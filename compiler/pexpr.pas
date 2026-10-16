@@ -163,23 +163,23 @@ implementation
                   so disable the range checking for the string }
                 if parse_generic and
                   (nf_generic_para in p.flags) then
-                  TOrdConstNode(p).value:=255;
-                if TOrdConstNode(p).value<=0 then
+                  TOrdConstNode(p).Value:=255;
+                if TOrdConstNode(p).Value<=0 then
                   begin
                      Message(parser_e_invalid_string_size);
-                     TOrdConstNode(p).value:=255;
+                     TOrdConstNode(p).Value:=255;
                   end;
-                if TOrdConstNode(p).value>255 then
+                if TOrdConstNode(p).Value>255 then
                   begin
                     { longstring is currently unsupported (CEC)! }
 {                    t:=cstringdef.createlong(tordconstnode(p).value))}
                     Message(parser_e_invalid_string_size);
-                    TOrdConstNode(p).value:=255;
-                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).value),true);
+                    TOrdConstNode(p).Value:=255;
+                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).Value),true);
                   end
                 else
-                  if TOrdConstNode(p).value<>255 then
-                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).value),true);
+                  if TOrdConstNode(p).Value<>255 then
+                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).Value),true);
                 consume(_RECKKLAMMER);
               end;
              p.free;
@@ -360,7 +360,7 @@ implementation
                           consume(_RKLAMMER);
                           if not Assigned(CurrentProcInfo) or
                              (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
-                             is_void(CurrentProcInfo.procdef.ReturnDef) then
+                             Is_Void(CurrentProcInfo.procdef.ReturnDef) then
                             begin
                               Message(parser_e_void_function);
                               { recovery }
@@ -389,7 +389,7 @@ implementation
                                 begin
                                   include(CurrentProcInfo.flags,pi_has_nested_exit);
                                   exclude(CurrentProcInfo.procdef.ProcOptions,po_inline);
-                                  if is_nested_pd(CurrentProcInfo.procdef) then
+                                  if Is_Nested_PD(CurrentProcInfo.procdef) then
                                     CurrentProcInfo.set_needs_parentfp(exit_procinfo.procdef.ParaST.SymTableLevel);
 
                                   exit_procinfo.nestedexitlabel:=CLabelSym.create('$nestedexit');
@@ -489,12 +489,12 @@ implementation
                  (
                   (Is_Object(p1.resultdef) and
                    (oo_has_constructor in TObjectDef(p1.resultdef).ObjectOptions)) or
-                  is_open_array(p1.resultdef) or
-                  is_array_of_const(p1.resultdef) or
-                  is_open_string(p1.resultdef)
+                  Is_Open_Array(p1.resultdef) or
+                  Is_Array_Of_Const(p1.resultdef) or
+                  Is_Open_String(p1.resultdef)
                  )) or
                  { keep the function call if it is a type parameter to avoid arithmetic errors due to constant folding }
-                 is_typeparam(p1.resultdef) then
+                 Is_TypeParam(p1.resultdef) then
                 begin
                   statement_syssym:=geninlinenode(in_sizeof_x,false,p1);
                   { no packed bit support for these things }
@@ -513,11 +513,11 @@ implementation
                    Message1(type_e_type_is_not_completly_defined,TForwardDef(p1.resultdef).ToSymName^);
                  if (l = in_sizeof_x) or
                     (not((p1.nodetype = vecn) and
-                         is_packed_array(TVecNode(p1).left.resultdef)) and
+                         Is_Packed_Array(TVecNode(p1).left.resultdef)) and
                      not((p1.nodetype = subscriptn) and
-                         is_packed_record_or_object(TSubscriptNode(p1).left.resultdef))) then
+                         Is_Packed_Record_Or_Object(TSubscriptNode(p1).left.resultdef))) then
                    begin
-                     statement_syssym:=genintconstnode(p1.resultdef.size,SizeSIntType);
+                     statement_syssym:=genintconstnode(p1.resultdef.Size,SizeSIntType);
                      if (l = in_bitsizeof_x) then
                        statement_syssym:=CAddNode.create(muln,statement_syssym,COrdConstNode.create(8,SizeSIntType,true));
                    end
@@ -629,7 +629,7 @@ implementation
                          err:=true;
                        end;
                    arraydef :
-                     if not is_dynamic_array(p1.resultdef) then
+                     if not Is_Dynamic_Array(p1.resultdef) then
                        begin
                          Message(parser_e_illegal_parameter_list);
                          err:=true;
@@ -984,7 +984,7 @@ implementation
                   { e.g. inline specialization TBird<Boolean> }
                   p1:=sub_expr(opcompare,[ef_accept_equal],p1);
                   if p1.nodetype in [addn,subn,muln,slashn,divn,modn,symdifn,starstarn,
-                      equaln,unequaln,ltn,lten,gtn,gten,inn,isn,asn,orn,andn,xorn,
+                      EqualN,unequaln,ltn,lten,gtn,gten,inn,isn,asn,orn,andn,xorn,
                       shln,shrn,notn,assignn] then
                     nameof_ok:=false;
                 end;
@@ -1119,7 +1119,7 @@ implementation
                  else
                    p1:=load_self_node;
                  { don't try to call the invokable again }
-                 if is_invokable(TDef(st.DefOwner)) then
+                 if Is_Invokable(TDef(st.DefOwner)) then
                    include(p1.flags,nf_load_procvar);
                  { We are calling a member }
                  maybe_load_methodpointer:=true;
@@ -1214,8 +1214,8 @@ implementation
              if Assigned(CurrentProcInfo) and
                  Assigned(aprocdef) and
                  (aprocdef.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
-                 (aprocdef.ParaST.SymTableLevel>normal_function_level) and
-                 (CurrentProcInfo.procdef.ParaST.SymTableLevel>normal_function_level) then
+                 (aprocdef.ParaST.SymTableLevel>NormalFunctionLevel) and
+                 (CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel) then
                CurrentProcInfo.Add_Captured_Sym(sym,aprocdef,CurrentFilePos);
 
              { generate a methodcallnode or proccallnode }
@@ -1361,7 +1361,7 @@ implementation
       begin
         if not Assigned(fr) then
           InternalError(2022032401);
-        if not is_invokable(fr) then
+        if not Is_Invokable(fr) then
           InternalError(2022032402);
         if (m_tp_procvar in CurrentSettings.ModeSwitches) or
            (m_mac_procvar in CurrentSettings.ModeSwitches) then
@@ -1424,7 +1424,7 @@ implementation
          { indexed property }
          if (ppo_indexed in propsym.PropOptions) then
            begin
-             p2:=COrdConstNode.create(propsym.index,propsym.IndexDef,true);
+             p2:=COrdConstNode.create(propsym.Index,propsym.IndexDef,true);
              paras:=CCallParaNode.create(p2,paras);
            end;
          { we need only a write property if a := follows }
@@ -1449,7 +1449,7 @@ implementation
                          { read the expression }
                          if propsym.PropDef.typ=procvardef then
                            getprocvardef:=TProcVarDef(propsym.PropDef)
-                         else if is_invokable(propsym.PropDef) then
+                         else if Is_Invokable(propsym.PropDef) then
                            getfuncrefdef:=TObjectDef(propsym.PropDef);
                          p2:=comp_expr([ef_accept_equal]);
                          if Assigned(getprocvardef) then
@@ -1472,7 +1472,7 @@ implementation
                          { read the expression }
                          if propsym.PropDef.typ=procvardef then
                            getprocvardef:=TProcVarDef(propsym.PropDef)
-                         else if is_invokable(propsym.PropDef) then
+                         else if Is_Invokable(propsym.PropDef) then
                            getfuncrefdef:=TObjectDef(propsym.PropDef);
                          p2:=comp_expr([ef_accept_equal]);
                          if Assigned(getprocvardef) then
@@ -1660,7 +1660,7 @@ implementation
                               if (TCallNode(p1).procdefinition.ProcTypeOption<>potype_constructor) and
                                  not(po_staticmethod in TCallNode(p1).procdefinition.ProcOptions) and
                                  (not Assigned(CurrentStructDef) or
-                                  not def_is_related(CurrentStructDef,structh)) then
+                                  not Def_Is_Related(CurrentStructDef,structh)) then
                                 begin
                                   p1.free;
                                   p1:=CErrorNode.create;
@@ -1740,7 +1740,7 @@ implementation
                      p1.free;
                      p1:=nil;
                      { typed constants are absolutebarsyms now to handle storage properly }
-                     propaccesslist_to_node(p1,nil,TAbsoluteVarSym(sym).ref);
+                     propaccesslist_to_node(p1,nil,TAbsoluteVarSym(sym).Ref);
                    end
                  else
                    InternalError(16);
@@ -1833,7 +1833,7 @@ implementation
          { allow Ordinal(Value) for type declarations since it
            can be an enumeration declaration or a set lke:
            (OrdinalType(const1)..OrdinalType(const2) }
-         if (not typeonly or is_ordinal(hdef)) and
+         if (not typeonly or Is_Ordinal(hdef)) and
             try_to_consume(_LKLAMMER) then
           begin
             result:=comp_expr([ef_accept_equal]);
@@ -1845,7 +1845,7 @@ implementation
             else
               begin
                 result:=CTypeConvNode.create_explicit(result,hdef);
-                if is_currency(hdef) then
+                if Is_Currency(hdef) then
                   { Make sure currency types are correctly scaled }
                   Include(result.flags,nf_is_currency);
               end;
@@ -1859,7 +1859,7 @@ implementation
                using "parentobject.methodname()" }
              if Assigned(CurrentStructDef) and
                 not(getaddr) and
-                def_is_related(CurrentStructDef,hdef) then
+                Def_Is_Related(CurrentStructDef,hdef) then
                begin
                  result:=CTypeNode.create(hdef);
                  TTypeNode(result).TypeSym:=sym;
@@ -2045,7 +2045,7 @@ implementation
                 (d = Double(d)) then
           result:=CRealConstNode.create(d,S64FloatType)
         else
-          result:=CRealConstNode.create(d,pbestrealtype^);
+          result:=CRealConstNode.create(d,PBestRealType^);
         TRealConstNode(result).SetCurrencyLiteral(s);
       end;
 {$pop}
@@ -2109,7 +2109,7 @@ implementation
          until not try_to_consume(_COMMA);
 
          arraydef:=CArrayDef.getreusable(S32IntType,elements.count);
-         temp:=CTempCreateNode.create(arraydef,arraydef.size,tt_persistent,false);
+         temp:=CTempCreateNode.create(arraydef,arraydef.Size,tt_persistent,false);
          addstatement(newstatement,temp);
          for countindices:=0 to elements.count-1 do
            begin
@@ -2150,7 +2150,7 @@ implementation
          else
            begin
              { create temp for result }
-             tempresultvariant:=CTempCreateNode.create(CVariantType,CVariantType.size,tt_persistent,true);
+             tempresultvariant:=CTempCreateNode.create(CVariantType,CVariantType.Size,tt_persistent,true);
              addstatement(newstatement,tempresultvariant);
 
              { create call to fpc_vararray_get }
@@ -2185,7 +2185,7 @@ implementation
         begin
           result:=internalstatements(newstatement);
           { create temp for result }
-          arrnode:=CTempCreateNode.create(arrdef,arrdef.size,tt_persistent,true);
+          arrnode:=CTempCreateNode.create(arrdef,arrdef.Size,tt_persistent,true);
           addstatement(newstatement,arrnode);
 
           paracount:=0;
@@ -2209,7 +2209,7 @@ implementation
             assnode:=nil;
 
           { get temp for array of lengths }
-          temp2:=CTempCreateNode.create(SIntType,SIntType.size,tt_persistent,false);
+          temp2:=CTempCreateNode.create(SIntType,SIntType.Size,tt_persistent,false);
           addstatement(newstatement,temp2);
 
           { one dimensional }
@@ -2274,7 +2274,7 @@ implementation
                       extdef:=TObjectDef(srsymtable.DefOwner).ExtendedDef;
                       newstatement:=nil;
                       n:=internalstatements(newstatement);
-                      temp:=CTempCreateNode.create(extdef,extdef.size,tt_persistent,false);
+                      temp:=CTempCreateNode.create(extdef,extdef.Size,tt_persistent,false);
                       addstatement(newstatement,temp);
                       addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(temp),node));
                       addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
@@ -2495,11 +2495,11 @@ implementation
                  end;
                { procvar.<something> can never mean anything so always
                  try to call it in case it returns a record/object/... }
-               maybe_call_procvar(p1,is_invokable(p1.resultdef) and not is_funcref(p1.resultdef));
+               maybe_call_procvar(p1,Is_Invokable(p1.resultdef) and not Is_FuncRef(p1.resultdef));
 
                if (p1.nodetype=ordconstn) and
-                   not is_boolean(p1.resultdef) and
-                   not is_enum(p1.resultdef) then
+                   not Is_Boolean(p1.resultdef) and
+                   not Is_Enum(p1.resultdef) then
                  begin
                    { type helpers are checked first }
                    if (CurrentScanner.token=_ID) and try_type_helper(p1,nil) then
@@ -2522,10 +2522,10 @@ implementation
                        else
                          expstr:='';
                        consume(CurrentScanner.token);
-                       if TOrdConstNode(p1).value.signed then
-                         str(TOrdConstNode(p1).value.svalue,valstr)
+                       if TOrdConstNode(p1).Value.signed then
+                         str(TOrdConstNode(p1).Value.svalue,valstr)
                        else
-                         str(TOrdConstNode(p1).value.uvalue,valstr);
+                         str(TOrdConstNode(p1).Value.uvalue,valstr);
                        valstr:=valstr+'.0E';
                        if expstr='' then
                          case CurrentScanner.token of
@@ -2576,7 +2576,7 @@ implementation
                    else
                      begin
                        { just convert the ordconst to a realconst }
-                       p2:=CRealConstNode.create(TOrdConstNode(p1).value,pbestrealtype^);
+                       p2:=CRealConstNode.create(TOrdConstNode(p1).Value,PBestRealType^);
                        p1.free;
                        p1:=p2;
                        again:=false;
@@ -2701,7 +2701,7 @@ implementation
                    end;
                  arraydef:
                    begin
-                     if is_dynamic_array(p1.resultdef) then
+                     if Is_Dynamic_Array(p1.resultdef) then
                        begin
                          if CurrentScanner.token=_ID then
                            begin
@@ -2973,10 +2973,10 @@ implementation
           else
             begin
               { is this a procedure variable ? }
-              if is_invokable(p1.resultdef) and
+              if Is_Invokable(p1.resultdef) and
                   (CurrentScanner.token=_LKLAMMER) then
                 begin
-                  if not SearchSym_In_Class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
+                  if not SearchSym_In_Class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),MethodNameFuncRefInvokeFind,srsym,srsymtable,[]) then
                     InternalError(2021040202);
                   include(p1.flags,nf_load_procvar);
                   do_proc_call(srsym,srsymtable,TAbstractRecordDef(p1.resultdef),false,again,p1,[],nil);
@@ -2988,11 +2988,11 @@ implementation
                   if (p1.nodetype=typen) or
                      (
                       Assigned(getprocvardef) and
-                      equal_defs(p1.resultdef,getprocvardef)
+                      Equal_Defs(p1.resultdef,getprocvardef)
                      ) or
                      (
                       Assigned(getfuncrefdef) and
-                      equal_defs(p1.resultdef,getfuncrefdef)
+                      Equal_Defs(p1.resultdef,getfuncrefdef)
                      ) then
                     begin
                       if try_to_consume(_LKLAMMER) then
@@ -3089,7 +3089,7 @@ implementation
               if (TAbsoluteVarSym(srsym).AbsTyp=tovar) then
                 begin
                   result:=nil;
-                  propaccesslist_to_node(result,nil,TAbsoluteVarSym(srsym).ref);
+                  propaccesslist_to_node(result,nil,TAbsoluteVarSym(srsym).Ref);
                   result:=CTypeConvNode.create(result,TAbsoluteVarSym(srsym).vardef);
                   include(result.flags,nf_absolute);
                   if TAbsoluteVarSym(srsym).vardef=S64CurrencyType then
@@ -3218,7 +3218,7 @@ implementation
                 begin
                   result:=CLoadNode.create(srsym,srsymtable);
                   DoTypeCheckPass(result);
-                  if is_systemunit_unicode then
+                  if Is_SystemUnit_Unicode then
                     result.resultdef:=CStringDef.CreateUnicode(true)
                   else
                     result.resultdef:=GetAnsiStringDef;
@@ -3876,7 +3876,7 @@ implementation
                       p1:=comp_expr([ef_accept_equal]);
                       if not Assigned(CurrentProcInfo) or
                          (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
-                         is_void(CurrentProcInfo.procdef.ReturnDef) then
+                         Is_Void(CurrentProcInfo.procdef.ReturnDef) then
                         begin
                           Message(parser_e_void_function);
                           { recovery }
@@ -3990,7 +3990,7 @@ implementation
                                        to }
                                      if (srsym.Owner.DefOwner.typ=objectdef) and
                                          Is_ObjectPascal_Helper(TObjectDef(srsym.Owner.DefOwner)) then
-                                       if def_is_related(CurrentStructDef,TDef(srsym.Owner.DefOwner)) and
+                                       if Def_Is_Related(CurrentStructDef,TDef(srsym.Owner.DefOwner)) and
                                            Assigned(TObjectDef(CurrentStructDef).ChildOf) then
                                          hdef:=TObjectDef(CurrentStructDef).ChildOf
                                        else
@@ -4102,7 +4102,7 @@ implementation
                  if code=0 then
                    begin
                       consume(_INTCONST);
-                      int_to_type(ic,hdef);
+                      Int_To_Type(ic,hdef);
                       p1:=COrdConstNode.create(ic,hdef,true);
                    end
                  else
@@ -4112,7 +4112,7 @@ implementation
                      if code=0 then
                        begin
                           consume(_INTCONST);
-                          int_to_type(qc,hdef);
+                          Int_To_Type(qc,hdef);
                           p1:=COrdConstNode.create(qc,hdef,true);
                        end;
                    end;
@@ -4130,7 +4130,7 @@ implementation
                      else
                        begin
                           consume(_INTCONST);
-                          p1:=CRealConstNode.create(d,pbestrealtype^);
+                          p1:=CRealConstNode.create(d,PBestRealType^);
                        end;
                    end
                  else
@@ -4338,7 +4338,7 @@ implementation
                         begin
                           if TBinaryNode(p1).left.nodetype=ordconstn then
                             begin
-                              TOrdConstNode(TBinaryNode(p1).left).value:=-TOrdConstNode(TBinaryNode(p1).left).value;
+                              TOrdConstNode(TBinaryNode(p1).left).Value:=-TOrdConstNode(TBinaryNode(p1).left).Value;
                               p1:=CUnaryMinusNode.create(p1);
                             end
                           else if TBinaryNode(p1).left.nodetype=realconstn then
@@ -4804,7 +4804,7 @@ implementation
                _SLASH :
                  p1:=CAddNode.create(slashn,p1,p2);
                _EQ:
-                 p1:=CAddNode.create(equaln,p1,p2);
+                 p1:=CAddNode.create(EqualN,p1,p2);
                _GT :
                  p1:=CAddNode.create(gtn,p1,p2);
                _LT :
@@ -5062,7 +5062,7 @@ implementation
                 if Assigned(p1.resultdef) then
                   if (p1.resultdef.typ=procvardef) then
                     getprocvardef:=TProcVarDef(p1.resultdef)
-                  else if is_invokable(p1.resultdef) then
+                  else if Is_Invokable(p1.resultdef) then
                     getfuncrefdef:=TObjectDef(p1.resultdef);
                 p2:=sub_expr(opcompare,[ef_accept_equal],nil);
                 if Assigned(getprocvardef) then
@@ -5133,10 +5133,10 @@ implementation
       if not CodeGenError then
        begin
          if (p.nodetype<>ordconstn) or
-            not(is_integer(p.resultdef)) then
+            not(Is_Integer(p.resultdef)) then
           Message(parser_e_illegal_expression)
          else
-          result:=TOrdConstNode(p).value;
+          result:=TOrdConstNode(p).Value;
        end;
       p.free;
       p := nil;
@@ -5158,8 +5158,8 @@ implementation
       p:=comp_expr([ef_accept_equal]);
       if p.nodetype<>stringconstn then
         begin
-          if (p.nodetype=ordconstn) and is_char(p.resultdef) then
-            get_stringconst:=char(TOrdConstNode(p).value.svalue)
+          if (p.nodetype=ordconstn) and Is_Char(p.resultdef) then
+            get_stringconst:=char(TOrdConstNode(p).Value.svalue)
           else
             Message(parser_e_illegal_expression);
         end

@@ -98,7 +98,7 @@ implementation
 
     procedure TCGInlineNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          case inlinenumber of
             in_sizeof_x,
@@ -156,37 +156,37 @@ implementation
             in_unaligned_x:
               begin
                 SecondPass(TCallParaNode(left).left);
-                location:=TCallParaNode(left).left.location;
-                if location.loc in [LOC_CREFERENCE,LOC_REFERENCE] then
-                  location.reference.alignment:=1
+                location:=TCallParaNode(left).left.Location;
+                if location.Loc in [LOC_CREFERENCE,LOC_REFERENCE] then
+                  location.Reference.Alignment:=1
                 else
                   message(parser_w_unaligned_useless);
               end;
             in_aligned_x:
               begin
                 SecondPass(TCallParaNode(left).left);
-                location:=TCallParaNode(left).left.location;
-                if location.loc in [LOC_CREFERENCE,LOC_REFERENCE] then
-                  location.reference.alignment:=resultdef.alignment
+                location:=TCallParaNode(left).left.Location;
+                if location.Loc in [LOC_CREFERENCE,LOC_REFERENCE] then
+                  location.Reference.Alignment:=resultdef.Alignment
                 else
                   message(parser_w_aligned_useless);
               end;
             in_volatile_x:
               begin
                 SecondPass(TCallParaNode(left).left);
-                location:=TCallParaNode(left).left.location;
-                if location.loc in [LOC_CREFERENCE,LOC_REFERENCE,LOC_SUBSETREF,LOC_CSUBSETREF] then
-                  location.reference.volatility:=[vol_read,vol_write];
+                location:=TCallParaNode(left).left.Location;
+                if location.Loc in [LOC_CREFERENCE,LOC_REFERENCE,LOC_SUBSETREF,LOC_CSUBSETREF] then
+                  location.Reference.Volatility:=[vol_read,vol_write];
               end;
 {$ifdef SUPPORT_MMX}
             in_mmx_pcmpeqb..in_mmx_pcmpgtw:
               begin
-                 location_reset(location,LOC_MMXREGISTER,OS_NO);
-                 if left.location.loc=LOC_REGISTER then
+                 Location_Reset(location,LOC_MMXREGISTER,OS_NO);
+                 if left.Location.Loc=LOC_REGISTER then
                    begin
                       {!!!!!!!}
                    end
-                 else if TCallParaNode(left).left.location.loc=LOC_REGISTER then
+                 else if TCallParaNode(left).left.Location.Loc=LOC_REGISTER then
                    begin
                       {!!!!!!!}
                    end
@@ -282,45 +282,45 @@ implementation
         href : TReference;
       begin
         SecondPass(left);
-        if is_shortstring(left.resultdef) then
+        if Is_ShortString(left.resultdef) then
          begin
-           location_copy(location,left.location);
-           location.size:=OS_8;
+           Location_Copy(location,left.Location);
+           location.Size:=OS_8;
          end
         else
          begin
            { length in ansi/wide strings and high in dynamic arrays is at offset -sizeof(pint) }
-           hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+           hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
            CurrentAsmData.getjumplabel(lengthlab);
-           hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,left.resultdef,OC_EQ,0,left.location.register,lengthlab);
+           hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,left.resultdef,OC_EQ,0,left.Location.Register,lengthlab);
            { the length of a widestring is a 32 bit unsigned int. Since every
              character occupies 2 bytes, on a 32 bit platform you can express
              the maximum length using 31 bits. On a 64 bit platform, it may be
              32 bits. This means that regardless of the platform, a location
              with size OS_SINT/ossinttype can hold the length without
              overflowing (this code returns an ossinttype value) }
-           if is_widestring(left.resultdef) then
+           if Is_WideString(left.resultdef) then
              lendef:=U32IntType
            else
              lendef:=SizeSIntType;
            { volatility of the ansistring/widestring refers to the volatility of the
              string pointer, not of the string data }
-           hlcg.reference_reset_base(href,left.resultdef,left.location.register,-lendef.size,ctempposinvalid,lendef.alignment,[]);
+           hlcg.Reference_Reset_Base(href,left.resultdef,left.Location.Register,-lendef.Size,CTempPosInvalid,lendef.Alignment,[]);
            { if the string pointer is nil, the length is 0 -> reuse the register
              that originally held the string pointer for the length, so that we
              can keep the original nil/0 as length in that case }
-           hregister:=cg.makeregsize(CurrentAsmData.CurrAsmList,left.location.register,def_cgsize(resultdef));
-           hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,lendef,resultdef,href,hregister);
-           if is_widestring(left.resultdef) then
-             hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SHR,resultdef,1,hregister);
+           hregister:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,left.Location.Register,Def_CGSize(resultdef));
+           hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,lendef,resultdef,href,hregister);
+           if Is_WideString(left.resultdef) then
+             hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,resultdef,1,hregister);
 
            { Dynamic arrays do not have their length attached but their maximum index }
-           if is_dynamic_array(left.resultdef) then
-             hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_ADD,resultdef,1,hregister);
+           if Is_Dynamic_Array(left.resultdef) then
+             hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_ADD,resultdef,1,hregister);
 
-           cg.a_label(CurrentAsmData.CurrAsmList,lengthlab);
-           location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-           location.register:=hregister;
+           cg.A_Label(CurrentAsmData.CurrAsmList,lengthlab);
+           Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+           location.Register:=hregister;
          end;
       end;
 
@@ -335,29 +335,29 @@ implementation
         href : TReference;
       begin
         SecondPass(left);
-        if not(is_dynamic_array(left.resultdef)) then
+        if not(Is_Dynamic_Array(left.resultdef)) then
           InternalError(2019122801);
         { length in dynamic arrays is at offset -sizeof(pint) }
-        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
         CurrentAsmData.getjumplabel(loadlab);
         CurrentAsmData.getjumplabel(nillab);
         CurrentAsmData.getjumplabel(donelab);
-        hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,left.resultdef,OC_EQ,0,left.location.register,nillab);
+        hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,left.resultdef,OC_EQ,0,left.Location.Register,nillab);
         { volatility of the dyn. array refers to the volatility of the
           string pointer, not of the string data }
-        hlcg.reference_reset_base(href,left.resultdef,left.location.register,-SizeSIntType.size,ctempposinvalid,OSSIntType.alignment,[]);
+        hlcg.Reference_Reset_Base(href,left.resultdef,left.Location.Register,-SizeSIntType.Size,CTempPosInvalid,OSSIntType.Alignment,[]);
         { if the string pointer is nil, the length is 0 -> reuse the register
           that originally held the string pointer for the length, so that we
           can keep the original nil/0 as length in that case }
-        hregister:=cg.makeregsize(CurrentAsmData.CurrAsmList,left.location.register,def_cgsize(resultdef));
-        hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,SizeSIntType,resultdef,href,hregister);
-        hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,donelab);
+        hregister:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,left.Location.Register,Def_CGSize(resultdef));
+        hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,SizeSIntType,resultdef,href,hregister);
+        hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,donelab);
 
-        cg.a_label(CurrentAsmData.CurrAsmList,nillab);
-        hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,1,hregister);
-        cg.a_label(CurrentAsmData.CurrAsmList,donelab);
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-        location.register:=hregister;
+        cg.A_Label(CurrentAsmData.CurrAsmList,nillab);
+        hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,1,hregister);
+        cg.A_Label(CurrentAsmData.CurrAsmList,donelab);
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        location.Register:=hregister;
       end;
 
 
@@ -375,22 +375,22 @@ implementation
         else
            cgop:=OP_ADD;
 
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
 
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-        if def_cgsize(resultdef) in [OS_64,OS_S64] then
+        if Def_CGSize(resultdef) in [OS_64,OS_S64] then
           begin
-            location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            cg64.a_op64_const_reg_reg(CurrentAsmData.CurrAsmList,cgop,def_cgsize(resultdef),1,left.location.register64,location.register64);
+            location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            cg64.A_Op64_Const_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,Def_CGSize(resultdef),1,left.Location.Register64,location.Register64);
           end
         else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
           begin
-            location.register:=hlcg.getregisterfordef(CurrentAsmData.CurrAsmList,resultdef);
-            hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,cgop,resultdef,1,left.location.register,location.register);
+            location.Register:=hlcg.GetRegisterForDef(CurrentAsmData.CurrAsmList,resultdef);
+            hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,1,left.Location.Register,location.Register);
           end;
       end;
 
@@ -435,10 +435,10 @@ implementation
                 addvalue:=1;
             pointerdef :
                begin
-                 if is_void(TPointerDef(TCallParaNode(left).left.resultdef).PointedDef) then
+                 if Is_Void(TPointerDef(TCallParaNode(left).left.resultdef).PointedDef) then
                    addvalue:=1
                  else
-                   addvalue:=TPointerDef(TCallParaNode(left).left.resultdef).PointedDef.size;
+                   addvalue:=TPointerDef(TCallParaNode(left).left.resultdef).PointedDef.Size;
                end;
            else
                InternalError(2020100814);
@@ -450,26 +450,26 @@ implementation
               if is_constintnode(TCallParaNode(TCallParaNode(left).right).left) then
                  addvalue:=addvalue*get_ordinal_value(TCallParaNode(TCallParaNode(left).right).left)
               else if is_constpointernode(TCallParaNode(TCallParaNode(left).right).left) then
-                 addvalue:=addvalue*TPointerConstNode(TCallParaNode(TCallParaNode(left).right).left).value
+                 addvalue:=addvalue*TPointerConstNode(TCallParaNode(TCallParaNode(left).right).left).Value
               else
                 begin
-                  if not(TCallParaNode(TCallParaNode(left).right).left.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) or (addvalue>1) or
-                    not(equal_defs(left.resultdef,TCallParaNode(TCallParaNode(left).right).left.resultdef)) then
+                  if not(TCallParaNode(TCallParaNode(left).right).left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) or (addvalue>1) or
+                    not(Equal_Defs(left.resultdef,TCallParaNode(TCallParaNode(left).right).left.resultdef)) then
                     begin
-                      hlcg.location_force_reg(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.location,TCallParaNode(TCallParaNode(left).right).left.resultdef,second_incdec_tempregdef,addvalue<=1);
-                      hregister:=TCallParaNode(TCallParaNode(left).right).left.location.register;
+                      hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.Location,TCallParaNode(TCallParaNode(left).right).left.resultdef,second_incdec_tempregdef,addvalue<=1);
+                      hregister:=TCallParaNode(TCallParaNode(left).right).left.Location.Register;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      hregisterhi:=TCallParaNode(TCallParaNode(left).right).left.location.register64.reghi;
+                      hregisterhi:=TCallParaNode(TCallParaNode(left).right).left.Location.Register64.RegHi;
 {$endif not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
                       { insert multiply with addvalue if its >1 }
                       if addvalue>1 then
-                        hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_IMUL,left.resultdef,addvalue.svalue,hregister);
+                        hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,left.resultdef,addvalue.svalue,hregister);
                     end
-                  else if TCallParaNode(TCallParaNode(left).right).left.location.loc in [LOC_REGISTER,LOC_CREGISTER] then
+                  else if TCallParaNode(TCallParaNode(left).right).left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
                     begin
-                      hregister:=TCallParaNode(TCallParaNode(left).right).left.location.register;
+                      hregister:=TCallParaNode(TCallParaNode(left).right).left.Location.Register;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      hregisterhi:=TCallParaNode(TCallParaNode(left).right).left.location.register64.reghi;
+                      hregisterhi:=TCallParaNode(TCallParaNode(left).right).left.Location.Register64.RegHi;
 {$endif not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
                     end;
                   addconstant:=false;
@@ -479,43 +479,43 @@ implementation
           if addconstant then
             begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-              if def_cgsize(left.resultdef) in [OS_64,OS_S64] then
+              if Def_CGSize(left.resultdef) in [OS_64,OS_S64] then
                 { use addvalue.svalue here to avoid an internal error if addvalue is unsigned and overflows int64, see #35298,
                   we are only interested in the bit pattern here }
-                cg64.a_op64_const_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],def_cgsize(left.resultdef),addvalue.svalue,TCallParaNode(left).left.location)
+                cg64.A_Op64_Const_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],Def_CGSize(left.resultdef),addvalue.svalue,TCallParaNode(left).left.Location)
               else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                hlcg.a_op_const_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
+                hlcg.A_Op_Const_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
 {$ifdef cpu64bitalu}
                   aint(addvalue.svalue),
 {$else cpu64bitalu}
                   LongInt(addvalue.svalue),  // can't use aint, because it breaks 16-bit and 8-bit CPUs
 {$endif cpu64bitalu}
-                  TCallParaNode(left).left.location);
+                  TCallParaNode(left).left.Location);
             end
            else
              begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-               if def_cgsize(left.resultdef) in [OS_64,OS_S64] then
-                 case TCallParaNode(TCallParaNode(left).right).left.location.loc of
+               if Def_CGSize(left.resultdef) in [OS_64,OS_S64] then
+                 case TCallParaNode(TCallParaNode(left).right).left.Location.Loc of
                    LOC_REFERENCE,LOC_CREFERENCE:
-                     cg64.a_op64_ref_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],def_cgsize(left.resultdef),
-                       TCallParaNode(TCallParaNode(left).right).left.location.reference,TCallParaNode(left).left.location);
+                     cg64.A_Op64_Ref_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],Def_CGSize(left.resultdef),
+                       TCallParaNode(TCallParaNode(left).right).left.Location.Reference,TCallParaNode(left).left.Location);
                    LOC_REGISTER,LOC_CREGISTER:
-                     cg64.a_op64_reg_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],def_cgsize(left.resultdef),
-                       joinreg64(hregister,hregisterhi),TCallParaNode(left).left.location);
+                     cg64.A_Op64_Reg_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],Def_CGSize(left.resultdef),
+                       JoinReg64(hregister,hregisterhi),TCallParaNode(left).left.Location);
                    else
                      InternalError(2020042801);
                  end
                else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                 case TCallParaNode(TCallParaNode(left).right).left.location.loc of
+                 case TCallParaNode(TCallParaNode(left).right).left.Location.Loc of
                    LOC_REFERENCE,LOC_CREFERENCE:
-                     hlcg.a_op_ref_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
-                       TCallParaNode(TCallParaNode(left).right).left.location.reference,TCallParaNode(left).left.location);
+                     hlcg.A_Op_Ref_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
+                       TCallParaNode(TCallParaNode(left).right).left.Location.Reference,TCallParaNode(left).left.Location);
                    LOC_REGISTER,LOC_CREGISTER:
-                     hlcg.a_op_reg_loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
-                       hregister,TCallParaNode(left).left.location);
+                     hlcg.A_Op_Reg_Loc(CurrentAsmData.CurrAsmList,addsubop[inlinenumber],left.resultdef,
+                       hregister,TCallParaNode(left).left.Location);
                    else
                      InternalError(2020042802);
                  end;
@@ -577,12 +577,12 @@ implementation
             begin
               { for shift/rotate the shift count can be of different size than the shifted variable }
               if inlinenumber in [in_sar_assign_x_y,in_shl_assign_x_y,in_shr_assign_x_y,in_rol_assign_x_y,in_ror_assign_x_y] then
-                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,TCallParaNode(left).left.location,TCallParaNode(left).left.resultdef,TCallParaNode(left).left.resultdef,true)
+                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,TCallParaNode(left).left.Location,TCallParaNode(left).left.resultdef,TCallParaNode(left).left.resultdef,true)
               else
-                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,TCallParaNode(left).left.location,TCallParaNode(left).left.resultdef,TCallParaNode(left).right.resultdef,true);
-              hregister:=TCallParaNode(left).left.location.register;
+                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,TCallParaNode(left).left.Location,TCallParaNode(left).left.resultdef,TCallParaNode(left).right.resultdef,true);
+              hregister:=TCallParaNode(left).left.Location.Register;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-              hregisterhi:=TCallParaNode(left).left.location.register64.reghi;
+              hregisterhi:=TCallParaNode(left).left.Location.Register64.RegHi;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
               maskconstant:=false;
             end;
@@ -590,35 +590,35 @@ implementation
           if maskconstant then
             begin
               if inlinenumber in [in_sar_assign_x_y,in_shl_assign_x_y,in_shr_assign_x_y,in_rol_assign_x_y,in_ror_assign_x_y] then
-                if def_cgsize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64] then
+                if Def_CGSize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64] then
                   maskvalue:=maskvalue and 63
                 else
                   maskvalue:=maskvalue and 31;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-              if (def_cgsize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64]) and
-                 (TCallParaNode(TCallParaNode(left).right).left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
-                cg64.a_op64_const_loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],def_cgsize(TCallParaNode(left).right.resultdef),maskvalue.svalue,TCallParaNode(TCallParaNode(left).right).left.location)
+              if (Def_CGSize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64]) and
+                 (TCallParaNode(TCallParaNode(left).right).left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
+                cg64.A_Op64_Const_Loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],Def_CGSize(TCallParaNode(left).right.resultdef),maskvalue.svalue,TCallParaNode(TCallParaNode(left).right).left.Location)
               else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                hlcg.a_op_const_loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],TCallParaNode(left).right.resultdef,
+                hlcg.A_Op_Const_Loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],TCallParaNode(left).right.resultdef,
 {$ifdef cpu64bitalu}
                   aint(maskvalue.svalue),
 {$else cpu64bitalu}
                   LongInt(maskvalue.svalue),  // can't use aint, because it breaks 16-bit and 8-bit CPUs
 {$endif cpu64bitalu}
-                  TCallParaNode(TCallParaNode(left).right).left.location);
+                  TCallParaNode(TCallParaNode(left).right).left.Location);
             end
            else
              begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-               if (def_cgsize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64]) and
-                  (TCallParaNode(TCallParaNode(left).right).left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
-                 cg64.a_op64_reg_loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],def_cgsize(TCallParaNode(left).right.resultdef),
-                   joinreg64(hregister,hregisterhi),TCallParaNode(TCallParaNode(left).right).left.location)
+               if (Def_CGSize(TCallParaNode(left).right.resultdef) in [OS_64,OS_S64]) and
+                  (TCallParaNode(TCallParaNode(left).right).left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
+                 cg64.A_Op64_Reg_Loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],Def_CGSize(TCallParaNode(left).right.resultdef),
+                   JoinReg64(hregister,hregisterhi),TCallParaNode(TCallParaNode(left).right).left.Location)
                else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                 hlcg.a_op_reg_loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],TCallParaNode(left).right.resultdef,
-                   hregister,TCallParaNode(TCallParaNode(left).right).left.location);
+                 hlcg.A_Op_Reg_Loc(CurrentAsmData.CurrAsmList,andorxorop[inlinenumber],TCallParaNode(left).right.resultdef,
+                   hregister,TCallParaNode(TCallParaNode(left).right).left.Location);
              end;
         end;
 
@@ -633,14 +633,14 @@ implementation
           { load parameter, must be a reference }
           SecondPass(left);
 
-          location_reset(location,LOC_VOID,OS_NO);
+          Location_Reset(location,LOC_VOID,OS_NO);
 
 {$if not defined(cpu64bitalu) } // and not defined(cpuhighleveltarget)}
-          if (def_cgsize(left.resultdef) in [OS_64,OS_S64]) and (left.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) then
-            cg64.a_op64_loc(CurrentAsmData.CurrAsmList,negnotop[inlinenumber],def_cgsize(left.resultdef),left.location)
+          if (Def_CGSize(left.resultdef) in [OS_64,OS_S64]) and (left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) then
+            cg64.A_Op64_Loc(CurrentAsmData.CurrAsmList,negnotop[inlinenumber],Def_CGSize(left.resultdef),left.Location)
           else
 {$endif not cpu64bitalu}
-            hlcg.a_op_loc(CurrentAsmData.CurrAsmList,negnotop[inlinenumber],left.resultdef,left.location);
+            hlcg.A_Op_Loc(CurrentAsmData.CurrAsmList,negnotop[inlinenumber],left.resultdef,left.Location);
         end;
 
 
@@ -669,17 +669,17 @@ implementation
           setpara:=TCallParaNode(left).left;
           elepara:=TCallParaNode(TCallParaNode(left).right).left;
 
-          if elepara.location.loc=LOC_CONSTANT then
+          if elepara.Location.Loc=LOC_CONSTANT then
             begin
-              hlcg.a_bit_set_const_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
-                setpara.resultdef,elepara.location.value-TSetDef(setpara.resultdef).SetBase,setpara.location);
+              hlcg.A_Bit_Set_Const_Loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
+                setpara.resultdef,elepara.Location.Value-TSetDef(setpara.resultdef).SetBase,setpara.Location);
             end
           else
             begin
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,elepara.location,elepara.resultdef,U32IntType,true);
-              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,U32IntType,elepara.location,TSetDef(setpara.resultdef).SetBase);
-              hlcg.a_bit_set_reg_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
-                U32IntType,setpara.resultdef,elepara.location.register,setpara.location);
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,elepara.Location,elepara.resultdef,U32IntType,true);
+              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,U32IntType,elepara.Location,TSetDef(setpara.resultdef).SetBase);
+              hlcg.A_Bit_Set_Reg_Loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
+                U32IntType,setpara.resultdef,elepara.Location.Register,setpara.Location);
             end;
         end;
 
@@ -766,45 +766,45 @@ implementation
         ovloc: TLocation;
       begin
         SecondPass(left);
-        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
-        location:=left.location;
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
+        location:=left.Location;
 {$if not(defined(cpu64bitalu)) and not defined(cpuhighleveltarget)}
-        if is_64bitint(left.resultdef) then
+        if Is_64BitInt(left.resultdef) then
           begin
-            location:=left.location;
-            location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            cg64.a_load64_reg_reg(CurrentAsmData.CurrAsmList,left.location.register64,location.register64);
-            cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SAR,OS_32,31,left.location.register64.reghi);
-            tempreg64.reghi:=left.location.register64.reghi;
-            tempreg64.reglo:=left.location.register64.reghi;
-            cg64.a_op64_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,def_cgsize(resultdef),tempreg64,location.register64);
+            location:=left.Location;
+            location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            cg64.A_Load64_Reg_Reg(CurrentAsmData.CurrAsmList,left.Location.Register64,location.Register64);
+            cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,OS_32,31,left.Location.Register64.RegHi);
+            tempreg64.RegHi:=left.Location.Register64.RegHi;
+            tempreg64.RegLo:=left.Location.Register64.RegHi;
+            cg64.A_Op64_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,Def_CGSize(resultdef),tempreg64,location.Register64);
             if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
-                cg64.a_op64_reg_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,OP_SUB,def_cgsize(resultdef),tempreg64,location.register64,location.register64,true,ovloc);
-                hlcg.g_overflowcheck_loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
+                cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,Def_CGSize(resultdef),tempreg64,location.Register64,location.Register64,true,ovloc);
+                hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
               end
             else
-              cg64.a_op64_reg_reg_reg(CurrentAsmData.CurrAsmList,OP_SUB,def_cgsize(resultdef),tempreg64,location.register64,location.register64);
+              cg64.A_Op64_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,Def_CGSize(resultdef),tempreg64,location.Register64,location.Register64);
           end
         else
 {$endif not(defined(cpu64bitalu)) and not defined(cpuhighleveltarget)}
           begin
-            location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,left.resultdef);
+            location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,left.resultdef);
 
-            tempreg1:=hlcg.getintregister(CurrentAsmData.CurrAsmList,left.resultdef);
-            tempreg2:=hlcg.getintregister(CurrentAsmData.CurrAsmList,left.resultdef);
+            tempreg1:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,left.resultdef);
+            tempreg2:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,left.resultdef);
 
-            hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SAR,left.resultdef,left.resultdef.size*8-1,left.location.register,tempreg1);
-            hlcg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,left.resultdef,left.location.register,tempreg1,tempreg2);
+            hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SAR,left.resultdef,left.resultdef.Size*8-1,left.Location.Register,tempreg1);
+            hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,left.resultdef,left.Location.Register,tempreg1,tempreg2);
 
             if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
-                hlcg.a_op_reg_reg_reg_checkoverflow(CurrentAsmData.CurrAsmlist,OP_SUB,resultdef,tempreg1,tempreg2,location.register,true,ovloc);
-                hlcg.g_overflowcheck_loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
+                hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmlist,OP_SUB,resultdef,tempreg1,tempreg2,location.Register,true,ovloc);
+                hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
               end
             else
-              hlcg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmlist,OP_SUB,resultdef,tempreg1,tempreg2,location.register);
+              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmlist,OP_SUB,resultdef,tempreg1,tempreg2,location.Register);
           end;
       end;
 
@@ -824,14 +824,14 @@ implementation
 {$if defined(x86)}
       if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
         begin
-          location_reset(location,LOC_CONSTANT,OS_ADDR);
-          location.value:=0;
+          Location_Reset(location,LOC_CONSTANT,OS_ADDR);
+          location.Value:=0;
         end
       else
 {$endif}
         begin
-          location_reset(location,LOC_CREGISTER,OS_ADDR);
-          location.register:=CurrentProcInfo.framepointer;
+          Location_Reset(location,LOC_CREGISTER,OS_ADDR);
+          location.Register:=CurrentProcInfo.framepointer;
         end;
     end;
 
@@ -847,12 +847,12 @@ implementation
       if left<>nil then
         begin
           SecondPass(left);
-          if left.location.loc=LOC_CONSTANT then
+          if left.Location.Loc=LOC_CONSTANT then
             use_frame_pointer:=true
           else
             begin
-              hlcg.location_force_reg(CurrentAsmData.currasmlist,left.location,left.resultdef,VoidPointerType,false);
-              frame_reg:=left.location.register;
+              hlcg.Location_Force_Reg(CurrentAsmData.currasmlist,left.Location,left.resultdef,VoidPointerType,false);
+              frame_reg:=left.Location.Register;
               use_frame_pointer:=false;
             end
         end
@@ -864,13 +864,13 @@ implementation
 
       if use_frame_pointer then
         begin
-          location_reset(location,LOC_CREGISTER,OS_ADDR);
-          location.register:=NR_FRAME_POINTER_REG;
+          Location_Reset(location,LOC_CREGISTER,OS_ADDR);
+          location.Register:=NR_FRAME_POINTER_REG;
         end
       else
         begin
-          location_reset_ref(location,LOC_REFERENCE,OS_ADDR,sizeof(PInt),[]);
-          location.reference.base:=frame_reg;
+          Location_Reset_Ref(location,LOC_REFERENCE,OS_ADDR,sizeof(PInt),[]);
+          location.Reference.Base:=frame_reg;
         end;
     end;
 
@@ -880,17 +880,17 @@ implementation
       begin
         if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
           begin
-            location_reset(location,LOC_REGISTER,OS_ADDR);
-            location.register:=cg.getaddressregister(CurrentAsmData.currasmlist);
-            reference_reset_base(frame_ref,NR_STACK_POINTER_REG,{current_procinfo.calc_stackframe_size}tg.lasttemp,ctempposinvalid,sizeof(PInt),[]);
-            cg.a_load_ref_reg(CurrentAsmData.currasmlist,OS_ADDR,OS_ADDR,frame_ref,location.register);
+            Location_Reset(location,LOC_REGISTER,OS_ADDR);
+            location.Register:=cg.GetAddressRegister(CurrentAsmData.currasmlist);
+            Reference_Reset_Base(frame_ref,NR_STACK_POINTER_REG,{current_procinfo.calc_stackframe_size}tg.lasttemp,CTempPosInvalid,sizeof(PInt),[]);
+            cg.A_Load_Ref_Reg(CurrentAsmData.currasmlist,OS_ADDR,OS_ADDR,frame_ref,location.Register);
           end
         else
           begin
-            location_reset(location,LOC_REGISTER,OS_ADDR);
-            location.register:=cg.getaddressregister(CurrentAsmData.currasmlist);
-            reference_reset_base(frame_ref,CurrentProcInfo.framepointer,sizeof(PInt),ctempposinvalid,sizeof(PInt),[]);
-            cg.a_load_ref_reg(CurrentAsmData.currasmlist,OS_ADDR,OS_ADDR,frame_ref,location.register);
+            Location_Reset(location,LOC_REGISTER,OS_ADDR);
+            location.Register:=cg.GetAddressRegister(CurrentAsmData.currasmlist);
+            Reference_Reset_Base(frame_ref,CurrentProcInfo.framepointer,sizeof(PInt),CTempPosInvalid,sizeof(PInt),[]);
+            cg.A_Load_Ref_Reg(CurrentAsmData.currasmlist,OS_ADDR,OS_ADDR,frame_ref,location.Register);
           end;
       end;
 
@@ -929,69 +929,69 @@ implementation
             InternalError(2013120110);
         end;
 
-        if not(op1.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,op1.location,op1.resultdef,resultdef,true);
+        if not(op1.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,op1.Location,op1.resultdef,resultdef,true);
 
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-        if def_cgsize(resultdef) in [OS_64,OS_S64] then
+        if Def_CGSize(resultdef) in [OS_64,OS_S64] then
           begin
-            location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
+            location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
           end
         else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-          location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
+          location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
 
         if Assigned(op2) then
           begin
              { rotating by a constant directly coded: }
              if op2.nodetype=ordconstn then
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-               if def_cgsize(resultdef) in [OS_64,OS_S64] then
-                 cg64.a_op64_const_reg_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),
-                   TOrdConstNode(op2).value.uvalue and (resultdef.size*8-1),
-                   op1.location.register64, location.register64)
+               if Def_CGSize(resultdef) in [OS_64,OS_S64] then
+                 cg64.A_Op64_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,Def_CGSize(resultdef),
+                   TOrdConstNode(op2).Value.uvalue and (resultdef.Size*8-1),
+                   op1.Location.Register64, location.Register64)
                else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                 hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,resultdef,
-                   TOrdConstNode(op2).value.uvalue and (resultdef.size*8-1),
-                   op1.location.register, location.register)
+                 hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,resultdef,
+                   TOrdConstNode(op2).Value.uvalue and (resultdef.Size*8-1),
+                   op1.Location.Register, location.Register)
              else
                begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                 if def_cgsize(resultdef) in [OS_64,OS_S64] then
+                 if Def_CGSize(resultdef) in [OS_64,OS_S64] then
                    begin
-                     if not(op2.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
-                       not(equal_defs(op2.resultdef,ALUSIntType)) then
-                       hlcg.location_force_reg(CurrentAsmData.CurrAsmList,op2.location,
+                     if not(op2.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) or
+                       not(Equal_Defs(op2.resultdef,ALUSIntType)) then
+                       hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,op2.Location,
                                                op2.resultdef,ALUSIntType,true);
-                     cg64.a_op64_reg_reg_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),
-                                             joinreg64(op2.location.register,NR_NO),op1.location.register64,
-                                             location.register64);
+                     cg64.A_Op64_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,Def_CGSize(resultdef),
+                                             JoinReg64(op2.Location.Register,NR_NO),op1.Location.Register64,
+                                             location.Register64);
                    end
                  else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
                    begin
-                     if not(op2.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
-                       not(equal_defs(op2.resultdef,resultdef)) then
-                       hlcg.location_force_reg(CurrentAsmData.CurrAsmList,op2.location,
+                     if not(op2.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) or
+                       not(Equal_Defs(op2.resultdef,resultdef)) then
+                       hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,op2.Location,
                                                op2.resultdef,resultdef,true);
-                     hlcg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmList,op,resultdef,
-                                           op2.location.register,op1.location.register,
-                                           location.register);
+                     hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,resultdef,
+                                           op2.Location.Register,op1.Location.Register,
+                                           location.Register);
                    end;
                end;
           end
         else
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-          if def_cgsize(resultdef) in [OS_64,OS_S64] then
-            cg64.a_op64_const_reg_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),1,
-                                      op1.location.register64,location.register64)
+          if Def_CGSize(resultdef) in [OS_64,OS_S64] then
+            cg64.A_Op64_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,Def_CGSize(resultdef),1,
+                                      op1.Location.Register64,location.Register64)
           else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-            hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,resultdef,1,
-                                    op1.location.register,location.register);
+            hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,resultdef,1,
+                                    op1.Location.Register,location.Register);
       end;
 
 
@@ -1002,13 +1002,13 @@ implementation
     begin
       SecondPass(left);
 
-      opsize:=tcgsize2unsigned[left.location.size];
-      if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,cgsize_orddef(opsize),true);
+      opsize:=TCgSize2Unsigned[left.Location.Size];
+      if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,CGSize_OrdDef(opsize),true);
 
-      location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-      location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
-      cg.a_bit_scan_reg_reg(CurrentAsmData.CurrAsmList,inlinenumber=in_bsr_x,node_not_zero(left),opsize,location.size,left.location.register,location.register);
+      Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+      location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
+      cg.A_Bit_Scan_Reg_Reg(CurrentAsmData.CurrAsmList,inlinenumber=in_bsr_x,node_not_zero(left),opsize,location.Size,left.Location.Register,location.Register);
     end;
 
 

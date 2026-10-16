@@ -529,7 +529,7 @@ implementation
       begin
         if not Assigned(ExceptionReasonType) then
           ExceptionReasonType:=OSSIntType;
-        tg.gethltemp(list,ExceptionReasonType,ExceptionReasonType.size,tt_persistent,t.reasonbuf);
+        tg.GetHLTemp(list,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,t.reasonbuf);
       end;
 
 
@@ -572,9 +572,9 @@ implementation
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
         if exceptframekind<>tek_except then
           begin
-            reg:=hlcg.getintregister(list,OSSIntType);
-            hlcg.a_load_const_reg(list,OSSIntType,1,reg);
-            hlcg.g_exception_reason_save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
+            reg:=hlcg.GetIntRegister(list,OSSIntType);
+            hlcg.A_Load_Const_Reg(list,OSSIntType,1,reg);
+            hlcg.G_Exception_Reason_Save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
           end;
       end;
 
@@ -582,17 +582,17 @@ implementation
     class procedure TPSABIEHExceptionStateHandler.emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind;
       var exceptionstate: TExceptionState;var exceptiontemps:TExceptionTemps);
       begin
-        hlcg.g_unreachable(list);
-        hlcg.a_label(list,exceptionstate.exceptionlabel);
+        hlcg.G_Unreachable(list);
+        hlcg.A_Label(list,exceptionstate.exceptionlabel);
         if exceptframekind<>tek_except then
           begin
             if not Assigned(exceptionstate.finallycodelabel) then
               InternalError(2019021002);
 
-            hlcg.a_label(list,exceptionstate.finallycodelabel);
+            hlcg.A_Label(list,exceptionstate.finallycodelabel);
             exceptionstate.finallycodelabel:=nil;
-            exceptiontemps.unwind_info:=cg.getaddressregister(list);
-            hlcg.a_load_reg_reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,exceptiontemps.unwind_info);
+            exceptiontemps.unwind_info:=cg.GetAddressRegister(list);
+            hlcg.A_Load_Reg_Reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,exceptiontemps.unwind_info);
           end;
       end;
 
@@ -605,13 +605,13 @@ implementation
         if exceptframekind<>tek_except then
           begin
             { record that no exception happened in the reason buf, in case we are in a try block of a finally statement }
-            reg:=hlcg.getintregister(list,OSSIntType);
-            hlcg.a_load_const_reg(list,OSSIntType,0,reg);
-            hlcg.g_exception_reason_save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
+            reg:=hlcg.GetIntRegister(list,OSSIntType);
+            hlcg.A_Load_Const_Reg(list,OSSIntType,0,reg);
+            hlcg.G_Exception_Reason_Save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
           end;
         inherited;
         if exceptframekind=tek_except then
-          hlcg.a_jmp_always(list,endlabel);
+          hlcg.A_Jmp_Always(list,endlabel);
         (CurrentProcInfo as TPSABIEHProcInfo).CreateNewPSABIEHCallsite(list);
         (CurrentProcInfo as TPSABIEHProcInfo).PopLandingPad((CurrentProcInfo as TPSABIEHProcInfo).CurrentLandingPad);
       end;
@@ -649,10 +649,10 @@ implementation
 
             pd:=Search_System_Proc('_unwind_resume');
             cgpara1.init;
-            paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-            hlcg.a_load_reg_cgpara(list,VoidPointerType,t.unwind_info,cgpara1);
-            paramanager.freecgpara(list,cgpara1);
-            hlcg.g_call_system_proc(list,'_unwind_resume',[@cgpara1],nil).resetiftemp;
+            ParaManager.GetCGTempParaLoc(list,pd,1,cgpara1);
+            hlcg.A_Load_Reg_CGPara(list,VoidPointerType,t.unwind_info,cgpara1);
+            ParaManager.FreeCGPara(list,cgpara1);
+            hlcg.G_Call_System_Proc(list,'_unwind_resume',[@cgpara1],nil).ResetIfTemp;
             { we do not have to clean up the stack, we never return }
             cgpara1.done;
 
@@ -677,7 +677,7 @@ implementation
               end
             else
               ReRaiseLandingPad:=nil;
-            hlcg.g_call_system_proc(list,'fpc_reraise',[],nil).resetiftemp;
+            hlcg.G_Call_System_Proc(list,'fpc_reraise',[],nil).ResetIfTemp;
             if Assigned(ReRaiseLandingPad) then
               begin
                 psabiehprocinfo.CreateNewPSABIEHCallsite(list);
@@ -710,8 +710,8 @@ implementation
         rttidef:=nil;
         rttisym:=nil;
 }
-        wrappedexception:=hlcg.getaddressregister(list,VoidPointerType);
-        hlcg.a_load_reg_reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,wrappedexception);
+        wrappedexception:=hlcg.GetAddressRegister(list,VoidPointerType);
+        hlcg.A_Load_Reg_Reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,wrappedexception);
 (*
         if add_catch then
           begin
@@ -735,32 +735,32 @@ implementation
 {$endif}
             CurrentAsmData.getjumplabel(catchstartlab);
 {$if defined(i386)}
-            hlcg.a_cmp_const_reg_label (list,OSUIntType,OC_EQ,typeindex+1,NR_FUNCTION_RESULT64_HIGH_REG,catchstartlab);
+            hlcg.A_Cmp_Const_Reg_Label (list,OSUIntType,OC_EQ,typeindex+1,NR_FUNCTION_RESULT64_HIGH_REG,catchstartlab);
 {$elseif defined(x86_64)}
-            hlcg.a_cmp_const_reg_label (list,S32IntType,OC_EQ,typeindex+1,NR_EDX,catchstartlab);
+            hlcg.A_Cmp_Const_Reg_Label (list,S32IntType,OC_EQ,typeindex+1,NR_EDX,catchstartlab);
 {$else}
             { we need to find a way to fix this in a generic way }
             InternalError(2019021008);
 {$endif}
-            hlcg.a_jmp_always(list,nextonlabel);
-            hlcg.a_label(list,catchstartlab);
+            hlcg.A_Jmp_Always(list,nextonlabel);
+            hlcg.A_Label(list,catchstartlab);
           end
         else
           (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(TObjectDef(-1));
 
         pd:=Search_System_Proc('fpc_psabi_begin_catch');
-        paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
-        hlcg.a_load_reg_cgpara(list,VoidPointerType,wrappedexception,paraloc1);
-        begincatchres:=hlcg.g_call_system_proc(list,pd,[@paraloc1],nil);
-        location_reset(exceptloc, LOC_REGISTER, def_cgsize(begincatchres.def));
-        exceptloc.register:=hlcg.getaddressregister(list, begincatchres.def);
-        hlcg.gen_load_cgpara_loc(list, begincatchres.def, begincatchres, exceptloc, true);
+        ParaManager.GetCGTempParaLoc(list, pd, 1, paraloc1);
+        hlcg.A_Load_Reg_CGPara(list,VoidPointerType,wrappedexception,paraloc1);
+        begincatchres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1],nil);
+        Location_Reset(exceptloc, LOC_REGISTER, Def_CGSize(begincatchres.def));
+        exceptloc.Register:=hlcg.GetAddressRegister(list, begincatchres.def);
+        hlcg.Gen_Load_CGPara_Loc(list, begincatchres.def, begincatchres, exceptloc, true);
 
-        begincatchres.resetiftemp;
+        begincatchres.ResetIfTemp;
         paraloc1.done;
 
         exceptlocdef:=begincatchres.def;
-        exceptlocreg:=exceptloc.register;
+        exceptlocreg:=exceptloc.Register;
       end;
 
 
@@ -782,7 +782,7 @@ implementation
 
     class procedure TPSABIEHExceptionStateHandler.end_catch(list: TAsmList);
       begin
-        hlcg.g_call_system_proc(list,'fpc_psabi_end_catch',[],nil).resetiftemp;
+        hlcg.G_Call_System_Proc(list,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
         inherited;
       end;
 
@@ -801,7 +801,7 @@ implementation
 
     class procedure TPSABIEHExceptionStateHandler.catch_all_end(list: TAsmList);
       begin
-        hlcg.g_call_system_proc(list,'fpc_psabi_end_catch',[],nil).resetiftemp;
+        hlcg.G_Call_System_Proc(list,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
       end;
 
 

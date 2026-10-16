@@ -136,7 +136,7 @@ implementation
           else
             begin
               CurrentModule.AddExternalImport(Entry^.Package.PPLFileName,
-                Name,Name+suffix_indirect,0,True,False);
+                Name,Name+SuffixIndirect,0,True,False);
               B.emit_tai(TAIConst.create_sym(
                 CurrentAsmData.RefAsmSymbol(Name,AT_DATA,True)),VoidPointerType);
             end;
@@ -854,8 +854,8 @@ implementation
             SymName:=Sym.Name;
             if Sym.Bind=ab_external_indirect then
               begin
-                SuffixIdx:=Pos(suffix_indirect,SymName);
-                if SuffixIdx=Length(SymName)-Length(suffix_indirect)+1 then
+                SuffixIdx:=Pos(SuffixIndirect,SymName);
+                if SuffixIdx=Length(SymName)-Length(SuffixIndirect)+1 then
                   SymName:=Copy(SymName,1,SuffixIdx-1)
                 else
                   InternalError(2016062401);
@@ -922,7 +922,7 @@ implementation
                 ImpName:=SymName;
                 if CacheEntry^.Sym.Typ=AT_DATA then
                   { import as the $indirect symbol if it as a variable }
-                  ImpName:=SymName+suffix_indirect;
+                  ImpName:=SymName+SuffixIndirect;
                 CurrentModule.AddExternalImport(CacheEntry^.Pkg.PPLFileName,SymName,ImpName,0,CacheEntry^.Sym.Typ=at_data,False);
               end;
           end;
@@ -999,12 +999,12 @@ implementation
                               if TConstSym(Sym).ConstTyp<>ConstResourceString then
                                 InternalError(2016072201);
                               Name:=Make_MangledName('RESSTR',Sym.Owner,Sym.Name);
-                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+suffix_indirect,0,True,False);
+                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+SuffixIndirect,0,True,False);
                             end;
                           StaticVarSym:
                             begin
                               Name:=TStaticVarSym(Sym).MangledName;
-                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+suffix_indirect,0,True,False);
+                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+SuffixIndirect,0,True,False);
                             end;
                           ProcSym:
                             begin

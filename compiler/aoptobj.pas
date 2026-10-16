@@ -522,14 +522,14 @@ Unit AoptObj;
           while Assigned(p) and
                 (p.typ=ait_RegAlloc) Do
             begin
-              if (getregtype(TAIRegAlloc(p).reg) = typ) then
+              if (GetRegType(TAIRegAlloc(p).reg) = typ) then
                 begin
                   case TAIRegAlloc(p).ratype of
                     ra_alloc :
                       if not(IgnoreNewAllocs) then
-                        Include(UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+                        Include(UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
                     ra_dealloc :
-                      Exclude(UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+                      Exclude(UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
                     else
                       ;
                   end;
@@ -545,7 +545,7 @@ Unit AoptObj;
 
     Function TUsedRegs.IsUsed(Reg: TRegister): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       Begin
-        IsUsed := (getregtype(Reg)=Typ) and (getsupreg(Reg) in UsedRegs);
+        IsUsed := (GetRegType(Reg)=Typ) and (GetSupReg(Reg) in UsedRegs);
       End;
 
 
@@ -826,7 +826,7 @@ Unit AoptObj;
       Begin
         Case o.typ Of
           top_reg: ReadReg(o.reg);
-          top_ref: ReadRef(o.ref);
+          top_ref: ReadRef(o.Ref);
         else
           InternalError(200410241);
         End;
@@ -918,7 +918,7 @@ Unit AoptObj;
             Count := 0;
             Repeat
               If (TInstr(p).oper[Count]^.typ = Top_Ref) Then
-                TmpResult := RefsEq(Ref, PInstr(p)^.oper[Count]^.ref^);
+                TmpResult := RefsEq(Ref, PInstr(p)^.oper[Count]^.Ref^);
               Inc(Count);
             Until (Count = max_operands) or TmpResult;
           End;
@@ -938,7 +938,7 @@ Unit AoptObj;
               (Counter <= Content.NrOfMods) Do
           Begin
             If (p.typ = ait_instruction) And
-               RefInInstruction(Ref, p, @references_equal)
+               RefInInstruction(Ref, p, @References_Equal)
               Then TmpResult := True;
             Inc(Counter);
             GetNextInstruction(p,p)
@@ -1052,9 +1052,9 @@ Unit AoptObj;
                 prefetch(pointer(p.Next)^);
                 case TAIRegAlloc(p).ratype of
                   ra_alloc :
-                    Include(UsedRegs[getregtype(TAIRegAlloc(p).reg)].UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+                    Include(UsedRegs[GetRegType(TAIRegAlloc(p).reg)].UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
                   ra_dealloc :
-                    Exclude(UsedRegs[getregtype(TAIRegAlloc(p).reg)].UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+                    Exclude(UsedRegs[GetRegType(TAIRegAlloc(p).reg)].UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
                   else
                     { Do nothing };
                 end;
@@ -1098,9 +1098,9 @@ Unit AoptObj;
         begin
           case TAIRegAlloc(p).ratype of
             ra_alloc :
-              Include(Regs[getregtype(TAIRegAlloc(p).reg)].UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+              Include(Regs[GetRegType(TAIRegAlloc(p).reg)].UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
             ra_dealloc :
-              Exclude(Regs[getregtype(TAIRegAlloc(p).reg)].UsedRegs, getsupreg(TAIRegAlloc(p).reg));
+              Exclude(Regs[GetRegType(TAIRegAlloc(p).reg)].UsedRegs, GetSupReg(TAIRegAlloc(p).reg));
             else
               ;
           end;
@@ -1205,21 +1205,21 @@ Unit AoptObj;
 
       class Function TAOptObj.RegInUsedRegs(reg : TRegister; var regs : TAllUsedRegs) : boolean;
       begin
-        result:=regs[getregtype(reg)].IsUsed(reg);
+        result:=regs[GetRegType(reg)].IsUsed(reg);
       end;
 
 
       class procedure TAOptObj.IncludeRegInUsedRegs(reg: TRegister;
        var regs: TAllUsedRegs); {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        include(regs[getregtype(reg)].UsedRegs,getsupreg(Reg));
+        include(regs[GetRegType(reg)].UsedRegs,GetSupReg(Reg));
       end;
 
 
       class procedure TAOptObj.ExcludeRegFromUsedRegs(reg: TRegister;
        var regs: TAllUsedRegs); {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        exclude(regs[getregtype(reg)].UsedRegs,getsupreg(Reg));
+        exclude(regs[GetRegType(reg)].UsedRegs,GetSupReg(Reg));
       end;
 
 
@@ -1231,7 +1231,7 @@ Unit AoptObj;
         Result:='';
         for i:=low(TRegisterType) to high(TRegisterType) do
           for j in regs[i].UsedRegs do
-            Result:=Result+std_regname(newreg(i,j,R_SUBWHOLE))+' ';
+            Result:=Result+std_regname(NewReg(i,j,R_SUBWHOLE))+' ';
       end;
 
 
@@ -1348,11 +1348,11 @@ Unit AoptObj;
               OpsEqual:=o1.reg=o2.reg;
             Top_Ref :
               OpsEqual:=
-                references_equal(o1.ref^, o2.ref^) and
-                (o1.ref^.volatility=[]) and
-                (o2.ref^.volatility=[]);
+                References_Equal(o1.Ref^, o2.Ref^) and
+                (o1.Ref^.Volatility=[]) and
+                (o2.Ref^.Volatility=[]);
             Top_Const :
-              OpsEqual:=o1.val=o2.val;
+              OpsEqual:=o1.Val=o2.Val;
             Top_None :
               OpsEqual := True
             else OpsEqual := False
@@ -1378,8 +1378,8 @@ Unit AoptObj;
              (StartPai.typ = ait_regAlloc) Then
             Begin
               if (TAIRegAlloc(StartPai).ratype=ra_alloc) and
-                (getregtype(TAIRegAlloc(StartPai).Reg) = getregtype(Reg)) and
-                (getsupreg(TAIRegAlloc(StartPai).Reg) = getsupreg(Reg)) then
+                (GetRegType(TAIRegAlloc(StartPai).Reg) = GetRegType(Reg)) and
+                (GetSupReg(TAIRegAlloc(StartPai).Reg) = GetSupReg(Reg)) then
                begin
                  Result:=TAIRegAlloc(StartPai);
                  exit;
@@ -1432,8 +1432,8 @@ Unit AoptObj;
               (StartPai.typ = ait_regAlloc) Then
              Begin
                if (TAIRegAlloc(StartPai).ratype=ra_dealloc) and
-                 (getregtype(TAIRegAlloc(StartPai).Reg) = getregtype(Reg)) and
-                 (getsupreg(TAIRegAlloc(StartPai).Reg) = getsupreg(Reg)) then
+                 (GetRegType(TAIRegAlloc(StartPai).Reg) = GetRegType(Reg)) and
+                 (GetSupReg(TAIRegAlloc(StartPai).Reg) = GetSupReg(Reg)) then
                 begin
                   Result:=TAIRegAlloc(StartPai);
                   exit;
@@ -1459,7 +1459,7 @@ Unit AoptObj;
               (StartPai.typ = ait_tempalloc) Then
              Begin
                if not(TAITempAlloc(StartPai).allocation) and
-                 (TAITempAlloc(StartPai).temppos = Offset) then
+                 (TAITempAlloc(StartPai).TempPos = Offset) then
                 begin
                   Result:=TAITempAlloc(StartPai);
                   exit;
@@ -1514,17 +1514,17 @@ Unit AoptObj;
           as we do no register re-allocation in the peephole optimizer,
           this does not hurt
         }
-        case getregtype(reg) of
+        case GetRegType(reg) of
           R_MMREGISTER:
-            reg:=newreg(R_MMREGISTER,getsupreg(reg),R_SUBMMWHOLE);
+            reg:=NewReg(R_MMREGISTER,GetSupReg(reg),R_SUBMMWHOLE);
           R_INTREGISTER:
-            reg:=newreg(R_INTREGISTER,getsupreg(reg),R_SUBWHOLE);
+            reg:=NewReg(R_INTREGISTER,GetSupReg(reg),R_SUBWHOLE);
           R_FPUREGISTER:
-            reg:=newreg(R_FPUREGISTER,getsupreg(reg),R_SUBWHOLE);
+            reg:=NewReg(R_FPUREGISTER,GetSupReg(reg),R_SUBWHOLE);
           R_ADDRESSREGISTER:
-            reg:=newreg(R_ADDRESSREGISTER,getsupreg(reg),R_SUBWHOLE);
+            reg:=NewReg(R_ADDRESSREGISTER,GetSupReg(reg),R_SUBWHOLE);
           R_SPECIALREGISTER:
-            reg:=newreg(R_SPECIALREGISTER,getsupreg(reg),R_SUBWHOLE);
+            reg:=NewReg(R_SPECIALREGISTER,GetSupReg(reg),R_SUBWHOLE);
           else
             InternalError(2018030701);
         end;
@@ -1553,8 +1553,8 @@ Unit AoptObj;
                   { same super register, different sub register? }
                   if SuperRegistersEqual(reg,TAIRegAlloc(p1).reg) and (TAIRegAlloc(p1).reg<>reg) then
                     begin
-                      if (getsubreg(reg)<>R_SUBMMWHOLE) and { R_SUBMMWHOLE is below R_SUBMMX, R_SUBMMY and R_SUBMMZ }
-                        ((getsubreg(TAIRegAlloc(p1).reg)>getsubreg(reg)) or (getsubreg(reg)=R_SUBH)) then
+                      if (GetSubReg(reg)<>R_SUBMMWHOLE) and { R_SUBMMWHOLE is below R_SUBMMX, R_SUBMMY and R_SUBMMZ }
+                        ((GetSubReg(TAIRegAlloc(p1).reg)>GetSubReg(reg)) or (GetSubReg(reg)=R_SUBH)) then
                         InternalError(2016101501);
                       TAIRegAlloc(p1).reg:=reg;
                     end;
@@ -1596,9 +1596,9 @@ Unit AoptObj;
 
     function TAOptObj.RegUsedAfterInstruction(reg: TRegister; p: TAI;var AllUsedRegs: TAllUsedRegs): Boolean;
       begin
-        AllUsedRegs[getregtype(reg)].Update(TAI(p.Next),true);
+        AllUsedRegs[GetRegType(reg)].Update(TAI(p.Next),true);
         RegUsedAfterInstruction :=
-          AllUsedRegs[getregtype(reg)].IsUsed(reg) and
+          AllUsedRegs[GetRegType(reg)].IsUsed(reg) and
           not(regLoadedWithNewValue(reg,p)) and
           (
             not(GetNextInstruction(p,p)) or
@@ -1702,7 +1702,7 @@ Unit AoptObj;
 {$endif}
           (hp.ops>0) and
           (JumpTargetOp(hp)^.typ = top_ref) and
-          (JumpTargetOp(hp)^.ref^.symbol is TAsmLabel);
+          (JumpTargetOp(hp)^.Ref^.Symbol is TAsmLabel);
       end;
 
 
@@ -1712,7 +1712,7 @@ Unit AoptObj;
         result:=hp.is_jmp and
           (hp.ops>0) and
           (JumpTargetOp(hp)^.typ = top_ref) and
-          (JumpTargetOp(hp)^.ref^.symbol is TAsmLabel);
+          (JumpTargetOp(hp)^.Ref^.Symbol is TAsmLabel);
       end;
 
 
@@ -1781,12 +1781,12 @@ Unit AoptObj;
               if (hp1.typ = ait_instruction) and
                  TAICPU(hp1).is_jmp and
                  (JumpTargetOp(TAICPU(hp1))^.typ = top_ref) and
-                 (JumpTargetOp(TAICPU(hp1))^.ref^.symbol is TAsmLabel) then
+                 (JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol is TAsmLabel) then
                 begin
                   { If the destination label appears earlier, it may permit
                     further optimisations, so signal this in the Result }
                   Result := True;
-                  TAsmLabel(JumpTargetOp(TAICPU(hp1))^.ref^.symbol).decrefs;
+                  TAsmLabel(JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol).decrefs;
                 end;
               { don't kill start/end of assembler block,
                 no-line-info-start/end etc }
@@ -2071,7 +2071,7 @@ Unit AoptObj;
         if (Result <> LastLabel) then
           begin
             Result.decrefs;
-            JumpTargetOp(TAICPU(jump))^.ref^.symbol := LastLabel;
+            JumpTargetOp(TAICPU(jump))^.Ref^.Symbol := LastLabel;
             LastLabel.increfs;
             Result := LastLabel;
             lbltai := hp2;
@@ -2097,7 +2097,7 @@ Unit AoptObj;
               (TAI(hp1).typ=ait_instruction) and
               IsJumpToLabel(TAICPU(hp1)) then
               begin
-                NCJLabel := TAsmLabel(JumpTargetOp(TAICPU(hp1))^.ref^.symbol);
+                NCJLabel := TAsmLabel(JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol);
 
                 if IsJumpToLabelUncond(TAICPU(hp1)) then
                   begin
@@ -2167,7 +2167,7 @@ Unit AoptObj;
                             TAICPU(p).condition:=inverse_cond(TAICPU(p).condition);
                             CJLabel.decrefs;
 
-                            JumpTargetOp(TAICPU(p))^.ref^.symbol := NCJLabel;
+                            JumpTargetOp(TAICPU(p))^.Ref^.Symbol := NCJLabel;
 
                             { when freeing hp1, the reference count
                               isn't decreased, so don't increase }
@@ -2358,7 +2358,7 @@ Unit AoptObj;
               if (hp1 = BlockEnd) then
                 Exit;
 
-              ThisLabel := TAsmLabel(JumpTargetOp(TAICPU(p))^.ref^.symbol);
+              ThisLabel := TAsmLabel(JumpTargetOp(TAICPU(p))^.Ref^.Symbol);
 
               hp2 := getlabelwithsym(ThisLabel);
 
@@ -2423,7 +2423,7 @@ Unit AoptObj;
         if level > 20 then
           exit;
 
-        ThisLabel := TAsmLabel(JumpTargetOp(hp)^.ref^.symbol);
+        ThisLabel := TAsmLabel(JumpTargetOp(hp)^.Ref^.Symbol);
         p1 := getlabelwithsym(ThisLabel);
         if Assigned(p1) then
           begin
@@ -2436,7 +2436,7 @@ Unit AoptObj;
                   Exit;
 
                 { Collapse any zero distance jumps we stumble across }
-                while (p1<>StartPoint) and CollapseZeroDistJump(p1, TAsmLabel(JumpTargetOp(TAICPU(p1))^.ref^.symbol)) do
+                while (p1<>StartPoint) and CollapseZeroDistJump(p1, TAsmLabel(JumpTargetOp(TAICPU(p1))^.Ref^.Symbol)) do
                   begin
                     { Note: Cannot remove the first instruction }
                     if (p1.typ in [ait_align, ait_label]) then
@@ -2489,7 +2489,7 @@ Unit AoptObj;
                    then
                   begin
                     { quick check for loops of the form "l5: ; jmp l5" }
-                    if (TAsmLabel(JumpTargetOp(TAICPU(p1))^.ref^.symbol).labelnr = ThisLabel.labelnr) then
+                    if (TAsmLabel(JumpTargetOp(TAICPU(p1))^.Ref^.Symbol).labelnr = ThisLabel.labelnr) then
                       exit;
                     if not GetFinalDestination(TAICPU(p1),succ(level)) then
                       exit;
@@ -2498,7 +2498,7 @@ Unit AoptObj;
                       because GetFinalDestination may change the destination
                       label of p1. [Kit] }
 
-                    l := TAsmLabel(JumpTargetOp(TAICPU(p1))^.ref^.symbol);
+                    l := TAsmLabel(JumpTargetOp(TAICPU(p1))^.Ref^.Symbol);
 
 {$if defined(aarch64)}
                     { can't have conditional branches to
@@ -2509,7 +2509,7 @@ Unit AoptObj;
                       exit;
 {$endif aarch64}
                     ThisLabel.decrefs;
-                    JumpTargetOp(hp)^.ref^.symbol:=l;
+                    JumpTargetOp(hp)^.Ref^.Symbol:=l;
                     l.increfs;
                     GetFinalDestination := True;
                     Exit;
@@ -2523,7 +2523,7 @@ Unit AoptObj;
                           insertllitem(p1,p1.next,TAILabel.Create(l));
 
                           ThisLabel.decrefs;
-                          JumpTargetOp(hp)^.ref^.symbol := l;
+                          JumpTargetOp(hp)^.Ref^.Symbol := l;
                           l.increfs;
                           GetFinalDestination := True;
           {               this won't work, since the new label isn't in the labeltable }
@@ -2535,7 +2535,7 @@ Unit AoptObj;
                         begin
                           l.increfs;
                           ThisLabel.decrefs;
-                          JumpTargetOp(hp)^.ref^.symbol := l;
+                          JumpTargetOp(hp)^.Ref^.Symbol := l;
                           if not GetFinalDestination(hp,succ(level)) then
                             exit;
                         end;
@@ -2574,8 +2574,8 @@ Unit AoptObj;
           if Assigned(CurrentAlloc) and
             (CurrentAlloc.typ = ait_regalloc) then
             begin
-              if (getregtype(TAIRegAlloc(CurrentAlloc).Reg) = getregtype(Reg)) and
-                (getsupreg(TAIRegAlloc(CurrentAlloc).Reg) = getsupreg(Reg)) then
+              if (GetRegType(TAIRegAlloc(CurrentAlloc).Reg) = GetRegType(Reg)) and
+                (GetSupReg(TAIRegAlloc(CurrentAlloc).Reg) = GetSupReg(Reg)) then
                begin
                  Break;
                end;

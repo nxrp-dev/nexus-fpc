@@ -1077,33 +1077,33 @@ type
         conststring,
         constresourcestring:
           begin
-            value.len:=c.value.len;
+            value.len:=c.Value.len;
             GetMem(value.ValuePtr,value.len+1);
-            move(c.value.ValuePtr^,value.ValuePtr^,value.len+1);
+            move(c.Value.ValuePtr^,value.ValuePtr^,value.len+1);
           end;
         constwstring,
         constwresourcestring:
           begin
             InitWideString(value.ValueWS);
-            CopyWideString(c.value.ValueWS,value.ValueWS);
+            CopyWideString(c.Value.ValueWS,value.ValueWS);
           end;
         constreal:
           begin
             new(PBestReal(value.ValuePtr));
-            PBestReal(value.ValuePtr)^:=PBestReal(c.value.ValuePtr)^;
+            PBestReal(value.ValuePtr)^:=PBestReal(c.Value.ValuePtr)^;
           end;
         constset:
           begin
             new(PNormalSet(value.ValuePtr));
-            PNormalSet(value.ValuePtr)^:=PNormalSet(c.value.ValuePtr)^;
+            PNormalSet(value.ValuePtr)^:=PNormalSet(c.Value.ValuePtr)^;
           end;
         constguid:
           begin
             new(PGUID(value.ValuePtr));
-            PGUID(value.ValuePtr)^:=PGUID(c.value.ValuePtr)^;
+            PGUID(value.ValuePtr)^:=PGUID(c.Value.ValuePtr)^;
           end;
         else
-          value:=c.value;
+          value:=c.Value;
       end;
     end;
 
@@ -1220,10 +1220,10 @@ type
     function check_compatible: boolean;
       begin
         result:=(
-                  (is_ordinal(v.def) or is_fpu(v.def)) and
-                  (is_ordinal(def) or is_fpu(def))
+                  (Is_Ordinal(v.def) or Is_FPU(v.def)) and
+                  (Is_Ordinal(def) or Is_FPU(def))
                 ) or
-                (is_stringlike(v.def) and is_stringlike(def));
+                (Is_StringLike(v.def) and Is_StringLike(def));
         if not result then
           Message2(type_e_incompatible_types,def.TypeName,v.def.TypeName);
       end;
@@ -1235,32 +1235,32 @@ type
       case op of
         _OP_IN:
         begin
-          if not is_set(v.def) then
+          if not Is_Set(v.def) then
             begin
               v.error('Set', 'IN');
               result:=TExprValue.create_error;
             end
           else
-          if not is_ordinal(def) then
+          if not Is_Ordinal(def) then
             begin
               error('Ordinal', 'IN');
               result:=TExprValue.create_error;
             end
           else
           if value.ValueOrd.signed then
-            result:=TExprValue.create_bool(value.ValueOrd.svalue in PNormalSet(v.value.ValuePtr)^)
+            result:=TExprValue.create_bool(value.ValueOrd.svalue in PNormalSet(v.Value.ValuePtr)^)
           else
-            result:=TExprValue.create_bool(value.ValueOrd.uvalue in PNormalSet(v.value.ValuePtr)^);
+            result:=TExprValue.create_bool(value.ValueOrd.uvalue in PNormalSet(v.Value.ValuePtr)^);
         end;
         _OP_NOT:
         begin
           if isBoolean then
             result:=TExprValue.create_bool(not asBool)
-          else if is_ordinal(def) then
+          else if Is_Ordinal(def) then
             begin
               result:=TExprValue.Create_Ord(value.ValueOrd);
               result.def:=def;
-              calc_not_ordvalue(result.value.ValueOrd,result.def);
+              Calc_Not_OrdValue(result.Value.ValueOrd,result.def);
             end
           else
             begin
@@ -1278,9 +1278,9 @@ type
                 v.error('Boolean','OR');
                 result:=TExprValue.create_error;
               end
-          else if is_ordinal(def) then
-            if is_ordinal(v.def) then
-              result:=TExprValue.Create_Ord(value.ValueOrd or v.value.ValueOrd)
+          else if Is_Ordinal(def) then
+            if Is_Ordinal(v.def) then
+              result:=TExprValue.Create_Ord(value.ValueOrd or v.Value.ValueOrd)
             else
               begin
                 v.error('Ordinal','OR');
@@ -1302,9 +1302,9 @@ type
                 v.error('Boolean','XOR');
                 result:=TExprValue.create_error;
               end
-          else if is_ordinal(def) then
-            if is_ordinal(v.def) then
-              result:=TExprValue.Create_Ord(value.ValueOrd xor v.value.ValueOrd)
+          else if Is_Ordinal(def) then
+            if Is_Ordinal(v.def) then
+              result:=TExprValue.Create_Ord(value.ValueOrd xor v.Value.ValueOrd)
             else
               begin
                 v.error('Ordinal','XOR');
@@ -1326,9 +1326,9 @@ type
                 v.error('Boolean','AND');
                 result:=TExprValue.create_error;
               end
-          else if is_ordinal(def) then
-            if is_ordinal(v.def) then
-              result:=TExprValue.Create_Ord(value.ValueOrd and v.value.ValueOrd)
+          else if Is_Ordinal(def) then
+            if Is_Ordinal(v.def) then
+              result:=TExprValue.Create_Ord(value.ValueOrd and v.Value.ValueOrd)
             else
               begin
                 v.error('Ordinal','AND');
@@ -1343,19 +1343,19 @@ type
         _EQ,_NE,_LT,_GT,_GTE,_LTE,_PLUS,_MINUS,_STAR,_SLASH,_OP_DIV,_OP_MOD,_OP_SHL,_OP_SHR:
         if (op=_MINUS) and not(Assigned(v)) then
           begin
-            if is_ordinal(def) then
+            if Is_Ordinal(def) then
               result:=TExprValue.Create_Ord(-value.ValueOrd)
-            else if is_fpu(def) then
+            else if Is_FPU(def) then
               result:=TExprValue.create_real(-PBestReal(value.ValuePtr)^)
             else
               InternalError(2025050610);
           end
         else if check_compatible then
           begin
-            if (is_ordinal(def) and is_ordinal(v.def)) then
+            if (Is_Ordinal(def) and Is_Ordinal(v.def)) then
               begin
                 lv:=value.ValueOrd;
-                rv:=v.value.ValueOrd;
+                rv:=v.Value.ValueOrd;
                 case op of
                   _EQ:
                     result:=TExprValue.create_bool(lv=rv);
@@ -1390,17 +1390,17 @@ type
                 end;
               end
             else
-            if (is_fpu(def) or is_ordinal(def)) and
-               (is_fpu(v.def) or is_ordinal(v.def)) then
+            if (Is_FPU(def) or Is_Ordinal(def)) and
+               (Is_FPU(v.def) or Is_Ordinal(v.def)) then
               begin
-                if is_fpu(def) then
+                if Is_FPU(def) then
                   lvd:=PBestReal(value.ValuePtr)^
                 else
                   lvd:=value.ValueOrd;
-                if is_fpu(v.def) then
-                  rvd:=PBestReal(v.value.ValuePtr)^
+                if Is_FPU(v.def) then
+                  rvd:=PBestReal(v.Value.ValuePtr)^
                 else
-                  rvd:=v.value.ValueOrd;
+                  rvd:=v.Value.ValueOrd;
                 case op of
                   _EQ:
                     result:=TExprValue.create_bool(lvd=rvd);
@@ -1476,8 +1476,8 @@ type
     var
       i: int64;
     begin
-      result:=is_boolean(def);
-      if not result and is_integer(def) then
+      result:=Is_Boolean(def);
+      if not result and Is_Integer(def) then
         begin
           i:=asInt64;
           result:=(i=0)or(i=1);
@@ -1486,7 +1486,7 @@ type
 
   function TExprValue.isInt: Boolean;
     begin
-      result:=is_integer(def);
+      result:=Is_Integer(def);
     end;
 
   function TExprValue.asBool: Boolean;
@@ -2048,7 +2048,7 @@ type
                                 begin
                                   if TTypeSym(srsym).typedef.typ in [errordef,abstractdef,ForwardDef] then
                                     Message(parser_e_illegal_expression);
-                                  l:=TTypeSym(srsym).typedef.size;
+                                  l:=TTypeSym(srsym).typedef.Size;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               else
@@ -2119,12 +2119,12 @@ type
                                 enumdef:
                                   result:=TExprValue.create_int(TEnumDef(hdef).MaxVal);
                                 arraydef:
-                                  if is_open_array(hdef) or is_array_of_const(hdef) or is_dynamic_array(hdef) then
+                                  if Is_Open_Array(hdef) or Is_Array_Of_Const(hdef) or Is_Dynamic_Array(hdef) then
                                     Message(type_e_mismatch)
                                   else
                                     result:=TExprValue.create_int(TArrayDef(hdef).HighRange);
                                 stringdef:
-                                  if is_open_string(hdef) or is_ansistring(hdef) or is_wide_or_unicode_string(hdef) then
+                                  if Is_Open_String(hdef) or Is_AnsiString(hdef) or Is_Wide_Or_Unicode_String(hdef) then
                                     Message(type_e_mismatch)
                                   else
                                     result:=TExprValue.create_int(TStringDef(hdef).len);
@@ -2226,7 +2226,7 @@ type
                     exprvalue:=preproc_factor(eval);
                     if eval then
                       begin
-                        if is_ordinal(exprvalue.def) then
+                        if Is_Ordinal(exprvalue.def) then
                           result:=TExprValue.create_int(exprvalue.asInt)
                         else
                           begin
@@ -2289,7 +2289,7 @@ type
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
                                         (TConstSym(srsym).ConstDef.typ=setdef) and
-                                        (compare_defs(TSetDef(TConstSym(srsym).ConstDef).ElementDef,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
+                                        (Compare_Defs(TSetDef(TConstSym(srsym).ConstDef).ElementDef,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2307,7 +2307,7 @@ type
                                       { enum definition must conform to the set type }
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
-                                        (compare_defs(TEnumSym(srsym).definition,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
+                                        (Compare_Defs(TEnumSym(srsym).definition,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2317,7 +2317,7 @@ type
                                       if result<>nil then
                                         begin
                                           result.free;
-                                          result:=TExprValue.create_int(TEnumSym(srsym).value);
+                                          result:=TExprValue.create_int(TEnumSym(srsym).Value);
                                         end;
                                     end;
                                   else
@@ -2425,8 +2425,8 @@ type
                  result:=exprvalue.evaluate(nil,_MINUS)
                else if exprvalue.isInt then
                  result:=TExprValue.create_int(-exprvalue.asInt)
-               else if is_fpu(exprvalue.def) then
-                 result:=TExprValue.create_real(-PBestReal(exprvalue.value.ValuePtr)^)
+               else if Is_FPU(exprvalue.def) then
+                 result:=TExprValue.create_real(-PBestReal(exprvalue.Value.ValuePtr)^)
                else
                  Message(scan_e_error_in_preproc_expr);
                exprvalue.free;
@@ -2689,8 +2689,8 @@ type
           begin
              CurrentScanner.readchar;
              exprvalue:=preproc_comp_expr(nil);
-             if not is_boolean(exprvalue.def) and
-                not is_integer(exprvalue.def) then
+             if not Is_Boolean(exprvalue.def) and
+                not Is_Integer(exprvalue.def) then
                exprvalue.error('Boolean, Integer', 'SETC');
              hs:=exprvalue.asStr;
 
@@ -3646,7 +3646,7 @@ type
               begin
                 { What about endianess here?}
                 { SB: this is handled by tokenreadlongint }
-                val:=PMsg^.value;
+                val:=PMsg^.Value;
                 tokenwritelongint(val);
                 val:=ord(PMsg^.state);
                 tokenwritelongint(val);
@@ -3793,7 +3793,7 @@ type
         if not Assigned(replaytokenbuf) then
           InternalError(200511177);
         { End of replay buffer? Then load the next char from the file again }
-        if replaytokenbuf.pos>=replaytokenbuf.size then
+        if replaytokenbuf.pos>=replaytokenbuf.Size then
           begin
             token:=replaystack.token;
             idtoken:=replaystack.idtoken;
@@ -3922,11 +3922,11 @@ type
                                 PMsg^.owner:=CurrentModule;
                                 {$ENDIF}
                               end;
-                            PMsg^.value:=tokenreadlongint;
+                            PMsg^.Value:=tokenreadlongint;
                             PMsg^.state:=TMsgState(tokenreadlongint);
                             PMsg^.next:=nil;
                             msgfound:=false;
-                            if Assigned(msgset.findoradd(@PMsg^.value,sizeof(PMsg^.value),msgfound)) and msgfound then
+                            if Assigned(msgset.findoradd(@PMsg^.Value,sizeof(PMsg^.Value),msgfound)) and msgfound then
                               continue;
                             if i=1 then
                               PendingState.NextMessageRecord:=PMsg

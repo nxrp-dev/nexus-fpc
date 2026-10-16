@@ -94,8 +94,8 @@ unit optloadmodifystore;
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [addn,subn,andn,orn,xorn]) and
               (TAddNode(right).left.isequal(left)) and
-              is_integer(TAddNode(right).left.resultdef) and
-              is_integer(TAddNode(right).right.resultdef) and
+              Is_Integer(TAddNode(right).left.resultdef) and
+              Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TAddNode(right).left,false) and
@@ -143,15 +143,15 @@ unit optloadmodifystore;
             if (right.nodetype=typeconvn) and
                (TTypeConvNode(right).convtype=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [addn,subn,andn,orn,xorn]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
-               (right.resultdef.size<=TTypeConvNode(right).left.resultdef.size) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
+               (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TAddNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
                (TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
                TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.isequal(left) and
-               is_integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
-               is_integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
-               is_integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Is_Integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
+               Is_Integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
+               Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,false) and
@@ -193,8 +193,8 @@ unit optloadmodifystore;
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [addn,andn,orn,xorn]) and
               (TAddNode(right).right.isequal(left)) and
-              is_integer(TAddNode(right).left.resultdef) and
-              is_integer(TAddNode(right).right.resultdef) and
+              Is_Integer(TAddNode(right).left.resultdef) and
+              Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TAddNode(right).right,false) and
@@ -239,15 +239,15 @@ unit optloadmodifystore;
             if (right.nodetype=typeconvn) and
                (TTypeConvNode(right).convtype=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [addn,andn,orn,xorn]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
-               (right.resultdef.size<=TTypeConvNode(right).left.resultdef.size) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
+               (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TAddNode(TTypeConvNode(right).left).right.nodetype=typeconvn) and
                (TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
                TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.isequal(left) and
-               is_integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
-               is_integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
-               is_integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
+               Is_Integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
+               Is_Integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
+               Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,false) and
@@ -287,7 +287,7 @@ unit optloadmodifystore;
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [notn,unaryminusn]) and
               (TUnaryNode(right).left.isequal(left)) and
-              is_integer(TUnaryNode(right).left.resultdef) and
+              Is_Integer(TUnaryNode(right).left.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TUnaryNode(right).left,false) and
@@ -316,13 +316,13 @@ unit optloadmodifystore;
             if (right.nodetype=typeconvn) and
                (TTypeConvNode(right).convtype=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [notn,unaryminusn]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
-               (right.resultdef.size<=TTypeConvNode(right).left.resultdef.size) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
+               (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TUnaryNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
                (TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
                TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.isequal(left) and
-               is_integer(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Is_Integer(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left,false) and
@@ -353,10 +353,10 @@ unit optloadmodifystore;
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [shln,shrn]) and
               (TShlShrNode(right).left.isequal(left)) and
-              is_integer(TShlShrNode(right).left.resultdef) and
-              is_integer(TShlShrNode(right).right.resultdef) and
+              Is_Integer(TShlShrNode(right).left.resultdef) and
+              Is_Integer(TShlShrNode(right).right.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
-              not(is_64bitint(TShlShrNode(right).left.resultdef)) and
+              not(Is_64BitInt(TShlShrNode(right).left.resultdef)) and
 {$endif}
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
@@ -393,18 +393,18 @@ unit optloadmodifystore;
             if (right.nodetype=typeconvn) and
                (TTypeConvNode(right).convtype=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [shln,shrn]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
-               not(is_64bitint(TTypeConvNode(right).left.resultdef)) and
+               not(Is_64BitInt(TTypeConvNode(right).left.resultdef)) and
 {$endif}
-               (right.resultdef.size<=TTypeConvNode(right).left.resultdef.size) and
+               (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TShlShrNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
                (TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
                TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.isequal(left) and
-               is_integer(TShlShrNode(TTypeConvNode(right).left).left.resultdef) and
-               is_integer(TShlShrNode(TTypeConvNode(right).left).right.resultdef) and
-               is_integer(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Is_Integer(TShlShrNode(TTypeConvNode(right).left).left.resultdef) and
+               Is_Integer(TShlShrNode(TTypeConvNode(right).left).right.resultdef) and
+               Is_Integer(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,false) and
@@ -446,9 +446,9 @@ unit optloadmodifystore;
 {$endif enable_rox_assign_x_y}
                  ]) and
                (TInlineNode(right).left.isequal(left)) and
-               is_integer(TInlineNode(right).left.resultdef) and
+               Is_Integer(TInlineNode(right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
-               not(is_64bitint(TInlineNode(right).left.resultdef)) and
+               not(Is_64BitInt(TInlineNode(right).left.resultdef)) and
 {$endif}
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
@@ -494,13 +494,13 @@ unit optloadmodifystore;
                    in_rol_x,in_ror_x
 {$endif enable_rox_assign_x_y}
                  ]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
-               (right.resultdef.size=TTypeConvNode(right).left.resultdef.size) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
+               (right.resultdef.Size=TTypeConvNode(right).left.resultdef.Size) and
                (TInlineNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
                (TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
                TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.isequal(left) and
-               is_integer(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
+               Is_Integer(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,false) and
@@ -542,9 +542,9 @@ unit optloadmodifystore;
                  ]) and
                (TInlineNode(right).left.nodetype=callparan) and
                TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.isequal(left) and
-               is_integer(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef) and
+               Is_Integer(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
-               not(is_64bitint(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef)) and
+               not(Is_64BitInt(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef)) and
 {$endif}
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
@@ -593,14 +593,14 @@ unit optloadmodifystore;
                    in_rol_x_y,in_ror_x_y
 {$endif enable_rox_assign_x_y}
                  ]) and
-               is_integer(TTypeConvNode(right).left.resultdef) and
-               (right.resultdef.size=TTypeConvNode(right).left.resultdef.size) and
+               Is_Integer(TTypeConvNode(right).left.resultdef) and
+               (right.resultdef.Size=TTypeConvNode(right).left.resultdef.Size) and
                (TInlineNode(TTypeConvNode(right).left).left.nodetype=callparan) and
                (TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left.nodetype=typeconvn) and
                (TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
+               Are_Equal_Ints(right.resultdef,TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
                TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.isequal(left) and
-               is_integer(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
+               Is_Integer(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,false) and

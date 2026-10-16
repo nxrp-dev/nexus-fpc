@@ -362,14 +362,14 @@ implementation
          not Assigned(Struct.TypeSym) then
         InternalError(2011032811);
       { copy all fields }
-      Str:='type _fpc_ptrt = ^'+Struct.TypeSym.RealName+'; var res: _fpc_ptrt; begin res:=_fpc_ptrt(result);';
+      Str:='type _fpc_ptrt = ^'+Struct.TypeSym.RealName+'; var Res: _fpc_ptrt; begin Res:=_fpc_ptrt(Result);';
       for I:=0 to Struct.SymTable.SymList.Count-1 do
         begin
           Sym:=TSym(Struct.SymTable.SymList[I]);
           if (Sym.Typ=FieldVarSym) then
             begin
               FSym:=TFieldVarSym(Sym);
-              Str:=Str+'res^.&'+FSym.RealName+':=&'+FSym.RealName+';';
+              Str:=Str+'Res^.&'+FSym.RealName+':=&'+FSym.RealName+';';
             end;
         end;
       Str:=Str+'end;';
@@ -402,7 +402,7 @@ implementation
             begin
               FSym:=TFieldVarSym(Sym);
               if FSym.VarDef.NeedsInitTable then
-                Str:=Str+(internal_macro_escape_unit_namespace_name+'system.initialize(&')+FSym.RealName+');';
+                Str:=Str+(internal_macro_escape_unit_namespace_name+'System.Initialize(&')+FSym.RealName+');';
             end;
         end;
       Str:=Str+'end;';
@@ -456,7 +456,7 @@ implementation
       CallPD:=TProcDef(PD.SKPara);
       Str:='begin ';
       if PD.ReturnDef<>VoidType then
-        Str:=Str+'result:=';
+        Str:=Str+'Result:=';
       { if the routine is a global routine in a unit/program, explicitly
         mnetion this program/unit name to avoid accidentally calling other
         same-named routines that may be in scope }
@@ -482,7 +482,7 @@ implementation
       FirstPara: Boolean;
     begin
       CallThroughProp:=TPropertySym(PD.SKPara);
-      Str:='begin result:='+CallThroughProp.RealName;
+      Str:='begin Result:='+CallThroughProp.RealName;
       if ppo_hasparameters in CallThroughProp.PropOptions then
         begin
           if not CallThroughProp.GetPropAccessList(palt_read,PropAccessList) then
@@ -565,7 +565,7 @@ implementation
       Str:='';
       Str:='begin ';
       if PD.ReturnDef<>VoidType then
-        Str:=Str+'result:=';
+        Str:=Str+'Result:=';
       Str:=Str+'__FPC_BLOCK_INVOKE_PV_TYPE(PFPC_Block_literal_complex_procvar(FPC_Block_Self)^.pv)(';
       AddVisibleParameters(Str,PD);
       Str:=Str+') end;';
@@ -587,10 +587,10 @@ implementation
       Str:='begin ';
       { self right now points to the VMT of interface inside the instance ->
         adjust so it points to the start of the instance }
-      Str:=Str+'pointer(self):=pointer(self) - '+ToStr(WrapperInfo^.Offset)+';';
+      Str:=Str+'Pointer(Self):=Pointer(Self) - '+ToStr(WrapperInfo^.Offset)+';';
       { now call through to the actual method }
       if PD.ReturnDef<>VoidType then
-        Str:=Str+'result:=';
+        Str:=Str+'Result:=';
       Str:=Str+'&'+CallThroughPD.ProcSym.RealName+'(';
       AddVisibleParameters(Str,PD);
       Str:=Str+') end;';
@@ -671,10 +671,10 @@ implementation
           PT:=GetMethodParamType(Para.VarDef,True,IsArray);
           if IsArray then
             begin
-            Str:=Str+'  tpa'+ToStr(ArgCount)+' = '+PT+';'#10;
-            PT:='^tpa'+ToStr(ArgCount);
+            Str:=Str+'  TPA'+ToStr(ArgCount)+' = '+PT+';'#10;
+            PT:='^TPA'+ToStr(ArgCount);
             end;
-          Str:=Str+'  tp'+ToStr(ArgCount)+' = '+PT+';'#10;
+          Str:=Str+'  TP'+ToStr(ArgCount)+' = '+PT+';'#10;
         end;
       HaveResult:=PD.ReturnDef<>VoidType;
       if HaveResult then
@@ -684,14 +684,14 @@ implementation
         PT:=GetMethodParamType(PD.ReturnDef ,True,IsArray);
         if IsArray then
           begin
-          Str:=Str+'  tra'+ToStr(ArgCount)+' = '+PT+';'#10;
-          PT:='^tra';
+          Str:=Str+'  TRA'+ToStr(ArgCount)+' = '+PT+';'#10;
+          PT:='^TRA';
           end;
-        Str:=Str+'  tr = '+PT+';'#10;
+        Str:=Str+'  TR = '+PT+';'#10;
         end;
       Str:=Str+'begin'#10'  ';
       if HaveResult then
-        Str:=Str+'TR(args[0])^:=';
+        Str:=Str+'TR(Args[0])^:=';
       Str:=Str+CN+'(Instance).'+PN+'(';
       ArgCount:=0;
       for I:=0 to PD.Paras.Count-1 do
@@ -703,7 +703,7 @@ implementation
           SArg:=ToStr(ArgCount);
           if ArgCount>1 then
             Str:=Str+',';
-          Str:=Str+'tp'+SArg+'(Args['+SArg+'])^';
+          Str:=Str+'TP'+SArg+'(Args['+SArg+'])^';
         end;
       Str:=Str+');'#10;
       Str:=Str+'end;'#10;
@@ -786,7 +786,7 @@ implementation
     }
     IsAnonymousArrayDef:=False;
     if AsPointer and (VarDef.Typ=FormalDef) then
-      Exit('pointer');
+      Exit('Pointer');
     if (VarDef is TProcVarDef) then
       begin
       Result:=VarDef.FullOwnerHierarchyName(False,False);
@@ -982,7 +982,7 @@ implementation
     if Offs>0 then
       begin
       Str:=Str+'public '#10;
-      Str:=Str+'  function InterfaceVMTOffset : word; override;'#10;
+      Str:=Str+'  function InterfaceVMTOffset : Word; override;'#10;
       end;
     Str:=Str+' end;'#10;
     Def:=StrParseObjectTypeDef(CN,Str);
@@ -1055,23 +1055,23 @@ implementation
       end;
     Str:=Str+';'#10;
     Str:=Str+'var '#10;
-    Str:=Str+'  data : array[0..'+ToStr(ArgCount)+'] of System.TInterfaceThunk.TArgData;'#10;
+    Str:=Str+'  Data : array[0..'+ToStr(ArgCount)+'] of System.TInterfaceThunk.TArgData;'#10;
     if HaveResult then
-      Str:=Str+'  res : '+Rest+';'#10;
+      Str:=Str+'  Res : '+Rest+';'#10;
     Str:=Str+'begin'#10;
     // initialize result.
     if HaveResult then
       begin
-      Str:=Str+'  data[0].addr:=@Res;'#10;
-      Str:=Str+'  data[0].info:=TypeInfo(Res);'#10;
+      Str:=Str+'  Data[0].Addr:=@Res;'#10;
+      Str:=Str+'  Data[0].Info:=TypeInfo(Res);'#10;
       end
     else
       begin
-      Str:=Str+'  data[0].addr:=nil;'#10;
-      Str:=Str+'  data[0].idx:=-1;'#10;
+      Str:=Str+'  Data[0].Addr:=nil;'#10;
+      Str:=Str+'  Data[0].Idx:=-1;'#10;
       end;
-    Str:=Str+'  data[0].idx:=-1;'#10;
-    Str:=Str+'  data[0].ahigh:=-1;'#10;
+    Str:=Str+'  Data[0].Idx:=-1;'#10;
+    Str:=Str+'  Data[0].AHigh:=-1;'#10;
     // Fill rest of data
     AArg:=0;
     WasHigh:=False;
@@ -1085,27 +1085,27 @@ implementation
         WasHigh:=(vo_is_high_para in Para.VarOptions);
         if WasHigh then
           // D is still value of previous (real) parameter
-          Str:=Str+'  data['+D+'].ahigh:=High(p'+D+');'#10
+          Str:=Str+'  Data['+D+'].AHigh:=High(p'+D+');'#10
         else
-          Str:=Str+'  data['+D+'].ahigh:=-1;'#10;
+          Str:=Str+'  Data['+D+'].AHigh:=-1;'#10;
         end;
       if vo_is_hidden_para in Para.VarOptions then
         Continue;
       Inc(AArg);
       D:=ToStr(AArg);
-      Str:=Str+'  data['+D+'].addr:=@p'+D+';'#10;
-      Str:=Str+'  data['+D+'].idx:='+ToStr(I)+';'#10;
+      Str:=Str+'  Data['+D+'].Addr:=@p'+D+';'#10;
+      Str:=Str+'  Data['+D+'].Idx:='+ToStr(I)+';'#10;
       if Assigned(Para.VarDef) and not (Para.VarDef is TFormalDef) then
-        Str:=Str+'  data['+D+'].info:=TypeInfo(p'+D+');'#10
+        Str:=Str+'  Data['+D+'].Info:=TypeInfo(p'+D+');'#10
       else
-        Str:=Str+'  data['+D+'].info:=Nil;'#10
+        Str:=Str+'  Data['+D+'].Info:=Nil;'#10
       end;
     // if last was not high, set to sentinel.
     if not WasHigh then
-      Str:=Str+'  data['+D+'].ahigh:=-1;'#10;
+      Str:=Str+'  Data['+D+'].AHigh:=-1;'#10;
     Str:=Str+'  Thunk('+ToStr(PD.ExtNumber)+','+ToStr(ArgCount)+',@Data);'#10;
     if HaveResult then
-      Str:=Str+'  Result:=res;'#10;
+      Str:=Str+'  Result:=Res;'#10;
     Str:=Str+'end;'#10;
     PD:=StrParseMethod(Str,True);
   end;
@@ -1115,9 +1115,9 @@ implementation
   var
     Str : AnsiString;
   begin
-    Str:='function '+CN+'.InterfaceVMTOffset : word;'#10;
+    Str:='function '+CN+'.InterfaceVMTOffset : Word;'#10;
     Str:=Str+'begin'#10;
-    Str:=Str+'  result:='+ToStr(Offs)+';'#10;
+    Str:=Str+'  Result:='+ToStr(Offs)+';'#10;
     Str:=Str+'end;'#10;
     StrParseMethod(Str);
   end;
@@ -1190,7 +1190,7 @@ implementation
       Def:=TDef(ST.DefList[I]);
       if (Def.Typ<>ObjectDef) then
         Continue;
-      if not (ObjDef.ObjectType in objecttypes_with_thunk) then
+      if not (ObjDef.ObjectType in ObjectTypesWithThunk) then
         Continue;
       if not (oo_can_have_published in ObjDef.ObjectOptions) then
         Continue;
@@ -1351,8 +1351,8 @@ implementation
         result }
       if vo_is_funcret in TAbstractVarSym(Sym).VarOptions then
         begin
-          SymName:='result';
-          SymRealName:='$result'
+          SymName:='Result';
+          SymRealName:='$Result'
         end
       else
         begin
@@ -1468,15 +1468,15 @@ implementation
 
   function Make_Field_Static(RecST: TSymTable; FieldVS: TFieldVarSym): TStaticVarSym;
     var
-      static_name: string;
+      StaticName: string;
       HStaticVS: TStaticVarSym;
       Tmp: TAbsoluteVarSym;
       SL: TPropAccessList;
     begin
       Include(FieldVS.SymOptions,sp_static);
       { generate the symbol which reserves the space }
-      static_name:=Lower(Generate_Nested_Name(RecST,'_'))+'_'+FieldVS.Name;
-      HStaticVS:=CStaticVarSym.Create_From_FieldVar(static_name,FieldVS);
+      StaticName:=Lower(Generate_Nested_Name(RecST,'_'))+'_'+FieldVS.Name;
+      HStaticVS:=CStaticVarSym.Create_From_FieldVar(StaticName,FieldVS);
       Include(HStaticVS.SymOptions,sp_internal);
       if df_generic in TDef(RecST.DefOwner).DefOptions then
         TAbstractRecordSymTable(RecST).InsertSym(HStaticVS)
@@ -1491,7 +1491,7 @@ implementation
         load node (handle_staticfield_access -> searchsym_in_class ->
         is_visible_for_object), which means that the load will fail if this
         symbol is e.g. "strict private" while the property is public }
-      Tmp:=CAbsoluteVarSym.Create_Ref('$'+static_name,FieldVS.VarDef,SL);
+      Tmp:=CAbsoluteVarSym.Create_Ref('$'+StaticName,FieldVS.VarDef,SL);
       RecST.InsertSym(Tmp);
       Result:=HStaticVS;
     end;
@@ -1587,7 +1587,7 @@ implementation
           { the RTTI always references this symbol }
           Inc(PS.RefS);
           CurrentModule.LocalSymTable.InsertSym(PS);
-          PD:=CProcDef.Create(normal_function_level,True);
+          PD:=CProcDef.Create(NormalFunctionLevel,True);
           { always register the def }
           PD.RegisterDef;
           PD.ProcSym:=PS;

@@ -200,15 +200,15 @@ implementation
             CurrentFilePos:=p.fileinfo;
             CurrentSettings.LocalSwitches:=p.LocalSwitches;
             CodeGenError:=false;
-            oldexecutionweight:=cg.executionweight;
+            oldexecutionweight:=cg.ExecutionWeight;
             if Assigned(p.optinfo) then
-              cg.executionweight:=min(p.optinfo^.executionweight,high(cg.executionweight))
+              cg.ExecutionWeight:=min(p.optinfo^.ExecutionWeight,high(cg.ExecutionWeight))
             else
-              cg.executionweight:=100;
+              cg.ExecutionWeight:=100;
 {$ifdef EXTDEBUG}
             if (p.expectloc=LOC_INVALID) then
               Comment(VWarning,'ExpectLoc is not set before secondpass: '+nodetype2str[p.nodetype]);
-            if (p.location.loc<>LOC_INVALID) then
+            if (p.Location.Loc<>LOC_INVALID) then
               Comment(VWarning,'Location.Loc is already set before secondpass: '+nodetype2str[p.nodetype]);
             if (cs_asm_nodes in CurrentSettings.GlobalSwitches) then
               logsecond(p.nodetype,true);
@@ -219,20 +219,20 @@ implementation
               logsecond(p.nodetype,false);
             if (not CodeGenError) then
              begin
-               if (p.location.loc<>p.expectloc) then
+               if (p.Location.Loc<>p.expectloc) then
                  begin
-                   if ((p.location.loc=loc_register) and (p.expectloc=loc_cregister))
-                      or ((p.location.loc=loc_fpuregister) and (p.expectloc=loc_cfpuregister))
+                   if ((p.Location.Loc=loc_register) and (p.expectloc=loc_cregister))
+                      or ((p.Location.Loc=loc_fpuregister) and (p.expectloc=loc_cfpuregister))
 {$ifdef SUPPORT_MMX}
-                      or ((p.location.loc=loc_mmxregister) and (p.expectloc=loc_cmmxregister))
+                      or ((p.Location.Loc=loc_mmxregister) and (p.expectloc=loc_cmmxregister))
 {$endif SUPPORT_MMX}
-                      or ((p.location.loc=loc_reference) and (p.expectloc=loc_creference))
-                      or ((p.location.loc=loc_void) and (p.nodetype = calln)) then
-                     Comment(VNote,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype])
+                      or ((p.Location.Loc=loc_reference) and (p.expectloc=loc_creference))
+                      or ((p.Location.Loc=loc_void) and (p.nodetype = calln)) then
+                     Comment(VNote,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+nodetype2str[p.nodetype])
                    else
-                     Comment(VWarning,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype]);
+                     Comment(VWarning,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+nodetype2str[p.nodetype]);
                  end;
-               if (p.location.loc=LOC_INVALID) then
+               if (p.Location.Loc=LOC_INVALID) then
                  Comment(VWarning,'Location not set in secondpass: '+nodetype2str[p.nodetype]);
              end;
 {$endif EXTDEBUG}
@@ -241,7 +241,7 @@ implementation
             CodeGenError:=CodeGenError or oldcodegenerror;
             CurrentSettings.LocalSwitches:=oldlocalswitches;
             CurrentFilePos:=oldpos;
-            cg.executionweight:=oldexecutionweight;
+            cg.ExecutionWeight:=oldexecutionweight;
           end
          else
            CodeGenError:=true;

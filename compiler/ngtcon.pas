@@ -185,7 +185,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         begin
            n:=comp_expr([ef_accept_equal]);
            { for C-style booleans, true=-1 and false=0) }
-           if is_cbool(def) then
+           if Is_CBool(def) then
              inserttypeconv(n,def);
            tc_emit_orddef(def,n);
            n.free;
@@ -506,7 +506,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
       begin
         strval:='';
         { load strval and strlength of the constant tree }
-        if (node.nodetype=stringconstn) or is_wide_or_unicode_string(def) or is_constwidecharnode(node) or
+        if (node.nodetype=stringconstn) or Is_Wide_Or_Unicode_String(def) or is_constwidecharnode(node) or
           ((node.nodetype=typen) and Is_InterfaceCORBA(TTypeNode(node).typedef)) or
           is_constcharnode(node) then
           begin
@@ -542,8 +542,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         else if is_constresourcestringnode(node) then
           begin
             hsym:=TConstSym(TLoadNode(node).symtableentry);
-            strval:=pchar(hsym.value.ValuePtr);
-            strlength:=hsym.value.len;
+            strval:=pchar(hsym.Value.ValuePtr);
+            strlength:=hsym.Value.len;
             { Delphi-compatible (mis)feature:
               Link AnsiString constants to their initializing resourcestring,
               enabling them to be (re)translated at runtime.
@@ -551,8 +551,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               ShortStrings cannot be handled unless another table is built for them;
               considering this acceptable, because Delphi rejects them altogether.
             }
-            if (not is_shortstring(def)) and
-               ((tcsym.owner.SymTableLevel<=main_program_level) or
+            if (not Is_ShortString(def)) and
+               ((tcsym.owner.SymTableLevel<=MainProgramLevel) or
                 (current_old_block_type=bt_const)) then
               begin
                 CurrentAsmData.ResStrInits.Concat(
@@ -573,7 +573,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               st_shortstring:
                 begin
                   ftcb.maybe_begin_aggregate(def);
-                  defsize:=def.size;
+                  defsize:=def.Size;
                   if strlength>=defsize then
                    begin
                      message2(parser_w_string_too_long,strval,ToStr(defsize-1));
@@ -621,7 +621,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                          Local initialized vars are excluded because they are initialized
                          at function entry instead. }
                        if winlike and
-                          ((tcsym.owner.SymTableLevel<=main_program_level) or
+                          ((tcsym.owner.SymTableLevel<=MainProgramLevel) or
                            (current_old_block_type=bt_const)) then
                          begin
                            if ll.ofs<>0 then
@@ -669,8 +669,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
              begin
                 if is_constboolnode(node) then
                   begin
-                    adaptrange(def,TOrdConstNode(node).value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                    ftcb.emit_ord_const(TOrdConstNode(node).value.svalue,def)
+                    AdaptRange(def,TOrdConstNode(node).Value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                    ftcb.emit_ord_const(TOrdConstNode(node).Value.svalue,def)
                   end
                 else
                   do_error;
@@ -682,8 +682,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 if is_constcharnode(node) or
                   ((m_delphi in CurrentSettings.ModeSwitches) and
                    is_constwidecharnode(node) and
-                   (TOrdConstNode(node).value <= 255)) then
-                  ftcb.emit_ord_const(byte(TOrdConstNode(node).value.svalue),def)
+                   (TOrdConstNode(node).Value <= 255)) then
+                  ftcb.emit_ord_const(byte(TOrdConstNode(node).Value.svalue),def)
                 else
                   do_error;
              end;
@@ -692,7 +692,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 if is_constcharnode(node) then
                   inserttypeconv(node,CWideCharType);
                 if is_constwidecharnode(node) then
-                  ftcb.emit_ord_const(word(TOrdConstNode(node).value.svalue),def)
+                  ftcb.emit_ord_const(word(TOrdConstNode(node).Value.svalue),def)
                 else
                   do_error;
              end;
@@ -703,8 +703,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
              begin
                 if is_constintnode(node) then
                   begin
-                    adaptrange(def,TOrdConstNode(node).value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                    ftcb.emit_ord_const(TOrdConstNode(node).value.svalue,def);
+                    AdaptRange(def,TOrdConstNode(node).Value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                    ftcb.emit_ord_const(TOrdConstNode(node).Value.svalue,def);
                   end
                 else
                   do_error;
@@ -714,9 +714,9 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 if is_constintnode(node) then
                   begin
                     if nf_is_currency in node.flags then
-                      intvalue:=TOrdConstNode(node).value
+                      intvalue:=TOrdConstNode(node).Value
                     else
-                      intvalue:=TOrdConstNode(node).value*10000
+                      intvalue:=TOrdConstNode(node).Value*10000
                   end
                 { allow bootstrapping }
                 else if is_constrealnode(node) then
@@ -742,7 +742,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         if is_constrealnode(node) then
           value:=TRealConstNode(node).value_real
         else if is_constintnode(node) then
-          value:=TOrdConstNode(node).value
+          value:=TOrdConstNode(node).Value
         else if is_constnode(node) then
           IncompatibleTypes(node.resultdef, def)
         else
@@ -754,9 +754,9 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
            S64Real :
                ftcb.emit_tai(TAIRealConst.create_s64real(Double(value)),def);
            s80real :
-             ftcb.emit_tai(TAIRealConst.create_s80real(value,S80FloatType.size),def);
+             ftcb.emit_tai(TAIRealConst.create_s80real(value,S80FloatType.Size),def);
            sc80real :
-             ftcb.emit_tai(TAIRealConst.create_s80real(value,SC80FloatType.size),def);
+             ftcb.emit_tai(TAIRealConst.create_s80real(value,SC80FloatType.Size),def);
            s64comp :
              { the round is necessary for native compilers where comp isn't a float }
              ftcb.emit_tai(TAIRealConst.create_s64compreal(Round(value)),def);
@@ -776,7 +776,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         case node.nodetype of
           loadvmtaddrn:
             begin
-              if not def_is_related(TObjectDef(TClassRefDef(node.resultdef).PointedDef),TObjectDef(def.PointedDef)) then
+              if not Def_Is_Related(TObjectDef(TClassRefDef(node.resultdef).PointedDef),TObjectDef(def.PointedDef)) then
                 IncompatibleTypes(node.resultdef, def);
               ftcb.emit_tai(TAIConst.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(TClassRefDef(node.resultdef).PointedDef).VMT_MangledName,AT_DATA)),def);
             end;
@@ -805,7 +805,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         { remove equal typecasts for pointer/nil addresses }
         if (node.nodetype=typeconvn) then
           with TTypeConvNode(node) do
-            if (left.nodetype in [addrn,niln]) and equal_defs(def,node.resultdef) then
+            if (left.nodetype in [addrn,niln]) and Equal_Defs(def,node.resultdef) then
               begin
                 hp:=left;
                 left:=nil;
@@ -815,7 +815,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         { allows horrible ofs(typeof(TButton)^) code !! }
         if (node.nodetype=typeconvn) then
           with TTypeConvNode(node) do
-            if (left.nodetype=addrn) and equal_defs(UIntType,node.resultdef) then
+            if (left.nodetype=addrn) and Equal_Defs(UIntType,node.resultdef) then
               begin
                 hp:=left;
                 left:=nil;
@@ -837,10 +837,10 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             ftcb.queue_init(def);
             ftcb.queue_typeconvn(PtrSIntType,def);
             {$ifdef cpu64bitaddr}
-              ftcb.queue_emit_ordconst(int64(TPointerConstNode(node).value),PtrSIntType);
+              ftcb.queue_emit_ordconst(int64(TPointerConstNode(node).Value),PtrSIntType);
             {$else}
               {$ifdef cpu32bitaddr}
-                ftcb.queue_emit_ordconst(LongInt(TPointerConstNode(node).value),PtrSIntType);
+                ftcb.queue_emit_ordconst(LongInt(TPointerConstNode(node).Value),PtrSIntType);
               {$else}
                 InternalError(200404122);
             {$endif} {$endif}
@@ -850,21 +850,21 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
           ftcb.emit_tai(TAIConst.Create_sym(nil),def)
         { maybe pchar ? }
         else
-          if is_char(def.PointedDef) and
+          if Is_Char(def.PointedDef) and
             ((node.nodetype=stringconstn) or is_constcharnode(node) or is_constwidecharnode(node)) then
             begin
               { ensure that a widestring is converted to the current codepage }
               if is_constwidecharnode(node) then
                 begin
                   InitWideString(pw);
-                  ConcatWideStringChar(pw,TCompilerWideChar(word(TOrdConstNode(node).value.svalue)));
+                  ConcatWideStringChar(pw,TCompilerWideChar(word(TOrdConstNode(node).Value.svalue)));
                   hp:=CStringConstNode.createunistr(pw);
                   DoneWideString(pw);
                   node.free;
                   DoTypeCheckPass(hp);
                   node:=hp;
                 end;
-              if (node.nodetype=stringconstn) and is_wide_or_unicode_string(node.resultdef) then
+              if (node.nodetype=stringconstn) and Is_Wide_Or_Unicode_String(node.resultdef) then
                 TStringConstNode(node).changestringtype(GetAnsiStringDef);
               { create a tcb for the string data (it's placed in a separate
                 asmlist) }
@@ -890,7 +890,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 begin
                   datadef:=CArrayDef.getreusable(CAnsiCharType,2);
                   datatcb.maybe_begin_aggregate(datadef);
-                  datatcb.emit_tai(TAIString.Create(char(byte(TOrdConstNode(node).value.svalue))+#0),datadef);
+                  datatcb.emit_tai(TAIString.Create(char(byte(TOrdConstNode(node).Value.svalue))+#0),datadef);
                   datatcb.maybe_end_aggregate(datadef);
                 end
               else
@@ -909,7 +909,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             end
         { maybe pwidechar ? }
         else
-          if is_widechar(def.PointedDef) and
+          if Is_WideChar(def.PointedDef) and
             (node.nodetype in [stringconstn,ordconstn]) then
             begin
               if (node.nodetype in [stringconstn,ordconstn]) then
@@ -968,7 +968,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                                is_constenumnode(TAddNode(hp).right) or
                                is_constcharnode(TAddNode(hp).right) or
                                is_constboolnode(TAddNode(hp).right)) and
-                               is_pointer(TAddNode(hp).left.resultdef) then
+                               Is_Pointer(TAddNode(hp).left.resultdef) then
                                ftcb.queue_pointeraddn(TPointerDef(TAddNode(hp).left.resultdef),get_ordinal_value(TAddNode(hp).right))
                              else
                                Message(parser_e_illegal_expression);
@@ -979,7 +979,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                                is_constenumnode(TAddNode(hp).right) or
                                is_constcharnode(TAddNode(hp).right) or
                                is_constboolnode(TAddNode(hp).right)) and
-                               is_pointer(TAddNode(hp).left.resultdef) then
+                               Is_Pointer(TAddNode(hp).left.resultdef) then
                                ftcb.queue_pointersubn(TPointerDef(TAddNode(hp).left.resultdef),get_ordinal_value(TAddNode(hp).right))
                              else
                                Message(parser_e_illegal_expression);
@@ -1081,16 +1081,16 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 ftcb.maybe_begin_aggregate(def);
                 TSetConstNode(node).adjustforsetbase;
                 { this writing is endian-dependant   }
-                if not is_smallset(def) then
+                if not Is_SmallSet(def) then
                   begin
                     if SourceInfo.endian=TargetInfo.endian then
                       begin
-                        for i:=0 to node.resultdef.size-1 do
+                        for i:=0 to node.resultdef.Size-1 do
                           ftcb.emit_tai(TAIConst.create_8bit(PSetBytes(TSetConstNode(node).value_set)^[i]),U8IntType);
                       end
                     else
                       begin
-                        for i:=0 to node.resultdef.size-1 do
+                        for i:=0 to node.resultdef.Size-1 do
                           ftcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(TSetConstNode(node).value_set)^[i])),U8IntType);
                       end;
                   end
@@ -1102,15 +1102,15 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                     setval:=0;
                     if SourceInfo.endian=TargetInfo.endian then
                       begin
-                        for i:=0 to node.resultdef.size-1 do
+                        for i:=0 to node.resultdef.Size-1 do
                           setval:=setval or (PSetBytes(TSetConstNode(node).value_set)^[i] shl (i*8));
                       end
                     else
                       begin
-                        for i:=0 to node.resultdef.size-1 do
+                        for i:=0 to node.resultdef.Size-1 do
                           setval:=setval or (Reverse_Byte(PSetBytes(TSetConstNode(node).value_set)^[i]) shl (i*8));
                       end;
-                    case def.size of
+                    case def.Size of
                       1:
                         ftcb.emit_tai(TAIConst.create_8bit(setval),def);
                       2:
@@ -1143,19 +1143,19 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
       begin
         if node.nodetype=ordconstn then
           begin
-            equal:=equal_defs(node.resultdef,def);
+            equal:=Equal_Defs(node.resultdef,def);
             if equal or
-               is_subequal(node.resultdef,def) then
+               Is_Subequal(node.resultdef,def) then
               begin
                 { if equal, the necessary range checking has already been
                   performed; needed for handling hacks like
                     const x = tenum(255); }
                 if not equal then
-                  adaptrange(def,TOrdConstNode(node).value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                case node.resultdef.size of
-                  1 : ftcb.emit_tai(TAIConst.Create_8bit(Byte(TOrdConstNode(node).value.svalue)),def);
-                  2 : ftcb.emit_tai(TAIConst.Create_16bit(Word(TOrdConstNode(node).value.svalue)),def);
-                  4 : ftcb.emit_tai(TAIConst.Create_32bit(LongInt(TOrdConstNode(node).value.svalue)),def);
+                  AdaptRange(def,TOrdConstNode(node).Value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                case node.resultdef.Size of
+                  1 : ftcb.emit_tai(TAIConst.Create_8bit(Byte(TOrdConstNode(node).Value.svalue)),def);
+                  2 : ftcb.emit_tai(TAIConst.Create_16bit(Word(TOrdConstNode(node).Value.svalue)),def);
+                  4 : ftcb.emit_tai(TAIConst.Create_32bit(LongInt(TOrdConstNode(node).Value.svalue)),def);
                   else
                     InternalError(2022040301);
                 end;
@@ -1178,8 +1178,8 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         result:=true;
         node:=comp_expr([ef_accept_equal]);
         if (node.nodetype <> ordconstn) or
-           (not equal_defs(node.resultdef,def) and
-            not is_subequal(node.resultdef,def)) then
+           (not Equal_Defs(node.resultdef,def) and
+            not Is_Subequal(node.resultdef,def)) then
           begin
             IncompatibleTypes(node.resultdef,def);
             node.free;
@@ -1188,10 +1188,10 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             result:=false;
             exit;
           end;
-        if (TOrdConstNode(node).value<qword(low(Aword))) or (TOrdConstNode(node).value>qword(high(Aword))) then
-          message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(node).value),ToStr(low(Aword)),ToStr(high(Aword)))
+        if (TOrdConstNode(node).Value<qword(low(Aword))) or (TOrdConstNode(node).Value>qword(high(Aword))) then
+          message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(node).Value),ToStr(low(Aword)),ToStr(high(Aword)))
         else
-          bitpackval(TOrdConstNode(node).value.uvalue,bp);
+          bitpackval(TOrdConstNode(node).Value.uvalue,bp);
         if (bp.curbitoffset>=AIntBits) then
           flush_packed_value(bp);
         node.free;
@@ -1228,7 +1228,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               sec:=sec_data;
             secname:=asmsym.Name;
           end;
-        reslist:=ftcb.get_final_asmlist(asmsym,fsym,fsym.vardef,sec,secname,fsym.vardef.alignment);
+        reslist:=ftcb.get_final_asmlist(asmsym,fsym,fsym.vardef,sec,secname,fsym.vardef.Alignment);
         datalist:=fdatalist;
       end;
 
@@ -1257,7 +1257,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         dynarrdef : TDef;
       begin
         { dynamic array }
-        if is_dynamic_array(def) then
+        if Is_Dynamic_Array(def) then
           begin
             if try_to_consume(_NIL) then
               begin
@@ -1305,7 +1305,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               consume(_LKLAMMER);
           end
         { packed array constant }
-        else if is_packed_array(def) and
+        else if Is_Packed_Array(def) and
                 (def.ElementDef.typ in [orddef,enumdef]) and
                 ((def.ElePackedBitSize mod 8 <> 0) or
                  not IsPowerOf2(def.ElePackedBitSize div 8,i)) then
@@ -1339,7 +1339,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 for i:=def.LowRange to def.HighRange-1 do
                   begin
                     read_typed_const_data(def.ElementDef);
-                    Inc(curoffset,def.ElementDef.size);
+                    Inc(curoffset,def.ElementDef.Size);
                     if CurrentScanner.token=_RKLAMMER then
                       begin
                         Message1(parser_e_more_array_elements_expected,ToStr(def.HighRange-i));
@@ -1357,10 +1357,10 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               ftcb.maybe_end_aggregate(def);
           end
         { if array of char then we allow also a string }
-        else if is_anychar(def.ElementDef) then
+        else if Is_AnyChar(def.ElementDef) then
           begin
              ftcb.maybe_begin_aggregate(def);
-             char_size:=def.ElementDef.size;
+             char_size:=def.ElementDef.Size;
              n:=comp_expr([ef_accept_equal]);
              if n.nodetype=stringconstn then
                begin
@@ -1392,13 +1392,13 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 begin
                   case char_size of
                     1:
-                      ch[0]:=chr(TOrdConstNode(n).value.uvalue and $ff);
+                      ch[0]:=chr(TOrdConstNode(n).Value.uvalue and $ff);
                     2:
                       begin
                         inserttypeconv(n,CWideCharType);
                         if not is_constwidecharnode(n) then
                           InternalError(2010033001);
-                        widechar(ch):=widechar(TOrdConstNode(n).value.uvalue and $ffff);
+                        widechar(ch):=widechar(TOrdConstNode(n).Value.uvalue and $ffff);
                       end;
                     else
                       InternalError(2010033002);
@@ -1414,10 +1414,10 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                         inserttypeconv(n,CAnsiCharType);
                         if not is_constcharnode(n) then
                           InternalError(2010033006);
-                        ch[0]:=chr(TOrdConstNode(n).value.uvalue and $ff);
+                        ch[0]:=chr(TOrdConstNode(n).Value.uvalue and $ff);
                       end;
                     2:
-                      widechar(ch):=widechar(TOrdConstNode(n).value.uvalue and $ffff);
+                      widechar(ch):=widechar(TOrdConstNode(n).Value.uvalue and $ffff);
                     else
                       InternalError(2010033008);
                   end;
@@ -1510,7 +1510,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         ftcb.maybe_begin_aggregate(def);
         { get the address of the procedure, except if it's a C-block (then we
           we will end up with a record that represents the C-block) }
-        if not is_block(def) then
+        if not Is_Block(def) then
           procaddrdef:=CProcVarDef.GetReusableProcAddr(def,pc_address_only)
         else
           procaddrdef:=def;
@@ -1579,17 +1579,17 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             { nested procvar typed consts can only be initialised with nil
               (checked above) or with a global procedure (checked here),
               because in other cases we need a valid frame pointer }
-            else if is_nested_pd(def) then
+            else if Is_Nested_PD(def) then
               begin
                 if haveblock or
-                   is_nested_pd(pd) then
+                   Is_Nested_PD(pd) then
                   Message(parser_e_no_procvarnested_const);
                 ftcb.emit_tai(TAIConst.Create_sym(nil),VoidPointerType);
               end;
           end
         else if n.nodetype=pointerconstn then
           begin
-            ftcb.queue_emit_ordconst(TPointerConstNode(n).value,procaddrdef);
+            ftcb.queue_emit_ordconst(TPointerConstNode(n).Value,procaddrdef);
             if not def.Is_AddressOnly then
               ftcb.emit_tai(TAIConst.Create_sym(nil),VoidPointerType);
           end
@@ -1649,7 +1649,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               begin
                 inserttypeconv(n,Rec_TGUID);
                 if n.nodetype=guidconstn then
-                  ftcb.emit_guid_const(TGUIDConstNode(n).value)
+                  ftcb.emit_guid_const(TGUIDConstNode(n).Value)
                 else
                   Message(parser_e_illegal_expression);
               end;
@@ -1671,7 +1671,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
           end;
         ftcb.maybe_begin_aggregate(def);
         { bitpacked record? }
-        Is_Packed:=is_packed_record_or_object(def);
+        Is_Packed:=Is_Packed_Record_Or_Object(def);
         if (Is_Packed) then
           { packedbitsize will be set separately for each field }
           initbitpackval(bp,0);
@@ -1763,7 +1763,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 { new position }
                 recoffset:=TFieldVarSym(srsym).FieldOffset;
                 if not(Is_Packed) then
-                  inc(recoffset,TFieldVarSym(srsym).vardef.size)
+                  inc(recoffset,TFieldVarSym(srsym).vardef.Size)
                  else
                    inc(recoffset,TFieldVarSym(srsym).vardef.PackedBitSize);
 
@@ -1820,7 +1820,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
               begin
                 flush_packed_value(bp);
                 recoffset:=align(recoffset,8);
-                fillbytes:=def.size-(recoffset div 8);
+                fillbytes:=def.Size-(recoffset div 8);
               end;
             for i:=1 to fillbytes do
               ftcb.emit_tai(TAIConst.Create_8bit(0),U8IntType);
@@ -1844,7 +1844,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         startoffset : aint;
       begin
         { no support for packed object }
-        if is_packed_record_or_object(def) then
+        if Is_Packed_Record_Or_Object(def) then
           begin
             Message(type_e_no_const_packed_record);
             exit;
@@ -1925,14 +1925,14 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                     begin
                       ftcb.next_field:=TFieldVarSym(def.VMTField);
                       ftcb.emit_tai(TAIConst.createname(def.VMT_MangledName,AT_DATA,0),TFieldVarSym(def.VMTField).vardef);
-                      objoffset:=def.VMT_Offset+TFieldVarSym(def.VMTField).vardef.size;
+                      objoffset:=def.VMT_Offset+TFieldVarSym(def.VMTField).vardef.Size;
                       vmtwritten:=true;
                     end;
 
                   ftcb.next_field:=TFieldVarSym(srsym);
 
                   { new position }
-                  objoffset:=FieldOffset+vardef.size;
+                  objoffset:=FieldOffset+vardef.Size;
 
                   { read the data }
                   curoffset:=startoffset+FieldOffset;
@@ -1951,7 +1951,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
           begin
             ftcb.next_field:=TFieldVarSym(def.VMTField);
             ftcb.emit_tai(TAIConst.createname(def.VMT_MangledName,AT_DATA,0),TFieldVarSym(def.VMTField).vardef);
-            objoffset:=def.VMT_Offset+TFieldVarSym(def.VMTField).vardef.size;
+            objoffset:=def.VMT_Offset+TFieldVarSym(def.VMTField).vardef.Size;
           end;
         ftcb.maybe_end_aggregate(def);
         consume(_RKLAMMER);
@@ -1973,7 +1973,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         orgbase: TNode;
       begin
         { dynamic array nil }
-        if is_dynamic_array(def) then
+        if Is_Dynamic_Array(def) then
           begin
             { Only allow nil initialization }
             consume(_NIL);
@@ -2002,7 +2002,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             consume(_RKLAMMER);
           end
         { if array of char then we allow also a string }
-        else if is_anychar(def.ElementDef) then
+        else if Is_AnyChar(def.ElementDef) then
           begin
              n:=comp_expr([ef_accept_equal]);
              addstatement(statmnt,CAssignmentNode.Create_Internal(basenode,n));
@@ -2055,7 +2055,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 inserttypeconv(n,Rec_TGUID);
                 if n.nodetype=guidconstn then
                   begin
-                    n2:=CStringConstNode.createstr(GUID2String(TGUIDConstNode(n).value));
+                    n2:=CStringConstNode.createstr(GUID2String(TGUIDConstNode(n).Value));
                     n.free;
                     n:=n2;
                     handle_stringconstn;
@@ -2080,7 +2080,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             exit;
           end;
         { bitpacked record? }
-        Is_Packed:=is_packed_record_or_object(def);
+        Is_Packed:=Is_Packed_Record_Or_Object(def);
         { normal record }
         consume(_LKLAMMER);
         recoffset:=0;
@@ -2155,7 +2155,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 { new position }
                 recoffset:=TFieldVarSym(srsym).FieldOffset;
                 if not(Is_Packed) then
-                  inc(recoffset,TFieldVarSym(srsym).vardef.size)
+                  inc(recoffset,TFieldVarSym(srsym).vardef.Size)
                  else
                    inc(recoffset,TFieldVarSym(srsym).vardef.PackedBitSize);
 
@@ -2208,7 +2208,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
         s,sorg : TIDString;
       begin
         { no support for packed object }
-        if is_packed_record_or_object(def) then
+        if Is_Packed_Record_Or_Object(def) then
           begin
             Message(type_e_no_const_packed_record);
             exit;
@@ -2284,7 +2284,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                     message(parser_e_invalid_record_const);
 
                   { new position }
-                  objoffset:=FieldOffset+vardef.size;
+                  objoffset:=FieldOffset+vardef.Size;
 
                   { read the data }
                   basenode:=CSubscriptNode.create(srsym,orgbasenode.GetCopy);

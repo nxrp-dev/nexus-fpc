@@ -560,10 +560,10 @@ implementation
         { Code can never grow after a pass }
         if Assigned(objsection) and
            (objsection=aobjsec) and
-           (aobjsec.size>offset) then
+           (aobjsec.Size>offset) then
           InternalError(200603014);
         objsection:=aobjsec;
-        offset:=aobjsec.size;
+        offset:=aobjsec.Size;
       end;
 
 
@@ -741,7 +741,7 @@ implementation
         result:=size;
         if Assigned(Data) then
           begin
-            if Size<>Data.size then
+            if Size<>Data.Size then
               InternalError(200602281);
 {$ifndef cpu64bitaddr}
             if (qword(size)+l)>SizeLimit then
@@ -1531,7 +1531,7 @@ implementation
       begin
         if not Assigned(CurrObjSec) then
           InternalError(200402253);
-        CurrObjSec.alloc(align_objsecofs(CurrObjSec.size,len)-CurrObjSec.size);
+        CurrObjSec.alloc(align_objsecofs(CurrObjSec.Size,len)-CurrObjSec.Size);
       end;
 
 

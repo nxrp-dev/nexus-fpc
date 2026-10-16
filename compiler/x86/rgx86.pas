@@ -28,20 +28,20 @@ unit rgx86;
   interface
 
     uses
-      cpubase,cgbase,cgutils,
-      aasmtai,AAsmData,aasmsym,aasmcpu,
-      rgobj;
+      CPUBase,CGBase,CGUtils,
+      AAsmTAI,AAsmData,AAsmSym,AAsmCPU,
+      RGObj;
 
     type
        TRGX86 = class(TRGObj)
-         function  get_spill_subreg(r : TRegister) : TSubRegister;override;
-         function  do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;override;
+         function  Get_Spill_SubReg(R : TRegister) : TSubRegister;override;
+         function  Do_Spill_Replace(List:TAsmList;Instr:TAICPUAbstractSym;OrgReg:TSuperRegister;const SpillTemp:TReference):Boolean;override;
        end;
 
        TPushedSavedLoc = record
-         case byte of
-           0: (pushed: boolean);
-           1: (ofs: LongInt);
+         case Byte of
+           0: (Pushed: Boolean);
+           1: (Ofs: LongInt);
        end;
 
        TPushedSavedFPU = array[TSuperRegister] of TPushedSavedLoc;
@@ -49,33 +49,33 @@ unit rgx86;
        TRGX86FPU = class
           { these counters contain the number of elements in the }
           { unusedregsxxx/usableregsxxx sets                     }
-          countunusedregsfpu : byte;
+          CountUnusedRegsFPU : Byte;
 
           { Contains the registers which are really used by the proc itself.
             It doesn't take care of registers used by called procedures
           }
-          used_in_proc : TCPURegisterSet;
+          UsedInProc : TCPURegisterSet;
 
           {reg_pushes_other : regvarother_longintarray;
           is_reg_var_other : regvarother_booleanarray;
           regvar_loaded_other : regvarother_booleanarray;}
 
-          fpuvaroffset : byte;
+          FPUVarOffset : Byte;
 
-          constructor create;
+          constructor Create;
 
-          function getregisterfpu(list: TAsmList) : TRegister;
-          procedure ungetregisterfpu(list: TAsmList; r : TRegister);
+          function GetRegisterFPU(List: TAsmList) : TRegister;
+          procedure UngetRegisterFPU(List: TAsmList; R : TRegister);
 
           { pushes and restores registers }
-          procedure saveusedfpuregisters(list:TAsmList;
-                                         var saved:TPushedSavedFPU;
-                                         const s:TCPURegisterSet);
-          procedure restoreusedfpuregisters(list:TAsmList;
-                                            const saved:TPushedSavedFPU);
+          procedure SaveUsedFPURegisters(List:TAsmList;
+                                         var Saved:TPushedSavedFPU;
+                                         const S:TCPURegisterSet);
+          procedure RestoreUsedFPURegisters(List:TAsmList;
+                                            const Saved:TPushedSavedFPU);
 
           { corrects the fpu stack register by ofs }
-          function correct_fpuregister(r : TRegister;ofs : byte) : TRegister;
+          function Correct_FPURegister(R : TRegister;Ofs : Byte) : TRegister;
        end;
 
 
@@ -87,28 +87,28 @@ implementation
     const
        { This value is used in tsaved. If the array value is equal
          to this, then this means that this register is not used.}
-       reg_not_saved = $7fffffff;
+       RegNotSaved = $7fffffff;
 
 
 {******************************************************************************
                                     Trgcpu
 ******************************************************************************}
 
-    function TRGX86.get_spill_subreg(r : TRegister) : TSubRegister;
+    function TRGX86.Get_Spill_SubReg(R : TRegister) : TSubRegister;
       begin
-        result:=getsubreg(r);
+        Result:=GetSubReg(R);
       end;
 
 
     { Decide wether a "replace" spill is possible, i.e. wether we can replace a register
       in an instruction by a memory reference. For example, in "mov ireg26d,0", the imaginary
       register ireg26d can be replaced by a memory reference.}
-    function TRGX86.do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;
+    function TRGX86.Do_Spill_Replace(List:TAsmList;Instr:TAICPUAbstractSym;OrgReg:TSuperRegister;const SpillTemp:TReference):Boolean;
 
        { returns true if opcode is an avx opcode which allows only the first (zero) operand might be a memory reference }
-       function avx_opcode_only_op0_may_be_memref(opcode : TAsmOp) : boolean;
+       function AVXOpcodeOnlyOp0MayBeMemRef(Opcode : TAsmOp) : Boolean;
          begin
-           case opcode of
+           case Opcode of
              A_VMAXPD,
              A_VMAXPS,
              A_VMAXSD,
@@ -158,60 +158,60 @@ implementation
              A_VREDUCESS,
              A_VROUNDSS,
              A_VROUNDSD:
-               result:=true;
+               Result:=True;
              else
-               result:=false;
+               Result:=False;
            end;
          end;
 
 
       var
-        n,replaceoper : LongInt;
+        N,ReplaceOper : LongInt;
         is_subh: Boolean;
       begin
-        result:=false;
-        with TAICPU(instr) do
+        Result:=False;
+        with TAICPU(Instr) do
           begin
-            replaceoper:=-1;
-            case ops of
+            ReplaceOper:=-1;
+            case Ops of
               1 :
                 begin
-                  if (oper[0]^.typ=top_reg) and
-                     (getregtype(oper[0]^.reg)=regtype) then
+                  if (Oper[0]^.Typ=top_reg) and
+                     (GetRegType(Oper[0]^.Reg)=RegType) then
                     begin
-                      if get_alias(getsupreg(oper[0]^.reg))<>orgreg then
+                      if Get_Alias(GetSupReg(Oper[0]^.Reg))<>OrgReg then
                         InternalError(200410101);
-                      replaceoper:=0;
+                      ReplaceOper:=0;
                     end;
                 end;
               2,3 :
                 begin
                   { avx instruction?
                     currently this rule is sufficient but it might be extended }
-                  if (ops=3) and (opcode<>A_SHRD) and (opcode<>A_SHLD) and (opcode<>A_IMUL) then
+                  if (Ops=3) and (Opcode<>A_SHRD) and (Opcode<>A_SHLD) and (Opcode<>A_IMUL) then
                     begin
                       { BMI shifting/rotating instructions have special requirements regarding spilling, only
                         the middle operand can be replaced }
-                      if ((opcode=A_RORX) or (opcode=A_SHRX) or (opcode=A_SARX) or (opcode=A_SHLX) or (opcode=A_BEXTR) or (opcode=A_BZHI)) then
+                      if ((Opcode=A_RORX) or (Opcode=A_SHRX) or (Opcode=A_SARX) or (Opcode=A_SHLX) or (Opcode=A_BEXTR) or (Opcode=A_BZHI)) then
                         begin
-                          if (oper[1]^.typ=top_reg) and (getregtype(oper[1]^.reg)=regtype) and (get_alias(getsupreg(oper[1]^.reg))=orgreg) then
-                            replaceoper:=1;
+                          if (Oper[1]^.Typ=top_reg) and (GetRegType(Oper[1]^.Reg)=RegType) and (Get_Alias(GetSupReg(Oper[1]^.Reg))=OrgReg) then
+                            ReplaceOper:=1;
                         end
                       { avx instructions allow only the first operand (at&t counting) to be a register operand
                         all operands must be registers ... }
-                      else if (oper[0]^.typ=top_reg) and
-                         (getregtype(oper[0]^.reg)=regtype) and
-                         (oper[1]^.typ=top_reg) and
-                         (oper[2]^.typ=top_reg) and
+                      else if (Oper[0]^.Typ=top_reg) and
+                         (GetRegType(Oper[0]^.Reg)=RegType) and
+                         (Oper[1]^.Typ=top_reg) and
+                         (Oper[2]^.Typ=top_reg) and
                          { but they must be different }
-                         ((getregtype(oper[1]^.reg)<>regtype) or
-                          (get_alias(getsupreg(oper[0]^.reg))<>get_alias(getsupreg(oper[1]^.reg)))
+                         ((GetRegType(Oper[1]^.Reg)<>RegType) or
+                          (Get_Alias(GetSupReg(Oper[0]^.Reg))<>Get_Alias(GetSupReg(Oper[1]^.Reg)))
                          ) and
-                         ((getregtype(oper[2]^.reg)<>regtype) or
-                          (get_alias(getsupreg(oper[0]^.reg))<>get_alias(getsupreg(oper[2]^.reg)))
+                         ((GetRegType(Oper[2]^.Reg)<>RegType) or
+                          (Get_Alias(GetSupReg(Oper[0]^.Reg))<>Get_Alias(GetSupReg(Oper[2]^.Reg)))
                          ) and
-                         (get_alias(getsupreg(oper[0]^.reg))=orgreg) then
-                        replaceoper:=0;
+                         (Get_Alias(GetSupReg(Oper[0]^.Reg))=OrgReg) then
+                        ReplaceOper:=0;
                     end
                   else
                     begin
@@ -220,63 +220,63 @@ implementation
                         However, due to AT&T order inside the compiler, the 3rd operand is
                         numbered 0, so look at operand no. 1 and 2 if we have 3 operands by
                         adding a "n". }
-                      n:=0;
-                      if ops=3 then
-                        n:=1;
+                      N:=0;
+                      if Ops=3 then
+                        N:=1;
                       { lea is tricky: part of operand 0 can be spilled and the instruction can converted into an
                         add, if base or index shall be spilled and the other one is equal the destination }
-                      if (opcode=A_LEA) then
+                      if (Opcode=A_LEA) then
                         begin
-                          if (oper[0]^.ref^.offset=0) and
-                             (oper[0]^.ref^.scalefactor in [0,1]) and
-                             (((getregtype(oper[0]^.ref^.base)=regtype) and
-                               (get_alias(getsupreg(oper[0]^.ref^.base))=orgreg) and
-                               (getregtype(oper[0]^.ref^.index)=getregtype(oper[1]^.reg)) and
-                               (get_alias(getsupreg(oper[0]^.ref^.index))=get_alias(getsupreg(oper[1]^.reg)))) or
-                              ((getregtype(oper[0]^.ref^.index)=regtype) and
-                               (get_alias(getsupreg(oper[0]^.ref^.index))=orgreg) and
-                               (getregtype(oper[0]^.ref^.base)=getregtype(oper[1]^.reg)) and
-                               (get_alias(getsupreg(oper[0]^.ref^.base))=get_alias(getsupreg(oper[1]^.reg))))
+                          if (Oper[0]^.Ref^.Offset=0) and
+                             (Oper[0]^.Ref^.ScaleFactor in [0,1]) and
+                             (((GetRegType(Oper[0]^.Ref^.Base)=RegType) and
+                               (Get_Alias(GetSupReg(Oper[0]^.Ref^.Base))=OrgReg) and
+                               (GetRegType(Oper[0]^.Ref^.Index)=GetRegType(Oper[1]^.Reg)) and
+                               (Get_Alias(GetSupReg(Oper[0]^.Ref^.Index))=Get_Alias(GetSupReg(Oper[1]^.Reg)))) or
+                              ((GetRegType(Oper[0]^.Ref^.Index)=RegType) and
+                               (Get_Alias(GetSupReg(Oper[0]^.Ref^.Index))=OrgReg) and
+                               (GetRegType(Oper[0]^.Ref^.Base)=GetRegType(Oper[1]^.Reg)) and
+                               (Get_Alias(GetSupReg(Oper[0]^.Ref^.Base))=Get_Alias(GetSupReg(Oper[1]^.Reg))))
                              ) then
-                             replaceoper:=0;
+                             ReplaceOper:=0;
                         end
-                      else if (oper[n+0]^.typ=top_reg) and
-                         (oper[n+1]^.typ=top_reg) and
-                         ((getregtype(oper[n+0]^.reg)<>regtype) or
-                          (getregtype(oper[n+1]^.reg)<>regtype) or
-                          (get_alias(getsupreg(oper[n+0]^.reg))<>get_alias(getsupreg(oper[n+1]^.reg)))) then
+                      else if (Oper[N+0]^.Typ=top_reg) and
+                         (Oper[N+1]^.Typ=top_reg) and
+                         ((GetRegType(Oper[N+0]^.Reg)<>RegType) or
+                          (GetRegType(Oper[N+1]^.Reg)<>RegType) or
+                          (Get_Alias(GetSupReg(Oper[N+0]^.Reg))<>Get_Alias(GetSupReg(Oper[N+1]^.Reg)))) then
                         begin
-                          if (getregtype(oper[n+0]^.reg)=regtype) and
-                             (get_alias(getsupreg(oper[n+0]^.reg))=orgreg) then
-                            replaceoper:=0+n
-                          else if (getregtype(oper[n+1]^.reg)=regtype) and
-                             (get_alias(getsupreg(oper[n+1]^.reg))=orgreg) then
-                            replaceoper:=1+n;
+                          if (GetRegType(Oper[N+0]^.Reg)=RegType) and
+                             (Get_Alias(GetSupReg(Oper[N+0]^.Reg))=OrgReg) then
+                            ReplaceOper:=0+N
+                          else if (GetRegType(Oper[N+1]^.Reg)=RegType) and
+                             (Get_Alias(GetSupReg(Oper[N+1]^.Reg))=OrgReg) then
+                            ReplaceOper:=1+N;
                         end
-                      else if (oper[n+0]^.typ=top_reg) and
-                         (oper[n+1]^.typ=top_const) then
+                      else if (Oper[N+0]^.Typ=top_reg) and
+                         (Oper[N+1]^.Typ=top_const) then
                         begin
-                          if (getregtype(oper[0+n]^.reg)=regtype) and
-                             (get_alias(getsupreg(oper[0+n]^.reg))=orgreg) then
-                            replaceoper:=0+n
+                          if (GetRegType(Oper[0+N]^.Reg)=RegType) and
+                             (Get_Alias(GetSupReg(Oper[0+N]^.Reg))=OrgReg) then
+                            ReplaceOper:=0+N
                           else
                             InternalError(200704282);
                         end
-                      else if (oper[n+0]^.typ=top_const) and
-                         (oper[n+1]^.typ=top_reg) then
+                      else if (Oper[N+0]^.Typ=top_const) and
+                         (Oper[N+1]^.Typ=top_reg) then
                         begin
-                          if (getregtype(oper[1+n]^.reg)=regtype) and
-                             (get_alias(getsupreg(oper[1+n]^.reg))=orgreg) then
-                            replaceoper:=1+n
+                          if (GetRegType(Oper[1+N]^.Reg)=RegType) and
+                             (Get_Alias(GetSupReg(Oper[1+N]^.Reg))=OrgReg) then
+                            ReplaceOper:=1+N
                           else
                             InternalError(200704283);
                         end;
-                      case replaceoper of
+                      case ReplaceOper of
                         0 :
                           begin
                             { Some instructions don't allow memory references
                               for source }
-                            case opcode of
+                            case Opcode of
                               A_BT,
                               A_BTS,
                               A_BTC,
@@ -288,12 +288,12 @@ implementation
                               A_SHUFPS,
                               A_UNPCKLPD,
                               A_UNPCKLPS :
-                                replaceoper:=-1;
+                                ReplaceOper:=-1;
 
                               { movlhps/movhlps requires the second parameter to be XMM registers }
                               A_MOVHLPS,
                               A_MOVLHPS:
-                                replaceoper:=-1;
+                                ReplaceOper:=-1;
                               else
                                 ;
                             end;
@@ -302,7 +302,7 @@ implementation
                           begin
                             { Some instructions don't allow memory references
                               for destination }
-                            case opcode of
+                            case Opcode of
                               A_CMOVcc,
                               A_MOVZX,
                               A_MOVSX,
@@ -368,35 +368,35 @@ implementation
                               A_MAXSD,
                               A_MAXPS,
                               A_MAXPD:
-                                replaceoper:=-1;
+                                ReplaceOper:=-1;
 
                               A_IMUL:
-                                if ops<>3 then
-                                  replaceoper:=-1;
+                                if Ops<>3 then
+                                  ReplaceOper:=-1;
 {$ifdef x86_64}
                               A_MOV:
                                  { 64 bit constants can only be moved into registers }
-                                 if (oper[0]^.typ=top_const) and
-                                    (oper[1]^.typ=top_reg) and
-                                    ((oper[0]^.val<low(LongInt)) or
-                                     (oper[0]^.val>high(LongInt))) then
-                                   replaceoper:=-1;
+                                 if (Oper[0]^.Typ=top_const) and
+                                    (Oper[1]^.Typ=top_reg) and
+                                    ((Oper[0]^.Val<Low(LongInt)) or
+                                     (Oper[0]^.Val>High(LongInt))) then
+                                   ReplaceOper:=-1;
 {$endif x86_64}
                               else
-                                if avx_opcode_only_op0_may_be_memref(opcode) then
-                                  replaceoper:=-1;
+                                if AVXOpcodeOnlyOp0MayBeMemRef(Opcode) then
+                                  ReplaceOper:=-1;
                             end;
                           end;
                         2 :
                           begin
                             { Some 3-op instructions don't allow memory references
                               for destination }
-                            case instr.opcode of
+                            case Instr.Opcode of
                               A_IMUL:
-                                replaceoper:=-1;
+                                ReplaceOper:=-1;
                               else
-                                if avx_opcode_only_op0_may_be_memref(opcode) then
-                                  replaceoper:=-1;
+                                if AVXOpcodeOnlyOp0MayBeMemRef(Opcode) then
+                                  ReplaceOper:=-1;
                             end;
                           end;
                       end;
@@ -411,60 +411,60 @@ implementation
               in registers.
 
               However, for instructions not modifying registers, this is not a problem }
-            if (opsize=S_L) and (opcode<>A_CMP) and (opcode<>A_TEST) and (opcode<>A_BT) then
-              replaceoper:=-1;
+            if (OpSize=S_L) and (Opcode<>A_CMP) and (Opcode<>A_TEST) and (Opcode<>A_BT) then
+              ReplaceOper:=-1;
 {$endif x86_64}
 
             { Replace register with spill reference }
-            if replaceoper<>-1 then
+            if ReplaceOper<>-1 then
               begin
-                if replaceoper<=1 then
+                if ReplaceOper<=1 then
                   begin
 {$ifdef x86_64}
                     { if an mm register => int register (v)movq is converted, replace it by MOV with opsize Q }
-                    if ((opcode=A_MOVQ) or (opcode=A_VMOVQ)) and (oper[0]^.typ=top_reg)  and (oper[1]^.typ=top_reg) and (getregtype(oper[replaceoper xor 1]^.reg)=R_INTREGISTER) then
+                    if ((Opcode=A_MOVQ) or (Opcode=A_VMOVQ)) and (Oper[0]^.Typ=top_reg)  and (Oper[1]^.Typ=top_reg) and (GetRegType(Oper[ReplaceOper xor 1]^.Reg)=R_INTREGISTER) then
                       begin
-                        opcode:=A_MOV;
-                        opsize:=S_Q;
+                        Opcode:=A_MOV;
+                        OpSize:=S_Q;
                       end
                     else
 {$endif x86_64}
                     { if an mm register => int register (v)movd is converted, replace it by MOV with opsize L }
-                    if ((opcode=A_MOVD) or (opcode=A_VMOVD)) and (oper[0]^.typ=top_reg)  and (oper[1]^.typ=top_reg) and (getregtype(oper[replaceoper xor 1]^.reg)=R_INTREGISTER) then
+                    if ((Opcode=A_MOVD) or (Opcode=A_VMOVD)) and (Oper[0]^.Typ=top_reg)  and (Oper[1]^.Typ=top_reg) and (GetRegType(Oper[ReplaceOper xor 1]^.Reg)=R_INTREGISTER) then
                       begin
-                        opcode:=A_MOV;
-                        opsize:=S_L;
+                        Opcode:=A_MOV;
+                        OpSize:=S_L;
                       end;
                   end;
 
-                if opcode=A_LEA then
+                if Opcode=A_LEA then
                   begin
-                    opcode:=A_ADD;
-                    oper[0]^.ref^:=spilltemp;
+                    Opcode:=A_ADD;
+                    Oper[0]^.Ref^:=SpillTemp;
                   end
                 else
                   begin
-                    is_subh:=getsubreg(oper[replaceoper]^.reg)=R_SUBH;
-                    oper[replaceoper]^.typ:=top_ref;
-                    new(oper[replaceoper]^.ref);
-                    oper[replaceoper]^.ref^:=spilltemp;
+                    is_subh:=GetSubReg(Oper[ReplaceOper]^.Reg)=R_SUBH;
+                    Oper[ReplaceOper]^.Typ:=top_ref;
+                    New(Oper[ReplaceOper]^.Ref);
+                    Oper[ReplaceOper]^.Ref^:=SpillTemp;
                     if is_subh then
-                      inc(oper[replaceoper]^.ref^.offset);
+                      Inc(Oper[ReplaceOper]^.Ref^.Offset);
                     { memory locations aren't guaranteed to be aligned }
-                    case opcode of
+                    case Opcode of
                       A_MOVAPS:
-                        opcode:=A_MOVSS;
+                        Opcode:=A_MOVSS;
                       A_MOVAPD:
-                        opcode:=A_MOVSD;
+                        Opcode:=A_MOVSD;
                       A_VMOVAPS:
-                        opcode:=A_VMOVSS;
+                        Opcode:=A_VMOVSS;
                       A_VMOVAPD:
-                        opcode:=A_VMOVSD;
+                        Opcode:=A_VMOVSD;
                       else
                         ;
                     end;
                   end;
-                result:=true;
+                Result:=True;
               end;
           end;
       end;
@@ -474,21 +474,21 @@ implementation
                                   Trgx86fpu
 ******************************************************************************}
 
-    constructor TRGX86FPU.create;
+    constructor TRGX86FPU.Create;
       begin
-        used_in_proc:=[];
+        UsedInProc:=[];
       end;
 
 
-    function TRGX86FPU.getregisterfpu(list: TAsmList) : TRegister;
+    function TRGX86FPU.GetRegisterFPU(List: TAsmList) : TRegister;
       begin
         { note: don't return R_ST0, see comments above implementation of }
         { a_loadfpu_* methods in cgcpu (JM)                              }
-        result:=NR_ST;
+        Result:=NR_ST;
       end;
 
 
-    procedure TRGX86FPU.ungetregisterfpu(list : TAsmList; r : TRegister);
+    procedure TRGX86FPU.UngetRegisterFPU(List : TAsmList; R : TRegister);
       begin
         { nothing to do, fpu stack management is handled by the load/ }
         { store operations in cgcpu (JM)                              }
@@ -496,21 +496,21 @@ implementation
 
 
 
-    function TRGX86FPU.correct_fpuregister(r : TRegister;ofs : byte) : TRegister;
+    function TRGX86FPU.Correct_FPURegister(R : TRegister;Ofs : Byte) : TRegister;
       begin
-        correct_fpuregister:=r;
-        setsupreg(correct_fpuregister,ofs);
+        Correct_FPURegister:=R;
+        SetSupReg(Correct_FPURegister,Ofs);
       end;
 
 
-    procedure TRGX86FPU.saveusedfpuregisters(list: TAsmList;
-                                             var saved : TPushedSavedFPU;
-                                             const s: TCPURegisterSet);
+    procedure TRGX86FPU.SaveUsedFPURegisters(List: TAsmList;
+                                             var Saved : TPushedSavedFPU;
+                                             const S: TCPURegisterSet);
      { var
          r : tregister;
          hr : treference; }
       begin
-        used_in_proc:=used_in_proc+s;
+        UsedInProc:=UsedInProc+S;
 
 { TODO: firstsavefpureg}
 (*
@@ -540,8 +540,8 @@ implementation
       end;
 
 
-    procedure TRGX86FPU.restoreusedfpuregisters(list : TAsmList;
-                                                const saved : TPushedSavedFPU);
+    procedure TRGX86FPU.RestoreUsedFPURegisters(List : TAsmList;
+                                                const Saved : TPushedSavedFPU);
 {
       var
          r,r2 : tregister;

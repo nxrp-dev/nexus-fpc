@@ -96,7 +96,7 @@ implementation
                       for i:=0 to high(variantdesc^.branches) do
                         begin
                           for j:=0 to high(variantdesc^.branches[i].values) do
-                            if variantdesc^.branches[i].values[j]=TOrdConstNode(p2).value then
+                            if variantdesc^.branches[i].values[j]=TOrdConstNode(p2).Value then
                               begin
                                 found:=true;
                                 variantselectsymbol:=TFieldVarSym(variantdesc^.VariantSelector);
@@ -213,7 +213,7 @@ implementation
             destructorpos:=CurrentTokenPos;
             consume(_ID);
 
-            if is_typeparam(p.resultdef) then
+            if Is_TypeParam(p.resultdef) then
               begin
                  p.free;
                  p:=factor(false,[]);
@@ -346,7 +346,7 @@ implementation
           begin
              if (p.resultdef.typ<>pointerdef) then
                Begin
-                 if is_typeparam(p.resultdef) then
+                 if Is_TypeParam(p.resultdef) then
                    begin
                       p.free;
                       p := nil;
@@ -381,18 +381,18 @@ implementation
                   if is_new then
                    begin
                      { create temp for result }
-                     temp := CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
+                     temp := CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
                      addstatement(newstatement,temp);
 
                      { create call to fpc_getmem }
                      para := CCallParaNode.create(COrdConstNode.create
-                         (TPointerDef(p.resultdef).PointedDef.size,PtrUIntType,true),nil);
+                         (TPointerDef(p.resultdef).PointedDef.Size,PtrUIntType,true),nil);
                      addstatement(newstatement,CAssignmentNode.create(
                          CTempRefNode.create(temp),
                          CCallNode.createintern('fpc_getmem',para)));
 
                      { create call to fpc_initialize }
-                     if is_managed_type(TPointerDef(p.resultdef).PointedDef) or
+                     if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) or
                        ((m_isolike_io in CurrentSettings.ModeSwitches) and (TPointerDef(p.resultdef).PointedDef.typ=filedef)) then
                        addstatement(newstatement,CNodeUtils.initialize_data_node(CDerefNode.create(CTempRefNode.create(temp)),false));
 
@@ -410,11 +410,11 @@ implementation
                    begin
                      temp:=nil;
                      { create call to fpc_finalize }
-                     if is_managed_type(TPointerDef(p.resultdef).PointedDef) then
+                     if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) then
                        if might_have_sideeffects(p) then
                          begin
                            { ensure that p gets evaluated only once, in case it is e.g. a call }
-                           temp:=CTempCreateNode.create_value(p.resultdef,p.resultdef.size,tt_persistent,true,p);
+                           temp:=CTempCreateNode.create_value(p.resultdef,p.resultdef.Size,tt_persistent,true,p);
                            addstatement(newstatement,temp);
                            addstatement(newstatement,CNodeUtils.finalize_data_node(CDerefNode.create(CTempRefNode.create(temp))));
                          end
@@ -564,7 +564,7 @@ implementation
                 { if there are three parameters and the first parameter
                   ( = paras.right.right) is an ansistring, add a codepage
                   parameter }
-                if is_ansistring(strpara.resultdef) then
+                if Is_AnsiString(strpara.resultdef) then
                   begin
                     cp:=TStringDef(strpara.resultdef).encoding;
                     if (cp=Globals.CP_NONE) then
@@ -573,11 +573,11 @@ implementation
                   end;
                 procname:='fpc_setstring_'+TStringDef(strpara.resultdef).StringTypName;
                 { decide which version to call based on the second parameter }
-                if not is_shortstring(strpara.resultdef) then
-                  if is_pwidechar(pcharpara.resultdef) or
-                     is_widechar(pcharpara.resultdef) or
+                if not Is_ShortString(strpara.resultdef) then
+                  if Is_PWideChar(pcharpara.resultdef) or
+                     Is_WideChar(pcharpara.resultdef) or
                      ((pcharpara.resultdef.typ=arraydef) and
-                      is_widechar(TArrayDef(pcharpara.resultdef).ElementDef)) then
+                      Is_WideChar(TArrayDef(pcharpara.resultdef).ElementDef)) then
                     procname:=procname+'_pwidechar'
                   else
                     procname:=procname+'_pansichar';

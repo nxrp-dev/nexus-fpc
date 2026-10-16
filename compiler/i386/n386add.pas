@@ -75,14 +75,14 @@ interface
     var
       unsigned: boolean;
     begin
-      unsigned:=not(is_signed(left.resultdef)) or
-                not(is_signed(right.resultdef));
+      unsigned:=not(Is_Signed(left.resultdef)) or
+                not(Is_Signed(right.resultdef));
       { use IMUL instead of MUL in case overflow checking is off and we're
         doing a 32->32-bit multiplication }
       if not needoverflowcheck and
-         not is_64bit(resultdef) then
+         not Is_64Bit(resultdef) then
         unsigned:=false;
-      if (nodetype=muln) and (unsigned or is_64bit(resultdef)) then
+      if (nodetype=muln) and (unsigned or Is_64Bit(resultdef)) then
         second_mul(unsigned)
       else
         inherited second_addordinal;
@@ -147,44 +147,44 @@ interface
 
         { left and right no register?  }
         { then one must be demanded    }
-        if (left.location.loc<>LOC_REGISTER) then
+        if (left.Location.Loc<>LOC_REGISTER) then
          begin
-           if (right.location.loc<>LOC_REGISTER) then
+           if (right.Location.Loc<>LOC_REGISTER) then
             begin
-              hregister:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-              hregister2:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-              cg64.a_load64_loc_reg(CurrentAsmData.CurrAsmList,left.location,joinreg64(hregister,hregister2));
-              location_reset(left.location,LOC_REGISTER,left.location.size);
-              left.location.register64.reglo:=hregister;
-              left.location.register64.reghi:=hregister2;
+              hregister:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+              hregister2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+              cg64.A_Load64_Loc_Reg(CurrentAsmData.CurrAsmList,left.Location,JoinReg64(hregister,hregister2));
+              Location_Reset(left.Location,LOC_REGISTER,left.Location.Size);
+              left.Location.Register64.RegLo:=hregister;
+              left.Location.Register64.RegHi:=hregister2;
             end
            else
             begin
-              location_swap(left.location,right.location);
+              Location_Swap(left.Location,right.Location);
               toggleflag(nf_swapped);
             end;
          end;
 
         { at this point, left.location.loc should be LOC_REGISTER }
-        if right.location.loc=LOC_REGISTER then
+        if right.Location.Loc=LOC_REGISTER then
          begin
            if mboverflow and needoverflowcheck then
-             cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
            { when swapped another result register }
            if (nodetype=subn) and (nf_swapped in flags) then
             begin
-              cg64.a_op64_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
-                left.location.register64,
-                right.location.register64);
-              location_swap(left.location,right.location);
+              cg64.A_Op64_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
+                left.Location.Register64,
+                right.Location.Register64);
+              Location_Swap(left.Location,right.Location);
               toggleflag(nf_swapped);
             end
            else
             begin
-              cg64.a_op64_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
-                right.location.register64,
-                left.location.register64);
+              cg64.A_Op64_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
+                right.Location.Register64,
+                left.Location.Register64);
             end;
          end
         else
@@ -192,30 +192,30 @@ interface
            { right.location<>LOC_REGISTER }
            if (nodetype=subn) and (nf_swapped in flags) then
             begin
-              r:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-              cg64.a_load64low_loc_reg(CurrentAsmData.CurrAsmList,right.location,r);
-              cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              emit_reg_reg(op1,opsize,left.location.register64.reglo,r);
-              emit_reg_reg(A_MOV,opsize,r,left.location.register64.reglo);
-              cg64.a_load64high_loc_reg(CurrentAsmData.CurrAsmList,right.location,r);
+              r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+              cg64.A_Load64Low_Loc_Reg(CurrentAsmData.CurrAsmList,right.Location,r);
+              cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              emit_reg_reg(op1,opsize,left.Location.Register64.RegLo,r);
+              emit_reg_reg(A_MOV,opsize,r,left.Location.Register64.RegLo);
+              cg64.A_Load64High_Loc_Reg(CurrentAsmData.CurrAsmList,right.Location,r);
               { the carry flag is still ok }
-              emit_reg_reg(op2,opsize,left.location.register64.reghi,r);
+              emit_reg_reg(op2,opsize,left.Location.Register64.RegHi,r);
 
               { We need to keep the FLAGS register allocated for overflow checks }
               if not mboverflow or not needoverflowcheck then
-                cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
-              emit_reg_reg(A_MOV,opsize,r,left.location.register64.reghi);
+              emit_reg_reg(A_MOV,opsize,r,left.Location.Register64.RegHi);
             end
            else
             begin
               if mboverflow and needoverflowcheck then
-                cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
-              cg64.a_op64_loc_reg(CurrentAsmData.CurrAsmList,op,location.size,right.location,
-                left.location.register64);
+              cg64.A_Op64_Loc_Reg(CurrentAsmData.CurrAsmList,op,location.Size,right.Location,
+                left.Location.Register64);
             end;
-          location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+          location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
          end;
 
         { only in case of overflow operations }
@@ -228,24 +228,24 @@ interface
             begin
               CurrentAsmData.getjumplabel(hl4);
               if unsigned then
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_AE,hl4)
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,hl4)
               else
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl4);
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NO,hl4);
 
-              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-              cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-              cg.a_label(CurrentAsmData.CurrAsmList,hl4);
+              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+              cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+              cg.A_Label(CurrentAsmData.CurrAsmList,hl4);
             end;
          end;
 
-        location_copy(location,left.location);
+        Location_Copy(location,left.Location);
       end;
 
 
     procedure TI386AddNode.second_cmp64bit;
       var
-        truelabel,
-        falselabel,
+        TrueLabel,
+        FalseLabel,
         hlab       : TAsmLabel;
         href       : TReference;
         unsigned   : boolean;
@@ -260,12 +260,12 @@ interface
            case nodetype of
               ltn,gtn:
                 begin
-                   if (hlab<>location.truelabel) then
-                     cg.a_jmp_flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.truelabel);
+                   if (hlab<>location.TrueLabel) then
+                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.TrueLabel);
                    { cheat a little bit for the negative test }
                    toggleflag(nf_swapped);
-                   if (hlab<>location.falselabel) then
-                     cg.a_jmp_flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.falselabel);
+                   if (hlab<>location.FalseLabel) then
+                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.FalseLabel);
                    toggleflag(nf_swapped);
                 end;
               lten,gten:
@@ -275,21 +275,21 @@ interface
                      nodetype:=ltn
                    else
                      nodetype:=gtn;
-                   if (hlab<>location.truelabel) then
-                     cg.a_jmp_flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.truelabel);
+                   if (hlab<>location.TrueLabel) then
+                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.TrueLabel);
                    { cheat for the negative test }
                    if nodetype=ltn then
                      nodetype:=gtn
                    else
                      nodetype:=ltn;
-                   if (hlab<>location.falselabel) then
-                     cg.a_jmp_flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.falselabel);
+                   if (hlab<>location.FalseLabel) then
+                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,getresflags(unsigned),location.FalseLabel);
                    nodetype:=oldnodetype;
                 end;
-              equaln:
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NE,location.falselabel);
+              EqualN:
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NE,location.FalseLabel);
               unequaln:
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NE,location.truelabel);
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NE,location.TrueLabel);
               else
                 InternalError(2019050905);
            end;
@@ -304,18 +304,18 @@ interface
                 begin
                    { the comparison of the low dword have to be   }
                    {  always unsigned!                            }
-                   cg.a_jmp_flags(CurrentAsmData.CurrAsmList,getresflags(true),location.truelabel);
-                   cg.a_jmp_always(CurrentAsmData.CurrAsmList,location.falselabel);
+                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,getresflags(true),location.TrueLabel);
+                   cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,location.FalseLabel);
                 end;
-              equaln:
+              EqualN:
                 begin
-                   cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NE,location.falselabel);
-                   cg.a_jmp_always(CurrentAsmData.CurrAsmList,location.truelabel);
+                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NE,location.FalseLabel);
+                   cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,location.TrueLabel);
                 end;
               unequaln:
                 begin
-                   cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NE,location.truelabel);
-                   cg.a_jmp_always(CurrentAsmData.CurrAsmList,location.falselabel);
+                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NE,location.TrueLabel);
+                   cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,location.FalseLabel);
                 end;
               else
                 InternalError(2019050904);
@@ -323,8 +323,8 @@ interface
         end;
 
       begin
-        truelabel:=nil;
-        falselabel:=nil;
+        TrueLabel:=nil;
+        FalseLabel:=nil;
         pass_left_right;
 
         unsigned:=((left.resultdef.typ=orddef) and
@@ -333,100 +333,100 @@ interface
                    (TOrdDef(right.resultdef).OrdType=u64bit));
 
         { we have LOC_JUMP as result }
-        CurrentAsmData.getjumplabel(truelabel);
-        CurrentAsmData.getjumplabel(falselabel);
-        location_reset_jump(location,truelabel,falselabel);
+        CurrentAsmData.getjumplabel(TrueLabel);
+        CurrentAsmData.getjumplabel(FalseLabel);
+        Location_Reset_Jump(location,TrueLabel,FalseLabel);
 
         { Relational compares against constants having low dword=0 can omit the
           second compare based on the fact that any unsigned value is >=0 }
         hlab:=nil;
-        if (right.location.loc=LOC_CONSTANT) and
-           (lo(right.location.value64)=0) then
+        if (right.Location.Loc=LOC_CONSTANT) and
+           (lo(right.Location.Value64)=0) then
           begin
             case getresflags(true) of
-              F_AE: hlab:=location.truelabel ;
-              F_B:  hlab:=location.falselabel;
+              F_AE: hlab:=location.TrueLabel ;
+              F_B:  hlab:=location.FalseLabel;
               else
                 ;
             end;
           end;
 
-        if (right.location.loc=LOC_CONSTANT) and
-           (left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+        if (right.Location.Loc=LOC_CONSTANT) and
+           (left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
           begin
-            TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
-            href:=left.location.reference;
-            inc(href.offset,4);
-            cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-            emit_const_ref(A_CMP,S_L,aint(hi(right.location.value64)),href);
+            TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.Location.Reference);
+            href:=left.Location.Reference;
+            inc(href.Offset,4);
+            cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+            emit_const_ref(A_CMP,S_L,aint(hi(right.Location.Value64)),href);
             firstjmp64bitcmp;
-            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+            cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             if Assigned(hlab) then
-              cg.a_jmp_always(CurrentAsmData.CurrAsmList,hlab)
+              cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,hlab)
             else
               begin
-                cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                emit_const_ref(A_CMP,S_L,aint(lo(right.location.value64)),left.location.reference);
+                cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                emit_const_ref(A_CMP,S_L,aint(lo(right.Location.Value64)),left.Location.Reference);
                 secondjmp64bitcmp;
-                cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
               end;
-            location_freetemp(CurrentAsmData.CurrAsmList,left.location);
+            location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
             exit;
           end;
 
         { left and right no register?  }
         { then one must be demanded    }
-        if not (left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+        if not (left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
          begin
-           if not (right.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true)
+           if not (right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true)
            else
             begin
-              location_swap(left.location,right.location);
+              Location_Swap(left.Location,right.Location);
               toggleflag(nf_swapped);
             end;
          end;
 
         { at this point, left.location.loc should be LOC_[C]REGISTER }
-        case right.location.loc of
+        case right.Location.Loc of
           LOC_REGISTER,
           LOC_CREGISTER :
             begin
-              cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              emit_reg_reg(A_CMP,S_L,right.location.register64.reghi,left.location.register64.reghi);
+              cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              emit_reg_reg(A_CMP,S_L,right.Location.Register64.RegHi,left.Location.Register64.RegHi);
               firstjmp64bitcmp;
-              emit_reg_reg(A_CMP,S_L,right.location.register64.reglo,left.location.register64.reglo);
+              emit_reg_reg(A_CMP,S_L,right.Location.Register64.RegLo,left.Location.Register64.RegLo);
               secondjmp64bitcmp;
-              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             end;
           LOC_CREFERENCE,
           LOC_REFERENCE :
             begin
-              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
-              href:=right.location.reference;
-              inc(href.offset,4);
-              cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              emit_ref_reg(A_CMP,S_L,href,left.location.register64.reghi);
+              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.Location.Reference);
+              href:=right.Location.Reference;
+              inc(href.Offset,4);
+              cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              emit_ref_reg(A_CMP,S_L,href,left.Location.Register64.RegHi);
               firstjmp64bitcmp;
-              emit_ref_reg(A_CMP,S_L,right.location.reference,left.location.register64.reglo);
+              emit_ref_reg(A_CMP,S_L,right.Location.Reference,left.Location.Register64.RegLo);
               secondjmp64bitcmp;
-              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
             end;
           LOC_CONSTANT :
             begin
-              cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(hi(right.location.value64)),left.location.register64.reghi));
+              cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(hi(right.Location.Value64)),left.Location.Register64.RegHi));
               firstjmp64bitcmp;
-              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
               if Assigned(hlab) then
-                cg.a_jmp_always(CurrentAsmData.CurrAsmList,hlab)
+                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,hlab)
               else
                 begin
-                  cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(lo(right.location.value64)),left.location.register64.reglo));
+                  cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(lo(right.Location.Value64)),left.Location.Register64.RegLo));
                   secondjmp64bitcmp;
-                  cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                  cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                 end;
             end;
         else
@@ -442,33 +442,33 @@ interface
 
     procedure TI386AddNode.set_mul_result_location;
     begin
-      location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
+      Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
       {Free EAX,EDX}
-      cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
-      if is_64bit(resultdef) then
+      cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EDX);
+      if Is_64Bit(resultdef) then
       begin
         {Allocate a couple of registers and store EDX:EAX into it}
-        location.register64.reghi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList, OS_INT, OS_INT, NR_EDX, location.register64.reghi);
-        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-        location.register64.reglo := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList, OS_INT, OS_INT, NR_EAX, location.register64.reglo);
+        location.Register64.RegHi := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList, OS_INT, OS_INT, NR_EDX, location.Register64.RegHi);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
+        location.Register64.RegLo := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList, OS_INT, OS_INT, NR_EAX, location.Register64.RegLo);
       end
       else
       begin
         {Allocate a new register and store the result in EAX in it.}
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_INT,OS_INT,NR_EAX,location.register);
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
+        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_INT,OS_INT,NR_EAX,location.Register);
       end;
-      location_freetemp(CurrentAsmData.CurrAsmList,left.location);
-      location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+      location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+      location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
     end;
 
 
     procedure TI386AddNode.second_mul(unsigned: boolean);
 
-    var reg,reghi,reglo:TRegister;
+    var reg,RegHi,RegLo:TRegister;
         ref:TReference;
         use_ref:boolean;
         hl4 : TAsmLabel;
@@ -479,62 +479,62 @@ interface
     begin
       pass_left_right;
       reg:=NR_NO;
-      reference_reset(ref,sizeof(PInt),[]);
+      Reference_Reset(ref,sizeof(PInt),[]);
 
       { Mul supports registers and references, so if not register/reference,
         load the location into a register.
         The variant of IMUL which is capable of doing 32->64 bits has the same restrictions. }
       use_ref:=false;
-      if left.location.loc in [LOC_REGISTER,LOC_CREGISTER] then
-        reg:=left.location.register
-      else if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+      if left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+        reg:=left.Location.Register
+      else if left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
         begin
-          TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
-          ref:=left.location.reference;
+          TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.Location.Reference);
+          ref:=left.Location.Reference;
           use_ref:=true;
         end
       else
         begin
           { LOC_CONSTANT for example.}
-          reg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,OSUIntType,left.location,reg);
+          reg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+          hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,OSUIntType,left.Location,reg);
         end;
 
       if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
         (not(needoverflowcheck) or
         { 32->64 bit cannot overflow }
-        is_64bit(resultdef)) then
+        Is_64Bit(resultdef)) then
         begin
-          cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,NR_EDX);
-          reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-          reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+          cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_EDX);
+          hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.Location,NR_EDX);
+          RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+          RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
           if use_ref then
-            CurrentAsmData.CurrAsmList.concat(TAICPU.Op_ref_reg_reg(A_MULX,S_L,ref,reglo,reghi))
+            CurrentAsmData.CurrAsmList.concat(TAICPU.Op_ref_reg_reg(A_MULX,S_L,ref,RegLo,RegHi))
           else
-            emit_reg_reg_reg(A_MULX,S_L,reg,reglo,reghi);
-          cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
+            emit_reg_reg_reg(A_MULX,S_L,reg,RegLo,RegHi);
+          cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EDX);
 
-          location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-          location.register64.reglo:=reglo;
+          Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+          location.Register64.RegLo:=RegLo;
 
-          if is_64bit(resultdef) then
-            location.register64.reghi:=reghi;
+          if Is_64Bit(resultdef) then
+            location.Register64.RegHi:=RegHi;
 
-          location_freetemp(CurrentAsmData.CurrAsmList,left.location);
-          location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+          location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+          location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
         end
       else
         begin
           { Allocate EAX. }
-          cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
+          cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
           { Load the right value. }
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,NR_EAX);
+          hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.Location,NR_EAX);
           { Also allocate EDX, since it is also modified by a mul (JM). }
-          cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
+          cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_EDX);
 
           if needoverflowcheck then
-            cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
           if use_ref then
             emit_ref(asmops[unsigned],S_L,ref)
@@ -542,13 +542,13 @@ interface
             emit_reg(asmops[unsigned],S_L,reg);
           if needoverflowcheck and
             { 32->64 bit cannot overflow }
-            (not is_64bit(resultdef)) then
+            (not Is_64Bit(resultdef)) then
             begin
               CurrentAsmData.getjumplabel(hl4);
-              cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_AE,hl4);
-              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-              cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-              cg.a_label(CurrentAsmData.CurrAsmList,hl4);
+              cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,hl4);
+              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+              cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+              cg.A_Label(CurrentAsmData.CurrAsmList,hl4);
             end;
           set_mul_result_location;
         end;
@@ -565,51 +565,51 @@ interface
         of operand signs, and so is the generated code. }
       { pass_left_right already called from second_add64bit }
       list:=CurrentAsmData.CurrAsmList;
-      if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-        TCGX86(cg).make_simple_ref(list,left.location.reference);
-      if right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-        TCGX86(cg).make_simple_ref(list,right.location.reference);
+      if left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+        TCGX86(cg).make_simple_ref(list,left.Location.Reference);
+      if right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+        TCGX86(cg).make_simple_ref(list,right.Location.Reference);
 
       { calculate 32-bit terms lo(right)*hi(left) and hi(left)*lo(right) }
-      if (right.location.loc=LOC_CONSTANT) then
+      if (right.Location.Loc=LOC_CONSTANT) then
         begin
           { if left has side effects, it could be that this code is called with right.location.value64=0,
             see also #40182 }
-          if right.location.value64=0 then
+          if right.Location.Value64=0 then
             begin
-              location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-              location.register64.reglo := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-              emit_const_reg(A_MOV,S_L,0,location.register64.reglo);
-              location.register64.reghi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-              emit_const_reg(A_MOV,S_L,0,location.register64.reghi);
+              Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+              location.Register64.RegLo := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+              emit_const_reg(A_MOV,S_L,0,location.Register64.RegLo);
+              location.Register64.RegHi := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+              emit_const_reg(A_MOV,S_L,0,location.Register64.RegHi);
               exit;
             end;
 
           { Omit zero terms, if any }
           hreg1:=NR_NO;
           hreg2:=NR_NO;
-          if lo(right.location.value64)<>0 then
-            hreg1:=cg.getintregister(list,OS_INT);
-          if hi(right.location.value64)<>0 then
-            hreg2:=cg.getintregister(list,OS_INT);
+          if lo(right.Location.Value64)<>0 then
+            hreg1:=cg.GetIntRegister(list,OS_INT);
+          if hi(right.Location.Value64)<>0 then
+            hreg2:=cg.GetIntRegister(list,OS_INT);
 
           { Take advantage of 3-operand form of IMUL }
-          case left.location.loc of
+          case left.Location.Loc of
             LOC_REGISTER,LOC_CREGISTER:
               begin
                 if hreg1<>NR_NO then
-                  emit_const_reg_reg(A_IMUL,S_L,LongInt(lo(right.location.value64)),left.location.register64.reghi,hreg1);
+                  emit_const_reg_reg(A_IMUL,S_L,LongInt(lo(right.Location.Value64)),left.Location.Register64.RegHi,hreg1);
                 if hreg2<>NR_NO then
-                  emit_const_reg_reg(A_IMUL,S_L,LongInt(hi(right.location.value64)),left.location.register64.reglo,hreg2);
+                  emit_const_reg_reg(A_IMUL,S_L,LongInt(hi(right.Location.Value64)),left.Location.Register64.RegLo,hreg2);
               end;
             LOC_REFERENCE,LOC_CREFERENCE:
               begin
                 if hreg2<>NR_NO then
-                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(hi(right.location.value64)),left.location.reference,hreg2));
-                inc(left.location.reference.offset,4);
+                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(hi(right.Location.Value64)),left.Location.Reference,hreg2));
+                inc(left.Location.Reference.Offset,4);
                 if hreg1<>NR_NO then
-                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(lo(right.location.value64)),left.location.reference,hreg1));
-                dec(left.location.reference.offset,4);
+                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(lo(right.Location.Value64)),left.Location.Reference,hreg1));
+                dec(left.Location.Reference.Offset,4);
               end;
           else
             InternalError(2014011602);
@@ -617,22 +617,22 @@ interface
         end
       else
         begin
-          hreg1:=cg.getintregister(list,OS_INT);
-          hreg2:=cg.getintregister(list,OS_INT);
-          cg64.a_load64low_loc_reg(list,left.location,hreg1);
-          cg64.a_load64high_loc_reg(list,left.location,hreg2);
-          case right.location.loc of
+          hreg1:=cg.GetIntRegister(list,OS_INT);
+          hreg2:=cg.GetIntRegister(list,OS_INT);
+          cg64.A_Load64Low_Loc_Reg(list,left.Location,hreg1);
+          cg64.A_Load64High_Loc_Reg(list,left.Location,hreg2);
+          case right.Location.Loc of
             LOC_REGISTER,LOC_CREGISTER:
               begin
-                emit_reg_reg(A_IMUL,S_L,right.location.register64.reghi,hreg1);
-                emit_reg_reg(A_IMUL,S_L,right.location.register64.reglo,hreg2);
+                emit_reg_reg(A_IMUL,S_L,right.Location.Register64.RegHi,hreg1);
+                emit_reg_reg(A_IMUL,S_L,right.Location.Register64.RegLo,hreg2);
               end;
             LOC_REFERENCE,LOC_CREFERENCE:
               begin
-                emit_ref_reg(A_IMUL,S_L,right.location.reference,hreg2);
-                inc(right.location.reference.offset,4);
-                emit_ref_reg(A_IMUL,S_L,right.location.reference,hreg1);
-                dec(right.location.reference.offset,4);
+                emit_ref_reg(A_IMUL,S_L,right.Location.Reference,hreg2);
+                inc(right.Location.Reference.Offset,4);
+                emit_ref_reg(A_IMUL,S_L,right.Location.Reference,hreg1);
+                dec(right.Location.Reference.Offset,4);
               end;
           else
             InternalError(2014011603);
@@ -643,15 +643,15 @@ interface
         emit_reg_reg(A_ADD,S_L,hreg2,hreg1);
 
       { load lo(right) into EAX }
-      cg.getcpuregister(list,NR_EAX);
-      cg64.a_load64low_loc_reg(list,right.location,NR_EAX);
+      cg.GetCPURegister(list,NR_EAX);
+      cg64.A_Load64Low_Loc_Reg(list,right.Location,NR_EAX);
 
       { multiply EAX by lo(left), producing 64-bit value in EDX:EAX }
-      cg.getcpuregister(list,NR_EDX);
-      if (left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-        emit_reg(A_MUL,S_L,left.location.register64.reglo)
-      else if (left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-        emit_ref(A_MUL,S_L,left.location.reference)
+      cg.GetCPURegister(list,NR_EDX);
+      if (left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+        emit_reg(A_MUL,S_L,left.Location.Register64.RegLo)
+      else if (left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+        emit_ref(A_MUL,S_L,left.Location.Reference)
       else
         InternalError(2014011604);
       { add previously calculated terms to the high half }

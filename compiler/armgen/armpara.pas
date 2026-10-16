@@ -25,8 +25,8 @@ unit armpara;
 interface
 
 uses
-  symtype,
-  paramgr;
+  SymType,
+  ParaMgr;
 
 type
   TArmGenParaManager = class(TParaManager)
@@ -34,87 +34,87 @@ type
     { Returns whether a def is a "homogeneous float array" at the machine level.
       This means that in the memory layout, the def only consists of maximally
       4 floating point values that appear consecutively in memory }
-    function is_hfa(p: TDef; out BaseDef: TDef) : boolean;
+    function Is_HFA(P: TDef; out BaseDef: TDef) : Boolean;
    private
-    function is_hfa_internal(p: TDef; var BaseDef: TDef; var EleCount: LongInt): boolean;
+    function IsHFAInternal(P: TDef; var BaseDef: TDef; var EleCount: LongInt): Boolean;
   end;
 
 
 implementation
 
   uses
-    symconst,symdef,SymSym,symutil,defutil;
+    SymConst,SymDef,SymSym,SymUtil,DefUtil;
 
 
-  function TArmGenParaManager.is_hfa(p: TDef; out BaseDef: TDef): boolean;
+  function TArmGenParaManager.Is_HFA(P: TDef; out BaseDef: TDef): Boolean;
     var
       EleCount: LongInt;
     begin
-      result:=false;
+      Result:=False;
       BaseDef:=nil;
       EleCount:=0;
-      result:=is_hfa_internal(p,BaseDef,EleCount);
-      result:=
-        result and
+      Result:=IsHFAInternal(P,BaseDef,EleCount);
+      Result:=
+        Result and
         (EleCount>0) and
         (EleCount<=4) and
-        (p.size=BaseDef.size*EleCount)
+        (P.Size=BaseDef.Size*EleCount)
       end;
 
 
-  function TArmGenParaManager.is_hfa_internal(p: TDef; var BaseDef: TDef; var EleCount: LongInt): boolean;
+  function TArmGenParaManager.IsHFAInternal(P: TDef; var BaseDef: TDef; var EleCount: LongInt): Boolean;
     var
-      i: LongInt;
-      sym: TSym;
-      tmpelecount: LongInt;
+      I: LongInt;
+      Sym: TSym;
+      TmpEleCount: LongInt;
     begin
-      result:=false;
-      case p.typ of
-        arraydef:
+      Result:=False;
+      case P.Typ of
+        ArrayDef:
           begin
-            if is_special_array(p) then
-              exit;
+            if Is_Special_Array(P) then
+              Exit;
             { an array of empty records has no influence }
-            if TArrayDef(p).ElementDef.size=0 then
+            if TArrayDef(P).ElementDef.Size=0 then
               begin
-                result:=true;
-                exit
+                Result:=True;
+                Exit
               end;
-            tmpelecount:=0;
-            if not is_hfa_internal(TArrayDef(p).ElementDef,BaseDef,tmpelecount) then
-              exit;
+            TmpEleCount:=0;
+            if not IsHFAInternal(TArrayDef(P).ElementDef,BaseDef,TmpEleCount) then
+              Exit;
             { tmpelecount now contains the number of hfa elements in a
               single array element (e.g. 2 if it's an array of a record
               containing two singles) -> multiply by number of elements
               in the array }
-            inc(EleCount,TArrayDef(p).EleCount*tmpelecount);
+            Inc(EleCount,TArrayDef(P).EleCount*TmpEleCount);
             if EleCount>4 then
-              exit;
-            result:=true;
+              Exit;
+            Result:=True;
           end;
-        floatdef:
+        FloatDef:
           begin
             if not Assigned(BaseDef) then
-              BaseDef:=p
-            else if BaseDef<>p then
-              exit;
-            inc(EleCount);
-            result:=true;
+              BaseDef:=P
+            else if BaseDef<>P then
+              Exit;
+            Inc(EleCount);
+            Result:=True;
           end;
-        recorddef:
+        RecordDef:
           begin
-            for i:=0 to TAbstractRecordDef(p).SymTable.SymList.count-1 do
+            for I:=0 to TAbstractRecordDef(P).SymTable.SymList.Count-1 do
               begin
-                sym:=TSym(TAbstractRecordDef(p).SymTable.SymList[i]);
-                if not is_normal_fieldvarsym(sym) then
-                  continue;
-                if not is_hfa_internal(TFieldVarSym(sym).vardef,BaseDef,EleCount) then
-                  exit
+                Sym:=TSym(TAbstractRecordDef(P).SymTable.SymList[I]);
+                if not Is_Normal_FieldVarSym(Sym) then
+                  Continue;
+                if not IsHFAInternal(TFieldVarSym(Sym).VarDef,BaseDef,EleCount) then
+                  Exit
               end;
-            result:=true;
+            Result:=True;
           end;
         else
-          exit
+          Exit
       end;
     end;
 

@@ -202,10 +202,10 @@ end;
 
     function objcparasize(vs: TParaVarSym): ptrint;
       begin
-        result:=vs.ParaLoc[callerside].intsize;
+        result:=vs.ParaLoc[callerside].IntSize;
         { In Objective-C, all ordinal types are widened to at least the
           size of the C "int" type. Assume __LP64__/4 byte ints for now. }
-        if is_ordinal(vs.vardef) and
+        if Is_Ordinal(vs.vardef) and
            (result<4) then
           result:=4;
       end;
@@ -230,7 +230,7 @@ end;
               continue;
             { objcaddencodedtype always assumes a value parameter, so add
               a pointer indirection for var/out parameters.  }
-            if not paramanager.push_addr_param(vs_value,vs.vardef,pocall_cdecl) and
+            if not ParaManager.Push_Addr_Param(vs_value,vs.vardef,pocall_cdecl) and
                (vs.VarSpez in [vs_var,vs_out,vs_constref]) then
               result:=result+'^';
             { Add the parameter type.  }

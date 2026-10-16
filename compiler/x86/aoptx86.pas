@@ -457,7 +457,7 @@ unit aoptx86;
 
     function MatchOperand(const oper: TOper; const a: TCGInt): boolean; inline;
       begin
-        result := (oper.typ = top_const) and (oper.val = a);
+        result := (oper.typ = top_const) and (oper.Val = a);
       end;
 
 
@@ -468,11 +468,11 @@ unit aoptx86;
         if result then
           case oper1.typ of
             top_const:
-              Result:=oper1.val = oper2.val;
+              Result:=oper1.Val = oper2.Val;
             top_reg:
               Result:=oper1.reg = oper2.reg;
             top_ref:
-              Result:=RefsEqual(oper1.ref^, oper2.ref^);
+              Result:=RefsEqual(oper1.Ref^, oper2.Ref^);
             else
               InternalError(2013102801);
           end
@@ -486,11 +486,11 @@ unit aoptx86;
         if result then
           case oper1.typ of
             top_const:
-              Result:=(oper1.val = oper2.val) and (oper1.val = oper3.val);
+              Result:=(oper1.Val = oper2.Val) and (oper1.Val = oper3.Val);
             top_reg:
               Result:=(oper1.reg = oper2.reg) and (oper1.reg = oper3.reg);
             top_ref:
-              Result:=RefsEqual(oper1.ref^, oper2.ref^) and RefsEqual(oper1.ref^, oper3.ref^);
+              Result:=RefsEqual(oper1.Ref^, oper2.Ref^) and RefsEqual(oper1.Ref^, oper3.Ref^);
             else
               InternalError(2020052401);
           end
@@ -500,41 +500,41 @@ unit aoptx86;
     function RefsEqual(const r1, r2: TReference): boolean;
       begin
         RefsEqual :=
-          (r1.symbol=r2.symbol) and (r1.refaddr = r2.refaddr) and
-          (r1.relsymbol = r2.relsymbol) and
-          (r1.segment = r2.segment) and (r1.base = r2.base) and
-          (r1.index = r2.index) and (r1.scalefactor = r2.scalefactor) and
-          (r1.offset = r2.offset) and
-          (r1.volatility + r2.volatility = []);
+          (r1.Symbol=r2.Symbol) and (r1.RefAddr = r2.RefAddr) and
+          (r1.RelSymbol = r2.RelSymbol) and
+          (r1.Segment = r2.Segment) and (r1.Base = r2.Base) and
+          (r1.Index = r2.Index) and (r1.ScaleFactor = r2.ScaleFactor) and
+          (r1.Offset = r2.Offset) and
+          (r1.Volatility + r2.Volatility = []);
       end;
 
 
     function RefsAlmostEqual(const r1, r2: TReference): boolean;
       begin
         RefsAlmostEqual :=
-          (r1.symbol=r2.symbol) and (r1.refaddr = r2.refaddr) and
-          (r1.relsymbol = r2.relsymbol) and
-          (r1.segment = r2.segment) and (r1.base = r2.base) and
-          (r1.index = r2.index) and (r1.scalefactor = r2.scalefactor) and
+          (r1.Symbol=r2.Symbol) and (r1.RefAddr = r2.RefAddr) and
+          (r1.RelSymbol = r2.RelSymbol) and
+          (r1.Segment = r2.Segment) and (r1.Base = r2.Base) and
+          (r1.Index = r2.Index) and (r1.ScaleFactor = r2.ScaleFactor) and
           { Don't compare the offsets }
-          (r1.volatility + r2.volatility = []);
+          (r1.Volatility + r2.Volatility = []);
       end;
 
 
     function RefsMightOverlap(const r1, r2: TReference; const Range: asizeint): boolean;
       begin
-        if (r1.symbol<>r2.symbol) then
+        if (r1.Symbol<>r2.Symbol) then
           { If the index registers are different, there's a chance one could
             be set so it equals the other symbol }
-          Exit((r1.index<>r2.index) or (r1.scalefactor<>r2.scalefactor));
+          Exit((r1.Index<>r2.Index) or (r1.ScaleFactor<>r2.ScaleFactor));
 
-        if (r1.symbol=r2.symbol) and (r1.refaddr = r2.refaddr) and
-          (r1.relsymbol = r2.relsymbol) and
-          (r1.segment = r2.segment) and (r1.base = r2.base) and
-          (r1.index = r2.index) and (r1.scalefactor = r2.scalefactor) and
-          (r1.volatility + r2.volatility = []) then
+        if (r1.Symbol=r2.Symbol) and (r1.RefAddr = r2.RefAddr) and
+          (r1.RelSymbol = r2.RelSymbol) and
+          (r1.Segment = r2.Segment) and (r1.Base = r2.Base) and
+          (r1.Index = r2.Index) and (r1.ScaleFactor = r2.ScaleFactor) and
+          (r1.Volatility + r2.Volatility = []) then
           { In this case, it all depends on the offsets }
-          Exit(abs(r1.offset - r2.offset) < Range);
+          Exit(abs(r1.Offset - r2.Offset) < Range);
 
         { There's a chance things MIGHT overlap, so take no chances }
         Result := True;
@@ -543,30 +543,30 @@ unit aoptx86;
 
     function MatchReference(const ref : TReference;base,index : TRegister) : Boolean;
       begin
-       Result:=(ref.offset=0) and
-         (ref.scalefactor in [0,1]) and
-         (ref.segment=NR_NO) and
-         (ref.symbol=nil) and
-         (ref.relsymbol=nil) and
-         ((base=NR_INVALID) or
-          (ref.base=base)) and
-         ((index=NR_INVALID) or
-          (ref.index=index)) and
-         (ref.volatility=[]);
+       Result:=(ref.Offset=0) and
+         (ref.ScaleFactor in [0,1]) and
+         (ref.Segment=NR_NO) and
+         (ref.Symbol=nil) and
+         (ref.RelSymbol=nil) and
+         ((base=NRInvalid) or
+          (ref.Base=base)) and
+         ((index=NRInvalid) or
+          (ref.Index=index)) and
+         (ref.Volatility=[]);
       end;
 
 
     function MatchReferenceWithOffset(const ref : TReference;base,index : TRegister) : Boolean;
       begin
-       Result:=(ref.scalefactor in [0,1]) and
-         (ref.segment=NR_NO) and
-         (ref.symbol=nil) and
-         (ref.relsymbol=nil) and
-         ((base=NR_INVALID) or
-          (ref.base=base)) and
-         ((index=NR_INVALID) or
-          (ref.index=index)) and
-         (ref.volatility=[]);
+       Result:=(ref.ScaleFactor in [0,1]) and
+         (ref.Segment=NR_NO) and
+         (ref.Symbol=nil) and
+         (ref.RelSymbol=nil) and
+         ((base=NRInvalid) or
+          (ref.Base=base)) and
+         ((index=NRInvalid) or
+          (ref.Index=index)) and
+         (ref.Volatility=[]);
       end;
 
 
@@ -647,7 +647,7 @@ unit aoptx86;
           end;
 
         if not Assigned(Search) then
-          Search := TJumpTrackingItem.Create(JumpTargetOp(TAICPU(Next))^.ref^.symbol);
+          Search := TJumpTrackingItem.Create(JumpTargetOp(TAICPU(Next))^.Ref^.Symbol);
 
         JumpTracking.Concat(Search);
         Search.IncRefs;
@@ -742,7 +742,7 @@ unit aoptx86;
                     begin
                       if LabelAccountedFor(TAILabel(Next_Label).labsym) then
                         begin
-                          TrackJump(JumpTargetOp(TAICPU(Next))^.ref^.symbol);
+                          TrackJump(JumpTargetOp(TAICPU(Next))^.Ref^.Symbol);
                           Next := Next_Label;
 
                           { CrossJump gets set to false by LabelAccountedFor if the
@@ -779,7 +779,7 @@ unit aoptx86;
                     Include(OptsToCheck, aoc_ForceNewIteration);
                 end
               else if IsJumpToLabel(TAICPU(Next)) then
-                TrackJump(JumpTargetOp(TAICPU(Next))^.ref^.symbol)
+                TrackJump(JumpTargetOp(TAICPU(Next))^.Ref^.Symbol)
               else
                 { Conditional jumps should always be a jump to label }
                 InternalError(2022041701);
@@ -827,7 +827,7 @@ unit aoptx86;
       while Assigned(Next) do
         begin
           if ((Next.typ=ait_instruction) and is_calljmp(TAICPU(Next).opcode) and not(TAICPU(Next).opcode=A_CALL)) or
-            ((Next.typ=ait_regalloc) and (getsupreg(TAIRegAlloc(Next).reg)=getsupreg(reg))) or
+            ((Next.typ=ait_regalloc) and (GetSupReg(TAIRegAlloc(Next).reg)=GetSupReg(reg))) or
             ((Next.typ=ait_label) and not(labelCanBeSkipped(TAILabel(Next)))) then
             exit
           else if (Next.typ=ait_instruction) and RegInInstruction(reg,Next) and not(TAICPU(Next).opcode=A_CALL) then
@@ -863,8 +863,8 @@ unit aoptx86;
             1:
               regReadByInstruction := RegInOp(reg,p.oper[0]^) or
                  (
-                  ((getregtype(reg)=R_INTREGISTER) and (getsupreg(reg)=RS_EAX)) and
-                  ((getsubreg(reg)<>R_SUBH) or (p.opsize<>S_B))
+                  ((GetRegType(reg)=R_INTREGISTER) and (GetSupReg(reg)=RS_EAX)) and
+                  ((GetSubReg(reg)<>R_SUBH) or (p.opsize<>S_B))
                  );
             2,3:
               regReadByInstruction :=
@@ -877,17 +877,17 @@ unit aoptx86;
           begin
             regReadByInstruction := RegInOp(reg,p.oper[0]^) or
                (
-                ((getregtype(reg)=R_INTREGISTER) and (getsupreg(reg)=RS_EAX)) and
-                ((getsubreg(reg)<>R_SUBH) or (p.opsize<>S_B))
+                ((GetRegType(reg)=R_INTREGISTER) and (GetSupReg(reg)=RS_EAX)) and
+                ((GetSubReg(reg)<>R_SUBH) or (p.opsize<>S_B))
                );
           end;
         A_IDIV,A_DIV:
           begin
             regReadByInstruction := RegInOp(reg,p.oper[0]^) or
                (
-                 (getregtype(reg)=R_INTREGISTER) and
+                 (GetRegType(reg)=R_INTREGISTER) and
                  (
-                   (getsupreg(reg)=RS_EAX) or ((getsupreg(reg)=RS_EDX) and (p.opsize<>S_B))
+                   (GetSupReg(reg)=RS_EAX) or ((GetSupReg(reg)=RS_EDX) and (p.opsize<>S_B))
                  )
                );
           end;
@@ -900,7 +900,7 @@ unit aoptx86;
               end;
             for opcount := 0 to p.ops-1 do
               if (p.oper[opCount]^.typ = top_ref) and
-                 RegInRef(reg,p.oper[opcount]^.ref^) then
+                 RegInRef(reg,p.oper[opcount]^.Ref^) then
                 begin
                   RegReadByInstruction := true;
                   exit
@@ -918,10 +918,10 @@ unit aoptx86;
               end;
             with insprop[p.opcode] do
               begin
-                case getregtype(reg) of
+                case GetRegType(reg) of
                   R_INTREGISTER:
                     begin
-                      case getsupreg(reg) of
+                      case GetSupReg(reg) of
                         RS_EAX:
                           if [Ch_REAX,Ch_RWEAX,Ch_MEAX,Ch_WRAX,Ch_RWRAX,Ch_MRAX]*Ch<>[] then
                             begin
@@ -974,7 +974,7 @@ unit aoptx86;
                     end;
                   R_MMREGISTER:
                     begin
-                      case getsupreg(reg) of
+                      case GetSupReg(reg) of
                         RS_XMM0:
                           if [Ch_RXMM0,Ch_RWXMM0,Ch_MXMM0]*Ch<>[] then
                             begin
@@ -988,40 +988,40 @@ unit aoptx86;
                 end;
                 if SuperRegistersEqual(reg,NR_DEFAULTFLAGS) then
                   begin
-                    if (Ch_RFLAGScc in Ch) and not(getsubreg(reg) in [R_SUBW,R_SUBD,R_SUBQ]) then
+                    if (Ch_RFLAGScc in Ch) and not(GetSubReg(reg) in [R_SUBW,R_SUBD,R_SUBQ]) then
                       begin
                         case p.condition of
                           C_A,C_NBE,       { CF=0 and ZF=0  }
                           C_BE,C_NA:       { CF=1 or ZF=1   }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGCARRY,R_SUBFLAGZERO];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGCARRY,R_SUBFLAGZERO];
                           C_AE,C_NB,C_NC,  { CF=0           }
                           C_B,C_NAE,C_C:   { CF=1           }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGCARRY];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGCARRY];
                           C_NE,C_NZ,       { ZF=0           }
                           C_E,C_Z:         { ZF=1           }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGZERO];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGZERO];
                           C_G,C_NLE,       { ZF=0 and SF=OF }
                           C_LE,C_NG:       { ZF=1 or SF<>OF }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGZERO,R_SUBFLAGSIGN,R_SUBFLAGOVERFLOW];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGZERO,R_SUBFLAGSIGN,R_SUBFLAGOVERFLOW];
                           C_GE,C_NL,       { SF=OF          }
                           C_L,C_NGE:       { SF<>OF         }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGSIGN,R_SUBFLAGOVERFLOW];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGSIGN,R_SUBFLAGOVERFLOW];
                           C_NO,            { OF=0           }
                           C_O:             { OF=1           }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGOVERFLOW];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGOVERFLOW];
                           C_NP,C_PO,       { PF=0           }
                           C_P,C_PE:        { PF=1           }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGPARITY];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGPARITY];
                           C_NS,            { SF=0           }
                           C_S:             { SF=1           }
-                            RegReadByInstruction:=getsubreg(reg) in [R_SUBFLAGSIGN];
+                            RegReadByInstruction:=GetSubReg(reg) in [R_SUBFLAGSIGN];
                           else
                             InternalError(2017042701);
                         end;
                         if RegReadByInstruction then
                           exit;
                       end;
-                    case getsubreg(reg) of
+                    case GetSubReg(reg) of
                       R_SUBW,R_SUBD,R_SUBQ:
                         RegReadByInstruction :=
                           [Ch_RCarryFlag,Ch_RParityFlag,Ch_RAuxiliaryFlag,Ch_RZeroFlag,Ch_RSignFlag,Ch_ROverflowFlag,
@@ -1087,7 +1087,7 @@ unit aoptx86;
       if (Ch_All in insprop[TAICPU(p1).opcode].Ch) then
         exit(true);
 
-      if (getregtype(reg)=R_INTREGISTER) and
+      if (GetRegType(reg)=R_INTREGISTER) and
         { change information for xmm movsd are not correct }
         ((TAICPU(p1).opcode<>A_MOVSD) or (TAICPU(p1).ops=0)) then
         begin
@@ -1095,22 +1095,22 @@ unit aoptx86;
           case TAICPU(p1).opcode of
             A_MUL, A_DIV, A_IDIV:
               if TAICPU(p1).opsize = S_B then
-                Result := (getsupreg(Reg) = RS_EAX)
+                Result := (GetSupReg(Reg) = RS_EAX)
               else
-                Result := (getsupreg(Reg) in [RS_EAX, RS_EDX]);
+                Result := (GetSupReg(Reg) in [RS_EAX, RS_EDX]);
 
             A_IMUL:
               if TAICPU(p1).ops = 1 then
                 begin
                   if TAICPU(p1).opsize = S_B then
-                    Result := (getsupreg(Reg) = RS_EAX)
+                    Result := (GetSupReg(Reg) = RS_EAX)
                   else
-                    Result := (getsupreg(Reg) in [RS_EAX, RS_EDX]);
+                    Result := (GetSupReg(Reg) in [RS_EAX, RS_EDX]);
                 end;
               { If ops are greater than 1, call inherited method }
 
             else
-              case getsupreg(reg) of
+              case GetSupReg(reg) of
                 { RS_EAX = RS_RAX on x86-64 }
                 RS_EAX:
                   result:=([Ch_REAX,Ch_RRAX,Ch_WEAX,Ch_WRAX,Ch_RWEAX,Ch_RWRAX,Ch_MEAX,Ch_MRAX]*insprop[TAICPU(p1).opcode].Ch)<>[];
@@ -1136,9 +1136,9 @@ unit aoptx86;
           if result then
             exit;
         end
-      else if getregtype(reg)=R_MMREGISTER then
+      else if GetRegType(reg)=R_MMREGISTER then
         begin
-          case getsupreg(reg) of
+          case GetSupReg(reg) of
             RS_XMM0:
               result:=([Ch_RXMM0,Ch_WXMM0,Ch_RWXMM0,Ch_MXMM0]*insprop[TAICPU(p1).opcode].Ch)<>[];
             else
@@ -1151,7 +1151,7 @@ unit aoptx86;
         begin
           if ([Ch_RFlags,Ch_WFlags,Ch_RWFlags,Ch_RFLAGScc]*insprop[TAICPU(p1).opcode].Ch)<>[] then
             exit(true);
-          case getsubreg(reg) of
+          case GetSubReg(reg) of
             R_SUBFLAGCARRY:
               Result:=([Ch_RCarryFlag,Ch_RWCarryFlag,Ch_W0CarryFlag,Ch_W1CarryFlag,Ch_WCarryFlag,Ch_WUCarryFlag]*insprop[TAICPU(p1).opcode].Ch)<>[];
             R_SUBFLAGPARITY:
@@ -1184,7 +1184,7 @@ unit aoptx86;
           if result then
             exit;
         end
-      else if (getregtype(reg)=R_FPUREGISTER) and (Ch_FPU in insprop[TAICPU(p1).opcode].Ch) then
+      else if (GetRegType(reg)=R_FPUREGISTER) and (Ch_FPU in insprop[TAICPU(p1).opcode].Ch) then
         exit(true);
       Result:=inherited RegInInstruction(Reg, p1);
     end;
@@ -1207,7 +1207,7 @@ unit aoptx86;
         with insprop[TAICPU(p1).opcode] do
           if SuperRegistersEqual(reg,NR_DEFAULTFLAGS) then
             begin
-              case getsubreg(reg) of
+              case GetSubReg(reg) of
                 R_SUBW,R_SUBD,R_SUBQ:
                   Result :=
                     [Ch_WCarryFlag,Ch_WParityFlag,Ch_WAuxiliaryFlag,Ch_WZeroFlag,Ch_WSignFlag,Ch_WOverflowFlag,
@@ -1267,15 +1267,15 @@ unit aoptx86;
           A_MUL, A_DIV, A_IDIV:
             begin
               if TAICPU(p1).opsize = S_B then
-                Result := (getsupreg(Reg) = RS_EAX)
+                Result := (GetSupReg(Reg) = RS_EAX)
               else
-                Result := (getsupreg(Reg) in [RS_EAX, RS_EDX]);
+                Result := (GetSupReg(Reg) in [RS_EAX, RS_EDX]);
             end;
           A_IMUL:
             begin
               if TAICPU(p1).ops = 1 then
                 begin
-                  Result := (getsupreg(Reg) in [RS_EAX, RS_EDX]);
+                  Result := (GetSupReg(Reg) in [RS_EAX, RS_EDX]);
                 end
               else
                 Result := (TAICPU(p1).oper[TAICPU(p1).ops-1]^.typ=top_reg) and RegInOp(reg,TAICPU(p1).oper[TAICPU(p1).ops-1]^);
@@ -1289,9 +1289,9 @@ unit aoptx86;
           exit;
         with insprop[TAICPU(p1).opcode] do
           begin
-            if getregtype(reg)=R_INTREGISTER then
+            if GetRegType(reg)=R_INTREGISTER then
               begin
-                case getsupreg(reg) of
+                case GetSupReg(reg) of
                   RS_EAX:
                     if [Ch_WEAX,Ch_RWEAX,Ch_MEAX,Ch_WRAX,Ch_RWRAX,Ch_MRAX]*Ch<>[] then
                       begin
@@ -1368,16 +1368,16 @@ unit aoptx86;
         CurrentP1Size: asizeint;
       begin
         Result := (
-          (Ref.base <> NR_NO) and
+          (Ref.Base <> NR_NO) and
 {$ifdef x86_64}
-          (Ref.base <> NR_RIP) and
+          (Ref.Base <> NR_RIP) and
 {$endif x86_64}
-          RegModifiedBetween(Ref.base, p1, p2)
+          RegModifiedBetween(Ref.Base, p1, p2)
         ) or
         (
-          (Ref.index <> NR_NO) and
-          (Ref.index <> Ref.base) and
-          RegModifiedBetween(Ref.index, p1, p2)
+          (Ref.Index <> NR_NO) and
+          (Ref.Index <> Ref.Base) and
+          RegModifiedBetween(Ref.Index, p1, p2)
         );
 
         { Now check to see if the memory itself is written to }
@@ -1390,15 +1390,15 @@ unit aoptx86;
                   with insprop[TAICPU(p1).opcode] do
                     for X := 0 to TAICPU(p1).ops - 1 do
                       if (TAICPU(p1).oper[X]^.typ = top_ref) and
-                        RefsAlmostEqual(Ref, TAICPU(p1).oper[X]^.ref^) and
+                        RefsAlmostEqual(Ref, TAICPU(p1).oper[X]^.Ref^) and
                         { Catch any potential overlaps }
                         (
                           (RefSize = 0) or
-                          ((TAICPU(p1).oper[X]^.ref^.offset - Ref.offset) < RefSize)
+                          ((TAICPU(p1).oper[X]^.Ref^.Offset - Ref.Offset) < RefSize)
                         ) and
                         (
                           (CurrentP1Size = 0) or
-                          ((Ref.offset - TAICPU(p1).oper[X]^.ref^.offset) < CurrentP1Size)
+                          ((Ref.Offset - TAICPU(p1).oper[X]^.Ref^.Offset) < CurrentP1Size)
                         ) and
                         { Reference is used, but does the instruction write to it? }
                         (
@@ -1451,28 +1451,28 @@ unit aoptx86;
       begin
         case oper.typ of
           top_const:
-            Result := '$' + debug_tostr(oper.val);
+            Result := '$' + debug_tostr(oper.Val);
           top_reg:
             Result := debug_regname(oper.reg);
           top_ref:
             begin
-              if oper.ref^.offset <> 0 then
-                Result := debug_tostr(oper.ref^.offset) + '('
+              if oper.Ref^.Offset <> 0 then
+                Result := debug_tostr(oper.Ref^.Offset) + '('
               else
                 Result := '(';
 
-              if (oper.ref^.base <> NR_INVALID) and (oper.ref^.base <> NR_NO) then
+              if (oper.Ref^.Base <> NRInvalid) and (oper.Ref^.Base <> NR_NO) then
                 begin
-                  Result := Result + debug_regname(oper.ref^.base);
-                  if (oper.ref^.index <> NR_INVALID) and (oper.ref^.index <> NR_NO) then
-                    Result := Result + ',' + debug_regname(oper.ref^.index);
+                  Result := Result + debug_regname(oper.Ref^.Base);
+                  if (oper.Ref^.Index <> NRInvalid) and (oper.Ref^.Index <> NR_NO) then
+                    Result := Result + ',' + debug_regname(oper.Ref^.Index);
                 end
               else
-                if (oper.ref^.index <> NR_INVALID) and (oper.ref^.index <> NR_NO) then
-                  Result := Result + debug_regname(oper.ref^.index);
+                if (oper.Ref^.Index <> NRInvalid) and (oper.Ref^.Index <> NR_NO) then
+                  Result := Result + debug_regname(oper.Ref^.Index);
 
-              if (oper.ref^.scalefactor > 1) then
-                Result := Result + ',' + debug_tostr(oper.ref^.scalefactor) + ')'
+              if (oper.Ref^.ScaleFactor > 1) then
+                Result := Result + ',' + debug_tostr(oper.Ref^.ScaleFactor) + ')'
               else
                 Result := Result + ')';
             end;
@@ -1558,7 +1558,7 @@ unit aoptx86;
       begin
         Result := NR_NO;
         RegSet :=
-          paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption) +
+          ParaManager.Get_Volatile_Registers_Int(CurrentProcInfo.procdef.ProcCallOption) +
           CurrentProcInfo.saved_regs_int;
 (*
         { Don't use the frame register unless explicitly allowed (fixes i40111) }
@@ -1567,7 +1567,7 @@ unit aoptx86;
 *)
         for CurrentSuperReg in RegSet do
           begin
-            CurrentReg := newreg(R_INTREGISTER, TSuperRegister(CurrentSuperReg), RegSize);
+            CurrentReg := NewReg(R_INTREGISTER, TSuperRegister(CurrentSuperReg), RegSize);
             if not AUsedRegs[R_INTREGISTER].IsUsed(CurrentReg)
 {$if defined(i386)}
               { If the target size is 8-bit, make sure we can actually encode it }
@@ -1636,12 +1636,12 @@ unit aoptx86;
       begin
         Result := NR_NO;
         RegSet :=
-          paramanager.get_volatile_registers_mm(CurrentProcInfo.procdef.ProcCallOption) +
+          ParaManager.Get_Volatile_Registers_MM(CurrentProcInfo.procdef.ProcCallOption) +
           CurrentProcInfo.saved_regs_mm;
 
         for CurrentSuperReg in RegSet do
           begin
-            CurrentReg := newreg(R_MMREGISTER, TSuperRegister(CurrentSuperReg), RegSize);
+            CurrentReg := NewReg(R_MMREGISTER, TSuperRegister(CurrentSuperReg), RegSize);
             if not AUsedRegs[R_MMREGISTER].IsUsed(CurrentReg) then
               begin
                 Currentp := p;
@@ -1693,28 +1693,28 @@ unit aoptx86;
       begin
         if not SuperRegistersEqual(reg1,reg2) then
           exit(false);
-        if getregtype(reg1)<>R_INTREGISTER then
+        if GetRegType(reg1)<>R_INTREGISTER then
           exit(true);  {because SuperRegisterEqual is true}
-        case getsubreg(reg1) of
+        case GetSubReg(reg1) of
           { A write to R_SUBL doesn't change R_SUBH and if reg2 is R_SUBW or
             higher, it preserves the high bits, so the new value depends on
             reg2's previous value. In other words, it is equivalent to doing:
 
             reg2 := (reg2 and $ffffff00) or byte(reg1); }
           R_SUBL:
-            exit(getsubreg(reg2)=R_SUBL);
+            exit(GetSubReg(reg2)=R_SUBL);
           { A write to R_SUBH doesn't change R_SUBL and if reg2 is R_SUBW or
             higher, it actually does a:
 
             reg2 := (reg2 and $ffff00ff) or (reg1 and $ff00); }
           R_SUBH:
-            exit(getsubreg(reg2)=R_SUBH);
+            exit(GetSubReg(reg2)=R_SUBH);
           { If reg2 is R_SUBD or larger, a write to R_SUBW preserves the high 16
             bits of reg2:
 
             reg2 := (reg2 and $ffff0000) or word(reg1); }
           R_SUBW:
-            exit(getsubreg(reg2) in [R_SUBL,R_SUBH,R_SUBW]);
+            exit(GetSubReg(reg2) in [R_SUBL,R_SUBH,R_SUBW]);
           { a write to R_SUBD always overwrites every other subregister,
             because it clears the high 32 bits of R_SUBQ on x86_64 }
           R_SUBD,
@@ -1730,13 +1730,13 @@ unit aoptx86;
       begin
         if not SuperRegistersEqual(reg1,reg2) then
           exit(false);
-        if getregtype(reg1)<>R_INTREGISTER then
+        if GetRegType(reg1)<>R_INTREGISTER then
           exit(true);  {because SuperRegisterEqual is true}
-        case getsubreg(reg1) of
+        case GetSubReg(reg1) of
           R_SUBL:
-            exit(getsubreg(reg2)<>R_SUBH);
+            exit(GetSubReg(reg2)<>R_SUBH);
           R_SUBH:
-            exit(getsubreg(reg2)<>R_SUBL);
+            exit(GetSubReg(reg2)<>R_SUBL);
           R_SUBW,
           R_SUBD,
           R_SUBQ:
@@ -1769,13 +1769,13 @@ unit aoptx86;
           (TAICPU(hp1).oper[1]^.typ = TAICPU(p).oper[1]^.typ) and
           OpsEqual(TAICPU(hp1).oper[1]^, TAICPU(p).oper[1]^) then
           begin
-            if (TAICPU(p).oper[0]^.val > TAICPU(hp1).oper[0]^.val) and
+            if (TAICPU(p).oper[0]^.Val > TAICPU(hp1).oper[0]^.Val) and
               not(cs_opt_size in CurrentSettings.OptimizerSwitches)
 {$ifdef x86_64}
               and (
                 (TAICPU(p).opsize <> S_Q) or
                 { 64-bit AND can only store signed 32-bit immediates }
-                (TAICPU(p).oper[0]^.val < 32)
+                (TAICPU(p).oper[0]^.Val < 32)
               )
 {$endif x86_64}
               then
@@ -1784,9 +1784,9 @@ unit aoptx86;
                   shl     const2, %reg
                   with const1 > const2 }
                 DebugMsg(SPeepholeOptimization + 'SxrShl2SxrAnd 1 done',p);
-                TAICPU(p).loadConst(0,TAICPU(p).oper[0]^.val-TAICPU(hp1).oper[0]^.val);
+                TAICPU(p).loadConst(0,TAICPU(p).oper[0]^.Val-TAICPU(hp1).oper[0]^.Val);
                 TAICPU(hp1).opcode := A_AND;
-                l := (1 shl (TAICPU(hp1).oper[0]^.val)) - 1;
+                l := (1 shl (TAICPU(hp1).oper[0]^.Val)) - 1;
                 case TAICPU(p).opsize Of
                   S_B: TAICPU(hp1).loadConst(0,l Xor $ff);
                   S_W: TAICPU(hp1).loadConst(0,l Xor $ffff);
@@ -1796,13 +1796,13 @@ unit aoptx86;
                     InternalError(2017050703)
                 end;
               end
-            else if (TAICPU(p).oper[0]^.val<TAICPU(hp1).oper[0]^.val) and
+            else if (TAICPU(p).oper[0]^.Val<TAICPU(hp1).oper[0]^.Val) and
               not(cs_opt_size in CurrentSettings.OptimizerSwitches)
 {$ifdef x86_64}
               and (
                 (TAICPU(p).opsize <> S_Q) or
                 { 64-bit AND can only store signed 32-bit immediates }
-                (TAICPU(p).oper[0]^.val < 32)
+                (TAICPU(p).oper[0]^.Val < 32)
               )
 {$endif x86_64}
               then
@@ -1811,9 +1811,9 @@ unit aoptx86;
                   shl     const2, %reg
                   with const1 < const2 }
                 DebugMsg(SPeepholeOptimization + 'SxrShl2SxrAnd 2 done',p);
-                TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val-TAICPU(p).oper[0]^.val);
+                TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val-TAICPU(p).oper[0]^.Val);
                 TAICPU(p).opcode := A_AND;
-                l := (1 shl (TAICPU(p).oper[0]^.val))-1;
+                l := (1 shl (TAICPU(p).oper[0]^.Val))-1;
                 case TAICPU(p).opsize Of
                   S_B: TAICPU(p).loadConst(0,l Xor $ff);
                   S_W: TAICPU(p).loadConst(0,l Xor $ffff);
@@ -1823,12 +1823,12 @@ unit aoptx86;
                     InternalError(2017050702)
                 end;
               end
-            else if (TAICPU(p).oper[0]^.val = TAICPU(hp1).oper[0]^.val)
+            else if (TAICPU(p).oper[0]^.Val = TAICPU(hp1).oper[0]^.Val)
 {$ifdef x86_64}
               and (
                 (TAICPU(p).opsize <> S_Q) or
                 { 64-bit AND can only store signed 32-bit immediates }
-                (TAICPU(p).oper[0]^.val < 32)
+                (TAICPU(p).oper[0]^.Val < 32)
               )
 {$endif x86_64}
               then
@@ -1838,7 +1838,7 @@ unit aoptx86;
                   with const1 = const2 }
                 DebugMsg(SPeepholeOptimization + 'SxrShl2And done',p);
                 TAICPU(p).opcode := A_AND;
-                l := (1 shl (TAICPU(p).oper[0]^.val))-1;
+                l := (1 shl (TAICPU(p).oper[0]^.Val))-1;
                 case TAICPU(p).opsize Of
                   S_B: TAICPU(p).loadConst(0,l Xor $ff);
                   S_W: TAICPU(p).loadConst(0,l Xor $ffff);
@@ -1867,7 +1867,7 @@ unit aoptx86;
         if (MatchOpType(TAICPU(p),top_const,top_reg) or
             MatchOpType(TAICPU(p),top_const,top_reg,top_reg)) and
            (opsize in [S_L{$ifdef x86_64},S_Q{$endif x86_64}]) then
-          if (TAICPU(p).oper[0]^.val = 1) then
+          if (TAICPU(p).oper[0]^.Val = 1) then
             if (TAICPU(p).ops = 2) then
              { remove "imul $1, reg" }
               begin
@@ -1906,13 +1906,13 @@ unit aoptx86;
                 This optimization can be applied as long as only two bits are set in the constant and those two bits are separated by
                 at most two zeros
               }
-              reference_reset(tmpref,1,[]);
-              if (PopCnt(QWord(TAICPU(p).oper[0]^.val))=2) and (BsrQWord(TAICPU(p).oper[0]^.val)-BsfQWord(TAICPU(p).oper[0]^.val)<=3) then
+              Reference_Reset(tmpref,1,[]);
+              if (PopCnt(QWord(TAICPU(p).oper[0]^.Val))=2) and (BsrQWord(TAICPU(p).oper[0]^.Val)-BsfQWord(TAICPU(p).oper[0]^.Val)<=3) then
                 begin
-                  ShiftValue:=BsfQWord(TAICPU(p).oper[0]^.val);
-                  BaseValue:=TAICPU(p).oper[0]^.val shr ShiftValue;
-                  TmpRef.base := TAICPU(p).oper[1]^.reg;
-                  TmpRef.index := TAICPU(p).oper[1]^.reg;
+                  ShiftValue:=BsfQWord(TAICPU(p).oper[0]^.Val);
+                  BaseValue:=TAICPU(p).oper[0]^.Val shr ShiftValue;
+                  TmpRef.Base := TAICPU(p).oper[1]^.reg;
+                  TmpRef.Index := TAICPU(p).oper[1]^.reg;
                   if not(BaseValue in [3,5,9]) then
                     InternalError(2018110101);
                   TmpRef.ScaleFactor := BaseValue-1;
@@ -1963,7 +1963,7 @@ unit aoptx86;
         if SuperRegistersEqual(reg,NR_DEFAULTFLAGS) then
           with insprop[p.opcode] do
             begin
-              case getsubreg(reg) of
+              case GetSubReg(reg) of
                 R_SUBW,R_SUBD,R_SUBQ:
                   Result:=
                     { ZF, CF, OF, SF, PF and AF must all be set in some way (ordered so the most
@@ -2012,7 +2012,7 @@ unit aoptx86;
                    not(Reg1ReadDependsOnReg2(p.oper[0]^.reg,reg))
                  ) or (
                    (p.oper[0]^.typ = top_ref) and
-                   not RegInRef(reg,p.oper[0]^.ref^)
+                   not RegInRef(reg,p.oper[0]^.Ref^)
                  )
                );
             end;
@@ -2028,7 +2028,7 @@ unit aoptx86;
                     not Reg1ReadDependsOnReg2(p.oper[1]^.reg,reg)
                   ) or (
                     (p.oper[1]^.typ=top_ref) and
-                    not RegInRef(reg,p.oper[1]^.ref^)
+                    not RegInRef(reg,p.oper[1]^.Ref^)
                   )
                 )
               ) or (
@@ -2042,7 +2042,7 @@ unit aoptx86;
                       )
                     ) or (
                       (p.oper[0]^.typ=top_ref) and
-                      not RegInRef(reg,p.oper[0]^.ref^)
+                      not RegInRef(reg,p.oper[0]^.Ref^)
                     )
                   ) and (
                     (
@@ -2069,19 +2069,19 @@ unit aoptx86;
             Result := Reg1WriteOverwritesReg2Entirely(NR_AX,reg) and not(Reg1ReadDependsOnReg2(NR_AL,reg));
 {$ifndef x86_64}
           A_LDS:
-            Result := (reg=NR_DS) and not(RegInRef(reg,p.oper[0]^.ref^));
+            Result := (reg=NR_DS) and not(RegInRef(reg,p.oper[0]^.Ref^));
 
           A_LES:
-            Result := (reg=NR_ES) and not(RegInRef(reg,p.oper[0]^.ref^));
+            Result := (reg=NR_ES) and not(RegInRef(reg,p.oper[0]^.Ref^));
 {$endif not x86_64}
           A_LFS:
-            Result := (reg=NR_FS) and not(RegInRef(reg,p.oper[0]^.ref^));
+            Result := (reg=NR_FS) and not(RegInRef(reg,p.oper[0]^.Ref^));
 
           A_LGS:
-            Result := (reg=NR_GS) and not(RegInRef(reg,p.oper[0]^.ref^));
+            Result := (reg=NR_GS) and not(RegInRef(reg,p.oper[0]^.Ref^));
 
           A_LSS:
-            Result := (reg=NR_SS) and not(RegInRef(reg,p.oper[0]^.ref^));
+            Result := (reg=NR_SS) and not(RegInRef(reg,p.oper[0]^.Ref^));
 
           A_LAHF{$ifndef x86_64}, A_AAM{$endif not x86_64}:
             Result := Reg1WriteOverwritesReg2Entirely(NR_AH,reg);
@@ -2118,7 +2118,7 @@ unit aoptx86;
                     end;
 
                   { Make sure the entire register is overwritten }
-                  if (getregtype(reg) = R_INTREGISTER) then
+                  if (GetRegType(reg) = R_INTREGISTER) then
                     begin
 
                       if (p.ops > 0) then
@@ -2127,7 +2127,7 @@ unit aoptx86;
                             begin
                               if (p.oper[0]^.typ = top_ref) then
                                 begin
-                                  if RegInRef(reg, p.oper[0]^.ref^) then
+                                  if RegInRef(reg, p.oper[0]^.Ref^) then
                                     begin
                                       Result := False;
                                       Exit;
@@ -2160,7 +2160,7 @@ unit aoptx86;
                                 begin
                                   if (p.oper[1]^.typ = top_ref) then
                                     begin
-                                      if RegInRef(reg, p.oper[1]^.ref^) then
+                                      if RegInRef(reg, p.oper[1]^.Ref^) then
                                         begin
                                           Result := False;
                                           Exit;
@@ -2193,7 +2193,7 @@ unit aoptx86;
                                     begin
                                       if (p.oper[2]^.typ = top_ref) then
                                         begin
-                                          if RegInRef(reg, p.oper[2]^.ref^) then
+                                          if RegInRef(reg, p.oper[2]^.Ref^) then
                                             begin
                                               Result := False;
                                               Exit;
@@ -2224,7 +2224,7 @@ unit aoptx86;
                                     begin
                                       if (p.oper[3]^.typ = top_ref) then
                                         begin
-                                          if RegInRef(reg, p.oper[3]^.ref^) then
+                                          if RegInRef(reg, p.oper[3]^.Ref^) then
                                             begin
                                               Result := False;
                                               Exit;
@@ -2255,7 +2255,7 @@ unit aoptx86;
                         end;
 
                       { Don't do these ones first in case an input operand is equal to an explicit output register }
-                      case getsupreg(reg) of
+                      case GetSupReg(reg) of
                         RS_EAX:
                           if ([Ch_WEAX{$ifdef x86_64},Ch_WRAX{$endif x86_64}]*Ch<>[]) and Reg1WriteOverwritesReg2Entirely(NR_EAX, reg) then
                             begin
@@ -2329,7 +2329,7 @@ unit aoptx86;
          ) or
          (((TAICPU(p).opcode=A_LEA) and
            MatchOpType(TAICPU(p),top_ref,top_reg) and
-           (TAICPU(p).oper[0]^.ref^.base=NR_STACK_POINTER_REG) and
+           (TAICPU(p).oper[0]^.Ref^.Base=NR_STACK_POINTER_REG) and
            (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG)
            ) and
           GetNextInstruction(p,hp2) and
@@ -2341,7 +2341,7 @@ unit aoptx86;
            (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG)) or
            ((TAICPU(p).opcode=A_LEA) and
            MatchOpType(TAICPU(p),top_ref,top_reg) and
-           (TAICPU(p).oper[0]^.ref^.base=CurrentProcInfo.framepointer) and
+           (TAICPU(p).oper[0]^.Ref^.Base=CurrentProcInfo.framepointer) and
            (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG)
            )
           ) and
@@ -2385,14 +2385,14 @@ unit aoptx86;
         if (topsize2memsize[p.opsize]>NewBitSize) and
           (p.oper[0]^.typ=top_const) and
           (NewBitSize<=63) then
-          p.oper[0]^.val:=p.oper[0]^.val and ((qword(1) shl NewBitSize)-1);
+          p.oper[0]^.Val:=p.oper[0]^.Val and ((qword(1) shl NewBitSize)-1);
         p.changeopsize(NewSize);
       end;
 
 
     procedure TX86AsmOptimizer.RemoveLastDeallocForFuncRes(p: TAI);
 
-      procedure DoRemoveLastDeallocForFuncRes( supreg: TSuperRegister);
+      procedure DoRemoveLastDeallocForFuncRes( SupReg: TSuperRegister);
         var
           hp2: TAI;
         begin
@@ -2402,13 +2402,13 @@ unit aoptx86;
             if Assigned(hp2) and
                (hp2.typ = ait_regalloc) and
                (TAIRegAlloc(hp2).ratype=ra_dealloc) and
-               (getregtype(TAIRegAlloc(hp2).reg) = R_INTREGISTER) and
-               (getsupreg(TAIRegAlloc(hp2).reg) = supreg) then
+               (GetRegType(TAIRegAlloc(hp2).reg) = R_INTREGISTER) and
+               (GetSupReg(TAIRegAlloc(hp2).reg) = SupReg) then
               begin
                 RemoveInstruction(hp2);
                 break;
               end;
-          until not(Assigned(hp2)) or regInInstruction(newreg(R_INTREGISTER,supreg,R_SUBWHOLE),hp2);
+          until not(Assigned(hp2)) or regInInstruction(NewReg(R_INTREGISTER,SupReg,R_SUBWHOLE),hp2);
         end;
 
       begin
@@ -2419,11 +2419,11 @@ unit aoptx86;
                classrefdef,ForwardDef:
               DoRemoveLastDeallocForFuncRes(RS_EAX);
             orddef:
-              if CurrentProcInfo.procdef.ReturnDef.size <> 0 then
+              if CurrentProcInfo.procdef.ReturnDef.Size <> 0 then
                 begin
                   DoRemoveLastDeallocForFuncRes(RS_EAX);
                   { for int64/qword }
-                  if CurrentProcInfo.procdef.ReturnDef.size = 8 then
+                  if CurrentProcInfo.procdef.ReturnDef.Size = 8 then
                     DoRemoveLastDeallocForFuncRes(RS_EDX);
                 end;
             else
@@ -2544,7 +2544,7 @@ unit aoptx86;
                       vmova* reg1,<op> }
                     if MatchOperand(TAICPU(p).oper[0]^,TAICPU(hp1).oper[1]^) and
                       ((TAICPU(p).oper[0]^.typ<>top_ref) or
-                       (not(vol_read in TAICPU(p).oper[0]^.ref^.volatility))
+                       (not(vol_read in TAICPU(p).oper[0]^.Ref^.Volatility))
                       ) then
                       begin
                         DebugMsg(SPeepholeOptimization + '(V)MOVA*(V)MOVA*2(V)MOVA* 2',p);
@@ -2780,16 +2780,16 @@ unit aoptx86;
         { For safety reasons, only check for exact register matches }
 
         { Check base register }
-        if (ref.base = AOldReg) then
+        if (ref.Base = AOldReg) then
           begin
-            ref.base := ANewReg;
+            ref.Base := ANewReg;
             Result := True;
           end;
 
         { Check index register }
-        if (ref.index = AOldReg) and (getsupreg(ANewReg)<>RS_ESP) then
+        if (ref.Index = AOldReg) and (GetSupReg(ANewReg)<>RS_ESP) then
           begin
-            ref.index := ANewReg;
+            ref.Index := ANewReg;
             Result := True;
           end;
       end;
@@ -2809,13 +2809,13 @@ unit aoptx86;
         if (AOldReg = NR_NO) or (ANewReg = NR_NO) then
           InternalError(2020011801);
 
-        OldSupReg := getsupreg(AOldReg);
-        OldSubReg := getsubreg(AOldReg);
-        OldRegType := getregtype(AOldReg);
-        NewSupReg := getsupreg(ANewReg);
-        NewSubReg := getsubreg(ANewReg);
+        OldSupReg := GetSupReg(AOldReg);
+        OldSubReg := GetSubReg(AOldReg);
+        OldRegType := GetRegType(AOldReg);
+        NewSupReg := GetSupReg(ANewReg);
+        NewSubReg := GetSubReg(ANewReg);
 
-        if OldRegType <> getregtype(ANewReg) then
+        if OldRegType <> GetRegType(ANewReg) then
           InternalError(2020011802);
 
         if OldSubReg <> NewSubReg then
@@ -2827,15 +2827,15 @@ unit aoptx86;
               (ThisOper^.reg = AOldReg) or
                 (
                   (OldRegType = R_INTREGISTER) and
-                  (getsupreg(ThisOper^.reg) = OldSupReg) and
-                  (getregtype(ThisOper^.reg) = R_INTREGISTER) and
+                  (GetSupReg(ThisOper^.reg) = OldSupReg) and
+                  (GetRegType(ThisOper^.reg) = R_INTREGISTER) and
                   (
-                    (getsubreg(ThisOper^.reg) <= OldSubReg)
+                    (GetSubReg(ThisOper^.reg) <= OldSubReg)
 {$ifndef x86_64}
                     and (
                     { Under i386 and i8086, ESI, EDI, EBP and ESP
                       don't have an 8-bit representation }
-                      (getsubreg(ThisOper^.reg) >= R_SUBW) or
+                      (GetSubReg(ThisOper^.reg) >= R_SUBW) or
                       not (NewSupReg in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
                     )
 {$endif x86_64}
@@ -2843,11 +2843,11 @@ unit aoptx86;
                 )
               ) then
               begin
-                ThisOper^.reg := newreg(getregtype(ANewReg), NewSupReg, getsubreg(p.oper[OperIdx]^.reg));
+                ThisOper^.reg := NewReg(GetRegType(ANewReg), NewSupReg, GetSubReg(p.oper[OperIdx]^.reg));
                 Result := True;
               end;
           top_ref:
-            if ReplaceRegisterInRef(ThisOper^.ref^, AOldReg, ANewReg) then
+            if ReplaceRegisterInRef(ThisOper^.Ref^, AOldReg, ANewReg) then
               Result := True;
 
           else
@@ -2887,17 +2887,17 @@ unit aoptx86;
     class function TX86AsmOptimizer.IsRefSafe(const ref: PReference): Boolean;
       begin
         Result :=
-          (ref^.index = NR_NO) and
+          (ref^.Index = NR_NO) and
           (
 {$ifdef x86_64}
             (
-              (ref^.base = NR_RIP) and
-              (ref^.refaddr in [addr_pic, addr_pic_no_got])
+              (ref^.Base = NR_RIP) and
+              (ref^.RefAddr in [addr_pic, addr_pic_no_got])
             ) or
 {$endif x86_64}
-            (ref^.refaddr = addr_full) or
-            (ref^.base = NR_STACK_POINTER_REG) or
-            (ref^.base = CurrentProcInfo.framepointer)
+            (ref^.RefAddr = addr_full) or
+            (ref^.Base = NR_STACK_POINTER_REG) or
+            (ref^.Base = CurrentProcInfo.framepointer)
           );
       end;
 
@@ -2967,7 +2967,7 @@ unit aoptx86;
           A_VMOVD,
           A_VMOVQ:
             if (hp.oper[0]^.typ = top_reg) and
-              (getregtype(hp.oper[0]^.reg) = R_INTREGISTER) then
+              (GetRegType(hp.oper[0]^.reg) = R_INTREGISTER) then
               Result:=0
             else
               Result:=-1;
@@ -2976,10 +2976,10 @@ unit aoptx86;
           A_IDIV:
             if (TAICPU(p).oper[0]^.typ=top_reg) and
               (
-                (getsupreg(TAICPU(p).oper[0]^.reg)=RS_EAX) or { EAX is also used implicitly; don't change }
+                (GetSupReg(TAICPU(p).oper[0]^.reg)=RS_EAX) or { EAX is also used implicitly; don't change }
                 (
                   (hp.opsize<>S_B) and
-                  (getsupreg(TAICPU(p).oper[0]^.reg)=RS_EDX) { EDX is also used implicitly; don't change }
+                  (GetSupReg(TAICPU(p).oper[0]^.reg)=RS_EDX) { EDX is also used implicitly; don't change }
                 )
               ) then
               Result:=-1
@@ -2987,7 +2987,7 @@ unit aoptx86;
               Result:=0;
 
           A_MUL:
-            if (TAICPU(p).oper[0]^.typ=top_reg) and (getsupreg(TAICPU(p).oper[0]^.reg)=RS_EAX) then
+            if (TAICPU(p).oper[0]^.typ=top_reg) and (GetSupReg(TAICPU(p).oper[0]^.reg)=RS_EAX) then
               Result:=-1 { EAX is also used implicitly; don't change }
             else
               Result:=0;
@@ -2999,7 +2999,7 @@ unit aoptx86;
               2:
                 Result:=0;
               else
-                if (TAICPU(p).oper[0]^.typ=top_reg) and (getsupreg(TAICPU(p).oper[0]^.reg)=RS_EAX) then
+                if (TAICPU(p).oper[0]^.typ=top_reg) and (GetSupReg(TAICPU(p).oper[0]^.reg)=RS_EAX) then
                   Result:=-1 { EAX is also used implicitly; don't change }
                 else
                   Result:=0;
@@ -3026,7 +3026,7 @@ unit aoptx86;
            not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
            exit;
 
-         with p.oper[0]^.ref^ do
+         with p.oper[0]^.Ref^ do
           begin
             if (base <> p.oper[1]^.reg) or
                (index <> NR_NO) or
@@ -3037,14 +3037,14 @@ unit aoptx86;
             if (l=1) and UseIncDec then
               begin
                 p.opcode:=A_INC;
-                p.loadreg(0,p.oper[1]^.reg);
+                p.LoadReg(0,p.oper[1]^.reg);
                 p.ops:=1;
                 DebugMsg(SPeepholeOptimization + 'Lea2Inc done',p);
               end
             else if (l=-1) and UseIncDec then
               begin
                 p.opcode:=A_DEC;
-                p.loadreg(0,p.oper[1]^.reg);
+                p.LoadReg(0,p.oper[1]^.reg);
                 p.ops:=1;
                 DebugMsg(SPeepholeOptimization + 'Lea2Dec done',p);
               end
@@ -3098,9 +3098,9 @@ unit aoptx86;
                 1:
                   if (
                     (
-                      (hp.opsize = S_B) and (getsupreg(CurrentReg) <> RS_EAX)
+                      (hp.opsize = S_B) and (GetSupReg(CurrentReg) <> RS_EAX)
                     ) or
-                      not (getsupreg(CurrentReg) in [RS_EAX, RS_EDX])
+                      not (GetSupReg(CurrentReg) in [RS_EAX, RS_EDX])
                   ) and ReplaceRegisterInOper(hp, 0, CurrentReg, ReplaceReg) then
                     begin
                       Result := True;
@@ -3257,28 +3257,28 @@ unit aoptx86;
     procedure TX86AsmOptimizer.TrackAndCorrectRefMove(const ref: TReference; var p: TAI; const hp1: TAI; const correct_symrefs: Boolean);
       begin
         { Update the register tracking for the registers inside the reference }
-        if (ref.index<>NR_NO) then
-          AllocRegBetween(ref.index,p,hp1,UsedRegs);
+        if (ref.Index<>NR_NO) then
+          AllocRegBetween(ref.Index,p,hp1,UsedRegs);
 
-        if (ref.refaddr=addr_no) then
+        if (ref.RefAddr=addr_no) then
           begin
             if
-              (ref.base<>NR_NO) and
+              (ref.Base<>NR_NO) and
 {$ifdef x86_64}
-              (ref.base<>NR_RIP) and
+              (ref.Base<>NR_RIP) and
 {$endif x86_64}
-              (ref.base<>NR_STACK_POINTER_REG) and
-              (ref.base<>CurrentProcInfo.framepointer) and
-              (ref.base<>ref.index) then
-              AllocRegBetween(ref.base,p,hp1,UsedRegs);
+              (ref.Base<>NR_STACK_POINTER_REG) and
+              (ref.Base<>CurrentProcInfo.framepointer) and
+              (ref.Base<>ref.Index) then
+              AllocRegBetween(ref.Base,p,hp1,UsedRegs);
           end
         else if correct_symrefs then
           begin
             { loadref increases the reference count, so decrement it again }
-            if Assigned(ref.symbol) then
-              ref.symbol.decrefs;
-            if Assigned(ref.relsymbol) then
-              ref.relsymbol.decrefs;
+            if Assigned(ref.Symbol) then
+              ref.Symbol.decrefs;
+            if Assigned(ref.RelSymbol) then
+              ref.RelSymbol.decrefs;
           end;
       end;
 
@@ -3289,14 +3289,14 @@ unit aoptx86;
         if MatchOpType(TAICPU(p),top_ref,top_reg) and
           MatchOpType(TAICPU(hp1),top_ref,top_reg) and
           (TAICPU(p).opsize = TAICPU(hp1).opsize) and
-          RefsEqual(TAICPU(p).oper[0]^.ref^,TAICPU(hp1).oper[0]^.ref^) and
-          (TAICPU(p).oper[0]^.ref^.volatility=[]) and
-          (TAICPU(hp1).oper[0]^.ref^.volatility=[]) and
-          not(SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[0]^.ref^.base)) and
-          not(SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[0]^.ref^.index)) then
+          RefsEqual(TAICPU(p).oper[0]^.Ref^,TAICPU(hp1).oper[0]^.Ref^) and
+          (TAICPU(p).oper[0]^.Ref^.Volatility=[]) and
+          (TAICPU(hp1).oper[0]^.Ref^.Volatility=[]) and
+          not(SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[0]^.Ref^.Base)) and
+          not(SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[0]^.Ref^.Index)) then
           begin
             DebugMsg(SPeepholeOptimization + 'MovMov2MovMov 2',p);
-            TAICPU(hp1).loadReg(0,TAICPU(p).oper[1]^.reg);
+            TAICPU(hp1).LoadReg(0,TAICPU(p).oper[1]^.reg);
             Result := True;
             Include(OptsToCheck, aoc_ForceNewIteration);
           end;
@@ -3316,11 +3316,11 @@ unit aoptx86;
         begin
           if TAICPU(hp1).opcode = signed_movop then
             begin
-              if TAICPU(p).oper[0]^.val > max_value shr 1 then
-                TAICPU(p).oper[0]^.val:=TAICPU(p).oper[0]^.val - max_value - 1 { Convert to signed }
+              if TAICPU(p).oper[0]^.Val > max_value shr 1 then
+                TAICPU(p).oper[0]^.Val:=TAICPU(p).oper[0]^.Val - max_value - 1 { Convert to signed }
             end
           else
-            TAICPU(p).oper[0]^.val:=TAICPU(p).oper[0]^.val and max_value; { Trim to unsigned }
+            TAICPU(p).oper[0]^.Val:=TAICPU(p).oper[0]^.Val and max_value; { Trim to unsigned }
         end;
 
       function GetNextHp1(const in_p: TAI): Boolean;
@@ -3337,28 +3337,28 @@ unit aoptx86;
           ThisRef: TReference;
         begin
           Result := False;
-          ThisRef := TAICPU(p2).oper[1]^.ref^;
+          ThisRef := TAICPU(p2).oper[1]^.Ref^;
           { Only permit writes to the stack, since we can guarantee alignment with that }
-          if (ThisRef.index = NR_NO) and
+          if (ThisRef.Index = NR_NO) and
             (
-              (ThisRef.base = NR_STACK_POINTER_REG) or
-              (ThisRef.base = CurrentProcInfo.framepointer)
+              (ThisRef.Base = NR_STACK_POINTER_REG) or
+              (ThisRef.Base = CurrentProcInfo.framepointer)
             ) then
             begin
               case TAICPU(p).opsize of
                 S_B:
                   begin
                     { Word writes must be on a 2-byte boundary }
-                    if (TAICPU(p1).oper[1]^.ref^.offset mod 2) = 0 then
+                    if (TAICPU(p1).oper[1]^.Ref^.Offset mod 2) = 0 then
                       begin
                         { Reduce offset of second reference to see if it is sequential with the first }
-                        Dec(ThisRef.offset, 1);
-                        if RefsEqual(TAICPU(p1).oper[1]^.ref^, ThisRef) then
+                        Dec(ThisRef.Offset, 1);
+                        if RefsEqual(TAICPU(p1).oper[1]^.Ref^, ThisRef) then
                           begin
                             { Make sure the constants aren't represented as a
                               negative number, as these won't merge properly }
                             TAICPU(p1).opsize := S_W;
-                            TAICPU(p1).oper[0]^.val := (TAICPU(p1).oper[0]^.val and $FF) or ((TAICPU(p2).oper[0]^.val and $FF) shl 8);
+                            TAICPU(p1).oper[0]^.Val := (TAICPU(p1).oper[0]^.Val and $FF) or ((TAICPU(p2).oper[0]^.Val and $FF) shl 8);
                             DebugMsg(SPeepholeOptimization + 'Merged two byte-sized constant writes to stack (MovMov2Mov 2a)', p1);
                             RemoveInstruction(p2);
                             Result := True;
@@ -3368,16 +3368,16 @@ unit aoptx86;
                 S_W:
                   begin
                     { Longword writes must be on a 4-byte boundary }
-                    if (TAICPU(p1).oper[1]^.ref^.offset mod 4) = 0 then
+                    if (TAICPU(p1).oper[1]^.Ref^.Offset mod 4) = 0 then
                       begin
                         { Reduce offset of second reference to see if it is sequential with the first }
-                        Dec(ThisRef.offset, 2);
-                        if RefsEqual(TAICPU(p1).oper[1]^.ref^, ThisRef) then
+                        Dec(ThisRef.Offset, 2);
+                        if RefsEqual(TAICPU(p1).oper[1]^.Ref^, ThisRef) then
                           begin
                             { Make sure the constants aren't represented as a
                               negative number, as these won't merge properly }
                             TAICPU(p1).opsize := S_L;
-                            TAICPU(p1).oper[0]^.val := (TAICPU(p1).oper[0]^.val and $FFFF) or ((TAICPU(p2).oper[0]^.val and $FFFF) shl 16);
+                            TAICPU(p1).oper[0]^.Val := (TAICPU(p1).oper[0]^.Val and $FFFF) or ((TAICPU(p2).oper[0]^.Val and $FFFF) shl 16);
                             DebugMsg(SPeepholeOptimization + 'Merged two word-sized constant writes to stack (MovMov2Mov 2b)', p1);
                             RemoveInstruction(p2);
                             Result := True;
@@ -3389,20 +3389,20 @@ unit aoptx86;
                   begin
                     { Only sign-extended 32-bit constants can be written to 64-bit memory directly, so check to
                       see if the constants can be encoded this way. }
-                    NewConst := (TAICPU(p1).oper[0]^.val and $FFFFFFFF) or (TAICPU(p2).oper[0]^.val shl 32);
+                    NewConst := (TAICPU(p1).oper[0]^.Val and $FFFFFFFF) or (TAICPU(p2).oper[0]^.Val shl 32);
                     if (NewConst >= -2147483648) and (NewConst <= 2147483647) and
                       { Quadword writes must be on an 8-byte boundary }
-                      ((TAICPU(p1).oper[1]^.ref^.offset mod 8) = 0) then
+                      ((TAICPU(p1).oper[1]^.Ref^.Offset mod 8) = 0) then
                       begin
                         { Reduce offset of second reference to see if it is sequential with the first }
-                        Dec(ThisRef.offset, 4);
-                        if RefsEqual(TAICPU(p1).oper[1]^.ref^, ThisRef) then
+                        Dec(ThisRef.Offset, 4);
+                        if RefsEqual(TAICPU(p1).oper[1]^.Ref^, ThisRef) then
                           begin
                             { Make sure the constants aren't represented as a
                               negative number, as these won't merge properly }
                             TAICPU(p1).opsize := S_Q;
                             { Force a typecast into a 32-bit signed integer (that will then be sign-extended to 64-bit) }
-                            TAICPU(p1).oper[0]^.val := NewConst;
+                            TAICPU(p1).oper[0]^.Val := NewConst;
                             DebugMsg(SPeepholeOptimization + 'Merged two longword-sized constant writes to stack (MovMov2Mov 2c)', p1);
                             RemoveInstruction(p2);
                             Result := True;
@@ -3465,7 +3465,7 @@ unit aoptx86;
                         begin
                           case TAICPU(p).opsize of
                             S_L:
-                              if (TAICPU(hp1).oper[0]^.val = $ffffffff) then
+                              if (TAICPU(hp1).oper[0]^.Val = $ffffffff) then
                                 begin
                                   { Optimize out:
                                       mov x, %reg
@@ -3483,7 +3483,7 @@ unit aoptx86;
                                     Exit;
                                 end;
                             S_Q: { TODO: Confirm if this is even possible }
-                              if (TAICPU(hp1).oper[0]^.val = $ffffffffffffffff) then
+                              if (TAICPU(hp1).oper[0]^.Val = $ffffffffffffffff) then
                                 begin
                                   { Optimize out:
                                       mov x, %reg
@@ -3513,8 +3513,8 @@ unit aoptx86;
                               ) or
                               (
                                 (TAICPU(p).oper[0]^.typ = top_ref) and
-                                (TAICPU(p).oper[0]^.ref^.refaddr <> addr_full) and
-                                not RefModifiedBetween(TAICPU(p).oper[0]^.ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1)
+                                (TAICPU(p).oper[0]^.Ref^.RefAddr <> addr_full) and
+                                not RefModifiedBetween(TAICPU(p).oper[0]^.Ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1)
                               )
                             ) and
                             GetNextInstruction(hp1,hp2) and
@@ -3527,21 +3527,21 @@ unit aoptx86;
                                   fits into the smaller size  }
                                 (TAICPU(hp1).oper[1]^.typ = top_reg) and (TAICPU(hp2).oper[1]^.typ = top_reg) and
                                 SuperRegistersEqual(TAICPU(hp1).oper[1]^.reg,TAICPU(hp2).oper[1]^.reg) and
-                                (TAICPU(hp1).oper[0]^.typ = top_const) and (TAICPU(hp1).oper[0]^.val >= 0) and
+                                (TAICPU(hp1).oper[0]^.typ = top_const) and (TAICPU(hp1).oper[0]^.Val >= 0) and
                                 (GetSubReg(TAICPU(hp2).oper[1]^.reg) < GetSubReg(TAICPU(hp1).oper[1]^.reg)) and
                                 (
                                   (
                                     (GetSubReg(TAICPU(hp2).oper[1]^.reg) = R_SUBL) and
-                                    (TAICPU(hp1).oper[0]^.val <= $FF)
+                                    (TAICPU(hp1).oper[0]^.Val <= $FF)
                                   ) or
                                   (
                                     (GetSubReg(TAICPU(hp2).oper[1]^.reg) = R_SUBW) and
-                                    (TAICPU(hp1).oper[0]^.val <= $FFFF)
+                                    (TAICPU(hp1).oper[0]^.Val <= $FFFF)
 {$ifdef x86_64}
                                   ) or
                                   (
                                     (GetSubReg(TAICPU(hp2).oper[1]^.reg) = R_SUBD) and
-                                    (TAICPU(hp1).oper[0]^.val <= $FFFFFFFF)
+                                    (TAICPU(hp1).oper[0]^.Val <= $FFFFFFFF)
 {$endif x86_64}
                                   )
                                 )
@@ -3565,7 +3565,7 @@ unit aoptx86;
                                   TAICPU(hp1).opcode:=A_TEST;
 
                                   { Shrink the TEST instruction down to the smallest possible size }
-                                  case TAICPU(hp1).oper[0]^.val of
+                                  case TAICPU(hp1).oper[0]^.Val of
                                     0..255:
                                       if (TAICPU(hp1).opsize <> S_B)
 {$ifndef x86_64}
@@ -3584,7 +3584,7 @@ unit aoptx86;
 
                                           TAICPU(hp1).opsize := S_B;
                                           if (TAICPU(hp1).oper[1]^.typ = top_reg) then
-                                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBL);
+                                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBL);
                                         end;
                                     256..65535:
                                       if (TAICPU(hp1).opsize <> S_W) then
@@ -3596,7 +3596,7 @@ unit aoptx86;
 
                                           TAICPU(hp1).opsize := S_W;
                                           if (TAICPU(hp1).oper[1]^.typ = top_reg) then
-                                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
+                                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
                                         end;
 {$ifdef x86_64}
                                     65536..$7FFFFFFF:
@@ -3609,7 +3609,7 @@ unit aoptx86;
 
                                           TAICPU(hp1).opsize := S_L;
                                           if (TAICPU(hp1).oper[1]^.typ = top_reg) then
-                                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                                         end;
 {$endif x86_64}
                                     else
@@ -3663,11 +3663,11 @@ unit aoptx86;
                         (TAICPU(p).oper[0]^.typ <> top_const) then { MOVZX only supports registers and memory, not immediates (use MOV for that!) }
                         begin
                           InputVal := debug_operstr(TAICPU(p).oper[0]^);
-                          MaskNum := debug_tostr(TAICPU(hp1).oper[0]^.val);
+                          MaskNum := debug_tostr(TAICPU(hp1).oper[0]^.Val);
 
                           case TAICPU(p).opsize of
                             S_B:
-                              if (TAICPU(hp1).oper[0]^.val = $ff) then
+                              if (TAICPU(hp1).oper[0]^.Val = $ff) then
                                 begin
                                   { Convert:
                                       movb x, %regl        movb x, %regl
@@ -3693,7 +3693,7 @@ unit aoptx86;
                               else
                                 NewSize := S_NO;
                             S_W:
-                              if (TAICPU(hp1).oper[0]^.val = $ffff) then
+                              if (TAICPU(hp1).oper[0]^.Val = $ffff) then
                                 begin
                                   { Convert:
                                       movw x, %regw
@@ -3732,10 +3732,10 @@ unit aoptx86;
                               { Make sure we deal with any reference counts that were increased }
                               if TAICPU(hp1).oper[1]^.typ = top_ref then
                                 begin
-                                  if Assigned(TAICPU(hp1).oper[1]^.ref^.symbol) then
-                                    TAICPU(hp1).oper[1]^.ref^.symbol.decrefs;
-                                  if Assigned(TAICPU(hp1).oper[1]^.ref^.relsymbol) then
-                                    TAICPU(hp1).oper[1]^.ref^.relsymbol.decrefs;
+                                  if Assigned(TAICPU(hp1).oper[1]^.Ref^.Symbol) then
+                                    TAICPU(hp1).oper[1]^.Ref^.Symbol.decrefs;
+                                  if Assigned(TAICPU(hp1).oper[1]^.Ref^.RelSymbol) then
+                                    TAICPU(hp1).oper[1]^.Ref^.RelSymbol.decrefs;
                                 end;
 
                               { Safeguard if "and" is followed by a conditional command }
@@ -3854,7 +3854,7 @@ unit aoptx86;
                                   end;
 
                                   TAICPU(hp1).opcode := A_MOVZX;
-                                  setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                                  SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                                 end
                               else
                                 begin
@@ -3890,8 +3890,8 @@ unit aoptx86;
                           UpdateUsedRegsBetween(TmpUsedRegs, TAI(p.Next), hp1);
 
                           TAICPU(hp1).opsize := S_L;
-                          TAICPU(hp1).loadreg(0, p_SourceReg);
-                          setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                          TAICPU(hp1).LoadReg(0, p_SourceReg);
+                          SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
 
                           AllocRegBetween(p_SourceReg, p, hp1, UsedRegs);
 
@@ -4007,7 +4007,7 @@ unit aoptx86;
                                                     TAICPU(hp3).ops := 2;
                                                     TAICPU(hp3).condition := C_None;
                                                     TAICPU(hp3).opsize := S_B;
-                                                    TAICPU(hp3).loadreg(1,TAICPU(hp3).oper[0]^.reg);
+                                                    TAICPU(hp3).LoadReg(1,TAICPU(hp3).oper[0]^.reg);
                                                     TAICPU(hp3).loadconst(0, 1);
                                                     Result := True;
                                                   end;
@@ -4022,7 +4022,7 @@ unit aoptx86;
                                                 A_Jcc:
                                                   begin
                                                     DebugMsg(SPeepholeOptimization + 'Condition is always false (jump removed)', hp3);
-                                                    TAsmLabel(TAICPU(hp3).oper[0]^.ref^.symbol).decrefs;
+                                                    TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol).decrefs;
                                                     RemoveInstruction(hp3);
                                                     Result := True;
                                                     { Since hp3 was deleted, hp2 must not be updated }
@@ -4044,7 +4044,7 @@ unit aoptx86;
                                                     TAICPU(hp3).ops := 2;
                                                     TAICPU(hp3).condition := C_None;
                                                     TAICPU(hp3).opsize := S_B;
-                                                    TAICPU(hp3).loadreg(1,TAICPU(hp3).oper[0]^.reg);
+                                                    TAICPU(hp3).LoadReg(1,TAICPU(hp3).oper[0]^.reg);
                                                     TAICPU(hp3).loadconst(0, 0);
                                                     Result := True;
                                                   end;
@@ -4080,8 +4080,8 @@ unit aoptx86;
                                 encoded as a value greater than or equal to 2^31 }
                               if (TAICPU(hp1).opsize = S_Q) and
                                 (TAICPU(hp1).oper[0]^.typ = top_const) and
-                                (TAICPU(hp1).oper[0]^.val >= $80000000) then
-                                TAICPU(hp1).oper[0]^.val := TAICPU(hp1).oper[0]^.val or $FFFFFFFF00000000;
+                                (TAICPU(hp1).oper[0]^.Val >= $80000000) then
+                                TAICPU(hp1).oper[0]^.Val := TAICPU(hp1).oper[0]^.Val or $FFFFFFFF00000000;
 {$endif x86_64}
                               DebugMsg(SPeepholeOptimization + 'MOV 0 / OR -> MOV', p);
                               TAICPU(hp1).opcode := A_MOV;
@@ -4093,15 +4093,15 @@ unit aoptx86;
                     end
                   else if
                     { oper[0] is a reference }
-                    (TAICPU(p).oper[0]^.ref^.refaddr <> addr_full) then
+                    (TAICPU(p).oper[0]^.Ref^.RefAddr <> addr_full) then
                     begin
                       if MatchInstruction(hp1,A_LEA,[S_L{$ifdef x86_64},S_Q{$endif x86_64}]) then
                         begin
-                          if ((MatchReference(TAICPU(hp1).oper[0]^.ref^,TAICPU(hp1).oper[1]^.reg,TAICPU(p).oper[1]^.reg) and
-                               (TAICPU(hp1).oper[0]^.ref^.base<>TAICPU(p).oper[1]^.reg)
+                          if ((MatchReference(TAICPU(hp1).oper[0]^.Ref^,TAICPU(hp1).oper[1]^.reg,TAICPU(p).oper[1]^.reg) and
+                               (TAICPU(hp1).oper[0]^.Ref^.Base<>TAICPU(p).oper[1]^.reg)
                               ) or
-                              (MatchReference(TAICPU(hp1).oper[0]^.ref^,TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.reg) and
-                               (TAICPU(hp1).oper[0]^.ref^.index<>TAICPU(p).oper[1]^.reg)
+                              (MatchReference(TAICPU(hp1).oper[0]^.Ref^,TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.reg) and
+                               (TAICPU(hp1).oper[0]^.Ref^.Index<>TAICPU(p).oper[1]^.reg)
                               )
                              ) and
                             not RegModifiedBetween(TAICPU(hp1).oper[1]^.reg, p, hp1) then
@@ -4123,11 +4123,11 @@ unit aoptx86;
                                 begin
                                   TAICPU(hp1).opcode:=A_ADD;
                                   { Just transfer the ref pointer for speed }
-                                  TAICPU(hp1).oper[0]^.ref:=TAICPU(p).oper[0]^.ref;
-                                  TrackAndCorrectRefMove(TAICPU(p).oper[0]^.ref^,p,hp1,False);
+                                  TAICPU(hp1).oper[0]^.Ref:=TAICPU(p).oper[0]^.Ref;
+                                  TrackAndCorrectRefMove(TAICPU(p).oper[0]^.Ref^,p,hp1,False);
                                   DebugMsg(SPeepholeOptimization + 'MovLea2Add done',hp1);
                                   { Set the original ref pointer to nil so it doesn't get freed }
-                                  TAICPU(p).oper[0]^.ref:=nil;
+                                  TAICPU(p).oper[0]^.Ref:=nil;
                                   RemoveCurrentp(p);
                                   result:=true;
                                   exit;
@@ -4152,7 +4152,7 @@ unit aoptx86;
                       op_idx := -1; { Needed to prevent compiler warnings }
                       if (SetAndPassThrough(GetRMReadIndex(hp1),op_idx)<>-1) and
                         (TAICPU(hp1).oper[op_idx]^.reg = p_TargetReg) and
-                        not RefModifiedBetween(TAICPU(p).oper[0]^.ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1) then
+                        not RefModifiedBetween(TAICPU(p).oper[0]^.Ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1) then
                         begin
                           TransferUsedRegs(TmpUsedRegs);
                           UpdateUsedRegsBetween(TmpUsedRegs, TAI(p.Next), hp1);
@@ -4164,7 +4164,7 @@ unit aoptx86;
 
                               { A trick so RegLoadedWithNewValue will not return False
                                 if p_TargetReg is read from or appears in the reference }
-                              TAICPU(hp1).loadreg(op_idx,NR_NO);
+                              TAICPU(hp1).LoadReg(op_idx,NR_NO);
 
                               TransferUsedRegs(TmpUsedRegs);
                               UpdateUsedRegsBetween(TmpUsedRegs, TAI(p.Next), hp1);
@@ -4178,34 +4178,34 @@ unit aoptx86;
                               if RegUsedAfterInstruction(p_TargetReg, hp1, TmpUsedRegs) then
                                 begin
                                   { Abort }
-                                  TAICPU(hp1).loadreg(op_idx,p_TargetReg);
+                                  TAICPU(hp1).LoadReg(op_idx,p_TargetReg);
                                   DoOptimisation := False;
                                 end;
                             end;
 
                           if DoOptimisation then
                             begin
-                              TAICPU(hp1).loadref(op_idx,TAICPU(p).oper[0]^.ref^);
+                              TAICPU(hp1).loadref(op_idx,TAICPU(p).oper[0]^.Ref^);
 
                               { loadref increases the reference count, so decrement it again }
-                              if Assigned(TAICPU(p).oper[0]^.ref^.symbol) then
-                                TAICPU(p).oper[0]^.ref^.symbol.decrefs;
-                              if Assigned(TAICPU(p).oper[0]^.ref^.relsymbol) then
-                                TAICPU(p).oper[0]^.ref^.relsymbol.decrefs;
+                              if Assigned(TAICPU(p).oper[0]^.Ref^.Symbol) then
+                                TAICPU(p).oper[0]^.Ref^.Symbol.decrefs;
+                              if Assigned(TAICPU(p).oper[0]^.Ref^.RelSymbol) then
+                                TAICPU(p).oper[0]^.Ref^.RelSymbol.decrefs;
 
                               DebugMsg(SPeepholeOptimization + 'MovOp2Op done',hp1);
 
                               { See if we can remove the allocation of reg0 }
-                              if not RegInRef(p_TargetReg, TAICPU(p).oper[0]^.ref^) then
+                              if not RegInRef(p_TargetReg, TAICPU(p).oper[0]^.Ref^) then
                                 TryRemoveRegAlloc(p_TargetReg, p, hp1);
 
                               { Update the register tracking for the registers inside the reference }
-                              if (TAICPU(p).oper[0]^.ref^.base<>NR_NO) then
-                                AllocRegBetween(TAICPU(p).oper[0]^.ref^.base, p, hp1, UsedRegs);
+                              if (TAICPU(p).oper[0]^.Ref^.Base<>NR_NO) then
+                                AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Base, p, hp1, UsedRegs);
 
-                              if (TAICPU(p).oper[0]^.ref^.index<>NR_NO) and
-                                (TAICPU(p).oper[0]^.ref^.index<>TAICPU(p).oper[0]^.ref^.base) then
-                                AllocRegBetween(TAICPU(p).oper[0]^.ref^.index, p, hp1, UsedRegs);
+                              if (TAICPU(p).oper[0]^.Ref^.Index<>NR_NO) and
+                                (TAICPU(p).oper[0]^.Ref^.Index<>TAICPU(p).oper[0]^.Ref^.Base) then
+                                AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Index, p, hp1, UsedRegs);
 
                               RemoveCurrentp(p);
                               Result:=true;
@@ -4245,38 +4245,38 @@ unit aoptx86;
                                     S_BW:
                                       begin
                                         convert_mov_value(A_MOVSX, $FF);
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBW);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBW);
                                         TAICPU(p).opsize := S_W;
                                       end;
                                     S_BL:
                                       begin
                                         convert_mov_value(A_MOVSX, $FF);
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
                                         TAICPU(p).opsize := S_L;
                                       end;
                                     S_WL:
                                       begin
                                         convert_mov_value(A_MOVSX, $FFFF);
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
                                         TAICPU(p).opsize := S_L;
                                       end;
 {$ifdef x86_64}
                                     S_BQ:
                                       begin
                                         convert_mov_value(A_MOVSX, $FF);
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBQ);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBQ);
                                         TAICPU(p).opsize := S_Q;
                                       end;
                                     S_WQ:
                                       begin
                                         convert_mov_value(A_MOVSX, $FFFF);
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBQ);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBQ);
                                         TAICPU(p).opsize := S_Q;
                                       end;
                                     S_LQ:
                                       begin
                                         convert_mov_value(A_MOVSXD, $FFFFFFFF);  { Note it's MOVSXD, not MOVSX }
-                                        setsubreg(TAICPU(p).oper[1]^.reg, R_SUBQ);
+                                        SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBQ);
                                         TAICPU(p).opsize := S_Q;
                                       end;
 {$endif x86_64}
@@ -4301,7 +4301,7 @@ unit aoptx86;
 
                                     movzbl mem,  %regd
                                   }
-                                  if (TAICPU(p).oper[0]^.ref^.refaddr<>addr_full) and (IsMOVZXAcceptable or (TAICPU(hp1).opcode<>A_MOVZX)) then
+                                  if (TAICPU(p).oper[0]^.Ref^.RefAddr<>addr_full) and (IsMOVZXAcceptable or (TAICPU(hp1).opcode<>A_MOVZX)) then
                                     begin
                                       DebugMsg(SPeepholeOptimization + 'MovMovXX2MovXX 1 done',p);
 
@@ -4387,17 +4387,17 @@ unit aoptx86;
                                     { For 32-to-64-bit zero-extension, the immediate
                                       must be between 0 and 2^31 - 1}
                                     (TAICPU(p).opsize=S_L) and (TAICPU(hp1).opsize=S_Q) and
-                                    ((TAICPU(p).oper[0]^.val>=0) and (TAICPU(p).oper[0]^.val<=high(LongInt)))
+                                    ((TAICPU(p).oper[0]^.Val>=0) and (TAICPU(p).oper[0]^.Val<=high(LongInt)))
                                   ) or
                                   (
                                     not ((TAICPU(p).opsize=S_L) and (TAICPU(hp1).opsize=S_Q)) and
                                     (
-                                      (TAICPU(p).oper[0]^.val>=low(LongInt)) and (TAICPU(p).oper[0]^.val<=high(LongInt))
+                                      (TAICPU(p).oper[0]^.Val>=low(LongInt)) and (TAICPU(p).oper[0]^.Val<=high(LongInt))
                                     )
                                   ) then
 {$endif x86_64}
                                   begin
-                                    TAICPU(hp1).loadconst(0, TAICPU(p).oper[0]^.val);
+                                    TAICPU(hp1).loadconst(0, TAICPU(p).oper[0]^.Val);
                                     DebugMsg(SPeepholeOptimization + 'MovMov2Mov 5 done', hp1);
                                     RemoveCurrentP(p);
                                     Result := True;
@@ -4421,9 +4421,9 @@ unit aoptx86;
                                       { If zero extending from 32-bit to 64-bit,
                                         we have to make sure the replaced
                                         register is the right size }
-                                      TAICPU(p).loadreg(1, newreg(R_INTREGISTER,getsupreg(TAICPU(hp1).oper[1]^.reg),getsubreg(p_TargetReg)));
+                                      TAICPU(p).LoadReg(1, NewReg(R_INTREGISTER,GetSupReg(TAICPU(hp1).oper[1]^.reg),GetSubReg(p_TargetReg)));
 {$else}
-                                      TAICPU(p).loadreg(1, TAICPU(hp1).oper[1]^.reg);
+                                      TAICPU(p).LoadReg(1, TAICPU(hp1).oper[1]^.reg);
 {$endif x86_64}
                                       DebugMsg(SPeepholeOptimization + 'MovMov2Mov 3a done', p);
                                       AllocRegBetween(TAICPU(hp1).oper[1]^.reg, p, hp1, UsedRegs);
@@ -4434,19 +4434,19 @@ unit aoptx86;
                                   else if
                                     { Make sure that if a reference is used, its
                                       registers are not modified in between }
-                                    not RefModifiedBetween(TAICPU(p).oper[0]^.ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1) then
+                                    not RefModifiedBetween(TAICPU(p).oper[0]^.Ref^, topsize2memsize[TAICPU(p).opsize] shr 3, p, hp1) then
                                     begin
-                                      if (TAICPU(p).oper[0]^.ref^.base <> NR_NO){$ifdef x86_64} and (TAICPU(p).oper[0]^.ref^.base <> NR_RIP){$endif x86_64} then
-                                        AllocRegBetween(TAICPU(p).oper[0]^.ref^.base, p, hp1, UsedRegs);
-                                      if (TAICPU(p).oper[0]^.ref^.index <> NR_NO) and (TAICPU(p).oper[0]^.ref^.index <> TAICPU(p).oper[0]^.ref^.base) then
-                                        AllocRegBetween(TAICPU(p).oper[0]^.ref^.index, p, hp1, UsedRegs);
+                                      if (TAICPU(p).oper[0]^.Ref^.Base <> NR_NO){$ifdef x86_64} and (TAICPU(p).oper[0]^.Ref^.Base <> NR_RIP){$endif x86_64} then
+                                        AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Base, p, hp1, UsedRegs);
+                                      if (TAICPU(p).oper[0]^.Ref^.Index <> NR_NO) and (TAICPU(p).oper[0]^.Ref^.Index <> TAICPU(p).oper[0]^.Ref^.Base) then
+                                        AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Index, p, hp1, UsedRegs);
 
-                                      TAICPU(hp1).loadref(0, TAICPU(p).oper[0]^.ref^);
+                                      TAICPU(hp1).loadref(0, TAICPU(p).oper[0]^.Ref^);
 
-                                      if Assigned(TAICPU(p).oper[0]^.ref^.symbol) then
-                                        TAICPU(p).oper[0]^.ref^.symbol.decrefs;
-                                      if Assigned(TAICPU(p).oper[0]^.ref^.relsymbol) then
-                                        TAICPU(p).oper[0]^.ref^.relsymbol.decrefs;
+                                      if Assigned(TAICPU(p).oper[0]^.Ref^.Symbol) then
+                                        TAICPU(p).oper[0]^.Ref^.Symbol.decrefs;
+                                      if Assigned(TAICPU(p).oper[0]^.Ref^.RelSymbol) then
+                                        TAICPU(p).oper[0]^.Ref^.RelSymbol.decrefs;
 
                                       DebugMsg(SPeepholeOptimization + 'MovMov2Mov 3 done', hp1);
                                       RemoveCurrentP(p);
@@ -4454,7 +4454,7 @@ unit aoptx86;
                                       Exit;
                                     end;
                                 top_ref:
-                                  if not RegInRef(p_TargetReg, TAICPU(p).oper[0]^.ref^) then
+                                  if not RegInRef(p_TargetReg, TAICPU(p).oper[0]^.Ref^) then
                                     begin
 {$ifdef x86_64}
                                       { Look for the following to simplify:
@@ -4470,8 +4470,8 @@ unit aoptx86;
 
                                         ...but only as long as the memory blocks don't overlap
                                       }
-                                      SourceRef := TAICPU(p).oper[0]^.ref^;
-                                      TargetRef := TAICPU(hp1).oper[1]^.ref^;
+                                      SourceRef := TAICPU(p).oper[0]^.Ref^;
+                                      TargetRef := TAICPU(hp1).oper[1]^.Ref^;
                                       if (TAICPU(p).opsize = S_Q) and
                                         not RegUsedAfterInstruction(p_TargetReg, hp1, TmpUsedRegs) and
                                         GetNextInstruction(hp1, hp2) and
@@ -4482,7 +4482,7 @@ unit aoptx86;
 
                                           UpdateUsedRegs(TmpUsedRegs, TAI(hp1.Next));
 
-                                          Inc(SourceRef.offset, 8);
+                                          Inc(SourceRef.Offset, 8);
 
                                           if UseAVX then
                                             begin
@@ -4495,27 +4495,27 @@ unit aoptx86;
                                               MovUnaligned := A_MOVDQU;
                                             end;
 
-                                          if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.ref^) and
-                                            not RefsMightOverlap(TAICPU(p).oper[0]^.ref^, TargetRef, 16) then
+                                          if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.Ref^) and
+                                            not RefsMightOverlap(TAICPU(p).oper[0]^.Ref^, TargetRef, 16) then
                                             begin
                                               UpdateUsedRegs(TmpUsedRegs, TAI(hp2.Next));
-                                              Inc(TargetRef.offset, 8);
+                                              Inc(TargetRef.Offset, 8);
                                               if GetNextInstruction(hp2, hp3) and
                                                 MatchInstruction(hp3, A_MOV, [TAICPU(p).opsize]) and
                                                 MatchOpType(TAICPU(hp3), top_reg, top_ref) and
                                                 (TAICPU(hp2).oper[1]^.reg = TAICPU(hp3).oper[0]^.reg) and
-                                                RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.ref^) and
+                                                RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.Ref^) and
                                                 not RegUsedAfterInstruction(TAICPU(hp2).oper[1]^.reg, hp3, TmpUsedRegs) then
                                                 begin
                                                   NewMMReg := GetMMRegisterBetween(R_SUBMMX, UsedRegs, p, hp3);
                                                   if NewMMReg <> NR_NO then
                                                     begin
                                                       { Remember that the offsets are 8 ahead }
-                                                      if ((SourceRef.offset mod 16) = 8) and
+                                                      if ((SourceRef.Offset mod 16) = 8) and
                                                         (
                                                           { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                          (SourceRef.base = CurrentProcInfo.framepointer) or
-                                                          ((SourceRef.alignment >= 16) and ((SourceRef.alignment mod 16) = 0))
+                                                          (SourceRef.Base = CurrentProcInfo.framepointer) or
+                                                          ((SourceRef.Alignment >= 16) and ((SourceRef.Alignment mod 16) = 0))
                                                         ) then
                                                         TAICPU(p).opcode := MovAligned
                                                       else
@@ -4524,11 +4524,11 @@ unit aoptx86;
                                                       TAICPU(p).opsize := S_XMM;
                                                       TAICPU(p).oper[1]^.reg := NewMMReg;
 
-                                                      if ((TargetRef.offset mod 16) = 8) and
+                                                      if ((TargetRef.Offset mod 16) = 8) and
                                                         (
                                                           { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                          (TargetRef.base = CurrentProcInfo.framepointer) or
-                                                          ((TargetRef.alignment >= 16) and ((TargetRef.alignment mod 16) = 0))
+                                                          (TargetRef.Base = CurrentProcInfo.framepointer) or
+                                                          ((TargetRef.Alignment >= 16) and ((TargetRef.Alignment mod 16) = 0))
                                                         ) then
                                                         TAICPU(hp1).opcode := MovAligned
                                                       else
@@ -4550,28 +4550,28 @@ unit aoptx86;
                                             begin
                                               { See if the next references are 8 less rather than 8 greater }
 
-                                              Dec(SourceRef.offset, 16); { -8 the other way }
-                                              if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.ref^) then
+                                              Dec(SourceRef.Offset, 16); { -8 the other way }
+                                              if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.Ref^) then
                                                 begin
                                                   UpdateUsedRegs(TmpUsedRegs, TAI(hp2.Next));
-                                                  Dec(TargetRef.offset, 8); { Only 8, not 16, as it wasn't incremented unlike SourceRef }
+                                                  Dec(TargetRef.Offset, 8); { Only 8, not 16, as it wasn't incremented unlike SourceRef }
                                                   if not RefsMightOverlap(SourceRef, TargetRef, 16) and
                                                     GetNextInstruction(hp2, hp3) and
                                                     MatchInstruction(hp3, A_MOV, [TAICPU(p).opsize]) and
                                                     MatchOpType(TAICPU(hp3), top_reg, top_ref) and
                                                     (TAICPU(hp2).oper[1]^.reg = TAICPU(hp3).oper[0]^.reg) and
-                                                    RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.ref^) and
+                                                    RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.Ref^) and
                                                     not RegUsedAfterInstruction(TAICPU(hp2).oper[1]^.reg, hp3, TmpUsedRegs) then
                                                     begin
                                                       NewMMReg := GetMMRegisterBetween(R_SUBMMX, UsedRegs, p, hp3);
                                                       if NewMMReg <> NR_NO then
                                                         begin
                                                           { hp2 and hp3 are the starting offsets, so mod = 0 this time }
-                                                          if ((SourceRef.offset mod 16) = 0) and
+                                                          if ((SourceRef.Offset mod 16) = 0) and
                                                             (
                                                               { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                              (SourceRef.base = CurrentProcInfo.framepointer) or
-                                                              ((SourceRef.alignment >= 16) and ((SourceRef.alignment mod 16) = 0))
+                                                              (SourceRef.Base = CurrentProcInfo.framepointer) or
+                                                              ((SourceRef.Alignment >= 16) and ((SourceRef.Alignment mod 16) = 0))
                                                             ) then
                                                             TAICPU(hp2).opcode := MovAligned
                                                           else
@@ -4580,11 +4580,11 @@ unit aoptx86;
                                                           TAICPU(hp2).opsize := S_XMM;
                                                           TAICPU(hp2).oper[1]^.reg := NewMMReg;
 
-                                                          if ((TargetRef.offset mod 16) = 0) and
+                                                          if ((TargetRef.Offset mod 16) = 0) and
                                                             (
                                                               { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                              (TargetRef.base = CurrentProcInfo.framepointer) or
-                                                              ((TargetRef.alignment >= 16) and ((TargetRef.alignment mod 16) = 0))
+                                                              (TargetRef.Base = CurrentProcInfo.framepointer) or
+                                                              ((TargetRef.Alignment >= 16) and ((TargetRef.Alignment mod 16) = 0))
                                                             ) then
                                                             TAICPU(hp3).opcode := MovAligned
                                                           else
@@ -4629,18 +4629,18 @@ unit aoptx86;
                             { For 32-to-64-bit zero-extension, the immediate
                               must be between 0 and 2^31 - 1}
                             (TAICPU(p).opsize=S_L) and (TAICPU(hp1).opsize=S_Q) and
-                            ((TAICPU(p).oper[0]^.val>=0) and (TAICPU(p).oper[0]^.val<=high(LongInt)))
+                            ((TAICPU(p).oper[0]^.Val>=0) and (TAICPU(p).oper[0]^.Val<=high(LongInt)))
                           ) or
                           (
                             not ((TAICPU(p).opsize=S_L) and (TAICPU(hp1).opsize=S_Q)) and
                             (
-                              (TAICPU(p).oper[0]^.val>=low(LongInt)) and (TAICPU(p).oper[0]^.val<=high(LongInt))
+                              (TAICPU(p).oper[0]^.Val>=low(LongInt)) and (TAICPU(p).oper[0]^.Val<=high(LongInt))
                             )
                           )
                         ) then
                         begin
-                          DebugMsg(SPeepholeOptimization + debug_operstr(TAICPU(hp1).oper[0]^) + ' = $' + debug_tostr(TAICPU(p).oper[0]^.val) + '; changed to minimise pipeline stall (MovMov2Mov 6b)',hp1);
-                          TAICPU(hp1).loadconst(0, TAICPU(p).oper[0]^.val);
+                          DebugMsg(SPeepholeOptimization + debug_operstr(TAICPU(hp1).oper[0]^) + ' = $' + debug_tostr(TAICPU(p).oper[0]^.Val) + '; changed to minimise pipeline stall (MovMov2Mov 6b)',hp1);
+                          TAICPU(hp1).loadconst(0, TAICPU(p).oper[0]^.Val);
                           Include(OptsToCheck, aoc_ForceNewIteration);
                         end;
                     end;
@@ -4683,30 +4683,30 @@ unit aoptx86;
                     if MatchInstruction(hp1, A_MOV, [TAICPU(p).opsize]) and
                       (TAICPU(hp1).oper[0]^.typ = top_ref) { The other operand will be a register } and
                       (TAICPU(hp1).oper[1]^.reg = p_SourceReg) and
-                      RegInRef(p_SourceReg, TAICPU(hp1).oper[0]^.ref^) and
+                      RegInRef(p_SourceReg, TAICPU(hp1).oper[0]^.Ref^) and
                       not RegModifiedBetween(p_TargetReg, p, hp1) and
                       GetNextInstructionUsingReg(hp1, hp2, p_TargetReg) and
                       MatchInstruction(hp2, A_MOV, [TAICPU(p).opsize]) and
                       (TAICPU(hp2).oper[0]^.typ = top_ref) { The other operand will be a register } and
                       not RegModifiedBetween(p_SourceReg, hp1, hp2) then
                       begin
-                        SourceRef := TAICPU(hp2).oper[0]^.ref^;
+                        SourceRef := TAICPU(hp2).oper[0]^.Ref^;
                         if RegInRef(p_TargetReg, SourceRef) and
                           { If %reg1 also appears in the second reference, then it will
                             not refer to the same memory block as the first reference }
                           not RegInRef(p_SourceReg, SourceRef) then
                           begin
                             { Check to see if the references match if %reg2 is changed to %reg1 }
-                            if SourceRef.base = p_TargetReg then
-                              SourceRef.base := p_SourceReg;
+                            if SourceRef.Base = p_TargetReg then
+                              SourceRef.Base := p_SourceReg;
 
-                            if SourceRef.index = p_TargetReg then
-                              SourceRef.index := p_SourceReg;
+                            if SourceRef.Index = p_TargetReg then
+                              SourceRef.Index := p_SourceReg;
 
                             { RefsEqual also checks to ensure both references are non-volatile }
-                            if RefsEqual(TAICPU(hp1).oper[0]^.ref^, SourceRef) then
+                            if RefsEqual(TAICPU(hp1).oper[0]^.Ref^, SourceRef) then
                               begin
-                                TAICPU(hp2).loadreg(0, p_SourceReg);
+                                TAICPU(hp2).LoadReg(0, p_SourceReg);
 
                                 TransferUsedRegs(TmpUsedRegs);
                                 UpdateUsedRegsBetween(TmpUsedRegs, TAI(p.Next), hp1);
@@ -4764,13 +4764,13 @@ unit aoptx86;
             UpdateUsedRegs(TmpUsedRegs, TAI(p.Next));
             if not RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg,hp1,TmpUsedRegs) then
               begin
-                TAICPU(hp1).loadref(0,TAICPU(p).oper[0]^.ref^);
+                TAICPU(hp1).loadref(0,TAICPU(p).oper[0]^.Ref^);
 
                 { loadref increases the reference count, so decrement it again }
-                if Assigned(TAICPU(p).oper[0]^.ref^.symbol) then
-                  TAICPU(p).oper[0]^.ref^.symbol.decrefs;
-                if Assigned(TAICPU(p).oper[0]^.ref^.relsymbol) then
-                  TAICPU(p).oper[0]^.ref^.relsymbol.decrefs;
+                if Assigned(TAICPU(p).oper[0]^.Ref^.Symbol) then
+                  TAICPU(p).oper[0]^.Ref^.Symbol.decrefs;
+                if Assigned(TAICPU(p).oper[0]^.Ref^.RelSymbol) then
+                  TAICPU(p).oper[0]^.Ref^.RelSymbol.decrefs;
 
                 DebugMsg(SPeepholeOptimization+'Merged MOV and (V)MOVD/(V)MOVQ to eliminate intermediate register (MovMovD/Q2MovD/Q)',p);
                 RemoveCurrentP(p,hp1);
@@ -4876,7 +4876,7 @@ unit aoptx86;
                         if (TAICPU(p).oper[1]^.typ = top_ref) and
                           { mov reg1, mem1
                             mov mem2, reg1 }
-                           (TAICPU(hp1).oper[0]^.ref^.refaddr = addr_no) and
+                           (TAICPU(hp1).oper[0]^.Ref^.RefAddr = addr_no) and
                            GetNextInstruction(hp1, hp2) and
                            MatchInstruction(hp2,A_CMP,[TAICPU(p).opsize]) and
                            OpsEqual(TAICPU(p).oper[1]^,TAICPU(hp2).oper[0]^) and
@@ -4890,8 +4890,8 @@ unit aoptx86;
                           begin
                             RemoveInstruction(hp2);
                             TAICPU(hp1).opcode := A_CMP;
-                            TAICPU(hp1).loadref(1,TAICPU(hp1).oper[0]^.ref^);
-                            TAICPU(hp1).loadreg(0,TAICPU(p).oper[0]^.reg);
+                            TAICPU(hp1).loadref(1,TAICPU(hp1).oper[0]^.Ref^);
+                            TAICPU(hp1).LoadReg(0,TAICPU(p).oper[0]^.reg);
                             AllocRegBetween(TAICPU(p).oper[0]^.reg,p,hp1,UsedRegs);
                             DebugMsg(SPeepholeOptimization + 'MovMovCmp2MovCmp done',hp1);
                           end;
@@ -4901,7 +4901,7 @@ unit aoptx86;
                   OpsEqual(TAICPU(hp1).oper[0]^,TAICPU(p).oper[1]^) then
                   begin
                     AllocRegBetween(TAICPU(p).oper[0]^.reg,p,hp1,UsedRegs);
-                    TAICPU(hp1).loadreg(0,TAICPU(p).oper[0]^.reg);
+                    TAICPU(hp1).LoadReg(0,TAICPU(p).oper[0]^.reg);
                     DebugMsg(SPeepholeOptimization + 'MovMov2MovMov1 done',p);
                   end
                 else
@@ -4913,8 +4913,8 @@ unit aoptx86;
                       (TAICPU(hp1).oper[1]^.typ = top_ref) and
                       MatchInstruction(hp2,A_MOV,[TAICPU(p).opsize]) and
                       MatchOpType(TAICPU(hp2),top_ref,top_reg) and
-                      RefsEqual(TAICPU(hp2).oper[0]^.ref^, TAICPU(hp1).oper[1]^.ref^)  then
-                      if not RegInRef(TAICPU(hp2).oper[1]^.reg,TAICPU(hp2).oper[0]^.ref^) and
+                      RefsEqual(TAICPU(hp2).oper[0]^.Ref^, TAICPU(hp1).oper[1]^.Ref^)  then
+                      if not RegInRef(TAICPU(hp2).oper[1]^.reg,TAICPU(hp2).oper[0]^.Ref^) and
                          not(RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg,hp1,tmpUsedRegs)) then
                         {   mov mem1, %reg1
                             mov %reg1, mem2
@@ -4936,8 +4936,8 @@ unit aoptx86;
                         on x86-64
                       }
                       else if (TAICPU(p).oper[1]^.reg <> TAICPU(hp2).oper[1]^.reg) and
-                        not(RegInRef(TAICPU(p).oper[1]^.reg,TAICPU(p).oper[0]^.ref^)) and
-                        not(RegInRef(TAICPU(hp2).oper[1]^.reg,TAICPU(hp2).oper[0]^.ref^)) then
+                        not(RegInRef(TAICPU(p).oper[1]^.reg,TAICPU(p).oper[0]^.Ref^)) and
+                        not(RegInRef(TAICPU(hp2).oper[1]^.reg,TAICPU(hp2).oper[0]^.Ref^)) then
                         {   mov mem1, reg1         mov mem1, reg1
                             mov reg1, mem2         mov reg1, mem2
                             mov mem2, reg2         mov mem2, reg1
@@ -4954,21 +4954,21 @@ unit aoptx86;
                              mov reg1, reg2
                         }
                         begin
-                          TAICPU(hp1).loadRef(0,TAICPU(p).oper[0]^.ref^);
-                          TAICPU(hp1).loadReg(1,TAICPU(hp2).oper[1]^.reg);
-                          TAICPU(hp2).loadRef(1,TAICPU(hp2).oper[0]^.ref^);
-                          TAICPU(hp2).loadReg(0,TAICPU(p).oper[1]^.reg);
+                          TAICPU(hp1).loadRef(0,TAICPU(p).oper[0]^.Ref^);
+                          TAICPU(hp1).LoadReg(1,TAICPU(hp2).oper[1]^.reg);
+                          TAICPU(hp2).loadRef(1,TAICPU(hp2).oper[0]^.Ref^);
+                          TAICPU(hp2).LoadReg(0,TAICPU(p).oper[1]^.reg);
                           AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp2,usedregs);
-                          if (TAICPU(p).oper[0]^.ref^.base <> NR_NO) and
-                             (getsupreg(TAICPU(p).oper[0]^.ref^.base) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX,RS_ESI,RS_EDI]) then
-                            AllocRegBetween(TAICPU(p).oper[0]^.ref^.base,p,hp2,usedregs);
-                          if (TAICPU(p).oper[0]^.ref^.index <> NR_NO) and
-                             (getsupreg(TAICPU(p).oper[0]^.ref^.index) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX,RS_ESI,RS_EDI]) then
-                            AllocRegBetween(TAICPU(p).oper[0]^.ref^.index,p,hp2,usedregs);
+                          if (TAICPU(p).oper[0]^.Ref^.Base <> NR_NO) and
+                             (GetSupReg(TAICPU(p).oper[0]^.Ref^.Base) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX,RS_ESI,RS_EDI]) then
+                            AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Base,p,hp2,usedregs);
+                          if (TAICPU(p).oper[0]^.Ref^.Index <> NR_NO) and
+                             (GetSupReg(TAICPU(p).oper[0]^.Ref^.Index) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX,RS_ESI,RS_EDI]) then
+                            AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Index,p,hp2,usedregs);
                         end
                       else if (TAICPU(hp1).Oper[0]^.reg <> TAICPU(hp2).Oper[1]^.reg) then
                         begin
-                          TAICPU(hp2).loadReg(0,TAICPU(hp1).Oper[0]^.reg);
+                          TAICPU(hp2).LoadReg(0,TAICPU(hp1).Oper[0]^.reg);
                           AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp2,usedregs);
                         end
                       else
@@ -5000,13 +5000,13 @@ unit aoptx86;
                  MatchOpType(TAICPU(p),top_const,top_ref) and
                  MatchOpType(TAICPU(hp1),top_ref,top_reg) and
                  (TAICPU(p).opsize = TAICPU(hp1).opsize) and
-                 RefsEqual(TAICPU(hp1).oper[0]^.ref^,TAICPU(p).oper[1]^.ref^) and
-                 not(RegInRef(TAICPU(hp1).oper[1]^.reg,TAICPU(hp1).oper[0]^.ref^)) then
+                 RefsEqual(TAICPU(hp1).oper[0]^.Ref^,TAICPU(p).oper[1]^.Ref^) and
+                 not(RegInRef(TAICPU(hp1).oper[1]^.reg,TAICPU(hp1).oper[0]^.Ref^)) then
               begin
                 AllocRegBetween(TAICPU(hp1).oper[1]^.reg,p,hp1,usedregs);
-                TAICPU(hp1).loadReg(0,TAICPU(hp1).oper[1]^.reg);
-                TAICPU(hp1).loadRef(1,TAICPU(p).oper[1]^.ref^);
-                TAICPU(p).loadReg(1,TAICPU(hp1).oper[0]^.reg);
+                TAICPU(hp1).LoadReg(0,TAICPU(hp1).oper[1]^.reg);
+                TAICPU(hp1).loadRef(1,TAICPU(p).oper[1]^.Ref^);
+                TAICPU(p).LoadReg(1,TAICPU(hp1).oper[0]^.reg);
                 TAICPU(hp1).fileinfo := TAICPU(p).fileinfo;
                 DebugMsg(SPeepholeOptimization + 'MovMov2MovMov 1',p);
                 Result:=true;
@@ -5131,13 +5131,13 @@ unit aoptx86;
                               else
                                 begin
                                   AllocRegBetween(p_SourceReg, p, hp2, UsedRegs);
-                                  TAICPU(hp2).loadReg(0, p_SourceReg);
+                                  TAICPU(hp2).LoadReg(0, p_SourceReg);
 
                                   DebugMsg(SPeepholeOptimization + RegName1 + ' = ' + debug_regname(p_SourceReg) + '; changed to minimise pipeline stall (MovMov2Mov 6a}',hp2);
 
                                   { Check to see if the register also appears in the reference }
                                   if (TAICPU(hp2).oper[1]^.typ = top_ref) then
-                                    ReplaceRegisterInRef(TAICPU(hp2).oper[1]^.ref^, p_TargetReg, p_SourceReg);
+                                    ReplaceRegisterInRef(TAICPU(hp2).oper[1]^.Ref^, p_TargetReg, p_SourceReg);
 
                                   { ReplaceRegisterInRef won't actually replace the register if it's a different size }
                                   if not RegInOp(p_TargetReg, TAICPU(hp2).oper[1]^) then
@@ -5172,7 +5172,7 @@ unit aoptx86;
                                     mov const, y
                                 }
                                 if (TAICPU(hp2).oper[1]^.typ=top_reg) or
-                                  ((TAICPU(p).oper[0]^.val>=low(LongInt)) and (TAICPU(p).oper[0]^.val<=high(LongInt))) then
+                                  ((TAICPU(p).oper[0]^.Val>=low(LongInt)) and (TAICPU(p).oper[0]^.Val<=high(LongInt))) then
                                   begin
                                     RegName1 := debug_regname(TAICPU(hp2).oper[0]^.reg);
                                     TAICPU(hp2).loadOper(0,TAICPU(p).oper[0]^);
@@ -5180,7 +5180,7 @@ unit aoptx86;
                                     if TempRegUsed then
                                       begin
                                         { Don't remove the first instruction if the temporary register is in use }
-                                        DebugMsg(SPeepholeOptimization + RegName1 + ' = ' + debug_tostr(TAICPU(p).oper[0]^.val) + '; changed to minimise pipeline stall (MovMov2Mov 7a)',hp2);
+                                        DebugMsg(SPeepholeOptimization + RegName1 + ' = ' + debug_tostr(TAICPU(p).oper[0]^.Val) + '; changed to minimise pipeline stall (MovMov2Mov 7a)',hp2);
 
                                         { No need to set Result to True. If there's another instruction later on
                                           that can be optimised, it will be detected when the main Pass 1 loop
@@ -5217,7 +5217,7 @@ unit aoptx86;
                         if (TAICPU(p).oper[0]^.typ = top_const) and
                           (TAICPU(hp2).oper[0]^.typ = top_const) then
                           begin
-                            if TAICPU(p).oper[0]^.val = TAICPU(hp2).oper[0]^.val then
+                            if TAICPU(p).oper[0]^.Val = TAICPU(hp2).oper[0]^.Val then
                               begin
                                 { Same value - register hasn't changed }
                                 DebugMsg(SPeepholeOptimization + 'Mov2Nop 2 done', hp2);
@@ -5258,8 +5258,8 @@ unit aoptx86;
                           RegUsedAfterInstruction(p_TargetReg, hp2, TmpUsedRegs);
 
                         TAICPU(hp2).opsize := S_L;
-                        TAICPU(hp2).loadreg(0, TAICPU(p).oper[0]^.reg);
-                        setsubreg(TAICPU(hp2).oper[1]^.reg, R_SUBD);
+                        TAICPU(hp2).LoadReg(0, TAICPU(p).oper[0]^.reg);
+                        SetSubReg(TAICPU(hp2).oper[1]^.reg, R_SUBD);
 
                         AllocRegBetween(TAICPU(p).oper[0]^.reg, p, hp2, UsedRegs);
 
@@ -5421,10 +5421,10 @@ unit aoptx86;
                   shl %cl,###
               }
               (TAICPU(p).opsize <> S_B) and
-              (getsupreg(TAICPU(p).oper[1]^.reg) = RS_ECX) and
+              (GetSupReg(TAICPU(p).oper[1]^.reg) = RS_ECX) and
               (
                 (TAICPU(p).oper[0]^.typ <> top_reg) or
-                (getsupreg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_EBX, RS_EDX])
+                (GetSupReg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_EBX, RS_EDX])
               )
             ) or
 {$endif not x86_64}
@@ -5447,7 +5447,7 @@ unit aoptx86;
                   begin
                     if SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp2).oper[1]^.reg) then
                       begin
-                        if ((TAICPU(hp2).oper[0]^.typ=top_const) and (TAICPU(hp2).oper[0]^.val = $ffffffff)) or
+                        if ((TAICPU(hp2).oper[0]^.typ=top_const) and (TAICPU(hp2).oper[0]^.Val = $ffffffff)) or
                           ((TAICPU(hp2).oper[0]^.typ=top_reg) and (TAICPU(hp2).opsize=S_L)) then
                           begin
                             { Optimize out:
@@ -5465,34 +5465,34 @@ unit aoptx86;
               end
             else if
               { Need to check again in case we entered this block because aoc_MovAnd2Mov_3 was set }
-              (getsupreg(TAICPU(p).oper[1]^.reg) = RS_ECX) and
+              (GetSupReg(TAICPU(p).oper[1]^.reg) = RS_ECX) and
               (
                 (TAICPU(p).oper[0]^.typ <> top_reg) or
                 { Only EAX, ECX, EDX and EBX have 8-bit counterparts }
-                (getsupreg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX])
+                (GetSupReg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX])
               ) and
               MatchInstruction(hp2, [A_SHL, A_SHR, A_SHLD, A_SHRD, A_SAR, A_ROR, A_ROL, A_RCR, A_RCL], []) and
               (TAICPU(hp2).oper[0]^.typ = top_reg) { Will be %cl } and
               (
                 (
                   (TAICPU(hp2).oper[1]^.typ = top_reg) and
-                  (getsupreg(TAICPU(hp2).oper[1]^.reg) <> RS_ECX) and
+                  (GetSupReg(TAICPU(hp2).oper[1]^.reg) <> RS_ECX) and
                   (
                     (TAICPU(hp2).ops = 2) or
                     (
                       { For SHLD/SHRD }
                       (
                         (TAICPU(hp2).oper[2]^.typ = top_reg) and
-                        (getsupreg(TAICPU(hp2).oper[2]^.reg) <> RS_ECX)
+                        (GetSupReg(TAICPU(hp2).oper[2]^.reg) <> RS_ECX)
                       ) or (
                         (TAICPU(hp2).oper[2]^.typ = top_ref) and
-                        not RegInRef(NR_ECX, TAICPU(hp2).oper[2]^.ref^)
+                        not RegInRef(NR_ECX, TAICPU(hp2).oper[2]^.Ref^)
                       )
                     )
                   )
                 ) or (
                   (TAICPU(hp2).oper[1]^.typ = top_ref) and
-                  not RegInRef(NR_ECX, TAICPU(hp2).oper[1]^.ref^)
+                  not RegInRef(NR_ECX, TAICPU(hp2).oper[1]^.Ref^)
                 )
               ) then
               begin
@@ -5504,13 +5504,13 @@ unit aoptx86;
 
                     TAICPU(p).opsize := S_B;
 
-                    setsubreg(TAICPU(p).oper[1]^.reg, R_SUBL);
+                    SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBL);
                     case TAICPU(p).oper[0]^.typ of
                       top_reg:
-                        setsubreg(TAICPU(p).oper[0]^.reg, R_SUBL);
+                        SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBL);
                       top_const:
-                        if (TAICPU(p).oper[0]^.val < -128) or (TAICPU(p).oper[0]^.val > 127) then
-                          TAICPU(p).oper[0]^.val := TAICPU(p).oper[0]^.val and $FF;
+                        if (TAICPU(p).oper[0]^.Val < -128) or (TAICPU(p).oper[0]^.Val > 127) then
+                          TAICPU(p).oper[0]^.Val := TAICPU(p).oper[0]^.Val and $FF;
                       else
                         { i.e. a reference, which doesn't change };
                     end;
@@ -5529,21 +5529,21 @@ unit aoptx86;
         }
         if IsExitCode(hp1) and
           (TAICPU(p).oper[1]^.typ = top_ref) and
-          (TAICPU(p).oper[1]^.ref^.index = NR_NO) and
+          (TAICPU(p).oper[1]^.Ref^.Index = NR_NO) and
           (
             (
-              (TAICPU(p).oper[1]^.ref^.base = CurrentProcInfo.FramePointer) and
+              (TAICPU(p).oper[1]^.Ref^.Base = CurrentProcInfo.FramePointer) and
               not (
                 Assigned(CurrentProcInfo.procdef.FuncRetSym) and
-                (TAICPU(p).oper[1]^.ref^.offset <= TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.reference.offset)
+                (TAICPU(p).oper[1]^.Ref^.Offset <= TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.Reference.Offset)
               )
             ) or
             { Also discard writes to the stack that are below the base pointer,
               as this is temporary storage rather than a function result on the
               stack, say. }
             (
-              (TAICPU(p).oper[1]^.ref^.base = NR_STACK_POINTER_REG) and
-              (TAICPU(p).oper[1]^.ref^.offset < CurrentProcInfo.final_localsize)
+              (TAICPU(p).oper[1]^.Ref^.Base = NR_STACK_POINTER_REG) and
+              (TAICPU(p).oper[1]^.Ref^.Offset < CurrentProcInfo.final_localsize)
             )
           ) then
           begin
@@ -5557,7 +5557,7 @@ unit aoptx86;
           begin
             if MatchOpType(TAICPU(p),top_reg,top_ref) and
               (TAICPU(hp1).oper[1]^.typ = top_ref) and
-              RefsEqual(TAICPU(p).oper[1]^.ref^, TAICPU(hp1).oper[1]^.ref^) then
+              RefsEqual(TAICPU(p).oper[1]^.Ref^, TAICPU(hp1).oper[1]^.Ref^) then
               begin
                 { change
                     mov reg1, mem1
@@ -5568,7 +5568,7 @@ unit aoptx86;
                     mov reg1, mem1
                     test/cmp x, reg1
                 }
-                TAICPU(hp1).loadreg(1,TAICPU(p).oper[0]^.reg);
+                TAICPU(hp1).LoadReg(1,TAICPU(p).oper[0]^.reg);
                 DebugMsg(SPeepholeOptimization + 'MovTestCmp2MovTestCmp 1',hp1);
                 AllocRegBetween(TAICPU(p).oper[0]^.reg,p,hp1,usedregs);
                 Result := True;
@@ -5594,7 +5594,7 @@ unit aoptx86;
             or
             (
               (TAICPU(p).opsize=S_L) and (TAICPU(hp1).opsize=S_Q) and (TAICPU(hp2).opsize=S_L) and
-              IsFoldableArithOp(TAICPU(hp1), newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[1]^.reg),R_SUBQ))
+              IsFoldableArithOp(TAICPU(hp1), NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[1]^.reg),R_SUBQ))
             )
 {$endif x86_64}
           ) then
@@ -5638,7 +5638,7 @@ unit aoptx86;
                         begin
                           TAICPU(hp1).loadoper(0, TAICPU(hp2).oper[1]^);
                           if TAICPU(hp1).oper[0]^.typ=top_reg then
-                            setsubreg(TAICPU(hp1).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                            SetSubReg(TAICPU(hp1).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                         end;
                       2:
                         begin
@@ -5647,7 +5647,7 @@ unit aoptx86;
                             (TAICPU(hp1).opcode<>A_SHL) and
                             (TAICPU(hp1).opcode<>A_SHR) and
                             (TAICPU(hp1).opcode<>A_SAR) then
-                            setsubreg(TAICPU(hp1).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                            SetSubReg(TAICPU(hp1).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                         end;
                       else
                         InternalError(2008042701);
@@ -5669,13 +5669,13 @@ unit aoptx86;
                ((TAICPU(hp1).opcode<>A_SHL) and (TAICPU(hp1).opcode<>A_SHR) and (TAICPU(hp1).opcode<>A_SAR))
               ) and
               { if ref contains a symbol, we cannot change its size to a smaller size }
-              ((TAICPU(p).oper[0]^.typ<>top_ref) or (TAICPU(p).oper[0]^.ref^.symbol=nil) or
+              ((TAICPU(p).oper[0]^.typ<>top_ref) or (TAICPU(p).oper[0]^.Ref^.Symbol=nil) or
                (topsize2memsize[TAICPU(p).opsize]<=topsize2memsize[TAICPU(hp2).opsize])
               )
 {$ifdef i386}
               { byte registers of esi, edi, ebp, esp are not available on i386 }
-              and ((TAICPU(hp2).opsize<>S_B) or not(getsupreg(TAICPU(hp1).oper[0]^.reg) in [RS_ESI,RS_EDI,RS_EBP,RS_ESP]))
-              and ((TAICPU(hp2).opsize<>S_B) or not(getsupreg(TAICPU(p).oper[0]^.reg) in [RS_ESI,RS_EDI,RS_EBP,RS_ESP]))
+              and ((TAICPU(hp2).opsize<>S_B) or not(GetSupReg(TAICPU(hp1).oper[0]^.reg) in [RS_ESI,RS_EDI,RS_EBP,RS_ESP]))
+              and ((TAICPU(hp2).opsize<>S_B) or not(GetSupReg(TAICPU(p).oper[0]^.reg) in [RS_ESI,RS_EDI,RS_EBP,RS_ESP]))
 {$endif i386}
               then
               { change   movsX/movzX    reg/ref, reg2
@@ -5708,7 +5708,7 @@ unit aoptx86;
                     { limit size of constants as well to avoid assembler errors, but
                       check opsize to avoid overflow when left shifting the 1 }
                     if (TAICPU(p).oper[0]^.typ=top_const) and (topsize2memsize[TAICPU(hp2).opsize]<=63) then
-                      TAICPU(p).oper[0]^.val:=TAICPU(p).oper[0]^.val and ((qword(1) shl topsize2memsize[TAICPU(hp2).opsize])-1);
+                      TAICPU(p).oper[0]^.Val:=TAICPU(p).oper[0]^.Val and ((qword(1) shl topsize2memsize[TAICPU(hp2).opsize])-1);
 {$ifdef x86_64}
                     { Be careful of, for example:
                         movl %reg1,%reg2
@@ -5720,15 +5720,15 @@ unit aoptx86;
                     if (TAICPU(hp1).opsize = S_L) and (TAICPU(hp2).opsize = S_Q) then
                       begin
                         TAICPU(hp2).changeopsize(S_L);
-                        setsubreg(TAICPU(hp2).oper[0]^.reg, R_SUBD);
-                        setsubreg(TAICPU(hp2).oper[1]^.reg, R_SUBD);
+                        SetSubReg(TAICPU(hp2).oper[0]^.reg, R_SUBD);
+                        SetSubReg(TAICPU(hp2).oper[1]^.reg, R_SUBD);
                       end;
 {$endif x86_64}
 
                     ChangeArithmeticOpSize(TAICPU(hp1),TAICPU(hp2).opsize);
                     TAICPU(p).changeopsize(TAICPU(hp2).opsize);
                     if TAICPU(p).oper[0]^.typ=top_reg then
-                      setsubreg(TAICPU(p).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                      SetSubReg(TAICPU(p).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                     TAICPU(p).loadoper(1, TAICPU(hp2).oper[1]^);
                     AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,usedregs);
                     {
@@ -5742,7 +5742,7 @@ unit aoptx86;
                         begin
                           TAICPU(hp1).loadoper(0, TAICPU(hp2).oper[1]^);
                           if TAICPU(hp1).oper[0]^.typ=top_reg then
-                            setsubreg(TAICPU(hp1).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                            SetSubReg(TAICPU(hp1).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                         end;
                       2:
                         begin
@@ -5751,7 +5751,7 @@ unit aoptx86;
                             (TAICPU(hp1).opcode<>A_SHL) and
                             (TAICPU(hp1).opcode<>A_SHR) and
                             (TAICPU(hp1).opcode<>A_SAR) then
-                            setsubreg(TAICPU(hp1).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                            SetSubReg(TAICPU(hp1).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                         end;
                       else
                         InternalError(2018111801);
@@ -5825,19 +5825,19 @@ unit aoptx86;
             }
             if (TAICPU(p).opsize = S_Q) and
               (TAICPU(hp1).opcode = A_SHR) and
-              (TAICPU(hp1).oper[0]^.val >= 32) then
+              (TAICPU(hp1).oper[0]^.Val >= 32) then
               begin
                 PreMessage := 'movq ' + debug_operstr(TAICPU(p).oper[0]^) + ',' + RegName1 + '; ' +
-                  'shrq $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + ',' + RegName1 + ' -> movl ';
+                  'shrq $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + ',' + RegName1 + ' -> movl ';
 
                 { Convert to 32-bit }
-                setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+                SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
                 TAICPU(p).opsize := S_L;
 
-                Inc(TAICPU(p).oper[0]^.ref^.offset, 4);
+                Inc(TAICPU(p).oper[0]^.Ref^.Offset, 4);
 
                 PreMessage := PreMessage + debug_operstr(TAICPU(p).oper[0]^) + ',' + debug_regname(TAICPU(p).oper[1]^.reg);
-                if (TAICPU(hp1).oper[0]^.val = 32) then
+                if (TAICPU(hp1).oper[0]^.Val = 32) then
                   begin
                     DebugMsg(SPeepholeOptimization + PreMessage + ' (MovShr2Mov)', p);
                     RemoveInstruction(hp1);
@@ -5847,12 +5847,12 @@ unit aoptx86;
                     { This will potentially open up more arithmetic operations since
                       the peephole optimizer now has a big hint that only the lower
                       32 bits are currently in use (and opcodes are smaller in size) }
-                    setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                    SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                     TAICPU(hp1).opsize := S_L;
 
-                    Dec(TAICPU(hp1).oper[0]^.val, 32);
+                    Dec(TAICPU(hp1).oper[0]^.Val, 32);
                     DebugMsg(SPeepholeOptimization + PreMessage +
-                      '; shrl $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + ',' + debug_regname(TAICPU(hp1).oper[1]^.reg) + ' (MovShr2MovShr)', p);
+                      '; shrl $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + ',' + debug_regname(TAICPU(hp1).oper[1]^.reg) + ' (MovShr2MovShr)', p);
                   end;
                 Result := True;
                 Exit;
@@ -5879,13 +5879,13 @@ unit aoptx86;
               S_B:
                 { No valid combinations };
               S_W:
-                if (TAICPU(hp1).oper[0]^.val = 8) then
+                if (TAICPU(hp1).oper[0]^.Val = 8) then
                   begin
                     NewSize := S_BW;
                     NewOffset := 1;
                   end;
               S_L:
-                case TAICPU(hp1).oper[0]^.val of
+                case TAICPU(hp1).oper[0]^.Val of
                   16:
                     begin
                       NewSize := S_WL;
@@ -5901,7 +5901,7 @@ unit aoptx86;
                 end;
 {$ifdef x86_64}
               S_Q:
-                case TAICPU(hp1).oper[0]^.val of
+                case TAICPU(hp1).oper[0]^.Val of
                   32:
                     begin
                       if TAICPU(hp1).opcode = A_SAR then
@@ -5934,10 +5934,10 @@ unit aoptx86;
             end;
 
             if (NewSize <> S_NO) and
-              (TAICPU(p).oper[0]^.ref^.offset <= $7FFFFFFF - NewOffset) then
+              (TAICPU(p).oper[0]^.Ref^.Offset <= $7FFFFFFF - NewOffset) then
               begin
                 PreMessage := 'mov' + debug_opsize2str(TAICPU(p).opsize) + ' ' + debug_operstr(TAICPU(p).oper[0]^) + ',' + RegName1 + '; ' +
-                  'shr' + debug_opsize2str(TAICPU(p).opsize) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + ',' + RegName1 + ' -> ' +
+                  'shr' + debug_opsize2str(TAICPU(p).opsize) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + ',' + RegName1 + ' -> ' +
                   debug_op2str(MovUnaligned);
 
 {$ifdef x86_64}
@@ -5946,7 +5946,7 @@ unit aoptx86;
 {$endif x86_64}
                   PreMessage := PreMessage + debug_opsize2str(NewSize);
 
-                Inc(TAICPU(p).oper[0]^.ref^.offset, NewOffset);
+                Inc(TAICPU(p).oper[0]^.Ref^.Offset, NewOffset);
                 TAICPU(p).opcode := MovUnaligned;
                 TAICPU(p).opsize := NewSize;
 
@@ -5989,7 +5989,7 @@ unit aoptx86;
           MatchInstruction(hp1, A_MOV, []) and
           MatchOperand(TAICPU(hp1).oper[0]^,TAICPU(p).oper[1]^.reg) and
           (TAICPU(hp1).oper[1]^.typ=top_ref) and
-          not RegInRef(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.ref^) then
+          not RegInRef(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.Ref^) then
           begin
             TransferUsedRegs(TmpUsedRegs);
             UpdateUsedRegsBetween(TmpUsedRegs,p,hp1);
@@ -6001,25 +6001,25 @@ unit aoptx86;
                     not(cs_opt_level3 in CurrentSettings.OptimizerSwitches) or
                     (
                       (
-                        (TAICPU(hp1).oper[1]^.ref^.base=NR_NO) or
-                        not RegModifiedBetween(TAICPU(hp1).oper[1]^.ref^.base,p,hp1)
+                        (TAICPU(hp1).oper[1]^.Ref^.Base=NR_NO) or
+                        not RegModifiedBetween(TAICPU(hp1).oper[1]^.Ref^.Base,p,hp1)
                       ) and
                       (
-                        (TAICPU(hp1).oper[1]^.ref^.index=NR_NO) or
-                        not RegModifiedBetween(TAICPU(hp1).oper[1]^.ref^.index,p,hp1)
+                        (TAICPU(hp1).oper[1]^.Ref^.Index=NR_NO) or
+                        not RegModifiedBetween(TAICPU(hp1).oper[1]^.Ref^.Index,p,hp1)
                       )
                     )
                   ) then
                   begin
                     DebugMsg(SPeepholeOptimization+'Merged (V)MOVD/(V)MOVQ and MOV to eliminate intermediate register (MovD/QMov2MovD/Q 1a)',p);
 
-                    TAICPU(p).loadref(1,TAICPU(hp1).oper[1]^.ref^);
+                    TAICPU(p).loadref(1,TAICPU(hp1).oper[1]^.Ref^);
 
                     { loadref increases the reference count, so decrement it again }
-                    if Assigned(TAICPU(hp1).oper[1]^.ref^.symbol) then
-                      TAICPU(hp1).oper[1]^.ref^.symbol.decrefs;
-                    if Assigned(TAICPU(hp1).oper[1]^.ref^.relsymbol) then
-                      TAICPU(hp1).oper[1]^.ref^.relsymbol.decrefs;
+                    if Assigned(TAICPU(hp1).oper[1]^.Ref^.Symbol) then
+                      TAICPU(hp1).oper[1]^.Ref^.Symbol.decrefs;
+                    if Assigned(TAICPU(hp1).oper[1]^.Ref^.RelSymbol) then
+                      TAICPU(hp1).oper[1]^.Ref^.RelSymbol.decrefs;
 
                     RemoveInstruction(hp1);
                     Include(OptsToCheck, aoc_ForceNewIteration);
@@ -6030,14 +6030,14 @@ unit aoptx86;
                     DebugMsg(SPeepholeOptimization+'Merged (V)MOVD/(V)MOVQ and MOV to eliminate intermediate register (MovD/QMov2MovD/Q 1b)',hp1);
 
                     { Decrement the reference prior to replacing it }
-                    if Assigned(TAICPU(hp1).oper[1]^.ref^.symbol) then
-                      TAICPU(hp1).oper[1]^.ref^.symbol.decrefs;
-                    if Assigned(TAICPU(hp1).oper[1]^.ref^.relsymbol) then
-                      TAICPU(hp1).oper[1]^.ref^.relsymbol.decrefs;
+                    if Assigned(TAICPU(hp1).oper[1]^.Ref^.Symbol) then
+                      TAICPU(hp1).oper[1]^.Ref^.Symbol.decrefs;
+                    if Assigned(TAICPU(hp1).oper[1]^.Ref^.RelSymbol) then
+                      TAICPU(hp1).oper[1]^.Ref^.RelSymbol.decrefs;
 
                     TAICPU(hp1).opcode:=TAICPU(p).opcode;
                     TAICPU(hp1).opsize:=TAICPU(p).opsize;
-                    TAICPU(hp1).loadreg(0,TAICPU(p).oper[0]^.reg);
+                    TAICPU(hp1).LoadReg(0,TAICPU(p).oper[0]^.reg);
 
                     TransferUsedRegs(TmpUsedRegs);
                     AllocRegBetween(TAICPU(p).oper[0]^.reg,p,hp1,TmpUsedRegs);
@@ -6092,8 +6092,8 @@ unit aoptx86;
                               Result:=true;
                               exit;
                             end
-                          else if (TAICPU(hp1).oper[1]^.typ<>top_ref) or (not(vol_write in TAICPU(hp1).oper[1]^.ref^.volatility)) and
-                            (TAICPU(hp1).oper[0]^.typ<>top_ref) or (not(vol_read in TAICPU(hp1).oper[0]^.ref^.volatility)) then
+                          else if (TAICPU(hp1).oper[1]^.typ<>top_ref) or (not(vol_write in TAICPU(hp1).oper[1]^.Ref^.Volatility)) and
+                            (TAICPU(hp1).oper[0]^.typ<>top_ref) or (not(vol_read in TAICPU(hp1).oper[0]^.Ref^.Volatility)) then
                             begin
                               DebugMsg(SPeepholeOptimization + 'MovXXMovXX2MoVXX 1 done',p);
                               RemoveInstruction(hp1);
@@ -6124,7 +6124,7 @@ unit aoptx86;
                tempoper:=TAICPU(hp1).oper[1];
                TAICPU(hp1).oper[1]:=TAICPU(hp1).oper[0];
                TAICPU(hp1).oper[0]:=tempoper;
-               TAICPU(hp1).loadreg(2, tempoper^.reg);
+               TAICPU(hp1).LoadReg(2, tempoper^.reg);
                TAICPU(hp1).opcode:=A_ANDN;
              end;
 
@@ -6263,28 +6263,28 @@ unit aoptx86;
       begin
         Result := False;
         if (TAICPU(p).oper[0]^.typ = top_const) and
-          (TAICPU(p).oper[0]^.val <> -1) then
+          (TAICPU(p).oper[0]^.Val <> -1) then
           begin
             { Convert unsigned maximum constants to -1 to aid optimisation }
             case TAICPU(p).opsize of
               S_B:
-                if (TAICPU(p).oper[0]^.val and $FF) = $FF then
+                if (TAICPU(p).oper[0]^.Val and $FF) = $FF then
                   begin
-                    TAICPU(p).oper[0]^.val := -1;
+                    TAICPU(p).oper[0]^.Val := -1;
                     Result := True;
                     Exit;
                   end;
               S_W:
-                if (TAICPU(p).oper[0]^.val and $FFFF) = $FFFF then
+                if (TAICPU(p).oper[0]^.Val and $FFFF) = $FFFF then
                   begin
-                    TAICPU(p).oper[0]^.val := -1;
+                    TAICPU(p).oper[0]^.Val := -1;
                     Result := True;
                     Exit;
                   end;
               S_L:
-                if (TAICPU(p).oper[0]^.val and $FFFFFFFF) = $FFFFFFFF then
+                if (TAICPU(p).oper[0]^.Val and $FFFFFFFF) = $FFFFFFFF then
                   begin
-                    TAICPU(p).oper[0]^.val := -1;
+                    TAICPU(p).oper[0]^.Val := -1;
                     Result := True;
                     Exit;
                   end;
@@ -6346,7 +6346,7 @@ unit aoptx86;
 
             if IsJumpToLabel(TAICPU(hp1)) then
               begin
-                JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.ref^.symbol);
+                JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.Ref^.Symbol);
                 if Assigned(JumpLabel) then
                   p_label := getlabelwithsym(JumpLabel);
               end;
@@ -6391,7 +6391,7 @@ unit aoptx86;
               MatchOperand(TAICPU(p).oper[1]^, TAICPU(p).oper[0]^.reg) then
               FirstValue := -1
             else
-              FirstValue := TAICPU(p).oper[0]^.val;
+              FirstValue := TAICPU(p).oper[0]^.Val;
 
             { If we have several test/jne's in a row, it might be the case that
               the second label doesn't go to the same location, but the one
@@ -6444,7 +6444,7 @@ unit aoptx86;
                       ) then
                       SecondValue := -1
                     else
-                      SecondValue := TAICPU(p_dist).oper[0]^.val;
+                      SecondValue := TAICPU(p_dist).oper[0]^.Val;
 
                     { If both of the TEST constants are identical, delete the
                       second TEST that is unnecessary (be careful though, just
@@ -6458,7 +6458,7 @@ unit aoptx86;
                               Get it out of the way now rather than wait for the jump
                               optimisations for a speed boost. }
                             if IsJumpToLabel(TAICPU(hp1_dist)) then
-                              TAsmLabel(TAICPU(hp1_dist).oper[0]^.ref^.symbol).DecRefs;
+                              TAsmLabel(TAICPU(hp1_dist).oper[0]^.Ref^.Symbol).DecRefs;
 
                             DebugMsg(SPeepholeOptimization + 'Removed dominated jump (via TEST/Jcc/TEST)', hp1_dist);
                             RemoveInstruction(hp1_dist);
@@ -6603,7 +6603,7 @@ unit aoptx86;
                                 DebugMsg(SPeepholeOptimization + 'TEST/JNE/TEST/JNE merged (second TEST preserved)', p);
 
                                 if IsJumpToLabel(TAICPU(hp1_dist)) then
-                                  TAsmLabel(TAICPU(hp1_dist).oper[0]^.ref^.symbol).DecRefs;
+                                  TAsmLabel(TAICPU(hp1_dist).oper[0]^.Ref^.Symbol).DecRefs;
 
                                 { Remove second jump in this instance }
                                 RemoveInstruction(hp1_dist);
@@ -6658,7 +6658,7 @@ unit aoptx86;
           GetNextInstruction(p_dist, hp1_dist) and
           MatchInstruction(hp1_dist, A_JCC, []) then { This doesn't have to be an explicit label }
           begin
-            JumpLabel_dist := TAsmLabel(TAICPU(hp1_dist).oper[0]^.ref^.symbol);
+            JumpLabel_dist := TAsmLabel(TAICPU(hp1_dist).oper[0]^.Ref^.Symbol);
 
             if JumpLabel = JumpLabel_dist then
               { This is an infinite loop }
@@ -6672,7 +6672,7 @@ unit aoptx86;
                   JumpLabel.DecRefs;
 
                 DebugMsg(SPeepholeOptimization + 'TEST/Jcc/@Lbl/TEST/Jcc -> TEST/Jcc, redirecting first jump', hp1);
-                TAICPU(hp1).loadref(0, TAICPU(hp1_dist).oper[0]^.ref^); { This also increases the reference count }
+                TAICPU(hp1).loadref(0, TAICPU(hp1_dist).oper[0]^.Ref^); { This also increases the reference count }
                 Result := True;
                 Exit;
               end;
@@ -6714,8 +6714,8 @@ unit aoptx86;
             if (TAICPU(p).opsize >= S_L) and
               GetNextInstructionUsingReg(p,hp1, ActiveReg) and
               MatchInstruction(hp1,A_LEA,[]) and
-              (SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.ref^.base) or
-               SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.ref^.index)) and
+              (SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.Ref^.Base) or
+               SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.Ref^.Index)) and
               (
                 { Cover the case where the register in the reference is also the destination register }
                 Reg1WriteOverwritesReg2Entirely(TAICPU(hp1).oper[1]^.reg, ActiveReg) or
@@ -6726,21 +6726,21 @@ unit aoptx86;
                 )
               ) then
               begin
-                OldOffset := TAICPU(hp1).oper[0]^.ref^.offset;
+                OldOffset := TAICPU(hp1).oper[0]^.Ref^.Offset;
 {$push}
 {$R-}{$Q-}
                 { Explicitly disable overflow checking for these offset calculation
                   as those do not matter for the final result }
-                if ActiveReg=TAICPU(hp1).oper[0]^.ref^.base then
-                  inc(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.val);
-                if ActiveReg=TAICPU(hp1).oper[0]^.ref^.index then
-                  inc(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.val*max(TAICPU(hp1).oper[0]^.ref^.scalefactor,1));
+                if ActiveReg=TAICPU(hp1).oper[0]^.Ref^.Base then
+                  inc(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Val);
+                if ActiveReg=TAICPU(hp1).oper[0]^.Ref^.Index then
+                  inc(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Val*max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor,1));
 {$pop}
 {$ifdef x86_64}
-                if (TAICPU(hp1).oper[0]^.ref^.offset > $7FFFFFFF) or (TAICPU(hp1).oper[0]^.ref^.offset < -2147483648) then
+                if (TAICPU(hp1).oper[0]^.Ref^.Offset > $7FFFFFFF) or (TAICPU(hp1).oper[0]^.Ref^.Offset < -2147483648) then
                   begin
                     { Overflow; abort }
-                    TAICPU(hp1).oper[0]^.ref^.offset := OldOffset;
+                    TAICPU(hp1).oper[0]^.Ref^.Offset := OldOffset;
                   end
                 else
 {$endif x86_64}
@@ -6775,27 +6775,27 @@ unit aoptx86;
                       begin
                         { Merge add const1,%reg; add/sub const2,%reg to add const1+/-const2,%reg }
                         if TAICPU(hp1).opcode = A_ADD then
-                          ThisConst := TAICPU(p).oper[0]^.val + TAICPU(hp1).oper[0]^.val
+                          ThisConst := TAICPU(p).oper[0]^.Val + TAICPU(hp1).oper[0]^.Val
                         else
-                          ThisConst := TAICPU(p).oper[0]^.val - TAICPU(hp1).oper[0]^.val;
+                          ThisConst := TAICPU(p).oper[0]^.Val - TAICPU(hp1).oper[0]^.Val;
 
                         Result := True;
 
                         { Handle any overflows }
                         case TAICPU(p).opsize of
                           S_B:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FF;
                           S_W:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FFFF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FFFF;
                           S_L:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FFFFFFFF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FFFFFFFF;
 {$ifdef x86_64}
                           S_Q:
                             if (ThisConst > $7FFFFFFF) or (ThisConst < -2147483648) then
                               { Overflow; abort }
                               Result := False
                             else
-                              TAICPU(p).oper[0]^.val := ThisConst;
+                              TAICPU(p).oper[0]^.Val := ThisConst;
 {$endif x86_64}
                           else
                             InternalError(2021102610);
@@ -6804,16 +6804,16 @@ unit aoptx86;
                         { Result may get set to False again if the combined immediate overflows for S_Q sizes }
                         if Result then
                           begin
-                            if (TAICPU(p).oper[0]^.val < 0) and
+                            if (TAICPU(p).oper[0]^.Val < 0) and
                               (
-                                ((TAICPU(p).opsize = S_B) and (TAICPU(p).oper[0]^.val <> -128)) or
-                                ((TAICPU(p).opsize = S_W) and (TAICPU(p).oper[0]^.val <> -32768)) or
-                                ((TAICPU(p).opsize in [S_L{$ifdef x86_64}, S_Q{$endif x86_64}]) and (TAICPU(p).oper[0]^.val <> -2147483648))
+                                ((TAICPU(p).opsize = S_B) and (TAICPU(p).oper[0]^.Val <> -128)) or
+                                ((TAICPU(p).opsize = S_W) and (TAICPU(p).oper[0]^.Val <> -32768)) or
+                                ((TAICPU(p).opsize in [S_L{$ifdef x86_64}, S_Q{$endif x86_64}]) and (TAICPU(p).oper[0]^.Val <> -2147483648))
                               ) then
                               begin
                                 DebugMsg(SPeepholeOptimization + 'ADD; ADD/SUB -> SUB',p);
                                 TAICPU(p).opcode := A_SUB;
-                                TAICPU(p).oper[0]^.val := -TAICPU(p).oper[0]^.val;
+                                TAICPU(p).oper[0]^.Val := -TAICPU(p).oper[0]^.Val;
                               end
                             else
                               DebugMsg(SPeepholeOptimization + 'ADD; ADD/SUB -> ADD',p);
@@ -6853,29 +6853,29 @@ unit aoptx86;
 
         { play save and throw an error if LEA uses a seg register prefix,
           this is most likely an error somewhere else }
-        if TAICPU(p).oper[0]^.ref^.Segment<>NR_NO then
+        if TAICPU(p).oper[0]^.Ref^.Segment<>NR_NO then
           InternalError(2022022001);
 
         { changes "lea (%reg1), %reg2" into "mov %reg1, %reg2" }
-        if (TAICPU(p).oper[0]^.ref^.base <> NR_NO) and
-           (TAICPU(p).oper[0]^.ref^.index = NR_NO) and
+        if (TAICPU(p).oper[0]^.Ref^.Base <> NR_NO) and
+           (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) and
            (
              { do not mess with leas accessing the stack pointer
                unless it's a null operation }
              (TAICPU(p).oper[1]^.reg <> NR_STACK_POINTER_REG) or
              (
-               (TAICPU(p).oper[0]^.ref^.base = NR_STACK_POINTER_REG) and
-               (TAICPU(p).oper[0]^.ref^.offset = 0)
+               (TAICPU(p).oper[0]^.Ref^.Base = NR_STACK_POINTER_REG) and
+               (TAICPU(p).oper[0]^.Ref^.Offset = 0)
              )
            ) and
-           (not(Assigned(TAICPU(p).oper[0]^.ref^.Symbol))) then
+           (not(Assigned(TAICPU(p).oper[0]^.Ref^.Symbol))) then
           begin
-            if (TAICPU(p).oper[0]^.ref^.offset = 0) then
+            if (TAICPU(p).oper[0]^.Ref^.Offset = 0) then
               begin
-                if (TAICPU(p).oper[0]^.ref^.base <> TAICPU(p).oper[1]^.reg) then
+                if (TAICPU(p).oper[0]^.Ref^.Base <> TAICPU(p).oper[1]^.reg) then
                   begin
                     TAICPU(p).opcode := A_MOV;
-                    TAICPU(p).loadreg(0, TAICPU(p).oper[0]^.ref^.base);
+                    TAICPU(p).LoadReg(0, TAICPU(p).oper[0]^.Ref^.Base);
                     DebugMsg(SPeepholeOptimization + 'Lea2Mov done',p);
                   end
                 else
@@ -6916,7 +6916,7 @@ unit aoptx86;
                 UpdateUsedRegs(TmpUsedRegs, TAI(p.next));
                 if not(RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg,hp1,TmpUsedRegs)) then
                   begin
-                    TAICPU(p).loadreg(1,TAICPU(hp1).oper[1]^.reg);
+                    TAICPU(p).LoadReg(1,TAICPU(hp1).oper[1]^.reg);
                     AllocRegBetween(TAICPU(hp1).oper[1]^.reg,p,hp1,UsedRegs);
                     DebugMsg(SPeepholeOptimization + 'LeaMov2Lea done',p);
                     RemoveInstruction(hp1);
@@ -6940,28 +6940,28 @@ unit aoptx86;
               ref:=-1;
             if (ref<>-1) and
               { reg1 must be either the base or the index }
-              ((TAICPU(hp1).oper[ref]^.ref^.base=TAICPU(p).oper[1]^.reg) xor (TAICPU(hp1).oper[ref]^.ref^.index=TAICPU(p).oper[1]^.reg)) then
+              ((TAICPU(hp1).oper[ref]^.Ref^.Base=TAICPU(p).oper[1]^.reg) xor (TAICPU(hp1).oper[ref]^.Ref^.Index=TAICPU(p).oper[1]^.reg)) then
               begin
                 { reg1 can be removed from the reference }
-                saveref:=TAICPU(hp1).oper[ref]^.ref^;
-                if TAICPU(hp1).oper[ref]^.ref^.base=TAICPU(p).oper[1]^.reg then
-                  TAICPU(hp1).oper[ref]^.ref^.base:=NR_NO
-                else if TAICPU(hp1).oper[ref]^.ref^.index=TAICPU(p).oper[1]^.reg then
-                  TAICPU(hp1).oper[ref]^.ref^.index:=NR_NO
+                saveref:=TAICPU(hp1).oper[ref]^.Ref^;
+                if TAICPU(hp1).oper[ref]^.Ref^.Base=TAICPU(p).oper[1]^.reg then
+                  TAICPU(hp1).oper[ref]^.Ref^.Base:=NR_NO
+                else if TAICPU(hp1).oper[ref]^.Ref^.Index=TAICPU(p).oper[1]^.reg then
+                  TAICPU(hp1).oper[ref]^.Ref^.Index:=NR_NO
                 else
                   InternalError(2019111201);
                 { check if the can insert all data of the lea into the second instruction }
-                if ((TAICPU(hp1).oper[ref]^.ref^.base=TAICPU(p).oper[1]^.reg) or (TAICPU(hp1).oper[ref]^.ref^.scalefactor <= 1)) and
-                  ((TAICPU(p).oper[0]^.ref^.base=NR_NO) or (TAICPU(hp1).oper[ref]^.ref^.base=NR_NO)) and
-                  ((TAICPU(p).oper[0]^.ref^.index=NR_NO) or (TAICPU(hp1).oper[ref]^.ref^.index=NR_NO)) and
-                  ((TAICPU(p).oper[0]^.ref^.symbol=nil) or (TAICPU(hp1).oper[ref]^.ref^.symbol=nil)) and
-                  ((TAICPU(p).oper[0]^.ref^.relsymbol=nil) or (TAICPU(hp1).oper[ref]^.ref^.relsymbol=nil)) and
-                  ((TAICPU(p).oper[0]^.ref^.scalefactor <= 1) or (TAICPU(hp1).oper[ref]^.ref^.scalefactor <= 1)) and
-                  (TAICPU(p).oper[0]^.ref^.segment=NR_NO) and (TAICPU(hp1).oper[ref]^.ref^.segment=NR_NO)
+                if ((TAICPU(hp1).oper[ref]^.Ref^.Base=TAICPU(p).oper[1]^.reg) or (TAICPU(hp1).oper[ref]^.Ref^.ScaleFactor <= 1)) and
+                  ((TAICPU(p).oper[0]^.Ref^.Base=NR_NO) or (TAICPU(hp1).oper[ref]^.Ref^.Base=NR_NO)) and
+                  ((TAICPU(p).oper[0]^.Ref^.Index=NR_NO) or (TAICPU(hp1).oper[ref]^.Ref^.Index=NR_NO)) and
+                  ((TAICPU(p).oper[0]^.Ref^.Symbol=nil) or (TAICPU(hp1).oper[ref]^.Ref^.Symbol=nil)) and
+                  ((TAICPU(p).oper[0]^.Ref^.RelSymbol=nil) or (TAICPU(hp1).oper[ref]^.Ref^.RelSymbol=nil)) and
+                  ((TAICPU(p).oper[0]^.Ref^.ScaleFactor <= 1) or (TAICPU(hp1).oper[ref]^.Ref^.ScaleFactor <= 1)) and
+                  (TAICPU(p).oper[0]^.Ref^.Segment=NR_NO) and (TAICPU(hp1).oper[ref]^.Ref^.Segment=NR_NO)
 {$ifdef x86_64}
-                  and (abs(TAICPU(hp1).oper[ref]^.ref^.offset+TAICPU(p).oper[0]^.ref^.offset)<=$7fffffff)
-                  and (((TAICPU(p).oper[0]^.ref^.base<>NR_RIP) and (TAICPU(p).oper[0]^.ref^.index<>NR_RIP)) or
-                       ((TAICPU(hp1).oper[ref]^.ref^.base=NR_NO) and (TAICPU(hp1).oper[ref]^.ref^.index=NR_NO))
+                  and (abs(TAICPU(hp1).oper[ref]^.Ref^.Offset+TAICPU(p).oper[0]^.Ref^.Offset)<=$7fffffff)
+                  and (((TAICPU(p).oper[0]^.Ref^.Base<>NR_RIP) and (TAICPU(p).oper[0]^.Ref^.Index<>NR_RIP)) or
+                       ((TAICPU(hp1).oper[ref]^.Ref^.Base=NR_NO) and (TAICPU(hp1).oper[ref]^.Ref^.Index=NR_NO))
                       )
 {$endif x86_64}
                   then
@@ -6975,21 +6975,21 @@ unit aoptx86;
                         if not(RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg,hp1,TmpUsedRegs)) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'LeaOp2Op done',p);
-                            if TAICPU(p).oper[0]^.ref^.base<>NR_NO then
-                              TAICPU(hp1).oper[ref]^.ref^.base:=TAICPU(p).oper[0]^.ref^.base;
-                            if TAICPU(p).oper[0]^.ref^.index<>NR_NO then
-                              TAICPU(hp1).oper[ref]^.ref^.index:=TAICPU(p).oper[0]^.ref^.index;
-                            if TAICPU(p).oper[0]^.ref^.symbol<>nil then
-                              TAICPU(hp1).oper[ref]^.ref^.symbol:=TAICPU(p).oper[0]^.ref^.symbol;
-                            if TAICPU(p).oper[0]^.ref^.relsymbol<>nil then
-                              TAICPU(hp1).oper[ref]^.ref^.relsymbol:=TAICPU(p).oper[0]^.ref^.relsymbol;
-                            if TAICPU(p).oper[0]^.ref^.scalefactor > 1 then
-                              TAICPU(hp1).oper[ref]^.ref^.scalefactor:=TAICPU(p).oper[0]^.ref^.scalefactor;
-                            inc(TAICPU(hp1).oper[ref]^.ref^.offset,TAICPU(p).oper[0]^.ref^.offset);
+                            if TAICPU(p).oper[0]^.Ref^.Base<>NR_NO then
+                              TAICPU(hp1).oper[ref]^.Ref^.Base:=TAICPU(p).oper[0]^.Ref^.Base;
+                            if TAICPU(p).oper[0]^.Ref^.Index<>NR_NO then
+                              TAICPU(hp1).oper[ref]^.Ref^.Index:=TAICPU(p).oper[0]^.Ref^.Index;
+                            if TAICPU(p).oper[0]^.Ref^.Symbol<>nil then
+                              TAICPU(hp1).oper[ref]^.Ref^.Symbol:=TAICPU(p).oper[0]^.Ref^.Symbol;
+                            if TAICPU(p).oper[0]^.Ref^.RelSymbol<>nil then
+                              TAICPU(hp1).oper[ref]^.Ref^.RelSymbol:=TAICPU(p).oper[0]^.Ref^.RelSymbol;
+                            if TAICPU(p).oper[0]^.Ref^.ScaleFactor > 1 then
+                              TAICPU(hp1).oper[ref]^.Ref^.ScaleFactor:=TAICPU(p).oper[0]^.Ref^.ScaleFactor;
+                            inc(TAICPU(hp1).oper[ref]^.Ref^.Offset,TAICPU(p).oper[0]^.Ref^.Offset);
 
                             { Make sure the registers in the reference are
                               tracked and symbols aren't double-counted }
-                            TrackAndCorrectRefMove(TAICPU(p).oper[0]^.ref^, p, hp1, False);
+                            TrackAndCorrectRefMove(TAICPU(p).oper[0]^.Ref^, p, hp1, False);
 
                             RemoveCurrentP(p, hp1);
                             result:=true;
@@ -6998,7 +6998,7 @@ unit aoptx86;
                       end;
                   end;
                 { recover }
-                TAICPU(hp1).oper[ref]^.ref^:=saveref;
+                TAICPU(hp1).oper[ref]^.Ref^:=saveref;
               end;
 
             Adjacent := RegInInstruction(TAICPU(p).oper[1]^.reg, hp1);
@@ -7008,24 +7008,24 @@ unit aoptx86;
               begin
                 { Check common LEA/LEA conditions }
                 if MatchInstruction(hp1,A_LEA,[TAICPU(p).opsize]) and
-                  (TAICPU(p).oper[0]^.ref^.relsymbol = nil) and
-                  (TAICPU(p).oper[0]^.ref^.segment = NR_NO) and
-                  (TAICPU(p).oper[0]^.ref^.symbol = nil) and
-                  (TAICPU(hp1).oper[0]^.ref^.relsymbol = nil) and
-                  (TAICPU(hp1).oper[0]^.ref^.segment = NR_NO) and
-                  (TAICPU(hp1).oper[0]^.ref^.symbol = nil) and
+                  (TAICPU(p).oper[0]^.Ref^.RelSymbol = nil) and
+                  (TAICPU(p).oper[0]^.Ref^.Segment = NR_NO) and
+                  (TAICPU(p).oper[0]^.Ref^.Symbol = nil) and
+                  (TAICPU(hp1).oper[0]^.Ref^.RelSymbol = nil) and
+                  (TAICPU(hp1).oper[0]^.Ref^.Segment = NR_NO) and
+                  (TAICPU(hp1).oper[0]^.Ref^.Symbol = nil) and
                   (
                     { If p and hp1 are adjacent, RegModifiedBetween always returns False, so avoid
                       calling it (since it calls GetNextInstruction) }
                     Adjacent or
                     (
                       (
-                        (TAICPU(p).oper[0]^.ref^.base = NR_NO) or { Don't call RegModifiedBetween unnecessarily }
-                        not(RegModifiedBetween(TAICPU(p).oper[0]^.ref^.base,p,hp1))
+                        (TAICPU(p).oper[0]^.Ref^.Base = NR_NO) or { Don't call RegModifiedBetween unnecessarily }
+                        not(RegModifiedBetween(TAICPU(p).oper[0]^.Ref^.Base,p,hp1))
                       ) and (
-                        (TAICPU(p).oper[0]^.ref^.index = TAICPU(p).oper[0]^.ref^.base) or { Don't call RegModifiedBetween unnecessarily }
-                        (TAICPU(p).oper[0]^.ref^.index = NR_NO) or
-                        not(RegModifiedBetween(TAICPU(p).oper[0]^.ref^.index,p,hp1))
+                        (TAICPU(p).oper[0]^.Ref^.Index = TAICPU(p).oper[0]^.Ref^.Base) or { Don't call RegModifiedBetween unnecessarily }
+                        (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) or
+                        not(RegModifiedBetween(TAICPU(p).oper[0]^.Ref^.Index,p,hp1))
                       )
                     )
                   ) then
@@ -7062,7 +7062,7 @@ unit aoptx86;
 
                       (Similarly, allow the first instruction to be "lea (regX,regX),reg1")
                       }
-                    if (TAICPU(p).oper[0]^.ref^.base<>NR_STACK_POINTER_REG) and { lea (%rsp,scale),reg is not a valid encoding }
+                    if (TAICPU(p).oper[0]^.Ref^.Base<>NR_STACK_POINTER_REG) and { lea (%rsp,scale),reg is not a valid encoding }
                       (
                         { Don't optimise if size is a concern and the intermediate register remains in use }
                         IntermediateRegDiscarded or
@@ -7070,88 +7070,88 @@ unit aoptx86;
                           not (cs_opt_size in CurrentSettings.OptimizerSwitches) and
                           { If the intermediate register is not discarded, it must not
                             appear in the first LEA's reference.  (Fixes #41166) }
-                          not RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(p).oper[0]^.ref^)
+                          not RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(p).oper[0]^.Ref^)
                         )
                       ) and
-                      (TAICPU(hp1).oper[0]^.ref^.index = TAICPU(p).oper[1]^.reg) and
+                      (TAICPU(hp1).oper[0]^.Ref^.Index = TAICPU(p).oper[1]^.reg) and
                       (
-                        (TAICPU(p).oper[0]^.ref^.base <> TAICPU(p).oper[0]^.ref^.index) or
-                        (TAICPU(p).oper[0]^.ref^.scalefactor <= 1)
+                        (TAICPU(p).oper[0]^.Ref^.Base <> TAICPU(p).oper[0]^.Ref^.Index) or
+                        (TAICPU(p).oper[0]^.Ref^.ScaleFactor <= 1)
                       ) and (
                         (
                           { lea (reg1,scale2), reg2 variant }
-                          (TAICPU(hp1).oper[0]^.ref^.base <> TAICPU(p).oper[1]^.reg) and
+                          (TAICPU(hp1).oper[0]^.Ref^.Base <> TAICPU(p).oper[1]^.reg) and
                           (
                             Adjacent or
-                            not RegModifiedBetween(TAICPU(hp1).oper[0]^.ref^.base, p, hp1)
+                            not RegModifiedBetween(TAICPU(hp1).oper[0]^.Ref^.Base, p, hp1)
                           ) and
                           (
                             (
-                              (TAICPU(p).oper[0]^.ref^.base = NR_NO) and
-                              (TAICPU(hp1).oper[0]^.ref^.scalefactor * TAICPU(p).oper[0]^.ref^.scalefactor <= 8)
+                              (TAICPU(p).oper[0]^.Ref^.Base = NR_NO) and
+                              (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor * TAICPU(p).oper[0]^.Ref^.ScaleFactor <= 8)
                             ) or (
                               { lea (regX,regX), reg1 variant }
-                              (TAICPU(p).oper[0]^.ref^.base = TAICPU(p).oper[0]^.ref^.index) and
-                              (TAICPU(hp1).oper[0]^.ref^.scalefactor <= 4)
+                              (TAICPU(p).oper[0]^.Ref^.Base = TAICPU(p).oper[0]^.Ref^.Index) and
+                              (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor <= 4)
                             )
                           )
                         ) or (
                           { lea (reg1,reg1), reg1 variant }
-                          (TAICPU(hp1).oper[0]^.ref^.base = TAICPU(p).oper[1]^.reg) and
-                          (TAICPU(hp1).oper[0]^.ref^.scalefactor <= 1)
+                          (TAICPU(hp1).oper[0]^.Ref^.Base = TAICPU(p).oper[1]^.reg) and
+                          (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor <= 1)
                         )
                       ) then
                       begin
                         { Make everything homogeneous to make calculations easier }
-                        if (TAICPU(p).oper[0]^.ref^.base <> NR_NO) then
+                        if (TAICPU(p).oper[0]^.Ref^.Base <> NR_NO) then
                           begin
-                            if TAICPU(p).oper[0]^.ref^.index <> NR_NO then
+                            if TAICPU(p).oper[0]^.Ref^.Index <> NR_NO then
                               { Convert lea (regX,regX),reg1 to lea (regX,2),reg1 }
-                              TAICPU(p).oper[0]^.ref^.scalefactor := 2
+                              TAICPU(p).oper[0]^.Ref^.ScaleFactor := 2
                             else
-                              TAICPU(p).oper[0]^.ref^.index := TAICPU(p).oper[0]^.ref^.base;
+                              TAICPU(p).oper[0]^.Ref^.Index := TAICPU(p).oper[0]^.Ref^.Base;
 
-                            TAICPU(p).oper[0]^.ref^.base := NR_NO;
+                            TAICPU(p).oper[0]^.Ref^.Base := NR_NO;
                           end;
 
                         { Make sure the offset doesn't go out of range (use 64-bit arithmetic)}
-                        offsetcalc := TAICPU(hp1).oper[0]^.ref^.offset;
-                        Inc(offsetcalc, Int64(TAICPU(p).oper[0]^.ref^.offset) * max(TAICPU(hp1).oper[0]^.ref^.scalefactor, 1));
+                        offsetcalc := TAICPU(hp1).oper[0]^.Ref^.Offset;
+                        Inc(offsetcalc, Int64(TAICPU(p).oper[0]^.Ref^.Offset) * max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor, 1));
 
                         if (offsetcalc <= $7FFFFFFF) and (offsetcalc >= -2147483648) then
                           begin
-                            if (TAICPU(hp1).oper[0]^.ref^.base = TAICPU(p).oper[1]^.reg) and
-                              (TAICPU(hp1).oper[0]^.ref^.index <> TAICPU(p).oper[1]^.reg) then
+                            if (TAICPU(hp1).oper[0]^.Ref^.Base = TAICPU(p).oper[1]^.reg) and
+                              (TAICPU(hp1).oper[0]^.Ref^.Index <> TAICPU(p).oper[1]^.reg) then
                               begin
                                 { Put the register to change in the index register }
-                                TempReg := TAICPU(hp1).oper[0]^.ref^.index;
-                                TAICPU(hp1).oper[0]^.ref^.index := TAICPU(hp1).oper[0]^.ref^.base;
-                                TAICPU(hp1).oper[0]^.ref^.base := TempReg;
+                                TempReg := TAICPU(hp1).oper[0]^.Ref^.Index;
+                                TAICPU(hp1).oper[0]^.Ref^.Index := TAICPU(hp1).oper[0]^.Ref^.Base;
+                                TAICPU(hp1).oper[0]^.Ref^.Base := TempReg;
                               end;
 
                             { Change lea (reg,reg) to lea(,reg,2) }
-                            if (TAICPU(hp1).oper[0]^.ref^.base = TAICPU(p).oper[1]^.reg) then
+                            if (TAICPU(hp1).oper[0]^.Ref^.Base = TAICPU(p).oper[1]^.reg) then
                               begin
-                                TAICPU(hp1).oper[0]^.ref^.base := NR_NO;
-                                TAICPU(hp1).oper[0]^.ref^.scalefactor := 2;
+                                TAICPU(hp1).oper[0]^.Ref^.Base := NR_NO;
+                                TAICPU(hp1).oper[0]^.Ref^.ScaleFactor := 2;
                               end;
 
-                            if (TAICPU(p).oper[0]^.ref^.offset <> 0) then
-                              Inc(TAICPU(hp1).oper[0]^.ref^.offset, TAICPU(p).oper[0]^.ref^.offset * max(TAICPU(hp1).oper[0]^.ref^.scalefactor, 1));
-                            TAICPU(hp1).oper[0]^.ref^.index := TAICPU(p).oper[0]^.ref^.index;
+                            if (TAICPU(p).oper[0]^.Ref^.Offset <> 0) then
+                              Inc(TAICPU(hp1).oper[0]^.Ref^.Offset, TAICPU(p).oper[0]^.Ref^.Offset * max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor, 1));
+                            TAICPU(hp1).oper[0]^.Ref^.Index := TAICPU(p).oper[0]^.Ref^.Index;
 
                             { Just to prevent miscalculations }
-                            if (TAICPU(hp1).oper[0]^.ref^.scalefactor = 0) then
-                              TAICPU(hp1).oper[0]^.ref^.scalefactor := TAICPU(p).oper[0]^.ref^.scalefactor
+                            if (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor = 0) then
+                              TAICPU(hp1).oper[0]^.Ref^.ScaleFactor := TAICPU(p).oper[0]^.Ref^.ScaleFactor
                             else
-                              TAICPU(hp1).oper[0]^.ref^.scalefactor := TAICPU(hp1).oper[0]^.ref^.scalefactor * max(TAICPU(p).oper[0]^.ref^.scalefactor, 1);
+                              TAICPU(hp1).oper[0]^.Ref^.ScaleFactor := TAICPU(hp1).oper[0]^.Ref^.ScaleFactor * max(TAICPU(p).oper[0]^.Ref^.ScaleFactor, 1);
 
-                            if (TAICPU(p).oper[0]^.ref^.base<>NR_NO) and
-                               (not RegInUsedRegs(TAICPU(p).oper[0]^.ref^.base, TmpUsedRegs)) then
-                              AllocRegBetween(TAICPU(p).oper[0]^.ref^.base , p, hp1, TmpUsedRegs);
-                            if (TAICPU(p).oper[0]^.ref^.index<>NR_NO) and
-                               (not RegInUsedRegs(TAICPU(p).oper[0]^.ref^.index, TmpUsedRegs)) then
-                              AllocRegBetween(TAICPU(p).oper[0]^.ref^.index , p, hp1, TmpUsedRegs);
+                            if (TAICPU(p).oper[0]^.Ref^.Base<>NR_NO) and
+                               (not RegInUsedRegs(TAICPU(p).oper[0]^.Ref^.Base, TmpUsedRegs)) then
+                              AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Base , p, hp1, TmpUsedRegs);
+                            if (TAICPU(p).oper[0]^.Ref^.Index<>NR_NO) and
+                               (not RegInUsedRegs(TAICPU(p).oper[0]^.Ref^.Index, TmpUsedRegs)) then
+                              AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Index , p, hp1, TmpUsedRegs);
                             UpdateUsedRegsBetween(TmpUsedRegs, p, hp1);
 
                             { Only remove the first LEA if we don't need the intermediate register's value as is }
@@ -7180,30 +7180,30 @@ unit aoptx86;
                           not (cs_opt_size in CurrentSettings.OptimizerSwitches) and
                           { If the intermediate register is not discarded, it must not
                             appear in the first LEA's reference.  (Fixes #41166) }
-                          not RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(p).oper[0]^.ref^)
+                          not RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(p).oper[0]^.Ref^)
                         )
                       ) and
                       (
                         (
-                          (TAICPU(hp1).oper[0]^.ref^.index = TAICPU(p).oper[1]^.reg) and
-                          (getsupreg(TAICPU(p).oper[0]^.ref^.base)<>RS_ESP) and
-                          (TAICPU(p).oper[0]^.ref^.index = NR_NO)
+                          (TAICPU(hp1).oper[0]^.Ref^.Index = TAICPU(p).oper[1]^.reg) and
+                          (GetSupReg(TAICPU(p).oper[0]^.Ref^.Base)<>RS_ESP) and
+                          (TAICPU(p).oper[0]^.Ref^.Index = NR_NO)
                         ) or (
-                          (TAICPU(hp1).oper[0]^.ref^.base = TAICPU(p).oper[1]^.reg) and
-                          (TAICPU(hp1).oper[0]^.ref^.scalefactor <= 1) and
+                          (TAICPU(hp1).oper[0]^.Ref^.Base = TAICPU(p).oper[1]^.reg) and
+                          (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor <= 1) and
                           (
                             (
-                              (TAICPU(p).oper[0]^.ref^.index = NR_NO) or
-                              (TAICPU(p).oper[0]^.ref^.base = NR_NO)
+                              (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) or
+                              (TAICPU(p).oper[0]^.Ref^.Base = NR_NO)
                             ) or (
-                              (TAICPU(p).oper[0]^.ref^.scalefactor <= 1) and
+                              (TAICPU(p).oper[0]^.Ref^.ScaleFactor <= 1) and
                               (
-                                (TAICPU(p).oper[0]^.ref^.index = NR_NO) or
+                                (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) or
                                 (
-                                  (TAICPU(p).oper[0]^.ref^.index = TAICPU(p).oper[0]^.ref^.base) and
+                                  (TAICPU(p).oper[0]^.Ref^.Index = TAICPU(p).oper[0]^.Ref^.Base) and
                                   (
-                                    (TAICPU(hp1).oper[0]^.ref^.index = NR_NO) or
-                                    (TAICPU(hp1).oper[0]^.ref^.base = NR_NO)
+                                    (TAICPU(hp1).oper[0]^.Ref^.Index = NR_NO) or
+                                    (TAICPU(hp1).oper[0]^.Ref^.Base = NR_NO)
                                   )
                                 )
                               )
@@ -7213,50 +7213,50 @@ unit aoptx86;
                       ) then
                       begin
                         { Make sure the offset doesn't go out of range (use 64-bit arithmetic)}
-                        offsetcalc := TAICPU(hp1).oper[0]^.ref^.offset;
-                        Inc(offsetcalc, Int64(TAICPU(p).oper[0]^.ref^.offset) * max(TAICPU(hp1).oper[0]^.ref^.scalefactor, 1));
+                        offsetcalc := TAICPU(hp1).oper[0]^.Ref^.Offset;
+                        Inc(offsetcalc, Int64(TAICPU(p).oper[0]^.Ref^.Offset) * max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor, 1));
 
                         if (offsetcalc <= $7FFFFFFF) and (offsetcalc >= -2147483648) then
                           begin
-                            if TAICPU(hp1).oper[0]^.ref^.index=TAICPU(p).oper[1]^.reg then
+                            if TAICPU(hp1).oper[0]^.Ref^.Index=TAICPU(p).oper[1]^.reg then
                               begin
-                                TAICPU(hp1).oper[0]^.ref^.index:=TAICPU(p).oper[0]^.ref^.base;
-                                inc(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.ref^.offset*max(TAICPU(hp1).oper[0]^.ref^.scalefactor,1));
+                                TAICPU(hp1).oper[0]^.Ref^.Index:=TAICPU(p).oper[0]^.Ref^.Base;
+                                inc(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Ref^.Offset*max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor,1));
                                 { if the register is used as index and base, we have to increase for base as well
                                   and adapt base }
-                                if TAICPU(hp1).oper[0]^.ref^.base=TAICPU(p).oper[1]^.reg then
+                                if TAICPU(hp1).oper[0]^.Ref^.Base=TAICPU(p).oper[1]^.reg then
                                   begin
-                                    TAICPU(hp1).oper[0]^.ref^.base:=TAICPU(p).oper[0]^.ref^.base;
-                                    inc(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.ref^.offset);
+                                    TAICPU(hp1).oper[0]^.Ref^.Base:=TAICPU(p).oper[0]^.Ref^.Base;
+                                    inc(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Ref^.Offset);
                                   end;
                               end
                             else
                               begin
-                                inc(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.ref^.offset);
-                                TAICPU(hp1).oper[0]^.ref^.base:=TAICPU(p).oper[0]^.ref^.base;
+                                inc(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Ref^.Offset);
+                                TAICPU(hp1).oper[0]^.Ref^.Base:=TAICPU(p).oper[0]^.Ref^.Base;
                               end;
 
-                            if TAICPU(p).oper[0]^.ref^.index<>NR_NO then
+                            if TAICPU(p).oper[0]^.Ref^.Index<>NR_NO then
                               begin
-                                TAICPU(hp1).oper[0]^.ref^.base:=TAICPU(hp1).oper[0]^.ref^.index;
-                                TAICPU(hp1).oper[0]^.ref^.index:=TAICPU(p).oper[0]^.ref^.index;
+                                TAICPU(hp1).oper[0]^.Ref^.Base:=TAICPU(hp1).oper[0]^.Ref^.Index;
+                                TAICPU(hp1).oper[0]^.Ref^.Index:=TAICPU(p).oper[0]^.Ref^.Index;
 
-                                if (TAICPU(p).oper[0]^.ref^.index = TAICPU(p).oper[0]^.ref^.base) then
+                                if (TAICPU(p).oper[0]^.Ref^.Index = TAICPU(p).oper[0]^.Ref^.Base) then
                                   { Catch the situation where the base = index
                                     and treat this as *2.  The scalefactor of
                                     p will be 0 or 1 due to the conditional
                                     checks above.  Fixes i40647 }
-                                  TAICPU(hp1).oper[0]^.ref^.scalefactor := 2
+                                  TAICPU(hp1).oper[0]^.Ref^.ScaleFactor := 2
                                 else
-                                  TAICPU(hp1).oper[0]^.ref^.scalefactor := TAICPU(p).oper[0]^.ref^.scalefactor;
+                                  TAICPU(hp1).oper[0]^.Ref^.ScaleFactor := TAICPU(p).oper[0]^.Ref^.ScaleFactor;
                               end;
 
-                            if (TAICPU(p).oper[0]^.ref^.base<>NR_NO) and
-                               (not RegInUsedRegs(TAICPU(p).oper[0]^.ref^.base, TmpUsedRegs)) then
-                              AllocRegBetween(TAICPU(p).oper[0]^.ref^.base , p, hp1, TmpUsedRegs);
-                            if (TAICPU(p).oper[0]^.ref^.index<>NR_NO) and
-                               (not RegInUsedRegs(TAICPU(p).oper[0]^.ref^.index, TmpUsedRegs)) then
-                              AllocRegBetween(TAICPU(p).oper[0]^.ref^.index , p, hp1, TmpUsedRegs);
+                            if (TAICPU(p).oper[0]^.Ref^.Base<>NR_NO) and
+                               (not RegInUsedRegs(TAICPU(p).oper[0]^.Ref^.Base, TmpUsedRegs)) then
+                              AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Base , p, hp1, TmpUsedRegs);
+                            if (TAICPU(p).oper[0]^.Ref^.Index<>NR_NO) and
+                               (not RegInUsedRegs(TAICPU(p).oper[0]^.Ref^.Index, TmpUsedRegs)) then
+                              AllocRegBetween(TAICPU(p).oper[0]^.Ref^.Index , p, hp1, TmpUsedRegs);
                             UpdateUsedRegsBetween(TmpUsedRegs, p, hp1);
 
                             { Only remove the first LEA if we don't need the intermediate register's value as is }
@@ -7282,48 +7282,48 @@ unit aoptx86;
                   To:
                     leal/q $(x+2^y)(%reg1,2^y),%reg2 (if y <= 3)
                 }
-                if (TAICPU(p).oper[0]^.ref^.base<>NR_STACK_POINTER_REG) and { lea (%rsp,scale),reg is not a valid encoding }
+                if (TAICPU(p).oper[0]^.Ref^.Base<>NR_STACK_POINTER_REG) and { lea (%rsp,scale),reg is not a valid encoding }
                   MatchInstruction(hp1, A_SHL, [TAICPU(p).opsize]) and
                   MatchOpType(TAICPU(hp1), top_const, top_reg) and
                   (TAICPU(hp1).oper[1]^.reg = TAICPU(p).oper[1]^.reg) and
-                  (TAICPU(hp1).oper[0]^.val <= 3) then
+                  (TAICPU(hp1).oper[0]^.Val <= 3) then
                   begin
-                    Multiple := 1 shl TAICPU(hp1).oper[0]^.val;
+                    Multiple := 1 shl TAICPU(hp1).oper[0]^.Val;
                     TransferUsedRegs(TmpUsedRegs);
                     UpdateUsedRegs(TmpUsedRegs, TAI(hp1.Next));
 
                     if
                       { This allows the optimisation in some circumstances even if the lea instruction already has a scale factor
                         (this works even if scalefactor is zero) }
-                      ((Multiple * TAICPU(p).oper[0]^.ref^.scalefactor) <= 8) and
+                      ((Multiple * TAICPU(p).oper[0]^.Ref^.ScaleFactor) <= 8) and
 
                       { Ensure offset doesn't go out of bounds }
-                      (abs(TAICPU(p).oper[0]^.ref^.offset * Multiple) <= $7FFFFFFF) and
+                      (abs(TAICPU(p).oper[0]^.Ref^.Offset * Multiple) <= $7FFFFFFF) and
 
                       not (RegInUsedRegs(NR_DEFAULTFLAGS,TmpUsedRegs)) and
                       (
                         (
-                          not SuperRegistersEqual(TAICPU(p).oper[0]^.ref^.base, TAICPU(p).oper[1]^.reg) and
+                          not SuperRegistersEqual(TAICPU(p).oper[0]^.Ref^.Base, TAICPU(p).oper[1]^.reg) and
                           (
-                            (TAICPU(p).oper[0]^.ref^.index = NR_NO) or
-                            (TAICPU(p).oper[0]^.ref^.index = NR_INVALID) or
+                            (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) or
+                            (TAICPU(p).oper[0]^.Ref^.Index = NRInvalid) or
                             (
                               { Check for lea $x(%reg1,%reg1),%reg2 and treat as it it were lea $x(%reg1,2),%reg2 }
-                              (TAICPU(p).oper[0]^.ref^.index = TAICPU(p).oper[0]^.ref^.base) and
-                              (TAICPU(p).oper[0]^.ref^.scalefactor <= 1)
+                              (TAICPU(p).oper[0]^.Ref^.Index = TAICPU(p).oper[0]^.Ref^.Base) and
+                              (TAICPU(p).oper[0]^.Ref^.ScaleFactor <= 1)
                             )
                           )
                         ) or (
                           (
-                            (TAICPU(p).oper[0]^.ref^.base = NR_NO) or
-                            (TAICPU(p).oper[0]^.ref^.base = NR_INVALID)
+                            (TAICPU(p).oper[0]^.Ref^.Base = NR_NO) or
+                            (TAICPU(p).oper[0]^.Ref^.Base = NRInvalid)
                           ) and
-                          not SuperRegistersEqual(TAICPU(p).oper[0]^.ref^.index, TAICPU(p).oper[1]^.reg)
+                          not SuperRegistersEqual(TAICPU(p).oper[0]^.Ref^.Index, TAICPU(p).oper[1]^.reg)
                         )
                       ) then
                       begin
                         repeat
-                          with TAICPU(p).oper[0]^.ref^ do
+                          with TAICPU(p).oper[0]^.Ref^ do
                             begin
                               { Convert lea $x(%reg1,%reg1),%reg2 to lea $x(%reg1,2),%reg2 }
                               if index = base then
@@ -7334,10 +7334,10 @@ unit aoptx86;
                                     Break;
 
                                   base := NR_NO;
-                                  scalefactor := 2;
+                                  ScaleFactor := 2;
                                   DebugMsg(SPeepholeOptimization + 'lea $x(%reg1,%reg1),%reg2 -> lea $x(%reg1,2),%reg2 for following optimisation', p);
                                 end
-                              else if (base <> NR_NO) and (base <> NR_INVALID) then
+                              else if (base <> NR_NO) and (base <> NRInvalid) then
                                 begin
                                   { Scale factor only works on the index register }
                                   index := base;
@@ -7345,15 +7345,15 @@ unit aoptx86;
                                 end;
 
                               { For safety }
-                              if scalefactor <= 1 then
+                              if ScaleFactor <= 1 then
                                 begin
                                   DebugMsg(SPeepholeOptimization + 'LeaShl2Lea 1', p);
-                                  scalefactor := Multiple;
+                                  ScaleFactor := Multiple;
                                 end
                               else
                                 begin
                                   DebugMsg(SPeepholeOptimization + 'LeaShl2Lea 2', p);
-                                  scalefactor := scalefactor * Multiple;
+                                  ScaleFactor := ScaleFactor * Multiple;
                                 end;
 
                               offset := offset * Multiple;
@@ -7403,9 +7403,9 @@ unit aoptx86;
                 if MatchOperand(TAICPU(hp1).oper[0]^,TAICPU(p).oper[1]^) then
                   begin
                     if SubInstr then
-                      ThisConst := TAICPU(p).oper[0]^.val - 1
+                      ThisConst := TAICPU(p).oper[0]^.Val - 1
                     else
-                      ThisConst := TAICPU(p).oper[0]^.val + 1;
+                      ThisConst := TAICPU(p).oper[0]^.Val + 1;
                   end
                 else
                   Exit;
@@ -7413,9 +7413,9 @@ unit aoptx86;
                 if MatchOperand(TAICPU(hp1).oper[0]^,TAICPU(p).oper[1]^) then
                   begin
                     if SubInstr then
-                      ThisConst := TAICPU(p).oper[0]^.val + 1
+                      ThisConst := TAICPU(p).oper[0]^.Val + 1
                     else
-                      ThisConst := TAICPU(p).oper[0]^.val - 1;
+                      ThisConst := TAICPU(p).oper[0]^.Val - 1;
                   end
                 else
                   Exit;
@@ -7424,9 +7424,9 @@ unit aoptx86;
                    MatchOperand(TAICPU(hp1).oper[1]^,TAICPU(p).oper[1]^) then
                    begin
                      if SubInstr then
-                       ThisConst := TAICPU(p).oper[0]^.val + TAICPU(hp1).oper[0]^.val
+                       ThisConst := TAICPU(p).oper[0]^.Val + TAICPU(hp1).oper[0]^.Val
                      else
-                       ThisConst := TAICPU(p).oper[0]^.val - TAICPU(hp1).oper[0]^.val;
+                       ThisConst := TAICPU(p).oper[0]^.Val - TAICPU(hp1).oper[0]^.Val;
                    end
                  else
                    Exit;
@@ -7435,9 +7435,9 @@ unit aoptx86;
                    MatchOperand(TAICPU(hp1).oper[1]^,TAICPU(p).oper[1]^) then
                    begin
                      if SubInstr then
-                       ThisConst := TAICPU(p).oper[0]^.val - TAICPU(hp1).oper[0]^.val
+                       ThisConst := TAICPU(p).oper[0]^.Val - TAICPU(hp1).oper[0]^.Val
                      else
-                       ThisConst := TAICPU(p).oper[0]^.val + TAICPU(hp1).oper[0]^.val;
+                       ThisConst := TAICPU(p).oper[0]^.Val + TAICPU(hp1).oper[0]^.Val;
                    end
                  else
                    Exit;
@@ -7453,8 +7453,8 @@ unit aoptx86;
             if (ThisConst = 0) then
               begin
                 DebugMsg(SPeepholeOptimization + 'Arithmetic combine: ' +
-                  debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + ',' + debug_operstr(TAICPU(hp1).oper[1]^) + '; ' +
-                  debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' cancel out (NOP)', p);
+                  debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + ',' + debug_operstr(TAICPU(hp1).oper[1]^) + '; ' +
+                  debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.Val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' cancel out (NOP)', p);
 
                 RemoveInstruction(hp1);
                 hp1 := TAI(p.next);
@@ -7466,13 +7466,13 @@ unit aoptx86;
               begin
                 if TAICPU(hp1).opercnt=1 then
                   DebugMsg(SPeepholeOptimization + 'Arithmetic combine: ' +
-                    debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + '; ' +
-                    debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' -> ' +
+                    debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + '; ' +
+                    debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.Val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' -> ' +
                     debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(ThisConst) + ' ' + debug_operstr(TAICPU(p).oper[1]^), p)
                 else
                   DebugMsg(SPeepholeOptimization + 'Arithmetic combine: ' +
-                    debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.val) + ',' + debug_operstr(TAICPU(hp1).oper[1]^) + '; ' +
-                    debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' -> ' +
+                    debug_op2str(TAICPU(hp1).opcode) + ' $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) + ',' + debug_operstr(TAICPU(hp1).oper[1]^) + '; ' +
+                    debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(TAICPU(p).oper[0]^.Val) + ',' + debug_operstr(TAICPU(p).oper[1]^) + ' -> ' +
                     debug_op2str(TAICPU(p).opcode) + ' $' + debug_tostr(ThisConst) + ' ' + debug_operstr(TAICPU(p).oper[1]^), p);
 
                 RemoveInstruction(hp1);
@@ -7489,7 +7489,7 @@ unit aoptx86;
         Result := False;
         if MatchOpType(TAICPU(p),top_ref,top_reg) and
           { The x86 assemblers have difficulty comparing values against absolute addresses }
-          (TAICPU(p).oper[0]^.ref^.refaddr <> addr_full) and
+          (TAICPU(p).oper[0]^.Ref^.RefAddr <> addr_full) and
           (TAICPU(hp1).oper[0]^.typ <> top_ref) and
           MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[1]^.reg) and
           (
@@ -7526,8 +7526,8 @@ unit aoptx86;
                     TAICPU(hp1).opcode := A_CMP;
                     TAICPU(hp1).loadconst(0, 0);
                   end;
-                TAICPU(hp1).loadref(1, TAICPU(p).oper[0]^.ref^);
-                TrackAndCorrectRefMove(TAICPU(p).oper[0]^.ref^,p,hp1,True);
+                TAICPU(hp1).loadref(1, TAICPU(p).oper[0]^.Ref^);
+                TrackAndCorrectRefMove(TAICPU(p).oper[0]^.Ref^,p,hp1,True);
                 DebugMsg(SPeepholeOptimization + 'MOV/CMP -> CMP (memory check)', p);
 
                 RemoveCurrentP(p);
@@ -7579,10 +7579,10 @@ unit aoptx86;
             jmp   .L3    (or ret)
         }
 
-        if JumpTargetOp(TAICPU(p))^.ref^.refaddr<>addr_full then
+        if JumpTargetOp(TAICPU(p))^.Ref^.RefAddr<>addr_full then
           Exit;
 
-        JumpLoc := TAsmLabel(JumpTargetOp(TAICPU(p))^.ref^.symbol);
+        JumpLoc := TAsmLabel(JumpTargetOp(TAICPU(p))^.Ref^.Symbol);
 
         if GetNextInstruction(hp_label, hp2) and
           MatchInstruction(hp2,A_MOV,[]) and
@@ -7593,7 +7593,7 @@ unit aoptx86;
  {$ifdef i386}
               { Under i386, ESI, EDI, EBP and ESP
                 don't have an 8-bit representation }
-               and not (getsupreg(TAICPU(hp2).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
+               and not (GetSupReg(TAICPU(hp2).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
  {$endif i386}
             ) or (
  {$ifdef i386}
@@ -7607,8 +7607,8 @@ unit aoptx86;
           (
             (TAICPU(hp3).opcode=A_RET) or
             (
-              (TAICPU(hp3).oper[0]^.ref^.refaddr=addr_full) and
-              (TAsmLabel(TAICPU(hp3).oper[0]^.ref^.symbol)<>TAILabel(hp_label).labsym)
+              (TAICPU(hp3).oper[0]^.Ref^.RefAddr=addr_full) and
+              (TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol)<>TAILabel(hp_label).labsym)
             )
           ) and
           GetNextInstruction(hp3, hp4) and
@@ -7626,8 +7626,8 @@ unit aoptx86;
           MatchInstruction(hp5,A_MOV,[TAICPU(hp2).opsize]) and
           (TAICPU(hp5).oper[0]^.typ = top_const) and
           (
-            ((TAICPU(hp2).oper[0]^.val = 0) and (TAICPU(hp5).oper[0]^.val = 1)) or
-            ((TAICPU(hp2).oper[0]^.val = 1) and (TAICPU(hp5).oper[0]^.val = 0))
+            ((TAICPU(hp2).oper[0]^.Val = 0) and (TAICPU(hp5).oper[0]^.Val = 1)) or
+            ((TAICPU(hp2).oper[0]^.Val = 1) and (TAICPU(hp5).oper[0]^.Val = 0))
           ) and
           MatchOperand(TAICPU(hp2).oper[1]^,TAICPU(hp5).oper[1]^) and
           GetNextInstruction(hp5,hp6) and
@@ -7652,7 +7652,7 @@ unit aoptx86;
                 if (TAICPU(hp3).opcode=A_JMP) then
                   begin
                     { Reuse hp5 }
-                    hp5 := getlabelwithsym(TAsmLabel(JumpTargetOp(TAICPU(hp3))^.ref^.symbol));
+                    hp5 := getlabelwithsym(TAsmLabel(JumpTargetOp(TAICPU(hp3))^.Ref^.Symbol));
 
                     { Make sure hp5 doesn't jump back to .L1 (zero distance jump) or .L2 (infinite loop) }
                     if not Assigned(hp5) or (hp5 = hp_label) or (hp5 = hp4) or not GetNextInstruction(hp5, hp5) then
@@ -7671,7 +7671,7 @@ unit aoptx86;
                 if (TAICPU(hp6).opcode=A_JMP) then
                   begin
                     { Reuse hp5 }
-                    hp5 := getlabelwithsym(TAsmLabel(JumpTargetOp(TAICPU(hp6))^.ref^.symbol));
+                    hp5 := getlabelwithsym(TAsmLabel(JumpTargetOp(TAICPU(hp6))^.Ref^.Symbol));
                     if not Assigned(hp5) or not GetNextInstruction(hp5, hp5) then
                       Exit;
 
@@ -7698,7 +7698,7 @@ unit aoptx86;
               end;
 
 
-            if (TAICPU(hp2).oper[0]^.val = 1) then
+            if (TAICPU(hp2).oper[0]^.Val = 1) then
               begin
                 TAICPU(p).condition := inverse_cond(TAICPU(p).condition);
                 DebugMsg(SPeepholeOptimization + 'J(c)Mov1Jmp/RetMov0Jmp/Ret -> Set(~c)Jmp/Ret',p)
@@ -7715,7 +7715,7 @@ unit aoptx86;
                   end
                 else
                   begin
-                    hp4:=TAICPU.op_ref(A_SETcc, S_B, TAICPU(hp2).oper[1]^.ref^);
+                    hp4:=TAICPU.op_ref(A_SETcc, S_B, TAICPU(hp2).oper[1]^.Ref^);
                     SecondReg := NR_NO;
                   end;
 
@@ -7726,7 +7726,7 @@ unit aoptx86;
               begin
                 { Will be a register because the size can't be S_B otherwise }
                 SecondReg:=TAICPU(hp2).oper[1]^.reg;
-                ThisReg:=newreg(R_INTREGISTER,getsupreg(SecondReg), R_SUBL);
+                ThisReg:=NewReg(R_INTREGISTER,GetSupReg(SecondReg), R_SUBL);
                 hp4:=TAICPU.op_reg(A_SETcc, S_B, ThisReg);
 
                 if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
@@ -7742,7 +7742,7 @@ unit aoptx86;
                         begin
                           NewSize := S_BL;
                           { Will implicitly zero-extend to 64-bit }
-                          setsubreg(SecondReg, R_SUBD);
+                          SetSubReg(SecondReg, R_SUBD);
                         end;
 {$endif x86_64}
                       else
@@ -7780,7 +7780,7 @@ unit aoptx86;
                 JumpLoc.decrefs;
                 MakeUnconditional(TAICPU(p));
                 { This also increases the reference count }
-                TAICPU(p).loadref(0, JumpTargetOp(TAICPU(hp3))^.ref^);
+                TAICPU(p).loadref(0, JumpTargetOp(TAICPU(hp3))^.Ref^);
               end
             else
               ConvertJumpToRET(p, hp3);
@@ -7831,8 +7831,8 @@ unit aoptx86;
             if (TAICPU(p).opsize >= S_L) and
               GetNextInstructionUsingReg(p,hp1, ActiveReg) and
               MatchInstruction(hp1,A_LEA,[]) and
-              (SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.ref^.base) or
-               SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.ref^.index)) and
+              (SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.Ref^.Base) or
+               SuperRegistersEqual(ActiveReg, TAICPU(hp1).oper[0]^.Ref^.Index)) and
               (
                 { Cover the case where the register in the reference is also the destination register }
                 Reg1WriteOverwritesReg2Entirely(TAICPU(hp1).oper[1]^.reg, ActiveReg) or
@@ -7843,18 +7843,18 @@ unit aoptx86;
                 )
               ) then
               begin
-                OldOffset := TAICPU(hp1).oper[0]^.ref^.offset;
+                OldOffset := TAICPU(hp1).oper[0]^.Ref^.Offset;
 
-                if SuperRegistersEqual(ActiveReg,TAICPU(hp1).oper[0]^.ref^.base) then
-                  Dec(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.val);
-                if SuperRegistersEqual(ActiveReg,TAICPU(hp1).oper[0]^.ref^.index) then
-                  Dec(TAICPU(hp1).oper[0]^.ref^.offset,TAICPU(p).oper[0]^.val*max(TAICPU(hp1).oper[0]^.ref^.scalefactor,1));
+                if SuperRegistersEqual(ActiveReg,TAICPU(hp1).oper[0]^.Ref^.Base) then
+                  Dec(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Val);
+                if SuperRegistersEqual(ActiveReg,TAICPU(hp1).oper[0]^.Ref^.Index) then
+                  Dec(TAICPU(hp1).oper[0]^.Ref^.Offset,TAICPU(p).oper[0]^.Val*max(TAICPU(hp1).oper[0]^.Ref^.ScaleFactor,1));
 
 {$ifdef x86_64}
-                if (TAICPU(hp1).oper[0]^.ref^.offset > $7FFFFFFF) or (TAICPU(hp1).oper[0]^.ref^.offset < -2147483648) then
+                if (TAICPU(hp1).oper[0]^.Ref^.Offset > $7FFFFFFF) or (TAICPU(hp1).oper[0]^.Ref^.Offset < -2147483648) then
                   begin
                     { Overflow; abort }
-                    TAICPU(hp1).oper[0]^.ref^.offset := OldOffset;
+                    TAICPU(hp1).oper[0]^.Ref^.Offset := OldOffset;
                   end
                 else
 {$endif x86_64}
@@ -7889,24 +7889,24 @@ unit aoptx86;
                     if (TAICPU(hp1).oper[0]^.typ = top_const) then
                       begin
                         { Merge add const1,%reg; add const2,%reg to add const1+const2,%reg }
-                        ThisConst := TAICPU(p).oper[0]^.val + TAICPU(hp1).oper[0]^.val;
+                        ThisConst := TAICPU(p).oper[0]^.Val + TAICPU(hp1).oper[0]^.Val;
                         Result := True;
 
                         { Handle any overflows }
                         case TAICPU(p).opsize of
                           S_B:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FF;
                           S_W:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FFFF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FFFF;
                           S_L:
-                            TAICPU(p).oper[0]^.val := ThisConst and $FFFFFFFF;
+                            TAICPU(p).oper[0]^.Val := ThisConst and $FFFFFFFF;
 {$ifdef x86_64}
                           S_Q:
                             if (ThisConst > $7FFFFFFF) or (ThisConst < -2147483648) then
                               { Overflow; abort }
                               Result := False
                             else
-                              TAICPU(p).oper[0]^.val := ThisConst;
+                              TAICPU(p).oper[0]^.Val := ThisConst;
 {$endif x86_64}
                           else
                             InternalError(2021102611);
@@ -7915,16 +7915,16 @@ unit aoptx86;
                         { Result may get set to False again if the combined immediate overflows for S_Q sizes }
                         if Result then
                           begin
-                            if (TAICPU(p).oper[0]^.val < 0) and
+                            if (TAICPU(p).oper[0]^.Val < 0) and
                               (
-                                ((TAICPU(p).opsize = S_B) and (TAICPU(p).oper[0]^.val <> -128)) or
-                                ((TAICPU(p).opsize = S_W) and (TAICPU(p).oper[0]^.val <> -32768)) or
-                                ((TAICPU(p).opsize in [S_L{$ifdef x86_64}, S_Q{$endif x86_64}]) and (TAICPU(p).oper[0]^.val <> -2147483648))
+                                ((TAICPU(p).opsize = S_B) and (TAICPU(p).oper[0]^.Val <> -128)) or
+                                ((TAICPU(p).opsize = S_W) and (TAICPU(p).oper[0]^.Val <> -32768)) or
+                                ((TAICPU(p).opsize in [S_L{$ifdef x86_64}, S_Q{$endif x86_64}]) and (TAICPU(p).oper[0]^.Val <> -2147483648))
                               ) then
                               begin
                                 DebugMsg(SPeepholeOptimization + 'SUB; ADD/SUB -> ADD',p);
                                 TAICPU(p).opcode := A_SUB;
-                                TAICPU(p).oper[0]^.val := -TAICPU(p).oper[0]^.val;
+                                TAICPU(p).oper[0]^.Val := -TAICPU(p).oper[0]^.Val;
                               end
                             else
                               DebugMsg(SPeepholeOptimization + 'SUB; ADD/SUB -> SUB',p);
@@ -7948,7 +7948,7 @@ unit aoptx86;
         { * change "sub/add const1, reg" or "dec reg" followed by
             "sub const2, reg" to one "sub ..., reg" }
 {$ifdef i386}
-            if (TAICPU(p).oper[0]^.val = 2) and
+            if (TAICPU(p).oper[0]^.Val = 2) and
                (ActiveReg = NR_ESP) and
                { Don't do the sub/push optimization if the sub }
                { comes from setting up the stack frame (JM)    }
@@ -7968,7 +7968,7 @@ unit aoptx86;
                   begin
                     TAICPU(hp1).changeopsize(S_L);
                     if TAICPU(hp1).oper[0]^.typ=top_reg then
-                      setsubreg(TAICPU(hp1).oper[0]^.reg,R_SUBWHOLE);
+                      SetSubReg(TAICPU(hp1).oper[0]^.reg,R_SUBWHOLE);
                     hp1 := TAI(p.next);
                     RemoveCurrentp(p, hp1);
                     Result:=true;
@@ -7987,7 +7987,7 @@ unit aoptx86;
         TmpBool1,TmpBool2 : Boolean;
         tmpref : TReference;
         hp1,hp2: TAI;
-        mask, shiftval:    TCGInt;
+        mask, ShiftVal:    TCGInt;
       begin
         Result:=false;
 
@@ -7996,7 +7996,7 @@ unit aoptx86;
           Exit;
 
         if (TAICPU(p).opsize in [S_L{$ifdef x86_64},S_Q{$endif x86_64}]) and
-           (TAICPU(p).oper[0]^.val <= 3) then
+           (TAICPU(p).oper[0]^.Val <= 3) then
           { Changes "shl const, %reg32; add const/reg, %reg32" to one lea statement }
           begin
             { should we check the next instruction? }
@@ -8004,9 +8004,9 @@ unit aoptx86;
             { have we found an add/sub which could be
               integrated in the lea? }
             TmpBool2 := False;
-            reference_reset(tmpref,2,[]);
-            TmpRef.index := TAICPU(p).oper[1]^.reg;
-            TmpRef.scalefactor := 1 shl TAICPU(p).oper[0]^.val;
+            Reference_Reset(tmpref,2,[]);
+            TmpRef.Index := TAICPU(p).oper[1]^.reg;
+            TmpRef.ScaleFactor := 1 shl TAICPU(p).oper[0]^.Val;
             while TmpBool1 and
                   GetNextInstruction(p, hp1) and
                   (TAI(hp1).typ = ait_instruction) and
@@ -8019,7 +8019,7 @@ unit aoptx86;
                     (TAICPU(hp1).oper[0]^.typ = Top_Reg) and
                     (TAICPU(hp1).oper[0]^.reg = TAICPU(p).oper[1]^.reg)) or
                     ((TAICPU(hp1).opcode = A_LEA) and
-                    (TAICPU(hp1).oper[0]^.ref^.index = TAICPU(p).oper[1]^.reg) and
+                    (TAICPU(hp1).oper[0]^.Ref^.Index = TAICPU(p).oper[1]^.reg) and
                     (TAICPU(hp1).oper[1]^.reg = TAICPU(p).oper[1]^.reg))) and
                   (not GetNextInstruction(hp1,hp2) or
                    not instrReadsFlags(hp2)) Do
@@ -8027,19 +8027,19 @@ unit aoptx86;
                 TmpBool1 := False;
                 if TAICPU(hp1).opcode=A_LEA then
                   begin
-                    if (TmpRef.base = NR_NO) and
-                       (TAICPU(hp1).oper[0]^.ref^.symbol=nil) and
-                       (TAICPU(hp1).oper[0]^.ref^.relsymbol=nil) and
+                    if (TmpRef.Base = NR_NO) and
+                       (TAICPU(hp1).oper[0]^.Ref^.Symbol=nil) and
+                       (TAICPU(hp1).oper[0]^.Ref^.RelSymbol=nil) and
                        { Segment register isn't a concern here }
-                       ((TAICPU(hp1).oper[0]^.ref^.scalefactor=0) or
-                       (TAICPU(hp1).oper[0]^.ref^.scalefactor*tmpref.scalefactor<=8)) then
+                       ((TAICPU(hp1).oper[0]^.Ref^.ScaleFactor=0) or
+                       (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor*tmpref.ScaleFactor<=8)) then
                       begin
                         TmpBool1 := True;
                         TmpBool2 := True;
-                        inc(TmpRef.offset, TAICPU(hp1).oper[0]^.ref^.offset);
-                        if TAICPU(hp1).oper[0]^.ref^.scalefactor<>0 then
-                          tmpref.scalefactor:=tmpref.scalefactor*TAICPU(hp1).oper[0]^.ref^.scalefactor;
-                        TmpRef.base := TAICPU(hp1).oper[0]^.ref^.base;
+                        inc(TmpRef.Offset, TAICPU(hp1).oper[0]^.Ref^.Offset);
+                        if TAICPU(hp1).oper[0]^.Ref^.ScaleFactor<>0 then
+                          tmpref.ScaleFactor:=tmpref.ScaleFactor*TAICPU(hp1).oper[0]^.Ref^.ScaleFactor;
+                        TmpRef.Base := TAICPU(hp1).oper[0]^.Ref^.Base;
                         RemoveInstruction(hp1);
                       end
                   end
@@ -8049,9 +8049,9 @@ unit aoptx86;
                     TmpBool2 := True;
                     case TAICPU(hp1).opcode of
                       A_ADD:
-                        inc(TmpRef.offset, LongInt(TAICPU(hp1).oper[0]^.val));
+                        inc(TmpRef.Offset, LongInt(TAICPU(hp1).oper[0]^.Val));
                       A_SUB:
-                        dec(TmpRef.offset, LongInt(TAICPU(hp1).oper[0]^.val));
+                        dec(TmpRef.Offset, LongInt(TAICPU(hp1).oper[0]^.Val));
                       else
                         InternalError(2019050536);
                     end;
@@ -8060,7 +8060,7 @@ unit aoptx86;
                 else
                   if (TAICPU(hp1).oper[0]^.typ = Top_Reg) and
                      (((TAICPU(hp1).opcode = A_ADD) and
-                       (TmpRef.base = NR_NO)) or
+                       (TmpRef.Base = NR_NO)) or
                       (TAICPU(hp1).opcode = A_INC) or
                       (TAICPU(hp1).opcode = A_DEC)) then
                     begin
@@ -8068,11 +8068,11 @@ unit aoptx86;
                       TmpBool2 := True;
                       case TAICPU(hp1).opcode of
                         A_ADD:
-                          TmpRef.base := TAICPU(hp1).oper[0]^.reg;
+                          TmpRef.Base := TAICPU(hp1).oper[0]^.reg;
                         A_INC:
-                          inc(TmpRef.offset);
+                          inc(TmpRef.Offset);
                         A_DEC:
-                          dec(TmpRef.offset);
+                          dec(TmpRef.Offset);
                         else
                           InternalError(2019050535);
                       end;
@@ -8083,16 +8083,16 @@ unit aoptx86;
 {$ifndef x86_64}
                or
                ((CurrentSettings.OptimizeCPUType < cpu_Pentium2) and
-               (TAICPU(p).oper[0]^.val <= 3) and
+               (TAICPU(p).oper[0]^.Val <= 3) and
                not(cs_opt_size in CurrentSettings.OptimizerSwitches))
 {$endif x86_64}
               then
               begin
                 if not(TmpBool2) and
-                    (TAICPU(p).oper[0]^.val=1) then
+                    (TAICPU(p).oper[0]^.Val=1) then
                   begin
                     TAICPU(p).opcode := A_ADD;
-                    TAICPU(p).loadreg(0, TAICPU(p).oper[1]^.reg);
+                    TAICPU(p).LoadReg(0, TAICPU(p).oper[1]^.reg);
                   end
                 else
                   begin
@@ -8109,20 +8109,20 @@ unit aoptx86;
             { changes "shl $1, %reg" to "add %reg, %reg", which is the same on a 386,
               but faster on a 486, and Tairable in both U and V pipes on the Pentium
               (unlike shl, which is only Tairable in the U pipe) }
-            if TAICPU(p).oper[0]^.val=1 then
+            if TAICPU(p).oper[0]^.Val=1 then
                 begin
                   TAICPU(p).opcode := A_ADD;
-                  TAICPU(p).loadreg(0, TAICPU(p).oper[1]^.reg);
+                  TAICPU(p).LoadReg(0, TAICPU(p).oper[1]^.reg);
                   Result := True;
                 end
            { changes "shl $2, %reg" to "lea (,%reg,4), %reg"
              "shl $3, %reg" to "lea (,%reg,8), %reg }
            else if (TAICPU(p).opsize = S_L) and
-                   (TAICPU(p).oper[0]^.val<= 3) then
+                   (TAICPU(p).oper[0]^.Val<= 3) then
              begin
-               reference_reset(tmpref,2,[]);
-               TmpRef.index := TAICPU(p).oper[1]^.reg;
-               TmpRef.scalefactor := 1 shl TAICPU(p).oper[0]^.val;
+               Reference_Reset(tmpref,2,[]);
+               TmpRef.Index := TAICPU(p).oper[1]^.reg;
+               TmpRef.ScaleFactor := 1 shl TAICPU(p).oper[0]^.Val;
                TAICPU(p).opcode := A_LEA;
                TAICPU(p).loadref(0, TmpRef);
                Result := True;
@@ -8162,7 +8162,7 @@ unit aoptx86;
 
               Since the and operation only zeroes bits that are already zero from the shl operation
             }
-            case TAICPU(p).oper[0]^.val of
+            case TAICPU(p).oper[0]^.Val of
                8:
                  mask:=$FFFFFFFFFFFFFF00;
                16:
@@ -8174,16 +8174,16 @@ unit aoptx86;
                  mask:=$8000000000000000;
                else
                  begin
-                   if TAICPU(p).oper[0]^.val >= 64 then
+                   if TAICPU(p).oper[0]^.Val >= 64 then
                      { Shouldn't happen realistically, since the register
                        is guaranteed to be set to zero at this point }
                      mask := 0
                    else
-                     mask := -(Int64(1 shl TAICPU(p).oper[0]^.val));
+                     mask := -(Int64(1 shl TAICPU(p).oper[0]^.Val));
                  end;
             end;
 
-            if TAICPU(hp1).oper[0]^.val = mask then
+            if TAICPU(hp1).oper[0]^.Val = mask then
               begin
                 { Everything checks out, perform the optimisation, as long as
                   the FLAGS register isn't being used}
@@ -8233,19 +8233,19 @@ unit aoptx86;
                   able to optimise the mask for the "shl/and" version, which
                   may permit other peephole optimisations }
 {$ifdef DEBUG_AOPTCPU}
-                mask := TAICPU(hp1).oper[0]^.val and mask;
-                if TAICPU(hp1).oper[0]^.val <> mask then
+                mask := TAICPU(hp1).oper[0]^.Val and mask;
+                if TAICPU(hp1).oper[0]^.Val <> mask then
                   begin
                     DebugMsg(
                       SPeepholeOptimization +
-                      'Changed mask from $' + debug_tostr(TAICPU(hp1).oper[0]^.val) +
+                      'Changed mask from $' + debug_tostr(TAICPU(hp1).oper[0]^.Val) +
                       ' to $' + debug_tostr(mask) +
                       'based on previous instruction (ShlAnd2ShlAnd)', hp1);
-                    TAICPU(hp1).oper[0]^.val := mask;
+                    TAICPU(hp1).oper[0]^.Val := mask;
                   end;
 {$else DEBUG_AOPTCPU}
                 { If debugging is off, just set the operand even if it's the same }
-                TAICPU(hp1).oper[0]^.val := TAICPU(hp1).oper[0]^.val and mask;
+                TAICPU(hp1).oper[0]^.Val := TAICPU(hp1).oper[0]^.Val and mask;
 {$endif DEBUG_AOPTCPU}
               end;
           end;
@@ -8262,22 +8262,22 @@ unit aoptx86;
         }
 
         if MatchOpType(TAICPU(p), top_const, top_reg) and
-          (TAICPU(p).oper[0]^.val in [1..3]) and
+          (TAICPU(p).oper[0]^.Val in [1..3]) and
           GetNextInstructionUsingReg(p,hp1,TAICPU(p).oper[1]^.reg) and
           ((MatchInstruction(hp1,A_MOV,A_LEA,[]) and
            MatchOpType(TAICPU(hp1),top_ref,top_reg)) or
            (MatchInstruction(hp1,A_FST,A_FSTP,A_FLD,[]) and
            MatchOpType(TAICPU(hp1),top_ref))
           ) and
-          (TAICPU(p).oper[1]^.reg=TAICPU(hp1).oper[0]^.ref^.index) and
-          (TAICPU(p).oper[1]^.reg<>TAICPU(hp1).oper[0]^.ref^.base) and
-          (TAICPU(hp1).oper[0]^.ref^.scalefactor in [0,1]) then
+          (TAICPU(p).oper[1]^.reg=TAICPU(hp1).oper[0]^.Ref^.Index) and
+          (TAICPU(p).oper[1]^.reg<>TAICPU(hp1).oper[0]^.Ref^.Base) and
+          (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor in [0,1]) then
           begin
             TransferUsedRegs(TmpUsedRegs);
             UpdateUsedRegs(TmpUsedRegs, TAI(p.next));
             if not(RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg, hp1, TmpUsedRegs)) then
               begin
-                TAICPU(hp1).oper[0]^.ref^.scalefactor:=1 shl TAICPU(p).oper[0]^.val;
+                TAICPU(hp1).oper[0]^.Ref^.ScaleFactor:=1 shl TAICPU(p).oper[0]^.Val;
                 DebugMsg(SPeepholeOptimization + 'ShlOp2Op', p);
                 RemoveCurrentP(p);
                 Result:=true;
@@ -8290,22 +8290,22 @@ unit aoptx86;
           MatchOpType(TAICPU(hp1),top_const,top_reg) and
           (TAICPU(p).oper[1]^.reg=TAICPU(hp1).oper[1]^.reg) then
           begin
-            shiftval:=TAICPU(p).oper[0]^.val+TAICPU(hp1).oper[0]^.val;
-            if ((TAICPU(p).opsize=S_B) and (shiftval>7)) or
-              ((TAICPU(p).opsize=S_W) and (shiftval>15)) or
+            ShiftVal:=TAICPU(p).oper[0]^.Val+TAICPU(hp1).oper[0]^.Val;
+            if ((TAICPU(p).opsize=S_B) and (ShiftVal>7)) or
+              ((TAICPU(p).opsize=S_W) and (ShiftVal>15)) or
 {$ifdef x86_64}
-              ((TAICPU(p).opsize=S_Q) and (shiftval>63)) or
+              ((TAICPU(p).opsize=S_Q) and (ShiftVal>63)) or
 {$endif x86_64}
-              ((TAICPU(p).opsize=S_L) and (shiftval>31)) then
+              ((TAICPU(p).opsize=S_L) and (ShiftVal>31)) then
               begin
                 DebugMsg(SPeepholeOptimization + 'ShlShl2Mov', p);
                 TAICPU(hp1).opcode:=A_MOV;
-                TAICPU(hp1).oper[0]^.val:=0;
+                TAICPU(hp1).oper[0]^.Val:=0;
               end
             else
               begin
                 DebugMsg(SPeepholeOptimization + 'ShlShl2Shl', p);
-                TAICPU(hp1).oper[0]^.val:=shiftval;
+                TAICPU(hp1).oper[0]^.Val:=ShiftVal;
               end;
             RemoveCurrentP(p);
             Result:=true;
@@ -8352,7 +8352,7 @@ unit aoptx86;
 
         Result := False;
         DoNotMerge := False;
-        Shift := TAICPU(p).oper[0]^.val;
+        Shift := TAICPU(p).oper[0]^.Val;
         LimitSize := TAICPU(p).opsize;
 
         hp1 := p;
@@ -8403,7 +8403,7 @@ unit aoptx86;
                           InternalError(2022081501);
                       end;
 
-                      if (TAICPU(hp1).oper[0]^.val and IdentityMask) = IdentityMask then
+                      if (TAICPU(hp1).oper[0]^.Val and IdentityMask) = IdentityMask then
                         begin
                           DebugMsg(SPeepholeOptimization + 'Removed AND instruction since previous SHR makes this an identity operation (ShrAnd2Shr)', hp1);
                           { All the possible 1 bits are covered, so we can remove the AND }
@@ -8463,7 +8463,7 @@ unit aoptx86;
                         begin
                           DebugMsg(SPeepholeOptimization + 'Converted MOVZX instruction to MOV since previous SHR makes zero-extension unnecessary (ShrMovz2ShrMov 1)', hp1);
                           TAICPU(hp1).opcode := A_MOV;
-                          setsubreg(TAICPU(hp1).oper[0]^.reg, getsubreg(TAICPU(hp1).oper[1]^.reg));
+                          SetSubReg(TAICPU(hp1).oper[0]^.reg, GetSubReg(TAICPU(hp1).oper[1]^.reg));
                           case TAICPU(hp1).opsize of
                             S_BW:
                               TAICPU(hp1).opsize := S_W;
@@ -8537,10 +8537,10 @@ unit aoptx86;
                     LimitSize := TAICPU(hp1).opsize;
 
                   if TAICPU(hp1).opcode = A_SHR then
-                    Inc(Shift, TAICPU(hp1).oper[0]^.val)
+                    Inc(Shift, TAICPU(hp1).oper[0]^.Val)
                   else
                     begin
-                      Dec(Shift, TAICPU(hp1).oper[0]^.val);
+                      Dec(Shift, TAICPU(hp1).oper[0]^.Val);
                       DoNotMerge := True;
                     end;
 
@@ -8554,7 +8554,7 @@ unit aoptx86;
                     begin
                       hp2 := TAI(hp1.Previous);
                       DebugMsg(SPeepholeOptimization + 'ShrShr2Shr 1', p);
-                      Inc(TAICPU(p).oper[0]^.val, TAICPU(hp1).oper[0]^.val);
+                      Inc(TAICPU(p).oper[0]^.Val, TAICPU(hp1).oper[0]^.Val);
                       RemoveInstruction(hp1);
                       hp1 := hp2;
 
@@ -8613,41 +8613,41 @@ unit aoptx86;
 
         { We assume you've checked if the operand is actually a reference by
           this point. If it isn't, you'll most likely get an access violation }
-        CurrentRef := first_mov.oper[1]^.ref^;
+        CurrentRef := first_mov.oper[1]^.Ref^;
 
         { Memory must be aligned }
-        if (CurrentRef.offset mod 4) <> 0 then
+        if (CurrentRef.Offset mod 4) <> 0 then
           Exit;
 
-        Inc(CurrentRef.offset);
-        CurrentRef.alignment := 1; { Otherwise references_equal will return False }
+        Inc(CurrentRef.Offset);
+        CurrentRef.Alignment := 1; { Otherwise references_equal will return False }
 
         if MatchOperand(second_mov.oper[0]^, 0) and
-          references_equal(second_mov.oper[1]^.ref^, CurrentRef) and
+          References_Equal(second_mov.oper[1]^.Ref^, CurrentRef) and
           GetNextInstruction(second_mov, hp1) and
           (hp1.typ = ait_instruction) and
           (TAICPU(hp1).opcode = A_MOV) and
           MatchOpType(TAICPU(hp1), top_const, top_ref) and
-          (TAICPU(hp1).oper[0]^.val = 0) then
+          (TAICPU(hp1).oper[0]^.Val = 0) then
           begin
-            Inc(CurrentRef.offset);
-            CurrentRef.alignment := TAICPU(hp1).oper[1]^.ref^.alignment; { Otherwise references_equal might return False }
+            Inc(CurrentRef.Offset);
+            CurrentRef.Alignment := TAICPU(hp1).oper[1]^.Ref^.Alignment; { Otherwise references_equal might return False }
 
-            FullReg := newreg(R_INTREGISTER,getsupreg(first_mov.oper[0]^.reg), R_SUBD);
+            FullReg := NewReg(R_INTREGISTER,GetSupReg(first_mov.oper[0]^.reg), R_SUBD);
 
-            if references_equal(TAICPU(hp1).oper[1]^.ref^, CurrentRef) then
+            if References_Equal(TAICPU(hp1).oper[1]^.Ref^, CurrentRef) then
               begin
                 case TAICPU(hp1).opsize of
                   S_B:
                     if GetNextInstruction(hp1, hp2) and
                       MatchInstruction(TAICPU(hp2), A_MOV, [S_B]) and
                       MatchOpType(TAICPU(hp2), top_const, top_ref) and
-                      (TAICPU(hp2).oper[0]^.val = 0) then
+                      (TAICPU(hp2).oper[0]^.Val = 0) then
                       begin
-                        Inc(CurrentRef.offset);
-                        CurrentRef.alignment := 1; { Otherwise references_equal will return False }
+                        Inc(CurrentRef.Offset);
+                        CurrentRef.Alignment := 1; { Otherwise references_equal will return False }
 
-                        if references_equal(TAICPU(hp2).oper[1]^.ref^, CurrentRef) and
+                        if References_Equal(TAICPU(hp2).oper[1]^.Ref^, CurrentRef) and
                           (TAICPU(hp2).opsize = S_B) then
                           begin
                             RemoveInstruction(hp1);
@@ -8662,8 +8662,8 @@ unit aoptx86;
                                 { Reuse second_mov as a MOVZX instruction }
                                 second_mov.opcode := A_MOVZX;
                                 second_mov.opsize := S_BL;
-                                second_mov.loadreg(0, first_mov.oper[0]^.reg);
-                                second_mov.loadreg(1, FullReg);
+                                second_mov.LoadReg(0, first_mov.oper[0]^.reg);
+                                second_mov.LoadReg(1, FullReg);
 
                                 first_mov.oper[0]^.reg := FullReg;
 
@@ -8694,8 +8694,8 @@ unit aoptx86;
                           { Reuse second_mov as a MOVZX instruction }
                           second_mov.opcode := A_MOVZX;
                           second_mov.opsize := S_BL;
-                          second_mov.loadreg(0, first_mov.oper[0]^.reg);
-                          second_mov.loadreg(1, FullReg);
+                          second_mov.LoadReg(0, first_mov.oper[0]^.reg);
+                          second_mov.LoadReg(1, FullReg);
 
                           first_mov.oper[0]^.reg := FullReg;
 
@@ -8736,25 +8736,25 @@ unit aoptx86;
              (TAICPU(hp1).opcode = A_FILD))) and
            MatchOpType(TAICPU(hp1),top_ref) and
            (TAICPU(hp1).opsize = TAICPU(p).opsize) and
-           RefsEqual(TAICPU(p).oper[0]^.ref^, TAICPU(hp1).oper[0]^.ref^) then
+           RefsEqual(TAICPU(p).oper[0]^.Ref^, TAICPU(hp1).oper[0]^.Ref^) then
           begin
             { replacing fstp f;fld f by fst f is only valid for extended because of rounding or if fastmath is on }
             if ((TAICPU(p).opsize=S_FX) or (cs_opt_fastmath in CurrentSettings.OptimizerSwitches)) and
                GetNextInstruction(hp1, hp2) and
                (((hp2.typ = ait_instruction) and
                IsExitCode(hp2) and
-               (TAICPU(p).oper[0]^.ref^.base = CurrentProcInfo.FramePointer) and
+               (TAICPU(p).oper[0]^.Ref^.Base = CurrentProcInfo.FramePointer) and
                not(Assigned(CurrentProcInfo.procdef.FuncRetSym) and
-                   (TAICPU(p).oper[0]^.ref^.offset < TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.reference.offset)) and
-               (TAICPU(p).oper[0]^.ref^.index = NR_NO)) or
+                   (TAICPU(p).oper[0]^.Ref^.Offset < TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.Reference.Offset)) and
+               (TAICPU(p).oper[0]^.Ref^.Index = NR_NO)) or
                { fstp <temp>
                  fld  <temp>
                  <dealloc> <temp>
                }
-               ((TAICPU(p).oper[0]^.ref^.base = CurrentProcInfo.FramePointer) and
-                (TAICPU(p).oper[0]^.ref^.index = NR_NO) and
-                SetAndTest(FindTempDeAlloc(TAICPU(p).oper[0]^.ref^.offset,TAI(hp1.next)),hp2) and
-                (TAITempAlloc(hp2).temppos=TAICPU(p).oper[0]^.ref^.offset) and
+               ((TAICPU(p).oper[0]^.Ref^.Base = CurrentProcInfo.FramePointer) and
+                (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) and
+                SetAndTest(FindTempDeAlloc(TAICPU(p).oper[0]^.Ref^.Offset,TAI(hp1.next)),hp2) and
+                (TAITempAlloc(hp2).TempPos=TAICPU(p).oper[0]^.Ref^.Offset) and
                 (((TAICPU(p).opsize=S_FX) and (TAITempAlloc(hp2).tempsize=16)) or
                  ((TAICPU(p).opsize in [S_IQ,S_FL]) and (TAITempAlloc(hp2).tempsize=8)) or
                  ((TAICPU(p).opsize=S_FS) and (TAITempAlloc(hp2).tempsize=4))
@@ -8780,11 +8780,11 @@ unit aoptx86;
                 (TAICPU(p).opcode=TAICPU(hp2).opcode) and
                 (TAICPU(p).opsize=TAICPU(hp2).opsize) then
                 begin
-                  if (TAICPU(p).oper[0]^.ref^.base = CurrentProcInfo.FramePointer) and
-                    (TAICPU(p).oper[0]^.ref^.index = NR_NO) and
-                    SetAndTest(FindTempDeAlloc(TAICPU(p).oper[0]^.ref^.offset,TAI(hp2.next)),hp3) and
+                  if (TAICPU(p).oper[0]^.Ref^.Base = CurrentProcInfo.FramePointer) and
+                    (TAICPU(p).oper[0]^.Ref^.Index = NR_NO) and
+                    SetAndTest(FindTempDeAlloc(TAICPU(p).oper[0]^.Ref^.Offset,TAI(hp2.next)),hp3) and
                     MatchOperand(TAICPU(p).oper[0]^,TAICPU(hp1).oper[0]^) and
-                    (TAITempAlloc(hp3).temppos=TAICPU(p).oper[0]^.ref^.offset) and
+                    (TAITempAlloc(hp3).TempPos=TAICPU(p).oper[0]^.Ref^.Offset) and
                     (((TAICPU(p).opsize=S_FX) and (TAITempAlloc(hp3).tempsize=16)) or
                      ((TAICPU(p).opsize in [S_IQ,S_FL]) and (TAITempAlloc(hp3).tempsize=8)) or
                      ((TAICPU(p).opsize=S_FS) and (TAITempAlloc(hp3).tempsize=4))
@@ -8865,7 +8865,7 @@ unit aoptx86;
             if GetLastInstruction(p, hp1) and
               MatchInstruction(hp1,A_FLD,A_FST,[TAICPU(p).opsize]) and
               MatchOpType(TAICPU(hp1),top_ref) and
-              RefsEqual(TAICPU(p).oper[0]^.ref^, TAICPU(hp1).oper[0]^.ref^) then
+              RefsEqual(TAICPU(p).oper[0]^.Ref^, TAICPU(hp1).oper[0]^.Ref^) then
               if ((TAICPU(hp2).opcode = A_FMULP) or
                   (TAICPU(hp2).opcode = A_FADDP)) then
               { change                      to
@@ -8890,7 +8890,7 @@ unit aoptx86;
                 begin
                   DebugMsg(SPeepholeOptimization + 'Fld/Fst<mem>Fld<mem>2Fld/Fst<mem>Fld<reg>',hp1);
                   TAICPU(p).changeopsize(S_FL);
-                  TAICPU(p).loadreg(0,NR_ST);
+                  TAICPU(p).LoadReg(0,NR_ST);
                 end
             else
               begin
@@ -9009,7 +9009,7 @@ unit aoptx86;
                      Continue;
                    end;
 
-                 JumpLabel := TAsmLabel(TAICPU(p_jump).oper[0]^.ref^.symbol);
+                 JumpLabel := TAsmLabel(TAICPU(p_jump).oper[0]^.Ref^.Symbol);
                  if GetNextInstruction(p_jump, hp2) and
                    (
                      OptimizeConditionalJump(JumpLabel, p_jump, hp2, TempBool) or
@@ -9034,7 +9034,7 @@ unit aoptx86;
                    GetNextInstruction(p_dist, hp1_dist) and
                    MatchInstruction(hp1_dist, A_JCC, []) then { This doesn't have to be an explicit label }
                    begin
-                     JumpLabel_dist := TAsmLabel(TAICPU(hp1_dist).oper[0]^.ref^.symbol);
+                     JumpLabel_dist := TAsmLabel(TAICPU(hp1_dist).oper[0]^.Ref^.Symbol);
 
                      if JumpLabel = JumpLabel_dist then
                        { This is an infinite loop }
@@ -9048,7 +9048,7 @@ unit aoptx86;
                            JumpLabel.DecRefs;
 
                          DebugMsg(SPeepholeOptimization + 'CMP/Jcc/@Lbl/CMP/Jcc -> CMP/Jcc, redirecting first jump', p_jump);
-                         TAICPU(p_jump).loadref(0, TAICPU(hp1_dist).oper[0]^.ref^); { This also increases the reference count }
+                         TAICPU(p_jump).loadref(0, TAICPU(hp1_dist).oper[0]^.Ref^); { This also increases the reference count }
                          Include(OptsToCheck, aoc_ForceNewIteration);
                          { Don't exit yet.  Since p and p_jump haven't actually been
                            removed, we can check for more on this iteration }
@@ -9075,7 +9075,7 @@ unit aoptx86;
 
                              JumpLabel_far.IncRefs;
 
-                             TAICPU(p_jump).oper[0]^.ref^.symbol := JumpLabel_far;
+                             TAICPU(p_jump).oper[0]^.Ref^.Symbol := JumpLabel_far;
 
                              Result := True;
                              { Don't exit yet.  Since p and p_jump haven't actually been
@@ -9102,7 +9102,7 @@ unit aoptx86;
                      (
                        MatchOpType(TAICPU(p), top_const, top_reg) and
                        MatchOpType(TAICPU(hp2), top_const, top_reg) and
-                       (TAICPU(hp2).oper[0]^.val = TAICPU(p).oper[0]^.val) and
+                       (TAICPU(hp2).oper[0]^.Val = TAICPU(p).oper[0]^.Val) and
                        Reg1WriteOverwritesReg2Entirely(TAICPU(hp2).oper[1]^.reg, TAICPU(p).oper[1]^.reg)
                      ) or (
                        MatchOperand(TAICPU(hp2).oper[0]^, TAICPU(p).oper[0]^) and
@@ -9182,7 +9182,7 @@ unit aoptx86;
                ) and
                GetNextInstruction(hp2, hp1_label) and
                (hp1_label.typ = ait_label) and
-               (TAILabel(hp1_label).labsym = TAICPU(hp1).oper[0]^.ref^.symbol) then
+               (TAILabel(hp1_label).labsym = TAICPU(hp1).oper[0]^.Ref^.Symbol) then
                begin
                  TAILabel(hp1_label).labsym.DecRefs;
                  if (TAICPU(hp1).condition in [C_NE, C_NZ]) then
@@ -9227,7 +9227,7 @@ unit aoptx86;
                GetNextInstruction(hp2, p_label) and
                (p_label.typ = ait_label) and
                (TAILabel(p_label).labsym.getrefs = 1) and
-               (JumpTargetOp(TAICPU(hp1))^.ref^.symbol = TAILabel(p_label).labsym) and
+               (JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol = TAILabel(p_label).labsym) and
                GetNextInstruction(p_label, p_dist) and
                MatchInstruction(p_dist, A_SETcc, []) and
                (TAICPU(p_dist).condition in [C_E, C_Z]) and
@@ -9254,7 +9254,7 @@ unit aoptx86;
                          { Change the jump instruction into a SETcc instruction }
                          TAICPU(hp1).opcode := A_SETcc;
                          TAICPU(hp1).opsize := S_B;
-                         TAICPU(hp1).loadreg(0, NewReg);
+                         TAICPU(hp1).LoadReg(0, NewReg);
 
                          { This is now a dead label }
                          TAILabel(p_label).labsym.decrefs;
@@ -9279,7 +9279,7 @@ unit aoptx86;
            MatchInstruction(hp1,A_Jcc,A_SETcc,[]) then
            begin
 
-             if (TAICPU(p).oper[0]^.val = 0) and
+             if (TAICPU(p).oper[0]^.Val = 0) and
                (TAICPU(p).oper[1]^.typ = top_reg) then
                begin
                  hp2 := p;
@@ -9310,7 +9310,7 @@ unit aoptx86;
                            if TAICPU(hp1).opcode = A_Jcc then
                              begin
                                DebugMsg(SPeepholeOptimization + 'Cmpcc2Testcc - condition B/C/NAE/O --> Never (jump removed)', hp1);
-                               TAsmLabel(TAICPU(hp1).oper[0]^.ref^.symbol).decrefs;
+                               TAsmLabel(TAICPU(hp1).oper[0]^.Ref^.Symbol).decrefs;
                                RemoveInstruction(hp1);
                                { Since hp1 was deleted, hp2 must not be updated }
                                Continue;
@@ -9323,7 +9323,7 @@ unit aoptx86;
                                TAICPU(hp1).ops := 2;
                                TAICPU(hp1).condition := C_None;
                                TAICPU(hp1).opsize := S_B;
-                               TAICPU(hp1).loadreg(1,TAICPU(hp1).oper[0]^.reg);
+                               TAICPU(hp1).LoadReg(1,TAICPU(hp1).oper[0]^.reg);
                                TAICPU(hp1).loadconst(0, 0);
                              end;
                          end;
@@ -9357,7 +9357,7 @@ unit aoptx86;
                                TAICPU(hp1).ops := 2;
                                TAICPU(hp1).condition := C_None;
                                TAICPU(hp1).opsize := S_B;
-                               TAICPU(hp1).loadreg(1,TAICPU(hp1).oper[0]^.reg);
+                               TAICPU(hp1).LoadReg(1,TAICPU(hp1).oper[0]^.reg);
                                TAICPU(hp1).loadconst(0, 1);
                              end;
                          end;
@@ -9378,7 +9378,7 @@ unit aoptx86;
                  { Convert the instruction to a TEST }
 
                  TAICPU(p).opcode := A_TEST;
-                 TAICPU(p).loadreg(0,TAICPU(p).oper[1]^.reg);
+                 TAICPU(p).LoadReg(0,TAICPU(p).oper[1]^.reg);
                  Result := True;
                  Exit;
                end
@@ -9389,7 +9389,7 @@ unit aoptx86;
 
                  if not RegUsedAfterInstruction(NR_DEFAULTFLAGS, hp1, TmpUsedRegs) then
                    begin
-                     if (TAICPU(p).oper[0]^.val = 1) and
+                     if (TAICPU(p).oper[0]^.Val = 1) and
                        (TAICPU(hp1).condition in [C_L, C_NL, C_NGE, C_GE]) then
                        begin
                          { Convert;       To:
@@ -9398,7 +9398,7 @@ unit aoptx86;
                              (Also do inverted conditions)
                          }
                          DebugMsg(SPeepholeOptimization + 'Cmp1Jl2Cmp0Jle', p);
-                         TAICPU(p).oper[0]^.val := 0;
+                         TAICPU(p).oper[0]^.Val := 0;
                          if TAICPU(hp1).condition in [C_L, C_NGE] then
                            TAICPU(hp1).condition := C_LE
                          else
@@ -9411,7 +9411,7 @@ unit aoptx86;
                          if (TAICPU(p).oper[1]^.typ = top_reg) then
                            begin
                              TAICPU(p).opcode := A_TEST;
-                             TAICPU(p).loadreg(0,TAICPU(p).oper[1]^.reg);
+                             TAICPU(p).LoadReg(0,TAICPU(p).oper[1]^.reg);
                            end;
 
                          Result := True;
@@ -9435,7 +9435,7 @@ unit aoptx86;
                              InternalError(2013112905);
                          end;
 
-                         if (TAICPU(p).oper[0]^.val=v) and
+                         if (TAICPU(p).oper[0]^.Val=v) and
                             (TAICPU(hp1).condition in [C_E,C_NE]) then
                            begin
                              TransferUsedRegs(TmpUsedRegs);
@@ -9595,8 +9595,8 @@ unit aoptx86;
          begin
            DebugMsg(SPeepholeOptimization + 'VPXor2VPXor done',p);
            { avoid unnecessary data dependency }
-           TAICPU(p).loadreg(0,TAICPU(p).oper[2]^.reg);
-           TAICPU(p).loadreg(1,TAICPU(p).oper[2]^.reg);
+           TAICPU(p).LoadReg(0,TAICPU(p).oper[2]^.reg);
+           TAICPU(p).LoadReg(1,TAICPU(p).oper[2]^.reg);
            result:=true;
            exit;
          end;
@@ -9683,14 +9683,14 @@ unit aoptx86;
           ((TAICPU(p).opcode=A_VCVTSS2SD) and MatchInstruction(hp1,A_VCVTSD2SS,[TAICPU(p).opsize]) and
            MatchOpType(TAICPU(p),top_reg,top_reg,top_reg) and
            MatchOpType(TAICPU(hp1),top_reg,top_reg,top_reg) and
-           (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(p).oper[1]^.reg)) and
-           (getsupreg(TAICPU(hp1).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[1]^.reg)) and
-           (getsupreg(TAICPU(p).oper[2]^.reg)=getsupreg(TAICPU(hp1).oper[0]^.reg))
+           (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(p).oper[1]^.reg)) and
+           (GetSupReg(TAICPU(hp1).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[1]^.reg)) and
+           (GetSupReg(TAICPU(p).oper[2]^.reg)=GetSupReg(TAICPU(hp1).oper[0]^.reg))
           )
          ) then
          begin
-           if ((TAICPU(p).opcode=A_CVTSS2SD) and (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[1]^.reg))) or
-             ((TAICPU(p).opcode=A_VCVTSS2SD) and (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[2]^.reg))) then
+           if ((TAICPU(p).opcode=A_CVTSS2SD) and (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[1]^.reg))) or
+             ((TAICPU(p).opcode=A_VCVTSS2SD) and (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[2]^.reg))) then
              begin
                DebugMsg(SPeepholeOptimization + '(V)Cvtss2CvtSd(V)Cvtsd2ss2Nop done',p);
                RemoveCurrentP(p);
@@ -9701,12 +9701,12 @@ unit aoptx86;
                DebugMsg(SPeepholeOptimization + '(V)Cvtss2CvtSd(V)Cvtsd2ss2Vmovaps done',p);
                if TAICPU(hp1).opcode=A_CVTSD2SS then
                  begin
-                   TAICPU(p).loadreg(1,TAICPU(hp1).oper[1]^.reg);
+                   TAICPU(p).LoadReg(1,TAICPU(hp1).oper[1]^.reg);
                    TAICPU(p).opcode:=A_MOVAPS;
                  end
                else
                  begin
-                   TAICPU(p).loadreg(1,TAICPU(hp1).oper[2]^.reg);
+                   TAICPU(p).LoadReg(1,TAICPU(hp1).oper[2]^.reg);
                    TAICPU(p).opcode:=A_VMOVAPS;
                  end;
                TAICPU(p).ops:=2;
@@ -9757,7 +9757,7 @@ unit aoptx86;
 {$ifdef i386}
              { Under i386, ESI, EDI, EBP and ESP
                don't have an 8-bit representation }
-              and not (getsupreg(TAICPU(hp1).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
+              and not (GetSupReg(TAICPU(hp1).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
 
 {$endif i386}
            ) or (
@@ -9768,21 +9768,21 @@ unit aoptx86;
            )
          ) and
          GetNextInstruction(hp1,hp2) and
-         MatchInstruction(hp2,A_JMP,[]) and (TAICPU(hp2).oper[0]^.ref^.refaddr=addr_full) and
+         MatchInstruction(hp2,A_JMP,[]) and (TAICPU(hp2).oper[0]^.Ref^.RefAddr=addr_full) and
          GetNextInstruction(hp2,hp3) and
-         FindLabel(TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol), hp3) and
+         FindLabel(TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol), hp3) and
          GetNextInstruction(hp3,hp4) and
          MatchInstruction(hp4,A_MOV,[TAICPU(hp1).opsize]) and
          (TAICPU(hp4).oper[0]^.typ = top_const) and
          (
-           ((TAICPU(hp1).oper[0]^.val = 0) and (TAICPU(hp4).oper[0]^.val = 1)) or
-           ((TAICPU(hp1).oper[0]^.val = 1) and (TAICPU(hp4).oper[0]^.val = 0))
+           ((TAICPU(hp1).oper[0]^.Val = 0) and (TAICPU(hp4).oper[0]^.Val = 1)) or
+           ((TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0))
          ) and
          MatchOperand(TAICPU(hp1).oper[1]^,TAICPU(hp4).oper[1]^) and
          GetNextInstruction(hp4,hp5) and
-         FindLabel(TAsmLabel(TAICPU(hp2).oper[0]^.ref^.symbol), hp5) then
+         FindLabel(TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol), hp5) then
          begin
-           if (TAICPU(hp1).oper[0]^.val = 1) and (TAICPU(hp4).oper[0]^.val = 0) then
+           if (TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0) then
              TAICPU(p).condition := inverse_cond(TAICPU(p).condition);
 
            TAILabel(hp3).labsym.DecRefs;
@@ -9792,7 +9792,7 @@ unit aoptx86;
              that follows will remain. }
            if (TAILabel(hp3).labsym.getrefs = 0) then
              begin
-               if (TAICPU(hp1).oper[0]^.val = 1) and (TAICPU(hp4).oper[0]^.val = 0) then
+               if (TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0) then
                  DebugMsg(SPeepholeOptimization + 'J(c)Mov1JmpMov0 -> Set(~c)',p)
                else
                  DebugMsg(SPeepholeOptimization + 'J(c)Mov0JmpMov1 -> Set(c)',p);
@@ -9814,7 +9814,7 @@ unit aoptx86;
              end
            else
              begin
-               if (TAICPU(hp1).oper[0]^.val = 1) and (TAICPU(hp4).oper[0]^.val = 0) then
+               if (TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0) then
                  DebugMsg(SPeepholeOptimization + 'J(c)Mov1JmpMov0 -> Set(~c) (partial)',p)
                else
                  DebugMsg(SPeepholeOptimization + 'J(c)Mov0JmpMov1 -> Set(c) (partial)',p);
@@ -9835,8 +9835,8 @@ unit aoptx86;
            else
              begin
                { Will be a register because the size can't be S_B otherwise }
-               ThisReg := newreg(R_INTREGISTER,getsupreg(TAICPU(hp1).oper[1]^.reg), R_SUBL);
-               TAICPU(p).loadreg(0, ThisReg);
+               ThisReg := NewReg(R_INTREGISTER,GetSupReg(TAICPU(hp1).oper[1]^.reg), R_SUBL);
+               TAICPU(p).LoadReg(0, ThisReg);
                AllocRegBetween(ThisReg, p, hp2, UsedRegs);
 
                if (cs_opt_size in CurrentSettings.OptimizerSwitches) and IsMOVZXAcceptable then
@@ -9851,7 +9851,7 @@ unit aoptx86;
                        begin
                          TAICPU(hp1).opsize := S_BL;
                          { Change the destination register to 32-bit }
-                         TAICPU(hp1).loadreg(1, newreg(R_INTREGISTER,getsupreg(ThisReg), R_SUBD));
+                         TAICPU(hp1).LoadReg(1, NewReg(R_INTREGISTER,GetSupReg(ThisReg), R_SUBD));
                        end;
 {$endif x86_64}
                      else
@@ -9859,7 +9859,7 @@ unit aoptx86;
                    end;
 
                    TAICPU(hp1).opcode := A_MOVZX;
-                   TAICPU(hp1).loadreg(0, ThisReg);
+                   TAICPU(hp1).LoadReg(0, ThisReg);
                  end
                else
                  begin
@@ -9925,8 +9925,8 @@ unit aoptx86;
         MatchOpType(TAICPU(hp1), top_reg, top_ref) and
         not RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg, hp1, TmpUsedRegs) then
         begin
-          SourceRef := TAICPU(p).oper[0]^.ref^;
-          TargetRef := TAICPU(hp1).oper[1]^.ref^;
+          SourceRef := TAICPU(p).oper[0]^.Ref^;
+          TargetRef := TAICPU(hp1).oper[1]^.Ref^;
           if GetNextInstruction(hp1, hp2) and
             MatchInstruction(hp2, A_VMOVDQA, A_VMOVDQU, [S_XMM]) and
             MatchOpType(TAICPU(hp2), top_ref, top_reg) then
@@ -9934,21 +9934,21 @@ unit aoptx86;
               { Delay calling GetNextInstruction(hp2, hp3) for as long as possible }
               UpdateUsedRegs(TmpUsedRegs, TAI(hp1.Next));
 
-              Inc(SourceRef.offset, 16);
+              Inc(SourceRef.Offset, 16);
 
               { Reuse the register in the first block move }
-              CurrentReg := newreg(R_MMREGISTER, getsupreg(TAICPU(p).oper[1]^.reg), R_SUBMMY);
+              CurrentReg := NewReg(R_MMREGISTER, GetSupReg(TAICPU(p).oper[1]^.reg), R_SUBMMY);
 
-              if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.ref^) and
-                not RefsMightOverlap(TAICPU(p).oper[0]^.ref^, TargetRef, 32) then
+              if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.Ref^) and
+                not RefsMightOverlap(TAICPU(p).oper[0]^.Ref^, TargetRef, 32) then
                 begin
                   UpdateUsedRegs(TmpUsedRegs, TAI(hp2.Next));
-                  Inc(TargetRef.offset, 16);
+                  Inc(TargetRef.Offset, 16);
                   if GetNextInstruction(hp2, hp3) and
                     MatchInstruction(hp3, A_VMOVDQA, A_VMOVDQU, [S_XMM]) and
                     MatchOpType(TAICPU(hp3), top_reg, top_ref) and
                     (TAICPU(hp2).oper[1]^.reg = TAICPU(hp3).oper[0]^.reg) and
-                    RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.ref^) and
+                    RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.Ref^) and
                     not RegUsedAfterInstruction(TAICPU(hp2).oper[1]^.reg, hp3, TmpUsedRegs) then
                     begin
                       { Update the register tracking to the new size }
@@ -9958,8 +9958,8 @@ unit aoptx86;
 
                       { Switch to unaligned if the memory isn't on a 32-byte boundary }
                       if not (
-                          ((SourceRef.offset mod 32) = 16) and
-                          (SourceRef.alignment >= 32) and ((SourceRef.alignment mod 32) = 0)
+                          ((SourceRef.Offset mod 32) = 16) and
+                          (SourceRef.Alignment >= 32) and ((SourceRef.Alignment mod 32) = 0)
                         ) then
                         TAICPU(p).opcode := A_VMOVDQU;
 
@@ -9967,8 +9967,8 @@ unit aoptx86;
                       TAICPU(p).oper[1]^.reg := CurrentReg;
 
                       if not (
-                          ((TargetRef.offset mod 32) = 16) and
-                          (TargetRef.alignment >= 32) and ((TargetRef.alignment mod 32) = 0)
+                          ((TargetRef.Offset mod 32) = 16) and
+                          (TargetRef.Alignment >= 32) and ((TargetRef.Alignment mod 32) = 0)
                         ) then
                         TAICPU(hp1).opcode := A_VMOVDQU;
 
@@ -9984,12 +9984,12 @@ unit aoptx86;
                         begin
                           { Upper 128 bits will be set to zero; change to XMM
                             to avoid requirement of AVX2 }
-                          setsubreg(CurrentReg, R_SUBMMX);
+                          SetSubReg(CurrentReg, R_SUBMMX);
                           TAICPU(hp2).opcode := A_VPXOR;
                           TAICPU(hp2).opsize := S_XMM;
-                          TAICPU(hp2).loadreg(0, CurrentReg);
-                          TAICPU(hp2).loadreg(1, CurrentReg);
-                          TAICPU(hp2).loadreg(2, CurrentReg);
+                          TAICPU(hp2).LoadReg(0, CurrentReg);
+                          TAICPU(hp2).LoadReg(1, CurrentReg);
+                          TAICPU(hp2).LoadReg(2, CurrentReg);
                           TAICPU(hp2).ops := 3;
                         end;
 
@@ -10002,17 +10002,17 @@ unit aoptx86;
                 begin
                   { See if the next references are 16 less rather than 16 greater }
 
-                  Dec(SourceRef.offset, 32); { -16 the other way }
-                  if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.ref^) then
+                  Dec(SourceRef.Offset, 32); { -16 the other way }
+                  if RefsEqual(SourceRef, TAICPU(hp2).oper[0]^.Ref^) then
                     begin
                       UpdateUsedRegs(TmpUsedRegs, TAI(hp2.Next));
-                      Dec(TargetRef.offset, 16); { Only 16, not 32, as it wasn't incremented unlike SourceRef }
+                      Dec(TargetRef.Offset, 16); { Only 16, not 32, as it wasn't incremented unlike SourceRef }
                       if not RefsMightOverlap(SourceRef, TargetRef, 32) and
                         GetNextInstruction(hp2, hp3) and
                         MatchInstruction(hp3, A_MOV, [TAICPU(p).opsize]) and
                         MatchOpType(TAICPU(hp3), top_reg, top_ref) and
                         (TAICPU(hp2).oper[1]^.reg = TAICPU(hp3).oper[0]^.reg) and
-                        RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.ref^) and
+                        RefsEqual(TargetRef, TAICPU(hp3).oper[1]^.Ref^) and
                         not RegUsedAfterInstruction(TAICPU(hp2).oper[1]^.reg, hp3, TmpUsedRegs) then
                         begin
                           { Update the register tracking to the new size }
@@ -10022,8 +10022,8 @@ unit aoptx86;
 
                           { Switch to unaligned if the memory isn't on a 32-byte boundary }
                           if not(
-                              ((SourceRef.offset mod 32) = 0) and
-                              (SourceRef.alignment >= 32) and ((SourceRef.alignment mod 32) = 0)
+                              ((SourceRef.Offset mod 32) = 0) and
+                              (SourceRef.Alignment >= 32) and ((SourceRef.Alignment mod 32) = 0)
                             ) then
                             TAICPU(hp2).opcode := A_VMOVDQU;
 
@@ -10031,8 +10031,8 @@ unit aoptx86;
                           TAICPU(hp2).oper[1]^.reg := CurrentReg;
 
                           if not (
-                              ((TargetRef.offset mod 32) = 0) and
-                              (TargetRef.alignment >= 32) and ((TargetRef.alignment mod 32) = 0)
+                              ((TargetRef.Offset mod 32) = 0) and
+                              (TargetRef.Alignment >= 32) and ((TargetRef.Alignment mod 32) = 0)
                             ) then
                             TAICPU(hp3).opcode := A_VMOVDQU;
 
@@ -10048,12 +10048,12 @@ unit aoptx86;
                             begin
                               { Upper 128 bits will be set to zero; change to
                                 XMM to avoid requirement of AVX2 }
-                              setsubreg(CurrentReg, R_SUBMMX);
+                              SetSubReg(CurrentReg, R_SUBMMX);
                               TAICPU(hp1).opcode := A_VPXOR;
                               TAICPU(hp1).opsize := S_XMM;
-                              TAICPU(hp1).loadreg(0, CurrentReg);
-                              TAICPU(hp1).loadreg(1, CurrentReg);
-                              TAICPU(hp1).loadreg(2, CurrentReg);
+                              TAICPU(hp1).LoadReg(0, CurrentReg);
+                              TAICPU(hp1).LoadReg(1, CurrentReg);
+                              TAICPU(hp1).LoadReg(2, CurrentReg);
                               TAICPU(hp1).ops := 3;
 
                               Asml.Remove(hp1);
@@ -10085,13 +10085,13 @@ unit aoptx86;
           Exit;
         end;
       if (TAICPU(p).oper[0]^.typ <> top_ref) or
-        (TAICPU(p).oper[0]^.ref^.refaddr <> addr_full) or
-        (TAICPU(p).oper[0]^.ref^.base <> NR_NO) or
-        (TAICPU(p).oper[0]^.ref^.index <> NR_NO) or
-        not (TAICPU(p).oper[0]^.ref^.symbol is TAsmLabel) then
+        (TAICPU(p).oper[0]^.Ref^.RefAddr <> addr_full) or
+        (TAICPU(p).oper[0]^.Ref^.Base <> NR_NO) or
+        (TAICPU(p).oper[0]^.Ref^.Index <> NR_NO) or
+        not (TAICPU(p).oper[0]^.Ref^.Symbol is TAsmLabel) then
         Exit;
 
-      OrigLabel := TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol);
+      OrigLabel := TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol);
 
       {
         change
@@ -10170,7 +10170,7 @@ unit aoptx86;
             A_JMP:
               begin
                 { Guard against infinite loops }
-                if TAICPU(hp2).oper[0]^.ref^.symbol = OrigLabel then
+                if TAICPU(hp2).oper[0]^.Ref^.Symbol = OrigLabel then
                   Exit;
 
                 { Analyse this jump first in case it also duplicates assignments }
@@ -10244,8 +10244,8 @@ unit aoptx86;
                       begin
                         { Change the original jump to the new destination }
                         OrigLabel.decrefs;
-                        TAICPU(hp1).oper[0]^.ref^.symbol.increfs;
-                        TAICPU(p).loadref(0, TAICPU(hp1).oper[0]^.ref^);
+                        TAICPU(hp1).oper[0]^.Ref^.Symbol.increfs;
+                        TAICPU(p).loadref(0, TAICPU(hp1).oper[0]^.Ref^);
 
                         { Set p to the first duplicated assignment so it can get optimised if needs be }
                         if not Assigned(first_assignment) then
@@ -10284,39 +10284,39 @@ unit aoptx86;
                               case typ of
                                 top_ref:
                                   begin
-                                    if (ref^.base <> NR_NO) and
-                                      (getsupreg(ref^.base) <> RS_STACK_POINTER_REG) and
+                                    if (ref^.Base <> NR_NO) and
+                                      (GetSupReg(ref^.Base) <> RS_STACK_POINTER_REG) and
                                       (
-                                        (getsupreg(ref^.base) <> RS_FRAME_POINTER_REG) or
+                                        (GetSupReg(ref^.Base) <> RS_FRAME_POINTER_REG) or
                                         (
                                           { Allow the frame pointer if it's not being used by the procedure as such }
                                           Assigned(CurrentProcInfo) and
                                           (CurrentProcInfo.framepointer <> NR_FRAME_POINTER_REG)
                                         )
                                       )
-                                      {$ifdef x86_64} and (ref^.base <> NR_RIP) {$endif x86_64}
+                                      {$ifdef x86_64} and (ref^.Base <> NR_RIP) {$endif x86_64}
                                       then
                                       begin
-                                        AllocRegBetween(ref^.base, hp3, p, TmpUsedRegs);
+                                        AllocRegBetween(ref^.Base, hp3, p, TmpUsedRegs);
                                         if not Assigned(first_assignment) then
-                                          IncludeRegInUsedRegs(ref^.base, UsedRegs);
+                                          IncludeRegInUsedRegs(ref^.Base, UsedRegs);
                                       end;
-                                    if (ref^.index <> NR_NO) and
-                                      (getsupreg(ref^.index) <> RS_STACK_POINTER_REG) and
+                                    if (ref^.Index <> NR_NO) and
+                                      (GetSupReg(ref^.Index) <> RS_STACK_POINTER_REG) and
                                       (
-                                        (getsupreg(ref^.index) <> RS_FRAME_POINTER_REG) or
+                                        (GetSupReg(ref^.Index) <> RS_FRAME_POINTER_REG) or
                                         (
                                           { Allow the frame pointer if it's not being used by the procedure as such }
                                           Assigned(CurrentProcInfo) and
                                           (CurrentProcInfo.framepointer <> NR_FRAME_POINTER_REG)
                                         )
                                       )
-                                      {$ifdef x86_64} and (ref^.index <> NR_RIP) {$endif x86_64} and
-                                      (ref^.index <> ref^.base) then
+                                      {$ifdef x86_64} and (ref^.Index <> NR_RIP) {$endif x86_64} and
+                                      (ref^.Index <> ref^.Base) then
                                       begin
-                                        AllocRegBetween(ref^.index, hp3, p, TmpUsedRegs);
+                                        AllocRegBetween(ref^.Index, hp3, p, TmpUsedRegs);
                                         if not Assigned(first_assignment) then
-                                          IncludeRegInUsedRegs(ref^.index, UsedRegs);
+                                          IncludeRegInUsedRegs(ref^.Index, UsedRegs);
                                       end;
                                   end;
                                 top_reg:
@@ -10398,7 +10398,7 @@ unit aoptx86;
       { EAX, ECX, EDX, EBX, ESI, EDI, EBP, ESP in that order }
       for X := 0 to 7 do
         if (RegWriteFlags[X] * InsProp[TAICPU(hp1).opcode].Ch <> [])
-          and RegInInstruction(newreg(R_INTREGISTER, TSuperRegister(X), R_SUBWHOLE), p) then
+          and RegInInstruction(NewReg(R_INTREGISTER, TSuperRegister(X), R_SUBWHOLE), p) then
           Exit;
 
       for X := 0 to TAICPU(hp1).ops - 1 do
@@ -10425,7 +10425,7 @@ unit aoptx86;
       { EAX, ECX, EDX, EBX, ESI, EDI, EBP, ESP in that order }
       for X := 0 to 7 do
         if (RegWriteFlags[X] * InsProp[TAICPU(p).opcode].Ch <> [])
-          and RegInInstruction(newreg(R_INTREGISTER, TSuperRegister(X), R_SUBWHOLE), hp1) then
+          and RegInInstruction(NewReg(R_INTREGISTER, TSuperRegister(X), R_SUBWHOLE), hp1) then
           Exit;
 
       for X := 0 to TAICPU(p).ops - 1 do
@@ -10478,17 +10478,17 @@ unit aoptx86;
             end;
           top_ref:
             begin
-              if TAICPU(hp1).oper[X]^.ref^.base <> NR_NO then
+              if TAICPU(hp1).oper[X]^.Ref^.Base <> NR_NO then
                 begin
-                  asml.InsertBefore(TAIRegAlloc.alloc(TAICPU(hp1).oper[X]^.ref^.base, nil), hp1);
-                  IncludeRegInUsedRegs(TAICPU(hp1).oper[X]^.ref^.base, UsedRegs);
-                  AllocRegBetween(TAICPU(hp1).oper[X]^.ref^.base, hp1, p, UsedRegs);
+                  asml.InsertBefore(TAIRegAlloc.alloc(TAICPU(hp1).oper[X]^.Ref^.Base, nil), hp1);
+                  IncludeRegInUsedRegs(TAICPU(hp1).oper[X]^.Ref^.Base, UsedRegs);
+                  AllocRegBetween(TAICPU(hp1).oper[X]^.Ref^.Base, hp1, p, UsedRegs);
                 end;
-              if TAICPU(hp1).oper[X]^.ref^.index <> NR_NO then
+              if TAICPU(hp1).oper[X]^.Ref^.Index <> NR_NO then
                 begin
-                  asml.InsertBefore(TAIRegAlloc.alloc(TAICPU(hp1).oper[X]^.ref^.index, nil), hp1);
-                  IncludeRegInUsedRegs(TAICPU(hp1).oper[X]^.ref^.index, UsedRegs);
-                  AllocRegBetween(TAICPU(hp1).oper[X]^.ref^.index, hp1, p, UsedRegs);
+                  asml.InsertBefore(TAIRegAlloc.alloc(TAICPU(hp1).oper[X]^.Ref^.Index, nil), hp1);
+                  IncludeRegInUsedRegs(TAICPU(hp1).oper[X]^.Ref^.Index, UsedRegs);
+                  AllocRegBetween(TAICPU(hp1).oper[X]^.Ref^.Index, hp1, p, UsedRegs);
                 end;
             end;
           else
@@ -10596,7 +10596,7 @@ unit aoptx86;
 
               { TryJccStcClcOpts calls "DoJumpOptimizations", which may change
                 the label destination, so only grab the label name afterwards }
-              JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.ref^.symbol);
+              JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.Ref^.Symbol);
               if not Assigned(JumpLabel) then
                 InternalError(2024012802);
 
@@ -10642,7 +10642,7 @@ unit aoptx86;
             end
           else
             begin
-              JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.ref^.symbol);
+              JumpLabel := TAsmLabel(TAICPU(hp1).oper[0]^.Ref^.Symbol);
               if not Assigned(JumpLabel) then
                 InternalError(2024012801);
             end;
@@ -10669,7 +10669,7 @@ unit aoptx86;
                         DebugMsg(SPeepholeOptimization + 'STC/CLC; JMP/Jcc; ... J(N)C -> JMP/Jcc (StcClcJ(c)2Jmp)', p);
 
                         JumpLabel.decrefs;
-                        TAICPU(hp1).loadsymbol(0, TAICPU(p_dist).oper[0]^.ref^.symbol, 0);
+                        TAICPU(hp1).loadsymbol(0, TAICPU(p_dist).oper[0]^.Ref^.Symbol, 0);
 
                         RemoveCurrentP(p); { hp1 may not be the immediate next instruction }
                         Result := True;
@@ -10720,7 +10720,7 @@ unit aoptx86;
                       DebugMsg(SPeepholeOptimization + 'STC/CLC; JMP; ... SET(N)C; JMP -> MOV; JMP (StcClcSet(c)2Mov)', p);
 
                       JumpLabel.decrefs;
-                      TAICPU(hp1).loadsymbol(0, TAICPU(hp1_dist).oper[0]^.ref^.symbol, 0);
+                      TAICPU(hp1).loadsymbol(0, TAICPU(hp1_dist).oper[0]^.Ref^.Symbol, 0);
 
                       { If a flag allocation is found, try to move it to after the MOV so "mov $0,%reg" gets optimised to "xor %reg,%reg" }
                       if SetAndTest(FindRegAllocBackward(NR_DEFAULTFLAGS, TAI(p.Previous)), hp2) and
@@ -10769,7 +10769,7 @@ unit aoptx86;
       }
       if GetNextInstruction(hp1, hp2) and
         (hp2.typ = ait_label) and
-        (TAILabel(hp2).labsym = TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol)) and
+        (TAILabel(hp2).labsym = TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)) and
         GetNextInstruction(hp2, hp3) and
         MatchInstruction(hp3, A_Jcc, []) and
         (
@@ -10786,7 +10786,7 @@ unit aoptx86;
         begin
           TAICPU(hp1).allocate_oper(1);
           TAICPU(hp1).ops := 1;
-          TAICPU(hp1).loadsymbol(0, TAsmLabel(TAICPU(hp3).oper[0]^.ref^.symbol), 0);
+          TAICPU(hp1).loadsymbol(0, TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol), 0);
           TAICPU(hp1).opcode := A_JMP;
           TAICPU(hp1).is_jmp := True;
 
@@ -10884,7 +10884,7 @@ unit aoptx86;
                         and (TAICPU(hp1).oper[1]^.reg = TAICPU(p).oper[0]^.reg) then
                         begin
                           { Found a constant! }
-                          TAICPU(p).loadconst(0, TAICPU(hp1).oper[0]^.val);
+                          TAICPU(p).loadconst(0, TAICPU(hp1).oper[0]^.Val);
 
                           if not RegUsedAfterInstruction(TAICPU(hp1).oper[1]^.reg, p, UsedRegs) then
                             { The source register is no longer in use }
@@ -10947,7 +10947,7 @@ unit aoptx86;
 
             { be lazy, checking separately for sub would be slightly better }
             if (TAICPU(InputInstr).oper[0]^.typ = top_const) and
-              (abs(TAICPU(InputInstr).oper[0]^.val)<=$7fffffff) then
+              (abs(TAICPU(InputInstr).oper[0]^.Val)<=$7fffffff) then
               begin
                 NextPresent := GetNextInstruction(InputInstr, NextInstr);
                 if NextPresent then
@@ -10968,19 +10968,19 @@ unit aoptx86;
                     )
                   ) then
                   begin
-                    reference_reset(NewRef, 1, []);
-                    NewRef.base := TAICPU(p).oper[0]^.reg;
-                    NewRef.scalefactor := 1;
+                    Reference_Reset(NewRef, 1, []);
+                    NewRef.Base := TAICPU(p).oper[0]^.reg;
+                    NewRef.ScaleFactor := 1;
 
                     if TAICPU(InputInstr).opcode = A_ADD then
                       begin
                         DebugMsg(SPeepholeOptimization + 'MovAdd2Lea', p);
-                        NewRef.offset := TAICPU(InputInstr).oper[0]^.val;
+                        NewRef.Offset := TAICPU(InputInstr).oper[0]^.Val;
                       end
                     else
                       begin
                         DebugMsg(SPeepholeOptimization + 'MovSub2Lea', p);
-                        NewRef.offset := -TAICPU(InputInstr).oper[0]^.val;
+                        NewRef.Offset := -TAICPU(InputInstr).oper[0]^.Val;
                       end;
 
                     TAICPU(p).opcode := A_LEA;
@@ -11003,7 +11003,7 @@ unit aoptx86;
         { This optimisation adds an instruction, so only do it for speed }
         if not (cs_opt_size in CurrentSettings.OptimizerSwitches) and
           MatchOpType(TAICPU(p), top_const, top_reg) and
-          (TAICPU(p).oper[0]^.val = 0) then
+          (TAICPU(p).oper[0]^.Val = 0) then
           begin
 
             { To avoid compiler warning }
@@ -11053,8 +11053,8 @@ unit aoptx86;
                     ) and GetNextInstruction(hp2, hp3) and
                     (hp3.typ = ait_instruction) and
                     (TAICPU(hp3).opcode = A_JCC) and
-                    (TAICPU(hp3).oper[0]^.typ=top_ref) and (TAICPU(hp3).oper[0]^.ref^.refaddr=addr_full) and (TAICPU(hp3).oper[0]^.ref^.base=NR_NO) and
-                    (TAICPU(hp3).oper[0]^.ref^.index=NR_NO) and (TAICPU(hp3).oper[0]^.ref^.symbol is TAsmLabel) then
+                    (TAICPU(hp3).oper[0]^.typ=top_ref) and (TAICPU(hp3).oper[0]^.Ref^.RefAddr=addr_full) and (TAICPU(hp3).oper[0]^.Ref^.Base=NR_NO) and
+                    (TAICPU(hp3).oper[0]^.Ref^.Index=NR_NO) and (TAICPU(hp3).oper[0]^.Ref^.Symbol is TAsmLabel) then
                     begin
                       { Check condition of jump }
 
@@ -11063,7 +11063,7 @@ unit aoptx86;
                         begin
                           { Copy label symbol and obtain matching label entry for the
                             conditional jump, as this will be our destination}
-                          DestLabel := TAsmLabel(TAICPU(hp3).oper[0]^.ref^.symbol);
+                          DestLabel := TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol);
                           DebugMsg(SPeepholeOptimization + 'Mov0LblCmp0Je -> Mov0JmpLblCmp0Je', p);
                           Result := True;
                         end
@@ -11078,7 +11078,7 @@ unit aoptx86;
                               begin
                                 if TAICPU(hp2).opcode = A_JMP then
                                   begin
-                                    DestLabel := TAsmLabel(TAICPU(hp2).oper[0]^.ref^.symbol);
+                                    DestLabel := TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol);
                                     { An unconditional jump follows the conditional jump which will always be false,
                                       so use this jump's destination for the new jump }
                                     DebugMsg(SPeepholeOptimization + 'Mov0LblCmp0Jne -> Mov0JmpLblCmp0Jne (with JMP)', p);
@@ -11086,7 +11086,7 @@ unit aoptx86;
                                   end
                                 else if TAICPU(hp2).opcode = A_JCC then
                                   begin
-                                    DestLabel := TAsmLabel(TAICPU(hp2).oper[0]^.ref^.symbol);
+                                    DestLabel := TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol);
                                     if condition_in(C_E, TAICPU(hp2).condition) then
                                       begin
                                         { A second conditional jump follows the conditional jump which will always be false,
@@ -11106,7 +11106,7 @@ unit aoptx86;
                       if Result then
                         begin
                           { Just so we have something to insert as a parameter}
-                          reference_reset(NewRef, 1, []);
+                          Reference_Reset(NewRef, 1, []);
                           NewInstr := TAICPU.op_ref(A_JMP, S_NO, NewRef);
 
                           { Now actually load the correct parameter (this also
@@ -11298,7 +11298,7 @@ unit aoptx86;
             TransferUsedRegs(TmpUsedRegs);
             UpdateUsedRegs(TmpUsedRegs, TAI(p.next));
 
-            if (getsupreg(TAICPU(p).oper[1]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg)) or
+            if (GetSupReg(TAICPU(p).oper[1]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg)) or
               not RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg, hp1, TmpUsedRegs)
             then
               begin
@@ -11457,11 +11457,11 @@ unit aoptx86;
 
                             RemoveInstruction(hp1);
 
-                            TAICPU(hp2).loadreg(0, NR_EDX);
-                            TAICPU(hp2).loadreg(1, NR_EAX);
+                            TAICPU(hp2).LoadReg(0, NR_EDX);
+                            TAICPU(hp2).LoadReg(1, NR_EAX);
 
-                            TAICPU(hp3).loadreg(0, NR_EDX);
-                            TAICPU(hp3).loadreg(1, NR_EAX);
+                            TAICPU(hp3).LoadReg(0, NR_EDX);
+                            TAICPU(hp3).LoadReg(1, NR_EAX);
 
                             AllocRegBetween(NR_EAX, hp3, hp4, TmpUsedRegs);
                             { Convert references in the following instruction (hp4) from %edx to %eax }
@@ -11469,14 +11469,14 @@ unit aoptx86;
                               with TAICPU(hp4).oper[OperIdx]^ do
                                 case typ of
                                   top_reg:
-                                    if getsupreg(reg) = RS_EDX then
-                                      reg := newreg(R_INTREGISTER,RS_EAX,getsubreg(reg));
+                                    if GetSupReg(reg) = RS_EDX then
+                                      reg := NewReg(R_INTREGISTER,RS_EAX,GetSubReg(reg));
                                   top_ref:
                                     begin
-                                      if getsupreg(reg) = RS_EDX then
-                                        ref^.base := newreg(R_INTREGISTER,RS_EAX,getsubreg(reg));
-                                      if getsupreg(reg) = RS_EDX then
-                                        ref^.index := newreg(R_INTREGISTER,RS_EAX,getsubreg(reg));
+                                      if GetSupReg(reg) = RS_EDX then
+                                        ref^.Base := NewReg(R_INTREGISTER,RS_EAX,GetSubReg(reg));
+                                      if GetSupReg(reg) = RS_EDX then
+                                        ref^.Index := NewReg(R_INTREGISTER,RS_EAX,GetSubReg(reg));
                                     end;
                                   else
                                     ;
@@ -11585,7 +11585,7 @@ unit aoptx86;
                     DebugMsg(SPeepholeOptimization + 'MovMovSar2MovCltd', p);
 
                     AllocRegBetween(NR_EAX, p, hp1, UsedRegs);
-                    TAICPU(p).loadreg(1, NR_EAX);
+                    TAICPU(p).LoadReg(1, NR_EAX);
 
                     TAICPU(hp1).opcode := A_CDQ;
                     TAICPU(hp1).clearop(1);
@@ -11668,30 +11668,30 @@ unit aoptx86;
                 (TAICPU(hp2).oper[0]^.typ = top_reg) and (TAICPU(hp2).oper[1]^.typ = top_reg) and
                 (
                   (
-                    (getsupreg(TAICPU(hp2).oper[0]^.reg) = getsupreg(TAICPU(p).oper[1]^.reg)) and
-                    (getsupreg(TAICPU(hp2).oper[1]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[0]^.reg) = GetSupReg(TAICPU(p).oper[1]^.reg)) and
+                    (GetSupReg(TAICPU(hp2).oper[1]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg))
                   ) or (
-                    (getsupreg(TAICPU(hp2).oper[0]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg)) and
-                    (getsupreg(TAICPU(hp2).oper[1]^.reg) = getsupreg(TAICPU(p).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[0]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg)) and
+                    (GetSupReg(TAICPU(hp2).oper[1]^.reg) = GetSupReg(TAICPU(p).oper[1]^.reg))
                   )
                 )
               ) or (
                 MatchInstruction(hp2, A_LEA,[]) and
-                (TAICPU(hp2).oper[0]^.ref^.offset = 0) and
-                (TAICPU(hp2).oper[0]^.ref^.scalefactor <= 1) and
+                (TAICPU(hp2).oper[0]^.Ref^.Offset = 0) and
+                (TAICPU(hp2).oper[0]^.Ref^.ScaleFactor <= 1) and
                 (
                   (
-                    (getsupreg(TAICPU(hp2).oper[0]^.ref^.base) = getsupreg(TAICPU(p).oper[1]^.reg)) and
-                    (getsupreg(TAICPU(hp2).oper[0]^.ref^.index) = getsupreg(TAICPU(hp1).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[0]^.Ref^.Base) = GetSupReg(TAICPU(p).oper[1]^.reg)) and
+                    (GetSupReg(TAICPU(hp2).oper[0]^.Ref^.Index) = GetSupReg(TAICPU(hp1).oper[1]^.reg))
                   ) or (
-                    (getsupreg(TAICPU(hp2).oper[0]^.ref^.base) = getsupreg(TAICPU(hp1).oper[1]^.reg)) and
-                    (getsupreg(TAICPU(hp2).oper[0]^.ref^.index) = getsupreg(TAICPU(p).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[0]^.Ref^.Base) = GetSupReg(TAICPU(hp1).oper[1]^.reg)) and
+                    (GetSupReg(TAICPU(hp2).oper[0]^.Ref^.Index) = GetSupReg(TAICPU(p).oper[1]^.reg))
                   )
                 ) and (
                   (
-                    (getsupreg(TAICPU(hp2).oper[1]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[1]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg))
                   ) or (
-                    (getsupreg(TAICPU(hp2).oper[1]^.reg) = getsupreg(TAICPU(p).oper[1]^.reg))
+                    (GetSupReg(TAICPU(hp2).oper[1]^.reg) = GetSupReg(TAICPU(p).oper[1]^.reg))
                   )
                 )
               )
@@ -11701,7 +11701,7 @@ unit aoptx86;
             MatchInstruction(hp3, A_SHR,[]) and
             (TAICPU(hp3).opsize = S_Q) and
             (TAICPU(hp3).oper[0]^.typ = top_const) and (TAICPU(hp2).oper[1]^.typ = top_reg) and
-            (TAICPU(hp3).oper[0]^.val = 1) and
+            (TAICPU(hp3).oper[0]^.Val = 1) and
             (TAICPU(hp3).oper[1]^.reg = TAICPU(hp2).oper[1]^.reg)
           ) then
           begin
@@ -11723,7 +11723,7 @@ unit aoptx86;
 
             DebugMsg(SPeepholeOptimization + 'MovMov*Shr2MovMov*Rcr', p);
 
-            if (getsupreg(TAICPU(hp2).oper[1]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg)) then
+            if (GetSupReg(TAICPU(hp2).oper[1]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg)) then
               begin
                 { Change first MOV command to have the same register as the final output }
                 TAICPU(p).oper[1]^.reg := TAICPU(hp1).oper[1]^.reg;
@@ -11748,7 +11748,7 @@ unit aoptx86;
             { Convert "shrq $1, reg1q" to "rcr $1, reg1d" }
             TAICPU(hp3).opcode := A_RCR;
             TAICPU(hp3).changeopsize(S_L);
-            setsubreg(TAICPU(hp3).oper[1]^.reg, R_SUBD);
+            SetSubReg(TAICPU(hp3).oper[1]^.reg, R_SUBD);
             { Don't need to Exit yet as p is still a MOV and hp1 hasn't been
               called, so FuncMov2Func below is safe to call }
 {$endif x86_64}
@@ -11805,8 +11805,8 @@ unit aoptx86;
                       UpdateUsedRegsBetween(TmpUsedRegs, TAI(hp2.Next), hp1);
 
                       TAICPU(hp1).opsize := S_L;
-                      TAICPU(hp1).loadreg(0, TAICPU(p).oper[0]^.reg);
-                      setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                      TAICPU(hp1).LoadReg(0, TAICPU(p).oper[0]^.reg);
+                      SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
 
                       AllocRegBetween(TAICPU(p).oper[0]^.reg, p, hp1, TmpUsedRegs);
 
@@ -11976,14 +11976,14 @@ unit aoptx86;
                       (TAICPU(hp1).opsize in [S_BW, S_BL{$ifdef x86_64}, S_BQ{$endif x86_64}]) then
                       begin
                         TargetSize := S_B;
-                        setsubreg(ThisReg, R_SUBL);
+                        SetSubReg(ThisReg, R_SUBL);
                         Result := True;
                       end
                     else if (TAICPU(p).opsize = S_WL) and
                       (TAICPU(hp1).opsize in [S_WL{$ifdef x86_64}, S_BQ{$endif x86_64}]) then
                       begin
                         TargetSize := S_W;
-                        setsubreg(ThisReg, R_SUBW);
+                        SetSubReg(ThisReg, R_SUBW);
                         Result := True;
                       end;
 
@@ -12124,7 +12124,7 @@ unit aoptx86;
             end;
 
             { Update the register to its new size }
-            setsubreg(ThisReg, TargetSubReg);
+            SetSubReg(ThisReg, TargetSubReg);
             RegInUse := False;
 
             if not SuperRegistersEqual(TAICPU(hp1).oper[1]^.reg, ThisReg) then
@@ -12188,7 +12188,7 @@ unit aoptx86;
                       end;
 
                     ThisReg := TAICPU(hp1).oper[1]^.reg;
-                    setsubreg(ThisReg, TargetSubReg);
+                    SetSubReg(ThisReg, TargetSubReg);
                     RegChanged := True;
 
                     DebugMsg(SPeepholeOptimization + 'Simplified register usage so ' + debug_regname(ThisReg) + ' = ' + debug_regname(TAICPU(p).oper[1]^.reg), p);
@@ -12239,7 +12239,7 @@ unit aoptx86;
                             InternalError(2020112351);
                         end;
 
-                        setsubreg(ThisReg, TargetSubReg);
+                        SetSubReg(ThisReg, TargetSubReg);
                       end;
 
                     AdjustFinalLoad;
@@ -12298,7 +12298,7 @@ unit aoptx86;
             shl/shr/sar/rcl/rcr/ror/rol  %cl,###
         }
 
-        if (getsupreg(ThisReg) = RS_ECX) and
+        if (GetSupReg(ThisReg) = RS_ECX) and
           GetNextInstructionUsingReg(p, hp1, NR_ECX) and
           (hp1.typ = ait_instruction) and
           (
@@ -12520,11 +12520,11 @@ unit aoptx86;
                       smallest allowed signed value for the minimum size (e.g.
                       -128 for 8-bit) }
                     not (
-                      ((TAICPU(hp1).oper[0]^.val and LowerLimit) = TAICPU(hp1).oper[0]^.val) or
+                      ((TAICPU(hp1).oper[0]^.Val and LowerLimit) = TAICPU(hp1).oper[0]^.Val) or
                       { Is it in the negative range? }
                       (
-                        (TAICPU(hp1).oper[0]^.val < 0) and
-                        (TAICPU(hp1).oper[0]^.val >= SignedLowerLimitBottom)
+                        (TAICPU(hp1).oper[0]^.Val < 0) and
+                        (TAICPU(hp1).oper[0]^.Val >= SignedLowerLimitBottom)
                       )
                     ) then
                     Break;
@@ -12564,7 +12564,7 @@ unit aoptx86;
                       if TargetSize <> MaxSize then
                         begin
                           { Update the register to its new size }
-                          setsubreg(ThisReg, TargetSubReg);
+                          SetSubReg(ThisReg, TargetSubReg);
 
                           DebugMsg(SPeepholeOptimization + 'CMP instruction resized thanks to register size optimisation (see MOV/Z assignment above)', hp1);
                           TAICPU(hp1).oper[1]^.reg := ThisReg;
@@ -12626,16 +12626,16 @@ unit aoptx86;
                           (
                             (TAICPU(hp1).opcode = A_SHL) and
                             (
-                              ((MinSize = S_B) and (TAICPU(hp1).oper[0]^.val < 8)) or
-                              ((MinSize = S_W) and (TAICPU(hp1).oper[0]^.val < 16)) or
-                              ((MinSize = S_L) and (TAICPU(hp1).oper[0]^.val < 32))
+                              ((MinSize = S_B) and (TAICPU(hp1).oper[0]^.Val < 8)) or
+                              ((MinSize = S_W) and (TAICPU(hp1).oper[0]^.Val < 16)) or
+                              ((MinSize = S_L) and (TAICPU(hp1).oper[0]^.Val < 32))
                             )
                           ) or (
                             (TAICPU(hp1).opcode <> A_SHL) and
                             (
-                              ((TAICPU(hp1).oper[0]^.val and UpperLimit) = TAICPU(hp1).oper[0]^.val) or
+                              ((TAICPU(hp1).oper[0]^.Val and UpperLimit) = TAICPU(hp1).oper[0]^.Val) or
                               { Is it in the negative range? }
-                              (((not TAICPU(hp1).oper[0]^.val) and (UpperLimit shr 1)) = (not TAICPU(hp1).oper[0]^.val))
+                              (((not TAICPU(hp1).oper[0]^.Val) and (UpperLimit shr 1)) = (not TAICPU(hp1).oper[0]^.Val))
                             )
                           )
                         )
@@ -12667,7 +12667,7 @@ unit aoptx86;
                           end
                         else
                           begin
-                            WorkingValue := TAICPU(hp1).oper[0]^.val;
+                            WorkingValue := TAICPU(hp1).oper[0]^.Val;
                             TestValMin := TestValMin + WorkingValue;
                             TestValMax := TestValMax + WorkingValue;
                             TestValSignedMax := TestValSignedMax + WorkingValue;
@@ -12689,7 +12689,7 @@ unit aoptx86;
                             else
                               BitwiseOnly := False;
 
-                            WorkingValue := TAICPU(hp1).oper[0]^.val;
+                            WorkingValue := TAICPU(hp1).oper[0]^.Val;
                             TestValMin := TestValMin - WorkingValue;
                             TestValMax := TestValMax - WorkingValue;
                             TestValSignedMax := TestValSignedMax - WorkingValue;
@@ -12704,21 +12704,21 @@ unit aoptx86;
                               S_B:
                                 ;
                               S_W:
-                                if ((TAICPU(hp1).oper[0]^.val and $FF) = TAICPU(hp1).oper[0]^.val) or
-                                  ((not(TAICPU(hp1).oper[0]^.val) and $7F) = (not TAICPU(hp1).oper[0]^.val)) then
+                                if ((TAICPU(hp1).oper[0]^.Val and $FF) = TAICPU(hp1).oper[0]^.Val) or
+                                  ((not(TAICPU(hp1).oper[0]^.Val) and $7F) = (not TAICPU(hp1).oper[0]^.Val)) then
                                   begin
                                     TryShiftDown := S_B;
                                     TryShiftDownLimit := $FF;
                                   end;
                               S_L:
-                                if ((TAICPU(hp1).oper[0]^.val and $FF) = TAICPU(hp1).oper[0]^.val) or
-                                  ((not(TAICPU(hp1).oper[0]^.val) and $7F) = (not TAICPU(hp1).oper[0]^.val)) then
+                                if ((TAICPU(hp1).oper[0]^.Val and $FF) = TAICPU(hp1).oper[0]^.Val) or
+                                  ((not(TAICPU(hp1).oper[0]^.Val) and $7F) = (not TAICPU(hp1).oper[0]^.Val)) then
                                   begin
                                     TryShiftDown := S_B;
                                     TryShiftDownLimit := $FF;
                                   end
-                                else if ((TAICPU(hp1).oper[0]^.val and $FFFF) = TAICPU(hp1).oper[0]^.val) or
-                                  ((not(TAICPU(hp1).oper[0]^.val) and $7FFF) = (not TAICPU(hp1).oper[0]^.val)) then
+                                else if ((TAICPU(hp1).oper[0]^.Val and $FFFF) = TAICPU(hp1).oper[0]^.Val) or
+                                  ((not(TAICPU(hp1).oper[0]^.Val) and $7FFF) = (not TAICPU(hp1).oper[0]^.Val)) then
                                   begin
                                     TryShiftDown := S_W;
                                     TryShiftDownLimit := $FFFF;
@@ -12727,7 +12727,7 @@ unit aoptx86;
                                 InternalError(2020112320);
                             end;
 
-                          WorkingValue := TAICPU(hp1).oper[0]^.val;
+                          WorkingValue := TAICPU(hp1).oper[0]^.Val;
                           TestValMin := TestValMin and WorkingValue;
                           TestValMax := TestValMax and WorkingValue;
                           TestValSignedMax := TestValSignedMax and WorkingValue;
@@ -12739,7 +12739,7 @@ unit aoptx86;
 
                         OrXorUsed := True;
 
-                        WorkingValue := TAICPU(hp1).oper[0]^.val;
+                        WorkingValue := TAICPU(hp1).oper[0]^.Val;
                         TestValMin := TestValMin or WorkingValue;
                         TestValMax := TestValMax or WorkingValue;
                         TestValSignedMax := TestValSignedMax or WorkingValue;
@@ -12759,7 +12759,7 @@ unit aoptx86;
 
                             OrXorUsed := True;
 
-                            WorkingValue := TAICPU(hp1).oper[0]^.val;
+                            WorkingValue := TAICPU(hp1).oper[0]^.Val;
                             TestValMin := TestValMin xor WorkingValue;
                             TestValMax := TestValMax xor WorkingValue;
                             TestValSignedMax := TestValSignedMax xor WorkingValue;
@@ -12769,7 +12769,7 @@ unit aoptx86;
                       begin
                         BitwiseOnly := False;
 
-                        WorkingValue := TAICPU(hp1).oper[0]^.val;
+                        WorkingValue := TAICPU(hp1).oper[0]^.Val;
                         TestValMin := TestValMin shl WorkingValue;
                         TestValMax := TestValMax shl WorkingValue;
                         TestValSignedMax := TestValSignedMax shl WorkingValue;
@@ -12786,7 +12786,7 @@ unit aoptx86;
                             S_B:
                               ;
                             S_W:
-                              if (TAICPU(hp1).oper[0]^.val >= 8) then
+                              if (TAICPU(hp1).oper[0]^.Val >= 8) then
                                 begin
                                   TryShiftDown := S_B;
                                   TryShiftDownLimit := $FF;
@@ -12794,14 +12794,14 @@ unit aoptx86;
                                   TryShiftDownSignedLimitLower := -128;
                                 end;
                             S_L:
-                              if (TAICPU(hp1).oper[0]^.val >= 24) then
+                              if (TAICPU(hp1).oper[0]^.Val >= 24) then
                                 begin
                                   TryShiftDown := S_B;
                                   TryShiftDownLimit := $FF;
                                   TryShiftDownSignedLimit := $7F;
                                   TryShiftDownSignedLimitLower := -128;
                                 end
-                              else if (TAICPU(hp1).oper[0]^.val >= 16) then
+                              else if (TAICPU(hp1).oper[0]^.Val >= 16) then
                                 begin
                                   TryShiftDown := S_W;
                                   TryShiftDownLimit := $FFFF;
@@ -12812,7 +12812,7 @@ unit aoptx86;
                               InternalError(2020112321);
                           end;
 
-                        WorkingValue := TAICPU(hp1).oper[0]^.val;
+                        WorkingValue := TAICPU(hp1).oper[0]^.Val;
                         if TAICPU(hp1).opcode = A_SAR then
                           begin
                             TestValMin := SarInt64(TestValMin, WorkingValue);
@@ -12923,18 +12923,18 @@ unit aoptx86;
                         S_BQ:
                           begin
                             TAICPU(hp1).opsize := S_BL;
-                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                           end;
                         S_WQ:
                           begin
                             TAICPU(hp1).opsize := S_WL;
-                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                           end;
                         S_LQ:
                           begin
                             TAICPU(hp1).opcode := A_MOV;
                             TAICPU(hp1).opsize := S_L;
-                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
 
                             { In this instance, we need to break out because the
                               instruction is no longer MOVZX or MOVSXD }
@@ -12979,7 +12979,7 @@ unit aoptx86;
                             then
                               begin
                                 if (TAICPU(p).oper[0]^.typ = top_reg) then
-                                  setsubreg(TAICPU(p).oper[0]^.reg, R_SUBL);
+                                  SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBL);
 
                                 DebugMsg(SPeepholeOptimization + 'movzwl2movzbl 1', p);
                                 TAICPU(p).opsize := S_BL;
@@ -13041,7 +13041,7 @@ unit aoptx86;
         Result:=false;
         if (TAICPU(p).ops >= 2) and
            ((TAICPU(p).oper[0]^.typ = top_const) or
-            ((TAICPU(p).oper[0]^.typ = top_ref) and (TAICPU(p).oper[0]^.ref^.refaddr=addr_full))) and
+            ((TAICPU(p).oper[0]^.typ = top_ref) and (TAICPU(p).oper[0]^.Ref^.RefAddr=addr_full))) and
            (TAICPU(p).oper[1]^.typ = top_reg) and
            ((TAICPU(p).ops = 2) or
             ((TAICPU(p).oper[2]^.typ = top_reg) and
@@ -13059,8 +13059,8 @@ unit aoptx86;
                   imul y,reg2 to imul y,reg1,reg2 }
               begin
                 TAICPU(p).ops := 3;
-                TAICPU(p).loadreg(2,TAICPU(p).oper[1]^.reg);
-                TAICPU(p).loadreg(1,TAICPU(hp1).oper[0]^.reg);
+                TAICPU(p).LoadReg(2,TAICPU(p).oper[1]^.reg);
+                TAICPU(p).LoadReg(1,TAICPU(hp1).oper[0]^.reg);
                 DebugMsg(SPeepholeOptimization + 'MovImul2Imul done',p);
                 RemoveInstruction(hp1);
                 result:=true;
@@ -13073,7 +13073,7 @@ unit aoptx86;
       var
         ThisLabel: TAsmLabel;
       begin
-        ThisLabel := TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol);
+        ThisLabel := TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol);
         ThisLabel.decrefs;
         TAICPU(p).condition := C_None;
         TAICPU(p).opcode := A_RET;
@@ -13083,7 +13083,7 @@ unit aoptx86;
           0:
             TAICPU(p).clearop(0);
           1:
-            TAICPU(p).loadconst(0,TAICPU(ret_p).oper[0]^.val);
+            TAICPU(p).loadconst(0,TAICPU(ret_p).oper[0]^.Val);
           else
             InternalError(2016041301);
         end;
@@ -13200,7 +13200,7 @@ unit aoptx86;
                                     (TAICPU(next).oper[1]^.typ <> top_reg) or
                                     { Must write to a register }
                                     (TAICPU(next).oper[0]^.typ <> top_const) or
-                                    (TAICPU(next).oper[0]^.val = $80000000) then
+                                    (TAICPU(next).oper[0]^.Val = $80000000) then
                                     { Can't subtract a register with LEA - also
                                       check that the value isn't -2^31, as this
                                       can't be negated }
@@ -13216,8 +13216,8 @@ unit aoptx86;
                                     (TAICPU(next).oper[1]^.typ <> top_reg) or
                                     { Must write to a register }
                                     (TAICPU(next).oper[0]^.typ <> top_const) or
-                                    (TAICPU(next).oper[0]^.val < 0) or
-                                    (TAICPU(next).oper[0]^.val > 3) then
+                                    (TAICPU(next).oper[0]^.Val < 0) or
+                                    (TAICPU(next).oper[0]^.Val > 3) then
                                       Exit;
 
                                   PotentialModified := True;
@@ -13227,7 +13227,7 @@ unit aoptx86;
                                   if (TAICPU(next).ops <> 3) or
                                     (TAICPU(next).oper[1]^.typ <> top_reg) or
                                     { Must write to a register }
-                                    (TAICPU(next).oper[2]^.val in [2,3,4,5,8,9]) then
+                                    (TAICPU(next).oper[2]^.Val in [2,3,4,5,8,9]) then
                                     { We can convert "imul x,%reg1,%reg2" (where x = 2, 4 or 8)
                                       to "lea (%reg1,x),%reg2".  If x = 3, 5  or 9, we can
                                       change this to "lea (%reg1,%reg1,(x-1)),%reg2" }
@@ -13264,16 +13264,16 @@ unit aoptx86;
                               begin
                                 DebugMsg(SPeepholeOptimization + 'ADD -> LEA' + SNoFlags, InstrList[Index]);
                                 InstrList[Index].opcode := A_LEA;
-                                reference_reset(NewRef, 1, []);
-                                NewRef.base := InstrList[Index].oper[1]^.reg;
+                                Reference_Reset(NewRef, 1, []);
+                                NewRef.Base := InstrList[Index].oper[1]^.reg;
 
                                 if InstrList[Index].oper[0]^.typ = top_reg then
                                   begin
-                                    NewRef.index := InstrList[Index].oper[0]^.reg;
-                                    NewRef.scalefactor := 1;
+                                    NewRef.Index := InstrList[Index].oper[0]^.reg;
+                                    NewRef.ScaleFactor := 1;
                                   end
                                 else
-                                  NewRef.offset := InstrList[Index].oper[0]^.val;
+                                  NewRef.Offset := InstrList[Index].oper[0]^.Val;
 
                                 InstrList[Index].loadref(0, NewRef);
                               end;
@@ -13281,9 +13281,9 @@ unit aoptx86;
                               begin
                                 DebugMsg(SPeepholeOptimization + 'SUB -> LEA' + SNoFlags, InstrList[Index]);
                                 InstrList[Index].opcode := A_LEA;
-                                reference_reset(NewRef, 1, []);
-                                NewRef.base := InstrList[Index].oper[1]^.reg;
-                                NewRef.offset := -InstrList[Index].oper[0]^.val;
+                                Reference_Reset(NewRef, 1, []);
+                                NewRef.Base := InstrList[Index].oper[1]^.reg;
+                                NewRef.Offset := -InstrList[Index].oper[0]^.Val;
 
                                 InstrList[Index].loadref(0, NewRef);
                               end;
@@ -13292,9 +13292,9 @@ unit aoptx86;
                               begin
                                 DebugMsg(SPeepholeOptimization + 'SHL -> LEA' + SNoFlags, InstrList[Index]);
                                 InstrList[Index].opcode := A_LEA;
-                                reference_reset(NewRef, 1, []);
-                                NewRef.index := InstrList[Index].oper[1]^.reg;
-                                NewRef.scalefactor := 1 shl (InstrList[Index].oper[0]^.val);
+                                Reference_Reset(NewRef, 1, []);
+                                NewRef.Index := InstrList[Index].oper[1]^.reg;
+                                NewRef.ScaleFactor := 1 shl (InstrList[Index].oper[0]^.Val);
 
                                 InstrList[Index].loadref(0, NewRef);
                               end;
@@ -13302,15 +13302,15 @@ unit aoptx86;
                               begin
                                 DebugMsg(SPeepholeOptimization + 'IMUL -> LEA' + SNoFlags, InstrList[Index]);
                                 InstrList[Index].opcode := A_LEA;
-                                reference_reset(NewRef, 1, []);
-                                NewRef.index := InstrList[Index].oper[1]^.reg;
-                                case InstrList[Index].oper[0]^.val of
+                                Reference_Reset(NewRef, 1, []);
+                                NewRef.Index := InstrList[Index].oper[1]^.reg;
+                                case InstrList[Index].oper[0]^.Val of
                                   2, 4, 8:
-                                    NewRef.scalefactor := InstrList[Index].oper[0]^.val;
+                                    NewRef.ScaleFactor := InstrList[Index].oper[0]^.Val;
                                   else {3, 5 and 9}
                                     begin
-                                      NewRef.scalefactor := InstrList[Index].oper[0]^.val - 1;
-                                      NewRef.base := InstrList[Index].oper[1]^.reg;
+                                      NewRef.ScaleFactor := InstrList[Index].oper[0]^.Val - 1;
+                                      NewRef.Base := InstrList[Index].oper[1]^.reg;
                                     end;
                                 end;
 
@@ -13363,7 +13363,7 @@ unit aoptx86;
 
                 { as hp2 is a jump, we cannot use RegUsedAfterInstruction but we have to check if it is included in
                   TmpUsedRegs }
-                if not TmpUsedRegs[getregtype(TAICPU(p).oper[0]^.reg)].IsUsed(TAICPU(p).oper[0]^.reg) then
+                if not TmpUsedRegs[GetRegType(TAICPU(p).oper[0]^.reg)].IsUsed(TAICPU(p).oper[0]^.reg) then
                   begin
                     RemoveCurrentp(p, hp2);
                     if TAICPU(hp2).opcode = A_SETcc then
@@ -13546,7 +13546,7 @@ unit aoptx86;
 
         if (
             (TAICPU(hp1).oper[0]^.typ = top_reg) or
-            IsRefSafe(TAICPU(hp1).oper[0]^.ref)
+            IsRefSafe(TAICPU(hp1).oper[0]^.Ref)
           ) then
           begin
             { We have to tread carefully here, hence why we're not using
@@ -13579,7 +13579,7 @@ unit aoptx86;
                           if TAICPU(hp2).oper[1]^.reg = TargetReg then
                             begin
                               if (TAICPU(hp2).oper[0]^.typ = top_reg) or
-                                IsRefSafe(TAICPU(hp2).oper[0]^.ref) then
+                                IsRefSafe(TAICPU(hp2).oper[0]^.Ref) then
                                 begin
                                   pCMOV := hp2;
                                   Break;
@@ -13636,7 +13636,7 @@ unit aoptx86;
                     SuperRegistersEqual(TAICPU(hp2).oper[1]^.reg, TAICPU(pCMOV).oper[0]^.reg) then
                     begin
                       { Change the destination }
-                      TAICPU(hp2).loadreg(1, newreg(R_INTREGISTER, getsupreg(TargetReg), getsubreg(TAICPU(hp2).oper[1]^.reg)));
+                      TAICPU(hp2).LoadReg(1, NewReg(R_INTREGISTER, GetSupReg(TargetReg), GetSubReg(TAICPU(hp2).oper[1]^.reg)));
 
                       if not FoundMOV then
                         begin
@@ -13877,10 +13877,10 @@ unit aoptx86;
         { Sometimes, the optimisations below can permit this }
         RemoveDeadCodeAfterJump(p);
 
-        if (TAICPU(p).oper[0]^.typ=top_ref) and (TAICPU(p).oper[0]^.ref^.refaddr=addr_full) and (TAICPU(p).oper[0]^.ref^.base=NR_NO) and
-          (TAICPU(p).oper[0]^.ref^.index=NR_NO) and (TAICPU(p).oper[0]^.ref^.symbol is TAsmLabel) then
+        if (TAICPU(p).oper[0]^.typ=top_ref) and (TAICPU(p).oper[0]^.Ref^.RefAddr=addr_full) and (TAICPU(p).oper[0]^.Ref^.Base=NR_NO) and
+          (TAICPU(p).oper[0]^.Ref^.Index=NR_NO) and (TAICPU(p).oper[0]^.Ref^.Symbol is TAsmLabel) then
           begin
-            OrigLabel := TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol);
+            OrigLabel := TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol);
 
             { Also a side-effect of optimisations }
             if CollapseZeroDistJump(p, OrigLabel) then
@@ -13933,9 +13933,9 @@ unit aoptx86;
               (TAICPU(p).oper[0]^.typ = top_ref) and
               { TODO: Can we detect which references become constants at this
                 stage so we don't have to do a blanket ban? }
-              (TAICPU(p).oper[0]^.ref^.refaddr <> addr_full) and
+              (TAICPU(p).oper[0]^.Ref^.RefAddr <> addr_full) and
               (
-                IsRefSafe(TAICPU(p).oper[0]^.ref) or
+                IsRefSafe(TAICPU(p).oper[0]^.Ref) or
                 (
                   { Don't use the reference in the condition if one of its registers got modified by a previous MOV }
                   not RefModified and
@@ -13948,19 +13948,19 @@ unit aoptx86;
                   { Just consider 2-operand comparison instructions for now to be safe }
                   (TAICPU(cond_p).ops = 2) and
                   (
-                    ((TAICPU(cond_p).oper[1]^.typ = top_ref) and RefsEqual(TAICPU(cond_p).oper[1]^.ref^, TAICPU(p).oper[0]^.ref^)) or
+                    ((TAICPU(cond_p).oper[1]^.typ = top_ref) and RefsEqual(TAICPU(cond_p).oper[1]^.Ref^, TAICPU(p).oper[0]^.Ref^)) or
                     (
                       (TAICPU(cond_p).oper[0]^.typ = top_ref) and
                       { Don't risk identical registers but different offsets, as we may have constructs
                         such as buffer streams with things like length fields that indicate whether
                         any more data follows.  And there are probably some contrived examples where
                         writing to offsets behind the one being read also lead to access violations }
-                      RefsEqual(TAICPU(cond_p).oper[0]^.ref^, TAICPU(p).oper[0]^.ref^) and
+                      RefsEqual(TAICPU(cond_p).oper[0]^.Ref^, TAICPU(p).oper[0]^.Ref^) and
                       (
                         { Check that we're not modifying a register that appears in the reference }
                         (InsProp[TAICPU(cond_p).opcode].Ch * [Ch_Mop2, Ch_RWop2, Ch_Wop2] = []) or
                         (TAICPU(cond_p).oper[1]^.typ <> top_reg) or
-                        not RegInRef(TAICPU(cond_p).oper[1]^.reg, TAICPU(cond_p).oper[0]^.ref^)
+                        not RegInRef(TAICPU(cond_p).oper[1]^.reg, TAICPU(cond_p).oper[0]^.Ref^)
                       )
                     )
                   )
@@ -13984,7 +13984,7 @@ unit aoptx86;
           while Assigned(p) and
                 (p.typ=ait_RegAlloc) Do
             begin
-              if (getregtype(TAIRegAlloc(p).reg) = R_INTREGISTER) then
+              if (GetRegType(TAIRegAlloc(p).reg) = R_INTREGISTER) then
                 begin
                   case TAIRegAlloc(p).ratype of
                     ra_alloc :
@@ -14019,7 +14019,7 @@ unit aoptx86;
                 if (TAICPU(BlockStart).opcode = A_JMP) then
                   begin
                     if not IsJumpToLabel(TAICPU(BlockStart)) or
-                      (JumpTargetOp(TAICPU(BlockStart))^.ref^.index <> NR_NO) then
+                      (JumpTargetOp(TAICPU(BlockStart))^.Ref^.Index <> NR_NO) then
                       Exit;
 
                     EndJump := BlockStart;
@@ -14075,11 +14075,11 @@ unit aoptx86;
                           (
                             (
                               (TAICPU(fCondition).oper[0]^.typ = top_ref) and
-                              fOptimizer.RegInRef(TAICPU(hp1).oper[1]^.reg, TAICPU(fCondition).oper[0]^.ref^)
+                              fOptimizer.RegInRef(TAICPU(hp1).oper[1]^.reg, TAICPU(fCondition).oper[0]^.Ref^)
                             ) or
                             (
                               (TAICPU(fCondition).oper[1]^.typ = top_ref) and
-                              fOptimizer.RegInRef(TAICPU(hp1).oper[1]^.reg, TAICPU(fCondition).oper[1]^.ref^)
+                              fOptimizer.RegInRef(TAICPU(hp1).oper[1]^.reg, TAICPU(fCondition).oper[1]^.Ref^)
                             )
                           ) then
                           { It is no longer safe to use the reference in the condition.
@@ -14176,19 +14176,19 @@ unit aoptx86;
               with TAICPU(fCondition).oper[Count]^ do
                 case typ of
                   top_reg:
-                    if getregtype(reg) = R_INTREGISTER then
+                    if GetRegType(reg) = R_INTREGISTER then
                       Optimizer.IncludeRegInUsedRegs(reg, RegisterTracking);
                   top_ref:
                     begin
                       if
 {$ifdef x86_64}
-                        (ref^.base <> NR_RIP) and
+                        (ref^.Base <> NR_RIP) and
 {$endif x86_64}
-                        (ref^.base <> NR_NO) then
-                        Optimizer.IncludeRegInUsedRegs(ref^.base, RegisterTracking);
+                        (ref^.Base <> NR_NO) then
+                        Optimizer.IncludeRegInUsedRegs(ref^.Base, RegisterTracking);
 
-                      if (ref^.index <> NR_NO) then
-                        Optimizer.IncludeRegInUsedRegs(ref^.index, RegisterTracking);
+                      if (ref^.Index <> NR_NO) then
+                        Optimizer.IncludeRegInUsedRegs(ref^.Index, RegisterTracking);
                     end
                   else
                     ;
@@ -14230,19 +14230,19 @@ unit aoptx86;
                       with TAICPU(hp1).oper[Count]^ do
                         case typ of
                           top_reg:
-                            if getregtype(reg) = R_INTREGISTER then
+                            if GetRegType(reg) = R_INTREGISTER then
                               Optimizer.IncludeRegInUsedRegs(reg, RegisterTracking);
                           top_ref:
                             begin
                               if
 {$ifdef x86_64}
-                                (ref^.base <> NR_RIP) and
+                                (ref^.Base <> NR_RIP) and
 {$endif x86_64}
-                                (ref^.base <> NR_NO) then
-                                Optimizer.IncludeRegInUsedRegs(ref^.base, RegisterTracking);
+                                (ref^.Base <> NR_NO) then
+                                Optimizer.IncludeRegInUsedRegs(ref^.Base, RegisterTracking);
 
-                              if (ref^.index <> NR_NO) then
-                                Optimizer.IncludeRegInUsedRegs(ref^.index, RegisterTracking);
+                              if (ref^.Index <> NR_NO) then
+                                Optimizer.IncludeRegInUsedRegs(ref^.Index, RegisterTracking);
                             end
                           else
                             ;
@@ -14289,7 +14289,7 @@ unit aoptx86;
 
         if Assigned(fSecondJump) then
           begin
-            if (JumpTargetOp(TAICPU(fSecondJump))^.ref^.symbol = AFirstLabel) then
+            if (JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol = AFirstLabel) then
               begin
                 fState := tsDetour
               end
@@ -14353,7 +14353,7 @@ unit aoptx86;
             else
               fEndLabel := hp1;
 
-            if TAILabel(fEndLabel).labsym <> JumpTargetOp(TAICPU(fSecondJump))^.ref^.symbol then
+            if TAILabel(fEndLabel).labsym <> JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol then
               { Second jump doesn't go to the end }
               fEndLabel := nil;
 
@@ -14378,7 +14378,7 @@ unit aoptx86;
               begin
                 if not Assigned(fSecondJump) then
                   fState := tsDoubleSecondBranching
-                else if (JumpTargetOp(TAICPU(fSecondJump))^.ref^.symbol = JumpTargetOp(TAICPU(fThirdJump))^.ref^.symbol) then
+                else if (JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol = JumpTargetOp(TAICPU(fThirdJump))^.Ref^.Symbol) then
                   fState := tsDoubleBranchSame
                 else
                   fState := tsDoubleBranchDifferent;
@@ -14424,7 +14424,7 @@ unit aoptx86;
         end;
 
         { See if the value has already been reserved for another CMOV instruction }
-        CurrentVal := TAICPU(p).oper[0]^.val;
+        CurrentVal := TAICPU(p).oper[0]^.Val;
         for X := 0 to ConstCount - 1 do
           if ConstVals[X] = CurrentVal then
             begin
@@ -14552,8 +14552,8 @@ unit aoptx86;
                           RegMatch := False;
 
                           for Count := 0 to ConstCount - 1 do
-                            if (ConstVals[Count] = TAICPU(hp1).oper[0]^.val) and
-                              (getsubreg(TAICPU(hp1).oper[1]^.reg) = ConstSizes[Count]) then
+                            if (ConstVals[Count] = TAICPU(hp1).oper[0]^.Val) and
+                              (GetSubReg(TAICPU(hp1).oper[1]^.reg) = ConstSizes[Count]) then
                               begin
                                 RegMatch := True;
 
@@ -14563,7 +14563,7 @@ unit aoptx86;
                                   UsedRegs through AllocRegBetween below) }
                                 if not RegisterTracking[R_INTREGISTER].IsUsed(ConstRegs[Count]) then
                                   begin
-                                    hp_new := TAICPU.op_const_reg(A_MOV, subreg2opsize(R_SUBWHOLE), TAICPU(hp1).oper[0]^.val, ConstRegs[Count]);
+                                    hp_new := TAICPU.op_const_reg(A_MOV, subreg2opsize(R_SUBWHOLE), TAICPU(hp1).oper[0]^.Val, ConstRegs[Count]);
                                     TAICPU(hp_new).fileinfo := TAICPU(fInitialJump).fileinfo;
 
                                     fOptimizer.asml.InsertBefore(hp_new, fInsertionPoint);
@@ -14577,11 +14577,11 @@ unit aoptx86;
                                   hp_new := fSecondMovBlock;
 
                                 { Keep track of largest write for this register so it can be optimised later }
-                                if (getsubreg(TAICPU(hp1).oper[1]^.reg) > ConstWriteSizes[getsupreg(ConstRegs[Count])]) then
-                                  ConstWriteSizes[getsupreg(ConstRegs[Count])] := getsubreg(TAICPU(hp1).oper[1]^.reg);
+                                if (GetSubReg(TAICPU(hp1).oper[1]^.reg) > ConstWriteSizes[GetSupReg(ConstRegs[Count])]) then
+                                  ConstWriteSizes[GetSupReg(ConstRegs[Count])] := GetSubReg(TAICPU(hp1).oper[1]^.reg);
 
                                 fOptimizer.AllocRegBetween(ConstRegs[Count], hp_new, hp1, fOptimizer.UsedRegs);
-                                TAICPU(hp1).loadreg(0, newreg(R_INTREGISTER, getsupreg(ConstRegs[Count]), ConstSizes[Count]));
+                                TAICPU(hp1).LoadReg(0, NewReg(R_INTREGISTER, GetSupReg(ConstRegs[Count]), ConstSizes[Count]));
                                 Break;
                               end;
 
@@ -14636,8 +14636,8 @@ unit aoptx86;
               if TAICPU(hp1).oper[0]^.typ = top_const then
                 begin
                   for Count := 0 to ConstCount - 1 do
-                    if (ConstVals[Count] = TAICPU(hp1).oper[0]^.val) and
-                      (getsubreg(TAICPU(hp1).oper[1]^.reg) = ConstSizes[Count]) then
+                    if (ConstVals[Count] = TAICPU(hp1).oper[0]^.Val) and
+                      (GetSubReg(TAICPU(hp1).oper[1]^.reg) = ConstSizes[Count]) then
                       begin
                         RegMatch := True;
 
@@ -14647,7 +14647,7 @@ unit aoptx86;
                           AllocRegBetween below) }
                         if not RegisterTracking[R_INTREGISTER].IsUsed(ConstRegs[Count]) then
                           begin
-                            hp_new := TAICPU.op_const_reg(A_MOV, subreg2opsize(R_SUBWHOLE), TAICPU(hp1).oper[0]^.val, ConstRegs[Count]);
+                            hp_new := TAICPU.op_const_reg(A_MOV, subreg2opsize(R_SUBWHOLE), TAICPU(hp1).oper[0]^.Val, ConstRegs[Count]);
                             TAICPU(hp_new).fileinfo := TAICPU(fInitialJump).fileinfo;
 
                             fOptimizer.asml.InsertBefore(hp_new, fInsertionPoint);
@@ -14661,11 +14661,11 @@ unit aoptx86;
                             hp_new := fFirstMovBlock;
 
                         { Keep track of largest write for this register so it can be optimised later }
-                        if (getsubreg(TAICPU(hp1).oper[1]^.reg) > ConstWriteSizes[getsupreg(ConstRegs[Count])]) then
-                          ConstWriteSizes[getsupreg(ConstRegs[Count])] := getsubreg(TAICPU(hp1).oper[1]^.reg);
+                        if (GetSubReg(TAICPU(hp1).oper[1]^.reg) > ConstWriteSizes[GetSupReg(ConstRegs[Count])]) then
+                          ConstWriteSizes[GetSupReg(ConstRegs[Count])] := GetSubReg(TAICPU(hp1).oper[1]^.reg);
 
                         fOptimizer.AllocRegBetween(ConstRegs[Count], hp_new, hp1, fOptimizer.UsedRegs);
-                        TAICPU(hp1).loadreg(0, newreg(R_INTREGISTER, getsupreg(ConstRegs[Count]), ConstSizes[Count]));
+                        TAICPU(hp1).LoadReg(0, NewReg(R_INTREGISTER, GetSupReg(ConstRegs[Count]), ConstSizes[Count]));
                         Break;
                       end;
 
@@ -14692,7 +14692,7 @@ unit aoptx86;
           if Assigned(ConstMovs[Count]) then
             begin
               TAICPU(ConstMovs[Count]).opsize := subreg2opsize(ConstWriteSizes[Word(ConstRegs[Count])]);
-              setsubreg(TAICPU(ConstMovs[Count]).oper[1]^.reg, ConstWriteSizes[Word(ConstRegs[Count])]);
+              SetSubReg(TAICPU(ConstMovs[Count]).oper[1]^.reg, ConstWriteSizes[Word(ConstRegs[Count])]);
             end;
 
         case fState of
@@ -14722,14 +14722,14 @@ unit aoptx86;
               else
                 fOptimizer.DebugMsg(SPeepholeOptimization + 'CMOV Block (Double branching (same) type)', fInitialJump);
               { Delete second jump }
-              JumpTargetOp(TAICPU(fSecondJump))^.ref^.symbol.decrefs;
+              JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol.decrefs;
               fOptimizer.RemoveInstruction(fSecondJump);
             end;
           tsDoubleSecondBranching:
             begin
               fOptimizer.DebugMsg(SPeepholeOptimization + 'CMOV Block (Double, second branching type)', fInitialJump);
               { Delete second jump, preserve third jump as conditional }
-              JumpTargetOp(TAICPU(fSecondJump))^.ref^.symbol.decrefs;
+              JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol.decrefs;
               fOptimizer.RemoveInstruction(fSecondJump);
               TAICPU(fThirdJump).opcode := A_JCC;
               TAICPU(fThirdJump).condition := condition;
@@ -14781,12 +14781,12 @@ unit aoptx86;
             else if (hp1.typ<>ait_instruction) then
               Exit;
 
-            symbol := TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol);
+            symbol := TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol);
             if (
                 (
                   ((TAICPU(hp1).opcode=A_ADD) or (TAICPU(hp1).opcode=A_SUB)) and
                   MatchOptype(TAICPU(hp1),top_const,top_reg) and
-                  (TAICPU(hp1).oper[0]^.val=1)
+                  (TAICPU(hp1).oper[0]^.Val=1)
                 ) or
                 ((TAICPU(hp1).opcode=A_INC) or (TAICPU(hp1).opcode=A_DEC))
               ) and
@@ -14880,19 +14880,19 @@ unit aoptx86;
                          TAICPU(p).opcode:=A_SETcc;
                          DebugMsg(SPeepholeOptimization+'JccAdd2SetccAdd',p);
                          TAICPU(p).condition:=inverse_cond(TAICPU(p).condition);
-                         TAICPU(p).loadreg(0,increg);
+                         TAICPU(p).LoadReg(0,increg);
 
-                         if getsubreg(TAICPU(hp1).oper[1]^.reg)<>R_SUBL then
+                         if GetSubReg(TAICPU(hp1).oper[1]^.reg)<>R_SUBL then
                            begin
-                             case getsubreg(TAICPU(hp1).oper[1]^.reg) of
+                             case GetSubReg(TAICPU(hp1).oper[1]^.reg) of
                                R_SUBW:
                                  begin
-                                   tmpreg := newreg(R_INTREGISTER,getsupreg(increg),R_SUBW);
+                                   tmpreg := NewReg(R_INTREGISTER,GetSupReg(increg),R_SUBW);
                                    hp2:=TAICPU.op_reg_reg(A_MOVZX,S_BW,increg,tmpreg);
                                  end;
                                R_SUBD:
                                  begin
-                                   tmpreg := newreg(R_INTREGISTER,getsupreg(increg),R_SUBD);
+                                   tmpreg := NewReg(R_INTREGISTER,GetSupReg(increg),R_SUBD);
                                    hp2:=TAICPU.op_reg_reg(A_MOVZX,S_BL,increg,tmpreg);
                                  end;
 {$ifdef x86_64}
@@ -14901,9 +14901,9 @@ unit aoptx86;
                                    { MOVZX doesn't have a 64-bit variant, because
                                      the 32-bit version implicitly zeroes the
                                      upper 32-bits of the destination register }
-                                   tmpreg := newreg(R_INTREGISTER,getsupreg(increg),R_SUBD);
+                                   tmpreg := NewReg(R_INTREGISTER,GetSupReg(increg),R_SUBD);
                                    hp2:=TAICPU.op_reg_reg(A_MOVZX,S_BL,increg,tmpreg);
-                                   setsubreg(tmpreg, R_SUBQ);
+                                   SetSubReg(tmpreg, R_SUBQ);
                                  end;
 {$endif x86_64}
                                else
@@ -14920,7 +14920,7 @@ unit aoptx86;
                              TAICPU(hp1).ops:=2;
                              TAICPU(hp1).loadoper(1,TAICPU(hp1).oper[0]^)
                            end;
-                         TAICPU(hp1).loadreg(0,tmpreg);
+                         TAICPU(hp1).LoadReg(0,tmpreg);
                          AllocRegBetween(tmpreg,p,hp1,UsedRegs);
 
                          Result := True;
@@ -14943,7 +14943,7 @@ unit aoptx86;
                   jmp<inv_cond> @Lbl2
                   ret
               }
-              if MatchInstruction(hp1,A_JMP,[]) and (TAICPU(hp1).oper[0]^.ref^.refaddr=addr_full) then
+              if MatchInstruction(hp1,A_JMP,[]) and (TAICPU(hp1).oper[0]^.Ref^.RefAddr=addr_full) then
                 begin
                   hp2:=getlabelwithsym(TAsmLabel(symbol));
                   if Assigned(hp2) and SkipLabels(hp2,hp2) and
@@ -14963,7 +14963,7 @@ unit aoptx86;
                         0:
                           TAICPU(hp1).clearop(0);
                         1:
-                          TAICPU(hp1).loadconst(0,TAICPU(hp2).oper[0]^.val);
+                          TAICPU(hp1).loadconst(0,TAICPU(hp2).oper[0]^.Val);
                         else
                           InternalError(2016041302);
                       end;
@@ -14992,24 +14992,24 @@ unit aoptx86;
                 (
                 { Under i386, ESI, EDI, EBP and ESP
                   don't have an 8-bit representation }
-                  not (getsupreg(TAICPU(hp1).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
+                  not (GetSupReg(TAICPU(hp1).oper[1]^.reg) in [RS_ESI, RS_EDI, RS_EBP, RS_ESP])
                 ) and
 {$endif i386}
-                (TAICPU(hp1).oper[0]^.val=1) and
+                (TAICPU(hp1).oper[0]^.Val=1) and
                 GetNextInstruction(hp1,hp2) and
-                MatchInstruction(hp2,A_JMP,[]) and (TAICPU(hp2).oper[0]^.ref^.refaddr=addr_full) and
+                MatchInstruction(hp2,A_JMP,[]) and (TAICPU(hp2).oper[0]^.Ref^.RefAddr=addr_full) and
                 GetNextInstruction(hp2,hp3) and
                 (hp3.typ=ait_label) and
-                (TAsmLabel(TAICPU(p).oper[0]^.ref^.symbol)=TAILabel(hp3).labsym) and
+                (TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)=TAILabel(hp3).labsym) and
                 (TAILabel(hp3).labsym.getrefs=1) and
                 GetNextInstruction(hp3,hp4) and
                 MatchInstruction(hp4,A_MOV,[]) and
                 MatchOpType(TAICPU(hp4),top_const,top_reg) and
-                (TAICPU(hp4).oper[0]^.val=0) and
+                (TAICPU(hp4).oper[0]^.Val=0) and
                 MatchOperand(TAICPU(hp1).oper[1]^,TAICPU(hp4).oper[1]^) and
                 GetNextInstruction(hp4,hp5) and
                 (hp5.typ=ait_label) and
-                (TAsmLabel(TAICPU(hp2).oper[0]^.ref^.symbol)=TAILabel(hp5).labsym) and
+                (TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol)=TAILabel(hp5).labsym) and
                 (TAILabel(hp5).labsym.getrefs=1) then
                 begin
                   AllocRegBetween(NR_FLAGS,p,hp4,UsedRegs);
@@ -15027,7 +15027,7 @@ unit aoptx86;
                   TAICPU(hp4).opcode:=A_SETcc;
                   TAICPU(hp4).opsize:=S_B;
                   TAICPU(hp4).condition:=inverse_cond(TAICPU(p).condition);
-                  TAICPU(hp4).loadreg(0,newreg(R_INTREGISTER,getsupreg(TAICPU(hp4).oper[1]^.reg),R_SUBL));
+                  TAICPU(hp4).LoadReg(0,NewReg(R_INTREGISTER,GetSupReg(TAICPU(hp4).oper[1]^.reg),R_SUBL));
                   TAICPU(hp4).opercnt:=1;
                   TAICPU(hp4).ops:=1;
                   TAICPU(hp4).freeop(1);
@@ -15102,12 +15102,12 @@ unit aoptx86;
            (TAICPU(p).opsize in [S_WL]) and (TAICPU(hp2).opsize=S_W)) and
 {$ifdef i386}
            { not all registers have byte size sub registers on i386 }
-           ((TAICPU(hp2).opsize<>S_B) or (getsupreg(TAICPU(hp1).oper[0]^.reg) in [RS_EAX, RS_EBX, RS_ECX, RS_EDX])) and
+           ((TAICPU(hp2).opsize<>S_B) or (GetSupReg(TAICPU(hp1).oper[0]^.reg) in [RS_EAX, RS_EBX, RS_ECX, RS_EDX])) and
 {$endif i386}
            (((TAICPU(hp1).ops=2) and
-             (getsupreg(TAICPU(hp2).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[1]^.reg))) or
+             (GetSupReg(TAICPU(hp2).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[1]^.reg))) or
              ((TAICPU(hp1).ops=1) and
-             (getsupreg(TAICPU(hp2).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[0]^.reg)))) and
+             (GetSupReg(TAICPU(hp2).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[0]^.reg)))) and
            not(RegUsedAfterInstruction(TAICPU(hp2).oper[0]^.reg,hp2,UsedRegs)) then
           begin
             { change   movsX/movzX    reg/ref, reg2
@@ -15138,7 +15138,7 @@ unit aoptx86;
                 begin
                   TAICPU(hp1).loadoper(1,TAICPU(hp2).oper[1]^);
                   if (TAICPU(hp1).oper[0]^.typ = top_reg) then
-                    setsubreg(TAICPU(hp1).oper[0]^.reg,getsubreg(TAICPU(hp2).oper[0]^.reg));
+                    SetSubReg(TAICPU(hp1).oper[0]^.reg,GetSubReg(TAICPU(hp2).oper[0]^.reg));
                 end;
               else
                 InternalError(2008042702);
@@ -15186,10 +15186,10 @@ unit aoptx86;
 {$ifdef x86_64}
                 if (TAICPU(p).opsize in [S_BL,S_WL]) and
                   (TAICPU(hp1).opsize=S_Q) then
-                  TAICPU(p).loadreg(1,newreg(R_INTREGISTER,getsupreg(TAICPU(hp1).oper[1]^.reg),R_SUBD))
+                  TAICPU(p).LoadReg(1,NewReg(R_INTREGISTER,GetSupReg(TAICPU(hp1).oper[1]^.reg),R_SUBD))
                 else
 {$endif x86_64}
-                  TAICPU(p).loadreg(1,TAICPU(hp1).oper[1]^.reg);
+                  TAICPU(p).LoadReg(1,TAICPU(hp1).oper[1]^.reg);
                 AllocRegBetween(TAICPU(hp1).oper[1]^.reg,p,hp1,UsedRegs);
                 RemoveInstruction(hp1);
                 Result := True;
@@ -15220,7 +15220,7 @@ unit aoptx86;
                     (
                       { If the AND and TEST instructions share a constant, this is also valid }
                       (TAICPU(hp1).oper[0]^.typ = top_const) and
-                      MatchOperand(TAICPU(hp2).oper[0]^, TAICPU(hp1).oper[0]^.val)
+                      MatchOperand(TAICPU(hp2).oper[0]^, TAICPU(hp1).oper[0]^.Val)
                     )
                   ) and
                   MatchOperand(TAICPU(hp2).oper[1]^, TAICPU(hp1).oper[1]^.reg)
@@ -15245,7 +15245,7 @@ unit aoptx86;
               if the second op accesses only the bits stored in (oper)
             }
             if ((TAICPU(p).oper[0]^.typ=top_reg) or
-              ((TAICPU(p).oper[0]^.typ=top_ref) and (TAICPU(p).oper[0]^.ref^.refaddr<>addr_full))) and
+              ((TAICPU(p).oper[0]^.typ=top_ref) and (TAICPU(p).oper[0]^.Ref^.RefAddr<>addr_full))) and
               (TAICPU(hp1).oper[0]^.typ = top_const) and
               (TAICPU(hp1).oper[1]^.reg = TAICPU(p).oper[1]^.reg) and
               AndTest then
@@ -15274,9 +15274,9 @@ unit aoptx86;
                 end;
 
                 if (
-                    ((TAICPU(hp1).oper[0]^.val and Limit) = TAICPU(hp1).oper[0]^.val) or
+                    ((TAICPU(hp1).oper[0]^.Val and Limit) = TAICPU(hp1).oper[0]^.Val) or
                     { Check for negative operands }
-                    (((not TAICPU(hp1).oper[0]^.val) and Limit) = (not TAICPU(hp1).oper[0]^.val))
+                    (((not TAICPU(hp1).oper[0]^.Val) and Limit) = (not TAICPU(hp1).oper[0]^.Val))
                   ) and
                   GetNextInstruction(hp2,hp3) and
                   MatchInstruction(hp3,A_Jcc,A_Setcc,A_CMOVcc,[]) and
@@ -15292,7 +15292,7 @@ unit aoptx86;
                         if TAICPU(p).oper[0]^.typ=top_reg then
                           AllocRegBetween(TAICPU(p).oper[0]^.reg,p,hp1,UsedRegs)
                         else
-                          TrackAndCorrectRefMove(TAICPU(p).oper[0]^.ref^,p,hp1,True);
+                          TrackAndCorrectRefMove(TAICPU(p).oper[0]^.Ref^,p,hp1,True);
                         TAICPU(hp1).opcode := A_TEST;
                         TAICPU(hp1).opsize := NewSize;
                         RemoveInstruction(hp2);
@@ -15341,7 +15341,7 @@ unit aoptx86;
                   begin
 {$ifndef x86_64}
                     if (TAICPU(hp1).opsize=S_B) and (TAICPU(p).oper[0]^.typ=top_reg) and
-                      not (getsupreg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX]) then
+                      not (GetSupReg(TAICPU(p).oper[0]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX]) then
                       begin
                         { Only EAX, ECX, EDX and EBX have 8-bit counterparts }
                         if (TAICPU(hp1).opcode=A_MOV) then
@@ -15349,8 +15349,8 @@ unit aoptx86;
                             { We can expand a MOV to Word-sized though }
                             DebugMsg(SPeepholeOptimization + 'MovxOp2Op 1a (byte-to-word)',p);
                             TAICPU(hp1).opsize:=S_W;
-                            TAICPU(hp1).oper[0]^.reg:=newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[0]^.reg),R_SUBW);
-                            setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
+                            TAICPU(hp1).oper[0]^.reg:=NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[0]^.reg),R_SUBW);
+                            SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
                             RemoveCurrentP(p);
                             if AndTest then
                               RemoveInstruction(hp2);
@@ -15366,11 +15366,11 @@ unit aoptx86;
                           begin
                             case TAICPU(hp1).opsize of
                               S_B:
-                                TAICPU(hp1).loadreg(0,newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[0]^.reg),R_SUBL));
+                                TAICPU(hp1).LoadReg(0,NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[0]^.reg),R_SUBL));
                               S_W:
-                                TAICPU(hp1).loadreg(0,newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[0]^.reg),R_SUBW));
+                                TAICPU(hp1).LoadReg(0,NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[0]^.reg),R_SUBW));
                               S_L:
-                                TAICPU(hp1).loadreg(0,newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[0]^.reg),R_SUBD));
+                                TAICPU(hp1).LoadReg(0,NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[0]^.reg),R_SUBD));
                               else
                                 InternalError(2020102301);
                             end;
@@ -15378,8 +15378,8 @@ unit aoptx86;
                           end
                         else
                           begin
-                            TAICPU(hp1).loadref(0,TAICPU(p).oper[0]^.ref^);
-                            TrackAndCorrectRefMove(TAICPU(p).oper[0]^.ref^,p,hp1,True);
+                            TAICPU(hp1).loadref(0,TAICPU(p).oper[0]^.Ref^);
+                            TrackAndCorrectRefMove(TAICPU(p).oper[0]^.Ref^,p,hp1,True);
                           end;
                         RemoveCurrentP(p);
                         if AndTest then
@@ -15483,7 +15483,7 @@ unit aoptx86;
                     (TAICPU(p).oper[0]^.typ = top_reg) and
                     SuperRegistersEqual(TAICPU(p).oper[0]^.reg, TAICPU(p).oper[1]^.reg) and
                     (TAICPU(hp1).oper[0]^.typ = top_const) and
-                    ((TAICPU(hp1).oper[0]^.val and Limit) = TAICPU(hp1).oper[0]^.val)
+                    ((TAICPU(hp1).oper[0]^.Val and Limit) = TAICPU(hp1).oper[0]^.Val)
                   ) then
                   begin
 {$if defined(i386)}
@@ -15515,10 +15515,10 @@ unit aoptx86;
 
                     case TAICPU(hp1).oper[0]^.typ of
                       top_reg:
-                        setsubreg(TAICPU(hp1).oper[0]^.reg, NewRegSize);
+                        SetSubReg(TAICPU(hp1).oper[0]^.reg, NewRegSize);
                       top_const:
                         { For the AND/TEST case }
-                        TAICPU(hp1).oper[0]^.val := TAICPU(hp1).oper[0]^.val and Limit;
+                        TAICPU(hp1).oper[0]^.Val := TAICPU(hp1).oper[0]^.Val and Limit;
                       else
                         ;
                     end;
@@ -15547,11 +15547,11 @@ unit aoptx86;
           SuperRegistersEqual(TAICPU(p).oper[0]^.reg, TAICPU(p).oper[1]^.reg) and
           MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[1]^.reg) and
           { Minimum shift value allowed is the bit difference between the sizes }
-          (TAICPU(hp1).oper[0]^.val >=
+          (TAICPU(hp1).oper[0]^.Val >=
             { Multiply by 8 because tcgsize2size returns bytes, not bits }
             8 * (
-              tcgsize2size[reg_cgsize(TAICPU(p).oper[1]^.reg)] -
-              tcgsize2size[reg_cgsize(TAICPU(p).oper[0]^.reg)]
+              TCgSize2Size[reg_cgsize(TAICPU(p).oper[1]^.reg)] -
+              TCgSize2Size[reg_cgsize(TAICPU(p).oper[0]^.reg)]
             )
           ) then
           begin
@@ -15577,10 +15577,10 @@ unit aoptx86;
           SuperRegistersEqual(TAICPU(p).oper[0]^.reg, TAICPU(p).oper[1]^.reg) and
           MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[1]^.reg) and
           { Minimum shift value allowed is the bit size of the smallest register - 1 }
-          (TAICPU(hp1).oper[0]^.val <
+          (TAICPU(hp1).oper[0]^.Val <
             { Multiply by 8 because tcgsize2size returns bytes, not bits }
             8 * (
-              tcgsize2size[reg_cgsize(TAICPU(p).oper[0]^.reg)]
+              TCgSize2Size[reg_cgsize(TAICPU(p).oper[0]^.reg)]
             )
           ) then
           begin
@@ -15656,7 +15656,7 @@ unit aoptx86;
                             begin
                               TAICPU(p).opsize := S_BL;
                               { 64-bit zero extension is implicit, so change to the 32-bit register }
-                              setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                              SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                             end
                           else
                             TAICPU(p).opsize := S_BQ;
@@ -15675,7 +15675,7 @@ unit aoptx86;
                             begin
                               TAICPU(p).opsize := S_BL;
                               { 64-bit zero extension is implicit, so change to the 32-bit register }
-                              setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                              SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                             end
                           else
                             TAICPU(p).opsize := S_BQ;
@@ -15692,7 +15692,7 @@ unit aoptx86;
                             begin
                               TAICPU(p).opsize := S_WL;
                               { 64-bit zero extension is implicit, so change to the 32-bit register }
-                              setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                              SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                             end
                           else
                             TAICPU(p).opsize := S_WQ;
@@ -15780,7 +15780,7 @@ unit aoptx86;
                     end;
 
                     TAICPU(hp2).loadoper(0, TAICPU(hp1).oper[0]^);
-                    TAICPU(hp2).loadreg(1, TAICPU(p).oper[0]^.reg);
+                    TAICPU(hp2).LoadReg(1, TAICPU(p).oper[0]^.reg);
                     TAICPU(hp2).opsize := NewSize;
 
                     RemoveInstruction(hp1);
@@ -15823,7 +15823,7 @@ unit aoptx86;
               begin
                 case TAICPU(p).opsize Of
                   S_BL, S_BW{$ifdef x86_64}, S_BQ{$endif x86_64}:
-                    if (TAICPU(hp1).oper[0]^.val = $ff) then
+                    if (TAICPU(hp1).oper[0]^.Val = $ff) then
                       begin
                         DebugMsg(SPeepholeOptimization + 'MovzAnd2Movz1',p);
                         RemoveInstruction(hp1);
@@ -15831,7 +15831,7 @@ unit aoptx86;
                         exit;
                       end;
                     S_WL{$ifdef x86_64}, S_WQ{$endif x86_64}:
-                      if (TAICPU(hp1).oper[0]^.val = $ffff) then
+                      if (TAICPU(hp1).oper[0]^.Val = $ffff) then
                         begin
                           DebugMsg(SPeepholeOptimization + 'MovzAnd2Movz2',p);
                           RemoveInstruction(hp1);
@@ -15840,7 +15840,7 @@ unit aoptx86;
                         end;
 {$ifdef x86_64}
                     S_LQ:
-                      if (TAICPU(hp1).oper[0]^.val = $ffffffff) then
+                      if (TAICPU(hp1).oper[0]^.Val = $ffffffff) then
                         begin
                           DebugMsg(SPeepholeOptimization + 'MovzAnd2Movz3',p);
                           RemoveInstruction(hp1);
@@ -15856,7 +15856,7 @@ unit aoptx86;
                   begin
                     case TAICPU(p).opsize Of
                       S_BL, S_BW{$ifdef x86_64}, S_BQ{$endif x86_64}:
-                        if (TAICPU(hp1).oper[0]^.val and $ff)=TAICPU(hp1).oper[0]^.val then
+                        if (TAICPU(hp1).oper[0]^.Val and $ff)=TAICPU(hp1).oper[0]^.Val then
                           begin
                             DebugMsg(SPeepholeOptimization + 'MovzAnd2And1',p);
                             RemoveCurrentP(p,hp1);
@@ -15864,7 +15864,7 @@ unit aoptx86;
                             exit;
                           end;
                         S_WL{$ifdef x86_64}, S_WQ{$endif x86_64}:
-                          if (TAICPU(hp1).oper[0]^.val and $ffff)=TAICPU(hp1).oper[0]^.val then
+                          if (TAICPU(hp1).oper[0]^.Val and $ffff)=TAICPU(hp1).oper[0]^.Val then
                             begin
                               DebugMsg(SPeepholeOptimization + 'MovzAnd2And2',p);
                               RemoveCurrentP(p,hp1);
@@ -15873,7 +15873,7 @@ unit aoptx86;
                             end;
 {$ifdef x86_64}
                         S_LQ:
-                          if (TAICPU(hp1).oper[0]^.val and $ffffffff)=TAICPU(hp1).oper[0]^.val then
+                          if (TAICPU(hp1).oper[0]^.Val and $ffffffff)=TAICPU(hp1).oper[0]^.Val then
                             begin
                               DebugMsg(SPeepholeOptimization + 'MovzAnd2And3',p);
                               RemoveCurrentP(p,hp1);
@@ -15898,7 +15898,7 @@ unit aoptx86;
                     [Kit] }
                   S_BW:
                     begin
-                      if (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(p).oper[1]^.reg)) and
+                      if (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(p).oper[1]^.reg)) and
                         (
                           not IsMOVZXAcceptable
                           { and $0xff,%ax has a smaller encoding but risks a partial write penalty }
@@ -15927,8 +15927,8 @@ unit aoptx86;
                           DebugMsg(SPeepholeOptimization + 'var8',p);
                           TAICPU(p).opcode := A_MOV;
                           TAICPU(p).changeopsize(S_W);
-                          setsubreg(TAICPU(p).oper[0]^.reg,R_SUBW);
-                          TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ff);
+                          SetSubReg(TAICPU(p).oper[0]^.reg,R_SUBW);
+                          TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ff);
                           Result := True;
                         end;
                     end;
@@ -15936,7 +15936,7 @@ unit aoptx86;
                   S_BL:
                     if not IsMOVZXAcceptable then
                       begin
-                        if (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(p).oper[1]^.reg)) then
+                        if (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(p).oper[1]^.reg)) then
                           { Change "movzbl %al, %eax" to "andl $0x0ffh, %eax" }
                           begin
                             DebugMsg(SPeepholeOptimization + 'var9',p);
@@ -15959,8 +15959,8 @@ unit aoptx86;
                             { do not use R_SUBWHOLE
                               as movl %rdx,%eax
                               is invalid in assembler PM }
-                            setsubreg(TAICPU(p).oper[0]^.reg, R_SUBD);
-                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ff);
+                            SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBD);
+                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ff);
                             Result := True;
                           end;
                       end;
@@ -15968,7 +15968,7 @@ unit aoptx86;
                   S_WL:
                     if not IsMOVZXAcceptable then
                       begin
-                        if (getsupreg(TAICPU(p).oper[0]^.reg)=getsupreg(TAICPU(p).oper[1]^.reg)) then
+                        if (GetSupReg(TAICPU(p).oper[0]^.reg)=GetSupReg(TAICPU(p).oper[1]^.reg)) then
                           { Change "movzwl %ax, %eax" to "andl $0x0ffffh, %eax" }
                           begin
                             DebugMsg(SPeepholeOptimization + 'var11',p);
@@ -15992,8 +15992,8 @@ unit aoptx86;
                             { do not use R_SUBWHOLE
                               as movl %rdx,%eax
                               is invalid in assembler PM }
-                            setsubreg(TAICPU(p).oper[0]^.reg, R_SUBD);
-                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ffff);
+                            SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBD);
+                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ffff);
                             Result := True;
                           end;
                       end;
@@ -16012,29 +16012,29 @@ unit aoptx86;
                     case TAICPU(p).opsize Of
                       S_BL:
                         if (TAICPU(hp1).opsize <> S_L) or
-                          (TAICPU(hp1).oper[0]^.val > $FF) then
+                          (TAICPU(hp1).oper[0]^.Val > $FF) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'var13',p);
                             TAICPU(hp1).changeopsize(S_L);
-                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ff);
+                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ff);
                             Include(OptsToCheck, aoc_ForceNewIteration);
                           end;
                       S_WL:
                         if (TAICPU(hp1).opsize <> S_L) or
-                          (TAICPU(hp1).oper[0]^.val > $FFFF) then
+                          (TAICPU(hp1).oper[0]^.Val > $FFFF) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'var14',p);
                             TAICPU(hp1).changeopsize(S_L);
-                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ffff);
+                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ffff);
                             Include(OptsToCheck, aoc_ForceNewIteration);
                           end;
                       S_BW:
                         if (TAICPU(hp1).opsize <> S_W) or
-                          (TAICPU(hp1).oper[0]^.val > $FF) then
+                          (TAICPU(hp1).oper[0]^.Val > $FF) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'var15',p);
                             TAICPU(hp1).changeopsize(S_W);
-                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.val and $ff);
+                            TAICPU(hp1).loadConst(0,TAICPU(hp1).oper[0]^.Val and $ff);
                             Include(OptsToCheck, aoc_ForceNewIteration);
                           end;
                       else
@@ -16058,8 +16058,8 @@ unit aoptx86;
 
         Result:=False;
 
-        FullSourceReg:=TAICPU(mov_p).oper[0]^.reg; setsubreg(FullSourceReg, R_SUBQ);
-        FullTargetReg:=TAICPU(mov_p).oper[1]^.reg; setsubreg(FullTargetReg, R_SUBQ);
+        FullSourceReg:=TAICPU(mov_p).oper[0]^.reg; SetSubReg(FullSourceReg, R_SUBQ);
+        FullTargetReg:=TAICPU(mov_p).oper[1]^.reg; SetSubReg(FullTargetReg, R_SUBQ);
 
         { Mark the registers in the MOV command as "used" }
         IncludeRegInUsedRegs(FullSourceReg,UsedRegs);
@@ -16108,8 +16108,8 @@ unit aoptx86;
           end;
 
         { Put the MOV instruction back as it was }
-        setsubreg(TAICPU(mov_p).oper[0]^.reg,R_SUBD);
-        setsubreg(TAICPU(mov_p).oper[1]^.reg,R_SUBD);
+        SetSubReg(TAICPU(mov_p).oper[0]^.reg,R_SUBD);
+        SetSubReg(TAICPU(mov_p).oper[1]^.reg,R_SUBD);
       end;
 
 {$endif x86_64}
@@ -16139,10 +16139,10 @@ unit aoptx86;
                 case TAICPU(hp1).opcode of
                   A_AND:
                     if MatchOpType(TAICPU(hp1),top_const,top_reg) and
-                      (getsupreg(TAICPU(p).oper[1]^.reg) = getsupreg(TAICPU(hp1).oper[1]^.reg)) and
+                      (GetSupReg(TAICPU(p).oper[1]^.reg) = GetSupReg(TAICPU(hp1).oper[1]^.reg)) and
                       { the second register must contain the first one, so compare their subreg types }
-                      (getsubreg(TAICPU(p).oper[1]^.reg)<=getsubreg(TAICPU(hp1).oper[1]^.reg)) and
-                      (abs(TAICPU(p).oper[0]^.val and TAICPU(hp1).oper[0]^.val)<$80000000) then
+                      (GetSubReg(TAICPU(p).oper[1]^.reg)<=GetSubReg(TAICPU(hp1).oper[1]^.reg)) and
+                      (abs(TAICPU(p).oper[0]^.Val and TAICPU(hp1).oper[0]^.Val)<$80000000) then
                       { change
                           and const1, reg
                           and const2, reg
@@ -16150,7 +16150,7 @@ unit aoptx86;
                           and (const1 and const2), reg
                       }
                       begin
-                        TAICPU(hp1).loadConst(0, TAICPU(p).oper[0]^.val and TAICPU(hp1).oper[0]^.val);
+                        TAICPU(hp1).loadConst(0, TAICPU(p).oper[0]^.Val and TAICPU(hp1).oper[0]^.Val);
                         DebugMsg(SPeepholeOptimization + 'AndAnd2And done',hp1);
                         RemoveCurrentP(p, hp1);
                         Result:=true;
@@ -16158,8 +16158,8 @@ unit aoptx86;
                       end;
 
                   A_CMP:
-                    if (PopCnt(DWord(TAICPU(p).oper[0]^.val)) = 1) and { Only 1 bit set }
-                      MatchOperand(TAICPU(hp1).oper[0]^, TAICPU(p).oper[0]^.val) and
+                    if (PopCnt(DWord(TAICPU(p).oper[0]^.Val)) = 1) and { Only 1 bit set }
+                      MatchOperand(TAICPU(hp1).oper[0]^, TAICPU(p).oper[0]^.Val) and
                       MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[1]^.reg) and
                       { Just check that the condition on the next instruction is compatible }
                       GetNextInstruction(hp1, hp2) and
@@ -16178,21 +16178,21 @@ unit aoptx86;
                       begin
                         { Keep TEST instruction in, rather than remove it, because
                           it may trigger other optimisations such as MovAndTest2Test }
-                        TAICPU(hp1).loadreg(0, TAICPU(hp1).oper[1]^.reg);
+                        TAICPU(hp1).LoadReg(0, TAICPU(hp1).oper[1]^.reg);
                         TAICPU(hp1).opcode := A_TEST;
                         DebugMsg(SPeepholeOptimization + 'AND/CMP/J(c) -> AND/J(~c) with power of 2 constant', p);
                         TAICPU(hp2).condition := inverse_cond(TAICPU(hp2).condition);
                         Result := True;
                         Exit;
                       end
-                    else if ((TAICPU(p).oper[0]^.val=$ff) or (TAICPU(p).oper[0]^.val=$ffff) or (TAICPU(p).oper[0]^.val=$ffffffff)) and
+                    else if ((TAICPU(p).oper[0]^.Val=$ff) or (TAICPU(p).oper[0]^.Val=$ffff) or (TAICPU(p).oper[0]^.Val=$ffffffff)) and
                       MatchOpType(TAICPU(hp1),top_const,top_reg) and
-                      (TAICPU(p).oper[0]^.val>=TAICPU(hp1).oper[0]^.val) and
+                      (TAICPU(p).oper[0]^.Val>=TAICPU(hp1).oper[0]^.Val) and
 {$ifndef x86_64}
                       (
-                        (TAICPU(p).oper[0]^.val <> $ff) or 
+                        (TAICPU(p).oper[0]^.Val <> $ff) or 
                         { Only EAX, ECX, EDX and EBX have 8-bit counterparts }
-                        (getsupreg(TAICPU(hp1).oper[1]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX])
+                        (GetSupReg(TAICPU(hp1).oper[1]^.reg) in [RS_EAX, RS_ECX, RS_EDX, RS_EBX])
                       ) and
 {$endif x86_64}
                       SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.reg) then
@@ -16209,20 +16209,20 @@ unit aoptx86;
                         if not RegUsedAfterInstruction(TAICPU(p).oper[1]^.reg, hp1, TmpUsedRegs) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'AND/CMP -> CMP', p);
-                            case TAICPU(p).oper[0]^.val of
+                            case TAICPU(p).oper[0]^.Val of
                               $ff:
                                 begin
-                                  setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBL);
+                                  SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBL);
                                   TAICPU(hp1).opsize:=S_B;
                                 end;
                               $ffff:
                                 begin
-                                  setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
+                                  SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBW);
                                   TAICPU(hp1).opsize:=S_W;
                                 end;
                               $ffffffff:
                                 begin
-                                  setsubreg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
+                                  SetSubReg(TAICPU(hp1).oper[1]^.reg, R_SUBD);
                                   TAICPU(hp1).opsize:=S_L;
                                 end;
                               else
@@ -16237,7 +16237,7 @@ unit aoptx86;
                   A_MOVZX:
                     if MatchOpType(TAICPU(hp1),top_reg,top_reg) and
                       SuperRegistersEqual(TAICPU(p).oper[1]^.reg,TAICPU(hp1).oper[1]^.reg) and
-                      (getsupreg(TAICPU(hp1).oper[0]^.reg)=getsupreg(TAICPU(hp1).oper[1]^.reg)) and
+                      (GetSupReg(TAICPU(hp1).oper[0]^.reg)=GetSupReg(TAICPU(hp1).oper[1]^.reg)) and
                       (
                         (
                           (TAICPU(p).opsize=S_W) and
@@ -16257,10 +16257,10 @@ unit aoptx86;
                       ) then
                       begin
                         if (((TAICPU(hp1).opsize) in [S_BW,S_BL{$ifdef x86_64},S_BQ{$endif x86_64}]) and
-                            ((TAICPU(p).oper[0]^.val and $ff)=TAICPU(p).oper[0]^.val)
+                            ((TAICPU(p).oper[0]^.Val and $ff)=TAICPU(p).oper[0]^.Val)
                              ) or
                            (((TAICPU(hp1).opsize) in [S_WL{$ifdef x86_64},S_WQ{$endif x86_64}]) and
-                            ((TAICPU(p).oper[0]^.val and $ffff)=TAICPU(p).oper[0]^.val))
+                            ((TAICPU(p).oper[0]^.Val and $ffff)=TAICPU(p).oper[0]^.Val))
                         then
                           begin
                             { Unlike MOVSX, MOVZX doesn't actually have a version that zero-extends a
@@ -16281,22 +16281,22 @@ unit aoptx86;
 
                   A_SHL:
                     if MatchOpType(TAICPU(hp1),top_const,top_reg) and
-                      (getsupreg(TAICPU(p).oper[1]^.reg)=getsupreg(TAICPU(hp1).oper[1]^.reg)) then
+                      (GetSupReg(TAICPU(p).oper[1]^.reg)=GetSupReg(TAICPU(hp1).oper[1]^.reg)) then
                       begin
 {$ifopt R+}
 {$define RANGE_WAS_ON}
 {$R-}
 {$endif}
                         { get length of potential and mask }
-                        MaskLength:=SizeOf(TAICPU(p).oper[0]^.val)*8-BsrQWord(TAICPU(p).oper[0]^.val)-1;
+                        MaskLength:=SizeOf(TAICPU(p).oper[0]^.Val)*8-BsrQWord(TAICPU(p).oper[0]^.Val)-1;
 
                         { really a mask? }
 {$ifdef RANGE_WAS_ON}
 {$R+}
 {$endif}
-                        if (((QWord(1) shl MaskLength)-1)=TAICPU(p).oper[0]^.val) and
+                        if (((QWord(1) shl MaskLength)-1)=TAICPU(p).oper[0]^.Val) and
                           { unmasked part shifted out? }
-                          ((MaskLength+TAICPU(hp1).oper[0]^.val)>=topsize2memsize[TAICPU(hp1).opsize]) then
+                          ((MaskLength+TAICPU(hp1).oper[0]^.Val)>=topsize2memsize[TAICPU(hp1).opsize]) then
                           begin
                             DebugMsg(SPeepholeOptimization + 'AndShlToShl done',p);
                             RemoveCurrentP(p, hp1);
@@ -16308,13 +16308,13 @@ unit aoptx86;
                   A_SHR:
                     if MatchOpType(TAICPU(hp1),top_const,top_reg) and
                       (TAICPU(p).oper[1]^.reg = TAICPU(hp1).oper[1]^.reg) and
-                      (TAICPU(hp1).oper[0]^.val <= 63) then
+                      (TAICPU(hp1).oper[0]^.Val <= 63) then
                       begin
                         { Does SHR combined with the AND cover all the bits?
 
                           e.g. for "andb $252,%reg; shrb $2,%reg" - the "and" can be removed }
 
-                        MaskedBits := TAICPU(p).oper[0]^.val or ((TCGInt(1) shl TAICPU(hp1).oper[0]^.val) - 1);
+                        MaskedBits := TAICPU(p).oper[0]^.Val or ((TCGInt(1) shl TAICPU(hp1).oper[0]^.Val) - 1);
 
                         if ((TAICPU(p).opsize = S_B) and ((MaskedBits and $FF) = $FF)) or
                           ((TAICPU(p).opsize = S_W) and ((MaskedBits and $FFFF) = $FFFF)) or
@@ -16335,14 +16335,14 @@ unit aoptx86;
                           (
                             (
                               (TAICPU(hp1).opsize in [S_BW,S_BL{$ifdef x86_64},S_BQ{$endif x86_64}]) and
-                              ((TAICPU(p).oper[0]^.val and $7F) = TAICPU(p).oper[0]^.val)
+                              ((TAICPU(p).oper[0]^.Val and $7F) = TAICPU(p).oper[0]^.Val)
                             ) or (
                               (TAICPU(hp1).opsize in [S_WL{$ifdef x86_64},S_WQ{$endif x86_64}]) and
-                              ((TAICPU(p).oper[0]^.val and $7FFF) = TAICPU(p).oper[0]^.val)
+                              ((TAICPU(p).oper[0]^.Val and $7FFF) = TAICPU(p).oper[0]^.Val)
 {$ifdef x86_64}
                             ) or (
                               (TAICPU(hp1).opsize = S_LQ) and
-                              ((TAICPU(p).oper[0]^.val and $7fffffff) = TAICPU(p).oper[0]^.val)
+                              ((TAICPU(p).oper[0]^.Val and $7fffffff) = TAICPU(p).oper[0]^.Val)
 {$endif x86_64}
                             )
                           ) then
@@ -16365,12 +16365,12 @@ unit aoptx86;
                               S_BQ:
                                 begin
                                   TAICPU(hp1).opsize := S_BL;
-                                  TAICPU(hp1).oper[1]^.reg := newreg(R_INTREGISTER, getsupreg(TAICPU(hp1).oper[1]^.reg), R_SUBD);
+                                  TAICPU(hp1).oper[1]^.reg := NewReg(R_INTREGISTER, GetSupReg(TAICPU(hp1).oper[1]^.reg), R_SUBD);
                                 end;
                               S_WQ:
                                 begin
                                   TAICPU(hp1).opsize := S_WL;
-                                  TAICPU(hp1).oper[1]^.reg := newreg(R_INTREGISTER, getsupreg(TAICPU(hp1).oper[1]^.reg), R_SUBD);
+                                  TAICPU(hp1).oper[1]^.reg := NewReg(R_INTREGISTER, GetSupReg(TAICPU(hp1).oper[1]^.reg), R_SUBD);
                                 end
                               else
                                 ;
@@ -16408,12 +16408,12 @@ unit aoptx86;
 
                     if (
                         (TAICPU(hp1).oper[0]^.typ <> top_ref) or
-                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.ref^)
+                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.Ref^)
                       ) and
                       (
                         (TAICPU(hp1).opcode <> A_MOV) or
                         (TAICPU(hp1).oper[1]^.typ <> top_ref) or
-                        not RegInRef(ActiveReg, TAICPU(hp1).oper[1]^.ref^)
+                        not RegInRef(ActiveReg, TAICPU(hp1).oper[1]^.Ref^)
                       ) and
                       not (
                         { If mov %reg,%reg is present, remove that instruction instead in OptPass1MOV }
@@ -16458,7 +16458,7 @@ unit aoptx86;
                     { Register is written to, so this will clear the upper 32 bits (2-operand instructions) }
                     if (
                         (TAICPU(hp1).oper[0]^.typ <> top_ref) or
-                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.ref^)
+                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.Ref^)
                       ) and
                       MatchOperand(TAICPU(hp1).oper[1]^, ActiveReg) then
                       begin
@@ -16471,7 +16471,7 @@ unit aoptx86;
                   A_TEST:
                     if (
                         (TAICPU(hp1).oper[0]^.typ <> top_ref) or
-                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.ref^)
+                        not RegInRef(ActiveReg, TAICPU(hp1).oper[0]^.Ref^)
                       ) and
                       MatchOperand(TAICPU(hp1).oper[1]^, ActiveReg) and
                       not RegUsedAfterInstruction(ActiveReg, hp1, TmpUsedRegs) then
@@ -16526,11 +16526,11 @@ unit aoptx86;
               - Convert and $0xFFFF,reg to and reg,reg if reg is 16-bit
               - Convert and $0xFFFFFFFF,reg to and reg,reg if reg is 32-bit
             }
-            if ((TAICPU(p).oper[0]^.val = $FF) and (TAICPU(p).opsize = S_B)) or
-              ((TAICPU(p).oper[0]^.val = $FFFF) and (TAICPU(p).opsize = S_W)) or
-              ((TAICPU(p).oper[0]^.val = $FFFFFFFF) and (TAICPU(p).opsize = S_L)) then
+            if ((TAICPU(p).oper[0]^.Val = $FF) and (TAICPU(p).opsize = S_B)) or
+              ((TAICPU(p).oper[0]^.Val = $FFFF) and (TAICPU(p).opsize = S_W)) or
+              ((TAICPU(p).oper[0]^.Val = $FFFFFFFF) and (TAICPU(p).opsize = S_L)) then
               begin
-                TAICPU(p).loadreg(0, TAICPU(p).oper[1]^.reg);
+                TAICPU(p).LoadReg(0, TAICPU(p).oper[1]^.reg);
                 if TAICPU(p).opsize = S_L then
                   begin
                     Include(OptsToCheck,aoc_MovAnd2Mov_3);
@@ -16679,16 +16679,16 @@ unit aoptx86;
             if (TAICPU(p).oper[0]^.typ = top_reg) and
               MatchInstruction(hp1, [A_MOV, A_MOVZX, A_MOVSX{$ifdef x86_64}, A_MOVSXD{$endif}], []) and
               MatchOpType(TAICPU(hp1), top_ref, top_reg) and
-              (TAICPU(hp1).oper[0]^.ref^.scalefactor <= 1) and
+              (TAICPU(hp1).oper[0]^.Ref^.ScaleFactor <= 1) and
               (
                 (
-                  (TAICPU(hp1).oper[0]^.ref^.base = TAICPU(p).oper[1]^.reg) and
-                  (TAICPU(hp1).oper[0]^.ref^.index = NR_NO) and
+                  (TAICPU(hp1).oper[0]^.Ref^.Base = TAICPU(p).oper[1]^.reg) and
+                  (TAICPU(hp1).oper[0]^.Ref^.Index = NR_NO) and
                   { r/esp cannot be an index }
                   (TAICPU(p).oper[0]^.reg<>NR_STACK_POINTER_REG)
                 ) or (
-                  (TAICPU(hp1).oper[0]^.ref^.index = TAICPU(p).oper[1]^.reg) and
-                  (TAICPU(hp1).oper[0]^.ref^.base = NR_NO)
+                  (TAICPU(hp1).oper[0]^.Ref^.Index = TAICPU(p).oper[1]^.reg) and
+                  (TAICPU(hp1).oper[0]^.Ref^.Base = NR_NO)
                 )
               ) and (
                 Reg1WriteOverwritesReg2Entirely(TAICPU(p).oper[1]^.reg, TAICPU(hp1).oper[1]^.reg) or
@@ -16712,8 +16712,8 @@ unit aoptx86;
                     Asml.Remove(hp1);
                     Asml.InsertAfter(hp1, p);
 
-                    TAICPU(hp1).oper[0]^.ref^.base := TAICPU(p).oper[1]^.reg;
-                    TAICPU(hp1).oper[0]^.ref^.index := TAICPU(p).oper[0]^.reg;
+                    TAICPU(hp1).oper[0]^.Ref^.Base := TAICPU(p).oper[1]^.reg;
+                    TAICPU(hp1).oper[0]^.Ref^.Index := TAICPU(p).oper[0]^.reg;
 
                     DebugMsg(SPeepholeOptimization + 'AddMov2Mov done (instruction moved)', p);
 
@@ -16722,8 +16722,8 @@ unit aoptx86;
                 else
                   begin
                     AllocRegBetween(TAICPU(p).oper[0]^.reg, p, hp1, UsedRegs);
-                    TAICPU(hp1).oper[0]^.ref^.base := TAICPU(p).oper[1]^.reg;
-                    TAICPU(hp1).oper[0]^.ref^.index := TAICPU(p).oper[0]^.reg;
+                    TAICPU(hp1).oper[0]^.Ref^.Base := TAICPU(p).oper[1]^.reg;
+                    TAICPU(hp1).oper[0]^.Ref^.Index := TAICPU(p).oper[0]^.reg;
 
                     DebugMsg(SPeepholeOptimization + 'AddMov2Mov done', p);
 
@@ -16787,14 +16787,14 @@ unit aoptx86;
                     { Change the MOV instruction to a LEA instruction, and update the
                       first operand }
 
-                    reference_reset(NewRef, 1, []);
-                    NewRef.base := TAICPU(p).oper[1]^.reg;
-                    NewRef.scalefactor := 1;
+                    Reference_Reset(NewRef, 1, []);
+                    NewRef.Base := TAICPU(p).oper[1]^.reg;
+                    NewRef.ScaleFactor := 1;
                     { if the destination reg is the same as the ADD register,
                       and we keep the ADD instruction, do not add the offset
                       to LEA instruction, otherwise the reg gets increased by 2 times the offset value }
                     if DoAddMov2Lea or not MatchOperand(TAICPU(hp1).oper[0]^,TAICPU(hp1).oper[1]^.reg) then
-                      NewRef.offset := asizeint(TAICPU(p).oper[0]^.val);
+                      NewRef.Offset := asizeint(TAICPU(p).oper[0]^.Val);
 
                     TAICPU(hp1).opcode := A_LEA;
                     TAICPU(hp1).loadref(0, NewRef);
@@ -16838,16 +16838,16 @@ unit aoptx86;
       begin
         Result := False;
         CallJmp := False;
-        SubReg := getsubreg(TAICPU(p).oper[1]^.reg);
+        SubReg := GetSubReg(TAICPU(p).oper[1]^.reg);
 
         if not (RegInUsedRegs(NR_DEFAULTFLAGS,UsedRegs)) then
-          with TAICPU(p).oper[0]^.ref^ do
-            if not Assigned(symbol) and not Assigned(relsymbol) and (index <> NR_NO) then
+          with TAICPU(p).oper[0]^.Ref^ do
+            if not Assigned(symbol) and not Assigned(RelSymbol) and (index <> NR_NO) then
               if (offset = 0) then
                 begin
-                  if (scalefactor <= 1) and SuperRegistersEqual(base, TAICPU(p).oper[1]^.reg) then
+                  if (ScaleFactor <= 1) and SuperRegistersEqual(base, TAICPU(p).oper[1]^.reg) then
                     begin
-                      TAICPU(p).loadreg(0, newreg(R_INTREGISTER, getsupreg(index), SubReg));
+                      TAICPU(p).LoadReg(0, NewReg(R_INTREGISTER, GetSupReg(index), SubReg));
                       TAICPU(p).opcode := A_ADD;
                       DebugMsg(SPeepholeOptimization + 'Lea2AddBase done',p);
                       Result := True;
@@ -16856,9 +16856,9 @@ unit aoptx86;
                     begin
                       if (base <> NR_NO) then
                         begin
-                          if (scalefactor <= 1) then
+                          if (ScaleFactor <= 1) then
                             begin
-                              TAICPU(p).loadreg(0, newreg(R_INTREGISTER, getsupreg(base), SubReg));
+                              TAICPU(p).LoadReg(0, NewReg(R_INTREGISTER, GetSupReg(base), SubReg));
                               TAICPU(p).opcode := A_ADD;
                               DebugMsg(SPeepholeOptimization + 'Lea2AddIndex done',p);
                               Result := True;
@@ -16866,10 +16866,10 @@ unit aoptx86;
                         end
                       else
                         { Convert lea (%reg,2^x),%reg to shl x,%reg }
-                        if (scalefactor in [2, 4, 8]) then
+                        if (ScaleFactor in [2, 4, 8]) then
                           begin
                             { BsrByte is, in essence, the base-2 logarithm of the scale factor }
-                            TAICPU(p).loadconst(0, BsrByte(scalefactor));
+                            TAICPU(p).loadconst(0, BsrByte(ScaleFactor));
                             TAICPU(p).opcode := A_SHL;
                             DebugMsg(SPeepholeOptimization + 'Lea2Shl done',p);
                             Result := True;
@@ -16925,7 +16925,7 @@ unit aoptx86;
                   hp2 := TAICPU.op_const_reg(A_ADD, TAICPU(p).opsize, offset, TAICPU(p).oper[1]^.reg);
                   TAICPU(hp2).fileinfo := TAICPU(p).fileinfo;
                   offset := 0;
-                  if Assigned(symbol) or Assigned(relsymbol) then
+                  if Assigned(symbol) or Assigned(RelSymbol) then
                     DebugMsg(SPeepholeOptimization + 'lea x(sym,%reg1),%reg2 -> lea(sym,%reg1),%reg2; add $x,%reg2 to minimise instruction latency (Lea2LeaAdd)', p)
                   else
                     DebugMsg(SPeepholeOptimization + 'lea x(%reg1,%reg2),%reg3 -> lea(%reg1,%reg2),%reg3; add $x,%reg3 to minimise instruction latency (Lea2LeaAdd)', p);
@@ -17067,14 +17067,14 @@ unit aoptx86;
                   begin
                     { Change the MOV instruction to a LEA instruction, and update the
                       first operand }
-                    reference_reset(NewRef, 1, []);
-                    NewRef.base := TAICPU(p).oper[1]^.reg;
-                    NewRef.scalefactor := 1;
+                    Reference_Reset(NewRef, 1, []);
+                    NewRef.Base := TAICPU(p).oper[1]^.reg;
+                    NewRef.ScaleFactor := 1;
                     { if the destination reg is the same as the SUB register,
                       and we keep the ADD instruction, do not subtract the offset
                       to LEA instruction, otherwise the reg gets decreased by 2 times the offset value }
                     if DoSubMov2Lea or not MatchOperand(TAICPU(hp1).oper[0]^,TAICPU(hp1).oper[1]^.reg) then
-                       NewRef.offset := -TAICPU(p).oper[0]^.val;
+                       NewRef.Offset := -TAICPU(p).oper[0]^.Val;
 
                     TAICPU(hp1).opcode := A_LEA;
                     TAICPU(hp1).loadref(0, NewRef);
@@ -17144,21 +17144,21 @@ unit aoptx86;
 
           Reduces the number of bytes of machine code
         }
-        if (getsubreg(TAICPU(p).oper[1]^.reg)=R_SUBD) and
+        if (GetSubReg(TAICPU(p).oper[1]^.reg)=R_SUBD) and
           (
-            (getsubreg(TAICPU(p).oper[0]^.ref^.base)=R_SUBD) or
-            (getsubreg(TAICPU(p).oper[0]^.ref^.index)=R_SUBD)
+            (GetSubReg(TAICPU(p).oper[0]^.Ref^.Base)=R_SUBD) or
+            (GetSubReg(TAICPU(p).oper[0]^.Ref^.Index)=R_SUBD)
           ) then
           begin
             DebugMsg(SPeepholeOptimization + 'Changed 32-bit registers in reference to 64-bit (reduces instruction size)', p);
-            if (getsubreg(TAICPU(p).oper[0]^.ref^.base)=R_SUBD) then
-              setsubreg(TAICPU(p).oper[0]^.ref^.base,R_SUBQ);
-            if (getsubreg(TAICPU(p).oper[0]^.ref^.index)=R_SUBD) then
-              setsubreg(TAICPU(p).oper[0]^.ref^.index,R_SUBQ);
+            if (GetSubReg(TAICPU(p).oper[0]^.Ref^.Base)=R_SUBD) then
+              SetSubReg(TAICPU(p).oper[0]^.Ref^.Base,R_SUBQ);
+            if (GetSubReg(TAICPU(p).oper[0]^.Ref^.Index)=R_SUBD) then
+              SetSubReg(TAICPU(p).oper[0]^.Ref^.Index,R_SUBQ);
 
             { sign extend offset }
-            if TAICPU(p).oper[0]^.ref^.offset>$7fffffff then
-              TAICPU(p).oper[0]^.ref^.offset:=TAICPU(p).oper[0]^.ref^.offset or $ffffffff00000000;
+            if TAICPU(p).oper[0]^.Ref^.Offset>$7fffffff then
+              TAICPU(p).oper[0]^.Ref^.Offset:=TAICPU(p).oper[0]^.Ref^.Offset or $ffffffff00000000;
 
             { No reason to set Result to true }
           end;
@@ -17184,15 +17184,15 @@ unit aoptx86;
         }
         if (cs_opt_level4 in CurrentSettings.OptimizerSwitches) and
           (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG) and
-          (TAICPU(p).oper[0]^.ref^.base=NR_STACK_POINTER_REG) and
-          (TAICPU(p).oper[0]^.ref^.index=NR_NO) and
+          (TAICPU(p).oper[0]^.Ref^.Base=NR_STACK_POINTER_REG) and
+          (TAICPU(p).oper[0]^.Ref^.Index=NR_NO) and
           { the -8, -24, -40 are not required, but bail out early if possible,
             higher values are unlikely }
-          ((TAICPU(p).oper[0]^.ref^.offset=-8) or
-           (TAICPU(p).oper[0]^.ref^.offset=-24) or
-           (TAICPU(p).oper[0]^.ref^.offset=-40))  and
-          (TAICPU(p).oper[0]^.ref^.symbol=nil) and
-          (TAICPU(p).oper[0]^.ref^.relsymbol=nil) and
+          ((TAICPU(p).oper[0]^.Ref^.Offset=-8) or
+           (TAICPU(p).oper[0]^.Ref^.Offset=-24) or
+           (TAICPU(p).oper[0]^.Ref^.Offset=-40))  and
+          (TAICPU(p).oper[0]^.Ref^.Symbol=nil) and
+          (TAICPU(p).oper[0]^.Ref^.RelSymbol=nil) and
           GetNextInstruction(p, hp1) and
           { Take a copy of hp1 }
           SetAndTest(hp1, hp4) and
@@ -17216,11 +17216,11 @@ unit aoptx86;
             MatchInstruction(hp2,A_LEA,[TAICPU(p).opsize]))
           ) and
           (TAICPU(hp2).oper[1]^.reg=NR_STACK_POINTER_REG) and
-          (TAICPU(hp2).oper[0]^.ref^.offset=-TAICPU(p).oper[0]^.ref^.offset) and
-          (TAICPU(hp2).oper[0]^.ref^.base=NR_STACK_POINTER_REG) and
-          (TAICPU(hp2).oper[0]^.ref^.index=NR_NO) and
-          (TAICPU(hp2).oper[0]^.ref^.symbol=nil) and
-          (TAICPU(hp2).oper[0]^.ref^.relsymbol=nil) and
+          (TAICPU(hp2).oper[0]^.Ref^.Offset=-TAICPU(p).oper[0]^.Ref^.Offset) and
+          (TAICPU(hp2).oper[0]^.Ref^.Base=NR_STACK_POINTER_REG) and
+          (TAICPU(hp2).oper[0]^.Ref^.Index=NR_NO) and
+          (TAICPU(hp2).oper[0]^.Ref^.Symbol=nil) and
+          (TAICPU(hp2).oper[0]^.Ref^.RelSymbol=nil) and
           { Segment register will be NR_NO }
           GetNextInstruction(hp2, hp3) and
           { trick to skip label }
@@ -17245,7 +17245,7 @@ unit aoptx86;
                 if (hp7.typ=ait_seh_directive) and (TAISEHDirective(hp7).kind=ash_stackalloc) then
                   begin
                     { sanity check }
-                    if TAICPU(p).oper[0]^.ref^.offset<>-TAISEHDirective(hp7).data.offset then
+                    if TAICPU(p).oper[0]^.Ref^.Offset<>-TAISEHDirective(hp7).data.Offset then
                       InternalError(2024012201);
 
                     hp8:=TAI(hp7.next);
@@ -17350,7 +17350,7 @@ unit aoptx86;
         if (TAICPU(p).oper[1]^.typ = top_reg) and (TAICPU(p).oper[0]^.typ = top_const) then
           begin
 
-            case TAICPU(p).oper[0]^.val of
+            case TAICPU(p).oper[0]^.Val of
             0:
               { Don't make this optimisation if the CPU flags are required, since XOR scrambles them }
               if not RegInUsedRegs(NR_DEFAULTFLAGS,UsedRegs) or
@@ -17362,7 +17362,7 @@ unit aoptx86;
                 begin
                   { change "mov $0,%reg" into "xor %reg,%reg" }
                   TAICPU(p).opcode := A_XOR;
-                  TAICPU(p).loadReg(0,TAICPU(p).oper[1]^.reg);
+                  TAICPU(p).LoadReg(0,TAICPU(p).oper[1]^.reg);
                   Result := True;
 {$ifdef x86_64}
                 end
@@ -17371,7 +17371,7 @@ unit aoptx86;
                   RegName := debug_regname(TAICPU(p).oper[1]^.reg); { 64-bit register name }
 
                   { The actual optimization }
-                  setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+                  SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
                   TAICPU(p).changeopsize(S_L);
 
                   DebugMsg(SPeepholeOptimization + 'movq $0,' + RegName + ' -> movl $0,' + debug_regname(TAICPU(p).oper[1]^.reg) + ' (immediate can be represented with just 32 bits)', p);
@@ -17385,10 +17385,10 @@ unit aoptx86;
                   S_Q:
                     begin
                       RegName := debug_regname(TAICPU(p).oper[1]^.reg); { 64-bit register name }
-                      Value := debug_tostr(TAICPU(p).oper[0]^.val);
+                      Value := debug_tostr(TAICPU(p).oper[0]^.Val);
 
                       { The actual optimization }
-                      setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+                      SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
                       TAICPU(p).changeopsize(S_L);
 
                       DebugMsg(SPeepholeOptimization + 'movq $' + Value + ',' + RegName + ' -> movl $' + Value + ',' + debug_regname(TAICPU(p).oper[1]^.reg) + ' (immediate can be represented with just 32 bits)', p);
@@ -17447,8 +17447,8 @@ unit aoptx86;
             instruction can be encoded with AND/OR/XOR, so don't optimise if it
             falls within this range }
           (
-            (TAICPU(p).oper[0]^.val > -128) and
-            (TAICPU(p).oper[0]^.val <= 127)
+            (TAICPU(p).oper[0]^.Val > -128) and
+            (TAICPU(p).oper[0]^.Val <= 127)
           ) then
           Exit;
 
@@ -17482,7 +17482,7 @@ unit aoptx86;
             }
 
             if (TAICPU(p).oper[1]^.reg = NR_AX) and { This is also enough to determine that opsize = S_W }
-              ((TAICPU(p).oper[0]^.val and $7FFF) = TAICPU(p).oper[0]^.val) and
+              ((TAICPU(p).oper[0]^.Val and $7FFF) = TAICPU(p).oper[0]^.Val) and
               GetNextInstructionUsingReg(p, hp1, NR_EAX) and
               MatchInstruction(hp1, A_MOVZX, [S_WL]) and
               MatchOperand(TAICPU(hp1).oper[0]^, NR_AX) and
@@ -17520,7 +17520,7 @@ unit aoptx86;
             { Value is a sign-extended 32-bit integer - just correct it
               if it's represented as an unsigned value.  Also, IsBTXAcceptable
               checks to see if this operand is an immediate. }
-            Value := not TAICPU(p).oper[0]^.val;
+            Value := not TAICPU(p).oper[0]^.Val;
 {$pop}
 {$ifdef x86_64}
             if TAICPU(p).opsize = S_L then
@@ -17529,9 +17529,9 @@ unit aoptx86;
 
             if (PopCnt(QWord(Value)) = 1) then
               begin
-                DebugMsg(SPeepholeOptimization + 'Changed AND (not $' + debug_hexstr(TAICPU(p).oper[0]^.val) + ') to BTR $' + debug_tostr(BsrQWord(Value)) + ' to shrink instruction size (And2Btr)', p);
+                DebugMsg(SPeepholeOptimization + 'Changed AND (not $' + debug_hexstr(TAICPU(p).oper[0]^.Val) + ') to BTR $' + debug_tostr(BsrQWord(Value)) + ' to shrink instruction size (And2Btr)', p);
                 TAICPU(p).opcode := A_BTR;
-                TAICPU(p).oper[0]^.val := BsrQWord(Value); { Essentially the base 2 logarithm }
+                TAICPU(p).oper[0]^.Val := BsrQWord(Value); { Essentially the base 2 logarithm }
                 Result := True;
                 Exit;
               end;
@@ -17611,7 +17611,7 @@ unit aoptx86;
           { First operand will be %cl }
           (TAICPU(hp1).oper[1]^.reg = TAICPU(p).oper[1]^.reg) and
           { Just to be sure }
-          (getsupreg(TAICPU(hp1).oper[1]^.reg) <> RS_ECX) then
+          (GetSupReg(TAICPU(hp1).oper[1]^.reg) <> RS_ECX) then
           begin
             DebugMsg(SPeepholeOptimization + 'Swapped variable and constant SHR instructions to minimise pipeline stall (ShrShr2ShrShr)', hp1);
 
@@ -17730,12 +17730,12 @@ unit aoptx86;
                             { Should have broken out of this optimisation already }
                             InternalError(2021112901);
 
-                          DebugMsg(SPeepholeOptimization + debug_op2str(TAICPU(hp2).opcode) + debug_opsize2str(TAICPU(hp2).opsize) + ' $' + debug_tostr(TAICPU(hp2).oper[0]^.val) + ',' + debug_operstr(TAICPU(hp2).oper[1]^) + ' -> ' +
-                            debug_op2str(SecondOpposite) + debug_opsize2str(TAICPU(hp2).opsize) + ' $' + debug_tostr(not TAICPU(hp2).oper[0]^.val) + ',' + debug_operstr(TAICPU(hp2).oper[1]^) + ' to accommodate inverted carry bit', hp2);
+                          DebugMsg(SPeepholeOptimization + debug_op2str(TAICPU(hp2).opcode) + debug_opsize2str(TAICPU(hp2).opsize) + ' $' + debug_tostr(TAICPU(hp2).oper[0]^.Val) + ',' + debug_operstr(TAICPU(hp2).oper[1]^) + ' -> ' +
+                            debug_op2str(SecondOpposite) + debug_opsize2str(TAICPU(hp2).opsize) + ' $' + debug_tostr(not TAICPU(hp2).oper[0]^.Val) + ',' + debug_operstr(TAICPU(hp2).oper[1]^) + ' to accommodate inverted carry bit', hp2);
 
                           { Bit-invert the constant (effectively equivalent to "-1 - val") }
                           TAICPU(hp2).opcode := SecondOpposite;
-                          TAICPU(hp2).oper[0]^.val := not TAICPU(hp2).oper[0]^.val;
+                          TAICPU(hp2).oper[0]^.Val := not TAICPU(hp2).oper[0]^.Val;
                         end;
 
                     { Move to the next instruction }
@@ -17750,7 +17750,7 @@ unit aoptx86;
               debug_op2str(opposite) + debug_opsize2str(TAICPU(p).opsize) + ' $-128,' + debug_operstr(TAICPU(p).oper[1]^) + ' to reduce instruction size', p);
 
             TAICPU(p).opcode := Opposite;
-            TAICPU(p).oper[0]^.val := -128;
+            TAICPU(p).oper[0]^.Val := -128;
 
             { No further optimisations can be made on this instruction, so move
               onto the next one to save time }
@@ -17853,10 +17853,10 @@ unit aoptx86;
 
         { change "cmp $0, %reg" to "test %reg, %reg" }
         if MatchOpType(TAICPU(p),top_const,top_reg) and
-           (TAICPU(p).oper[0]^.val = 0) then
+           (TAICPU(p).oper[0]^.Val = 0) then
           begin
             TAICPU(p).opcode := A_TEST;
-            TAICPU(p).loadreg(0,TAICPU(p).oper[1]^.reg);
+            TAICPU(p).LoadReg(0,TAICPU(p).oper[1]^.reg);
             DebugMsg(SPeepholeOptimization + 'Cmp2Test', p);
             Result:=true;
           end;
@@ -17914,16 +17914,16 @@ unit aoptx86;
         if (TAICPU(p).opcode = A_OR) and
           IsBTXAcceptable(p) and
           { IsBTXAcceptable checks to see if oper[0] is an immediate }
-          (PopCnt(QWord(TAICPU(p).oper[0]^.val)) = 1) and
+          (PopCnt(QWord(TAICPU(p).oper[0]^.Val)) = 1) and
           (
             { Don't optimise if a test instruction follows }
             not GetNextInstruction(p, hp1) or
             not MatchInstruction(hp1, A_TEST, [TAICPU(p).opsize])
           ) then
           begin
-            DebugMsg(SPeepholeOptimization + 'Changed OR $' + debug_hexstr(TAICPU(p).oper[0]^.val) + ' to BTS $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.val)) + ' to shrink instruction size (Or2Bts)', p);
+            DebugMsg(SPeepholeOptimization + 'Changed OR $' + debug_hexstr(TAICPU(p).oper[0]^.Val) + ' to BTS $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.Val)) + ' to shrink instruction size (Or2Bts)', p);
             TAICPU(p).opcode := A_BTS;
-            TAICPU(p).oper[0]^.val := BsrQWord(TAICPU(p).oper[0]^.val); { Essentially the base 2 logarithm }
+            TAICPU(p).oper[0]^.Val := BsrQWord(TAICPU(p).oper[0]^.Val); { Essentially the base 2 logarithm }
             Result := True;
             Exit;
           end;
@@ -17950,7 +17950,7 @@ unit aoptx86;
               (CPUX86_HINT_FAST_BT_MEM_IMM in cpu_optimization_hints[CurrentSettings.OptimizeCPUType])
             )
           ) and
-          (PopCnt(QWord(TAICPU(p).oper[0]^.val)) = 1) and
+          (PopCnt(QWord(TAICPU(p).oper[0]^.Val)) = 1) and
           { For sizes less than S_L, the byte size is equal or larger with BT,
             so don't bother optimising }
           (TAICPU(p).opsize >= S_L) then
@@ -18017,9 +18017,9 @@ unit aoptx86;
                     GetNextInstruction(hp2, hp2);
                   end;
 
-                DebugMsg(SPeepholeOptimization + 'Changed TEST $' + debug_hexstr(TAICPU(p).oper[0]^.val) + ' to BT $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.val)) + ' to shrink instruction size (Test2Bt)', p);
+                DebugMsg(SPeepholeOptimization + 'Changed TEST $' + debug_hexstr(TAICPU(p).oper[0]^.Val) + ' to BT $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.Val)) + ' to shrink instruction size (Test2Bt)', p);
                 TAICPU(p).opcode := A_BT;
-                TAICPU(p).oper[0]^.val := BsrQWord(TAICPU(p).oper[0]^.val); { Essentially the base 2 logarithm }
+                TAICPU(p).oper[0]^.Val := BsrQWord(TAICPU(p).oper[0]^.Val); { Essentially the base 2 logarithm }
                 Result := True;
                 Exit;
               end;
@@ -18081,7 +18081,7 @@ unit aoptx86;
                   { therefore, it's only safe to do this optimization for     }
                   { shifts by a (nonzero) constant                            }
                    (TAICPU(hp1).oper[0]^.typ = top_const) and
-                   (TAICPU(hp1).oper[0]^.val <> 0) and
+                   (TAICPU(hp1).oper[0]^.Val <> 0) and
                   { does not work in case of overflow for G(E)/L(E)/C_O/C_NO }
                   { and in case of carry for A(E)/B(E)/C/NC                  }
                    (TAICPU(hp2).condition in [C_Z,C_NZ,C_E,C_NE]) then
@@ -18166,9 +18166,9 @@ unit aoptx86;
            GetNextInstruction(p, hp1) and
            MatchInstruction(hp1,A_JMP,[S_NO]) and
            MatchOpType(TAICPU(hp1),top_ref) and
-           (TAICPU(hp1).oper[0]^.ref^.refaddr=addr_full) then
+           (TAICPU(hp1).oper[0]^.Ref^.RefAddr=addr_full) then
           begin
-            hp2 := TAICPU.Op_sym(A_PUSH,S_L,TAICPU(hp1).oper[0]^.ref^.symbol);
+            hp2 := TAICPU.Op_sym(A_PUSH,S_L,TAICPU(hp1).oper[0]^.Ref^.Symbol);
             TAICPU(hp2).fileinfo := TAICPU(p).fileinfo;
             InsertLLItem(p.previous, p, hp2);
             TAICPU(p).opcode := A_JMP;
@@ -18267,7 +18267,7 @@ unit aoptx86;
               (
                 (
                   (TAICPU(hp1).opcode = A_CMP) and MatchOpType(TAICPU(hp1), top_const, top_reg) and
-                  ConstInRange(TAICPU(hp1).oper[0]^.val, TAICPU(p).opsize)
+                  ConstInRange(TAICPU(hp1).oper[0]^.Val, TAICPU(p).opsize)
                 ) or (
                   { If MatchOperand returns True, they must both be registers }
                   (TAICPU(hp1).opcode = A_TEST) and MatchOperand(TAICPU(hp1).oper[0]^, TAICPU(hp1).oper[1]^)
@@ -18282,10 +18282,10 @@ unit aoptx86;
                 asml.InsertBefore(hp1, p);
 
                 { Swap instructions in the case of cmp 0,%reg or test %reg,%reg }
-                if (TAICPU(hp1).opcode = A_TEST) or (TAICPU(hp1).oper[0]^.val = 0) then
+                if (TAICPU(hp1).opcode = A_TEST) or (TAICPU(hp1).oper[0]^.Val = 0) then
                   begin
                     TAICPU(hp1).opcode := A_TEST;
-                    TAICPU(hp1).loadreg(0, TAICPU(p).oper[0]^.reg);
+                    TAICPU(hp1).LoadReg(0, TAICPU(p).oper[0]^.reg);
                   end;
 
                 TAICPU(hp1).oper[1]^.reg := TAICPU(p).oper[0]^.reg;
@@ -18384,16 +18384,16 @@ unit aoptx86;
         }
         if IsBTXAcceptable(p) and
           { IsBTXAcceptable checks to see if oper[0] is an immediate }
-          (PopCnt(QWord(TAICPU(p).oper[0]^.val)) = 1) and
+          (PopCnt(QWord(TAICPU(p).oper[0]^.Val)) = 1) and
           (
             { Don't optimise if a test instruction follows }
             not GetNextInstruction(p, hp1) or
             not MatchInstruction(hp1, A_TEST, [TAICPU(p).opsize])
           ) then
           begin
-            DebugMsg(SPeepholeOptimization + 'Changed XOR $' + debug_hexstr(TAICPU(p).oper[0]^.val) + ' to BTC $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.val)) + ' to shrink instruction size (Xor2Btc)', p);
+            DebugMsg(SPeepholeOptimization + 'Changed XOR $' + debug_hexstr(TAICPU(p).oper[0]^.Val) + ' to BTC $' + debug_tostr(BsrQWord(TAICPU(p).oper[0]^.Val)) + ' to shrink instruction size (Xor2Btc)', p);
             TAICPU(p).opcode := A_BTC;
-            TAICPU(p).oper[0]^.val := BsrQWord(TAICPU(p).oper[0]^.val); { Essentially the base 2 logarithm }
+            TAICPU(p).oper[0]^.Val := BsrQWord(TAICPU(p).oper[0]^.Val); { Essentially the base 2 logarithm }
             Result := True;
             Exit;
           end;
@@ -18417,8 +18417,8 @@ unit aoptx86;
               PreMessage := 'xorq ' + RegName + ',' + RegName + ' -> xorl ';
 
               { The actual optimization }
-              setsubreg(TAICPU(p).oper[0]^.reg, R_SUBD);
-              setsubreg(TAICPU(p).oper[1]^.reg, R_SUBD);
+              SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBD);
+              SetSubReg(TAICPU(p).oper[1]^.reg, R_SUBD);
               TAICPU(p).changeopsize(S_L);
 
               RegName := debug_regname(TAICPU(p).oper[0]^.reg); { 32-bit register name }
@@ -18446,7 +18446,7 @@ unit aoptx86;
             if (TAICPU(p).oper[1]^.reg = XReg) then
               begin
                 TAICPU(p).changeopsize(S_XMM);
-                setsubreg(TAICPU(p).oper[2]^.reg, R_SUBMMX);
+                SetSubReg(TAICPU(p).oper[2]^.reg, R_SUBMMX);
                 if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
                   begin
                     { Change input registers to %xmm0 to reduce size.  Note that
@@ -18457,7 +18457,7 @@ unit aoptx86;
                   end
                 else
                   begin
-                    setsubreg(XReg, R_SUBMMX);
+                    SetSubReg(XReg, R_SUBMMX);
                     DebugMsg(SPeepholeOptimization + 'Changed zero-setting vpxor from Y/ZMM to XMM to reduce size and increase efficiency', p);
                   end;
                 TAICPU(p).oper[0]^.reg := XReg;
@@ -18532,7 +18532,7 @@ unit aoptx86;
           (Smaller instruction size)
           Same with SARX and SHRX (and when using %rcx for 64-bit)
         }
-        if (getsupreg(TAICPU(p).oper[0]^.reg)=RS_ECX) and
+        if (GetSupReg(TAICPU(p).oper[0]^.reg)=RS_ECX) and
           MatchOperand(TAICPU(p).oper[1]^,TAICPU(p).oper[2]^.reg) and
           not RegInUsedRegs(NR_DEFAULTFLAGS, UsedRegs) then
           begin
@@ -18543,7 +18543,7 @@ unit aoptx86;
               else
                 InternalError(2025090501);
             end;
-            setsubreg(TAICPU(p).oper[0]^.reg, R_SUBL);
+            SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBL);
             TAICPU(p).ops:=2;
             TAICPU(p).clearop(2);
           end;
@@ -18556,7 +18556,7 @@ unit aoptx86;
       begin
         for OperIdx := 0 to p.ops - 1 do
           if p.oper[OperIdx]^.typ = top_ref then
-            optimize_ref(p.oper[OperIdx]^.ref^, False);
+            optimize_ref(p.oper[OperIdx]^.Ref^, False);
       end;
 
 end.

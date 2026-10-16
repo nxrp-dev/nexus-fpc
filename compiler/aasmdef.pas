@@ -73,7 +73,7 @@ function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: 
           symind,ptrdef,
           sec_rodata,
           lower(symind.name),
-          ptrdef.alignment));
+          ptrdef.Alignment));
         tcb.free;
         tcb := nil;
         if (_typ=AT_DATA_FORCEINDIRECT) and not (TargetInfo.system in systems_indirect_var_imports) then

@@ -59,7 +59,7 @@ implementation
     procedure TX8664CallNode.gen_syscall_para(para: TCallParaNode);
       begin
         { lib parameter has no special type but proccalloptions must be a syscall }
-        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).libsym,TCPUProcDef(procdefinition).libsym.owner);
+        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).LibSym,TCPUProcDef(procdefinition).LibSym.owner);
       end;
 
 
@@ -71,7 +71,7 @@ implementation
         if (cnf_uses_varargs in callnodeflags) and not x86_64_use_ms_abi(procdefinition.ProcCallOption) then
           begin
             if Assigned(varargsparas) then
-              mmregs:=varargsparas.mmregsused
+              mmregs:=varargsparas.MMRegsUsed
             else
               mmregs:=0;
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_MOV,S_Q,mmregs,NR_RAX))
@@ -84,12 +84,12 @@ implementation
         { avoid useless "movq %xmm0,%rax" and "movq %rax,%xmm0" instructions
           (which moreover for some reason are not supported by the Darwin
            x86-64 assembler) }
-        if Assigned(retloc.location) and
-           not Assigned(retloc.location^.next) and
-           (retloc.location^.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+        if Assigned(retloc.Location) and
+           not Assigned(retloc.Location^.next) and
+           (retloc.Location^.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
           begin
-            location_reset(location,LOC_MMREGISTER,retloc.location^.size);
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,retloc.location^.size);
+            Location_Reset(location,LOC_MMREGISTER,retloc.Location^.Size);
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,retloc.Location^.Size);
           end
         else
           inherited

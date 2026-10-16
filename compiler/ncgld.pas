@@ -109,9 +109,9 @@ implementation
                    not(vo_is_funcret in TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions)) or
                   not(fc_exit in flowcontrol)) and
                  { stored in memory... }
-                 (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.loc in [LOC_REFERENCE]) and
+                 (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.Loc in [LOC_REFERENCE]) and
                  { ... at the place we are looking for }
-                 references_equal(TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.reference,rr^.old^) and
+                 References_Equal(TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.Reference,rr^.old^) and
                  { its address cannot have escaped the current routine }
                  not(TAbstractVarSym(TLoadNode(n).symtableentry).AddrTaken) and
                  { it is not accessed in nested procedures }
@@ -126,9 +126,9 @@ implementation
             begin
               if (ti_valid in TTempRefNode(n).tempflags) and
                  { memory temp... }
-                 (TTempRefNode(n).tempinfo^.location.loc in [LOC_REFERENCE]) and
+                 (TTempRefNode(n).tempinfo^.Location.Loc in [LOC_REFERENCE]) and
                  { ... at the place we are looking for }
-                 references_equal(TTempRefNode(n).tempinfo^.location.reference,rr^.old^) and
+                 References_Equal(TTempRefNode(n).tempinfo^.Location.Reference,rr^.old^) and
                  { its address cannot have escaped the current routine }
                  not(ti_addr_taken in TTempRefNode(n).tempflags) then
                 begin
@@ -148,8 +148,8 @@ implementation
             if not(TUnaryNode(n).left.resultdef.typ in [recorddef,objectdef,arraydef,stringdef]) or
                { make sure we don't try to call resultdef.size for types that
                  don't have a compile-time size such as open arrays }
-               is_special_array(TUnaryNode(n).left.resultdef) or
-               (TUnaryNode(n).left.resultdef.size<>TUnaryNode(n).resultdef.size) then
+               Is_Special_Array(TUnaryNode(n).left.resultdef) or
+               (TUnaryNode(n).left.resultdef.Size<>TUnaryNode(n).resultdef.Size) then
               result := fen_norecurse_false;
 
           { optimize the searching a bit }
@@ -157,7 +157,7 @@ implementation
           calln,inlinen,casen,
           addn,subn,muln,
           andn,orn,xorn,
-          ltn,lten,gtn,gten,equaln,unequaln,
+          ltn,lten,gtn,gten,EqualN,unequaln,
           slashn,divn,shrn,shln,notn,
           inn,
           asn,isn:
@@ -178,27 +178,27 @@ implementation
         { variables move to different memory locations)     }
         if not(cs_opt_level2 in CurrentSettings.OptimizerSwitches) or
            { must be a copy to a memory location ... }
-           (n.location.loc <> LOC_REFERENCE) or
+           (n.Location.Loc <> LOC_REFERENCE) or
            { not inside a control flow statement and no goto's in sight }
            ([fc_inflowcontrol,fc_gotolabel] * flowcontrol <> []) or
            { not for refcounted types, because those locations are   }
            { still used later on in initialisation/finalisation code }
-           is_managed_type(n.resultdef) or
+           Is_Managed_Type(n.resultdef) or
            { source and destination are temps (= not global variables) }
            { and both point to the start of a temp, and the source is a }
            { non-persistent temp (otherwise we need some kind of copy-  }
            { on-write support in case later on both are still used)     }
            not tg.isstartoftemp(newref) or
-           not tg.isstartoftemp(n.location.reference) or
+           not tg.isstartoftemp(n.Location.Reference) or
            (tg.gettypeoftemp(newref) <> tt_normal) or
-           not (tg.gettypeoftemp(n.location.reference) in [tt_normal,tt_persistent]) or
+           not (tg.gettypeoftemp(n.Location.Reference) in [tt_normal,tt_persistent]) or
            { and both have the same size }
-           (tg.sizeoftemp(CurrentAsmData.CurrAsmList,newref) <> tg.sizeoftemp(CurrentAsmData.CurrAsmList,n.location.reference)) then
+           (tg.sizeoftemp(CurrentAsmData.CurrAsmList,newref) <> tg.sizeoftemp(CurrentAsmData.CurrAsmList,n.Location.Reference)) then
           exit;
 
         { find the source of the old reference (loadnode or tempnode) }
         { and replace it with the new reference                       }
-        rr.old := @n.location.reference;
+        rr.old := @n.Location.Reference;
         rr.new := @newref;
         rr.ressym := nil;
 
@@ -213,7 +213,7 @@ implementation
         if not foreachnodestatic(n,@doreplaceref,@rr) then
           exit;
 
-        n.location.reference := newref;
+        n.Location.Reference := newref;
         result:=true;
       end;
 
@@ -225,18 +225,18 @@ implementation
       var
         oldtemptype: TTempType;
       begin
-        if (location.loc<>LOC_REFERENCE) then
+        if (location.Loc<>LOC_REFERENCE) then
           InternalError(2007020812);
-        if not tg.istemp(location.reference) then
+        if not tg.istemp(location.Reference) then
           InternalError(2007020813);
-        oldtemptype:=tg.gettypeoftemp(location.reference);
+        oldtemptype:=tg.gettypeoftemp(location.Reference);
         if (oldtemptype = tt_persistent) then
-          tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.reference,tt_normal);
-        tg.ungettemp(CurrentAsmData.CurrAsmList,location.reference);
-        location.reference:=ref;
-        tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.reference,oldtemptype);
+          tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.Reference,tt_normal);
+        tg.ungettemp(CurrentAsmData.CurrAsmList,location.Reference);
+        location.Reference:=ref;
+        tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.Reference,oldtemptype);
         TAbstractNormalVarSym(symtableentry).LocAlloc:=location;
-        hlcg.recordnewsymloc(CurrentAsmData.CurrAsmList,symtableentry,TAbstractNormalVarSym(symtableentry).vardef,location.reference,false);
+        hlcg.RecordNewSymLoc(CurrentAsmData.CurrAsmList,symtableentry,TAbstractNormalVarSym(symtableentry).vardef,location.Reference,false);
       end;
 
 
@@ -246,18 +246,18 @@ implementation
         lvs: TAbstractNormalVarSym absolute vs;
       begin
         SecondPass(left);
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
           InternalError(200309286);
-        if lvs.LocAlloc.loc<>LOC_REFERENCE then
+        if lvs.LocAlloc.Loc<>LOC_REFERENCE then
           InternalError(200409241);
-        hlcg.reference_reset_base(location.reference,left.resultdef,left.location.register,lvs.LocAlloc.reference.offset,ctempposinvalid,lvs.LocAlloc.reference.alignment,lvs.LocAlloc.reference.volatility);
+        hlcg.Reference_Reset_Base(location.Reference,left.resultdef,left.Location.Register,lvs.LocAlloc.Reference.Offset,CTempPosInvalid,lvs.LocAlloc.Reference.Alignment,lvs.LocAlloc.Reference.Volatility);
       end;
 
 
     procedure TCGLoadNode.generate_absaddr_access(vs: TAbsoluteVarSym);
       begin
-        location.reference.offset:=asizeint(vs.AddrOffset);
-        location.reference.volatility:=[vol_read,vol_write];
+        location.Reference.Offset:=asizeint(vs.AddrOffset);
+        location.Reference.Volatility:=[vol_read,vol_write];
       end;
 
 
@@ -271,8 +271,8 @@ implementation
       begin
         if tf_section_threadvars in TargetInfo.flags then
           begin
-            if gvs.LocAlloc.loc=LOC_INVALID then
-              reference_reset_symbol(location.reference,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_TLS,use_indirect_symbol(gvs)),0,location.reference.alignment,[])
+            if gvs.LocAlloc.Loc=LOC_INVALID then
+              Reference_Reset_Symbol(location.Reference,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_TLS,use_indirect_symbol(gvs)),0,location.Reference.Alignment,[])
             else
               location:=gvs.LocAlloc;
             exit;
@@ -281,21 +281,21 @@ implementation
           images use the same resolver; there is no inline main-thread value. }
         pd:=Search_System_Proc('fpc_threadvar_addr');
         para.init;
-        paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,para);
+        ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,para);
         if vo_is_weak_external in gvs.VarOptions then
-          reference_reset_symbol(ref,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[])
+          Reference_Reset_Symbol(ref,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[])
         else
-          reference_reset_symbol(ref,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[]);
-        hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,VoidPointerType,ref,para);
-        paramanager.freecgpara(CurrentAsmData.CurrAsmList,para);
-        respara:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@para],VoidPointerType);
+          Reference_Reset_Symbol(ref,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[]);
+        hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,VoidPointerType,ref,para);
+        ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,para);
+        respara:=hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@para],VoidPointerType);
         para.done;
-        reg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,VoidPointerType);
-        location_reset(tmp,LOC_REGISTER,OS_ADDR);
-        tmp.register:=reg;
-        hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,VoidPointerType,respara,tmp,true);
-        respara.resetiftemp;
-        hlcg.reference_reset_base(location.reference,VoidPointerType,reg,0,ctempposinvalid,resultdef.alignment,[]);
+        reg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,VoidPointerType);
+        Location_Reset(tmp,LOC_REGISTER,OS_ADDR);
+        tmp.Register:=reg;
+        hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,VoidPointerType,respara,tmp,true);
+        respara.ResetIfTemp;
+        hlcg.Reference_Reset_Base(location.Reference,VoidPointerType,reg,0,CTempPosInvalid,resultdef.Alignment,[]);
       end;
 
 
@@ -333,9 +333,9 @@ implementation
         name : TSymStr;
       begin
         { we don't know the size of all arrays }
-        newsize:=def_cgsize(resultdef);
+        newsize:=Def_CGSize(resultdef);
         { alignment is overridden per case below }
-        location_reset_ref(location,LOC_REFERENCE,newsize,resultdef.alignment,[]);
+        Location_Reset_Ref(location,LOC_REFERENCE,newsize,resultdef.Alignment,[]);
         case symtableentry.typ of
            absolutevarsym :
               begin
@@ -344,7 +344,7 @@ implementation
                    toaddr :
                      generate_absaddr_access(TAbsoluteVarSym(symtableentry));
                    toasm :
-                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(TAbsoluteVarSym(symtableentry).MangledName,AT_DATA);
+                     location.Reference.Symbol:=CurrentAsmData.RefAsmSymbol(TAbsoluteVarSym(symtableentry).MangledName,AT_DATA);
                    else
                      InternalError(200310283);
                  end;
@@ -353,20 +353,20 @@ implementation
              begin
                 if TConstSym(symtableentry).ConstTyp in [constresourcestring,constwresourcestring] then
                   begin
-                     location_reset_ref(location,LOC_CREFERENCE,def_cgsize(CAnsiStringType),CAnsiStringType.size,[]);
+                     Location_Reset_Ref(location,LOC_CREFERENCE,Def_CGSize(CAnsiStringType),CAnsiStringType.Size,[]);
                      indirect:=(tf_supports_packages in TargetInfo.flags) and
                                  (TargetInfo.system in systems_indirect_var_imports) and
                                  (symtableentry.owner.ModuleID<>CurrentModule.ModuleID);
                      name:=Make_MangledName('RESSTR',symtableentry.owner,symtableentry.name);
-                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(name,AT_DATA,indirect);
+                     location.Reference.Symbol:=CurrentAsmData.RefAsmSymbol(name,AT_DATA,indirect);
                      if symtableentry.owner.ModuleID<>CurrentModule.ModuleID then
                        CurrentModule.AddImportedSym(symtableentry);
                      vd:=Search_System_Type('TRESOURCESTRINGRECORD').typedef;
-                     hlcg.g_set_addr_nonbitpacked_field_ref(
+                     hlcg.G_Set_Addr_NonBitPacked_Field_Ref(
                        CurrentAsmData.CurrAsmList,
                        TRecordDef(vd),
                        TFieldVarSym(Search_Struct_Member(TRecordDef(vd),'CURRENTVALUE')),
-                       location.reference);
+                       location.Reference);
                   end
                 else
                   InternalError(22798);
@@ -378,13 +378,13 @@ implementation
                if (vo_is_dll_var in gvs.VarOptions) then
                { DLL variable }
                  begin
-                   hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+                   hregister:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
                    if not(vo_is_weak_external in gvs.VarOptions) then
-                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(symtableentry).MangledName,AT_DATA)
+                     location.Reference.Symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(symtableentry).MangledName,AT_DATA)
                    else
-                     location.reference.symbol:=CurrentAsmData.WeakRefAsmSymbol(TStaticVarSym(symtableentry).MangledName,AT_DATA);
-                   cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,location.reference,hregister);
-                   reference_reset_base(location.reference,hregister,0,ctempposinvalid,location.reference.alignment,[]);
+                     location.Reference.Symbol:=CurrentAsmData.WeakRefAsmSymbol(TStaticVarSym(symtableentry).MangledName,AT_DATA);
+                   cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,location.Reference,hregister);
+                   Reference_Reset_Base(location.Reference,hregister,0,CTempPosInvalid,location.Reference.Alignment,[]);
                  end
                { Thread variable }
                else if (vo_is_thread_var in gvs.VarOptions) then
@@ -392,13 +392,13 @@ implementation
                { Normal (or external) variable }
                else
                  begin
-                   if gvs.LocAlloc.loc=LOC_INVALID then
+                   if gvs.LocAlloc.Loc=LOC_INVALID then
                      begin
                        { static data is currently always volatile }
                        if not(vo_is_weak_external in gvs.VarOptions) then
-                         reference_reset_symbol(location.reference,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,location.reference.alignment,[])
+                         Reference_Reset_Symbol(location.Reference,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,location.Reference.Alignment,[])
                        else
-                         reference_reset_symbol(location.reference,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,location.reference.alignment,[])
+                         Reference_Reset_Symbol(location.Reference,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,location.Reference.Alignment,[])
                      end
                    else
                       location:=gvs.LocAlloc;
@@ -406,8 +406,8 @@ implementation
 
                 { make const a LOC_CREFERENCE }
                 if (gvs.VarSpez=vs_const) and
-                   (location.loc=LOC_REFERENCE) then
-                  location.loc:=LOC_CREFERENCE;
+                   (location.Loc=LOC_REFERENCE) then
+                  location.Loc:=LOC_CREFERENCE;
               end;
             paravarsym,
             localvarsym :
@@ -424,32 +424,32 @@ implementation
                   when we need to load the self pointer for objects }
                 if is_addr_param_load then
                   begin
-                    if (location.loc in [LOC_CREGISTER,LOC_REGISTER]) then
-                      hregister:=location.register
+                    if (location.Loc in [LOC_CREGISTER,LOC_REGISTER]) then
+                      hregister:=location.Register
                     else
                       begin
                         vd:=CPointerDef.getreusable(resultdef);
-                        hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vd);
+                        hregister:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,vd);
                         { we need to load only an address }
-                        location.size:=int_cgsize(vd.size);
-                        hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,vd,vd,location,hregister);
+                        location.Size:=Int_CGSize(vd.Size);
+                        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,vd,vd,location,hregister);
                       end;
                     { assume packed records may always be unaligned }
                     if not(resultdef.typ in [recorddef,objectdef]) or
                        (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).UseFieldAlignment<>1) then
                       begin
-                        alignment:=min(min(min(resultdef.alignment,CurrentSettings.alignment.LocalAlignMax),CurrentSettings.alignment.ConstAlignMax),CurrentSettings.alignment.VarAlignMax);
-                        location_reset_ref(location,LOC_REFERENCE,newsize,alignment,[]);
+                        alignment:=min(min(min(resultdef.Alignment,CurrentSettings.Alignment.LocalAlignMax),CurrentSettings.Alignment.ConstAlignMax),CurrentSettings.Alignment.VarAlignMax);
+                        Location_Reset_Ref(location,LOC_REFERENCE,newsize,alignment,[]);
                       end
                     else
-                      location_reset_ref(location,LOC_REFERENCE,newsize,1,[]);
-                    hlcg.reference_reset_base(location.reference,VoidPointerType,hregister,0,ctempposinvalid,location.reference.alignment,[]);
+                      Location_Reset_Ref(location,LOC_REFERENCE,newsize,1,[]);
+                    hlcg.Reference_Reset_Base(location.Reference,VoidPointerType,hregister,0,CTempPosInvalid,location.Reference.Alignment,[]);
                   end;
 
                 { make const a LOC_CREFERENCE }
                 if (vs.VarSpez=vs_const) and
-                   (location.loc=LOC_REFERENCE) then
-                  location.loc:=LOC_CREFERENCE;
+                   (location.Loc=LOC_REFERENCE) then
+                  location.Loc:=LOC_CREFERENCE;
              end;
            ProcSym:
               begin
@@ -459,19 +459,19 @@ implementation
                    (resultdef.typ in [symconst.procdef,procvardef]) and
                     not TAbstractProcDef(resultdef).Is_AddressOnly then
                    begin
-                     location_reset(location,LOC_CREGISTER,int_cgsize(VoidPointerType.size*2));
+                     Location_Reset(location,LOC_CREGISTER,Int_CGSize(VoidPointerType.Size*2));
 
                      SecondPass(left);
 
                      { load class instance/classrefdef address }
-                     if left.location.loc=LOC_CONSTANT then
-                       hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+                     if left.Location.Loc=LOC_CONSTANT then
+                       hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
                      { vd will contain the type of the self pointer (self in
                        case of a class/classref, address of self in case of
                        an object, frame pointer or pointer to parentfpstruct
                        in case of nested procsym load  }
                      vd:=nil;
-                     case left.location.loc of
+                     case left.Location.Loc of
                         LOC_CREGISTER,
                         LOC_REGISTER:
                           begin
@@ -479,7 +479,7 @@ implementation
                              if Is_Object(left.resultdef) then
                                InternalError(200304234);
 
-                             location.registerhi:=left.location.register;
+                             location.RegisterHi:=left.Location.Register;
 
                              vd:=left.resultdef;
                           end;
@@ -488,23 +488,23 @@ implementation
                           begin
                              if Is_Implicit_Pointer_Object_Type(left.resultdef) or
                                 (left.resultdef.typ=classrefdef) or
-                                is_nested_pd(procdef) then
+                                Is_Nested_PD(procdef) then
                                begin
                                  vd:=left.resultdef;
 
-                                 location.registerhi:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,left.resultdef);
-                                 hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.location.reference,location.registerhi)
+                                 location.RegisterHi:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,left.resultdef);
+                                 hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.Location.Reference,location.RegisterHi)
 
                                end
                              else
                                begin
                                  vd:=CPointerDef.getreusable(left.resultdef);
 
-                                 location.registerhi:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vd);
-                                 hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.resultdef,vd,left.location.reference,location.registerhi);
+                                 location.RegisterHi:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,vd);
+                                 hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,left.resultdef,vd,left.Location.Reference,location.RegisterHi);
 
                                end;
-                             location_freetemp(CurrentAsmData.CurrAsmList,left.location);
+                             location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
                           end;
                         else
                           InternalError(200610311);
@@ -529,11 +529,11 @@ implementation
                             Assigned(TObjectDef(left.resultdef).VMTField) then
                            begin
                              { vmt pointer is a pointer to the vmt record }
-                             hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
+                             hlcg.Reference_Reset_Base(href,vd,location.RegisterHi,0,CTempPosInvalid,vd.Alignment,[]);
                              vmtdef:=CPointerDef.getreusable(TObjectDef(left.resultdef).VMT_Def);
-                             hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TObjectDef(left.resultdef),TFieldVarSym(TObjectDef(left.resultdef).VMTField),href);
-                             hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
-                             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,TFieldVarSym(TObjectDef(left.resultdef).VMTField).vardef,vmtdef,href,hregister);
+                             hlcg.G_Set_Addr_NonBitPacked_Field_Ref(CurrentAsmData.CurrAsmList,TObjectDef(left.resultdef),TFieldVarSym(TObjectDef(left.resultdef).VMTField),href);
+                             hregister:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,vmtdef);
+                             hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,TFieldVarSym(TObjectDef(left.resultdef).VMTField).vardef,vmtdef,href,hregister);
                            end
                          else if left.resultdef.typ=classrefdef then
                            begin
@@ -541,40 +541,40 @@ implementation
                              { classrefdef is a pointer to the vmt already }
 
                              { targets with 32 bit method pointers got already a register assigned }
-                             hregister:=location.registerhi;
+                             hregister:=location.RegisterHi;
 
-                             hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,left.resultdef,vmtdef,hregister);
+                             hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,left.resultdef,vmtdef,hregister);
                            end
                          else if Is_Any_Interface_Kind(left.resultdef) then
                            begin
                              { an interface is a pointer to a pointer to a vmt }
-                             hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
+                             hlcg.Reference_Reset_Base(href,vd,location.RegisterHi,0,CTempPosInvalid,vd.Alignment,[]);
                              vmtdef:=CPointerDef.getreusable(TObjectDef(left.resultdef).VMT_Def);
-                             hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
-                             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,vmtdef,vmtdef,href,hregister);
+                             hregister:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,vmtdef);
+                             hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,vmtdef,vmtdef,href,hregister);
                            end
                          else
                            InternalError(2015112501);
                          { load method address }
                          vmtentry:=TAbstractRecordSymTable(TRecordDef(vmtdef.PointedDef).SymTable).FindFieldByOffset(
                            TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber));
-                         hlcg.reference_reset_base(href,vmtdef,hregister,0,ctempposinvalid,vmtdef.alignment,[]);
+                         hlcg.Reference_Reset_Base(href,vmtdef,hregister,0,CTempPosInvalid,vmtdef.Alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
 
-                         location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtentry.vardef);
+                         location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,vmtentry.vardef);
 
-                         hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TAbstractRecordDef(vmtdef.PointedDef),vmtentry,href);
-                         hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,vmtentry.vardef,vmtentry.vardef,href,location.register);
+                         hlcg.G_Set_Addr_NonBitPacked_Field_Ref(CurrentAsmData.CurrAsmList,TAbstractRecordDef(vmtdef.PointedDef),vmtentry,href);
+                         hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,vmtentry.vardef,vmtentry.vardef,href,location.Register);
                        end
                      else
                        begin
                          { load address of the function }
-                         reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION),0,procdef.Address_Type.alignment,[]);
+                         Reference_Reset_Symbol(href,CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION),0,procdef.Address_Type.Alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
 
-                         location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,CProcVarDef.GetReusableProcAddr(procdef,pc_address_only));
+                         location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,CProcVarDef.GetReusableProcAddr(procdef,pc_address_only));
 
-                         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,procdef,CProcVarDef.GetReusableProcAddr(procdef,pc_address_only),href,location.register);
+                         hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,procdef,CProcVarDef.GetReusableProcAddr(procdef,pc_address_only),href,location.Register);
                        end;
 
                      { to get methodpointers stored correctly, code and self register must be swapped on
@@ -583,27 +583,27 @@ implementation
                        begin
                          { cpus with 16 bit address registers don't use registerhi here }
 
-                         hregister:=location.register;
-                         location.register:=location.registerhi;
-                         location.registerhi:=hregister;
+                         hregister:=location.Register;
+                         location.Register:=location.RegisterHi;
+                         location.RegisterHi:=hregister;
                        end;
                    end
                  else
                    begin
                       pd:=TProcDef(TProcSym(symtableentry).ProcdefList[0]);
                       { def_cgsize does not work for tprocdef, so we use pd.address_type }
-                      location.size:=def_cgsize(pd.Address_Type);
+                      location.Size:=Def_CGSize(pd.Address_Type);
                       if not(po_weakexternal in pd.ProcOptions) then
-                        location.reference.symbol:=CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION)
+                        location.Reference.Symbol:=CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION)
                       else
-                        location.reference.symbol:=CurrentAsmData.WeakRefAsmSymbol(procdef.MangledName,AT_FUNCTION);
+                        location.Reference.Symbol:=CurrentAsmData.WeakRefAsmSymbol(procdef.MangledName,AT_FUNCTION);
                    end;
               end;
            labelsym :
              if Assigned(TLabelSym(symtableentry).AsmBlockLabel) then
-               location.reference.symbol:=TLabelSym(symtableentry).AsmBlockLabel
+               location.Reference.Symbol:=TLabelSym(symtableentry).AsmBlockLabel
              else
-               location.reference.symbol:=TCGLabelNode((TLabelSym(symtableentry).code)).getasmlabel;
+               location.Reference.Symbol:=TCGLabelNode((TLabelSym(symtableentry).code)).getasmlabel;
            else InternalError(200510032);
         end;
       end;
@@ -633,7 +633,7 @@ implementation
           value could be just copied so this could should be able also to handle
           managed types without any special "managing code"}
 
-        location_reset(location,LOC_VOID,OS_NO);
+        Location_Reset(location,LOC_VOID,OS_NO);
 
         {
           in most cases we can process first the right node which contains
@@ -687,7 +687,7 @@ implementation
           not(ti_const in TTempRefNode(left).tempflags);
 
         { shortstring assignments are handled separately }
-        if is_shortstring(left.resultdef) then
+        if Is_ShortString(left.resultdef) then
           begin
             {
               we can get here only in the following situations
@@ -698,7 +698,7 @@ implementation
 
             { The addn is replaced by a blockn or calln that already returns
               a shortstring }
-            if is_shortstring(right.resultdef) and
+            if Is_ShortString(right.resultdef) and
                (right.nodetype in [blockn,calln]) then
               begin
                 { verify that we indeed have nothing to do }
@@ -709,44 +709,44 @@ implementation
             else if (right.nodetype=stringconstn) and
                (TStringConstNode(right).len=0) then
               begin
-                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(CharPointerType),left.location.reference);
-                hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,CAnsiCharType,0,left.location.reference);
+                hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(CharPointerType),left.Location.Reference);
+                hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,CAnsiCharType,0,left.Location.Reference);
               end
             { char loading }
-            else if is_char(right.resultdef) then
+            else if Is_Char(right.resultdef) then
               begin
                 if right.nodetype=ordconstn then
                   begin
-                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),CPointerDef.getreusable(U16IntType),left.location.reference);
+                    hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),CPointerDef.getreusable(U16IntType),left.Location.Reference);
                     if (TargetInfo.endian = endian_little) then
-                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,U16IntType,(TOrdConstNode(right).value.svalue shl 8) or 1,
-                          setalignment(left.location.reference,1))
+                      hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,U16IntType,(TOrdConstNode(right).Value.svalue shl 8) or 1,
+                          SetAlignment(left.Location.Reference,1))
                     else
-                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,U16IntType,TOrdConstNode(right).value.svalue or (1 shl 8),
-                          setalignment(left.location.reference,1));
+                      hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,U16IntType,TOrdConstNode(right).Value.svalue or (1 shl 8),
+                          SetAlignment(left.Location.Reference,1));
                   end
                 else
                   begin
-                    href:=left.location.reference;
-                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(CharPointerType),href);
-                    hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,CAnsiCharType,1,href);
-                    inc(href.offset,1);
-                    href.alignment:=1;
-                    case right.location.loc of
+                    href:=left.Location.Reference;
+                    hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(CharPointerType),href);
+                    hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,CAnsiCharType,1,href);
+                    inc(href.Offset,1);
+                    href.Alignment:=1;
+                    case right.Location.Loc of
                       LOC_REGISTER,
                       LOC_CREGISTER :
                         begin
 {$ifndef cpuhighleveltarget}
-                          r:=cg.makeregsize(CurrentAsmData.CurrAsmList,right.location.register,OS_8);
+                          r:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,right.Location.Register,OS_8);
 {$else not cpuhighleveltarget}
-                          r:=hlcg.getintregister(CurrentAsmData.CurrAsmList,U8IntType);
-                          hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,CAnsiCharType,U8IntType,right.location.register,r);
+                          r:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,U8IntType);
+                          hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,CAnsiCharType,U8IntType,right.Location.Register,r);
 {$endif cpuhighleveltarget}
-                          hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList,U8IntType,U8IntType,r,href);
+                          hlcg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,U8IntType,U8IntType,r,href);
                         end;
                       LOC_REFERENCE,
                       LOC_CREFERENCE :
-                        hlcg.a_load_ref_ref(CurrentAsmData.CurrAsmList,CAnsiCharType,CAnsiCharType,right.location.reference,href);
+                        hlcg.A_Load_Ref_Ref(CurrentAsmData.CurrAsmList,CAnsiCharType,CAnsiCharType,right.Location.Reference,href);
                       else
                         InternalError(200205111);
                     end;
@@ -757,64 +757,64 @@ implementation
           end
        { try to reuse memory locations instead of copying }
        { copy to a memory location ... }
-        else if (right.location.loc = LOC_REFERENCE) and
-           maybechangetemp(CurrentAsmData.CurrAsmList,left,right.location.reference) then
+        else if (right.Location.Loc = LOC_REFERENCE) and
+           maybechangetemp(CurrentAsmData.CurrAsmList,left,right.Location.Reference) then
           begin
             { if it worked, we're done }
           end
         else
           begin
             { SSA support }
-            hlcg.maybe_change_load_node_reg(CurrentAsmData.CurrAsmList,left,false);
-            hlcg.maybe_change_load_node_reg(CurrentAsmData.CurrAsmList,right,true);
-            case right.location.loc of
+            hlcg.Maybe_Change_Load_Node_Reg(CurrentAsmData.CurrAsmList,left,false);
+            hlcg.Maybe_Change_Load_Node_Reg(CurrentAsmData.CurrAsmList,right,true);
+            case right.Location.Loc of
               LOC_CONSTANT :
                 begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                  if (left.location.size in [OS_64,OS_S64]) or (right.location.size in [OS_64,OS_S64]) then
-                    cg64.a_load64_const_loc(CurrentAsmData.CurrAsmList,right.location.value64,left.location)
+                  if (left.Location.Size in [OS_64,OS_S64]) or (right.Location.Size in [OS_64,OS_S64]) then
+                    cg64.A_Load64_Const_Loc(CurrentAsmData.CurrAsmList,right.Location.Value64,left.Location)
                   else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                    hlcg.a_load_const_loc(CurrentAsmData.CurrAsmList,left.resultdef,right.location.value,left.location);
+                    hlcg.A_Load_Const_Loc(CurrentAsmData.CurrAsmList,left.resultdef,right.Location.Value,left.Location);
                 end;
               LOC_REFERENCE,
               LOC_CREFERENCE :
                 begin
-                  case left.location.loc of
+                  case left.Location.Loc of
                     LOC_REGISTER,
                     LOC_CREGISTER :
                       begin
 {$ifndef cpuhighleveltarget}
 {$ifdef cpu64bitalu}
-                        if left.location.size in [OS_128,OS_S128] then
-                          cg128.a_load128_ref_reg(CurrentAsmData.CurrAsmList,right.location.reference,left.location.register128)
+                        if left.Location.Size in [OS_128,OS_S128] then
+                          cg128.A_Load128_Ref_Reg(CurrentAsmData.CurrAsmList,right.Location.Reference,left.Location.Register128)
                         else
 {$else cpu64bitalu}
-                        if left.location.size in [OS_64,OS_S64] then
-                          cg64.a_load64_ref_reg(CurrentAsmData.CurrAsmList,right.location.reference,left.location.register64)
+                        if left.Location.Size in [OS_64,OS_S64] then
+                          cg64.A_Load64_Ref_Reg(CurrentAsmData.CurrAsmList,right.Location.Reference,left.Location.Register64)
                         else
 {$endif cpu64bitalu}
 {$endif not cpuhighleveltarget}
-                          hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.reference,left.location.register);
+                          hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Reference,left.Location.Register);
                       end;
                     LOC_FPUREGISTER,
                     LOC_CFPUREGISTER :
                       begin
-                        hlcg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,
+                        hlcg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,
                             right.resultdef,left.resultdef,
-                            right.location.reference,
-                            left.location.register);
+                            right.Location.Reference,
+                            left.Location.Register);
                       end;
                     LOC_REFERENCE,
                     LOC_CREFERENCE :
                       begin
                         if (left.resultdef.typ=floatdef) and
                            (right.resultdef.typ=floatdef) and
-                           ((left.location.size<>right.location.size)
+                           ((left.Location.Size<>right.Location.Size)
                            { on newer (1993+ :)) x86 cpus, use the fpu to copy extended values }
 {$ifdef x86}
                             or ({$ifndef x86_64}(CurrentSettings.CPUType>=cpu_Pentium) and{$endif x86_64}
-                            (is_extended(right.resultdef) {$ifdef i386} or is_double(right.resultdef){$endif i386} ))
+                            (Is_Extended(right.resultdef) {$ifdef i386} or Is_Double(right.resultdef){$endif i386} ))
 {$endif x86}
                            )then
                           begin
@@ -822,19 +822,19 @@ implementation
                               fpu if one can be handled by the fpu }
                             if not Use_VectorFPU(left.resultdef) or
                                not Use_VectorFPU(right.resultdef) then
-                              hlcg.a_loadfpu_ref_ref(CurrentAsmData.CurrAsmList,
+                              hlcg.A_LoadFPU_Ref_Ref(CurrentAsmData.CurrAsmList,
                                 right.resultdef,left.resultdef,
-                                right.location.reference,left.location.reference)
+                                right.Location.Reference,left.Location.Reference)
                             else
-                              hlcg.a_loadmm_ref_ref(CurrentAsmData.CurrAsmList,
+                              hlcg.A_LoadMM_Ref_Ref(CurrentAsmData.CurrAsmList,
                                 right.resultdef,left.resultdef,
-                                right.location.reference,left.location.reference,mms_movescalar)
+                                right.Location.Reference,left.Location.Reference,MMS_MoveScalar)
                           end
                         else
                           begin
 { TODO: HACK: unaligned test, maybe remove all unaligned locations (array of char) from the compiler}
                             { Use unaligned copy when the offset is not aligned }
-                            len:=left.resultdef.size;
+                            len:=left.resultdef.Size;
 
                             if len=0 then
                               len:=sizeof(PInt);
@@ -843,16 +843,16 @@ implementation
                             { max(1,...) avoids div by zero in case of an empty record  }
                             alignmentrequirement:=min(max(1,len),sizeof(aint));
 
-                            if (right.location.reference.offset mod alignmentrequirement<>0) or
-                              (left.location.reference.offset mod alignmentrequirement<>0) or
-                              (right.resultdef.alignment<alignmentrequirement) or
-                              ((right.location.reference.alignment<>0) and
-                               (right.location.reference.alignment<alignmentrequirement)) or
-                              ((left.location.reference.alignment<>0) and
-                               (left.location.reference.alignment<alignmentrequirement)) then
-                              hlcg.g_concatcopy_unaligned(CurrentAsmData.CurrAsmList,left.resultdef,right.location.reference,left.location.reference)
+                            if (right.Location.Reference.Offset mod alignmentrequirement<>0) or
+                              (left.Location.Reference.Offset mod alignmentrequirement<>0) or
+                              (right.resultdef.Alignment<alignmentrequirement) or
+                              ((right.Location.Reference.Alignment<>0) and
+                               (right.Location.Reference.Alignment<alignmentrequirement)) or
+                              ((left.Location.Reference.Alignment<>0) and
+                               (left.Location.Reference.Alignment<alignmentrequirement)) then
+                              hlcg.G_ConcatCopy_Unaligned(CurrentAsmData.CurrAsmList,left.resultdef,right.Location.Reference,left.Location.Reference)
                             else
-                              hlcg.g_concatcopy(CurrentAsmData.CurrAsmList,left.resultdef,right.location.reference,left.location.reference);
+                              hlcg.G_ConcatCopy(CurrentAsmData.CurrAsmList,left.resultdef,right.Location.Reference,left.Location.Reference);
                           end;
                       end;
                     LOC_MMREGISTER,
@@ -865,35 +865,35 @@ implementation
                             { perform size conversion if needed (the mm-code cannot }
                             { convert an extended into a double/single, since sse   }
                             { doesn't support extended)                             }
-                            r:=cg.getfpuregister(CurrentAsmData.CurrAsmList,right.location.size);
-                            tg.gethltemp(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef.size,tt_normal,href);
-                            cg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,right.location.size,right.location.size,right.location.reference,r);
-                            cg.a_loadfpu_reg_ref(CurrentAsmData.CurrAsmList,right.location.size,left.location.size,r,href);
+                            r:=cg.GetFPURegister(CurrentAsmData.CurrAsmList,right.Location.Size);
+                            tg.GetHLTemp(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef.Size,tt_normal,href);
+                            cg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,right.Location.Size,right.Location.Size,right.Location.Reference,r);
+                            cg.A_LoadFPU_Reg_Ref(CurrentAsmData.CurrAsmList,right.Location.Size,left.Location.Size,r,href);
                             if releaseright then
-                              location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+                              location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
                             releaseright:=true;
-                            location_reset_ref(right.location,LOC_REFERENCE,left.location.size,0,[]);
-                            right.location.reference:=href;
+                            Location_Reset_Ref(right.Location,LOC_REFERENCE,left.Location.Size,0,[]);
+                            right.Location.Reference:=href;
                             right.resultdef:=left.resultdef;
                           end;
 {$endif}
-                        hlcg.a_loadmm_ref_reg(CurrentAsmData.CurrAsmList,
+                        hlcg.A_LoadMM_Ref_Reg(CurrentAsmData.CurrAsmList,
                           right.resultdef,
                           left.resultdef,
-                          right.location.reference,
-                          left.location.register,mms_movescalar);
+                          right.Location.Reference,
+                          left.Location.Register,MMS_MoveScalar);
                       end;
                     LOC_SUBSETREG,
                     LOC_CSUBSETREG:
-                      hlcg.a_load_ref_subsetreg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.reference,left.location.sreg);
+                      hlcg.A_Load_Ref_SubsetReg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Reference,left.Location.SReg);
                     LOC_SUBSETREF,
                     LOC_CSUBSETREF:
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      if right.location.size in [OS_64,OS_S64] then
-                       cg64.a_load64_ref_subsetref(CurrentAsmData.CurrAsmList,right.location.reference,left.location.sref)
+                      if right.Location.Size in [OS_64,OS_S64] then
+                       cg64.A_Load64_Ref_SubsetRef(CurrentAsmData.CurrAsmList,right.Location.Reference,left.Location.SRef)
                       else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                       hlcg.a_load_ref_subsetref(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.reference,left.location.sref);
+                       hlcg.A_Load_Ref_SubsetRef(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Reference,left.Location.SRef);
                     else
                       InternalError(200203284);
                   end;
@@ -902,27 +902,27 @@ implementation
               LOC_CMMXREGISTER,
               LOC_MMXREGISTER:
                 begin
-                  if left.location.loc=LOC_CMMXREGISTER then
-                    cg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.location.register,left.location.register,nil)
+                  if left.Location.Loc=LOC_CMMXREGISTER then
+                    cg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.Location.Register,left.Location.Register,nil)
                   else
-                    cg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.location.register,left.location.reference,nil);
+                    cg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.Location.Register,left.Location.Reference,nil);
                 end;
 {$endif SUPPORT_MMX}
               LOC_MMREGISTER,
               LOC_CMMREGISTER:
                 begin
-                  if (is_vector(left.resultdef)) then
+                  if (Is_Vector(left.resultdef)) then
                     shuffle := nil
                   else
-                    shuffle := mms_movescalar;
+                    shuffle := MMS_MoveScalar;
 
-                  case left.location.loc of
+                  case left.Location.Loc of
                     LOC_CMMREGISTER,
                     LOC_MMREGISTER:
-                      hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.register,left.location.register, shuffle);
+                      hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Register,left.Location.Register, shuffle);
                     LOC_REFERENCE,
                     LOC_CREFERENCE:
-                      hlcg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.register,left.location.reference, shuffle);
+                      hlcg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Register,left.Location.Reference, shuffle);
                     else
                       InternalError(2009112601);
                   end;
@@ -932,170 +932,170 @@ implementation
                 begin
 {$ifndef cpuhighleveltarget}
 {$ifdef cpu64bitalu}
-                  if left.location.size in [OS_128,OS_S128] then
-                    cg128.a_load128_reg_loc(CurrentAsmData.CurrAsmList,
-                      right.location.register128,left.location)
+                  if left.Location.Size in [OS_128,OS_S128] then
+                    cg128.A_Load128_Reg_Loc(CurrentAsmData.CurrAsmList,
+                      right.Location.Register128,left.Location)
                   else
 {$else cpu64bitalu}
                   { also OS_F64 in case of mmreg -> intreg }
-                  if left.location.size in [OS_64,OS_S64,OS_F64] then
-                    cg64.a_load64_reg_loc(CurrentAsmData.CurrAsmList,
-                      right.location.register64,left.location)
+                  if left.Location.Size in [OS_64,OS_S64,OS_F64] then
+                    cg64.A_Load64_Reg_Loc(CurrentAsmData.CurrAsmList,
+                      right.Location.Register64,left.Location)
                   else
 {$endif cpu64bitalu}
 {$endif not cpuhighleveltarget}
-                    hlcg.a_load_reg_loc(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.register,left.location);
+                    hlcg.A_Load_Reg_Loc(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.Location.Register,left.Location);
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER :
                 begin
                   { we can't do direct moves between fpu and mm registers }
-                  if left.location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER] then
+                  if left.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER] then
                     begin
 {$ifdef x86}
                       if not Use_VectorFPU(right.resultdef) then
                         begin
                           { perform size conversion if needed (the mm-code cannot convert an   }
                           { extended into a double/single, since sse doesn't support extended) }
-                          tg.gethltemp(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef.size,tt_normal,href);
-                          cg.a_loadfpu_reg_ref(CurrentAsmData.CurrAsmList,right.location.size,left.location.size,right.location.register,href);
-                          location_reset_ref(right.location,LOC_REFERENCE,left.location.size,0,[]);
-                          right.location.reference:=href;
+                          tg.GetHLTemp(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef.Size,tt_normal,href);
+                          cg.A_LoadFPU_Reg_Ref(CurrentAsmData.CurrAsmList,right.Location.Size,left.Location.Size,right.Location.Register,href);
+                          Location_Reset_Ref(right.Location,LOC_REFERENCE,left.Location.Size,0,[]);
+                          right.Location.Reference:=href;
                           right.resultdef:=left.resultdef;
                         end;
 {$endif}
-                      hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,right.location,right.resultdef,false);
-                      hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,
+                      hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,false);
+                      hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,
                           right.resultdef,left.resultdef,
-                          right.location.register,left.location.register,mms_movescalar);
+                          right.Location.Register,left.Location.Register,MMS_MoveScalar);
                     end
                   else
-                    hlcg.a_loadfpu_reg_loc(CurrentAsmData.CurrAsmList,
+                    hlcg.A_LoadFPU_Reg_Loc(CurrentAsmData.CurrAsmList,
                         right.resultdef,left.resultdef,
-                        right.location.register,left.location);
+                        right.Location.Register,left.Location);
                 end;
               LOC_SUBSETREG,
               LOC_CSUBSETREG:
                 begin
-                  hlcg.a_load_subsetreg_loc(CurrentAsmData.CurrAsmList,
-                      right.resultdef,left.resultdef,right.location.sreg,left.location);
+                  hlcg.A_Load_SubsetReg_Loc(CurrentAsmData.CurrAsmList,
+                      right.resultdef,left.resultdef,right.Location.SReg,left.Location);
                 end;
               LOC_SUBSETREF,
               LOC_CSUBSETREF:
                 begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                  if right.location.size in [OS_64,OS_S64] then
-                   cg64.a_load64_subsetref_loc(CurrentAsmData.CurrAsmList,right.location.sref,left.location)
+                  if right.Location.Size in [OS_64,OS_S64] then
+                   cg64.A_Load64_SubsetRef_Loc(CurrentAsmData.CurrAsmList,right.Location.SRef,left.Location)
                   else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                  hlcg.a_load_subsetref_loc(CurrentAsmData.CurrAsmList,
-                      right.resultdef,left.resultdef,right.location.sref,left.location);
+                  hlcg.A_Load_SubsetRef_Loc(CurrentAsmData.CurrAsmList,
+                      right.resultdef,left.resultdef,right.Location.SRef,left.Location);
                 end;
               LOC_JUMP :
                 begin
                   CurrentAsmData.getjumplabel(hlabel);
-                  hlcg.a_label(CurrentAsmData.CurrAsmList,right.location.truelabel);
-                  if is_pasbool(left.resultdef) then
+                  hlcg.A_Label(CurrentAsmData.CurrAsmList,right.Location.TrueLabel);
+                  if Is_PasBool(left.resultdef) then
                     begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      if left.location.size in [OS_64,OS_S64] then
-                        cg64.a_load64_const_loc(CurrentAsmData.CurrAsmList,1,left.location)
+                      if left.Location.Size in [OS_64,OS_S64] then
+                        cg64.A_Load64_Const_Loc(CurrentAsmData.CurrAsmList,1,left.Location)
                       else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                        hlcg.a_load_const_loc(CurrentAsmData.CurrAsmList,left.resultdef,1,left.location)
+                        hlcg.A_Load_Const_Loc(CurrentAsmData.CurrAsmList,left.resultdef,1,left.Location)
                     end
                   else
                     begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      if left.location.size in [OS_64,OS_S64] then
-                        cg64.a_load64_const_loc(CurrentAsmData.CurrAsmList,-1,left.location)
+                      if left.Location.Size in [OS_64,OS_S64] then
+                        cg64.A_Load64_Const_Loc(CurrentAsmData.CurrAsmList,-1,left.Location)
                       else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                        hlcg.a_load_const_loc(CurrentAsmData.CurrAsmList,left.resultdef,-1,left.location);
+                        hlcg.A_Load_Const_Loc(CurrentAsmData.CurrAsmList,left.resultdef,-1,left.Location);
                     end;
 
-                  hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,hlabel);
-                  hlcg.a_label(CurrentAsmData.CurrAsmList,right.location.falselabel);
+                  hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,hlabel);
+                  hlcg.A_Label(CurrentAsmData.CurrAsmList,right.Location.FalseLabel);
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                  if left.location.size in [OS_64,OS_S64] then
-                    cg64.a_load64_const_loc(CurrentAsmData.CurrAsmList,0,left.location)
+                  if left.Location.Size in [OS_64,OS_S64] then
+                    cg64.A_Load64_Const_Loc(CurrentAsmData.CurrAsmList,0,left.Location)
                   else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-                    hlcg.a_load_const_loc(CurrentAsmData.CurrAsmList,left.resultdef,0,left.location);
-                  hlcg.a_label(CurrentAsmData.CurrAsmList,hlabel);
+                    hlcg.A_Load_Const_Loc(CurrentAsmData.CurrAsmList,left.resultdef,0,left.Location);
+                  hlcg.A_Label(CurrentAsmData.CurrAsmList,hlabel);
                 end;
 {$ifdef cpuflags}
               LOC_FLAGS :
                 begin
                   { check for cbool here as booleans converted to other types shall be handled as pas booleans,
                     see also tests/tbs/tw40908.pas }
-                  if is_cbool(left.resultdef) then
+                  if Is_CBool(left.resultdef) then
                     begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                      if left.location.size in [OS_S64,OS_64] then
+                      if left.Location.Size in [OS_S64,OS_64] then
                         begin
-                          r64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-                          r64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-                          cg.g_flags2reg(CurrentAsmData.CurrAsmList,OS_32,right.location.resflags,r64.reglo);
-                          cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                          cg.a_load_const_reg(CurrentAsmData.CurrAsmList,OS_32,0,r64.reghi);
-                          cg64.a_op64_reg_reg(CurrentAsmData.CurrAsmList,OP_NEG,OS_S64,
+                          r64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                          r64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                          cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,OS_32,right.Location.ResFlags,r64.RegLo);
+                          cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                          cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,OS_32,0,r64.RegHi);
+                          cg64.A_Op64_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NEG,OS_S64,
                             r64,r64);
-                          cg64.a_load64_reg_loc(CurrentAsmData.CurrAsmList,r64,left.location);
+                          cg64.A_Load64_Reg_Loc(CurrentAsmData.CurrAsmList,r64,left.Location);
                         end
                       else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
                         begin
-                          r:=cg.getintregister(CurrentAsmData.CurrAsmList,left.location.size);
-                          cg.g_flags2reg(CurrentAsmData.CurrAsmList,left.location.size,right.location.resflags,r);
-                          cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                          cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_NEG,left.location.size,r,r);
-                          hlcg.a_load_reg_loc(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,r,left.location);
+                          r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
+                          cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,left.Location.Size,right.Location.ResFlags,r);
+                          cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                          cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NEG,left.Location.Size,r,r);
+                          hlcg.A_Load_Reg_Loc(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,r,left.Location);
                         end
                     end
                   else
                     begin
-                      case left.location.loc of
+                      case left.Location.Loc of
                         LOC_REGISTER,LOC_CREGISTER:
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                          if left.location.size in [OS_S64,OS_64] then
+                          if left.Location.Size in [OS_S64,OS_64] then
                             begin
-                              cg.g_flags2reg(CurrentAsmData.CurrAsmList,OS_32,right.location.resflags,left.location.register64.reglo);
-                              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                              cg.a_load_const_reg(CurrentAsmData.CurrAsmList,OS_32,0,left.location.register64.reghi);
+                              cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,OS_32,right.Location.ResFlags,left.Location.Register64.RegLo);
+                              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                              cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,OS_32,0,left.Location.Register64.RegHi);
                             end
                           else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
                             begin
-                              cg.g_flags2reg(CurrentAsmData.CurrAsmList,left.location.size,right.location.resflags,left.location.register);
-                              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                              cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,left.Location.Size,right.Location.ResFlags,left.Location.Register);
+                              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                             end;
                         LOC_CREFERENCE,
                         LOC_REFERENCE:
                         { i8086 and i386 have hacks in their code generators so that they can
                           deal with 64 bit locations in this particular case }
 {$if not defined(cpu64bitalu) and not defined(x86) and not defined(cpuhighleveltarget)}
-                          if left.location.size in [OS_S64,OS_64] then
+                          if left.Location.Size in [OS_S64,OS_64] then
                             begin
-                              r64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-                              r64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-                              cg.g_flags2reg(CurrentAsmData.CurrAsmList,OS_32,right.location.resflags,r64.reglo);
-                              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                              cg.a_load_const_reg(CurrentAsmData.CurrAsmList,OS_32,0,r64.reghi);
-                              cg64.a_load64_reg_ref(CurrentAsmData.CurrAsmList,r64,left.location.reference);
+                              r64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                              r64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                              cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,OS_32,right.Location.ResFlags,r64.RegLo);
+                              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                              cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,OS_32,0,r64.RegHi);
+                              cg64.A_Load64_Reg_Ref(CurrentAsmData.CurrAsmList,r64,left.Location.Reference);
                             end
                           else
 {$endif not cpu64bitalu and not x86 and not cpuhighleveltarget}
                             begin
-                              cg.g_flags2ref(CurrentAsmData.CurrAsmList,left.location.size,right.location.resflags,left.location.reference);
-                              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                              cg.G_Flags2Ref(CurrentAsmData.CurrAsmList,left.Location.Size,right.Location.ResFlags,left.Location.Reference);
+                              cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                             end;
                         LOC_CSUBSETREG,LOC_SUBSETREG,LOC_SUBSETREF:
                           begin
-                            r:=cg.getintregister(CurrentAsmData.CurrAsmList,left.location.size);
-                            cg.g_flags2reg(CurrentAsmData.CurrAsmList,left.location.size,right.location.resflags,r);
-                            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                            hlcg.a_load_reg_loc(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,r,left.location);
+                            r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
+                            cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,left.Location.Size,right.Location.ResFlags,r);
+                            cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                            hlcg.A_Load_Reg_Loc(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,r,left.Location);
                           end;
                         else
                           InternalError(200203273);
@@ -1111,7 +1111,7 @@ implementation
          end;
 
         if releaseright then
-          location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+          location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
       end;
 
 
@@ -1151,8 +1151,8 @@ implementation
 
     procedure TCGArrayConstructorNode.advancearrayoffset(var ref: TReference; EleSize: asizeint);
       begin
-        ref.alignment:=NewAlignment(ref.alignment,EleSize);
-        inc(ref.offset,EleSize);
+        ref.Alignment:=NewAlignment(ref.Alignment,EleSize);
+        inc(ref.Offset,EleSize);
       end;
 
 
@@ -1173,24 +1173,24 @@ implementation
         freetemp,
         dovariant: boolean;
       begin
-        if is_packed_array(resultdef) then
+        if Is_Packed_Array(resultdef) then
           InternalError(200608042);
         dovariant:=
-          (acnf_forcevaria in arrayconstructornodeflags) or is_variant_array(resultdef);
+          (acnf_forcevaria in arrayconstructornodeflags) or Is_Variant_Array(resultdef);
         eledef:=TArrayDef(resultdef).ElementDef;
-        EleSize:=eledef.size;
+        EleSize:=eledef.Size;
         if dovariant then
           varvtypefield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VTYPE'))
         else
           varvtypefield:=nil;
         { alignment is filled in by tg.gethltemp below }
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,0,[]);
+        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,0,[]);
         fillchar(ParaLoc,sizeof(ParaLoc),0);
         { Allocate always a temp, also if no elements are required, to
           be sure that location is valid (PFV) }
 
-        tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,(TArrayDef(resultdef).HighRange+1)*EleSize,tt_normal,location.reference);
-        href:=location.reference;
+        tg.GetHLTemp(CurrentAsmData.CurrAsmList,resultdef,(TArrayDef(resultdef).HighRange+1)*EleSize,tt_normal,location.Reference);
+        href:=location.Reference;
         makearrayref(href,eledef);
         { Process nodes in array constructor }
         hp:=self;
@@ -1200,12 +1200,12 @@ implementation
             begin
               freetemp:=true;
               SecondPass(hp.left);
-              if (hp.left.location.loc=LOC_JUMP)<>
+              if (hp.left.Location.Loc=LOC_JUMP)<>
                  (hp.left.expectloc=LOC_JUMP) then
                 InternalError(2007103101);
               { Move flags and jump in register }
-              if hp.left.location.loc in [LOC_FLAGS,LOC_JUMP] then
-                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,hp.left.location,hp.left.resultdef,hp.left.resultdef,false);
+              if hp.left.Location.Loc in [LOC_FLAGS,LOC_JUMP] then
+                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,hp.left.Location,hp.left.resultdef,hp.left.resultdef,false);
 
               if dovariant then
                begin
@@ -1218,7 +1218,7 @@ implementation
                    enumdef,
                    orddef :
                      begin
-                       if is_64bit(lt) then
+                       if Is_64Bit(lt) then
                          begin
                             case TOrdDef(lt).OrdType of
                               scurrency:
@@ -1243,13 +1243,13 @@ implementation
                             vaddr:=true;
                          end
                        else if (lt.typ=enumdef) or
-                           is_integer(lt) then
+                           Is_Integer(lt) then
                          begin
                            vtype:=vtInteger;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VINTEGER'));
                          end
                        else
-                         if is_boolean(lt) then
+                         if Is_Boolean(lt) then
                            begin
                              vtype:=vtBoolean;
                              varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VINTEGER'));
@@ -1275,7 +1275,7 @@ implementation
                      end;
                    floatdef :
                      begin
-                       if is_currency(lt) then
+                       if Is_Currency(lt) then
                          begin
                            vtype:=vtCurrency;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VCURRENCY'));
@@ -1291,12 +1291,12 @@ implementation
                    procvardef,
                    pointerdef :
                      begin
-                       if is_pchar(lt) then
+                       if Is_PChar(lt) then
                          begin
                            vtype:=vtPChar;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VPCHAR'));
                          end
-                       else if is_pwidechar(lt) then
+                       else if Is_PWideChar(lt) then
                          begin
                            vtype:=vtPWideChar;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VPWIDECHAR'));
@@ -1335,7 +1335,7 @@ implementation
                        InternalError(200505171);
                    stringdef :
                      begin
-                       if is_shortstring(lt) then
+                       if Is_ShortString(lt) then
                         begin
                           vtype:=vtString;
                           varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VSTRING'));
@@ -1343,21 +1343,21 @@ implementation
                           freetemp:=false;
                         end
                        else
-                        if is_ansistring(lt) then
+                        if Is_AnsiString(lt) then
                          begin
                            vtype:=vtAnsiString;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VANSISTRING'));
                            freetemp:=false;
                          end
                        else
-                        if is_widestring(lt) then
+                        if Is_WideString(lt) then
                          begin
                            vtype:=vtWideString;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VWIDESTRING'));
                            freetemp:=false;
                          end
                        else
-                        if is_unicodestring(lt) then
+                        if Is_UnicodeString(lt) then
                          begin
                            vtype:=vtUnicodeString;
                            varfield:=TFieldVarSym(Search_Struct_Member_No_Helper(TRecordDef(eledef),'VUNICODESTRING'));
@@ -1373,65 +1373,65 @@ implementation
                    InternalError(2015102901);
                  { write changing field update href to the next element }
                  fref:=href;
-                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varfield,fref);
+                 hlcg.G_Set_Addr_NonBitPacked_Field_Ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varfield,fref);
                  if vaddr then
                    begin
-                     hlcg.location_force_mem(CurrentAsmData.CurrAsmList,hp.left.location,lt);
-                     tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt));
-                     hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,hp.left.resultdef,CPointerDef.getreusable(lt),hp.left.location.reference,tmpreg);
-                     hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt),varfield.vardef,tmpreg,fref);
+                     hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,hp.left.Location,lt);
+                     tmpreg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt));
+                     hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,hp.left.resultdef,CPointerDef.getreusable(lt),hp.left.Location.Reference,tmpreg);
+                     hlcg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt),varfield.vardef,tmpreg,fref);
                    end
                  else
-                   hlcg.a_load_loc_ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,varfield.vardef,hp.left.location,fref);
+                   hlcg.A_Load_Loc_Ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,varfield.vardef,hp.left.Location,fref);
                  { update href to the vtype field and write it }
                  fref:=href;
-                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varvtypefield,fref);
-                 hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,varvtypefield.vardef,vtype,fref);
+                 hlcg.G_Set_Addr_NonBitPacked_Field_Ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varvtypefield,fref);
+                 hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,varvtypefield.vardef,vtype,fref);
                  { goto next array element }
                  advancearrayoffset(href,EleSize);
                end
               else
               { normal array constructor of the same type }
                begin
-                 if is_managed_type(resultdef) then
+                 if Is_Managed_Type(resultdef) then
                    freetemp:=false;
-                 case hp.left.location.loc of
+                 case hp.left.Location.Loc of
                    LOC_MMREGISTER,
                    LOC_CMMREGISTER:
-                     hlcg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,hp.left.resultdef,
-                       hp.left.location.register,href,mms_movescalar);
+                     hlcg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,hp.left.resultdef,
+                       hp.left.Location.Register,href,MMS_MoveScalar);
                    LOC_FPUREGISTER,
                    LOC_CFPUREGISTER :
-                     hlcg.a_loadfpu_reg_ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,hp.left.resultdef,hp.left.location.register,href);
+                     hlcg.A_LoadFPU_Reg_Ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,hp.left.resultdef,hp.left.Location.Register,href);
                    LOC_REFERENCE,
                    LOC_CREFERENCE :
                      begin
-                       if is_shortstring(hp.left.resultdef) then
-                         hlcg.g_copyshortstring(CurrentAsmData.CurrAsmList,hp.left.location.reference,href,
+                       if Is_ShortString(hp.left.resultdef) then
+                         hlcg.G_CopyShortString(CurrentAsmData.CurrAsmList,hp.left.Location.Reference,href,
                              TStringDef(hp.left.resultdef))
                        else
-                         hlcg.g_concatcopy(CurrentAsmData.CurrAsmList,eledef,hp.left.location.reference,href);
+                         hlcg.G_ConcatCopy(CurrentAsmData.CurrAsmList,eledef,hp.left.Location.Reference,href);
                      end;
                    else
                      begin
 {$ifndef cpuhighleveltarget}
 {$ifdef cpu64bitalu}
-                       if hp.left.location.size in [OS_128,OS_S128] then
-                         cg128.a_load128_loc_ref(CurrentAsmData.CurrAsmList,hp.left.location,href)
+                       if hp.left.Location.Size in [OS_128,OS_S128] then
+                         cg128.A_Load128_Loc_Ref(CurrentAsmData.CurrAsmList,hp.left.Location,href)
                        else
 {$else cpu64bitalu}
-                       if hp.left.location.size in [OS_64,OS_S64] then
-                         cg64.a_load64_loc_ref(CurrentAsmData.CurrAsmList,hp.left.location,href)
+                       if hp.left.Location.Size in [OS_64,OS_S64] then
+                         cg64.A_Load64_Loc_Ref(CurrentAsmData.CurrAsmList,hp.left.Location,href)
                        else
 {$endif cpu64bitalu}
 {$endif not cpuhighleveltarget}
-                         hlcg.a_load_loc_ref(CurrentAsmData.CurrAsmList,eledef,eledef,hp.left.location,href);
+                         hlcg.A_Load_Loc_Ref(CurrentAsmData.CurrAsmList,eledef,eledef,hp.left.Location,href);
                      end;
                  end;
                  advancearrayoffset(href,EleSize);
                end;
               if freetemp then
-                location_freetemp(CurrentAsmData.CurrAsmList,hp.left.location);
+                location_freetemp(CurrentAsmData.CurrAsmList,hp.left.Location);
             end;
            { load next entry }
            hp:=TArrayConstructorNode(hp.right);
@@ -1451,14 +1451,14 @@ implementation
                       (TargetInfo.system in systems_indirect_var_imports) and
                       (rttidef.owner.ModuleID<>CurrentModule.ModuleID);
 
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,sizeof(PInt),[]);
+        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,sizeof(PInt),[]);
         case rttidatatype of
           rdt_normal:
-            location.reference.symbol:=RTTIWriter.get_rtti_label(rttidef,rttitype,indirect);
+            location.Reference.Symbol:=RTTIWriter.get_rtti_label(rttidef,rttitype,indirect);
           rdt_ord2str:
-            location.reference.symbol:=RTTIWriter.get_rtti_label_ord2str(rttidef,rttitype,indirect);
+            location.Reference.Symbol:=RTTIWriter.get_rtti_label_ord2str(rttidef,rttitype,indirect);
           rdt_str2ord:
-            location.reference.symbol:=RTTIWriter.get_rtti_label_str2ord(rttidef,rttitype,indirect);
+            location.Reference.Symbol:=RTTIWriter.get_rtti_label_str2ord(rttidef,rttitype,indirect);
         end;
       end;
 

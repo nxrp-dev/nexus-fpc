@@ -65,20 +65,20 @@ implementation
               begin
                 paraloc1.init;
                 pd:=Search_System_Proc('fpc_tls_add');
-                paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
+                ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                 if not(vo_is_weak_external in gvs.VarOptions) then
-                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
+                  Reference_Reset_Symbol(href,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
                 else
-                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[]);
-                cg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,href,paraloc1);
-                paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
+                  Reference_Reset_Symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[]);
+                cg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,href,paraloc1);
+                ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
                 paraloc1.done;
 
-                cg.g_call(CurrentAsmData.CurrAsmList,'FPC_TLS_ADD');
-                cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
-                hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-                cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,hregister);
-                location.reference.base:=hregister;
+                cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_TLS_ADD');
+                cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
+                hregister:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,hregister);
+                location.Reference.Base:=hregister;
                 handled:=true;
               end;
           end;
@@ -95,24 +95,24 @@ implementation
                   case CurrentSettings.TLSModel of
                     tlsm_local_exec:
                       begin
-                        location.reference.segment:=NR_GS;
-                        location.reference.refaddr:=addr_ntpoff;
+                        location.Reference.Segment:=NR_GS;
+                        location.Reference.RefAddr:=addr_ntpoff;
                       end;
                     tlsm_global_dynamic:
                       begin
                         include(CurrentProcInfo.flags,pi_needs_got);
-                        reference_reset(href,0,[]);
-                        location.reference.index:=CurrentProcInfo.got;
-                        location.reference.scalefactor:=1;
-                        location.reference.refaddr:=addr_tlsgd;
-                        cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_L,location.reference,NR_EAX));
-                        cg.g_call(CurrentAsmData.CurrAsmList,'___tls_get_addr');
-                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-                        hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-                        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_EAX,hregister);
-                        reference_reset(location.reference,location.reference.alignment,location.reference.volatility);
-                        location.reference.base:=hregister;
+                        Reference_Reset(href,0,[]);
+                        location.Reference.Index:=CurrentProcInfo.got;
+                        location.Reference.ScaleFactor:=1;
+                        location.Reference.RefAddr:=addr_tlsgd;
+                        cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_L,location.Reference,NR_EAX));
+                        cg.G_Call(CurrentAsmData.CurrAsmList,'___tls_get_addr');
+                        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        hregister:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_EAX,hregister);
+                        Reference_Reset(location.Reference,location.Reference.Alignment,location.Reference.Volatility);
+                        location.Reference.Base:=hregister;
                       end;
                     else
                       InternalError(2018110401);
@@ -129,28 +129,28 @@ implementation
                   case CurrentSettings.TLSModel of
                     tlsm_local_exec:
                       begin
-                        location.reference.segment:=NR_FS;
-                        location.reference.refaddr:=addr_tpoff;
+                        location.Reference.Segment:=NR_FS;
+                        location.Reference.RefAddr:=addr_tpoff;
                       end;
                     tlsm_global_dynamic:
                       begin
                         CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
-                        reference_reset(href,0,[]);
-                        location.reference.base:=NR_RIP;
-                        location.reference.scalefactor:=1;
-                        location.reference.refaddr:=addr_tlsgd;
-                        cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_Q,location.reference,NR_RDI));
+                        Reference_Reset(href,0,[]);
+                        location.Reference.Base:=NR_RIP;
+                        location.Reference.ScaleFactor:=1;
+                        location.Reference.RefAddr:=addr_tlsgd;
+                        cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_RDI);
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_Q,location.Reference,NR_RDI));
                         CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
                         CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
                         CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($48));
-                        cg.g_call(CurrentAsmData.CurrAsmList,'__tls_get_addr');
-                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
-                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-                        hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-                        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_RAX,hregister);
-                        reference_reset(location.reference,location.reference.alignment,location.reference.volatility);
-                        location.reference.base:=hregister;
+                        cg.G_Call(CurrentAsmData.CurrAsmList,'__tls_get_addr');
+                        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_RDI);
+                        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        hregister:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_RAX,hregister);
+                        Reference_Reset(location.Reference,location.Reference.Alignment,location.Reference.Volatility);
+                        location.Reference.Base:=hregister;
                       end;
                     else
                       InternalError(2019012002);

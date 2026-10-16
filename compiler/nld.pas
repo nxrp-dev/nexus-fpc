@@ -357,7 +357,7 @@ implementation
                 (symtableentry.typ=paravarsym) and
                 not(vo_has_local_copy in TParaVarSym(symtableentry).VarOptions) and
                 not(loadnf_load_addr in loadnodeflags) and
-                paramanager.push_addr_param(TParaVarSym(symtableentry).VarSpez,TParaVarSym(symtableentry).vardef,TProcDef(SymTable.DefOwner).ProcCallOption);
+                ParaManager.Push_Addr_Param(TParaVarSym(symtableentry).VarSpez,TParaVarSym(symtableentry).vardef,TProcDef(SymTable.DefOwner).ProcCallOption);
       end;
 
 
@@ -419,7 +419,7 @@ implementation
                  consider this as captured as well (needed for anonymous functions) }
                else if Assigned(CurrentProcInfo) and
                    (vo_is_self in TAbstractVarSym(symtableentry).VarOptions) and
-                   (SymTable.SymTableLevel>normal_function_level) then
+                   (SymTable.SymTableLevel>NormalFunctionLevel) then
                  CurrentProcInfo.Add_Captured_Sym(symtableentry,resultdef,fileinfo);
 
                { e.g. self for objects is passed as var-parameter on the caller
@@ -448,7 +448,7 @@ implementation
                  that the address needs to be returned }
                resultdef:=fprocdef;
 
-               if is_nested_pd(fprocdef) and is_nested_pd(CurrentProcInfo.procdef) then
+               if Is_Nested_PD(fprocdef) and Is_Nested_PD(CurrentProcInfo.procdef) then
                  CurrentProcInfo.set_needs_parentfp(TProcDef(fprocdef.owner.DefOwner).ParaST.SymTableLevel);
 
                { process methodpointer/framepointer }
@@ -488,7 +488,7 @@ implementation
          end;
 
          { Currency variables are scaled by 10000 when stored }
-         if is_currency(resultdef) then
+         if Is_Currency(resultdef) then
            Include(flags, nf_is_currency);
       end;
 
@@ -519,7 +519,7 @@ implementation
                   FirstPass(left);
                 if not is_addr_param_load and
                    TAbstractVarSym(symtableentry).Is_RegVar(is_addr_param_load) then
-                  expectloc:=tvarregable2tcgloc[TAbstractVarSym(symtableentry).VarRegable]
+                  expectloc:=TVarRegable2TCGLoc[TAbstractVarSym(symtableentry).VarRegable]
                 else
                   if (TAbstractVarSym(symtableentry).VarSpez=vs_const) then
                     expectloc:=LOC_CREFERENCE;
@@ -592,7 +592,7 @@ implementation
         resultdef:=p;
         { nested procedure? }
         if Assigned(p) and
-           is_nested_pd(p) and
+           Is_Nested_PD(p) and
            not forfuncref and
            (
              not (po_anonymous in p.ProcOptions) or
@@ -632,7 +632,7 @@ implementation
     function TAssignmentNode.direct_shortstring_assignment: boolean;
       begin
         result:=
-          is_char(right.resultdef) or
+          Is_Char(right.resultdef) or
           (right.resultdef.typ=stringdef);
       end;
 
@@ -692,10 +692,10 @@ implementation
         { are inserted in those cases. When inlining, a       }
         { variable may be replaced by a constant which can be }
         { converted at compile time, so check for this case   }
-        if is_real(left.resultdef) and
-           is_real(right.resultdef) and
+        if Is_Real(left.resultdef) and
+           Is_Real(right.resultdef) and
            is_constrealnode(right) and
-           not equal_defs(right.resultdef,left.resultdef) then
+           not Equal_Defs(right.resultdef,left.resultdef) then
           inserttypeconv(right,left.resultdef);
         { Perform simple optimizations when -O2 and the dedicated
           cs_opt_use_load_modify_store optimization pass is not enabled. }
@@ -745,11 +745,11 @@ implementation
         { tp procvar support, when we don't expect a procvar
           then we need to call the procvar }
         if (left.resultdef.typ<>procvardef) and
-            not is_invokable(left.resultdef) then
+            not Is_Invokable(left.resultdef) then
           maybe_call_procvar(right,true);
 
         { assignments to formaldefs and open arrays aren't allowed }
-        if is_open_array(left.resultdef) or is_array_of_const(left.resultdef) then
+        if Is_Open_Array(left.resultdef) or Is_Array_Of_Const(left.resultdef) then
           begin
             CGMessage(type_e_assignment_not_allowed);
             result:=CErrorNode.create;
@@ -768,7 +768,7 @@ implementation
             exit;
 
         { assigning nil or [] to a dynamic array clears the array }
-        if is_dynamic_array(left.resultdef) and
+        if Is_Dynamic_Array(left.resultdef) and
             (
               (right.nodetype=niln) or
               (
@@ -793,7 +793,7 @@ implementation
 
         { shortstring helpers can do the conversion directly,
           so treat them separately }
-        if (is_shortstring(left.resultdef)) then
+        if (Is_ShortString(left.resultdef)) then
          begin
            { insert typeconv, except for chars that are handled in
              secondpass and except for ansi/wide string that can
@@ -812,7 +812,7 @@ implementation
                   { just emit a warning, delphi gives an    }
                   { error, only if the type definition of   }
                   { of the string is less  < 255 characters }
-                  if not is_open_string(left.resultdef) and
+                  if not Is_Open_String(left.resultdef) and
                      (TStringConstNode(right).len > TStringDef(left.resultdef).len) then
                      CGMessage(type_w_string_too_long);
                   inserttypeconv(right,left.resultdef);
@@ -828,7 +828,7 @@ implementation
             end
          end
         { floating point assignments can also perform the conversion directly }
-        else if is_real(left.resultdef) and is_real(right.resultdef) and
+        else if Is_Real(left.resultdef) and Is_Real(right.resultdef) and
                 not is_constrealnode(right)
 
 {$ifdef x86}
@@ -855,8 +855,8 @@ implementation
               when trying to assign the result of a procedure, so give
               a better error message, see also #19122 }
             if (left.resultdef.typ<>procvardef) and
-                not is_invokable(left.resultdef) and
-              (right.nodetype=calln) and is_void(right.resultdef) then
+                not Is_Invokable(left.resultdef) and
+              (right.nodetype=calln) and Is_Void(right.resultdef) then
               CGMessage(type_e_procedures_return_no_value)
             else
               begin
@@ -887,7 +887,7 @@ implementation
         if Is_InterfaceCOM_Or_DispInterface(left.resultdef) then
          begin
 	   { Normal interface assignments are handled by the generic refcount incr/decr }
-           if not def_is_related(right.resultdef,left.resultdef) then
+           if not Def_Is_Related(right.resultdef,left.resultdef) then
              begin
                { remove property flag to avoid errors, see comments for }
                { tf_winlikewidestring assignments below                 }
@@ -920,7 +920,7 @@ implementation
           node:TNode;
         begin
           result:=false;
-          if not is_managed_type(right.resultdef) then
+          if not Is_Managed_Type(right.resultdef) then
             exit;
           node:=right;
           while Assigned(node) do
@@ -976,12 +976,12 @@ implementation
            exit;
 
          { assignment to refcounted variable -> inc/decref }
-         if is_managed_type(left.resultdef) then
+         if Is_Managed_Type(left.resultdef) then
            include(CurrentProcInfo.flags,pi_do_call);
 
          needrtti:=false;
 
-        if (is_shortstring(left.resultdef)) then
+        if (Is_ShortString(left.resultdef)) then
           begin
            if right.resultdef.typ=stringdef then
             begin
@@ -1003,10 +1003,10 @@ implementation
             exit;
            end
         { call helpers for composite types containing automated types }
-        else if is_managed_type(left.resultdef) and
+        else if Is_Managed_Type(left.resultdef) and
             (left.resultdef.typ in [arraydef,objectdef,recorddef]) and
             not Is_InterfaceCOM_Or_DispInterface(left.resultdef) and
-            not is_dynamic_array(left.resultdef) and
+            not Is_Dynamic_Array(left.resultdef) and
             not is_const(left) then
          begin
            hp:=CCallParaNode.create(CAddrNode.Create_Internal(
@@ -1048,15 +1048,15 @@ implementation
         else if not(is_const(left)) then
           begin
             { call helpers for pointer-sized managed types }
-            if is_widestring(left.resultdef) then
+            if Is_WideString(left.resultdef) then
               hs:='fpc_widestr_assign'
-            else if is_ansistring(left.resultdef) then
+            else if Is_AnsiString(left.resultdef) then
               hs:='fpc_ansistr_assign'
-            else if is_unicodestring(left.resultdef) then
+            else if Is_UnicodeString(left.resultdef) then
               hs:='fpc_unicodestr_assign'
             else if Is_InterfaceCOM_Or_DispInterface(left.resultdef) then
               hs:='fpc_intf_assign'
-            else if is_dynamic_array(left.resultdef) then
+            else if Is_Dynamic_Array(left.resultdef) then
               begin
                 hs:='fpc_dynarray_assign';
                 needrtti:=true;
@@ -1299,7 +1299,7 @@ implementation
                    This is to handle things like [nil,tclass,tclass], see also tw8371 (PFV) }
                  if hnodetype=niln then
                    begin
-                     eq:=compare_defs(hp.left.resultdef,hdef,hnodetype);
+                     eq:=Compare_Defs(hp.left.resultdef,hdef,hnodetype);
                      if eq>te_incompatible then
                        begin
                          hdef:=hp.left.resultdef;
@@ -1307,7 +1307,7 @@ implementation
                        end;
                    end
                  else
-                   eq:=compare_defs(hdef,hp.left.resultdef,hp.left.nodetype);
+                   eq:=Compare_Defs(hdef,hp.left.resultdef,hp.left.nodetype);
                  { the element is not compatible with the previous element
                    which means the constructor is array of const }
                  if eq=te_incompatible then
@@ -1316,9 +1316,9 @@ implementation
                    begin
                      { If both are integers we need to take the type that can hold both
                        defs }
-                     if is_integer(hdef) and is_integer(hp.left.resultdef) then
+                     if Is_Integer(hdef) and Is_Integer(hp.left.resultdef) then
                        begin
-                         if is_in_limit(hdef,hp.left.resultdef) then
+                         if Is_In_Limit(hdef,hp.left.resultdef) then
                            hdef:=hp.left.resultdef;
                        end
                      else
@@ -1335,8 +1335,8 @@ implementation
            because those can't be used with setelementdef }
          if not Assigned(hdef) or
             varia or
-            is_array_of_const(hdef) or
-            is_open_array(hdef) then
+            Is_Array_Of_Const(hdef) or
+            Is_Open_Array(hdef) then
            hdef:=VoidType;
          resultdef:=CArrayDef.create(0,len-1,S32IntType);
          include(TArrayDef(resultdef).ArrayOptions,ado_IsConstructor);
@@ -1424,7 +1424,7 @@ implementation
           TArrayDef(resultdef).ElementDef:=Search_System_Type('TVARREC').typedef;
         expectloc:=LOC_CREFERENCE;
 
-        inc(CurrentProcInfo.estimatedtempsize,(TArrayDef(resultdef).HighRange+1)*TArrayDef(resultdef).ElementDef.size);
+        inc(CurrentProcInfo.estimatedtempsize,(TArrayDef(resultdef).HighRange+1)*TArrayDef(resultdef).ElementDef.Size);
       end;
 
 

@@ -27,15 +27,15 @@ interface
 
     uses
        TPCompilerReal,
-       symconst,SymBase,symtype,SymSym;
+       SymConst,SymBase,SymType,SymSym;
 
-    function is_funcret_sym(p:TSymEntry):boolean;
+    function Is_FuncRet_Sym(P:TSymEntry):Boolean;
 
-    function equal_constsym(sym1,sym2:TConstSym; nanequal: boolean):boolean;
+    function Equal_ConstSym(Sym1,Sym2:TConstSym; NaNEqual: Boolean):Boolean;
 
-    function get_first_proc_str(Options: TProcOptions): ShortString;
+    function Get_First_Proc_Str(Options: TProcOptions): ShortString;
 
-    function is_normal_fieldvarsym(sym: TSym): boolean; inline;
+    function Is_Normal_FieldVarSym(Sym: TSym): Boolean; inline;
 
 
 implementation
@@ -44,60 +44,60 @@ implementation
        Systems,
        GlobType,CPUInfo,ConstExp,Verbose,
        WideStr,
-       symdef;
+       SymDef;
 
 
-    function is_funcret_sym(p:TSymEntry):boolean;
+    function Is_FuncRet_Sym(P:TSymEntry):Boolean;
       begin
-        is_funcret_sym:=(p.typ in [absolutevarsym,localvarsym,paravarsym]) and
-                        (vo_is_funcret in TAbstractVarSym(p).VarOptions);
+        Is_FuncRet_Sym:=(P.Typ in [AbsoluteVarSym,LocalVarSym,ParaVarSym]) and
+                        (vo_is_funcret in TAbstractVarSym(P).VarOptions);
       end;
 
 
-    function equal_constsym(sym1,sym2:TConstSym; nanequal: boolean):boolean;
+    function Equal_ConstSym(Sym1,Sym2:TConstSym; NaNEqual: Boolean):Boolean;
       var
-        p1,p2,pend : pchar;
+        P1,P2,PEnd : PChar;
       begin
-        equal_constsym:=false;
-        if sym1.ConstTyp<>sym2.ConstTyp then
-         exit;
-        case sym1.ConstTyp of
-           constord :
-             equal_constsym:=(sym1.value.ValueOrd=sym2.value.ValueOrd);
-           constpointer :
-             equal_constsym:=(sym1.value.ValueOrdPtr=sym2.value.ValueOrdPtr);
-           conststring,constresourcestring :
+        Equal_ConstSym:=False;
+        if Sym1.ConstTyp<>Sym2.ConstTyp then
+         Exit;
+        case Sym1.ConstTyp of
+           ConstOrd :
+             Equal_ConstSym:=(Sym1.Value.ValueOrd=Sym2.Value.ValueOrd);
+           ConstPointer :
+             Equal_ConstSym:=(Sym1.Value.ValueOrdPtr=Sym2.Value.ValueOrdPtr);
+           ConstString,ConstResourceString :
              begin
-               if sym1.value.len=sym2.value.len then
+               if Sym1.Value.Len=Sym2.Value.Len then
                 begin
-                  p1:=pchar(sym1.value.ValuePtr);
-                  p2:=pchar(sym2.value.ValuePtr);
-                  pend:=p1+sym1.value.len;
-                  while (p1<pend) do
+                  P1:=PChar(Sym1.Value.ValuePtr);
+                  P2:=PChar(Sym2.Value.ValuePtr);
+                  PEnd:=P1+Sym1.Value.Len;
+                  while (P1<PEnd) do
                    begin
-                     if p1^<>p2^ then
-                      break;
-                     inc(p1);
-                     inc(p2);
+                     if P1^<>P2^ then
+                      Break;
+                     Inc(P1);
+                     Inc(P2);
                    end;
-                  if (p1=pend) then
-                   equal_constsym:=true;
+                  if (P1=PEnd) then
+                   Equal_ConstSym:=True;
                 end;
              end;
-           constwstring :
+           ConstWString :
              begin
-               if (CompareWideStrings(sym1.value.ValueWS,sym2.value.ValueWS)=0) then
-                 equal_constsym:=true;
+               if (CompareWideStrings(Sym1.Value.ValueWS,Sym2.Value.ValueWS)=0) then
+                 Equal_ConstSym:=True;
              end;
-           constreal :
-             if nanequal then
-               equal_constsym:=CompareByte(PBestReal(sym1.value.ValuePtr)^,PBestReal(sym2.value.ValuePtr)^,sizeof(PBestReal^))=0
+           ConstReal :
+             if NaNEqual then
+               Equal_ConstSym:=CompareByte(PBestReal(Sym1.Value.ValuePtr)^,PBestReal(Sym2.Value.ValuePtr)^,SizeOf(PBestReal^))=0
              else
-               equal_constsym:=PBestReal(sym1.value.ValuePtr)^=PBestReal(sym2.value.ValuePtr)^;
-           constset :
-             equal_constsym:=(PNormalSet(sym1.value.ValuePtr)^=PNormalSet(sym2.value.ValuePtr)^);
-           constnil :
-             equal_constsym:=true;
+               Equal_ConstSym:=PBestReal(Sym1.Value.ValuePtr)^=PBestReal(Sym2.Value.ValuePtr)^;
+           ConstSet :
+             Equal_ConstSym:=(PNormalSet(Sym1.Value.ValuePtr)^=PNormalSet(Sym2.Value.ValuePtr)^);
+           ConstNil :
+             Equal_ConstSym:=True;
            else
              ;
         end;
@@ -106,28 +106,28 @@ implementation
 
     { get_first_proc_str - returns the token string of the first option that
       appears in the list }
-    function get_first_proc_str(Options: TProcOptions): ShortString;
+    function Get_First_Proc_Str(Options: TProcOptions): ShortString;
       var
         X: TProcOption;
       begin
         if Options = [] then
           InternalError(2018051700);
 
-        get_first_proc_str := '';
+        Get_First_Proc_Str := '';
 
         for X in Options do
           begin
-            get_first_proc_str := ProcOptionKeywords[X];
+            Get_First_Proc_Str := ProcOptionKeywords[X];
             Exit;
           end;
       end;
 
 
-    function is_normal_fieldvarsym(sym: TSym): boolean; inline;
+    function Is_Normal_FieldVarSym(Sym: TSym): Boolean; inline;
       begin
-        result:=
-           (sym.typ=FieldVarSym) and
-           not(sp_static in sym.SymOptions);
+        Result:=
+           (Sym.Typ=FieldVarSym) and
+           not(sp_static in Sym.SymOptions);
       end;
 
 

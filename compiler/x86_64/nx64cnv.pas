@@ -76,11 +76,11 @@ implementation
           we can use MOVD and MOVQ }
         if (resultdef.typ in [recorddef,orddef]) and
           Use_VectorFPU(left.resultdef) and
-          (resultdef.size=left.resultdef.size) then
+          (resultdef.Size=left.resultdef.Size) then
           expectloc:=LOC_MMREGISTER
         else if (left.resultdef.typ in [recorddef,orddef]) and
           Use_VectorFPU(resultdef) and
-          (resultdef.size=left.resultdef.size) then
+          (resultdef.Size=left.resultdef.Size) then
           expectloc:=LOC_REGISTER
         else
           result:=inherited first_nothing;
@@ -112,15 +112,15 @@ implementation
       begin
         if Use_VectorFPU(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
-            if is_double(resultdef) then
+            if Is_Double(resultdef) then
               op:=A_CVTSI2SD
-            else if is_single(resultdef) then
+            else if Is_Single(resultdef) then
               op:=A_CVTSI2SS
             else
               InternalError(200506061);
 
-            location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
 
             case TOrdDef(left.resultdef).OrdType of
               u64bit:
@@ -133,55 +133,55 @@ implementation
                    CurrentAsmData.getjumplabel(l2);
 
                    { Get sign bit }
-                   if not(left.location.loc in [LOC_REGISTER,LOC_REFERENCE]) then
-                     hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
-                   case left.location.loc of
+                   if not(left.Location.Loc in [LOC_REGISTER,LOC_REFERENCE]) then
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
+                   case left.Location.Loc of
                      LOC_REGISTER :
                        begin
-                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                         emit_const_reg(A_BT,S_Q,63,left.location.register);
-                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_Q,left.location.register,location.register));
+                         cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                         emit_const_reg(A_BT,S_Q,63,left.Location.Register);
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_Q,left.Location.Register,location.Register));
                        end;
                      LOC_REFERENCE :
                        begin
-                         href:=left.location.reference;
+                         href:=left.Location.Reference;
                          TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                         inc(href.offset,4);
-                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                         inc(href.Offset,4);
+                         cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                          emit_const_ref(A_BT,S_L,31,href);
-                         dec(href.offset,4);
-                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_Q,href,location.register));
+                         dec(href.Offset,4);
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_Q,href,location.Register));
                        end;
                      else
                        InternalError(200710181);
                    end;
 
-                   cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NC,l2);
-                   cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NC,l2);
+                   cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                    new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,Const_Align(sizeof(PInt)));
                    CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(l1));
-                   reference_reset_symbol(href,l1,0,4,[]);
+                   Reference_Reset_Symbol(href,l1,0,4,[]);
                    { simplify for PIC }
                    TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
 
                    { I got these constant from a test program (FK) }
-                   if is_double(resultdef) then
+                   if Is_Double(resultdef) then
                      begin
                        { double (2^64) }
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit(0));
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($43f00000));
                        TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSD,S_NO,href,location.register));
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSD,S_NO,href,location.Register));
                      end
-                   else if is_single(resultdef) then
+                   else if Is_Single(resultdef) then
                      begin
                        { single(2^64) }
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($5f800000));
-                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSS,S_NO,href,location.register));
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSS,S_NO,href,location.Register));
                      end
                    else
                      InternalError(200506071);
-                   cg.a_label(CurrentAsmData.CurrAsmList,l2);
+                   cg.A_Label(CurrentAsmData.CurrAsmList,l2);
                 end
               else
                 inherited second_int_to_real;

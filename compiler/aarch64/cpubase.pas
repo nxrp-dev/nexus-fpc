@@ -222,8 +222,8 @@ unit cpubase;
       PShifterOp = ^TShifterOp;
 
       TShifterOp = record
-        shiftmode : TShiftMode;
-        shiftimm : byte;
+        ShiftMode : TShiftMode;
+        ShiftImm : byte;
       end;
 
 {*****************************************************************************
@@ -320,7 +320,7 @@ unit cpubase;
 
     { Returns the tcgsize corresponding with the size of reg.}
     function reg_cgsize(const reg: TRegister) : TCgSize;
-    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function cgsize2subreg(RegType: TRegisterType; s:TCgSize):TSubRegister;
     function is_calljmp(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
     function is_calljmpmaybeuncondret(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
     procedure inverse_flags(var f: TResFlags);
@@ -364,9 +364,9 @@ unit cpubase;
       );
 
 
-    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function cgsize2subreg(RegType: TRegisterType; s:TCgSize):TSubRegister;
       begin
-        case regtype of
+        case RegType of
           R_INTREGISTER:
             begin
               case s of
@@ -400,9 +400,9 @@ unit cpubase;
 
     function reg_cgsize(const reg: TRegister): TCgSize;
       begin
-        case getregtype(reg) of
+        case GetRegType(reg) of
           R_INTREGISTER:
-            case getsubreg(reg) of
+            case GetSubReg(reg) of
               R_SUBD:
                 result:=OS_32
               else
@@ -410,7 +410,7 @@ unit cpubase;
             end;
           R_MMREGISTER :
             begin
-              case getsubreg(reg) of
+              case GetSubReg(reg) of
                 R_SUBMMD:
                   result:=OS_F64;
                 R_SUBMMS:
@@ -481,13 +481,13 @@ unit cpubase;
 
     function findreg_by_number(r:TRegister):TRegisterIndex;
       begin
-        result:=rgBase.findreg_by_number_table(r,regnumber_index);
+        result:=rgBase.FindReg_By_Number_Table(r,regnumber_index);
       end;
 
 
     function std_regnum_search(const s:string):TRegister;
       begin
-        result:=regnumber_table[findreg_by_name_table(s,std_regname_table,std_regname_index)];
+        result:=regnumber_table[FindReg_By_Name_Table(s,std_regname_table,std_regname_index)];
       end;
 
 
@@ -495,11 +495,11 @@ unit cpubase;
       var
         p : TRegisterIndex;
       begin
-        p:=findreg_by_number_table(r,regnumber_index);
+        p:=FindReg_By_Number_Table(r,regnumber_index);
         if p<>0 then
           result:=std_regname_table[p]
         else
-          result:=generic_regname(r);
+          result:=Generic_RegName(r);
       end;
 
 
@@ -685,14 +685,14 @@ unit cpubase;
       case ft of
         S32Real:
           begin
-            singlerec.value:=Single(value);
+            singlerec.Value:=Single(value);
             singlerec:=TCompSingleRec(NtoLE(DWord(singlerec)));
             Result:=(singlerec.bytes[0]=0) and (singlerec.bytes[1]=0) and ((singlerec.bytes[2] and 7)=0)  and
               (((singlerec.bytes[3] and $7e)=$40) or ((singlerec.bytes[3] and $7e)=$3e));
           end;
         S64Real:
           begin
-            doublerec.value:=Double(value);
+            doublerec.Value:=Double(value);
             doublerec:=TCompDoubleRec(NtoLE(QWord(doublerec)));
             Result:=(doublerec.bytes[0]=0) and (doublerec.bytes[1]=0) and (doublerec.bytes[2]=0) and
                     (doublerec.bytes[3]=0) and (doublerec.bytes[4]=0) and (doublerec.bytes[5]=0) and

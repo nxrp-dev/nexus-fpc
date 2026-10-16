@@ -231,7 +231,7 @@ implementation
               begin
                 for i := 0 to TEnumDef(psd.ElementDef).SymTable.SymList.Count - 1 do
                   begin
-                    include(pcs^,TEnumSym(TEnumDef(psd.ElementDef).SymTable.SymList[i]).value);
+                    include(pcs^,TEnumSym(TEnumDef(psd.ElementDef).SymTable.SymList[i]).Value);
                   end;
               end;
             orddef :
@@ -255,7 +255,7 @@ implementation
           exit;
 
          { Convert array constructor first to set }
-         if is_array_constructor(right.resultdef) then
+         if Is_Array_Constructor(right.resultdef) then
           begin
             arrayconstructor_to_set(right);
             if CodeGenError then
@@ -271,7 +271,7 @@ implementation
            InternalError(20021126);
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
+         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -290,17 +290,17 @@ implementation
          if CodeGenError then
            exit;
 
-         if not is_ordinal(left.resultdef) or (left.resultdef.size > U32IntType.size) then
+         if not Is_Ordinal(left.resultdef) or (left.resultdef.Size > U32IntType.Size) then
            begin
              CGMessage(type_h_in_range_check);
-             if is_signed(left.resultdef) then
+             if Is_Signed(left.resultdef) then
                inserttypeconv(left,S32IntType)
              else
                inserttypeconv(left,U32IntType);
            end
          else if Assigned(TSetDef(right.resultdef).ElementDef) and
-                 not(is_integer(TSetDef(right.resultdef).ElementDef) and
-                     is_integer(left.resultdef)) then
+                 not(Is_Integer(TSetDef(right.resultdef).ElementDef) and
+                     Is_Integer(left.resultdef)) then
             { Type conversion to check things like 'char in set_of_byte'. }
             { Can't use is_subequal because that will fail for            }
             { 'widechar in set_of_char'                                   }
@@ -340,11 +340,11 @@ implementation
                  { to the rule above -> will give range check error if      }
                  { value > high(longint) if we don't take the signedness    }
                  { into account                                             }
-                 if TOrdConstNode(left).value.signed then
-                   t:=COrdConstNode.create(byte(TOrdConstNode(left).value.svalue in TSetConstNode(right).value_set^),
+                 if TOrdConstNode(left).Value.signed then
+                   t:=COrdConstNode.create(byte(TOrdConstNode(left).Value.svalue in TSetConstNode(right).value_set^),
                      PasBool1Type,true)
                  else
-                   t:=COrdConstNode.create(byte(TOrdConstNode(left).value.uvalue in TSetConstNode(right).value_set^),
+                   t:=COrdConstNode.create(byte(TOrdConstNode(left).Value.uvalue in TSetConstNode(right).value_set^),
                      PasBool1Type,true);
                  TypeCheckPass(t);
                  result:=t;
@@ -352,8 +352,8 @@ implementation
                end
              else
                begin
-                 if (TOrdConstNode(left).value<int64(TSetDef(right.resultdef).SetBase)) or
-                    (TOrdConstNode(left).value>int64(TSetDef(right.resultdef).SetMax)) then
+                 if (TOrdConstNode(left).Value<int64(TSetDef(right.resultdef).SetBase)) or
+                    (TOrdConstNode(left).Value>int64(TSetDef(right.resultdef).SetMax)) then
                    begin
                      t:=COrdConstNode.create(0, PasBool1Type, true);
                      TypeCheckPass(t);
@@ -417,7 +417,7 @@ implementation
            right should be treated as one-symbol string }
          if is_conststringnode(l) and is_constcharnode(r) then
            begin
-             value := char(TOrdConstNode(r).value.uvalue) + ''#0;
+             value := char(TOrdConstNode(r).Value.uvalue) + ''#0;
              r.free;
              r := CStringConstNode.createstr(value);
              DoTypeCheckPass(r);
@@ -437,15 +437,15 @@ implementation
            exit;
          { both types must be compatible }
          if not (nf_generic_para in left.flags) and not (nf_generic_para in right.flags) and
-           (compare_defs(left.resultdef,right.resultdef,left.nodetype)=te_incompatible) then
+           (Compare_Defs(left.resultdef,right.resultdef,left.nodetype)=te_incompatible) then
            IncompatibleTypes(left.resultdef,right.resultdef);
          { check if only when its a constant set and
            ignore range nodes which are generic parameter derived }
          if not (nf_generic_para in flags) and (left.nodetype=ordconstn) and (right.nodetype=ordconstn) then
           begin
             { upper limit must be greater or equal than lower limit }
-            if (TOrdConstNode(left).value>TOrdConstNode(right).value) and
-               ((TOrdConstNode(left).value<0) or (TOrdConstNode(right).value>=0)) then
+            if (TOrdConstNode(left).Value>TOrdConstNode(right).Value) and
+               ((TOrdConstNode(left).Value<0) or (TOrdConstNode(right).Value>=0)) then
               CGMessage(parser_e_upper_lower_than_lower);
           end;
         resultdef:=left.resultdef;
@@ -777,7 +777,7 @@ implementation
                   else
                     newcheck:=@check;
                   labitem:=TLinkedListCaseLabelItem(lablist[j]).casenode;
-                  newcheck^:=CAddNode.create(equaln,left.GetCopy,labitem^._low_str.GetCopy);
+                  newcheck^:=CAddNode.create(EqualN,left.GetCopy,labitem^._low_str.GetCopy);
                   if (labitem^._low_str.fullcompare(labitem^._high_str)<>0) then
                     begin
                       newcheck^.nodetype:=gten;
@@ -806,7 +806,7 @@ implementation
              1) possibly simplify the case node without triggering a warning
              2) possibly give a compile-time error if not all cases are handled
                 in ISO/Extended Pascal mode }
-         if is_ordinal(left.resultdef) then
+         if Is_Ordinal(left.resultdef) then
            checkordinalcoverage;
 
          { ideally this would be in simplify, but then checkordinalcoverage can
@@ -833,7 +833,7 @@ implementation
              init_block := internalstatements(stmt);
              tempcaseexpr :=
                CTempCreateNode.create(
-                 left.resultdef, left.resultdef.size, tt_persistent, true);
+                 left.resultdef, left.resultdef.Size, tt_persistent, true);
              temp_cleanup := CTempDeleteNode.create(tempcaseexpr);
              TypeCheckPass(TNode(tempcaseexpr));
 
@@ -889,7 +889,7 @@ implementation
              exit;
            end;
 
-         if is_boolean(left.resultdef) then
+         if Is_Boolean(left.resultdef) then
            begin
              case blocks.count of
                2:
@@ -947,7 +947,7 @@ implementation
              if flabels^._low=flabels^._high then
                begin
                  result:=CIfNode.Create_Internal(
-                   CAddNode.Create_Internal(equaln,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
+                   CAddNode.Create_Internal(EqualN,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
                    PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock);
                end
              else if not(might_have_sideeffects(left,[mhs_exceptions])) and (node_complexity(left)<=1) then
@@ -963,7 +963,7 @@ implementation
                begin
                  init_block:=internalstatements(stmt);
                  tempcaseexpr:=CTempCreateNode.create(
-                   left.resultdef,left.resultdef.size,tt_persistent,true);
+                   left.resultdef,left.resultdef.Size,tt_persistent,true);
                  temp_cleanup:=CTempDeleteNode.create(tempcaseexpr);
                  TypeCheckPass(TNode(tempcaseexpr));
 
@@ -1001,8 +1001,8 @@ implementation
             { check all case labels until we find one that fits }
             while Assigned(tmp) do
               begin
-                if (tmp^._low<=TOrdConstNode(left).value) and
-                    (tmp^._high>=TOrdConstNode(left).value) then
+                if (tmp^._low<=TOrdConstNode(left).Value) and
+                    (tmp^._high>=TOrdConstNode(left).Value) then
                   begin
                     if tmp^.blockid>=blocks.count then
                       InternalError(2014022101);
@@ -1013,7 +1013,7 @@ implementation
                     exit;
                   end;
 
-                if tmp^._high<TOrdConstNode(left).value then
+                if tmp^._high<TOrdConstNode(left).Value then
                   tmp:=tmp^.greater
                 else
                   tmp:=tmp^.less;
@@ -1024,7 +1024,7 @@ implementation
             else
               begin
                 if ([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[] then
-                  CGMessage1(cg_e_case_missing_value,ToStr(TOrdConstNode(left).value))
+                  CGMessage1(cg_e_case_missing_value,ToStr(TOrdConstNode(left).Value))
                 else
                   CGMessage(cg_w_case_incomplete);
                 { no else block, so there is no code to execute at all }
@@ -1238,7 +1238,7 @@ implementation
         end;
 
       begin
-        isord:=is_ordinal(left.resultdef);
+        isord:=Is_Ordinal(left.resultdef);
         flabelcnt:=0;
         flabelcoverage:=0;
         first:=true;
@@ -1261,7 +1261,7 @@ implementation
              not IsPowerOf2(PackedBitSize div 8,dummy) then
             exit;
           dec(PackedBitSize);
-          if is_signed(def) then
+          if Is_Signed(def) then
             begin
 {$push}{$q-}
               if def.low<>(-(int64(1) shl PackedBitSize)) then
@@ -1286,9 +1286,9 @@ implementation
         lv, hv, typcount: TConstExprInt;
       begin
         { Check label type coverage for enumerations and small types }
-        getrange(left.resultdef,lv,hv);
+        GetRange(left.resultdef,lv,hv);
         { low/high value of c-style booleans are not suitable for calculating their "type count" }
-        if is_cbool(left.resultdef) then
+        if Is_CBool(left.resultdef) then
           typcount:=1
         else
           typcount:=hv-lv;
@@ -1297,8 +1297,8 @@ implementation
             { unless cs_check_all_case_coverage is set, only check for enums, booleans and
               subrange types different from the default ones }
             if (cs_check_all_case_coverage in CurrentSettings.LocalSwitches) or
-               (is_enum(left.resultdef) or
-                is_boolean(left.resultdef) or
+               (Is_Enum(left.resultdef) or
+                Is_Boolean(left.resultdef) or
                 not orddefspansfullrange(TOrdDef(left.resultdef))) and
                (labelcoverage<typcount) then
               begin

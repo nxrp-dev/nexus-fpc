@@ -133,9 +133,9 @@ begin
   result := nil;
   updatecurmaxlen;
   { left and right are already firstpass'ed by taddnode.pass_1 }
-  if not is_shortstring(left.resultdef) then
+  if not Is_ShortString(left.resultdef) then
    inserttypeconv(left,CShortStringType);
-  if not is_shortstring(right.resultdef) then
+  if not Is_ShortString(right.resultdef) then
    inserttypeconv(right,CShortStringType);
   resultdef := left.resultdef;
 end;
@@ -190,7 +190,7 @@ begin
     end
   else if (left.nodetype = stringconstn) then
     curmaxlen := min(TStringConstNode(left).len,255)
-  else if is_char(left.resultdef) then
+  else if Is_Char(left.resultdef) then
     curmaxlen := 1
   else if (left.nodetype = typeconvn) then
     begin
@@ -251,7 +251,7 @@ begin
 {   the shortstring will be gotten through conversion if necessary (JM)
     is_shortstring(p.left.resultdef) and }
     ((p.nodetype = addn) and
-     is_char(p.right.resultdef));
+     Is_Char(p.right.resultdef));
 end;
 
 function genaddsstringcharoptnode(p: TAddNode): TNode;
@@ -316,11 +316,11 @@ var
 begin
   arrp:=nil;
   hp:=p;
-  is_shortstr:=is_shortstring(p.resultdef);
+  is_shortstr:=Is_ShortString(p.resultdef);
   while Assigned(hp) and (hp.nodetype=addn) do
     begin
       sn:=TAddNode(hp).right.GetCopy;
-      if not is_shortstr or not is_shortstring(sn.resultdef) then
+      if not is_shortstr or not Is_ShortString(sn.resultdef) then
         inserttypeconv(sn,p.resultdef);
       if is_shortstr then
         begin
@@ -331,7 +331,7 @@ begin
       hp:=TAddNode(hp).left;
     end;
   sn:=hp.GetCopy;
-  if not is_shortstr or not is_shortstring(sn.resultdef) then
+  if not is_shortstr or not Is_ShortString(sn.resultdef) then
     inserttypeconv(sn,p.resultdef);
   if is_shortstr then
     begin
@@ -345,8 +345,8 @@ begin
      (
        (aktassignmentnode.left.resultdef=p.resultdef) or
        (
-         is_shortstring(aktassignmentnode.left.resultdef) and
-         is_shortstring(p.resultdef)
+         Is_ShortString(aktassignmentnode.left.resultdef) and
+         Is_ShortString(p.resultdef)
        )
      ) and
      valid_for_var(aktassignmentnode.left,false) then
@@ -355,7 +355,7 @@ begin
               arrp,
               CCallParaNode.create(aktassignmentnode.left.GetCopy,nil)
             );
-      if is_ansistring(p.resultdef) then
+      if Is_AnsiString(p.resultdef) then
         para:=CCallParaNode.create(
                 COrdConstNode.create(
                   { don't use getparaencoding(), we have to know
@@ -375,13 +375,13 @@ begin
   else
     begin
       result:=internalstatements(newstatement);
-      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent ,true);
+      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
       addstatement(newstatement,tempnode);
       para:=CCallParaNode.create(
               arrp,
               CCallParaNode.create(CTempRefNode.create(tempnode),nil)
             );
-      if is_ansistring(p.resultdef) then
+      if Is_AnsiString(p.resultdef) then
         para:=CCallParaNode.create(
                 COrdConstNode.create(
                   { don't use getparaencoding(), we have to know
@@ -411,7 +411,7 @@ var
   i  : LongInt;
 begin
   result:=false;
-  if not(is_dynamic_array(p.resultdef)) then
+  if not(Is_Dynamic_Array(p.resultdef)) then
     exit;
   i:=0;
   hp:=p;
@@ -452,9 +452,9 @@ var
     begin
       if is_stored_operand(n) then
         exit(CTypeConvNode.Create_Internal(n,VoidPointerType));
-      if not is_array_constructor(n.resultdef) then
+      if not Is_Array_Constructor(n.resultdef) then
         inserttypeconv(n,p.resultdef);
-      optemp:=CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
+      optemp:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
       addstatement(newstatement,optemp);
       addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(optemp),n));
       addstatement(newstatement,CTempDeleteNode.create_normal_temp(optemp));
@@ -494,7 +494,7 @@ begin
     end
   else
     begin
-      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent ,true);
+      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
       addstatement(newstatement,tempnode);
       para:=CCallParaNode.create(
               arrp,

@@ -125,8 +125,8 @@ end;
 
 function EncodeXMM(r: TRegister): integer;
 begin
-  if getregtype(r)=R_MMREGISTER then
-    result:=getsupreg(r)
+  if GetRegType(r)=R_MMREGISTER then
+    result:=GetSupReg(r)
   else
     InternalError(2011072308);
 end;
@@ -394,15 +394,15 @@ begin
       current_unw.switch_to_handlerdata(objdata);
     ash_eh,ash_32,ash_no32: ; { these are not for x86_64 }
     ash_setframe:
-      current_unw.set_frame(objdata,data.reg,data.offset);
+      current_unw.set_frame(objdata,data.reg,data.Offset);
     ash_stackalloc:
-      current_unw.stack_alloc(objdata,data.offset);
+      current_unw.stack_alloc(objdata,data.Offset);
     ash_pushreg:
       current_unw.push_reg(objdata,data.reg);
     ash_savereg:
-      current_unw.save_reg(objdata,data.reg,data.offset);
+      current_unw.save_reg(objdata,data.reg,data.Offset);
     ash_savexmm:
-      current_unw.save_xmm(objdata,data.reg,data.offset);
+      current_unw.save_xmm(objdata,data.reg,data.Offset);
     ash_pushframe: {TBD};
     ash_pushnv,
     ash_savenv:

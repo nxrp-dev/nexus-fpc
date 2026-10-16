@@ -110,7 +110,7 @@ implementation
           instr:=TAICPU.op_reg_reg(i,s,reg1,reg2);
           CurrentAsmData.CurrAsmList.concat(instr);
           if i=A_MOV then
-            cg.add_move_instruction(instr);
+            cg.Add_Move_Instruction(instr);
         end;
     end;
 

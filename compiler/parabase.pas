@@ -27,13 +27,13 @@ unit parabase;
     uses
        CClasses,GlobType,
 
-       cgbase,cgutils,
-       symtype;
+       CGBase,CGUtils,
+       SymType;
 
     type
        TCGParaReference = record
-          index       : TRegister;
-          offset      : asizeint;
+          Index       : TRegister;
+          Offset      : ASizeInt;
        end;
 
        PCGParaLocation = ^TCGParaLocation;
@@ -44,7 +44,7 @@ unit parabase;
          Loc  : TCGLoc;
 
          case TCGLoc of
-           LOC_REFERENCE : (reference : TCGParaReference);
+           LOC_REFERENCE : (Reference : TCGParaReference);
            LOC_FPUREGISTER,
            LOC_CFPUREGISTER,
            LOC_MMREGISTER,
@@ -71,8 +71,8 @@ unit parabase;
                1) for all parameter sizes < regsize
                2) on the caller side
              }
-             shiftval : shortint;
-             register : TRegister);
+             ShiftVal : ShortInt;
+             Register : TRegister);
        end;
 
        { TCGPara }
@@ -84,22 +84,22 @@ unit parabase;
           DefDeref  : TDeref;
           Alignment : ShortInt; { in case of LLVM, a negative alignment mean: force write the alignment }
           Size      : TCgSize;  { Size of the parameter included in all locations }
-          Temporary : boolean;  { created on the fly, no permanent references exist to this somewhere that will cause it to be disposed }
-          constructor init;
-          destructor  done;
-          procedure   reset;
-          procedure   resetiftemp; { reset if Temporary }
+          Temporary : Boolean;  { created on the fly, no permanent references exist to this somewhere that will cause it to be disposed }
+          constructor Init;
+          destructor  Done;
+          procedure   Reset;
+          procedure   ResetIfTemp; { reset if Temporary }
           function    GetCopy:TCGPara;
-          procedure   check_simple_location;
-          function    add_location:PCGParaLocation;
-          procedure   get_location(var newloc:TLocation);
-          function    locations_count:integer;
-          function    isempty: boolean; { no data, and not varargs para }
+          procedure   Check_Simple_Location;
+          function    Add_Location:PCGParaLocation;
+          procedure   Get_Location(var NewLoc:TLocation);
+          function    Locations_Count:Integer;
+          function    IsEmpty: Boolean; { no data, and not varargs para }
 
           procedure   BuildDeref;
-          procedure   deref;
-          procedure   ppuwrite(ppufile:TCompilerPPUFile);
-          procedure   ppuload(ppufile:TCompilerPPUFile);
+          procedure   Deref;
+          procedure   PPUWrite(PPUFile:TCompilerPPUFile);
+          procedure   PPULoad(PPUFile:TCompilerPPUFile);
        end;
        PCGPara = ^TCGPara;
 
@@ -112,10 +112,10 @@ unit parabase;
        end;
 
        TVarArgsParaList = class(TParaList)
-          varargsinfo : set of TVarArgsInfo;
+          VarArgsInfo : set of TVarArgsInfo;
 {$ifdef x86_64}
           { x86_64 requires %al to contain the no. SSE regs passed }
-          mmregsused  : LongInt;
+          MMRegsUsed  : LongInt;
 {$endif x86_64}
        end;
 
@@ -123,11 +123,11 @@ unit parabase;
        TRTTIParaLoc = record
          { contains the regtype in bits 0-6 and whether it's reference or not
            in bit 7 }
-         loctype : byte;
-         regsub : byte;
-         regindex : word;
+         LocType : Byte;
+         RegSub : Byte;
+         RegIndex : Word;
          { either stack offset or shiftval }
-         offset : aint;
+         Offset : AInt;
        end;
 
 
@@ -138,144 +138,144 @@ implementation
 
     uses
       Systems,Verbose,
-      SymSym,defutil;
+      SymSym,DefUtil;
 
 
 {****************************************************************************
                                 TCGPara
 ****************************************************************************}
 
-    constructor TCGPara.init;
+    constructor TCGPara.Init;
       begin
-        alignment:=0;
-        size:=OS_NO;
-        intsize:=0;
-        location:=nil;
-        def:=nil;
-        temporary:=false;
+        Alignment:=0;
+        Size:=OS_NO;
+        IntSize:=0;
+        Location:=nil;
+        Def:=nil;
+        Temporary:=False;
       end;
 
 
-    destructor TCGPara.done;
+    destructor TCGPara.Done;
       begin
-        reset;
+        Reset;
       end;
 
 
-    procedure TCGPara.reset;
+    procedure TCGPara.Reset;
       var
-        hlocation : PCGParaLocation;
+        HLocation : PCGParaLocation;
       begin
-        while Assigned(location) do
+        while Assigned(Location) do
           begin
-            hlocation:=location^.next;
-            dispose(location);
-            location:=hlocation;
+            HLocation:=Location^.Next;
+            Dispose(Location);
+            Location:=HLocation;
           end;
-        alignment:=0;
-        size:=OS_NO;
-        intsize:=0;
+        Alignment:=0;
+        Size:=OS_NO;
+        IntSize:=0;
       end;
 
-    procedure TCGPara.resetiftemp;
+    procedure TCGPara.ResetIfTemp;
       begin
-        if temporary then
-          reset;
+        if Temporary then
+          Reset;
       end;
 
 
     function TCGPara.GetCopy:TCGPara;
       var
-        srcloc,hlocation : PCGParaLocation;
+        SrcLoc,HLocation : PCGParaLocation;
       begin
-        result.init;
-        srcloc:=location;
-        while Assigned(srcloc) do
+        Result.Init;
+        SrcLoc:=Location;
+        while Assigned(SrcLoc) do
           begin
-            hlocation:=result.add_location;
-            hlocation^:=srcloc^;
-            hlocation^.next:=nil;
-            srcloc:=srcloc^.next;
+            HLocation:=Result.Add_Location;
+            HLocation^:=SrcLoc^;
+            HLocation^.Next:=nil;
+            SrcLoc:=SrcLoc^.Next;
           end;
-        result.alignment:=alignment;
-        result.size:=size;
-        result.intsize:=intsize;
-        result.def:=def;
-        result.Temporary:=Temporary;
+        Result.Alignment:=Alignment;
+        Result.Size:=Size;
+        Result.IntSize:=IntSize;
+        Result.Def:=Def;
+        Result.Temporary:=Temporary;
       end;
 
 
-    function TCGPara.add_location:PCGParaLocation;
+    function TCGPara.Add_Location:PCGParaLocation;
       var
-        prevlocation,
-        hlocation : PCGParaLocation;
+        PrevLocation,
+        HLocation : PCGParaLocation;
       begin
-        prevlocation:=nil;
-        hlocation:=location;
-        while Assigned(hlocation) do
+        PrevLocation:=nil;
+        HLocation:=Location;
+        while Assigned(HLocation) do
           begin
-            prevlocation:=hlocation;
-            hlocation:=hlocation^.next;
+            PrevLocation:=HLocation;
+            HLocation:=HLocation^.Next;
           end;
-        new(hlocation);
-        Fillchar(hlocation^,sizeof(TCGParaLocation),0);
-        if Assigned(prevlocation) then
-          prevlocation^.next:=hlocation
+        New(HLocation);
+        FillChar(HLocation^,SizeOf(TCGParaLocation),0);
+        if Assigned(PrevLocation) then
+          PrevLocation^.Next:=HLocation
         else
-          location:=hlocation;
-        result:=hlocation;
+          Location:=HLocation;
+        Result:=HLocation;
       end;
 
 
-    procedure TCGPara.check_simple_location;
+    procedure TCGPara.Check_Simple_Location;
       begin
-        if not Assigned(location) then
+        if not Assigned(Location) then
           InternalError(200408161);
-        if Assigned(location^.next) then
+        if Assigned(Location^.Next) then
           InternalError(200408162);
       end;
 
 
-    procedure TCGPara.get_location(var newloc:TLocation);
+    procedure TCGPara.Get_Location(var NewLoc:TLocation);
       begin
-        if not Assigned(location) then
+        if not Assigned(Location) then
           InternalError(200408205);
-        fillchar(newloc,sizeof(newloc),0);
-        newloc.loc:=location^.loc;
-        newloc.size:=size;
-        case location^.loc of
+        FillChar(NewLoc,SizeOf(NewLoc),0);
+        NewLoc.Loc:=Location^.Loc;
+        NewLoc.Size:=Size;
+        case Location^.Loc of
           LOC_REGISTER :
             begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-              if size in [OS_64,OS_S64] then
+              if Size in [OS_64,OS_S64] then
                 begin
-                  if not Assigned(location^.next) then
+                  if not Assigned(Location^.Next) then
                     InternalError(200408206);
-                  if (location^.next^.loc<>LOC_REGISTER) then
+                  if (Location^.Next^.Loc<>LOC_REGISTER) then
                     InternalError(200408207);
-                  if (TargetInfo.endian = ENDIAN_BIG) then
+                  if (TargetInfo.Endian = ENDIAN_BIG) then
                     begin
-                      newloc.register64.reghi:=location^.register;
-                      newloc.register64.reglo:=location^.next^.register;
+                      NewLoc.Register64.RegHi:=Location^.Register;
+                      NewLoc.Register64.RegLo:=Location^.Next^.Register;
                     end
                   else
                     begin
-                      newloc.register64.reglo:=location^.register;
-                      newloc.register64.reghi:=location^.next^.register;
+                      NewLoc.Register64.RegLo:=Location^.Register;
+                      NewLoc.Register64.RegHi:=Location^.Next^.Register;
                     end;
                 end
               else
 {$endif}
-                newloc.register:=location^.register;
+                NewLoc.Register:=Location^.Register;
             end;
           LOC_FPUREGISTER,
           LOC_MMREGISTER :
-            newloc.register:=location^.register;
+            NewLoc.Register:=Location^.Register;
           LOC_REFERENCE :
             begin
-              newloc.reference.base:=location^.reference.index;
-              newloc.reference.offset:=location^.reference.offset;
-              newloc.reference.alignment:=alignment;
+              NewLoc.Reference.Base:=Location^.Reference.Index;
+              NewLoc.Reference.Offset:=Location^.Reference.Offset;
+              NewLoc.Reference.Alignment:=Alignment;
             end;
           LOC_VOID:
             ;
@@ -285,78 +285,78 @@ implementation
       end;
 
 
-    function TCGPara.locations_count: integer;
+    function TCGPara.Locations_Count: Integer;
       var
-        hlocation: PCGParaLocation;
+        HLocation: PCGParaLocation;
       begin
-        result:=0;
-        hlocation:=location;
-        while Assigned(hlocation) do
+        Result:=0;
+        HLocation:=Location;
+        while Assigned(HLocation) do
           begin
-            inc(result);
-            hlocation:=hlocation^.next;
+            Inc(Result);
+            HLocation:=HLocation^.Next;
           end;
       end;
 
 
-    function TCGPara.isempty: boolean;
+    function TCGPara.IsEmpty: Boolean;
       var
-        hlocation: PCGParaLocation;
+        HLocation: PCGParaLocation;
       begin
         { can happen if e.g. [] is passed to a cdecl varargs para }
-        if not Assigned(def) then
-          exit(true);
-        if is_array_of_const(def) then
-          exit(false);
-        hlocation:=location;
-        while Assigned(hlocation) do
+        if not Assigned(Def) then
+          Exit(True);
+        if Is_Array_Of_Const(Def) then
+          Exit(False);
+        HLocation:=Location;
+        while Assigned(HLocation) do
           begin
-            if hlocation^.Loc<>LOC_VOID then
-              exit(false);
-            hlocation:=hlocation^.next;
+            if HLocation^.Loc<>LOC_VOID then
+              Exit(False);
+            HLocation:=HLocation^.Next;
           end;
-        result:=true;
+        Result:=True;
       end;
 
     procedure TCGPara.BuildDeref;
       begin
-        DefDeref.build(def);
+        DefDeref.Build(Def);
       end;
 
 
-    procedure TCGPara.deref;
+    procedure TCGPara.Deref;
       begin
-        def:=TDef(DefDeref.resolve);
+        Def:=TDef(DefDeref.Resolve);
       end;
 
 
-    procedure TCGPara.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TCGPara.PPUWrite(PPUFile: TCompilerPPUFile);
       var
-        hparaloc: PCGParaLocation;
-        nparaloc: byte;
+        HParaLoc: PCGParaLocation;
+        NParaLoc: Byte;
       begin
-        ppufile.PutByte(byte(Alignment));
-        ppufile.PutByte(ord(Size));
-        ppufile.PutAInt(IntSize);
-        ppufile.PutDeref(DefDeref);
-        nparaloc:=0;
-        hparaloc:=location;
-        while Assigned(hparaloc) do
+        PPUFile.PutByte(Byte(Alignment));
+        PPUFile.PutByte(Ord(Size));
+        PPUFile.PutAInt(IntSize);
+        PPUFile.PutDeref(DefDeref);
+        NParaLoc:=0;
+        HParaLoc:=Location;
+        while Assigned(HParaLoc) do
           begin
-            inc(nparaloc);
-            hparaloc:=hparaloc^.Next;
+            Inc(NParaLoc);
+            HParaLoc:=HParaLoc^.Next;
           end;
-        ppufile.PutByte(nparaloc);
-        hparaloc:=location;
-        while Assigned(hparaloc) do
+        PPUFile.PutByte(NParaLoc);
+        HParaLoc:=Location;
+        while Assigned(HParaLoc) do
           begin
-            ppufile.PutByte(byte(hparaloc^.Size));
-            ppufile.PutByte(byte(hparaloc^.loc));
-            case hparaloc^.loc of
+            PPUFile.PutByte(Byte(HParaLoc^.Size));
+            PPUFile.PutByte(Byte(HParaLoc^.Loc));
+            case HParaLoc^.Loc of
               LOC_REFERENCE:
                 begin
-                  ppufile.PutLongInt(LongInt(hparaloc^.reference.index));
-                  ppufile.PutAInt(hparaloc^.reference.offset);
+                  PPUFile.PutLongInt(LongInt(HParaLoc^.Reference.Index));
+                  PPUFile.PutAInt(HParaLoc^.Reference.Offset);
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER,
@@ -365,8 +365,8 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  ppufile.PutByte(hparaloc^.shiftval);
-                  ppufile.PutLongInt(LongInt(hparaloc^.register));
+                  PPUFile.PutByte(HParaLoc^.ShiftVal);
+                  PPUFile.PutLongInt(LongInt(HParaLoc^.Register));
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)
                 or otherwise it hits the internalerror below. I don't know if this is
@@ -377,32 +377,32 @@ implementation
               else
                 InternalError(2010053115);
             end;
-            hparaloc:=hparaloc^.next;
+            HParaLoc:=HParaLoc^.Next;
           end;
       end;
 
 
-    procedure TCGPara.ppuload(ppufile: TCompilerPPUFile);
+    procedure TCGPara.PPULoad(PPUFile: TCompilerPPUFile);
       var
-        hparaloc: PCGParaLocation;
-        nparaloc: byte;
+        HParaLoc: PCGParaLocation;
+        NParaLoc: Byte;
       begin
-        reset;
-        Alignment:=shortint(ppufile.GetByte);
-        Size:=TCgSize(ppufile.GetByte);
-        IntSize:=ppufile.GetAInt;
-        ppufile.GetDeref(DefDeref);
-        nparaloc:=ppufile.GetByte;
-        while nparaloc>0 do
+        Reset;
+        Alignment:=ShortInt(PPUFile.GetByte);
+        Size:=TCgSize(PPUFile.GetByte);
+        IntSize:=PPUFile.GetAInt;
+        PPUFile.GetDeref(DefDeref);
+        NParaLoc:=PPUFile.GetByte;
+        while NParaLoc>0 do
           begin
-            hparaloc:=add_location;
-            hparaloc^.size:=TCgSize(ppufile.GetByte);
-            hparaloc^.loc:=TCGLoc(ppufile.GetByte);
-            case hparaloc^.loc of
+            HParaLoc:=Add_Location;
+            HParaLoc^.Size:=TCgSize(PPUFile.GetByte);
+            HParaLoc^.Loc:=TCGLoc(PPUFile.GetByte);
+            case HParaLoc^.Loc of
               LOC_REFERENCE:
                 begin
-                  hparaloc^.reference.index:=TRegister(ppufile.GetLongInt);
-                  hparaloc^.reference.offset:=ppufile.GetAInt;
+                  HParaLoc^.Reference.Index:=TRegister(PPUFile.GetLongInt);
+                  HParaLoc^.Reference.Offset:=PPUFile.GetAInt;
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER,
@@ -411,8 +411,8 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  hparaloc^.shiftval:=ppufile.GetByte;
-                  hparaloc^.register:=TRegister(ppufile.GetLongInt);
+                  HParaLoc^.ShiftVal:=PPUFile.GetByte;
+                  HParaLoc^.Register:=TRegister(PPUFile.GetLongInt);
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)
                 or otherwise it hits the internalerror below. I don't know if this is
@@ -423,7 +423,7 @@ implementation
               else
                 InternalError(2010051301);
             end;
-            dec(nparaloc);
+            Dec(NParaLoc);
           end;
       end;
 

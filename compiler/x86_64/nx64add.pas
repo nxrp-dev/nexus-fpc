@@ -59,8 +59,8 @@ interface
         Note that when overflow checking is off, we can use IMUL instead. }
       if (nodetype=muln) and
         needoverflowcheck and
-        (not(is_signed(left.resultdef)) or
-         not(is_signed(right.resultdef))) then
+        (not(Is_Signed(left.resultdef)) or
+         not(Is_Signed(right.resultdef))) then
       begin
         second_mul;
         exit;
@@ -82,10 +82,10 @@ interface
         cgsize:TCgSize;
         opsize:TOpSize;
       begin
-        reference_reset(ref,0,[]);
+        Reference_Reset(ref,0,[]);
         reg:=NR_NO;
 
-        cgsize:=def_cgsize(resultdef);
+        cgsize:=Def_CGSize(resultdef);
         opsize:=TCGSize2OpSize[cgsize];
         case cgsize of
           OS_S64,OS_64:
@@ -105,32 +105,32 @@ interface
         pass_left_right;
 
         { The location.register will be filled in later (JM) }
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
         { Mul supports registers and references, so if not register/reference,
           load the location into a register}
         use_ref:=false;
-        if left.location.loc in [LOC_REGISTER,LOC_CREGISTER] then
-          reg:=left.location.register
-        else if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+        if left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+          reg:=left.Location.Register
+        else if left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
           begin
-            ref:=left.location.reference;
+            ref:=left.Location.Reference;
             use_ref:=true;
           end
         else
           begin
             {LOC_CONSTANT for example.}
-            reg:=cg.getintregister(CurrentAsmData.CurrAsmList,cgsize);
-            hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location,reg);
+            reg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
+            hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.Location,reg);
           end;
         { Allocate RAX. }
-        cg.getcpuregister(CurrentAsmData.CurrAsmList,rega);
+        cg.GetCPURegister(CurrentAsmData.CurrAsmList,rega);
         { Load the right value. }
-        hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,resultdef,right.location,rega);
+        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,resultdef,right.Location,rega);
         { Also allocate RDX, since it is also modified by a mul (JM). }
-        cg.getcpuregister(CurrentAsmData.CurrAsmList,regd);
+        cg.GetCPURegister(CurrentAsmData.CurrAsmList,regd);
 
         if needoverflowcheck then
-          cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+          cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
         if use_ref then
           emit_ref(A_MUL,opsize,ref)
@@ -139,19 +139,19 @@ interface
         if needoverflowcheck then
          begin
            CurrentAsmData.getjumplabel(hl4);
-           cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_AE,hl4);
-           cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-           cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-           cg.a_label(CurrentAsmData.CurrAsmList,hl4);
+           cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,hl4);
+           cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+           cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+           cg.A_Label(CurrentAsmData.CurrAsmList,hl4);
          end;
         { Free RDX,RAX }
-        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,regd);
-        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,rega);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,regd);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,rega);
         { Allocate a new register and store the result in RAX in it. }
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,cgsize);
-        emit_reg_reg(A_MOV,opsize,rega,location.register);
-        location_freetemp(CurrentAsmData.CurrAsmList,left.location);
-        location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
+        emit_reg_reg(A_MOV,opsize,rega,location.Register);
+        location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+        location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
       end;
 
 

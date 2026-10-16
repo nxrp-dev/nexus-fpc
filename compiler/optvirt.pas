@@ -360,7 +360,7 @@ unit optvirt;
            write('   Checking for classrefdef inheritance of ',def.TypeName);
 {$endif debug_devirt}
            for i:=0 to classrefdefs.count-1 do
-             if def_is_related(TObjectDef(def),TObjectDef(classrefdefs[i])) then
+             if Def_Is_Related(TObjectDef(def),TObjectDef(classrefdefs[i])) then
                begin
 {$ifdef debug_devirt}
                  WriteLn('... Found: inherits from Class Of ',TObjectDef(classrefdefs[i]).TypeName);

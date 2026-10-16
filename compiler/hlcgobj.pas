@@ -35,11 +35,11 @@ unit hlcgobj;
 
     uses
        CClasses,GlobType,ConstExp,
-       cpubase,cgbase,cgutils,parabase,
-       aasmbase,aasmtai,AAsmData,aasmcpu,
-       symconst,SymBase,symtype,SymSym,symdef,
-       node,nutils,
-       tgobj
+       CPUBase,CGBase,CGUtils,ParaBase,
+       AAsmBase,AAsmTAI,AAsmData,AAsmCPU,
+       SymConst,SymBase,SymType,SymSym,SymDef,
+       Node,NUtils,
+       TGObj
        ;
 
     type
@@ -47,19 +47,19 @@ unit hlcgobj;
 
        PReplaceRegRec = ^TReplaceRegRec;
        TReplaceRegRec = record
-         old, new: TRegister;
-         oldhi, newhi: TRegister;
-         ressym: TSym;
+         Old, New: TRegister;
+         OldHi, NewHi: TRegister;
+         ResSym: TSym;
          { moved sym }
-         sym : TAbstractNormalVarSym;
+         Sym : TAbstractNormalVarSym;
        end;
 
        { thlcgobj methods that may have to be overridden by non-descendants }
        THLCGObjHelpers = class
-         class procedure gen_proc_symbol(list:TAsmList);virtual;
+         class procedure Gen_Proc_Symbol(List:TAsmList);virtual;
          { queue the code/data generated for a procedure for writing out to
            the assembler/object file }
-         class procedure record_generated_code_for_procdef(pd: TProcDef; code, data: TAsmList); virtual;
+         class procedure Record_Generated_Code_For_ProcDef(PD: TProcDef; Code, Data: TAsmList); virtual;
        end;
        THLCGObjHelpersClass = class of THLCGObjHelpers;
 
@@ -74,52 +74,52 @@ unit hlcgobj;
 
        THLCGObj = class
        protected
-        fphlcgobjhelper: THLCGObjHelpersClass;
+        FPHLCGObjHelper: THLCGObjHelpersClass;
        public
           {************************************************}
           {                 basic routines                 }
-          constructor create; virtual;
-          constructor create(hlcgobjhelpers: THLCGObjHelpersClass);
+          constructor Create; virtual;
+          constructor Create(HLCGObjHelpers: THLCGObjHelpersClass);
 
           {# Initialize the register allocators needed for the codegenerator.}
-          procedure init_register_allocators;virtual;
+          procedure Init_Register_Allocators;virtual;
           {# Clean up the register allocators needed for the codegenerator.}
-          procedure done_register_allocators;virtual;
+          procedure Done_Register_Allocators;virtual;
           {# Set whether live_start or live_end should be updated when allocating registers, needed when e.g. generating initcode after the rest of the code. }
-          procedure set_regalloc_live_range_direction(dir: TRADirection);virtual;
+          procedure Set_RegAlloc_Live_Range_Direction(Dir: TRADirection);virtual;
           {# Gets a register suitable to do integer operations on.}
-          function getintregister(list:TAsmList;size:TDef):TRegister;virtual;
+          function GetIntRegister(List:TAsmList;Size:TDef):TRegister;virtual;
           {# Gets a register suitable to do integer operations on.}
-          function getaddressregister(list:TAsmList;size:TDef):TRegister;virtual;
-          function getfpuregister(list:TAsmList;size:TDef):TRegister;virtual;
+          function GetAddressRegister(List:TAsmList;Size:TDef):TRegister;virtual;
+          function GetFPURegister(List:TAsmList;Size:TDef):TRegister;virtual;
           { warning: only works correctly for fpu types currently }
-          function getmmregister(list:TAsmList;size:TDef):TRegister;virtual;
-          function getflagregister(list:TAsmList;size:TDef):TRegister;virtual;
-          function gettempregister(list:TAsmList;size:TDef):TRegister;virtual;
-          function getregisterfordef(list: TAsmList;size:TDef):TRegister;virtual;
+          function GetMMRegister(List:TAsmList;Size:TDef):TRegister;virtual;
+          function GetFlagRegister(List:TAsmList;Size:TDef):TRegister;virtual;
+          function GetTempRegister(List:TAsmList;Size:TDef):TRegister;virtual;
+          function GetRegisterForDef(List: TAsmList;Size:TDef):TRegister;virtual;
           {Does the generic cg need SIMD registers, like getmmxregister? Or should
            the cpu specific child cg object have such a method?}
 
-          function  uses_registers(rt:TRegisterType):boolean; inline;
+          function  Uses_Registers(RT:TRegisterType):Boolean; inline;
           {# Get a specific register.}
-          procedure getcpuregister(list:TAsmList;r:TRegister);virtual;
-          procedure ungetcpuregister(list:TAsmList;r:TRegister);virtual;
+          procedure GetCPURegister(List:TAsmList;R:TRegister);virtual;
+          procedure UngetCPURegister(List:TAsmList;R:TRegister);virtual;
           {# Get multiple registers specified.}
-          procedure alloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);virtual;
+          procedure AllocCPURegisters(List:TAsmList;RT:TRegisterType;const R:TCPURegisterSet);virtual;
           {# Free multiple registers specified.}
-          procedure dealloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);virtual;
+          procedure DeallocCPURegisters(List:TAsmList;RT:TRegisterType;const R:TCPURegisterSet);virtual;
 
-          procedure allocallcpuregisters(list:TAsmList);virtual;
-          procedure deallocallcpuregisters(list:TAsmList);virtual;
+          procedure AllocAllCPURegisters(List:TAsmList);virtual;
+          procedure DeallocAllCPURegisters(List:TAsmList);virtual;
 
-          procedure do_register_allocation(list:TAsmList;headertai:TAI); inline;
-          procedure translate_register(var reg : TRegister); inline;
+          procedure Do_Register_Allocation(List:TAsmList;HeaderTAI:TAI); inline;
+          procedure Translate_Register(var Reg : TRegister); inline;
 
           {# Returns the kind of register this type should be loaded in (it does not
              check whether this is actually possible, but if it's loaded in a register
              by the compiler for any purpose other than parameter passing/function
              result loading, this is the register type used) }
-          class function def2regtyp(def: TDef): TRegisterType; virtual;
+          class function Def2RegTyp(Def: TDef): TRegisterType; virtual;
 
           {# Returns a reference with its base address set from a pointer that
              has been loaded in a register.
@@ -134,19 +134,19 @@ unit hlcgobj;
              @param(regsize the type of the pointer, contained in the reg parameter)
              @param(reg register containing the value of a pointer)
           }
-          procedure reference_reset_base(var ref: TReference; regsize: TDef; reg: TRegister; offset: LongInt; temppos: TRefTempPos; alignment: LongInt; volatility: TVolatilitySet); virtual;
+          procedure Reference_Reset_Base(var Ref: TReference; RegSize: TDef; Reg: TRegister; Offset: LongInt; TempPos: TRefTempPos; Alignment: LongInt; Volatility: TVolatilitySet); virtual;
 
           {# Emit a label to the instruction stream. }
-          procedure a_label(list : TAsmList;l : TAsmLabel); inline;
+          procedure A_Label(List : TAsmList;L : TAsmLabel); inline;
           {# Emit a label that can be a target of a Pascal goto statement to the instruction stream. }
-          procedure a_label_pascal_goto_target(list : TAsmList;l : TAsmLabel); inline;
+          procedure A_Label_Pascal_Goto_Target(List : TAsmList;L : TAsmLabel); inline;
 
           {# Allocates register r by inserting a pai_realloc record }
-          procedure a_reg_alloc(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Alloc(List : TAsmList;R : TRegister); inline;
           {# Deallocates register r by inserting a pa_regdealloc record}
-          procedure a_reg_dealloc(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Dealloc(List : TAsmList;R : TRegister); inline;
           { Synchronize register, make sure it is still valid }
-          procedure a_reg_sync(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Sync(List : TAsmList;R : TRegister); inline;
 
           {# Pass a parameter, which is located in a register, to a routine.
 
@@ -159,7 +159,7 @@ unit hlcgobj;
              @param(r register source of the operand)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_reg_cgpara(list : TAsmList;size : TDef;r : TRegister;const cgpara : TCGPara);virtual;
+          procedure A_Load_Reg_CGPara(List : TAsmList;Size : TDef;R : TRegister;const CGPara : TCGPara);virtual;
           {# Pass a parameter, which is a constant, to a routine.
 
              A generic version is provided. This routine should
@@ -172,7 +172,7 @@ unit hlcgobj;
              @param(a value of constant to send)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_const_cgpara(list : TAsmList;tosize : TDef;a : TCGInt;const cgpara : TCGPara);virtual;
+          procedure A_Load_Const_CGPara(List : TAsmList;ToSize : TDef;A : TCGInt;const CGPara : TCGPara);virtual;
           {# Pass the value of a parameter, which is located in memory, to a routine.
 
              A generic version is provided. This routine should
@@ -185,7 +185,7 @@ unit hlcgobj;
              @param(r Memory reference of value to send)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_ref_cgpara(list : TAsmList;size : TDef;const r : TReference;const cgpara : TCGPara);virtual;
+          procedure A_Load_Ref_CGPara(List : TAsmList;Size : TDef;const R : TReference;const CGPara : TCGPara);virtual;
           {# Pass the value of a parameter, which can be located either in a register or memory location,
              to a routine.
 
@@ -195,7 +195,7 @@ unit hlcgobj;
              @param(nr parameter number (starting from one) of routine (from left to right))
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_loc_cgpara(list : TAsmList;size : TDef; const l : TLocation;const cgpara : TCGPara);virtual;
+          procedure A_Load_Loc_CGPara(List : TAsmList;Size : TDef; const L : TLocation;const CGPara : TCGPara);virtual;
           {# Pass the address of a reference to a routine. This routine
              will calculate the address of the reference, and pass this
              calculated address as a parameter.
@@ -210,12 +210,12 @@ unit hlcgobj;
              @param(tosize type of the pointer that we get as a result)
              @param(r reference to get address from)
           }
-          procedure a_loadaddr_ref_cgpara(list : TAsmList;fromsize : TDef;const r : TReference;const cgpara : TCGPara);virtual;
+          procedure A_LoadAddr_Ref_CGPara(List : TAsmList;FromSize : TDef;const R : TReference;const CGPara : TCGPara);virtual;
           {# Pass an undefined value as a parameter to a routine.
              A generic version is provided and passes the 0/nil value
              if the parameter's location is not a register.
           }
-          procedure a_load_undefined_cgpara(list : TAsmList;size : TDef;const cgpara : TCGPara);virtual;
+          procedure A_Load_Undefined_CGPara(List : TAsmList;Size : TDef;const CGPara : TCGPara);virtual;
 
           { Remarks:
             * If a method specifies a size you have only to take care
@@ -238,182 +238,182 @@ unit hlcgobj;
              Returns the function result location.
              This routine must be overridden for each new target cpu.
           }
-          function a_call_name(list : TAsmList;pd : TProcDef;const s : TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara;virtual;abstract;
-          function a_call_reg(list : TAsmList;pd : TAbstractProcDef;reg : TRegister; const paras: array of PCGPara): TCGPara;virtual;abstract;
+          function A_Call_Name(List : TAsmList;PD : TProcDef;const S : TSymStr; const Paras: array of PCGPara; ForceResDef: TDef; Weak: Boolean): TCGPara;virtual;abstract;
+          function A_Call_Reg(List : TAsmList;PD : TAbstractProcDef;Reg : TRegister; const Paras: array of PCGPara): TCGPara;virtual;abstract;
           { same as a_call_name, might be overridden on certain architectures to emit
             static calls without usage of a got trampoline }
-          function a_call_name_static(list : TAsmList;pd : TProcDef;const s : TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara;virtual;
+          function A_Call_Name_Static(List : TAsmList;PD : TProcDef;const S : TSymStr; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;virtual;
           { same as a_call_name, might be overridden on certain architectures to emit
             special static calls for inherited methods }
-          function a_call_name_inherited(list : TAsmList;pd : TProcDef;const s : TSymStr; const paras: array of PCGPara): TCGPara;virtual;
+          function A_Call_Name_Inherited(List : TAsmList;PD : TProcDef;const S : TSymStr; const Paras: array of PCGPara): TCGPara;virtual;
 
           { move instructions }
-          procedure a_load_const_reg(list : TAsmList;tosize : TDef;a : TCGInt;register : TRegister);virtual;abstract;
-          procedure a_load_const_ref(list : TAsmList;tosize : TDef;a : TCGInt;const ref : TReference);virtual;
-          procedure a_load_const_loc(list : TAsmList;tosize : TDef;a : TCGInt;const loc : TLocation);virtual;
-          procedure a_load_reg_ref(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);virtual;abstract;
-          procedure a_load_reg_ref_unaligned(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);virtual;
-          procedure a_load_reg_reg(list : TAsmList;fromsize, tosize : TDef;reg1,reg2 : TRegister);virtual;abstract;
-          procedure a_load_reg_loc(list : TAsmList;fromsize, tosize : TDef;reg : TRegister;const loc: TLocation);virtual;
-          procedure a_load_ref_reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);virtual;abstract;
-          procedure a_load_ref_reg_unaligned(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);virtual;
-          procedure a_load_ref_ref(list : TAsmList;fromsize, tosize : TDef;const sref : TReference;const dref : TReference);virtual;
-          procedure a_load_loc_reg(list : TAsmList;fromsize, tosize : TDef; const loc: TLocation; reg : TRegister);virtual;
-          procedure a_load_loc_ref(list : TAsmList;fromsize, tosize: TDef; const loc: TLocation; const ref : TReference);virtual;
-          procedure a_load_loc_subsetreg(list : TAsmList;fromsize, tosubsetsize: TDef; const loc: TLocation; const sreg : TSubsetRegister);virtual;
-          procedure a_load_loc_subsetref(list : TAsmList;fromsize, tosubsetsize: TDef; const loc: TLocation; const sref : TSubsetReference);virtual;
-          procedure a_loadaddr_ref_reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;r : TRegister);virtual;abstract;
+          procedure A_Load_Const_Reg(List : TAsmList;ToSize : TDef;A : TCGInt;Register : TRegister);virtual;abstract;
+          procedure A_Load_Const_Ref(List : TAsmList;ToSize : TDef;A : TCGInt;const Ref : TReference);virtual;
+          procedure A_Load_Const_Loc(List : TAsmList;ToSize : TDef;A : TCGInt;const Loc : TLocation);virtual;
+          procedure A_Load_Reg_Ref(List : TAsmList;FromSize, ToSize : TDef;Register : TRegister;const Ref : TReference);virtual;abstract;
+          procedure A_Load_Reg_Ref_Unaligned(List : TAsmList;FromSize, ToSize : TDef;Register : TRegister;const Ref : TReference);virtual;
+          procedure A_Load_Reg_Reg(List : TAsmList;FromSize, ToSize : TDef;Reg1,Reg2 : TRegister);virtual;abstract;
+          procedure A_Load_Reg_Loc(List : TAsmList;FromSize, ToSize : TDef;Reg : TRegister;const Loc: TLocation);virtual;
+          procedure A_Load_Ref_Reg(List : TAsmList;FromSize, ToSize : TDef;const Ref : TReference;Register : TRegister);virtual;abstract;
+          procedure A_Load_Ref_Reg_Unaligned(List : TAsmList;FromSize, ToSize : TDef;const Ref : TReference;Register : TRegister);virtual;
+          procedure A_Load_Ref_Ref(List : TAsmList;FromSize, ToSize : TDef;const SRef : TReference;const DRef : TReference);virtual;
+          procedure A_Load_Loc_Reg(List : TAsmList;FromSize, ToSize : TDef; const Loc: TLocation; Reg : TRegister);virtual;
+          procedure A_Load_Loc_Ref(List : TAsmList;FromSize, ToSize: TDef; const Loc: TLocation; const Ref : TReference);virtual;
+          procedure A_Load_Loc_SubsetReg(List : TAsmList;FromSize, ToSubsetSize: TDef; const Loc: TLocation; const SReg : TSubsetRegister);virtual;
+          procedure A_Load_Loc_SubsetRef(List : TAsmList;FromSize, ToSubsetSize: TDef; const Loc: TLocation; const SRef : TSubsetReference);virtual;
+          procedure A_LoadAddr_Ref_Reg(List : TAsmList;FromSize, ToSize : TDef;const Ref : TReference;R : TRegister);virtual;abstract;
 
           { For subsetreg/ref, the def is the size of the packed element. The
             size of the register that holds the data is a tcgsize, and hence
             always must be an orddef of the corresponding size in practice }
-          procedure a_load_subsetreg_reg(list : TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister); virtual;
-          procedure a_load_reg_subsetreg(list : TAsmList; fromsize, tosubsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister); virtual;
-          procedure a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize : TDef; const fromsreg, tosreg: TSubsetRegister); virtual;
-          procedure a_load_subsetreg_ref(list : TAsmList; fromsubsetsize, tosize: TDef; const sreg: TSubsetRegister; const destref: TReference); virtual;
-          procedure a_load_ref_subsetreg(list : TAsmList; fromsize, tosubsetsize: TDef; const fromref: TReference; const sreg: TSubsetRegister); virtual;
-          procedure a_load_const_subsetreg(list: TAsmList; tosubsetsize: TDef; a: TCGInt; const sreg: TSubsetRegister); virtual;
-          procedure a_load_subsetreg_loc(list: TAsmList; fromsubsetsize, tosize: TDef; const sreg: TSubsetRegister; const loc: TLocation); virtual;
+          procedure A_Load_SubsetReg_Reg(List : TAsmList; SubsetSize, ToSize: TDef; const SReg: TSubsetRegister; DestReg: TRegister); virtual;
+          procedure A_Load_Reg_SubsetReg(List : TAsmList; FromSize, ToSubsetSize: TDef; FromReg: TRegister; const SReg: TSubsetRegister); virtual;
+          procedure A_Load_SubsetReg_SubsetReg(List: TAsmList; FromSubsetSize, ToSubsetSize : TDef; const FromSReg, ToSReg: TSubsetRegister); virtual;
+          procedure A_Load_SubsetReg_Ref(List : TAsmList; FromSubsetSize, ToSize: TDef; const SReg: TSubsetRegister; const DestRef: TReference); virtual;
+          procedure A_Load_Ref_SubsetReg(List : TAsmList; FromSize, ToSubsetSize: TDef; const FromRef: TReference; const SReg: TSubsetRegister); virtual;
+          procedure A_Load_Const_SubsetReg(List: TAsmList; ToSubsetSize: TDef; A: TCGInt; const SReg: TSubsetRegister); virtual;
+          procedure A_Load_SubsetReg_Loc(List: TAsmList; FromSubsetSize, ToSize: TDef; const SReg: TSubsetRegister; const Loc: TLocation); virtual;
 
-          procedure a_load_subsetref_reg(list : TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; destreg: TRegister); virtual;
-          procedure a_load_reg_subsetref(list : TAsmList; fromsize, tosubsetsize: TDef; fromreg: TRegister; const sref: TSubsetReference); virtual;
-          procedure a_load_subsetref_subsetref(list: TAsmList; fromsubsetsize, tosubsetsize : TDef; const fromsref, tosref: TSubsetReference); virtual;
-          procedure a_load_subsetref_ref(list : TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; const destref: TReference); virtual;
-          procedure a_load_ref_subsetref(list : TAsmList; fromsize, tosubsetsize: TDef; const fromref: TReference; const sref: TSubsetReference); virtual;
-          procedure a_load_const_subsetref(list: TAsmList; tosubsetsize: TDef; a: TCGInt; const sref: TSubsetReference); virtual;
-          procedure a_load_subsetref_loc(list: TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; const loc: TLocation); virtual;
-          procedure a_load_subsetref_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize : TDef; const fromsref: TSubsetReference; const tosreg: TSubsetRegister); virtual;
-          procedure a_load_subsetreg_subsetref(list: TAsmList; fromsubsetsize, tosubsetsize : TDef; const fromsreg: TSubsetRegister; const tosref: TSubsetReference); virtual;
+          procedure A_Load_SubsetRef_Reg(List : TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; DestReg: TRegister); virtual;
+          procedure A_Load_Reg_SubsetRef(List : TAsmList; FromSize, ToSubsetSize: TDef; FromReg: TRegister; const SRef: TSubsetReference); virtual;
+          procedure A_Load_SubsetRef_SubsetRef(List: TAsmList; FromSubsetSize, ToSubsetSize : TDef; const FromSRef, ToSRef: TSubsetReference); virtual;
+          procedure A_Load_SubsetRef_Ref(List : TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; const DestRef: TReference); virtual;
+          procedure A_Load_Ref_SubsetRef(List : TAsmList; FromSize, ToSubsetSize: TDef; const FromRef: TReference; const SRef: TSubsetReference); virtual;
+          procedure A_Load_Const_SubsetRef(List: TAsmList; ToSubsetSize: TDef; A: TCGInt; const SRef: TSubsetReference); virtual;
+          procedure A_Load_SubsetRef_Loc(List: TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; const Loc: TLocation); virtual;
+          procedure A_Load_SubsetRef_SubsetReg(List: TAsmList; FromSubsetSize, ToSubsetSize : TDef; const FromSRef: TSubsetReference; const ToSReg: TSubsetRegister); virtual;
+          procedure A_Load_SubsetReg_SubsetRef(List: TAsmList; FromSubsetSize, ToSubsetSize : TDef; const FromSReg: TSubsetRegister; const ToSRef: TSubsetReference); virtual;
 
           { bit test instructions }
-          procedure a_bit_test_reg_reg_reg(list : TAsmList; bitnumbersize,valuesize,destsize: TDef;bitnumber,value,destreg: TRegister); virtual;
-          procedure a_bit_test_const_ref_reg(list: TAsmList; fromsize, destsize: TDef; bitnumber: aint; const ref: TReference; destreg: TRegister); virtual;
-          procedure a_bit_test_const_reg_reg(list: TAsmList; setregsize, destsize: TDef; bitnumber: aint; setreg, destreg: TRegister); virtual;
-          procedure a_bit_test_const_subsetreg_reg(list: TAsmList; fromsubsetsize, destsize: TDef; bitnumber: aint; const setreg: TSubsetRegister; destreg: TRegister); virtual;
-          procedure a_bit_test_reg_ref_reg(list: TAsmList; bitnumbersize, refsize, destsize: TDef; bitnumber: TRegister; const ref: TReference; destreg: TRegister); virtual;
-          procedure a_bit_test_reg_loc_reg(list: TAsmList; bitnumbersize, locsize, destsize: TDef; bitnumber: TRegister; const loc: TLocation; destreg: TRegister);virtual;
-          procedure a_bit_test_const_loc_reg(list: TAsmList; locsize, destsize: TDef; bitnumber: aint; const loc: TLocation; destreg: TRegister);virtual;
+          procedure A_Bit_Test_Reg_Reg_Reg(List : TAsmList; BitNumberSize,ValueSize,DestSize: TDef;BitNumber,Value,DestReg: TRegister); virtual;
+          procedure A_Bit_Test_Const_Ref_Reg(List: TAsmList; FromSize, DestSize: TDef; BitNumber: AInt; const Ref: TReference; DestReg: TRegister); virtual;
+          procedure A_Bit_Test_Const_Reg_Reg(List: TAsmList; SetRegSize, DestSize: TDef; BitNumber: AInt; SetReg, DestReg: TRegister); virtual;
+          procedure A_Bit_Test_Const_SubsetReg_Reg(List: TAsmList; FromSubsetSize, DestSize: TDef; BitNumber: AInt; const SetReg: TSubsetRegister; DestReg: TRegister); virtual;
+          procedure A_Bit_Test_Reg_Ref_Reg(List: TAsmList; BitNumberSize, RefSize, DestSize: TDef; BitNumber: TRegister; const Ref: TReference; DestReg: TRegister); virtual;
+          procedure A_Bit_Test_Reg_Loc_Reg(List: TAsmList; BitNumberSize, LocSize, DestSize: TDef; BitNumber: TRegister; const Loc: TLocation; DestReg: TRegister);virtual;
+          procedure A_Bit_Test_Const_Loc_Reg(List: TAsmList; LocSize, DestSize: TDef; BitNumber: AInt; const Loc: TLocation; DestReg: TRegister);virtual;
 
           { bit set/clear instructions }
-          procedure a_bit_set_reg_reg(list : TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber,dest: TRegister); virtual;
-          procedure a_bit_set_const_ref(list: TAsmList; doset: boolean;destsize: TDef; bitnumber: TCGInt; const ref: TReference); virtual;
-          procedure a_bit_set_const_reg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; destreg: TRegister); virtual;
-          procedure a_bit_set_const_subsetreg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; const destreg: TSubsetRegister); virtual;
-          procedure a_bit_set_reg_ref(list: TAsmList; doset: boolean; fromsize, tosize: TDef; bitnumber: TRegister; const ref: TReference); virtual;
-          procedure a_bit_set_reg_loc(list: TAsmList; doset: boolean; regsize, tosize: TDef; bitnumber: TRegister; const loc: TLocation);virtual;
-          procedure a_bit_set_const_loc(list: TAsmList; doset: boolean; tosize: TDef; bitnumber: TCGInt; const loc: TLocation);virtual;
+          procedure A_Bit_Set_Reg_Reg(List : TAsmList; DoSet: Boolean; BitNumberSize, DestSize: TDef; BitNumber,Dest: TRegister); virtual;
+          procedure A_Bit_Set_Const_Ref(List: TAsmList; DoSet: Boolean;DestSize: TDef; BitNumber: TCGInt; const Ref: TReference); virtual;
+          procedure A_Bit_Set_Const_Reg(List: TAsmList; DoSet: Boolean; DestSize: TDef; BitNumber: TCGInt; DestReg: TRegister); virtual;
+          procedure A_Bit_Set_Const_SubsetReg(List: TAsmList; DoSet: Boolean; DestSize: TDef; BitNumber: TCGInt; const DestReg: TSubsetRegister); virtual;
+          procedure A_Bit_Set_Reg_Ref(List: TAsmList; DoSet: Boolean; FromSize, ToSize: TDef; BitNumber: TRegister; const Ref: TReference); virtual;
+          procedure A_Bit_Set_Reg_Loc(List: TAsmList; DoSet: Boolean; RegSize, ToSize: TDef; BitNumber: TRegister; const Loc: TLocation);virtual;
+          procedure A_Bit_Set_Const_Loc(List: TAsmList; DoSet: Boolean; ToSize: TDef; BitNumber: TCGInt; const Loc: TLocation);virtual;
 
-          function  get_call_result_cgpara(pd: TAbstractProcDef; forceresdef: TDef): TCGPara; virtual;
+          function  Get_Call_Result_CGPara(PD: TAbstractProcDef; ForceResDef: TDef): TCGPara; virtual;
          protected
-           procedure get_subsetref_load_info(const sref: TSubsetReference; out loadsize: TOrdDef; out extra_load: boolean);
-           procedure a_load_subsetref_regs_noindex(list: TAsmList; subsetsize: TDef; loadbitsize: byte; const sref: TSubsetReference; valuereg, extra_value_reg: TRegister); virtual;
-           procedure a_load_subsetref_regs_index(list: TAsmList; subsetsize: TDef; loadbitsize: byte; const sref: TSubsetReference; valuereg: TRegister); virtual;
+           procedure Get_SubsetRef_Load_Info(const SRef: TSubsetReference; out LoadSize: TOrdDef; out ExtraLoad: Boolean);
+           procedure A_Load_SubsetRef_Regs_NoIndex(List: TAsmList; SubsetSize: TDef; LoadBitSize: Byte; const SRef: TSubsetReference; ValueReg, ExtraValueReg: TRegister); virtual;
+           procedure A_Load_SubsetRef_Regs_Index(List: TAsmList; SubsetSize: TDef; LoadBitSize: Byte; const SRef: TSubsetReference; ValueReg: TRegister); virtual;
 
-           procedure a_load_regconst_subsetref_intern(list : TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sref: TSubsetReference; slopt: TSubsetLoadOpt); virtual;
-           procedure a_load_regconst_subsetreg_intern(list : TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt); virtual;
+           procedure A_Load_RegConst_SubsetRef_Intern(List : TAsmList; FromSize, SubsetSize: TDef; FromReg: TRegister; const SRef: TSubsetReference; SlOpt: TSubsetLoadOpt); virtual;
+           procedure A_Load_RegConst_SubsetReg_Intern(List : TAsmList; FromSize, SubsetSize: TDef; FromReg: TRegister; const SReg: TSubsetRegister; SlOpt: TSubsetLoadOpt); virtual;
 
            { return a subsetref that represents bit "bitnumber" in ref, if ref
              has the type "refdef". The subsetref must be addressable via
              (unsigned) 8 bit access, unless all the *_bit_* methods are
              overloaded and use something else. }
-           function get_bit_const_ref_sref(bitnumber: TCGInt; refdef: TDef; const ref: TReference): TSubsetReference;
-           function get_bit_const_reg_sreg(setregsize: TDef; bitnumber: TCGInt; setreg: TRegister): TSubsetRegister;
-           function get_bit_reg_ref_sref(list: TAsmList; bitnumbersize, refsize: TDef; bitnumber: TRegister; const ref: TReference): TSubsetReference;
+           function Get_Bit_Const_Ref_SRef(BitNumber: TCGInt; RefDef: TDef; const Ref: TReference): TSubsetReference;
+           function Get_Bit_Const_Reg_SReg(SetRegSize: TDef; BitNumber: TCGInt; SetReg: TRegister): TSubsetRegister;
+           function Get_Bit_Reg_Ref_SRef(List: TAsmList; BitNumberSize, RefSize: TDef; BitNumber: TRegister; const Ref: TReference): TSubsetReference;
          public
 
           { bit scan instructions (still need transformation to thlcgobj) }
-          procedure a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TDef; src, dst: TRegister); virtual; abstract;
+          procedure A_Bit_Scan_Reg_Reg(List: TAsmList; Reverse,NotZero: Boolean; SrcSize, DstSize: TDef; Src, Dst: TRegister); virtual; abstract;
 
           { fpu move instructions }
-          procedure a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister); virtual; abstract;
-          procedure a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister); virtual; abstract;
-          procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference); virtual; abstract;
-          procedure a_loadfpu_ref_ref(list: TAsmList; fromsize, tosize: TDef; const ref1,ref2: TReference);virtual;
-          procedure a_loadfpu_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);virtual;
-          procedure a_loadfpu_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference);virtual;
-          procedure a_loadfpu_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);virtual;
-          procedure a_loadfpu_reg_cgpara(list : TAsmList;fromsize: TDef;const r : TRegister;const cgpara : TCGPara);virtual;
-          procedure a_loadfpu_ref_cgpara(list : TAsmList;fromsize : TDef;const ref : TReference;const cgpara : TCGPara);virtual;
+          procedure A_LoadFPU_Reg_Reg(List: TAsmList; FromSize, ToSize: TDef; Reg1, Reg2: TRegister); virtual; abstract;
+          procedure A_LoadFPU_Ref_Reg(List: TAsmList; FromSize, ToSize: TDef; const Ref: TReference; Reg: TRegister); virtual; abstract;
+          procedure A_LoadFPU_Reg_Ref(List: TAsmList; FromSize, ToSize: TDef; Reg: TRegister; const Ref: TReference); virtual; abstract;
+          procedure A_LoadFPU_Ref_Ref(List: TAsmList; FromSize, ToSize: TDef; const Ref1,Ref2: TReference);virtual;
+          procedure A_LoadFPU_Loc_Reg(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Reg: TRegister);virtual;
+          procedure A_LoadFPU_Loc_Ref(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Ref: TReference);virtual;
+          procedure A_LoadFPU_Reg_Loc(List: TAsmList; FromSize, ToSize: TDef; const Reg: TRegister; const Loc: TLocation);virtual;
+          procedure A_LoadFPU_Reg_CGPara(List : TAsmList;FromSize: TDef;const R : TRegister;const CGPara : TCGPara);virtual;
+          procedure A_LoadFPU_Ref_CGPara(List : TAsmList;FromSize : TDef;const Ref : TReference;const CGPara : TCGPara);virtual;
 
           { vector register move instructions }
-          procedure a_loadmm_reg_reg(list: TAsmList; fromsize, tosize: TDef;reg1, reg2: TRegister;shuffle : PMMShuffle); virtual; abstract;
-          procedure a_loadmm_ref_reg(list: TAsmList; fromsize, tosize: TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); virtual; abstract;
-          procedure a_loadmm_reg_ref(list: TAsmList; fromsize, tosize: TDef;reg: TRegister; const ref: TReference;shuffle : PMMShuffle); virtual; abstract;
-          procedure a_loadmm_ref_ref(list: TAsmList; fromsize, tosize: TDef; const fromref, toref: TReference; shuffle: PMMShuffle); virtual;
+          procedure A_LoadMM_Reg_Reg(List: TAsmList; FromSize, ToSize: TDef;Reg1, Reg2: TRegister;Shuffle : PMMShuffle); virtual; abstract;
+          procedure A_LoadMM_Ref_Reg(List: TAsmList; FromSize, ToSize: TDef;const Ref: TReference; Reg: TRegister;Shuffle : PMMShuffle); virtual; abstract;
+          procedure A_LoadMM_Reg_Ref(List: TAsmList; FromSize, ToSize: TDef;Reg: TRegister; const Ref: TReference;Shuffle : PMMShuffle); virtual; abstract;
+          procedure A_LoadMM_Ref_Ref(List: TAsmList; FromSize, ToSize: TDef; const FromRef, ToRef: TReference; Shuffle: PMMShuffle); virtual;
           { required for subsetreg/ref; still tcgsize rather than tdef because of reason mentioned above }
-          procedure a_loadmm_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister; shuffle : PMMShuffle);virtual;
-          procedure a_loadmm_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation;shuffle : PMMShuffle);virtual;
-          procedure a_loadmm_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference; shuffle : PMMShuffle);virtual;
-          procedure a_loadmm_reg_cgpara(list: TAsmList; fromsize: TDef; reg: TRegister;const cgpara : TCGPara;shuffle : PMMShuffle); virtual;
-          procedure a_loadmm_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference;const cgpara : TCGPara;shuffle : PMMShuffle); virtual;
-          procedure a_loadmm_loc_cgpara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara : TCGPara;shuffle : PMMShuffle); virtual;
-          procedure a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : TDef;src,dst: TRegister;shuffle : PMMShuffle); virtual; abstract;
-          procedure a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); virtual;
-          procedure a_opmm_loc_reg(list: TAsmList; Op: TOpCG; size : TDef;const loc: TLocation; reg: TRegister;shuffle : PMMShuffle); virtual;
-          procedure a_opmm_reg_ref(list: TAsmList; Op: TOpCG; size : TDef;reg: TRegister;const ref: TReference; shuffle : PMMShuffle); virtual;
+          procedure A_LoadMM_Loc_Reg(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Reg: TRegister; Shuffle : PMMShuffle);virtual;
+          procedure A_LoadMM_Reg_Loc(List: TAsmList; FromSize, ToSize: TDef; const Reg: TRegister; const Loc: TLocation;Shuffle : PMMShuffle);virtual;
+          procedure A_LoadMM_Loc_Ref(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Ref: TReference; Shuffle : PMMShuffle);virtual;
+          procedure A_LoadMM_Reg_CGPara(List: TAsmList; FromSize: TDef; Reg: TRegister;const CGPara : TCGPara;Shuffle : PMMShuffle); virtual;
+          procedure A_LoadMM_Ref_CGPara(List: TAsmList; FromSize: TDef; const Ref: TReference;const CGPara : TCGPara;Shuffle : PMMShuffle); virtual;
+          procedure A_LoadMM_Loc_CGPara(List: TAsmList; FromSize: TDef; const Loc: TLocation; const CGPara : TCGPara;Shuffle : PMMShuffle); virtual;
+          procedure A_OpMM_Reg_Reg(List: TAsmList; Op: TOpCG; Size : TDef;Src,Dst: TRegister;Shuffle : PMMShuffle); virtual; abstract;
+          procedure A_OpMM_Ref_Reg(List: TAsmList; Op: TOpCG; Size : TDef;const Ref: TReference; Reg: TRegister;Shuffle : PMMShuffle); virtual;
+          procedure A_OpMM_Loc_Reg(List: TAsmList; Op: TOpCG; Size : TDef;const Loc: TLocation; Reg: TRegister;Shuffle : PMMShuffle); virtual;
+          procedure A_OpMM_Reg_Ref(List: TAsmList; Op: TOpCG; Size : TDef;Reg: TRegister;const Ref: TReference; Shuffle : PMMShuffle); virtual;
           { requires a temp that is interpreted in two different ways, and we
             don't have a way (yet) to tag a treference with tdef information so
             targets like LLVM can insert the necessary bitcast
           }
-          procedure a_loadmm_intreg_reg(list: TAsmList; fromsize, tosize : TDef; intreg, mmreg: TRegister; shuffle: PMMShuffle); virtual; abstract;
-          procedure a_loadmm_reg_intreg(list: TAsmList; fromsize, tosize : TDef; mmreg, intreg: TRegister; shuffle : PMMShuffle); virtual; abstract;
+          procedure A_LoadMM_IntReg_Reg(List: TAsmList; FromSize, ToSize : TDef; IntReg, MMReg: TRegister; Shuffle: PMMShuffle); virtual; abstract;
+          procedure A_LoadMM_Reg_IntReg(List: TAsmList; FromSize, ToSize : TDef; MMReg, IntReg: TRegister; Shuffle : PMMShuffle); virtual; abstract;
 
           { basic arithmetic operations }
-          procedure a_op_const_reg(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; reg: TRegister); virtual; abstract;
-          procedure a_op_const_ref(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference); virtual;
-          procedure a_op_const_subsetreg(list : TAsmList; Op : TOpCG; size, subsetsize : TDef; a : TCGInt; const sreg: TSubsetRegister); virtual;
-          procedure a_op_const_subsetref(list : TAsmList; Op : TOpCG; size, subsetsize : TDef; a : TCGInt; const sref: TSubsetReference); virtual;
-          procedure a_op_const_loc(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);virtual;
-          procedure a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TDef; reg1, reg2: TRegister); virtual; abstract;
-          procedure a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference); virtual;
-          procedure a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister); virtual;
-          procedure a_op_reg_subsetreg(list: TAsmList; Op: TOpCG; opsize, destsubsetsize: TDef; reg: TRegister; const sreg: TSubsetRegister); virtual;
-          procedure a_op_reg_subsetref(list: TAsmList; Op: TOpCG; opsize, destsubsetsize: TDef; reg: TRegister; const sref: TSubsetReference); virtual;
-          procedure a_op_reg_loc(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);virtual;
-          procedure a_op_ref_loc(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);virtual;
+          procedure A_Op_Const_Reg(List : TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; Reg: TRegister); virtual; abstract;
+          procedure A_Op_Const_Ref(List : TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; const Ref: TReference); virtual;
+          procedure A_Op_Const_SubsetReg(List : TAsmList; Op : TOpCG; Size, SubsetSize : TDef; A : TCGInt; const SReg: TSubsetRegister); virtual;
+          procedure A_Op_Const_SubsetRef(List : TAsmList; Op : TOpCG; Size, SubsetSize : TDef; A : TCGInt; const SRef: TSubsetReference); virtual;
+          procedure A_Op_Const_Loc(List : TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; const Loc: TLocation);virtual;
+          procedure A_Op_Reg_Reg(List : TAsmList; Op: TOpCG; Size: TDef; Reg1, Reg2: TRegister); virtual; abstract;
+          procedure A_Op_Reg_Ref(List : TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister; const Ref: TReference); virtual;
+          procedure A_Op_Ref_Reg(List : TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference; Reg: TRegister); virtual;
+          procedure A_Op_Reg_SubsetReg(List: TAsmList; Op: TOpCG; OpSize, DestSubsetSize: TDef; Reg: TRegister; const SReg: TSubsetRegister); virtual;
+          procedure A_Op_Reg_SubsetRef(List: TAsmList; Op: TOpCG; OpSize, DestSubsetSize: TDef; Reg: TRegister; const SRef: TSubsetReference); virtual;
+          procedure A_Op_Reg_Loc(List : TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister; const Loc: TLocation);virtual;
+          procedure A_Op_Ref_Loc(List : TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference; const Loc: TLocation);virtual;
 
           { trinary operations for processors that support them, 'emulated' }
           { on others. None with "ref" arguments since I don't think there  }
           { are any processors that support it (JM)                         }
-          procedure a_op_const_reg_reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister); virtual;
-          procedure a_op_reg_reg_reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister); virtual;
-          procedure a_op_const_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister;setflags : boolean;var ovloc : TLocation); virtual;
-          procedure a_op_reg_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister;setflags : boolean;var ovloc : TLocation); virtual;
+          procedure A_Op_Const_Reg_Reg(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; Src, Dst: TRegister); virtual;
+          procedure A_Op_Reg_Reg_Reg(List: TAsmList; Op: TOpCG; Size: TDef; Src1, Src2, Dst: TRegister); virtual;
+          procedure A_Op_Const_Reg_Reg_CheckOverflow(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; Src, Dst: TRegister;SetFlags : Boolean;var OVLoc : TLocation); virtual;
+          procedure A_Op_Reg_Reg_Reg_CheckOverflow(List: TAsmList; Op: TOpCG; Size: TDef; Src1, Src2, Dst: TRegister;SetFlags : Boolean;var OVLoc : TLocation); virtual;
 
           { unary operations (not, neg) }
-          procedure a_op_reg(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister); virtual;
-          procedure a_op_ref(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference); virtual;
-          procedure a_op_subsetreg(list: TAsmList; Op: TOpCG; destsubsetsize: TDef; const sreg: TSubsetRegister); virtual;
-          procedure a_op_subsetref(list: TAsmList; Op: TOpCG; destsubsetsize: TDef; const sref: TSubsetReference); virtual;
-          procedure a_op_loc(list : TAsmList; Op: TOpCG; size: TDef;  const loc: TLocation); virtual;
+          procedure A_Op_Reg(List : TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister); virtual;
+          procedure A_Op_Ref(List : TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference); virtual;
+          procedure A_Op_SubsetReg(List: TAsmList; Op: TOpCG; DestSubsetSize: TDef; const SReg: TSubsetRegister); virtual;
+          procedure A_Op_SubsetRef(List: TAsmList; Op: TOpCG; DestSubsetSize: TDef; const SRef: TSubsetReference); virtual;
+          procedure A_Op_Loc(List : TAsmList; Op: TOpCG; Size: TDef;  const Loc: TLocation); virtual;
 
           {  comparison operations }
-          procedure a_cmp_const_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;reg : TRegister;
-            l : TAsmLabel);virtual;
-          procedure a_cmp_const_ref_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;const ref : TReference;
-            l : TAsmLabel); virtual;
-          procedure a_cmp_const_loc_label(list: TAsmList; size: TDef;cmp_op: TOpCmp; a: TCGInt; const loc: TLocation;
-            l : TAsmLabel);virtual;
-          procedure a_cmp_reg_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg1,reg2 : TRegister;l : TAsmLabel); virtual; abstract;
-          procedure a_cmp_ref_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const ref: TReference; reg : TRegister; l : TAsmLabel); virtual;
-          procedure a_cmp_reg_ref_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg : TRegister; const ref: TReference; l : TAsmLabel); virtual;
-          procedure a_cmp_subsetreg_reg_label(list: TAsmList; fromsubsetsize, cmpsize: TDef; cmp_op: TOpCmp; const sreg: TSubsetRegister; reg: TRegister; l: TAsmLabel); virtual;
-          procedure a_cmp_subsetref_reg_label(list: TAsmList; fromsubsetsize, cmpsize: TDef; cmp_op: TOpCmp; const sref: TSubsetReference; reg: TRegister; l: TAsmLabel); virtual;
+          procedure A_Cmp_Const_Reg_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp;A : TCGInt;Reg : TRegister;
+            L : TAsmLabel);virtual;
+          procedure A_Cmp_Const_Ref_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp;A : TCGInt;const Ref : TReference;
+            L : TAsmLabel); virtual;
+          procedure A_Cmp_Const_Loc_Label(List: TAsmList; Size: TDef;CmpOp: TOpCmp; A: TCGInt; const Loc: TLocation;
+            L : TAsmLabel);virtual;
+          procedure A_Cmp_Reg_Reg_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp;Reg1,Reg2 : TRegister;L : TAsmLabel); virtual; abstract;
+          procedure A_Cmp_Ref_Reg_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp; const Ref: TReference; Reg : TRegister; L : TAsmLabel); virtual;
+          procedure A_Cmp_Reg_Ref_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp;Reg : TRegister; const Ref: TReference; L : TAsmLabel); virtual;
+          procedure A_Cmp_SubsetReg_Reg_Label(List: TAsmList; FromSubsetSize, CmpSize: TDef; CmpOp: TOpCmp; const SReg: TSubsetRegister; Reg: TRegister; L: TAsmLabel); virtual;
+          procedure A_Cmp_SubsetRef_Reg_Label(List: TAsmList; FromSubsetSize, CmpSize: TDef; CmpOp: TOpCmp; const SRef: TSubsetReference; Reg: TRegister; L: TAsmLabel); virtual;
 
-          procedure a_cmp_loc_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const loc: TLocation; reg : TRegister; l : TAsmLabel);virtual;
-          procedure a_cmp_reg_loc_label(list : TAsmList;size : TDef;cmp_op : TOpCmp; reg: TRegister; const loc: TLocation; l : TAsmLabel);
-          procedure a_cmp_ref_loc_label(list: TAsmList; size: TDef;cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l : TAsmLabel);virtual;
+          procedure A_Cmp_Loc_Reg_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp; const Loc: TLocation; Reg : TRegister; L : TAsmLabel);virtual;
+          procedure A_Cmp_Reg_Loc_Label(List : TAsmList;Size : TDef;CmpOp : TOpCmp; Reg: TRegister; const Loc: TLocation; L : TAsmLabel);
+          procedure A_Cmp_Ref_Loc_Label(List: TAsmList; Size: TDef;CmpOp: TOpCmp; const Ref: TReference; const Loc: TLocation; L : TAsmLabel);virtual;
 
-          procedure a_jmp_always(list : TAsmList;l: TAsmLabel); virtual;abstract;
-          procedure a_jmp_always_pascal_goto(list : TAsmList;l: TAsmLabel);virtual;
+          procedure A_Jmp_Always(List : TAsmList;L: TAsmLabel); virtual;abstract;
+          procedure A_Jmp_Always_Pascal_Goto(List : TAsmList;L: TAsmLabel);virtual;
 {$ifdef cpuflags}
-          procedure a_jmp_flags(list : TAsmList;const f : TResFlags;l: TAsmLabel); virtual; abstract;
+          procedure A_Jmp_Flags(List : TAsmList;const F : TResFlags;L: TAsmLabel); virtual; abstract;
 
           {# Depending on the value to check in the flags, either sets the register reg to one (if the flag is set)
              or zero (if the flag is cleared). The size parameter indicates the destination size register.
           }
-          procedure g_flags2reg(list: TAsmList; size: TDef; const f: TResFlags; reg: TRegister); virtual; abstract;
-          procedure g_flags2ref(list: TAsmList; size: TDef; const f: TResFlags; const ref:TReference); virtual; abstract;
+          procedure G_Flags2Reg(List: TAsmList; Size: TDef; const F: TResFlags; Reg: TRegister); virtual; abstract;
+          procedure G_Flags2Ref(List: TAsmList; Size: TDef; const F: TResFlags; const Ref:TReference); virtual; abstract;
 {$endif cpuflags}
 
           {
@@ -427,7 +427,7 @@ unit hlcgobj;
              @param(a  The constant which should be emitted, returns the constant which must
                     be emitted)
           }
-          procedure optimize_op_const(size: TDef; var op: TOpCG; var a : TCGInt);virtual;
+          procedure Optimize_Op_Const(Size: TDef; var Op: TOpCG; var A : TCGInt);virtual;
 
           {#
               This routine is used in exception management nodes. It should
@@ -435,7 +435,7 @@ unit hlcgobj;
               save should be done either to a temp (pointed to by href).
               or on the stack (pushing the value on the stack).
            }
-          procedure g_exception_reason_save(list : TAsmList; fromsize, tosize: TDef; reg: TRegister; const href : TReference);virtual;
+          procedure G_Exception_Reason_Save(List : TAsmList; FromSize, ToSize: TDef; Reg: TRegister; const HRef : TReference);virtual;
 
           {#
               This routine is used in exception management nodes. It should
@@ -446,7 +446,7 @@ unit hlcgobj;
               The size of the value to save is OS_S32. The default version
               saves the exception reason to a temp. memory area.
            }
-          procedure g_exception_reason_save_const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference);virtual;
+          procedure G_Exception_Reason_Save_Const(List: TAsmList; Size: TDef; A: TCGInt; const HRef: TReference);virtual;
 
           {#
               This routine is used in exception management nodes. It should
@@ -457,13 +457,13 @@ unit hlcgobj;
               The size of the value to save is OS_S32. The default version
               saves the exception reason to a temp. memory area.
            }
-          procedure g_exception_reason_load(list : TAsmList; fromsize, tosize: TDef; const href : TReference; reg: TRegister);virtual;
+          procedure G_Exception_Reason_Load(List : TAsmList; FromSize, ToSize: TDef; const HRef : TReference; Reg: TRegister);virtual;
           {#
               This routine is called when the current exception reason can be
               discarded. On platforms that use push/pop, it causes the current
               value to be popped. On other platforms it doesn't do anything
           }
-          procedure g_exception_reason_discard(list : TAsmList; size: TDef; href: TReference); virtual;
+          procedure G_Exception_Reason_Discard(List : TAsmList; Size: TDef; HRef: TReference); virtual;
 
           {#
               This routine is called after g_call_system_proc to a system proc,
@@ -471,14 +471,14 @@ unit hlcgobj;
               to manually check an 'exception raised' flag, like WebAssembly in
               branchful exceptions mode.
           }
-          procedure g_maybe_checkforexceptions(list : TAsmList); virtual;
+          procedure G_Maybe_CheckForExceptions(List : TAsmList); virtual;
 
           {#
               Call when the current location should never be reached
           }
-          procedure g_unreachable(list: TAsmList); virtual;
+          procedure G_Unreachable(List: TAsmList); virtual;
 
-          procedure g_maybe_testself(list : TAsmList; selftype: TDef; reg:TRegister);
+          procedure G_Maybe_TestSelf(List : TAsmList; SelfType: TDef; Reg:TRegister);
 //          procedure g_maybe_testvmt(list : TAsmList;reg:tregister;objdef:tobjectdef);
           {# This should emit the opcode to copy len bytes from the source
              to destination.
@@ -489,7 +489,7 @@ unit hlcgobj;
              @param(dest Destination reference of copy)
 
           }
-          procedure g_concatcopy(list : TAsmList;size: TDef; const source,dest : TReference);virtual;
+          procedure G_ConcatCopy(List : TAsmList;Size: TDef; const Source,Dest : TReference);virtual;
           {# This should emit the opcode to copy len bytes from the an unaligned source
              to destination.
 
@@ -499,7 +499,7 @@ unit hlcgobj;
              @param(dest Destination reference of copy)
 
           }
-          procedure g_concatcopy_unaligned(list : TAsmList;size: TDef; const source,dest : TReference);virtual;
+          procedure G_ConcatCopy_Unaligned(List : TAsmList;Size: TDef; const Source,Dest : TReference);virtual;
           {# This should emit the opcode to a shortrstring from the source
              to destination.
 
@@ -507,19 +507,19 @@ unit hlcgobj;
              @param(dest Destination reference of copy)
 
           }
-          procedure g_copyshortstring(list : TAsmList;const source,dest : TReference;strdef:TStringDef);virtual;
-          procedure g_copyvariant(list : TAsmList;const source,dest : TReference;vardef:TVariantDef);virtual;
+          procedure G_CopyShortString(List : TAsmList;const Source,Dest : TReference;StrDef:TStringDef);virtual;
+          procedure G_CopyVariant(List : TAsmList;const Source,Dest : TReference;VarDef:TVariantDef);virtual;
 
-          procedure g_incrrefcount(list : TAsmList;t: TDef; const ref: TReference);virtual;
-          procedure g_initialize(list : TAsmList;t : TDef;const ref : TReference);virtual;
-          procedure g_finalize(list : TAsmList;t : TDef;const ref : TReference);virtual;
-          procedure g_array_rtti_helper(list: TAsmList; t: TDef; const ref: TReference; const highloc: TLocation;
-            const name: string);virtual;
+          procedure G_IncrRefCount(List : TAsmList;T: TDef; const Ref: TReference);virtual;
+          procedure G_Initialize(List : TAsmList;T : TDef;const Ref : TReference);virtual;
+          procedure G_Finalize(List : TAsmList;T : TDef;const Ref : TReference);virtual;
+          procedure G_Array_RTTI_Helper(List: TAsmList; T: TDef; const Ref: TReference; const HighLoc: TLocation;
+            const Name: string);virtual;
          protected
           { helper called by g_incrrefcount, g_initialize, g_finalize and
             g_array_rtti_helper to determine whether the RTTI symbol representing
             t needs to be loaded using the indirect symbol }
-          function def_needs_indirect(t:TDef):boolean;
+          function Def_Needs_Indirect(T:TDef):Boolean;
          public
 
           {# Generates range checking code. It is to note
@@ -529,48 +529,48 @@ unit hlcgobj;
              @param(p Node which contains the value to check)
              @param(todef Type definition of node to range check)
           }
-          procedure g_rangecheck(list: TAsmList; const l:TLocation; fromdef,todef: TDef); virtual;
+          procedure G_RangeCheck(List: TAsmList; const L:TLocation; FromDef,ToDef: TDef); virtual;
 
           {# Generates overflow checking code for a node }
-          procedure g_overflowcheck(list: TAsmList; const Loc:TLocation; def:TDef); virtual; abstract;
-          procedure g_overflowCheck_loc(List:TAsmList;const Loc:TLocation;def:TDef;var ovloc : TLocation);virtual; abstract;
+          procedure G_OverflowCheck(List: TAsmList; const Loc:TLocation; Def:TDef); virtual; abstract;
+          procedure G_OverflowCheck_Loc(List:TAsmList;const Loc:TLocation;Def:TDef;var OVLoc : TLocation);virtual; abstract;
 
-          procedure g_copyvaluepara_openarray(list : TAsmList;const ref:TReference;const lenloc:TLocation;arrdef: TArrayDef;destreg:TRegister);virtual;
-          procedure g_releasevaluepara_openarray(list : TAsmList;arrdef: TArrayDef;const l:TLocation);virtual;
+          procedure G_CopyValuePara_OpenArray(List : TAsmList;const Ref:TReference;const LenLoc:TLocation;ArrDef: TArrayDef;DestReg:TRegister);virtual;
+          procedure G_ReleaseValuePara_OpenArray(List : TAsmList;ArrDef: TArrayDef;const L:TLocation);virtual;
 
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
 
              @param(size Number of bytes to allocate)
           }
-          procedure g_stackpointer_alloc(list : TAsmList;size : LongInt);virtual; abstract;
+          procedure G_StackPointer_Alloc(List : TAsmList;Size : LongInt);virtual; abstract;
           {# Emits instruction for allocating the locals in entry
              code of a routine. This is one of the first
              routine called in @var(genentrycode).
 
              @param(localsize Number of bytes to allocate as locals)
           }
-          procedure g_proc_entry(list : TAsmList;localsize : LongInt;nostackframe:boolean);virtual; abstract;
+          procedure G_Proc_Entry(List : TAsmList;LocalSize : LongInt;NoStackFrame:Boolean);virtual; abstract;
           {# Emits instructions for returning from a subroutine.
              Should also restore the framepointer and stack.
 
              @param(parasize  Number of bytes of parameters to deallocate from stack)
           }
-          procedure g_proc_exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);virtual; abstract;
+          procedure G_Proc_Exit(List : TAsmList;ParaSize:LongInt;NoStackFrame:Boolean);virtual; abstract;
 
-          procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);virtual; abstract;
-          procedure g_adjust_self_value(list:TAsmList;procdef: TProcDef;ioffset: aint);virtual; abstract;
+          procedure G_Intf_Wrapper(List: TAsmList; ProcDef: TProcDef; const LabelName: string; IOffset: LongInt);virtual; abstract;
+          procedure G_Adjust_Self_Value(List:TAsmList;ProcDef: TProcDef;IOffset: AInt);virtual; abstract;
 
          protected
-          procedure a_jmp_external_name(list: TAsmList; const externalname: TSymStr); virtual;
+          procedure A_Jmp_External_Name(List: TAsmList; const ExternalName: TSymStr); virtual;
          public
           { generate a stub which only purpose is to pass control the given external method,
           setting up any additional environment before doing so (if required).
 
           The default implementation issues a jump instruction to the external name. }
-          procedure g_external_wrapper(list : TAsmList; procdef: TProcDef; const wrappername, externalname: string; global: boolean); virtual;
+          procedure G_External_Wrapper(List : TAsmList; ProcDef: TProcDef; const WrapperName, ExternalName: string; Global: Boolean); virtual;
 
          protected
-          procedure g_allocload_reg_reg(list: TAsmList; regsize: TDef; const fromreg: TRegister; out toreg: TRegister; regtyp: TRegisterType);
+          procedure G_AllocLoad_Reg_Reg(List: TAsmList; RegSize: TDef; const FromReg: TRegister; out ToReg: TRegister; RegTyp: TRegisterType);
          public
           { create "safe copy" of a tlocation that can be used later: all
             registers used in the tlocation are copied to new ones, so that
@@ -579,24 +579,24 @@ unit hlcgobj;
             kept). Must only be used on lvalue locations.
             It's intended as some kind of replacement for a_loadaddr_ref_reg()
             for targets without pointers. }
-          procedure g_reference_loc(list: TAsmList; def: TDef; const fromloc: TLocation; out toloc: TLocation); virtual;
+          procedure G_Reference_Loc(List: TAsmList; Def: TDef; const FromLoc: TLocation; out ToLoc: TLocation); virtual;
 
           { typecasts the pointer in reg to a new pointer. By default it does
             nothing, only required for type-aware platforms like LLVM.
             fromdef/todef are not typed as pointerdef, because they may also be
             a procvardef or classrefdef. Replaces reg with a new register if
             necessary }
-          procedure g_ptrtypecast_reg(list: TAsmList; fromdef, todef: TDef; var reg: TRegister); virtual;
+          procedure G_PtrTypeCast_Reg(List: TAsmList; FromDef, ToDef: TDef; var Reg: TRegister); virtual;
           { same but for a treference (considers the reference itself, not the
             value stored at that place in memory). Replaces ref with a new
             reference if necessary. fromdef needs to be a pointerdef because
             it may have to be passed as fromdef to a_loadaddr_ref_reg, which
             needs the "pointeddef" of fromdef }
-          procedure g_ptrtypecast_ref(list: TAsmList; fromdef, todef: TDef; var ref: TReference); virtual;
+          procedure G_PtrTypeCast_Ref(List: TAsmList; FromDef, ToDef: TDef; var Ref: TReference); virtual;
 
           { update a reference pointing to the start address of a record/object/
             class (contents) so it refers to the indicated field }
-          procedure g_set_addr_nonbitpacked_field_ref(list: TAsmList; recdef: TAbstractRecordDef; field: TFieldVarSym; var recref: TReference); virtual;
+          procedure G_Set_Addr_NonBitPacked_Field_Ref(List: TAsmList; RecDef: TAbstractRecordDef; Field: TFieldVarSym; var RecRef: TReference); virtual;
 
           { tell the code generator that while this register's contents may be
             undefined, it will be masked/cleaned up afterwards before its
@@ -604,124 +604,124 @@ unit hlcgobj;
 
             Needed for LLVM in case of e.g. a potential shift of more bits
             than the width of the register }
-          procedure g_undefined_ok(list: TAsmList; size: TDef; reg: TRegister); virtual;
+          procedure G_Undefined_Ok(List: TAsmList; Size: TDef; Reg: TRegister); virtual;
          protected
           { load a register/constant into a record field by name }
-          procedure g_setup_load_field_by_name(list: TAsmList; recdef: TRecordDef; const name: TIDString; const recref: TReference; out fref: TReference; out fielddef: TDef);
+          procedure G_Setup_Load_Field_By_Name(List: TAsmList; RecDef: TRecordDef; const Name: TIDString; const RecRef: TReference; out FRef: TReference; out FieldDef: TDef);
          public
-          procedure g_load_reg_field_by_name(list: TAsmList; regsize: TDef; recdef: TRecordDef; reg: TRegister; const name: TIDString; const recref: TReference);
-          procedure g_load_const_field_by_name(list: TAsmList; recdef: TRecordDef; a: TCGInt; const name: TIDString; const recref: TReference);
+          procedure G_Load_Reg_Field_By_Name(List: TAsmList; RegSize: TDef; RecDef: TRecordDef; Reg: TRegister; const Name: TIDString; const RecRef: TReference);
+          procedure G_Load_Const_Field_By_Name(List: TAsmList; RecDef: TRecordDef; A: TCGInt; const Name: TIDString; const RecRef: TReference);
           { laod a named field into a register }
-          procedure g_load_field_reg_by_name(list: TAsmList; recdef: TRecordDef; regsize: TDef; const name: TIDString; const recref: TReference; reg: TRegister);
+          procedure G_Load_Field_Reg_By_Name(List: TAsmList; RecDef: TRecordDef; RegSize: TDef; const Name: TIDString; const RecRef: TReference; Reg: TRegister);
           { same as above, but allocates the register and determines the def
             based on the type of the field }
-          procedure g_force_field_reg_by_name(list: TAsmList; recdef: TRecordDef; const name: TIDString; const recref: TReference; out regdef: TDef; out reg: TRegister);
+          procedure G_Force_Field_Reg_By_Name(List: TAsmList; RecDef: TRecordDef; const Name: TIDString; const RecRef: TReference; out RegDef: TDef; out Reg: TRegister);
 
           { routines migrated from ncgutil }
 
-          procedure location_force_reg(list:TAsmList;var l:TLocation;src_size,dst_size:TDef;maybeconst:boolean);virtual;
-          procedure location_force_fpureg(list:TAsmList;var l: TLocation;size: TDef;maybeconst:boolean);virtual;
-          procedure location_force_mem(list:TAsmList;var l:TLocation;size:TDef);virtual;
-          procedure location_force_mmregscalar(list:TAsmList;var l: TLocation;var size:TDef;maybeconst:boolean);virtual;
+          procedure Location_Force_Reg(List:TAsmList;var L:TLocation;SourceType,DestType:TDef;MaybeConst:Boolean);virtual;
+          procedure Location_Force_FPUReg(List:TAsmList;var L: TLocation;Size: TDef;MaybeConst:Boolean);virtual;
+          procedure Location_Force_Mem(List:TAsmList;var L:TLocation;Size:TDef);virtual;
+          procedure Location_Force_MMRegScalar(List:TAsmList;var L: TLocation;var Size:TDef;MaybeConst:Boolean);virtual;
 //          procedure location_force_mmreg(list:TAsmList;var l: tlocation;size:tdef;maybeconst:boolean);virtual;abstract;
 
           { Retrieve the location of the data pointed to in location l, when the location is
             a register it is expected to contain the address of the data }
-          procedure location_get_data_ref(list:TAsmList;def: TDef; const l:TLocation;var ref:TReference;loadref:boolean; alignment: LongInt);virtual;
+          procedure Location_Get_Data_Ref(List:TAsmList;Def: TDef; const L:TLocation;var Ref:TReference;LoadRef:Boolean; Alignment: LongInt);virtual;
 
           { if p is a boolean expression, turns p.location into a LOC_JUMP with
             jumps to generated true and false labels; otherwise internalerrors }
-          procedure maketojumpbool(list: TAsmList; p: TNode);
+          procedure MakeToJumpBool(List: TAsmList; P: TNode);
           { same as above, but using predefined true/false labels instead of
             by generating new ones }
-          procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: TAsmLabel);virtual;
+          procedure MakeToJumpBoolLabels(List: TAsmList; P: TNode; TrueLabel, FalseLabel: TAsmLabel);virtual;
           { if the result of n is a LOC_C(..)REGISTER, try to find the corresponding
             loadn and change its location to a new register (= SSA). In case reload
             is true, transfer the old to the new register                            }
-          procedure maybe_change_load_node_reg(list: TAsmList; var n: TNode; reload: boolean); virtual;
+          procedure Maybe_Change_Load_Node_Reg(List: TAsmList; var N: TNode; Reload: Boolean); virtual;
          private
-          function do_replace_node_regs(var n: TNode; para: pointer): TForEachNodeResult; virtual;
+          function Do_Replace_Node_Regs(var N: TNode; Para: Pointer): TForEachNodeResult; virtual;
          public
 
-          procedure gen_proc_symbol(list:TAsmList);
-          procedure gen_proc_symbol_end(list:TAsmList);virtual;
-          procedure handle_external_proc(list: TAsmList; pd: TProcDef; const importname: TSymStr); virtual;
+          procedure Gen_Proc_Symbol(List:TAsmList);
+          procedure Gen_Proc_Symbol_End(List:TAsmList);virtual;
+          procedure Handle_External_Proc(List: TAsmList; PD: TProcDef; const ImportName: TSymStr); virtual;
 
-          procedure gen_initialize_code(list:TAsmList);virtual;
-          procedure gen_finalize_code(list:TAsmList);virtual;
+          procedure Gen_Initialize_Code(List:TAsmList);virtual;
+          procedure Gen_Finalize_Code(List:TAsmList);virtual;
 
-          procedure gen_entry_code(list:TAsmList);virtual;
-          procedure gen_exit_code(list:TAsmList);virtual;
-          procedure gen_nexus_profile_call(list:TAsmList; const hookname:TIDString);
-          procedure emit_nexus_profile_descriptor;
-          procedure gen_nexus_profile_module_call(list:TAsmList;
-            const hookname:TIDString);
-          procedure emit_nexus_profile_module_data;
+          procedure Gen_Entry_Code(List:TAsmList);virtual;
+          procedure Gen_Exit_Code(List:TAsmList);virtual;
+          procedure Gen_Nexus_Profile_Call(List:TAsmList; const HookName:TIDString);
+          procedure Emit_Nexus_Profile_Descriptor;
+          procedure Gen_Nexus_Profile_Module_Call(List:TAsmList;
+            const HookName:TIDString);
+          procedure Emit_Nexus_Profile_Module_Data;
 
          protected
           { helpers called by gen_initialize_code/gen_finalize_code }
-          procedure inittempvariables(list:TAsmList);virtual;
-          procedure finalizetempvariables(list:TAsmList;for_finalization:boolean);virtual;
-          procedure initialize_regvars(p:TObject;arg:pointer);virtual;
+          procedure InitTempVariables(List:TAsmList);virtual;
+          procedure FinalizeTempVariables(List:TAsmList;ForFinalization:Boolean);virtual;
+          procedure Initialize_RegVars(P:TObject;Arg:Pointer);virtual;
           { generates the code for decrementing the reference count of parameters }
-          procedure final_paras(p:TObject;arg:pointer);
+          procedure Final_Paras(P:TObject;Arg:Pointer);
          public
           { helper called by gen_alloc_symtable }
-          procedure varsym_set_localloc(list: TAsmList; vs:TAbstractNormalVarSym); virtual;
+          procedure VarSym_Set_LocAlloc(List: TAsmList; VS:TAbstractNormalVarSym); virtual;
           { helper called by gen_alloc_symtable }
-          procedure paravarsym_set_initialloc_to_paraloc(vs: TParaVarSym); virtual;
+          procedure ParaVarSym_Set_InitialLoc_To_ParaLoc(VS: TParaVarSym); virtual;
 
-          procedure gen_load_para_value(list:TAsmList);virtual;
+          procedure Gen_Load_Para_Value(List:TAsmList);virtual;
           { helpers called by gen_load_para_value }
-          procedure g_copyvalueparas(p:TObject;arg:pointer);virtual;
+          procedure G_CopyValueParas(P:TObject;Arg:Pointer);virtual;
 
           { allocate a local temp to serve as storage for a para/localsym }
-          procedure getlocal(list: TAsmList; sym: TSym; size: asizeint; alignment: shortint; def: TDef; out ref : TReference);
+          procedure GetLocal(List: TAsmList; Sym: TSym; Size: ASizeInt; Alignment: ShortInt; Def: TDef; out Ref : TReference);
           { the symbol is stored at this location from now on }
-          procedure recordnewsymloc(list: TAsmList; sym: TSym; def: TDef; const ref: TReference; initial: boolean); virtual;
+          procedure RecordNewSymLoc(List: TAsmList; Sym: TSym; Def: TDef; const Ref: TReference; Initial: Boolean); virtual;
          protected
-          procedure gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation;const cgpara: TCGPara;locintsize: LongInt);virtual;
-          procedure init_paras(p:TObject;arg:pointer);
+          procedure Gen_LoadFPU_Loc_CGPara(List: TAsmList; Size: TDef; const L: TLocation;const CGPara: TCGPara;LocIntSize: LongInt);virtual;
+          procedure Init_Paras(P:TObject;Arg:Pointer);
          protected
           { Some targets have to put "something" in the function result
             location if it's not initialised by the Pascal code, e.g.
             stack-based architectures. By default it does nothing }
-          procedure gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: TCGPara);virtual;
-          procedure gen_load_loc_function_result(list: TAsmList; vardef: TDef; const l: TLocation);virtual;
+          procedure Gen_Load_Uninitialized_Function_Result(List: TAsmList; PD: TProcDef; ResDef: TDef; const ResLoc: TCGPara);virtual;
+          procedure Gen_Load_Loc_Function_Result(List: TAsmList; VarDef: TDef; const L: TLocation);virtual;
          public
           { load a tlocation into a cgpara }
-          procedure gen_load_loc_cgpara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara);virtual;
+          procedure Gen_Load_Loc_CGPara(List: TAsmList; VarDef: TDef; const L: TLocation; const CGPara: TCGPara);virtual;
 
           { load a cgpara into a tlocation }
-          procedure gen_load_cgpara_loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean);virtual;
+          procedure Gen_Load_CGPara_Loc(List: TAsmList; VarDef: TDef; const Para: TCGPara; var DestLoc: TLocation; ReusePara: Boolean);virtual;
 
           { load the function return value into the ABI-defined function return location }
-          procedure gen_load_return_value(list:TAsmList);virtual;
+          procedure Gen_Load_Return_Value(List:TAsmList);virtual;
 
           { extras refactored from other units }
-          procedure gen_stack_check_size_para(list:TAsmList); virtual;
-          procedure gen_stack_check_call(list:TAsmList); virtual;
+          procedure Gen_Stack_Check_Size_Para(List:TAsmList); virtual;
+          procedure Gen_Stack_Check_Call(List:TAsmList); virtual;
 
           { queue the code/data generated for a procedure for writing out to
             the assembler/object file }
-          procedure record_generated_code_for_procdef(pd: TProcDef; code, data: TAsmList); virtual;
+          procedure Record_Generated_Code_For_ProcDef(PD: TProcDef; Code, Data: TAsmList); virtual;
 
           { generate a call to a routine in the system unit }
-          function g_call_system_proc(list: TAsmList; const procname: string; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
-          function g_call_system_proc(list: TAsmList; pd: TProcDef; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+          function G_Call_System_Proc(List: TAsmList; const ProcName: string; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
+          function G_Call_System_Proc(List: TAsmList; PD: TProcDef; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
          protected
-          function g_call_system_proc_intern(list: TAsmList; pd: TProcDef; const paras: array of PCGPara; forceresdef: TDef): TCGPara; virtual;
+          function G_Call_System_Proc_Intern(List: TAsmList; PD: TProcDef; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara; virtual;
          public
 
 
           { Generate code to exit an unwind-protected region. The default implementation
             produces a simple jump to destination label. }
-          procedure g_local_unwind(list: TAsmList; l: TAsmLabel);virtual;abstract;
+          procedure G_Local_Unwind(List: TAsmList; L: TAsmLabel);virtual;abstract;
 
          strict protected
-          fhlcgobjhelpers: THLCGObjHelpersClass;
+          FHLCGObjHelpers: THLCGObjHelpersClass;
          public
-          property hlcgobjhelpers: THLCGObjHelpersClass write fhlcgobjhelpers;
+          property HLCGObjHelpers: THLCGObjHelpersClass write FHLCGObjHelpers;
        end;
      THLCGObjClass = class of THLCGObj;
 
@@ -729,393 +729,393 @@ unit hlcgobj;
 
     var
        {# Main high level code generator class }
-       hlcg : THLCGObj;
+       HLCG : THLCGObj;
        { class type of high level code generator class (also valid when hlcg is
          nil, in order to be able to call its virtual class methods) }
        CHLCGObj: THLCGObjClass;
-       create_hlcodegen: TCreateHLCGCodeGen;
+       Create_HLCodeGen: TCreateHLCGCodeGen;
 
-    procedure destroy_hlcodegen;
+    procedure Destroy_HLCodeGen;
 
 implementation
 
     uses
        Globals,Systems,
        FinPut,FModule,
-       Verbose,defutil,paramgr,
+       Verbose,DefUtil,ParaMgr,
        SymTable,
-       nbas,ncon,nld,nmem,
-       ncgrtti,pass_2,
-       cgobj,CUtils,ProcInfo,aasmcnst,
-       ngenutil,
+       NBas,NCon,NLd,NMem,
+       NCGRTTI,pass_2,
+       CGObj,CUtils,ProcInfo,AAsmCnst,
+       NGenUtil,
 {$ifdef x86}
-       cgx86,
+       CGX86,
 {$endif x86}
-       ncgutil;
+       NCGUtil;
 
 
-    procedure destroy_hlcodegen;
+    procedure Destroy_HLCodeGen;
       begin
-        hlcg.free;
-        hlcg:=nil;
-        destroy_codegen;
+        HLCG.Free;
+        HLCG:=nil;
+        Destroy_CodeGen;
       end;
 
 
-    class procedure THLCGObjHelpers.gen_proc_symbol(list: TAsmList);
+    class procedure THLCGObjHelpers.Gen_Proc_Symbol(List: TAsmList);
       var
-        firstitem,
-        item: TCmdStrListItem;
-        global: boolean;
+        FirstItem,
+        Item: TCmdStrListItem;
+        Global: Boolean;
       begin
-        item:=TCmdStrListItem(CurrentProcInfo.procdef.AliasNames.first);
-        firstitem:=item;
-        global:=CurrentProcInfo.procdef.NeedsGlobalAsmSym;
-        while Assigned(item) do
+        Item:=TCmdStrListItem(CurrentProcInfo.ProcDef.AliasNames.First);
+        FirstItem:=Item;
+        Global:=CurrentProcInfo.ProcDef.NeedsGlobalAsmSym;
+        while Assigned(Item) do
           begin
             { Record emitted entry points, rather than declarations: generic
               templates can have assembler names without executable bodies. }
-            if global and (tf_supports_packages in TargetInfo.flags) then
-              CurrentModule.Add_Public_AsmSym(item.str,AB_GLOBAL,AT_FUNCTION);
+            if Global and (tf_supports_packages in TargetInfo.Flags) then
+              CurrentModule.Add_Public_AsmSym(Item.Str,AB_GLOBAL,AT_FUNCTION);
             { alias procedure entry symbols via ".set" on Darwin, otherwise
               they can be interpreted as all different starting symbols of
               subsections and be reordered }
-            if (item<>firstitem) and
-               (TargetInfo.system in systems_darwin) then
+            if (Item<>FirstItem) and
+               (TargetInfo.System in systems_darwin) then
               begin
                 { the .set already defines the symbol, so can't emit a tai_symbol as that will redefine it }
-                if global then
+                if Global then
                   begin
-                    list.concat(TAISymbolPair.create(spk_set_global,item.str,firstitem.str));
+                    List.Concat(TAISymbolPair.Create(spk_set_global,Item.Str,FirstItem.Str));
                   end
                 else
                   begin
-                    list.concat(TAISymbolPair.create(spk_set,item.str,firstitem.str));
+                    List.Concat(TAISymbolPair.Create(spk_set,Item.Str,FirstItem.Str));
                   end;
               end
             else
               begin
-                if global then
-                  list.concat(TAISymbol.createname_global(item.str,AT_FUNCTION,0,CurrentProcInfo.procdef))
+                if Global then
+                  List.Concat(TAISymbol.createname_global(Item.Str,AT_FUNCTION,0,CurrentProcInfo.ProcDef))
                 else
-                  list.concat(TAISymbol.Createname_hidden(item.str,AT_FUNCTION,0,CurrentProcInfo.procdef));
-                list.concat(TAIFunctionName.create(item.str));
+                  List.Concat(TAISymbol.Createname_hidden(Item.Str,AT_FUNCTION,0,CurrentProcInfo.ProcDef));
+                List.Concat(TAIFunctionName.Create(Item.Str));
               end;
-            item:=TCmdStrListItem(item.next);
+            Item:=TCmdStrListItem(Item.Next);
           end;
-        CurrentProcInfo.procdef.ProcStartTAI:=TAI(list.last);
+        CurrentProcInfo.ProcDef.ProcStartTAI:=TAI(List.Last);
       end;
 
-    class procedure THLCGObjHelpers.record_generated_code_for_procdef(pd: TProcDef; code, data: TAsmList);
+    class procedure THLCGObjHelpers.Record_Generated_Code_For_ProcDef(PD: TProcDef; Code, Data: TAsmList);
       var
-        alt: TAsmListType;
-        procsection: TAISection;
+        Alt: TAsmListType;
+        ProcSection: TAISection;
       begin
-        procsection:=nil;
-        if not(po_assembler in pd.ProcOptions) then
-          alt:=al_procedures
+        ProcSection:=nil;
+        if not(po_assembler in PD.ProcOptions) then
+          Alt:=al_procedures
         else
-          alt:=al_pure_assembler;
+          Alt:=al_pure_assembler;
         { add the procedure to the al_procedures }
-        maybe_new_object_file(CurrentAsmData.asmlists[alt]);
+        maybe_new_object_file(CurrentAsmData.AsmLists[Alt]);
   {$ifdef symansistr}
-        if pd.section<>'' then
-          procsection:=new_proc_section(CurrentAsmData.asmlists[alt],sec_user,lower(pd.section),getprocalign)
+        if PD.Section<>'' then
+          ProcSection:=new_proc_section(CurrentAsmData.AsmLists[Alt],sec_user,Lower(PD.Section),GetProcAlign)
   {$else symansistr}
-        if Assigned(pd.section) then
-          procsection:=new_proc_section(CurrentAsmData.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
+        if Assigned(PD.Section) then
+          ProcSection:=new_proc_section(CurrentAsmData.AsmLists[Alt],sec_user,Lower(PD.Section^),GetProcAlign)
   {$endif symansistr}
         else
-          procsection:=new_section(CurrentAsmData.asmlists[alt],sec_code,lower(pd.MangledName),getprocalign);
-        if Assigned(CurrentProcInfo) and (CurrentProcInfo.procdef=pd) then
+          ProcSection:=new_section(CurrentAsmData.AsmLists[Alt],sec_code,Lower(PD.MangledName),GetProcAlign);
+        if Assigned(CurrentProcInfo) and (CurrentProcInfo.ProcDef=PD) then
           begin
-            if not Assigned(procsection) then
-              procsection:=TAISection(CurrentAsmData.asmlists[alt].last);
+            if not Assigned(ProcSection) then
+              ProcSection:=TAISection(CurrentAsmData.AsmLists[Alt].Last);
             if Assigned(CurrentProcInfo.nexus_profile_section) then
-              CurrentProcInfo.nexus_profile_section.AssociativeSection:=procsection;
+              CurrentProcInfo.nexus_profile_section.AssociativeSection:=ProcSection;
           end;
-        CurrentAsmData.asmlists[alt].ConcatList(code);
+        CurrentAsmData.AsmLists[Alt].ConcatList(Code);
         { save local data (castable) also in the same file }
-        if Assigned(data) and
-           (not data.empty) then
-          CurrentAsmData.asmlists[alt].ConcatList(data);
+        if Assigned(Data) and
+           (not Data.Empty) then
+          CurrentAsmData.AsmLists[Alt].ConcatList(Data);
       end;
 
 
   { thlcgobj }
 
-  constructor THLCGObj.create;
+  constructor THLCGObj.Create;
     begin
-      if not Assigned(fphlcgobjhelper) then
-        fphlcgobjhelper:=THLCGObjHelpers;
+      if not Assigned(FPHLCGObjHelper) then
+        FPHLCGObjHelper:=THLCGObjHelpers;
     end;
 
-  constructor THLCGObj.create(hlcgobjhelpers: THLCGObjHelpersClass);
+  constructor THLCGObj.Create(HLCGObjHelpers: THLCGObjHelpersClass);
     begin
-      fphlcgobjhelper:=hlcgobjhelpers;
-      create;
+      FPHLCGObjHelper:=HLCGObjHelpers;
+      Create;
     end;
 
-  procedure THLCGObj.init_register_allocators;
+  procedure THLCGObj.Init_Register_Allocators;
     begin
-      cg.init_register_allocators;
+      CG.Init_Register_Allocators;
     end;
 
-  procedure THLCGObj.done_register_allocators;
+  procedure THLCGObj.Done_Register_Allocators;
     begin
-      cg.done_register_allocators;
+      CG.Done_Register_Allocators;
     end;
 
-  procedure THLCGObj.set_regalloc_live_range_direction(dir: TRADirection);
+  procedure THLCGObj.Set_RegAlloc_Live_Range_Direction(Dir: TRADirection);
     begin
-      cg.set_regalloc_live_range_direction(dir);
+      CG.Set_RegAlloc_Live_Range_Direction(Dir);
     end;
 
-  function THLCGObj.getintregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetIntRegister(List: TAsmList; Size: TDef): TRegister;
     begin
-      result:=cg.getintregister(list,def_cgsize(size));
+      Result:=CG.GetIntRegister(List,Def_CGSize(Size));
     end;
 
-  function THLCGObj.getaddressregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetAddressRegister(List: TAsmList; Size: TDef): TRegister;
     begin
-      result:=cg.getaddressregister(list);
+      Result:=CG.GetAddressRegister(List);
     end;
 
-  function THLCGObj.getfpuregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetFPURegister(List: TAsmList; Size: TDef): TRegister;
     begin
-      result:=cg.getfpuregister(list,def_cgsize(size));
+      Result:=CG.GetFPURegister(List,Def_CGSize(Size));
     end;
 
-  function THLCGObj.getmmregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetMMRegister(List: TAsmList; Size: TDef): TRegister;
     begin
-      result:=cg.getmmregister(list,def_cgsize(size));
+      Result:=CG.GetMMRegister(List,Def_CGSize(Size));
     end;
 
-  function THLCGObj.getflagregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetFlagRegister(List: TAsmList; Size: TDef): TRegister;
     begin
-      result:=cg.getflagregister(list,def_cgsize(size));
+      Result:=CG.GetFlagRegister(List,Def_CGSize(Size));
     end;
 
-  function THLCGObj.gettempregister(list: TAsmList; size: TDef): TRegister;
+  function THLCGObj.GetTempRegister(List: TAsmList; Size: TDef): TRegister;
     begin
       { doesn't make sense to try to translate this size to tcgsize, temps
         can have any size }
-      result:=cg.gettempregister(list);
+      Result:=CG.GetTempRegister(List);
     end;
 
-    function THLCGObj.getregisterfordef(list: TAsmList; size: TDef): TRegister;
+    function THLCGObj.GetRegisterForDef(List: TAsmList; Size: TDef): TRegister;
       begin
-        case def2regtyp(size) of
+        case Def2RegTyp(Size) of
           R_INTREGISTER:
-            result:=getintregister(list,size);
+            Result:=GetIntRegister(List,Size);
           R_ADDRESSREGISTER:
-            result:=getaddressregister(list,size);
+            Result:=GetAddressRegister(List,Size);
           R_FPUREGISTER:
-            result:=getfpuregister(list,size);
+            Result:=GetFPURegister(List,Size);
           R_MMREGISTER:
-            result:=getmmregister(list,size);
+            Result:=GetMMRegister(List,Size);
           else
             InternalError(2010122901);
         end;
       end;
 
-  function THLCGObj.uses_registers(rt: TRegisterType): boolean;
+  function THLCGObj.Uses_Registers(RT: TRegisterType): Boolean;
     begin
-       result:=cg.uses_registers(rt);
+       Result:=CG.Uses_Registers(RT);
     end;
 
-  procedure THLCGObj.getcpuregister(list: TAsmList; r: TRegister);
+  procedure THLCGObj.GetCPURegister(List: TAsmList; R: TRegister);
     begin
-      cg.getcpuregister(list,r);
+      CG.GetCPURegister(List,R);
     end;
 
-  procedure THLCGObj.ungetcpuregister(list: TAsmList; r: TRegister);
+  procedure THLCGObj.UngetCPURegister(List: TAsmList; R: TRegister);
     begin
-      cg.ungetcpuregister(list,r);
+      CG.UngetCPURegister(List,R);
     end;
 
-  procedure THLCGObj.alloccpuregisters(list: TAsmList; rt: TRegisterType; const r: TCPURegisterSet);
+  procedure THLCGObj.AllocCPURegisters(List: TAsmList; RT: TRegisterType; const R: TCPURegisterSet);
     begin
-      cg.alloccpuregisters(list,rt,r);
+      CG.AllocCPURegisters(List,RT,R);
     end;
 
-  procedure THLCGObj.dealloccpuregisters(list: TAsmList; rt: TRegisterType; const r: TCPURegisterSet);
+  procedure THLCGObj.DeallocCPURegisters(List: TAsmList; RT: TRegisterType; const R: TCPURegisterSet);
     begin
-      cg.dealloccpuregisters(list,rt,r);
+      CG.DeallocCPURegisters(List,RT,R);
     end;
 
-  procedure THLCGObj.allocallcpuregisters(list: TAsmList);
+  procedure THLCGObj.AllocAllCPURegisters(List: TAsmList);
     begin
-      cg.allocallcpuregisters(list);
+      CG.AllocAllCPURegisters(List);
     end;
 
-  procedure THLCGObj.deallocallcpuregisters(list: TAsmList);
+  procedure THLCGObj.DeallocAllCPURegisters(List: TAsmList);
     begin
-      cg.deallocallcpuregisters(list);
+      CG.DeallocAllCPURegisters(List);
     end;
 
-  procedure THLCGObj.do_register_allocation(list: TAsmList; headertai: TAI);
+  procedure THLCGObj.Do_Register_Allocation(List: TAsmList; HeaderTAI: TAI);
     begin
-      cg.do_register_allocation(list,headertai);
+      CG.Do_Register_Allocation(List,HeaderTAI);
     end;
 
-  procedure THLCGObj.translate_register(var reg: TRegister);
+  procedure THLCGObj.Translate_Register(var Reg: TRegister);
     begin
-      cg.translate_register(reg);
+      CG.Translate_Register(Reg);
     end;
 
-  class function THLCGObj.def2regtyp(def: TDef): TRegisterType;
+  class function THLCGObj.Def2RegTyp(Def: TDef): TRegisterType;
     begin
-        case def.typ of
-          enumdef,
-          orddef,
-          recorddef,
-          setdef:
-            result:=R_INTREGISTER;
-          procvardef:
+        case Def.Typ of
+          EnumDef,
+          OrdDef,
+          RecordDef,
+          SetDef:
+            Result:=R_INTREGISTER;
+          ProcVarDef:
 
             { getaddressregister cannot handle if multiple registers
               are required for a single element }
-            if Is_MethodPointer(def) then
-              result:=R_INTREGISTER
+            if Is_MethodPointer(Def) then
+              Result:=R_INTREGISTER
             else
 
-              result:=R_ADDRESSREGISTER;
-          stringdef,
-          pointerdef,
-          classrefdef,
-          objectdef,
-          procdef,
-          formaldef:
-            result:=R_ADDRESSREGISTER;
-          arraydef:
-            if TArrayDef(def).Is_HWVector then
-              result:=R_MMREGISTER
-            else if TStoredDef(def).Is_IntRegable then
-              result:=R_INTREGISTER
+              Result:=R_ADDRESSREGISTER;
+          StringDef,
+          PointerDef,
+          ClassRefDef,
+          ObjectDef,
+          ProcDef,
+          FormalDef:
+            Result:=R_ADDRESSREGISTER;
+          ArrayDef:
+            if TArrayDef(Def).Is_HWVector then
+              Result:=R_MMREGISTER
+            else if TStoredDef(Def).Is_IntRegable then
+              Result:=R_INTREGISTER
             else
-              result:=R_ADDRESSREGISTER;
-          floatdef:
-            if Use_VectorFPU(def) then
-              result:=R_MMREGISTER
+              Result:=R_ADDRESSREGISTER;
+          FloatDef:
+            if Use_VectorFPU(Def) then
+              Result:=R_MMREGISTER
             else
-              result:=R_FPUREGISTER;
-          filedef,
-          variantdef,
+              Result:=R_FPUREGISTER;
+          FileDef,
+          VariantDef,
           ForwardDef,
-          undefineddef:
-            result:=R_INVALIDREGISTER;
+          UndefinedDef:
+            Result:=R_INVALIDREGISTER;
         else
           InternalError(2010120506);
         end;
     end;
 
-  procedure THLCGObj.reference_reset_base(var ref: TReference; regsize: TDef;
-    reg: TRegister; offset: LongInt; temppos: TRefTempPos; alignment: LongInt; volatility: TVolatilitySet);
+  procedure THLCGObj.Reference_Reset_Base(var Ref: TReference; RegSize: TDef;
+    Reg: TRegister; Offset: LongInt; TempPos: TRefTempPos; Alignment: LongInt; Volatility: TVolatilitySet);
     begin
-      reference_reset(ref,alignment,volatility);
-      ref.base:=reg;
-      ref.offset:=offset;
-      ref.temppos:=temppos;
+      Reference_Reset(Ref,Alignment,Volatility);
+      Ref.Base:=Reg;
+      Ref.Offset:=Offset;
+      Ref.TempPos:=TempPos;
     end;
 
-  procedure THLCGObj.a_label(list: TAsmList; l: TAsmLabel); inline;
+  procedure THLCGObj.A_Label(List: TAsmList; L: TAsmLabel); inline;
     begin
-      cg.a_label(list,l);
+      CG.A_Label(List,L);
     end;
 
-  procedure THLCGObj.a_label_pascal_goto_target(list : TAsmList;l : TAsmLabel); inline;
+  procedure THLCGObj.A_Label_Pascal_Goto_Target(List : TAsmList;L : TAsmLabel); inline;
     begin
-      cg.a_label_pascal_goto_target(list,l);
+      CG.A_Label_Pascal_Goto_Target(List,L);
     end;
 
-  procedure THLCGObj.a_reg_alloc(list: TAsmList; r: TRegister);
+  procedure THLCGObj.A_Reg_Alloc(List: TAsmList; R: TRegister);
     begin
-      cg.a_reg_alloc(list,r);
+      CG.A_Reg_Alloc(List,R);
     end;
 
-  procedure THLCGObj.a_reg_dealloc(list: TAsmList; r: TRegister);
+  procedure THLCGObj.A_Reg_Dealloc(List: TAsmList; R: TRegister);
     begin
-      cg.a_reg_dealloc(list,r);
+      CG.A_Reg_Dealloc(List,R);
     end;
 
-  procedure THLCGObj.a_reg_sync(list: TAsmList; r: TRegister);
+  procedure THLCGObj.A_Reg_Sync(List: TAsmList; R: TRegister);
     begin
-      cg.a_reg_sync(list,r);
+      CG.A_Reg_Sync(List,R);
     end;
 
-  procedure THLCGObj.a_load_reg_cgpara(list: TAsmList; size: TDef; r: TRegister; const cgpara: TCGPara);
+  procedure THLCGObj.A_Load_Reg_CGPara(List: TAsmList; Size: TDef; R: TRegister; const CGPara: TCGPara);
     var
-      ref: TReference;
-      tmpreg : TRegister;
+      Ref: TReference;
+      TmpReg : TRegister;
     begin
-      cgpara.check_simple_location;
-      paramanager.alloccgpara(list,cgpara);
-      if cgpara.location^.shiftval<0 then
+      CGPara.Check_Simple_Location;
+      ParaManager.AllocCGPara(List,CGPara);
+      if CGPara.Location^.ShiftVal<0 then
         begin
-          tmpreg:=getintregister(list,cgpara.location^.def);
-          a_op_const_reg_reg(list,OP_SHL,cgpara.location^.def,-cgpara.location^.shiftval,r,tmpreg);
-          r:=tmpreg;
+          TmpReg:=GetIntRegister(List,CGPara.Location^.Def);
+          A_Op_Const_Reg_Reg(List,OP_SHL,CGPara.Location^.Def,-CGPara.Location^.ShiftVal,R,TmpReg);
+          R:=TmpReg;
         end;
-      case cgpara.location^.loc of
+      case CGPara.Location^.Loc of
          LOC_REGISTER,LOC_CREGISTER:
-           a_load_reg_reg(list,size,cgpara.location^.def,r,cgpara.location^.register);
+           A_Load_Reg_Reg(List,Size,CGPara.Location^.Def,R,CGPara.Location^.Register);
          LOC_REFERENCE,LOC_CREFERENCE:
            begin
-              reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-              a_load_reg_ref(list,size,cgpara.location^.def,r,ref);
+              Reference_Reset_Base(Ref,VoidStackPointerType,CGPara.Location^.Reference.Index,CGPara.Location^.Reference.Offset,CTempPosInvalid,CGPara.Alignment,[]);
+              A_Load_Reg_Ref(List,Size,CGPara.Location^.Def,R,Ref);
            end;
          LOC_MMREGISTER,LOC_CMMREGISTER:
-           a_loadmm_intreg_reg(list,size,cgpara.location^.def,r,cgpara.location^.register,mms_movescalar);
+           A_LoadMM_IntReg_Reg(List,Size,CGPara.Location^.Def,R,CGPara.Location^.Register,MMS_MoveScalar);
          LOC_FPUREGISTER,LOC_CFPUREGISTER:
            begin
-             tg.gethltemp(list,size,size.size,tt_normal,ref);
-             a_load_reg_ref(list,size,cgpara.location^.def,r,ref);
-             a_loadfpu_ref_cgpara(list,cgpara.location^.def,ref,cgpara);
-             tg.ungettemp(list,ref);
+             TG.GetHLTemp(List,Size,Size.Size,tt_normal,Ref);
+             A_Load_Reg_Ref(List,Size,CGPara.Location^.Def,R,Ref);
+             A_LoadFPU_Ref_CGPara(List,CGPara.Location^.Def,Ref,CGPara);
+             TG.UngetTemp(List,Ref);
            end
          else
            InternalError(2010120415);
       end;
     end;
 
-  procedure THLCGObj.a_load_const_cgpara(list: TAsmList; tosize: TDef; a: TCGInt; const cgpara: TCGPara);
+  procedure THLCGObj.A_Load_Const_CGPara(List: TAsmList; ToSize: TDef; A: TCGInt; const CGPara: TCGPara);
     var
-       ref : TReference;
+       Ref : TReference;
     begin
-       cgpara.check_simple_location;
-       paramanager.alloccgpara(list,cgpara);
-      if cgpara.location^.shiftval<0 then
-        a:=a shl -cgpara.location^.shiftval;
-       case cgpara.location^.loc of
+       CGPara.Check_Simple_Location;
+       ParaManager.AllocCGPara(List,CGPara);
+      if CGPara.Location^.ShiftVal<0 then
+        A:=A shl -CGPara.Location^.ShiftVal;
+       case CGPara.Location^.Loc of
           LOC_REGISTER,LOC_CREGISTER:
-            a_load_const_reg(list,cgpara.location^.def,a,cgpara.location^.register);
+            A_Load_Const_Reg(List,CGPara.Location^.Def,A,CGPara.Location^.Register);
           LOC_REFERENCE,LOC_CREFERENCE:
             begin
-               reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-               a_load_const_ref(list,cgpara.location^.def,a,ref);
+               Reference_Reset_Base(Ref,VoidStackPointerType,CGPara.Location^.Reference.Index,CGPara.Location^.Reference.Offset,CTempPosInvalid,CGPara.Alignment,[]);
+               A_Load_Const_Ref(List,CGPara.Location^.Def,A,Ref);
             end
           else
             InternalError(2010120416);
        end;
     end;
 
-  procedure THLCGObj.a_load_ref_cgpara(list: TAsmList; size: TDef; const r: TReference; const cgpara: TCGPara);
+  procedure THLCGObj.A_Load_Ref_CGPara(List: TAsmList; Size: TDef; const R: TReference; const CGPara: TCGPara);
     var
-      tmpref, ref: TReference;
-      tmpreg: TRegister;
-      location: PCGParaLocation;
-      orgsizeleft,
-      sizeleft: TCGInt;
-      reghasvalue: boolean;
+      TmpRef, Ref: TReference;
+      TmpReg: TRegister;
+      Location: PCGParaLocation;
+      OrgSizeLeft,
+      SizeLeft: TCGInt;
+      RegHasValue: Boolean;
     begin
-      location:=cgpara.location;
-      tmpref:=r;
-      sizeleft:=cgpara.intsize;
-      while Assigned(location) do
+      Location:=CGPara.Location;
+      TmpRef:=R;
+      SizeLeft:=CGPara.IntSize;
+      while Assigned(Location) do
         begin
-          paramanager.allocparaloc(list,location);
-          case location^.loc of
+          ParaManager.AllocParaLoc(List,Location);
+          case Location^.Loc of
             LOC_REGISTER,LOC_CREGISTER:
               begin
                  { Parameter locations are often allocated in multiples of
@@ -1127,121 +1127,121 @@ implementation
                    we check that there is only one parameter location and
                    then use this "size" to load the value into the parameter
                    location }
-                 if (def_cgsize(size)<>OS_NO) and
-                    (size.size<=sizeof(aint)) then
+                 if (Def_CGSize(Size)<>OS_NO) and
+                    (Size.Size<=SizeOf(AInt)) then
                    begin
-                     cgpara.check_simple_location;
-                     a_load_ref_reg(list,size,location^.def,tmpref,location^.register);
-                     if location^.shiftval<0 then
-                       a_op_const_reg(list,OP_SHL,location^.def,-location^.shiftval,location^.register);
+                     CGPara.Check_Simple_Location;
+                     A_Load_Ref_Reg(List,Size,Location^.Def,TmpRef,Location^.Register);
+                     if Location^.ShiftVal<0 then
+                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                    end
                  { there's a lot more data left, and the current paraloc's
                    register is entirely filled with part of that data }
-                 else if (sizeleft>sizeof(aint)) then
+                 else if (SizeLeft>SizeOf(AInt)) then
                    begin
-                     a_load_ref_reg(list,location^.def,location^.def,tmpref,location^.register);
+                     A_Load_Ref_Reg(List,Location^.Def,Location^.Def,TmpRef,Location^.Register);
                    end
                  { we're at the end of the data, and it can be loaded into
                    the current location's register with a single regular
                    load }
-                 else if sizeleft in [1,2,4,8] then
+                 else if SizeLeft in [1,2,4,8] then
                    begin
                      { don't use cgsize_orddef(int_cgsize(sizeleft)) as fromdef,
                        because that may be larger than location^.register in
                        case of padding at the end of a record }
-                     a_load_ref_reg(list,location^.def,location^.def,tmpref,location^.register);
-                     if location^.shiftval<0 then
-                       a_op_const_reg(list,OP_SHL,location^.def,-location^.shiftval,location^.register);
+                     A_Load_Ref_Reg(List,Location^.Def,Location^.Def,TmpRef,Location^.Register);
+                     if Location^.ShiftVal<0 then
+                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                    end
                  { we're at the end of the data, and we need multiple loads
                    to get it in the register because it's an irregular size }
                  else
                    begin
                      { should be the last part }
-                     if Assigned(location^.next) then
+                     if Assigned(Location^.Next) then
                        InternalError(2010052902);
                      { load the value piecewise to get it into the register }
-                     orgsizeleft:=sizeleft;
-                     reghasvalue:=false;
+                     OrgSizeLeft:=SizeLeft;
+                     RegHasValue:=False;
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
-                     if sizeleft>=4 then
+                     if SizeLeft>=4 then
                        begin
-                         a_load_ref_reg(list,U32IntType,location^.def,tmpref,location^.register);
-                         dec(sizeleft,4);
-                         if TargetInfo.endian=endian_big then
-                           a_op_const_reg(list,OP_SHL,location^.def,sizeleft*8,location^.register);
-                         inc(tmpref.offset,4);
-                         reghasvalue:=true;
+                         A_Load_Ref_Reg(List,U32IntType,Location^.Def,TmpRef,Location^.Register);
+                         Dec(SizeLeft,4);
+                         if TargetInfo.Endian=endian_big then
+                           A_Op_Const_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,Location^.Register);
+                         Inc(TmpRef.Offset,4);
+                         RegHasValue:=True;
                        end;
 {$endif defined(cpu64bitalu) or defined(cpuhighleveltarget)}
-                     if sizeleft>=2 then
+                     if SizeLeft>=2 then
                        begin
-                         tmpreg:=getintregister(list,location^.def);
-                         a_load_ref_reg(list,U16IntType,location^.def,tmpref,tmpreg);
-                         dec(sizeleft,2);
-                         if reghasvalue then
+                         TmpReg:=GetIntRegister(List,Location^.Def);
+                         A_Load_Ref_Reg(List,U16IntType,Location^.Def,TmpRef,TmpReg);
+                         Dec(SizeLeft,2);
+                         if RegHasValue then
                            begin
-                             if TargetInfo.endian=endian_big then
-                               a_op_const_reg(list,OP_SHL,location^.def,sizeleft*8,tmpreg)
+                             if TargetInfo.Endian=endian_big then
+                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,TmpReg)
                              else
-                               a_op_const_reg(list,OP_SHL,location^.def,(orgsizeleft-(sizeleft+2))*8,tmpreg);
-                             a_op_reg_reg(list,OP_OR,location^.def,tmpreg,location^.register);
+                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+2))*8,TmpReg);
+                             A_Op_Reg_Reg(List,OP_OR,Location^.Def,TmpReg,Location^.Register);
                            end
                          else
                            begin
-                             if TargetInfo.endian=endian_big then
-                               a_op_const_reg_reg(list,OP_SHL,location^.def,sizeleft*8,tmpreg,location^.register)
+                             if TargetInfo.Endian=endian_big then
+                               A_Op_Const_Reg_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,TmpReg,Location^.Register)
                              else
-                               a_load_reg_reg(list,location^.def,location^.def,tmpreg,location^.register);
+                               A_Load_Reg_Reg(List,Location^.Def,Location^.Def,TmpReg,Location^.Register);
                            end;
-                         inc(tmpref.offset,2);
-                         reghasvalue:=true;
+                         Inc(TmpRef.Offset,2);
+                         RegHasValue:=True;
                        end;
-                     if sizeleft=1 then
+                     if SizeLeft=1 then
                        begin
-                         tmpreg:=getintregister(list,location^.def);
-                         a_load_ref_reg(list,U8IntType,location^.def,tmpref,tmpreg);
-                         dec(sizeleft,1);
-                         if reghasvalue then
+                         TmpReg:=GetIntRegister(List,Location^.Def);
+                         A_Load_Ref_Reg(List,U8IntType,Location^.Def,TmpRef,TmpReg);
+                         Dec(SizeLeft,1);
+                         if RegHasValue then
                            begin
-                             if TargetInfo.endian=endian_little then
-                               a_op_const_reg(list,OP_SHL,location^.def,(orgsizeleft-(sizeleft+1))*8,tmpreg);
-                             a_op_reg_reg(list,OP_OR,location^.def,tmpreg,location^.register)
+                             if TargetInfo.Endian=endian_little then
+                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+1))*8,TmpReg);
+                             A_Op_Reg_Reg(List,OP_OR,Location^.Def,TmpReg,Location^.Register)
                            end
                          else
-                           a_load_reg_reg(list,location^.def,location^.def,tmpreg,location^.register);
-                         inc(tmpref.offset);
+                           A_Load_Reg_Reg(List,Location^.Def,Location^.Def,TmpReg,Location^.Register);
+                         Inc(TmpRef.Offset);
                        end;
-                     if location^.shiftval<0 then
-                       a_op_const_reg(list,OP_SHL,location^.def,-location^.shiftval,location^.register);
+                     if Location^.ShiftVal<0 then
+                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                      { the loop will already adjust the offset and sizeleft }
-                     dec(tmpref.offset,orgsizeleft);
-                     sizeleft:=orgsizeleft;
+                     Dec(TmpRef.Offset,OrgSizeLeft);
+                     SizeLeft:=OrgSizeLeft;
                    end;
               end;
             LOC_REFERENCE,LOC_CREFERENCE:
               begin
-                 if Assigned(location^.next) then
+                 if Assigned(Location^.Next) then
                    InternalError(2017073001);
-                 reference_reset_base(ref,VoidStackPointerType,location^.reference.index,location^.reference.offset,ctempposinvalid,NewAlignment(cgpara.alignment,cgpara.intsize-sizeleft),[]);
-                 if (def_cgsize(size)<>OS_NO) and
-                    (size.size=sizeleft) and
-                    (sizeleft<=sizeof(aint)) then
-                   a_load_ref_ref(list,size,location^.def,tmpref,ref)
+                 Reference_Reset_Base(Ref,VoidStackPointerType,Location^.Reference.Index,Location^.Reference.Offset,CTempPosInvalid,NewAlignment(CGPara.Alignment,CGPara.IntSize-SizeLeft),[]);
+                 if (Def_CGSize(Size)<>OS_NO) and
+                    (Size.Size=SizeLeft) and
+                    (SizeLeft<=SizeOf(AInt)) then
+                   A_Load_Ref_Ref(List,Size,Location^.Def,TmpRef,Ref)
                  else
                    { use concatcopy, because the parameter can be larger than }
                    { what the OS_* constants can handle                       }
-                   g_concatcopy(list,location^.def,tmpref,ref);
+                   G_ConcatCopy(List,Location^.Def,TmpRef,Ref);
               end;
             LOC_MMREGISTER,LOC_CMMREGISTER:
               begin
-                 case location^.size of
+                 case Location^.Size of
                    OS_F32,
                    OS_F64,
                    OS_F128:
-                     a_loadmm_ref_reg(list,location^.def,location^.def,tmpref,location^.register,mms_movescalar);
+                     A_LoadMM_Ref_Reg(List,Location^.Def,Location^.Def,TmpRef,Location^.Register,MMS_MoveScalar);
                    OS_M8..OS_M128:
-                     a_loadmm_ref_reg(list,location^.def,location^.def,tmpref,location^.register,nil);
+                     A_LoadMM_Ref_Reg(List,Location^.Def,Location^.Def,TmpRef,Location^.Register,nil);
                    else
                      InternalError(2010053103);
                  end;
@@ -1249,195 +1249,195 @@ implementation
             else
               InternalError(2014032101);
           end;
-          inc(tmpref.offset,tcgsize2size[location^.size]);
-          dec(sizeleft,tcgsize2size[location^.size]);
-          location:=location^.next;
+          Inc(TmpRef.Offset,TCgSize2Size[Location^.Size]);
+          Dec(SizeLeft,TCgSize2Size[Location^.Size]);
+          Location:=Location^.Next;
         end;
     end;
 
 
-  procedure THLCGObj.a_load_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara);
+  procedure THLCGObj.A_Load_Loc_CGPara(List: TAsmList; Size: TDef; const L: TLocation; const CGPara: TCGPara);
     begin
-      case l.loc of
+      case L.Loc of
         LOC_REGISTER,
         LOC_CREGISTER :
-          a_load_reg_cgpara(list,size,l.register,cgpara);
+          A_Load_Reg_CGPara(List,Size,L.Register,CGPara);
         LOC_CONSTANT :
-          a_load_const_cgpara(list,size,l.value,cgpara);
+          A_Load_Const_CGPara(List,Size,L.Value,CGPara);
         LOC_CREFERENCE,
         LOC_REFERENCE :
-          a_load_ref_cgpara(list,size,l.reference,cgpara);
+          A_Load_Ref_CGPara(List,Size,L.Reference,CGPara);
         else
           InternalError(2010120419);
       end;
     end;
 
-  procedure THLCGObj.a_loadaddr_ref_cgpara(list: TAsmList; fromsize: TDef; const r: TReference; const cgpara: TCGPara);
+  procedure THLCGObj.A_LoadAddr_Ref_CGPara(List: TAsmList; FromSize: TDef; const R: TReference; const CGPara: TCGPara);
     var
-       hr : TRegister;
+       HR : TRegister;
     begin
-       cgpara.check_simple_location;
-       if cgpara.location^.loc in [LOC_CREGISTER,LOC_REGISTER] then
+       CGPara.Check_Simple_Location;
+       if CGPara.Location^.Loc in [LOC_CREGISTER,LOC_REGISTER] then
          begin
-           paramanager.allocparaloc(list,cgpara.location);
-           a_loadaddr_ref_reg(list,fromsize,cgpara.location^.def,r,cgpara.location^.register)
+           ParaManager.AllocParaLoc(List,CGPara.Location);
+           A_LoadAddr_Ref_Reg(List,FromSize,CGPara.Location^.Def,R,CGPara.Location^.Register)
          end
        else
          begin
-           hr:=getaddressregister(list,cgpara.def);
-           a_loadaddr_ref_reg(list,fromsize,cgpara.location^.def,r,hr);
-           a_load_reg_cgpara(list,cgpara.def,hr,cgpara);
+           HR:=GetAddressRegister(List,CGPara.Def);
+           A_LoadAddr_Ref_Reg(List,FromSize,CGPara.Location^.Def,R,HR);
+           A_Load_Reg_CGPara(List,CGPara.Def,HR,CGPara);
          end;
     end;
 
-  procedure THLCGObj.a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara);
+  procedure THLCGObj.A_Load_Undefined_CGPara(List: TAsmList; Size: TDef; const CGPara: TCGPara);
     begin
-      if not (cgpara.Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
-        a_load_const_cgpara(list,size,0,cgpara);
+      if not (CGPara.Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+        A_Load_Const_CGPara(List,Size,0,CGPara);
     end;
 
-  function THLCGObj.a_call_name_static(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+  function THLCGObj.A_Call_Name_Static(List: TAsmList; PD: TProcDef; const S: TSymStr; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
     begin
-      result:=a_call_name(list,pd,s,paras,forceresdef,false);
+      Result:=A_Call_Name(List,PD,S,Paras,ForceResDef,False);
     end;
 
-  function THLCGObj.a_call_name_inherited(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara): TCGPara;
+  function THLCGObj.A_Call_Name_Inherited(List: TAsmList; PD: TProcDef; const S: TSymStr; const Paras: array of PCGPara): TCGPara;
     begin
-      result:=a_call_name(list,pd,s,paras,nil,false);
+      Result:=A_Call_Name(List,PD,S,Paras,nil,False);
     end;
 
-  procedure THLCGObj.a_load_const_ref(list: TAsmList; tosize: TDef; a: TCGInt; const ref: TReference);
+  procedure THLCGObj.A_Load_Const_Ref(List: TAsmList; ToSize: TDef; A: TCGInt; const Ref: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,tosize);
-      a_load_const_reg(list,tosize,a,tmpreg);
-      a_load_reg_ref(list,tosize,tosize,tmpreg,ref);
+      TmpReg:=GetIntRegister(List,ToSize);
+      A_Load_Const_Reg(List,ToSize,A,TmpReg);
+      A_Load_Reg_Ref(List,ToSize,ToSize,TmpReg,Ref);
     end;
 
-  procedure THLCGObj.a_load_const_loc(list: TAsmList; tosize: TDef; a: TCGInt; const loc: TLocation);
+  procedure THLCGObj.A_Load_Const_Loc(List: TAsmList; ToSize: TDef; A: TCGInt; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_const_ref(list,tosize,a,loc.reference);
+          A_Load_Const_Ref(List,ToSize,A,Loc.Reference);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_const_reg(list,tosize,a,loc.register);
+          A_Load_Const_Reg(List,ToSize,A,Loc.Register);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_const_subsetreg(list,tosize,a,loc.sreg);
+          A_Load_Const_SubsetReg(List,ToSize,A,Loc.SReg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_const_subsetref(list,tosize,a,loc.sref);
+          A_Load_Const_SubsetRef(List,ToSize,A,Loc.SRef);
         else
           InternalError(2010120401);
       end;
     end;
 
-  procedure THLCGObj.a_load_reg_ref_unaligned(list: TAsmList; fromsize, tosize: TDef; register: TRegister; const ref: TReference);
+  procedure THLCGObj.A_Load_Reg_Ref_Unaligned(List: TAsmList; FromSize, ToSize: TDef; Register: TRegister; const Ref: TReference);
     begin
-      a_load_reg_ref(list,fromsize,tosize,register,ref);
+      A_Load_Reg_Ref(List,FromSize,ToSize,Register,Ref);
     end;
 
-  procedure THLCGObj.a_load_reg_loc(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const loc: TLocation);
+  procedure THLCGObj.A_Load_Reg_Loc(List: TAsmList; FromSize, ToSize: TDef; Reg: TRegister; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_reg_ref(list,fromsize,tosize,reg,loc.reference);
+          A_Load_Reg_Ref(List,FromSize,ToSize,Reg,Loc.Reference);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_reg_reg(list,fromsize,tosize,reg,loc.register);
+          A_Load_Reg_Reg(List,FromSize,ToSize,Reg,Loc.Register);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_reg_subsetreg(list,fromsize,tosize,reg,loc.sreg);
+          A_Load_Reg_SubsetReg(List,FromSize,ToSize,Reg,Loc.SReg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_reg_subsetref(list,fromsize,tosize,reg,loc.sref);
+          A_Load_Reg_SubsetRef(List,FromSize,ToSize,Reg,Loc.SRef);
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_intreg_reg(list,fromsize,tosize,reg,loc.register,mms_movescalar);
+          A_LoadMM_IntReg_Reg(List,FromSize,ToSize,Reg,Loc.Register,MMS_MoveScalar);
         else
           InternalError(2010120402);
       end;
     end;
 
-  procedure THLCGObj.a_load_ref_reg_unaligned(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; register: TRegister);
+  procedure THLCGObj.A_Load_Ref_Reg_Unaligned(List: TAsmList; FromSize, ToSize: TDef; const Ref: TReference; Register: TRegister);
     begin
-      a_load_ref_reg(list,fromsize,tosize,ref,register);
+      A_Load_Ref_Reg(List,FromSize,ToSize,Ref,Register);
     end;
 
-  procedure THLCGObj.a_load_ref_ref(list: TAsmList; fromsize, tosize: TDef; const sref: TReference; const dref: TReference);
+  procedure THLCGObj.A_Load_Ref_Ref(List: TAsmList; FromSize, ToSize: TDef; const SRef: TReference; const DRef: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
       { verify if we have the same reference }
-      if references_equal(sref,dref) then
-        exit;
-      tmpreg:=getintregister(list,tosize);
-      a_load_ref_reg(list,fromsize,tosize,sref,tmpreg);
-      a_load_reg_ref(list,tosize,tosize,tmpreg,dref);
+      if References_Equal(SRef,DRef) then
+        Exit;
+      TmpReg:=GetIntRegister(List,ToSize);
+      A_Load_Ref_Reg(List,FromSize,ToSize,SRef,TmpReg);
+      A_Load_Reg_Ref(List,ToSize,ToSize,TmpReg,DRef);
     end;
 
-  procedure THLCGObj.a_load_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; reg: TRegister);
+  procedure THLCGObj.A_Load_Loc_Reg(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; Reg: TRegister);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_ref_reg(list,fromsize,tosize,loc.reference,reg);
+          A_Load_Ref_Reg(List,FromSize,ToSize,Loc.Reference,Reg);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_reg_reg(list,fromsize,tosize,loc.register,reg);
+          A_Load_Reg_Reg(List,FromSize,ToSize,Loc.Register,Reg);
         LOC_CONSTANT:
-          a_load_const_reg(list,tosize,loc.value,reg);
+          A_Load_Const_Reg(List,ToSize,Loc.Value,Reg);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetreg_reg(list,fromsize,tosize,loc.sreg,reg);
+          A_Load_SubsetReg_Reg(List,FromSize,ToSize,Loc.SReg,Reg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetref_reg(list,fromsize,tosize,loc.sref,reg);
+          A_Load_SubsetRef_Reg(List,FromSize,ToSize,Loc.SRef,Reg);
         else
           InternalError(2010120201);
       end;
     end;
 
-  procedure THLCGObj.a_load_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference);
+  procedure THLCGObj.A_Load_Loc_Ref(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Ref: TReference);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_ref_ref(list,fromsize,tosize,loc.reference,ref);
+          A_Load_Ref_Ref(List,FromSize,ToSize,Loc.Reference,Ref);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_reg_ref(list,fromsize,tosize,loc.register,ref);
+          A_Load_Reg_Ref(List,FromSize,ToSize,Loc.Register,Ref);
         LOC_CONSTANT:
-          a_load_const_ref(list,tosize,loc.value,ref);
+          A_Load_Const_Ref(List,ToSize,Loc.Value,Ref);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetreg_ref(list,fromsize,tosize,loc.sreg,ref);
+          A_Load_SubsetReg_Ref(List,FromSize,ToSize,Loc.SReg,Ref);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetref_ref(list,fromsize,tosize,loc.sref,ref);
+          A_Load_SubsetRef_Ref(List,FromSize,ToSize,Loc.SRef,Ref);
         else
           InternalError(2010120403);
       end;
     end;
 
-  procedure THLCGObj.a_load_loc_subsetreg(list: TAsmList; fromsize, tosubsetsize: TDef; const loc: TLocation; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_Loc_SubsetReg(List: TAsmList; FromSize, ToSubsetSize: TDef; const Loc: TLocation; const SReg: TSubsetRegister);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_ref_subsetreg(list,fromsize,tosubsetsize,loc.reference,sreg);
+          A_Load_Ref_SubsetReg(List,FromSize,ToSubsetSize,Loc.Reference,SReg);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_reg_subsetreg(list,fromsize,tosubsetsize,loc.register,sreg);
+          A_Load_Reg_SubsetReg(List,FromSize,ToSubsetSize,Loc.Register,SReg);
         LOC_CONSTANT:
-          a_load_const_subsetreg(list,tosubsetsize,loc.value,sreg);
+          A_Load_Const_SubsetReg(List,ToSubsetSize,Loc.Value,SReg);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetreg_subsetreg(list,fromsize,tosubsetsize,loc.sreg,sreg);
+          A_Load_SubsetReg_SubsetReg(List,FromSize,ToSubsetSize,Loc.SReg,SReg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetref_subsetreg(list,fromsize,tosubsetsize,loc.sref,sreg);
+          A_Load_SubsetRef_SubsetReg(List,FromSize,ToSubsetSize,Loc.SRef,SReg);
         else
           InternalError(2010120404);
       end;
     end;
 
-  procedure THLCGObj.a_load_loc_subsetref(list: TAsmList; fromsize, tosubsetsize: TDef; const loc: TLocation; const sref: TSubsetReference);
+  procedure THLCGObj.A_Load_Loc_SubsetRef(List: TAsmList; FromSize, ToSubsetSize: TDef; const Loc: TLocation; const SRef: TSubsetReference);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_ref_subsetref(list,fromsize,tosubsetsize,loc.reference,sref);
+          A_Load_Ref_SubsetRef(List,FromSize,ToSubsetSize,Loc.Reference,SRef);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_reg_subsetref(list,fromsize,tosubsetsize,loc.register,sref);
+          A_Load_Reg_SubsetRef(List,FromSize,ToSubsetSize,Loc.Register,SRef);
         LOC_CONSTANT:
-          a_load_const_subsetref(list,tosubsetsize,loc.value,sref);
+          A_Load_Const_SubsetRef(List,ToSubsetSize,Loc.Value,SRef);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetreg_subsetref(list,fromsize,tosubsetsize,loc.sreg,sref);
+          A_Load_SubsetReg_SubsetRef(List,FromSize,ToSubsetSize,Loc.SReg,SRef);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetref_subsetref(list,fromsize,tosubsetsize,loc.sref,sref);
+          A_Load_SubsetRef_SubsetRef(List,FromSize,ToSubsetSize,Loc.SRef,SRef);
         else
           InternalError(2010120405);
       end;
@@ -1446,11 +1446,11 @@ implementation
 {$push}
 {$r-,q-}
 
-  procedure THLCGObj.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister);
+  procedure THLCGObj.A_Load_SubsetReg_Reg(List: TAsmList; SubsetSize, ToSize: TDef; const SReg: TSubsetRegister; DestReg: TRegister);
 
     function GetRegBitSize: Integer;
       begin
-        case getsubreg(sreg.subsetreg) of
+        case GetSubReg(SReg.SubsetReg) of
           R_SUBL, R_SUBH:
             Result := 8;
           R_SUBW:
@@ -1466,457 +1466,457 @@ implementation
       end;
 
     var
-      subsetregdef: TOrdDef;
-      bitmask: aword;
-      tmpreg,
-      subsetsizereg: TRegister;
-      stopbit: byte;
+      SubsetRegDef: TOrdDef;
+      BitMask: AWord;
+      TmpReg,
+      SubsetSizeReg: TRegister;
+      StopBit: Byte;
     begin
-      subsetregdef:=cgsize_orddef(sreg.subsetregsize);
-      tmpreg:=getintregister(list,subsetregdef);
+      SubsetRegDef:=CGSize_OrdDef(SReg.SubsetRegSize);
+      TmpReg:=GetIntRegister(List,SubsetRegDef);
       { insert shifts only if it changes bits being accessed later on }
-      if (sreg.startbit<>0) or
-        (tosize.size*8>sreg.bitlen) then
+      if (SReg.StartBit<>0) or
+        (ToSize.Size*8>SReg.BitLen) then
         begin
-          if is_signed(subsetsize) then
+          if Is_Signed(SubsetSize) then
             begin
               { sign extend in case the value has a bitsize mod 8 <> 0 }
               { both instructions will be optimized away if not        }
-              a_op_const_reg_reg(list,OP_SHL,subsetregdef,(tcgsize2size[sreg.subsetregsize]*8)-sreg.startbit-sreg.bitlen,sreg.subsetreg,tmpreg);
-              a_op_const_reg(list,OP_SAR,subsetregdef,(tcgsize2size[sreg.subsetregsize]*8)-sreg.bitlen,tmpreg);
+              A_Op_Const_Reg_Reg(List,OP_SHL,SubsetRegDef,(TCgSize2Size[SReg.SubsetRegSize]*8)-SReg.StartBit-SReg.BitLen,SReg.SubsetReg,TmpReg);
+              A_Op_Const_Reg(List,OP_SAR,SubsetRegDef,(TCgSize2Size[SReg.SubsetRegSize]*8)-SReg.BitLen,TmpReg);
             end
           else
             begin
-              a_op_const_reg_reg(list,OP_SHR,subsetregdef,sreg.startbit,sreg.subsetreg,tmpreg);
-              stopbit:=sreg.startbit+sreg.bitlen;
+              A_Op_Const_Reg_Reg(List,OP_SHR,SubsetRegDef,SReg.StartBit,SReg.SubsetReg,TmpReg);
+              StopBit:=SReg.StartBit+SReg.BitLen;
               { If stopbit = (tcgsize2size[sreg.subsetregsize] * 8), then an
                 AND mask is unnecessary }
-              if (stopbit < GetRegBitSize()) then
+              if (StopBit < GetRegBitSize()) then
                 begin
                   { on x86(64), 1 shl 32(64) = 1 instead of 0
                     use aword to prevent overflow with 1 shl 31 }
-                  if (stopbit-sreg.startbit<>AIntBits) then
-                    bitmask:=(aword(1) shl (stopbit-sreg.startbit))-1
+                  if (StopBit-SReg.StartBit<>AIntBits) then
+                    BitMask:=(AWord(1) shl (StopBit-SReg.StartBit))-1
                   else
-                    bitmask:=high(aword);
-                  a_op_const_reg(list,OP_AND,subsetregdef,TCGInt(bitmask),tmpreg);
+                    BitMask:=High(AWord);
+                  A_Op_Const_Reg(List,OP_AND,SubsetRegDef,TCGInt(BitMask),TmpReg);
                 end;
             end;
         end
       else
-        a_load_reg_reg(list,subsetregdef,subsetregdef,sreg.subsetreg,tmpreg);
-      subsetsizereg:=getintregister(list,subsetsize);
-      a_load_reg_reg(list,subsetregdef,subsetsize,tmpreg,subsetsizereg);
-      a_load_reg_reg(list,subsetsize,tosize,subsetsizereg,destreg);
+        A_Load_Reg_Reg(List,SubsetRegDef,SubsetRegDef,SReg.SubsetReg,TmpReg);
+      SubsetSizeReg:=GetIntRegister(List,SubsetSize);
+      A_Load_Reg_Reg(List,SubsetRegDef,SubsetSize,TmpReg,SubsetSizeReg);
+      A_Load_Reg_Reg(List,SubsetSize,ToSize,SubsetSizeReg,DestReg);
     end;
 
-  procedure THLCGObj.a_load_reg_subsetreg(list: TAsmList; fromsize, tosubsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_Reg_SubsetReg(List: TAsmList; FromSize, ToSubsetSize: TDef; FromReg: TRegister; const SReg: TSubsetRegister);
     begin
-      a_load_regconst_subsetreg_intern(list,fromsize,tosubsetsize,fromreg,sreg,SL_REG);
+      A_Load_RegConst_SubsetReg_Intern(List,FromSize,ToSubsetSize,FromReg,SReg,SL_REG);
     end;
 
-  procedure THLCGObj.a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_SubsetReg_SubsetReg(List: TAsmList; FromSubsetSize, ToSubsetSize: TDef; const FromSReg, ToSReg: TSubsetRegister);
     var
-      fromsubsetregdef,
-      tosubsetregdef: TOrdDef;
-      tmpreg, tmpreg2: TRegister;
-      bitmask: aword;
-      stopbit: byte;
+      FromSubsetRegDef,
+      ToSubsetRegDef: TOrdDef;
+      TmpReg, TmpReg2: TRegister;
+      BitMask: AWord;
+      StopBit: Byte;
     begin
-      if (fromsreg.bitlen>=tosreg.bitlen) then
+      if (FromSReg.BitLen>=ToSReg.BitLen) then
         begin
-          fromsubsetregdef:=cgsize_orddef(fromsreg.subsetregsize);
-          tosubsetregdef:=cgsize_orddef(tosreg.subsetregsize);
-          if (fromsreg.startbit<=tosreg.startbit) then
+          FromSubsetRegDef:=CGSize_OrdDef(FromSReg.SubsetRegSize);
+          ToSubsetRegDef:=CGSize_OrdDef(ToSReg.SubsetRegSize);
+          if (FromSReg.StartBit<=ToSReg.StartBit) then
             begin
               { tosreg may be larger -> use its size to perform the shift }
-              tmpreg:=getintregister(list,tosubsetregdef);
-              a_load_reg_reg(list,fromsubsetregdef,tosubsetregdef,fromsreg.subsetreg,tmpreg);
-              a_op_const_reg(list,OP_SHL,tosubsetregdef,tosreg.startbit-fromsreg.startbit,tmpreg)
+              TmpReg:=GetIntRegister(List,ToSubsetRegDef);
+              A_Load_Reg_Reg(List,FromSubsetRegDef,ToSubsetRegDef,FromSReg.SubsetReg,TmpReg);
+              A_Op_Const_Reg(List,OP_SHL,ToSubsetRegDef,ToSReg.StartBit-FromSReg.StartBit,TmpReg)
             end
           else
             begin
               { fromsreg may be larger -> use its size to perform the shift }
-              tmpreg:=getintregister(list,fromsubsetregdef);
-              a_op_const_reg_reg(list,OP_SHR,fromsubsetregdef,fromsreg.startbit-tosreg.startbit,fromsreg.subsetreg,tmpreg);
-              tmpreg2:=getintregister(list,tosubsetregdef);
-              a_load_reg_reg(list,fromsubsetregdef,tosubsetregdef,tmpreg,tmpreg2);
-              tmpreg:=tmpreg2;
+              TmpReg:=GetIntRegister(List,FromSubsetRegDef);
+              A_Op_Const_Reg_Reg(List,OP_SHR,FromSubsetRegDef,FromSReg.StartBit-ToSReg.StartBit,FromSReg.SubsetReg,TmpReg);
+              TmpReg2:=GetIntRegister(List,ToSubsetRegDef);
+              A_Load_Reg_Reg(List,FromSubsetRegDef,ToSubsetRegDef,TmpReg,TmpReg2);
+              TmpReg:=TmpReg2;
             end;
-          stopbit:=tosreg.startbit + tosreg.bitlen;
+          StopBit:=ToSReg.StartBit + ToSReg.BitLen;
           // on x86(64), 1 shl 32(64) = 1 instead of 0
-          if (stopbit<>AIntBits) then
-            bitmask:=not(((aword(1) shl stopbit)-1) xor ((aword(1) shl tosreg.startbit)-1))
+          if (StopBit<>AIntBits) then
+            BitMask:=not(((AWord(1) shl StopBit)-1) xor ((AWord(1) shl ToSReg.StartBit)-1))
            else
-             bitmask:=(aword(1) shl tosreg.startbit) - 1;
-          a_op_const_reg(list,OP_AND,tosubsetregdef,TCGInt(bitmask),tosreg.subsetreg);
-          a_op_const_reg(list,OP_AND,tosubsetregdef,TCGInt(not(bitmask)),tmpreg);
-          a_op_reg_reg(list,OP_OR,tosubsetregdef,tmpreg,tosreg.subsetreg);
+             BitMask:=(AWord(1) shl ToSReg.StartBit) - 1;
+          A_Op_Const_Reg(List,OP_AND,ToSubsetRegDef,TCGInt(BitMask),ToSReg.SubsetReg);
+          A_Op_Const_Reg(List,OP_AND,ToSubsetRegDef,TCGInt(not(BitMask)),TmpReg);
+          A_Op_Reg_Reg(List,OP_OR,ToSubsetRegDef,TmpReg,ToSReg.SubsetReg);
         end
       else
         begin
-          tmpreg:=getintregister(list,tosubsetsize);
-          a_load_subsetreg_reg(list,fromsubsetsize,tosubsetsize,fromsreg,tmpreg);
-          a_load_reg_subsetreg(list,tosubsetsize,tosubsetsize,tmpreg,tosreg);
+          TmpReg:=GetIntRegister(List,ToSubsetSize);
+          A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSubsetSize,FromSReg,TmpReg);
+          A_Load_Reg_SubsetReg(List,ToSubsetSize,ToSubsetSize,TmpReg,ToSReg);
         end;
     end;
 
-  procedure THLCGObj.a_load_subsetreg_ref(list: TAsmList; fromsubsetsize, tosize: TDef; const sreg: TSubsetRegister; const destref: TReference);
+  procedure THLCGObj.A_Load_SubsetReg_Ref(List: TAsmList; FromSubsetSize, ToSize: TDef; const SReg: TSubsetRegister; const DestRef: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,tosize);
-      a_load_subsetreg_reg(list,fromsubsetsize,tosize,sreg,tmpreg);
-      a_load_reg_ref(list,tosize,tosize,tmpreg,destref);
+      TmpReg:=GetIntRegister(List,ToSize);
+      A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSize,SReg,TmpReg);
+      A_Load_Reg_Ref(List,ToSize,ToSize,TmpReg,DestRef);
     end;
 
-  procedure THLCGObj.a_load_ref_subsetreg(list: TAsmList; fromsize, tosubsetsize: TDef; const fromref: TReference; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_Ref_SubsetReg(List: TAsmList; FromSize, ToSubsetSize: TDef; const FromRef: TReference; const SReg: TSubsetRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg := getintregister(list,tosubsetsize);
-      a_load_ref_reg(list,fromsize,tosubsetsize,fromref,tmpreg);
-      a_load_reg_subsetreg(list,tosubsetsize,tosubsetsize,tmpreg,sreg);
+      TmpReg := GetIntRegister(List,ToSubsetSize);
+      A_Load_Ref_Reg(List,FromSize,ToSubsetSize,FromRef,TmpReg);
+      A_Load_Reg_SubsetReg(List,ToSubsetSize,ToSubsetSize,TmpReg,SReg);
     end;
 
-  procedure THLCGObj.a_load_const_subsetreg(list: TAsmList; tosubsetsize: TDef; a: TCGInt; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_Const_SubsetReg(List: TAsmList; ToSubsetSize: TDef; A: TCGInt; const SReg: TSubsetRegister);
     var
-      subsetregdef: TOrdDef;
-      bitmask: aword;
-      stopbit: byte;
+      SubsetRegDef: TOrdDef;
+      BitMask: AWord;
+      StopBit: Byte;
     begin
-       subsetregdef:=cgsize_orddef(sreg.subsetregsize);
-       stopbit:=sreg.startbit+sreg.bitlen;
+       SubsetRegDef:=CGSize_OrdDef(SReg.SubsetRegSize);
+       StopBit:=SReg.StartBit+SReg.BitLen;
        // on x86(64), 1 shl 32(64) = 1 instead of 0
-       if (stopbit<>AIntBits) then
-         bitmask:=not(((aword(1) shl stopbit)-1) xor ((aword(1) shl sreg.startbit)-1))
+       if (StopBit<>AIntBits) then
+         BitMask:=not(((AWord(1) shl StopBit)-1) xor ((AWord(1) shl SReg.StartBit)-1))
        else
-         bitmask:=(aword(1) shl sreg.startbit)-1;
-       if (((aword(a) shl sreg.startbit) and not bitmask)<>not bitmask) then
-         a_op_const_reg(list,OP_AND,subsetregdef,TCGInt(bitmask),sreg.subsetreg);
-       a_op_const_reg(list,OP_OR,subsetregdef,TCGInt((aword(a) shl sreg.startbit) and not(bitmask)),sreg.subsetreg);
+         BitMask:=(AWord(1) shl SReg.StartBit)-1;
+       if (((AWord(A) shl SReg.StartBit) and not BitMask)<>not BitMask) then
+         A_Op_Const_Reg(List,OP_AND,SubsetRegDef,TCGInt(BitMask),SReg.SubsetReg);
+       A_Op_Const_Reg(List,OP_OR,SubsetRegDef,TCGInt((AWord(A) shl SReg.StartBit) and not(BitMask)),SReg.SubsetReg);
     end;
 
-  procedure THLCGObj.a_load_subsetreg_loc(list: TAsmList; fromsubsetsize, tosize: TDef; const sreg: TSubsetRegister; const loc: TLocation);
+  procedure THLCGObj.A_Load_SubsetReg_Loc(List: TAsmList; FromSubsetSize, ToSize: TDef; const SReg: TSubsetRegister; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_subsetreg_ref(list,fromsubsetsize,tosize,sreg,loc.reference);
+          A_Load_SubsetReg_Ref(List,FromSubsetSize,ToSize,SReg,Loc.Reference);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_subsetreg_reg(list,fromsubsetsize,tosize,sreg,loc.register);
+          A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSize,SReg,Loc.Register);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetreg_subsetreg(list,fromsubsetsize,tosize,sreg,loc.sreg);
+          A_Load_SubsetReg_SubsetReg(List,FromSubsetSize,ToSize,SReg,Loc.SReg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetreg_subsetref(list,fromsubsetsize,tosize,sreg,loc.sref);
+          A_Load_SubsetReg_SubsetRef(List,FromSubsetSize,ToSize,SReg,Loc.SRef);
         else
           InternalError(2010120406);
       end;
     end;
 
-  procedure THLCGObj.a_load_subsetref_reg(list: TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; destreg: TRegister);
+  procedure THLCGObj.A_Load_SubsetRef_Reg(List: TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; DestReg: TRegister);
     var
-      tmpref: TReference;
-      valuereg,extra_value_reg, tmpreg: TRegister;
-      tosreg: TSubsetRegister;
-      loadsize: TOrdDef;
-      loadbitsize: byte;
-      extra_load: boolean;
-      tmpsref: TSubsetReference;
+      TmpRef: TReference;
+      ValueReg,ExtraValueReg, TmpReg: TRegister;
+      ToSReg: TSubsetRegister;
+      LoadSize: TOrdDef;
+      LoadBitSize: Byte;
+      ExtraLoad: Boolean;
+      TmpSRef: TSubsetReference;
     begin
-      if sref.bitlen>AIntBits then
+      if SRef.BitLen>AIntBits then
         begin
-          tmpsref:=sref;
-          tmpsref.bitlen:=AIntBits;
-          valuereg:=hlcg.getintregister(list,tosize);
-          a_load_subsetref_reg(list,SIntType,tosize,tmpsref,valuereg);
-          tmpsref.bitlen:=sref.bitlen-AIntBits;
-          inc(tmpsref.ref.offset,AIntBits div 8);
-          extra_value_reg:=hlcg.getintregister(list,tosize);
-          a_load_subsetref_reg(list,SIntType,tosize,tmpsref,extra_value_reg);
+          TmpSRef:=SRef;
+          TmpSRef.BitLen:=AIntBits;
+          ValueReg:=HLCG.GetIntRegister(List,ToSize);
+          A_Load_SubsetRef_Reg(List,SIntType,ToSize,TmpSRef,ValueReg);
+          TmpSRef.BitLen:=SRef.BitLen-AIntBits;
+          Inc(TmpSRef.Ref.Offset,AIntBits div 8);
+          ExtraValueReg:=HLCG.GetIntRegister(List,ToSize);
+          A_Load_SubsetRef_Reg(List,SIntType,ToSize,TmpSRef,ExtraValueReg);
           { can't use a_load_reg_subsetreg to merge the results, as that one
             does not support sizes > AIntBits either }
-          tmpreg:=hlcg.getintregister(list,tosize);
-          if TargetInfo.endian=endian_big then
+          TmpReg:=HLCG.GetIntRegister(List,ToSize);
+          if TargetInfo.Endian=endian_big then
             begin
-              a_op_const_reg_reg(list,OP_SHL,tosize,sref.bitlen-AIntBits,valuereg,tmpreg);
-              if is_signed(fromsubsetsize) then
+              A_Op_Const_Reg_Reg(List,OP_SHL,ToSize,SRef.BitLen-AIntBits,ValueReg,TmpReg);
+              if Is_Signed(FromSubsetSize) then
                 begin
-                  valuereg:=tmpreg;
-                  tmpreg:=hlcg.getintregister(list,tosize);
-                  a_op_const_reg_reg(list,OP_AND,tosize,(TCGInt(1) shl (sref.bitlen-AIntBits))-1,extra_value_reg,tmpreg);
-                  valuereg:=tmpreg;
+                  ValueReg:=TmpReg;
+                  TmpReg:=HLCG.GetIntRegister(List,ToSize);
+                  A_Op_Const_Reg_Reg(List,OP_AND,ToSize,(TCGInt(1) shl (SRef.BitLen-AIntBits))-1,ExtraValueReg,TmpReg);
+                  ValueReg:=TmpReg;
                 end
             end
           else
             begin
-              a_op_const_reg_reg(list,OP_SHL,tosize,AIntBits,extra_value_reg,tmpreg);
-              if is_signed(fromsubsetsize) then
+              A_Op_Const_Reg_Reg(List,OP_SHL,ToSize,AIntBits,ExtraValueReg,TmpReg);
+              if Is_Signed(FromSubsetSize) then
                 begin
-                  extra_value_reg:=hlcg.getintregister(list,tosize);
-                  a_op_const_reg_reg(list,OP_AND,tosize,(TCGInt(1) shl AIntBits)-1,valuereg,extra_value_reg);
-                  valuereg:=extra_value_reg;
+                  ExtraValueReg:=HLCG.GetIntRegister(List,ToSize);
+                  A_Op_Const_Reg_Reg(List,OP_AND,ToSize,(TCGInt(1) shl AIntBits)-1,ValueReg,ExtraValueReg);
+                  ValueReg:=ExtraValueReg;
                 end
             end;
-          if is_signed(fromsubsetsize) then
+          if Is_Signed(FromSubsetSize) then
             begin
-              extra_value_reg:=hlcg.getintregister(list,tosize);
-              a_op_const_reg_reg(list,OP_AND,tosize,(TCGInt(1) shl AIntBits)-1,valuereg,extra_value_reg);
-              valuereg:=extra_value_reg;
+              ExtraValueReg:=HLCG.GetIntRegister(List,ToSize);
+              A_Op_Const_Reg_Reg(List,OP_AND,ToSize,(TCGInt(1) shl AIntBits)-1,ValueReg,ExtraValueReg);
+              ValueReg:=ExtraValueReg;
             end;
-          a_op_reg_reg_reg(list,OP_OR,tosize,valuereg,tmpreg,destreg);
-          exit;
+          A_Op_Reg_Reg_Reg(List,OP_OR,ToSize,ValueReg,TmpReg,DestReg);
+          Exit;
         end;
 
-      get_subsetref_load_info(sref,loadsize,extra_load);
-      loadbitsize:=loadsize.size*8;
+      Get_SubsetRef_Load_Info(SRef,LoadSize,ExtraLoad);
+      LoadBitSize:=LoadSize.Size*8;
 
       { load the (first part) of the bit sequence }
-      valuereg:=getintregister(list,ALUUIntType);
-      a_load_ref_reg(list,loadsize,ALUUIntType,sref.ref,valuereg);
+      ValueReg:=GetIntRegister(List,ALUUIntType);
+      A_Load_Ref_Reg(List,LoadSize,ALUUIntType,SRef.Ref,ValueReg);
 
-      if not extra_load then
+      if not ExtraLoad then
         begin
           { everything is guaranteed to be in a single register of loadsize }
-          if (sref.bitindexreg=NR_NO) then
+          if (SRef.BitIndexReg=NR_NO) then
             begin
               { use subsetreg routine, it may have been overridden with an optimized version }
-              tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
+              ToSReg.SubsetReg:=ValueReg;
+              ToSReg.SubsetRegSize:=Def_CGSize(ALUUIntType);
               { subsetregs always count bits from right to left }
-              if (TargetInfo.endian=endian_big) then
-                tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
+              if (TargetInfo.Endian=endian_big) then
+                ToSReg.StartBit:=LoadBitSize-(SRef.StartBit+SRef.BitLen)
               else
-                tosreg.startbit:=sref.startbit;
-              tosreg.bitlen:=sref.bitlen;
-              a_load_subsetreg_reg(list,fromsubsetsize,tosize,tosreg,destreg);
-              exit;
+                ToSReg.StartBit:=SRef.StartBit;
+              ToSReg.BitLen:=SRef.BitLen;
+              A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSize,ToSReg,DestReg);
+              Exit;
             end
           else
             begin
-              if (sref.startbit<>0) then
+              if (SRef.StartBit<>0) then
                 InternalError(2006081510);
-              if (TargetInfo.endian=endian_big) then
+              if (TargetInfo.Endian=endian_big) then
                 begin
-                  a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,valuereg);
-                  if is_signed(fromsubsetsize) then
+                  A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,ValueReg);
+                  if Is_Signed(FromSubsetSize) then
                     begin
                       { sign extend to entire register }
-                      a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize,valuereg);
-                      a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize,ValueReg);
+                      A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
                     end
                   else
-                    a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-sref.bitlen,valuereg);
+                    A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-SRef.BitLen,ValueReg);
                 end
               else
                 begin
-                  a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,valuereg);
-                  if is_signed(fromsubsetsize) then
+                  A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,ValueReg);
+                  if Is_Signed(FromSubsetSize) then
                     begin
-                      a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen,valuereg);
-                      a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
+                      A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
                     end
                 end;
               { mask other bits/sign extend }
-              if not is_signed(fromsubsetsize) then
-                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+              if not Is_Signed(FromSubsetSize) then
+                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
             end
         end
       else
         begin
           { load next value as well }
-          extra_value_reg:=getintregister(list,ALUUIntType);
+          ExtraValueReg:=GetIntRegister(List,ALUUIntType);
 
-          if (sref.bitindexreg=NR_NO) then
+          if (SRef.BitIndexReg=NR_NO) then
             begin
-              tmpref:=sref.ref;
-              inc(tmpref.offset,loadbitsize div 8);
-              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
+              TmpRef:=SRef.Ref;
+              Inc(TmpRef.Offset,LoadBitSize div 8);
+              A_Load_Ref_Reg(List,LoadSize,ALUUIntType,TmpRef,ExtraValueReg);
               { can be overridden to optimize }
-              a_load_subsetref_regs_noindex(list,fromsubsetsize,loadbitsize,sref,valuereg,extra_value_reg)
+              A_Load_SubsetRef_Regs_NoIndex(List,FromSubsetSize,LoadBitSize,SRef,ValueReg,ExtraValueReg)
             end
           else
             begin
-              if (sref.startbit<>0) then
+              if (SRef.StartBit<>0) then
                 InternalError(2006080610);
-              a_load_subsetref_regs_index(list,fromsubsetsize,loadbitsize,sref,valuereg);
+              A_Load_SubsetRef_Regs_Index(List,FromSubsetSize,LoadBitSize,SRef,ValueReg);
             end;
         end;
 
       { store in destination }
 {$ifndef cpuhighleveltarget}
       { avoid unnecessary sign extension and zeroing }
-      valuereg:=cg.makeregsize(list,valuereg,OS_INT);
-      destreg:=cg.makeregsize(list,destreg,OS_INT);
-      cg.a_load_reg_reg(list,OS_INT,OS_INT,valuereg,destreg);
-      destreg:=cg.makeregsize(list,destreg,def_cgsize(tosize));
+      ValueReg:=CG.MakeRegSize(List,ValueReg,OS_INT);
+      DestReg:=CG.MakeRegSize(List,DestReg,OS_INT);
+      CG.A_Load_Reg_Reg(List,OS_INT,OS_INT,ValueReg,DestReg);
+      DestReg:=CG.MakeRegSize(List,DestReg,Def_CGSize(ToSize));
 {$else}
       { can't juggle with register sizes, they are actually typed entities
         here }
-      a_load_reg_reg(list,ALUUIntType,tosize,valuereg,destreg);
+      A_Load_Reg_Reg(List,ALUUIntType,ToSize,ValueReg,DestReg);
 {$endif}
     end;
 
-  procedure THLCGObj.a_load_reg_subsetref(list: TAsmList; fromsize, tosubsetsize: TDef; fromreg: TRegister; const sref: TSubsetReference);
+  procedure THLCGObj.A_Load_Reg_SubsetRef(List: TAsmList; FromSize, ToSubsetSize: TDef; FromReg: TRegister; const SRef: TSubsetReference);
     var
-      tmpsref: TSubsetReference;
-      fromreg1: TRegister;
+      TmpSRef: TSubsetReference;
+      FromReg1: TRegister;
     begin
-      if sref.bitlen>AIntBits then
+      if SRef.BitLen>AIntBits then
         begin
-          if ((sref.bitlen mod AIntBits)<>0) then
+          if ((SRef.BitLen mod AIntBits)<>0) then
             InternalError(2019052901);
-          tmpsref:=sref;
-          tmpsref.bitlen:=AIntBits;
-          fromreg1:=hlcg.getintregister(list,ALUUIntType);
-          a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,fromreg1);
-          if TargetInfo.endian=endian_big then
+          TmpSRef:=SRef;
+          TmpSRef.BitLen:=AIntBits;
+          FromReg1:=HLCG.GetIntRegister(List,ALUUIntType);
+          A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,FromReg1);
+          if TargetInfo.Endian=endian_big then
             begin
-              inc(tmpsref.ref.offset,sref.bitlen-AIntBits);
+              Inc(TmpSRef.Ref.Offset,SRef.BitLen-AIntBits);
             end;
-          a_load_reg_subsetref(list,ALUUIntType,ALUUIntType,fromreg1,tmpsref);
-          if TargetInfo.endian=endian_big then
+          A_Load_Reg_SubsetRef(List,ALUUIntType,ALUUIntType,FromReg1,TmpSRef);
+          if TargetInfo.Endian=endian_big then
             begin
-              tmpsref.ref.offset:=sref.ref.offset;
+              TmpSRef.Ref.Offset:=SRef.Ref.Offset;
             end
           else
             begin
-              inc(tmpsref.ref.offset,AIntBits div 8);
+              Inc(TmpSRef.Ref.Offset,AIntBits div 8);
             end;
-          tmpsref.bitlen:=sref.bitlen-AIntBits;
-          fromreg1:=hlcg.getintregister(list,fromsize);
-          hlcg.a_op_const_reg_reg(list,OP_SHR,fromsize,AIntBits,fromreg,fromreg1);
-          a_load_reg_subsetref(list,fromsize,tosubsetsize,fromreg1,tmpsref);
-          exit;
+          TmpSRef.BitLen:=SRef.BitLen-AIntBits;
+          FromReg1:=HLCG.GetIntRegister(List,FromSize);
+          HLCG.A_Op_Const_Reg_Reg(List,OP_SHR,FromSize,AIntBits,FromReg,FromReg1);
+          A_Load_Reg_SubsetRef(List,FromSize,ToSubsetSize,FromReg1,TmpSRef);
+          Exit;
         end;
-      a_load_regconst_subsetref_intern(list,fromsize,tosubsetsize,fromreg,sref,SL_REG);
+      A_Load_RegConst_SubsetRef_Intern(List,FromSize,ToSubsetSize,FromReg,SRef,SL_REG);
     end;
 
-  procedure THLCGObj.a_load_subsetref_subsetref(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsref, tosref: TSubsetReference);
+  procedure THLCGObj.A_Load_SubsetRef_SubsetRef(List: TAsmList; FromSubsetSize, ToSubsetSize: TDef; const FromSRef, ToSRef: TSubsetReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,tosubsetsize);
-      a_load_subsetref_reg(list,fromsubsetsize,tosubsetsize,fromsref,tmpreg);
-      a_load_reg_subsetref(list,tosubsetsize,tosubsetsize,tmpreg,tosref);
+      TmpReg:=GetIntRegister(List,ToSubsetSize);
+      A_Load_SubsetRef_Reg(List,FromSubsetSize,ToSubsetSize,FromSRef,TmpReg);
+      A_Load_Reg_SubsetRef(List,ToSubsetSize,ToSubsetSize,TmpReg,ToSRef);
     end;
 
-  procedure THLCGObj.a_load_subsetref_ref(list: TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; const destref: TReference);
+  procedure THLCGObj.A_Load_SubsetRef_Ref(List: TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; const DestRef: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,tosize);
-      a_load_subsetref_reg(list,fromsubsetsize,tosize,sref,tmpreg);
-      a_load_reg_ref(list,tosize,tosize,tmpreg,destref);
+      TmpReg:=GetIntRegister(List,ToSize);
+      A_Load_SubsetRef_Reg(List,FromSubsetSize,ToSize,SRef,TmpReg);
+      A_Load_Reg_Ref(List,ToSize,ToSize,TmpReg,DestRef);
     end;
 
-  procedure THLCGObj.a_load_ref_subsetref(list: TAsmList; fromsize, tosubsetsize: TDef; const fromref: TReference; const sref: TSubsetReference);
+  procedure THLCGObj.A_Load_Ref_SubsetRef(List: TAsmList; FromSize, ToSubsetSize: TDef; const FromRef: TReference; const SRef: TSubsetReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg := getintregister(list,tosubsetsize);
-      a_load_ref_reg(list,fromsize,tosubsetsize,fromref,tmpreg);
-      a_load_reg_subsetref(list,tosubsetsize,tosubsetsize,tmpreg,sref);
+      TmpReg := GetIntRegister(List,ToSubsetSize);
+      A_Load_Ref_Reg(List,FromSize,ToSubsetSize,FromRef,TmpReg);
+      A_Load_Reg_SubsetRef(List,ToSubsetSize,ToSubsetSize,TmpReg,SRef);
     end;
 
-  procedure THLCGObj.a_load_const_subsetref(list: TAsmList; tosubsetsize: TDef; a: TCGInt; const sref: TSubsetReference);
+  procedure THLCGObj.A_Load_Const_SubsetRef(List: TAsmList; ToSubsetSize: TDef; A: TCGInt; const SRef: TSubsetReference);
     var
-      tmpsref: TSubsetReference;
-      tmpreg: TRegister;
-      slopt: TSubsetLoadOpt;
+      TmpSRef: TSubsetReference;
+      TmpReg: TRegister;
+      SlOpt: TSubsetLoadOpt;
     begin
-      if sref.bitlen>AIntBits then
+      if SRef.BitLen>AIntBits then
         begin
-          if ((sref.bitlen mod AIntBits)<>0) then
+          if ((SRef.BitLen mod AIntBits)<>0) then
             InternalError(2019052902);
-          tmpsref:=sref;
-          tmpsref.bitlen:=AIntBits;
-          if TargetInfo.endian=endian_big then
+          TmpSRef:=SRef;
+          TmpSRef.BitLen:=AIntBits;
+          if TargetInfo.Endian=endian_big then
             begin
-              inc(tmpsref.ref.offset,sref.bitlen-AIntBits);
+              Inc(TmpSRef.Ref.Offset,SRef.BitLen-AIntBits);
             end;
-          a_load_const_subsetref(list,tosubsetsize,aint(a),tmpsref);
-          if TargetInfo.endian=endian_big then
+          A_Load_Const_SubsetRef(List,ToSubsetSize,AInt(A),TmpSRef);
+          if TargetInfo.Endian=endian_big then
             begin
-              tmpsref.ref.offset:=sref.ref.offset;
+              TmpSRef.Ref.Offset:=SRef.Ref.Offset;
             end
           else
             begin
-              inc(tmpsref.ref.offset,AIntBits div 8);
+              Inc(TmpSRef.Ref.Offset,AIntBits div 8);
             end;
-          tmpsref.bitlen:=sref.bitlen-AIntBits;
-          a_load_const_subsetref(list,tosubsetsize,a shr AIntBits,tmpsref);
-          exit;
+          TmpSRef.BitLen:=SRef.BitLen-AIntBits;
+          A_Load_Const_SubsetRef(List,ToSubsetSize,A shr AIntBits,TmpSRef);
+          Exit;
         end;
       { perform masking of the source value in advance }
-      slopt:=SL_REGNOSRCMASK;
-      if (sref.bitlen<>AIntBits) then
-        a:=TCGInt(aword(a) and ((aword(1) shl sref.bitlen) -1));
+      SlOpt:=SL_REGNOSRCMASK;
+      if (SRef.BitLen<>AIntBits) then
+        A:=TCGInt(AWord(A) and ((AWord(1) shl SRef.BitLen) -1));
       if (
           { broken x86 "x shl regbitsize = x" }
-          ((sref.bitlen<>AIntBits) and
-           ((aword(a) and ((aword(1) shl sref.bitlen)-1))=(aword(1) shl sref.bitlen)-1)) or
-          ((sref.bitlen=AIntBits) and
-           (a=-1))
+          ((SRef.BitLen<>AIntBits) and
+           ((AWord(A) and ((AWord(1) shl SRef.BitLen)-1))=(AWord(1) shl SRef.BitLen)-1)) or
+          ((SRef.BitLen=AIntBits) and
+           (A=-1))
          ) then
-        slopt:=SL_SETMAX
-      else if (a=0) then
-        slopt:=SL_SETZERO;
-      if not(slopt in [SL_SETZERO,SL_SETMAX]) then
+        SlOpt:=SL_SETMAX
+      else if (A=0) then
+        SlOpt:=SL_SETZERO;
+      if not(SlOpt in [SL_SETZERO,SL_SETMAX]) then
         begin
-          tmpreg:=getintregister(list,tosubsetsize);
-          a_load_const_reg(list,tosubsetsize,a,tmpreg);
+          TmpReg:=GetIntRegister(List,ToSubsetSize);
+          A_Load_Const_Reg(List,ToSubsetSize,A,TmpReg);
         end
       else
-        tmpreg:=NR_NO;
-      a_load_regconst_subsetref_intern(list,tosubsetsize,tosubsetsize,tmpreg,sref,slopt);
+        TmpReg:=NR_NO;
+      A_Load_RegConst_SubsetRef_Intern(List,ToSubsetSize,ToSubsetSize,TmpReg,SRef,SlOpt);
     end;
 
-  procedure THLCGObj.a_load_subsetref_loc(list: TAsmList; fromsubsetsize, tosize: TDef; const sref: TSubsetReference; const loc: TLocation);
+  procedure THLCGObj.A_Load_SubsetRef_Loc(List: TAsmList; FromSubsetSize, ToSize: TDef; const SRef: TSubsetReference; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_load_subsetref_ref(list,fromsubsetsize,tosize,sref,loc.reference);
+          A_Load_SubsetRef_Ref(List,FromSubsetSize,ToSize,SRef,Loc.Reference);
         LOC_REGISTER,LOC_CREGISTER:
-          a_load_subsetref_reg(list,fromsubsetsize,tosize,sref,loc.register);
+          A_Load_SubsetRef_Reg(List,FromSubsetSize,ToSize,SRef,Loc.Register);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_load_subsetref_subsetreg(list,fromsubsetsize,tosize,sref,loc.sreg);
+          A_Load_SubsetRef_SubsetReg(List,FromSubsetSize,ToSize,SRef,Loc.SReg);
         LOC_SUBSETREF,LOC_CSUBSETREF:
-          a_load_subsetref_subsetref(list,fromsubsetsize,tosize,sref,loc.sref);
+          A_Load_SubsetRef_SubsetRef(List,FromSubsetSize,ToSize,SRef,Loc.SRef);
         else
           InternalError(2010120407);
       end;
     end;
 
-  procedure THLCGObj.a_load_subsetref_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsref: TSubsetReference; const tosreg: TSubsetRegister);
+  procedure THLCGObj.A_Load_SubsetRef_SubsetReg(List: TAsmList; FromSubsetSize, ToSubsetSize: TDef; const FromSRef: TSubsetReference; const ToSReg: TSubsetRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,tosubsetsize);
-      a_load_subsetref_reg(list,fromsubsetsize,tosubsetsize,fromsref,tmpreg);
-      a_load_reg_subsetreg(list,tosubsetsize,tosubsetsize,tmpreg,tosreg);
+      TmpReg:=GetIntRegister(List,ToSubsetSize);
+      A_Load_SubsetRef_Reg(List,FromSubsetSize,ToSubsetSize,FromSRef,TmpReg);
+      A_Load_Reg_SubsetReg(List,ToSubsetSize,ToSubsetSize,TmpReg,ToSReg);
     end;
 
-  procedure THLCGObj.a_load_subsetreg_subsetref(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg: TSubsetRegister; const tosref: TSubsetReference);
+  procedure THLCGObj.A_Load_SubsetReg_SubsetRef(List: TAsmList; FromSubsetSize, ToSubsetSize: TDef; const FromSReg: TSubsetRegister; const ToSRef: TSubsetReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg := getintregister(list,tosubsetsize);
-      a_load_subsetreg_reg(list,fromsubsetsize,tosubsetsize,fromsreg,tmpreg);
-      a_load_reg_subsetref(list,tosubsetsize,tosubsetsize,tmpreg,tosref);
+      TmpReg := GetIntRegister(List,ToSubsetSize);
+      A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSubsetSize,FromSReg,TmpReg);
+      A_Load_Reg_SubsetRef(List,ToSubsetSize,ToSubsetSize,TmpReg,ToSRef);
     end;
 
-  procedure THLCGObj.a_bit_test_reg_reg_reg(list: TAsmList; bitnumbersize, valuesize, destsize: TDef; bitnumber, value, destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Reg_Reg_Reg(List: TAsmList; BitNumberSize, ValueSize, DestSize: TDef; BitNumber, Value, DestReg: TRegister);
     var
-      tmpvalue: TRegister;
+      TmpValue: TRegister;
     begin
-      tmpvalue:=getintregister(list,valuesize);
+      TmpValue:=GetIntRegister(List,ValueSize);
 
-      if (TargetInfo.endian=endian_little) then
+      if (TargetInfo.Endian=endian_little) then
         begin
           { rotate value register "bitnumber" bits to the right }
-          a_op_reg_reg_reg(list,OP_SHR,valuesize,bitnumber,value,tmpvalue);
+          A_Op_Reg_Reg_Reg(List,OP_SHR,ValueSize,BitNumber,Value,TmpValue);
           { extract the bit we want }
-          a_op_const_reg(list,OP_AND,valuesize,1,tmpvalue);
+          A_Op_Const_Reg(List,OP_AND,ValueSize,1,TmpValue);
         end
       else
         begin
@@ -1924,78 +1924,78 @@ implementation
           { bit in uppermost position, then move it to the lowest position    }
           { "and" is not necessary since combination of shl/shr will clear    }
           { all other bits                                                    }
-          a_op_reg_reg_reg(list,OP_SHL,valuesize,bitnumber,value,tmpvalue);
-          a_op_const_reg(list,OP_SHR,valuesize,valuesize.size*8-1,tmpvalue);
+          A_Op_Reg_Reg_Reg(List,OP_SHL,ValueSize,BitNumber,Value,TmpValue);
+          A_Op_Const_Reg(List,OP_SHR,ValueSize,ValueSize.Size*8-1,TmpValue);
         end;
-      a_load_reg_reg(list,valuesize,destsize,tmpvalue,destreg);
+      A_Load_Reg_Reg(List,ValueSize,DestSize,TmpValue,DestReg);
     end;
 
-  procedure THLCGObj.a_bit_test_const_ref_reg(list: TAsmList; fromsize, destsize: TDef; bitnumber: aint; const ref: TReference; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Const_Ref_Reg(List: TAsmList; FromSize, DestSize: TDef; BitNumber: AInt; const Ref: TReference; DestReg: TRegister);
     var
-      href: TReference;
+      HRef: TReference;
     begin
-      href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(fromsize),CPointerDef.getreusable(U8IntType),href);
-      a_load_subsetref_reg(list,U8IntType,destsize,get_bit_const_ref_sref(bitnumber,fromsize,href),destreg);
+      HRef:=Ref;
+      G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(FromSize),CPointerDef.GetReusable(U8IntType),HRef);
+      A_Load_SubsetRef_Reg(List,U8IntType,DestSize,Get_Bit_Const_Ref_SRef(BitNumber,FromSize,HRef),DestReg);
     end;
 
-  procedure THLCGObj.a_bit_test_const_reg_reg(list: TAsmList; setregsize, destsize: TDef; bitnumber: aint; setreg, destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Const_Reg_Reg(List: TAsmList; SetRegSize, DestSize: TDef; BitNumber: AInt; SetReg, DestReg: TRegister);
     begin
-      a_load_subsetreg_reg(list,setregsize,destsize,get_bit_const_reg_sreg(setregsize,bitnumber,setreg),destreg);
+      A_Load_SubsetReg_Reg(List,SetRegSize,DestSize,Get_Bit_Const_Reg_SReg(SetRegSize,BitNumber,SetReg),DestReg);
     end;
 
-  procedure THLCGObj.a_bit_test_const_subsetreg_reg(list: TAsmList; fromsubsetsize, destsize: TDef; bitnumber: aint; const setreg: TSubsetRegister; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Const_SubsetReg_Reg(List: TAsmList; FromSubsetSize, DestSize: TDef; BitNumber: AInt; const SetReg: TSubsetRegister; DestReg: TRegister);
     var
-      tmpsreg: TSubsetRegister;
+      TmpSReg: TSubsetRegister;
     begin
       { the first parameter is used to calculate the bit offset in }
       { case of big endian, and therefore must be the size of the  }
       { set and not of the whole subsetreg                         }
-      tmpsreg:=get_bit_const_reg_sreg(fromsubsetsize,bitnumber,setreg.subsetreg);
+      TmpSReg:=Get_Bit_Const_Reg_SReg(FromSubsetSize,BitNumber,SetReg.SubsetReg);
       { now fix the size of the subsetreg }
-      tmpsreg.subsetregsize:=setreg.subsetregsize;
+      TmpSReg.SubsetRegSize:=SetReg.SubsetRegSize;
       { correct offset of the set in the subsetreg }
-      inc(tmpsreg.startbit,setreg.startbit);
-      a_load_subsetreg_reg(list,fromsubsetsize,destsize,tmpsreg,destreg);
+      Inc(TmpSReg.StartBit,SetReg.StartBit);
+      A_Load_SubsetReg_Reg(List,FromSubsetSize,DestSize,TmpSReg,DestReg);
     end;
 
-  procedure THLCGObj.a_bit_test_reg_ref_reg(list: TAsmList; bitnumbersize, refsize, destsize: TDef; bitnumber: TRegister; const ref: TReference; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Reg_Ref_Reg(List: TAsmList; BitNumberSize, RefSize, DestSize: TDef; BitNumber: TRegister; const Ref: TReference; DestReg: TRegister);
     var
-      href: TReference;
+      HRef: TReference;
     begin
-      href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(refsize),CPointerDef.getreusable(U8IntType),href);
-      a_load_subsetref_reg(list,U8IntType,destsize,get_bit_reg_ref_sref(list,bitnumbersize,refsize,bitnumber,href),destreg);
+      HRef:=Ref;
+      G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(RefSize),CPointerDef.GetReusable(U8IntType),HRef);
+      A_Load_SubsetRef_Reg(List,U8IntType,DestSize,Get_Bit_Reg_Ref_SRef(List,BitNumberSize,RefSize,BitNumber,HRef),DestReg);
     end;
 
-  procedure THLCGObj.a_bit_test_reg_loc_reg(list: TAsmList; bitnumbersize, locsize, destsize: TDef; bitnumber: TRegister; const loc: TLocation; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Reg_Loc_Reg(List: TAsmList; BitNumberSize, LocSize, DestSize: TDef; BitNumber: TRegister; const Loc: TLocation; DestReg: TRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_bit_test_reg_ref_reg(list,bitnumbersize,locsize,destsize,bitnumber,loc.reference,destreg);
+          A_Bit_Test_Reg_Ref_Reg(List,BitNumberSize,LocSize,DestSize,BitNumber,Loc.Reference,DestReg);
         LOC_REGISTER,LOC_CREGISTER,
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_CONSTANT:
           begin
-            case loc.loc of
+            case Loc.Loc of
               LOC_REGISTER,LOC_CREGISTER:
-                tmpreg:=loc.register;
+                TmpReg:=Loc.Register;
               LOC_SUBSETREG,LOC_CSUBSETREG:
                 begin
-                  tmpreg:=getintregister(list,locsize);
-                  a_load_subsetreg_reg(list,locsize,locsize,loc.sreg,tmpreg);
+                  TmpReg:=GetIntRegister(List,LocSize);
+                  A_Load_SubsetReg_Reg(List,LocSize,LocSize,Loc.SReg,TmpReg);
                 end;
               LOC_CONSTANT:
                 begin
-                  tmpreg:=getintregister(list,locsize);
-                  a_load_const_reg(list,locsize,loc.value,tmpreg);
+                  TmpReg:=GetIntRegister(List,LocSize);
+                  A_Load_Const_Reg(List,LocSize,Loc.Value,TmpReg);
                 end;
               else
                 InternalError(2013112909);
             end;
-            a_bit_test_reg_reg_reg(list,bitnumbersize,locsize,destsize,bitnumber,tmpreg,destreg);
+            A_Bit_Test_Reg_Reg_Reg(List,BitNumberSize,LocSize,DestSize,BitNumber,TmpReg,DestReg);
           end;
         { LOC_SUBSETREF is not possible, because sets are not (yet) bitpacked }
         else
@@ -2003,106 +2003,106 @@ implementation
       end;
     end;
 
-  procedure THLCGObj.a_bit_test_const_loc_reg(list: TAsmList; locsize, destsize: TDef; bitnumber: aint; const loc: TLocation; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Test_Const_Loc_Reg(List: TAsmList; LocSize, DestSize: TDef; BitNumber: AInt; const Loc: TLocation; DestReg: TRegister);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_bit_test_const_ref_reg(list,locsize,destsize,bitnumber,loc.reference,destreg);
+          A_Bit_Test_Const_Ref_Reg(List,LocSize,DestSize,BitNumber,Loc.Reference,DestReg);
         LOC_REGISTER,LOC_CREGISTER:
-          a_bit_test_const_reg_reg(list,locsize,destsize,bitnumber,loc.register,destreg);
+          A_Bit_Test_Const_Reg_Reg(List,LocSize,DestSize,BitNumber,Loc.Register,DestReg);
         LOC_SUBSETREG,LOC_CSUBSETREG:
-          a_bit_test_const_subsetreg_reg(list,locsize,destsize,bitnumber,loc.sreg,destreg);
+          A_Bit_Test_Const_SubsetReg_Reg(List,LocSize,DestSize,BitNumber,Loc.SReg,DestReg);
         { LOC_SUBSETREF is not possible, because sets are not (yet) bitpacked }
         else
           InternalError(2010120410);
       end;
     end;
 
-  procedure THLCGObj.a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: TRegister);
+  procedure THLCGObj.A_Bit_Set_Reg_Reg(List: TAsmList; DoSet: Boolean; BitNumberSize, DestSize: TDef; BitNumber, Dest: TRegister);
     var
-      tmpvalue: TRegister;
+      TmpValue: TRegister;
     begin
-      tmpvalue:=getintregister(list,destsize);
+      TmpValue:=GetIntRegister(List,DestSize);
 
-      if (TargetInfo.endian=endian_little) then
+      if (TargetInfo.Endian=endian_little) then
         begin
-          a_load_const_reg(list,destsize,1,tmpvalue);
+          A_Load_Const_Reg(List,DestSize,1,TmpValue);
           { rotate bit "bitnumber" bits to the left }
-          a_op_reg_reg(list,OP_SHL,destsize,bitnumber,tmpvalue);
+          A_Op_Reg_Reg(List,OP_SHL,DestSize,BitNumber,TmpValue);
         end
       else
         begin
           { highest (leftmost) bit = bit 0 -> "$80/$8000/$80000000/ ... }
           { shr bitnumber" results in correct mask                      }
-          a_load_const_reg(list,destsize,1 shl (destsize.size*8-1),tmpvalue);
-          a_op_reg_reg(list,OP_SHR,destsize,bitnumber,tmpvalue);
+          A_Load_Const_Reg(List,DestSize,1 shl (DestSize.Size*8-1),TmpValue);
+          A_Op_Reg_Reg(List,OP_SHR,DestSize,BitNumber,TmpValue);
         end;
       { set/clear the bit we want }
-      if doset then
-        a_op_reg_reg(list,OP_OR,destsize,tmpvalue,dest)
+      if DoSet then
+        A_Op_Reg_Reg(List,OP_OR,DestSize,TmpValue,Dest)
       else
         begin
-          a_op_reg_reg(list,OP_NOT,destsize,tmpvalue,tmpvalue);
-          a_op_reg_reg(list,OP_AND,destsize,tmpvalue,dest)
+          A_Op_Reg_Reg(List,OP_NOT,DestSize,TmpValue,TmpValue);
+          A_Op_Reg_Reg(List,OP_AND,DestSize,TmpValue,Dest)
         end;
     end;
 
-  procedure THLCGObj.a_bit_set_const_ref(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; const ref: TReference);
+  procedure THLCGObj.A_Bit_Set_Const_Ref(List: TAsmList; DoSet: Boolean; DestSize: TDef; BitNumber: TCGInt; const Ref: TReference);
     var
-      href: TReference;
+      HRef: TReference;
     begin
-      href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(U8IntType),href);
-      a_load_const_subsetref(list,U8IntType,ord(doset),get_bit_const_ref_sref(bitnumber,destsize,href));
+      HRef:=Ref;
+      G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(DestSize),CPointerDef.GetReusable(U8IntType),HRef);
+      A_Load_Const_SubsetRef(List,U8IntType,Ord(DoSet),Get_Bit_Const_Ref_SRef(BitNumber,DestSize,HRef));
     end;
 
-  procedure THLCGObj.a_bit_set_const_reg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; destreg: TRegister);
+  procedure THLCGObj.A_Bit_Set_Const_Reg(List: TAsmList; DoSet: Boolean; DestSize: TDef; BitNumber: TCGInt; DestReg: TRegister);
     begin
-      g_ptrtypecast_reg(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(U8IntType),destreg);
-      a_load_const_subsetreg(list,U8IntType,ord(doset),get_bit_const_reg_sreg(destsize,bitnumber,destreg));
+      G_PtrTypeCast_Reg(List,CPointerDef.GetReusable(DestSize),CPointerDef.GetReusable(U8IntType),DestReg);
+      A_Load_Const_SubsetReg(List,U8IntType,Ord(DoSet),Get_Bit_Const_Reg_SReg(DestSize,BitNumber,DestReg));
     end;
 
-  procedure THLCGObj.a_bit_set_const_subsetreg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; const destreg: TSubsetRegister);
+  procedure THLCGObj.A_Bit_Set_Const_SubsetReg(List: TAsmList; DoSet: Boolean; DestSize: TDef; BitNumber: TCGInt; const DestReg: TSubsetRegister);
     var
-      tmpsreg: TSubsetRegister;
+      TmpSReg: TSubsetRegister;
     begin
       { the first parameter is used to calculate the bit offset in }
       { case of big endian, and therefore must be the size of the  }
       { set and not of the whole subsetreg                         }
-      tmpsreg:=get_bit_const_reg_sreg(destsize,bitnumber,destreg.subsetreg);
+      TmpSReg:=Get_Bit_Const_Reg_SReg(DestSize,BitNumber,DestReg.SubsetReg);
       { now fix the size of the subsetreg }
-      tmpsreg.subsetregsize:=destreg.subsetregsize;
+      TmpSReg.SubsetRegSize:=DestReg.SubsetRegSize;
       { correct offset of the set in the subsetreg }
-      inc(tmpsreg.startbit,destreg.startbit);
-      a_load_const_subsetreg(list,U8IntType,ord(doset),tmpsreg);
+      Inc(TmpSReg.StartBit,DestReg.StartBit);
+      A_Load_Const_SubsetReg(List,U8IntType,Ord(DoSet),TmpSReg);
     end;
 
-  procedure THLCGObj.a_bit_set_reg_ref(list: TAsmList; doset: boolean; fromsize, tosize: TDef; bitnumber: TRegister; const ref: TReference);
+  procedure THLCGObj.A_Bit_Set_Reg_Ref(List: TAsmList; DoSet: Boolean; FromSize, ToSize: TDef; BitNumber: TRegister; const Ref: TReference);
     var
-      href: TReference;
+      HRef: TReference;
     begin
-      href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(tosize),CPointerDef.getreusable(U8IntType),href);
-      a_load_const_subsetref(list,U8IntType,ord(doset),get_bit_reg_ref_sref(list,fromsize,tosize,bitnumber,href));
+      HRef:=Ref;
+      G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(ToSize),CPointerDef.GetReusable(U8IntType),HRef);
+      A_Load_Const_SubsetRef(List,U8IntType,Ord(DoSet),Get_Bit_Reg_Ref_SRef(List,FromSize,ToSize,BitNumber,HRef));
     end;
 
-  procedure THLCGObj.a_bit_set_reg_loc(list: TAsmList; doset: boolean; regsize, tosize: TDef; bitnumber: TRegister; const loc: TLocation);
+  procedure THLCGObj.A_Bit_Set_Reg_Loc(List: TAsmList; DoSet: Boolean; RegSize, ToSize: TDef; BitNumber: TRegister; const Loc: TLocation);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE:
-          a_bit_set_reg_ref(list,doset,regsize,tosize,bitnumber,loc.reference);
+          A_Bit_Set_Reg_Ref(List,DoSet,RegSize,ToSize,BitNumber,Loc.Reference);
         LOC_CREGISTER:
-          a_bit_set_reg_reg(list,doset,regsize,tosize,bitnumber,loc.register);
+          A_Bit_Set_Reg_Reg(List,DoSet,RegSize,ToSize,BitNumber,Loc.Register);
         { e.g. a 2-byte set in a record regvar }
         LOC_CSUBSETREG:
           begin
             { hard to do in-place in a generic way, so operate on a copy }
-            tmpreg:=getintregister(list,tosize);
-            a_load_subsetreg_reg(list,tosize,tosize,loc.sreg,tmpreg);
-            a_bit_set_reg_reg(list,doset,regsize,tosize,bitnumber,tmpreg);
-            a_load_reg_subsetreg(list,tosize,tosize,tmpreg,loc.sreg);
+            TmpReg:=GetIntRegister(List,ToSize);
+            A_Load_SubsetReg_Reg(List,ToSize,ToSize,Loc.SReg,TmpReg);
+            A_Bit_Set_Reg_Reg(List,DoSet,RegSize,ToSize,BitNumber,TmpReg);
+            A_Load_Reg_SubsetReg(List,ToSize,ToSize,TmpReg,Loc.SReg);
           end;
         { LOC_SUBSETREF is not possible, because sets are not (yet) bitpacked }
         else
@@ -2110,15 +2110,15 @@ implementation
       end;
     end;
 
-  procedure THLCGObj.a_bit_set_const_loc(list: TAsmList; doset: boolean; tosize: TDef; bitnumber: TCGInt; const loc: TLocation);
+  procedure THLCGObj.A_Bit_Set_Const_Loc(List: TAsmList; DoSet: Boolean; ToSize: TDef; BitNumber: TCGInt; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE:
-          a_bit_set_const_ref(list,doset,tosize,bitnumber,loc.reference);
+          A_Bit_Set_Const_Ref(List,DoSet,ToSize,BitNumber,Loc.Reference);
         LOC_CREGISTER:
-          a_bit_set_const_reg(list,doset,tosize,bitnumber,loc.register);
+          A_Bit_Set_Const_Reg(List,DoSet,ToSize,BitNumber,Loc.Register);
         LOC_CSUBSETREG:
-          a_bit_set_const_subsetreg(list,doset,tosize,bitnumber,loc.sreg);
+          A_Bit_Set_Const_SubsetReg(List,DoSet,ToSize,BitNumber,Loc.SReg);
         { LOC_SUBSETREF is not possible, because sets are not (yet) bitpacked }
         else
           InternalError(2010120409)
@@ -2126,21 +2126,21 @@ implementation
     end;
 
 
-  function THLCGObj.get_call_result_cgpara(pd: TAbstractProcDef; forceresdef: TDef): TCGPara;
+  function THLCGObj.Get_Call_Result_CGPara(PD: TAbstractProcDef; ForceResDef: TDef): TCGPara;
     begin
-      if pd.Generate_SafeCall_Wrapper then
+      if PD.Generate_SafeCall_Wrapper then
         begin
-          if Assigned(forceresdef) then
+          if Assigned(ForceResDef) then
             InternalError(2019112403);
-          result:=paramanager.get_safecallresult_funcretloc(pd,callerside)
+          Result:=ParaManager.Get_SafeCallResult_FuncRetLoc(PD,CallerSide)
         end
-      else if not Assigned(forceresdef) then
+      else if not Assigned(ForceResDef) then
         begin
-          pd.Init_ParaLoc_Info(callerside);
-          result:=pd.FuncRetLoc[callerside];
+          PD.Init_ParaLoc_Info(CallerSide);
+          Result:=PD.FuncRetLoc[CallerSide];
         end
       else
-        result:=paramanager.get_funcretloc(pd,callerside,forceresdef);
+        Result:=ParaManager.Get_FuncRetLoc(PD,CallerSide,ForceResDef);
     end;
 
 
@@ -2198,922 +2198,922 @@ implementation
     {$defined cpurequiresproperalignment}.
   *)
 
-  procedure THLCGObj.get_subsetref_load_info(const sref: TSubsetReference; out loadsize: TOrdDef; out extra_load: boolean);
+  procedure THLCGObj.Get_SubsetRef_Load_Info(const SRef: TSubsetReference; out LoadSize: TOrdDef; out ExtraLoad: Boolean);
     var
-      intloadsize: TCGInt;
+      IntLoadSize: TCGInt;
     begin
-      intloadsize:=PackedBitsLoadSize(sref.bitlen);
+      IntLoadSize:=PackedBitsLoadSize(SRef.BitLen);
 
-      if (intloadsize=0) then
+      if (IntLoadSize=0) then
         InternalError(2006081310);
 
-      if (intloadsize>sizeof(aint)) then
-        intloadsize:=sizeof(aint);
-      loadsize:=cgsize_orddef(int_cgsize(intloadsize));
+      if (IntLoadSize>SizeOf(AInt)) then
+        IntLoadSize:=SizeOf(AInt);
+      LoadSize:=CGSize_OrdDef(Int_CGSize(IntLoadSize));
 
-      if (sref.bitlen>sizeof(aint)*8) then
+      if (SRef.BitLen>SizeOf(AInt)*8) then
         InternalError(2006081312);
 
-      extra_load:=
-        (sref.bitlen<>1) and
-        ((sref.bitindexreg<>NR_NO) or
-         (byte(sref.startbit+sref.bitlen)>byte(intloadsize*8)));
+      ExtraLoad:=
+        (SRef.BitLen<>1) and
+        ((SRef.BitIndexReg<>NR_NO) or
+         (Byte(SRef.StartBit+SRef.BitLen)>Byte(IntLoadSize*8)));
     end;
 
-  procedure THLCGObj.a_load_subsetref_regs_noindex(list: TAsmList; subsetsize: TDef; loadbitsize: byte; const sref: TSubsetReference; valuereg, extra_value_reg: TRegister);
+  procedure THLCGObj.A_Load_SubsetRef_Regs_NoIndex(List: TAsmList; SubsetSize: TDef; LoadBitSize: Byte; const SRef: TSubsetReference; ValueReg, ExtraValueReg: TRegister);
     var
-      restbits: byte;
+      RestBits: Byte;
     begin
-      if (TargetInfo.endian=endian_big) then
+      if (TargetInfo.Endian=endian_big) then
         begin
           { valuereg contains the upper bits, extra_value_reg the lower }
-          restbits:=(sref.bitlen-(loadbitsize-sref.startbit));
-          if is_signed(subsetsize) then
+          RestBits:=(SRef.BitLen-(LoadBitSize-SRef.StartBit));
+          if Is_Signed(SubsetSize) then
             begin
               { sign extend }
-              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize+sref.startbit,valuereg);
-              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize+SRef.StartBit,ValueReg);
+              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
             end
           else
             begin
-              a_op_const_reg(list,OP_SHL,ALUUIntType,restbits,valuereg);
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,RestBits,ValueReg);
               { mask other bits }
-              if (sref.bitlen<>AIntBits) then
-                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+              if (SRef.BitLen<>AIntBits) then
+                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
             end;
-          a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-restbits,extra_value_reg)
+          A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-RestBits,ExtraValueReg)
         end
       else
         begin
           { valuereg contains the lower bits, extra_value_reg the upper }
-          a_op_const_reg(list,OP_SHR,ALUUIntType,sref.startbit,valuereg);
-          if is_signed(subsetsize) then
+          A_Op_Const_Reg(List,OP_SHR,ALUUIntType,SRef.StartBit,ValueReg);
+          if Is_Signed(SubsetSize) then
             begin
-              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen+loadbitsize-sref.startbit,extra_value_reg);
-              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,extra_value_reg);
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-SRef.BitLen+LoadBitSize-SRef.StartBit,ExtraValueReg);
+              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ExtraValueReg);
             end
           else
             begin
-              a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.startbit,extra_value_reg);
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,LoadBitSize-SRef.StartBit,ExtraValueReg);
               { mask other bits }
-              if (sref.bitlen <> AIntBits) then
-                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),extra_value_reg);
+              if (SRef.BitLen <> AIntBits) then
+                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ExtraValueReg);
             end;
         end;
       { merge }
-      a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
+      A_Op_Reg_Reg(List,OP_OR,ALUUIntType,ExtraValueReg,ValueReg);
     end;
 
-  procedure THLCGObj.a_load_subsetref_regs_index(list: TAsmList; subsetsize: TDef; loadbitsize: byte; const sref: TSubsetReference; valuereg: TRegister);
+  procedure THLCGObj.A_Load_SubsetRef_Regs_Index(List: TAsmList; SubsetSize: TDef; LoadBitSize: Byte; const SRef: TSubsetReference; ValueReg: TRegister);
     var
-      hl: TAsmLabel;
-      tmpref: TReference;
-      extra_value_reg,
-      tmpreg: TRegister;
+      HL: TAsmLabel;
+      TmpRef: TReference;
+      ExtraValueReg,
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,ALUUIntType);
-      tmpref:=sref.ref;
-      inc(tmpref.offset,loadbitsize div 8);
-      extra_value_reg:=getintregister(list,ALUUIntType);
+      TmpReg:=GetIntRegister(List,ALUUIntType);
+      TmpRef:=SRef.Ref;
+      Inc(TmpRef.Offset,LoadBitSize div 8);
+      ExtraValueReg:=GetIntRegister(List,ALUUIntType);
 
-      if (TargetInfo.endian=endian_big) then
+      if (TargetInfo.Endian=endian_big) then
         begin
           { since this is a dynamic index, it's possible that the value   }
           { is entirely in valuereg.                                      }
 
           { get the data in valuereg in the right place }
-          a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,valuereg);
-          if is_signed(subsetsize) then
+          A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,ValueReg);
+          if Is_Signed(SubsetSize) then
             begin
-              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize,valuereg);
-              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg)
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize,ValueReg);
+              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg)
             end
           else
             begin
-              a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-sref.bitlen,valuereg);
-              if (loadbitsize<>AIntBits) then
+              A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-SRef.BitLen,ValueReg);
+              if (LoadBitSize<>AIntBits) then
                 { mask left over bits }
-                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
             end;
-          tmpreg := getintregister(list,ALUUIntType);
+          TmpReg := GetIntRegister(List,ALUUIntType);
 
           { ensure we don't load anything past the end of the array }
-          CurrentAsmData.getjumplabel(hl);
-          a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+          CurrentAsmData.GetJumpLabel(HL);
+          A_Cmp_Const_Reg_Label(List,ALUUIntType,OC_BE,LoadBitSize-SRef.BitLen,SRef.BitIndexReg,HL);
 
           { the bits in extra_value_reg (if any) start at the most significant bit =>         }
           { extra_value_reg must be shr by (loadbitsize-sref.bitlen)+(loadsize-sref.bitindex) }
           { => = -(sref.bitindex+(sref.bitlen-2*loadbitsize))                                 }
-          a_op_const_reg_reg(list,OP_ADD,ALUUIntType,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpreg);
-          a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpreg,tmpreg);
+          A_Op_Const_Reg_Reg(List,OP_ADD,ALUUIntType,SRef.BitLen-2*LoadBitSize,SRef.BitIndexReg,TmpReg);
+          A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpReg,TmpReg);
 
           { load next "loadbitsize" bits of the array }
-          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),ALUUIntType,tmpref,extra_value_reg);
+          A_Load_Ref_Reg(List,CGSize_OrdDef(Int_CGSize(LoadBitSize div 8)),ALUUIntType,TmpRef,ExtraValueReg);
 
-          a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpreg,extra_value_reg);
+          A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,TmpReg,ExtraValueReg);
           { if there are no bits in extra_value_reg, then sref.bitindex was      }
           { < loadsize-sref.bitlen, and therefore tmpreg will now be >= loadsize }
           { => extra_value_reg is now 0                                          }
           { merge }
-          a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
+          A_Op_Reg_Reg(List,OP_OR,ALUUIntType,ExtraValueReg,ValueReg);
           { no need to mask, necessary masking happened earlier on }
-          a_label(list,hl);
+          A_Label(List,HL);
         end
       else
         begin
-          a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,valuereg);
+          A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
           { ensure we don't load anything past the end of the array }
-          CurrentAsmData.getjumplabel(hl);
-          a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+          CurrentAsmData.GetJumpLabel(HL);
+          A_Cmp_Const_Reg_Label(List,ALUUIntType,OC_BE,LoadBitSize-SRef.BitLen,SRef.BitIndexReg,HL);
 
           { Y-x = -(Y-x) }
-          a_op_const_reg_reg(list,OP_SUB,ALUUIntType,loadbitsize,sref.bitindexreg,tmpreg);
-          a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpreg,tmpreg);
+          A_Op_Const_Reg_Reg(List,OP_SUB,ALUUIntType,LoadBitSize,SRef.BitIndexReg,TmpReg);
+          A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpReg,TmpReg);
 
           { load next "loadbitsize" bits of the array }
-          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),ALUUIntType,tmpref,extra_value_reg);
+          A_Load_Ref_Reg(List,CGSize_OrdDef(Int_CGSize(LoadBitSize div 8)),ALUUIntType,TmpRef,ExtraValueReg);
 
           { tmpreg is in the range 1..<cpu_bitsize>-1 -> always ok }
-          a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpreg,extra_value_reg);
+          A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,TmpReg,ExtraValueReg);
           { merge }
-          a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
-          a_label(list,hl);
+          A_Op_Reg_Reg(List,OP_OR,ALUUIntType,ExtraValueReg,ValueReg);
+          A_Label(List,HL);
           { sign extend or mask other bits }
-          if is_signed(subsetsize) then
+          if Is_Signed(SubsetSize) then
             begin
-              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen,valuereg);
-              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
+              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
             end
           else
-            a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+            A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
         end;
     end;
 
-  procedure THLCGObj.a_load_regconst_subsetref_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sref: TSubsetReference; slopt: TSubsetLoadOpt);
+  procedure THLCGObj.A_Load_RegConst_SubsetRef_Intern(List: TAsmList; FromSize, SubsetSize: TDef; FromReg: TRegister; const SRef: TSubsetReference; SlOpt: TSubsetLoadOpt);
     var
-      hl: TAsmLabel;
-      tmpreg, tmpindexreg, valuereg, extra_value_reg, maskreg: TRegister;
-      tosreg, fromsreg: TSubsetRegister;
-      tmpref: TReference;
-      bitmask: aword;
-      loadsize: TOrdDef;
-      loadbitsize: byte;
-      extra_load: boolean;
+      HL: TAsmLabel;
+      TmpReg, TmpIndexReg, ValueReg, ExtraValueReg, MaskReg: TRegister;
+      ToSReg, FromSReg: TSubsetRegister;
+      TmpRef: TReference;
+      BitMask: AWord;
+      LoadSize: TOrdDef;
+      LoadBitSize: Byte;
+      ExtraLoad: Boolean;
     begin
       { the register must be able to contain the requested value }
-      if (fromsize.size*8<sref.bitlen) then
+      if (FromSize.Size*8<SRef.BitLen) then
         InternalError(2006081613);
 
-      get_subsetref_load_info(sref,loadsize,extra_load);
-      loadbitsize:=loadsize.size*8;
+      Get_SubsetRef_Load_Info(SRef,LoadSize,ExtraLoad);
+      LoadBitSize:=LoadSize.Size*8;
 
       { load the (first part) of the bit sequence }
-      valuereg:=getintregister(list,ALUUIntType);
-      a_load_ref_reg(list,loadsize,ALUUIntType,sref.ref,valuereg);
+      ValueReg:=GetIntRegister(List,ALUUIntType);
+      A_Load_Ref_Reg(List,LoadSize,ALUUIntType,SRef.Ref,ValueReg);
 
       { constant offset of bit sequence? }
-      if not extra_load then
+      if not ExtraLoad then
         begin
-          if (sref.bitindexreg=NR_NO) then
+          if (SRef.BitIndexReg=NR_NO) then
             begin
               { use subsetreg routine, it may have been overridden with an optimized version }
-              tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
+              ToSReg.SubsetReg:=ValueReg;
+              ToSReg.SubsetRegSize:=Def_CGSize(ALUUIntType);
               { subsetregs always count bits from right to left }
-              if (TargetInfo.endian=endian_big) then
-                tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
+              if (TargetInfo.Endian=endian_big) then
+                ToSReg.StartBit:=LoadBitSize-(SRef.StartBit+SRef.BitLen)
               else
-                tosreg.startbit:=sref.startbit;
-              tosreg.bitlen:=sref.bitlen;
-              a_load_regconst_subsetreg_intern(list,fromsize,subsetsize,fromreg,tosreg,slopt);
+                ToSReg.StartBit:=SRef.StartBit;
+              ToSReg.BitLen:=SRef.BitLen;
+              A_Load_RegConst_SubsetReg_Intern(List,FromSize,SubsetSize,FromReg,ToSReg,SlOpt);
             end
           else
             begin
-              if (sref.startbit<>0) then
+              if (SRef.StartBit<>0) then
                 InternalError(2006081710);
               { should be handled by normal code and will give wrong result }
               { on x86 for the '1 shl bitlen' below                         }
-              if (sref.bitlen=AIntBits) then
+              if (SRef.BitLen=AIntBits) then
                 InternalError(2006081711);
 
               { zero the bits we have to insert }
-              if (slopt<>SL_SETMAX) then
+              if (SlOpt<>SL_SETMAX) then
                 begin
-                  if (slopt=SL_SETZERO) and (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
+                  if (SlOpt=SL_SETZERO) and (SRef.BitLen=1) and (TargetInfo.Endian=endian_little) then
                     begin
-                      a_bit_set_reg_reg(list,false,ALUUIntType,ALUUIntType,sref.bitindexreg,valuereg);
+                      A_Bit_Set_Reg_Reg(List,False,ALUUIntType,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
                       { store back to memory }
-                      tmpreg:=getintregister(list,loadsize);
-                      a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
-                      a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
-                      exit;
+                      TmpReg:=GetIntRegister(List,LoadSize);
+                      A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ValueReg,TmpReg);
+                      A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,SRef.Ref);
+                      Exit;
                     end
                   else
                     begin
-                      maskreg:=getintregister(list,ALUUIntType);
-                      if (TargetInfo.endian = endian_big) then
+                      MaskReg:=GetIntRegister(List,ALUUIntType);
+                      if (TargetInfo.Endian = endian_big) then
                         begin
-                          a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen),maskreg);
-                          a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,maskreg);
+                          A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen),MaskReg);
+                          A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,MaskReg);
                         end
                       else
                         begin
-                          a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                          a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,maskreg);
+                          A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
+                          A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,MaskReg);
                         end;
-                      a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
-                      a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,valuereg);
+                      A_Op_Reg_Reg(List,OP_NOT,ALUUIntType,MaskReg,MaskReg);
+                      A_Op_Reg_Reg(List,OP_AND,ALUUIntType,MaskReg,ValueReg);
                     end;
                 end;
 
               { insert the value }
-              if (slopt<>SL_SETZERO) then
+              if (SlOpt<>SL_SETZERO) then
                 begin
-                  tmpreg:=getintregister(list,ALUUIntType);
-                  if (slopt<>SL_SETMAX) then
-                    a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
+                  TmpReg:=GetIntRegister(List,ALUUIntType);
+                  if (SlOpt<>SL_SETMAX) then
+                    A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,TmpReg)
                   { setting of a single bit?
                     then we might take advantage of the CPU's bit set instruction }
-                  else if (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
+                  else if (SRef.BitLen=1) and (TargetInfo.Endian=endian_little) then
                     begin
-                      a_bit_set_reg_reg(list,true,ALUUIntType,ALUUIntType,sref.bitindexreg,valuereg);
+                      A_Bit_Set_Reg_Reg(List,True,ALUUIntType,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
                       { store back to memory }
-                      tmpreg:=getintregister(list,loadsize);
-                      a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
-                      a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
-                      exit;
+                      TmpReg:=GetIntRegister(List,LoadSize);
+                      A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ValueReg,TmpReg);
+                      A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,SRef.Ref);
+                      Exit;
                     end
-                  else if (sref.bitlen<>AIntBits) then
-                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1), tmpreg)
+                  else if (SRef.BitLen<>AIntBits) then
+                    A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1), TmpReg)
                   else
-                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
-                  if (TargetInfo.endian=endian_big) then
+                    A_Load_Const_Reg(List,ALUUIntType,-1,TmpReg);
+                  if (TargetInfo.Endian=endian_big) then
                     begin
-                      a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.bitlen,tmpreg);
-                      if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
+                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,LoadBitSize-SRef.BitLen,TmpReg);
+                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         begin
-                          if (loadbitsize<>AIntBits) then
-                            bitmask:=(((aword(1) shl loadbitsize)-1) xor ((aword(1) shl (loadbitsize-sref.bitlen))-1))
+                          if (LoadBitSize<>AIntBits) then
+                            BitMask:=(((AWord(1) shl LoadBitSize)-1) xor ((AWord(1) shl (LoadBitSize-SRef.BitLen))-1))
                           else
-                            bitmask:=(high(aword) xor ((aword(1) shl (loadbitsize-sref.bitlen))-1));
-                          a_op_const_reg(list,OP_AND,ALUUIntType,bitmask,tmpreg);
+                            BitMask:=(High(AWord) xor ((AWord(1) shl (LoadBitSize-SRef.BitLen))-1));
+                          A_Op_Const_Reg(List,OP_AND,ALUUIntType,BitMask,TmpReg);
                         end;
-                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,tmpreg);
+                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,TmpReg);
                     end
                   else
                     begin
-                      if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,tmpreg);
+                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
+                        A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
+                      A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,TmpReg);
                     end;
-                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,valuereg);
+                  A_Op_Reg_Reg(List,OP_OR,ALUUIntType,TmpReg,ValueReg);
                 end;
             end;
           { store back to memory }
-          tmpreg:=getintregister(list,loadsize);
-          a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
-          a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
-          exit;
+          TmpReg:=GetIntRegister(List,LoadSize);
+          A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ValueReg,TmpReg);
+          A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,SRef.Ref);
+          Exit;
         end
       else
         begin
           { load next value }
-          extra_value_reg:=getintregister(list,ALUUIntType);
-          tmpref:=sref.ref;
-          inc(tmpref.offset,loadbitsize div 8);
+          ExtraValueReg:=GetIntRegister(List,ALUUIntType);
+          TmpRef:=SRef.Ref;
+          Inc(TmpRef.Offset,LoadBitSize div 8);
 
           { should maybe be taken out too, can be done more efficiently }
           { on e.g. i386 with shld/shrd                                 }
-          if (sref.bitindexreg = NR_NO) then
+          if (SRef.BitIndexReg = NR_NO) then
             begin
-              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
+              A_Load_Ref_Reg(List,LoadSize,ALUUIntType,TmpRef,ExtraValueReg);
 
-              fromsreg.subsetreg:=fromreg;
-              fromsreg.subsetregsize:=def_cgsize(fromsize);
-              tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
+              FromSReg.SubsetReg:=FromReg;
+              FromSReg.SubsetRegSize:=Def_CGSize(FromSize);
+              ToSReg.SubsetReg:=ValueReg;
+              ToSReg.SubsetRegSize:=Def_CGSize(ALUUIntType);
 
               { transfer first part }
-              fromsreg.bitlen:=loadbitsize-sref.startbit;
-              tosreg.bitlen:=fromsreg.bitlen;
-              if (TargetInfo.endian=endian_big) then
+              FromSReg.BitLen:=LoadBitSize-SRef.StartBit;
+              ToSReg.BitLen:=FromSReg.BitLen;
+              if (TargetInfo.Endian=endian_big) then
                 begin
                   { valuereg must contain the upper bits of the value at bits [0..loadbitsize-startbit] }
 
                   { upper bits of the value ... }
-                  fromsreg.startbit:=sref.bitlen-(loadbitsize-sref.startbit);
+                  FromSReg.StartBit:=SRef.BitLen-(LoadBitSize-SRef.StartBit);
                   { ... to bit 0 }
-                  tosreg.startbit:=0
+                  ToSReg.StartBit:=0
                 end
               else
                 begin
                   { valuereg must contain the lower bits of the value at bits [startbit..loadbitsize] }
 
                   { lower bits of the value ... }
-                  fromsreg.startbit:=0;
+                  FromSReg.StartBit:=0;
                   { ... to startbit }
-                  tosreg.startbit:=sref.startbit;
+                  ToSReg.StartBit:=SRef.StartBit;
                 end;
-              case slopt of
+              case SlOpt of
                 SL_SETZERO,
                 SL_SETMAX:
-                  a_load_regconst_subsetreg_intern(list,fromsize,subsetsize,fromreg,tosreg,slopt);
+                  A_Load_RegConst_SubsetReg_Intern(List,FromSize,SubsetSize,FromReg,ToSReg,SlOpt);
                 else
-                  a_load_subsetreg_subsetreg(list,subsetsize,subsetsize,fromsreg,tosreg);
+                  A_Load_SubsetReg_SubsetReg(List,SubsetSize,SubsetSize,FromSReg,ToSReg);
               end;
 {$ifndef cpuhighleveltarget}
-              valuereg:=cg.makeregsize(list,valuereg,def_cgsize(loadsize));
-              a_load_reg_ref(list,loadsize,loadsize,valuereg,sref.ref);
+              ValueReg:=CG.MakeRegSize(List,ValueReg,Def_CGSize(LoadSize));
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,ValueReg,SRef.Ref);
 {$else}
-              tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
-              a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
+              TmpReg:=GetIntRegister(List,LoadSize);
+              A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ValueReg,TmpReg);
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,SRef.Ref);
 {$endif}
 
               { transfer second part }
-              if (TargetInfo.endian = endian_big) then
+              if (TargetInfo.Endian = endian_big) then
                 begin
                   { extra_value_reg must contain the lower bits of the value at bits  }
                   { [(loadbitsize-(bitlen-(loadbitsize-startbit)))..loadbitsize]  }
                   { (loadbitsize-(bitlen-(loadbitsize-startbit))) = 2*loadbitsize }
                   { - bitlen - startbit }
 
-                  fromsreg.startbit:=0;
-                  tosreg.startbit:=2*loadbitsize-sref.bitlen-sref.startbit
+                  FromSReg.StartBit:=0;
+                  ToSReg.StartBit:=2*LoadBitSize-SRef.BitLen-SRef.StartBit
                 end
               else
                 begin
                   { extra_value_reg must contain the upper bits of the value at bits [0..bitlen-(loadbitsize-startbit)] }
 
-                  fromsreg.startbit:=fromsreg.bitlen;
-                  tosreg.startbit:=0;
+                  FromSReg.StartBit:=FromSReg.BitLen;
+                  ToSReg.StartBit:=0;
                 end;
-              tosreg.subsetreg:=extra_value_reg;
-              fromsreg.bitlen:=sref.bitlen-fromsreg.bitlen;
-              tosreg.bitlen:=fromsreg.bitlen;
+              ToSReg.SubsetReg:=ExtraValueReg;
+              FromSReg.BitLen:=SRef.BitLen-FromSReg.BitLen;
+              ToSReg.BitLen:=FromSReg.BitLen;
 
-              case slopt of
+              case SlOpt of
                 SL_SETZERO,
                 SL_SETMAX:
-                  a_load_regconst_subsetreg_intern(list,fromsize,subsetsize,fromreg,tosreg,slopt);
+                  A_Load_RegConst_SubsetReg_Intern(List,FromSize,SubsetSize,FromReg,ToSReg,SlOpt);
                 else
-                  a_load_subsetreg_subsetreg(list,subsetsize,subsetsize,fromsreg,tosreg);
+                  A_Load_SubsetReg_SubsetReg(List,SubsetSize,SubsetSize,FromSReg,ToSReg);
               end;
-              tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,ALUUIntType,loadsize,extra_value_reg,tmpreg);
-              a_load_reg_ref(list,loadsize,loadsize,tmpreg,tmpref);
-              exit;
+              TmpReg:=GetIntRegister(List,LoadSize);
+              A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ExtraValueReg,TmpReg);
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,TmpRef);
+              Exit;
             end
           else
             begin
-              if (sref.startbit <> 0) then
+              if (SRef.StartBit <> 0) then
                 InternalError(2006081812);
               { should be handled by normal code and will give wrong result }
               { on x86 for the '1 shl bitlen' below                         }
-              if (sref.bitlen = AIntBits) then
+              if (SRef.BitLen = AIntBits) then
                 InternalError(2006081713);
 
               { generate mask to zero the bits we have to insert }
-              if (slopt <> SL_SETMAX) then
+              if (SlOpt <> SL_SETMAX) then
                 begin
-                  maskreg := getintregister(list,ALUUIntType);
-                  if (TargetInfo.endian = endian_big) then
+                  MaskReg := GetIntRegister(List,ALUUIntType);
+                  if (TargetInfo.Endian = endian_big) then
                     begin
-                      a_load_const_reg(list,ALUUIntType,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),maskreg);
-                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,maskreg);
+                      A_Load_Const_Reg(List,ALUUIntType,TCGInt(((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen)),MaskReg);
+                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,MaskReg);
                     end
                   else
                     begin
-                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,maskreg);
+                      A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
+                      A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,MaskReg);
                     end;
 
-                  a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
-                  a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,valuereg);
+                  A_Op_Reg_Reg(List,OP_NOT,ALUUIntType,MaskReg,MaskReg);
+                  A_Op_Reg_Reg(List,OP_AND,ALUUIntType,MaskReg,ValueReg);
                 end;
 
               { insert the value }
-              if (slopt <> SL_SETZERO) then
+              if (SlOpt <> SL_SETZERO) then
                 begin
-                  tmpreg := getintregister(list,ALUUIntType);
-                  if (slopt <> SL_SETMAX) then
-                    a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
-                  else if (sref.bitlen <> AIntBits) then
-                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
+                  TmpReg := GetIntRegister(List,ALUUIntType);
+                  if (SlOpt <> SL_SETMAX) then
+                    A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,TmpReg)
+                  else if (SRef.BitLen <> AIntBits) then
+                    A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen) - 1), TmpReg)
                   else
-                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
-                  if (TargetInfo.endian = endian_big) then
+                    A_Load_Const_Reg(List,ALUUIntType,-1,TmpReg);
+                  if (TargetInfo.Endian = endian_big) then
                     begin
-                      a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.bitlen,tmpreg);
-                      if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
+                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,LoadBitSize-SRef.BitLen,TmpReg);
+                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         { mask left over bits }
-                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),tmpreg);
-                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,tmpreg);
+                        A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt(((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen)),TmpReg);
+                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,TmpReg);
                     end
                   else
                     begin
-                      if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
+                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         { mask left over bits }
-                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,tmpreg);
+                        A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
+                      A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,TmpReg);
                     end;
-                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,valuereg);
+                  A_Op_Reg_Reg(List,OP_OR,ALUUIntType,TmpReg,ValueReg);
                 end;
-              tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
-              a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
+              TmpReg:=GetIntRegister(List,LoadSize);
+              A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ValueReg,TmpReg);
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,SRef.Ref);
 
               { make sure we do not read/write past the end of the array }
-              CurrentAsmData.getjumplabel(hl);
-              a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+              CurrentAsmData.GetJumpLabel(HL);
+              A_Cmp_Const_Reg_Label(List,ALUUIntType,OC_BE,LoadBitSize-SRef.BitLen,SRef.BitIndexReg,HL);
 
-              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
-              tmpindexreg:=getintregister(list,ALUUIntType);
+              A_Load_Ref_Reg(List,LoadSize,ALUUIntType,TmpRef,ExtraValueReg);
+              TmpIndexReg:=GetIntRegister(List,ALUUIntType);
 
               { load current array value }
-              if (slopt<>SL_SETZERO) then
+              if (SlOpt<>SL_SETZERO) then
                 begin
-                  tmpreg:=getintregister(list,ALUUIntType);
-                  if (slopt<>SL_SETMAX) then
-                     a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
-                  else if (sref.bitlen<>AIntBits) then
-                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
+                  TmpReg:=GetIntRegister(List,ALUUIntType);
+                  if (SlOpt<>SL_SETMAX) then
+                     A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,TmpReg)
+                  else if (SRef.BitLen<>AIntBits) then
+                    A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen) - 1), TmpReg)
                   else
-                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
+                    A_Load_Const_Reg(List,ALUUIntType,-1,TmpReg);
                 end;
 
               { generate mask to zero the bits we have to insert }
-              if (slopt<>SL_SETMAX) then
+              if (SlOpt<>SL_SETMAX) then
                 begin
-                  maskreg:=getintregister(list,ALUUIntType);
-                  if (TargetInfo.endian=endian_big) then
+                  MaskReg:=GetIntRegister(List,ALUUIntType);
+                  if (TargetInfo.Endian=endian_big) then
                     begin
-                      a_op_const_reg_reg(list,OP_ADD,ALUUIntType,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpindexreg);
-                      a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpindexreg,tmpindexreg);
-                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpindexreg,maskreg);
+                      A_Op_Const_Reg_Reg(List,OP_ADD,ALUUIntType,SRef.BitLen-2*LoadBitSize,SRef.BitIndexReg,TmpIndexReg);
+                      A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpIndexReg,TmpIndexReg);
+                      A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
+                      A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,TmpIndexReg,MaskReg);
                     end
                   else
                     begin
                       { Y-x = -(x-Y) }
-                      a_op_const_reg_reg(list,OP_SUB,ALUUIntType,loadbitsize,sref.bitindexreg,tmpindexreg);
-                      a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpindexreg,tmpindexreg);
-                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpindexreg,maskreg);
+                      A_Op_Const_Reg_Reg(List,OP_SUB,ALUUIntType,LoadBitSize,SRef.BitIndexReg,TmpIndexReg);
+                      A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpIndexReg,TmpIndexReg);
+                      A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
+                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,TmpIndexReg,MaskReg);
                     end;
 
-                  a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
-                  a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,extra_value_reg);
+                  A_Op_Reg_Reg(List,OP_NOT,ALUUIntType,MaskReg,MaskReg);
+                  A_Op_Reg_Reg(List,OP_AND,ALUUIntType,MaskReg,ExtraValueReg);
                 end;
 
-              if (slopt<>SL_SETZERO) then
+              if (SlOpt<>SL_SETZERO) then
                 begin
-                  if (TargetInfo.endian=endian_big) then
-                    a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpindexreg,tmpreg)
+                  if (TargetInfo.Endian=endian_big) then
+                    A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,TmpIndexReg,TmpReg)
                   else
                     begin
-                      if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpindexreg,tmpreg);
+                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
+                        A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
+                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,TmpIndexReg,TmpReg);
                     end;
-                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,extra_value_reg);
+                  A_Op_Reg_Reg(List,OP_OR,ALUUIntType,TmpReg,ExtraValueReg);
                 end;
 {$ifndef cpuhighleveltarget}
-              extra_value_reg:=cg.makeregsize(list,extra_value_reg,def_cgsize(loadsize));
-              a_load_reg_ref(list,loadsize,loadsize,extra_value_reg,tmpref);
+              ExtraValueReg:=CG.MakeRegSize(List,ExtraValueReg,Def_CGSize(LoadSize));
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,ExtraValueReg,TmpRef);
 {$else}
-              tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,ALUUIntType,loadsize,extra_value_reg,tmpreg);
-              a_load_reg_ref(list,loadsize,loadsize,tmpreg,tmpref);
+              TmpReg:=GetIntRegister(List,LoadSize);
+              A_Load_Reg_Reg(List,ALUUIntType,LoadSize,ExtraValueReg,TmpReg);
+              A_Load_Reg_Ref(List,LoadSize,LoadSize,TmpReg,TmpRef);
 {$endif}
 
-              a_label(list,hl);
+              A_Label(List,HL);
             end;
         end;
     end;
 
-  procedure THLCGObj.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt);
+  procedure THLCGObj.A_Load_RegConst_SubsetReg_Intern(List: TAsmList; FromSize, SubsetSize: TDef; FromReg: TRegister; const SReg: TSubsetRegister; SlOpt: TSubsetLoadOpt);
     var
-      bitmask: aword;
-      tmpreg: TRegister;
-      subsetregdef: TOrdDef;
-      stopbit: byte;
+      BitMask: AWord;
+      TmpReg: TRegister;
+      SubsetRegDef: TOrdDef;
+      StopBit: Byte;
 
     begin
-      tmpreg:=NR_NO;
-      subsetregdef:=cgsize_orddef(sreg.subsetregsize);
-      stopbit:=sreg.startbit+sreg.bitlen;
+      TmpReg:=NR_NO;
+      SubsetRegDef:=CGSize_OrdDef(SReg.SubsetRegSize);
+      StopBit:=SReg.StartBit+SReg.BitLen;
       // on x86(64), 1 shl 32(64) = 1 instead of 0
-      if (stopbit<>AIntBits) then
-        bitmask:=not(((aword(1) shl stopbit)-1) xor ((aword(1) shl sreg.startbit)-1))
+      if (StopBit<>AIntBits) then
+        BitMask:=not(((AWord(1) shl StopBit)-1) xor ((AWord(1) shl SReg.StartBit)-1))
       else
-        bitmask:=not(high(aword) xor ((aword(1) shl sreg.startbit)-1));
-      if not(slopt in [SL_SETZERO,SL_SETMAX]) then
+        BitMask:=not(High(AWord) xor ((AWord(1) shl SReg.StartBit)-1));
+      if not(SlOpt in [SL_SETZERO,SL_SETMAX]) then
         begin
-          tmpreg:=getintregister(list,subsetregdef);
-          a_load_reg_reg(list,fromsize,subsetregdef,fromreg,tmpreg);
-          a_op_const_reg(list,OP_SHL,subsetregdef,sreg.startbit,tmpreg);
-           if (slopt<>SL_REGNOSRCMASK) then
-            a_op_const_reg(list,OP_AND,subsetregdef,TCGInt(not(bitmask)),tmpreg);
+          TmpReg:=GetIntRegister(List,SubsetRegDef);
+          A_Load_Reg_Reg(List,FromSize,SubsetRegDef,FromReg,TmpReg);
+          A_Op_Const_Reg(List,OP_SHL,SubsetRegDef,SReg.StartBit,TmpReg);
+           if (SlOpt<>SL_REGNOSRCMASK) then
+            A_Op_Const_Reg(List,OP_AND,SubsetRegDef,TCGInt(not(BitMask)),TmpReg);
         end;
 
-      if (slopt<>SL_SETMAX) and
+      if (SlOpt<>SL_SETMAX) and
       { the "and" is not needed if the whole register is modified (except for SL_SETZERO),
         because later on we do a move in this case instead of an or }
-        ((sreg.bitlen<>AIntBits) or (slopt=SL_SETZERO)) then
+        ((SReg.BitLen<>AIntBits) or (SlOpt=SL_SETZERO)) then
           begin
             { shl could wrap around in this case }
-            if subsetregdef.size=sizeof(aword) then
-              a_op_const_reg(list,OP_AND,subsetregdef,TCGInt(bitmask),sreg.subsetreg)
+            if SubsetRegDef.Size=SizeOf(AWord) then
+              A_Op_Const_Reg(List,OP_AND,SubsetRegDef,TCGInt(BitMask),SReg.SubsetReg)
             else
-              a_op_const_reg(list,OP_AND,subsetregdef,TCGInt(bitmask) and aword((aword(1) shl (subsetregdef.size*8))-1),sreg.subsetreg);
+              A_Op_Const_Reg(List,OP_AND,SubsetRegDef,TCGInt(BitMask) and AWord((AWord(1) shl (SubsetRegDef.Size*8))-1),SReg.SubsetReg);
           end;
 
-      case slopt of
+      case SlOpt of
         SL_SETZERO : ;
         SL_SETMAX :
-          if (sreg.bitlen<>AIntBits) then
-            a_op_const_reg(list,OP_OR,subsetregdef,
-              TCGInt(((aword(1) shl sreg.bitlen)-1) shl sreg.startbit),
-              sreg.subsetreg)
+          if (SReg.BitLen<>AIntBits) then
+            A_Op_Const_Reg(List,OP_OR,SubsetRegDef,
+              TCGInt(((AWord(1) shl SReg.BitLen)-1) shl SReg.StartBit),
+              SReg.SubsetReg)
           else
-            a_load_const_reg(list,subsetregdef,-1,sreg.subsetreg);
+            A_Load_Const_Reg(List,SubsetRegDef,-1,SReg.SubsetReg);
         { if the whole register is modified, no "or" is needed }
-        else if sreg.bitlen=AIntBits then
-          a_load_reg_reg(list,subsetregdef,subsetregdef,tmpreg,sreg.subsetreg)
+        else if SReg.BitLen=AIntBits then
+          A_Load_Reg_Reg(List,SubsetRegDef,SubsetRegDef,TmpReg,SReg.SubsetReg)
         else
-          a_op_reg_reg(list,OP_OR,subsetregdef,tmpreg,sreg.subsetreg)
+          A_Op_Reg_Reg(List,OP_OR,SubsetRegDef,TmpReg,SReg.SubsetReg)
        end;
     end;
 
   {$pop}
 
-  function THLCGObj.get_bit_const_ref_sref(bitnumber: TCGInt; refdef: TDef; const ref: TReference): TSubsetReference;
+  function THLCGObj.Get_Bit_Const_Ref_SRef(BitNumber: TCGInt; RefDef: TDef; const Ref: TReference): TSubsetReference;
     begin
-      result.ref:=ref;
-      inc(result.ref.offset,bitnumber div 8);
-      result.ref.alignment:=NewAlignment(result.ref.alignment,bitnumber div 8);
-      result.bitindexreg:=NR_NO;
-      result.startbit:=bitnumber mod 8;
-      result.bitlen:=1;
+      Result.Ref:=Ref;
+      Inc(Result.Ref.Offset,BitNumber div 8);
+      Result.Ref.Alignment:=NewAlignment(Result.Ref.Alignment,BitNumber div 8);
+      Result.BitIndexReg:=NR_NO;
+      Result.StartBit:=BitNumber mod 8;
+      Result.BitLen:=1;
     end;
 
-  function THLCGObj.get_bit_const_reg_sreg(setregsize: TDef; bitnumber: TCGInt; setreg: TRegister): TSubsetRegister;
+  function THLCGObj.Get_Bit_Const_Reg_SReg(SetRegSize: TDef; BitNumber: TCGInt; SetReg: TRegister): TSubsetRegister;
     begin
-      result.subsetreg:=setreg;
-      result.subsetregsize:=def_cgsize(setregsize);
+      Result.SubsetReg:=SetReg;
+      Result.SubsetRegSize:=Def_CGSize(SetRegSize);
       { subsetregs always count from the least significant to the most significant bit }
-      if (TargetInfo.endian=endian_big) then
-        result.startbit:=(setregsize.size*8)-bitnumber-1
+      if (TargetInfo.Endian=endian_big) then
+        Result.StartBit:=(SetRegSize.Size*8)-BitNumber-1
       else
-        result.startbit:=bitnumber;
-      result.bitlen:=1;
+        Result.StartBit:=BitNumber;
+      Result.BitLen:=1;
     end;
 
-  function THLCGObj.get_bit_reg_ref_sref(list: TAsmList; bitnumbersize, refsize: TDef; bitnumber: TRegister; const ref: TReference): TSubsetReference;
+  function THLCGObj.Get_Bit_Reg_Ref_SRef(List: TAsmList; BitNumberSize, RefSize: TDef; BitNumber: TRegister; const Ref: TReference): TSubsetReference;
     var
-      refptrdef: TDef;
-      tmpreg,
-      newbase: TRegister;
+      RefPtrDef: TDef;
+      TmpReg,
+      NewBase: TRegister;
     begin
-      result.ref:=ref;
-      result.startbit:=0;
-      result.bitlen:=1;
+      Result.Ref:=Ref;
+      Result.StartBit:=0;
+      Result.BitLen:=1;
 
-      tmpreg:=getintregister(list,PtrUIntType);
-      a_load_reg_reg(list,bitnumbersize,PtrUIntType,bitnumber,tmpreg);
-      a_op_const_reg(list,OP_SHR,PtrUIntType,3,tmpreg);
+      TmpReg:=GetIntRegister(List,PtrUIntType);
+      A_Load_Reg_Reg(List,BitNumberSize,PtrUIntType,BitNumber,TmpReg);
+      A_Op_Const_Reg(List,OP_SHR,PtrUIntType,3,TmpReg);
 
       { don't assign to ref.base, that one is for pointers and this is an index
         (important for platforms like LLVM) }
-      if result.ref.index<>NR_NO then
+      if Result.Ref.Index<>NR_NO then
         begin
           { don't just add to ref.index, as it may be scaled }
-          refptrdef:=CPointerDef.getreusable(refsize);
-          newbase:=getaddressregister(list,refptrdef);
-          a_loadaddr_ref_reg(list,refsize,refptrdef,ref,newbase);
-          reference_reset_base(result.ref,refptrdef,newbase,0,result.ref.temppos,result.ref.alignment,[]);
+          RefPtrDef:=CPointerDef.GetReusable(RefSize);
+          NewBase:=GetAddressRegister(List,RefPtrDef);
+          A_LoadAddr_Ref_Reg(List,RefSize,RefPtrDef,Ref,NewBase);
+          Reference_Reset_Base(Result.Ref,RefPtrDef,NewBase,0,Result.Ref.TempPos,Result.Ref.Alignment,[]);
         end;
-      result.ref.index:=tmpreg;
-      tmpreg:=getintregister(list,ALUUIntType);
-      a_load_reg_reg(list,bitnumbersize,ALUUIntType,bitnumber,tmpreg);
-      a_op_const_reg(list,OP_AND,ALUUIntType,7,tmpreg);
-      result.bitindexreg:=tmpreg;
+      Result.Ref.Index:=TmpReg;
+      TmpReg:=GetIntRegister(List,ALUUIntType);
+      A_Load_Reg_Reg(List,BitNumberSize,ALUUIntType,BitNumber,TmpReg);
+      A_Op_Const_Reg(List,OP_AND,ALUUIntType,7,TmpReg);
+      Result.BitIndexReg:=TmpReg;
     end;
 
-  procedure THLCGObj.a_loadfpu_ref_ref(list: TAsmList; fromsize, tosize: TDef; const ref1, ref2: TReference);
+  procedure THLCGObj.A_LoadFPU_Ref_Ref(List: TAsmList; FromSize, ToSize: TDef; const Ref1, Ref2: TReference);
     var
-      reg: TRegister;
-      regsize: TDef;
+      Reg: TRegister;
+      RegSize: TDef;
     begin
-      if (fromsize.size>=tosize.size) then
-        regsize:=fromsize
+      if (FromSize.Size>=ToSize.Size) then
+        RegSize:=FromSize
       else
-        regsize:=tosize;
-      reg:=getfpuregister(list,regsize);
-      a_loadfpu_ref_reg(list,fromsize,regsize,ref1,reg);
-      a_loadfpu_reg_ref(list,regsize,tosize,reg,ref2);
+        RegSize:=ToSize;
+      Reg:=GetFPURegister(List,RegSize);
+      A_LoadFPU_Ref_Reg(List,FromSize,RegSize,Ref1,Reg);
+      A_LoadFPU_Reg_Ref(List,RegSize,ToSize,Reg,Ref2);
     end;
 
-  procedure THLCGObj.a_loadfpu_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);
+  procedure THLCGObj.A_LoadFPU_Loc_Reg(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Reg: TRegister);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE, LOC_CREFERENCE:
-          a_loadfpu_ref_reg(list,fromsize,tosize,loc.reference,reg);
+          A_LoadFPU_Ref_Reg(List,FromSize,ToSize,Loc.Reference,Reg);
         LOC_FPUREGISTER, LOC_CFPUREGISTER:
-          a_loadfpu_reg_reg(list,fromsize,tosize,loc.register,reg);
+          A_LoadFPU_Reg_Reg(List,FromSize,ToSize,Loc.Register,Reg);
         else
           InternalError(2010120412);
       end;
     end;
 
-  procedure THLCGObj.a_loadfpu_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference);
+  procedure THLCGObj.A_LoadFPU_Loc_Ref(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Ref: TReference);
     var
-      reg: TRegister;
+      Reg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE, LOC_CREFERENCE:
           begin
-            reg:=getfpuregister(list,tosize);
-            a_loadfpu_ref_reg(list,fromsize,tosize,loc.reference,reg);
-            a_loadfpu_reg_ref(list,tosize,tosize,reg,ref);
+            Reg:=GetFPURegister(List,ToSize);
+            A_LoadFPU_Ref_Reg(List,FromSize,ToSize,Loc.Reference,Reg);
+            A_LoadFPU_Reg_Ref(List,ToSize,ToSize,Reg,Ref);
           end;
         LOC_FPUREGISTER, LOC_CFPUREGISTER:
           begin
-            a_loadfpu_reg_ref(list,fromsize,tosize,loc.register,ref);
+            A_LoadFPU_Reg_Ref(List,FromSize,ToSize,Loc.Register,Ref);
           end;
         else
           InternalError(2014080802);
       end;
     end;
 
-  procedure THLCGObj.a_loadfpu_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);
+  procedure THLCGObj.A_LoadFPU_Reg_Loc(List: TAsmList; FromSize, ToSize: TDef; const Reg: TRegister; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REFERENCE, LOC_CREFERENCE:
-          a_loadfpu_reg_ref(list,fromsize,tosize,reg,loc.reference);
+          A_LoadFPU_Reg_Ref(List,FromSize,ToSize,Reg,Loc.Reference);
         LOC_FPUREGISTER, LOC_CFPUREGISTER:
-          a_loadfpu_reg_reg(list,fromsize,tosize,reg,loc.register);
+          A_LoadFPU_Reg_Reg(List,FromSize,ToSize,Reg,Loc.Register);
         else
           InternalError(2010120413);
        end;
     end;
 
-  procedure THLCGObj.a_loadfpu_reg_cgpara(list: TAsmList; fromsize: TDef; const r: TRegister; const cgpara: TCGPara);
+  procedure THLCGObj.A_LoadFPU_Reg_CGPara(List: TAsmList; FromSize: TDef; const R: TRegister; const CGPara: TCGPara);
       var
-         ref : TReference;
+         Ref : TReference;
       begin
-        paramanager.alloccgpara(list,cgpara);
-        case cgpara.location^.loc of
+        ParaManager.AllocCGPara(List,CGPara);
+        case CGPara.Location^.Loc of
           LOC_FPUREGISTER,LOC_CFPUREGISTER:
             begin
-              cgpara.check_simple_location;
-              a_loadfpu_reg_reg(list,fromsize,cgpara.def,r,cgpara.location^.register);
+              CGPara.Check_Simple_Location;
+              A_LoadFPU_Reg_Reg(List,FromSize,CGPara.Def,R,CGPara.Location^.Register);
             end;
           LOC_REFERENCE,LOC_CREFERENCE:
             begin
-              cgpara.check_simple_location;
-              reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-              a_loadfpu_reg_ref(list,fromsize,cgpara.def,r,ref);
+              CGPara.Check_Simple_Location;
+              Reference_Reset_Base(Ref,VoidStackPointerType,CGPara.Location^.Reference.Index,CGPara.Location^.Reference.Offset,CTempPosInvalid,CGPara.Alignment,[]);
+              A_LoadFPU_Reg_Ref(List,FromSize,CGPara.Def,R,Ref);
             end;
           LOC_REGISTER,LOC_CREGISTER:
             begin
               { paramfpu_ref does the check_simple_location check here if necessary }
-              tg.gethltemp(list,fromsize,fromsize.size,tt_normal,ref);
-              a_loadfpu_reg_ref(list,fromsize,fromsize,r,ref);
-              a_loadfpu_ref_cgpara(list,fromsize,ref,cgpara);
-              tg.Ungettemp(list,ref);
+              TG.GetHLTemp(List,FromSize,FromSize.Size,tt_normal,Ref);
+              A_LoadFPU_Reg_Ref(List,FromSize,FromSize,R,Ref);
+              A_LoadFPU_Ref_CGPara(List,FromSize,Ref,CGPara);
+              TG.UngetTemp(List,Ref);
             end;
           else
             InternalError(2010120422);
         end;
       end;
 
-  procedure THLCGObj.a_loadfpu_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara);
+  procedure THLCGObj.A_LoadFPU_Ref_CGPara(List: TAsmList; FromSize: TDef; const Ref: TReference; const CGPara: TCGPara);
     var
-       hreg : TRegister;
-       href : TReference;
-       intptrdef: TDef;
+       HReg : TRegister;
+       HRef : TReference;
+       IntPtrDef: TDef;
     begin
-       case cgpara.location^.loc of
+       case CGPara.Location^.Loc of
         LOC_FPUREGISTER,LOC_CFPUREGISTER:
           begin
-            cgpara.check_simple_location;
-            paramanager.alloccgpara(list,cgpara);
-            a_loadfpu_ref_reg(list,fromsize,cgpara.location^.def,ref,cgpara.location^.register);
+            CGPara.Check_Simple_Location;
+            ParaManager.AllocCGPara(List,CGPara);
+            A_LoadFPU_Ref_Reg(List,FromSize,CGPara.Location^.Def,Ref,CGPara.Location^.Register);
           end;
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            cgpara.check_simple_location;
-            reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+            CGPara.Check_Simple_Location;
+            Reference_Reset_Base(HRef,VoidStackPointerType,CGPara.Location^.Reference.Index,CGPara.Location^.Reference.Offset,CTempPosInvalid,CGPara.Alignment,[]);
             { concatcopy should choose the best way to copy the data }
-            g_concatcopy(list,fromsize,ref,href);
+            G_ConcatCopy(List,FromSize,Ref,HRef);
           end;
         LOC_REGISTER,LOC_CREGISTER:
           begin
-            cgpara.check_simple_location;
-            if fromsize.size<>cgpara.location^.def.size then
+            CGPara.Check_Simple_Location;
+            if FromSize.Size<>CGPara.Location^.Def.Size then
               InternalError(2014080603);
             { convert the reference from a floating point location to an
               integer location, and load that }
-            intptrdef:=CPointerDef.getreusable(cgpara.location^.def);
-            hreg:=getaddressregister(list,intptrdef);
-            a_loadaddr_ref_reg(list,fromsize,intptrdef,ref,hreg);
-            reference_reset_base(href,intptrdef,hreg,0,ref.temppos,ref.alignment,[]);
-            a_load_ref_cgpara(list,cgpara.location^.def,ref,cgpara);
+            IntPtrDef:=CPointerDef.GetReusable(CGPara.Location^.Def);
+            HReg:=GetAddressRegister(List,IntPtrDef);
+            A_LoadAddr_Ref_Reg(List,FromSize,IntPtrDef,Ref,HReg);
+            Reference_Reset_Base(HRef,IntPtrDef,HReg,0,Ref.TempPos,Ref.Alignment,[]);
+            A_Load_Ref_CGPara(List,CGPara.Location^.Def,Ref,CGPara);
           end
         else
           InternalError(2010120423);
       end;
     end;
 
-  procedure THLCGObj.a_loadmm_ref_ref(list: TAsmList; fromsize, tosize: TDef; const fromref, toref: TReference; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Ref_Ref(List: TAsmList; FromSize, ToSize: TDef; const FromRef, ToRef: TReference; Shuffle: PMMShuffle);
     var
-      reg: TRegister;
+      Reg: TRegister;
     begin
-      reg:=getmmregister(list,tosize);
-      a_loadmm_ref_reg(list,fromsize,tosize,fromref,reg,shuffle);
-      a_loadmm_reg_ref(list,tosize,tosize,reg,toref,shuffle);
+      Reg:=GetMMRegister(List,ToSize);
+      A_LoadMM_Ref_Reg(List,FromSize,ToSize,FromRef,Reg,Shuffle);
+      A_LoadMM_Reg_Ref(List,ToSize,ToSize,Reg,ToRef,Shuffle);
     end;
 
-  procedure THLCGObj.a_loadmm_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Loc_Reg(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Reg: TRegister; Shuffle: PMMShuffle);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_reg_reg(list,fromsize,tosize,loc.register,reg,shuffle);
+          A_LoadMM_Reg_Reg(List,FromSize,ToSize,Loc.Register,Reg,Shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_loadmm_ref_reg(list,fromsize,tosize,loc.reference,reg,shuffle);
+          A_LoadMM_Ref_Reg(List,FromSize,ToSize,Loc.Reference,Reg,Shuffle);
         LOC_REGISTER,LOC_CREGISTER:
-          a_loadmm_intreg_reg(list,fromsize,tosize,loc.register,reg,shuffle);
+          A_LoadMM_IntReg_Reg(List,FromSize,ToSize,Loc.Register,Reg,Shuffle);
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           begin
-            tmpreg:=getintregister(list,fromsize);
-            a_load_loc_reg(list,fromsize,fromsize,loc,tmpreg);
-            a_loadmm_intreg_reg(list,fromsize,tosize,tmpreg,reg,shuffle);
+            TmpReg:=GetIntRegister(List,FromSize);
+            A_Load_Loc_Reg(List,FromSize,FromSize,Loc,TmpReg);
+            A_LoadMM_IntReg_Reg(List,FromSize,ToSize,TmpReg,Reg,Shuffle);
           end
         else
           InternalError(2010120414);
       end;
     end;
 
-  procedure THLCGObj.a_loadmm_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Reg_Loc(List: TAsmList; FromSize, ToSize: TDef; const Reg: TRegister; const Loc: TLocation; Shuffle: PMMShuffle);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_reg_reg(list,fromsize,tosize,reg,loc.register,shuffle);
+          A_LoadMM_Reg_Reg(List,FromSize,ToSize,Reg,Loc.Register,Shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_loadmm_reg_ref(list,fromsize,tosize,reg,loc.reference,shuffle);
+          A_LoadMM_Reg_Ref(List,FromSize,ToSize,Reg,Loc.Reference,Shuffle);
         else
           InternalError(2010120417);
       end;
     end;
 
-  procedure THLCGObj.a_loadmm_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Loc_Ref(List: TAsmList; FromSize, ToSize: TDef; const Loc: TLocation; const Ref: TReference; Shuffle: PMMShuffle);
     var
-      intreg, reg: TRegister;
+      IntReg, Reg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_reg_ref(list,fromsize,tosize,loc.register,ref,shuffle);
+          A_LoadMM_Reg_Ref(List,FromSize,ToSize,Loc.Register,Ref,Shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            reg:=getmmregister(list,tosize);
-            a_loadmm_ref_reg(list,fromsize,tosize,loc.reference,reg,shuffle);
-            a_loadmm_reg_ref(list,tosize,tosize,reg,ref,shuffle);
+            Reg:=GetMMRegister(List,ToSize);
+            A_LoadMM_Ref_Reg(List,FromSize,ToSize,Loc.Reference,Reg,Shuffle);
+            A_LoadMM_Reg_Ref(List,ToSize,ToSize,Reg,Ref,Shuffle);
           end;
         LOC_REGISTER,LOC_CREGISTER:
           begin
-            reg:=getmmregister(list,tosize);
-            a_loadmm_intreg_reg(list,fromsize,tosize,loc.register,reg,shuffle);
-            a_loadmm_reg_ref(list,tosize,tosize,reg,ref,shuffle);
+            Reg:=GetMMRegister(List,ToSize);
+            A_LoadMM_IntReg_Reg(List,FromSize,ToSize,Loc.Register,Reg,Shuffle);
+            A_LoadMM_Reg_Ref(List,ToSize,ToSize,Reg,Ref,Shuffle);
           end;
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           begin
-            intreg:=getintregister(list,fromsize);
-            reg:=getmmregister(list,tosize);
-            a_load_loc_reg(list,fromsize,fromsize,loc,intreg);
-            a_loadmm_intreg_reg(list,fromsize,tosize,intreg,reg,shuffle);
-            a_loadmm_reg_ref(list,tosize,tosize,reg,ref,shuffle);
+            IntReg:=GetIntRegister(List,FromSize);
+            Reg:=GetMMRegister(List,ToSize);
+            A_Load_Loc_Reg(List,FromSize,FromSize,Loc,IntReg);
+            A_LoadMM_IntReg_Reg(List,FromSize,ToSize,IntReg,Reg,Shuffle);
+            A_LoadMM_Reg_Ref(List,ToSize,ToSize,Reg,Ref,Shuffle);
           end
         else
           InternalError(2014080803);
       end;
     end;
 
-  procedure THLCGObj.a_loadmm_reg_cgpara(list: TAsmList; fromsize: TDef; reg: TRegister; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Reg_CGPara(List: TAsmList; FromSize: TDef; Reg: TRegister; const CGPara: TCGPara; Shuffle: PMMShuffle);
     var
-      href  : TReference;
+      HRef  : TReference;
     begin
-       cgpara.check_simple_location;
-       paramanager.alloccgpara(list,cgpara);
-       case cgpara.location^.loc of
+       CGPara.Check_Simple_Location;
+       ParaManager.AllocCGPara(List,CGPara);
+       case CGPara.Location^.Loc of
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_reg_reg(list,fromsize,cgpara.def,reg,cgpara.location^.register,shuffle);
+          A_LoadMM_Reg_Reg(List,FromSize,CGPara.Def,Reg,CGPara.Location^.Register,Shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-            a_loadmm_reg_ref(list,fromsize,cgpara.def,reg,href,shuffle);
+            Reference_Reset_Base(HRef,VoidStackPointerType,CGPara.Location^.Reference.Index,CGPara.Location^.Reference.Offset,CTempPosInvalid,CGPara.Alignment,[]);
+            A_LoadMM_Reg_Ref(List,FromSize,CGPara.Def,Reg,HRef,Shuffle);
           end;
         LOC_REGISTER,LOC_CREGISTER:
           begin
-            if Assigned(shuffle) and
-               not shufflescalar(shuffle) then
+            if Assigned(Shuffle) and
+               not ShuffleScalar(Shuffle) then
               InternalError(2012071205);
-             a_loadmm_reg_intreg(list,fromsize,cgpara.def,reg,cgpara.location^.register,mms_movescalar);
+             A_LoadMM_Reg_IntReg(List,FromSize,CGPara.Def,Reg,CGPara.Location^.Register,MMS_MoveScalar);
           end
         else
           InternalError(2012071204);
       end;
     end;
 
-  procedure THLCGObj.a_loadmm_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Ref_CGPara(List: TAsmList; FromSize: TDef; const Ref: TReference; const CGPara: TCGPara; Shuffle: PMMShuffle);
     var
-       hr : TRegister;
-       hs : TMMShuffle;
+       HR : TRegister;
+       HS : TMMShuffle;
     begin
-       cgpara.check_simple_location;
-       hr:=getmmregister(list,cgpara.def);
-       a_loadmm_ref_reg(list,fromsize,cgpara.def,ref,hr,shuffle);
-       if realshuffle(shuffle) then
+       CGPara.Check_Simple_Location;
+       HR:=GetMMRegister(List,CGPara.Def);
+       A_LoadMM_Ref_Reg(List,FromSize,CGPara.Def,Ref,HR,Shuffle);
+       if RealShuffle(Shuffle) then
          begin
-           hs:=shuffle^;
-           removeshuffles(hs);
-           a_loadmm_reg_cgpara(list,cgpara.def,hr,cgpara,@hs);
+           HS:=Shuffle^;
+           RemoveShuffles(HS);
+           A_LoadMM_Reg_CGPara(List,CGPara.Def,HR,CGPara,@HS);
          end
        else
-         a_loadmm_reg_cgpara(list,cgpara.def,hr,cgpara,shuffle);
+         A_LoadMM_Reg_CGPara(List,CGPara.Def,HR,CGPara,Shuffle);
     end;
 
-  procedure THLCGObj.a_loadmm_loc_cgpara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCGObj.A_LoadMM_Loc_CGPara(List: TAsmList; FromSize: TDef; const Loc: TLocation; const CGPara: TCGPara; Shuffle: PMMShuffle);
     begin
 {$ifdef extdebug}
-      if def_cgsize(fromsize)<>loc.size then
+      if Def_CGSize(FromSize)<>Loc.Size then
         InternalError(2012071203);
 {$endif}
-      case loc.loc of
+      case Loc.Loc of
         LOC_MMREGISTER,LOC_CMMREGISTER:
-          a_loadmm_reg_cgpara(list,fromsize,loc.register,cgpara,shuffle);
+          A_LoadMM_Reg_CGPara(List,FromSize,Loc.Register,CGPara,Shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_loadmm_ref_cgpara(list,fromsize,loc.reference,cgpara,shuffle);
+          A_LoadMM_Ref_CGPara(List,FromSize,Loc.Reference,CGPara,Shuffle);
         else
           InternalError(2012071202);
       end;
     end;
 
-  procedure THLCGObj.a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCGObj.A_OpMM_Ref_Reg(List: TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference; Reg: TRegister; Shuffle: PMMShuffle);
     var
-       hr : TRegister;
-       hs : TMMShuffle;
+       HR : TRegister;
+       HS : TMMShuffle;
     begin
-       hr:=getmmregister(list,size);
-       a_loadmm_ref_reg(list,size,size,ref,hr,shuffle);
-       if realshuffle(shuffle) then
+       HR:=GetMMRegister(List,Size);
+       A_LoadMM_Ref_Reg(List,Size,Size,Ref,HR,Shuffle);
+       if RealShuffle(Shuffle) then
          begin
-           hs:=shuffle^;
-           removeshuffles(hs);
-           a_opmm_reg_reg(list,op,size,hr,reg,@hs);
+           HS:=Shuffle^;
+           RemoveShuffles(HS);
+           A_OpMM_Reg_Reg(List,Op,Size,HR,Reg,@HS);
          end
        else
-         a_opmm_reg_reg(list,op,size,hr,reg,shuffle);
+         A_OpMM_Reg_Reg(List,Op,Size,HR,Reg,Shuffle);
     end;
 
-  procedure THLCGObj.a_opmm_loc_reg(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation; reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCGObj.A_OpMM_Loc_Reg(List: TAsmList; Op: TOpCG; Size: TDef; const Loc: TLocation; Reg: TRegister; Shuffle: PMMShuffle);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_CMMREGISTER,LOC_MMREGISTER:
-          a_opmm_reg_reg(list,op,size,loc.register,reg,shuffle);
+          A_OpMM_Reg_Reg(List,Op,Size,Loc.Register,Reg,Shuffle);
         LOC_CREFERENCE,LOC_REFERENCE:
-          a_opmm_ref_reg(list,op,size,loc.reference,reg,shuffle);
+          A_OpMM_Ref_Reg(List,Op,Size,Loc.Reference,Reg,Shuffle);
         else
           InternalError(2012071201);
       end;
     end;
 
-  procedure THLCGObj.a_opmm_reg_ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference; shuffle: PMMShuffle);
+  procedure THLCGObj.A_OpMM_Reg_Ref(List: TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister; const Ref: TReference; Shuffle: PMMShuffle);
     var
-       hr : TRegister;
-       hs : TMMShuffle;
+       HR : TRegister;
+       HS : TMMShuffle;
     begin
-       hr:=getmmregister(list,size);
-       a_loadmm_ref_reg(list,size,size,ref,hr,shuffle);
-       if realshuffle(shuffle) then
+       HR:=GetMMRegister(List,Size);
+       A_LoadMM_Ref_Reg(List,Size,Size,Ref,HR,Shuffle);
+       if RealShuffle(Shuffle) then
          begin
-           hs:=shuffle^;
-           removeshuffles(hs);
-           a_opmm_reg_reg(list,op,size,reg,hr,@hs);
-           a_loadmm_reg_ref(list,size,size,hr,ref,@hs);
+           HS:=Shuffle^;
+           RemoveShuffles(HS);
+           A_OpMM_Reg_Reg(List,Op,Size,Reg,HR,@HS);
+           A_LoadMM_Reg_Ref(List,Size,Size,HR,Ref,@HS);
          end
        else
          begin
-           a_opmm_reg_reg(list,op,size,reg,hr,shuffle);
-           a_loadmm_reg_ref(list,size,size,hr,ref,shuffle);
+           A_OpMM_Reg_Reg(List,Op,Size,Reg,HR,Shuffle);
+           A_LoadMM_Reg_Ref(List,Size,Size,HR,Ref,Shuffle);
          end;
     end;
 
@@ -3128,401 +3128,401 @@ implementation
       cg.a_loadmm_reg_intreg(list,def_cgsize(fromsize),def_cgsize(tosize),mmreg,intreg,shuffle);
     end;
 *)
-  procedure THLCGObj.a_op_const_ref(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference);
+  procedure THLCGObj.A_Op_Const_Ref(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; const Ref: TReference);
     var
-      tmpreg : TRegister;
+      TmpReg : TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      a_op_const_reg(list,op,size,a,tmpreg);
-      a_load_reg_ref(list,size,size,tmpreg,ref);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      A_Op_Const_Reg(List,Op,Size,A,TmpReg);
+      A_Load_Reg_Ref(List,Size,Size,TmpReg,Ref);
     end;
 
-  procedure THLCGObj.a_op_const_subsetreg(list: TAsmList; Op: TOpCG; size, subsetsize: TDef; a: TCGInt; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Op_Const_SubsetReg(List: TAsmList; Op: TOpCG; Size, SubsetSize: TDef; A: TCGInt; const SReg: TSubsetRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_subsetreg_reg(list,subsetsize,size,sreg,tmpreg);
-      a_op_const_reg(list,op,size,a,tmpreg);
-      a_load_reg_subsetreg(list,size,subsetsize,tmpreg,sreg);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_SubsetReg_Reg(List,SubsetSize,Size,SReg,TmpReg);
+      A_Op_Const_Reg(List,Op,Size,A,TmpReg);
+      A_Load_Reg_SubsetReg(List,Size,SubsetSize,TmpReg,SReg);
     end;
 
-  procedure THLCGObj.a_op_const_subsetref(list: TAsmList; Op: TOpCG; size, subsetsize: TDef; a: TCGInt; const sref: TSubsetReference);
+  procedure THLCGObj.A_Op_Const_SubsetRef(List: TAsmList; Op: TOpCG; Size, SubsetSize: TDef; A: TCGInt; const SRef: TSubsetReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_subsetref_reg(list,subsetsize,size,sref,tmpreg);
-      a_op_const_reg(list,op,size,a,tmpreg);
-      a_load_reg_subsetref(list,size,subsetsize,tmpreg,sref);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_SubsetRef_Reg(List,SubsetSize,Size,SRef,TmpReg);
+      A_Op_Const_Reg(List,Op,Size,A,TmpReg);
+      A_Load_Reg_SubsetRef(List,Size,SubsetSize,TmpReg,SRef);
     end;
 
-  procedure THLCGObj.a_op_const_loc(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);
+  procedure THLCGObj.A_Op_Const_Loc(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER, LOC_CREGISTER:
-          a_op_const_reg(list,op,size,a,loc.register);
+          A_Op_Const_Reg(List,Op,Size,A,Loc.Register);
         LOC_REFERENCE, LOC_CREFERENCE:
-          a_op_const_ref(list,op,size,a,loc.reference);
+          A_Op_Const_Ref(List,Op,Size,A,Loc.Reference);
         LOC_SUBSETREG, LOC_CSUBSETREG:
-          a_op_const_subsetreg(list,op,size,size,a,loc.sreg);
+          A_Op_Const_SubsetReg(List,Op,Size,Size,A,Loc.SReg);
         LOC_SUBSETREF, LOC_CSUBSETREF:
-          a_op_const_subsetref(list,op,size,size,a,loc.sref);
+          A_Op_Const_SubsetRef(List,Op,Size,Size,A,Loc.SRef);
         else
           InternalError(2010120428);
       end;
     end;
 
-  procedure THLCGObj.a_op_reg_ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference);
+  procedure THLCGObj.A_Op_Reg_Ref(List: TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister; const Ref: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      case op of
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      case Op of
         OP_NOT,OP_NEG:
           begin
-            a_op_reg_reg(list,op,size,tmpreg,tmpreg);
+            A_Op_Reg_Reg(List,Op,Size,TmpReg,TmpReg);
           end;
         else
           begin
-            a_op_reg_reg(list,op,size,reg,tmpreg);
+            A_Op_Reg_Reg(List,Op,Size,Reg,TmpReg);
           end;
       end;
-      a_load_reg_ref(list,size,size,tmpreg,ref);
+      A_Load_Reg_Ref(List,Size,Size,TmpReg,Ref);
     end;
 
-  procedure THLCGObj.a_op_ref_reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister);
+  procedure THLCGObj.A_Op_Ref_Reg(List: TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference; Reg: TRegister);
       var
-        tmpreg: TRegister;
+        TmpReg: TRegister;
       begin
-        case op of
+        case Op of
           OP_NOT,OP_NEG:
             { handle it as "load ref,reg; op reg" }
             begin
-              a_load_ref_reg(list,size,size,ref,reg);
-              a_op_reg_reg(list,op,size,reg,reg);
+              A_Load_Ref_Reg(List,Size,Size,Ref,Reg);
+              A_Op_Reg_Reg(List,Op,Size,Reg,Reg);
             end;
           else
             begin
-              tmpreg:=getintregister(list,size);
-              a_load_ref_reg(list,size,size,ref,tmpreg);
-              a_op_reg_reg(list,op,size,tmpreg,reg);
+              TmpReg:=GetIntRegister(List,Size);
+              A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+              A_Op_Reg_Reg(List,Op,Size,TmpReg,Reg);
             end;
         end;
       end;
 
-  procedure THLCGObj.a_op_reg_subsetreg(list: TAsmList; Op: TOpCG; opsize, destsubsetsize: TDef; reg: TRegister; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Op_Reg_SubsetReg(List: TAsmList; Op: TOpCG; OpSize, DestSubsetSize: TDef; Reg: TRegister; const SReg: TSubsetRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,opsize);
-      a_load_subsetreg_reg(list,destsubsetsize,opsize,sreg,tmpreg);
-      a_op_reg_reg(list,op,opsize,reg,tmpreg);
-      a_load_reg_subsetreg(list,opsize,destsubsetsize,tmpreg,sreg);
+      TmpReg:=GetIntRegister(List,OpSize);
+      A_Load_SubsetReg_Reg(List,DestSubsetSize,OpSize,SReg,TmpReg);
+      A_Op_Reg_Reg(List,Op,OpSize,Reg,TmpReg);
+      A_Load_Reg_SubsetReg(List,OpSize,DestSubsetSize,TmpReg,SReg);
     end;
 
-  procedure THLCGObj.a_op_reg_subsetref(list: TAsmList; Op: TOpCG; opsize, destsubsetsize: TDef; reg: TRegister; const sref: TSubsetReference);
+  procedure THLCGObj.A_Op_Reg_SubsetRef(List: TAsmList; Op: TOpCG; OpSize, DestSubsetSize: TDef; Reg: TRegister; const SRef: TSubsetReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,opsize);
-      a_load_subsetref_reg(list,destsubsetsize,opsize,sref,tmpreg);
-      a_op_reg_reg(list,op,opsize,reg,tmpreg);
-      a_load_reg_subsetref(list,opsize,destsubsetsize,tmpreg,sref);
+      TmpReg:=GetIntRegister(List,OpSize);
+      A_Load_SubsetRef_Reg(List,DestSubsetSize,OpSize,SRef,TmpReg);
+      A_Op_Reg_Reg(List,Op,OpSize,Reg,TmpReg);
+      A_Load_Reg_SubsetRef(List,OpSize,DestSubsetSize,TmpReg,SRef);
     end;
 
-  procedure THLCGObj.a_op_reg_loc(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);
+  procedure THLCGObj.A_Op_Reg_Loc(List: TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER, LOC_CREGISTER:
-          a_op_reg_reg(list,op,size,reg,loc.register);
+          A_Op_Reg_Reg(List,Op,Size,Reg,Loc.Register);
         LOC_REFERENCE, LOC_CREFERENCE:
-          a_op_reg_ref(list,op,size,reg,loc.reference);
+          A_Op_Reg_Ref(List,Op,Size,Reg,Loc.Reference);
         LOC_SUBSETREG, LOC_CSUBSETREG:
-          a_op_reg_subsetreg(list,op,size,size,reg,loc.sreg);
+          A_Op_Reg_SubsetReg(List,Op,Size,Size,Reg,Loc.SReg);
         LOC_SUBSETREF, LOC_CSUBSETREF:
-          a_op_reg_subsetref(list,op,size,size,reg,loc.sref);
+          A_Op_Reg_SubsetRef(List,Op,Size,Size,Reg,Loc.SRef);
         else
           InternalError(2010120429);
       end;
     end;
 
-  procedure THLCGObj.a_op_ref_loc(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);
+  procedure THLCGObj.A_Op_Ref_Loc(List: TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference; const Loc: TLocation);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER,LOC_CREGISTER:
-          a_op_ref_reg(list,op,size,ref,loc.register);
+          A_Op_Ref_Reg(List,Op,Size,Ref,Loc.Register);
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_ref_reg(list,size,size,ref,tmpreg);
-            a_op_reg_ref(list,op,size,tmpreg,loc.reference);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+            A_Op_Reg_Ref(List,Op,Size,TmpReg,Loc.Reference);
           end;
         LOC_SUBSETREG, LOC_CSUBSETREG:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_subsetreg_reg(list,size,size,loc.sreg,tmpreg);
-            a_op_ref_reg(list,op,size,ref,tmpreg);
-            a_load_reg_subsetreg(list,size,size,tmpreg,loc.sreg);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_SubsetReg_Reg(List,Size,Size,Loc.SReg,TmpReg);
+            A_Op_Ref_Reg(List,Op,Size,Ref,TmpReg);
+            A_Load_Reg_SubsetReg(List,Size,Size,TmpReg,Loc.SReg);
           end;
         LOC_SUBSETREF, LOC_CSUBSETREF:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_subsetref_reg(list,size,size,loc.sref,tmpreg);
-            a_op_ref_reg(list,op,size,ref,tmpreg);
-            a_load_reg_subsetref(list,size,size,tmpreg,loc.sref);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_SubsetRef_Reg(List,Size,Size,Loc.SRef,TmpReg);
+            A_Op_Ref_Reg(List,Op,Size,Ref,TmpReg);
+            A_Load_Reg_SubsetRef(List,Size,Size,TmpReg,Loc.SRef);
           end;
         else
           InternalError(2010120418);
       end;
     end;
 
-  procedure THLCGObj.a_op_const_reg_reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister);
+  procedure THLCGObj.A_Op_Const_Reg_Reg(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; Src, Dst: TRegister);
     begin
-      a_load_reg_reg(list,size,size,src,dst);
-      a_op_const_reg(list,op,size,a,dst);
+      A_Load_Reg_Reg(List,Size,Size,Src,Dst);
+      A_Op_Const_Reg(List,Op,Size,A,Dst);
     end;
 
-  procedure THLCGObj.a_op_reg_reg_reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister);
+  procedure THLCGObj.A_Op_Reg_Reg_Reg(List: TAsmList; Op: TOpCG; Size: TDef; Src1, Src2, Dst: TRegister);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      if (dst<>src1) then
+      if (Dst<>Src1) then
         begin
-          a_load_reg_reg(list,size,size,src2,dst);
-          a_op_reg_reg(list,op,size,src1,dst);
+          A_Load_Reg_Reg(List,Size,Size,Src2,Dst);
+          A_Op_Reg_Reg(List,Op,Size,Src1,Dst);
         end
       else
         begin
           { can we do a direct operation on the target register ? }
-          if op in [OP_ADD,OP_MUL,OP_AND,OP_MOVE,OP_XOR,OP_IMUL,OP_OR] then
-            a_op_reg_reg(list,op,size,src2,dst)
+          if Op in [OP_ADD,OP_MUL,OP_AND,OP_MOVE,OP_XOR,OP_IMUL,OP_OR] then
+            A_Op_Reg_Reg(List,Op,Size,Src2,Dst)
           else
             begin
-              tmpreg:=getintregister(list,size);
-              a_load_reg_reg(list,size,size,src2,tmpreg);
-              a_op_reg_reg(list,op,size,src1,tmpreg);
-              a_load_reg_reg(list,size,size,tmpreg,dst);
+              TmpReg:=GetIntRegister(List,Size);
+              A_Load_Reg_Reg(List,Size,Size,Src2,TmpReg);
+              A_Op_Reg_Reg(List,Op,Size,Src1,TmpReg);
+              A_Load_Reg_Reg(List,Size,Size,TmpReg,Dst);
             end;
         end;
     end;
 
-  procedure THLCGObj.a_op_const_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister; setflags: boolean; var ovloc: TLocation);
+  procedure THLCGObj.A_Op_Const_Reg_Reg_CheckOverflow(List: TAsmList; Op: TOpCG; Size: TDef; A: TCGInt; Src, Dst: TRegister; SetFlags: Boolean; var OVLoc: TLocation);
     begin
-      ovloc.loc:=LOC_VOID;
-      if not setflags then
-        a_op_const_reg_reg(list,op,size,a,src,dst)
+      OVLoc.Loc:=LOC_VOID;
+      if not SetFlags then
+        A_Op_Const_Reg_Reg(List,Op,Size,A,Src,Dst)
       else
         InternalError(2010122910);
     end;
 
-  procedure THLCGObj.a_op_reg_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister; setflags: boolean; var ovloc: TLocation);
+  procedure THLCGObj.A_Op_Reg_Reg_Reg_CheckOverflow(List: TAsmList; Op: TOpCG; Size: TDef; Src1, Src2, Dst: TRegister; SetFlags: Boolean; var OVLoc: TLocation);
     begin
-      ovloc.loc:=LOC_VOID;
-      if not setflags then
-        a_op_reg_reg_reg(list,op,size,src1,src2,dst)
+      OVLoc.Loc:=LOC_VOID;
+      if not SetFlags then
+        A_Op_Reg_Reg_Reg(List,Op,Size,Src1,Src2,Dst)
       else
         InternalError(2010122911);
     end;
 
-  procedure THLCGObj.a_op_reg(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister);
+  procedure THLCGObj.A_Op_Reg(List: TAsmList; Op: TOpCG; Size: TDef; Reg: TRegister);
     begin
       if not (Op in [OP_NOT,OP_NEG]) then
         InternalError(2020050711);
-      a_op_reg_reg(list,op,size,reg,reg);
+      A_Op_Reg_Reg(List,Op,Size,Reg,Reg);
     end;
 
-  procedure THLCGObj.a_op_ref(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference);
+  procedure THLCGObj.A_Op_Ref(List: TAsmList; Op: TOpCG; Size: TDef; const Ref: TReference);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
       if not (Op in [OP_NOT,OP_NEG]) then
         InternalError(2020050712);
-      tmpreg:=getintregister(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      a_op_reg_reg(list,op,size,tmpreg,tmpreg);
-      a_load_reg_ref(list,size,size,tmpreg,ref);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      A_Op_Reg_Reg(List,Op,Size,TmpReg,TmpReg);
+      A_Load_Reg_Ref(List,Size,Size,TmpReg,Ref);
     end;
 
-  procedure THLCGObj.a_op_subsetreg(list: TAsmList; Op: TOpCG; destsubsetsize: TDef; const sreg: TSubsetRegister);
+  procedure THLCGObj.A_Op_SubsetReg(List: TAsmList; Op: TOpCG; DestSubsetSize: TDef; const SReg: TSubsetRegister);
     var
-      tmpreg: TRegister;
-      subsetregdef: TOrdDef;
+      TmpReg: TRegister;
+      SubsetRegDef: TOrdDef;
     begin
-      subsetregdef:=cgsize_orddef(sreg.subsetregsize);
-      tmpreg:=getintregister(list,subsetregdef);
-      a_load_subsetreg_reg(list,destsubsetsize,subsetregdef,sreg,tmpreg);
-      a_op_reg(list,op,subsetregdef,tmpreg);
-      a_load_reg_subsetreg(list,subsetregdef,destsubsetsize,tmpreg,sreg);
+      SubsetRegDef:=CGSize_OrdDef(SReg.SubsetRegSize);
+      TmpReg:=GetIntRegister(List,SubsetRegDef);
+      A_Load_SubsetReg_Reg(List,DestSubsetSize,SubsetRegDef,SReg,TmpReg);
+      A_Op_Reg(List,Op,SubsetRegDef,TmpReg);
+      A_Load_Reg_SubsetReg(List,SubsetRegDef,DestSubsetSize,TmpReg,SReg);
     end;
 
-  procedure THLCGObj.a_op_subsetref(list: TAsmList; Op: TOpCG; destsubsetsize: TDef; const sref: TSubsetReference);
+  procedure THLCGObj.A_Op_SubsetRef(List: TAsmList; Op: TOpCG; DestSubsetSize: TDef; const SRef: TSubsetReference);
     var
-      tmpreg: TRegister;
-      subsetregdef: TOrdDef;
+      TmpReg: TRegister;
+      SubsetRegDef: TOrdDef;
     begin
-      subsetregdef:=cgsize_orddef(def_cgsize(destsubsetsize));
-      tmpreg:=getintregister(list,subsetregdef);
-      a_load_subsetref_reg(list,destsubsetsize,subsetregdef,sref,tmpreg);
-      a_op_reg(list,op,subsetregdef,tmpreg);
-      a_load_reg_subsetref(list,subsetregdef,destsubsetsize,tmpreg,sref);
+      SubsetRegDef:=CGSize_OrdDef(Def_CGSize(DestSubsetSize));
+      TmpReg:=GetIntRegister(List,SubsetRegDef);
+      A_Load_SubsetRef_Reg(List,DestSubsetSize,SubsetRegDef,SRef,TmpReg);
+      A_Op_Reg(List,Op,SubsetRegDef,TmpReg);
+      A_Load_Reg_SubsetRef(List,SubsetRegDef,DestSubsetSize,TmpReg,SRef);
     end;
 
-  procedure THLCGObj.a_op_loc(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation);
+  procedure THLCGObj.A_Op_Loc(List: TAsmList; Op: TOpCG; Size: TDef; const Loc: TLocation);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER, LOC_CREGISTER:
-          a_op_reg(list,op,size,loc.register);
+          A_Op_Reg(List,Op,Size,Loc.Register);
         LOC_REFERENCE, LOC_CREFERENCE:
-          a_op_ref(list,op,size,loc.reference);
+          A_Op_Ref(List,Op,Size,Loc.Reference);
         LOC_SUBSETREG, LOC_CSUBSETREG:
-          a_op_subsetreg(list,op,size,loc.sreg);
+          A_Op_SubsetReg(List,Op,Size,Loc.SReg);
         LOC_SUBSETREF, LOC_CSUBSETREF:
-          a_op_subsetref(list,op,size,loc.sref);
+          A_Op_SubsetRef(List,Op,Size,Loc.SRef);
         else
           InternalError(2020050703);
       end;
     end;
 
-  procedure THLCGObj.a_cmp_const_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; reg: TRegister; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Const_Reg_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; A: TCGInt; Reg: TRegister; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getregisterfordef(list,size);
-      a_load_const_reg(list,size,a,tmpreg);
-      a_cmp_reg_reg_label(list,size,cmp_op,tmpreg,reg,l);
+      TmpReg:=GetRegisterForDef(List,Size);
+      A_Load_Const_Reg(List,Size,A,TmpReg);
+      A_Cmp_Reg_Reg_Label(List,Size,CmpOp,TmpReg,Reg,L);
     end;
 
-  procedure THLCGObj.a_cmp_const_ref_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const ref: TReference; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Const_Ref_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; A: TCGInt; const Ref: TReference; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getregisterfordef(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      a_cmp_const_reg_label(list,size,cmp_op,a,tmpreg,l);
+      TmpReg:=GetRegisterForDef(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      A_Cmp_Const_Reg_Label(List,Size,CmpOp,A,TmpReg,L);
     end;
 
-  procedure THLCGObj.a_cmp_const_loc_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const loc: TLocation; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Const_Loc_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; A: TCGInt; const Loc: TLocation; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER,LOC_CREGISTER:
-          a_cmp_const_reg_label(list,size,cmp_op,a,loc.register,l);
+          A_Cmp_Const_Reg_Label(List,Size,CmpOp,A,Loc.Register,L);
         LOC_REFERENCE,LOC_CREFERENCE:
-          a_cmp_const_ref_label(list,size,cmp_op,a,loc.reference,l);
+          A_Cmp_Const_Ref_Label(List,Size,CmpOp,A,Loc.Reference,L);
         LOC_SUBSETREG, LOC_CSUBSETREG:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_subsetreg_reg(list,size,size,loc.sreg,tmpreg);
-            a_cmp_const_reg_label(list,size,cmp_op,a,tmpreg,l);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_SubsetReg_Reg(List,Size,Size,Loc.SReg,TmpReg);
+            A_Cmp_Const_Reg_Label(List,Size,CmpOp,A,TmpReg,L);
           end;
         LOC_SUBSETREF, LOC_CSUBSETREF:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_subsetref_reg(list,size,size,loc.sref,tmpreg);
-            a_cmp_const_reg_label(list,size,cmp_op,a,tmpreg,l);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_SubsetRef_Reg(List,Size,Size,Loc.SRef,TmpReg);
+            A_Cmp_Const_Reg_Label(List,Size,CmpOp,A,TmpReg,L);
           end;
         else
           InternalError(2010120430);
       end;
     end;
 
-  procedure THLCGObj.a_cmp_ref_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; reg: TRegister; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Ref_Reg_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; const Ref: TReference; Reg: TRegister; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      a_cmp_reg_reg_label(list,size,cmp_op,tmpreg,reg,l);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      A_Cmp_Reg_Reg_Label(List,Size,CmpOp,TmpReg,Reg,L);
     end;
 
-  procedure THLCGObj.a_cmp_reg_ref_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg: TRegister; const ref: TReference; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Reg_Ref_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; Reg: TRegister; const Ref: TReference; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,size);
-      a_load_ref_reg(list,size,size,ref,tmpreg);
-      a_cmp_reg_reg_label(list,size,cmp_op,reg,tmpreg,l);
+      TmpReg:=GetIntRegister(List,Size);
+      A_Load_Ref_Reg(List,Size,Size,Ref,TmpReg);
+      A_Cmp_Reg_Reg_Label(List,Size,CmpOp,Reg,TmpReg,L);
     end;
 
-  procedure THLCGObj.a_cmp_subsetreg_reg_label(list: TAsmList; fromsubsetsize, cmpsize: TDef; cmp_op: TOpCmp; const sreg: TSubsetRegister; reg: TRegister; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_SubsetReg_Reg_Label(List: TAsmList; FromSubsetSize, CmpSize: TDef; CmpOp: TOpCmp; const SReg: TSubsetRegister; Reg: TRegister; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,cmpsize);
-      a_load_subsetreg_reg(list,fromsubsetsize,cmpsize,sreg,tmpreg);
-      a_cmp_reg_reg_label(list,cmpsize,cmp_op,tmpreg,reg,l);
+      TmpReg:=GetIntRegister(List,CmpSize);
+      A_Load_SubsetReg_Reg(List,FromSubsetSize,CmpSize,SReg,TmpReg);
+      A_Cmp_Reg_Reg_Label(List,CmpSize,CmpOp,TmpReg,Reg,L);
     end;
 
-  procedure THLCGObj.a_cmp_subsetref_reg_label(list: TAsmList; fromsubsetsize, cmpsize: TDef; cmp_op: TOpCmp; const sref: TSubsetReference; reg: TRegister; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_SubsetRef_Reg_Label(List: TAsmList; FromSubsetSize, CmpSize: TDef; CmpOp: TOpCmp; const SRef: TSubsetReference; Reg: TRegister; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      tmpreg:=getintregister(list,cmpsize);
-      a_load_subsetref_reg(list,fromsubsetsize,cmpsize,sref,tmpreg);
-      a_cmp_reg_reg_label(list,cmpsize,cmp_op,tmpreg,reg,l);
+      TmpReg:=GetIntRegister(List,CmpSize);
+      A_Load_SubsetRef_Reg(List,FromSubsetSize,CmpSize,SRef,TmpReg);
+      A_Cmp_Reg_Reg_Label(List,CmpSize,CmpOp,TmpReg,Reg,L);
     end;
 
-  procedure THLCGObj.a_cmp_loc_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const loc: TLocation; reg: TRegister; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Loc_Reg_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; const Loc: TLocation; Reg: TRegister; L: TAsmLabel);
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER,
         LOC_CREGISTER:
-          a_cmp_reg_reg_label(list,size,cmp_op,loc.register,reg,l);
+          A_Cmp_Reg_Reg_Label(List,Size,CmpOp,Loc.Register,Reg,L);
         LOC_REFERENCE,
         LOC_CREFERENCE :
-          a_cmp_ref_reg_label(list,size,cmp_op,loc.reference,reg,l);
+          A_Cmp_Ref_Reg_Label(List,Size,CmpOp,Loc.Reference,Reg,L);
         LOC_CONSTANT:
-          a_cmp_const_reg_label(list,size,cmp_op,loc.value,reg,l);
+          A_Cmp_Const_Reg_Label(List,Size,CmpOp,Loc.Value,Reg,L);
         LOC_SUBSETREG,
         LOC_CSUBSETREG:
-          a_cmp_subsetreg_reg_label(list,size,size,cmp_op,loc.sreg,reg,l);
+          A_Cmp_SubsetReg_Reg_Label(List,Size,Size,CmpOp,Loc.SReg,Reg,L);
         LOC_SUBSETREF,
         LOC_CSUBSETREF:
-          a_cmp_subsetref_reg_label(list,size,size,cmp_op,loc.sref,reg,l);
+          A_Cmp_SubsetRef_Reg_Label(List,Size,Size,CmpOp,Loc.SRef,Reg,L);
         else
           InternalError(2010120431);
       end;
     end;
 
-  procedure THLCGObj.a_cmp_reg_loc_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg: TRegister; const loc: TLocation; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Reg_Loc_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; Reg: TRegister; const Loc: TLocation; L: TAsmLabel);
     begin
-      a_cmp_loc_reg_label(list,size,swap_opcmp(cmp_op),loc,reg,l);
+      A_Cmp_Loc_Reg_Label(List,Size,Swap_OpCmp(CmpOp),Loc,Reg,L);
     end;
 
-  procedure THLCGObj.a_cmp_ref_loc_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l: TAsmLabel);
+  procedure THLCGObj.A_Cmp_Ref_Loc_Label(List: TAsmList; Size: TDef; CmpOp: TOpCmp; const Ref: TReference; const Loc: TLocation; L: TAsmLabel);
     var
-      tmpreg: TRegister;
+      TmpReg: TRegister;
     begin
-      case loc.loc of
+      case Loc.Loc of
         LOC_REGISTER,LOC_CREGISTER:
-          a_cmp_ref_reg_label(list,size,cmp_op,ref,loc.register,l);
+          A_Cmp_Ref_Reg_Label(List,Size,CmpOp,Ref,Loc.Register,L);
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_ref_reg(list,size,size,loc.reference,tmpreg);
-            a_cmp_ref_reg_label(list,size,cmp_op,ref,tmpreg,l);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_Ref_Reg(List,Size,Size,Loc.Reference,TmpReg);
+            A_Cmp_Ref_Reg_Label(List,Size,CmpOp,Ref,TmpReg,L);
           end;
         LOC_CONSTANT:
           begin
-            a_cmp_const_ref_label(list,size,swap_opcmp(cmp_op),loc.value,ref,l);
+            A_Cmp_Const_Ref_Label(List,Size,Swap_OpCmp(CmpOp),Loc.Value,Ref,L);
           end;
         LOC_SUBSETREG, LOC_CSUBSETREG:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_ref_reg(list,size,size,loc.reference,tmpreg);
-            a_cmp_subsetreg_reg_label(list,size,size,swap_opcmp(cmp_op),loc.sreg,tmpreg,l);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_Ref_Reg(List,Size,Size,Loc.Reference,TmpReg);
+            A_Cmp_SubsetReg_Reg_Label(List,Size,Size,Swap_OpCmp(CmpOp),Loc.SReg,TmpReg,L);
           end;
         LOC_SUBSETREF, LOC_CSUBSETREF:
           begin
-            tmpreg:=getintregister(list,size);
-            a_load_ref_reg(list,size,size,loc.reference,tmpreg);
-            a_cmp_subsetref_reg_label(list,size,size,swap_opcmp(cmp_op),loc.sref,tmpreg,l);
+            TmpReg:=GetIntRegister(List,Size);
+            A_Load_Ref_Reg(List,Size,Size,Loc.Reference,TmpReg);
+            A_Cmp_SubsetRef_Reg_Label(List,Size,Size,Swap_OpCmp(CmpOp),Loc.SRef,TmpReg,L);
           end;
         else
           InternalError(2010120432);
@@ -3530,588 +3530,588 @@ implementation
     end;
 
 
-  procedure THLCGObj.a_jmp_always_pascal_goto(list : TAsmList;l: TAsmLabel);
+  procedure THLCGObj.A_Jmp_Always_Pascal_Goto(List : TAsmList;L: TAsmLabel);
     begin
-      a_jmp_always(list,l);
+      A_Jmp_Always(List,L);
     end;
 
-  procedure THLCGObj.optimize_op_const(size: TDef; var op: TOpCG; var a: TCGInt);
+  procedure THLCGObj.Optimize_Op_Const(Size: TDef; var Op: TOpCG; var A: TCGInt);
     var
-      powerval : LongInt;
-      signext_a, zeroext_a: TCGInt;
-      cgsize: TCgSize;
+      PowerVal : LongInt;
+      SignExtA, ZeroExtA: TCGInt;
+      CGSize: TCgSize;
     begin
-      cgsize:=def_cgsize(size);
-      case cgsize of
+      CGSize:=Def_CGSize(Size);
+      case CGSize of
         OS_64,OS_S64:
           begin
-            signext_a:=int64(a);
-            zeroext_a:=int64(a);
+            SignExtA:=Int64(A);
+            ZeroExtA:=Int64(A);
           end;
         OS_32,OS_S32:
           begin
-            signext_a:=LongInt(a);
-            zeroext_a:=dword(a);
+            SignExtA:=LongInt(A);
+            ZeroExtA:=DWord(A);
           end;
         OS_16,OS_S16:
           begin
-            signext_a:=smallint(a);
-            zeroext_a:=word(a);
+            SignExtA:=SmallInt(A);
+            ZeroExtA:=Word(A);
           end;
         OS_8,OS_S8:
           begin
-            signext_a:=shortint(a);
-            zeroext_a:=byte(a);
+            SignExtA:=ShortInt(A);
+            ZeroExtA:=Byte(A);
           end
         else
           begin
             { Should we internalerror() here instead? }
-            signext_a:=a;
-            zeroext_a:=a;
+            SignExtA:=A;
+            ZeroExtA:=A;
           end;
       end;
-      case op of
+      case Op of
         OP_OR :
           begin
             { or with zero returns same result }
-            if a = 0 then
-              op:=OP_NONE
+            if A = 0 then
+              Op:=OP_NONE
             else
             { or with max returns max }
-              if signext_a = -1 then
-                op:=OP_MOVE;
+              if SignExtA = -1 then
+                Op:=OP_MOVE;
           end;
         OP_AND :
           begin
             { and with max returns same result }
-            if (signext_a = -1) then
-              op:=OP_NONE
+            if (SignExtA = -1) then
+              Op:=OP_NONE
             else
             { and with 0 returns 0 }
-              if a=0 then
-                op:=OP_MOVE;
+              if A=0 then
+                Op:=OP_MOVE;
           end;
         OP_XOR :
           begin
             { xor with zero returns same result }
-            if a = 0 then
-              op:=OP_NONE;
+            if A = 0 then
+              Op:=OP_NONE;
           end;
         OP_DIV :
           begin
             { division by 1 returns result }
-            if a = 1 then
-              op:=OP_NONE
-            else if IsPowerOf2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.LocalSwitches) then
+            if A = 1 then
+              Op:=OP_NONE
+            else if IsPowerOf2(Int64(ZeroExtA), PowerVal) and not(cs_check_overflow in CurrentSettings.LocalSwitches) then
               begin
-                a := powerval;
-                op:= OP_SHR;
+                A := PowerVal;
+                Op:= OP_SHR;
               end;
           end;
         OP_IDIV:
           begin
-            if a = 1 then
-              op:=OP_NONE;
+            if A = 1 then
+              Op:=OP_NONE;
           end;
        OP_MUL,OP_IMUL:
           begin
-             if a = 1 then
-               op:=OP_NONE
+             if A = 1 then
+               Op:=OP_NONE
              else
-               if a=0 then
-                 op:=OP_MOVE
-             else if IsPowerOf2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.LocalSwitches)  then
+               if A=0 then
+                 Op:=OP_MOVE
+             else if IsPowerOf2(Int64(ZeroExtA), PowerVal) and not(cs_check_overflow in CurrentSettings.LocalSwitches)  then
                begin
-                 a := powerval;
-                 op:= OP_SHL;
+                 A := PowerVal;
+                 Op:= OP_SHL;
                end;
           end;
       OP_ADD,OP_SUB:
           begin
-             if a = 0 then
-               op:=OP_NONE;
+             if A = 0 then
+               Op:=OP_NONE;
           end;
       OP_SAR,OP_SHL,OP_SHR:
          begin
-           if a = 0 then
-             op:=OP_NONE;
+           if A = 0 then
+             Op:=OP_NONE;
          end;
       OP_ROL,OP_ROR:
         begin
-          case cgsize of
+          case CGSize of
             OS_64,OS_S64:
-              a:=a and 63;
+              A:=A and 63;
             OS_32,OS_S32:
-              a:=a and 31;
+              A:=A and 31;
             OS_16,OS_S16:
-              a:=a and 15;
+              A:=A and 15;
             OS_8,OS_S8:
-              a:=a and 7;
+              A:=A and 7;
             else
               InternalError(2019050521);
           end;
-          if a = 0 then
-            op:=OP_NONE;
+          if A = 0 then
+            Op:=OP_NONE;
         end;
       else
         ;
       end;
     end;
 
-  procedure THLCGObj.g_exception_reason_save(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const href: TReference);
+  procedure THLCGObj.G_Exception_Reason_Save(List: TAsmList; FromSize, ToSize: TDef; Reg: TRegister; const HRef: TReference);
     begin
-      a_load_reg_ref(list,fromsize,tosize,reg,href);
+      A_Load_Reg_Ref(List,FromSize,ToSize,Reg,HRef);
     end;
 
-  procedure THLCGObj.g_exception_reason_save_const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference);
+  procedure THLCGObj.G_Exception_Reason_Save_Const(List: TAsmList; Size: TDef; A: TCGInt; const HRef: TReference);
     begin
-      a_load_const_ref(list,size,a,href);
-    end;
-
-
-  procedure THLCGObj.g_exception_reason_load(list: TAsmList; fromsize, tosize: TDef; const href: TReference; reg: TRegister);
-    begin
-      a_load_ref_reg(list,fromsize,tosize,href,reg);
+      A_Load_Const_Ref(List,Size,A,HRef);
     end;
 
 
-  procedure THLCGObj.g_exception_reason_discard(list: TAsmList; size: TDef; href: TReference);
+  procedure THLCGObj.G_Exception_Reason_Load(List: TAsmList; FromSize, ToSize: TDef; const HRef: TReference; Reg: TRegister);
     begin
-      { do nothing by default }
+      A_Load_Ref_Reg(List,FromSize,ToSize,HRef,Reg);
     end;
 
 
-  procedure THLCGObj.g_maybe_checkforexceptions(list : TAsmList);
+  procedure THLCGObj.G_Exception_Reason_Discard(List: TAsmList; Size: TDef; HRef: TReference);
     begin
       { do nothing by default }
     end;
 
 
-  procedure THLCGObj.g_unreachable(list: TAsmList);
+  procedure THLCGObj.G_Maybe_CheckForExceptions(List : TAsmList);
+    begin
+      { do nothing by default }
+    end;
+
+
+  procedure THLCGObj.G_Unreachable(List: TAsmList);
     begin
       { nothing }
     end;
 
 
-  procedure THLCGObj.g_maybe_testself(list: TAsmList; selftype: TDef; reg: TRegister);
+  procedure THLCGObj.G_Maybe_TestSelf(List: TAsmList; SelfType: TDef; Reg: TRegister);
     var
-      OKLabel : TAsmLabel;
-      cgpara1 : TCGPara;
-      pd      : TProcDef;
+      OkLabel : TAsmLabel;
+      CGPara1 : TCGPara;
+      PD      : TProcDef;
     begin
       if (cs_check_object in CurrentSettings.LocalSwitches) or
          (cs_check_range in CurrentSettings.LocalSwitches) then
        begin
-         pd:=Search_System_Proc('fpc_handleerror');
-         CurrentAsmData.getjumplabel(oklabel);
-         a_cmp_const_reg_label(list,selftype,OC_NE,0,reg,oklabel);
-         cgpara1.init;
-         paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-         a_load_const_cgpara(list,S32IntType,aint(210),cgpara1);
-         paramanager.freecgpara(list,cgpara1);
-         g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
-         cgpara1.done;
-         a_label(list,oklabel);
+         PD:=Search_System_Proc('fpc_handleerror');
+         CurrentAsmData.GetJumpLabel(OkLabel);
+         A_Cmp_Const_Reg_Label(List,SelfType,OC_NE,0,Reg,OkLabel);
+         CGPara1.Init;
+         ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+         A_Load_Const_CGPara(List,S32IntType,AInt(210),CGPara1);
+         ParaManager.FreeCGPara(List,CGPara1);
+         G_Call_System_Proc(List,PD,[@CGPara1],nil).ResetIfTemp;
+         CGPara1.Done;
+         A_Label(List,OkLabel);
        end;
     end;
 
-  procedure THLCGObj.g_concatcopy(list: TAsmList; size: TDef; const source, dest: TReference);
+  procedure THLCGObj.G_ConcatCopy(List: TAsmList; Size: TDef; const Source, Dest: TReference);
     begin
-      if Use_VectorFPU(size) then
-        a_loadmm_ref_ref(list,size,size,source,dest,mms_movescalar)
-      else if size.typ<>floatdef then
-        a_load_ref_ref(list,size,size,source,dest)
+      if Use_VectorFPU(Size) then
+        A_LoadMM_Ref_Ref(List,Size,Size,Source,Dest,MMS_MoveScalar)
+      else if Size.Typ<>FloatDef then
+        A_Load_Ref_Ref(List,Size,Size,Source,Dest)
       else
-        a_loadfpu_ref_ref(list,size,size,source,dest);
+        A_LoadFPU_Ref_Ref(List,Size,Size,Source,Dest);
     end;
 
-  procedure THLCGObj.g_concatcopy_unaligned(list: TAsmList; size: TDef; const source, dest: TReference);
+  procedure THLCGObj.G_ConcatCopy_Unaligned(List: TAsmList; Size: TDef; const Source, Dest: TReference);
     begin
-      g_concatcopy(list,size,source,dest);
+      G_ConcatCopy(List,Size,Source,Dest);
     end;
 
-  procedure THLCGObj.g_copyshortstring(list: TAsmList; const source, dest: TReference; strdef: TStringDef);
+  procedure THLCGObj.G_CopyShortString(List: TAsmList; const Source, Dest: TReference; StrDef: TStringDef);
     var
-      cgpara1,cgpara2,cgpara3 : TCGPara;
-      pd : TProcDef;
+      CGPara1,CGPara2,CGPara3 : TCGPara;
+      PD : TProcDef;
     begin
-      pd:=Search_System_Proc('fpc_shortstr_to_shortstr');
-      cgpara1.init;
-      cgpara2.init;
-      cgpara3.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-      paramanager.getcgtempparaloc(list,pd,3,cgpara3);
-      if pd.Is_PushLeftRight then
+      PD:=Search_System_Proc('fpc_shortstr_to_shortstr');
+      CGPara1.Init;
+      CGPara2.Init;
+      CGPara3.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+      ParaManager.GetCGTempParaLoc(List,PD,3,CGPara3);
+      if PD.Is_PushLeftRight then
         begin
-          a_loadaddr_ref_cgpara(list,strdef,dest,cgpara1);
-          a_load_const_cgpara(list,S32IntType,strdef.len,cgpara2);
-          a_loadaddr_ref_cgpara(list,strdef,source,cgpara3);
+          A_LoadAddr_Ref_CGPara(List,StrDef,Dest,CGPara1);
+          A_Load_Const_CGPara(List,S32IntType,StrDef.Len,CGPara2);
+          A_LoadAddr_Ref_CGPara(List,StrDef,Source,CGPara3);
         end
       else
         begin
-          a_loadaddr_ref_cgpara(list,strdef,source,cgpara3);
-          a_load_const_cgpara(list,S32IntType,strdef.len,cgpara2);
-          a_loadaddr_ref_cgpara(list,strdef,dest,cgpara1);
+          A_LoadAddr_Ref_CGPara(List,StrDef,Source,CGPara3);
+          A_Load_Const_CGPara(List,S32IntType,StrDef.Len,CGPara2);
+          A_LoadAddr_Ref_CGPara(List,StrDef,Dest,CGPara1);
         end;
-      paramanager.freecgpara(list,cgpara3);
-      paramanager.freecgpara(list,cgpara2);
-      paramanager.freecgpara(list,cgpara1);
-      g_call_system_proc(list,pd,[@cgpara1,@cgpara2,@cgpara3],nil).resetiftemp;
-      cgpara3.done;
-      cgpara2.done;
-      cgpara1.done;
+      ParaManager.FreeCGPara(List,CGPara3);
+      ParaManager.FreeCGPara(List,CGPara2);
+      ParaManager.FreeCGPara(List,CGPara1);
+      G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2,@CGPara3],nil).ResetIfTemp;
+      CGPara3.Done;
+      CGPara2.Done;
+      CGPara1.Done;
     end;
 
-  procedure THLCGObj.g_copyvariant(list: TAsmList; const source, dest: TReference; vardef: TVariantDef);
+  procedure THLCGObj.G_CopyVariant(List: TAsmList; const Source, Dest: TReference; VarDef: TVariantDef);
     var
-      cgpara1,cgpara2 : TCGPara;
-      pd : TProcDef;
+      CGPara1,CGPara2 : TCGPara;
+      PD : TProcDef;
     begin
-      pd:=Search_System_Proc('fpc_variant_copy_overwrite');
-      cgpara1.init;
-      cgpara2.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-      if pd.Is_PushLeftRight then
+      PD:=Search_System_Proc('fpc_variant_copy_overwrite');
+      CGPara1.Init;
+      CGPara2.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+      if PD.Is_PushLeftRight then
         begin
-          a_loadaddr_ref_cgpara(list,vardef,source,cgpara1);
-          a_loadaddr_ref_cgpara(list,vardef,dest,cgpara2);
+          A_LoadAddr_Ref_CGPara(List,VarDef,Source,CGPara1);
+          A_LoadAddr_Ref_CGPara(List,VarDef,Dest,CGPara2);
         end
       else
         begin
-          a_loadaddr_ref_cgpara(list,vardef,dest,cgpara2);
-          a_loadaddr_ref_cgpara(list,vardef,source,cgpara1);
+          A_LoadAddr_Ref_CGPara(List,VarDef,Dest,CGPara2);
+          A_LoadAddr_Ref_CGPara(List,VarDef,Source,CGPara1);
         end;
-      paramanager.freecgpara(list,cgpara2);
-      paramanager.freecgpara(list,cgpara1);
-      g_call_system_proc(list,pd,[@cgpara1,@cgpara2],nil).resetiftemp;
-      cgpara2.done;
-      cgpara1.done;
+      ParaManager.FreeCGPara(List,CGPara2);
+      ParaManager.FreeCGPara(List,CGPara1);
+      G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2],nil).ResetIfTemp;
+      CGPara2.Done;
+      CGPara1.Done;
     end;
 
-  procedure THLCGObj.g_incrrefcount(list: TAsmList; t: TDef; const ref: TReference);
+  procedure THLCGObj.G_IncrRefCount(List: TAsmList; T: TDef; const Ref: TReference);
     var
-      href : TReference;
-      incrfunc : string;
-      cgpara1,cgpara2 : TCGPara;
-      pd : TProcDef;
+      HRef : TReference;
+      IncrFunc : string;
+      CGPara1,CGPara2 : TCGPara;
+      PD : TProcDef;
     begin
-       cgpara1.init;
-       cgpara2.init;
-       if Is_InterfaceCOM_Or_DispInterface(t) then
-         incrfunc:='fpc_intf_incr_ref'
-       else if is_ansistring(t) then
-         incrfunc:='fpc_ansistr_incr_ref'
-       else if is_widestring(t) then
-         incrfunc:='fpc_widestr_incr_ref'
-       else if is_unicodestring(t) then
-         incrfunc:='fpc_unicodestr_incr_ref'
-       else if is_dynamic_array(t) then
-         incrfunc:='fpc_dynarray_incr_ref'
+       CGPara1.Init;
+       CGPara2.Init;
+       if Is_InterfaceCOM_Or_DispInterface(T) then
+         IncrFunc:='fpc_intf_incr_ref'
+       else if Is_AnsiString(T) then
+         IncrFunc:='fpc_ansistr_incr_ref'
+       else if Is_WideString(T) then
+         IncrFunc:='fpc_widestr_incr_ref'
+       else if Is_UnicodeString(T) then
+         IncrFunc:='fpc_unicodestr_incr_ref'
+       else if Is_Dynamic_Array(T) then
+         IncrFunc:='fpc_dynarray_incr_ref'
        else
-        incrfunc:='';
+        IncrFunc:='';
        { call the special incr function or the generic addref }
-       if incrfunc<>'' then
+       if IncrFunc<>'' then
         begin
-          pd:=Search_System_Proc(incrfunc);
-          paramanager.getcgtempparaloc(list,pd,1,cgpara1);
+          PD:=Search_System_Proc(IncrFunc);
+          ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
           { widestrings aren't ref. counted on all platforms so we need the address
             to create a real copy }
-          if is_widestring(t) then
-            a_loadaddr_ref_cgpara(list,t,ref,cgpara1)
+          if Is_WideString(T) then
+            A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1)
           else
             { these functions get the pointer by value }
-            a_load_ref_cgpara(list,t,ref,cgpara1);
-          paramanager.freecgpara(list,cgpara1);
-          g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
+            A_Load_Ref_CGPara(List,T,Ref,CGPara1);
+          ParaManager.FreeCGPara(List,CGPara1);
+          G_Call_System_Proc(List,PD,[@CGPara1],nil).ResetIfTemp;
         end
        else
         begin
-          pd:=Search_System_Proc('fpc_addref');
-          paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-          paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-          if is_open_array(t) then
+          PD:=Search_System_Proc('fpc_addref');
+          ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+          ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+          if Is_Open_Array(T) then
             InternalError(201103054);
-          reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-          if pd.Is_PushLeftRight then
+          Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+          if PD.Is_PushLeftRight then
             begin
-              a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
+              A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+              A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
             end
           else
             begin
-              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
-              a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
+              A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
+              A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
             end;
-          paramanager.freecgpara(list,cgpara1);
-          paramanager.freecgpara(list,cgpara2);
-          g_call_system_proc(list,pd,[@cgpara1,@cgpara2],nil).resetiftemp;
+          ParaManager.FreeCGPara(List,CGPara1);
+          ParaManager.FreeCGPara(List,CGPara2);
+          G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2],nil).ResetIfTemp;
         end;
-       cgpara2.done;
-       cgpara1.done;
+       CGPara2.Done;
+       CGPara1.Done;
     end;
 
-  procedure THLCGObj.g_initialize(list: TAsmList; t: TDef; const ref: TReference);
+  procedure THLCGObj.G_Initialize(List: TAsmList; T: TDef; const Ref: TReference);
     var
-       href : TReference;
-       cgpara1,cgpara2 : TCGPara;
-       pd : TProcDef;
+       HRef : TReference;
+       CGPara1,CGPara2 : TCGPara;
+       PD : TProcDef;
     begin
-       cgpara1.init;
-       cgpara2.init;
-       if is_ansistring(t) or
-          is_widestring(t) or
-          is_unicodestring(t) or
-          Is_InterfaceCOM_Or_DispInterface(t) or
-          is_dynamic_array(t) then
-         a_load_const_ref(list,t,0,ref)
-       else if t.typ=variantdef then
+       CGPara1.Init;
+       CGPara2.Init;
+       if Is_AnsiString(T) or
+          Is_WideString(T) or
+          Is_UnicodeString(T) or
+          Is_InterfaceCOM_Or_DispInterface(T) or
+          Is_Dynamic_Array(T) then
+         A_Load_Const_Ref(List,T,0,Ref)
+       else if T.Typ=VariantDef then
          begin
-           pd:=Search_System_Proc('fpc_variant_init');
-           paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-           a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-           paramanager.freecgpara(list,cgpara1);
-          g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
+           PD:=Search_System_Proc('fpc_variant_init');
+           ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+           A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+           ParaManager.FreeCGPara(List,CGPara1);
+          G_Call_System_Proc(List,PD,[@CGPara1],nil).ResetIfTemp;
          end
        else
          begin
-            if is_open_array(t) then
+            if Is_Open_Array(T) then
               InternalError(201103052);
-            pd:=Search_System_Proc('fpc_initialize');
-            paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-            paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-            reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-            if pd.Is_PushLeftRight then
+            PD:=Search_System_Proc('fpc_initialize');
+            ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+            ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+            Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+            if PD.Is_PushLeftRight then
               begin
-                a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-                a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
+                A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+                A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
               end
             else
               begin
-                a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
-                a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
+                A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
+                A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
               end;
-            paramanager.freecgpara(list,cgpara1);
-            paramanager.freecgpara(list,cgpara2);
-            g_call_system_proc(list,pd,[@cgpara1,@cgpara2],nil).resetiftemp;
+            ParaManager.FreeCGPara(List,CGPara1);
+            ParaManager.FreeCGPara(List,CGPara2);
+            G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2],nil).ResetIfTemp;
          end;
-       cgpara1.done;
-       cgpara2.done;
+       CGPara1.Done;
+       CGPara2.Done;
     end;
 
-  procedure THLCGObj.g_finalize(list: TAsmList; t: TDef; const ref: TReference);
+  procedure THLCGObj.G_Finalize(List: TAsmList; T: TDef; const Ref: TReference);
     var
-       href : TReference;
-       cgpara1,cgpara2 : TCGPara;
-       pd : TProcDef;
-       decrfunc : string;
+       HRef : TReference;
+       CGPara1,CGPara2 : TCGPara;
+       PD : TProcDef;
+       DecrFunc : string;
     begin
-      if Is_InterfaceCOM_Or_DispInterface(t) then
-        decrfunc:='fpc_intf_decr_ref'
-      else if is_ansistring(t) then
-        decrfunc:='fpc_ansistr_decr_ref'
-      else if is_widestring(t) then
-        decrfunc:='fpc_widestr_decr_ref'
-      else if is_unicodestring(t) then
-        decrfunc:='fpc_unicodestr_decr_ref'
-      else if t.typ=variantdef then
-        decrfunc:='fpc_variant_clear'
+      if Is_InterfaceCOM_Or_DispInterface(T) then
+        DecrFunc:='fpc_intf_decr_ref'
+      else if Is_AnsiString(T) then
+        DecrFunc:='fpc_ansistr_decr_ref'
+      else if Is_WideString(T) then
+        DecrFunc:='fpc_widestr_decr_ref'
+      else if Is_UnicodeString(T) then
+        DecrFunc:='fpc_unicodestr_decr_ref'
+      else if T.Typ=VariantDef then
+        DecrFunc:='fpc_variant_clear'
       else
         begin
-          cgpara1.init;
-          cgpara2.init;
-          if is_open_array(t) then
+          CGPara1.Init;
+          CGPara2.Init;
+          if Is_Open_Array(T) then
             InternalError(201103051);
           { fpc_finalize takes a pointer value parameter, fpc_dynarray_clear a
             pointer var parameter }
-          if is_dynamic_array(t) then
-            pd:=Search_System_Proc('fpc_dynarray_clear')
+          if Is_Dynamic_Array(T) then
+            PD:=Search_System_Proc('fpc_dynarray_clear')
           else
-            pd:=Search_System_Proc('fpc_finalize');
-          paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-          paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-          reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-          if pd.Is_PushLeftRight then
+            PD:=Search_System_Proc('fpc_finalize');
+          ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+          ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+          Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+          if PD.Is_PushLeftRight then
             begin
-              a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
+              A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+              A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
             end
           else
             begin
-              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
-              a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
+              A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
+              A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
             end;
-          paramanager.freecgpara(list,cgpara1);
-          paramanager.freecgpara(list,cgpara2);
-          g_call_system_proc(list,pd,[@cgpara1,@cgpara2],nil).resetiftemp;
-          cgpara1.done;
-          cgpara2.done;
-          exit;
+          ParaManager.FreeCGPara(List,CGPara1);
+          ParaManager.FreeCGPara(List,CGPara2);
+          G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2],nil).ResetIfTemp;
+          CGPara1.Done;
+          CGPara2.Done;
+          Exit;
         end;
-      pd:=Search_System_Proc(decrfunc);
-      cgpara1.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-      paramanager.freecgpara(list,cgpara1);
-      g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
-      cgpara1.done;
+      PD:=Search_System_Proc(DecrFunc);
+      CGPara1.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+      ParaManager.FreeCGPara(List,CGPara1);
+      G_Call_System_Proc(List,PD,[@CGPara1],nil).ResetIfTemp;
+      CGPara1.Done;
     end;
 
-  procedure THLCGObj.g_array_rtti_helper(list: TAsmList; t: TDef; const ref: TReference; const highloc: TLocation; const name: string);
+  procedure THLCGObj.G_Array_RTTI_Helper(List: TAsmList; T: TDef; const Ref: TReference; const HighLoc: TLocation; const Name: string);
     var
-      cgpara1,cgpara2,cgpara3: TCGPara;
-      href: TReference;
-      hreg, lenreg: TRegister;
-      pd: TProcDef;
+      CGPara1,CGPara2,CGPara3: TCGPara;
+      HRef: TReference;
+      HReg, LenReg: TRegister;
+      PD: TProcDef;
     begin
-      cgpara1.init;
-      cgpara2.init;
-      cgpara3.init;
-      pd:=Search_System_Proc(name);
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-      paramanager.getcgtempparaloc(list,pd,3,cgpara3);
+      CGPara1.Init;
+      CGPara2.Init;
+      CGPara3.Init;
+      PD:=Search_System_Proc(Name);
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+      ParaManager.GetCGTempParaLoc(List,PD,3,CGPara3);
 
-      reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
+      Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
       { if calling convention is left to right, push parameters 1 and 2 }
-      if pd.Is_PushLeftRight then
+      if PD.Is_PushLeftRight then
         begin
-          a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-          a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
+          A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
+          A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
         end;
 
       { push parameter 3 }
-      if highloc.loc=LOC_CONSTANT then
-        a_load_const_cgpara(list,SizeSIntType,highloc.value+1,cgpara3)
+      if HighLoc.Loc=LOC_CONSTANT then
+        A_Load_Const_CGPara(List,SizeSIntType,HighLoc.Value+1,CGPara3)
       else
         begin
-          if highloc.loc in [LOC_REGISTER,LOC_CREGISTER] then
-            hreg:=highloc.register
+          if HighLoc.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+            HReg:=HighLoc.Register
           else
             begin
-              hreg:=getintregister(list,SizeSIntType);
-              a_load_loc_reg(list,SizeSIntType,SizeSIntType,highloc,hreg);
+              HReg:=GetIntRegister(List,SizeSIntType);
+              A_Load_Loc_Reg(List,SizeSIntType,SizeSIntType,HighLoc,HReg);
             end;
           { increment, converts high(x) to length(x) }
-          lenreg:=getintregister(list,SizeSIntType);
-          a_op_const_reg_reg(list,OP_ADD,SizeSIntType,1,hreg,lenreg);
-          a_load_reg_cgpara(list,SizeSIntType,lenreg,cgpara3);
+          LenReg:=GetIntRegister(List,SizeSIntType);
+          A_Op_Const_Reg_Reg(List,OP_ADD,SizeSIntType,1,HReg,LenReg);
+          A_Load_Reg_CGPara(List,SizeSIntType,LenReg,CGPara3);
         end;
 
       { if calling convention is right to left, push parameters 2 and 1 }
-      if not pd.Is_PushLeftRight then
+      if not PD.Is_PushLeftRight then
         begin
-          a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
-          a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
+          A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,CGPara2);
+          A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
         end;
-      paramanager.freecgpara(list,cgpara1);
-      paramanager.freecgpara(list,cgpara2);
-      paramanager.freecgpara(list,cgpara3);
-      g_call_system_proc(list,pd,[@cgpara1,@cgpara2,@cgpara3],nil).resetiftemp;
+      ParaManager.FreeCGPara(List,CGPara1);
+      ParaManager.FreeCGPara(List,CGPara2);
+      ParaManager.FreeCGPara(List,CGPara3);
+      G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2,@CGPara3],nil).ResetIfTemp;
 
-      cgpara3.done;
-      cgpara2.done;
-      cgpara1.done;
+      CGPara3.Done;
+      CGPara2.Done;
+      CGPara1.Done;
     end;
 
-  function THLCGObj.def_needs_indirect(t:TDef):boolean;
+  function THLCGObj.Def_Needs_Indirect(T:TDef):Boolean;
     begin
-      result:=(tf_supports_packages in TargetInfo.flags) and
-                (TargetInfo.system in systems_indirect_var_imports) and
-                (FindUnitSymTable(t.owner).ModuleID<>CurrentModule.ModuleID);
+      Result:=(tf_supports_packages in TargetInfo.Flags) and
+                (TargetInfo.System in systems_indirect_var_imports) and
+                (FindUnitSymTable(T.Owner).ModuleID<>CurrentModule.ModuleID);
     end;
 
-  procedure THLCGObj.g_rangecheck(list: TAsmList; const l: TLocation; fromdef, todef: TDef);
+  procedure THLCGObj.G_RangeCheck(List: TAsmList; const L: TLocation; FromDef, ToDef: TDef);
     var
 {$if defined(cpuhighleveltarget)}
-      aintmax: TCGInt;
+      AIntMax: TCGInt;
 {$elseif defined(cpu64bitalu) or defined(cpu32bitalu)}
-      aintmax: aint;
+      AIntMax: AInt;
 {$else}
-      aintmax: LongInt;
+      AIntMax: LongInt;
 {$endif}
-      neglabel : TAsmLabel;
-      hreg : TRegister;
-      lto,hto,
-      lfrom,hfrom : TConstExprInt;
-      fromsize, tosize: cardinal;
-      maxdef: TDef;
-      from_signed, to_signed: boolean;
+      NegLabel : TAsmLabel;
+      HReg : TRegister;
+      LTo,HTo,
+      LFrom,HFrom : TConstExprInt;
+      FromSize, ToSize: Cardinal;
+      MaxDef: TDef;
+      FromSigned, ToSigned: Boolean;
     begin
       { range checking on and range checkable value? }
       if not(cs_check_range in CurrentSettings.LocalSwitches) or
-         not(fromdef.typ in [orddef,enumdef]) or
+         not(FromDef.Typ in [OrdDef,EnumDef]) or
          { C-style booleans can't really fail range checks, }
          { all values are always valid                      }
-         is_cbool(todef) then
-        exit;
+         Is_CBool(ToDef) then
+        Exit;
 {$if not defined(cpuhighleveltarget) and not defined(cpu64bitalu)}
         { handle 64bit rangechecks separate for 32bit processors }
-        if is_64bit(fromdef) or is_64bit(todef) then
+        if Is_64Bit(FromDef) or Is_64Bit(ToDef) then
           begin
-             cg64.g_rangecheck64(list,l,fromdef,todef);
-             exit;
+             CG64.G_RangeCheck64(List,L,FromDef,ToDef);
+             Exit;
           end;
 {$endif ndef cpuhighleveltarget and ndef cpu64bitalu}
       { only check when assigning to scalar, subranges are different, }
       { when todef=fromdef then the check is always generated         }
-      getrange(fromdef,lfrom,hfrom);
-      getrange(todef,lto,hto);
-      from_signed := is_signed(fromdef);
-      to_signed := is_signed(todef);
+      GetRange(FromDef,LFrom,HFrom);
+      GetRange(ToDef,LTo,HTo);
+      FromSigned := Is_Signed(FromDef);
+      ToSigned := Is_Signed(ToDef);
       { check the rangedef of the array, not the array itself }
       { (only change now, since getrange needs the arraydef)   }
-      if (todef.typ = arraydef) then
-        todef := TArrayDef(todef).RangeDef;
+      if (ToDef.Typ = ArrayDef) then
+        ToDef := TArrayDef(ToDef).RangeDef;
       { no range check if from and to are equal and are both longint/dword }
       { (if we have a 32bit processor) or int64/qword, since such          }
       { operations can at most cause overflows (JM)                        }
       { Note that these checks are mostly processor independent, they only }
       { have to be changed once we introduce 64bit subrange types          }
 {$if defined(cpuhighleveltarget) or defined(cpu64bitalu)}
-      if (fromdef=todef) and
-         (fromdef.typ=orddef) and
-         (((((TOrdDef(fromdef).OrdType=s64bit) and
-             (lfrom = low(int64)) and
-             (hfrom = high(int64))) or
-            ((TOrdDef(fromdef).OrdType=u64bit) and
-             (lfrom = low(qword)) and
-             (hfrom = high(qword))) or
-            ((TOrdDef(fromdef).OrdType=scurrency) and
-             (lfrom = low(int64)) and
-             (hfrom = high(int64)))))) then
-        exit;
+      if (FromDef=ToDef) and
+         (FromDef.Typ=OrdDef) and
+         (((((TOrdDef(FromDef).OrdType=S64Bit) and
+             (LFrom = Low(Int64)) and
+             (HFrom = High(Int64))) or
+            ((TOrdDef(FromDef).OrdType=U64Bit) and
+             (LFrom = Low(QWord)) and
+             (HFrom = High(QWord))) or
+            ((TOrdDef(FromDef).OrdType=SCurrency) and
+             (LFrom = Low(Int64)) and
+             (HFrom = High(Int64)))))) then
+        Exit;
 {$endif cpuhighleveltarget or cpu64bitalu}
       { 32 bit operations are automatically widened to 64 bit on 64 bit addr
         targets }
 {$ifdef cpu32bitaddr}
-      if (fromdef = todef) and
-         (fromdef.typ=orddef) and
-         (((((TOrdDef(fromdef).OrdType = s32bit) and
-             (lfrom = int64(low(LongInt))) and
-             (hfrom = int64(high(LongInt)))) or
-            ((TOrdDef(fromdef).OrdType = u32bit) and
-             (lfrom = low(cardinal)) and
-             (hfrom = high(cardinal)))))) then
-        exit;
+      if (FromDef = ToDef) and
+         (FromDef.Typ=OrdDef) and
+         (((((TOrdDef(FromDef).OrdType = S32Bit) and
+             (LFrom = Int64(Low(LongInt))) and
+             (HFrom = Int64(High(LongInt)))) or
+            ((TOrdDef(FromDef).OrdType = U32Bit) and
+             (LFrom = Low(Cardinal)) and
+             (HFrom = High(Cardinal)))))) then
+        Exit;
 {$endif cpu32bitaddr}
 
       { optimize some range checks away in safe cases }
-      fromsize := fromdef.size;
-      tosize := todef.size;
-      if ((from_signed = to_signed) or
-          (not from_signed)) and
-         (lto<=lfrom) and (hto>=hfrom) and
-         (fromsize <= tosize) then
+      FromSize := FromDef.Size;
+      ToSize := ToDef.Size;
+      if ((FromSigned = ToSigned) or
+          (not FromSigned)) and
+         (LTo<=LFrom) and (HTo>=HFrom) and
+         (FromSize <= ToSize) then
         begin
           { if fromsize < tosize, and both have the same signed-ness or }
           { fromdef is unsigned, then all bit patterns from fromdef are }
           { valid for todef as well                                     }
-          if (fromsize < tosize) then
-            exit;
-          if (fromsize = tosize) and
-             (from_signed = to_signed) then
+          if (FromSize < ToSize) then
+            Exit;
+          if (FromSize = ToSize) and
+             (FromSigned = ToSigned) then
             { only optimize away if all bit patterns which fit in fromsize }
             { are valid for the todef                                      }
             begin
@@ -4123,23 +4123,23 @@ implementation
 {$define rangeon}
 {$R-}
 {$endif}
-              if to_signed then
+              if ToSigned then
                 begin
                   { calculation of the low/high ranges must not overflow 64 bit
                    otherwise we end up comparing with zero for 64 bit data types on
                    64 bit processors }
-                  if (lto = (int64(-1) << (tosize * 8 - 1))) and
-                     (hto = (-((int64(-1) << (tosize * 8 - 1))+1))) then
-                    exit
+                  if (LTo = (Int64(-1) << (ToSize * 8 - 1))) and
+                     (HTo = (-((Int64(-1) << (ToSize * 8 - 1))+1))) then
+                    Exit
                 end
               else
                 begin
                   { calculation of the low/high ranges must not overflow 64 bit
                    otherwise we end up having all zeros for 64 bit data types on
                    64 bit processors }
-                  if (lto = 0) and
-                     (qword(hto) = (qword(-1) >> (64-(tosize * 8))) ) then
-                    exit
+                  if (LTo = 0) and
+                     (QWord(HTo) = (QWord(-1) >> (64-(ToSize * 8))) ) then
+                    Exit
                 end;
 {$ifdef overflowon}
 {$Q+}
@@ -4154,18 +4154,18 @@ implementation
 
       { depending on the types involved, we perform the range check for 64 or
         for 32 bit }
-      if fromsize=8 then
-        maxdef:=fromdef
+      if FromSize=8 then
+        MaxDef:=FromDef
       else
-        maxdef:=todef;
+        MaxDef:=ToDef;
 {$if defined(cpuhighleveltarget) or defined(cpu64bitalu)}
-      if maxdef.size=8 then
-        aintmax:=high(int64)
+      if MaxDef.Size=8 then
+        AIntMax:=High(Int64)
       else
 {$endif}
         begin
-          aintmax:=high(LongInt);
-          maxdef:=U32IntType;
+          AIntMax:=High(LongInt);
+          MaxDef:=U32IntType;
         end;
 
       { generate the rangecheck code for the def where we are going to }
@@ -4178,218 +4178,218 @@ implementation
       { fromdef and todef are both signed or unsigned, or that we leave    }
       { the parts < 0 and > maxlongint out                                 }
 
-      if from_signed xor to_signed then
+      if FromSigned xor ToSigned then
         begin
-           if from_signed then
+           if FromSigned then
              { from is signed, to is unsigned }
              begin
                { if high(from) < 0 -> always range error }
-               if (hfrom < 0) or
+               if (HFrom < 0) or
                   { if low(to) > maxlongint also range error }
-                  (lto > aintmax) then
+                  (LTo > AIntMax) then
                  begin
-                   g_call_system_proc(list,'fpc_rangeerror',[],nil).resetiftemp;
-                   exit
+                   G_Call_System_Proc(List,'fpc_rangeerror',[],nil).ResetIfTemp;
+                   Exit
                  end;
                { from is signed and to is unsigned -> when looking at to }
                { as an signed value, it must be < maxaint (otherwise     }
                { it will become negative, which is invalid since "to" is unsigned) }
-               if hto > aintmax then
-                 hto := aintmax;
+               if HTo > AIntMax then
+                 HTo := AIntMax;
              end
            else
              { from is unsigned, to is signed }
              begin
-               if (lfrom > aintmax) or
-                  (hto < 0) then
+               if (LFrom > AIntMax) or
+                  (HTo < 0) then
                  begin
-                   g_call_system_proc(list,'fpc_rangeerror',[],nil).resetiftemp;
-                   exit
+                   G_Call_System_Proc(List,'fpc_rangeerror',[],nil).ResetIfTemp;
+                   Exit
                  end;
                { from is unsigned and to is signed -> when looking at to }
                { as an unsigned value, it must be >= 0 (since negative   }
                { values are the same as values > maxlongint)             }
-               if lto < 0 then
-                 lto := 0;
+               if LTo < 0 then
+                 LTo := 0;
              end;
         end;
-      hreg:=getintregister(list,maxdef);
-      a_load_loc_reg(list,fromdef,maxdef,l,hreg);
-      a_op_const_reg(list,OP_SUB,maxdef,TCGInt(int64(lto)),hreg);
-      CurrentAsmData.getjumplabel(neglabel);
+      HReg:=GetIntRegister(List,MaxDef);
+      A_Load_Loc_Reg(List,FromDef,MaxDef,L,HReg);
+      A_Op_Const_Reg(List,OP_SUB,MaxDef,TCGInt(Int64(LTo)),HReg);
+      CurrentAsmData.GetJumpLabel(NegLabel);
       {
       if from_signed then
         a_cmp_const_reg_label(list,OS_INT,OC_GTE,aint(hto-lto),hreg,neglabel)
       else
       }
-      cg.a_reg_alloc(list, NR_DEFAULTFLAGS);
-      if qword(hto-lto)>qword(aintmax) then
-        a_cmp_const_reg_label(list,maxdef,OC_BE,aintmax,hreg,neglabel)
+      CG.A_Reg_Alloc(List, NR_DEFAULTFLAGS);
+      if QWord(HTo-LTo)>QWord(AIntMax) then
+        A_Cmp_Const_Reg_Label(List,MaxDef,OC_BE,AIntMax,HReg,NegLabel)
       else
-        a_cmp_const_reg_label(list,maxdef,OC_BE,TCGInt(int64(hto-lto)),hreg,neglabel);
-      cg.a_reg_dealloc(list, NR_DEFAULTFLAGS);
-      g_call_system_proc(list,'fpc_rangeerror',[],nil).resetiftemp;
-      a_label(list,neglabel);
+        A_Cmp_Const_Reg_Label(List,MaxDef,OC_BE,TCGInt(Int64(HTo-LTo)),HReg,NegLabel);
+      CG.A_Reg_Dealloc(List, NR_DEFAULTFLAGS);
+      G_Call_System_Proc(List,'fpc_rangeerror',[],nil).ResetIfTemp;
+      A_Label(List,NegLabel);
     end;
 
-  procedure THLCGObj.g_copyvaluepara_openarray(list: TAsmList; const ref: TReference; const lenloc: TLocation; arrdef: TArrayDef; destreg: TRegister);
+  procedure THLCGObj.G_CopyValuePara_OpenArray(List: TAsmList; const Ref: TReference; const LenLoc: TLocation; ArrDef: TArrayDef; DestReg: TRegister);
     var
-      sizereg,sourcereg,lenreg : TRegister;
-      cgpara1,cgpara2,cgpara3 : TCGPara;
-      ptrarrdef : TDef;
-      pd : TProcDef;
-      getmemres : TCGPara;
-      destloc : TLocation;
+      SizeReg,SourceReg,LenReg : TRegister;
+      CGPara1,CGPara2,CGPara3 : TCGPara;
+      PtrArrDef : TDef;
+      PD : TProcDef;
+      GetMemRes : TCGPara;
+      DestLoc : TLocation;
     begin
       { because some abis don't support dynamic stack allocation properly
         open array value parameters are copied onto the heap
       }
-      include(CurrentProcInfo.flags, pi_has_open_array_parameter);
+      Include(CurrentProcInfo.Flags, pi_has_open_array_parameter);
 
       { calculate necessary memory }
 
       { read/write operations on one register make the life of the register allocator hard }
-      if not(lenloc.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+      if not(LenLoc.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
         begin
-          lenreg:=getintregister(list,SIntType);
-          a_load_loc_reg(list,SIntType,SIntType,lenloc,lenreg);
+          LenReg:=GetIntRegister(List,SIntType);
+          A_Load_Loc_Reg(List,SIntType,SIntType,LenLoc,LenReg);
         end
       else
-        lenreg:=lenloc.register;
+        LenReg:=LenLoc.Register;
 
-      sizereg:=getintregister(list,SIntType);
-      a_op_const_reg_reg(list,OP_ADD,SIntType,1,lenreg,sizereg);
-      a_op_const_reg(list,OP_IMUL,SIntType,arrdef.EleSize,sizereg);
+      SizeReg:=GetIntRegister(List,SIntType);
+      A_Op_Const_Reg_Reg(List,OP_ADD,SIntType,1,LenReg,SizeReg);
+      A_Op_Const_Reg(List,OP_IMUL,SIntType,ArrDef.EleSize,SizeReg);
       { load source }
-      ptrarrdef:=CPointerDef.getreusable(arrdef);
-      sourcereg:=getaddressregister(list,ptrarrdef);
-      a_loadaddr_ref_reg(list,arrdef,ptrarrdef,ref,sourcereg);
+      PtrArrDef:=CPointerDef.GetReusable(ArrDef);
+      SourceReg:=GetAddressRegister(List,PtrArrDef);
+      A_LoadAddr_Ref_Reg(List,ArrDef,PtrArrDef,Ref,SourceReg);
 
       { do getmem call }
-      pd:=Search_System_Proc('fpc_getmem');
-      cgpara1.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      a_load_reg_cgpara(list,SIntType,sizereg,cgpara1);
-      paramanager.freecgpara(list,cgpara1);
-      getmemres:=g_call_system_proc(list,pd,[@cgpara1],ptrarrdef);
-      cgpara1.done;
+      PD:=Search_System_Proc('fpc_getmem');
+      CGPara1.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      A_Load_Reg_CGPara(List,SIntType,SizeReg,CGPara1);
+      ParaManager.FreeCGPara(List,CGPara1);
+      GetMemRes:=G_Call_System_Proc(List,PD,[@CGPara1],PtrArrDef);
+      CGPara1.Done;
       { return the new address }
-      location_reset(destloc,LOC_REGISTER,OS_ADDR);
-      destloc.register:=destreg;
-      gen_load_cgpara_loc(list,ptrarrdef,getmemres,destloc,false);
+      Location_Reset(DestLoc,LOC_REGISTER,OS_ADDR);
+      DestLoc.Register:=DestReg;
+      Gen_Load_CGPara_Loc(List,PtrArrDef,GetMemRes,DestLoc,False);
 
       { do move call }
-      pd:=Search_System_Proc('MOVE');
-      cgpara1.init;
-      cgpara2.init;
-      cgpara3.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-      paramanager.getcgtempparaloc(list,pd,3,cgpara3);
-      if pd.Is_PushLeftRight then
+      PD:=Search_System_Proc('MOVE');
+      CGPara1.Init;
+      CGPara2.Init;
+      CGPara3.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
+      ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
+      ParaManager.GetCGTempParaLoc(List,PD,3,CGPara3);
+      if PD.Is_PushLeftRight then
         begin
           { load source }
-          a_load_reg_cgpara(list,ptrarrdef,sourcereg,cgpara1);
+          A_Load_Reg_CGPara(List,PtrArrDef,SourceReg,CGPara1);
           { load destination }
-          a_load_reg_cgpara(list,ptrarrdef,destreg,cgpara2);
+          A_Load_Reg_CGPara(List,PtrArrDef,DestReg,CGPara2);
           { load size }
-          a_load_reg_cgpara(list,SizeSIntType,sizereg,cgpara3);
+          A_Load_Reg_CGPara(List,SizeSIntType,SizeReg,CGPara3);
         end
       else
         begin
           { load size }
-          a_load_reg_cgpara(list,SizeSIntType,sizereg,cgpara3);
+          A_Load_Reg_CGPara(List,SizeSIntType,SizeReg,CGPara3);
           { load destination }
-          a_load_reg_cgpara(list,ptrarrdef,destreg,cgpara2);
+          A_Load_Reg_CGPara(List,PtrArrDef,DestReg,CGPara2);
           { load source }
-          a_load_reg_cgpara(list,ptrarrdef,sourcereg,cgpara1);
+          A_Load_Reg_CGPara(List,PtrArrDef,SourceReg,CGPara1);
         end;
-      paramanager.freecgpara(list,cgpara3);
-      paramanager.freecgpara(list,cgpara2);
-      paramanager.freecgpara(list,cgpara1);
-      g_call_system_proc(list,pd,[@cgpara1,@cgpara2,@cgpara3],nil).resetiftemp;
-      cgpara3.done;
-      cgpara2.done;
-      cgpara1.done;
-      getmemres.resetiftemp;
+      ParaManager.FreeCGPara(List,CGPara3);
+      ParaManager.FreeCGPara(List,CGPara2);
+      ParaManager.FreeCGPara(List,CGPara1);
+      G_Call_System_Proc(List,PD,[@CGPara1,@CGPara2,@CGPara3],nil).ResetIfTemp;
+      CGPara3.Done;
+      CGPara2.Done;
+      CGPara1.Done;
+      GetMemRes.ResetIfTemp;
     end;
 
-  procedure THLCGObj.g_releasevaluepara_openarray(list: TAsmList; arrdef: TArrayDef; const l: TLocation);
+  procedure THLCGObj.G_ReleaseValuePara_OpenArray(List: TAsmList; ArrDef: TArrayDef; const L: TLocation);
     var
-      cgpara1 : TCGPara;
-      pd : TProcDef;
+      CGPara1 : TCGPara;
+      PD : TProcDef;
     begin
       { do freemem call }
-      pd:=Search_System_Proc('fpc_freemem');
-      cgpara1.init;
-      paramanager.getcgtempparaloc(list,pd,1,cgpara1);
+      PD:=Search_System_Proc('fpc_freemem');
+      CGPara1.Init;
+      ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
       { load source }
-      a_load_loc_cgpara(list,CPointerDef.getreusable(arrdef),l,cgpara1);
-      paramanager.freecgpara(list,cgpara1);
-      g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
-      cgpara1.done;
+      A_Load_Loc_CGPara(List,CPointerDef.GetReusable(ArrDef),L,CGPara1);
+      ParaManager.FreeCGPara(List,CGPara1);
+      G_Call_System_Proc(List,PD,[@CGPara1],nil).ResetIfTemp;
+      CGPara1.Done;
     end;
 
-  procedure THLCGObj.a_jmp_external_name(list: TAsmList; const externalname: TSymStr);
+  procedure THLCGObj.A_Jmp_External_Name(List: TAsmList; const ExternalName: TSymStr);
     begin
-      cg.a_jmp_name(list,externalname);
+      CG.A_Jmp_Name(List,ExternalName);
     end;
 
-  procedure THLCGObj.g_external_wrapper(list: TAsmList; procdef: TProcDef; const wrappername, externalname: string; global: boolean);
+  procedure THLCGObj.G_External_Wrapper(List: TAsmList; ProcDef: TProcDef; const WrapperName, ExternalName: string; Global: Boolean);
     var
-      sym: TAsmSymbol;
+      Sym: TAsmSymbol;
     begin
-      maybe_new_object_file(list);
-      new_section(list,sec_code,wrappername,TargetInfo.alignment.ProcAlign);
-      if global then
+      maybe_new_object_file(List);
+      new_section(List,sec_code,WrapperName,TargetInfo.Alignment.ProcAlign);
+      if Global then
         begin
-          sym:=CurrentAsmData.DefineAsmSymbol(wrappername,AB_GLOBAL,AT_FUNCTION,procdef);
-          list.concat(TAISymbol.Create_global(sym,0));
+          Sym:=CurrentAsmData.DefineAsmSymbol(WrapperName,AB_GLOBAL,AT_FUNCTION,ProcDef);
+          List.Concat(TAISymbol.Create_global(Sym,0));
         end
       else
         begin
-          sym:=CurrentAsmData.DefineAsmSymbol(wrappername,AB_PRIVATE_EXTERN,AT_FUNCTION,procdef);
-          list.concat(TAISymbol.Create(sym,0));
+          Sym:=CurrentAsmData.DefineAsmSymbol(WrapperName,AB_PRIVATE_EXTERN,AT_FUNCTION,ProcDef);
+          List.Concat(TAISymbol.Create(Sym,0));
         end;
-      a_jmp_external_name(list,externalname);
-      list.concat(TAISymbolEnd.Create(sym));
+      A_Jmp_External_Name(List,ExternalName);
+      List.Concat(TAISymbolEnd.Create(Sym));
     end;
 
-  procedure THLCGObj.g_allocload_reg_reg(list: TAsmList; regsize: TDef; const fromreg: TRegister; out toreg: TRegister; regtyp: TRegisterType);
+  procedure THLCGObj.G_AllocLoad_Reg_Reg(List: TAsmList; RegSize: TDef; const FromReg: TRegister; out ToReg: TRegister; RegTyp: TRegisterType);
     begin
-      case regtyp of
+      case RegTyp of
         R_INTREGISTER:
-          toreg:=getintregister(list,regsize);
+          ToReg:=GetIntRegister(List,RegSize);
         R_ADDRESSREGISTER:
-          toreg:=getaddressregister(list,regsize);
+          ToReg:=GetAddressRegister(List,RegSize);
         R_FPUREGISTER:
-          toreg:=getfpuregister(list,regsize);
+          ToReg:=GetFPURegister(List,RegSize);
         else
           InternalError(2013112910);
       end;
-      a_load_reg_reg(list,regsize,regsize,fromreg,toreg);
+      A_Load_Reg_Reg(List,RegSize,RegSize,FromReg,ToReg);
     end;
 
-  procedure THLCGObj.g_reference_loc(list: TAsmList; def: TDef; const fromloc: TLocation; out toloc: TLocation);
+  procedure THLCGObj.G_Reference_Loc(List: TAsmList; Def: TDef; const FromLoc: TLocation; out ToLoc: TLocation);
 
-    procedure handle_reg_move(regsize: TDef; const fromreg: TRegister; out toreg: TRegister; regtyp: TRegisterType);
+    procedure HandleRegMove(RegSize: TDef; const FromReg: TRegister; out ToReg: TRegister; RegTyp: TRegisterType);
       begin
-        case regtyp of
+        case RegTyp of
           R_INTREGISTER:
-            toreg:=getintregister(list,regsize);
+            ToReg:=GetIntRegister(List,RegSize);
           R_ADDRESSREGISTER:
-            toreg:=getaddressregister(list,regsize);
+            ToReg:=GetAddressRegister(List,RegSize);
           R_FPUREGISTER:
-            toreg:=getfpuregister(list,regsize);
+            ToReg:=GetFPURegister(List,RegSize);
         else
           InternalError(2013112915);
         end;
-        a_load_reg_reg(list,regsize,regsize,fromreg,toreg);
+        A_Load_Reg_Reg(List,RegSize,RegSize,FromReg,ToReg);
       end;
 
     begin
-      toloc:=fromloc;
-      case fromloc.loc of
+      ToLoc:=FromLoc;
+      case FromLoc.Loc of
         { volatile location, can't get a permanent reference }
         LOC_REGISTER,
         LOC_FPUREGISTER:
@@ -4398,238 +4398,238 @@ implementation
           { finished }
           ;
         LOC_CREGISTER:
-          handle_reg_move(def,fromloc.reference.index,toloc.reference.index,R_INTREGISTER);
+          HandleRegMove(Def,FromLoc.Reference.Index,ToLoc.Reference.Index,R_INTREGISTER);
         LOC_CFPUREGISTER:
-          handle_reg_move(def,fromloc.reference.index,toloc.reference.index,R_FPUREGISTER);
+          HandleRegMove(Def,FromLoc.Reference.Index,ToLoc.Reference.Index,R_FPUREGISTER);
         { although LOC_CREFERENCE cannot be an lvalue, we may want to take a
           reference to such a location for multiple reading }
         LOC_CREFERENCE,
         LOC_REFERENCE:
           begin
-            if (fromloc.reference.base<>NR_NO) and
-               (fromloc.reference.base<>CurrentProcInfo.framepointer) and
-               (fromloc.reference.base<>NR_STACK_POINTER_REG) then
-              handle_reg_move(VoidPointerType,fromloc.reference.base,toloc.reference.base,getregtype(fromloc.reference.base));
-            if (fromloc.reference.index<>NR_NO) and
-               (fromloc.reference.index<>CurrentProcInfo.framepointer) and
-               (fromloc.reference.index<>NR_STACK_POINTER_REG) then
-              handle_reg_move(VoidPointerType,fromloc.reference.index,toloc.reference.index,getregtype(fromloc.reference.index));
+            if (FromLoc.Reference.Base<>NR_NO) and
+               (FromLoc.Reference.Base<>CurrentProcInfo.FramePointer) and
+               (FromLoc.Reference.Base<>NR_STACK_POINTER_REG) then
+              HandleRegMove(VoidPointerType,FromLoc.Reference.Base,ToLoc.Reference.Base,GetRegType(FromLoc.Reference.Base));
+            if (FromLoc.Reference.Index<>NR_NO) and
+               (FromLoc.Reference.Index<>CurrentProcInfo.FramePointer) and
+               (FromLoc.Reference.Index<>NR_STACK_POINTER_REG) then
+              HandleRegMove(VoidPointerType,FromLoc.Reference.Index,ToLoc.Reference.Index,GetRegType(FromLoc.Reference.Index));
           end;
         else
           InternalError(2012012701);
       end;
     end;
 
-  procedure THLCGObj.g_ptrtypecast_reg(list: TAsmList; fromdef, todef: TDef; var reg: TRegister);
+  procedure THLCGObj.G_PtrTypeCast_Reg(List: TAsmList; FromDef, ToDef: TDef; var Reg: TRegister);
     begin
       { nothing to do }
     end;
 
-  procedure THLCGObj.g_ptrtypecast_ref(list: TAsmList; fromdef, todef: TDef; var ref: TReference);
+  procedure THLCGObj.G_PtrTypeCast_Ref(List: TAsmList; FromDef, ToDef: TDef; var Ref: TReference);
     begin
       { nothing to do }
     end;
 
-  procedure THLCGObj.g_set_addr_nonbitpacked_field_ref(list: TAsmList; recdef: TAbstractRecordDef; field: TFieldVarSym; var recref: TReference);
+  procedure THLCGObj.G_Set_Addr_NonBitPacked_Field_Ref(List: TAsmList; RecDef: TAbstractRecordDef; Field: TFieldVarSym; var RecRef: TReference);
     begin
-      inc(recref.offset,field.FieldOffset);
-      recref.alignment:=NewAlignment(recref.alignment,field.FieldOffset);
+      Inc(RecRef.Offset,Field.FieldOffset);
+      RecRef.Alignment:=NewAlignment(RecRef.Alignment,Field.FieldOffset);
     end;
 
 
-  procedure THLCGObj.g_undefined_ok(list: TAsmList; size: TDef; reg: TRegister);
+  procedure THLCGObj.G_Undefined_Ok(List: TAsmList; Size: TDef; Reg: TRegister);
     begin
       { nothing by default }
     end;
 
 
-  procedure THLCGObj.g_setup_load_field_by_name(list: TAsmList; recdef: TRecordDef; const name: TIDString; const recref: TReference; out fref: TReference; out fielddef: TDef);
+  procedure THLCGObj.G_Setup_Load_Field_By_Name(List: TAsmList; RecDef: TRecordDef; const Name: TIDString; const RecRef: TReference; out FRef: TReference; out FieldDef: TDef);
     var
-      sym: TSym;
-      field: TFieldVarSym;
+      Sym: TSym;
+      Field: TFieldVarSym;
     begin
-      sym:=Search_Struct_Member(recdef,name);
-      if not Assigned(sym) or
-         (sym.typ<>FieldVarSym) then
+      Sym:=Search_Struct_Member(RecDef,Name);
+      if not Assigned(Sym) or
+         (Sym.Typ<>FieldVarSym) then
         InternalError(2015111901);
-      field:=TFieldVarSym(sym);
-      fref:=recref;
-      fielddef:=field.vardef;
-      g_set_addr_nonbitpacked_field_ref(list,recdef,field,fref);
+      Field:=TFieldVarSym(Sym);
+      FRef:=RecRef;
+      FieldDef:=Field.VarDef;
+      G_Set_Addr_NonBitPacked_Field_Ref(List,RecDef,Field,FRef);
     end;
 
 
-  procedure THLCGObj.g_load_reg_field_by_name(list: TAsmList; regsize: TDef; recdef: TRecordDef; reg: TRegister; const name: TIDString; const recref: TReference);
+  procedure THLCGObj.G_Load_Reg_Field_By_Name(List: TAsmList; RegSize: TDef; RecDef: TRecordDef; Reg: TRegister; const Name: TIDString; const RecRef: TReference);
     var
-      fref: TReference;
-      fielddef: TDef;
+      FRef: TReference;
+      FieldDef: TDef;
     begin
-      g_setup_load_field_by_name(list,recdef,name,recref,fref,fielddef);
-      a_load_reg_ref(list,regsize,fielddef,reg,fref);
+      G_Setup_Load_Field_By_Name(List,RecDef,Name,RecRef,FRef,FieldDef);
+      A_Load_Reg_Ref(List,RegSize,FieldDef,Reg,FRef);
     end;
 
 
-  procedure THLCGObj.g_load_const_field_by_name(list: TAsmList; recdef: TRecordDef; a: TCGInt; const name: TIDString; const recref: TReference);
+  procedure THLCGObj.G_Load_Const_Field_By_Name(List: TAsmList; RecDef: TRecordDef; A: TCGInt; const Name: TIDString; const RecRef: TReference);
     var
-      fref: TReference;
-      fielddef: TDef;
+      FRef: TReference;
+      FieldDef: TDef;
     begin
-      g_setup_load_field_by_name(list,recdef,name,recref,fref,fielddef);
-      a_load_const_ref(list,fielddef,a,fref);
+      G_Setup_Load_Field_By_Name(List,RecDef,Name,RecRef,FRef,FieldDef);
+      A_Load_Const_Ref(List,FieldDef,A,FRef);
     end;
 
 
-  procedure THLCGObj.g_load_field_reg_by_name(list: TAsmList; recdef: TRecordDef; regsize: TDef; const name: TIDString; const recref: TReference; reg: TRegister);
+  procedure THLCGObj.G_Load_Field_Reg_By_Name(List: TAsmList; RecDef: TRecordDef; RegSize: TDef; const Name: TIDString; const RecRef: TReference; Reg: TRegister);
     var
-      fref: TReference;
-      fielddef: TDef;
+      FRef: TReference;
+      FieldDef: TDef;
     begin
-      g_setup_load_field_by_name(list,recdef,name,recref,fref,fielddef);
-      a_load_ref_reg(list,fielddef,regsize,fref,reg);
+      G_Setup_Load_Field_By_Name(List,RecDef,Name,RecRef,FRef,FieldDef);
+      A_Load_Ref_Reg(List,FieldDef,RegSize,FRef,Reg);
     end;
 
 
-  procedure THLCGObj.g_force_field_reg_by_name(list: TAsmList; recdef: TRecordDef; const name: TIDString; const recref: TReference; out regdef: TDef; out reg: TRegister);
+  procedure THLCGObj.G_Force_Field_Reg_By_Name(List: TAsmList; RecDef: TRecordDef; const Name: TIDString; const RecRef: TReference; out RegDef: TDef; out Reg: TRegister);
     var
-      fref: TReference;
+      FRef: TReference;
     begin
-      g_setup_load_field_by_name(list,recdef,name,recref,fref,regdef);
-      reg:=getregisterfordef(list,regdef);
-      a_load_ref_reg(list,regdef,regdef,fref,reg);
+      G_Setup_Load_Field_By_Name(List,RecDef,Name,RecRef,FRef,RegDef);
+      Reg:=GetRegisterForDef(List,RegDef);
+      A_Load_Ref_Reg(List,RegDef,RegDef,FRef,Reg);
     end;
 
 
-  procedure THLCGObj.location_force_reg(list: TAsmList; var l: TLocation; src_size, dst_size: TDef; maybeconst: boolean);
+  procedure THLCGObj.Location_Force_Reg(List: TAsmList; var L: TLocation; SourceType, DestType: TDef; MaybeConst: Boolean);
     var
-      hregister,
-      hregister2: TRegister;
-      hl : TAsmLabel;
-      oldloc : TLocation;
+      HRegister,
+      HRegister2: TRegister;
+      HL : TAsmLabel;
+      OldLoc : TLocation;
     begin
-      oldloc:=l;
-      hregister:=getregisterfordef(list,dst_size);
+      OldLoc:=L;
+      HRegister:=GetRegisterForDef(List,DestType);
       { load value in new register }
-      case l.loc of
+      case L.Loc of
 {$ifdef cpuflags}
         LOC_FLAGS :
           begin
-            g_flags2reg(list,dst_size,l.resflags,hregister);
-            cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
+            G_Flags2Reg(List,DestType,L.ResFlags,HRegister);
+            CG.A_Reg_Dealloc(List,NR_DEFAULTFLAGS);
           end;
 {$endif cpuflags}
         LOC_JUMP :
           begin
-            a_label(list,l.truelabel);
-            if is_cbool(src_size) then
-              a_load_const_reg(list,dst_size,-1,hregister)
+            A_Label(List,L.TrueLabel);
+            if Is_CBool(SourceType) then
+              A_Load_Const_Reg(List,DestType,-1,HRegister)
             else
-              a_load_const_reg(list,dst_size,1,hregister);
-            CurrentAsmData.getjumplabel(hl);
-            a_jmp_always(list,hl);
-            a_label(list,l.falselabel);
-            a_load_const_reg(list,dst_size,0,hregister);
-            a_label(list,hl);
+              A_Load_Const_Reg(List,DestType,1,HRegister);
+            CurrentAsmData.GetJumpLabel(HL);
+            A_Jmp_Always(List,HL);
+            A_Label(List,L.FalseLabel);
+            A_Load_Const_Reg(List,DestType,0,HRegister);
+            A_Label(List,HL);
           end;
         else
           begin
             { load_loc_reg can only handle size >= l.size, when the
               new size is smaller then we need to adjust the size
               of the original and maybe recalculate l.register for i386 }
-            if (dst_size.size<src_size.size) then
+            if (DestType.Size<SourceType.Size) then
               begin
-                hregister2:=getregisterfordef(list,src_size);
+                HRegister2:=GetRegisterForDef(List,SourceType);
 
-                a_load_loc_reg(list,src_size,src_size,l,hregister2);
-                a_load_reg_reg(list,src_size,dst_size,hregister2,hregister);
+                A_Load_Loc_Reg(List,SourceType,SourceType,L,HRegister2);
+                A_Load_Reg_Reg(List,SourceType,DestType,HRegister2,HRegister);
               end
             else
-              a_load_loc_reg(list,src_size,dst_size,l,hregister);
+              A_Load_Loc_Reg(List,SourceType,DestType,L,HRegister);
           end;
       end;
-      if (l.loc <> LOC_CREGISTER) or
-         not maybeconst then
-        location_reset(l,LOC_REGISTER,def_cgsize(dst_size))
+      if (L.Loc <> LOC_CREGISTER) or
+         not MaybeConst then
+        Location_Reset(L,LOC_REGISTER,Def_CGSize(DestType))
       else
-        location_reset(l,LOC_CREGISTER,def_cgsize(dst_size));
-      l.register:=hregister;
+        Location_Reset(L,LOC_CREGISTER,Def_CGSize(DestType));
+      L.Register:=HRegister;
       { Release temp if it was a reference }
-      if oldloc.loc=LOC_REFERENCE then
-        location_freetemp(list,oldloc);
+      if OldLoc.Loc=LOC_REFERENCE then
+        location_freetemp(List,OldLoc);
     end;
 
-  procedure THLCGObj.location_force_fpureg(list: TAsmList; var l: TLocation; size: TDef; maybeconst: boolean);
+  procedure THLCGObj.Location_Force_FPUReg(List: TAsmList; var L: TLocation; Size: TDef; MaybeConst: Boolean);
     var
-      reg : TRegister;
+      Reg : TRegister;
     begin
-      if (l.loc<>LOC_FPUREGISTER)  and
-         ((l.loc<>LOC_CFPUREGISTER) or (not maybeconst)) then
+      if (L.Loc<>LOC_FPUREGISTER)  and
+         ((L.Loc<>LOC_CFPUREGISTER) or (not MaybeConst)) then
         begin
           { if it's in an mm register, store to memory first }
-          if (l.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
-            location_force_mem(list,l,size);
-          reg:=getfpuregister(list,size);
-          a_loadfpu_loc_reg(list,size,size,l,reg);
-          location_freetemp(list,l);
-          location_reset(l,LOC_FPUREGISTER,l.size);
-          l.register:=reg;
+          if (L.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+            Location_Force_Mem(List,L,Size);
+          Reg:=GetFPURegister(List,Size);
+          A_LoadFPU_Loc_Reg(List,Size,Size,L,Reg);
+          location_freetemp(List,L);
+          Location_Reset(L,LOC_FPUREGISTER,L.Size);
+          L.Register:=Reg;
         end;
     end;
 
-  procedure THLCGObj.location_force_mem(list: TAsmList; var l: TLocation; size: TDef);
+  procedure THLCGObj.Location_Force_Mem(List: TAsmList; var L: TLocation; Size: TDef);
     var
-      r : TReference;
-      forcesize: aint;
-      hregister: TRegister;
-      hl: TAsmLabel;
+      R : TReference;
+      ForceSize: AInt;
+      HRegister: TRegister;
+      HL: TAsmLabel;
     begin
-      case l.loc of
+      case L.Loc of
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER :
           begin
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            a_loadfpu_reg_ref(list,size,size,l.register,r);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            TG.GetHLTemp(List,Size,Size.Size,tt_normal,R);
+            A_LoadFPU_Reg_Ref(List,Size,Size,L.Register,R);
+            Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+            L.Reference:=R;
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
             { vectors can't be represented yet using tdef }
-            if size.typ<>floatdef then
+            if Size.Typ<>FloatDef then
               InternalError(2012062302);
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            a_loadmm_reg_ref(list,size,size,l.register,r,mms_movescalar);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            TG.GetHLTemp(List,Size,Size.Size,tt_normal,R);
+            A_LoadMM_Reg_Ref(List,Size,Size,L.Register,R,MMS_MoveScalar);
+            Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+            L.Reference:=R;
           end;
 {$ifdef cpuflags}
         LOC_FLAGS :
           begin
-            hregister:=getregisterfordef(list,size);
-            g_flags2reg(list,size,l.resflags,hregister);
-            cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            a_load_reg_ref(list,size,size,hregister,r);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            HRegister:=GetRegisterForDef(List,Size);
+            G_Flags2Reg(List,Size,L.ResFlags,HRegister);
+            CG.A_Reg_Dealloc(List,NR_DEFAULTFLAGS);
+            TG.GetHLTemp(List,Size,Size.Size,tt_normal,R);
+            A_Load_Reg_Ref(List,Size,Size,HRegister,R);
+            Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+            L.Reference:=R;
           end;
 {$endif cpuflags}
         LOC_JUMP :
           begin
-            a_label(list,l.truelabel);
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            if is_cbool(size) then
-              a_load_const_ref(list,size,-1,r)
+            A_Label(List,L.TrueLabel);
+            TG.GetHLTemp(List,Size,Size.Size,tt_normal,R);
+            if Is_CBool(Size) then
+              A_Load_Const_Ref(List,Size,-1,R)
             else
-              a_load_const_ref(list,size,1,r);
-            CurrentAsmData.getjumplabel(hl);
-            a_jmp_always(list,hl);
-            a_label(list,l.falselabel);
-            a_load_const_ref(list,size,0,r);
-            a_label(list,hl);
+              A_Load_Const_Ref(List,Size,1,R);
+            CurrentAsmData.GetJumpLabel(HL);
+            A_Jmp_Always(List,HL);
+            A_Label(List,L.FalseLabel);
+            A_Load_Const_Ref(List,Size,0,R);
+            A_Label(List,HL);
 
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+            L.Reference:=R;
           end;
         LOC_CONSTANT,
         LOC_REGISTER,
@@ -4639,15 +4639,15 @@ implementation
         LOC_SUBSETREF,
         LOC_CSUBSETREF:
           begin
-            if not is_dynamic_array(size) and
-               not is_open_array(size) then
-              forcesize:=size.size
+            if not Is_Dynamic_Array(Size) and
+               not Is_Open_Array(Size) then
+              ForceSize:=Size.Size
             else
-              forcesize:=sizeof(PInt);
-            tg.gethltemp(list,size,forcesize,tt_normal,r);
-            a_load_loc_ref(list,size,size,l,r);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+              ForceSize:=SizeOf(PInt);
+            TG.GetHLTemp(List,Size,ForceSize,tt_normal,R);
+            A_Load_Loc_Ref(List,Size,Size,L,R);
+            Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+            L.Reference:=R;
           end;
         LOC_CREFERENCE,
         LOC_REFERENCE : ;
@@ -4656,80 +4656,80 @@ implementation
       end;
     end;
 
-  procedure THLCGObj.location_force_mmregscalar(list: TAsmList; var l: TLocation; var size: TDef; maybeconst: boolean);
+  procedure THLCGObj.Location_Force_MMRegScalar(List: TAsmList; var L: TLocation; var Size: TDef; MaybeConst: Boolean);
     var
-      reg : TRegister;
-      href : TReference;
-      newsize : TDef;
+      Reg : TRegister;
+      HRef : TReference;
+      NewSize : TDef;
     begin
-      if (l.loc<>LOC_MMREGISTER)  and
-         ((l.loc<>LOC_CMMREGISTER) or (not maybeconst)) then
+      if (L.Loc<>LOC_MMREGISTER)  and
+         ((L.Loc<>LOC_CMMREGISTER) or (not MaybeConst)) then
         begin
           { if it's in an fpu register, store to memory first }
-          if (l.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          if (L.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
             begin
-              tg.gethltemp(list,size,-1,tt_normal,href);
-              hlcg.a_loadfpu_reg_ref(list,size,size,l.register,href);
-              location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-              l.reference:=href;
+              TG.GetHLTemp(List,Size,-1,tt_normal,HRef);
+              HLCG.A_LoadFPU_Reg_Ref(List,Size,Size,L.Register,HRef);
+              Location_Reset_Ref(L,LOC_REFERENCE,L.Size,Size.Alignment,[]);
+              L.Reference:=HRef;
             end;
           { on ARM, CFP values may be located in integer registers,
             and its second_int_to_real() also uses this routine to
             force integer (memory) values in an mmregister }
-          if (l.size in [OS_32,OS_S32]) then
+          if (L.Size in [OS_32,OS_S32]) then
             begin
-              size:=cgsize_orddef(l.size);
-              newsize:=S32FloatType;
+              Size:=CGSize_OrdDef(L.Size);
+              NewSize:=S32FloatType;
             end
-          else if (l.size in [OS_64,OS_S64]) then
+          else if (L.Size in [OS_64,OS_S64]) then
             begin
-              size:=cgsize_orddef(l.size);
-              newsize:=S64FloatType;
+              Size:=CGSize_OrdDef(L.Size);
+              NewSize:=S64FloatType;
             end
           else
-            newsize:=size;
-          case size.size of
+            NewSize:=Size;
+          case Size.Size of
             4:
-              newsize:=S32FloatType;
+              NewSize:=S32FloatType;
             8:
-              newsize:=S64FloatType;
+              NewSize:=S64FloatType;
             else
-              newsize:=size;
+              NewSize:=Size;
           end;
-          reg:=hlcg.getmmregister(list,newsize);
-          hlcg.a_loadmm_loc_reg(list,size,newsize,l,reg,mms_movescalar);
-          l.size:=def_cgsize(newsize);
-          location_freetemp(list,l);
-          location_reset(l,LOC_MMREGISTER,l.size);
-          size:=newsize;
-          l.register:=reg;
+          Reg:=HLCG.GetMMRegister(List,NewSize);
+          HLCG.A_LoadMM_Loc_Reg(List,Size,NewSize,L,Reg,MMS_MoveScalar);
+          L.Size:=Def_CGSize(NewSize);
+          location_freetemp(List,L);
+          Location_Reset(L,LOC_MMREGISTER,L.Size);
+          Size:=NewSize;
+          L.Register:=Reg;
         end;
     end;
 
-    procedure THLCGObj.location_get_data_ref(list: TAsmList; def: TDef; const l: TLocation; var ref: TReference; loadref: boolean; alignment: LongInt);
+    procedure THLCGObj.Location_Get_Data_Ref(List: TAsmList; Def: TDef; const L: TLocation; var Ref: TReference; LoadRef: Boolean; Alignment: LongInt);
       var
-        pdef: TDef;
+        PDef: TDef;
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REGISTER,
           LOC_CREGISTER :
             begin
-              if not loadref then
+              if not LoadRef then
                 InternalError(200410231);
-              reference_reset_base(ref,CPointerDef.getreusable(def),l.register,0,ctempposinvalid,alignment,[]);
+              Reference_Reset_Base(Ref,CPointerDef.GetReusable(Def),L.Register,0,CTempPosInvalid,Alignment,[]);
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
-              if loadref then
+              if LoadRef then
                 begin
-                  pdef:=CPointerDef.getreusable(def);
-                  reference_reset_base(ref,pdef,getaddressregister(list,VoidPointerType),0,ctempposinvalid,alignment,[]);
+                  PDef:=CPointerDef.GetReusable(Def);
+                  Reference_Reset_Base(Ref,PDef,GetAddressRegister(List,VoidPointerType),0,CTempPosInvalid,Alignment,[]);
                   { it's a pointer to def }
-                  a_load_ref_reg(list,pdef,pdef,l.reference,ref.base);
+                  A_Load_Ref_Reg(List,PDef,PDef,L.Reference,Ref.Base);
                 end
               else
-                ref:=l.reference;
+                Ref:=L.Reference;
             end;
           else
             InternalError(200309181);
@@ -4737,771 +4737,771 @@ implementation
       end;
 
 
-  procedure THLCGObj.maketojumpbool(list: TAsmList; p: TNode);
+  procedure THLCGObj.MakeToJumpBool(List: TAsmList; P: TNode);
     var
-      truelabel,
-      falselabel: TAsmLabel;
+      TrueLabel,
+      FalseLabel: TAsmLabel;
     begin
-       if p.location.loc<>LOC_JUMP then
+       if P.Location.Loc<>LOC_JUMP then
          begin
-           CurrentAsmData.getjumplabel(truelabel);
-           CurrentAsmData.getjumplabel(falselabel);
+           CurrentAsmData.GetJumpLabel(TrueLabel);
+           CurrentAsmData.GetJumpLabel(FalseLabel);
          end
        else
          begin
-           truelabel:=p.location.truelabel;
-           falselabel:=p.location.falselabel;
+           TrueLabel:=P.Location.TrueLabel;
+           FalseLabel:=P.Location.FalseLabel;
          end;
-       maketojumpboollabels(list,p,truelabel,falselabel);
+       MakeToJumpBoolLabels(List,P,TrueLabel,FalseLabel);
     end;
 
 
-  procedure THLCGObj.maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: TAsmLabel);
+  procedure THLCGObj.MakeToJumpBoolLabels(List: TAsmList; P: TNode; TrueLabel, FalseLabel: TAsmLabel);
     var
-      storepos : TFilePosInfo;
+      StorePos : TFilePosInfo;
     begin
-       if tnf_error in p.transientflags then
-         exit;
-       storepos:=CurrentFilePos;
-       CurrentFilePos:=p.fileinfo;
-       if is_boolean(p.resultdef) then
+       if tnf_error in P.TransientFlags then
+         Exit;
+       StorePos:=CurrentFilePos;
+       CurrentFilePos:=P.FileInfo;
+       if Is_Boolean(P.ResultDef) then
          begin
-            if is_constboolnode(p) then
+            if is_constboolnode(P) then
               begin
-                 if TOrdConstNode(p).value.uvalue<>0 then
-                   a_jmp_always(list,truelabel)
+                 if TOrdConstNode(P).Value.UValue<>0 then
+                   A_Jmp_Always(List,TrueLabel)
                  else
-                   a_jmp_always(list,falselabel)
+                   A_Jmp_Always(List,FalseLabel)
               end
             else
               begin
-                 case p.location.loc of
+                 case P.Location.Loc of
                    LOC_SUBSETREG,LOC_CSUBSETREG,
                    LOC_SUBSETREF,LOC_CSUBSETREF,
                    LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE :
                      begin
-                       a_cmp_const_loc_label(list,p.resultdef,OC_NE,0,p.location,truelabel);
+                       A_Cmp_Const_Loc_Label(List,P.ResultDef,OC_NE,0,P.Location,TrueLabel);
 {$ifdef x86} { x86 always uses the flags in some way for conditional jumps }
-                       a_reg_dealloc(list,NR_DEFAULTFLAGS);
+                       A_Reg_Dealloc(List,NR_DEFAULTFLAGS);
 {$endif x86}
-                       a_jmp_always(list,falselabel);
+                       A_Jmp_Always(List,FalseLabel);
                      end;
                    LOC_JUMP:
                      begin
-                       if truelabel<>p.location.truelabel then
+                       if TrueLabel<>P.Location.TrueLabel then
                          begin
-                           a_label(list,p.location.truelabel);
-                           a_jmp_always(list,truelabel);
+                           A_Label(List,P.Location.TrueLabel);
+                           A_Jmp_Always(List,TrueLabel);
                          end;
-                       if falselabel<>p.location.falselabel then
+                       if FalseLabel<>P.Location.FalseLabel then
                          begin
-                           a_label(list,p.location.falselabel);
-                           a_jmp_always(list,falselabel);
+                           A_Label(List,P.Location.FalseLabel);
+                           A_Jmp_Always(List,FalseLabel);
                          end;
                      end;
 {$ifdef cpuflags}
                    LOC_FLAGS :
                      begin
-                       a_jmp_flags(list,p.location.resflags,truelabel);
-                       a_reg_dealloc(list,NR_DEFAULTFLAGS);
-                       a_jmp_always(list,falselabel);
+                       A_Jmp_Flags(List,P.Location.ResFlags,TrueLabel);
+                       A_Reg_Dealloc(List,NR_DEFAULTFLAGS);
+                       A_Jmp_Always(List,FalseLabel);
                      end;
 {$endif cpuflags}
                    else
                      InternalError(2011010418);
                  end;
               end;
-            location_reset_jump(p.location,truelabel,falselabel);
+            Location_Reset_Jump(P.Location,TrueLabel,FalseLabel);
          end
        else
          InternalError(2011010419);
-       CurrentFilePos:=storepos;
+       CurrentFilePos:=StorePos;
     end;
 
 
-  procedure THLCGObj.maybe_change_load_node_reg(list: TAsmList; var n: TNode; reload: boolean);
+  procedure THLCGObj.Maybe_Change_Load_Node_Reg(List: TAsmList; var N: TNode; Reload: Boolean);
     var
-      rr: TReplaceRegRec;
-      varloc : TAIVarLoc;
+      RR: TReplaceRegRec;
+      VarLoc : TAIVarLoc;
     begin
-      if not (n.location.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) or
-        ([fc_inflowcontrol,fc_gotolabel,fc_lefthandled] * flowcontrol <> []) then
-        exit;
-      rr.old := n.location.register;
-      rr.ressym := nil;
-      rr.sym := nil;
-      rr.oldhi := NR_NO;
-      case n.location.loc of
+      if not (N.Location.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) or
+        ([fc_inflowcontrol,fc_gotolabel,fc_lefthandled] * FlowControl <> []) then
+        Exit;
+      RR.Old := N.Location.Register;
+      RR.ResSym := nil;
+      RR.Sym := nil;
+      RR.OldHi := NR_NO;
+      case N.Location.Loc of
         LOC_CREGISTER:
           begin
 {$ifdef cpu64bitalu}
-            if (n.location.size in [OS_128,OS_S128]) then
+            if (N.Location.Size in [OS_128,OS_S128]) then
               begin
-                rr.oldhi := n.location.register128.reghi;
-                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-                rr.newhi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+                RR.OldHi := N.Location.Register128.RegHi;
+                RR.New := CG.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+                RR.NewHi := CG.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
               end
             else
 {$else cpu64bitalu}
-            if (n.location.size in [OS_64,OS_S64]) then
+            if (N.Location.Size in [OS_64,OS_S64]) then
               begin
-                rr.oldhi := n.location.register64.reghi;
-                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-                rr.newhi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
+                RR.OldHi := N.Location.Register64.RegHi;
+                RR.New := CG.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                RR.NewHi := CG.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
               end
             else
 {$endif cpu64bitalu}
-              if getregtype(rr.old)=R_ADDRESSREGISTER then
-                rr.new := hlcg.getaddressregister(CurrentAsmData.CurrAsmList,n.resultdef)
+              if GetRegType(RR.Old)=R_ADDRESSREGISTER then
+                RR.New := HLCG.GetAddressRegister(CurrentAsmData.CurrAsmList,N.ResultDef)
               else
-                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,n.location.size);
+                RR.New := CG.GetIntRegister(CurrentAsmData.CurrAsmList,N.Location.Size);
           end;
         LOC_CFPUREGISTER:
-          rr.new := cg.getfpuregister(CurrentAsmData.CurrAsmList,n.location.size);
+          RR.New := CG.GetFPURegister(CurrentAsmData.CurrAsmList,N.Location.Size);
 {$ifdef SUPPORT_MMX}
         LOC_CMMXREGISTER:
-          rr.new := TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+          RR.New := TCGX86(CG).GetMMXRegister(CurrentAsmData.CurrAsmList);
 {$endif SUPPORT_MMX}
         LOC_CMMREGISTER:
-          rr.new := cg.getmmregister(CurrentAsmData.CurrAsmList,n.location.size);
+          RR.New := CG.GetMMRegister(CurrentAsmData.CurrAsmList,N.Location.Size);
         else
-          exit;
+          Exit;
       end;
 
       { self is implicitly returned from constructors, even if there are no
         references to it; additionally, funcretsym is not set for constructor
         procdefs }
-      if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) then
-        rr.ressym:=TSym(CurrentProcInfo.procdef.ParaST.Find('self'))
-      else if not is_void(CurrentProcInfo.procdef.ReturnDef) and
-         Assigned(CurrentProcInfo.procdef.FuncRetSym) and
-         (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs <> 0) then
-        rr.ressym:=CurrentProcInfo.procdef.FuncRetSym;
+      if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_constructor) then
+        RR.ResSym:=TSym(CurrentProcInfo.ProcDef.ParaST.Find('self'))
+      else if not Is_Void(CurrentProcInfo.ProcDef.ReturnDef) and
+         Assigned(CurrentProcInfo.ProcDef.FuncRetSym) and
+         (TAbstractVarSym(CurrentProcInfo.ProcDef.FuncRetSym).Refs <> 0) then
+        RR.ResSym:=CurrentProcInfo.ProcDef.FuncRetSym;
 
-      if not foreachnode(n,@do_replace_node_regs,@rr) then
-        exit;
+      if not ForEachNode(N,@Do_Replace_Node_Regs,@RR) then
+        Exit;
 
-      if reload then
-        case n.location.loc of
+      if Reload then
+        case N.Location.Loc of
           LOC_CREGISTER:
             begin
 {$ifdef cpu64bitalu}
-              if (n.location.size in [OS_128,OS_S128]) then
-                cg128.a_load128_reg_reg(list,n.location.register128,joinreg128(rr.new,rr.newhi))
+              if (N.Location.Size in [OS_128,OS_S128]) then
+                CG128.A_Load128_Reg_Reg(List,N.Location.Register128,JoinReg128(RR.New,RR.NewHi))
               else
 {$else cpu64bitalu}
-              if (n.location.size in [OS_64,OS_S64]) then
-                cg64.a_load64_reg_reg(list,n.location.register64,joinreg64(rr.new,rr.newhi))
+              if (N.Location.Size in [OS_64,OS_S64]) then
+                CG64.A_Load64_Reg_Reg(List,N.Location.Register64,JoinReg64(RR.New,RR.NewHi))
               else
 {$endif cpu64bitalu}
-                a_load_reg_reg(list,n.resultdef,n.resultdef,n.location.register,rr.new);
+                A_Load_Reg_Reg(List,N.ResultDef,N.ResultDef,N.Location.Register,RR.New);
             end;
           LOC_CFPUREGISTER:
-            cg.a_loadfpu_reg_reg(list,n.location.size,n.location.size,n.location.register,rr.new);
+            CG.A_LoadFPU_Reg_Reg(List,N.Location.Size,N.Location.Size,N.Location.Register,RR.New);
 {$ifdef SUPPORT_MMX}
           LOC_CMMXREGISTER:
-            cg.a_loadmm_reg_reg(list,OS_M64,OS_M64,n.location.register,rr.new,nil);
+            CG.A_LoadMM_Reg_Reg(List,OS_M64,OS_M64,N.Location.Register,RR.New,nil);
 {$endif SUPPORT_MMX}
           LOC_CMMREGISTER:
-            a_loadmm_reg_reg(list,n.resultdef,n.resultdef,n.location.register,rr.new,nil);
+            A_LoadMM_Reg_Reg(List,N.ResultDef,N.ResultDef,N.Location.Register,RR.New,nil);
           else
             InternalError(2006090920);
         end;
 
       { now that we've change the loadn/temp, also change the node result location }
 {$ifdef cpu64bitalu}
-      if (n.location.size in [OS_128,OS_S128]) then
+      if (N.Location.Size in [OS_128,OS_S128]) then
         begin
-          n.location.register128.reglo := rr.new;
-          n.location.register128.reghi := rr.newhi;
-          if Assigned(rr.sym) then
+          N.Location.Register128.RegLo := RR.New;
+          N.Location.Register128.RegHi := RR.NewHi;
+          if Assigned(RR.Sym) then
             begin
-              varloc:=TAIVarLoc.create128(rr.sym,rr.new,rr.newhi);
-              list.concat(varloc);
+              VarLoc:=TAIVarLoc.Create128(RR.Sym,RR.New,RR.NewHi);
+              List.Concat(VarLoc);
             end;
         end
       else
 {$else cpu64bitalu}
-      if (n.location.size in [OS_64,OS_S64]) then
+      if (N.Location.Size in [OS_64,OS_S64]) then
         begin
-          n.location.register64.reglo := rr.new;
-          n.location.register64.reghi := rr.newhi;
-          if Assigned(rr.sym) then
+          N.Location.Register64.RegLo := RR.New;
+          N.Location.Register64.RegHi := RR.NewHi;
+          if Assigned(RR.Sym) then
             begin
-              varloc:=TAIVarLoc.create64(rr.sym,rr.new,rr.newhi);
-              list.concat(varloc);
+              VarLoc:=TAIVarLoc.Create64(RR.Sym,RR.New,RR.NewHi);
+              List.Concat(VarLoc);
             end;
         end
       else
 {$endif cpu64bitalu}
         begin
-          n.location.register := rr.new;
-          if Assigned(rr.sym) then
+          N.Location.Register := RR.New;
+          if Assigned(RR.Sym) then
             begin
-              varloc:=TAIVarLoc.create(rr.sym,rr.new);
-              list.concat(varloc);
+              VarLoc:=TAIVarLoc.Create(RR.Sym,RR.New);
+              List.Concat(VarLoc);
             end;
         end;
     end;
 
 
-  function THLCGObj.do_replace_node_regs(var n: TNode; para: pointer): TForEachNodeResult;
+  function THLCGObj.Do_Replace_Node_Regs(var N: TNode; Para: Pointer): TForEachNodeResult;
     var
-      rr: PReplaceRegRec absolute para;
+      RR: PReplaceRegRec absolute Para;
     begin
-      result := fen_false;
-      if (nf_is_funcret in n.flags) and (fc_exit in flowcontrol) then
-        exit;
-      case n.nodetype of
-        loadn:
+      Result := fen_false;
+      if (nf_is_funcret in N.Flags) and (fc_exit in FlowControl) then
+        Exit;
+      case N.NodeType of
+        LoadN:
           begin
-            if (TLoadNode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
-               (TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions * [vo_is_dll_var, vo_is_thread_var] = []) and
-               not Assigned(TLoadNode(n).left) and
-               ((TLoadNode(n).symtableentry <> rr^.ressym) or
-                not(fc_exit in flowcontrol)
+            if (TLoadNode(N).SymTableEntry.Typ in [LocalVarSym,ParaVarSym,StaticVarSym]) and
+               (TAbstractVarSym(TLoadNode(N).SymTableEntry).VarOptions * [vo_is_dll_var, vo_is_thread_var] = []) and
+               not Assigned(TLoadNode(N).Left) and
+               ((TLoadNode(N).SymTableEntry <> RR^.ResSym) or
+                not(fc_exit in FlowControl)
                ) and
-               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
-               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register = rr^.old) then
+               (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
+               (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register = RR^.Old) then
               begin
 {$ifdef cpu64bitalu}
                 { it's possible a 128 bit location was shifted and/xor typecasted }
                 { in a 64 bit value, so only 1 register was left in the location }
-                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.size in [OS_128,OS_S128]) then
-                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register128.reghi = rr^.oldhi) then
-                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register128.reghi := rr^.newhi
+                if (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Size in [OS_128,OS_S128]) then
+                  if (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register128.RegHi = RR^.OldHi) then
+                    TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register128.RegHi := RR^.NewHi
                   else
-                    exit;
+                    Exit;
 {$else cpu64bitalu}
                 { it's possible a 64 bit location was shifted and/xor typecasted }
                 { in a 32 bit value, so only 1 register was left in the location }
-                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.size in [OS_64,OS_S64]) then
-                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register64.reghi = rr^.oldhi) then
-                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register64.reghi := rr^.newhi
+                if (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Size in [OS_64,OS_S64]) then
+                  if (TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register64.RegHi = RR^.OldHi) then
+                    TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register64.RegHi := RR^.NewHi
                   else
-                    exit;
+                    Exit;
 {$endif cpu64bitalu}
-                TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register := rr^.new;
-                rr^.sym := TAbstractNormalVarSym(TLoadNode(n).symtableentry);
-                result := fen_norecurse_true;
+                TAbstractNormalVarSym(TLoadNode(N).SymTableEntry).LocAlloc.Register := RR^.New;
+                RR^.Sym := TAbstractNormalVarSym(TLoadNode(N).SymTableEntry);
+                Result := fen_norecurse_true;
               end;
           end;
-        temprefn:
+        TempRefN:
           begin
-            if (ti_valid in TTempRefNode(n).tempflags) and
-               (TTempRefNode(n).tempinfo^.location.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
-               (TTempRefNode(n).tempinfo^.location.register = rr^.old) then
+            if (ti_valid in TTempRefNode(N).TempFlags) and
+               (TTempRefNode(N).TempInfo^.Location.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
+               (TTempRefNode(N).TempInfo^.Location.Register = RR^.Old) then
               begin
 {$ifdef cpu64bitalu}
                 { it's possible a 128 bit location was shifted and/xor typecasted }
                 { in a 64 bit value, so only 1 register was left in the location }
-                if (TTempRefNode(n).tempinfo^.location.size in [OS_128,OS_S128]) then
-                  if (TTempRefNode(n).tempinfo^.location.register128.reghi = rr^.oldhi) then
-                    TTempRefNode(n).tempinfo^.location.register128.reghi := rr^.newhi
+                if (TTempRefNode(N).TempInfo^.Location.Size in [OS_128,OS_S128]) then
+                  if (TTempRefNode(N).TempInfo^.Location.Register128.RegHi = RR^.OldHi) then
+                    TTempRefNode(N).TempInfo^.Location.Register128.RegHi := RR^.NewHi
                   else
-                    exit;
+                    Exit;
 {$else cpu64bitalu}
                 { it's possible a 64 bit location was shifted and/xor typecasted }
                 { in a 32 bit value, so only 1 register was left in the location }
-                if (TTempRefNode(n).tempinfo^.location.size in [OS_64,OS_S64]) then
-                  if (TTempRefNode(n).tempinfo^.location.register64.reghi = rr^.oldhi) then
-                    TTempRefNode(n).tempinfo^.location.register64.reghi := rr^.newhi
+                if (TTempRefNode(N).TempInfo^.Location.Size in [OS_64,OS_S64]) then
+                  if (TTempRefNode(N).TempInfo^.Location.Register64.RegHi = RR^.OldHi) then
+                    TTempRefNode(N).TempInfo^.Location.Register64.RegHi := RR^.NewHi
                   else
-                    exit;
+                    Exit;
 {$endif cpu64bitalu}
-                TTempRefNode(n).tempinfo^.location.register := rr^.new;
-                result := fen_norecurse_true;
+                TTempRefNode(N).TempInfo^.Location.Register := RR^.New;
+                Result := fen_norecurse_true;
               end;
           end;
         { optimize the searching a bit }
-        derefn,addrn,
-        calln,inlinen,casen,
-        addn,subn,muln,
-        andn,orn,xorn,
-        ltn,lten,gtn,gten,equaln,unequaln,
-        slashn,divn,shrn,shln,notn,
-        inn,
-        asn,isn:
-          result := fen_norecurse_false;
-        vecn:
+        DerefN,AddrN,
+        CallN,InlineN,CaseN,
+        AddN,SubN,MulN,
+        AndN,OrN,XorN,
+        LtN,LteN,GtN,GteN,EqualN,UnequalN,
+        SlashN,DivN,ShrN,ShlN,NotN,
+        InN,
+        ASN,IsN:
+          Result := fen_norecurse_false;
+        VecN:
           { we cannot do SSA during partial writes to arrays which span multiple registers, see also tw39325 }
-          if (TVecNode(n).left.location.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
-            (tcgsize2size[reg_cgsize(TVecNode(n).left.location.register)]<>TVecNode(n).left.resultdef.size) then
-            result := fen_norecurse_false;
+          if (TVecNode(N).Left.Location.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
+            (TCgSize2Size[reg_cgsize(TVecNode(N).Left.Location.Register)]<>TVecNode(N).Left.ResultDef.Size) then
+            Result := fen_norecurse_false;
         else
           ;
       end;
     end;
 
 
-  procedure THLCGObj.gen_proc_symbol(list: TAsmList);
+  procedure THLCGObj.Gen_Proc_Symbol(List: TAsmList);
     begin
-      fphlcgobjhelper.gen_proc_symbol(list);
+      FPHLCGObjHelper.Gen_Proc_Symbol(List);
     end;
 
-  procedure THLCGObj.gen_proc_symbol_end(list: TAsmList);
+  procedure THLCGObj.Gen_Proc_Symbol_End(List: TAsmList);
     begin
       if nexus_profile_proc_eligible(CurrentProcInfo) then
         begin
           if not Assigned(CurrentProcInfo.nexus_profile_endlabel) then
-            CurrentAsmData.getjumplabel(CurrentProcInfo.nexus_profile_endlabel);
-          list.concat(TAILabel.create(CurrentProcInfo.nexus_profile_endlabel));
-          emit_nexus_profile_descriptor;
+            CurrentAsmData.GetJumpLabel(CurrentProcInfo.nexus_profile_endlabel);
+          List.Concat(TAILabel.Create(CurrentProcInfo.nexus_profile_endlabel));
+          Emit_Nexus_Profile_Descriptor;
         end;
-      if (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) and
+      if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_proginit) and
          (cs_nexus_profile in CurrentSettings.ModuleSwitches) and
-         (TargetInfo.system=system_x86_64_win64) and
+         (TargetInfo.System=system_x86_64_win64) and
          not CurrentModule.IsLibrary then
-        emit_nexus_profile_module_data;
-      list.concat(TAISymbolEnd.Createname(CurrentProcInfo.procdef.MangledName));
-      CurrentProcInfo.procdef.ProcEndTAI:=TAI(list.last);
+        Emit_Nexus_Profile_Module_Data;
+      List.Concat(TAISymbolEnd.Createname(CurrentProcInfo.ProcDef.MangledName));
+      CurrentProcInfo.ProcDef.ProcEndTAI:=TAI(List.Last);
     end;
 
 
-  procedure THLCGObj.handle_external_proc(list: TAsmList; pd: TProcDef; const importname: TSymStr);
+  procedure THLCGObj.Handle_External_Proc(List: TAsmList; PD: TProcDef; const ImportName: TSymStr);
     begin
       { External declared in implementation, and there was already a
         forward (or interface) declaration then we need to generate
         a stub that calls the external routine }
-      if (not pd.ForwardDef) and
-         (pd.HasForward) then
+      if (not PD.ForwardDef) and
+         (PD.HasForward) then
         begin
-          if importname<>'' then
+          if ImportName<>'' then
             begin
              { add the procedure to the al_procedures }
-             g_external_wrapper(list,pd,pd.MangledName,importname,true);
+             G_External_Wrapper(List,PD,PD.MangledName,ImportName,True);
             end;
           { remove the external stuff, so that the interface crc
             doesn't change. This makes the function calls less
             efficient, but it means that the interface doesn't
             change if the function is ever redirected to another
             function or implemented in the unit. }
-          pd.ProcOptions:=pd.ProcOptions-[po_external,po_has_importname,po_has_importdll];
-          StringDispose(pd.ImportName);
-          StringDispose(pd.ImportDLL);
-          pd.ImportNr:=0;
+          PD.ProcOptions:=PD.ProcOptions-[po_external,po_has_importname,po_has_importdll];
+          StringDispose(PD.ImportName);
+          StringDispose(PD.ImportDLL);
+          PD.ImportNr:=0;
         end;
     end;
 
 
-  procedure THLCGObj.gen_initialize_code(list: TAsmList);
+  procedure THLCGObj.Gen_Initialize_Code(List: TAsmList);
     begin
       { initialize global register variables }
-      case CurrentProcInfo.procdef.ProcTypeOption of
+      case CurrentProcInfo.ProcDef.ProcTypeOption of
         potype_unitinit,
         potype_proginit:
-          TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@initialize_regvars,list);
+          TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@Initialize_RegVars,List);
         else
           ;
       end;
 
       { initialises temp. ansi/wide string data }
-      if (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) or
-         (TargetInfo.system=system_aarch64_win64) then
-        inittempvariables(list);
+      if (CurrentProcInfo.ProcDef.ProcTypeOption<>potype_exceptfilter) or
+         (TargetInfo.System=system_aarch64_win64) then
+        InitTempVariables(List);
     end;
 
-  procedure THLCGObj.gen_finalize_code(list: TAsmList);
+  procedure THLCGObj.Gen_Finalize_Code(List: TAsmList);
     var
-      old_current_procinfo: TProcInfo;
-      for_finalization: boolean;
+      OldCurrentProcInfo: TProcInfo;
+      ForFinalization: Boolean;
     begin
-      old_current_procinfo:=CurrentProcInfo;
-      for_finalization:=false;
-      if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
+      OldCurrentProcInfo:=CurrentProcInfo;
+      ForFinalization:=False;
+      if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) then
         begin
-          if (CurrentProcInfo.parent.finalize_procinfo<>CurrentProcInfo) then
-            exit;
-          CurrentProcInfo:=CurrentProcInfo.parent;
-          for_finalization:=true;
+          if (CurrentProcInfo.Parent.finalize_procinfo<>CurrentProcInfo) then
+            Exit;
+          CurrentProcInfo:=CurrentProcInfo.Parent;
+          ForFinalization:=True;
         end;
 
       { finalize paras data }
-      if Assigned(CurrentProcInfo.procdef.ParaST) and
-         not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
-        CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@final_paras,list);
+      if Assigned(CurrentProcInfo.ProcDef.ParaST) and
+         not(po_assembler in CurrentProcInfo.ProcDef.ProcOptions) then
+        CurrentProcInfo.ProcDef.ParaST.SymList.ForEachCall(@Final_Paras,List);
 
       { finalize temporary data }
-      finalizetempvariables(list,for_finalization);
+      FinalizeTempVariables(List,ForFinalization);
 
-      CurrentProcInfo:=old_current_procinfo;
+      CurrentProcInfo:=OldCurrentProcInfo;
     end;
 
-  procedure THLCGObj.varsym_set_localloc(list: TAsmList; vs: TAbstractNormalVarSym);
+  procedure THLCGObj.VarSym_Set_LocAlloc(List: TAsmList; VS: TAbstractNormalVarSym);
     begin
       if cs_asm_source in CurrentSettings.GlobalSwitches then
         begin
-          case vs.InitialLoc.loc of
+          case VS.InitialLoc.Loc of
             LOC_REFERENCE :
               begin
-                if not Assigned(vs.InitialLoc.reference.symbol) then
-                  list.concat(TAIComment.Create(StrPNew('Var '+vs.realname+' located at '+
-                     std_regname(vs.InitialLoc.reference.base)+ToStr_With_Plus(vs.InitialLoc.reference.offset)+
-                     ', size='+tcgsize2str(vs.InitialLoc.size))));
+                if not Assigned(VS.InitialLoc.Reference.Symbol) then
+                  List.Concat(TAIComment.Create(StrPNew('Var '+VS.RealName+' located at '+
+                     std_regname(VS.InitialLoc.Reference.Base)+ToStr_With_Plus(VS.InitialLoc.Reference.Offset)+
+                     ', size='+TCgSize2Str(VS.InitialLoc.Size))));
               end;
             else
               ;
           end;
         end;
-      vs.LocAlloc:=vs.InitialLoc;
+      VS.LocAlloc:=VS.InitialLoc;
     end;
 
-  procedure THLCGObj.paravarsym_set_initialloc_to_paraloc(vs: TParaVarSym);
+  procedure THLCGObj.ParaVarSym_Set_InitialLoc_To_ParaLoc(VS: TParaVarSym);
     begin
-      reference_reset_base(vs.InitialLoc.reference,VoidStackPointerType,TParaVarSym(vs).ParaLoc[calleeside].location^.reference.index,
-          TParaVarSym(vs).ParaLoc[calleeside].location^.reference.offset,ctempposinvalid,
-          TParaVarSym(vs).ParaLoc[calleeside].alignment,[]);
+      Reference_Reset_Base(VS.InitialLoc.Reference,VoidStackPointerType,TParaVarSym(VS).ParaLoc[CalleeSide].Location^.Reference.Index,
+          TParaVarSym(VS).ParaLoc[CalleeSide].Location^.Reference.Offset,CTempPosInvalid,
+          TParaVarSym(VS).ParaLoc[CalleeSide].Alignment,[]);
     end;
 
-  procedure THLCGObj.gen_entry_code(list: TAsmList);
+  procedure THLCGObj.Gen_Entry_Code(List: TAsmList);
     begin
       { call startup helpers from main program }
-      if (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) then
+      if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_proginit) then
        begin
          if cs_nexus_profile in CurrentSettings.ModuleSwitches then
-           gen_nexus_profile_module_call(list,'nxp_module_register');
+           Gen_Nexus_Profile_Module_Call(List,'nxp_module_register');
          { initialize units }
          if not(CurrentModule.IsLibrary) then
            begin
-             if tf_init_final_units_by_calls in TargetInfo.flags then
+             if tf_init_final_units_by_calls in TargetInfo.Flags then
                begin
                  { Only insert call if there are init functions }
                  if CNodeUtils.has_init_list then
-                   cg.a_call_name(list,'FPC_INIT_FUNC_TABLE',false);
+                   CG.A_Call_Name(List,'FPC_INIT_FUNC_TABLE',False);
                end
              else
-               g_call_system_proc(list,'fpc_initializeunits',[],nil).resetiftemp;
+               G_Call_System_Proc(List,'fpc_initializeunits',[],nil).ResetIfTemp;
            end
          else
-           g_call_system_proc(list,'fpc_libinitializeunits',[],nil).resetiftemp;
+           G_Call_System_Proc(List,'fpc_libinitializeunits',[],nil).ResetIfTemp;
        end;
 
       { The program body starts after its units. The image was already
         registered before unit initialization. }
       if nexus_profile_proc_eligible(CurrentProcInfo) then
-        gen_nexus_profile_call(list,'nxp_enter');
+        Gen_Nexus_Profile_Call(List,'nxp_enter');
 
-      list.concat(TAIForceLine.Create);
+      List.Concat(TAIForceLine.Create);
     end;
 
-  procedure THLCGObj.gen_exit_code(list: TAsmList);
+  procedure THLCGObj.Gen_Exit_Code(List: TAsmList);
     begin
       { TODO: create high level version (create compilerproc in system unit,
           look up procdef, use hlcgobj.a_call_name()) }
 
       if nexus_profile_proc_eligible(CurrentProcInfo) then
-        gen_nexus_profile_call(list,'nxp_leave');
+        Gen_Nexus_Profile_Call(List,'nxp_leave');
 
       { call __EXIT for main program }
       if (not CurrentModule.IsLibrary) and
-         (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) then
-        g_call_system_proc(list,'fpc_do_exit',[],nil).resetiftemp;
+         (CurrentProcInfo.ProcDef.ProcTypeOption=potype_proginit) then
+        G_Call_System_Proc(List,'fpc_do_exit',[],nil).ResetIfTemp;
     end;
 
 {$push}{$Q-}
-  function nexus_profile_hash64(const s: AnsiString): qword;
+  function NexusProfileHash64(const S: AnsiString): QWord;
     var
-      i: SizeInt;
+      I: SizeInt;
     begin
-      result:=qword($CBF29CE484222325);
-      for i:=1 to length(s) do
+      Result:=QWord($CBF29CE484222325);
+      for I:=1 to Length(S) do
         begin
-          result:=result xor byte(s[i]);
-          result:=result*qword($100000001B3);
+          Result:=Result xor Byte(S[I]);
+          Result:=Result*QWord($100000001B3);
         end;
     end;
 {$pop}
 
-  procedure ensure_nexus_profile_descriptor_symbol;
+  procedure EnsureNexusProfileDescriptorSymbol;
     var
-      symname: string;
+      SymName: string;
     begin
       if Assigned(CurrentProcInfo.nexus_profile_descsym) then
-        exit;
-      symname:='NXP_DESC_'+CurrentModule.ModuleName^+'_'+
-        CurrentProcInfo.procdef.UniqueIDStr;
+        Exit;
+      SymName:='NXP_DESC_'+CurrentModule.ModuleName^+'_'+
+        CurrentProcInfo.ProcDef.UniqueIDStr;
       CurrentProcInfo.nexus_profile_descsym:=CurrentAsmData.DefineAsmSymbol(
-        symname,AB_LOCAL,AT_DATA,VoidPointerType);
+        SymName,AB_LOCAL,AT_DATA,VoidPointerType);
     end;
 
-  procedure THLCGObj.gen_nexus_profile_call(list:TAsmList; const hookname:TIDString);
+  procedure THLCGObj.Gen_Nexus_Profile_Call(List:TAsmList; const HookName:TIDString);
     var
-      para: TCGPara;
+      Para: TCGPara;
       ParaLoc: PCGParaLocation;
-      href: TReference;
+      HRef: TReference;
     begin
-      ensure_nexus_profile_descriptor_symbol;
+      EnsureNexusProfileDescriptorSymbol;
 {$ifdef x86_64}
-      CurrentModule.Add_Extern_AsmSym(hookname,AB_EXTERNAL,AT_FUNCTION);
-      para.init;
-      para.def:=VoidPointerType;
-      para.size:=OS_ADDR;
-      para.intsize:=sizeof(PInt);
-      ParaLoc:=para.add_location;
-      ParaLoc^.def:=VoidPointerType;
-      ParaLoc^.size:=OS_ADDR;
-      ParaLoc^.loc:=LOC_REGISTER;
-      ParaLoc^.register:=NR_RCX;
-      reference_reset_symbol(href,CurrentProcInfo.nexus_profile_descsym,0,
-        sizeof(PInt),[]);
-      a_loadaddr_ref_cgpara(list,VoidPointerType,href,para);
-      allocallcpuregisters(list);
-      cg.a_call_name(list,hookname,false);
-      deallocallcpuregisters(list);
-      para.done;
+      CurrentModule.Add_Extern_AsmSym(HookName,AB_EXTERNAL,AT_FUNCTION);
+      Para.Init;
+      Para.Def:=VoidPointerType;
+      Para.Size:=OS_ADDR;
+      Para.IntSize:=SizeOf(PInt);
+      ParaLoc:=Para.Add_Location;
+      ParaLoc^.Def:=VoidPointerType;
+      ParaLoc^.Size:=OS_ADDR;
+      ParaLoc^.Loc:=LOC_REGISTER;
+      ParaLoc^.Register:=NR_RCX;
+      Reference_Reset_Symbol(HRef,CurrentProcInfo.nexus_profile_descsym,0,
+        SizeOf(PInt),[]);
+      A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,Para);
+      AllocAllCPURegisters(List);
+      CG.A_Call_Name(List,HookName,False);
+      DeallocAllCPURegisters(List);
+      Para.Done;
 {$else x86_64}
       InternalError(2026092301);
 {$endif x86_64}
     end;
 
-  procedure THLCGObj.gen_nexus_profile_module_call(list:TAsmList;
-    const hookname:TIDString);
+  procedure THLCGObj.Gen_Nexus_Profile_Module_Call(List:TAsmList;
+    const HookName:TIDString);
     var
-      para: TCGPara;
+      Para: TCGPara;
       ParaLoc: PCGParaLocation;
-      href: TReference;
-      modulesym: TAsmSymbol;
+      HRef: TReference;
+      ModuleSym: TAsmSymbol;
     begin
 {$ifdef x86_64}
-      CurrentModule.Add_Extern_AsmSym(hookname,AB_EXTERNAL,AT_FUNCTION);
-      modulesym:=CurrentAsmData.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
-      para.init;
-      para.def:=VoidPointerType;
-      para.size:=OS_ADDR;
-      para.intsize:=sizeof(PInt);
-      ParaLoc:=para.add_location;
-      ParaLoc^.def:=VoidPointerType;
-      ParaLoc^.size:=OS_ADDR;
-      ParaLoc^.loc:=LOC_REGISTER;
-      ParaLoc^.register:=NR_RCX;
-      reference_reset_symbol(href,modulesym,0,sizeof(PInt),[]);
-      a_loadaddr_ref_cgpara(list,VoidPointerType,href,para);
-      allocallcpuregisters(list);
-      cg.a_call_name(list,hookname,false);
-      deallocallcpuregisters(list);
-      para.done;
+      CurrentModule.Add_Extern_AsmSym(HookName,AB_EXTERNAL,AT_FUNCTION);
+      ModuleSym:=CurrentAsmData.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
+      Para.Init;
+      Para.Def:=VoidPointerType;
+      Para.Size:=OS_ADDR;
+      Para.IntSize:=SizeOf(PInt);
+      ParaLoc:=Para.Add_Location;
+      ParaLoc^.Def:=VoidPointerType;
+      ParaLoc^.Size:=OS_ADDR;
+      ParaLoc^.Loc:=LOC_REGISTER;
+      ParaLoc^.Register:=NR_RCX;
+      Reference_Reset_Symbol(HRef,ModuleSym,0,SizeOf(PInt),[]);
+      A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,Para);
+      AllocAllCPURegisters(List);
+      CG.A_Call_Name(List,HookName,False);
+      DeallocAllCPURegisters(List);
+      Para.Done;
 {$else x86_64}
       InternalError(2026092302);
 {$endif x86_64}
     end;
 
-  procedure THLCGObj.emit_nexus_profile_descriptor;
+  procedure THLCGObj.Emit_Nexus_Profile_Descriptor;
     const
       NXP_DESC_MAGIC = $4450584E; { NXPD }
       NXP_DESC_ABI = 1;
       NXP_DESC_SIZE = 72;
     var
-      pd: TProcDef;
-      key,name,profunitname,source: AnsiString;
-      stableid: qword;
-      namelabel,unitlabel,sourcelabel: TAsmLabOfs;
-      sourcefile: TInputFile;
-      section: TAISection;
-      tcb: TTAITypedConstBuilder;
+      PD: TProcDef;
+      Key,Name,ProfUnitName,Source: AnsiString;
+      StableID: QWord;
+      NameLabel,UnitLabel,SourceLabel: TAsmLabOfs;
+      SourceFile: TInputFile;
+      Section: TAISection;
+      TCB: TTAITypedConstBuilder;
     begin
-      ensure_nexus_profile_descriptor_symbol;
-      pd:=CurrentProcInfo.procdef;
-      name:=pd.FullProcName(true);
-      profunitname:=CurrentModule.RealModuleName^;
-      sourcefile:=Get_Source_File(CurrentProcInfo.entrypos.moduleindex,
-        CurrentProcInfo.entrypos.fileindex);
-      if Assigned(sourcefile) then
-        source:=sourcefile.path+sourcefile.name
+      EnsureNexusProfileDescriptorSymbol;
+      PD:=CurrentProcInfo.ProcDef;
+      Name:=PD.FullProcName(True);
+      ProfUnitName:=CurrentModule.RealModuleName^;
+      SourceFile:=Get_Source_File(CurrentProcInfo.EntryPos.ModuleIndex,
+        CurrentProcInfo.EntryPos.FileIndex);
+      if Assigned(SourceFile) then
+        Source:=SourceFile.Path+SourceFile.Name
       else
-        source:='';
-      key:=profunitname+'|'+name+'|'+pd.MangledName+'|'+pd.UniqueIDStr;
-      stableid:=nexus_profile_hash64(key);
-      tcb:=CTAITypedConstBuilder.create([]);
-      if name='' then
-        namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
+        Source:='';
+      Key:=ProfUnitName+'|'+Name+'|'+PD.MangledName+'|'+PD.UniqueIDStr;
+      StableID:=NexusProfileHash64(Key);
+      TCB:=CTAITypedConstBuilder.Create([]);
+      if Name='' then
+        NameLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
           nil,0,GetAnsiStringCodePage)
       else
-        namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @name[1],length(name),GetAnsiStringCodePage);
-      if profunitname='' then
-        unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
+        NameLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
+          @Name[1],Length(Name),GetAnsiStringCodePage);
+      if ProfUnitName='' then
+        UnitLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
           nil,0,GetAnsiStringCodePage)
       else
-        unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @profunitname[1],length(profunitname),GetAnsiStringCodePage);
-      if source='' then
-        sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
+        UnitLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
+          @ProfUnitName[1],Length(ProfUnitName),GetAnsiStringCodePage);
+      if Source='' then
+        SourceLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
           nil,0,GetAnsiStringCodePage)
       else
-        sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @source[1],length(source),GetAnsiStringCodePage);
-      tcb.free;
-      section:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
-        '.nxprof$M_'+HexStr(int64(stableid),16),3);
-      CurrentProcInfo.nexus_profile_section:=section;
-      CurrentProcInfo.aktlocaldata.concat(TAISymbol.create(
+        SourceLabel:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],
+          @Source[1],Length(Source),GetAnsiStringCodePage);
+      TCB.Free;
+      Section:=new_section(CurrentProcInfo.AktLocalData,sec_user,
+        '.nxprof$M_'+HexStr(Int64(StableID),16),3);
+      CurrentProcInfo.nexus_profile_section:=Section;
+      CurrentProcInfo.AktLocalData.Concat(TAISymbol.Create(
         CurrentProcInfo.nexus_profile_descsym,NXP_DESC_SIZE));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(NXP_DESC_MAGIC));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_16bit(NXP_DESC_ABI));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_16bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_64bit(int64(stableid)));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym(
-        CurrentAsmData.RefAsmSymbol(pd.MangledName,AT_FUNCTION)));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym(
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(NXP_DESC_MAGIC));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(NXP_DESC_ABI));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_64bit(Int64(StableID)));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym(
+        CurrentAsmData.RefAsmSymbol(PD.MangledName,AT_FUNCTION)));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym(
         CurrentProcInfo.nexus_profile_endlabel));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym_offset(
-        namelabel.lab,namelabel.ofs));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym_offset(
-        unitlabel.lab,unitlabel.ofs));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym_offset(
-        sourcelabel.lab,sourcelabel.ofs));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(
-        CurrentProcInfo.entrypos.line));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(
-        CurrentProcInfo.entrypos.column));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
+        NameLabel.Lab,NameLabel.Ofs));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
+        UnitLabel.Lab,UnitLabel.Ofs));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
+        SourceLabel.Lab,SourceLabel.Ofs));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(
+        CurrentProcInfo.EntryPos.Line));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(
+        CurrentProcInfo.EntryPos.Column));
     end;
 
-  procedure THLCGObj.emit_nexus_profile_module_data;
+  procedure THLCGObj.Emit_Nexus_Profile_Module_Data;
     const
       NXP_MODULE_MAGIC = $4D50584E; { NXPM }
       NXP_MODULE_ABI = 1;
       NXP_MODULE_SIZE = 32;
     var
-      startsection,endsection,modulesection: TAISection;
-      startsym,endsym,modulesym: TAsmSymbol;
+      StartSection,EndSection,ModuleSection: TAISection;
+      StartSym,EndSym,ModuleSym: TAsmSymbol;
     begin
-      startsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_start',
+      StartSym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_start',
         AB_GLOBAL,AT_DATA,VoidPointerType);
-      endsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_end',
+      EndSym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_end',
         AB_GLOBAL,AT_DATA,VoidPointerType);
-      modulesym:=CurrentAsmData.DefineAsmSymbol('__NXP_module_descriptor',
+      ModuleSym:=CurrentAsmData.DefineAsmSymbol('__NXP_module_descriptor',
         AB_GLOBAL,AT_DATA,VoidPointerType);
 
-      modulesection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
+      ModuleSection:=new_section(CurrentProcInfo.AktLocalData,sec_user,
         '.nxprof$0',3);
-      CurrentProcInfo.aktlocaldata.concat(TAISymbol.create_global(modulesym,
+      CurrentProcInfo.AktLocalData.Concat(TAISymbol.create_global(ModuleSym,
         NXP_MODULE_SIZE));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(
         NXP_MODULE_MAGIC));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_16bit(
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(
         NXP_MODULE_ABI));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_16bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(0));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym_offset(
-        startsym,sizeof(QWord)));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym(endsym));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
+        StartSym,SizeOf(QWord)));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym(EndSym));
 
-      startsection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
+      StartSection:=new_section(CurrentProcInfo.AktLocalData,sec_user,
         '.nxprof$A',3);
-      CurrentProcInfo.aktlocaldata.concat(TAISymbol.create_global(startsym,
-        sizeof(QWord)));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_64bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAISymbol.create_global(StartSym,
+        SizeOf(QWord)));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_64bit(0));
 
-      endsection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
+      EndSection:=new_section(CurrentProcInfo.AktLocalData,sec_user,
         '.nxprof$Z',3);
-      CurrentProcInfo.aktlocaldata.concat(TAISymbol.create_global(endsym,
-        sizeof(QWord)));
-      CurrentProcInfo.aktlocaldata.concat(TAIConst.create_64bit(0));
+      CurrentProcInfo.AktLocalData.Concat(TAISymbol.create_global(EndSym,
+        SizeOf(QWord)));
+      CurrentProcInfo.AktLocalData.Concat(TAIConst.create_64bit(0));
       { Keep the locals assigned so builds with internal consistency checks can
         verify all three explicit sections were created. }
-      if not Assigned(modulesection) or not Assigned(startsection) or
-         not Assigned(endsection) then
+      if not Assigned(ModuleSection) or not Assigned(StartSection) or
+         not Assigned(EndSection) then
         InternalError(2026092303);
     end;
 
-  procedure THLCGObj.inittempvariables(list: TAsmList);
+  procedure THLCGObj.InitTempVariables(List: TAsmList);
     var
-      hp : PTempRecord;
-      href : TReference;
+      HP : PTempRecord;
+      HRef : TReference;
     begin
-      hp:=tg.templist;
-      while Assigned(hp) do
+      HP:=TG.TempList;
+      while Assigned(HP) do
        begin
-         if hp^.fini and
-            Assigned(hp^.def) and
-            is_managed_type(hp^.def) then
+         if HP^.Fini and
+            Assigned(HP^.Def) and
+            Is_Managed_Type(HP^.Def) then
           begin
-            tg.temp_to_ref(hp,href);
+            TG.temp_to_ref(HP,HRef);
             { On AArch64-Win64 exceptfilters have their own SP-relative temps
               but share the parent's temp allocator. Parent temps are already
               initialised by the parent; only handler-local temps need zeroing.
               adjust_exceptfilter_ref converts parent temps to FP-relative,
               so if the base changed from the framepointer it is a parent temp. }
-            if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
+            if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) then
               begin
-                cg.adjust_exceptfilter_ref(href,false);
-                if href.base<>CurrentProcInfo.framepointer then
+                CG.Adjust_ExceptFilter_Ref(HRef,False);
+                if HRef.Base<>CurrentProcInfo.FramePointer then
                   begin
-                    hp:=hp^.next;
-                    continue;
+                    HP:=HP^.Next;
+                    Continue;
                   end;
               end;
-            g_initialize(list,hp^.def,href);
+            G_Initialize(List,HP^.Def,HRef);
           end;
-         hp:=hp^.next;
+         HP:=HP^.Next;
        end;
     end;
 
-  procedure THLCGObj.finalizetempvariables(list: TAsmList;for_finalization:boolean);
+  procedure THLCGObj.FinalizeTempVariables(List: TAsmList;ForFinalization:Boolean);
     var
-      hp : PTempRecord;
-      href : TReference;
+      HP : PTempRecord;
+      HRef : TReference;
     begin
-      hp:=tg.templist;
-      while Assigned(hp) do
+      HP:=TG.TempList;
+      while Assigned(HP) do
        begin
-         if hp^.fini and
-            Assigned(hp^.def) and
-            is_managed_type(hp^.def) then
+         if HP^.Fini and
+            Assigned(HP^.Def) and
+            Is_Managed_Type(HP^.Def) then
           begin
-            include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-            tg.temp_to_ref(hp,href);
-            if for_finalization then
-              cg.adjust_exceptfilter_ref(href,true);
-            g_finalize(list,hp^.def,href);
+            Include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
+            TG.temp_to_ref(HP,HRef);
+            if ForFinalization then
+              CG.Adjust_ExceptFilter_Ref(HRef,True);
+            G_Finalize(List,HP^.Def,HRef);
           end;
-         hp:=hp^.next;
+         HP:=HP^.Next;
        end;
     end;
 
-  procedure THLCGObj.initialize_regvars(p: TObject; arg: pointer);
+  procedure THLCGObj.Initialize_RegVars(P: TObject; Arg: Pointer);
     var
-      href : TReference;
-      mmreg : TRegister;
+      HRef : TReference;
+      MMReg : TRegister;
     begin
-      if (TSym(p).typ=staticvarsym) and not(TStaticVarSym(p).NoRegVarInitNeeded) then
+      if (TSym(P).Typ=StaticVarSym) and not(TStaticVarSym(P).NoRegVarInitNeeded) then
        begin
          { Static variables can have the initialloc only set to LOC_CxREGISTER
            or LOC_INVALID, for explanation see gen_alloc_symtable (PFV) }
-         case TStaticVarSym(p).InitialLoc.loc of
+         case TStaticVarSym(P).InitialLoc.Loc of
            LOC_CREGISTER :
              begin
 {$ifdef cpu64bitalu}
-               if (TStaticVarSym(p).InitialLoc.size in [OS_128,OS_S128]) then
-                 cg128.a_load128_const_reg(TAsmList(arg),0,0,TStaticVarSym(p).InitialLoc.register128)
+               if (TStaticVarSym(P).InitialLoc.Size in [OS_128,OS_S128]) then
+                 CG128.A_Load128_Const_Reg(TAsmList(Arg),0,0,TStaticVarSym(P).InitialLoc.Register128)
                else
 {$else cpu64bitalu}
-               if (TStaticVarSym(p).InitialLoc.size in [OS_64,OS_S64]) then
-                 cg64.a_load64_const_reg(TAsmList(arg),0,TStaticVarSym(p).InitialLoc.register64)
+               if (TStaticVarSym(P).InitialLoc.Size in [OS_64,OS_S64]) then
+                 CG64.A_Load64_Const_Reg(TAsmList(Arg),0,TStaticVarSym(P).InitialLoc.Register64)
                else
 {$endif cpu64bitalu}
-                 a_load_const_reg(TAsmList(arg),TStaticVarSym(p).vardef,0,
-                     TStaticVarSym(p).InitialLoc.register);
+                 A_Load_Const_Reg(TAsmList(Arg),TStaticVarSym(P).VarDef,0,
+                     TStaticVarSym(P).InitialLoc.Register);
              end;
            LOC_CMMREGISTER :
              begin
                { clear the whole register }
-               mmreg:=newreg(R_MMREGISTER,getsupreg(TStaticVarSym(p).InitialLoc.register),R_SUBMMWHOLE);
-               a_opmm_reg_reg(TAsmList(arg),OP_XOR,TStaticVarSym(p).vardef, mmreg, mmreg,
+               MMReg:=NewReg(R_MMREGISTER,GetSupReg(TStaticVarSym(P).InitialLoc.Register),R_SUBMMWHOLE);
+               A_OpMM_Reg_Reg(TAsmList(Arg),OP_XOR,TStaticVarSym(P).VarDef, MMReg, MMReg,
                  { as we pass shuffle=nil, we have to pass a full register }
                  nil);
              end;
            LOC_CFPUREGISTER :
              begin
                { initialize fpu regvar by loading from memory }
-               reference_reset_symbol(href,
-                 CurrentAsmData.RefAsmSymbol(TStaticVarSym(p).MangledName,AT_DATA), 0,
-                 Var_Align(TStaticVarSym(p).vardef.alignment),[]);
-               a_loadfpu_ref_reg(TAsmList(arg), TStaticVarSym(p).vardef,
-                 TStaticVarSym(p).vardef, href, TStaticVarSym(p).InitialLoc.register);
+               Reference_Reset_Symbol(HRef,
+                 CurrentAsmData.RefAsmSymbol(TStaticVarSym(P).MangledName,AT_DATA), 0,
+                 Var_Align(TStaticVarSym(P).VarDef.Alignment),[]);
+               A_LoadFPU_Ref_Reg(TAsmList(Arg), TStaticVarSym(P).VarDef,
+                 TStaticVarSym(P).VarDef, HRef, TStaticVarSym(P).InitialLoc.Register);
              end;
            LOC_INVALID :
              ;
@@ -5511,61 +5511,61 @@ implementation
        end;
     end;
 
-  procedure THLCGObj.final_paras(p: TObject; arg: pointer);
+  procedure THLCGObj.Final_Paras(P: TObject; Arg: Pointer);
     var
-      list : TAsmList;
-      href : TReference;
-      hsym : TParaVarSym;
-      eldef : TDef;
-      highloc : TLocation;
+      List : TAsmList;
+      HRef : TReference;
+      HSym : TParaVarSym;
+      ElDef : TDef;
+      HighLoc : TLocation;
     begin
-      if not(TSym(p).typ=paravarsym) then
-        exit;
-      list:=TAsmList(arg);
-      if is_managed_type(TParaVarSym(p).vardef) then
+      if not(TSym(P).Typ=ParaVarSym) then
+        Exit;
+      List:=TAsmList(Arg);
+      if Is_Managed_Type(TParaVarSym(P).VarDef) then
        begin
-         if (TParaVarSym(p).VarSpez=vs_value) then
+         if (TParaVarSym(P).VarSpez=vs_value) then
           begin
-            include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-            location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).LocAlloc,href,
-              is_open_array(TParaVarSym(p).vardef) or
-              ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-               paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)),
-              sizeof(PInt));
-            if is_open_array(TParaVarSym(p).vardef) then
+            Include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
+            Location_Get_Data_Ref(List,TParaVarSym(P).VarDef,TParaVarSym(P).LocAlloc,HRef,
+              Is_Open_Array(TParaVarSym(P).VarDef) or
+              ((TargetInfo.System in systems_caller_copy_addr_value_para) and
+               ParaManager.Push_Addr_Param(vs_value,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption)),
+              SizeOf(PInt));
+            if Is_Open_Array(TParaVarSym(P).VarDef) then
               begin
-                if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
+                if ParaManager.Push_High_Param(TParaVarSym(P).VarSpez,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption) then
                   begin
-                    hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                    if not Assigned(hsym) then
+                    HSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(P)));
+                    if not Assigned(HSym) then
                       InternalError(201003032);
-                    highloc:=hsym.InitialLoc;
+                    HighLoc:=HSym.InitialLoc;
                     { adjust high bound reference for exceptfilter finalization }
                     if Assigned(CurrentProcInfo.finalize_procinfo) and
-                       (CurrentProcInfo.finalize_procinfo.procdef.ProcTypeOption=potype_exceptfilter) and
-                       (highloc.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                      cg.adjust_exceptfilter_ref(highloc.reference,true);
+                       (CurrentProcInfo.finalize_procinfo.ProcDef.ProcTypeOption=potype_exceptfilter) and
+                       (HighLoc.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                      CG.Adjust_ExceptFilter_Ref(HighLoc.Reference,True);
                   end
                 else
-                  highloc.loc:=LOC_INVALID;
-                eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
-                g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
-                g_array_rtti_helper(list,eldef,href,highloc,'fpc_finalize_array');
+                  HighLoc.Loc:=LOC_INVALID;
+                ElDef:=TArrayDef(TParaVarSym(P).VarDef).ElementDef;
+                G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(TParaVarSym(P).VarDef),CPointerDef.GetReusable(ElDef),HRef);
+                G_Array_RTTI_Helper(List,ElDef,HRef,HighLoc,'fpc_finalize_array');
               end
             else
-              g_finalize(list,TParaVarSym(p).vardef,href);
+              G_Finalize(List,TParaVarSym(P).VarDef,HRef);
           end;
        end;
       { open arrays can contain elements requiring init/final code, so the else has been removed here }
-      if not(TargetInfo.system in systems_caller_copy_addr_value_para) and
-         (TParaVarSym(p).VarSpez=vs_value) and
-         (is_open_array(TParaVarSym(p).vardef) or
-          is_array_of_const(TParaVarSym(p).vardef)) then
+      if not(TargetInfo.System in systems_caller_copy_addr_value_para) and
+         (TParaVarSym(P).VarSpez=vs_value) and
+         (Is_Open_Array(TParaVarSym(P).VarDef) or
+          Is_Array_Of_Const(TParaVarSym(P).VarDef)) then
         begin
           { cdecl functions don't have a high pointer so it is not possible to generate
             a local copy }
-          if not(CurrentProcInfo.procdef.ProcCallOption in cdecl_pocalls) then
-            g_releasevaluepara_openarray(list,TArrayDef(TParaVarSym(p).vardef),TParaVarSym(p).LocAlloc);
+          if not(CurrentProcInfo.ProcDef.ProcCallOption in CDecl_PoCalls) then
+            G_ReleaseValuePara_OpenArray(List,TArrayDef(TParaVarSym(P).VarDef),TParaVarSym(P).LocAlloc);
         end;
     end;
 
@@ -5574,52 +5574,52 @@ implementation
   initialize out parameters }
   { generates the code for incrementing the reference count of parameters and
     initialize out parameters }
-  procedure THLCGObj.init_paras(p:TObject;arg:pointer);
+  procedure THLCGObj.Init_Paras(P:TObject;Arg:Pointer);
     var
-      href : TReference;
-      hsym : TParaVarSym;
-      eldef : TDef;
-      list : TAsmList;
-      highloc : TLocation;
-      NeedsInitTable  : boolean;
+      HRef : TReference;
+      HSym : TParaVarSym;
+      ElDef : TDef;
+      List : TAsmList;
+      HighLoc : TLocation;
+      NeedsInitTable  : Boolean;
     begin
-      list:=TAsmList(arg);
-      if (TSym(p).typ=paravarsym) then
+      List:=TAsmList(Arg);
+      if (TSym(P).Typ=ParaVarSym) then
        begin
-         NeedsInitTable:=is_managed_type(TParaVarSym(p).vardef);
-         case TParaVarSym(p).VarSpez of
+         NeedsInitTable:=Is_Managed_Type(TParaVarSym(P).VarDef);
+         case TParaVarSym(P).VarSpez of
            vs_value :
              if NeedsInitTable then
                begin
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
-                 if not((TParaVarSym(p).vardef.typ=variantdef) and
-                   paramanager.push_addr_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)) then
+                 if not((TParaVarSym(P).VarDef.Typ=VariantDef) and
+                   ParaManager.Push_Addr_Param(TParaVarSym(P).VarSpez,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption)) then
                    begin
-                     location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,
-                       is_open_array(TParaVarSym(p).vardef) or
-                       ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-                        paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)),
-                       sizeof(PInt));
-                     if is_open_array(TParaVarSym(p).vardef) then
+                     Location_Get_Data_Ref(List,TParaVarSym(P).VarDef,TParaVarSym(P).InitialLoc,HRef,
+                       Is_Open_Array(TParaVarSym(P).VarDef) or
+                       ((TargetInfo.System in systems_caller_copy_addr_value_para) and
+                        ParaManager.Push_Addr_Param(vs_value,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption)),
+                       SizeOf(PInt));
+                     if Is_Open_Array(TParaVarSym(P).VarDef) then
                        begin
-                         if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
+                         if ParaManager.Push_High_Param(TParaVarSym(P).VarSpez,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption) then
                            begin
-                             hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                             if not Assigned(hsym) then
+                             HSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(P)));
+                             if not Assigned(HSym) then
                                InternalError(2010030303);
-                             highloc:=hsym.InitialLoc
+                             HighLoc:=HSym.InitialLoc
                            end
                          else
-                           highloc.loc:=LOC_INVALID;
+                           HighLoc.Loc:=LOC_INVALID;
                          { open arrays do not contain correct element count in their rtti,
                            the actual count must be passed separately. }
-                         eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
-                         g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
-                         g_array_rtti_helper(list,eldef,href,highloc,'fpc_addref_array');
+                         ElDef:=TArrayDef(TParaVarSym(P).VarDef).ElementDef;
+                         G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(TParaVarSym(P).VarDef),CPointerDef.GetReusable(ElDef),HRef);
+                         G_Array_RTTI_Helper(List,ElDef,HRef,HighLoc,'fpc_addref_array');
                        end
                      else
-                      g_incrrefcount(list,TParaVarSym(p).vardef,href);
+                      G_IncrRefCount(List,TParaVarSym(P).VarDef,HRef);
                    end;
                end;
            vs_out :
@@ -5629,26 +5629,26 @@ implementation
                    { we have no idea about the alignment at the callee side,
                      and the user also cannot specify "unaligned" here, so
                      assume worst case }
-                   location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,true,1);
+                   Location_Get_Data_Ref(List,TParaVarSym(P).VarDef,TParaVarSym(P).InitialLoc,HRef,True,1);
                    if NeedsInitTable then
                      begin
-                       if is_open_array(TParaVarSym(p).vardef) then
+                       if Is_Open_Array(TParaVarSym(P).VarDef) then
                          begin
-                           if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
+                           if ParaManager.Push_High_Param(TParaVarSym(P).VarSpez,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption) then
                              begin
-                               hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                               if not Assigned(hsym) then
+                               HSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(P)));
+                               if not Assigned(HSym) then
                                  InternalError(2010030304);
-                               highloc:=hsym.InitialLoc
+                               HighLoc:=HSym.InitialLoc
                              end
                            else
-                             highloc.loc:=LOC_INVALID;
-                           eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
-                           g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
-                           g_array_rtti_helper(list,eldef,href,highloc,'fpc_initialize_array');
+                             HighLoc.Loc:=LOC_INVALID;
+                           ElDef:=TArrayDef(TParaVarSym(P).VarDef).ElementDef;
+                           G_PtrTypeCast_Ref(List,CPointerDef.GetReusable(TParaVarSym(P).VarDef),CPointerDef.GetReusable(ElDef),HRef);
+                           G_Array_RTTI_Helper(List,ElDef,HRef,HighLoc,'fpc_initialize_array');
                          end
                        else
-                         g_initialize(list,TParaVarSym(p).vardef,href);
+                         G_Initialize(List,TParaVarSym(P).VarDef,HRef);
                      end;
                  end;
              end;
@@ -5658,34 +5658,34 @@ implementation
        end;
     end;
 
-  procedure THLCGObj.gen_load_para_value(list: TAsmList);
+  procedure THLCGObj.Gen_Load_Para_Value(List: TAsmList);
     var
-      i: LongInt;
-      currpara: TParaVarSym;
+      I: LongInt;
+      CurrPara: TParaVarSym;
     begin
-      if (po_assembler in CurrentProcInfo.procdef.ProcOptions) or
+      if (po_assembler in CurrentProcInfo.ProcDef.ProcOptions) or
       { exceptfilters have a single hidden 'parentfp' parameter, which
         is handled by tcg.g_proc_entry. }
-         (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
-        exit;
+         (CurrentProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) then
+        Exit;
 
       { Copy parameters to local references/registers }
-      for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
+      for I:=0 to CurrentProcInfo.ProcDef.Paras.Count-1 do
         begin
-          currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-          if not currpara.Is_Used then
-            continue;
+          CurrPara:=TParaVarSym(CurrentProcInfo.ProcDef.Paras[I]);
+          if not CurrPara.Is_Used then
+            Continue;
           { don't use currpara.vardef, as this will be wrong in case of
             call-by-reference parameters (it won't contain the pointer) }
-          gen_load_cgpara_loc(list,currpara.ParaLoc[calleeside].def,currpara.ParaLoc[calleeside],currpara.InitialLoc,paramanager.param_use_paraloc(currpara.ParaLoc[calleeside]));
+          Gen_Load_CGPara_Loc(List,CurrPara.ParaLoc[CalleeSide].Def,CurrPara.ParaLoc[CalleeSide],CurrPara.InitialLoc,ParaManager.Param_Use_ParaLoc(CurrPara.ParaLoc[CalleeSide]));
         end;
 
       { generate copies of call by value parameters, must be done before
         the initialization and body is parsed because the refcounts are
         incremented using the local copies }
-      CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@g_copyvalueparas,list);
+      CurrentProcInfo.ProcDef.ParaST.SymList.ForEachCall(@G_CopyValueParas,List);
 
-      if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
+      if not(po_assembler in CurrentProcInfo.ProcDef.ProcOptions) then
         begin
           { initialize refcounted paras, and trash others. Needed here
             instead of in gen_initialize_code, because when a reference is
@@ -5693,146 +5693,146 @@ implementation
             in a regvar, we add a register move and that one again has to
             come after the parameter loading code as far as the register
             allocator is concerned }
-          CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@init_paras,list);
+          CurrentProcInfo.ProcDef.ParaST.SymList.ForEachCall(@Init_Paras,List);
         end;
     end;
 
-  procedure THLCGObj.g_copyvalueparas(p: TObject; arg: pointer);
+  procedure THLCGObj.G_CopyValueParas(P: TObject; Arg: Pointer);
     var
-      href : TReference;
-      hreg : TRegister;
-      list : TAsmList;
-      hsym : TParaVarSym;
-      l    : LongInt;
-      highloc,
-      localcopyloc : TLocation;
+      HRef : TReference;
+      HReg : TRegister;
+      List : TAsmList;
+      HSym : TParaVarSym;
+      L    : LongInt;
+      HighLoc,
+      LocalCopyLoc : TLocation;
     begin
-      list:=TAsmList(arg);
-      if (TSym(p).typ=paravarsym) and
-         (TParaVarSym(p).Is_Used) and
-         ((vo_has_local_copy in TParaVarSym(p).VarOptions) or
-          (not(TargetInfo.system in systems_caller_copy_addr_value_para) and
-           (is_open_array(TParaVarSym(p).vardef) or
-            is_array_of_const(TParaVarSym(p).vardef)) and
-           (TParaVarSym(p).VarSpez=vs_value))) then
+      List:=TAsmList(Arg);
+      if (TSym(P).Typ=ParaVarSym) and
+         (TParaVarSym(P).Is_Used) and
+         ((vo_has_local_copy in TParaVarSym(P).VarOptions) or
+          (not(TargetInfo.System in systems_caller_copy_addr_value_para) and
+           (Is_Open_Array(TParaVarSym(P).VarDef) or
+            Is_Array_Of_Const(TParaVarSym(P).VarDef)) and
+           (TParaVarSym(P).VarSpez=vs_value))) then
         begin
           { we have no idea about the alignment at the caller side }
-          location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,true,1);
-          if is_open_array(TParaVarSym(p).vardef) or
-             is_array_of_const(TParaVarSym(p).vardef) then
+          Location_Get_Data_Ref(List,TParaVarSym(P).VarDef,TParaVarSym(P).InitialLoc,HRef,True,1);
+          if Is_Open_Array(TParaVarSym(P).VarDef) or
+             Is_Array_Of_Const(TParaVarSym(P).VarDef) then
             begin
               { cdecl functions don't have a high pointer so it is not possible to generate
                 a local copy }
-              if not(CurrentProcInfo.procdef.ProcCallOption in cdecl_pocalls) then
+              if not(CurrentProcInfo.ProcDef.ProcCallOption in CDecl_PoCalls) then
                 begin
-                  if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
+                  if ParaManager.Push_High_Param(TParaVarSym(P).VarSpez,TParaVarSym(P).VarDef,CurrentProcInfo.ProcDef.ProcCallOption) then
                     begin
-                      hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                      if not Assigned(hsym) then
+                      HSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(P)));
+                      if not Assigned(HSym) then
                         InternalError(2011020506);
-                      highloc:=hsym.InitialLoc
+                      HighLoc:=HSym.InitialLoc
                     end
                   else
-                    highloc.loc:=LOC_INVALID;
-                  hreg:=getaddressregister(list,VoidPointerType);
-                  if not is_packed_array(TParaVarSym(p).vardef) then
-                    g_copyvaluepara_openarray(list,href,highloc,TArrayDef(TParaVarSym(p).vardef),hreg)
+                    HighLoc.Loc:=LOC_INVALID;
+                  HReg:=GetAddressRegister(List,VoidPointerType);
+                  if not Is_Packed_Array(TParaVarSym(P).VarDef) then
+                    G_CopyValuePara_OpenArray(List,HRef,HighLoc,TArrayDef(TParaVarSym(P).VarDef),HReg)
                   else
                     InternalError(2011020507);
 //                      cg.g_copyvaluepara_packedopenarray(list,href,hsym.intialloc,tarraydef(tparavarsym(p).vardef).elepackedbitsize,hreg);
-                  a_load_reg_loc(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(TParaVarSym(p).vardef),hreg,TParaVarSym(p).InitialLoc);
+                  A_Load_Reg_Loc(List,CPointerDef.GetReusable(TParaVarSym(P).VarDef),CPointerDef.GetReusable(TParaVarSym(P).VarDef),HReg,TParaVarSym(P).InitialLoc);
                 end;
             end
           else
             begin
               { Allocate space for the local copy }
-              l:=TParaVarSym(p).GetSize;
-              localcopyloc.loc:=LOC_REFERENCE;
-              localcopyloc.size:=int_cgsize(l);
-              getlocal(list,TParaVarSym(p),l,TParaVarSym(p).vardef.alignment,TParaVarSym(p).vardef,localcopyloc.reference);
+              L:=TParaVarSym(P).GetSize;
+              LocalCopyLoc.Loc:=LOC_REFERENCE;
+              LocalCopyLoc.Size:=Int_CGSize(L);
+              GetLocal(List,TParaVarSym(P),L,TParaVarSym(P).VarDef.Alignment,TParaVarSym(P).VarDef,LocalCopyLoc.Reference);
               { Copy data }
-              if is_shortstring(TParaVarSym(p).vardef) then
+              if Is_ShortString(TParaVarSym(P).VarDef) then
                 begin
                   { this code is only executed before the code for the body and the entry/exit code is generated
                     so we're allowed to include pi_do_call here; after pass1 is run, this isn't allowed anymore
                   }
-                  include(CurrentProcInfo.flags,pi_do_call);
-                  g_copyshortstring(list,href,localcopyloc.reference,TStringDef(TParaVarSym(p).vardef))
+                  Include(CurrentProcInfo.Flags,pi_do_call);
+                  G_CopyShortString(List,HRef,LocalCopyLoc.Reference,TStringDef(TParaVarSym(P).VarDef))
                 end
-              else if TParaVarSym(p).vardef.typ=variantdef then
+              else if TParaVarSym(P).VarDef.Typ=VariantDef then
                 begin
                   { this code is only executed before the code for the body and the entry/exit code is generated
                     so we're allowed to include pi_do_call here; after pass1 is run, this isn't allowed anymore
                   }
-                  include(CurrentProcInfo.flags,pi_do_call);
-                  g_copyvariant(list,href,localcopyloc.reference,TVariantDef(TParaVarSym(p).vardef))
+                  Include(CurrentProcInfo.Flags,pi_do_call);
+                  G_CopyVariant(List,HRef,LocalCopyLoc.Reference,TVariantDef(TParaVarSym(P).VarDef))
                 end
               else
                 begin
-                  g_concatcopy(list,TParaVarSym(p).vardef,href,localcopyloc.reference);
+                  G_ConcatCopy(List,TParaVarSym(P).VarDef,HRef,LocalCopyLoc.Reference);
                 end;
               { update localloc of varsym }
-              if TParaVarSym(p).LocAlloc.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-                tg.Ungetlocal(list,TParaVarSym(p).LocAlloc.reference);
-              TParaVarSym(p).LocAlloc:=localcopyloc;
-              TParaVarSym(p).InitialLoc:=localcopyloc;
+              if TParaVarSym(P).LocAlloc.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+                TG.Ungetlocal(List,TParaVarSym(P).LocAlloc.Reference);
+              TParaVarSym(P).LocAlloc:=LocalCopyLoc;
+              TParaVarSym(P).InitialLoc:=LocalCopyLoc;
             end;
         end;
     end;
 
 
-  procedure THLCGObj.getlocal(list: TAsmList; sym: TSym; size: asizeint; alignment: shortint; def: TDef; out ref: TReference);
+  procedure THLCGObj.GetLocal(List: TAsmList; Sym: TSym; Size: ASizeInt; Alignment: ShortInt; Def: TDef; out Ref: TReference);
     var
-      explicitalign : shortint;
+      ExplicitAlign : ShortInt;
     begin
-      if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef]) then
-        explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).ExplicitRecordAlignment
+      if Def.InheritsFrom(TAbstractRecordDef) and (Def.Typ in [RecordDef]) then
+        ExplicitAlign:=TAbstractRecordSymTable(TAbstractRecordDef(Def).SymTable).ExplicitRecordAlignment
       else
-        explicitalign:=0;
-      tg.getlocal(list,size,alignment,explicitalign,def,sym,ref);
-      recordnewsymloc(list,sym,def,ref,true);
+        ExplicitAlign:=0;
+      TG.GetLocal(List,Size,Alignment,ExplicitAlign,Def,Sym,Ref);
+      RecordNewSymLoc(List,Sym,Def,Ref,True);
     end;
 
-  procedure THLCGObj.recordnewsymloc(list: TAsmList; sym: TSym; def: TDef; const ref: TReference; initial: boolean);
+  procedure THLCGObj.RecordNewSymLoc(List: TAsmList; Sym: TSym; Def: TDef; const Ref: TReference; Initial: Boolean);
     begin
       // do nothing
     end;
 
 
-  procedure THLCGObj.gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt);
+  procedure THLCGObj.Gen_LoadFPU_Loc_CGPara(List: TAsmList; Size: TDef; const L: TLocation; const CGPara: TCGPara; LocIntSize: LongInt);
     var
-      tmploc: TLocation;
+      TmpLoc: TLocation;
     begin
-      case l.loc of
+      case L.Loc of
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
-          case cgpara.location^.loc of
+          case CGPara.Location^.Loc of
             LOC_REFERENCE,
             LOC_CREFERENCE,
             LOC_MMREGISTER,
             LOC_CMMREGISTER,
             LOC_REGISTER,
             LOC_CREGISTER :
-              a_loadmm_reg_cgpara(list,size,l.register,cgpara,mms_movescalar);
+              A_LoadMM_Reg_CGPara(List,Size,L.Register,CGPara,MMS_MoveScalar);
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
               begin
-                tmploc:=l;
-                location_force_fpureg(list,tmploc,size,false);
-                a_loadfpu_reg_cgpara(list,size,tmploc.register,cgpara);
+                TmpLoc:=L;
+                Location_Force_FPUReg(List,TmpLoc,Size,False);
+                A_LoadFPU_Reg_CGPara(List,Size,TmpLoc.Register,CGPara);
               end;
             else
               InternalError(2002042402);
           end;
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER:
-          case cgpara.location^.loc of
+          case CGPara.Location^.Loc of
             LOC_MMREGISTER,
             LOC_CMMREGISTER:
               begin
-                tmploc:=l;
-                location_force_mmregscalar(list,tmploc,size,false);
-                a_loadmm_reg_cgpara(list,size,tmploc.register,cgpara,mms_movescalar);
+                TmpLoc:=L;
+                Location_Force_MMRegScalar(List,TmpLoc,Size,False);
+                A_LoadMM_Reg_CGPara(List,Size,TmpLoc.Register,CGPara,MMS_MoveScalar);
               end;
             { Some targets pass floats in normal registers }
             LOC_REGISTER,
@@ -5841,16 +5841,16 @@ implementation
             LOC_CREFERENCE,
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
-              a_loadfpu_reg_cgpara(list,size,l.register,cgpara);
+              A_LoadFPU_Reg_CGPara(List,Size,L.Register,CGPara);
             else
               InternalError(2011010210);
           end;
         LOC_REFERENCE,
         LOC_CREFERENCE:
-          case cgpara.location^.loc of
+          case CGPara.Location^.Loc of
             LOC_MMREGISTER,
             LOC_CMMREGISTER:
-              a_loadmm_ref_cgpara(list,size,l.reference,cgpara,mms_movescalar);
+              A_LoadMM_Ref_CGPara(List,Size,L.Reference,CGPara,MMS_MoveScalar);
             { Some targets pass floats in normal registers }
             LOC_REGISTER,
             LOC_CREGISTER,
@@ -5858,85 +5858,85 @@ implementation
             LOC_CREFERENCE,
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
-              a_loadfpu_ref_cgpara(list,size,l.reference,cgpara);
+              A_LoadFPU_Ref_CGPara(List,Size,L.Reference,CGPara);
             else
               InternalError(2011010211);
           end;
         LOC_REGISTER,
         LOC_CREGISTER :
-          a_load_loc_cgpara(list,size,l,cgpara);
+          A_Load_Loc_CGPara(List,Size,L,CGPara);
          else
            InternalError(2011010212);
       end;
     end;
 
-  procedure THLCGObj.gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: TCGPara);
+  procedure THLCGObj.Gen_Load_Uninitialized_Function_Result(List: TAsmList; PD: TProcDef; ResDef: TDef; const ResLoc: TCGPara);
     begin
       { do nothing by default }
     end;
 
-  procedure THLCGObj.gen_load_loc_function_result(list: TAsmList; vardef: TDef; const l: TLocation);
+  procedure THLCGObj.Gen_Load_Loc_Function_Result(List: TAsmList; VarDef: TDef; const L: TLocation);
     var
-      safecallretpara: TCGPara;
+      SafeCallRetPara: TCGPara;
     begin
-      if not CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
-        gen_load_loc_cgpara(list,vardef,l,CurrentProcInfo.procdef.FuncRetLoc[calleeside])
+      if not CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper then
+        Gen_Load_Loc_CGPara(List,VarDef,L,CurrentProcInfo.ProcDef.FuncRetLoc[CalleeSide])
       else
         begin
-          safecallretpara:=paramanager.get_safecallresult_funcretloc(CurrentProcInfo.procdef,calleeside);
-          gen_load_loc_cgpara(list,vardef,l,safecallretpara);
-          safecallretpara.resetiftemp;
+          SafeCallRetPara:=ParaManager.Get_SafeCallResult_FuncRetLoc(CurrentProcInfo.ProcDef,CalleeSide);
+          Gen_Load_Loc_CGPara(List,VarDef,L,SafeCallRetPara);
+          SafeCallRetPara.ResetIfTemp;
         end;
     end;
 
-  procedure THLCGObj.gen_load_loc_cgpara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara);
+  procedure THLCGObj.Gen_Load_Loc_CGPara(List: TAsmList; VarDef: TDef; const L: TLocation; const CGPara: TCGPara);
     var
-      tmploc: TLocation;
+      TmpLoc: TLocation;
     begin
       { skip e.g. empty records }
-      if (cgpara.location^.loc = LOC_VOID) then
-        exit;
+      if (CGPara.Location^.Loc = LOC_VOID) then
+        Exit;
 
       { Handle Floating point types differently
 
         This doesn't depend on emulator settings, emulator settings should
         be handled by cpupara }
-      if (vardef.typ=floatdef) or
+      if (VarDef.Typ=FloatDef) or
          { some ABIs return certain records in an fpu register }
-         (l.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) or
-         (Assigned(cgpara.location) and
-          (cgpara.Location^.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER])) then
+         (L.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) or
+         (Assigned(CGPara.Location) and
+          (CGPara.Location^.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER])) then
         begin
-          gen_loadfpu_loc_cgpara(list,vardef,l,cgpara,vardef.size);
-          exit;
+          Gen_LoadFPU_Loc_CGPara(List,VarDef,L,CGPara,VarDef.Size);
+          Exit;
         end;
 
       { in case of multiple locations, force the source to memory as only
         a_load_ref_cgpara supports multiple locations }
-      if Assigned(cgpara.location^.next) and
-         not(l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+      if Assigned(CGPara.Location^.Next) and
+         not(L.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
         begin
-          tmploc:=l;
-          location_force_mem(list,tmploc,vardef);
-          a_load_loc_cgpara(list,vardef,tmploc,cgpara);
-          location_freetemp(list,tmploc);
-          exit;
+          TmpLoc:=L;
+          Location_Force_Mem(List,TmpLoc,VarDef);
+          A_Load_Loc_CGPara(List,VarDef,TmpLoc,CGPara);
+          location_freetemp(List,TmpLoc);
+          Exit;
         end;
 
-      case l.loc of
+      case L.Loc of
         LOC_CONSTANT,
         LOC_REGISTER,
         LOC_CREGISTER,
         LOC_REFERENCE,
         LOC_CREFERENCE :
           begin
-            a_load_loc_cgpara(list,vardef,l,cgpara);
+            A_Load_Loc_CGPara(List,VarDef,L,CGPara);
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            if Use_VectorFPU(vardef) then
-              a_loadmm_loc_cgpara(list,vardef,l,cgpara,mms_movescalar)
+            if Use_VectorFPU(VarDef) then
+              A_LoadMM_Loc_CGPara(List,VarDef,L,CGPara,MMS_MoveScalar)
             else
               { no vector support yet }
               InternalError(2012071212);
@@ -5949,26 +5949,26 @@ implementation
       end;
     end;
 
-  procedure THLCGObj.gen_load_cgpara_loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean);
+  procedure THLCGObj.Gen_Load_CGPara_Loc(List: TAsmList; VarDef: TDef; const Para: TCGPara; var DestLoc: TLocation; ReusePara: Boolean);
     var
-      href     : TReference;
+      HRef     : TReference;
     begin
-      para.check_simple_location;
+      Para.Check_Simple_Location;
       { skip e.g. empty records }
-      if (para.location^.loc = LOC_VOID) then
-        exit;
-      case destloc.loc of
+      if (Para.Location^.Loc = LOC_VOID) then
+        Exit;
+      case DestLoc.Loc of
         LOC_REFERENCE :
           begin
             { If the parameter location is reused we don't need to copy
               anything }
-            if not reusepara then
+            if not ReusePara then
               begin
-                case para.location^.loc of
+                case Para.Location^.Loc of
                   LOC_REFERENCE,LOC_CREFERENCE:
                     begin
-                      reference_reset_base(href,VoidStackPointerType,para.location^.reference.index,para.location^.reference.offset,ctempposinvalid,para.alignment,[]);
-                      a_load_ref_ref(list,para.def,para.def,href,destloc.reference);
+                      Reference_Reset_Base(HRef,VoidStackPointerType,Para.Location^.Reference.Index,Para.Location^.Reference.Offset,CTempPosInvalid,Para.Alignment,[]);
+                      A_Load_Ref_Ref(List,Para.Def,Para.Def,HRef,DestLoc.Reference);
                     end;
                   else
                     InternalError(2013102305);
@@ -5981,117 +5981,117 @@ implementation
       end;
     end;
 
-  procedure THLCGObj.gen_load_return_value(list: TAsmList);
+  procedure THLCGObj.Gen_Load_Return_Value(List: TAsmList);
     var
-      ressym : TSym;
-      retdef : TDef;
+      ResSym : TSym;
+      RetDef : TDef;
     begin
       { Is the loading needed? }
-      if (is_void(CurrentProcInfo.procdef.ReturnDef) and
-          not CurrentProcInfo.procdef.Generate_SafeCall_Wrapper) or
+      if (Is_Void(CurrentProcInfo.ProcDef.ReturnDef) and
+          not CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper) or
          (
-          (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
-          (CurrentProcInfo.procdef.Generate_SafeCall_Wrapper or
-           not Assigned(CurrentProcInfo.procdef.FuncRetSym) or
-           (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs=0) or
-           (po_nostackframe in CurrentProcInfo.procdef.ProcOptions)
+          (po_assembler in CurrentProcInfo.ProcDef.ProcOptions) and
+          (CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper or
+           not Assigned(CurrentProcInfo.ProcDef.FuncRetSym) or
+           (TAbstractVarSym(CurrentProcInfo.ProcDef.FuncRetSym).Refs=0) or
+           (po_nostackframe in CurrentProcInfo.ProcDef.ProcOptions)
           )
          ) then
         begin
-          ressym:=CurrentProcInfo.procdef.FuncRetSym;
-          if not Assigned(ressym) then
-            exit;
+          ResSym:=CurrentProcInfo.ProcDef.FuncRetSym;
+          if not Assigned(ResSym) then
+            Exit;
         end
       else
         begin
           { constructors return self }
-          if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
+          if CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper then
             begin
-              if not CurrentProcInfo.procdef.Get_SafeCall_FuncRetSym_Info(ressym,retdef) then
+              if not CurrentProcInfo.ProcDef.Get_SafeCall_FuncRetSym_Info(ResSym,RetDef) then
                 InternalError(2019112402);
-              gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).LocAlloc);
+              Gen_Load_Loc_Function_Result(List,RetDef,TAbstractNormalVarSym(ResSym).LocAlloc);
             end
           else
             begin
-              if not CurrentProcInfo.procdef.Get_FuncRetSym_Info(ressym,retdef) then
+              if not CurrentProcInfo.ProcDef.Get_FuncRetSym_Info(ResSym,RetDef) then
                 InternalError(2018122501);
-              if (ressym.refs>0) or
-                 is_managed_type(retdef) then
+              if (ResSym.Refs>0) or
+                 Is_Managed_Type(RetDef) then
                 begin
                   { was: don't do anything if funcretloc.loc in [LOC_INVALID,LOC_REFERENCE] }
-                  if not paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef) then
-                    gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).LocAlloc);
+                  if not ParaManager.Ret_In_Param(CurrentProcInfo.ProcDef.ReturnDef,CurrentProcInfo.ProcDef) then
+                    Gen_Load_Loc_Function_Result(List,RetDef,TAbstractNormalVarSym(ResSym).LocAlloc);
                 end
               else
-                gen_load_uninitialized_function_result(list,CurrentProcInfo.procdef,retdef,CurrentProcInfo.procdef.FuncRetLoc[calleeside]);
+                Gen_Load_Uninitialized_Function_Result(List,CurrentProcInfo.ProcDef,RetDef,CurrentProcInfo.ProcDef.FuncRetLoc[CalleeSide]);
             end;
         end;
 
-      if TAbstractNormalVarSym(ressym).LocAlloc.loc=LOC_REFERENCE then
-        tg.UnGetLocal(list,TAbstractNormalVarSym(ressym).LocAlloc.reference);
+      if TAbstractNormalVarSym(ResSym).LocAlloc.Loc=LOC_REFERENCE then
+        TG.UnGetLocal(List,TAbstractNormalVarSym(ResSym).LocAlloc.Reference);
     end;
 
-  procedure THLCGObj.gen_stack_check_size_para(list: TAsmList);
+  procedure THLCGObj.Gen_Stack_Check_Size_Para(List: TAsmList);
     var
-      paraloc1 : TCGPara;
-      pd       : TProcDef;
+      ParaLoc1 : TCGPara;
+      PD       : TProcDef;
     begin
-      pd:=Search_System_Proc('fpc_stackcheck');
-      paraloc1.init;
-      paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-      hlcg.a_load_const_cgpara(list,paraloc1.def,CurrentProcInfo.calc_stackframe_size,paraloc1);
-      paramanager.freecgpara(list,paraloc1);
-      paraloc1.done;
+      PD:=Search_System_Proc('fpc_stackcheck');
+      ParaLoc1.Init;
+      ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,PD,1,ParaLoc1);
+      HLCG.A_Load_Const_CGPara(List,ParaLoc1.Def,CurrentProcInfo.calc_stackframe_size,ParaLoc1);
+      ParaManager.FreeCGPara(List,ParaLoc1);
+      ParaLoc1.Done;
     end;
 
-  procedure THLCGObj.gen_stack_check_call(list: TAsmList);
+  procedure THLCGObj.Gen_Stack_Check_Call(List: TAsmList);
     var
-      paraloc1 : TCGPara;
-      pd       : TProcDef;
+      ParaLoc1 : TCGPara;
+      PD       : TProcDef;
     begin
-      pd:=Search_System_Proc('fpc_stackcheck');
-      paraloc1.init;
+      PD:=Search_System_Proc('fpc_stackcheck');
+      ParaLoc1.Init;
       { The parameter to fpc_stackcheck is loaded separately via
         gen_stack_check_size_para() }
-      paramanager.getcgtempparaloc(list,pd,1,paraloc1);
-      paramanager.freecgpara(list,paraloc1);
+      ParaManager.GetCGTempParaLoc(List,PD,1,ParaLoc1);
+      ParaManager.FreeCGPara(List,ParaLoc1);
       { Call the helper }
-      g_call_system_proc(list,pd,[@paraloc1],nil).resetiftemp;
-      paraloc1.done;
+      G_Call_System_Proc(List,PD,[@ParaLoc1],nil).ResetIfTemp;
+      ParaLoc1.Done;
     end;
 
-  procedure THLCGObj.record_generated_code_for_procdef(pd: TProcDef; code, data: TAsmList);
+  procedure THLCGObj.Record_Generated_Code_For_ProcDef(PD: TProcDef; Code, Data: TAsmList);
     begin
-      fphlcgobjhelper.record_generated_code_for_procdef(pd, code, data);
+      FPHLCGObjHelper.Record_Generated_Code_For_ProcDef(PD, Code, Data);
     end;
 
-  function THLCGObj.g_call_system_proc(list: TAsmList; const procname: string; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+  function THLCGObj.G_Call_System_Proc(List: TAsmList; const ProcName: string; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
     var
-      pd: TProcDef;
+      PD: TProcDef;
     begin
-      pd:=Search_System_Proc(procname);
-      pd.Init_ParaLoc_Info(callerside);
+      PD:=Search_System_Proc(ProcName);
+      PD.Init_ParaLoc_Info(CallerSide);
       if SystemUnit<>CurrentModule.GlobalSymTable then
-        CurrentModule.AddImportedSym(pd.ProcSym);
-      result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
+        CurrentModule.AddImportedSym(PD.ProcSym);
+      Result:=G_Call_System_Proc_Intern(List,PD,Paras,ForceResDef);
     end;
 
-  function THLCGObj.g_call_system_proc(list: TAsmList; pd: TProcDef; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+  function THLCGObj.G_Call_System_Proc(List: TAsmList; PD: TProcDef; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
     begin
       { separate non-virtual routine to make it clear that the routine to
         override, if any, is g_call_system_proc_intern (and that none of
         the g_call_system_proc variants should be made virtual) }
-      pd.Init_ParaLoc_Info(callerside);
+      PD.Init_ParaLoc_Info(CallerSide);
       if SystemUnit<>CurrentModule.GlobalSymTable then
-        CurrentModule.AddImportedSym(pd.ProcSym);
-      result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
+        CurrentModule.AddImportedSym(PD.ProcSym);
+      Result:=G_Call_System_Proc_Intern(List,PD,Paras,ForceResDef);
     end;
 
-  function THLCGObj.g_call_system_proc_intern(list: TAsmList; pd: TProcDef; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+  function THLCGObj.G_Call_System_Proc_Intern(List: TAsmList; PD: TProcDef; const Paras: array of PCGPara; ForceResDef: TDef): TCGPara;
     begin
-      allocallcpuregisters(list);
-      result:=a_call_name(list,pd,pd.MangledName,paras,forceresdef,false);
-      deallocallcpuregisters(list);
+      AllocAllCPURegisters(List);
+      Result:=A_Call_Name(List,PD,PD.MangledName,Paras,ForceResDef,False);
+      DeallocAllCPURegisters(List);
     end;
 
 

@@ -154,7 +154,7 @@ implementation
 
         if is_constintnode(right) then
           begin
-            rv:=TOrdConstNode(right).value;
+            rv:=TOrdConstNode(right).Value;
             if rv = 1 then
               begin
                 case nodetype of
@@ -174,7 +174,7 @@ implementation
                 if not (nf_generic_para in flags) then
                   Message(parser_e_division_by_zero);
                 { recover }
-                TOrdConstNode(right).value := 1;
+                TOrdConstNode(right).Value := 1;
               end;
             { the following simplification is also required for correctness
               on x86, as its transformation of divisions by constants to
@@ -191,7 +191,7 @@ implementation
                begin
                  Message(cg_e_mod_only_defined_for_pos_quotient);
                  { recover }
-                 TOrdConstNode(right).value := 1;
+                 TOrdConstNode(right).Value := 1;
                end
             else if (rv=-1) and
               (nodetype=modn) then
@@ -203,7 +203,7 @@ implementation
             if (nodetype=divn) and (left.nodetype=divn) and is_constintnode(TModDivNode(left).right) and
               { we need a type and the types must be consistent }
               Assigned(resultdef) and
-              (compare_defs(resultdef,left.resultdef,nothingn)=te_exact) then
+              (Compare_Defs(resultdef,left.resultdef,nothingn)=te_exact) then
               begin
                 { re-use the current node so we get the result type right }
                 right:=CAddNode.Create_Internal(muln,right,TModDivNode(left).right.GetCopy);
@@ -267,7 +267,7 @@ implementation
           (left.resultdef.typ=orddef) and
           (right.resultdef.typ=orddef) and
           { include currency as well }
-          (is_64bit(left.resultdef) or is_64bit(right.resultdef));
+          (Is_64Bit(left.resultdef) or Is_64Bit(right.resultdef));
 {$endif cpu64bitalu or cpuhighleveltarget}
       end;
 
@@ -287,7 +287,7 @@ implementation
          TypeCheckPass(right);
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
+         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -311,7 +311,7 @@ implementation
            end;
 
          if not(nf_internal in flags) and
-            (is_currency(left.resultdef) or is_currency(right.resultdef)) then
+            (Is_Currency(left.resultdef) or Is_Currency(right.resultdef)) then
            begin
              { Divide the stored fixed-point integers. The quotient needs its
                Currency scale restored; the remainder already has that scale. }
@@ -364,12 +364,12 @@ implementation
          { (tbs/tw8870)                                                                }
          if (rd.OrdType in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(left) and
-              (TOrdConstNode(left).value >= 0) and
-              (TOrdConstNode(left).value <= get_max_value(rd))) or
-             (not is_signed(ld) and
-              (rd.size >= ld.size))) then
+              (TOrdConstNode(left).Value >= 0) and
+              (TOrdConstNode(left).Value <= Get_Max_Value(rd))) or
+             (not Is_Signed(ld) and
+              (rd.Size >= ld.Size))) then
            begin
-             if rd.size<UIntType.size then
+             if rd.Size<UIntType.Size then
                begin
                  inserttypeconv(left,UIntType);
                  inserttypeconv(right,UIntType);
@@ -380,12 +380,12 @@ implementation
            end
          else if (ld.OrdType in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(right) and
-              (TOrdConstNode(right).value >= 0) and
-              (TOrdConstNode(right).value <= get_max_value(ld))) or
-             (not is_signed(rd) and
-              (ld.size >= rd.size))) then
+              (TOrdConstNode(right).Value >= 0) and
+              (TOrdConstNode(right).Value <= Get_Max_Value(ld))) or
+             (not Is_Signed(rd) and
+              (ld.Size >= rd.Size))) then
            begin
-             if ld.size<UIntType.size then
+             if ld.Size<UIntType.Size then
                begin
                  inserttypeconv(left,UIntType);
                  inserttypeconv(right,UIntType);
@@ -410,10 +410,10 @@ implementation
          else
           { when there is one 64bit value, everything is done
             in 64bit }
-          if (is_64bitint(left.resultdef) or
-              is_64bitint(right.resultdef)) then
+          if (Is_64BitInt(left.resultdef) or
+              Is_64BitInt(right.resultdef)) then
            begin
-             if is_signed(rd) or is_signed(ld) then
+             if Is_Signed(rd) or Is_Signed(ld) then
                begin
                   if (ld.OrdType<>s64bit) then
                     inserttypeconv(left,S64IntType);
@@ -431,9 +431,9 @@ implementation
            end
          else
           { is there a larger than the native int? }
-          if is_oversizedint(ld) or is_oversizedint(rd) then
+          if Is_OversizedInt(ld) or Is_OversizedInt(rd) then
            begin
-             nd:=get_common_intdef(ld,rd,false);
+             nd:=Get_Common_IntDef(ld,rd,false);
              if (ld.OrdType<>nd.OrdType) then
                inserttypeconv(left,nd);
              if (rd.OrdType<>nd.OrdType) then
@@ -442,14 +442,14 @@ implementation
            end
          else
           { when mixing unsigned and signed native ints, convert everything to a larger signed type (JM) }
-          if (is_nativeuint(rd) and
-              is_signed(ld)) or
-             (is_nativeuint(ld) and
-              is_signed(rd)) then
+          if (Is_NativeUInt(rd) and
+              Is_Signed(ld)) or
+             (Is_NativeUInt(ld) and
+              Is_Signed(rd)) then
            begin
               CGMessage(type_h_mixed_signed_unsigned);
               { get a signed int, larger than the native int }
-              nd:=get_common_intdef(TOrdDef(SIntType),TOrdDef(UIntType),false);
+              nd:=Get_Common_IntDef(TOrdDef(SIntType),TOrdDef(UIntType),false);
               if (ld.OrdType<>nd.OrdType) then
                 inserttypeconv(left,nd);
               if (rd.OrdType<>nd.OrdType) then
@@ -474,7 +474,7 @@ implementation
            begin
              result:=internalstatements(statements);
              else_block:=internalstatements(else_statements);
-             result_data:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+             result_data:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
 
              { right <=0? }
              addstatement(statements,CIfNode.Create_Internal(CAddNode.Create_Internal(lten,right.GetCopy,COrdConstNode.create(0,resultdef,false)),
@@ -583,7 +583,7 @@ implementation
           procname := 'fpc_mod_';
         { only qword needs the unsigned code, the
           signed code is also used for currency }
-        if is_signed(resultdef) then
+        if Is_Signed(resultdef) then
           procname := procname + 'int64'
         else
           procname := procname + 'qword';
@@ -598,7 +598,7 @@ implementation
 
     function TModDivNode.firstoptimize: TNode;
       var
-        power,shiftval : LongInt;
+        power,ShiftVal : LongInt;
         statements : TStatementNode;
         temp,resulttemp : TTempCreateNode;
         masknode : TNode;
@@ -607,34 +607,34 @@ implementation
         result := nil;
         { divide/mod a number by a constant which is a power of 2? }
         if (right.nodetype = ordconstn) and
-          IsAbsPowerOf2(TOrdConstNode(right).value,power) and
+          IsAbsPowerOf2(TOrdConstNode(right).Value,power) and
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
           { for 64 bit, we leave the optimization to the cg }
-            (not is_signed(resultdef)) then
+            (not Is_Signed(resultdef)) then
 {$else cpu64bitalu or cpuhighleveltarget}
-           (((nodetype=divn) and is_oversizedord(resultdef)) or
+           (((nodetype=divn) and Is_OversizedOrd(resultdef)) or
             (nodetype=modn) or
-            not is_signed(resultdef)) then
+            not Is_Signed(resultdef)) then
 {$endif cpu64bitalu or cpuhighleveltarget}
           begin
             if nodetype=divn then
               begin
-                if is_signed(resultdef) then
+                if Is_Signed(resultdef) then
                   begin
-                    invertsign:=TOrdConstNode(right).value<0;
-                    if is_64bitint(left.resultdef) then
+                    invertsign:=TOrdConstNode(right).Value<0;
+                    if Is_64BitInt(left.resultdef) then
                       if not (cs_opt_size in CurrentSettings.OptimizerSwitches) then
-                        shiftval:=63
+                        ShiftVal:=63
                       else
                         { the shift code is a lot bigger than the call to }
                         { the divide helper                               }
                         exit
                     else
-                      shiftval:=left.resultdef.size*8-1;
+                      ShiftVal:=left.resultdef.Size*8-1;
 
                     result:=internalstatements(statements);
-                    temp:=CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
-                    resulttemp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                    temp:=CTempCreateNode.create(left.resultdef,left.resultdef.Size,tt_persistent,true);
+                    resulttemp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                     addstatement(statements,resulttemp);
                     addstatement(statements,temp);
                     addstatement(statements,CAssignmentNode.create(CTempRefNode.create(temp),
@@ -647,13 +647,13 @@ implementation
                       masknode:=
                         CShlShrNode.create(shrn,
                           CTempRefNode.create(temp),
-                          COrdConstNode.create(shiftval,U8IntType,false)
+                          COrdConstNode.create(ShiftVal,U8IntType,false)
                         )
                     else
                       masknode:=
                         CAddNode.create(andn,
                           CInlineNode.create(in_sar_x_y,false,
-                            CCallParaNode.create(COrdConstNode.create(shiftval,U8IntType,false),
+                            CCallParaNode.create(COrdConstNode.create(ShiftVal,U8IntType,false),
                             CCallParaNode.create(CTempRefNode.create(temp),nil))
                           ),
                           COrdConstNode.create(TCGInt((qword(1) shl power)-1),
@@ -685,21 +685,21 @@ implementation
                   end
                 else
                   begin
-                    TOrdConstNode(right).value:=power;
+                    TOrdConstNode(right).Value:=power;
                     result:=CShlShrNode.create(shrn,left,right)
                   end;
               end
-            else if is_signed(resultdef) then    { signed modulus }
+            else if Is_Signed(resultdef) then    { signed modulus }
               begin
                 if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
                   exit;
 
-                shiftval:=left.resultdef.size*8-1;
-                TOrdConstNode(right).value.uvalue:=qword((qword(1) shl power)-1);
+                ShiftVal:=left.resultdef.Size*8-1;
+                TOrdConstNode(right).Value.uvalue:=qword((qword(1) shl power)-1);
 
                 result:=internalstatements(statements);
-                temp:=CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
-                resulttemp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                temp:=CTempCreateNode.create(left.resultdef,left.resultdef.Size,tt_persistent,true);
+                resulttemp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                 addstatement(statements,resulttemp);
                 addstatement(statements,temp);
                 addstatement(statements,CAssignmentNode.create(CTempRefNode.create(temp),left));
@@ -708,13 +708,13 @@ implementation
                   masknode:=
                     CShlShrNode.create(shrn,
                       CTempRefNode.create(temp),
-                      COrdConstNode.create(shiftval,U8IntType,false)
+                      COrdConstNode.create(ShiftVal,U8IntType,false)
                     )
                 else
                   masknode:=
                     CAddNode.create(andn,
                       CInlineNode.create(in_sar_x_y,false,
-                        CCallParaNode.create(COrdConstNode.create(shiftval,U8IntType,false),
+                        CCallParaNode.create(COrdConstNode.create(ShiftVal,U8IntType,false),
                         CCallParaNode.create(CTempRefNode.create(temp),nil))
                       ),
                       COrdConstNode.create(TCGInt((qword(1) shl power)-1),
@@ -739,7 +739,7 @@ implementation
               end
             else
               begin
-                TOrdConstNode(right).value.uvalue:=qword((qword(1) shl power)-1);
+                TOrdConstNode(right).Value.uvalue:=qword((qword(1) shl power)-1);
                 result := CAddNode.create(andn,left,right);
               end;
             { left and right are reused }
@@ -820,21 +820,21 @@ implementation
           begin
             if forinline then
               begin
-                case resultdef.size of
+                case resultdef.Size of
                   1,2,4:
-                    rvalue:=TOrdConstNode(right).value and byte($1f);
+                    rvalue:=TOrdConstNode(right).Value and byte($1f);
                   8:
-                    rvalue:=TOrdConstNode(right).value and byte($3f);
+                    rvalue:=TOrdConstNode(right).Value and byte($3f);
                   else
                     InternalError(2013122302);
                 end;
               end
             else
-              rvalue:=TOrdConstNode(right).value;
+              rvalue:=TOrdConstNode(right).Value;
             if is_constintnode(left) then
                begin
-                 lvalue:=TOrdConstNode(left).value;
-                 getrangedefmasksize(resultdef, RangeDef, mask, size);
+                 lvalue:=TOrdConstNode(left).Value;
+                 GetRangeDefMaskSize(resultdef, RangeDef, mask, size);
                  { shr is an unsigned operation, so cut off upper bits }
                  if forinline then
                    lvalue:=lvalue and mask;
@@ -860,19 +860,19 @@ implementation
             { optimize "a shl n1 shl n2" and "a shr n1 shr n2" }
             else if (nodetype=left.nodetype) and is_constintnode(TShlShrNode(left).right) and
               { do not overflow the variable being shifted }
-              (TOrdConstNode(right).value+TOrdConstNode(TShlShrNode(left).right).value<TShlShrNode(left).left.resultdef.size*8) then
+              (TOrdConstNode(right).Value+TOrdConstNode(TShlShrNode(left).right).Value<TShlShrNode(left).left.resultdef.Size*8) then
               begin
                 result:=left;
                 left:=nil;
-                TOrdConstNode(TShlShrNode(result).right).value:=TOrdConstNode(TShlShrNode(result).right).value+TOrdConstNode(right).value;
+                TOrdConstNode(TShlShrNode(result).right).Value:=TOrdConstNode(TShlShrNode(result).right).Value+TOrdConstNode(right).Value;
               end;
           end
         else if is_constintnode(left) then
           begin
-            lvalue:=TOrdConstNode(left).value;
+            lvalue:=TOrdConstNode(left).Value;
             if forinline then
               begin
-                getrangedefmasksize(resultdef, RangeDef, mask, size);
+                GetRangeDefMaskSize(resultdef, RangeDef, mask, size);
                 lvalue:=lvalue and mask;
               end;
             { '0 shl x' and '0 shr x' are 0 }
@@ -893,7 +893,7 @@ implementation
          TypeCheckPass(right);
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
+         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -918,14 +918,14 @@ implementation
 
 {$ifdef SUPPORT_MMX}
          if (cs_mmx in CurrentSettings.LocalSwitches) and
-           is_mmx_able_array(left.resultdef) and
-           ((is_mmx_able_array(right.resultdef) and
-             equal_defs(left.resultdef,right.resultdef)
+           Is_MMX_Able_Array(left.resultdef) and
+           ((Is_MMX_Able_Array(right.resultdef) and
+             Equal_Defs(left.resultdef,right.resultdef)
             ) or is_constintnode(right)) then
            begin
-             if not(mmx_type(left.resultdef) in [mmxu16bit,mmxs16bit,mmxfixed16,mmxu32bit,mmxs32bit,mmxu64bit,mmxs64bit]) then
+             if not(MMX_Type(left.resultdef) in [mmxu16bit,mmxs16bit,mmxfixed16,mmxu32bit,mmxs32bit,mmxu64bit,mmxs64bit]) then
                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.TypeName,right.resultdef.TypeName);
-             if not(is_mmx_able_array(right.resultdef)) then
+             if not(Is_MMX_Able_Array(right.resultdef)) then
                inserttypeconv(right,SIntType);
            end
          else
@@ -934,11 +934,11 @@ implementation
              { calculations for ordinals < 32 bit have to be done in
                32 bit for backwards compatibility. That way 'shl 33' is
                the same as 'shl 1'. It's ugly but compatible with delphi/tp/gcc }
-             if (not is_64bit(left.resultdef)) and
+             if (not Is_64Bit(left.resultdef)) and
                 (TOrdDef(left.resultdef).OrdType<>u32bit) then
                begin
                  { keep signedness of original type }
-                 if is_signed(left.resultdef) then
+                 if Is_Signed(left.resultdef) then
                    begin
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
                      inserttypeconv(left,S32IntType)
@@ -977,7 +977,7 @@ implementation
           just in case it is called directly }
         FirstPass(left);
         { otherwise create a call to a helper }
-        if is_signed(left.resultdef) then
+        if Is_Signed(left.resultdef) then
           procname:='int64'
         else
           procname:='qword';
@@ -1007,7 +1007,7 @@ implementation
          expectloc:=LOC_REGISTER;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          { 64 bit ints have their own shift handling }
-         if is_64bit(left.resultdef) then
+         if Is_64Bit(left.resultdef) then
            result := first_shlshr64bitint;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
       end;
@@ -1029,7 +1029,7 @@ implementation
         { constant folding }
         if is_constintnode(left) then
           begin
-             result:=create_simplified_ord_const(-TOrdConstNode(left).value,resultdef,forinline,cs_check_overflow in LocalSwitches);
+             result:=create_simplified_ord_const(-TOrdConstNode(left).Value,resultdef,forinline,cs_check_overflow in LocalSwitches);
              exit;
           end;
         if is_constrealnode(left) then
@@ -1039,7 +1039,7 @@ implementation
              left:=nil;
              exit;
           end;
-        if is_real(left.resultdef) then
+        if Is_Real(left.resultdef) then
           begin
             {
               -(left-right) => right-left
@@ -1097,14 +1097,14 @@ implementation
               end;
           end
         { transform -(x+1) or -(1+x) into not(x) }
-        else if is_integer(left.resultdef) and is_signed(left.resultdef) and (left.nodetype=addn) and ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) then
+        else if Is_Integer(left.resultdef) and Is_Signed(left.resultdef) and (left.nodetype=addn) and ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) then
           begin
-            if is_constintnode(TAddNode(left).right) and (TOrdConstNode(TAddNode(left).right).value=1) then
+            if is_constintnode(TAddNode(left).right) and (TOrdConstNode(TAddNode(left).right).Value=1) then
               begin
                 result:=CNotNode.create(TAddNode(left).left.GetCopy);
                 exit;
               end
-            else if is_constintnode(TAddNode(left).left) and (TOrdConstNode(TAddNode(left).left).value=1) then
+            else if is_constintnode(TAddNode(left).left) and (TOrdConstNode(TAddNode(left).left).Value=1) then
               begin
                 result:=CNotNode.create(TAddNode(left).right.GetCopy);
                 exit;
@@ -1121,7 +1121,7 @@ implementation
          TypeCheckPass(left);
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) then
+         if Is_TypeParam(left.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -1136,7 +1136,7 @@ implementation
            exit;
 
          resultdef:=left.resultdef;
-         if is_currency(left.resultdef) then
+         if Is_Currency(left.resultdef) then
            begin
              { negating a currency value does not change its scaling, so the
                result is scaled exactly like the operand }
@@ -1148,13 +1148,13 @@ implementation
              if not(TFloatDef(left.resultdef).FloatType in [s64comp,s64currency]) and
                (cs_excessprecision in CurrentSettings.LocalSwitches) then
                begin
-                 inserttypeconv(left,pbestrealtype^);
+                 inserttypeconv(left,PBestRealType^);
                  resultdef:=left.resultdef
                end;
            end
 {$ifdef SUPPORT_MMX}
          else if (cs_mmx in CurrentSettings.LocalSwitches) and
-           is_mmx_able_array(left.resultdef) then
+           Is_MMX_Able_Array(left.resultdef) then
              begin
                { if saturation is on, left.resultdef isn't
                  "mmx able" (FK)
@@ -1165,13 +1165,13 @@ implementation
                }
              end
 {$endif SUPPORT_MMX}
-         else if is_oversizedord(left.resultdef) then
+         else if Is_OversizedOrd(left.resultdef) then
            begin
-             if is_64bit(left.resultdef) then
+             if Is_64Bit(left.resultdef) then
                inserttypeconv(left,S64IntType)
-             else if is_32bit(left.resultdef) then
+             else if Is_32Bit(left.resultdef) then
                inserttypeconv(left,S32IntType)
-             else if is_16bit(left.resultdef) then
+             else if Is_16Bit(left.resultdef) then
                inserttypeconv(left,S16IntType)
              else
                InternalError(2013040701);
@@ -1210,7 +1210,7 @@ implementation
           expectloc:=LOC_FPUREGISTER
 {$ifdef SUPPORT_MMX}
         else if (cs_mmx in CurrentSettings.LocalSwitches) and
-          is_mmx_able_array(left.resultdef) then
+          Is_MMX_Able_Array(left.resultdef) then
           expectloc:=LOC_MMXREGISTER
 {$endif SUPPORT_MMX}
         else if (left.resultdef.typ=orddef) then
@@ -1242,7 +1242,7 @@ implementation
         TypeCheckPass(left);
 
         { avoid any problems with type parameters later on }
-        if is_typeparam(left.resultdef) then
+        if Is_TypeParam(left.resultdef) then
           begin
             resultdef:=CUndefinedType;
             exit;
@@ -1255,23 +1255,23 @@ implementation
         if is_constintnode(left) or
            is_constrealnode(left) or
            (left.resultdef.typ=floatdef) or
-           is_currency(left.resultdef)
+           Is_Currency(left.resultdef)
 {$ifdef SUPPORT_MMX}
            or ((cs_mmx in CurrentSettings.LocalSwitches) and
-                is_mmx_able_array(left.resultdef))
+                Is_MMX_Able_Array(left.resultdef))
 {$endif SUPPORT_MMX}
         then
           begin
             result:=left;
             left:=nil;
           end
-        else if is_oversizedord(left.resultdef) then
+        else if Is_OversizedOrd(left.resultdef) then
           begin
-            if is_64bit(left.resultdef) then
+            if Is_64Bit(left.resultdef) then
               inserttypeconv(left,S64IntType)
-            else if is_32bit(left.resultdef) then
+            else if Is_32Bit(left.resultdef) then
               inserttypeconv(left,S32IntType)
-            else if is_16bit(left.resultdef) then
+            else if Is_16Bit(left.resultdef) then
               inserttypeconv(left,S16IntType)
             else
               InternalError(2013040702);
@@ -1305,7 +1305,7 @@ implementation
 
     const
       boolean_reverse:array[ltn..unequaln] of TNodeType=(
-        gten,gtn,lten,ltn,unequaln,equaln
+        gten,gtn,lten,ltn,unequaln,EqualN
       );
 
     constructor TNotNode.create(expr : TNode);
@@ -1330,13 +1330,13 @@ implementation
             exit;
           end;
 
-        if (left.nodetype in [ltn,lten,equaln,unequaln,gtn,gten]) then
+        if (left.nodetype in [ltn,lten,EqualN,unequaln,gtn,gten]) then
          begin
            { Not of boolean expression. Turn around the operator and remove
              the not. This is not allowed for sets with the gten/lten,
              because there is no ltn/gtn support }
            if (TAddNode(left).left.resultdef.typ<>setdef) or
-              (left.nodetype in [equaln,unequaln]) then
+              (left.nodetype in [EqualN,unequaln]) then
             begin
               result:=left;
               left.nodetype:=boolean_reverse[left.nodetype];
@@ -1349,9 +1349,9 @@ implementation
         if (left.nodetype=ordconstn) and
           (left.resultdef.typ=orddef) then
           begin
-             v:=TOrdConstNode(left).value;
+             v:=TOrdConstNode(left).Value;
              def:=left.resultdef;
-             if not calc_not_ordvalue(v,def) then
+             if not Calc_Not_OrdValue(v,def) then
                CGMessage(type_e_mismatch);
              { not-nodes are not range checked by the code generator -> also
                don't range check while inlining; the resultdef is a bit tricky
@@ -1382,7 +1382,7 @@ implementation
          TypeCheckPass(left);
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) then
+         if Is_TypeParam(left.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -1401,24 +1401,24 @@ implementation
          if Assigned(result) then
            exit;
 
-         if is_boolean(resultdef) then
+         if Is_Boolean(resultdef) then
            begin
            end
          else
 {$ifdef SUPPORT_MMX}
            if (cs_mmx in CurrentSettings.LocalSwitches) and
-             is_mmx_able_array(left.resultdef) then
+             Is_MMX_Able_Array(left.resultdef) then
              begin
              end
          else
 {$endif SUPPORT_MMX}
 {$ifndef cpu64bitaddr}
-           if is_64bitint(left.resultdef) then
+           if Is_64BitInt(left.resultdef) then
              begin
              end
          else
 {$endif not cpu64bitaddr}
-           if is_integer(left.resultdef) then
+           if Is_Integer(left.resultdef) then
              begin
              end
          else
@@ -1444,7 +1444,7 @@ implementation
            exit;
 
          expectloc:=left.expectloc;
-         if is_boolean(resultdef) then
+         if Is_Boolean(resultdef) then
            begin
              if (expectloc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_CREGISTER]) then
                expectloc:=LOC_REGISTER;
@@ -1458,19 +1458,19 @@ implementation
          else
 {$ifdef SUPPORT_MMX}
            if (cs_mmx in CurrentSettings.LocalSwitches) and
-             is_mmx_able_array(left.resultdef) then
+             Is_MMX_Able_Array(left.resultdef) then
              expectloc:=LOC_MMXREGISTER
          else
 {$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-           if is_64bit(left.resultdef) then
+           if Is_64Bit(left.resultdef) then
              begin
                 if (expectloc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_CREGISTER]) then
                   expectloc:=LOC_REGISTER;
              end
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-           if is_integer(left.resultdef) then
+           if Is_Integer(left.resultdef) then
              expectloc:=LOC_REGISTER;
       end;
 

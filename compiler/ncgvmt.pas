@@ -553,7 +553,7 @@ implementation
               Get_TableDef(itp_vmt_intern_tmethodnametable,U32IntType,lists.methodnamerec,count,PackRecords,pubmethodsdef,pubmethodsarraydef);
               { begin record encompassing the tmethodnametable and the extended method table }
               lists.pubmethodstcb.begin_anonymous_record('',PackRecords,
-                  pubmethodsdef.alignment, targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+                  pubmethodsdef.Alignment, targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
               { begin tmethodnametable }
               lists.pubmethodstcb.maybe_begin_aggregate(pubmethodsdef);
               { emit count field }
@@ -630,7 +630,7 @@ implementation
                 tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.VMT_MangledName,datatcb,classtable);
                 datatcb.begin_anonymous_record('$fpc_intern_classtable_'+ToStr(classtablelist.Count-1),
                   PackRecords,1,
-                  targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+                  targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
                 datatcb.emit_tai(TAIConst.Create_16bit(classtablelist.count),U16IntType);
                 for i:=0 to classtablelist.Count-1 do
                   begin
@@ -665,7 +665,7 @@ implementation
               plus there would be very little chance that it could actually be
               reused }
             datatcb.begin_anonymous_record('',PackRecords,1,
-              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+              targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
             datatcb.emit_tai(TAIConst.Create_16bit(fieldcount),U16IntType);
             if classtable<>nil then
               datatcb.emit_tai(TAIConst.Create_sym(classtable),CPointerDef.getreusable(classtabledef))
@@ -695,7 +695,7 @@ implementation
                           end;
                         }
                         datatcb.begin_anonymous_record('$fpc_intern_fieldinfo_'+ToStr(length(TFieldVarSym(sym).realname)),PackRecords,1,
-                          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+                          targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
                         datatcb.emit_tai(TAIConst.Create_sizeint(TFieldVarSym(sym).FieldOffset),SizeUIntType);
                         classindex:=classtablelist.IndexOf(TFieldVarSym(sym).vardef);
                         if classindex=-1 then
@@ -759,7 +759,7 @@ implementation
       begin
         tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,'',datatcb,fintfvtablelabels[intfindex]);
         datatcb.begin_anonymous_record('',0,1,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+          targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
         if Assigned(AImplIntf.procdefs) then
           begin
             for i:=0 to AImplIntf.procdefs.count-1 do
@@ -881,7 +881,7 @@ implementation
 
         tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.VMT_MangledName,datatcb,lab);
         datatcb.begin_anonymous_record('',Default_Settings.PackRecords,1,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+          targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
         datatcb.emit_tai(TAIConst.Create_sizeint(_class.ImplementedInterfaces.count),SizeUIntType);
         interfaceentrydef:=Search_System_Type('TINTERFACEENTRY').typedef;
         interfaceentrytypedef:=Search_System_Type('TINTERFACEENTRYTYPE').typedef;
@@ -898,7 +898,7 @@ implementation
             datatcb.maybe_end_aggregate(interfacearray);
           end;
         intftabledef:=datatcb.end_anonymous_record;
-        tcb.finish_internal_data_builder(datatcb,lab,intftabledef,intftabledef.alignment);
+        tcb.finish_internal_data_builder(datatcb,lab,intftabledef,intftabledef.Alignment);
 
       end;
 
@@ -958,8 +958,8 @@ implementation
         if procdef.isempty then
           begin
 {$ifdef x86}
-            paramanager.create_funcretloc_info(procdef,calleeside);
-            if (procdef.FuncRetLoc[calleeside].Location^.loc=LOC_FPUREGISTER) then
+            ParaManager.Create_FuncRetLoc_Info(procdef,calleeside);
+            if (procdef.FuncRetLoc[calleeside].Location^.Loc=LOC_FPUREGISTER) then
               exit;
 {$endif x86}
             procdef.Init_ParaLoc_Info(callerside);
@@ -1294,8 +1294,8 @@ implementation
                   if usehighlevelwrapper then
                     begin
                       new(wrapperinfo);
-                      wrapperinfo^.pd:=pd;
-                      wrapperinfo^.offset:=ImplIntf.ioffset;
+                      wrapperinfo^.PD:=pd;
+                      wrapperinfo^.Offset:=ImplIntf.ioffset;
                       { insert the wrapper procdef in the current unit's local
                         symbol table, but set the owning "struct" to the current
                         class (so self will have the correct type) }
@@ -1318,11 +1318,11 @@ implementation
                         end;
                       { create wrapper code }
                       tmplist:=TAsmList.create;
-                      new_section(tmplist,sec_code,tmps,TargetInfo.alignment.ProcAlign);
+                      new_section(tmplist,sec_code,tmps,TargetInfo.Alignment.ProcAlign);
                       tmplist.Concat(TAIFunctionName.create(tmps));
-                      hlcg.init_register_allocators;
-                      hlcg.g_intf_wrapper(tmplist,pd,tmps,ImplIntf.ioffset);
-                      hlcg.done_register_allocators;
+                      hlcg.Init_Register_Allocators;
+                      hlcg.G_Intf_Wrapper(tmplist,pd,tmps,ImplIntf.ioffset);
+                      hlcg.Done_Register_Allocators;
                       if ((cs_debuginfo in CurrentSettings.ModuleSwitches) or
                          (cs_use_lineinfo in CurrentSettings.GlobalSwitches)) then
                         CurrentDebugInfo.insertlineinfo(tmplist);
@@ -1392,11 +1392,11 @@ implementation
     procedure write_vmts(st:TSymTable;is_global:boolean);
       begin
 {$ifndef cpuhighleveltarget}
-        create_hlcodegen(THLCGObjHelpers);
+        Create_HLCodeGen(THLCGObjHelpers);
 {$endif}
         do_write_vmts(st,is_global);
 {$ifndef cpuhighleveltarget}
-        destroy_hlcodegen;
+        Destroy_HLCodeGen;
 {$endif}
       end;
 

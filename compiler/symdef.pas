@@ -1488,7 +1488,7 @@ implementation
         I: LongInt;
         Name : TIDString;
       begin
-        Name:=Copy(InternaltypeprefixName[Prefix],2,Length(InternaltypeprefixName[Prefix]));
+        Name:=Copy(InternalTypePrefixName[Prefix],2,Length(InternalTypePrefixName[Prefix]));
         if SearchSym_Type(Name,SRSym,SRSymTable) then
           begin
             Result:=TRecordDef(TTypeSym(SRSym).TypeDef);
@@ -1504,7 +1504,7 @@ implementation
         FieldList:=TFPList.Create;
         for I:=Low(Fields) to High(Fields) do
           FieldList.Add(Fields[I]);
-        Result:=CRecordDef.Create_Global_Internal(InternaltypeprefixName[Prefix],PackRecords,
+        Result:=CRecordDef.Create_Global_Internal(InternalTypePrefixName[Prefix],PackRecords,
           TargetInfos[Ord(TargetInfo.System)]^.Alignment.RecordAlignMin);
         Result.Add_Fields_From_DefList(FieldList);
         FieldList.Free;
@@ -1522,7 +1522,7 @@ implementation
       begin
         { already created a message string table with this number of elements
           in this unit -> reuse the def }
-        Name:=InternaltypeprefixName[Prefix]+ToStr(Count);
+        Name:=InternalTypePrefixName[Prefix]+ToStr(Count);
         if SearchSym_Type(Copy(Name,2,Length(Name)),SRSym,SRSymTable) then
           begin
             RecDef:=TRecordDef(TTypeSym(SRSym).TypeDef);
@@ -2455,17 +2455,17 @@ implementation
           ObjectDef:
             Is_IntRegable:=(Is_Implicit_Pointer_Object_Type(Self)) and not NeedsInitTable;
           SetDef:
-            Is_IntRegable:=is_smallset(Self);
+            Is_IntRegable:=Is_SmallSet(Self);
           ArrayDef:
 {$ifdef cpuhighleveltarget}
             Is_IntRegable:=False
 {$else cpuhighleveltarget}
-            Is_IntRegable:=not(is_special_array(Self)) and
+            Is_IntRegable:=not(Is_Special_Array(Self)) and
               (TArrayDef(Self).Size<=8) and (TArrayDef(Self).Size in [1,2,4,8]) and
               TStoredDef(TArrayDef(Self).ElementDef).Is_IntRegable
 {$ifdef SUPPORT_MMX}
               and not((cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(Self))
+                 Is_MMX_Able_Array(Self))
 {$endif SUPPORT_MMX}
 {$endif cpuhighleveltarget}
               ;
@@ -2509,7 +2509,7 @@ implementation
          StringDef:
            Result:=TStringDef(Self).StringType in [st_ansistring,st_unicodestring,st_widestring];
          ArrayDef:
-           Result:=is_dynamic_array(Self);
+           Result:=Is_Dynamic_Array(Self);
          ObjectDef:
            Result:=Is_Interface(Self);
          else
@@ -2624,7 +2624,7 @@ implementation
                if Assigned(ST) then
                  TStoredSymTable(ST).Register_Children;
              end;
-           if DefID<defid_not_registered then
+           if DefID<DefIDNotRegistered then
              DefID:=DefListIndex
            else
              begin
@@ -2635,7 +2635,7 @@ implementation
            Maybe_Put_In_SymTable_Stack;
          end
        else
-         DefID:=defid_registered_nost;
+         DefID:=DefIDRegisteredNoST;
      end;
 
 
@@ -3523,7 +3523,7 @@ implementation
       begin
         Result:=BaseType2VarDef[OrdType];
         if Result=VarEmpty then
-          Result:=BaseType2VarDef[range_to_basetype(Low,High)];
+          Result:=BaseType2VarDef[Range_To_BaseType(Low,High)];
       end;
 
 
@@ -4603,7 +4603,7 @@ implementation
          { alignment is the target alignment for the used load size }
          else if (ado_IsBitPacked in ArrayOptions) and
             (ElementDef.Typ in [EnumDef,OrdDef]) then
-           Alignment:=cgsize_orddef(int_cgsize(PackedBitsLoadSize(ElePackedBitSize))).Alignment
+           Alignment:=CGSize_OrdDef(Int_CGSize(PackedBitsLoadSize(ElePackedBitSize))).Alignment
          { alignment is the alignment of the elements }
          else
            Alignment:=ElementDef.Alignment
@@ -4955,7 +4955,7 @@ implementation
             begin
               PD := TProcDef(TProcSym(Sym).ProcDefList[I]);
               if (PD.ProcTypeOption = potype_function) and
-                 is_boolean(PD.ReturnDef) and
+                 Is_Boolean(PD.ReturnDef) and
                  (PD.MinParaCount = 0) and
                  (PD.Visibility >= vis_public) then
               begin
@@ -5667,7 +5667,7 @@ implementation
          end;
         { add resultdef, add $$ as separator to make it unique from a
           parameter separator }
-        if not is_void(ReturnDef) then
+        if not Is_Void(ReturnDef) then
           Result:=Result+'$$'+ReturnDef.MangledParaName;
         NewLen:=Length(Result)+OldLen;
         { Replace with hash if the parameter line is very long }
@@ -5684,7 +5684,7 @@ implementation
                     Hash:=UpdateFNV64(Hash,HS[1],Length(HS));
                   end;
               end;
-            if not is_void(ReturnDef) then
+            if not Is_Void(ReturnDef) then
               begin
                 { add a little prefix so that x(integer; integer) is different from x(integer):integer }
                 HS:='$$'+ReturnDef.MangledParaName;
@@ -5869,7 +5869,7 @@ implementation
                       HS:=ToStr(HPC.Value.ValueOrdPtr);
                     ConstOrd :
                       begin
-                        if is_boolean(HPC.ConstDef) then
+                        if Is_Boolean(HPC.ConstDef) then
                           begin
                             if HPC.Value.ValueOrd<>0 then
                              HS:='TRUE'
@@ -5932,7 +5932,7 @@ implementation
             if (CopyTyp<>pc_bareproc) then
               Result:=CProcDef.Create(NestingLevel,DoRegister)
             else
-              Result:=CProcDef.Create(normal_function_level,DoRegister);
+              Result:=CProcDef.Create(NormalFunctionLevel,DoRegister);
             TProcDef(Result).Visibility:=vis_public;
           end
         else
@@ -5996,7 +5996,7 @@ implementation
                   TAbstractProcDef(Result).ReturnDef:=CPointerDef.GetReusable(TAbstractProcDef(Result).ReturnDef);
                 TAbstractProcDef(Result).ProcTypeOption:=potype_function;
               end
-            else if is_void(ReturnDef) then
+            else if Is_Void(ReturnDef) then
               TAbstractProcDef(Result).ProcTypeOption:=potype_procedure
             else
               TAbstractProcDef(Result).ProcTypeOption:=potype_function;
@@ -6037,7 +6037,7 @@ implementation
       begin
          { nested procvars require that nested functions use the Delphi-style
            nested procedure calling convention }
-         if (ParaST.SymTableLevel>normal_function_level) and
+         if (ParaST.SymTableLevel>NormalFunctionLevel) and
             (m_nested_procvars in CurrentSettings.ModeSwitches) then
            Include(ProcOptions,po_delphi_nested_cc);
       end;
@@ -6048,10 +6048,10 @@ implementation
         if (Side in [CallerSide,CallBothSides]) and
            not(HasParaLocInfo in [CallerSide,CallBothSides]) then
           begin
-            if not is_c_variadic(Self) then
-              CallerArgAreaSize:=ParaManager.create_paraloc_info(Self,CallerSide)
+            if not Is_C_Variadic(Self) then
+              CallerArgAreaSize:=ParaManager.Create_ParaLoc_Info(Self,CallerSide)
             else
-              CallerArgAreaSize:=ParaManager.create_varargs_paraloc_info(Self,CallerSide,nil);
+              CallerArgAreaSize:=ParaManager.Create_VarArgs_ParaLoc_Info(Self,CallerSide,nil);
             if HasParaLocInfo in [CalleeSide,CallBothSides] then
               HasParaLocInfo:=CallBothSides
             else
@@ -6060,10 +6060,10 @@ implementation
         if (Side in [CalleeSide,CallBothSides]) and
            not(HasParaLocInfo in [CalleeSide,CallBothSides]) then
           begin
-            if not is_c_variadic(Self) then
-              CalleeArgAreaSize:=ParaManager.create_paraloc_info(Self,CalleeSide)
+            if not Is_C_Variadic(Self) then
+              CalleeArgAreaSize:=ParaManager.Create_ParaLoc_Info(Self,CalleeSide)
             else
-              CallerArgAreaSize:=ParaManager.create_varargs_paraloc_info(Self,CalleeSide,nil);
+              CallerArgAreaSize:=ParaManager.Create_VarArgs_ParaLoc_Info(Self,CalleeSide,nil);
             if HasParaLocInfo in [CallerSide,CallBothSides] then
               HasParaLocInfo:=CallBothSides
             else
@@ -6117,8 +6117,8 @@ implementation
               if not P.Is_Used then
                 Continue;
               { check if no parameter is located on the stack }
-              if (is_open_array(P.VarDef) or
-                 is_array_of_const(P.VarDef)) and (P.VarSpez=vs_value) then
+              if (Is_Open_Array(P.VarDef) or
+                 Is_Array_Of_Const(P.VarDef)) and (P.VarSpez=vs_value) then
                 begin
                   Result:=True;
                   Exit;
@@ -6844,7 +6844,7 @@ implementation
                 if (pno_proctypeoption in PNo) and not (po_anonymous in ProcOptions) then
                   begin
                    if Assigned(ReturnDef) and
-                     not(is_void(ReturnDef)) then
+                     not(Is_Void(ReturnDef)) then
                      S:=S+'function '
                    else
                      S:=S+'procedure ';
@@ -6864,7 +6864,7 @@ implementation
               begin
                 S:=S+'anonymous ';
                 if Assigned(ReturnDef) and
-                  not(is_void(ReturnDef)) then
+                  not(Is_Void(ReturnDef)) then
                   S:=S+'function'
                 else
                   S:=S+'procedure';
@@ -6883,7 +6883,7 @@ implementation
         if not(ProcTypeOption in [potype_constructor,potype_destructor,
              potype_class_constructor,potype_class_destructor]) and
            Assigned(ReturnDef) and
-           not(is_void(ReturnDef)) then
+           not(Is_Void(ReturnDef)) then
           begin
             if Assigned(ReturnDef.TypeSym) then
               begin
@@ -6935,7 +6935,7 @@ implementation
         Result:=Assigned(Owner) and
                 not Is_MethodPointer and
                 (not(m_nested_procvars in CurrentSettings.ModeSwitches) or
-                 not is_nested_pd(Self)) and
+                 not Is_Nested_PD(Self)) and
                  (
                    not (po_anonymous in ProcOptions) or
                    not Assigned(CapturedSyms) or
@@ -6984,7 +6984,7 @@ implementation
             ResSym:=TSym(LocalST.Find('safecallresult'));
             ResDef:=TAbstractNormalVarSym(ResSym).VarDef;
           end
-        else if not is_void(ReturnDef) then
+        else if not Is_Void(ReturnDef) then
           begin
             Result:=True;
             ResSym:=FuncRetSym;
@@ -7288,7 +7288,7 @@ implementation
                 begin
                   S:=OrdType2Str[TOrdDef(P).OrdType];
                   if S='C' then
-                    S:=OrdType2Str[range_to_basetype(TOrdDef(P).Low,TOrdDef(P).High)];
+                    S:=OrdType2Str[Range_To_BaseType(TOrdDef(P).Low,TOrdDef(P).High)];
                 end;
               PointerDef:
                 S:='P'+GetCPPParaName(TPointerDef(P).PointedDef);
@@ -7470,7 +7470,7 @@ implementation
             all non-nested procedures to AB_GLOBAL
             otherwise you get undefined symbol error at linking
             for msdos  target with -CX option for instance }
-          (create_smartlink_library and not is_nested_pd(Self)) or
+          (create_smartlink_library and not Is_Nested_PD(Self)) or
           (po_global in ProcOptions);
     end;
 
@@ -7612,7 +7612,7 @@ implementation
            Size:=VoidPointerType.Size
          else if not Is_AddressOnly then
            begin
-             if is_nested_pd(Self) then
+             if Is_Nested_PD(Self) then
                Size:=VoidCodePointerType.Size+ParentFPVoidPointerType.Size
              else
                Size:=VoidCodePointerType.Size+VoidPointerType.Size;
@@ -7632,7 +7632,7 @@ implementation
       begin
         Result:=((not(po_methodpointer in ProcOptions) or (po_staticmethod in ProcOptions)) and
                  not(po_is_block in ProcOptions) and
-                 not is_nested_pd(Self)) or
+                 not Is_Nested_PD(Self)) or
                 (po_addressonly in ProcOptions);
       end;
 
@@ -7640,7 +7640,7 @@ implementation
     function TProcVarDef.GetMangledParaName:TSymStr;
       begin
         if not(po_methodpointer in ProcOptions) then
-          if not is_nested_pd(Self) then
+          if not Is_Nested_PD(Self) then
             Result:='procvar'
           else
             { we need the manglednames here, because nestedprocvars can be anonymous, e.g.
@@ -7696,7 +7696,7 @@ implementation
            S:=S+' procedure'+TypeName_Paras(PNo);
          if po_methodpointer in ProcOptions then
            S := S+' of object';
-         if is_nested_pd(Self) then
+         if Is_Nested_PD(Self) then
            S := S+' is nested';
          GetTypeName := S+';'+ProcCallOptionStr[ProcCallOption]+'>';
       end;
@@ -8068,7 +8068,7 @@ implementation
           owner = symtable in which objcclassdef is defined
         }
         ST:=PD.Owner.DefOwner.Owner;
-        NName:=class_helper_prefix+TProcSym(PD.ProcSym).Name;
+        NName:=ClassHelperPrefix+TProcSym(PD.ProcSym).Name;
         { check for an existing procsym with our special name }
         PSym:=TSym(ST.Find(NName));
         if not Assigned(PSym) then
@@ -8158,7 +8158,7 @@ implementation
         if not Assigned(C) then
           Exit;
         { inherit options and status }
-        ObjectOptions:=ObjectOptions+(C.ObjectOptions*inherited_objectoptions);
+        ObjectOptions:=ObjectOptions+(C.ObjectOptions*Inherited_ObjectOptions);
         { check if parent is a generic parameter }
         if sp_generic_para in C.TypeSym.SymOptions then
          ObjectOptions:=ObjectOptions+[oo_inherits_not_specialized];
@@ -8172,8 +8172,8 @@ implementation
             TObjectSymTable(SymTable).RecordAlignment:=TObjectSymTable(C.SymTable).RecordAlignment;
             { if both the parent and this record use C-alignment, also inherit
               the current field alignment }
-            if (TObjectSymTable(C.SymTable).UseFieldAlignment=C_alignment) and
-               (TObjectSymTable(SymTable).UseFieldAlignment=C_alignment) then
+            if (TObjectSymTable(C.SymTable).UseFieldAlignment=CAlignment) and
+               (TObjectSymTable(SymTable).UseFieldAlignment=CAlignment) then
               TObjectSymTable(SymTable).FieldAlignment:=TObjectSymTable(C.SymTable).FieldAlignment;
             { the padding is not inherited for Objective-C classes (maybe not
               for cppclass either?) }
@@ -8222,7 +8222,7 @@ implementation
      begin
         if ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
           Result:=0
-        else if (TObjectSymTable(SymTable).UseFieldAlignment<>bit_alignment) then
+        else if (TObjectSymTable(SymTable).UseFieldAlignment<>BitAlignment) then
           Result:=TFieldVarSym(VMTField).FieldOffset
         else
           Result:=TFieldVarSym(VMTField).FieldOffset div 8;
@@ -8672,7 +8672,7 @@ implementation
                     Inc(ParaCount);
                 for I:=0 to PD.Paras.Count-1 do
                   if not(vo_is_hidden_para in TParaVarSym(PD.Paras[I]).VarOptions) and
-                     not is_array_of_const(TParaVarSym(PD.Paras[I]).VarDef) then
+                     not Is_Array_Of_Const(TParaVarSym(PD.Paras[I]).VarDef) then
                     Dec(ParaCount);
                 if (ParaCount<>0) then
                   MessagePos(PD.FileInfo,sym_e_objc_para_mismatch);
@@ -8692,7 +8692,7 @@ implementation
                     for I:=0 to PD.ParaST.SymList.Count-1 do
                       begin
                         if (TSym(PD.ParaST.SymList[I]).Typ=ParaVarSym) and
-                           is_array_of_const(TParaVarSym(PD.ParaST.SymList[I]).VarDef) then
+                           Is_Array_Of_Const(TParaVarSym(PD.ParaST.SymList[I]).VarDef) then
                           MessagePos(PD.FileInfo,parser_e_varargs_need_cdecl_and_external);
                       end;
                   end;
@@ -8729,7 +8729,7 @@ implementation
           Exit;
         if (Sym.Typ=ParaVarSym) and
            ((vo_is_hidden_para in TParaVarSym(Sym).VarOptions) or
-            is_array_of_const(TParaVarSym(Sym).VarDef)) then
+            Is_Array_Of_Const(TParaVarSym(Sym).VarDef)) then
           Exit;
         if not ObjCCheckType(Sym.VarDef,FoundErrorDef) then
           begin
@@ -9337,7 +9337,7 @@ implementation
 
     function Is_Implicit_Array_Pointer(Def: TDef): Boolean;
       begin
-        Result:=is_dynamic_array(Def) or is_dynamicstring(Def);
+        Result:=Is_Dynamic_Array(Def) or Is_DynamicString(Def);
       end;
 
     function Is_Class_Or_Object(Def: TDef): Boolean;
@@ -9393,15 +9393,15 @@ implementation
       begin
 {$ifdef x86}
 {$define use_vectorfpuimplemented}
-        Use_VectorFPU:=(is_single(Def) and (CurrentSettings.FPUType in sse_singlescalar)) or
-          (is_double(Def) and (CurrentSettings.FPUType in sse_doublescalar)) or
+        Use_VectorFPU:=(Is_Single(Def) and (CurrentSettings.FPUType in sse_singlescalar)) or
+          (Is_Double(Def) and (CurrentSettings.FPUType in sse_doublescalar)) or
           { Check vector types }
           (
-            is_normal_array(Def) and
+            Is_Normal_Array(Def) and
             (ado_IsVector in TArrayDef(Def).ArrayOptions) and
             (
               (
-                is_single(TArrayDef(Def).ElementDef) and
+                Is_Single(TArrayDef(Def).ElementDef) and
                 (
                   { SSE or AVX XMM register }
                   ((TArrayDef(Def).EleCount = 4) and (CurrentSettings.FPUType in sse_singlescalar)) or
@@ -9415,7 +9415,7 @@ implementation
                 )
               ) or
               (
-                is_double(TArrayDef(Def).ElementDef) and
+                Is_Double(TArrayDef(Def).ElementDef) and
                 (
                   { SSE or AVX XMM register }
                   ((TArrayDef(Def).EleCount = 2) and (CurrentSettings.FPUType in sse_doublescalar)) or

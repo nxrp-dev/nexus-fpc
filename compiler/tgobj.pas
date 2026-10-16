@@ -97,7 +97,7 @@ unit tgobj;
 
             the forcesize parameter is so that it can be used for defs that
             don't have an inherent size (e.g., array of const) }
-          procedure gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference); virtual;
+          procedure GetHLTemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference); virtual;
           procedure gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: TReference); virtual;
           procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : TReference);
           procedure gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : TReference);
@@ -176,8 +176,8 @@ implementation
 
     procedure location_freetemp(list:TAsmList; const l : TLocation);
       begin
-        if (l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-         tg.ungetiftemp(list,l.reference);
+        if (l.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+         tg.ungetiftemp(list,l.Reference);
       end;
 
 
@@ -210,7 +210,7 @@ implementation
            if not(templist^.temptype in FreeTempTypes) then
              begin
                Comment(VWarning,'tgobj: (ResetTempgen) temp at pos '+ToStr(templist^.pos)+
-                       ' with size '+ToStr(templist^.size)+' and type '+TempTypeStr[templist^.temptype]+
+                       ' with size '+ToStr(templist^.Size)+' and type '+TempTypeStr[templist^.temptype]+
                        ' from pos '+ToStr(templist^.posinfo.line)+':'+ToStr(templist^.posinfo.column)+
                        ' not freed at the end of the procedure');
              end;
@@ -311,12 +311,12 @@ implementation
                   (hp^.fini=fini) and
                   ((hp^.def=def) or
                    not fini) and
-                  (hp^.size>=size) and
+                  (hp^.Size>=size) and
                   ((adjustedpos=align(adjustedpos,alignment)) or
-                   (adjustedpos+hp^.size-size = align(adjustedpos+hp^.size-size,alignment))) then
+                   (adjustedpos+hp^.Size-size = align(adjustedpos+hp^.Size-size,alignment))) then
                 begin
                   { Slot is the same size then leave immediately }
-                  if (hp^.size=size) then
+                  if (hp^.Size=size) then
                    begin
                      bestprev:=hprev;
                      bestslot:=hp;
@@ -332,7 +332,7 @@ implementation
                      { still suffices. And we pick the block which will     }
                      { have the best alignment after this new block is      }
                      { subtracted from it.                                  }
-                     fitatend:=(adjustedpos+hp^.size-size)=align(adjustedpos+hp^.size-size,alignment);
+                     fitatend:=(adjustedpos+hp^.Size-size)=align(adjustedpos+hp^.Size-size,alignment);
                      fitatbegin:=adjustedpos=align(adjustedpos,alignment);
                      if Assigned(bestslot) then
                        begin
@@ -340,17 +340,17 @@ implementation
                            ((not bestatend and
                              (direction=-1)) or
                             (bestatend and
-                             IsBetterAlignedThan(abs(bestslot^.pos+hp^.size-size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.LocalAlignMax)));
+                             IsBetterAlignedThan(abs(bestslot^.pos+hp^.Size-size),abs(adjustedpos+hp^.Size-size),CurrentSettings.Alignment.LocalAlignMax)));
                          fitatbegin:=fitatbegin and
                            (not bestatend or
                             (direction=1)) and
-                           IsBetterAlignedThan(abs(adjustedpos+size),abs(bestslot^.pos+size),CurrentSettings.alignment.LocalAlignMax);
+                           IsBetterAlignedThan(abs(adjustedpos+size),abs(bestslot^.pos+size),CurrentSettings.Alignment.LocalAlignMax);
                        end;
                      if fitatend and
                         fitatbegin then
-                       if IsBetterAlignedThan(abs(adjustedpos+hp^.size-size),abs(adjustedpos+size),CurrentSettings.alignment.LocalAlignMax) then
+                       if IsBetterAlignedThan(abs(adjustedpos+hp^.Size-size),abs(adjustedpos+size),CurrentSettings.Alignment.LocalAlignMax) then
                          fitatbegin:=false
-                       else if IsBetterAlignedThan(abs(adjustedpos+size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.LocalAlignMax) then
+                       else if IsBetterAlignedThan(abs(adjustedpos+size),abs(adjustedpos+hp^.Size-size),CurrentSettings.Alignment.LocalAlignMax) then
                          fitatend:=false
                        else if (direction=1) then
                          fitatend:=false
@@ -372,7 +372,7 @@ implementation
          { Reuse an old temp ? }
          if Assigned(bestslot) then
           begin
-            if bestslot^.size=size then
+            if bestslot^.Size=size then
              begin
                tl:=bestslot;
                { Remove from the tempfreelist }
@@ -409,18 +409,18 @@ implementation
                if not bestatend then
                  inc(bestslot^.pos,size)
                else
-                 inc(tl^.pos,tl^.size-size);
+                 inc(tl^.pos,tl^.Size-size);
 
                { Create new block and resize the old block }
                tl^.fini:=fini;
-               tl^.size:=size;
+               tl^.Size:=size;
                tl^.nextfree:=nil;
                { Resize the old block }
-               dec(bestslot^.size,size);
+               dec(bestslot^.Size,size);
              end;
             tl^.temptype:=temptype;
             tl^.def:=def;
-            tl^.alignment:=alignment;
+            tl^.Alignment:=alignment;
             tl^.nextfree:=nil;
           end
          else
@@ -455,8 +455,8 @@ implementation
          Comment(VNote,'tgobj: (AllocTemp) lasttemp set to '+ToStr(lasttemp));
 {$endif}
             tl^.fini:=fini;
-            tl^.alignment:=alignment;
-            tl^.size:=size;
+            tl^.Alignment:=alignment;
+            tl^.Size:=size;
             tl^.next:=templist;
             tl^.nextfree:=nil;
             templist:=tl;
@@ -464,12 +464,12 @@ implementation
 {$ifdef EXTDEBUG}
          tl^.posinfo:=CurrentFilePos;
          if Assigned(tl^.def) then
-           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.TypeName))
+           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.Size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.TypeName))
          else
-           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]));
+           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.Size,'allocated with type '+TempTypeStr[tl^.temptype]));
          Comment(VNote,'tgobj: (AllocTemp) temp of size '+ToStr(size)+' type '+TempTypeStr[tl^.temptype]+' requested, allocated at offset '+ToStr(tl^.pos));
 {$else}
-         list.concat(TAITempAlloc.alloc(tl^.pos,tl^.size));
+         list.concat(TAITempAlloc.alloc(tl^.pos,tl^.Size));
 {$endif}
          temp_to_ref(tl,ref);
       end;
@@ -483,18 +483,18 @@ implementation
          hprev:=nil;
          hprevfree:=nil;
 {$ifdef EXTDEBUG}
-         Comment(VNote,'tgobj: (FreeTemp) freeing of temp at pos '+ToStr(pos.val)+' requested');
+         Comment(VNote,'tgobj: (FreeTemp) freeing of temp at pos '+ToStr(pos.Val)+' requested');
 {$endif}
          while Assigned(hp) do
           begin
-            if (hp^.pos=pos.val) then
+            if (hp^.pos=pos.Val) then
              begin
                { check if already freed }
                if hp^.temptype in FreeTempTypes then
                 begin
 {$ifdef EXTDEBUG}
-                  Comment(VWarning,'tgobj: (FreeTemp) temp at pos '+ToStr(pos.val)+ ' is already free !');
-                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
+                  Comment(VWarning,'tgobj: (FreeTemp) temp at pos '+ToStr(pos.Val)+ ' is already free !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.Size,'temp is already freed'));
 {$endif}
                   exit;
                 end;
@@ -503,10 +503,10 @@ implementation
                 begin
 {$ifdef DEBUG_FREETEMP}
                   if hp^.temptype = tt_persistent then
-                    Comment(VNote,'tgobj: (Freetemp) temp at pos '+ToStr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing')
+                    Comment(VNote,'tgobj: (Freetemp) temp at pos '+ToStr(pos.Val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing')
                   else
-                    Comment(VWarning,'tgobj: (Freetemp) temp at pos '+ToStr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing');
-                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp has wrong type ('+TempTypeStr[hp^.temptype]+') not releasing'));
+                    Comment(VWarning,'tgobj: (Freetemp) temp at pos '+ToStr(pos.Val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.Size,'temp has wrong type ('+TempTypeStr[hp^.temptype]+') not releasing'));
 {$endif}
                   exit;
                 end;
@@ -524,7 +524,7 @@ implementation
                      (hprev^.temptype=tt_free) and
                      not Assigned(hprev^.def) then
                    begin
-                     inc(hprev^.size,hp^.size);
+                     inc(hprev^.Size,hp^.Size);
                      if direction=1 then
                        hprev^.pos:=hp^.pos;
                      hprev^.next:=hp^.next;
@@ -551,7 +551,7 @@ implementation
                   (hnext^.temptype=tt_free) and
                   not Assigned(hnext^.def) then
                 begin
-                  inc(hp^.size,hnext^.size);
+                  inc(hp^.Size,hnext^.Size);
                   if direction=1 then
                     hp^.pos:=hnext^.pos;
                   hp^.nextfree:=hnext^.nextfree;
@@ -569,9 +569,9 @@ implementation
       end;
 
 
-    procedure TTGObj.gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference);
+    procedure TTGObj.GetHLTemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference);
       begin
-        gettemp(list,forcesize,def.alignment,temptype,ref);
+        gettemp(list,forcesize,def.Alignment,temptype,ref);
       end;
 
 
@@ -591,26 +591,26 @@ implementation
       var
         varalign : shortint;
       begin
-        varalign:=Used_Align(alignment,CurrentSettings.alignment.LocalAlignMin,CurrentSettings.alignment.LocalAlignMax);
+        varalign:=Used_Align(alignment,CurrentSettings.Alignment.LocalAlignMin,CurrentSettings.Alignment.LocalAlignMax);
         alloctemp(list,size,varalign,temptype,def,fini,ref);
       end;
 
 
     procedure TTGObj.freetemphook(list: TAsmList; temp: PTempRecord);
       begin
-        list.concat(TAITempAlloc.dealloc(temp^.pos,temp^.size));
+        list.concat(TAITempAlloc.dealloc(temp^.pos,temp^.Size));
       end;
 
 
     procedure TTGObj.gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : TReference);
       begin
-        gettempinternal(list,def.size,def.alignment,temptype,def,true,ref);
+        gettempinternal(list,def.Size,def.Alignment,temptype,def,true,ref);
       end;
 
 
     function TTGObj.istemp(const ref : TReference) : boolean;
       begin
-         istemp:=ref.temppos.val<>ctempposinvalid.val;
+         istemp:=ref.TempPos.Val<>CTempPosInvalid.Val;
       end;
 
 
@@ -622,16 +622,16 @@ implementation
          hp:=templist;
          while Assigned(hp) do
            begin
-             if (hp^.pos=ref.temppos.val) then
+             if (hp^.pos=ref.TempPos.Val) then
                begin
-                 sizeoftemp := hp^.size;
+                 sizeoftemp := hp^.Size;
                  exit;
                end;
              hp := hp^.next;
            end;
 {$ifdef EXTDEBUG}
-         comment(VDebug,'tgobj: (SizeOfTemp) temp at pos '+ToStr(ref.temppos.val)+' not found !');
-         list.concat(TAITempAlloc.allocinfo(ref.temppos.val,0,'temp not found'));
+         comment(VDebug,'tgobj: (SizeOfTemp) temp at pos '+ToStr(ref.TempPos.Val)+' not found !');
+         list.concat(TAITempAlloc.allocinfo(ref.TempPos.Val,0,'temp not found'));
 {$endif}
       end;
 
@@ -644,15 +644,15 @@ implementation
          hp:=templist;
          while Assigned(hp) do
           begin
-            if (hp^.pos=ref.temppos.val) then
+            if (hp^.pos=ref.TempPos.Val) then
              begin
                if hp^.temptype<>tt_free then
                 begin
 {$ifdef EXTDEBUG}
                   if hp^.temptype=temptype then
                     Comment(VWarning,'tgobj: (ChangeTempType) temp'+
-                       ' at pos '+ToStr(ref.temppos.val)+ ' is already of the correct type !');
-                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'type changed to '+TempTypeStr[temptype]));
+                       ' at pos '+ToStr(ref.TempPos.Val)+ ' is already of the correct type !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.Size,'type changed to '+TempTypeStr[temptype]));
 {$endif}
                   ChangeTempType:=true;
                   hp^.temptype:=temptype;
@@ -661,8 +661,8 @@ implementation
                 begin
 {$ifdef EXTDEBUG}
                    Comment(VWarning,'tgobj: (ChangeTempType) temp'+
-                      ' at pos '+ToStr(ref.temppos.val)+ ' is already freed !');
-                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
+                      ' at pos '+ToStr(ref.TempPos.Val)+ ' is already freed !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.Size,'temp is already freed'));
 {$endif}
                 end;
                exit;
@@ -671,8 +671,8 @@ implementation
           end;
 {$ifdef EXTDEBUG}
          Comment(VWarning,'tgobj: (ChangeTempType) temp'+
-            ' at pos '+ToStr(ref.temppos.val)+ ' not found !');
-         list.concat(TAITempAlloc.allocinfo(ref.temppos.val,0,'temp not found'));
+            ' at pos '+ToStr(ref.TempPos.Val)+ ' not found !');
+         list.concat(TAITempAlloc.allocinfo(ref.TempPos.Val,0,'temp not found'));
 {$endif}
       end;
 
@@ -684,7 +684,7 @@ implementation
          hp:=templist;
          while Assigned(hp) do
           begin
-            if (hp^.pos=ref.temppos.val) then
+            if (hp^.pos=ref.TempPos.Val) then
              begin
                if hp^.temptype<>tt_free then
                  result:=hp^.temptype
@@ -704,14 +704,14 @@ implementation
         tmpref: TReference;
       begin
         hp:=templist;
-        if ref.temppos.val=ctempposinvalid.val then
+        if ref.TempPos.Val=CTempPosInvalid.Val then
           begin
             result:=false;
             exit;
           end;
         while Assigned(hp) do
          begin
-           if (hp^.pos=ref.temppos.val) then
+           if (hp^.pos=ref.TempPos.Val) then
             begin
               if hp^.temptype=tt_free then
                 begin
@@ -719,7 +719,7 @@ implementation
                   exit;
                 end;
               temp_to_ref(hp, tmpref);
-              result:=references_equal(ref, tmpref);
+              result:=References_Equal(ref, tmpref);
               exit;
             end;
            hp:=hp^.next;
@@ -732,30 +732,30 @@ implementation
       var
         t: TRefTempPos;
       begin
-        t.val:=p^.pos;
-        reference_reset_base(ref,CurrentProcInfo.framepointer,p^.pos,t,p^.alignment,[]);
+        t.Val:=p^.pos;
+        Reference_Reset_Base(ref,CurrentProcInfo.framepointer,p^.pos,t,p^.Alignment,[]);
       end;
 
 
     procedure TTGObj.UnGetTemp(list: TAsmList; const ref : TReference);
       begin
-        FreeTemp(list,ref.temppos,[tt_normal,tt_noreuse,tt_persistent,tt_regallocator]);
+        FreeTemp(list,ref.TempPos,[tt_normal,tt_noreuse,tt_persistent,tt_regallocator]);
       end;
 
 
     procedure TTGObj.UnGetIfTemp(list: TAsmList; const ref : TReference);
       begin
         if istemp(ref) then
-          FreeTemp(list,ref.temppos,[tt_normal]);
+          FreeTemp(list,ref.TempPos,[tt_normal]);
       end;
 
 
     procedure TTGObj.getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : TReference);
       begin
         if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef])  then
-          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).ExplicitRecordAlignment, def, nil, ref)
+          getlocal(list, size, def.Alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).ExplicitRecordAlignment, def, nil, ref)
         else
-          getlocal(list, size, def.alignment, 0, def, nil, ref);
+          getlocal(list, size, def.Alignment, 0, def, nil, ref);
       end;
 
 
@@ -763,7 +763,7 @@ implementation
       var
         lalign : shortint;
       begin
-        lalign:=Used_Align(alignment,CurrentSettings.alignment.LocalAlignMin,CurrentSettings.alignment.LocalAlignMax);
+        lalign:=Used_Align(alignment,CurrentSettings.Alignment.LocalAlignMin,CurrentSettings.Alignment.LocalAlignMax);
         if (explicitalignment>lalign) then
           begin
             if Assigned(sym) then
@@ -771,7 +771,7 @@ implementation
             else
               CGMessage1(scanner_w_local_alignment_larger_than_max,def.TypeName);
           end
-        else if (alignment>lalign) and (CurrentSettings.alignment.LocalAlignMax>1) then
+        else if (alignment>lalign) and (CurrentSettings.Alignment.LocalAlignMax>1) then
           begin
             if Assigned(sym) then
               CGMessage1(scanner_n_local_alignment_larger_than_max,sym.name)
@@ -784,7 +784,7 @@ implementation
 
     procedure TTGObj.UnGetLocal(list: TAsmList; const ref : TReference);
       begin
-        FreeTemp(list,ref.temppos,[tt_persistent]);
+        FreeTemp(list,ref.TempPos,[tt_persistent]);
       end;
 
 

@@ -408,7 +408,7 @@ implementation
           if result or (para.left.resultdef.typ in [variantdef]) then
             assign_type:=VoidPointerType
           else
-            case para.left.resultdef.size of
+            case para.left.resultdef.Size of
               1..4:
                 assign_type:=U32IntType;
               8:
@@ -420,19 +420,19 @@ implementation
 
       function GetVarDef(sourcedef: TDef): LongInt;
         begin
-          if is_ansistring(sourcedef) then
-            result:=varStrArg
+          if Is_AnsiString(sourcedef) then
+            result:=VarStrArg
           else
-          if is_unicodestring(sourcedef) then
-            result:=varUStrArg
+          if Is_UnicodeString(sourcedef) then
+            result:=VarUStrArg
           else
           if Is_InterfaceCOM_Or_DispInterface(sourcedef) then
             begin
               { distinct IDispatch and IUnknown interfaces }
-              if def_is_related(TObjectDef(sourcedef),Interface_IDispatch) then
-                result:=vardispatch
+              if Def_Is_Related(TObjectDef(sourcedef),Interface_IDispatch) then
+                result:=VarDispatch
               else
-                result:=varunknown;
+                result:=VarUnknown;
             end
           else
             result:=sourcedef.GetVarDef;
@@ -445,11 +445,11 @@ implementation
         selftemp:=nil;
         selfpara:=nil;
 
-        useresult := Assigned(resultdef) and not is_void(resultdef);
+        useresult := Assigned(resultdef) and not Is_Void(resultdef);
         if useresult then
           begin
             { get temp for the result }
-            result_data:=CTempCreateNode.create(COleVariantType,COleVariantType.size,tt_persistent,true);
+            result_data:=CTempCreateNode.create(COleVariantType,COleVariantType.Size,tt_persistent,true);
             addstatement(statements,result_data);
           end;
 
@@ -477,26 +477,26 @@ implementation
               inserttypeconv_internal(para.left,CWideStringType)
 
             { force automatable boolean type }
-            else if is_boolean(para.left.resultdef) then
+            else if Is_Boolean(para.left.resultdef) then
               inserttypeconv_internal(para.left,Bool16Type)
 
             { force automatable float type }
-            else if is_extended(para.left.resultdef)
+            else if Is_Extended(para.left.resultdef)
                 and (CurrentSettings.FPUType<>fpu_none) then
               inserttypeconv_internal(para.left,S64FloatType)
 
-            else if is_shortstring(para.left.resultdef) then
+            else if Is_ShortString(para.left.resultdef) then
               inserttypeconv_internal(para.left,CWideStringType)
 
             { skip this check if we've already typecasted to automatable type }
-            else if (para.left.nodetype<>nothingn) and (not is_automatable(para.left.resultdef)) then
+            else if (para.left.nodetype<>nothingn) and (not Is_Automatable(para.left.resultdef)) then
               CGMessagePos1(para.left.fileinfo,type_e_not_automatable,para.left.resultdef.TypeName);
 
             para:=TCallParaNode(para.nextpara);
           end;
 
         { create a temp to store parameter values }
-        vardispatchparadef:=CRecordDef.Create_Global_Internal('',VoidPointerType.size,VoidPointerType.size);
+        vardispatchparadef:=CRecordDef.Create_Global_Internal('',VoidPointerType.Size,VoidPointerType.Size);
         { the size will be set once the vardistpatchparadef record has been completed }
         params:=CTempCreateNode.create(vardispatchparadef,0,tt_persistent,false);
         addstatement(statements,params);
@@ -531,7 +531,7 @@ implementation
             if para.left.nodetype=nothingn then
             begin
               if variantdispatch then
-                tcb.emit_ord_const(varError,U8IntType);
+                tcb.emit_ord_const(VarError,U8IntType);
               para:=TCallParaNode(para.nextpara);
               continue;
             end;
@@ -562,7 +562,7 @@ implementation
               CSubscriptNode.create(vardispatchfield,CTempRefNode.create(params)),
                 CTypeConvNode.Create_Internal(para.left,assignmenttype)));
 
-            inc(paramssize,max(VoidPointerType.size,assignmenttype.size));
+            inc(paramssize,max(VoidPointerType.Size,assignmenttype.Size));
             tcb.emit_ord_const(restype,U8IntType);
 
             para.left:=nil;
@@ -573,7 +573,7 @@ implementation
         TRecordSymTable(vardispatchparadef.SymTable).AddAlignmentPadding;
 
         { Set final size for parameter block }
-        params.size:=paramssize;
+        params.Size:=paramssize;
 
         { old argument list skeleton isn't needed anymore }
         parametersnode.free;
@@ -598,7 +598,7 @@ implementation
         { may be referred from other units in case of inlining -> global
           -> must have unique name in entire progream }
         calldescsym:=CStaticVarSym.create(
-          internaltypeprefixName[itp_vardisp_calldesc]+CurrentModule.ModuleName^+'$'+ToStr(CurrentModule.LocalSymTable.SymList.count),
+          InternalTypePrefixName[itp_vardisp_calldesc]+CurrentModule.ModuleName^+'$'+ToStr(CurrentModule.LocalSymTable.SymList.count),
           vs_const,tcb.end_anonymous_record,[vo_is_public,vo_is_typed_const]);
         calldescsym.VarState:=vs_initialised;
         CurrentModule.LocalSymTable.InsertSym(calldescsym);
@@ -621,7 +621,7 @@ implementation
               see issues #26773 and #27044 }
             if not valid_for_var(selfnode,false) then
               begin
-                selftemp:=CTempCreateNode.create(selfnode.resultdef,selfnode.resultdef.size,tt_persistent,false);
+                selftemp:=CTempCreateNode.create(selfnode.resultdef,selfnode.resultdef.Size,tt_persistent,false);
                 addstatement(statements,selftemp);
                 addstatement(statements,CAssignmentNode.create(CTempRefNode.create(selftemp),selfnode));
                 selfpara:=CTempRefNode.create(selftemp);
@@ -697,9 +697,9 @@ implementation
       begin
         { release memory for reference counted out parameters }
         if (parasym.VarSpez=vs_out) and
-           is_managed_type(orgparadef) and
-           (not is_open_array(resultdef) or
-            is_managed_type(TArrayDef(resultdef).ElementDef)) then
+           Is_Managed_Type(orgparadef) and
+           (not Is_Open_Array(resultdef) or
+            Is_Managed_Type(TArrayDef(resultdef).ElementDef)) then
           begin
             { after converting a parameter to an open array, its resultdef is
               set back to its original resultdef so we can get the value of the
@@ -707,8 +707,8 @@ implementation
               type conversion to "open array". Since here we work on this
               converted parameter, set it back to the type to which it was
               converted in order to avoid type mismatches at the LLVM level }
-            if is_open_array(parasym.vardef) and
-               is_dynamic_array(orgparadef) then
+            if Is_Open_Array(parasym.vardef) and
+               Is_Dynamic_Array(orgparadef) then
               begin
                 left.resultdef:=resultdef;
                 orgparadef:=resultdef;
@@ -716,7 +716,7 @@ implementation
             paraaddrtype:=CPointerDef.getreusable(orgparadef);
             { create temp with address of the parameter }
             temp:=CTempCreateNode.create(
-              paraaddrtype,paraaddrtype.size,tt_persistent,true);
+              paraaddrtype,paraaddrtype.Size,tt_persistent,true);
             { put this code in the init/done statement of the call node, because
               we should finalize all out parameters before other parameters
               are evaluated (in case e.g. a managed out parameter is also
@@ -727,8 +727,8 @@ implementation
               CAssignmentNode.create(
                 CTempRefNode.create(temp),
                 CAddrNode.create(left)));
-            if not is_open_array(resultdef) or
-               not is_managed_type(TArrayDef(resultdef).ElementDef) then
+            if not Is_Open_Array(resultdef) or
+               not Is_Managed_Type(TArrayDef(resultdef).ElementDef) then
               { finalize the entire parameter }
               callnode.add_init_statement(
                 CNodeUtils.finalize_data_node(
@@ -777,7 +777,7 @@ implementation
         { in case of an array constructor, we don't need a copy since the array
           constructor itself is already constructed on the fly (and hence if
           it's modified by the caller, that's no problem) }
-        if not is_array_constructor(left.resultdef) then
+        if not Is_Array_Constructor(left.resultdef) then
           begin
             fparainit:=internalstatements(initstat);
             finiblock:=internalstatements(finistat);
@@ -786,13 +786,13 @@ implementation
             { making a copy of an open array, an array of const or a dynamic
               array requires dynamic memory allocation since we don't know the
               size at compile time }
-            if is_open_array(left.resultdef) or
-               is_array_of_const(left.resultdef) or
-               (is_dynamic_array(left.resultdef) and
-                is_open_array(parasym.vardef)) then
+            if Is_Open_Array(left.resultdef) or
+               Is_Array_Of_Const(left.resultdef) or
+               (Is_Dynamic_Array(left.resultdef) and
+                Is_Open_Array(parasym.vardef)) then
               begin
-                 paratemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
-                 if is_dynamic_array(left.resultdef) then
+                 paratemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
+                 if Is_Dynamic_Array(left.resultdef) then
                    begin
                       { note that in insert_typeconv, this dynamic array was
                         already converted into an open array (-> dereferenced)
@@ -803,7 +803,7 @@ implementation
                      temparraydef:=left.resultdef;
                      left.resultdef:=resultdef;
                      { get its address }
-                     lefttemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+                     lefttemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
                      addstatement(initstat,lefttemp);
                      addstatement(finistat,CTempDeleteNode.create(lefttemp));
                      addstatement(initstat,
@@ -824,7 +824,7 @@ implementation
                          CTypeConvNode.create_explicit(CTempRefNode.create(lefttemp),
                            temparraydef)
                        ),
-                       genintconstnode(TArrayDef(temparraydef).ElementDef.size)
+                       genintconstnode(TArrayDef(temparraydef).ElementDef.Size)
                      );
                    end
                  else
@@ -890,11 +890,11 @@ implementation
                    CDerefNode.create(CTempRefNode.create(paratemp)),
                    left.resultdef);
               end
-            else if is_shortstring(parasym.vardef) then
+            else if Is_ShortString(parasym.vardef) then
               begin
                 { the shortstring parameter may have a different size than the
                   parameter type -> assign and truncate/extend }
-                paratemp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.size,tt_persistent,false);
+                paratemp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.Size,tt_persistent,false);
                 addstatement(initstat,paratemp);
                 { assign shortstring }
                 addstatement(initstat,
@@ -909,7 +909,7 @@ implementation
             else if parasym.vardef.typ=variantdef then
               begin
                 vardatatype:=Search_System_Type('TVARDATA').typedef;
-                paratemp:=CTempCreateNode.create(vardatatype,vardatatype.size,tt_persistent,false);
+                paratemp:=CTempCreateNode.create(vardatatype,vardatatype.Size,tt_persistent,false);
                 addstatement(initstat,paratemp);
                 addstatement(initstat,
                   CCallNode.createintern('fpc_variant_copy_overwrite',
@@ -928,13 +928,13 @@ implementation
                   reused above) }
                 left:=CTypeConvNode.create_explicit(CTempRefNode.create(paratemp),parasym.vardef);
               end
-            else if is_managed_type(left.resultdef) then
+            else if Is_Managed_Type(left.resultdef) then
               begin
                 { don't increase/decrease the reference count here, will be done by
                   the callee (see (*) above) -> typecast to array of byte
                   for the assignment to the temp }
-                temparraydef:=CArrayDef.getreusable(U8IntType,left.resultdef.size);
-                paratemp:=CTempCreateNode.create(temparraydef,temparraydef.size,tt_persistent,false);
+                temparraydef:=CArrayDef.getreusable(U8IntType,left.resultdef.Size);
+                paratemp:=CTempCreateNode.create(temparraydef,temparraydef.Size,tt_persistent,false);
                 addstatement(initstat,paratemp);
                 addstatement(initstat,
                   CAssignmentNode.create(
@@ -946,7 +946,7 @@ implementation
               end
             else
               begin
-                paratemp:=CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,false);
+                paratemp:=CTempCreateNode.create(left.resultdef,left.resultdef.Size,tt_persistent,false);
                 addstatement(initstat,paratemp);
                 addstatement(initstat,
                   CAssignmentNode.create(CTempRefNode.create(paratemp),left)
@@ -1086,7 +1086,7 @@ implementation
          else
           resultdef:=left.resultdef;
 
-         if is_currency(resultdef) then
+         if Is_Currency(resultdef) then
            { Ensure actual parameters are scaled correctly }
            Include(flags,nf_is_currency);
       end;
@@ -1119,10 +1119,10 @@ implementation
             (cpf_varargs_para in callparaflags)) and
            (left.nodetype<>nothingn) and
            not(vo_has_local_copy in parasym.VarOptions) and
-           ((not is_open_array(parasym.vardef) and
-             not is_array_of_const(parasym.vardef)) or
-            not(callnode.procdefinition.ProcCallOption in cdecl_pocalls)) and
-           paramanager.push_addr_param(vs_value,parasym.vardef,
+           ((not Is_Open_Array(parasym.vardef) and
+             not Is_Array_Of_Const(parasym.vardef)) or
+            not(callnode.procdefinition.ProcCallOption in CDecl_PoCalls)) and
+           ParaManager.Push_Addr_Param(vs_value,parasym.vardef,
                       callnode.procdefinition.ProcCallOption) and
            not(cnf_do_inline in callnode.callnodeflags) then
           copy_value_by_ref_para;
@@ -1191,7 +1191,7 @@ implementation
              if (m_mac_procvar in CurrentSettings.ModeSwitches) and
                 (parasym.vardef.typ=procvardef) and
                 (left.nodetype=typeconvn) and
-                is_voidpointer(left.resultdef) and
+                Is_VoidPointer(left.resultdef) and
                 (TTypeConvNode(left).left.nodetype=typeconvn) and
                 (TTypeConvNode(TTypeConvNode(left).left).convtype=tc_proc_2_procvar) then
                begin
@@ -1241,11 +1241,11 @@ implementation
                    left:=arrayconstructor_to_set(left,false);
 
                  { set some settings needed for arrayconstructor }
-                 if is_array_constructor(left.resultdef) then
+                 if Is_Array_Constructor(left.resultdef) then
                   begin
                     if left.nodetype<>arrayconstructorn then
                       InternalError(200504041);
-                    if is_array_of_const(parasym.vardef) then
+                    if Is_Array_Of_Const(parasym.vardef) then
                      begin
                        { force variant array }
                        include(TArrayConstructorNode(left).arrayconstructornodeflags,acnf_forcevaria);
@@ -1265,13 +1265,13 @@ implementation
                    test_local_to_procvar(TProcVarDef(left.resultdef),parasym.vardef);
 
                  { test conversions }
-                 if not(is_shortstring(left.resultdef) and
-                        is_shortstring(parasym.vardef)) and
+                 if not(Is_ShortString(left.resultdef) and
+                        Is_ShortString(parasym.vardef)) and
                     (parasym.vardef.typ<>formaldef) and
                     not(parasym.UnivPara) then
                    begin
                       { Process open parameters }
-                      if paramanager.keep_para_array_range(parasym.VarSpez,parasym.vardef,callnode.procdefinition.ProcCallOption) then
+                      if ParaManager.Keep_Para_Array_Range(parasym.VarSpez,parasym.vardef,callnode.procdefinition.ProcCallOption) then
                        begin
                          { insert type conv but hold the ranges of the array }
                          olddef:=left.resultdef;
@@ -1291,14 +1291,14 @@ implementation
                 { they are passed by value (if passed by reference, then the  }
                 { callee will truncate when copying in the string)            }
                 { This happens e.g. on x86_64 for small strings               }
-                 if is_shortstring(left.resultdef) and
-                    is_shortstring(parasym.vardef) and
+                 if Is_ShortString(left.resultdef) and
+                    Is_ShortString(parasym.vardef) and
                     (parasym.VarSpez=vs_value) and
-                    not paramanager.push_addr_param(parasym.VarSpez,parasym.vardef,
+                    not ParaManager.Push_Addr_Param(parasym.VarSpez,parasym.vardef,
                           callnode.procdefinition.ProcCallOption) and
-                    ((is_open_string(left.resultdef) and
+                    ((Is_Open_String(left.resultdef) and
                       (TStringDef(parasym.vardef).len < 255)) or
-                     (not is_open_string(left.resultdef) and
+                     (not Is_Open_String(left.resultdef) and
                       { when a stringconstn is typeconverted, then only its  }
                       { def is modified, not the contents (needed because in }
                       { Delphi/TP, if you pass a longer string to a const    }
@@ -1311,7 +1311,7 @@ implementation
                    begin
                      block:=internalstatements(statements);
                      { temp for the new string }
-                     temp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.size,
+                     temp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.Size,
                        tt_persistent,true);
                      addstatement(statements,temp);
                      { assign parameter to temp }
@@ -1326,11 +1326,11 @@ implementation
 
                  { check var strings }
                  if (cs_strict_var_strings in CurrentSettings.LocalSwitches) and
-                    is_shortstring(left.resultdef) and
-                    is_shortstring(parasym.vardef) and
+                    Is_ShortString(left.resultdef) and
+                    Is_ShortString(parasym.vardef) and
                     (parasym.VarSpez in [vs_out,vs_var,vs_constref]) and
-                    not(is_open_string(parasym.vardef)) and
-                    not(equal_defs(left.resultdef,parasym.vardef)) then
+                    not(Is_Open_String(parasym.vardef)) and
+                    not(Equal_Defs(left.resultdef,parasym.vardef)) then
                    begin
                      CGMessagePos(left.fileinfo,type_e_strict_var_string_violation);
                    end;
@@ -1345,7 +1345,7 @@ implementation
                      if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                          (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                         (left.nodetype=calln) and
-                        (is_void(left.resultdef)) then
+                        (Is_Void(left.resultdef)) then
                        begin
                          load_procvar_from_calln(left);
                          { load_procvar_from_calln() creates a loadn for a
@@ -1365,7 +1365,7 @@ implementation
                      if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                          (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                         (left.nodetype=calln) and
-                        (is_void(left.resultdef)) then
+                        (Is_Void(left.resultdef)) then
                        load_procvar_from_calln(left);
 
                      case parasym.VarSpez of
@@ -1494,8 +1494,8 @@ implementation
           begin
             { look for type conversion nodes which convert a }
             { refcounted type into a non-refcounted type     }
-            if not is_managed_type(n.resultdef) and
-               is_managed_type(TTypeConvNode(n).left.resultdef) then
+            if not Is_Managed_Type(n.resultdef) and
+               Is_Managed_Type(TTypeConvNode(n).left.resultdef) then
               exit;
             n:=TTypeConvNode(n).left;
           end;
@@ -1617,7 +1617,7 @@ implementation
                 call_vmt_node:=load_vmt_pointer_node
               else if Is_Class(CurrentStructDef) then
                 begin
-                  if not SearchSym(copy(internaltypeprefixName[itp_vmt_afterconstruction_local],2,255),srsym,srsymtable) then
+                  if not SearchSym(copy(InternalTypePrefixName[itp_vmt_afterconstruction_local],2,255),srsym,srsymtable) then
                     InternalError(2016090801);
                   call_vmt_node:=CLoadNode.create(srsym,srsymtable);
                 end;
@@ -1681,8 +1681,8 @@ implementation
         pd:=TProcDef(symtableprocentry.ProcdefList[0]);
         { both the normal and specified resultdef either have to be returned via a }
         { parameter or not, but no mixing (JM)                                      }
-        if paramanager.ret_in_param(typedef,pd) xor
-          paramanager.ret_in_param(pd.ReturnDef,pd) then
+        if ParaManager.Ret_In_Param(typedef,pd) xor
+          ParaManager.Ret_In_Param(pd.ReturnDef,pd) then
           InternalError(2001082911);
       end;
 
@@ -1697,8 +1697,8 @@ implementation
         pd:=TProcDef(symtableprocentry.ProcdefList[0]);
         { both the normal and specified resultdef either have to be returned via a }
         { parameter or not, but no mixing (JM)                                      }
-        if paramanager.ret_in_param(typedef,pd) xor
-          paramanager.ret_in_param(pd.ReturnDef,pd) then
+        if ParaManager.Ret_In_Param(typedef,pd) xor
+          ParaManager.Ret_In_Param(pd.ReturnDef,pd) then
           InternalError(200108291);
       end;
 
@@ -1987,7 +1987,7 @@ implementation
             deterministically based on the methodpointer }
           (methodpointer.isequal(TCallNode(p).methodpointer)) and
           (((cnf_typedefset in callnodeflags) and (cnf_typedefset in TCallNode(p).callnodeflags) and
-            (equal_defs(typedef,TCallNode(p).typedef))) or
+            (Equal_Defs(typedef,TCallNode(p).typedef))) or
            (not(cnf_typedefset in callnodeflags) and not(cnf_typedefset in TCallNode(p).callnodeflags)));
       end;
 
@@ -2369,7 +2369,7 @@ implementation
 
             { temp create }
             usederef:=(p.resultdef.typ in [arraydef,recorddef]) or
-                      is_shortstring(p.resultdef) or
+                      Is_ShortString(p.resultdef) or
                       Is_Object(p.resultdef);
 
             if usederef then
@@ -2377,7 +2377,7 @@ implementation
             else
               hdef:=p.resultdef;
 
-            ptemp:=CTempCreateNode.create(hdef,hdef.size,tt_persistent,true);
+            ptemp:=CTempCreateNode.create(hdef,hdef.Size,tt_persistent,true);
             if usederef then
               begin
                 loadp:=CAddrNode.Create_Internal(p);
@@ -2388,7 +2388,7 @@ implementation
                 loadp:=p;
                 refp:=CTempRefNode.create(ptemp);
                 { ensure that an invokable isn't called again }
-                if is_invokable(hdef) then
+                if Is_Invokable(hdef) then
                   include(TTempRefNode(refp).flags,nf_load_procvar);
               end;
             add_init_statement(ptemp);
@@ -2430,7 +2430,7 @@ implementation
                 InternalError(200405241);
               { passing a string to an array of char }
               if (p.nodetype=stringconstn) and
-                 is_char(TArrayDef(paradef).ElementDef) then
+                 Is_Char(TArrayDef(paradef).ElementDef) then
                 begin
                   len:=TStringConstNode(p).len;
                   if len>0 then
@@ -2438,7 +2438,7 @@ implementation
                 end
               else
               { handle special case of passing an single array to an array of array }
-              if compare_defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
+              if Compare_Defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
                 len:=0
               else
                 begin
@@ -2503,7 +2503,7 @@ implementation
                       temp:=geninlinenode(in_ord_x,false,geninlinenode(in_low_x,false,p.GetCopy));
                       TypeCheckPass(temp);
                       if (temp.nodetype <> ordconstn) or
-                         (TOrdConstNode(temp).value <> 0) then
+                         (TOrdConstNode(temp).Value <> 0) then
                         begin
                           hightree:=CAddNode.create(subn,hightree,temp);
                           include(hightree.flags,nf_internal);
@@ -2516,7 +2516,7 @@ implementation
             end;
           stringdef :
             begin
-              if is_open_string(paradef) then
+              if Is_Open_String(paradef) then
                begin
                  { a stringconstn is not a simple parameter and hence would be
                    loaded in a temp, but in that case the high() node
@@ -2532,12 +2532,12 @@ implementation
                end
               else
                { handle special case of passing an single string to an array of string }
-               if compare_defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
+               if Compare_Defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
                 len:=0
               else
                { passing a string to an array of char }
                if (p.nodetype=stringconstn) and
-                  is_char(TArrayDef(paradef).ElementDef) then
+                  Is_Char(TArrayDef(paradef).ElementDef) then
                  begin
                    len:=TStringConstNode(p).len;
                    if len>0 then
@@ -2642,7 +2642,7 @@ implementation
                       begin
                         { TSomeRecord.Constructor call. We need to allocate }
                         { self node as a temp node of the result type       }
-                        temp:=CTempCreateNode.create(methodpointer.resultdef,methodpointer.resultdef.size,tt_persistent,false);
+                        temp:=CTempCreateNode.create(methodpointer.resultdef,methodpointer.resultdef.Size,tt_persistent,false);
                         add_init_statement(temp);
                         add_done_statement(CTempDeleteNode.create_normal_temp(temp));
                         selftree:=CTempRefNode.create(temp);
@@ -2934,7 +2934,7 @@ implementation
                     begin
                       { Minimum length }
                       minlennode := para.left;
-                      if is_integer(minlennode.resultdef) then
+                      if Is_Integer(minlennode.resultdef) then
                         begin
                           para := GetParaFromIndex(paracount - 1);
 
@@ -2947,7 +2947,7 @@ implementation
                             begin
                               { Numeric value }
                               valnode := para.left;
-                              if is_integer(valnode.resultdef) then
+                              if Is_Integer(valnode.resultdef) then
                                 begin
                                   while (valnode.nodetype = typeconvn) and (TTypeConvNode(valnode).convtype in [tc_equal, tc_int_2_int]) do
                                     begin
@@ -2956,13 +2956,13 @@ implementation
 
                                   if is_constintnode(valnode) then
                                     begin
-                                      minstrlen := TOrdConstNode(minlennode).value.svalue;
+                                      minstrlen := TOrdConstNode(minlennode).Value.svalue;
 
                                       { If we've gotten this far, we can convert the node into a direct assignment }
-                                      if TOrdConstNode(valnode).value.signed then
-                                        Str(TOrdConstNode(valnode).value.svalue:minstrlen, StringLiteral)
+                                      if TOrdConstNode(valnode).Value.signed then
+                                        Str(TOrdConstNode(valnode).Value.svalue:minstrlen, StringLiteral)
                                       else
-                                        Str(TOrdConstNode(valnode).value.uvalue:minstrlen, StringLiteral);
+                                        Str(TOrdConstNode(valnode).Value.uvalue:minstrlen, StringLiteral);
 
                                       para := GetParaFromIndex(paracount);
                                       if Assigned(para) then
@@ -2973,7 +2973,7 @@ implementation
                                             maxlennode := TTypeConvNode(maxlennode).left;
 
                                           if is_constintnode(maxlennode) then
-                                            SetLength(StringLiteral, TOrdConstNode(maxlennode).value.svalue)
+                                            SetLength(StringLiteral, TOrdConstNode(maxlennode).Value.svalue)
                                           else
                                             Exit;
                                         end;
@@ -3030,10 +3030,10 @@ implementation
                         { we can handle only the fpc_val_sint helpers so far }
                         ((copy(name,1,13)='$fpc_val_sint') or (copy(name,1,13)='$fpc_val_uint')) then
                         begin
-                          ValOutput.signed := is_signed(ResultDef);
+                          ValOutput.signed := Is_Signed(ResultDef);
 {$PUSH}
 {$R-}
-                          case LongInt(TOrdConstNode(GetParaFromIndex(2).paravalue).value.svalue) of
+                          case LongInt(TOrdConstNode(GetParaFromIndex(2).paravalue).Value.svalue) of
                             1:
                               if ValOutput.signed then
                                 begin
@@ -3207,7 +3207,7 @@ implementation
         { The AArch64 abi does not require special handling for struct returns }
 {$ifndef aarch64}
         { record returned via implicit pointer }
-        if paramanager.ret_in_param(resultdef,procdefinition) then
+        if ParaManager.Ret_In_Param(resultdef,procdefinition) then
           begin
             if not(cnf_inherited in callnodeflags) then
               msgsendname:='OBJC_MSGSEND_STRET'
@@ -3256,7 +3256,7 @@ implementation
              if (objcsupertype.typ<>recorddef) then
                InternalError(2009032901);
              { temp for the for the objc_super record }
-             temp:=CTempCreateNode.create(objcsupertype,objcsupertype.size,tt_persistent,false);
+             temp:=CTempCreateNode.create(objcsupertype,objcsupertype.Size,tt_persistent,false);
              addstatement(statements,temp);
              { initialize objc_super record }
              selftree:=safe_call_self_node.GetCopy;
@@ -3530,7 +3530,7 @@ implementation
           parameters -- unless this is an inline function, in which case
           writes to the function result will directly change it and we do have
           to check for potential aliasing }
-        if not paramanager.ret_in_param(resultdef,procdefinition) then
+        if not ParaManager.Ret_In_Param(resultdef,procdefinition) then
            begin
              if not(cnf_do_inline in callnodeflags) then
                 begin
@@ -3571,7 +3571,7 @@ implementation
 
         if (realassignmenttarget.nodetype=loadn) and
            { nested procedures may access the current procedure's locals }
-           (procdefinition.ParaST.SymTableLevel=normal_function_level) and
+           (procdefinition.ParaST.SymTableLevel=NormalFunctionLevel) and
            { must be a local variable, a value para or a hidden function result }
            { parameter (which can be passed by address, but in that case it got }
            { through these same checks at the caller side and is thus safe )    }
@@ -3603,9 +3603,9 @@ implementation
               will result also in a change of the parameter value }
             result:=not foreachnodestatic(left,@check_funcret_used_as_para,TLoadNode(realassignmenttarget).symtableentry);
             { ensure that it is aligned using the default alignment }
-            alignment:=TAbstractVarSym(TLoadNode(realassignmenttarget).symtableentry).vardef.alignment;
-            if (Used_Align(alignment,TargetInfo.alignment.LocalAlignMin,TargetInfo.alignment.LocalAlignMax)<>
-                Used_Align(alignment,CurrentSettings.alignment.LocalAlignMin,CurrentSettings.alignment.LocalAlignMax)) then
+            alignment:=TAbstractVarSym(TLoadNode(realassignmenttarget).symtableentry).vardef.Alignment;
+            if (Used_Align(alignment,TargetInfo.Alignment.LocalAlignMin,TargetInfo.Alignment.LocalAlignMax)<>
+                Used_Align(alignment,CurrentSettings.Alignment.LocalAlignMin,CurrentSettings.Alignment.LocalAlignMax)) then
               result:=false;
             exit;
           end;
@@ -3622,12 +3622,12 @@ implementation
             - Inlined functions
             - Types requiring initialization/finalization
             - Types passed in parameters }
-        if not is_void(resultdef) and
+        if not Is_Void(resultdef) and
            not Assigned(funcretnode) and
             (
              (cnf_do_inline in callnodeflags) or
-             is_managed_type(resultdef) or
-             paramanager.ret_in_param(resultdef,procdefinition)
+             Is_Managed_Type(resultdef) or
+             ParaManager.Ret_In_Param(resultdef,procdefinition)
             ) then
           begin
             { Optimize calls like x:=f() where we can use x directly as
@@ -3652,14 +3652,14 @@ implementation
               end
             else
               begin
-                temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,
+                temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,
                   (cnf_do_inline in callnodeflags) and
                   not(TAbstractVarSym(TProcDef(procdefinition).FuncRetSym).VarRegable in [vr_none,vr_addr]));
                 include(temp.flags,nf_is_funcret);
                 { if a managed type is returned by reference, assigning something
                   to the result on the caller side will take care of decreasing
                   the reference count }
-                if paramanager.ret_in_param(resultdef,procdefinition) then
+                if ParaManager.Ret_In_Param(resultdef,procdefinition) then
                   temp.includetempflag(ti_nofini);
                 add_init_statement(temp);
                 { When the function result is not used in an inlined function
@@ -3727,7 +3727,7 @@ implementation
                      { make sure that e.g. the self pointer of an advanced
                        record does not become a regvar, because it's a vs_var
                        parameter }
-                     if paramanager.push_addr_param(para.parasym.VarSpez,para.parasym.vardef,
+                     if ParaManager.Push_Addr_Param(para.parasym.VarSpez,para.parasym.vardef,
                          procdefinition.ProcCallOption) then
                        make_not_regable(para.left,[ra_addr_regable]);
                    end
@@ -3960,9 +3960,9 @@ implementation
                   hiddentree:=gen_high_tree(pt.left,paradef);
                   { for open array of managed type, a copy of high parameter is
                     necessary to properly initialize before the call }
-                  if is_open_array(paradef) and
+                  if Is_Open_Array(paradef) and
                     (TParaVarSym(procdefinition.paras[i-1]).VarSpez=vs_out) and
-                     is_managed_type(TArrayDef(paradef).ElementDef) then
+                     Is_Managed_Type(TArrayDef(paradef).ElementDef) then
                     begin
                       TypeCheckPass(hiddentree);
                       {this eliminates double call to fpc_dynarray_high, if any}
@@ -3988,14 +3988,14 @@ implementation
                     begin
                       if Assigned(procdefinition.owner.DefOwner) then
                         begin
-                          if paramanager.can_opt_unused_para(currpara) then
+                          if ParaManager.Can_Opt_Unused_Para(currpara) then
                             { If parentfp is unused by the target proc, create a dummy
                               pointerconstnode which will be discarded later. }
                             hiddentree:=CPointerConstNode.create(0,currpara.vardef)
                           else
                             begin
                               hiddentree:=CLoadParentFPNode.create(TProcDef(procdefinition.owner.DefOwner),lpf_forpara);
-                              if is_nested_pd(CurrentProcInfo.procdef) then
+                              if Is_Nested_PD(CurrentProcInfo.procdef) then
                                 CurrentProcInfo.set_needs_parentfp(TProcDef(procdefinition.owner.DefOwner).ParaST.SymTableLevel);
                            end;
                         end
@@ -4138,9 +4138,9 @@ implementation
              if CodeGenError then
                exit;
 
-             if is_invokable(right.resultdef) then
+             if Is_Invokable(right.resultdef) then
                begin
-                 procdefinition:=get_invoke_procdef(TObjectDef(right.resultdef));
+                 procdefinition:=Get_Invoke_ProcDef(TObjectDef(right.resultdef));
                  if Assigned(methodpointer) then
                    InternalError(2021041004);
                  methodpointer:=right;
@@ -4641,8 +4641,8 @@ implementation
         { Change loading of array of const to varargs }
         if Assigned(left) and
            (procdefinition.paras.count>0) and
-           is_array_of_const(TParaVarSym(procdefinition.paras[procdefinition.paras.count-1]).vardef) and
-           (procdefinition.ProcCallOption in cdecl_pocalls) then
+           Is_Array_Of_Const(TParaVarSym(procdefinition.paras[procdefinition.paras.count-1]).vardef) and
+           (procdefinition.ProcCallOption in CDecl_PoCalls) then
           convert_carg_array_of_const;
 
         { bind parasyms to the callparanodes and insert hidden parameters }
@@ -4662,7 +4662,7 @@ implementation
               calltype:=dct_method;
             end;
             { if the result is used, we've to insert a call to convert the type to be on the "safe side" }
-            if (cnf_return_value_used in callnodeflags) and not is_void(procdefinition.ReturnDef) then
+            if (cnf_return_value_used in callnodeflags) and not Is_Void(procdefinition.ReturnDef) then
               begin
                 result:=internalstatements(statements);
                 converted_result_data:=CTempCreateNode.create(procdefinition.ReturnDef,sizeof(procdefinition.ReturnDef),
@@ -4691,14 +4691,14 @@ implementation
         if Assigned(call_vmt_node) then
           TypeCheckPass(call_vmt_node);
 
-        if is_currency(resultdef) then
+        if Is_Currency(resultdef) then
           Include(flags,nf_is_currency);
 
         if Assigned(CurrentProcInfo) and
             (procdefinition.typ=procdef) and
             (procdefinition.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
-            (procdefinition.ParaST.SymTableLevel>normal_function_level) and
-            (CurrentProcInfo.procdef.ParaST.SymTableLevel>normal_function_level) then
+            (procdefinition.ParaST.SymTableLevel>NormalFunctionLevel) and
+            (CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel) then
           CurrentProcInfo.Add_Captured_Sym(TProcDef(procdefinition).ProcSym,procdefinition,fileinfo);
         maybe_reset_para_callnode;
       end;
@@ -4767,9 +4767,9 @@ implementation
               evaluate the calls, because otherwise the already loaded
               register parameters will have to be saved so the intermediate
               call can be evaluated (JM) }
-            if not Assigned(hpcurr.parasym.ParaLoc[callerside].location) then
+            if not Assigned(hpcurr.parasym.ParaLoc[callerside].Location) then
               InternalError(200412152);
-            currloc:=hpcurr.parasym.ParaLoc[callerside].location^.loc;
+            currloc:=hpcurr.parasym.ParaLoc[callerside].Location^.Loc;
             hpprev:=nil;
             hp:=hpfirst;
             { on fixed_stack targets, always evaluate parameters containing
@@ -4780,13 +4780,13 @@ implementation
               them from keeping on chasing each other's tail }
             while Assigned(hp) do
               begin
-                if paramanager.use_fixed_stack and
+                if ParaManager.Use_Fixed_Stack and
                    hpcurr.contains_stack_tainting_call_cached then
                   break;
                 case currloc of
                   LOC_REFERENCE :
                     begin
-                      case hp.parasym.ParaLoc[callerside].location^.loc of
+                      case hp.parasym.ParaLoc[callerside].Location^.Loc of
                         LOC_REFERENCE :
                           begin
                             { Offset is calculated like:
@@ -4802,10 +4802,10 @@ implementation
                             { the i386 code generator expects all reference }
                             { parameters to be in this order so they can use   }
                             { pushes in case of no fixed stack                 }
-                            if (not paramanager.use_fixed_stack and
-                                (hpcurr.parasym.ParaLoc[callerside].location^.reference.offset>
-                                 hp.parasym.ParaLoc[callerside].location^.reference.offset)) or
-                               (paramanager.use_fixed_stack and
+                            if (not ParaManager.Use_Fixed_Stack and
+                                (hpcurr.parasym.ParaLoc[callerside].Location^.Reference.Offset>
+                                 hp.parasym.ParaLoc[callerside].Location^.Reference.Offset)) or
+                               (ParaManager.Use_Fixed_Stack and
                                 (node_complexity(hpcurr.left)<node_complexity(hp.left))) then
 {$else i386}
                             if (node_complexity(hpcurr.left)<node_complexity(hp.left)) then
@@ -4824,7 +4824,7 @@ implementation
                   LOC_FPUREGISTER,
                   LOC_REGISTER :
                     begin
-                      if (hp.parasym.ParaLoc[callerside].location^.loc<>LOC_REFERENCE) and
+                      if (hp.parasym.ParaLoc[callerside].Location^.Loc<>LOC_REFERENCE) and
                          (node_complexity(hpcurr.left)>node_complexity(hp.left)) then
                         break;
                     end;
@@ -4880,10 +4880,10 @@ implementation
           begin
             if Assigned(hp.parasym) then
               begin
-                loc:=hp.parasym.ParaLoc[callerside].location;
+                loc:=hp.parasym.ParaLoc[callerside].Location;
                 while Assigned(loc) do
                   begin
-                    if loc^.loc=LOC_REFERENCE then
+                    if loc^.Loc=LOC_REFERENCE then
                       begin
                         include(CurrentProcInfo.flags,pi_has_stackparameter);
                         exit;
@@ -4991,7 +4991,7 @@ implementation
                       (vo_is_hidden_para in hp.parasym.VarOptions) and
                       (hp.left.resultdef.typ in [pointerdef,classrefdef])
                      ) and
-                  paramanager.push_addr_param(hp.parasym.VarSpez,hp.parasym.vardef,
+                  ParaManager.Push_Addr_Param(hp.parasym.VarSpez,hp.parasym.vardef,
                       self.procdefinition.ProcCallOption)
                  ) then
                 { pushing the address of a variable to take the place of a temp
@@ -5056,7 +5056,7 @@ implementation
                     ((para.parasym.refs>0) or
                     { array of consts are converted later on so we need to skip them here
                       else no error detection is done }
-                     is_array_of_const(para.parasym.vardef) or
+                     Is_Array_Of_Const(para.parasym.vardef) or
                      not(cs_opt_dead_values in CurrentSettings.OptimizerSwitches) or
                      might_have_sideeffects(para.left)) then
                      break;
@@ -5106,8 +5106,8 @@ implementation
            maybe_load_in_temp(right);
 
          { the return value might be stored on the current stack by allocating a temp. }
-         if not(paramanager.ret_in_param(procdefinition.ReturnDef,procdefinition)) then
-           inc(CurrentProcInfo.estimatedtempsize,procdefinition.ReturnDef.size);
+         if not(ParaManager.Ret_In_Param(procdefinition.ReturnDef,procdefinition)) then
+           inc(CurrentProcInfo.estimatedtempsize,procdefinition.ReturnDef.Size);
 
          { Create destination (temp or assignment-variable reuse) for function result if it not yet set }
          maybe_create_funcret_node;
@@ -5142,7 +5142,7 @@ implementation
 
          { calculate the parameter size needed for this call include varargs if they are available }
          if Assigned(varargsparas) then
-           pushedparasize:=paramanager.create_varargs_paraloc_info(procdefinition,callerside,varargsparas)
+           pushedparasize:=ParaManager.Create_VarArgs_ParaLoc_Info(procdefinition,callerside,varargsparas)
          else
            pushedparasize:=procdefinition.CallerArgAreaSize;
 
@@ -5183,17 +5183,17 @@ implementation
          order_parameters;
 
          { get a register for the return value }
-         if (not is_void(resultdef)) then
+         if (not Is_Void(resultdef)) then
            begin
-              if paramanager.ret_in_param(resultdef,procdefinition) then
+              if ParaManager.Ret_In_Param(resultdef,procdefinition) then
                begin
                  expectloc:=LOC_REFERENCE;
                end
              else
              { ansi/widestrings must be registered, so we can dispose them }
-              if is_ansistring(resultdef) or
-                 is_widestring(resultdef) or
-                 is_unicodestring(resultdef) then
+              if Is_AnsiString(resultdef) or
+                 Is_WideString(resultdef) or
+                 Is_UnicodeString(resultdef) then
                begin
                  expectloc:=LOC_REFERENCE;
                end
@@ -5316,7 +5316,7 @@ implementation
         else
           begin
             tempnode :=CTempCreateNode.create(TAbstractVarSym(p).vardef,
-              TAbstractVarSym(p).vardef.size,tt_persistent,TAbstractVarSym(p).Is_RegVar(false));
+              TAbstractVarSym(p).vardef.Size,tt_persistent,TAbstractVarSym(p).Is_RegVar(false));
             addstatement(inlineinitstatement,tempnode);
 
             if LocalVarTrashing <> -1 then
@@ -5490,7 +5490,7 @@ implementation
         { pre-compute some values }
         paracomplexity:=node_complexity(para.left);
         if para.parasym.VarSpez=vs_const then
-          pushconstaddr:=paramanager.push_addr_param(vs_const,para.parasym.vardef,procdefinition.ProcCallOption)
+          pushconstaddr:=ParaManager.Push_Addr_Param(vs_const,para.parasym.vardef,procdefinition.ProcCallOption)
         else
           pushconstaddr:=false;
         realtarget:=actualtargetnode(@para.left)^;
@@ -5519,7 +5519,7 @@ implementation
           with the temp everywhere in the function                  }
         if paraneedsinlinetemp(para,pushconstaddr,complexpara) then
           begin
-            tempnode:=CTempCreateNode.create(para.parasym.vardef,para.parasym.vardef.size,
+            tempnode:=CTempCreateNode.create(para.parasym.vardef,para.parasym.vardef.Size,
               tt_persistent,TParaVarSym(para.parasym).Is_RegVar(false));
             addstatement(inlineinitstatement,tempnode);
 
@@ -5602,7 +5602,7 @@ implementation
         isfuncretnode : boolean;
       begin
         ptrtype:=CPointerDef.getreusable(para.left.resultdef);
-        tempnode:=CTempCreateNode.create(ptrtype,ptrtype.size,tt_persistent,true);
+        tempnode:=CTempCreateNode.create(ptrtype,ptrtype.Size,tt_persistent,true);
         addstatement(inlineinitstatement,tempnode);
         isfuncretnode:=nf_is_funcret in para.left.flags;
         if isfuncretnode then

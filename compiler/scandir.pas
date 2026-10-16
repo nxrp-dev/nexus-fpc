@@ -238,11 +238,11 @@ unit scandir;
              begin
                { Support switches used in Apples Universal Interfaces}
                if (hs='MAC68K') then
-                 CurrentSettings.PackRecords:=mac68k_alignment
+                 CurrentSettings.PackRecords:=Mac68KAlignment
                { "power" alignment is the default C packrecords setting on
                  Mac OS X }
                else if (hs='POWER') or (hs='POWERPC') then
-                 CurrentSettings.PackRecords:=C_alignment
+                 CurrentSettings.PackRecords:=CAlignment
                else if (hs='RESET') then
                  CurrentSettings.PackRecords:=Default_Settings.PackRecords
                else
@@ -1143,7 +1143,7 @@ unit scandir;
            hs:=CurrentScanner.readid;
            { C has the special recordalignmax of C_alignment }
            if (hs='C') then
-            RecordPendingPackRecords(C_alignment)
+            RecordPendingPackRecords(CAlignment)
            else
             if (hs='NORMAL') or (hs='DEFAULT') then
              RecordPendingPackRecords(Default_Settings.PackRecords)
@@ -1207,7 +1207,7 @@ unit scandir;
           Dec(SwitchesStateStackPos);
           RecordPendingLocalFullSwitch(SwitchesStateStack[SwitchesStateStackPos].localsw);
           RecordPendingVerbosityFullSwitch(SwitchesStateStack[SwitchesStateStackPos].verbosity);
-          RecordPendingAlignmentFullSwitch(SwitchesStateStack[SwitchesStateStackPos].alignment);
+          RecordPendingAlignmentFullSwitch(SwitchesStateStack[SwitchesStateStackPos].Alignment);
           RecordPendingPackEnum(SwitchesStateStack[SwitchesStateStackPos].PackEnum);
           RecordPendingPackRecords(SwitchesStateStack[SwitchesStateStackPos].PackRecords);
           RecordPendingSetAlloc(SwitchesStateStack[SwitchesStateStackPos].SetAlloc);
@@ -1238,9 +1238,9 @@ unit scandir;
       { do not flush here as we might have read directives which shall not be active yet,
         see e.g. tests/tbs/tw22744b.pas }
       if psf_alignment_changed in PendingState.flags then
-        SwitchesStateStack[SwitchesStateStackPos].alignment:=PendingState.NextAlignment
+        SwitchesStateStack[SwitchesStateStackPos].Alignment:=PendingState.NextAlignment
       else
-        SwitchesStateStack[SwitchesStateStackPos].alignment:=CurrentSettings.alignment;
+        SwitchesStateStack[SwitchesStateStackPos].Alignment:=CurrentSettings.Alignment;
 
       if psf_verbosity_full_switched in PendingState.flags then
         SwitchesStateStack[SwitchesStateStackPos].verbosity:=PendingState.NextVerbosityFullSwitch
@@ -1318,7 +1318,7 @@ unit scandir;
         if TargetInfo.res<>res_none then
           begin
             include(CurrentModule.ModuleFlags,mf_has_resourcefiles);
-            if (res_single_file in TargetRes.resflags) and
+            if (res_single_file in TargetRes.ResFlags) and
                                    not (CurrentModule.ResourceFiles.Empty) then
               Message(scan_w_only_one_resourcefile_supported)
             else
@@ -1439,12 +1439,12 @@ unit scandir;
         if SearchSym(ident,srsym,srsymtable) then
           if (srsym.typ=constsym) and
               (TConstSym(srsym).ConstTyp=constord) and
-              is_integer(TConstSym(srsym).ConstDef) then
-            with TConstSym(srsym).value.ValueOrd do
+              Is_Integer(TConstSym(srsym).ConstDef) then
+            with TConstSym(srsym).Value.ValueOrd do
               if signed then
-                result:=TConstSym(srsym).value.ValueOrd.svalue
+                result:=TConstSym(srsym).Value.ValueOrd.svalue
               else
-                result:=TConstSym(srsym).value.ValueOrd.uvalue
+                result:=TConstSym(srsym).Value.ValueOrd.uvalue
           else
             message(error)
         else
@@ -1893,7 +1893,7 @@ unit scandir;
       begin
         CurrentScanner.skipspace;
         s:=CurrentScanner.readcomment;
-        if not(UpdateAlignmentStr(s,CurrentSettings.alignment)) then
+        if not(UpdateAlignmentStr(s,CurrentSettings.Alignment)) then
           message(scanner_e_illegal_alignment_directive);
       end;
 

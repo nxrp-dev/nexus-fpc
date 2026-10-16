@@ -73,7 +73,7 @@ implementation
           if eo_index in hp1.options then
            begin
              if i2 then
-               IsGreater:=hp1.index>hp2.index
+               IsGreater:=hp1.Index>hp2.Index
              else
                IsGreater:=false;
            end
@@ -138,14 +138,14 @@ implementation
                      begin
                        pt:=comp_expr([ef_accept_equal]);
                        if pt.nodetype=ordconstn then
-                        if (TOrdConstNode(pt).value<int64(low(index))) or
-                           (TOrdConstNode(pt).value>int64(high(index))) then
+                        if (TOrdConstNode(pt).Value<int64(low(index))) or
+                           (TOrdConstNode(pt).Value>int64(high(index))) then
                           begin
                             index:=0;
-                            message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(index)),ToStr(high(index)))
+                            message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(index)),ToStr(high(index)))
                           end
                         else
-                          index:=TOrdConstNode(pt).value.svalue
+                          index:=TOrdConstNode(pt).Value.svalue
                        else
                         begin
                           index:=0;
@@ -165,7 +165,7 @@ implementation
                        if pt.nodetype=stringconstn then
                          hpname:=StrPas(pchar(@TStringConstNode(pt).valueas[0]))
                        else if is_constcharnode(pt) then
-                         hpname:=chr(TOrdConstNode(pt).value.svalue and $ff)
+                         hpname:=chr(TOrdConstNode(pt).Value.svalue and $ff)
                        else
                          message(type_e_string_expr_expected);
                        include(options,eo_name);

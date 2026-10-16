@@ -55,34 +55,34 @@ unit hlcg2ll;
        public
           {************************************************}
           {                 basic routines                 }
-          procedure init_register_allocators;override;
+          procedure Init_Register_Allocators;override;
           {# Clean up the register allocators needed for the codegenerator.}
-          procedure done_register_allocators;override;
+          procedure Done_Register_Allocators;override;
           {# Set whether live_start or live_end should be updated when allocating registers, needed when e.g. generating initcode after the rest of the code. }
-          procedure set_regalloc_live_range_direction(dir: TRADirection);override;
+          procedure Set_RegAlloc_Live_Range_Direction(dir: TRADirection);override;
 
           {# Gets a register suitable to do integer operations on.}
-          function getintregister(list:TAsmList;size:TDef):TRegister;override;
+          function GetIntRegister(list:TAsmList;size:TDef):TRegister;override;
           {# Gets a register suitable to do integer operations on.}
-          function getaddressregister(list:TAsmList;size:TDef):TRegister;override;
-          function getfpuregister(list:TAsmList;size:TDef):TRegister;override;
+          function GetAddressRegister(list:TAsmList;size:TDef):TRegister;override;
+          function GetFPURegister(list:TAsmList;size:TDef):TRegister;override;
           { warning: only works correctly for fpu types currently }
-          function getmmregister(list:TAsmList;size:TDef):TRegister;override;
-          function getflagregister(list:TAsmList;size:TDef):TRegister;override;
+          function GetMMRegister(list:TAsmList;size:TDef):TRegister;override;
+          function GetFlagRegister(list:TAsmList;size:TDef):TRegister;override;
           {Does the generic cg need SIMD registers, like getmmxregister? Or should
            the cpu specific child cg object have such a method?}
 
-          function  uses_registers(rt:TRegisterType):boolean; inline;
+          function  Uses_Registers(rt:TRegisterType):boolean; inline;
 
-          procedure do_register_allocation(list:TAsmList;headertai:TAI); inline;
-          procedure translate_register(var reg : TRegister); inline;
+          procedure Do_Register_Allocation(list:TAsmList;headertai:TAI); inline;
+          procedure Translate_Register(var reg : TRegister); inline;
 
           {# Allocates register r by inserting a pai_realloc record }
-          procedure a_reg_alloc(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Alloc(list : TAsmList;r : TRegister); inline;
           {# Deallocates register r by inserting a pa_regdealloc record}
-          procedure a_reg_dealloc(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Dealloc(list : TAsmList;r : TRegister); inline;
           { Synchronize register, make sure it is still valid }
-          procedure a_reg_sync(list : TAsmList;r : TRegister); inline;
+          procedure A_Reg_Sync(list : TAsmList;r : TRegister); inline;
 
           {# Pass a parameter, which is located in a register, to a routine.
 
@@ -95,7 +95,7 @@ unit hlcg2ll;
              @param(r register source of the operand)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_reg_cgpara(list : TAsmList;size : TDef;r : TRegister;const cgpara : TCGPara);override;
+          procedure A_Load_Reg_CGPara(list : TAsmList;size : TDef;r : TRegister;const cgpara : TCGPara);override;
           {# Pass a parameter, which is a constant, to a routine.
 
              A generic version is provided. This routine should
@@ -108,7 +108,7 @@ unit hlcg2ll;
              @param(a value of constant to send)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_const_cgpara(list : TAsmList;tosize : TDef;a : TCGInt;const cgpara : TCGPara);override;
+          procedure A_Load_Const_CGPara(list : TAsmList;tosize : TDef;a : TCGInt;const cgpara : TCGPara);override;
           {# Pass the value of a parameter, which is located in memory, to a routine.
 
              A generic version is provided. This routine should
@@ -121,7 +121,7 @@ unit hlcg2ll;
              @param(r Memory reference of value to send)
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_ref_cgpara(list : TAsmList;size : TDef;const r : TReference;const cgpara : TCGPara);override;
+          procedure A_Load_Ref_CGPara(list : TAsmList;size : TDef;const r : TReference;const cgpara : TCGPara);override;
           {# Pass the value of a parameter, which can be located either in a register or memory location,
              to a routine.
 
@@ -131,7 +131,7 @@ unit hlcg2ll;
              @param(nr parameter number (starting from one) of routine (from left to right))
              @param(cgpara where the parameter will be stored)
           }
-          procedure a_load_loc_cgpara(list : TAsmList;size : TDef; const l : TLocation;const cgpara : TCGPara);override;
+          procedure A_Load_Loc_CGPara(list : TAsmList;size : TDef; const l : TLocation;const cgpara : TCGPara);override;
           {# Pass the address of a reference to a routine. This routine
              will calculate the address of the reference, and pass this
              calculated address as a parameter.
@@ -146,108 +146,108 @@ unit hlcg2ll;
              @param(tosize type of the pointer that we get as a result)
              @param(r reference to get address from)
           }
-          procedure a_loadaddr_ref_cgpara(list : TAsmList;fromsize : TDef;const r : TReference;const cgpara : TCGPara);override;
+          procedure A_LoadAddr_Ref_CGPara(list : TAsmList;fromsize : TDef;const r : TReference;const cgpara : TCGPara);override;
 
-          function a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara; override;
-          function a_call_reg(list : TAsmList;pd : TAbstractProcDef;reg : TRegister; const paras: array of PCGPara): TCGPara;override;
+          function A_Call_Name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara; override;
+          function A_Call_Reg(list : TAsmList;pd : TAbstractProcDef;reg : TRegister; const paras: array of PCGPara): TCGPara;override;
           { same as a_call_name, might be overridden on certain architectures to emit
             static calls without usage of a got trampoline }
-          function a_call_name_static(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara; override;
+          function A_Call_Name_Static(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara; override;
 
           { move instructions }
-          procedure a_load_const_reg(list : TAsmList;tosize : TDef;a : TCGInt;register : TRegister);override;
-          procedure a_load_const_ref(list : TAsmList;tosize : TDef;a : TCGInt;const ref : TReference);override;
-          procedure a_load_const_loc(list : TAsmList;tosize : TDef;a : TCGInt;const loc : TLocation);override;
-          procedure a_load_reg_ref(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);override;
-          procedure a_load_reg_ref_unaligned(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);override;
-          procedure a_load_reg_reg(list : TAsmList;fromsize, tosize : TDef;reg1,reg2 : TRegister);override;
-          procedure a_load_reg_loc(list : TAsmList;fromsize, tosize : TDef;reg : TRegister;const loc: TLocation);override;
-          procedure a_load_ref_reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);override;
-          procedure a_load_ref_reg_unaligned(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);override;
-          procedure a_load_ref_ref(list : TAsmList;fromsize, tosize : TDef;const sref : TReference;const dref : TReference);override;
-          procedure a_load_loc_reg(list : TAsmList;fromsize, tosize : TDef; const loc: TLocation; reg : TRegister);override;
-          procedure a_load_loc_ref(list : TAsmList;fromsize, tosize: TDef; const loc: TLocation; const ref : TReference);override;
-          procedure a_loadaddr_ref_reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;r : TRegister);override;
+          procedure A_Load_Const_Reg(list : TAsmList;tosize : TDef;a : TCGInt;register : TRegister);override;
+          procedure A_Load_Const_Ref(list : TAsmList;tosize : TDef;a : TCGInt;const ref : TReference);override;
+          procedure A_Load_Const_Loc(list : TAsmList;tosize : TDef;a : TCGInt;const loc : TLocation);override;
+          procedure A_Load_Reg_Ref(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);override;
+          procedure A_Load_Reg_Ref_Unaligned(list : TAsmList;fromsize, tosize : TDef;register : TRegister;const ref : TReference);override;
+          procedure A_Load_Reg_Reg(list : TAsmList;fromsize, tosize : TDef;reg1,reg2 : TRegister);override;
+          procedure A_Load_Reg_Loc(list : TAsmList;fromsize, tosize : TDef;reg : TRegister;const loc: TLocation);override;
+          procedure A_Load_Ref_Reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);override;
+          procedure A_Load_Ref_Reg_Unaligned(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;register : TRegister);override;
+          procedure A_Load_Ref_Ref(list : TAsmList;fromsize, tosize : TDef;const sref : TReference;const dref : TReference);override;
+          procedure A_Load_Loc_Reg(list : TAsmList;fromsize, tosize : TDef; const loc: TLocation; reg : TRegister);override;
+          procedure A_Load_Loc_Ref(list : TAsmList;fromsize, tosize: TDef; const loc: TLocation; const ref : TReference);override;
+          procedure A_LoadAddr_Ref_Reg(list : TAsmList;fromsize, tosize : TDef;const ref : TReference;r : TRegister);override;
 
           { bit scan instructions }
-          procedure a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TDef; src, dst: TRegister); override;
+          procedure A_Bit_Scan_Reg_Reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TDef; src, dst: TRegister); override;
 
           { fpu move instructions }
-          procedure a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister); override;
-          procedure a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister); override;
-          procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference); override;
-          procedure a_loadfpu_ref_ref(list: TAsmList; fromsize, tosize: TDef; const ref1,ref2: TReference);override;
-          procedure a_loadfpu_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);override;
-          procedure a_loadfpu_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);override;
-          procedure a_loadfpu_reg_cgpara(list : TAsmList;fromsize: TDef;const r : TRegister;const cgpara : TCGPara);override;
-          procedure a_loadfpu_ref_cgpara(list : TAsmList;fromsize : TDef;const ref : TReference;const cgpara : TCGPara);override;
+          procedure A_LoadFPU_Reg_Reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister); override;
+          procedure A_LoadFPU_Ref_Reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister); override;
+          procedure A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference); override;
+          procedure A_LoadFPU_Ref_Ref(list: TAsmList; fromsize, tosize: TDef; const ref1,ref2: TReference);override;
+          procedure A_LoadFPU_Loc_Reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);override;
+          procedure A_LoadFPU_Reg_Loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);override;
+          procedure A_LoadFPU_Reg_CGPara(list : TAsmList;fromsize: TDef;const r : TRegister;const cgpara : TCGPara);override;
+          procedure A_LoadFPU_Ref_CGPara(list : TAsmList;fromsize : TDef;const ref : TReference;const cgpara : TCGPara);override;
 
           { vector register move instructions }
-          procedure a_loadmm_reg_reg(list: TAsmList; fromsize, tosize: TDef;reg1, reg2: TRegister;shuffle : PMMShuffle); override;
-          procedure a_loadmm_ref_reg(list: TAsmList; fromsize, tosize: TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
-          procedure a_loadmm_reg_ref(list: TAsmList; fromsize, tosize: TDef;reg: TRegister; const ref: TReference;shuffle : PMMShuffle); override;
-          procedure a_loadmm_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister;shuffle : PMMShuffle);override;
-          procedure a_loadmm_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation;shuffle : PMMShuffle);override;
-          procedure a_loadmm_reg_cgpara(list: TAsmList; fromsize: TDef; reg: TRegister;const cgpara : TCGPara;shuffle : PMMShuffle); override;
-          procedure a_loadmm_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference;const cgpara : TCGPara;shuffle : PMMShuffle); override;
-          procedure a_loadmm_loc_cgpara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara : TCGPara;shuffle : PMMShuffle); override;
-          procedure a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : TDef;src,dst: TRegister;shuffle : PMMShuffle); override;
-          procedure a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
-          procedure a_opmm_loc_reg(list: TAsmList; Op: TOpCG; size : TDef;const loc: TLocation; reg: TRegister;shuffle : PMMShuffle); override;
-          procedure a_opmm_reg_ref(list: TAsmList; Op: TOpCG; size : TDef;reg: TRegister;const ref: TReference; shuffle : PMMShuffle); override;
-          procedure a_loadmm_intreg_reg(list: TAsmList; fromsize, tosize : TDef; intreg, mmreg: TRegister; shuffle: PMMShuffle); override;
-          procedure a_loadmm_reg_intreg(list: TAsmList; fromsize, tosize : TDef; mmreg, intreg: TRegister; shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Reg_Reg(list: TAsmList; fromsize, tosize: TDef;reg1, reg2: TRegister;shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Ref_Reg(list: TAsmList; fromsize, tosize: TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Reg_Ref(list: TAsmList; fromsize, tosize: TDef;reg: TRegister; const ref: TReference;shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Loc_Reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister;shuffle : PMMShuffle);override;
+          procedure A_LoadMM_Reg_Loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation;shuffle : PMMShuffle);override;
+          procedure A_LoadMM_Reg_CGPara(list: TAsmList; fromsize: TDef; reg: TRegister;const cgpara : TCGPara;shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Ref_CGPara(list: TAsmList; fromsize: TDef; const ref: TReference;const cgpara : TCGPara;shuffle : PMMShuffle); override;
+          procedure A_LoadMM_Loc_CGPara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara : TCGPara;shuffle : PMMShuffle); override;
+          procedure A_OpMM_Reg_Reg(list: TAsmList; Op: TOpCG; size : TDef;src,dst: TRegister;shuffle : PMMShuffle); override;
+          procedure A_OpMM_Ref_Reg(list: TAsmList; Op: TOpCG; size : TDef;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
+          procedure A_OpMM_Loc_Reg(list: TAsmList; Op: TOpCG; size : TDef;const loc: TLocation; reg: TRegister;shuffle : PMMShuffle); override;
+          procedure A_OpMM_Reg_Ref(list: TAsmList; Op: TOpCG; size : TDef;reg: TRegister;const ref: TReference; shuffle : PMMShuffle); override;
+          procedure A_LoadMM_IntReg_Reg(list: TAsmList; fromsize, tosize : TDef; intreg, mmreg: TRegister; shuffle: PMMShuffle); override;
+          procedure A_LoadMM_Reg_IntReg(list: TAsmList; fromsize, tosize : TDef; mmreg, intreg: TRegister; shuffle : PMMShuffle); override;
 
           { basic arithmetic operations }
           { note: for operators which require only one argument (not, neg), use }
           { the op_reg_reg, op_reg_ref or op_reg_loc methods and keep in mind   }
           { that in this case the *second* operand is used as both source and   }
           { destination (JM)                                                    }
-          procedure a_op_const_reg(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; reg: TRegister); override;
-          procedure a_op_const_ref(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference); override;
-          procedure a_op_const_loc(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);override;
-          procedure a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TDef; reg1, reg2: TRegister); override;
-          procedure a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference); override;
-          procedure a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister); override;
-          procedure a_op_reg_loc(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);override;
-          procedure a_op_ref_loc(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);override;
+          procedure A_Op_Const_Reg(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; reg: TRegister); override;
+          procedure A_Op_Const_Ref(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference); override;
+          procedure A_Op_Const_Loc(list : TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);override;
+          procedure A_Op_Reg_Reg(list : TAsmList; Op: TOpCG; size: TDef; reg1, reg2: TRegister); override;
+          procedure A_Op_Reg_Ref(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference); override;
+          procedure A_Op_Ref_Reg(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister); override;
+          procedure A_Op_Reg_Loc(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);override;
+          procedure A_Op_Ref_Loc(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);override;
 
           { trinary operations for processors that support them, 'emulated' }
           { on others. None with "ref" arguments since I don't think there  }
           { are any processors that support it (JM)                         }
-          procedure a_op_const_reg_reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister); override;
-          procedure a_op_reg_reg_reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister); override;
-          procedure a_op_const_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister;setflags : boolean;var ovloc : TLocation); override;
-          procedure a_op_reg_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister;setflags : boolean;var ovloc : TLocation); override;
+          procedure A_Op_Const_Reg_Reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister); override;
+          procedure A_Op_Reg_Reg_Reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister); override;
+          procedure A_Op_Const_Reg_Reg_CheckOverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister;setflags : boolean;var ovloc : TLocation); override;
+          procedure A_Op_Reg_Reg_Reg_CheckOverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister;setflags : boolean;var ovloc : TLocation); override;
 
           { unary operations (not, neg) }
-          procedure a_op_reg(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister); override;
-          procedure a_op_ref(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference); override;
-          procedure a_op_loc(list : TAsmList; Op: TOpCG; size: TDef;  const loc: TLocation); override;
+          procedure A_Op_Reg(list : TAsmList; Op: TOpCG; size: TDef; reg: TRegister); override;
+          procedure A_Op_Ref(list : TAsmList; Op: TOpCG; size: TDef; const ref: TReference); override;
+          procedure A_Op_Loc(list : TAsmList; Op: TOpCG; size: TDef;  const loc: TLocation); override;
 
           {  comparison operations }
-          procedure a_cmp_const_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;reg : TRegister;
+          procedure A_Cmp_Const_Reg_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;reg : TRegister;
             l : TAsmLabel);override;
-          procedure a_cmp_const_ref_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;const ref : TReference;
+          procedure A_Cmp_Const_Ref_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp;a : TCGInt;const ref : TReference;
             l : TAsmLabel); override;
-          procedure a_cmp_const_loc_label(list: TAsmList; size: TDef;cmp_op: TOpCmp; a: TCGInt; const loc: TLocation;
+          procedure A_Cmp_Const_Loc_Label(list: TAsmList; size: TDef;cmp_op: TOpCmp; a: TCGInt; const loc: TLocation;
             l : TAsmLabel);override;
-          procedure a_cmp_reg_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg1,reg2 : TRegister;l : TAsmLabel); override;
-          procedure a_cmp_ref_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const ref: TReference; reg : TRegister; l : TAsmLabel); override;
-          procedure a_cmp_reg_ref_label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg : TRegister; const ref: TReference; l : TAsmLabel); override;
+          procedure A_Cmp_Reg_Reg_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg1,reg2 : TRegister;l : TAsmLabel); override;
+          procedure A_Cmp_Ref_Reg_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const ref: TReference; reg : TRegister; l : TAsmLabel); override;
+          procedure A_Cmp_Reg_Ref_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp;reg : TRegister; const ref: TReference; l : TAsmLabel); override;
 
-          procedure a_cmp_loc_reg_label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const loc: TLocation; reg : TRegister; l : TAsmLabel);override;
-          procedure a_cmp_ref_loc_label(list: TAsmList; size: TDef;cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l : TAsmLabel);override;
+          procedure A_Cmp_Loc_Reg_Label(list : TAsmList;size : TDef;cmp_op : TOpCmp; const loc: TLocation; reg : TRegister; l : TAsmLabel);override;
+          procedure A_Cmp_Ref_Loc_Label(list: TAsmList; size: TDef;cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l : TAsmLabel);override;
 
-          procedure a_jmp_always(list : TAsmList;l: TAsmLabel); override;
+          procedure A_Jmp_Always(list : TAsmList;l: TAsmLabel); override;
 {$ifdef cpuflags}
-          procedure a_jmp_flags(list : TAsmList;const f : TResFlags;l: TAsmLabel); override;
+          procedure A_Jmp_Flags(list : TAsmList;const f : TResFlags;l: TAsmLabel); override;
 
           {# Depending on the value to check in the flags, either sets the register reg to one (if the flag is set)
              or zero (if the flag is cleared). The size parameter indicates the destination size register.
           }
-          procedure g_flags2reg(list: TAsmList; size: TDef; const f: TResFlags; reg: TRegister); override;
-          procedure g_flags2ref(list: TAsmList; size: TDef; const f: TResFlags; const ref:TReference); override;
+          procedure G_Flags2Reg(list: TAsmList; size: TDef; const f: TResFlags; reg: TRegister); override;
+          procedure G_Flags2Ref(list: TAsmList; size: TDef; const f: TResFlags; const ref:TReference); override;
 {$endif cpuflags}
 
 //          procedure g_maybe_testvmt(list : TAsmList;reg:tregister;objdef:tobjectdef);
@@ -260,7 +260,7 @@ unit hlcg2ll;
              @param(dest Destination reference of copy)
 
           }
-          procedure g_concatcopy(list : TAsmList;size: TDef; const source,dest : TReference);override;
+          procedure G_ConcatCopy(list : TAsmList;size: TDef; const source,dest : TReference);override;
           {# This should emit the opcode to copy len bytes from the an unaligned source
              to destination.
 
@@ -270,52 +270,52 @@ unit hlcg2ll;
              @param(dest Destination reference of copy)
 
           }
-          procedure g_concatcopy_unaligned(list : TAsmList;size: TDef; const source,dest : TReference);override;
+          procedure G_ConcatCopy_Unaligned(list : TAsmList;size: TDef; const source,dest : TReference);override;
 
           {# Generates overflow checking code for a node }
-          procedure g_overflowcheck(list: TAsmList; const Loc:TLocation; def:TDef); override;
-          procedure g_overflowCheck_loc(List:TAsmList;const Loc:TLocation;def:TDef;var ovloc : TLocation);override;
+          procedure G_OverflowCheck(list: TAsmList; const Loc:TLocation; def:TDef); override;
+          procedure G_OverflowCheck_Loc(List:TAsmList;const Loc:TLocation;def:TDef;var ovloc : TLocation);override;
 
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
 
              @param(size Number of bytes to allocate)
           }
-          procedure g_stackpointer_alloc(list : TAsmList;size : LongInt);override;
+          procedure G_StackPointer_Alloc(list : TAsmList;size : LongInt);override;
           {# Emits instruction for allocating the locals in entry
              code of a routine. This is one of the first
              routine called in @var(genentrycode).
 
              @param(localsize Number of bytes to allocate as locals)
           }
-          procedure g_proc_entry(list : TAsmList;localsize : LongInt;nostackframe:boolean);override;
+          procedure G_Proc_Entry(list : TAsmList;localsize : LongInt;nostackframe:boolean);override;
           {# Emits instructions for returning from a subroutine.
              Should also restore the framepointer and stack.
 
              @param(parasize  Number of bytes of parameters to deallocate from stack)
           }
-          procedure g_proc_exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);override;
+          procedure G_Proc_Exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);override;
 
-          procedure g_adjust_self_value(list:TAsmList;procdef: TProcDef;ioffset: aint);override;
+          procedure G_Adjust_Self_Value(list:TAsmList;procdef: TProcDef;ioffset: aint);override;
 
           { Generate code to exit an unwind-protected region. The default implementation
             produces a simple jump to destination label. }
-          procedure g_local_unwind(list: TAsmList; l: TAsmLabel);override;
+          procedure G_Local_Unwind(list: TAsmList; l: TAsmLabel);override;
 
-          procedure location_force_reg(list:TAsmList;var l:TLocation;src_size,dst_size:TDef;maybeconst:boolean);override;
-          procedure location_force_mem(list:TAsmList;var l:TLocation;size:TDef);override;
-          procedure location_force_mmregscalar(list:TAsmList;var l: TLocation;var size:TDef;maybeconst:boolean);override;
+          procedure Location_Force_Reg(list:TAsmList;var l:TLocation;src_size,dst_size:TDef;maybeconst:boolean);override;
+          procedure Location_Force_Mem(list:TAsmList;var l:TLocation;size:TDef);override;
+          procedure Location_Force_MMRegScalar(list:TAsmList;var l: TLocation;var size:TDef;maybeconst:boolean);override;
 //          procedure location_force_mmreg(list:TAsmList;var l: tlocation;size:tdef;maybeconst:boolean);override;
 
-          procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: TAsmLabel); override;
+          procedure MakeToJumpBoolLabels(list: TAsmList; p: TNode; TrueLabel, FalseLabel: TAsmLabel); override;
 
-          procedure gen_load_para_value(list:TAsmList);override;
+          procedure Gen_Load_Para_Value(list:TAsmList);override;
          protected
-          procedure gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation;const cgpara: TCGPara;locintsize: LongInt);override;
+          procedure Gen_LoadFPU_Loc_CGPara(list: TAsmList; size: TDef; const l: TLocation;const cgpara: TCGPara;locintsize: LongInt);override;
          public
 
 
-          procedure gen_load_loc_cgpara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara); override;
-          procedure gen_load_cgpara_loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean); override;
+          procedure Gen_Load_Loc_CGPara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara); override;
+          procedure Gen_Load_CGPara_Loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean); override;
 
          protected
           { returns the equivalent MM size for a vector register that contains
@@ -336,40 +336,40 @@ implementation
 
   { thlcg2ll }
 
-  procedure THLCG2LL.init_register_allocators;
+  procedure THLCG2LL.Init_Register_Allocators;
     begin
-      cg.init_register_allocators;
+      cg.Init_Register_Allocators;
     end;
 
-  procedure THLCG2LL.done_register_allocators;
+  procedure THLCG2LL.Done_Register_Allocators;
     begin
-      cg.done_register_allocators;
+      cg.Done_Register_Allocators;
     end;
 
-  procedure THLCG2LL.set_regalloc_live_range_direction(dir: TRADirection);
+  procedure THLCG2LL.Set_RegAlloc_Live_Range_Direction(dir: TRADirection);
     begin
-      cg.set_regalloc_live_range_direction(dir);
+      cg.Set_RegAlloc_Live_Range_Direction(dir);
     end;
 
-  function THLCG2LL.getintregister(list: TAsmList; size: TDef): TRegister;
+  function THLCG2LL.GetIntRegister(list: TAsmList; size: TDef): TRegister;
     begin
-      result:=cg.getintregister(list,def_cgsize(size));
+      result:=cg.GetIntRegister(list,Def_CGSize(size));
     end;
 
 
-  function THLCG2LL.getaddressregister(list: TAsmList; size: TDef): TRegister;
+  function THLCG2LL.GetAddressRegister(list: TAsmList; size: TDef): TRegister;
     begin
-      result:=cg.getaddressregister(list);
+      result:=cg.GetAddressRegister(list);
     end;
 
-  function THLCG2LL.getfpuregister(list: TAsmList; size: TDef): TRegister;
+  function THLCG2LL.GetFPURegister(list: TAsmList; size: TDef): TRegister;
     begin
-      result:=cg.getfpuregister(list,def_cgsize(size));
+      result:=cg.GetFPURegister(list,Def_CGSize(size));
     end;
 
-  function THLCG2LL.getmmregister(list: TAsmList; size: TDef): TRegister;
+  function THLCG2LL.GetMMRegister(list: TAsmList; size: TDef): TRegister;
     begin
-      result:=cg.getmmregister(list,def_cgsize(size));
+      result:=cg.GetMMRegister(list,Def_CGSize(size));
     end;
 
 (*
@@ -378,125 +378,125 @@ implementation
       result:=cg.getmmregister(list,def_cgsize(size));
     end;
 *)
-  function THLCG2LL.getflagregister(list: TAsmList; size: TDef): TRegister;
+  function THLCG2LL.GetFlagRegister(list: TAsmList; size: TDef): TRegister;
     begin
-      result:=cg.getflagregister(list,def_cgsize(size));
+      result:=cg.GetFlagRegister(list,Def_CGSize(size));
     end;
 
-  function THLCG2LL.uses_registers(rt: TRegisterType): boolean;
+  function THLCG2LL.Uses_Registers(rt: TRegisterType): boolean;
     begin
-       result:=cg.uses_registers(rt);
+       result:=cg.Uses_Registers(rt);
     end;
 
-  procedure THLCG2LL.do_register_allocation(list: TAsmList; headertai: TAI);
+  procedure THLCG2LL.Do_Register_Allocation(list: TAsmList; headertai: TAI);
     begin
-      cg.do_register_allocation(list,headertai);
+      cg.Do_Register_Allocation(list,headertai);
     end;
 
-  procedure THLCG2LL.translate_register(var reg: TRegister);
+  procedure THLCG2LL.Translate_Register(var reg: TRegister);
     begin
-      cg.translate_register(reg);
+      cg.Translate_Register(reg);
     end;
 
-  procedure THLCG2LL.a_reg_alloc(list: TAsmList; r: TRegister);
+  procedure THLCG2LL.A_Reg_Alloc(list: TAsmList; r: TRegister);
     begin
-      cg.a_reg_alloc(list,r);
+      cg.A_Reg_Alloc(list,r);
     end;
 
-  procedure THLCG2LL.a_reg_dealloc(list: TAsmList; r: TRegister);
+  procedure THLCG2LL.A_Reg_Dealloc(list: TAsmList; r: TRegister);
     begin
-      cg.a_reg_dealloc(list,r);
+      cg.A_Reg_Dealloc(list,r);
     end;
 
-  procedure THLCG2LL.a_reg_sync(list: TAsmList; r: TRegister);
+  procedure THLCG2LL.A_Reg_Sync(list: TAsmList; r: TRegister);
     begin
-      cg.a_reg_sync(list,r);
+      cg.A_Reg_Sync(list,r);
     end;
 
-  procedure THLCG2LL.a_load_reg_cgpara(list: TAsmList; size: TDef; r: TRegister; const cgpara: TCGPara);
+  procedure THLCG2LL.A_Load_Reg_CGPara(list: TAsmList; size: TDef; r: TRegister; const cgpara: TCGPara);
     begin
-      cg.a_load_reg_cgpara(list,def_cgsize(size),r,cgpara);
+      cg.A_Load_Reg_CGPara(list,Def_CGSize(size),r,cgpara);
     end;
 
-  procedure THLCG2LL.a_load_const_cgpara(list: TAsmList; tosize: TDef; a: TCGInt; const cgpara: TCGPara);
+  procedure THLCG2LL.A_Load_Const_CGPara(list: TAsmList; tosize: TDef; a: TCGInt; const cgpara: TCGPara);
     begin
-      cg.a_load_const_cgpara(list,def_cgsize(tosize),a,cgpara);
+      cg.A_Load_Const_CGPara(list,Def_CGSize(tosize),a,cgpara);
     end;
 
-  procedure THLCG2LL.a_load_ref_cgpara(list: TAsmList; size: TDef; const r: TReference; const cgpara: TCGPara);
+  procedure THLCG2LL.A_Load_Ref_CGPara(list: TAsmList; size: TDef; const r: TReference; const cgpara: TCGPara);
     begin
-      cg.a_load_ref_cgpara(list,def_cgsize(size),r,cgpara);
+      cg.A_Load_Ref_CGPara(list,Def_CGSize(size),r,cgpara);
     end;
 
-  procedure THLCG2LL.a_load_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara);
+  procedure THLCG2LL.A_Load_Loc_CGPara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara);
     begin
-      cg.a_load_loc_cgpara(list,l,cgpara);
+      cg.A_Load_Loc_CGPara(list,l,cgpara);
     end;
 
-  procedure THLCG2LL.a_loadaddr_ref_cgpara(list: TAsmList; fromsize: TDef; const r: TReference; const cgpara: TCGPara);
+  procedure THLCG2LL.A_LoadAddr_Ref_CGPara(list: TAsmList; fromsize: TDef; const r: TReference; const cgpara: TCGPara);
     begin
-      cg.a_loadaddr_ref_cgpara(list,r,cgpara);
+      cg.A_LoadAddr_Ref_CGPara(list,r,cgpara);
     end;
 
-  function THLCG2LL.a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara;
+  function THLCG2LL.A_Call_Name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara;
     begin
-      cg.a_call_name(list,s,weak);
-      result:=get_call_result_cgpara(pd,forceresdef);
+      cg.A_Call_Name(list,s,weak);
+      result:=Get_Call_Result_CGPara(pd,forceresdef);
     end;
 
-  function THLCG2LL.a_call_reg(list: TAsmList; pd: TAbstractProcDef; reg: TRegister; const paras: array of PCGPara): TCGPara;
+  function THLCG2LL.A_Call_Reg(list: TAsmList; pd: TAbstractProcDef; reg: TRegister; const paras: array of PCGPara): TCGPara;
     begin
-      cg.a_call_reg(list,reg);
-      result:=get_call_result_cgpara(pd,nil);
+      cg.A_Call_Reg(list,reg);
+      result:=Get_Call_Result_CGPara(pd,nil);
     end;
 
-  function THLCG2LL.a_call_name_static(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
+  function THLCG2LL.A_Call_Name_Static(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
     begin
-      cg.a_call_name_static(list,s);
-      result:=get_call_result_cgpara(pd,forceresdef);
+      cg.A_Call_Name_Static(list,s);
+      result:=Get_Call_Result_CGPara(pd,forceresdef);
     end;
 
-  procedure THLCG2LL.a_load_const_reg(list: TAsmList; tosize: TDef; a: TCGInt; register: TRegister);
+  procedure THLCG2LL.A_Load_Const_Reg(list: TAsmList; tosize: TDef; a: TCGInt; register: TRegister);
     begin
-      cg.a_load_const_reg(list,def_cgsize(tosize),a,register);
+      cg.A_Load_Const_Reg(list,Def_CGSize(tosize),a,register);
     end;
 
-  procedure THLCG2LL.a_load_const_ref(list: TAsmList; tosize: TDef; a: TCGInt; const ref: TReference);
+  procedure THLCG2LL.A_Load_Const_Ref(list: TAsmList; tosize: TDef; a: TCGInt; const ref: TReference);
     begin
-       cg.a_load_const_ref(list,def_cgsize(tosize),a,ref);
+       cg.A_Load_Const_Ref(list,Def_CGSize(tosize),a,ref);
     end;
 
-  procedure THLCG2LL.a_load_const_loc(list: TAsmList; tosize: TDef; a: TCGInt; const loc: TLocation);
+  procedure THLCG2LL.A_Load_Const_Loc(list: TAsmList; tosize: TDef; a: TCGInt; const loc: TLocation);
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_load_const_loc(list,a,loc);
+          cg.A_Load_Const_Loc(list,a,loc);
       end;
     end;
 
-  procedure THLCG2LL.a_load_reg_ref(list: TAsmList; fromsize, tosize: TDef; register: TRegister; const ref: TReference);
+  procedure THLCG2LL.A_Load_Reg_Ref(list: TAsmList; fromsize, tosize: TDef; register: TRegister; const ref: TReference);
     begin
-      cg.a_load_reg_ref(list,def_cgsize(fromsize),def_cgsize(tosize),register,ref);
+      cg.A_Load_Reg_Ref(list,Def_CGSize(fromsize),Def_CGSize(tosize),register,ref);
     end;
 
-  procedure THLCG2LL.a_load_reg_ref_unaligned(list: TAsmList; fromsize, tosize: TDef; register: TRegister; const ref: TReference);
+  procedure THLCG2LL.A_Load_Reg_Ref_Unaligned(list: TAsmList; fromsize, tosize: TDef; register: TRegister; const ref: TReference);
     begin
-      cg.a_load_reg_ref_unaligned(list,def_cgsize(fromsize),def_cgsize(tosize),register,ref);
+      cg.A_Load_Reg_Ref_Unaligned(list,Def_CGSize(fromsize),Def_CGSize(tosize),register,ref);
     end;
 
-  procedure THLCG2LL.a_load_reg_reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister);
+  procedure THLCG2LL.A_Load_Reg_Reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister);
     begin
-      cg.a_load_reg_reg(list,def_cgsize(fromsize),def_cgsize(tosize),reg1,reg2);
+      cg.A_Load_Reg_Reg(list,Def_CGSize(fromsize),Def_CGSize(tosize),reg1,reg2);
     end;
 
-  procedure THLCG2LL.a_load_reg_loc(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const loc: TLocation);
+  procedure THLCG2LL.A_Load_Reg_Loc(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const loc: TLocation);
     var
       fromcgsize: TCgSize;
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited;
@@ -505,37 +505,37 @@ implementation
             { avoid problems with 3-byte records and the like }
             if (fromsize.typ<>floatdef) and
                (fromsize=tosize) then
-              fromcgsize:=loc.size
+              fromcgsize:=loc.Size
             else
               { fromsize can be a floatdef (in case the destination is an
                 MMREGISTER) -> use int_cgsize rather than def_cgsize to get the
                 corresponding integer cgsize of the def }
-              fromcgsize:=int_cgsize(fromsize.size);
-            cg.a_load_reg_loc(list,fromcgsize,reg,loc);
+              fromcgsize:=Int_CGSize(fromsize.Size);
+            cg.A_Load_Reg_Loc(list,fromcgsize,reg,loc);
           end;
       end;
     end;
 
-  procedure THLCG2LL.a_load_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; register: TRegister);
+  procedure THLCG2LL.A_Load_Ref_Reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; register: TRegister);
     begin
-      cg.a_load_ref_reg(list,def_cgsize(fromsize),def_cgsize(tosize),ref,register);
+      cg.A_Load_Ref_Reg(list,Def_CGSize(fromsize),Def_CGSize(tosize),ref,register);
     end;
 
-  procedure THLCG2LL.a_load_ref_reg_unaligned(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; register: TRegister);
+  procedure THLCG2LL.A_Load_Ref_Reg_Unaligned(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; register: TRegister);
     begin
-      cg.a_load_ref_reg_unaligned(list,def_cgsize(fromsize),def_cgsize(tosize),ref,register);
+      cg.A_Load_Ref_Reg_Unaligned(list,Def_CGSize(fromsize),Def_CGSize(tosize),ref,register);
     end;
 
-  procedure THLCG2LL.a_load_ref_ref(list: TAsmList; fromsize, tosize: TDef; const sref: TReference; const dref: TReference);
+  procedure THLCG2LL.A_Load_Ref_Ref(list: TAsmList; fromsize, tosize: TDef; const sref: TReference; const dref: TReference);
     begin
-      cg.a_load_ref_ref(list,def_cgsize(fromsize),def_cgsize(tosize),sref,dref);
+      cg.A_Load_Ref_Ref(list,Def_CGSize(fromsize),Def_CGSize(tosize),sref,dref);
     end;
 
-  procedure THLCG2LL.a_load_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; reg: TRegister);
+  procedure THLCG2LL.A_Load_Loc_Reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; reg: TRegister);
     var
       tocgsize: TCgSize;
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
@@ -543,19 +543,19 @@ implementation
           begin
             { avoid problems with 3-byte records and the like }
             if fromsize=tosize then
-              tocgsize:=loc.size
+              tocgsize:=loc.Size
             else
-              tocgsize:=def_cgsize(tosize);
-            cg.a_load_loc_reg(list,tocgsize,loc,reg);
+              tocgsize:=Def_CGSize(tosize);
+            cg.A_Load_Loc_Reg(list,tocgsize,loc,reg);
           end;
       end;
     end;
 
-  procedure THLCG2LL.a_load_loc_ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference);
+  procedure THLCG2LL.A_Load_Loc_Ref(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const ref: TReference);
     var
       tocgsize: TCgSize;
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
@@ -563,453 +563,453 @@ implementation
           begin
             { avoid problems with 3-byte records and the like }
             if fromsize=tosize then
-              tocgsize:=loc.size
+              tocgsize:=loc.Size
             else
-              tocgsize:=def_cgsize(tosize);
-            cg.a_load_loc_ref(list,tocgsize,loc,ref);
+              tocgsize:=Def_CGSize(tosize);
+            cg.A_Load_Loc_Ref(list,tocgsize,loc,ref);
           end;
       end;
     end;
 
-  procedure THLCG2LL.a_loadaddr_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; r: TRegister);
+  procedure THLCG2LL.A_LoadAddr_Ref_Reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; r: TRegister);
     begin
-      cg.a_loadaddr_ref_reg(list,ref,r);
+      cg.A_LoadAddr_Ref_Reg(list,ref,r);
     end;
 
-  procedure THLCG2LL.a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TDef; src, dst: TRegister);
+  procedure THLCG2LL.A_Bit_Scan_Reg_Reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TDef; src, dst: TRegister);
     begin
-      cg.a_bit_scan_reg_reg(list,reverse,not_zero,def_cgsize(srcsize),def_cgsize(dstsize),src,dst);
+      cg.A_Bit_Scan_Reg_Reg(list,reverse,not_zero,Def_CGSize(srcsize),Def_CGSize(dstsize),src,dst);
     end;
 
-  procedure THLCG2LL.a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister);
+  procedure THLCG2LL.A_LoadFPU_Reg_Reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister);
     begin
-      cg.a_loadfpu_reg_reg(list,def_cgsize(fromsize),def_cgsize(tosize),reg1,reg2);
+      cg.A_LoadFPU_Reg_Reg(list,Def_CGSize(fromsize),Def_CGSize(tosize),reg1,reg2);
     end;
 
-  procedure THLCG2LL.a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister);
+  procedure THLCG2LL.A_LoadFPU_Ref_Reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister);
     begin
-      cg.a_loadfpu_ref_reg(list,def_cgsize(fromsize),def_cgsize(tosize),ref,reg);
+      cg.A_LoadFPU_Ref_Reg(list,Def_CGSize(fromsize),Def_CGSize(tosize),ref,reg);
     end;
 
-  procedure THLCG2LL.a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference);
+  procedure THLCG2LL.A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference);
     begin
-      cg.a_loadfpu_reg_ref(list,def_cgsize(fromsize),def_cgsize(tosize),reg,ref);
+      cg.A_LoadFPU_Reg_Ref(list,Def_CGSize(fromsize),Def_CGSize(tosize),reg,ref);
     end;
 
-  procedure THLCG2LL.a_loadfpu_ref_ref(list: TAsmList; fromsize, tosize: TDef; const ref1, ref2: TReference);
+  procedure THLCG2LL.A_LoadFPU_Ref_Ref(list: TAsmList; fromsize, tosize: TDef; const ref1, ref2: TReference);
     begin
-      cg.a_loadfpu_ref_ref(list,def_cgsize(fromsize),def_cgsize(tosize),ref1,ref2);
+      cg.A_LoadFPU_Ref_Ref(list,Def_CGSize(fromsize),Def_CGSize(tosize),ref1,ref2);
     end;
 
-  procedure THLCG2LL.a_loadfpu_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);
+  procedure THLCG2LL.A_LoadFPU_Loc_Reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister);
     begin
 {$ifdef extdebug}
-      if def_cgsize(fromsize)<>loc.size then
+      if Def_CGSize(fromsize)<>loc.Size then
         InternalError(2010112102);
 {$endif}
-      cg.a_loadfpu_loc_reg(list,def_cgsize(tosize),loc,reg);
+      cg.A_LoadFPU_Loc_Reg(list,Def_CGSize(tosize),loc,reg);
     end;
 
-  procedure THLCG2LL.a_loadfpu_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);
+  procedure THLCG2LL.A_LoadFPU_Reg_Loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation);
     var
       usesize: TCgSize;
     begin
 {$ifdef extdebug}
-      if def_cgsize(tosize)<>loc.size then
+      if Def_CGSize(tosize)<>loc.Size then
         InternalError(2010112101);
 {$endif}
       { on some platforms, certain records are passed/returned in floating point
         registers -> def_cgsize() won't give us the result we need -> translate
         to corresponding fpu size }
-      usesize:=def_cgsize(fromsize);
+      usesize:=Def_CGSize(fromsize);
       if not(usesize in [OS_F32..OS_F128]) then
-        usesize:=int_float_cgsize(tcgsize2size[usesize]);
-      cg.a_loadfpu_reg_loc(list,usesize,reg,loc);
+        usesize:=Int_Float_CGSize(TCgSize2Size[usesize]);
+      cg.A_LoadFPU_Reg_Loc(list,usesize,reg,loc);
     end;
 
-  procedure THLCG2LL.a_loadfpu_reg_cgpara(list: TAsmList; fromsize: TDef; const r: TRegister; const cgpara: TCGPara);
+  procedure THLCG2LL.A_LoadFPU_Reg_CGPara(list: TAsmList; fromsize: TDef; const r: TRegister; const cgpara: TCGPara);
     begin
-      cg.a_loadfpu_reg_cgpara(list,def_cgsize(fromsize),r,cgpara);
+      cg.A_LoadFPU_Reg_CGPara(list,Def_CGSize(fromsize),r,cgpara);
     end;
 
-  procedure THLCG2LL.a_loadfpu_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara);
+  procedure THLCG2LL.A_LoadFPU_Ref_CGPara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara);
     begin
-      cg.a_loadfpu_ref_cgpara(list,def_cgsize(fromsize),ref,cgpara);
+      cg.A_LoadFPU_Ref_CGPara(list,Def_CGSize(fromsize),ref,cgpara);
     end;
 
-  procedure THLCG2LL.a_loadmm_loc_reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister;shuffle : PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Loc_Reg(list: TAsmList; fromsize, tosize: TDef; const loc: TLocation; const reg: TRegister;shuffle : PMMShuffle);
     var
       tmpreg: TRegister;
       tocgsize: TCgSize;
     begin
-      if def_cgmmsize(fromsize)<>loc.size then
+      if Def_CGMMSize(fromsize)<>loc.Size then
         InternalError(2012071226);
-      tocgsize:=getintmmcgsize(reg,def_cgmmsize(tosize));
-      case loc.loc of
+      tocgsize:=getintmmcgsize(reg,Def_CGMMSize(tosize));
+      case loc.Loc of
         LOC_CONSTANT,
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           begin
-            tmpreg:=cg.getintregister(list,loc.size);
-            a_load_loc_reg(list,fromsize,fromsize,loc,tmpreg);
+            tmpreg:=cg.GetIntRegister(list,loc.Size);
+            A_Load_Loc_Reg(list,fromsize,fromsize,loc,tmpreg);
             { integer register -> no def_cgmmsize but plain }
-            cg.a_loadmm_intreg_reg(list,def_cgsize(fromsize),tocgsize,tmpreg,reg,shuffle);
+            cg.A_LoadMM_IntReg_Reg(list,Def_CGSize(fromsize),tocgsize,tmpreg,reg,shuffle);
           end
         else
-          cg.a_loadmm_loc_reg(list,tocgsize,loc,reg,shuffle);
+          cg.A_LoadMM_Loc_Reg(list,tocgsize,loc,reg,shuffle);
       end;
     end;
 
-  procedure THLCG2LL.a_loadmm_reg_reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Reg_Reg(list: TAsmList; fromsize, tosize: TDef; reg1, reg2: TRegister; shuffle: PMMShuffle);
     var
       fromcgsize: TCgSize;
       tocgsize: TCgSize;
     begin
-      fromcgsize:=getintmmcgsize(reg1,def_cgmmsize(fromsize));
-      tocgsize:=getintmmcgsize(reg2,def_cgmmsize(tosize));
+      fromcgsize:=getintmmcgsize(reg1,Def_CGMMSize(fromsize));
+      tocgsize:=getintmmcgsize(reg2,Def_CGMMSize(tosize));
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      cg.a_loadmm_reg_reg(list,fromcgsize,tocgsize,reg1,reg2,shuffle);
+      cg.A_LoadMM_Reg_Reg(list,fromcgsize,tocgsize,reg1,reg2,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_ref_reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Ref_Reg(list: TAsmList; fromsize, tosize: TDef; const ref: TReference; reg: TRegister; shuffle: PMMShuffle);
     var
       tocgsize: TCgSize;
     begin
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      tocgsize:=getintmmcgsize(reg,def_cgmmsize(tosize));
-      cg.a_loadmm_ref_reg(list,def_cgmmsize(fromsize),tocgsize,ref,reg,shuffle);
+      tocgsize:=getintmmcgsize(reg,Def_CGMMSize(tosize));
+      cg.A_LoadMM_Ref_Reg(list,Def_CGMMSize(fromsize),tocgsize,ref,reg,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_reg_ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Reg_Ref(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const ref: TReference; shuffle: PMMShuffle);
     var
       fromcgsize: TCgSize;
     begin
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      fromcgsize:=getintmmcgsize(reg,def_cgmmsize(fromsize));
-      cg.a_loadmm_reg_ref(list,fromcgsize,def_cgmmsize(tosize),reg,ref,shuffle);
+      fromcgsize:=getintmmcgsize(reg,Def_CGMMSize(fromsize));
+      cg.A_LoadMM_Reg_Ref(list,fromcgsize,Def_CGMMSize(tosize),reg,ref,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_reg_loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Reg_Loc(list: TAsmList; fromsize, tosize: TDef; const reg: TRegister; const loc: TLocation; shuffle: PMMShuffle);
     var
       fromcgsize: TCgSize;
     begin
       { sanity check }
-      if def_cgmmsize(tosize)<>loc.size then
+      if Def_CGMMSize(tosize)<>loc.Size then
         InternalError(2012071216);
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      fromcgsize:=getintmmcgsize(reg,def_cgmmsize(fromsize));
-      cg.a_loadmm_reg_loc(list,fromcgsize,reg,loc,shuffle);
+      fromcgsize:=getintmmcgsize(reg,Def_CGMMSize(fromsize));
+      cg.A_LoadMM_Reg_Loc(list,fromcgsize,reg,loc,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_reg_cgpara(list: TAsmList; fromsize: TDef; reg: TRegister; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Reg_CGPara(list: TAsmList; fromsize: TDef; reg: TRegister; const cgpara: TCGPara; shuffle: PMMShuffle);
     var
       fromcgsize: TCgSize;
     begin
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      fromcgsize:=getintmmcgsize(reg,def_cgmmsize(fromsize));
-      cg.a_loadmm_reg_cgpara(list,fromcgsize,reg,cgpara,shuffle);
+      fromcgsize:=getintmmcgsize(reg,Def_CGMMSize(fromsize));
+      cg.A_LoadMM_Reg_CGPara(list,fromcgsize,reg,cgpara,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_ref_cgpara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Ref_CGPara(list: TAsmList; fromsize: TDef; const ref: TReference; const cgpara: TCGPara; shuffle: PMMShuffle);
     begin
-      cg.a_loadmm_ref_cgpara(list,def_cgmmsize(fromsize),ref,cgpara,shuffle);
+      cg.A_LoadMM_Ref_CGPara(list,Def_CGMMSize(fromsize),ref,cgpara,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_loc_cgpara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara: TCGPara; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Loc_CGPara(list: TAsmList; fromsize: TDef; const loc: TLocation; const cgpara: TCGPara; shuffle: PMMShuffle);
     begin
       { sanity check }
-      if def_cgmmsize(fromsize)<>loc.size then
+      if Def_CGMMSize(fromsize)<>loc.Size then
         InternalError(2012071220);
-      cg.a_loadmm_loc_cgpara(list,loc,cgpara,shuffle);
+      cg.A_LoadMM_Loc_CGPara(list,loc,cgpara,shuffle);
     end;
 
-  procedure THLCG2LL.a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size: TDef; src, dst: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_OpMM_Reg_Reg(list: TAsmList; Op: TOpCG; size: TDef; src, dst: TRegister; shuffle: PMMShuffle);
     begin
-      cg.a_opmm_reg_reg(list,op,def_cgmmsize(size),src,dst,shuffle);
+      cg.A_OpMM_Reg_Reg(list,op,Def_CGMMSize(size),src,dst,shuffle);
     end;
 
-  procedure THLCG2LL.a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_OpMM_Ref_Reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister; shuffle: PMMShuffle);
     begin
-      cg.a_opmm_ref_reg(list,op,def_cgmmsize(size),ref,reg,shuffle);
+      cg.A_OpMM_Ref_Reg(list,op,Def_CGMMSize(size),ref,reg,shuffle);
     end;
 
-  procedure THLCG2LL.a_opmm_loc_reg(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation; reg: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_OpMM_Loc_Reg(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation; reg: TRegister; shuffle: PMMShuffle);
     begin
-      cg.a_opmm_loc_reg(list,op,def_cgmmsize(size),loc,reg,shuffle);
+      cg.A_OpMM_Loc_Reg(list,op,Def_CGMMSize(size),loc,reg,shuffle);
     end;
 
-  procedure THLCG2LL.a_opmm_reg_ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_OpMM_Reg_Ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference; shuffle: PMMShuffle);
     begin
-      cg.a_opmm_reg_ref(list,op,def_cgmmsize(size),reg,ref,shuffle);
+      cg.A_OpMM_Reg_Ref(list,op,Def_CGMMSize(size),reg,ref,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_intreg_reg(list: TAsmList; fromsize, tosize: TDef; intreg, mmreg: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_IntReg_Reg(list: TAsmList; fromsize, tosize: TDef; intreg, mmreg: TRegister; shuffle: PMMShuffle);
     var
       tocgsize: TCgSize;
     begin
       { records may be stored in mmregisters, but def_cgmmsize will return an
         integer size for them... }
-      tocgsize:=getintmmcgsize(mmreg,def_cgmmsize(tosize));
-      cg.a_loadmm_intreg_reg(list,def_cgsize(fromsize),tocgsize,intreg,mmreg,shuffle);
+      tocgsize:=getintmmcgsize(mmreg,Def_CGMMSize(tosize));
+      cg.A_LoadMM_IntReg_Reg(list,Def_CGSize(fromsize),tocgsize,intreg,mmreg,shuffle);
     end;
 
-  procedure THLCG2LL.a_loadmm_reg_intreg(list: TAsmList; fromsize, tosize: TDef; mmreg, intreg: TRegister; shuffle: PMMShuffle);
+  procedure THLCG2LL.A_LoadMM_Reg_IntReg(list: TAsmList; fromsize, tosize: TDef; mmreg, intreg: TRegister; shuffle: PMMShuffle);
     var
       fromcgsize: TCgSize;
     begin
       { records may be stored in mmregisters, but def_cgsize will return an
         integer size for them... }
-      fromcgsize:=getintmmcgsize(mmreg,def_cgmmsize(fromsize));
-      cg.a_loadmm_reg_intreg(list,fromcgsize,def_cgsize(tosize),mmreg,intreg,shuffle);
+      fromcgsize:=getintmmcgsize(mmreg,Def_CGMMSize(fromsize));
+      cg.A_LoadMM_Reg_IntReg(list,fromcgsize,Def_CGSize(tosize),mmreg,intreg,shuffle);
     end;
 
-  procedure THLCG2LL.a_op_const_reg(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; reg: TRegister);
+  procedure THLCG2LL.A_Op_Const_Reg(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; reg: TRegister);
     begin
-      cg.a_op_const_reg(list,op,def_cgsize(size),a,reg);
+      cg.A_Op_Const_Reg(list,op,Def_CGSize(size),a,reg);
     end;
 
-  procedure THLCG2LL.a_op_const_ref(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference);
+  procedure THLCG2LL.A_Op_Const_Ref(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const ref: TReference);
     begin
-      cg.a_op_const_ref(list,op,def_cgsize(size),a,ref);
+      cg.A_Op_Const_Ref(list,op,Def_CGSize(size),a,ref);
     end;
 
-  procedure THLCG2LL.a_op_const_loc(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);
+  procedure THLCG2LL.A_Op_Const_Loc(list: TAsmList; Op: TOpCG; size: TDef; a: TCGInt; const loc: TLocation);
     begin
 {$ifdef extdebug}
-      if def_cgsize(size)<>loc.size then
+      if Def_CGSize(size)<>loc.Size then
         InternalError(2010112106);
 {$endif}
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_op_const_loc(list,op,a,loc);
+          cg.A_Op_Const_Loc(list,op,a,loc);
       end;
     end;
 
-  procedure THLCG2LL.a_op_reg_reg(list: TAsmList; Op: TOpCG; size: TDef; reg1, reg2: TRegister);
+  procedure THLCG2LL.A_Op_Reg_Reg(list: TAsmList; Op: TOpCG; size: TDef; reg1, reg2: TRegister);
     begin
-      cg.a_op_reg_reg(list,op,def_cgsize(size),reg1,reg2);
+      cg.A_Op_Reg_Reg(list,op,Def_CGSize(size),reg1,reg2);
     end;
 
-  procedure THLCG2LL.a_op_reg_ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference);
+  procedure THLCG2LL.A_Op_Reg_Ref(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const ref: TReference);
     begin
-      cg.a_op_reg_ref(list,op,def_cgsize(size),reg,ref);
+      cg.A_Op_Reg_Ref(list,op,Def_CGSize(size),reg,ref);
     end;
 
-  procedure THLCG2LL.a_op_ref_reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister);
+  procedure THLCG2LL.A_Op_Ref_Reg(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; reg: TRegister);
     begin
-      cg.a_op_ref_reg(list,op,def_cgsize(size),ref,reg);
+      cg.A_Op_Ref_Reg(list,op,Def_CGSize(size),ref,reg);
     end;
 
-  procedure THLCG2LL.a_op_reg_loc(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);
+  procedure THLCG2LL.A_Op_Reg_Loc(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister; const loc: TLocation);
     begin
 {$ifdef extdebug}
-      if def_cgsize(size)<>loc.size then
+      if Def_CGSize(size)<>loc.Size then
         InternalError(2010112107);
 {$endif}
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_op_reg_loc(list,op,reg,loc)
+          cg.A_Op_Reg_Loc(list,op,reg,loc)
       end;
     end;
 
-  procedure THLCG2LL.a_op_ref_loc(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);
+  procedure THLCG2LL.A_Op_Ref_Loc(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference; const loc: TLocation);
     begin
 {$ifdef extdebug}
-      if def_cgsize(size)<>loc.size then
+      if Def_CGSize(size)<>loc.Size then
         InternalError(2010112103);
 {$endif}
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_op_ref_loc(list,op,ref,loc);
+          cg.A_Op_Ref_Loc(list,op,ref,loc);
       end;
     end;
 
-  procedure THLCG2LL.a_op_const_reg_reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister);
+  procedure THLCG2LL.A_Op_Const_Reg_Reg(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister);
     begin
-      cg.a_op_const_reg_reg(list,op,def_cgsize(size),a,src,dst);
+      cg.A_Op_Const_Reg_Reg(list,op,Def_CGSize(size),a,src,dst);
     end;
 
-  procedure THLCG2LL.a_op_reg_reg_reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister);
+  procedure THLCG2LL.A_Op_Reg_Reg_Reg(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister);
     begin
-      cg.a_op_reg_reg_reg(list,op,def_cgsize(size),src1,src2,dst);
+      cg.A_Op_Reg_Reg_Reg(list,op,Def_CGSize(size),src1,src2,dst);
     end;
 
-  procedure THLCG2LL.a_op_const_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister; setflags: boolean; var ovloc: TLocation);
+  procedure THLCG2LL.A_Op_Const_Reg_Reg_CheckOverflow(list: TAsmList; op: TOpCG; size: TDef; a: TCGInt; src, dst: TRegister; setflags: boolean; var ovloc: TLocation);
     begin
-      cg.a_op_const_reg_reg_checkoverflow(list,op,def_cgsize(size),a,src,dst,setflags,ovloc);
+      cg.A_Op_Const_Reg_Reg_CheckOverflow(list,op,Def_CGSize(size),a,src,dst,setflags,ovloc);
     end;
 
-  procedure THLCG2LL.a_op_reg_reg_reg_checkoverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister; setflags: boolean; var ovloc: TLocation);
+  procedure THLCG2LL.A_Op_Reg_Reg_Reg_CheckOverflow(list: TAsmList; op: TOpCG; size: TDef; src1, src2, dst: TRegister; setflags: boolean; var ovloc: TLocation);
     begin
-      cg.a_op_reg_reg_reg_checkoverflow(list,op,def_cgsize(size),src1,src2,dst,setflags,ovloc);
+      cg.A_Op_Reg_Reg_Reg_CheckOverflow(list,op,Def_CGSize(size),src1,src2,dst,setflags,ovloc);
     end;
 
-  procedure THLCG2LL.a_op_reg(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister);
+  procedure THLCG2LL.A_Op_Reg(list: TAsmList; Op: TOpCG; size: TDef; reg: TRegister);
     begin
-      cg.a_op_reg(list,op,def_cgsize(size),reg);
+      cg.A_Op_Reg(list,op,Def_CGSize(size),reg);
     end;
 
-  procedure THLCG2LL.a_op_ref(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference);
+  procedure THLCG2LL.A_Op_Ref(list: TAsmList; Op: TOpCG; size: TDef; const ref: TReference);
     begin
-      cg.a_op_ref(list,op,def_cgsize(size),ref);
+      cg.A_Op_Ref(list,op,Def_CGSize(size),ref);
     end;
 
-  procedure THLCG2LL.a_op_loc(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation);
+  procedure THLCG2LL.A_Op_Loc(list: TAsmList; Op: TOpCG; size: TDef; const loc: TLocation);
     begin
 {$ifdef extdebug}
-      if def_cgsize(size)<>loc.size then
+      if Def_CGSize(size)<>loc.Size then
         InternalError(2020050704);
 {$endif}
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_op_loc(list,op,loc);
+          cg.A_Op_Loc(list,op,loc);
       end;
     end;
 
-  procedure THLCG2LL.a_cmp_const_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; reg: TRegister; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Const_Reg_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; reg: TRegister; l: TAsmLabel);
     begin
-      cg.a_cmp_const_reg_label(list,def_cgsize(size),cmp_op,a,reg,l);
+      cg.A_Cmp_Const_Reg_Label(list,Def_CGSize(size),cmp_op,a,reg,l);
     end;
 
-  procedure THLCG2LL.a_cmp_const_ref_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const ref: TReference; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Const_Ref_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const ref: TReference; l: TAsmLabel);
     begin
-      cg.a_cmp_const_ref_label(list,def_cgsize(size),cmp_op,a,ref,l);
+      cg.A_Cmp_Const_Ref_Label(list,Def_CGSize(size),cmp_op,a,ref,l);
     end;
 
-  procedure THLCG2LL.a_cmp_const_loc_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const loc: TLocation; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Const_Loc_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; a: TCGInt; const loc: TLocation; l: TAsmLabel);
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_cmp_const_loc_label(list,def_cgsize(size),cmp_op,a,loc,l);
+          cg.A_Cmp_Const_Loc_Label(list,Def_CGSize(size),cmp_op,a,loc,l);
       end;
     end;
 
-  procedure THLCG2LL.a_cmp_reg_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Reg_Reg_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel);
     begin
-       cg.a_cmp_reg_reg_label(list,def_cgsize(size),cmp_op,reg1,reg2,l);
+       cg.A_Cmp_Reg_Reg_Label(list,Def_CGSize(size),cmp_op,reg1,reg2,l);
     end;
 
-  procedure THLCG2LL.a_cmp_ref_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; reg: TRegister; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Ref_Reg_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; reg: TRegister; l: TAsmLabel);
     begin
-      cg.a_cmp_ref_reg_label(list,def_cgsize(size),cmp_op,ref,reg,l);
+      cg.A_Cmp_Ref_Reg_Label(list,Def_CGSize(size),cmp_op,ref,reg,l);
     end;
 
-  procedure THLCG2LL.a_cmp_reg_ref_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg: TRegister; const ref: TReference; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Reg_Ref_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; reg: TRegister; const ref: TReference; l: TAsmLabel);
     begin
-      cg.a_cmp_reg_ref_label(list,def_cgsize(size),cmp_op,reg,ref,l);
+      cg.A_Cmp_Reg_Ref_Label(list,Def_CGSize(size),cmp_op,reg,ref,l);
     end;
 
-  procedure THLCG2LL.a_cmp_loc_reg_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const loc: TLocation; reg: TRegister; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Loc_Reg_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const loc: TLocation; reg: TRegister; l: TAsmLabel);
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_cmp_loc_reg_label(list,def_cgsize(size),cmp_op,loc,reg,l);
+          cg.A_Cmp_Loc_Reg_Label(list,Def_CGSize(size),cmp_op,loc,reg,l);
       end;
     end;
 
-  procedure THLCG2LL.a_cmp_ref_loc_label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l: TAsmLabel);
+  procedure THLCG2LL.A_Cmp_Ref_Loc_Label(list: TAsmList; size: TDef; cmp_op: TOpCmp; const ref: TReference; const loc: TLocation; l: TAsmLabel);
     begin
-      case loc.loc of
+      case loc.Loc of
         LOC_SUBSETREG,LOC_CSUBSETREG,
         LOC_SUBSETREF,LOC_CSUBSETREF:
           inherited
         else
-          cg.a_cmp_ref_loc_label(list,def_cgsize(size),cmp_op,ref,loc,l);
+          cg.A_Cmp_Ref_Loc_Label(list,Def_CGSize(size),cmp_op,ref,loc,l);
       end;
     end;
 
-  procedure THLCG2LL.a_jmp_always(list: TAsmList; l: TAsmLabel);
+  procedure THLCG2LL.A_Jmp_Always(list: TAsmList; l: TAsmLabel);
     begin
-      cg.a_jmp_always(list,l);
+      cg.A_Jmp_Always(list,l);
     end;
 
 {$ifdef cpuflags}
-  procedure THLCG2LL.a_jmp_flags(list: TAsmList; const f: TResFlags; l: TAsmLabel);
+  procedure THLCG2LL.A_Jmp_Flags(list: TAsmList; const f: TResFlags; l: TAsmLabel);
     begin
-      cg.a_jmp_flags(list,f,l);
+      cg.A_Jmp_Flags(list,f,l);
     end;
 
-  procedure THLCG2LL.g_flags2reg(list: TAsmList; size: TDef; const f: TResFlags; reg: TRegister);
+  procedure THLCG2LL.G_Flags2Reg(list: TAsmList; size: TDef; const f: TResFlags; reg: TRegister);
     begin
-      cg.g_flags2reg(list,def_cgsize(size),f,reg);
+      cg.G_Flags2Reg(list,Def_CGSize(size),f,reg);
     end;
 
-  procedure THLCG2LL.g_flags2ref(list: TAsmList; size: TDef; const f: TResFlags; const ref: TReference);
+  procedure THLCG2LL.G_Flags2Ref(list: TAsmList; size: TDef; const f: TResFlags; const ref: TReference);
     begin
-      cg.g_flags2ref(list,def_cgsize(size),f,ref);
+      cg.G_Flags2Ref(list,Def_CGSize(size),f,ref);
     end;
 
 {$endif cpuflags}
 
-  procedure THLCG2LL.g_concatcopy(list: TAsmList; size: TDef; const source, dest: TReference);
+  procedure THLCG2LL.G_ConcatCopy(list: TAsmList; size: TDef; const source, dest: TReference);
     begin
-      cg.g_concatcopy(list,source,dest,size.size);
+      cg.G_ConcatCopy(list,source,dest,size.Size);
     end;
 
-  procedure THLCG2LL.g_concatcopy_unaligned(list: TAsmList; size: TDef; const source, dest: TReference);
+  procedure THLCG2LL.G_ConcatCopy_Unaligned(list: TAsmList; size: TDef; const source, dest: TReference);
     begin
-      cg.g_concatcopy_unaligned(list,source,dest,size.size);
+      cg.G_ConcatCopy_Unaligned(list,source,dest,size.Size);
     end;
 
-  procedure THLCG2LL.g_overflowcheck(list: TAsmList; const Loc: TLocation; def: TDef);
+  procedure THLCG2LL.G_OverflowCheck(list: TAsmList; const Loc: TLocation; def: TDef);
     begin
-      cg.g_overflowcheck(list,loc,def);
+      cg.G_OverflowCheck(list,loc,def);
     end;
 
-  procedure THLCG2LL.g_overflowCheck_loc(List: TAsmList; const Loc: TLocation; def: TDef; var ovloc: TLocation);
+  procedure THLCG2LL.G_OverflowCheck_Loc(List: TAsmList; const Loc: TLocation; def: TDef; var ovloc: TLocation);
     begin
-      cg.g_overflowCheck_loc(list,loc,def,ovloc);
+      cg.G_OverflowCheck_Loc(list,loc,def,ovloc);
     end;
 
-  procedure THLCG2LL.g_stackpointer_alloc(list: TAsmList; size: LongInt);
+  procedure THLCG2LL.G_StackPointer_Alloc(list: TAsmList; size: LongInt);
     begin
-      cg.g_stackpointer_alloc(list,size);
+      cg.G_StackPointer_Alloc(list,size);
     end;
 
-  procedure THLCG2LL.g_proc_entry(list: TAsmList; localsize: LongInt; nostackframe: boolean);
+  procedure THLCG2LL.G_Proc_Entry(list: TAsmList; localsize: LongInt; nostackframe: boolean);
     begin
-      cg.g_proc_entry(list,localsize,nostackframe);
+      cg.G_Proc_Entry(list,localsize,nostackframe);
     end;
 
-  procedure THLCG2LL.g_proc_exit(list: TAsmList; parasize: LongInt; nostackframe: boolean);
+  procedure THLCG2LL.G_Proc_Exit(list: TAsmList; parasize: LongInt; nostackframe: boolean);
     begin
-      cg.g_proc_exit(list,parasize,nostackframe);
+      cg.G_Proc_Exit(list,parasize,nostackframe);
     end;
 
-  procedure THLCG2LL.g_adjust_self_value(list: TAsmList; procdef: TProcDef; ioffset: aint);
+  procedure THLCG2LL.G_Adjust_Self_Value(list: TAsmList; procdef: TProcDef; ioffset: aint);
     begin
-      cg.g_adjust_self_value(list,procdef,ioffset);
+      cg.G_Adjust_Self_Value(list,procdef,ioffset);
     end;
 
-  procedure THLCG2LL.g_local_unwind(list: TAsmList; l: TAsmLabel);
+  procedure THLCG2LL.G_Local_Unwind(list: TAsmList; l: TAsmLabel);
     begin
-      cg.g_local_unwind(list, l);
+      cg.G_Local_Unwind(list, l);
     end;
 
-  procedure THLCG2LL.location_force_reg(list: TAsmList; var l: TLocation; src_size, dst_size: TDef; maybeconst: boolean);
+  procedure THLCG2LL.Location_Force_Reg(list: TAsmList; var l: TLocation; src_size, dst_size: TDef; maybeconst: boolean);
     var
 {$ifndef cpu64bitalu}
       hregisterhi,
@@ -1024,93 +1024,93 @@ implementation
       dst_cgsize,tmpsize: TCgSize;
     begin
       oldloc:=l;
-      dst_cgsize:=def_cgsize(dst_size);
+      dst_cgsize:=Def_CGSize(dst_size);
 {$ifndef cpu64bitalu}
       { handle transformations to 64bit separate }
       if dst_cgsize in [OS_64,OS_S64] then
        begin
-         if not (l.size in [OS_64,OS_S64]) then
+         if not (l.Size in [OS_64,OS_S64]) then
           begin
             { load a smaller size to OS_64 }
-            if l.loc=LOC_REGISTER then
+            if l.Loc=LOC_REGISTER then
              begin
 
-               hregister:=cg.makeregsize(list,l.register64.reglo,OS_32);
+               hregister:=cg.MakeRegSize(list,l.Register64.RegLo,OS_32);
 
              end
             else
-             hregister:=cg.getintregister(list,OS_32);
+             hregister:=cg.GetIntRegister(list,OS_32);
             { load value in low register }
-            case l.loc of
+            case l.Loc of
 {$ifdef cpuflags}
               LOC_FLAGS :
                 begin
-                  cg.g_flags2reg(list,OS_32,l.resflags,hregister);
-                  cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
+                  cg.G_Flags2Reg(list,OS_32,l.ResFlags,hregister);
+                  cg.A_Reg_Dealloc(list,NR_DEFAULTFLAGS);
                 end;
 {$endif cpuflags}
               LOC_JUMP :
                 begin
-                  cg.a_label(list,l.truelabel);
-                  cg.a_load_const_reg(list,OS_INT,1,hregister);
+                  cg.A_Label(list,l.TrueLabel);
+                  cg.A_Load_Const_Reg(list,OS_INT,1,hregister);
                   CurrentAsmData.getjumplabel(hl);
-                  cg.a_jmp_always(list,hl);
-                  cg.a_label(list,l.falselabel);
-                  cg.a_load_const_reg(list,OS_INT,0,hregister);
-                  cg.a_label(list,hl);
+                  cg.A_Jmp_Always(list,hl);
+                  cg.A_Label(list,l.FalseLabel);
+                  cg.A_Load_Const_Reg(list,OS_INT,0,hregister);
+                  cg.A_Label(list,hl);
 
                 end;
               else
-                a_load_loc_reg(list,src_size,U32IntType,l,hregister);
+                A_Load_Loc_Reg(list,src_size,U32IntType,l,hregister);
             end;
             { reset hi part, take care of the signed bit of the current value }
-            hregisterhi:=cg.getintregister(list,OS_32);
-            if (l.size in [OS_S8,OS_S16,OS_S32]) then
+            hregisterhi:=cg.GetIntRegister(list,OS_32);
+            if (l.Size in [OS_S8,OS_S16,OS_S32]) then
              begin
-               if l.loc=LOC_CONSTANT then
+               if l.Loc=LOC_CONSTANT then
                 begin
-                  if (LongInt(l.value)<0) then
-                   cg.a_load_const_reg(list,OS_32,LongInt($ffffffff),hregisterhi)
+                  if (LongInt(l.Value)<0) then
+                   cg.A_Load_Const_Reg(list,OS_32,LongInt($ffffffff),hregisterhi)
                   else
-                   cg.a_load_const_reg(list,OS_32,0,hregisterhi);
+                   cg.A_Load_Const_Reg(list,OS_32,0,hregisterhi);
                 end
                else
                 begin
-                  cg.a_op_const_reg_reg(list,OP_SAR,OS_32,31,hregister,
+                  cg.A_Op_Const_Reg_Reg(list,OP_SAR,OS_32,31,hregister,
                     hregisterhi);
                 end;
              end
             else
-             cg.a_load_const_reg(list,OS_32,0,hregisterhi);
-            location_reset(l,LOC_REGISTER,dst_cgsize);
-            l.register64.reglo:=hregister;
-            l.register64.reghi:=hregisterhi;
+             cg.A_Load_Const_Reg(list,OS_32,0,hregisterhi);
+            Location_Reset(l,LOC_REGISTER,dst_cgsize);
+            l.Register64.RegLo:=hregister;
+            l.Register64.RegHi:=hregisterhi;
           end
          else
           begin
             { 64bit to 64bit }
-            if ((l.loc=LOC_CREGISTER) and maybeconst) then
+            if ((l.Loc=LOC_CREGISTER) and maybeconst) then
              begin
-               hregister:=l.register64.reglo;
-               hregisterhi:=l.register64.reghi;
+               hregister:=l.Register64.RegLo;
+               hregisterhi:=l.Register64.RegHi;
                const_location := true;
              end
             else
              begin
-               hregister:=cg.getintregister(list,OS_32);
-               hregisterhi:=cg.getintregister(list,OS_32);
+               hregister:=cg.GetIntRegister(list,OS_32);
+               hregisterhi:=cg.GetIntRegister(list,OS_32);
                const_location := false;
              end;
-            hreg64.reglo:=hregister;
-            hreg64.reghi:=hregisterhi;
+            hreg64.RegLo:=hregister;
+            hreg64.RegHi:=hregisterhi;
             { load value in new register }
-            cg64.a_load64_loc_reg(list,l,hreg64);
+            cg64.A_Load64_Loc_Reg(list,l,hreg64);
             if not const_location then
-              location_reset(l,LOC_REGISTER,dst_cgsize)
+              Location_Reset(l,LOC_REGISTER,dst_cgsize)
             else
-              location_reset(l,LOC_CREGISTER,dst_cgsize);
-            l.register64.reglo:=hregister;
-            l.register64.reghi:=hregisterhi;
+              Location_Reset(l,LOC_CREGISTER,dst_cgsize);
+            l.Register64.RegLo:=hregister;
+            l.Register64.RegHi:=hregisterhi;
           end;
        end
       else
@@ -1125,34 +1125,34 @@ implementation
            }
           const_location :=
              (maybeconst) and
-             (l.loc = LOC_CREGISTER) and
-             (TCGSize2Size[l.size] = TCGSize2Size[dst_cgsize]) and
-             ((l.size = dst_cgsize) or
-              (TCGSize2Size[l.size] = sizeof(aint)));
+             (l.Loc = LOC_CREGISTER) and
+             (TCgSize2Size[l.Size] = TCgSize2Size[dst_cgsize]) and
+             ((l.Size = dst_cgsize) or
+              (TCgSize2Size[l.Size] = sizeof(aint)));
           if not const_location then
-            hregister:=hlcg.getregisterfordef(list,dst_size)
+            hregister:=hlcg.GetRegisterForDef(list,dst_size)
           else
-            hregister := l.register;
+            hregister := l.Register;
           { load value in new register }
-          case l.loc of
+          case l.Loc of
 {$ifdef cpuflags}
             LOC_FLAGS :
               begin
-                cg.g_flags2reg(list,dst_cgsize,l.resflags,hregister);
-                cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
+                cg.G_Flags2Reg(list,dst_cgsize,l.ResFlags,hregister);
+                cg.A_Reg_Dealloc(list,NR_DEFAULTFLAGS);
               end;
 {$endif cpuflags}
             LOC_JUMP :
               begin
                 tmpsize:=dst_cgsize;
 
-                cg.a_label(list,l.truelabel);
-                cg.a_load_const_reg(list,tmpsize,1,hregister);
+                cg.A_Label(list,l.TrueLabel);
+                cg.A_Load_Const_Reg(list,tmpsize,1,hregister);
                 CurrentAsmData.getjumplabel(hl);
-                cg.a_jmp_always(list,hl);
-                cg.a_label(list,l.falselabel);
-                cg.a_load_const_reg(list,tmpsize,0,hregister);
-                cg.a_label(list,hl);
+                cg.A_Jmp_Always(list,hl);
+                cg.A_Label(list,l.FalseLabel);
+                cg.A_Load_Const_Reg(list,tmpsize,0,hregister);
+                cg.A_Label(list,hl);
 
               end;
             else
@@ -1160,122 +1160,122 @@ implementation
                 { load_loc_reg can only handle size >= l.size, when the
                   new size is smaller then we need to adjust the size
                   of the original and maybe recalculate l.register for i386 }
-                if (TCGSize2Size[dst_cgsize]<TCGSize2Size[l.size]) then
+                if (TCgSize2Size[dst_cgsize]<TCgSize2Size[l.Size]) then
                  begin
-                   if (l.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+                   if (l.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
                      begin
 
-                         l.register:=cg.makeregsize(list,l.register,dst_cgsize);
+                         l.Register:=cg.MakeRegSize(list,l.Register,dst_cgsize);
                      end;
                    { for big endian systems, the reference's offset must }
                    { be increased in this case, since they have the      }
                    { MSB first in memory and e.g. byte(word_var) should  }
                    { return  the second byte in this case (JM)           }
                    if (TargetInfo.endian = ENDIAN_BIG) and
-                      (l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                      (l.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                      begin
-                       inc(l.reference.offset,TCGSize2Size[l.size]-TCGSize2Size[dst_cgsize]);
-                       l.reference.alignment:=NewAlignment(l.reference.alignment,TCGSize2Size[l.size]-TCGSize2Size[dst_cgsize]);
+                       inc(l.Reference.Offset,TCgSize2Size[l.Size]-TCgSize2Size[dst_cgsize]);
+                       l.Reference.Alignment:=NewAlignment(l.Reference.Alignment,TCgSize2Size[l.Size]-TCgSize2Size[dst_cgsize]);
                      end;
 {$ifdef x86}
-                   if not (l.loc in [LOC_SUBSETREG,LOC_CSUBSETREG]) then
+                   if not (l.Loc in [LOC_SUBSETREG,LOC_CSUBSETREG]) then
                      begin
-                       l.size:=dst_cgsize;
+                       l.Size:=dst_cgsize;
                        src_size:=dst_size;
                      end;
 {$endif x86}
                  end;
-                a_load_loc_reg(list,src_size,dst_size,l,hregister);
-                if (TCGSize2Size[dst_cgsize]<TCGSize2Size[l.size])
+                A_Load_Loc_Reg(list,src_size,dst_size,l,hregister);
+                if (TCgSize2Size[dst_cgsize]<TCgSize2Size[l.Size])
 {$ifdef x86}
-                   and (l.loc in [LOC_SUBSETREG,LOC_CSUBSETREG])
+                   and (l.Loc in [LOC_SUBSETREG,LOC_CSUBSETREG])
 {$endif x86}
                   then
-                    l.size:=dst_cgsize;
+                    l.Size:=dst_cgsize;
               end;
           end;
           if not const_location then
-            location_reset(l,LOC_REGISTER,dst_cgsize)
+            Location_Reset(l,LOC_REGISTER,dst_cgsize)
           else
-            location_reset(l,LOC_CREGISTER,dst_cgsize);
-          l.register:=hregister;
+            Location_Reset(l,LOC_CREGISTER,dst_cgsize);
+          l.Register:=hregister;
         end;
       { Release temp when it was a reference }
-      if oldloc.loc=LOC_REFERENCE then
+      if oldloc.Loc=LOC_REFERENCE then
           location_freetemp(list,oldloc);
     end;
 
-  procedure THLCG2LL.location_force_mem(list: TAsmList; var l: TLocation; size: TDef);
+  procedure THLCG2LL.Location_Force_Mem(list: TAsmList; var l: TLocation; size: TDef);
     var
       r: TReference;
     begin
-      case l.loc of
+      case l.Loc of
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER :
           begin
             { implement here using tcg because some platforms store records
               in fpu registers in some cases, and a_loadfpu* can't deal with
               record "size" parameters }
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            cg.a_loadfpu_reg_ref(list,l.size,l.size,l.register,r);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
+            cg.A_LoadFPU_Reg_Ref(list,l.Size,l.Size,l.Register,r);
+            Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
+            l.Reference:=r;
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            tg.gethltemp(list,size,size.size,tt_normal,r);
-            cg.a_loadmm_reg_ref(list,l.size,l.size,l.register,r,mms_movescalar);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
+            cg.A_LoadMM_Reg_Ref(list,l.Size,l.Size,l.Register,r,MMS_MoveScalar);
+            Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
+            l.Reference:=r;
           end;
         LOC_CONSTANT,
         LOC_REGISTER,
         LOC_CREGISTER :
           begin
-            tg.gethltemp(list,size,size.size,tt_normal,r);
+            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
 {$ifdef cpu64bitalu}
-            if l.size in [OS_128,OS_S128] then
-              cg128.a_load128_loc_ref(list,l,r)
+            if l.Size in [OS_128,OS_S128] then
+              cg128.A_Load128_Loc_Ref(list,l,r)
             else
 {$else cpu64bitalu}
-            if l.size in [OS_64,OS_S64] then
-              cg64.a_load64_loc_ref(list,l,r)
+            if l.Size in [OS_64,OS_S64] then
+              cg64.A_Load64_Loc_Ref(list,l,r)
             else
 {$endif cpu64bitalu}
-              a_load_loc_ref(list,size,size,l,r);
-            location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-            l.reference:=r;
+              A_Load_Loc_Ref(list,size,size,l,r);
+            Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
+            l.Reference:=r;
           end;
         else
           inherited;
       end;
     end;
 
-  procedure THLCG2LL.location_force_mmregscalar(list: TAsmList; var l: TLocation; var size: TDef; maybeconst: boolean);
+  procedure THLCG2LL.Location_Force_MMRegScalar(list: TAsmList; var l: TLocation; var size: TDef; maybeconst: boolean);
     var
       reg : TRegister;
       href : TReference;
       newsize : TDef;
     begin
-      if (l.loc<>LOC_MMREGISTER)  and
-         ((l.loc<>LOC_CMMREGISTER) or (not maybeconst)) then
+      if (l.Loc<>LOC_MMREGISTER)  and
+         ((l.Loc<>LOC_CMMREGISTER) or (not maybeconst)) then
         begin
           { if it's in an fpu register, store to memory first }
-          if (l.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          if (l.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
             begin
-              tg.GetTemp(list,tcgsize2size[l.size],tcgsize2size[l.size],tt_normal,href);
-              cg.a_loadfpu_reg_ref(list,l.size,l.size,l.register,href);
-              location_reset_ref(l,LOC_REFERENCE,l.size,size.alignment,[]);
-              l.reference:=href;
+              tg.GetTemp(list,TCgSize2Size[l.Size],TCgSize2Size[l.Size],tt_normal,href);
+              cg.A_LoadFPU_Reg_Ref(list,l.Size,l.Size,l.Register,href);
+              Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
+              l.Reference:=href;
             end;
 {$ifndef cpu64bitalu}
-          if (l.loc in [LOC_REGISTER,LOC_CREGISTER]) and
-             (l.size in [OS_64,OS_S64]) then
+          if (l.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
+             (l.Size in [OS_64,OS_S64]) then
             begin
-              reg:=cg.getmmregister(list,OS_F64);
-              cg64.a_loadmm_intreg64_reg(list,OS_F64,l.register64,reg);
-              l.size:=OS_F64;
+              reg:=cg.GetMMRegister(list,OS_F64);
+              cg64.A_LoadMM_IntReg64_Reg(list,OS_F64,l.Register64,reg);
+              l.Size:=OS_F64;
               size:=S64FloatType;
             end
           else
@@ -1284,26 +1284,26 @@ implementation
                { on ARM, CFP values may be located in integer registers,
                  and its second_int_to_real() also uses this routine to
                  force integer (memory) values in an mmregister }
-               if (l.size in [OS_32,OS_S32]) then
+               if (l.Size in [OS_32,OS_S32]) then
                  begin
-                   size:=cgsize_orddef(l.size);
+                   size:=CGSize_OrdDef(l.Size);
                    newsize:=S32FloatType;
                  end
-               else if (l.size in [OS_64,OS_S64]) then
+               else if (l.Size in [OS_64,OS_S64]) then
                  begin
-                   size:=cgsize_orddef(l.size);
+                   size:=CGSize_OrdDef(l.Size);
                    newsize:=S64FloatType;
                  end
                else
                  newsize:=size;
-               reg:=getmmregister(list,newsize);
-               a_loadmm_loc_reg(list,size,newsize,l,reg,mms_movescalar);
-               l.size:=def_cgsize(newsize);
+               reg:=GetMMRegister(list,newsize);
+               A_LoadMM_Loc_Reg(list,size,newsize,l,reg,MMS_MoveScalar);
+               l.Size:=Def_CGSize(newsize);
                size:=newsize;
              end;
           location_freetemp(list,l);
-          location_reset(l,LOC_MMREGISTER,l.size);
-          l.register:=reg;
+          Location_Reset(l,LOC_MMREGISTER,l.Size);
+          l.Register:=reg;
         end;
     end;
 
@@ -1313,32 +1313,32 @@ implementation
       ncgutil.location_force_mmreg(list,l,maybeconst);
     end;
 *)
-  procedure THLCG2LL.maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: TAsmLabel);
+  procedure THLCG2LL.MakeToJumpBoolLabels(list: TAsmList; p: TNode; TrueLabel, FalseLabel: TAsmLabel);
     begin
       { loadregvars parameter is no longer used, should be removed from
          ncgutil version as well }
-      ncgutil.maketojumpboollabels(list,p,truelabel,falselabel);
+      ncgutil.MakeToJumpBoolLabels(list,p,TrueLabel,FalseLabel);
     end;
 
-  procedure THLCG2LL.gen_load_para_value(list: TAsmList);
+  procedure THLCG2LL.Gen_Load_Para_Value(list: TAsmList);
 
     procedure get_para(const ParaLoc:TCGParaLocation);
       begin
-         case ParaLoc.loc of
+         case ParaLoc.Loc of
            LOC_REGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_int_imreg then
-                 cg.getcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_int_imreg then
+                 cg.GetCPURegister(list,ParaLoc.Register);
              end;
            LOC_MMREGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_mm_imreg then
-                 cg.getcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_mm_imreg then
+                 cg.GetCPURegister(list,ParaLoc.Register);
              end;
            LOC_FPUREGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_fpu_imreg then
-                 cg.getcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_fpu_imreg then
+                 cg.GetCPURegister(list,ParaLoc.Register);
              end;
            else
              ;
@@ -1360,10 +1360,10 @@ implementation
      for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
        begin
          currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-         ParaLoc:=currpara.ParaLoc[calleeside].location;
+         ParaLoc:=currpara.ParaLoc[calleeside].Location;
          while Assigned(ParaLoc) do
            begin
-             if ParaLoc^.loc in [LOC_REGISTER,LOC_FPUREGISTER,LOC_MMREGISTER] then
+             if ParaLoc^.Loc in [LOC_REGISTER,LOC_FPUREGISTER,LOC_MMREGISTER] then
                get_para(ParaLoc^);
              ParaLoc:=ParaLoc^.next;
            end;
@@ -1375,20 +1375,20 @@ implementation
          currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
          { don't use currpara.vardef, as this will be wrong in case of
            call-by-reference parameters (it won't contain the pointerdef) }
-         gen_load_cgpara_loc(list,currpara.ParaLoc[calleeside].def,currpara.ParaLoc[calleeside],currpara.InitialLoc,paramanager.param_use_paraloc(currpara.ParaLoc[calleeside]));
+         Gen_Load_CGPara_Loc(list,currpara.ParaLoc[calleeside].def,currpara.ParaLoc[calleeside],currpara.InitialLoc,ParaManager.Param_Use_ParaLoc(currpara.ParaLoc[calleeside]));
          { gen_load_cgpara_loc() already allocated the initialloc
            -> don't allocate again }
-         if currpara.InitialLoc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER] then
+         if currpara.InitialLoc.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER] then
            begin
              gen_alloc_regvar(list,currpara,false);
-             hlcg.varsym_set_localloc(list,currpara);
+             hlcg.VarSym_Set_LocAlloc(list,currpara);
            end;
        end;
 
      { generate copies of call by value parameters, must be done before
        the initialization and body is parsed because the refcounts are
        incremented using the local copies }
-     CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@hlcg.g_copyvalueparas,list);
+     CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@hlcg.G_CopyValueParas,list);
      if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
        begin
          { initialize refcounted paras, and trash others. Needed here
@@ -1397,49 +1397,49 @@ implementation
            in a regvar, we add a register move and that one again has to
            come after the parameter loading code as far as the register
            allocator is concerned }
-         CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@init_paras,list);
+         CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@Init_Paras,list);
        end;
    end;
 
-  procedure THLCG2LL.gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt);
+  procedure THLCG2LL.Gen_LoadFPU_Loc_CGPara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt);
     var
       locsize : TCgSize;
       tmploc : TLocation;
     begin
-      if not(l.size in [OS_32,OS_S32,OS_64,OS_S64,OS_128,OS_S128]) then
-        locsize:=l.size
+      if not(l.Size in [OS_32,OS_S32,OS_64,OS_S64,OS_128,OS_S128]) then
+        locsize:=l.Size
       else
-        locsize:=int_float_cgsize(tcgsize2size[l.size]);
-      case l.loc of
+        locsize:=Int_Float_CGSize(TCgSize2Size[l.Size]);
+      case l.Loc of
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
-          case cgpara.location^.loc of
+          case cgpara.Location^.Loc of
             LOC_REFERENCE,
             LOC_CREFERENCE,
             LOC_MMREGISTER,
             LOC_CMMREGISTER,
             LOC_REGISTER,
             LOC_CREGISTER :
-              cg.a_loadmm_reg_cgpara(list,locsize,l.register,cgpara,mms_movescalar);
+              cg.A_LoadMM_Reg_CGPara(list,locsize,l.Register,cgpara,MMS_MoveScalar);
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
               begin
                 tmploc:=l;
-                location_force_fpureg(list,tmploc,size,false);
-                cg.a_loadfpu_reg_cgpara(list,tmploc.size,tmploc.register,cgpara);
+                Location_Force_FPUReg(list,tmploc,size,false);
+                cg.A_LoadFPU_Reg_CGPara(list,tmploc.Size,tmploc.Register,cgpara);
               end;
             else
               InternalError(200204249);
           end;
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER:
-          case cgpara.location^.loc of
+          case cgpara.Location^.Loc of
             LOC_MMREGISTER,
             LOC_CMMREGISTER:
               begin
                 tmploc:=l;
-                location_force_mmregscalar(list,tmploc,size,false);
-                cg.a_loadmm_reg_cgpara(list,tmploc.size,tmploc.register,cgpara,mms_movescalar);
+                Location_Force_MMRegScalar(list,tmploc,size,false);
+                cg.A_LoadMM_Reg_CGPara(list,tmploc.Size,tmploc.Register,cgpara,MMS_MoveScalar);
               end;
             { Some targets pass floats in normal registers }
             LOC_REGISTER,
@@ -1448,28 +1448,28 @@ implementation
             LOC_CREFERENCE,
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
-              cg.a_loadfpu_reg_cgpara(list,locsize,l.register,cgpara);
+              cg.A_LoadFPU_Reg_CGPara(list,locsize,l.Register,cgpara);
             else
               InternalError(2002042433);
           end;
         LOC_REFERENCE,
         LOC_CREFERENCE:
-          case cgpara.location^.loc of
+          case cgpara.Location^.Loc of
             LOC_MMREGISTER,
             LOC_CMMREGISTER:
-              cg.a_loadmm_ref_cgpara(list,locsize,l.reference,cgpara,mms_movescalar);
+              cg.A_LoadMM_Ref_CGPara(list,locsize,l.Reference,cgpara,MMS_MoveScalar);
             { Some targets pass floats in normal registers }
             LOC_REFERENCE,
             LOC_CREFERENCE:
               if Use_VectorFPU(size) then
-                cg.a_loadmm_ref_cgpara(list,locsize,l.reference,cgpara,mms_movescalar)
+                cg.A_LoadMM_Ref_CGPara(list,locsize,l.Reference,cgpara,MMS_MoveScalar)
               else
-                cg.a_loadfpu_ref_cgpara(list,locsize,l.reference,cgpara);
+                cg.A_LoadFPU_Ref_CGPara(list,locsize,l.Reference,cgpara);
             LOC_REGISTER,
             LOC_CREGISTER,
             LOC_FPUREGISTER,
             LOC_CFPUREGISTER:
-              cg.a_loadfpu_ref_cgpara(list,locsize,l.reference,cgpara);
+              cg.A_LoadFPU_Ref_CGPara(list,locsize,l.Reference,cgpara);
             else
               InternalError(2002042431);
           end;
@@ -1483,36 +1483,36 @@ implementation
                by typecasting an int64 constant to a record of 8 bytes }
              if locsize = OS_F64 then
                begin
-                 if (cgpara.Location^.Next=nil) and (l.size in [OS_64,OS_S64]) and
-                   (cgpara.size in [OS_64,OS_S64]) then
-                   cg64.a_load64_reg_cgpara(list,l.register64,cgpara)
+                 if (cgpara.Location^.Next=nil) and (l.Size in [OS_64,OS_S64]) and
+                   (cgpara.Size in [OS_64,OS_S64]) then
+                   cg64.A_Load64_Reg_CGPara(list,l.Register64,cgpara)
                  else
                    begin
                      tmploc:=l;
-                     location_force_mem(list,tmploc,size);
-                     cg.a_load_loc_cgpara(list,tmploc,cgpara);
+                     Location_Force_Mem(list,tmploc,size);
+                     cg.A_Load_Loc_CGPara(list,tmploc,cgpara);
                      location_freetemp(list,tmploc);
                    end;
                end
              else
 {$endif not cpu64bitalu}
-             case cgpara.location^.loc of
+             case cgpara.Location^.Loc of
                LOC_FPUREGISTER,
                LOC_CFPUREGISTER:
                  begin
                    tmploc:=l;
-                   location_force_mem(list,tmploc,size);
-                   cg.a_loadfpu_ref_cgpara(list,locsize,tmploc.reference,cgpara);
+                   Location_Force_Mem(list,tmploc,size);
+                   cg.A_LoadFPU_Ref_CGPara(list,locsize,tmploc.Reference,cgpara);
                  end;
                LOC_MMREGISTER,
                LOC_CMMREGISTER:
                  begin
                    tmploc:=l;
-                   location_force_mem(list,tmploc,size);
-                   cg.a_loadmm_ref_cgpara(list,locsize,tmploc.reference,cgpara,mms_movescalar);
+                   Location_Force_Mem(list,tmploc,size);
+                   cg.A_LoadMM_Ref_CGPara(list,locsize,tmploc.Reference,cgpara,MMS_MoveScalar);
                  end;
                else
-                 cg.a_load_loc_cgpara(list,l,cgpara);
+                 cg.A_Load_Loc_CGPara(list,l,cgpara);
              end;
           end;
         else
@@ -1520,12 +1520,12 @@ implementation
       end;
     end;
 
-  procedure THLCG2LL.gen_load_loc_cgpara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara);
+  procedure THLCG2LL.Gen_Load_Loc_CGPara(list: TAsmList; vardef: TDef; const l: TLocation; const cgpara: TCGPara);
     var
       tmploc: TLocation;
     begin
       { skip e.g. empty records }
-      if (cgpara.location^.loc = LOC_VOID) then
+      if (cgpara.Location^.Loc = LOC_VOID) then
         exit;
 
       { Handle Floating point types differently
@@ -1534,15 +1534,15 @@ implementation
         be handled by cpupara }
       if (vardef.typ=floatdef) or
          { some ABIs return certain records in an fpu register }
-         (l.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) or
-         (Assigned(cgpara.location) and
-          (cgpara.Location^.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER])) then
+         (l.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) or
+         (Assigned(cgpara.Location) and
+          (cgpara.Location^.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER])) then
         begin
-          gen_loadfpu_loc_cgpara(list,vardef,l,cgpara,vardef.size);
+          Gen_LoadFPU_Loc_CGPara(list,vardef,l,cgpara,vardef.Size);
           exit;
         end;
 
-      case l.loc of
+      case l.Loc of
         LOC_CONSTANT,
         LOC_REGISTER,
         LOC_CREGISTER,
@@ -1551,14 +1551,14 @@ implementation
           begin
 {$ifdef cpu64bitalu}
             { use cg128 only if no "chained" location is used }
-            if Is_MethodPointer(cgpara.def) and (l.size in [OS_128,OS_S128]) and (cgpara.Size in [OS_128,OS_S128]) then
-              cg128.a_load128_loc_cgpara(list,l,cgpara)
+            if Is_MethodPointer(cgpara.def) and (l.Size in [OS_128,OS_S128]) and (cgpara.Size in [OS_128,OS_S128]) then
+              cg128.A_Load128_Loc_CGPara(list,l,cgpara)
             else
 {$else cpu64bitalu}
             { use cg64 only for int64, not for 8 byte records; in particular,
               filter out records passed in fpu/mm register}
-            if (l.size in [OS_64,OS_S64]) and (cgpara.Size in [OS_64,OS_S64]) and (cgpara.location^.loc in [LOC_REGISTER,LOC_REFERENCE]) then
-              cg64.a_load64_loc_cgpara(list,l,cgpara)
+            if (l.Size in [OS_64,OS_S64]) and (cgpara.Size in [OS_64,OS_S64]) and (cgpara.Location^.Loc in [LOC_REGISTER,LOC_REFERENCE]) then
+              cg64.A_Load64_Loc_CGPara(list,l,cgpara)
             else
 {$endif cpu64bitalu}
               begin
@@ -1568,64 +1568,64 @@ implementation
                   to a reference first. This situation can be triggered
                   by typecasting an int64 constant to a record of 8 bytes }
 {$ifdef cpu64bitalu}
-                if l.size in [OS_128,OS_S128] then
+                if l.Size in [OS_128,OS_S128] then
 {$else cpu64bitalu}
-                if l.size in [OS_64,OS_S64] then
+                if l.Size in [OS_64,OS_S64] then
 {$endif cpu64bitalu}
                   begin
                     tmploc:=l;
-                    location_force_mem(list,tmploc,vardef);
-                    a_load_loc_cgpara(list,vardef,tmploc,cgpara);
+                    Location_Force_Mem(list,tmploc,vardef);
+                    A_Load_Loc_CGPara(list,vardef,tmploc,cgpara);
                     { do not free the tmploc in case the original value was
                       already in memory, because the caller (ncgcal) will then
                       free it again later }
-                    if not(l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                    if not(l.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                       location_freetemp(list,tmploc);
                   end
                 else
-                  a_load_loc_cgpara(list,vardef,l,cgpara);
+                  A_Load_Loc_CGPara(list,vardef,l,cgpara);
               end;
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            case l.size of
+            case l.Size of
               OS_F32,
               OS_F64:
-                cg.a_loadmm_loc_cgpara(list,l,cgpara,mms_movescalar);
+                cg.A_LoadMM_Loc_CGPara(list,l,cgpara,MMS_MoveScalar);
               else
-                cg.a_loadmm_loc_cgpara(list,l,cgpara,nil);
+                cg.A_LoadMM_Loc_CGPara(list,l,cgpara,nil);
             end;
           end;
 {$ifdef SUPPORT_MMX}
         LOC_MMXREGISTER,
         LOC_CMMXREGISTER:
-          cg.a_loadmm_reg_cgpara(list,OS_M64,l.register,cgpara,nil);
+          cg.A_LoadMM_Reg_CGPara(list,OS_M64,l.Register,cgpara,nil);
 {$endif SUPPORT_MMX}
         else
           InternalError(200204241);
       end;
     end;
 
-  procedure THLCG2LL.gen_load_cgpara_loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean);
+  procedure THLCG2LL.Gen_Load_CGPara_Loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean);
 
     procedure unget_para(const ParaLoc:TCGParaLocation);
       begin
-         case ParaLoc.loc of
+         case ParaLoc.Loc of
            LOC_REGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_int_imreg then
-                 cg.ungetcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_int_imreg then
+                 cg.UngetCPURegister(list,ParaLoc.Register);
              end;
            LOC_MMREGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_mm_imreg then
-                 cg.ungetcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_mm_imreg then
+                 cg.UngetCPURegister(list,ParaLoc.Register);
              end;
            LOC_FPUREGISTER :
              begin
-               if getsupreg(ParaLoc.register)<first_fpu_imreg then
-                 cg.ungetcpuregister(list,ParaLoc.register);
+               if GetSupReg(ParaLoc.Register)<first_fpu_imreg then
+                 cg.UngetCPURegister(list,ParaLoc.Register);
              end;
            else
              ;
@@ -1644,32 +1644,32 @@ implementation
 
 {$endif not cpu64bitalu}
     begin
-      ParaLoc:=para.location;
+      ParaLoc:=para.Location;
       if not Assigned(ParaLoc) then
         InternalError(200408203);
       { skip e.g. empty records }
-      if (ParaLoc^.loc = LOC_VOID) then
+      if (ParaLoc^.Loc = LOC_VOID) then
         exit;
-      case destloc.loc of
+      case destloc.Loc of
         LOC_REFERENCE :
           begin
             { If the parameter location is reused we don't need to copy
               anything }
             if not reusepara then
               begin
-                href:=destloc.reference;
-                sizeleft:=para.intsize;
+                href:=destloc.Reference;
+                sizeleft:=para.IntSize;
                 while Assigned(ParaLoc) do
                   begin
-                    if (ParaLoc^.size=OS_NO) then
+                    if (ParaLoc^.Size=OS_NO) then
                       begin
                         { Can only be a reference that contains the rest
                           of the parameter }
-                        if (ParaLoc^.loc<>LOC_REFERENCE) or
+                        if (ParaLoc^.Loc<>LOC_REFERENCE) or
                            Assigned(ParaLoc^.next) then
                           InternalError(2005013010);
-                        cg.a_load_cgparaloc_ref(list,ParaLoc^,href,sizeleft,destloc.reference.alignment);
-                        inc(href.offset,sizeleft);
+                        cg.A_Load_CGParaLoc_Ref(list,ParaLoc^,href,sizeleft,destloc.Reference.Alignment);
+                        inc(href.Offset,sizeleft);
                         sizeleft:=0;
                       end
                     else
@@ -1678,13 +1678,13 @@ implementation
                            paraloc^.size could be bigger than destloc.size of a parameter occupies a full register
                            and as on big endian system the parameters might be left aligned, we have to work
                            with the full register size for paraloc^.size }
-                        if tcgsize2size[destloc.size]<>0 then
-                          loadsize:=min(min(tcgsize2size[ParaLoc^.size],tcgsize2size[destloc.size]),sizeleft)
+                        if TCgSize2Size[destloc.Size]<>0 then
+                          loadsize:=min(min(TCgSize2Size[ParaLoc^.Size],TCgSize2Size[destloc.Size]),sizeleft)
                         else
-                          loadsize:=min(tcgsize2size[ParaLoc^.size],sizeleft);
+                          loadsize:=min(TCgSize2Size[ParaLoc^.Size],sizeleft);
 
-                        cg.a_load_cgparaloc_ref(list,ParaLoc^,href,loadsize,destloc.reference.alignment);
-                        inc(href.offset,loadsize);
+                        cg.A_Load_CGParaLoc_Ref(list,ParaLoc^,href,loadsize,destloc.Reference.Alignment);
+                        inc(href.Offset,loadsize);
                         dec(sizeleft,loadsize);
                       end;
                     unget_para(ParaLoc^);
@@ -1696,20 +1696,20 @@ implementation
         LOC_CREGISTER :
           begin
 {$ifdef cpu64bitalu}
-            if (para.size in [OS_128,OS_S128,OS_F128]) and
+            if (para.Size in [OS_128,OS_S128,OS_F128]) and
                ({ in case of fpu emulation, or abi's that pass fpu values
                   via integer registers }
                 (vardef.typ=floatdef) or
                  Is_MethodPointer(vardef) or
                  Is_Record(vardef)) then
               begin
-                case ParaLoc^.loc of
+                case ParaLoc^.Loc of
                   LOC_REGISTER,
                   LOC_MMREGISTER:
                     begin
                       if not Assigned(ParaLoc^.next) then
                         InternalError(200410104);
-                      case tcgsize2size[ParaLoc^.size] of
+                      case TCgSize2Size[ParaLoc^.Size] of
                         8:
                           begin
                             if (TargetInfo.endian=ENDIAN_BIG) then
@@ -1719,9 +1719,9 @@ implementation
                                 unget_para(ParaLoc^);
                                 gen_alloc_regloc(list,destloc,vardef);
                                 { reg->reg, alignment is irrelevant }
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reghi,8);
+                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegHi,8);
                                 unget_para(ParaLoc^.next^);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^.next^,destloc.register128.reglo,8);
+                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^.next^,destloc.Register128.RegLo,8);
                               end
                             else
                               begin
@@ -1729,9 +1729,9 @@ implementation
                                   paraloc^.next -> high }
                                 unget_para(ParaLoc^);
                                 gen_alloc_regloc(list,destloc,vardef);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reglo,8);
+                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegLo,8);
                                 unget_para(ParaLoc^.next^);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^.next^,destloc.register128.reghi,8);
+                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^.next^,destloc.Register128.RegHi,8);
                               end;
                           end;
                         4:
@@ -1743,30 +1743,30 @@ implementation
                             if TargetInfo.endian=ENDIAN_BIG then
                               InternalError(2018101702);  // Big endian support not implemented yet
                             gen_alloc_regloc(list,destloc,vardef);
-                            tempreg:=cg.getintregister(list,OS_64);
+                            tempreg:=cg.GetIntRegister(list,OS_64);
                             // Low part of the 128-bit param
                             unget_para(ParaLoc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,tempreg,4);
+                            cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,tempreg,4);
                             ParaLoc:=ParaLoc^.next;
                             if ParaLoc=nil then
                               InternalError(2018101703);
                             unget_para(ParaLoc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reglo,4);
-                            cg.a_op_const_reg(list,OP_SHL,OS_64,32,destloc.register128.reglo);
-                            cg.a_op_reg_reg(list,OP_OR,OS_64,tempreg,destloc.register128.reglo);
+                            cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegLo,4);
+                            cg.A_Op_Const_Reg(list,OP_SHL,OS_64,32,destloc.Register128.RegLo);
+                            cg.A_Op_Reg_Reg(list,OP_OR,OS_64,tempreg,destloc.Register128.RegLo);
                             // High part of the 128-bit param
                             ParaLoc:=ParaLoc^.next;
                             if ParaLoc=nil then
                               InternalError(2018101704);
                             unget_para(ParaLoc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,tempreg,4);
+                            cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,tempreg,4);
                             ParaLoc:=ParaLoc^.next;
                             if ParaLoc=nil then
                               InternalError(2018101705);
                             unget_para(ParaLoc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reghi,4);
-                            cg.a_op_const_reg(list,OP_SHL,OS_64,32,destloc.register128.reghi);
-                            cg.a_op_reg_reg(list,OP_OR,OS_64,tempreg,destloc.register128.reghi);
+                            cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegHi,4);
+                            cg.A_Op_Const_Reg(list,OP_SHL,OS_64,32,destloc.Register128.RegHi);
+                            cg.A_Op_Reg_Reg(list,OP_OR,OS_64,tempreg,destloc.Register128.RegHi);
                           end
                         else
                           InternalError(2018101701);
@@ -1775,8 +1775,8 @@ implementation
                   LOC_REFERENCE:
                     begin
                       gen_alloc_regloc(list,destloc,vardef);
-                      reference_reset_base(href,CPointerDef.getreusable(vardef),ParaLoc^.reference.index,ParaLoc^.reference.offset,ctempposinvalid,para.alignment,[]);
-                      cg128.a_load128_ref_reg(list,href,destloc.register128);
+                      Reference_Reset_Base(href,CPointerDef.getreusable(vardef),ParaLoc^.Reference.Index,ParaLoc^.Reference.Offset,CTempPosInvalid,para.Alignment,[]);
+                      cg128.A_Load128_Ref_Reg(list,href,destloc.Register128);
                       unget_para(ParaLoc^);
                     end;
                   else
@@ -1785,18 +1785,18 @@ implementation
               end
             else
 {$else cpu64bitalu}
-            if (para.size in [OS_64,OS_S64,OS_F64]) and
-               (is_64bit(vardef) or
+            if (para.Size in [OS_64,OS_S64,OS_F64]) and
+               (Is_64Bit(vardef) or
                 { in case of fpu emulation, or abi's that pass fpu values
                   via integer registers }
                 (vardef.typ=floatdef) or
                  Is_MethodPointer(vardef) or
                  Is_Record(vardef)) then
               begin
-                case ParaLoc^.loc of
+                case ParaLoc^.Loc of
                   LOC_REGISTER:
                     begin
-                      case para.locations_count of
+                      case para.Locations_Count of
 
 
                         2:
@@ -1807,9 +1807,9 @@ implementation
                               unget_para(ParaLoc^);
                               gen_alloc_regloc(list,destloc,vardef);
                               { reg->reg, alignment is irrelevant }
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^,destloc.register64.reghi,4);
+                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^,destloc.Register64.RegHi,4);
                               unget_para(ParaLoc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,destloc.register64.reglo,4);
+                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^.next^,destloc.Register64.RegLo,4);
                             end
                           else
                             begin
@@ -1817,9 +1817,9 @@ implementation
                                 paraloc^.next -> high }
                               unget_para(ParaLoc^);
                               gen_alloc_regloc(list,destloc,vardef);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^,destloc.register64.reglo,4);
+                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^,destloc.Register64.RegLo,4);
                               unget_para(ParaLoc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,destloc.register64.reghi,4);
+                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^.next^,destloc.Register64.RegHi,4);
                             end;
                         else
                           { unexpected number of paralocs }
@@ -1829,8 +1829,8 @@ implementation
                   LOC_REFERENCE:
                     begin
                       gen_alloc_regloc(list,destloc,vardef);
-                      reference_reset_base(href,CPointerDef.getreusable(vardef),ParaLoc^.reference.index,ParaLoc^.reference.offset,ctempposinvalid,para.alignment,[]);
-                      cg64.a_load64_ref_reg(list,href,destloc.register64);
+                      Reference_Reset_Base(href,CPointerDef.getreusable(vardef),ParaLoc^.Reference.Index,ParaLoc^.Reference.Offset,CTempPosInvalid,para.Alignment,[]);
+                      cg64.A_Load64_Ref_Reg(list,href,destloc.Register64);
                       unget_para(ParaLoc^);
                     end;
                   else
@@ -1842,15 +1842,15 @@ implementation
               begin
                 if Assigned(ParaLoc^.next) then
                   begin
-                    if (destloc.size in [OS_PAIR,OS_SPAIR]) and
-                      (para.Size in [OS_PAIR,OS_SPAIR]) then
+                    if (destloc.Size in [OSPair,OSSPair]) and
+                      (para.Size in [OSPair,OSSPair]) then
                       begin
                         unget_para(ParaLoc^);
                         gen_alloc_regloc(list,destloc,vardef);
-                        cg.a_load_cgparaloc_anyreg(list,OS_INT,ParaLoc^,destloc.register,sizeof(aint));
+                        cg.A_Load_CGParaLoc_AnyReg(list,OS_INT,ParaLoc^,destloc.Register,sizeof(aint));
                         unget_para(ParaLoc^.Next^);
 
-                          cg.a_load_cgparaloc_anyreg(list,OS_INT,ParaLoc^.Next^,destloc.registerhi,sizeof(aint));
+                          cg.A_Load_CGParaLoc_AnyReg(list,OS_INT,ParaLoc^.Next^,destloc.RegisterHi,sizeof(aint));
 
                       end
 
@@ -1861,10 +1861,10 @@ implementation
                           fields must be passed in two single precision
                           registers }
                         { does it fit in the register of destloc? }
-                        sizeleft:=para.intsize;
-                        if sizeleft<>vardef.size then
+                        sizeleft:=para.IntSize;
+                        if sizeleft<>vardef.Size then
                           InternalError(2014122806);
-                        if sizeleft<>tcgsize2size[destloc.size] then
+                        if sizeleft<>TCgSize2Size[destloc.Size] then
                           InternalError(200410105);
                         { store everything first to memory, then load it in
                           destloc }
@@ -1875,16 +1875,16 @@ implementation
                             if not Assigned(ParaLoc) then
                               InternalError(2014122807);
                             unget_para(ParaLoc^);
-                            cg.a_load_cgparaloc_ref(list,ParaLoc^,tempref,sizeleft,NewAlignment(para.alignment,para.intsize-sizeleft));
-                            if (ParaLoc^.size=OS_NO) and
+                            cg.A_Load_CGParaLoc_Ref(list,ParaLoc^,tempref,sizeleft,NewAlignment(para.Alignment,para.IntSize-sizeleft));
+                            if (ParaLoc^.Size=OS_NO) and
                                Assigned(ParaLoc^.next) then
                               InternalError(2014122805);
-                            inc(tempref.offset,tcgsize2size[ParaLoc^.size]);
-                            dec(sizeleft,tcgsize2size[ParaLoc^.size]);
+                            inc(tempref.Offset,TCgSize2Size[ParaLoc^.Size]);
+                            dec(sizeleft,TCgSize2Size[ParaLoc^.Size]);
                             ParaLoc:=ParaLoc^.next;
                           end;
-                        dec(tempref.offset,para.intsize);
-                        cg.a_load_ref_reg(list,para.size,para.size,tempref,destloc.register);
+                        dec(tempref.Offset,para.IntSize);
+                        cg.A_Load_Ref_Reg(list,para.Size,para.Size,tempref,destloc.Register);
                         tg.ungettemp(list,tempref);
                       end;
                   end
@@ -1892,7 +1892,7 @@ implementation
                   begin
                     unget_para(ParaLoc^);
                     gen_alloc_regloc(list,destloc,vardef);
-                    cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,sizeof(aint));
+                    cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,sizeof(aint));
                   end;
               end;
           end;
@@ -1902,7 +1902,7 @@ implementation
             unget_para(ParaLoc^);
             gen_alloc_regloc(list,destloc,vardef);
             { from register to register -> alignment is irrelevant }
-            cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,0);
+            cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,0);
             if Assigned(ParaLoc^.next) then
               InternalError(200410109);
           end;
@@ -1911,8 +1911,8 @@ implementation
           begin
 {$ifndef cpu64bitalu}
             { ARM vfp floats are passed in integer registers }
-            if (para.size=OS_F64) and
-               (ParaLoc^.size in [OS_32,OS_S32]) and
+            if (para.Size=OS_F64) and
+               (ParaLoc^.Size in [OS_32,OS_S32]) and
                Use_VectorFPU(vardef) then
               begin
                 { we need 2x32bit reg }
@@ -1920,13 +1920,13 @@ implementation
                    Assigned(ParaLoc^.next^.next) then
                   InternalError(2009112421);
                 unget_para(ParaLoc^.next^);
-                case ParaLoc^.next^.loc of
+                case ParaLoc^.next^.Loc of
                   LOC_REGISTER:
-                    tempreg:=ParaLoc^.next^.register;
+                    tempreg:=ParaLoc^.next^.Register;
                   LOC_REFERENCE:
                     begin
-                      tempreg:=cg.getintregister(list,OS_32);
-                      cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,tempreg,4);
+                      tempreg:=cg.GetIntRegister(list,OS_32);
+                      cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^.next^,tempreg,4);
                     end;
                   else
                     InternalError(2012051301);
@@ -1938,10 +1938,10 @@ implementation
                 if (TargetInfo.endian=endian_big) then
                   { paraloc^ -> high
                     paraloc^.next -> low }
-                  reg64:=joinreg64(tempreg,ParaLoc^.register)
+                  reg64:=JoinReg64(tempreg,ParaLoc^.Register)
                 else
-                  reg64:=joinreg64(ParaLoc^.register,tempreg);
-                cg64.a_loadmm_intreg64_reg(list,OS_F64,reg64,destloc.register);
+                  reg64:=JoinReg64(ParaLoc^.Register,tempreg);
+                cg64.A_LoadMM_IntReg64_Reg(list,OS_F64,reg64,destloc.Register);
               end
             else
 {$endif not cpu64bitalu}
@@ -1951,7 +1951,7 @@ implementation
                     unget_para(ParaLoc^);
                     gen_alloc_regloc(list,destloc,vardef);
                     { from register to register -> alignment is irrelevant }
-                    cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,0);
+                    cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,0);
                   end
                 else
                   begin
@@ -1972,7 +1972,7 @@ implementation
   function THLCG2LL.getintmmcgsize(reg: TRegister; size: TCgSize): TCgSize;
     begin
       result:=size;
-      if getregtype(reg)=R_MMREGISTER then
+      if GetRegType(reg)=R_MMREGISTER then
         begin
           case size of
             OS_32:

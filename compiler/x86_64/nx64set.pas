@@ -113,7 +113,7 @@ implementation
 
         jtlist := CurrentAsmData.CurrAsmList;
         last:=min_;
-        opcgsize:=def_cgsize(opsize);
+        opcgsize:=Def_CGSize(opsize);
 
         AlmostExhaustive := False;
         oldmin := min_;
@@ -121,7 +121,7 @@ implementation
         if not(jumptable_no_range) then
           begin
 
-            getrange(left.resultdef,lv,hv);
+            GetRange(left.resultdef,lv,hv);
             Range := aint(max_)-aint(min_);
 
             if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
@@ -144,34 +144,34 @@ implementation
             else
               begin
                 { a <= x <= b <-> unsigned(x-a) <= (b-a) }
-                cg.a_op_const_reg(jtlist,OP_SUB,opcgsize,aint(min_),hregister);
+                cg.A_Op_Const_Reg(jtlist,OP_SUB,opcgsize,aint(min_),hregister);
                 { case expr greater than max_ => goto elselabel }
-                cg.a_cmp_const_reg_label(jtlist,opcgsize,OC_A,Range,hregister,elselabel);
+                cg.A_Cmp_Const_Reg_Label(jtlist,opcgsize,OC_A,Range,hregister,elselabel);
                 min_:=0;
                 { do not sign extend when we load the index register, as we applied an offset above }
-                opcgsize:=tcgsize2unsigned[opcgsize];
+                opcgsize:=TCgSize2Unsigned[opcgsize];
               end;
           end;
 
         { local label in order to avoid using GOT }
         CurrentAsmData.getlabel(tablelabel,alt_data);
-        indexreg:=cg.makeregsize(jtlist,hregister,OS_ADDR);
-        cg.a_load_reg_reg(jtlist,opcgsize,OS_ADDR,hregister,indexreg);
+        indexreg:=cg.MakeRegSize(jtlist,hregister,OS_ADDR);
+        cg.A_Load_Reg_Reg(jtlist,opcgsize,OS_ADDR,hregister,indexreg);
         { load table address }
-        reference_reset_symbol(href,tablelabel,0,4,[]);
-        basereg:=cg.getaddressregister(jtlist);
-        cg.a_loadaddr_ref_reg(jtlist,href,basereg);
+        Reference_Reset_Symbol(href,tablelabel,0,4,[]);
+        basereg:=cg.GetAddressRegister(jtlist);
+        cg.A_LoadAddr_Ref_Reg(jtlist,href,basereg);
         { load table slot, 32-bit sign extended }
-        reference_reset_base(href,basereg,-aint(min_)*4,ctempposinvalid,4,[]);
-        href.index:=indexreg;
-        href.scalefactor:=4;
-        jumpreg:=cg.getaddressregister(jtlist);
-        cg.a_load_ref_reg(jtlist,OS_S32,OS_ADDR,href,jumpreg);
+        Reference_Reset_Base(href,basereg,-aint(min_)*4,CTempPosInvalid,4,[]);
+        href.Index:=indexreg;
+        href.ScaleFactor:=4;
+        jumpreg:=cg.GetAddressRegister(jtlist);
+        cg.A_Load_Ref_Reg(jtlist,OS_S32,OS_ADDR,href,jumpreg);
         { add table address }
-        reference_reset_base(href,basereg,0,ctempposinvalid,sizeof(PInt),[]);
-        href.index:=jumpreg;
-        href.scalefactor:=1;
-        cg.a_loadaddr_ref_reg(jtlist,href,jumpreg);
+        Reference_Reset_Base(href,basereg,0,CTempPosInvalid,sizeof(PInt),[]);
+        href.Index:=jumpreg;
+        href.ScaleFactor:=1;
+        cg.A_LoadAddr_Ref_Reg(jtlist,href,jumpreg);
         { and finally jump }
         emit_reg(A_JMP,S_NO,jumpreg);
         { generate jump table }
@@ -191,7 +191,7 @@ implementation
             same subsection that contains the routine's code }
           sectype:=sec_code;
 
-        jtlist := CurrentProcInfo.aktlocaldata;
+        jtlist := CurrentProcInfo.AktLocalData;
         new_section(jtlist,sectype,CurrentProcInfo.procdef.MangledName,4);
         jtlist.concat(TAILabel.Create(tablelabel));
 

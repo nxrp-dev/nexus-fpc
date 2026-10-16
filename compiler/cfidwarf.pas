@@ -148,7 +148,7 @@ implementation
         ops:=1;
         oper[0].typ:=dop_reg;
         oper[0].enc:=enc1;
-        oper[0].register:=reg;
+        oper[0].Register:=reg;
       end;
 
 
@@ -159,7 +159,7 @@ implementation
         ops:=1;
         oper[0].typ:=dop_const;
         oper[0].enc:=enc1;
-        oper[0].value:=val;
+        oper[0].Value:=val;
       end;
 
 
@@ -194,10 +194,10 @@ implementation
         ops:=2;
         oper[0].typ:=dop_reg;
         oper[0].enc:=enc1;
-        oper[0].register:=reg;
+        oper[0].Register:=reg;
         oper[1].typ:=dop_const;
         oper[1].enc:=enc2;
-        oper[1].value:=val;
+        oper[1].Value:=val;
       end;
 
 
@@ -215,7 +215,7 @@ implementation
           begin
             case oper[i].typ of
               dop_const :
-                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],oper[i].value));
+                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],oper[i].Value));
               dop_sym :
                 begin
                   if oper[i].enc<>doe_ptr then
@@ -225,7 +225,7 @@ implementation
               dop_reloffset :
                 list.concat(TAIConst.create_rel_sym(enc2ait_const[oper[i].enc],oper[i].beginsym,oper[i].endsym));
               dop_reg :
-                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].register)));
+                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].Register)));
             end;
           end;
       end;

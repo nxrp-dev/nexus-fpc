@@ -164,14 +164,14 @@ interface
              owner.writer.AsmWrite(gas_regname(segment)+':');
            if Assigned(symbol) then
              owner.writer.AsmWrite(symbol.name);
-           if Assigned(relsymbol) then
-             owner.writer.AsmWrite('-'+relsymbol.name);
-           case ref.refaddr of
+           if Assigned(RelSymbol) then
+             owner.writer.AsmWrite('-'+RelSymbol.name);
+           case ref.RefAddr of
              addr_pic:
                begin
                  { @GOT and @GOTPCREL references are only allowed for symbol alone,
                    indexing, relsymbol or offset cannot be present. }
-                 if Assigned(relsymbol) or (offset<>0) or (index<>NR_NO) then
+                 if Assigned(RelSymbol) or (offset<>0) or (index<>NR_NO) then
                    InternalError(2015011801);
 {$ifdef x86_64}
                  if (base<>NR_RIP) then
@@ -212,8 +212,8 @@ interface
            if (index<>NR_NO) and (base=NR_NO) then
             begin
               owner.writer.AsmWrite('(,'+gas_regname(index));
-              if scalefactor<>0 then
-                owner.writer.AsmWrite(','+ToStr(scalefactor));
+              if ScaleFactor<>0 then
+                owner.writer.AsmWrite(','+ToStr(ScaleFactor));
               owner.writer.AsmWrite(')');
             end
            else
@@ -223,8 +223,8 @@ interface
              if (index<>NR_NO) and (base<>NR_NO) then
               begin
                 owner.writer.AsmWrite('('+gas_regname(base)+','+gas_regname(index));
-                if scalefactor<>0 then
-                 owner.writer.AsmWrite(','+ToStr(scalefactor));
+                if ScaleFactor<>0 then
+                 owner.writer.AsmWrite(','+ToStr(ScaleFactor));
                 owner.writer.AsmWrite(')');
               end;
          end;
@@ -252,27 +252,27 @@ interface
           top_reg :
             owner.writer.AsmWrite(gas_regname(o.reg));
           top_ref :
-            if o.ref^.refaddr in [addr_no,addr_pic,addr_pic_no_got
+            if o.Ref^.RefAddr in [addr_no,addr_pic,addr_pic_no_got
               {$ifdef i386},addr_ntpoff,addr_tlsgd{$endif i386}
               {$ifdef x86_64},addr_tpoff,addr_tlsgd{$endif x86_64}
               ] then
-              WriteReference(o.ref^)
+              WriteReference(o.Ref^)
             else
               begin
                 owner.writer.AsmWrite('$');
-                if Assigned(o.ref^.symbol) then
-                 owner.writer.AsmWrite(o.ref^.symbol.name);
-                if o.ref^.offset>0 then
-                 owner.writer.AsmWrite('+'+ToStr(o.ref^.offset))
+                if Assigned(o.Ref^.Symbol) then
+                 owner.writer.AsmWrite(o.Ref^.Symbol.name);
+                if o.Ref^.Offset>0 then
+                 owner.writer.AsmWrite('+'+ToStr(o.Ref^.Offset))
                 else
-                 if o.ref^.offset<0 then
-                  owner.writer.AsmWrite(ToStr(o.ref^.offset))
+                 if o.Ref^.Offset<0 then
+                  owner.writer.AsmWrite(ToStr(o.Ref^.Offset))
                 else
-                 if not(Assigned(o.ref^.symbol)) then
+                 if not(Assigned(o.Ref^.Symbol)) then
                    owner.writer.AsmWrite('0');
               end;
           top_const :
-              owner.writer.AsmWrite('$'+ToStr(o.val));
+              owner.writer.AsmWrite('$'+ToStr(o.Val));
           else
             InternalError(2020100810);
         end;
@@ -307,25 +307,25 @@ interface
             owner.writer.AsmWrite('*'+gas_regname(o.reg));
           top_ref :
             begin
-              if o.ref^.refaddr in [addr_no,addr_pic_no_got] then
+              if o.Ref^.RefAddr in [addr_no,addr_pic_no_got] then
                 begin
                   owner.writer.AsmWrite('*');
-                  WriteReference(o.ref^);
+                  WriteReference(o.Ref^);
                 end
               else
                 begin
-                  owner.writer.AsmWrite(o.ref^.symbol.name);
-                  if o.ref^.refaddr=addr_pic then
+                  owner.writer.AsmWrite(o.Ref^.Symbol.name);
+                  if o.Ref^.RefAddr=addr_pic then
                     owner.writer.AsmWrite('@PLT');
-                  if o.ref^.offset>0 then
-                   owner.writer.AsmWrite('+'+ToStr(o.ref^.offset))
+                  if o.Ref^.Offset>0 then
+                   owner.writer.AsmWrite('+'+ToStr(o.Ref^.Offset))
                   else
-                   if o.ref^.offset<0 then
-                    owner.writer.AsmWrite(ToStr(o.ref^.offset));
+                   if o.Ref^.Offset<0 then
+                    owner.writer.AsmWrite(ToStr(o.Ref^.Offset));
                 end;
             end;
           top_const :
-            owner.writer.AsmWrite(ToStr(o.val));
+            owner.writer.AsmWrite(ToStr(o.Val));
           else
             InternalError(2020100811);
         end;
@@ -350,9 +350,9 @@ interface
             if ((op=A_MOVQ) or
                 (op=A_VMOVQ)) and
                (((TAICPU(hp).oper[0]^.typ=top_reg) and
-                 (getregtype(TAICPU(hp).oper[0]^.reg)=R_INTREGISTER)) or
+                 (GetRegType(TAICPU(hp).oper[0]^.reg)=R_INTREGISTER)) or
                 ((TAICPU(hp).oper[1]^.typ=top_reg) and
-                 (getregtype(TAICPU(hp).oper[1]^.reg)=R_INTREGISTER))) then
+                 (GetRegType(TAICPU(hp).oper[1]^.reg)=R_INTREGISTER))) then
               begin
                 if op=A_MOVQ then
                   op:=A_MOVD
@@ -390,7 +390,7 @@ interface
            not(
                (TAICPU(hp).ops<>0) and
                (TAICPU(hp).oper[0]^.typ=top_reg) and
-               (getregtype(TAICPU(hp).oper[0]^.reg)=R_FPUREGISTER)
+               (GetRegType(TAICPU(hp).oper[0]^.reg)=R_FPUREGISTER)
               ) then
         begin
           if (gas_needsuffix[op]<>AttSufMMX) or

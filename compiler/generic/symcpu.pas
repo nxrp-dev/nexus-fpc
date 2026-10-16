@@ -169,7 +169,7 @@ type
 
 
 const
-  pbestrealtype : ^TDef = @<somestandardfloattype>;
+  PBestRealType : ^TDef = @<somestandardfloattype>;
 
 
 implementation

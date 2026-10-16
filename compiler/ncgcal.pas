@@ -150,9 +150,9 @@ implementation
                  fixed stack is used
               or the parameter is in a register
               or the parameter is $parentfp and po_delphi_nested_cc is set for the routine. }
-        result:=paramanager.can_opt_unused_para(parasym) and
-          not paramanager.has_strict_proc_signature and
-          (paramanager.use_fixed_stack or
+        result:=ParaManager.Can_Opt_Unused_Para(parasym) and
+          not ParaManager.Has_Strict_Proc_Signature and
+          (ParaManager.Use_Fixed_Stack or
            ((vo_is_parentfp in parasym.VarOptions) and
             (po_delphi_nested_cc in TAbstractProcDef(parasym.owner.DefOwner).ProcOptions)) or
            (parasym.ParaLoc[callerside].Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]));
@@ -180,7 +180,7 @@ implementation
       var
         ValueDef: TDef;
       begin
-        if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
+        if not(left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
           InternalError(200304235);
         if maybe_push_unused_para then
           exit;
@@ -189,12 +189,12 @@ implementation
           (to keep track of the range of the original array); we inserted a type
           conversion to parasym.vardef, so that is the type this value actually
           has }
-        if is_dynamic_array(left.resultdef) and
-           is_open_array(parasym.vardef) then
+        if Is_Dynamic_Array(left.resultdef) and
+           Is_Open_Array(parasym.vardef) then
           ValueDef:=parasym.vardef
         else
           ValueDef:=left.resultdef;
-        hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,ValueDef,left.location.reference,tempcgpara);
+        hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,ValueDef,left.Location.Reference,tempcgpara);
       end;
 
 
@@ -232,7 +232,7 @@ implementation
         hpreversestart:=nil;
         while Assigned(hpcurr) do
           begin
-            if not(hpcurr.parasym.ParaLoc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+            if not(hpcurr.parasym.ParaLoc[callerside].Location^.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
               hpreversestart:=hpcurr;
             hpcurr:=TCGCallParaNode(hpcurr.right);
           end;
@@ -247,7 +247,7 @@ implementation
         while (hpcurr<>hpreversestart) do
           begin
             hpnext:=TCGCallParaNode(hpcurr.right);
-            if not(hpcurr.parasym.ParaLoc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+            if not(hpcurr.parasym.ParaLoc[callerside].Location^.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
               begin
                 { remove hpcurr from chain }
                 if Assigned(hpprev) then
@@ -271,19 +271,19 @@ implementation
     procedure TCGCallParaNode.push_value_para;
       begin
         { Permissive backends do not need parameters with no storage. }
-        if (left.resultdef.size=0) and
-           not paramanager.has_strict_proc_signature then
+        if (left.resultdef.Size=0) and
+           not ParaManager.Has_Strict_Proc_Signature then
           exit;
 
         if maybe_push_unused_para then
           exit;
 
         { Move flags and jump in register to make it less complex }
-        if left.location.loc in [LOC_FLAGS,LOC_JUMP,LOC_SUBSETREG,LOC_CSUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF] then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+        if left.Location.Loc in [LOC_FLAGS,LOC_JUMP,LOC_SUBSETREG,LOC_CSUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF] then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
 
         { load the parameter's tlocation into its cgpara }
-        hlcg.gen_load_loc_cgpara(CurrentAsmData.CurrAsmList,left.resultdef,left.location,tempcgpara)
+        hlcg.Gen_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,left.Location,tempcgpara)
       end;
 
 
@@ -293,8 +293,8 @@ implementation
           exit;
         { allow passing of a constant to a const formaldef }
         if (parasym.VarSpez=vs_const) and
-           not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
-          hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
+           not(left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
+          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
         push_addr_para;
       end;
 
@@ -302,7 +302,7 @@ implementation
     function TCGCallParaNode.maybe_push_unused_para: boolean;
       begin
         { Check if the parameter is unused and can be optimized }
-        result:=paramanager.can_opt_unused_para(parasym);
+        result:=ParaManager.Can_Opt_Unused_Para(parasym);
         if not result then
           exit;
         { If we can't skip loading of the parameter, load an undefined dummy value. }
@@ -310,7 +310,7 @@ implementation
           begin
             if cs_asm_source in CurrentSettings.GlobalSwitches then
               CurrentAsmData.CurrAsmList.concat(TAIComment.Create(StrPNew('Parameter '+parasym.realname+' is unused, loading undefined value')));
-            hlcg.a_load_undefined_cgpara(CurrentAsmData.CurrAsmList,left.resultdef,tempcgpara);
+            hlcg.A_Load_Undefined_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,tempcgpara);
           end
         else
           if cs_asm_source in CurrentSettings.GlobalSwitches then
@@ -330,14 +330,14 @@ implementation
       var
         pushaddr: boolean;
       begin
-        hlcg.maybe_change_load_node_reg(CurrentAsmData.CurrAsmList,left,true);
+        hlcg.Maybe_Change_Load_Node_Reg(CurrentAsmData.CurrAsmList,left,true);
 
-        paramanager.createtempparaloc(CurrentAsmData.CurrAsmList,callnode.procdefinition.ProcCallOption,parasym,not followed_by_stack_tainting_call_cached,tempcgpara);
+        ParaManager.CreateTempParaLoc(CurrentAsmData.CurrAsmList,callnode.procdefinition.ProcCallOption,parasym,not followed_by_stack_tainting_call_cached,tempcgpara);
 
         { handle varargs first, because parasym is not valid }
         if (cpf_varargs_para in callparaflags) then
           begin
-            if paramanager.push_addr_param(vs_value,left.resultdef,
+            if ParaManager.Push_Addr_Param(vs_value,left.resultdef,
                    callnode.procdefinition.ProcCallOption) then
               push_addr_para
             else
@@ -365,14 +365,14 @@ implementation
                      (TObjectDef(callnode.procdefinition.owner.DefOwner).ExtendedDef.typ=pointerdef)
                    )
                  ) and
-                paramanager.push_addr_param(parasym.VarSpez,parasym.vardef,
+                ParaManager.Push_Addr_Param(parasym.VarSpez,parasym.vardef,
                     callnode.procdefinition.ProcCallOption));
 
             if pushaddr then
               begin
                 { objects or advanced records could be located in registers if they are the result of a type case, see e.g. tbs\tw26075.pas }
-                if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
-                  hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
+                if not(left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
+                  hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
                 push_addr_para
               end
             else
@@ -382,7 +382,7 @@ implementation
         else if (parasym.vardef.typ=formaldef) then
           push_formal_para
         { Normal parameter }
-        else if paramanager.push_copyout_param(parasym.VarSpez,parasym.vardef,
+        else if ParaManager.Push_CopyOut_Param(parasym.VarSpez,parasym.vardef,
                     callnode.procdefinition.ProcCallOption) then
           push_copyout_para
         else
@@ -393,12 +393,12 @@ implementation
                     (vo_is_hidden_para in parasym.VarOptions) and
                     (left.resultdef.typ in [pointerdef,classrefdef])
                    ) and
-                paramanager.push_addr_param(parasym.VarSpez,parasym.vardef,
+                ParaManager.Push_Addr_Param(parasym.VarSpez,parasym.vardef,
                     callnode.procdefinition.ProcCallOption)) and
                 { dyn. arrays passed to an array of const must be passed by value, see tests/tbs/tb_arrays_objfpc_run_02.pas (case tw4219.pas) }
                 not(
-                    is_array_of_const(parasym.vardef) and
-                    is_dynamic_array(left.resultdef)
+                    Is_Array_Of_Const(parasym.vardef) and
+                    Is_Dynamic_Array(left.resultdef)
                    ) then
               begin
                  { Passing a var parameter to a var parameter, we can
@@ -406,16 +406,16 @@ implementation
                  if (left.nodetype=loadn) and
                     (TLoadNode(left).is_addr_param_load) then
                    begin
-                     if (left.location.reference.index<>NR_NO) or
-                        (left.location.reference.offset<>0) then
+                     if (left.Location.Reference.Index<>NR_NO) or
+                        (left.Location.Reference.Offset<>0) then
                        InternalError(200410107);
-                     hlcg.a_load_reg_cgpara(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),left.location.reference.base,tempcgpara)
+                     hlcg.A_Load_Reg_CGPara(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),left.Location.Reference.Base,tempcgpara)
                    end
                  else
                    begin
                      { Force to be in memory }
-                     if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
-                       hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
+                     if not(left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
+                       hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
                      push_addr_para;
                    end;
               end
@@ -435,7 +435,7 @@ implementation
              ) or
              (vo_is_funcret in parasym.VarOptions)
            ) then
-          location_copy(callnode.location,left.location);
+          Location_Copy(callnode.Location,left.Location);
       end;
 
 
@@ -488,7 +488,7 @@ implementation
         hsym:=TSym(procdefinition.ParaST.Find('syscalllib'));
         if not Assigned(hsym) then
           InternalError(2016110605);
-        result:=TParaVarSym(hsym).ParaLoc[callerside].location;
+        result:=TParaVarSym(hsym).ParaLoc[callerside].Location;
         if not Assigned(result) then
           InternalError(2016110604);
       end;
@@ -499,18 +499,18 @@ implementation
       begin
         libparaloc:=get_syscall_libbase_paraloc;
 
-        case libparaloc^.loc of
+        case libparaloc^.Loc of
           LOC_REGISTER:
-            reference_reset_base(tmpref,libparaloc^.register,-TProcDef(procdefinition).ExtNumber,ctempposinvalid,sizeof(PInt),[]);
+            Reference_Reset_Base(tmpref,libparaloc^.Register,-TProcDef(procdefinition).ExtNumber,CTempPosInvalid,sizeof(PInt),[]);
           LOC_REFERENCE:
             begin
-              reference_reset_base(tmpref,libparaloc^.reference.index,libparaloc^.reference.offset,ctempposinvalid,sizeof(PInt),[]);
-              cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,tmpref,reg);
-              reference_reset_base(tmpref,reg,-TProcDef(procdefinition).ExtNumber,ctempposinvalid,sizeof(PInt),[]);
+              Reference_Reset_Base(tmpref,libparaloc^.Reference.Index,libparaloc^.Reference.Offset,CTempPosInvalid,sizeof(PInt),[]);
+              cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,tmpref,reg);
+              Reference_Reset_Base(tmpref,reg,-TProcDef(procdefinition).ExtNumber,CTempPosInvalid,sizeof(PInt),[]);
             end;
           else
             begin
-              reference_reset(tmpref,0,[]);
+              Reference_Reset(tmpref,0,[]);
               InternalError(2016090205);
             end;
         end;
@@ -542,18 +542,18 @@ implementation
         literaldef: TRecordDef;
       begin
         literaldef:=get_block_literal_type_for_proc(TAbstractProcDef(right.resultdef));
-        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,CPointerDef.getreusable(literaldef),true);
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,CPointerDef.getreusable(literaldef),true);
         { load the invoke pointer }
-        hlcg.reference_reset_base(href,right.resultdef,right.location.register,0,ctempposinvalid,right.resultdef.alignment,[]);
+        hlcg.Reference_Reset_Base(href,right.resultdef,right.Location.Register,0,CTempPosInvalid,right.resultdef.Alignment,[]);
         callprocdef:=CProcVarDef.GetReusableProcAddr(procdefinition,pc_address_only);
-        toreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,callprocdef);
-        hlcg.g_load_field_reg_by_name(CurrentAsmData.CurrAsmList,literaldef,callprocdef,'INVOKE',href,toreg);
+        toreg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,callprocdef);
+        hlcg.G_Load_Field_Reg_By_Name(CurrentAsmData.CurrAsmList,literaldef,callprocdef,'INVOKE',href,toreg);
      end;
 
 
     function TCGCallNode.get_call_reg(list: TAsmList): TRegister;
       begin
-        result:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,procdefinition.Address_Type);
+        result:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,procdefinition.Address_Type);
       end;
 
 
@@ -572,26 +572,26 @@ implementation
              no exception can occur right now (except in case of existing
              memory corruption), and we'd store them to a regular temp
              anyway and that is not safer than keeping them in a register }
-           ((realresdef.size=sizeof(aint)) and
-            (retloc.location^.loc=LOC_REGISTER) and
-            not Assigned(retloc.location^.next)) then
+           ((realresdef.Size=sizeof(aint)) and
+            (retloc.Location^.Loc=LOC_REGISTER) and
+            not Assigned(retloc.Location^.next)) then
           location_allocate_register(CurrentAsmData.CurrAsmList,location,realresdef,false)
         else
           begin
-            location_reset_ref(location,LOC_REFERENCE,def_cgsize(realresdef),0,[]);
-            tg.gethltemp(CurrentAsmData.CurrAsmList,realresdef,retloc.intsize,tt_normal,location.reference);
+            Location_Reset_Ref(location,LOC_REFERENCE,Def_CGSize(realresdef),0,[]);
+            tg.GetHLTemp(CurrentAsmData.CurrAsmList,realresdef,retloc.IntSize,tt_normal,location.Reference);
           end;
       end;
 
 
     procedure TCGCallNode.do_release_unused_return_value;
       begin
-        case location.loc of
+        case location.Loc of
           LOC_REFERENCE :
             begin
-              if is_managed_type(resultdef) then
-                 hlcg.g_finalize(CurrentAsmData.CurrAsmList,resultdef,location.reference);
-               tg.ungetiftemp(CurrentAsmData.CurrAsmList,location.reference);
+              if Is_Managed_Type(resultdef) then
+                 hlcg.G_Finalize(CurrentAsmData.CurrAsmList,resultdef,location.Reference);
+               tg.ungetiftemp(CurrentAsmData.CurrAsmList,location.Reference);
             end;
           else
             ;
@@ -610,11 +610,11 @@ implementation
       begin
         { Check that the return location is set when the result is passed in
           a parameter }
-        if paramanager.ret_in_param(resultdef,procdefinition) then
+        if ParaManager.Ret_In_Param(resultdef,procdefinition) then
           begin
             { self.location is set near the end of secondcallparan so it
               refers to the implicit result parameter }
-            if location.loc<>LOC_REFERENCE then
+            if location.Loc<>LOC_REFERENCE then
               InternalError(200304241);
             exit;
           end;
@@ -638,18 +638,18 @@ implementation
             (mantis #13536).  }
           if (cnf_return_value_used in callnodeflags) or
              Assigned(funcretnode) then
-            hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,realresdef,retloc,location,false);
+            hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,realresdef,retloc,location,false);
 
-        if ((location.loc=LOC_REGISTER) and
+        if ((location.Loc=LOC_REGISTER) and
             not realresdef.Is_IntRegable) or
-           ((location.loc in [LOC_FPUREGISTER,LOC_MMREGISTER]) and
+           ((location.Loc in [LOC_FPUREGISTER,LOC_MMREGISTER]) and
             (not realresdef.Is_FPURegable or
-             ((location.loc=LOC_MMREGISTER)<>Use_VectorFPU(realresdef)))) then
+             ((location.Loc=LOC_MMREGISTER)<>Use_VectorFPU(realresdef)))) then
           begin
-            hlcg.location_force_mem(CurrentAsmData.CurrAsmList,location,realresdef);
+            hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,location,realresdef);
             { may have been record returned in a floating point register (-> location.size
               will be the size of the fpuregister instead of the int size of the record) }
-            location.size:=def_cgsize(realresdef);
+            location.Size:=Def_CGSize(realresdef);
           end;
 
         { copy value to the final location if this was already provided to the
@@ -662,45 +662,45 @@ implementation
               we have used a temp, because then it is already done from tempcreatenode.
               Also no finalize is needed, because there is no risk of exceptions from the
               function since this is code is only executed after the function call has returned }
-            if is_managed_type(funcretnode.resultdef) and
+            if Is_Managed_Type(funcretnode.resultdef) and
                (funcretnode.nodetype<>temprefn) then
-              hlcg.g_finalize(CurrentAsmData.CurrAsmList,funcretnode.resultdef,funcretnode.location.reference);
+              hlcg.G_Finalize(CurrentAsmData.CurrAsmList,funcretnode.resultdef,funcretnode.Location.Reference);
 
-            case location.loc of
+            case location.Loc of
               LOC_REGISTER :
                 begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-                  if location.size in [OS_64,OS_S64] then
-                    cg64.a_load64_reg_loc(CurrentAsmData.CurrAsmList,location.register64,funcretnode.location)
+                  if location.Size in [OS_64,OS_S64] then
+                    cg64.A_Load64_Reg_Loc(CurrentAsmData.CurrAsmList,location.Register64,funcretnode.Location)
                   else
 {$endif}
-                    hlcg.a_load_reg_loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.register,funcretnode.location);
+                    hlcg.A_Load_Reg_Loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.Register,funcretnode.Location);
                   location_free(CurrentAsmData.CurrAsmList,location);
                 end;
               LOC_MMREGISTER :
                 begin
-                  hlcg.a_loadmm_reg_loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.register,funcretnode.location,nil);
+                  hlcg.A_LoadMM_Reg_Loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.Register,funcretnode.Location,nil);
                   location_free(CurrentAsmData.CurrAsmList,location);
                 end;
               LOC_FPUREGISTER:
                 begin
-                  hlcg.a_loadfpu_reg_loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.register,funcretnode.location);
+                  hlcg.A_LoadFPU_Reg_Loc(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.Register,funcretnode.Location);
                   location_free(CurrentAsmData.CurrAsmList,location);
                 end;
               LOC_REFERENCE:
                 begin
-                  case funcretnode.location.loc of
+                  case funcretnode.Location.Loc of
                     LOC_CREGISTER,
                     LOC_REGISTER:
-                      hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.reference,funcretnode.location.register);
+                      hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.Reference,funcretnode.Location.Register);
                     LOC_CFPUREGISTER,
                     LOC_FPUREGISTER:
-                      hlcg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.reference,funcretnode.location.register);
+                      hlcg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,location.Reference,funcretnode.Location.Register);
                     LOC_REFERENCE:
-                      hlcg.g_concatcopy(CurrentAsmData.CurrAsmList,resultdef,location.reference,funcretnode.location.reference);
+                      hlcg.G_ConcatCopy(CurrentAsmData.CurrAsmList,resultdef,location.Reference,funcretnode.Location.Reference);
                     LOC_CMMREGISTER,
                     LOC_MMREGISTER:
-                      hlcg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,resultdef,resultdef,funcretnode.location.register,location.reference,nil);
+                      hlcg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,resultdef,resultdef,funcretnode.Location.Register,location.Reference,nil);
                     else
                       InternalError(200802121);
                   end;
@@ -709,7 +709,7 @@ implementation
               else
                 InternalError(200709085);
             end;
-            location := funcretnode.location;
+            location := funcretnode.Location;
           end;
       end;
 
@@ -722,9 +722,9 @@ implementation
         if not(cnf_return_value_used in callnodeflags) then
           begin
             do_release_unused_return_value;
-            if (retloc.intsize<>0) then
-              paramanager.freecgpara(CurrentAsmData.CurrAsmList,retloc);
-            location_reset(location,LOC_VOID,OS_NO);
+            if (retloc.IntSize<>0) then
+              ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,retloc);
+            Location_Reset(location,LOC_VOID,OS_NO);
          end;
       end;
 
@@ -765,7 +765,7 @@ implementation
                         (ppn.parasym.vardef.typ<>objectdef)
                       )
                     )then
-                   location_freetemp(CurrentAsmData.CurrAsmList,ppn.left.location);
+                   location_freetemp(CurrentAsmData.CurrAsmList,ppn.left.Location);
                  { process also all nodes of an array of const }
                  hp:=ppn.left;
                  while (hp.nodetype=typeconvn) do
@@ -783,7 +783,7 @@ implementation
                            hp2:=TUnaryNode(TUnaryNode(hp2).left).left
                          else if hp2.nodetype=addrn then
                            hp2:=TUnaryNode(hp2).left;
-                         location_freetemp(CurrentAsmData.CurrAsmList,hp2.location);
+                         location_freetemp(CurrentAsmData.CurrAsmList,hp2.Location);
                          hp:=TArrayConstructorNode(hp).right;
                        end;
                    end;
@@ -816,83 +816,83 @@ implementation
                  { better check for the real location of the parameter here, when stack passed parameters
                    are saved temporary in registers, checking for the tmpparaloc.loc is wrong
                  }
-                 paramanager.freecgpara(CurrentAsmData.CurrAsmList,ppn.tempcgpara);
-                 tmpparaloc:=ppn.tempcgpara.location;
-                 sizeleft:=ppn.parasym.ParaLoc[callerside].intsize;
-                 calleralignment:=ppn.parasym.ParaLoc[callerside].alignment;
-                 tmpalignment:=ppn.tempcgpara.alignment;
+                 ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,ppn.tempcgpara);
+                 tmpparaloc:=ppn.tempcgpara.Location;
+                 sizeleft:=ppn.parasym.ParaLoc[callerside].IntSize;
+                 calleralignment:=ppn.parasym.ParaLoc[callerside].Alignment;
+                 tmpalignment:=ppn.tempcgpara.Alignment;
                  if (tmpalignment=0) or
                     (calleralignment=0) then
                    InternalError(2009020701);
-                 callerparaloc:=ppn.parasym.ParaLoc[callerside].location;
+                 callerparaloc:=ppn.parasym.ParaLoc[callerside].Location;
                  skipiffinalloc:=
-                   not paramanager.use_fixed_stack or
+                   not ParaManager.Use_Fixed_Stack or
                    not(ppn.followed_by_stack_tainting_call_cached);
                  while Assigned(callerparaloc) do
                    begin
                      { Every paraloc must have a matching tmpparaloc }
                      if not Assigned(tmpparaloc) then
                        InternalError(200408224);
-                     if callerparaloc^.size<>tmpparaloc^.size then
+                     if callerparaloc^.Size<>tmpparaloc^.Size then
                        InternalError(200408225);
-                     case callerparaloc^.loc of
+                     case callerparaloc^.Loc of
                        LOC_REGISTER:
                          begin
-                           if tmpparaloc^.loc<>LOC_REGISTER then
+                           if tmpparaloc^.Loc<>LOC_REGISTER then
                              InternalError(200408221);
-                           if getsupreg(callerparaloc^.register)<first_int_imreg then
-                             cg.getcpuregister(CurrentAsmData.CurrAsmList,callerparaloc^.register);
-                           cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,
-                               tmpparaloc^.register,callerparaloc^.register);
+                           if GetSupReg(callerparaloc^.Register)<first_int_imreg then
+                             cg.GetCPURegister(CurrentAsmData.CurrAsmList,callerparaloc^.Register);
+                           cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,
+                               tmpparaloc^.Register,callerparaloc^.Register);
                          end;
                        LOC_FPUREGISTER:
                          begin
-                           if tmpparaloc^.loc<>LOC_FPUREGISTER then
+                           if tmpparaloc^.Loc<>LOC_FPUREGISTER then
                              InternalError(200408222);
-                           if getsupreg(callerparaloc^.register)<first_fpu_imreg then
-                             cg.getcpuregister(CurrentAsmData.CurrAsmList,callerparaloc^.register);
-                           cg.a_loadfpu_reg_reg(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,tmpparaloc^.register,callerparaloc^.register);
+                           if GetSupReg(callerparaloc^.Register)<first_fpu_imreg then
+                             cg.GetCPURegister(CurrentAsmData.CurrAsmList,callerparaloc^.Register);
+                           cg.A_LoadFPU_Reg_Reg(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,tmpparaloc^.Register,callerparaloc^.Register);
                          end;
                        LOC_MMREGISTER:
                          begin
-                           if tmpparaloc^.loc<>LOC_MMREGISTER then
+                           if tmpparaloc^.Loc<>LOC_MMREGISTER then
                              InternalError(200408223);
-                           if getsupreg(callerparaloc^.register)<first_mm_imreg then
-                             cg.getcpuregister(CurrentAsmData.CurrAsmList,callerparaloc^.register);
-                           cg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,
-                             tmpparaloc^.register,callerparaloc^.register,mms_movescalar);
+                           if GetSupReg(callerparaloc^.Register)<first_mm_imreg then
+                             cg.GetCPURegister(CurrentAsmData.CurrAsmList,callerparaloc^.Register);
+                           cg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,
+                             tmpparaloc^.Register,callerparaloc^.Register,MMS_MoveScalar);
                          end;
                        LOC_REFERENCE:
                          begin
                            if not(skipiffinalloc and
-                                  paramanager.is_stack_paraloc(callerparaloc)) then
+                                  ParaManager.Is_Stack_ParaLoc(callerparaloc)) then
                              begin
                                { Can't have a data copied to the stack, every location
                                  must contain a valid size field }
 
-                              if (tmpparaloc^.size=OS_NO) and
-                                 ((tmpparaloc^.loc<>LOC_REFERENCE) or
+                              if (tmpparaloc^.Size=OS_NO) and
+                                 ((tmpparaloc^.Loc<>LOC_REFERENCE) or
                                   Assigned(tmpparaloc^.next)) then
                                 InternalError(200501281);
-                                reference_reset_base(href,callerparaloc^.reference.index,callerparaloc^.reference.offset,ctempposinvalid,calleralignment,[]);
+                                Reference_Reset_Base(href,callerparaloc^.Reference.Index,callerparaloc^.Reference.Offset,CTempPosInvalid,calleralignment,[]);
                               { copy parameters in case they were moved to a temp. location because we've a fixed stack }
-                              case tmpparaloc^.loc of
+                              case tmpparaloc^.Loc of
                               LOC_REFERENCE:
                                   begin
-                                    reference_reset_base(htempref,tmpparaloc^.reference.index,tmpparaloc^.reference.offset,ctempposinvalid,tmpalignment,[]);
+                                    Reference_Reset_Base(htempref,tmpparaloc^.Reference.Index,tmpparaloc^.Reference.Offset,CTempPosInvalid,tmpalignment,[]);
                                     { use concatcopy, because it can also be a float which fails when
                                       load_ref_ref is used }
-                                    if (tmpparaloc^.size <> OS_NO) then
-                                      cg.g_concatcopy(CurrentAsmData.CurrAsmList,htempref,href,tcgsize2size[tmpparaloc^.size])
+                                    if (tmpparaloc^.Size <> OS_NO) then
+                                      cg.G_ConcatCopy(CurrentAsmData.CurrAsmList,htempref,href,TCgSize2Size[tmpparaloc^.Size])
                                     else
-                                      cg.g_concatcopy(CurrentAsmData.CurrAsmList,htempref,href,sizeleft)
+                                      cg.G_ConcatCopy(CurrentAsmData.CurrAsmList,htempref,href,sizeleft)
                                   end;
                                 LOC_REGISTER:
-                                  cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,tmpparaloc^.register,href);
+                                  cg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,tmpparaloc^.Register,href);
                                 LOC_FPUREGISTER:
-                                  cg.a_loadfpu_reg_ref(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,tmpparaloc^.register,href);
+                                  cg.A_LoadFPU_Reg_Ref(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,tmpparaloc^.Register,href);
                                 LOC_MMREGISTER:
-                                  cg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,tmpparaloc^.size,tmpparaloc^.size,tmpparaloc^.register,href,mms_movescalar);
+                                  cg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,tmpparaloc^.Size,tmpparaloc^.Size,tmpparaloc^.Register,href,MMS_MoveScalar);
                                 else
                                   InternalError(200402081);
                              end;
@@ -903,7 +903,7 @@ implementation
                        else
                          InternalError(2019050707);
                      end;
-                     dec(sizeleft,tcgsize2size[tmpparaloc^.size]);
+                     dec(sizeleft,TCgSize2Size[tmpparaloc^.Size]);
                      callerparaloc:=callerparaloc^.next;
                      tmpparaloc:=tmpparaloc^.next;
                    end;
@@ -926,25 +926,25 @@ implementation
            even though the procvardef constructor called by getcopyas looks at
            it) }
          callprocdef:=CProcVarDef.GetReusableProcAddr(procdefinition,pc_address_only);
-         reg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,callprocdef);
+         reg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,callprocdef);
          { in case we have a method pointer on a big endian target in registers,
            the method address is stored in registerhi (it's the first field
            in the tmethod record) }
-         if (right.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+         if (right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
            begin
-             if not(right.location.size in [OS_PAIR,OS_SPAIR]) then
+             if not(right.Location.Size in [OSPair,OSSPair]) then
                InternalError(2014081401);
              if (TargetInfo.endian=endian_big) then
-               srcreg:=right.location.registerhi
+               srcreg:=right.Location.RegisterHi
              else
-               srcreg:=right.location.register;
-             hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,callprocdef,callprocdef,srcreg,reg)
+               srcreg:=right.Location.Register;
+             hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,callprocdef,callprocdef,srcreg,reg)
            end
          else
            begin
-             hlcg.location_force_mem(CurrentAsmData.CurrAsmList,right.location,procdefinition);
-             hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(procdefinition),CPointerDef.getreusable(callprocdef),right.location.reference);
-             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,callprocdef,callprocdef,right.location.reference,reg);
+             hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,right.Location,procdefinition);
+             hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(procdefinition),CPointerDef.getreusable(callprocdef),right.Location.Reference);
+             hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,callprocdef,callprocdef,right.Location.Reference,reg);
            end;
        end;
 
@@ -957,8 +957,8 @@ implementation
            load_complex_procvar_codeptr(reg,callprocdef)
          else
            begin
-             reg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,procdefinition);
-             hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,procdefinition,procdefinition,right.location,reg);
+             reg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,procdefinition);
+             hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,procdefinition,procdefinition,right.Location,reg);
              callprocdef:=procdefinition;
            end;
          callprocdef.Init_ParaLoc_Info(callerside);
@@ -975,8 +975,8 @@ implementation
            begin
              if (ppn.left.nodetype<>nothingn) then
                begin
-                 if (ppn.parasym.ParaLoc[callerside].location^.loc <> LOC_REFERENCE) then
-                   paramanager.freecgpara(CurrentAsmData.CurrAsmList,ppn.parasym.ParaLoc[callerside]);
+                 if (ppn.parasym.ParaLoc[callerside].Location^.Loc <> LOC_REFERENCE) then
+                   ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,ppn.parasym.ParaLoc[callerside]);
                end;
              ppn:=TCGCallParaNode(ppn.right);
            end;
@@ -1020,36 +1020,36 @@ implementation
          if Assigned(callinitblock) then
            SecondPass(TNode(callinitblock));
 
-         regs_to_save_int:=paramanager.get_volatile_registers_int(procdefinition.ProcCallOption);
-         regs_to_save_address:=paramanager.get_volatile_registers_address(procdefinition.ProcCallOption);
-         regs_to_save_fpu:=paramanager.get_volatile_registers_fpu(procdefinition.ProcCallOption);
-         regs_to_save_mm:=paramanager.get_volatile_registers_mm(procdefinition.ProcCallOption);
+         regs_to_save_int:=ParaManager.Get_Volatile_Registers_Int(procdefinition.ProcCallOption);
+         regs_to_save_address:=ParaManager.Get_Volatile_Registers_Address(procdefinition.ProcCallOption);
+         regs_to_save_fpu:=ParaManager.Get_Volatile_Registers_FPU(procdefinition.ProcCallOption);
+         regs_to_save_mm:=ParaManager.Get_Volatile_Registers_MM(procdefinition.ProcCallOption);
 
          { Include Function result registers }
-         if (not is_void(resultdef)) then
+         if (not Is_Void(resultdef)) then
           begin
             { The forced returntype may have a different size than the one
               declared for the procdef }
-            retloc:=hlcg.get_call_result_cgpara(procdefinition,typedef);
-            retlocitem:=retloc.location;
+            retloc:=hlcg.Get_Call_Result_CGPara(procdefinition,typedef);
+            retlocitem:=retloc.Location;
             while Assigned(retlocitem) do
               begin
-                case retlocitem^.loc of
+                case retlocitem^.Loc of
                   LOC_REGISTER:
-                    case getregtype(retlocitem^.register) of
+                    case GetRegType(retlocitem^.Register) of
                       R_INTREGISTER:
-                        include(regs_to_save_int,getsupreg(retlocitem^.register));
+                        include(regs_to_save_int,GetSupReg(retlocitem^.Register));
                       R_ADDRESSREGISTER:
-                        include(regs_to_save_address,getsupreg(retlocitem^.register));
+                        include(regs_to_save_address,GetSupReg(retlocitem^.Register));
                       R_TEMPREGISTER:
                         ;
                       else
                         InternalError(2014020102);
                       end;
                   LOC_FPUREGISTER:
-                    include(regs_to_save_fpu,getsupreg(retlocitem^.register));
+                    include(regs_to_save_fpu,GetSupReg(retlocitem^.Register));
                   LOC_MMREGISTER:
-                    include(regs_to_save_mm,getsupreg(retlocitem^.register));
+                    include(regs_to_save_mm,GetSupReg(retlocitem^.Register));
                   LOC_REFERENCE,
                   LOC_VOID:
                     ;
@@ -1106,16 +1106,16 @@ implementation
                      wpoinfomanager.symbol_live(CurrentProcInfo.procdef.MangledName)) then
                    TObjectDef(TProcDef(procdefinition).struct).Register_VMT_Call(TProcDef(procdefinition).ExtNumber);
 
-                 if not(vmt_entry.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                 if not(vmt_entry.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                    InternalError(2015052502);
-                 href:=vmt_entry.location.reference;
+                 href:=vmt_entry.Location.Reference;
                  pvreg:=NR_NO;
 
                  callref:=can_call_ref(href);
                  if not callref then
                    begin
                      pvreg:=get_call_reg(CurrentAsmData.CurrAsmList);
-                     hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,
+                     hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,
                        vmt_entry.resultdef,vmt_entry.resultdef,
                        href,pvreg);
                    end;
@@ -1131,23 +1131,23 @@ implementation
                  if callref then
                    extra_call_ref_code(href);
 
-                 cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
-                 if cg.uses_registers(R_ADDRESSREGISTER) then
-                   cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
-                 if cg.uses_registers(R_FPUREGISTER) then
-                   cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
-                 if cg.uses_registers(R_MMREGISTER) then
-                   cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
+                 cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
+                 if cg.Uses_Registers(R_ADDRESSREGISTER) then
+                   cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
+                 if cg.Uses_Registers(R_FPUREGISTER) then
+                   cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
+                 if cg.Uses_Registers(R_MMREGISTER) then
+                   cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
 
                  { call method }
                  extra_call_code;
-                 retloc.resetiftemp;
+                 retloc.ResetIfTemp;
                  if callref then
                    retloc:=do_call_ref(href)
                  else
                    begin
-                     hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,vmt_entry.resultdef,CPointerDef.getreusable(procdefinition),pvreg);
-                     retloc:=hlcg.a_call_reg(CurrentAsmData.CurrAsmList,TAbstractProcDef(procdefinition),pvreg,paralocs);
+                     hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,vmt_entry.resultdef,CPointerDef.getreusable(procdefinition),pvreg);
+                     retloc:=hlcg.A_Call_Reg(CurrentAsmData.CurrAsmList,TAbstractProcDef(procdefinition),pvreg,paralocs);
                      unget_call_reg(CurrentAsmData.CurrAsmList,pvreg);
                    end;
 
@@ -1163,13 +1163,13 @@ implementation
                       pushparas;
                     end;
 
-                  cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
-                  if cg.uses_registers(R_ADDRESSREGISTER) then
-                    cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
-                  if cg.uses_registers(R_FPUREGISTER) then
-                    cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
-                  if cg.uses_registers(R_MMREGISTER) then
-                    cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
+                  cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
+                  if cg.Uses_Registers(R_ADDRESSREGISTER) then
+                    cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
+                  if cg.Uses_Registers(R_FPUREGISTER) then
+                    cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
+                  if cg.Uses_Registers(R_MMREGISTER) then
+                    cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
 
                   if procdefinition.ProcCallOption=pocall_syscall then
                     do_syscall
@@ -1180,7 +1180,7 @@ implementation
                       if (po_interrupt in procdefinition.ProcOptions) then
                         extra_interrupt_code;
                       extra_call_code;
-                      retloc.resetiftemp;
+                      retloc.ResetIfTemp;
                       if name_to_call='' then
                         begin
                           if not Assigned(overrideprocnamedef) then
@@ -1189,14 +1189,14 @@ implementation
                             name_to_call:=overrideprocnamedef.MangledName;
                         end;
                       if cnf_inherited in callnodeflags then
-                        retloc:=hlcg.a_call_name_inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
+                        retloc:=hlcg.A_Call_Name_Inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
                       { under certain conditions, a static call (i.e. without PIC) can be generated }
                       else if ((procdefinition.owner=CurrentProcInfo.procdef.owner) or
                          (procdefinition.owner.SymTableType in [LocalSymTable,staticsymtable])
                         ) and ((procdefinition.ProcOptions*[po_weakexternal,po_external])=[]) then
-                        retloc:=hlcg.a_call_name_static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
+                        retloc:=hlcg.A_Call_Name_Static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
                       else
-                        retloc:=hlcg.a_call_name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.ProcOptions);
+                        retloc:=hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.ProcOptions);
                       extra_post_call_code;
                     end;
                end;
@@ -1209,9 +1209,9 @@ implementation
               { can we directly call the procvar in a memory location? }
               callref:=false;
               if not(po_is_block in procdefinition.ProcOptions) and
-                 (right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                 (right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                 begin
-                  href:=right.location.reference;
+                  href:=right.Location.Reference;
                   callref:=can_call_ref(href);
                 end;
 
@@ -1219,10 +1219,10 @@ implementation
                 load_procvar_codeptr(pvreg,callpvdef)
               else
                 begin
-                  pvreg:=NR_INVALID;
+                  pvreg:=NRInvalid;
                   callpvdef:=nil;
                 end;
-              location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+              location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
 
               { Load parameters that are in temporary registers in the
                 correct parameter register }
@@ -1235,13 +1235,13 @@ implementation
               if callref then
                 extra_call_ref_code(href);
 
-              cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
-              if cg.uses_registers(R_ADDRESSREGISTER) then
-                cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
-              if cg.uses_registers(R_FPUREGISTER) then
-                cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
-              if cg.uses_registers(R_MMREGISTER) then
-                cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
+              cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
+              if cg.Uses_Registers(R_ADDRESSREGISTER) then
+                cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
+              if cg.Uses_Registers(R_FPUREGISTER) then
+                cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
+              if cg.Uses_Registers(R_MMREGISTER) then
+                cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
 
               { Calling interrupt from the same code requires some
                 extra code }
@@ -1249,11 +1249,11 @@ implementation
                 extra_interrupt_code;
               extra_call_code;
 
-              retloc.resetiftemp;
+              retloc.ResetIfTemp;
               if callref then
                 retloc:=do_call_ref(href)
               else
-                retloc:=hlcg.a_call_reg(CurrentAsmData.CurrAsmList,callpvdef,pvreg,paralocs);
+                retloc:=hlcg.A_Call_Reg(CurrentAsmData.CurrAsmList,callpvdef,pvreg,paralocs);
               extra_post_call_code;
            end;
 
@@ -1263,27 +1263,27 @@ implementation
 
          { Release registers, but not the registers that contain the
            function result }
-         if (not is_void(resultdef)) then
+         if (not Is_Void(resultdef)) then
            begin
-             retlocitem:=retloc.location;
+             retlocitem:=retloc.Location;
              while Assigned(retlocitem) do
                begin
-                 case retlocitem^.loc of
+                 case retlocitem^.Loc of
                    LOC_REGISTER:
-                     case getregtype(retlocitem^.register) of
+                     case GetRegType(retlocitem^.Register) of
                        R_INTREGISTER:
-                         exclude(regs_to_save_int,getsupreg(retlocitem^.register));
+                         exclude(regs_to_save_int,GetSupReg(retlocitem^.Register));
                        R_ADDRESSREGISTER:
-                         exclude(regs_to_save_address,getsupreg(retlocitem^.register));
+                         exclude(regs_to_save_address,GetSupReg(retlocitem^.Register));
                        R_TEMPREGISTER:
                          ;
                        else
                          InternalError(2014020103);
                      end;
                    LOC_FPUREGISTER:
-                     exclude(regs_to_save_fpu,getsupreg(retlocitem^.register));
+                     exclude(regs_to_save_fpu,GetSupReg(retlocitem^.Register));
                    LOC_MMREGISTER:
-                     exclude(regs_to_save_mm,getsupreg(retlocitem^.register));
+                     exclude(regs_to_save_mm,GetSupReg(retlocitem^.Register));
                    LOC_REFERENCE,
                    LOC_VOID:
                      ;
@@ -1294,16 +1294,16 @@ implementation
                end;
            end;
 
-         if cg.uses_registers(R_MMREGISTER) then
-           cg.dealloccpuregisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
-         if cg.uses_registers(R_FPUREGISTER) then
-           cg.dealloccpuregisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
-         if cg.uses_registers(R_ADDRESSREGISTER) then
-           cg.dealloccpuregisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
-         cg.dealloccpuregisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
+         if cg.Uses_Registers(R_MMREGISTER) then
+           cg.DeallocCPURegisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
+         if cg.Uses_Registers(R_FPUREGISTER) then
+           cg.DeallocCPURegisters(CurrentAsmData.CurrAsmList,R_FPUREGISTER,regs_to_save_fpu);
+         if cg.Uses_Registers(R_ADDRESSREGISTER) then
+           cg.DeallocCPURegisters(CurrentAsmData.CurrAsmList,R_ADDRESSREGISTER,regs_to_save_address);
+         cg.DeallocCPURegisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
 
          { Need to remove the parameters from the stack? }
-         if procdefinition.ProcCallOption in clearstack_pocalls then
+         if procdefinition.ProcCallOption in ClearStack_PoCalls then
            begin
              pop_size:=pushedparasize;
              { for Cdecl functions we don't need to pop the funcret when it
@@ -1313,7 +1313,7 @@ implementation
                c-side, so the funcret has to be pop'ed normally. }
              if not ((procdefinition.ProcCallOption=pocall_safecall) and
                      (tf_safecall_exceptions in TargetInfo.flags)) and
-                paramanager.ret_in_param(procdefinition.ReturnDef,procdefinition) then
+                ParaManager.Ret_In_Param(procdefinition.ReturnDef,procdefinition) then
                dec(pop_size,sizeof(PInt));
              { Remove parameters/alignment from the stack }
              pop_parasize(pop_size);
@@ -1323,7 +1323,7 @@ implementation
            pop_parasize which uses pushedparasize to determine this
 
            This does not apply to interrupt procedures, their ret statement never clears any stack parameters }
-         else if paramanager.use_fixed_stack and
+         else if ParaManager.Use_Fixed_Stack and
                  not(po_interrupt in procdefinition.ProcOptions) and
                  (TargetInfo.abi=abi_i386_dynalignedstack) then
            begin
@@ -1338,7 +1338,7 @@ implementation
          { frame pointer parameter is popped by the caller when it's passed the
            Delphi way and $parentfp is used }
          else if (po_delphi_nested_cc in procdefinition.ProcOptions) and
-            not paramanager.use_fixed_stack and
+            not ParaManager.Use_Fixed_Stack and
             is_parentfp_pushed() then
            pop_parasize(sizeof(PInt));
 
@@ -1347,22 +1347,22 @@ implementation
              pd:=Search_System_Proc('fpc_safecallcheck');
              cgpara.init;
              { fpc_safecallcheck returns its parameter value (= function result of function we just called) }
-             paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
-             location_reset(tmploc,LOC_REGISTER,def_cgsize(retloc.Def));
-             tmploc.register:=hlcg.getregisterfordef(CurrentAsmData.CurrAsmList,retloc.Def);
-             hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,retloc.Def,retloc,tmploc,true);
-             paramanager.freecgpara(CurrentAsmData.CurrAsmList,cgpara);
-             hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,retloc.Def,tmploc,cgpara);
-             retloc.resetiftemp;
-             retloc:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
+             ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
+             Location_Reset(tmploc,LOC_REGISTER,Def_CGSize(retloc.Def));
+             tmploc.Register:=hlcg.GetRegisterForDef(CurrentAsmData.CurrAsmList,retloc.Def);
+             hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,retloc.Def,retloc,tmploc,true);
+             ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,cgpara);
+             hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,retloc.Def,tmploc,cgpara);
+             retloc.ResetIfTemp;
+             retloc:=hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
              cgpara.done;
            end;
 
          { handle function results }
-         if (not is_void(resultdef)) then
+         if (not Is_Void(resultdef)) then
            handle_return_value
          else
-           location_reset(location,LOC_VOID,OS_NO);
+           Location_Reset(location,LOC_VOID,OS_NO);
 
          { convert persistent temps for parameters and function result to normal temps }
          if Assigned(callcleanupblock) then
@@ -1381,7 +1381,7 @@ implementation
 
          { check for fpu exceptions }
          if cnf_check_fpu_exceptions in callnodeflags then
-           cg.maybe_check_for_fpu_exception(CurrentAsmData.CurrAsmList);
+           cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
 
          { perhaps i/o check ? }
          if (cs_check_io in CurrentSettings.LocalSwitches) and
@@ -1391,15 +1391,15 @@ implementation
             (right=nil) and
             not(po_virtualmethod in procdefinition.ProcOptions) then
            begin
-              hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_iocheck',[],nil).resetiftemp;
-              hlcg.g_maybe_checkforexceptions(CurrentAsmData.CurrAsmList);
+              hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,'fpc_iocheck',[],nil).ResetIfTemp;
+              hlcg.G_Maybe_CheckForExceptions(CurrentAsmData.CurrAsmList);
            end;
       end;
 
 
     destructor TCGCallNode.Destroy;
       begin
-        retloc.resetiftemp;
+        retloc.ResetIfTemp;
         inherited Destroy;
       end;
 

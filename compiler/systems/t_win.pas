@@ -104,7 +104,7 @@ implementation
           rcbin  : 'windres';
           rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
           resourcefileclass : nil;
-          resflags : [];
+          ResFlags : [];
         );
 {$ifdef x86_64}
     res_win64_gorc_info : TResInfo =
@@ -115,7 +115,7 @@ implementation
           rcbin  : 'gorc';
           rccmd  : '/machine x64 /nw /ni /r /d FPC /fo $RES $RC';
           resourcefileclass : nil;
-          resflags : [];
+          ResFlags : [];
         );
 {$endif x86_64}
 
@@ -347,7 +347,7 @@ implementation
           if ordnr <= 0 then
             objdata.writebytes(afuncname[1],length(afuncname));
           objdata.writebytes(emptyint,1);
-          objdata.writebytes(emptyint,align(objdata.CurrObjSec.size,2)-objdata.CurrObjSec.size);
+          objdata.writebytes(emptyint,align(objdata.CurrObjSec.Size,2)-objdata.CurrObjSec.Size);
           { idata4, import lookup table }
           objdata.SetSection(idata4objsection);
           WriteTableEntry;
@@ -374,7 +374,7 @@ implementation
 {$else}
               objdata.writereloc(0,sizeof(LongInt),idata5label,RELOC_ABSOLUTE32);
 {$endif x86_64 or aarch64}
-              objdata.writebytes(nopopcodes,align(objdata.CurrObjSec.size,qword(sizeof(nopopcodes)))-objdata.CurrObjSec.size);
+              objdata.writebytes(nopopcodes,align(objdata.CurrObjSec.Size,qword(sizeof(nopopcodes)))-objdata.CurrObjSec.Size);
             end;
           ObjOutput.exportsymbol(implabel);
           WriteObjData(objdata);
@@ -502,9 +502,9 @@ implementation
                     { ToDo }
                     InternalError(2020033001);
                   {$else X86}
-                    reference_reset_symbol(href,l4,0,sizeof(PInt),[]);
+                    Reference_Reset_Symbol(href,l4,0,sizeof(PInt),[]);
 {$ifdef X86_64}
-                    href.base:=NR_RIP;
+                    href.Base:=NR_RIP;
 {$endif X86_64}
 
                     CurrentAsmData.asmlists[al_imports].concat(TAICPU.Op_ref(A_JMP,S_NO,href));
@@ -618,20 +618,20 @@ implementation
         I1:TExportedItem absolute Item1;
         I2:TExportedItem absolute Item2;
       begin
-        Result:=I1.index-I2.index;
+        Result:=I1.Index-I2.Index;
         if(Result=0)and(Item1<>Item2)then
          begin
           Gl_DoubleIndex:=true;
-          Gl_DoubleIndexValue:=I1.index;
+          Gl_DoubleIndexValue:=I1.Index;
          end;
       end;
 
 
     procedure TExportLibWin.exportprocedure(hp : TExportedItem);
       begin
-        if (eo_index in hp.options) and ((hp.index<=0) or (hp.index>$ffff)) then
+        if (eo_index in hp.options) and ((hp.Index<=0) or (hp.Index>$ffff)) then
           begin
-           message1(parser_e_export_invalid_index,ToStr(hp.index));
+           message1(parser_e_export_invalid_index,ToStr(hp.Index));
            hp.free;
            exit;
           end;
@@ -715,7 +715,7 @@ implementation
                      hp2:=TExportedItem.create;
                      hp2.name:=StringDup(hp.name^);
                      hp2.internalname:=hp.internalname;
-                     hp2.index:=hp.index;
+                     hp2.Index:=hp.Index;
                      hp2.options:=hp.options;
                      hp2.is_var:=hp.is_var;
                      exportprocedure(hp2);
@@ -738,12 +738,12 @@ implementation
          autoindex:=1;
          while EList_nonindexed.Count>0 do
           begin
-           hole:=(EList_indexed.Count>0) and (TExportedItem(EList_indexed.Items[0]).index>1);
+           hole:=(EList_indexed.Count>0) and (TExportedItem(EList_indexed.Items[0]).Index>1);
            if not hole then
             for i:=autoindex to pred(EList_indexed.Count) do
-             if TExportedItem(EList_indexed.Items[i]).index-TExportedItem(EList_indexed.Items[pred(i)]).index>1 then
+             if TExportedItem(EList_indexed.Items[i]).Index-TExportedItem(EList_indexed.Items[pred(i)]).Index>1 then
               begin
-               autoindex:=succ(TExportedItem(EList_indexed.Items[pred(i)]).index);
+               autoindex:=succ(TExportedItem(EList_indexed.Items[pred(i)]).Index);
                hole:=true;
                break;
               end;
@@ -756,7 +756,7 @@ implementation
            else
             EList_indexed.Insert(pred(AutoIndex),EList_nonindexed.Items[ni_high]);
            EList_nonindexed.Delete(ni_high);
-           TExportedItem(EList_indexed.Items[pred(AutoIndex)]).index:=autoindex;
+           TExportedItem(EList_indexed.Items[pred(AutoIndex)]).Index:=autoindex;
           end;
          FreeAndNil(EList_nonindexed);
          for i:=0 to pred(EList_indexed.Count) do
@@ -780,10 +780,10 @@ implementation
          while Assigned(hp) do
            begin
               inc(entries);
-              if (hp.index>ordinal_max) then
-                ordinal_max:=hp.index;
-              if (hp.index>0) and (hp.index<ordinal_min) then
-                ordinal_min:=hp.index;
+              if (hp.Index>ordinal_max) then
+                ordinal_max:=hp.Index;
+              if (hp.Index>0) and (hp.Index<ordinal_min) then
+                ordinal_min:=hp.Index;
               if Assigned(hp.name) then
                 inc(named_entries);
               hp:=TExportedItem(hp.next);
@@ -848,7 +848,7 @@ implementation
                 begin
                    CurrentAsmData.getjumplabel(name_label);
                    name_table_pointers.concat(TAIConst.Create_rva_sym(name_label));
-                   ordinal_table.concat(TAIConst.Create_16bit(hp.index-ordinal_base));
+                   ordinal_table.concat(TAIConst.Create_16bit(hp.Index-ordinal_base));
                    name_table.concat(TAIAlign.Create_op(2,0));
                    name_table.concat(TAILabel.Create(name_label));
                    name_table.concat(TAIString.Create(hp.name^+#0));
@@ -863,7 +863,7 @@ implementation
            begin
               CurrentModule.ExportList.remove(hp);
               hp2:=TExportedItem(temtexport.first);
-              while Assigned(hp2) and (hp.index>hp2.index) do
+              while Assigned(hp2) and (hp.Index>hp2.Index) do
                 hp2:=TExportedItem(hp2.next);
               if hp2=nil then
                 temtexport.concat(hp)
@@ -878,7 +878,7 @@ implementation
          while Assigned(hp) do
            begin
               { fill missing values }
-              while current_index<hp.index do
+              while current_index<hp.Index do
                 begin
                    address_table.concat(TAIConst.Create_32bit(0));
                    inc(current_index);

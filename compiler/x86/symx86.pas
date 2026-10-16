@@ -27,34 +27,34 @@ interface
 
 uses
   GlobType, CClasses,
-  symconst, symtype,symdef,SymSym;
+  SymConst, SymType,SymDef,SymSym;
 
 type
   TX86PointerDef = class(TPointerDef)
    protected
-    procedure PPULoadPlatform(ppufile: TCompilerPPUFile); override;
-    procedure PPUWritePlatform(ppufile: TCompilerPPUFile); override;
+    procedure PPULoadPlatform(PPUFile: TCompilerPPUFile); override;
+    procedure PPUWritePlatform(PPUFile: TCompilerPPUFile); override;
    public
-    x86pointertyp : TX86PointerTyp;
-    constructor create(def: TDef); override;
-    class function getreusable(def: TDef): TPointerDef; override;
-    class function getreusablex86(def: TDef; x86typ: TX86PointerTyp): TPointerDef;
-    constructor createx86(def:TDef;x86typ:TX86PointerTyp);virtual;
-    function size: asizeint; override;
+    X86PointerTyp : TX86PointerTyp;
+    constructor Create(Def: TDef); override;
+    class function GetReusable(Def: TDef): TPointerDef; override;
+    class function GetReusableX86(Def: TDef; X86Typ: TX86PointerTyp): TPointerDef;
+    constructor CreateX86(Def:TDef;X86Typ:TX86PointerTyp);virtual;
+    function Size: ASizeInt; override;
     function GetCopy: TStoredDef; override;
     function GetTypeName: string; override;
-    class function default_x86_data_pointer_type: TX86PointerTyp; virtual;
-    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
+    class function Default_X86_Data_Pointer_Type: TX86PointerTyp; virtual;
+    function Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean; override;
   end;
   TX86PointerDefClass = class of TX86PointerDef;
 
   TX86ProcVarDef = class(TProcVarDef)
-    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
+    function Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean; override;
   end;
   TX86ProcVarDefClass = class of TX86ProcVarDef;
 
   TX86ProcDef = class(TProcDef)
-    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
+    function Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean; override;
   end;
   TX86ProcDefClass = class of TX86ProcDef;
 
@@ -70,50 +70,50 @@ implementation
                              tx86pointerdef
 ****************************************************************************}
 
-  procedure TX86PointerDef.PPULoadPlatform(ppufile: TCompilerPPUFile);
+  procedure TX86PointerDef.PPULoadPlatform(PPUFile: TCompilerPPUFile);
     begin
       inherited;
-      x86pointertyp:=TX86PointerTyp(ppufile.GetByte);
+      X86PointerTyp:=TX86PointerTyp(PPUFile.GetByte);
     end;
 
 
-  procedure TX86PointerDef.PPUWritePlatform(ppufile: TCompilerPPUFile);
+  procedure TX86PointerDef.PPUWritePlatform(PPUFile: TCompilerPPUFile);
     begin
       inherited;
-      ppufile.PutByte(byte(x86pointertyp));
+      PPUFile.PutByte(Byte(X86PointerTyp));
     end;
 
 
-  constructor TX86PointerDef.create(def: TDef);
+  constructor TX86PointerDef.Create(Def: TDef);
     begin
-      inherited create(def);
-      x86pointertyp := default_x86_data_pointer_type;
+      inherited Create(Def);
+      X86PointerTyp := Default_X86_Data_Pointer_Type;
     end;
 
 
-  class function TX86PointerDef.getreusable(def: TDef): TPointerDef;
+  class function TX86PointerDef.GetReusable(Def: TDef): TPointerDef;
     begin
-      result:=getreusablex86(def,default_x86_data_pointer_type);
+      Result:=GetReusableX86(Def,Default_X86_Data_Pointer_Type);
     end;
 
 
-  class function TX86PointerDef.getreusablex86(def: TDef; x86typ: TX86PointerTyp): TPointerDef;
+  class function TX86PointerDef.GetReusableX86(Def: TDef; X86Typ: TX86PointerTyp): TPointerDef;
     type
-      tx86PtrDefKey = packed record
-        def: TDef;
-        x86typ:TX86PointerTyp;
+      TX86PtrDefKey = packed record
+        Def: TDef;
+        X86Typ:TX86PointerTyp;
       end;
     var
-      res: PHashSetItem;
+      Res: PHashSetItem;
       OldSymTableStack: TSymTableStack;
-      key: tx86PtrDefKey;
+      Key: TX86PtrDefKey;
     begin
       if not Assigned(CurrentModule) then
         InternalError(2011071102);
-      key.def:=def;
-      key.x86typ:=x86typ;
-      res:=CurrentModule.PtrDefs.FindOrAdd(@key,sizeof(key));
-      if not Assigned(res^.Data) then
+      Key.Def:=Def;
+      Key.X86Typ:=X86Typ;
+      Res:=CurrentModule.PtrDefs.FindOrAdd(@Key,SizeOf(Key));
+      if not Assigned(Res^.Data) then
         begin
           { since these pointerdefs can be reused anywhere in the current
             unit, add them to the global/staticsymtable (or local symtable
@@ -124,78 +124,78 @@ implementation
           { do not simply push/pop current_module.localsymtable, because
             that can have side-effects (e.g., it removes helpers) }
           SymTableStack:=nil;
-          result:=TX86PointerDefClass(CPointerDef).createx86(def,x86typ);
-          SetupReusableDef(def,result,res,OldSymTableStack);
+          Result:=TX86PointerDefClass(CPointerDef).CreateX86(Def,X86Typ);
+          SetupReusableDef(Def,Result,Res,OldSymTableStack);
           { res^.Data may still be nil -> don't overwrite result }
-          exit;
+          Exit;
         end;
-      result:=TPointerDef(res^.Data);
+      Result:=TPointerDef(Res^.Data);
     end;
 
 
-  constructor TX86PointerDef.createx86(def: TDef; x86typ: TX86PointerTyp);
+  constructor TX86PointerDef.CreateX86(Def: TDef; X86Typ: TX86PointerTyp);
     begin
-      inherited create(def);
-      x86pointertyp:=x86typ;
+      inherited Create(Def);
+      X86PointerTyp:=X86Typ;
     end;
 
 
-  function TX86PointerDef.size: asizeint;
+  function TX86PointerDef.Size: ASizeInt;
     begin
-      if x86pointertyp in [x86pt_far,x86pt_huge] then
-        result:=sizeof(PInt)+2
+      if X86PointerTyp in [x86pt_far,x86pt_huge] then
+        Result:=SizeOf(PInt)+2
       else
-        result:=inherited;
+        Result:=inherited;
     end;
 
 
   function TX86PointerDef.GetCopy: TStoredDef;
     begin
-      result:=inherited;
-      TX86PointerDef(result).x86pointertyp:=x86pointertyp;
+      Result:=inherited;
+      TX86PointerDef(Result).X86PointerTyp:=X86PointerTyp;
     end;
 
 
   function TX86PointerDef.GetTypeName: string;
     begin
-      result:=inherited;
-      if x86pointertyp<>default_x86_data_pointer_type then
+      Result:=inherited;
+      if X86PointerTyp<>Default_X86_Data_Pointer_Type then
         begin
-          case x86pointertyp of
+          case X86PointerTyp of
             x86pt_near:
-              result:=result+';near';
+              Result:=Result+';near';
             x86pt_near_cs:
-              result:=result+';near ''CS''';
+              Result:=Result+';near ''CS''';
             x86pt_near_ds:
-              result:=result+';near ''DS''';
+              Result:=Result+';near ''DS''';
             x86pt_near_ss:
-              result:=result+';near ''SS''';
+              Result:=Result+';near ''SS''';
             x86pt_near_es:
-              result:=result+';near ''ES''';
+              Result:=Result+';near ''ES''';
             x86pt_near_fs:
-              result:=result+';near ''FS''';
+              Result:=Result+';near ''FS''';
             x86pt_near_gs:
-              result:=result+';near ''GS''';
+              Result:=Result+';near ''GS''';
             x86pt_far:
-              result:=result+';far';
+              Result:=Result+';far';
             x86pt_huge:
-              result:=result+';huge';
+              Result:=Result+';huge';
           end;
         end;
     end;
 
 
-  class function TX86PointerDef.default_x86_data_pointer_type: TX86PointerTyp;
+  class function TX86PointerDef.Default_X86_Data_Pointer_Type: TX86PointerTyp;
     begin
-      result:=x86pt_near;
+      Result:=x86pt_near;
     end;
 
 
-  function TX86PointerDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
+  function TX86PointerDef.Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean;
     begin
-      result:=
+      Result:=
         inherited and
-        (x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
+        (X86PointerTyp=TX86PointerDef(Ptr).X86PointerTyp);
     end;
 
 
@@ -204,11 +204,11 @@ implementation
 ****************************************************************************}
 
 
-  function TX86ProcVarDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
+  function TX86ProcVarDef.Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean;
     begin
-      result:=
+      Result:=
         inherited and
-        (TX86PointerDef(Address_Type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
+        (TX86PointerDef(Address_Type).X86PointerTyp=TX86PointerDef(Ptr).X86PointerTyp);
     end;
 
 
@@ -217,11 +217,11 @@ implementation
   ****************************************************************************}
 
 
-    function TX86ProcDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
+    function TX86ProcDef.Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean;
       begin
-        result:=
+        Result:=
           inherited and
-          (TX86PointerDef(Address_Type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
+          (TX86PointerDef(Address_Type).X86PointerTyp=TX86PointerDef(Ptr).X86PointerTyp);
       end;
 
 

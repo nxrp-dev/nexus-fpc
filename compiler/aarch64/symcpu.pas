@@ -26,7 +26,7 @@ unit symcpu;
 interface
 
 uses
-  symtype,symdef,SymSym;
+  SymType,SymDef,SymSym;
 
 type
   { defs }
@@ -135,7 +135,7 @@ type
 
 
 var
-  pbestrealtype : ^TDef = @S64FloatType;
+  PBestRealType : ^TDef = @S64FloatType;
 
 
 implementation

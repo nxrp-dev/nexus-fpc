@@ -34,19 +34,19 @@ unit cgcpu;
 
     type
       TCGX8664 = class(TCGX86)
-        procedure init_register_allocators;override;
+        procedure Init_Register_Allocators;override;
 
-        procedure a_loadfpu_ref_cgpara(list: TAsmList; size: TCgSize; const ref: TReference; const cgpara: TCGPara); override;
-        procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference); override;
+        procedure A_LoadFPU_Ref_CGPara(list: TAsmList; size: TCgSize; const ref: TReference; const cgpara: TCGPara); override;
+        procedure A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference); override;
 
-        procedure g_proc_entry(list : TAsmList;localsize:LongInt; nostackframe:boolean);override;
-        procedure g_proc_exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);override;
-        procedure g_local_unwind(list: TAsmList; l: TAsmLabel);override;
-        procedure g_save_registers(list: TAsmList);override;
-        procedure g_restore_registers(list: TAsmList);override;
+        procedure G_Proc_Entry(list : TAsmList;localsize:LongInt; nostackframe:boolean);override;
+        procedure G_Proc_Exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);override;
+        procedure G_Local_Unwind(list: TAsmList; l: TAsmLabel);override;
+        procedure G_Save_Registers(list: TAsmList);override;
+        procedure G_Restore_Registers(list: TAsmList);override;
 
-        procedure a_loadmm_intreg_reg(list: TAsmList; fromsize, tosize : TCgSize;intreg, mmreg: TRegister; shuffle: PMMShuffle); override;
-        procedure a_loadmm_reg_intreg(list: TAsmList; fromsize, tosize : TCgSize;mmreg, intreg: TRegister;shuffle : PMMShuffle); override;
+        procedure A_LoadMM_IntReg_Reg(list: TAsmList; fromsize, tosize : TCgSize;intreg, mmreg: TRegister; shuffle: PMMShuffle); override;
+        procedure A_LoadMM_Reg_IntReg(list: TAsmList; fromsize, tosize : TCgSize;mmreg, intreg: TRegister;shuffle : PMMShuffle); override;
 
         function use_ms_abi: boolean;
       private
@@ -65,11 +65,11 @@ unit cgcpu;
        rgcpu,ncgutil;
 
 
-    procedure TCGX8664.init_register_allocators;
+    procedure TCGX8664.Init_Register_Allocators;
       var
         ms_abi: boolean;
       begin
-        inherited init_register_allocators;
+        inherited Init_Register_Allocators;
 
         ms_abi:=use_ms_abi;
         if ms_abi then
@@ -98,7 +98,7 @@ unit cgcpu;
       end;
 
 
-    procedure TCGX8664.a_loadfpu_ref_cgpara(list: TAsmList; size: TCgSize; const ref: TReference; const cgpara: TCGPara);
+    procedure TCGX8664.A_LoadFPU_Ref_CGPara(list: TAsmList; size: TCgSize; const ref: TReference; const cgpara: TCGPara);
       begin
         { a record containing an extended value is returned on the x87 stack
           -> size will be OS_F128 (if not packed), while cgpara.paraloc^.size
@@ -107,12 +107,12 @@ unit cgcpu;
           In the future we should probably always use cgpara.location^.size, but
           that should only be tested/done after 2.8 is branched }
         if size in [OS_128,OS_F128] then
-          size:=cgpara.location^.size;
+          size:=cgpara.Location^.Size;
         inherited;
       end;
 
 
-    procedure TCGX8664.a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference);
+    procedure TCGX8664.A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference);
       begin
         { same as with a_loadfpu_ref_cgpara() above, but on the callee side
           when the value is moved from the fpu register into a memory location }
@@ -136,18 +136,18 @@ unit cgcpu;
       begin
         result:=0;
         if (TargetInfo.system<>system_x86_64_win64) or
-           (not uses_registers(R_MMREGISTER)) then
+           (not Uses_Registers(R_MMREGISTER)) then
           exit;
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_mm:=ParaManager.Get_Saved_Registers_MM(CurrentProcInfo.procdef.ProcCallOption);
         for i:=low(regs_to_save_mm) to high(regs_to_save_mm) do
           begin
-            if (regs_to_save_mm[i] in rg[R_MMREGISTER].used_in_proc) then
-              inc(result,tcgsize2size[OS_VECTOR]);
+            if (regs_to_save_mm[i] in rg[R_MMREGISTER].UsedInProc) then
+              inc(result,TCgSize2Size[OS_VECTOR]);
           end;
       end;
 
 
-    procedure TCGX8664.g_proc_entry(list : TAsmList;localsize:LongInt;nostackframe:boolean);
+    procedure TCGX8664.G_Proc_Entry(list : TAsmList;localsize:LongInt;nostackframe:boolean);
       var
         hitem: TLinkedListItem;
         seh_proc: TAISEHDirective;
@@ -178,13 +178,13 @@ unit cgcpu;
           usedregs: TCPURegisterSet;
           hreg: TRegister;
         begin
-          usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+          usedregs:=rg[R_INTREGISTER].UsedInProc-ParaManager.Get_Volatile_Registers_Int(CurrentProcInfo.procdef.ProcCallOption);
           for r := low(regs_to_save_int) to high(regs_to_save_int) do
             if regs_to_save_int[r] in usedregs then
               begin
                 inc(regsize,sizeof(aint));
                 inc(stackmisalignment,sizeof(aint));
-                hreg:=newreg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE);
+                hreg:=NewReg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE);
                 push_one_reg(hreg);
                 if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(PInt)*2+localsize))
@@ -198,8 +198,8 @@ unit cgcpu;
 
       begin
         regsize:=0;
-        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_int:=ParaManager.Get_Saved_Registers_Int(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_mm:=ParaManager.Get_Saved_Registers_MM(CurrentProcInfo.procdef.ProcCallOption);
         hitem:=list.last;
         { pi_has_unwind_info may already be set at this point if there are
           SEH directives in assembler body. In this case, .seh_endprologue
@@ -253,8 +253,8 @@ unit cgcpu;
             if use_push and (xmmsize<>0) then
               begin
                 localsize:=align(localsize,TargetInfo.stackalign)+xmmsize;
-                reference_reset_base(CurrentProcInfo.save_regs_ref,NR_STACK_POINTER_REG,
-                  localsize-xmmsize,ctempposinvalid,tcgsize2size[OS_VECTOR],[]);
+                Reference_Reset_Base(CurrentProcInfo.save_regs_ref,NR_STACK_POINTER_REG,
+                  localsize-xmmsize,CTempPosInvalid,TCgSize2Size[OS_VECTOR],[]);
               end;
 
             { allocate stackframe space }
@@ -266,7 +266,7 @@ unit cgcpu;
               begin
                 if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
-                g_stackpointer_alloc(list,localsize);
+                G_StackPointer_Alloc(list,localsize);
                 if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(PInt));
                 CurrentProcInfo.final_localsize:=localsize;
@@ -279,10 +279,10 @@ unit cgcpu;
                       begin
                         href:=CurrentProcInfo.save_regs_ref;
                         for r:=low(regs_to_save_mm) to high(regs_to_save_mm) do
-                          if regs_to_save_mm[r] in rg[R_MMREGISTER].used_in_proc then
+                          if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                             begin
-                              a_loadmm_reg_ref(list,OS_VECTOR,OS_VECTOR,newreg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE),href,nil);
-                              inc(href.offset,tcgsize2size[OS_VECTOR]);
+                              A_LoadMM_Reg_Ref(list,OS_VECTOR,OS_VECTOR,NewReg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE),href,nil);
+                              inc(href.Offset,TCgSize2Size[OS_VECTOR]);
                             end;
                       end;
                   end;
@@ -315,27 +315,27 @@ unit cgcpu;
         if (not use_push) then
           begin
             for r:=low(regs_to_save_int) to high(regs_to_save_int) do
-              if regs_to_save_int[r] in rg[R_INTREGISTER].used_in_proc then
+              if regs_to_save_int[r] in rg[R_INTREGISTER].UsedInProc then
                 begin
                   templist.concat(CAISEHDirective.create_reg_offset(ash_savereg,
-                    newreg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE),
-                    href.offset+frame_offset));
-                 inc(href.offset,sizeof(aint));
+                    NewReg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE),
+                    href.Offset+frame_offset));
+                 inc(href.Offset,sizeof(aint));
                 end;
           end;
-        if uses_registers(R_MMREGISTER) then
+        if Uses_Registers(R_MMREGISTER) then
           begin
-            if (href.offset mod tcgsize2size[OS_VECTOR])<>0 then
-              inc(href.offset,tcgsize2size[OS_VECTOR]-(href.offset mod tcgsize2size[OS_VECTOR]));
+            if (href.Offset mod TCgSize2Size[OS_VECTOR])<>0 then
+              inc(href.Offset,TCgSize2Size[OS_VECTOR]-(href.Offset mod TCgSize2Size[OS_VECTOR]));
 
             for r:=low(regs_to_save_mm) to high(regs_to_save_mm) do
               begin
-                if regs_to_save_mm[r] in rg[R_MMREGISTER].used_in_proc then
+                if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                   begin
                     templist.concat(CAISEHDirective.create_reg_offset(ash_savexmm,
-                      newreg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE),
-                      href.offset+frame_offset));
-                    inc(href.offset,tcgsize2size[OS_VECTOR]);
+                      NewReg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE),
+                      href.Offset+frame_offset));
+                    inc(href.Offset,TCgSize2Size[OS_VECTOR]);
                   end;
               end;
           end;
@@ -349,7 +349,7 @@ unit cgcpu;
       end;
 
 
-    procedure TCGX8664.g_proc_exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);
+    procedure TCGX8664.G_Proc_Exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);
 
       procedure increase_sp(a : TCGInt);
         var
@@ -359,7 +359,7 @@ unit cgcpu;
             list.concat(TAICPU.op_reg(A_POP,TCGSize2OpSize[OS_ADDR],NR_RCX))
           else
             begin
-              reference_reset_base(href,NR_STACK_POINTER_REG,a,ctempposinvalid,0,[]);
+              Reference_Reset_Base(href,NR_STACK_POINTER_REG,a,CTempPosInvalid,0,[]);
               { normally, lea is a better choice than an add }
               list.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_STACK_POINTER_REG));
             end;
@@ -378,7 +378,7 @@ unit cgcpu;
         }
         if not(po_noreturn in CurrentProcInfo.procdef.ProcOptions) then
           begin
-            regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
+            regs_to_save_mm:=ParaManager.Get_Saved_Registers_MM(CurrentProcInfo.procdef.ProcCallOption);
             { Prevent return address from a possible call from ending up in the epilogue }
             { (restoring registers happens before epilogue, providing necessary padding) }
             if (CurrentProcInfo.flags*[pi_has_unwind_info,pi_do_call,pi_has_saved_regs])=[pi_has_unwind_info,pi_do_call] then
@@ -392,13 +392,13 @@ unit cgcpu;
                       begin
                         href:=CurrentProcInfo.save_regs_ref;
                         for r:=low(regs_to_save_mm) to high(regs_to_save_mm) do
-                          if regs_to_save_mm[r] in rg[R_MMREGISTER].used_in_proc then
+                          if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                             begin
                               { Allocate register so the optimizer does not remove the load }
-                              hreg:=newreg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE);
-                              a_reg_alloc(list,hreg);
-                              a_loadmm_ref_reg(list,OS_VECTOR,OS_VECTOR,href,hreg,nil);
-                              inc(href.offset,tcgsize2size[OS_VECTOR]);
+                              hreg:=NewReg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE);
+                              A_Reg_Alloc(list,hreg);
+                              A_LoadMM_Ref_Reg(list,OS_VECTOR,OS_VECTOR,href,hreg,nil);
+                              inc(href.Offset,TCgSize2Size[OS_VECTOR]);
                             end;
                       end;
 
@@ -416,7 +416,7 @@ unit cgcpu;
                       'add $constant,%rsp' and 'lea offset(FPREG),%rsp' as belonging to
                       the function epilog.
                       Neither 'leave' nor even 'mov %FPREG,%rsp' are allowed. }
-                    reference_reset_base(href,CurrentProcInfo.framepointer,0,ctempposinvalid,sizeof(PInt),[]);
+                    Reference_Reset_Base(href,CurrentProcInfo.framepointer,0,CTempPosInvalid,sizeof(PInt),[]);
                     list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],href,NR_STACK_POINTER_REG));
                     list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[OS_ADDR],CurrentProcInfo.framepointer));
                   end
@@ -442,21 +442,21 @@ unit cgcpu;
       end;
 
 
-    procedure TCGX8664.g_save_registers(list: TAsmList);
+    procedure TCGX8664.G_Save_Registers(list: TAsmList);
       begin
         if (not use_push) then
-          inherited g_save_registers(list);
+          inherited G_Save_Registers(list);
       end;
 
 
-    procedure TCGX8664.g_restore_registers(list: TAsmList);
+    procedure TCGX8664.G_Restore_Registers(list: TAsmList);
       begin
         if (not use_push) then
-          inherited g_restore_registers(list);
+          inherited G_Restore_Registers(list);
       end;
 
 
-    procedure TCGX8664.g_local_unwind(list: TAsmList; l: TAsmLabel);
+    procedure TCGX8664.G_Local_Unwind(list: TAsmList; l: TAsmLabel);
       var
         para1,para2: TCGPara;
         href: TReference;
@@ -464,33 +464,33 @@ unit cgcpu;
       begin
         if (TargetInfo.system<>system_x86_64_win64) then
           begin
-            inherited g_local_unwind(list,l);
+            inherited G_Local_Unwind(list,l);
             exit;
           end;
         pd:=Search_System_Proc('_fpc_local_unwind');
         para1.init;
         para2.init;
-        paramanager.getcgtempparaloc(list,pd,1,para1);
-        paramanager.getcgtempparaloc(list,pd,2,para2);
-        reference_reset_symbol(href,l,0,1,[]);
+        ParaManager.GetCGTempParaLoc(list,pd,1,para1);
+        ParaManager.GetCGTempParaLoc(list,pd,2,para2);
+        Reference_Reset_Symbol(href,l,0,1,[]);
         { TODO: using RSP is correct only while the stack is fixed!!
           (true now, but will change if/when allocating from stack is implemented) }
-        a_load_reg_cgpara(list,OS_ADDR,NR_STACK_POINTER_REG,para1);
-        a_loadaddr_ref_cgpara(list,href,para2);
-        paramanager.freecgpara(list,para2);
-        paramanager.freecgpara(list,para1);
-        g_call(list,'_FPC_local_unwind');
+        A_Load_Reg_CGPara(list,OS_ADDR,NR_STACK_POINTER_REG,para1);
+        A_LoadAddr_Ref_CGPara(list,href,para2);
+        ParaManager.FreeCGPara(list,para2);
+        ParaManager.FreeCGPara(list,para1);
+        G_Call(list,'_FPC_local_unwind');
         para2.done;
         para1.done;
       end;
 
-    procedure TCGX8664.a_loadmm_intreg_reg(list: TAsmList; fromsize, tosize : TCgSize; intreg, mmreg: TRegister; shuffle: PMMShuffle);
+    procedure TCGX8664.A_LoadMM_IntReg_Reg(list: TAsmList; fromsize, tosize : TCgSize; intreg, mmreg: TRegister; shuffle: PMMShuffle);
       var
         opc: TAsmOp;
       begin
         { this code can only be used to transfer raw data, not to perform
           conversions }
-        if (tcgsize2size[fromsize]<>tcgsize2size[tosize]) or
+        if (TCgSize2Size[fromsize]<>TCgSize2Size[tosize]) or
            not(tosize in [OS_F32,OS_F64,OS_M64]) then
           InternalError(2009112505);
         case fromsize of
@@ -508,19 +508,19 @@ unit cgcpu;
             InternalError(2009112506);
         end;
         if Assigned(shuffle) and
-           not shufflescalar(shuffle) then
+           not ShuffleScalar(shuffle) then
           InternalError(2009112517);
         list.concat(TAICPU.op_reg_reg(opc,S_NO,intreg,mmreg));
       end;
 
 
-    procedure TCGX8664.a_loadmm_reg_intreg(list: TAsmList; fromsize, tosize : TCgSize; mmreg, intreg: TRegister;shuffle : PMMShuffle);
+    procedure TCGX8664.A_LoadMM_Reg_IntReg(list: TAsmList; fromsize, tosize : TCgSize; mmreg, intreg: TRegister;shuffle : PMMShuffle);
       var
         opc: TAsmOp;
       begin
         { this code can only be used to transfer raw data, not to perform
           conversions }
-        if (tcgsize2size[fromsize]<>tcgsize2size[tosize]) or
+        if (TCgSize2Size[fromsize]<>TCgSize2Size[tosize]) or
            not (fromsize in [OS_F32,OS_F64,OS_M64]) then
           InternalError(2009112507);
         case tosize of
@@ -538,13 +538,13 @@ unit cgcpu;
             InternalError(2009112408);
         end;
         if Assigned(shuffle) and
-           not shufflescalar(shuffle) then
+           not ShuffleScalar(shuffle) then
           InternalError(2009112515);
         list.concat(TAICPU.op_reg_reg(opc,S_NO,mmreg,intreg));
       end;
 
 
-    function TCGX8664.use_ms_abi: boolean;
+    function TCGX8664.Use_MS_ABI: boolean;
       begin
         if Assigned(CurrentProcInfo) then
           use_ms_abi:=x86_64_use_ms_abi(CurrentProcInfo.procdef.ProcCallOption)

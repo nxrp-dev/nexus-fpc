@@ -75,7 +75,7 @@ implementation
     begin
       if not Assigned(Class_TCustomAttribute) then
         Class_TCustomAttribute:=TObjectDef(Search_System_Type('TCUSTOMATTRIBUTE').typedef);
-      Result:=def_is_related(def,Class_TCustomAttribute);
+      Result:=Def_Is_Related(def,Class_TCustomAttribute);
     end;
 
     function readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):TConstSym;
@@ -101,13 +101,13 @@ implementation
            ordconstn:
              begin
                if p.resultdef.typ=pointerdef then
-                 hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TOrdConstNode(p).value.uvalue,p.resultdef)
+                 hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TOrdConstNode(p).Value.uvalue,p.resultdef)
                else
-                 hp:=CConstSym.Create_Ord(orgname,constord,TOrdConstNode(p).value,p.resultdef);
+                 hp:=CConstSym.Create_Ord(orgname,constord,TOrdConstNode(p).Value,p.resultdef);
              end;
            stringconstn:
              begin
-               if is_wide_or_unicode_string(p.resultdef) then
+               if Is_Wide_Or_Unicode_String(p.resultdef) then
                  begin
                    InitWideString(pw);
                    CopyWideString(TStringConstNode(p).ValueWS,pw);
@@ -121,7 +121,7 @@ implementation
                      move(TStringConstNode(p).valueas[0],sp^,TStringConstNode(p).len+1);
                    { if a non-default ansistring code page has been specified,
                      keep it }
-                   if is_ansistring(p.resultdef) and
+                   if Is_AnsiString(p.resultdef) and
                       (TStringDef(p.resultdef).encoding<>0) then
                      hp:=CConstSym.Create_String(orgname,conststring,sp,TStringConstNode(p).len,p.resultdef)
                    else
@@ -145,7 +145,7 @@ implementation
              end;
            pointerconstn :
              begin
-               hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TPointerConstNode(p).value,p.resultdef);
+               hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TPointerConstNode(p).Value,p.resultdef);
              end;
            niln :
              begin
@@ -318,7 +318,7 @@ implementation
                    { Anonymous proctype definitions can have proc directives }
                    if (
                          (hdef.typ=procvardef) or
-                         is_funcref(hdef)
+                         Is_FuncRef(hdef)
                        ) and
                        (hdef.TypeSym=nil) then
                     begin
@@ -592,7 +592,7 @@ implementation
            ObjectType:=odt_none;
            case CurrentScanner.token of
              _CLASS :
-               ObjectType:=default_class_type;
+               ObjectType:=DefaultClassType;
              _INTERFACE :
                case CurrentSettings.InterfaceType of
                  it_interfacecom:
@@ -674,7 +674,7 @@ implementation
             inferresult:=false;
         end;
         if inferresult and
-           def_is_related(TDef(pd.ProcSym.owner.DefOwner),pd.ReturnDef) then
+           Def_Is_Related(TDef(pd.ProcSym.owner.DefOwner),pd.ReturnDef) then
           include(pd.ProcOptions,po_objc_related_result_type);
       end;
 
@@ -918,7 +918,7 @@ implementation
                           TStoredDef(hdef2).OrgDef:=TStoredDef(hdef);
                           hdef:=hdef2;
                           { check if it is an ansistring(codepage) declaration }
-                          if is_ansistring(hdef) and try_to_consume(_LKLAMMER) then
+                          if Is_AnsiString(hdef) and try_to_consume(_LKLAMMER) then
                             begin
                               p:=comp_expr([ef_accept_equal]);
                               consume(_RKLAMMER);
@@ -929,12 +929,12 @@ implementation
                                 end
                               else
                                 begin
-                                  if (TOrdConstNode(p).value<0) or (TOrdConstNode(p).value>65535) then
+                                  if (TOrdConstNode(p).Value<0) or (TOrdConstNode(p).Value>65535) then
                                     begin
                                       Message(parser_e_invalid_codepage);
-                                      TOrdConstNode(p).value:=0;
+                                      TOrdConstNode(p).Value:=0;
                                     end;
-                                  TStringDef(hdef).encoding:=int64(TOrdConstNode(p).value);
+                                  TStringDef(hdef).encoding:=int64(TOrdConstNode(p).Value);
                                 end;
                               p.free;
                               p := nil;
@@ -985,7 +985,7 @@ implementation
                 begin
                   if not Assigned(Rec_TGUID) and
                      (gentypename='TGUID') and
-                     (hdef.size=16) then
+                     (hdef.Size=16) then
                     Rec_TGUID:=TRecordDef(hdef)
                   else if not Assigned(Rec_Jmp_Buf) and
                      (gentypename='JMP_BUF') then
@@ -1007,7 +1007,7 @@ implementation
   {$if defined(i386)}
                     if try_to_consume(_FAR) then
                      begin
-                       TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_fs;
+                       TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_fs;
                        consume(_SEMICOLON);
                      end
                     else
@@ -1018,18 +1018,18 @@ implementation
                            begin
                              segment_register:=get_stringconst;
                              case UpCase(segment_register) of
-                               'CS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_cs;
-                               'DS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_ds;
-                               'SS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_ss;
-                               'ES': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_es;
-                               'FS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_fs;
-                               'GS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_gs;
+                               'CS': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_cs;
+                               'DS': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_ds;
+                               'SS': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_ss;
+                               'ES': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_es;
+                               'FS': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_fs;
+                               'GS': TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near_gs;
                                else
                                  Message(asmr_e_invalid_register);
                              end;
                            end
                          else
-                           TCPUPointerDef(hdef).x86pointertyp:=x86pt_near;
+                           TCPUPointerDef(hdef).X86PointerTyp:=x86pt_near;
                          consume(_SEMICOLON);
                        end;
 {$endif x86}
@@ -1061,7 +1061,7 @@ implementation
                                  DummySym:=sym
                                else
                                  DummySym:=nil;
-                               adjust_funcref(hdef,newtype,DummySym);
+                               Adjust_FuncRef(hdef,newtype,DummySym);
                              end;
                            if CurrentScanner.replay_stack_depth=0 then
                              hdef.RegisterDef;
@@ -1083,7 +1083,7 @@ implementation
                   end;
                 objectdef :
                   begin
-                    if is_funcref(hdef) then
+                    if Is_FuncRef(hdef) then
                       begin
                         if not check_proc_directive(true) then
                           begin
@@ -1314,10 +1314,10 @@ implementation
                         begin
                            if is_constcharnode(p) then
                              begin
-                                if not is_systemunit_unicode then
+                                if not Is_SystemUnit_Unicode then
                                   begin
                                   GetMem(sp,2);
-                                  sp[0]:=chr(TOrdConstNode(p).value.svalue);
+                                  sp[0]:=chr(TOrdConstNode(p).Value.svalue);
                                   sp[1]:=#0;
                                   sym:=CConstSym.Create_String(orgname,constresourcestring,sp,1,nil);
                                   end
@@ -1325,7 +1325,7 @@ implementation
                                   begin
                                   InitWideString(pw);
                                   SetLengthWideString(pw,1);
-                                  pw.data[0]:=TOrdConstNode(p).value.svalue;
+                                  pw.data[0]:=TOrdConstNode(p).Value.svalue;
                                   sym:=CConstSym.Create_WString(orgname,constwresourcestring,pw);
                                   end;
                              end
@@ -1335,7 +1335,7 @@ implementation
                       stringconstn:
                         with TStringConstNode(p) do
                           begin
-                             if not is_systemunit_unicode  then
+                             if not Is_SystemUnit_Unicode  then
                                begin
                                if cst_type in [cst_widestring,cst_unicodestring] then
                                  changestringtype(GetAnsiStringDef);

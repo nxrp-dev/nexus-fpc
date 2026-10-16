@@ -328,7 +328,7 @@ implementation
              Message1(parser_e_forward_intf_declaration_must_be_resolved,intfdef.ObjRealName^);
              exit;
           end;
-        if find_implemented_interface(current_objectdef,intfdef)<>nil then
+        if Find_Implemented_Interface(current_objectdef,intfdef)<>nil then
           Message1(sym_e_duplicate_id,intfdef.ObjName^)
         else
           current_objectdef.Register_Implemented_Interface(intfdef,true);
@@ -355,7 +355,7 @@ implementation
              Message1(parser_e_forward_intf_declaration_must_be_resolved,intfdef.ObjRealName^);
              exit;
           end;
-        if find_implemented_interface(current_objectdef,intfdef)<>nil then
+        if Find_Implemented_Interface(current_objectdef,intfdef)<>nil then
           Message1(sym_e_duplicate_id,intfdef.ObjName^)
         else
           current_objectdef.Register_Implemented_Interface(intfdef,false);
@@ -669,7 +669,7 @@ implementation
               filedef,classrefdef,abstractdef,ForwardDef,formaldef]) or
               (
                 (def.typ=objectdef) and
-                not (TObjectDef(def).ObjectType in objecttypes_with_helpers)
+                not (TObjectDef(def).ObjectType in ObjectTypesWithHelpers)
               ) then
             begin
               Message1(type_e_type_not_allowed_for_type_helper,def.TypeName);
@@ -705,9 +705,9 @@ implementation
           if (def.typ<>errordef) and Assigned(current_objectdef.ChildOf) then
             begin
               if (current_objectdef.ChildOf.ExtendedDef.typ<>objectdef) or
-                 not (TObjectDef(current_objectdef.ChildOf.ExtendedDef).ObjectType in objecttypes_with_helpers) then
+                 not (TObjectDef(current_objectdef.ChildOf.ExtendedDef).ObjectType in ObjectTypesWithHelpers) then
                 InternalError(2011021101);
-              if not def_is_related(def,current_objectdef.ChildOf.ExtendedDef) then
+              if not Def_Is_Related(def,current_objectdef.ChildOf.ExtendedDef) then
                 begin
                   Message1(type_e_class_helper_must_extend_subclass,current_objectdef.ChildOf.ExtendedDef.TypeName);
                   def:=GenErrorDef;
@@ -775,7 +775,7 @@ implementation
                 begin
                   validate_extendeddef_typehelper(hdef);
                   if (hdef.typ=objectdef) and
-                      (TObjectDef(hdef).ObjectType in objecttypes_with_helpers) then
+                      (TObjectDef(hdef).ObjectType in ObjectTypesWithHelpers) then
                     check_inheritance_class_helper(hdef)
                   else
                     { a type helper must extend the same type as the

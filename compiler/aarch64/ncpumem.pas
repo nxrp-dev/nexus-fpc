@@ -58,18 +58,18 @@ implementation
     begin
       inherited pass_generate_code;
       { see the comments in tcgaarch64.g_proc_entry }
-      if (location.loc in [LOC_REGISTER,LOC_CREGISTER]) and
-         (location.register=NR_STACK_POINTER_REG) then
+      if (location.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
+         (location.Register=NR_STACK_POINTER_REG) then
         if (kind=lpf_forpara) then
-          location.register:=NR_FRAME_POINTER_REG
+          location.Register:=NR_FRAME_POINTER_REG
         else
           begin
             { load stack pointer in a different register, as many instructions
               cannot directly work with the stack pointer. The register
               allocator can merge them if possible }
-            location.register:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-            cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_STACK_POINTER_REG,location.register);
-            location.loc:=LOC_REGISTER;
+            location.Register:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_STACK_POINTER_REG,location.Register);
+            location.Loc:=LOC_REGISTER;
           end;
     end;
 
@@ -84,7 +84,7 @@ implementation
          b) for values < 32 bit, the entire 32 bit register always contains the
             sign/zero-extended version of the value }
       result:=
-        not is_packed_array(left.resultdef) and
+        not Is_Packed_Array(left.resultdef) and
         (get_mul_size in [1,2,4,8,16]);
     end;
 
@@ -102,37 +102,37 @@ implementation
           exit;
         end;
       { we need a base set and an index available }
-      if (location.reference.base=NR_NO) or
-         (location.reference.index<>NR_NO) then
+      if (location.Reference.Base=NR_NO) or
+         (location.Reference.Index<>NR_NO) then
         begin
           { don't integrate the offset yet, make_simple_ref() may be able to
             handle it more efficiently later (unless an offset is all we have
             -> optimization for someone that wants to add support for AArch64
             embedded targets) }
-          oldoffset:=location.reference.offset;
-          location.reference.offset:=0;
-          base:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-          cg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,location.reference,base);
-          reference_reset_base(location.reference,base,oldoffset,location.reference.temppos,location.reference.alignment,location.reference.volatility);
+          oldoffset:=location.Reference.Offset;
+          location.Reference.Offset:=0;
+          base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+          cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,location.Reference,base);
+          Reference_Reset_Base(location.Reference,base,oldoffset,location.Reference.TempPos,location.Reference.Alignment,location.Reference.Volatility);
         end;
       shift:=BsfDWord(l);
-      location.reference.index:=maybe_const_reg;
+      location.Reference.Index:=maybe_const_reg;
       { sign/zero-extend? }
-      if regsize.size=8 then
+      if regsize.Size=8 then
         if shift<>0 then
-          location.reference.shiftmode:=SM_LSL
+          location.Reference.ShiftMode:=SM_LSL
         else
-          location.reference.shiftmode:=SM_NONE
-      else if is_signed(regsize) then
-        location.reference.shiftmode:=SM_SXTW
+          location.Reference.ShiftMode:=SM_NONE
+      else if Is_Signed(regsize) then
+        location.Reference.ShiftMode:=SM_SXTW
       else if shift<>0 then
-        location.reference.shiftmode:=SM_UXTW
+        location.Reference.ShiftMode:=SM_UXTW
       else
         { the upper 32 bits are always already zero-extended -> just use 64 bit
           register }
-        location.reference.index:=cg.makeregsize(CurrentAsmData.CurrAsmList,location.reference.index,OS_64);
-      location.reference.shiftimm:=shift;
-      location.reference.alignment:=NewAlignment(location.reference.alignment,l);
+        location.Reference.Index:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,location.Reference.Index,OS_64);
+      location.Reference.ShiftImm:=shift;
+      location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,l);
     end;
 
 

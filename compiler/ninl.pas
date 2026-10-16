@@ -248,7 +248,7 @@ implementation
       if not (OrdType in [scurrency,s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
         InternalError(2013032603);
 
-      if is_oversizedord(def) then
+      if Is_OversizedOrd(def) then
         begin
           case OrdType of
             scurrency,
@@ -264,7 +264,7 @@ implementation
         end
       else
         begin
-          if is_nativeuint(def) then
+          if Is_NativeUInt(def) then
             exit('uint')
           else
             exit('sint');
@@ -282,7 +282,7 @@ implementation
         dest,
         source  : TCallParaNode;
         procname: string;
-        is_real,is_enum : boolean;
+        Is_Real,Is_Enum : boolean;
         rt : aint;
         intrinsiccode: TInlineNumber;
 
@@ -320,12 +320,12 @@ implementation
             exit;
           end;
 
-        is_real:=(source.resultdef.typ = floatdef) or is_currency(source.resultdef);
-        is_enum:=source.left.resultdef.typ=enumdef;
+        Is_Real:=(source.resultdef.typ = floatdef) or Is_Currency(source.resultdef);
+        Is_Enum:=source.left.resultdef.typ=enumdef;
 
         if ((dest.left.resultdef.typ<>stringdef) and
-            not(is_chararray(dest.left.resultdef))) or
-           not(is_real or is_enum or
+            not(Is_CharArray(dest.left.resultdef))) or
+           not(Is_Real or Is_Enum or
                (source.left.resultdef.typ=orddef)) then
           begin
             CGMessagePos1(source.fileinfo,
@@ -342,7 +342,7 @@ implementation
 
             { we can let the callnode do the type checking of these parameters too, }
             { but then the error messages aren't as nice                            }
-            if not is_integer(lenpara.resultdef) then
+            if not Is_Integer(lenpara.resultdef) then
               begin
                 CGMessagePos1(lenpara.fileinfo,
                   type_e_integer_expr_expected,lenpara.resultdef.TypeName);
@@ -353,12 +353,12 @@ implementation
                 { parameters are in reverse order! }
                 fracpara := lenpara;
                 lenpara := TCallParaNode(lenpara.right);
-                if not is_real then
+                if not Is_Real then
                   begin
                     CGMessagePos(lenpara.fileinfo,parser_e_illegal_colon_qualifier);
                     exit
                   end;
-                if not is_integer(lenpara.resultdef) then
+                if not Is_Integer(lenpara.resultdef) then
                   begin
                     CGMessagePos1(lenpara.fileinfo,
                       type_e_integer_expr_expected,lenpara.resultdef.TypeName);
@@ -371,10 +371,10 @@ implementation
         newparas := dest;
 
         { if we have a float parameter, insert the realtype, len and fracpara parameters }
-        if is_real then
+        if Is_Real then
           begin
             { insert realtype parameter }
-            if not is_currency(source.resultdef) then
+            if not Is_Currency(source.resultdef) then
               begin
                 rt:=ord(TFloatDef(source.left.resultdef).FloatType);
                 newparas.right := CCallParaNode.create(COrdConstNode.create(
@@ -397,7 +397,7 @@ implementation
                 COrdConstNode.create(int64(-32767),S32IntType,false),
                    fracpara.right);
           end
-        else if is_enum then
+        else if Is_Enum then
           begin
             {Insert a reference to the ord2string index.}
             newparas.right:=CCallParaNode.create(
@@ -436,16 +436,16 @@ implementation
         intrinsiccode := Default(TInlineNumber);
 
         { create procedure name }
-        if is_chararray(dest.resultdef) then
+        if Is_CharArray(dest.resultdef) then
           procname:='fpc_chararray_'
         else
           procname := 'fpc_' + TStringDef(dest.resultdef).StringTypName+'_';
-        if is_real then
-          if is_currency(source.resultdef) then
+        if Is_Real then
+          if Is_Currency(source.resultdef) then
             procname := procname + 'currency'
           else
             procname := procname + 'float'
-        else if is_enum then
+        else if Is_Enum then
           procname:=procname+'enum'
         else
           case TOrdDef(source.resultdef).OrdType of
@@ -468,7 +468,7 @@ implementation
           end;
 
         { for ansistrings insert the encoding argument }
-        if is_ansistring(dest.resultdef) then
+        if Is_AnsiString(dest.resultdef) then
           newparas:=CCallParaNode.create(COrdConstNode.create(
             GetParaEncoding(dest.resultdef),U16IntType,true),newparas);
 
@@ -575,7 +575,7 @@ implementation
           pointerdef:
             result:=CPointerConstNode.create(0,def);
           procvardef:
-            if TProcVarDef(def).size<>sizeof(PInt) then
+            if TProcVarDef(def).Size<>sizeof(PInt) then
               result:=getdefaultvarsym(def)
             else
               result:=CPointerConstNode.create(0,def);
@@ -657,7 +657,7 @@ implementation
         if inlinenumber in [in_reset_typedfile_name,in_rewrite_typedfile_name] then
           begin
             left := CCallParaNode.create(COrdConstNode.create(
-              TFileDef(TCallParaNode(TCallParaNode(left).nextpara).paravalue.resultdef).TypedFileDef.size,S32IntType,true),left);
+              TFileDef(TCallParaNode(TCallParaNode(left).nextpara).paravalue.resultdef).TypedFileDef.Size,S32IntType,true),left);
           end
         else
           begin
@@ -665,7 +665,7 @@ implementation
             {   parameter is gets lifted out of its original tcallparanode (see round }
             {   line 1306 of ncal.pas), so recreate a tcallparanode here (JM)         }
             left := CCallParaNode.create(COrdConstNode.create(
-              TFileDef(left.resultdef).TypedFileDef.size,S32IntType,true),
+              TFileDef(left.resultdef).TypedFileDef.Size,S32IntType,true),
               CCallParaNode.create(left,nil));
           end;
         { create the correct call }
@@ -704,12 +704,12 @@ implementation
         { either to shortstring or ansistring depending on    }
         { length                                              }
         if (n.nodetype=stringconstn) then
-          if is_chararray(n.resultdef) then
+          if Is_CharArray(n.resultdef) then
             if (TStringConstNode(n).len<=255) then
               inserttypeconv(n,CShortStringType)
             else
               inserttypeconv(n,GetAnsiStringDef)
-          else if is_widechararray(n.resultdef) then
+          else if Is_WideCharArray(n.resultdef) then
             inserttypeconv(n,CUnicodeStringType);
       end;
 
@@ -719,7 +719,7 @@ implementation
       OrdType: TOrdType;
     begin
       OrdType := TOrdDef(def).OrdType;
-      if is_oversizedint(def) then
+      if Is_OversizedInt(def) then
         begin
           case OrdType of
             s64bit:
@@ -788,7 +788,7 @@ implementation
 
     const  procprefixes:array[boolean] of string[15]=('fpc_write_text_','fpc_read_text_');
 
-    var error_para,is_real,special_handling,found_error,do_read:boolean;
+    var error_para,Is_Real,special_handling,found_error,do_read:boolean;
         p1:TNode;
         nextpara,
         indexpara,
@@ -810,13 +810,13 @@ implementation
           { is this parameter faulty? }
           error_para:=false;
           { is this parameter a real? }
-          is_real:=false;
+          Is_Real:=false;
           { type used for the read(), this is used to check
             whether a temp is needed for range checking }
           readfunctype:=nil;
 
           { can't read/write types }
-          if (para.left.nodetype=typen) and not(is_typeparam(TTypeNode(para.left).typedef)) then
+          if (para.left.nodetype=typen) and not(Is_TypeParam(TTypeNode(para.left).typedef)) then
             begin
               CGMessagePos(para.fileinfo,type_e_cant_read_write_type);
               error_para := true;
@@ -833,7 +833,7 @@ implementation
           if inlinenumber in [in_write_x,in_writeln_x] then
             { prefer strings to chararrays }
             maybe_convert_to_string(para.left);
-          if is_typeparam(para.left.resultdef) then
+          if Is_TypeParam(para.left.resultdef) then
             error_para:=true
           else
             case para.left.resultdef.typ of
@@ -848,7 +848,7 @@ implementation
                 end;
               pointerdef :
                 begin
-                  if (not is_pchar(para.left.resultdef)) or do_read then
+                  if (not Is_PChar(para.left.resultdef)) or do_read then
                     begin
                       CGMessagePos(para.fileinfo,type_e_cant_read_write_type);
                       error_para := true;
@@ -858,13 +858,13 @@ implementation
                 end;
               floatdef :
                 begin
-                  is_real:=true;
+                  Is_Real:=true;
                   if TFloatDef(para.left.resultdef).FloatType=s64currency then
                     name := procprefixes[do_read]+'currency'
                   else
                     begin
                       name := procprefixes[do_read]+'float';
-                      readfunctype:=pbestrealtype^;
+                      readfunctype:=PBestRealType^;
                     end;
                   { iso pascal needs a different handler }
                   if (m_isolike_io in CurrentSettings.ModeSwitches) and do_read then
@@ -882,7 +882,7 @@ implementation
                   if do_read then
                     { read is done with a var parameter so we need the correct
                       size for that }
-                    case para.left.resultdef.size of
+                    case para.left.resultdef.Size of
                       1:
                         begin
                           name:=name+'_shortint';
@@ -941,7 +941,7 @@ implementation
                         if (m_isolike_io in CurrentSettings.ModeSwitches) and do_read then
                           name:=name+'_iso';
                         readfunctype:=S64CurrencyType;
-                        is_real:=true;
+                        Is_Real:=true;
                       end;
                     pasbool1,
                     pasbool8,
@@ -976,7 +976,7 @@ implementation
                 end;
               arraydef :
                 begin
-                  if is_chararray(para.left.resultdef) then
+                  if Is_CharArray(para.left.resultdef) then
                     name := procprefixes[do_read]+'pchar_as_array'
                   else
                     begin
@@ -1017,7 +1017,7 @@ implementation
             nextpara := TCallParaNode(para.right);
 
           { check if a fracpara is allowed }
-          if Assigned(fracpara) and not is_real then
+          if Assigned(fracpara) and not Is_Real then
             begin
               CGMessagePos(fracpara.fileinfo,parser_e_illegal_colon_qualifier);
               error_para := true;
@@ -1039,7 +1039,7 @@ implementation
               if not do_read then
                 begin
                   { difference in default value for floats and the rest :( }
-                  if not is_real then
+                  if not Is_Real then
                     begin
                       if not Assigned(lenpara) then
                         begin
@@ -1068,7 +1068,7 @@ implementation
                           COrdConstNode.create(int64(-1),S32IntType,false),nil);
                       { add it to the lenpara }
                       lenpara.right := fracpara;
-                      if not is_currency(para.left.resultdef) then
+                      if not Is_Currency(para.left.resultdef) then
                         begin
                           { and add the realtype para (this also removes the link }
                           { to any parameters coming after it)                    }
@@ -1128,7 +1128,7 @@ implementation
                   valid_for_var(para.left,true);
 
                   { create the parameter list: the temp ... }
-                  temp := CTempCreateNode.create(readfunctype,readfunctype.size,tt_persistent,false);
+                  temp := CTempCreateNode.create(readfunctype,readfunctype.Size,tt_persistent,false);
                   addstatement(TStatementNode(newstatement),temp);
 
                   { ... and the file }
@@ -1184,7 +1184,7 @@ implementation
                       ord(TArrayDef(para.left.resultdef).LowRange=0),PasBool1Type,false),para)
                   else
                   { in case of reading an ansistring pass a codepage argument }
-                  if do_read and is_ansistring(para.left.resultdef) then
+                  if do_read and Is_AnsiString(para.left.resultdef) then
                     para:=CCallParaNode.create(COrdConstNode.create(
                       GetParaEncoding(para.left.resultdef),U16IntType,true),para);
                   { create the call statement }
@@ -1264,7 +1264,7 @@ implementation
       { add the typesize to the filepara }
       if filepara.resultdef.typ=filedef then
         filepara.right := CCallParaNode.create(COrdConstNode.create(
-          TFileDef(filepara.resultdef).TypedFileDef.size,S32IntType,true),nil);
+          TFileDef(filepara.resultdef).TypedFileDef.Size,S32IntType,true),nil);
 
       { check for "no parameters" (you need at least one extra para for typed files) }
       if not Assigned(para) then
@@ -1322,7 +1322,7 @@ implementation
             begin
               { create temp for result }
               temp := CTempCreateNode.create(para.left.resultdef,
-                para.left.resultdef.size,tt_persistent,false);
+                para.left.resultdef.Size,tt_persistent,false);
               addstatement(TStatementNode(newstatement),temp);
               { assign result to temp }
               addstatement(TStatementNode(newstatement),
@@ -1456,7 +1456,7 @@ implementation
               writestr that are function calls to functions that also call
               readstr/writestr) }
             textsym:=Search_System_Type('TEXT');
-            filetemp:=CTempCreateNode.create(textsym.typedef,textsym.typedef.size,tt_persistent,false);
+            filetemp:=CTempCreateNode.create(textsym.typedef,textsym.typedef.Size,tt_persistent,false);
             addstatement(newstatement,filetemp);
 
             if (do_read) then
@@ -1475,7 +1475,7 @@ implementation
             { in case of a writestr() to an ansistring, also pass the string's
               code page }
             if not do_read and
-               is_ansistring(filepara.left.resultdef) then
+               Is_AnsiString(filepara.left.resultdef) then
               filepara:=CCallParaNode.create(genintconstnode(TStringDef(filepara.left.resultdef).encoding),filepara);
             { pass the temp text file and the source/destination string to the
               setup routine, which will store the string's address in the
@@ -1488,7 +1488,7 @@ implementation
           begin
             { since the input/output variables are threadvars loading them into
               a temp once is faster. Create a temp which will hold a pointer to the file }
-            filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+            filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
             addstatement(newstatement,filetemp);
 
             { make sure the resultdef of the temp (and as such of the }
@@ -1526,7 +1526,7 @@ implementation
             if (filepara.left.nodetype <> loadn) then
               begin
                 { create a temp which will hold a pointer to the file }
-                filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+                filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
 
                 { add it to the statements }
                 addstatement(newstatement,filetemp);
@@ -1610,7 +1610,7 @@ implementation
       if not (OrdType in [s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
         InternalError(2020080101);
 
-      if is_oversizedint(def) then
+      if Is_OversizedInt(def) then
         begin
           case OrdType of
             s64bit: exit('int64');
@@ -1691,9 +1691,9 @@ implementation
         { check if codepara is valid }
         if Assigned(codepara) and
            (
-            not is_integer(codepara.resultdef)
+            not Is_Integer(codepara.resultdef)
 {$ifndef cpu64bitaddr}
-            or is_64bitint(codepara.resultdef)
+            or Is_64BitInt(codepara.resultdef)
 {$endif not cpu64bitaddr}
             ) then
           begin
@@ -1702,8 +1702,8 @@ implementation
           end;
 
         { check if dest para is valid }
-        if not is_integer(destpara.resultdef) and
-           not is_currency(destpara.resultdef) and
+        if not Is_Integer(destpara.resultdef) and
+           not Is_Currency(destpara.resultdef) and
            not(destpara.resultdef.typ in [floatdef,enumdef]) then
           begin
             CGMessagePos(destpara.fileinfo,type_e_integer_or_real_expr_expected);
@@ -1723,9 +1723,9 @@ implementation
         { code is not a valsinttype sized parameter (we already checked }
         { whether the code para, if specified, was an orddef)           }
         if not Assigned(codepara) or
-           (codepara.resultdef.size<>valsinttype.size) then
+           (codepara.resultdef.Size<>valsinttype.Size) then
           begin
-            tempcode := CTempCreateNode.create(valsinttype,valsinttype.size,tt_persistent,false);
+            tempcode := CTempCreateNode.create(valsinttype,valsinttype.Size,tt_persistent,false);
             addstatement(newstatement,tempcode);
             { set the resultdef of the temp (needed to be able to get }
             { the resultdef of the tempref used in the new code para) }
@@ -1770,7 +1770,7 @@ implementation
                     { we also need a destsize para in the case of sint or uint }
                     if (suffix = 'sint_') or (suffix = 'uint_') then
                       sizepara := CCallParaNode.create(COrdConstNode.create
-                        (destpara.resultdef.size,S32IntType,true),nil);
+                        (destpara.resultdef.Size,S32IntType,true),nil);
                   end;
                 scurrency: suffix := 'currency_';
                 else
@@ -1798,7 +1798,7 @@ implementation
           procname := procname + TStringDef(sourcepara.resultdef).StringTypName
         { zero-based arrays (of char) can be implicitly converted to ansistring, but don't do
           so if not needed because the array is too short }
-        else if is_zero_based_array(sourcepara.resultdef) and (sourcepara.resultdef.size>255) then
+        else if Is_Zero_Based_Array(sourcepara.resultdef) and (sourcepara.resultdef.Size>255) then
           procname := procname + 'ansistr'
         else
           procname := procname + 'shortstr';
@@ -1898,7 +1898,7 @@ implementation
         valid_for_var(destppn,true);
         set_varstate(destppn,vs_written,[vsf_must_be_valid,vsf_use_hints,vsf_use_hint_for_string_result]);
         { first param must be a string or dynamic array ...}
-        isarray:=is_dynamic_array(destppn.resultdef);
+        isarray:=Is_Dynamic_Array(destppn.resultdef);
         if not((destppn.resultdef.typ=stringdef) or
                isarray) then
           begin
@@ -1922,7 +1922,7 @@ implementation
               counter:=dims;
               while counter > 1 do
                 begin
-                  if not(is_dynamic_array(def)) then
+                  if not(Is_Dynamic_Array(def)) then
                     begin
                       CGMessage1(parser_e_wrong_parameter_size,'SetLength');
                       break;
@@ -1999,46 +1999,46 @@ implementation
         minargs:=2;
         maxargs:=3;
         func:='';
-        if is_ansistring(paradef) then
+        if Is_AnsiString(paradef) then
           begin
             // set resultdef to argument def
             resultdef:=paradef;
             func:='fpc_ansistr_copy';
           end
-        else if (is_chararray(paradef) and (paradef.size>255)) or
-           ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and is_pchar(paradef)) then
+        else if (Is_CharArray(paradef) and (paradef.Size>255)) or
+           ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and Is_PChar(paradef)) then
           begin
             // set resultdef to ansistring type since result will be in ansistring codepage
             resultdef:=GetAnsiStringDef;
             func:='fpc_ansistr_copy';
           end
-        else if is_widestring(paradef) then
+        else if Is_WideString(paradef) then
           begin
            resultdef:=CWideStringType;
            func:='fpc_widestr_copy';
           end
-        else if is_unicodestring(paradef) or
-            is_widechararray(paradef) or
-            is_pwidechar(paradef) then
+        else if Is_UnicodeString(paradef) or
+            Is_WideCharArray(paradef) or
+            Is_PWideChar(paradef) then
           begin
             resultdef:=CUnicodeStringType;
             func:='fpc_unicodestr_copy';
           end
         else
-         if is_char(paradef) then
+         if Is_Char(paradef) then
            begin
              resultdef:=CShortStringType;
              func:='fpc_char_copy';
            end
         else
-         if is_dynamic_array(paradef) then
+         if Is_Dynamic_Array(paradef) then
           begin
             minargs:=1;
             resultdef:=paradef;
             func:='fpc_array_to_dynarray_copy';
           end
         else
-         if is_open_array(paradef) then
+         if Is_Open_Array(paradef) then
           begin
             minargs:=1;
             resultdef:=CArrayDef.create(0,-1,TArrayDef(paradef).RangeDef);
@@ -2096,7 +2096,7 @@ implementation
                     v:=TEnumDef(def).MinVal;
                   enum:=nil;
                   for i := 0 to TEnumDef(def).SymTable.SymList.Count - 1 do
-                    if TEnumSym(TEnumDef(def).SymTable.SymList[i]).value=v then
+                    if TEnumSym(TEnumDef(def).SymTable.SymList[i]).Value=v then
                       begin
                         enum:=TEnumSym(TEnumDef(def).SymTable.SymList[i]);
                         break;
@@ -2117,7 +2117,7 @@ implementation
         begin
            case left.nodetype of
               ordconstn:
-                getconstrealvalue:=TOrdConstNode(left).value;
+                getconstrealvalue:=TOrdConstNode(left).Value;
               realconstn:
                 begin
                   if (nf_is_currency in TRealConstNode(left).flags) then
@@ -2133,7 +2133,7 @@ implementation
 
       procedure setconstrealvalue(r : BestReal);
         begin
-           result:=CRealConstNode.create(r,pbestrealtype^);
+           result:=CRealConstNode.create(r,PBestRealType^);
         end;
 
 
@@ -2142,18 +2142,18 @@ implementation
           if r<=0.0 then
             if Floating_Point_Range_Check_Error then
                begin
-                 result:=CRealConstNode.create(0,pbestrealtype^);
+                 result:=CRealConstNode.create(0,PBestRealType^);
                  CGMessage(type_e_wrong_math_argument)
                end
             else
               begin
                 if r=0.0 then
-                  result:=CRealConstNode.create(MathNegInf.Value,pbestrealtype^)
+                  result:=CRealConstNode.create(MathNegInf.Value,PBestRealType^)
                 else
-                  result:=CRealConstNode.create(MathQNaN.Value,pbestrealtype^)
+                  result:=CRealConstNode.create(MathQNaN.Value,PBestRealType^)
               end
           else
-            result:=CRealConstNode.create(Ln(r),pbestrealtype^)
+            result:=CRealConstNode.create(Ln(r),PBestRealType^)
         end;
 
 
@@ -2162,13 +2162,13 @@ implementation
           if r<0.0 then
             if Floating_Point_Range_Check_Error then
                begin
-                 result:=CRealConstNode.create(0,pbestrealtype^);
+                 result:=CRealConstNode.create(0,PBestRealType^);
                  CGMessage(type_e_wrong_math_argument)
                end
             else
-              result:=CRealConstNode.create(MathQNaN.Value,pbestrealtype^)
+              result:=CRealConstNode.create(MathQNaN.Value,PBestRealType^)
           else
-            result:=CRealConstNode.create(Sqrt(r),pbestrealtype^)
+            result:=CRealConstNode.create(Sqrt(r),PBestRealType^)
         end;
 
 
@@ -2185,9 +2185,9 @@ implementation
               if (left.nodetype=callparan) and
                  Assigned(TCallParaNode(left).right) then
                 begin
-                  vl:=TOrdConstNode(TCallParaNode(left).left).value;
+                  vl:=TOrdConstNode(TCallParaNode(left).left).Value;
                   if forinline then
-                    case resultdef.size of
+                    case resultdef.Size of
                       1,2,4:
                         vl:=vl and byte($1f);
                       8:
@@ -2198,7 +2198,7 @@ implementation
                   if (TCallParaNode(TCallParaNode(left).right).left.nodetype=ordconstn) then
                     begin
                       def:=TCallParaNode(TCallParaNode(left).right).left.resultdef;
-                      vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).value;
+                      vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).Value;
                     end
                   else if vl=0 then
                     begin
@@ -2213,10 +2213,10 @@ implementation
                 begin
                   def:=left.resultdef;
                   vl:=1;
-                  vl2:=TOrdConstNode(left).value;
+                  vl2:=TOrdConstNode(left).Value;
                 end;
 
-              bits:=def.size*8;
+              bits:=def.Size*8;
               shift:=vl.svalue and (bits-1);
               case bits of
                  8:
@@ -2244,14 +2244,14 @@ implementation
                   (TCallParaNode(TCallParaNode(left).right).left.nodetype=ordconstn) then
             begin
               def:=TCallParaNode(TCallParaNode(left).right).left.resultdef;
-              vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).value;
+              vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).Value;
               { sar(0,x) is 0 }
               { sar32(ffffffff,x) is ffffffff, etc. }
               if ((vl2=0) or
-                  ((resultdef.size=1) and (shortint(vl2.svalue)=-1)) or
-                  ((resultdef.size=2) and (smallint(vl2.svalue)=-1)) or
-                  ((resultdef.size=4) and (LongInt(vl2.svalue)=-1)) or
-                  ((resultdef.size=8) and (int64(vl2.svalue)=-1))) and
+                  ((resultdef.Size=1) and (shortint(vl2.svalue)=-1)) or
+                  ((resultdef.Size=2) and (smallint(vl2.svalue)=-1)) or
+                  ((resultdef.Size=4) and (LongInt(vl2.svalue)=-1)) or
+                  ((resultdef.Size=8) and (int64(vl2.svalue)=-1))) and
                  ((cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
                   not might_have_sideeffects(TCallParaNode(left).left)) then
                 begin
@@ -2276,9 +2276,9 @@ implementation
               if (left.nodetype=callparan) and
                  Assigned(TCallParaNode(left).right) then
                 begin
-                  vl:=TOrdConstNode(TCallParaNode(left).left).value;
+                  vl:=TOrdConstNode(TCallParaNode(left).left).Value;
                   if forinline then
-                    case resultdef.size of
+                    case resultdef.Size of
                       { unlike shifts, for rotates, when masking out the higher bits
                         of the rotate count, we go all the way down to byte, because
                         it doesn't matter, it produces the same result, since it's a rotate }
@@ -2296,7 +2296,7 @@ implementation
                   if (TCallParaNode(TCallParaNode(left).right).left.nodetype=ordconstn) then
                     begin
                       def:=TCallParaNode(TCallParaNode(left).right).left.resultdef;
-                      vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).value;
+                      vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).Value;
                     end
                   else if vl=0 then
                     begin
@@ -2311,10 +2311,10 @@ implementation
                 begin
                   def:=left.resultdef;
                   vl:=1;
-                  vl2:=TOrdConstNode(left).value;
+                  vl2:=TOrdConstNode(left).Value;
                 end;
 
-              bits:=def.size*8;
+              bits:=def.Size*8;
               shift:=vl.svalue and (bits-1);
 {$push}
 {$r-,q-}
@@ -2323,7 +2323,7 @@ implementation
               else
                 case inlinenumber of
                   in_ror_x,in_ror_x_y:
-                    case def.size of
+                    case def.Size of
                       1:
                         result:=COrdConstNode.create(RorByte(Byte(vl2.svalue),shift),def,false);
                       2:
@@ -2336,7 +2336,7 @@ implementation
                         InternalError(2011061903);
                     end;
                   in_rol_x,in_rol_x_y:
-                    case def.size of
+                    case def.Size of
                       1:
                         result:=COrdConstNode.create(RolByte(Byte(vl2.svalue),shift),def,false);
                       2:
@@ -2357,9 +2357,9 @@ implementation
                   (TCallParaNode(TCallParaNode(left).right).left.nodetype=ordconstn) then
             begin
               def:=TCallParaNode(TCallParaNode(left).right).left.resultdef;
-              vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).value;
+              vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).Value;
               { rol/ror are unsigned operations, so cut off upper bits }
-              case resultdef.size of
+              case resultdef.Size of
                 1:
                   vl2:=vl2 and byte($ff);
                 2:
@@ -2374,10 +2374,10 @@ implementation
               { rol(0,x) and ror(0,x) are 0 }
               { rol32(ffffffff,x) and ror32(ffffffff,x) are ffffffff, etc. }
               if ((vl2=0) or
-                  ((resultdef.size=1) and (vl2=$ff)) or
-                  ((resultdef.size=2) and (vl2=$ffff)) or
-                  ((resultdef.size=4) and (vl2=$ffffffff)) or
-                  ((resultdef.size=8) and (vl2.uvalue=qword($ffffffffffffffff)))) and
+                  ((resultdef.Size=1) and (vl2=$ff)) or
+                  ((resultdef.Size=2) and (vl2=$ffff)) or
+                  ((resultdef.Size=4) and (vl2=$ffffffff)) or
+                  ((resultdef.Size=8) and (vl2.uvalue=qword($ffffffffffffffff)))) and
                  ((cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
                   not might_have_sideeffects(TCallParaNode(left).left)) then
                 result:=COrdConstNode.create(vl2,resultdef,true);
@@ -2387,15 +2387,15 @@ implementation
       function is_minmax_deterministic(var node: TOrdConstNode; const DoMax: Boolean; out res: Boolean): Boolean;
         begin
           Result := False;
-          if not is_integer(resultdef) then
+          if not Is_Integer(resultdef) then
             InternalError(2024031501);
 
-          if (node.value <= TOrdDef(resultdef).low) then
+          if (node.Value <= TOrdDef(resultdef).low) then
             begin
               res := not DoMax;
               Exit(True);
             end
-          else if (node.value >= TOrdDef(resultdef).high) then
+          else if (node.Value >= TOrdDef(resultdef).high) then
             begin
               res := DoMax;
               Exit(True);
@@ -2422,18 +2422,18 @@ implementation
                vl2:=0; { second parameter Ex: ptr(vl,vl2) }
                case left.nodetype of
                  ordconstn :
-                   vl:=TOrdConstNode(left).value;
+                   vl:=TOrdConstNode(left).Value;
                  callparan :
                    begin
                      { both exists, else it was not generated }
-                     vl:=TOrdConstNode(TCallParaNode(left).left).value;
-                     vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).value;
+                     vl:=TOrdConstNode(TCallParaNode(left).left).Value;
+                     vl2:=TOrdConstNode(TCallParaNode(TCallParaNode(left).right).left).Value;
                    end;
                  else
                    begin
                      { Real functions are all handled with internproc below, and
                        unsupported typex are also trapped here }
-                     if is_integer(left.resultdef) then
+                     if Is_Integer(left.resultdef) then
                        { Not as informative, but less confusing }
                        CGMessagePos(left.fileinfo,parser_e_illegal_expression)
                      else
@@ -2501,17 +2501,17 @@ implementation
                     begin
                       case inlinenumber of
                         in_lo_word :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ff,U8IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value and $ff,U8IntType,true);
                         in_hi_word :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 8,U8IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value shr 8,U8IntType,true);
                         in_lo_long :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffff,U16IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value and $ffff,U16IntType,true);
                         in_hi_long :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 16,U16IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value shr 16,U16IntType,true);
                         in_lo_qword :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffffffff,U32IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value and $ffffffff,U32IntType,true);
                         in_hi_qword :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 32,U32IntType,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).Value shr 32,U32IntType,true);
                         else
                           InternalError(2019050514);
                       end;
@@ -2640,8 +2640,8 @@ implementation
                     orddef :
                       begin
                         { length of char is always one }
-                        if is_char(left.resultdef) or
-                           is_widechar(left.resultdef) then
+                        if Is_Char(left.resultdef) or
+                           Is_WideChar(left.resultdef) then
                          begin
                            result:=COrdConstNode.create(1,SIntType,false);
                          end
@@ -2653,9 +2653,9 @@ implementation
                             result:=COrdConstNode.create(
                               TStringConstNode(left).len,SIntType,true);
                           end
-                        else if not is_open_array(left.resultdef) and
-                           not is_array_of_const(left.resultdef) and
-                           not is_dynamic_array(left.resultdef) then
+                        else if not Is_Open_Array(left.resultdef) and
+                           not Is_Array_Of_Const(left.resultdef) and
+                           not Is_Dynamic_Array(left.resultdef) then
                           result:=genintconstnode(TArrayDef(left.resultdef).HighRange-
                             TArrayDef(left.resultdef).LowRange+1,SizeSIntType);
                       end;
@@ -2680,10 +2680,10 @@ implementation
                     ordconstn:
                       begin
                         if inlinenumber=in_succ_x then
-                          vl:=TOrdConstNode(left).value+1
+                          vl:=TOrdConstNode(left).Value+1
                         else
-                          vl:=TOrdConstNode(left).value-1;
-                        if is_integer(left.resultdef) then
+                          vl:=TOrdConstNode(left).Value-1;
+                        if Is_Integer(left.resultdef) then
                           { the type of the original integer constant is irrelevant,
                             it should be automatically adapted to the new value
                             (except when inlining) }
@@ -2706,18 +2706,18 @@ implementation
                               vl:=1
                             else
                               vl:=-1;
-                            if (TAddNode(left).left.nodetype=ordconstn) and equal_defs(resultdef,TAddNode(left).left.resultdef) then
+                            if (TAddNode(left).left.nodetype=ordconstn) and Equal_Defs(resultdef,TAddNode(left).left.resultdef) then
                               begin
-                                TOrdConstNode(TAddNode(left).left).value:=TOrdConstNode(TAddNode(left).left).value+vl;
+                                TOrdConstNode(TAddNode(left).left).Value:=TOrdConstNode(TAddNode(left).left).Value+vl;
                                 result:=left;
                                 left:=nil;
                               end
-                            else if (TAddNode(left).right.nodetype=ordconstn) and equal_defs(resultdef,TAddNode(left).right.resultdef) then
+                            else if (TAddNode(left).right.nodetype=ordconstn) and Equal_Defs(resultdef,TAddNode(left).right.resultdef) then
                               begin
                                 if left.nodetype=subn then
-                                  TOrdConstNode(TAddNode(left).right).value:=TOrdConstNode(TAddNode(left).right).value-vl
+                                  TOrdConstNode(TAddNode(left).right).Value:=TOrdConstNode(TAddNode(left).right).Value-vl
                                 else
-                                  TOrdConstNode(TAddNode(left).right).value:=TOrdConstNode(TAddNode(left).right).value+vl;
+                                  TOrdConstNode(TAddNode(left).right).Value:=TOrdConstNode(TAddNode(left).right).Value+vl;
                                 result:=left;
                                 left:=nil;
                               end;
@@ -2747,9 +2747,9 @@ implementation
                             result:=COrdConstNode.create(int64(TArrayDef(
                              left.resultdef).LowRange),TArrayDef(left.resultdef).RangeDef,true);
                           end
-                        else if not is_open_array(left.resultdef) and
-                                not is_array_of_const(left.resultdef) and
-                                not is_dynamic_array(left.resultdef) then
+                        else if not Is_Open_Array(left.resultdef) and
+                                not Is_Array_Of_Const(left.resultdef) and
+                                not Is_Dynamic_Array(left.resultdef) then
                           result:=COrdConstNode.create(int64(TArrayDef(left.resultdef).HighRange),
                             TArrayDef(left.resultdef).RangeDef,true);
                       end;
@@ -2757,13 +2757,13 @@ implementation
                       begin
                         if inlinenumber=in_low_x then
                           begin
-                            if is_dynamicstring(left.resultdef) and
+                            if Is_DynamicString(left.resultdef) and
                               not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
                               result:=COrdConstNode.create(1,U8IntType,false)
                             else
                               result:=COrdConstNode.create(0,U8IntType,false);
                           end
-                        else if not is_dynamicstring(left.resultdef) then
+                        else if not Is_DynamicString(left.resultdef) then
                           result:=COrdConstNode.create(TStringDef(left.resultdef).len,U8IntType,true)
                       end;
                     undefineddef:
@@ -2780,11 +2780,11 @@ implementation
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
                     begin
-                      result:=CRealConstNode.create(Exp(getconstrealvalue),pbestrealtype^);
+                      result:=CRealConstNode.create(Exp(getconstrealvalue),PBestRealType^);
                       if (TRealConstNode(result).value_real=MathInf.Value) and
                          Floating_Point_Range_Check_Error then
                         begin
-                          result:=CRealConstNode.create(0,pbestrealtype^);
+                          result:=CRealConstNode.create(0,PBestRealType^);
                           CGMessage(parser_e_range_check_error);
                         end;
                     end
@@ -2858,10 +2858,10 @@ implementation
                 begin
                   if left.nodetype=ordconstn then
                     begin
-                      if TOrdConstNode(left).value<0 then
-                        result:=COrdConstNode.create((-TOrdConstNode(left).value),resultdef,false)
+                      if TOrdConstNode(left).Value<0 then
+                        result:=COrdConstNode.create((-TOrdConstNode(left).Value),resultdef,false)
                       else
-                        result:=COrdConstNode.create((TOrdConstNode(left).value),resultdef,false);
+                        result:=COrdConstNode.create((TOrdConstNode(left).Value),resultdef,false);
                     end
                 end;
               in_sqr_real :
@@ -2899,15 +2899,15 @@ implementation
                 begin
                   if left.nodetype=ordconstn then
                     begin
-                      case left.resultdef.size of
+                      case left.resultdef.Size of
                         1:
-                          result:=COrdConstNode.create(BsfByte(Byte(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsfByte(Byte(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         2:
-                          result:=COrdConstNode.create(BsfWord(Word(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsfWord(Word(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         4:
-                          result:=COrdConstNode.create(BsfDWord(DWord(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsfDWord(DWord(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         8:
-                          result:=COrdConstNode.create(BsfQWord(QWord(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsfQWord(QWord(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         else
                           InternalError(2017042401);
                       end;
@@ -2917,15 +2917,15 @@ implementation
                 begin
                   if left.nodetype=ordconstn then
                     begin
-                      case left.resultdef.size of
+                      case left.resultdef.Size of
                         1:
-                          result:=COrdConstNode.create(BsrByte(Byte(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsrByte(Byte(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         2:
-                          result:=COrdConstNode.create(BsrWord(Word(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsrWord(Word(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         4:
-                          result:=COrdConstNode.create(BsrDWord(DWord(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsrDWord(DWord(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         8:
-                          result:=COrdConstNode.create(BsrQWord(QWord(TOrdConstNode(left).value.uvalue)),resultdef,false);
+                          result:=COrdConstNode.create(BsrQWord(QWord(TOrdConstNode(left).Value.uvalue)),resultdef,false);
                         else
                           InternalError(2017042402);
                       end;
@@ -2935,7 +2935,7 @@ implementation
                 begin
                   if left.nodetype=ordconstn then
                     begin
-                      result:=COrdConstNode.create(PopCnt(TOrdConstNode(left).value),resultdef,false);
+                      result:=COrdConstNode.create(PopCnt(TOrdConstNode(left).Value),resultdef,false);
                     end;
                 end;
               in_min_single,
@@ -2949,14 +2949,14 @@ implementation
 
                       if (hp.nodetype=realconstn) then
                         begin
-                          if (TRealConstNode(hp).value_real = MathQNaN.value) then
+                          if (TRealConstNode(hp).value_real = MathQNaN.Value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken }
                             result:=hp2.GetCopy()
-                          else if (TRealConstNode(hp).value_real = MathNegInf.value) then
+                          else if (TRealConstNode(hp).value_real = MathNegInf.Value) then
                             { Nothing is less than than -oo }
-                            result:=CRealConstNode.create(MathNegInf.value,resultdef)
-                          else if (TRealConstNode(hp).value_real = MathInf.value) then
+                            result:=CRealConstNode.create(MathNegInf.Value,resultdef)
+                          else if (TRealConstNode(hp).value_real = MathInf.Value) then
                             { Everything is less than +oo }
                             result:=hp2.GetCopy()
                           else if (hp2.nodetype=realconstn) then
@@ -2971,14 +2971,14 @@ implementation
                         end
                       else if (hp2.nodetype=realconstn) then
                         begin
-                          if (TRealConstNode(hp2).value_real = MathQNaN.value) then
+                          if (TRealConstNode(hp2).value_real = MathQNaN.Value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken (even if it is NaN) }
-                            result:=CRealConstNode.create(MathQNaN.value,resultdef)
-                          else if (TRealConstNode(hp2).value_real = MathNegInf.value) then
+                            result:=CRealConstNode.create(MathQNaN.Value,resultdef)
+                          else if (TRealConstNode(hp2).value_real = MathNegInf.Value) then
                             { Nothing is less than than -oo }
-                            result:=CRealConstNode.create(MathNegInf.value,resultdef)
-                          else if (TRealConstNode(hp2).value_real = MathInf.value) then
+                            result:=CRealConstNode.create(MathNegInf.Value,resultdef)
+                          else if (TRealConstNode(hp2).value_real = MathInf.Value) then
                             { Everything is less than +oo }
                             result:=hp.GetCopy();
                         end;
@@ -2995,16 +2995,16 @@ implementation
 
                       if (hp.nodetype=realconstn) then
                         begin
-                          if (TRealConstNode(hp).value_real = MathQNaN.value) then
+                          if (TRealConstNode(hp).value_real = MathQNaN.Value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken }
                             result:=hp2.GetCopy()
-                          else if (TRealConstNode(hp).value_real = MathNegInf.value) then
+                          else if (TRealConstNode(hp).value_real = MathNegInf.Value) then
                             { Everything is greater than than -oo }
                             result:=hp2.GetCopy()
-                          else if (TRealConstNode(hp).value_real = MathInf.value) then
+                          else if (TRealConstNode(hp).value_real = MathInf.Value) then
                             { Nothing is greater than +oo }
-                            result:=CRealConstNode.create(MathInf.value,resultdef)
+                            result:=CRealConstNode.create(MathInf.Value,resultdef)
                           else if (hp2.nodetype=realconstn) then
                             begin
                               { Both actual parameters are constants, so take
@@ -3017,16 +3017,16 @@ implementation
                         end
                       else if (hp2.nodetype=realconstn) then
                         begin
-                          if (TRealConstNode(hp2).value_real = MathQNaN.value) then
+                          if (TRealConstNode(hp2).value_real = MathQNaN.Value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken (even if it is NaN) }
-                            result:=CRealConstNode.create(MathQNaN.value,resultdef)
-                          else if (TRealConstNode(hp2).value_real = MathNegInf.value) then
+                            result:=CRealConstNode.create(MathQNaN.Value,resultdef)
+                          else if (TRealConstNode(hp2).value_real = MathNegInf.Value) then
                             { Everything is greater than than -oo }
                             result:=hp.GetCopy()
-                          else if (TRealConstNode(hp2).value_real = MathInf.value) then
+                          else if (TRealConstNode(hp2).value_real = MathInf.Value) then
                             { Nothing is greater than +oo }
-                            result:=CRealConstNode.create(MathInf.value,resultdef);
+                            result:=CRealConstNode.create(MathInf.Value,resultdef);
                         end;
                     end;
                 end;
@@ -3046,15 +3046,15 @@ implementation
                               { Both actual parameters are constants, so take
                                 the smaller of the two right now }
                               if inlinenumber=in_min_longint then
-                                result:=COrdConstNode.create(min(LongInt(TOrdConstNode(hp).value.svalue),LongInt(TOrdConstNode(hp2).value.svalue)),resultdef,false)
+                                result:=COrdConstNode.create(min(LongInt(TOrdConstNode(hp).Value.svalue),LongInt(TOrdConstNode(hp2).Value.svalue)),resultdef,false)
                               else
-                                result:=COrdConstNode.create(min(TOrdConstNode(hp).value,TOrdConstNode(hp2).value),resultdef,false);
+                                result:=COrdConstNode.create(min(TOrdConstNode(hp).Value,TOrdConstNode(hp2).Value),resultdef,false);
                             end;
 
                           if is_minmax_deterministic(TOrdConstNode(hp), False, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp).Value,resultdef,false)
                               else
                                 result:=hp2.GetCopy();
                             end;
@@ -3064,7 +3064,7 @@ implementation
                           if is_minmax_deterministic(TOrdConstNode(hp2), False, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp2).Value,resultdef,false)
                               else
                                 result:=hp.GetCopy();
                             end;
@@ -3087,15 +3087,15 @@ implementation
                               { Both actual parameters are constants, so take
                                 the larger of the two right now }
                               if inlinenumber=in_max_longint then
-                                result:=COrdConstNode.create(max(LongInt(TOrdConstNode(hp).value.svalue),LongInt(TOrdConstNode(hp2).value.svalue)),resultdef,false)
+                                result:=COrdConstNode.create(max(LongInt(TOrdConstNode(hp).Value.svalue),LongInt(TOrdConstNode(hp2).Value.svalue)),resultdef,false)
                               else
-                                result:=COrdConstNode.create(max(TOrdConstNode(hp).value,TOrdConstNode(hp2).value),resultdef,false);
+                                result:=COrdConstNode.create(max(TOrdConstNode(hp).Value,TOrdConstNode(hp2).Value),resultdef,false);
                             end;
 
                           if is_minmax_deterministic(TOrdConstNode(hp), True, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp).Value,resultdef,false)
                               else
                                 result:=hp2.GetCopy();
                             end;
@@ -3105,7 +3105,7 @@ implementation
                           if is_minmax_deterministic(TOrdConstNode(hp2), True, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp2).Value,resultdef,false)
                               else
                                 result:=hp.GetCopy();
                             end;
@@ -3128,15 +3128,15 @@ implementation
                               { Both actual parameters are constants, so take
                                 the smaller of the two right now }
                               if inlinenumber=in_min_dword then
-                                result:=COrdConstNode.create(min(DWord(TOrdConstNode(hp).value.uvalue),DWord(TOrdConstNode(hp2).value.uvalue)),resultdef,false)
+                                result:=COrdConstNode.create(min(DWord(TOrdConstNode(hp).Value.uvalue),DWord(TOrdConstNode(hp2).Value.uvalue)),resultdef,false)
                               else
-                                result:=COrdConstNode.create(min(TOrdConstNode(hp).value,TOrdConstNode(hp2).value),resultdef,false);
+                                result:=COrdConstNode.create(min(TOrdConstNode(hp).Value,TOrdConstNode(hp2).Value),resultdef,false);
                             end;
 
                           if is_minmax_deterministic(TOrdConstNode(hp), False, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp).Value,resultdef,false)
                               else
                                 result:=hp2.GetCopy();
                             end;
@@ -3146,7 +3146,7 @@ implementation
                           if is_minmax_deterministic(TOrdConstNode(hp2), False, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp2).Value,resultdef,false)
                               else
                                 result:=hp.GetCopy();
                             end;
@@ -3169,15 +3169,15 @@ implementation
                               { Both actual parameters are constants, so take
                                 the larger of the two right now }
                               if inlinenumber=in_max_dword then
-                                result:=COrdConstNode.create(max(DWord(TOrdConstNode(hp).value.uvalue),DWord(TOrdConstNode(hp2).value.uvalue)),resultdef,false)
+                                result:=COrdConstNode.create(max(DWord(TOrdConstNode(hp).Value.uvalue),DWord(TOrdConstNode(hp2).Value.uvalue)),resultdef,false)
                               else
-                                result:=COrdConstNode.create(max(TOrdConstNode(hp).value,TOrdConstNode(hp2).value),resultdef,false);
+                                result:=COrdConstNode.create(max(TOrdConstNode(hp).Value,TOrdConstNode(hp2).Value),resultdef,false);
                             end;
 
                           if is_minmax_deterministic(TOrdConstNode(hp), True, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp).Value,resultdef,false)
                               else
                                 result:=hp2.GetCopy();
                             end;
@@ -3187,7 +3187,7 @@ implementation
                           if is_minmax_deterministic(TOrdConstNode(hp2), True, helperres) then
                             begin
                               if helperres then
-                                result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
+                                result:=COrdConstNode.create(TOrdConstNode(hp2).Value,resultdef,false)
                               else
                                 result:=hp.GetCopy();
                             end;
@@ -3238,7 +3238,7 @@ implementation
               TTypeConvNode(p).left:=nil;
               p.free;
               p:=hnode;
-              if is_currency(p.resultdef) then
+              if Is_Currency(p.resultdef) then
                 begin
                   if (nf_is_currency in p.flags) and
                      (p.nodetype=slashn) and
@@ -3264,7 +3264,7 @@ implementation
               { for variant parameters; the rest has been converted by the
                 call node already }
               if not(p.nodetype in [ordconstn,realconstn]) then
-                inserttypeconv(P,pbestrealtype^);
+                inserttypeconv(P,PBestRealType^);
               result:=p.resultdef
             end;
         end;
@@ -3287,13 +3287,13 @@ implementation
               index := TCallParaNode(target.right);
 
               { source must be a packed array }
-              if not is_packed_array(source.left.resultdef) then
+              if not Is_Packed_Array(source.left.resultdef) then
                 CGMessagePos2(source.left.fileinfo,type_e_got_expected_packed_array,'1',source.left.resultdef.TypeName)
               else
                 packedarraydef := TArrayDef(source.left.resultdef);
               { target can be any kind of array, as long as it's not packed }
               if (target.left.resultdef.typ <> arraydef) or
-                 is_packed_array(target.left.resultdef) then
+                 Is_Packed_Array(target.left.resultdef) then
                 CGMessagePos2(target.left.fileinfo,type_e_got_expected_unpacked_array,'2',target.left.resultdef.TypeName)
               else
                 unpackedarraydef := TArrayDef(target.left.resultdef);
@@ -3305,12 +3305,12 @@ implementation
 
               { source can be any kind of array, as long as it's not packed }
               if (source.left.resultdef.typ <> arraydef) or
-                 is_packed_array(source.left.resultdef) then
+                 Is_Packed_Array(source.left.resultdef) then
                 CGMessagePos2(source.left.fileinfo,type_e_got_expected_unpacked_array,'1',source.left.resultdef.TypeName)
               else
                 unpackedarraydef := TArrayDef(source.left.resultdef);
               { target must be a packed array }
-              if not is_packed_array(target.left.resultdef) then
+              if not Is_Packed_Array(target.left.resultdef) then
                 CGMessagePos2(target.left.fileinfo,type_e_got_expected_packed_array,'3',target.left.resultdef.TypeName)
               else
                 packedarraydef := TArrayDef(target.left.resultdef);
@@ -3324,11 +3324,11 @@ implementation
               { range check at compile time if possible }
               if Assigned(packedarraydef) and
                  (index.left.nodetype = ordconstn) and
-                 not is_special_array(unpackedarraydef) then
+                 not Is_Special_Array(unpackedarraydef) then
                 begin
-                  adaptrange(unpackedarraydef,TOrdConstNode(index.left).value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                  tempindex := TOrdConstNode(index.left).value + packedarraydef.HighRange-packedarraydef.LowRange;
-                  adaptrange(unpackedarraydef,tempindex,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                  AdaptRange(unpackedarraydef,TOrdConstNode(index.left).Value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                  tempindex := TOrdConstNode(index.left).Value + packedarraydef.HighRange-packedarraydef.LowRange;
+                  AdaptRange(unpackedarraydef,tempindex,false,false,cs_check_range in CurrentSettings.LocalSwitches);
                 end;
             end;
 
@@ -3341,7 +3341,7 @@ implementation
           set_varstate(index.left,vs_read,[vsf_must_be_valid]);
           { if the size of the arrays is 0 (array of empty records), }
           { do nothing                                               }
-          if (source.resultdef.size = 0) then
+          if (source.resultdef.Size = 0) then
             result:=CNothingNode.create;
         end;
 
@@ -3388,7 +3388,7 @@ implementation
                      (m_delphi in CurrentSettings.ModeSwitches) then
                     CGMessage(type_w_maybe_wrong_hi_lo);
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
-                  if not is_integer(left.resultdef) then
+                  if not Is_Integer(left.resultdef) then
                     CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
                   case inlinenumber of
                     in_lo_word,
@@ -3412,7 +3412,7 @@ implementation
                   set_varstate(left,vs_read,[]);
                   if (left.resultdef.typ<>undefineddef) and
                       Assigned(CurrentProcInfo) and
-                      paramanager.push_high_param(vs_value,left.resultdef,CurrentProcInfo.procdef.ProcCallOption) then
+                      ParaManager.Push_High_Param(vs_value,left.resultdef,CurrentProcInfo.procdef.ProcCallOption) then
                    begin
                      { this should be an open array or array of const, both of
                        which can only be simple load nodes of parameters }
@@ -3424,7 +3424,7 @@ implementation
                         hp:=CAddNode.create(addn,hightree,
                                          COrdConstNode.create(1,SizeSIntType,false));
                         if (left.resultdef.typ=arraydef) then
-                          if not is_packed_array(TArrayDef(left.resultdef)) then
+                          if not Is_Packed_Array(TArrayDef(left.resultdef)) then
                             begin
                               if (TArrayDef(left.resultdef).EleSize<>1) then
                                 hp:=CAddNode.create(muln,hp,COrdConstNode.create(TArrayDef(
@@ -3436,7 +3436,7 @@ implementation
                               if (hp.nodetype <> ordconstn) then
                                 InternalError(2006081511);
                               hp.free;
-                              hp := COrdConstNode.create(left.resultdef.size,SizeSIntType,true);
+                              hp := COrdConstNode.create(left.resultdef.Size,SizeSIntType,true);
 {
                               hp:=
                                  ctypeconvnode.create_explicit(sizesinttype,
@@ -3492,8 +3492,8 @@ implementation
               in_length_x:
                 begin
                   if ((left.resultdef.typ=arraydef) and
-                      (not is_special_array(left.resultdef) or
-                       is_open_array(left.resultdef))) or
+                      (not Is_Special_Array(left.resultdef) or
+                       Is_Open_Array(left.resultdef))) or
                      (left.resultdef.typ=orddef) then
                     set_varstate(left,vs_read,[])
                   else
@@ -3513,8 +3513,8 @@ implementation
                         { length)                                 }
                         if (left.nodetype=typeconvn) and
                            (TTypeConvNode(left).left.resultdef.typ=stringdef) and
-                           not(is_wide_or_unicode_string(left.resultdef) xor
-                               is_wide_or_unicode_string(TTypeConvNode(left).left.resultdef)) then
+                           not(Is_Wide_Or_Unicode_String(left.resultdef) xor
+                               Is_Wide_Or_Unicode_String(TTypeConvNode(left).left.resultdef)) then
                          begin
                            hp:=TTypeConvNode(left).left;
                            TTypeConvNode(left).left:=nil;
@@ -3525,13 +3525,13 @@ implementation
                     orddef :
                       begin
                         { will be handled in simplify }
-                        if not is_char(left.resultdef) and
-                           not is_widechar(left.resultdef) then
+                        if not Is_Char(left.resultdef) and
+                           not Is_WideChar(left.resultdef) then
                           CGMessage(type_e_mismatch);
                       end;
                     pointerdef :
                       begin
-                        if is_pchar(left.resultdef) then
+                        if Is_PChar(left.resultdef) then
                          begin
                             hp := CCallParaNode.create(left,nil);
                             result := CCallNode.createintern('fpc_pchar_length',hp);
@@ -3540,7 +3540,7 @@ implementation
                             left:=nil;
                             exit;
                          end
-                        else if is_pwidechar(left.resultdef) then
+                        else if Is_PWideChar(left.resultdef) then
                          begin
                             hp := CCallParaNode.create(left,nil);
                             result := CCallNode.createintern('fpc_pwidechar_length',hp);
@@ -3554,8 +3554,8 @@ implementation
                       end;
                     arraydef :
                       begin
-                        if is_open_array(left.resultdef) or
-                           is_array_of_const(left.resultdef) then
+                        if Is_Open_Array(left.resultdef) or
+                           Is_Array_Of_Const(left.resultdef) then
                          begin
                            hightree:=load_high_value_node(TParaVarSym(TLoadNode(left).symtableentry));
                            if Assigned(hightree) then
@@ -3581,7 +3581,7 @@ implementation
 
                   { shortstring return an 8 bit value as the length
                     is the first byte of the string }
-                  if is_shortstring(left.resultdef) then
+                  if Is_ShortString(left.resultdef) then
                     resultdef:=U8IntType
                   else
                     resultdef:=SizeSIntType;
@@ -3650,7 +3650,7 @@ implementation
                 begin
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
                    resultdef:=left.resultdef;
-                   if is_ordinal(resultdef) or is_typeparam(resultdef) then
+                   if Is_Ordinal(resultdef) or Is_TypeParam(resultdef) then
                      begin
                        if (resultdef.typ=enumdef) and
                           (TEnumDef(resultdef).HasJumps) and
@@ -3688,15 +3688,15 @@ implementation
                            set_varstate(TCallParaNode(left).left,vs_readwritten,[vsf_must_be_valid]);
 
                            if (left.resultdef.typ in [enumdef,pointerdef]) or
-                              is_ordinal(left.resultdef) or
-                              is_currency(left.resultdef) then
+                              Is_Ordinal(left.resultdef) or
+                              Is_Currency(left.resultdef) then
                             begin
                               { value of left gets changed -> must be unique }
                               set_unique(TCallParaNode(left).left);
                               { two paras ? }
                               if Assigned(TCallParaNode(left).right) then
                                begin
-                                 if is_integer(TCallParaNode(left).right.resultdef) then
+                                 if Is_Integer(TCallParaNode(left).right.resultdef) then
                                    begin
                                      set_varstate(TCallParaNode(TCallParaNode(left).right).left,vs_read,[vsf_must_be_valid]);
                                      { when range/overflow checking is on, we
@@ -3709,12 +3709,12 @@ implementation
                                              because that will turn signed values into unsigned ones, which then
                                              goes wrong when they have to be multiplied with the size of the elements
                                              to which the pointer points in ncginl (mantis #17342) }
-                                           if is_signed(TCallParaNode(TCallParaNode(left).right).left.resultdef) then
+                                           if Is_Signed(TCallParaNode(TCallParaNode(left).right).left.resultdef) then
                                              inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).Pointer_Arithmetic_Int_Type)
                                            else
                                              inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).Pointer_Arithmetic_UInt_Type)
                                          end
-                                       else if is_integer(TCallParaNode(left).left.resultdef) then
+                                       else if Is_Integer(TCallParaNode(left).left.resultdef) then
                                          inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TCallParaNode(left).left.resultdef)
                                        else
                                          inserttypeconv_internal(TCallParaNode(TCallParaNode(left).right).left,TCallParaNode(left).left.resultdef);
@@ -3727,7 +3727,7 @@ implementation
                                end;
                             end
                            { generic type parameter? }
-                           else if is_typeparam(left.resultdef) then
+                           else if Is_TypeParam(left.resultdef) then
                              begin
                                result:=CNothingNode.create;
                                exit;
@@ -3775,11 +3775,11 @@ implementation
                       valid_for_var(TCallParaNode(TCallParaNode(left).right).left,true);
                       set_varstate(TCallParaNode(TCallParaNode(left).right).left,vs_readwritten,[vsf_must_be_valid]);
 
-                      if is_integer(TCallParaNode(left).right.resultdef) then
+                      if Is_Integer(TCallParaNode(left).right.resultdef) then
                         begin
                           { value of right gets changed -> must be unique }
                           set_unique(TCallParaNode(TCallParaNode(left).right).left);
-                          if is_integer(left.resultdef) then
+                          if Is_Integer(left.resultdef) then
                             begin
                               set_varstate(TCallParaNode(left).left,vs_read,[vsf_must_be_valid]);
                               { these nodes shouldn't be created, when range checking is on }
@@ -3794,7 +3794,7 @@ implementation
                             CGMessagePos(left.fileinfo,type_e_ordinal_expr_expected);
                         end
                       { generic type parameter? }
-                      else if is_typeparam(TCallParaNode(left).right.resultdef) then
+                      else if Is_TypeParam(TCallParaNode(left).right.resultdef) then
                         begin
                           result:=CNothingNode.create;
                           exit;
@@ -3813,7 +3813,7 @@ implementation
                       valid_for_var(left,true);
                       set_varstate(left,vs_readwritten,[vsf_must_be_valid]);
 
-                      if is_integer(left.resultdef) then
+                      if Is_Integer(left.resultdef) then
                         begin
                           { value of left gets changed -> must be unique }
                           set_unique(left);
@@ -3822,7 +3822,7 @@ implementation
                             InternalError(2017040703);
                         end
                       { generic type parameter? }
-                      else if is_typeparam(left.resultdef) then
+                      else if Is_TypeParam(left.resultdef) then
                         begin
                           result:=CNothingNode.create;
                           exit;
@@ -3847,7 +3847,7 @@ implementation
                   resultdef:=VoidType;
                   { now we know the type of buffer }
                   hp:=CCallParaNode.create(COrdConstNode.create(
-                     TCallParaNode(left).left.resultdef.size,S32IntType,true),left);
+                     TCallParaNode(left).left.resultdef.Size,S32IntType,true),left);
                   result:=CCallNode.createintern('SETTEXTBUF',hp);
                   left:=nil;
                 end;
@@ -3904,9 +3904,9 @@ implementation
                   resultdef:=TCallParaNode(left).left.resultdef;
                   if (resultdef.typ <> arraydef) then
                     CGMessagePos(left.fileinfo,type_e_mismatch)
-                  else if is_packed_array(resultdef) then
+                  else if Is_Packed_Array(resultdef) then
                     CGMessagePos2(left.fileinfo,type_e_got_expected_unpacked_array,'1',resultdef.TypeName);
-                  if not(is_integer(TCallParaNode(TCallParaNode(left).right).left.resultdef)) then
+                  if not(Is_Integer(TCallParaNode(TCallParaNode(left).right).left.resultdef)) then
                     CGMessagePos1(TCallParaNode(left).right.fileinfo,
                       type_e_integer_expr_expected,
                       TCallParaNode(TCallParaNode(left).right).left.resultdef.TypeName);
@@ -3930,8 +3930,8 @@ implementation
                           set_varstate(left,vs_read,[])
                         else
                          begin
-                           if is_open_array(left.resultdef) or
-                              is_array_of_const(left.resultdef) then
+                           if Is_Open_Array(left.resultdef) or
+                              Is_Array_Of_Const(left.resultdef) then
                             begin
                               set_varstate(left,vs_read,[]);
                               result:=load_high_value_node(TParaVarSym(TLoadNode(left).symtableentry));
@@ -3951,12 +3951,12 @@ implementation
                          end
                         else
                          begin
-                           if is_open_string(left.resultdef) then
+                           if Is_Open_String(left.resultdef) then
                             begin
                               set_varstate(left,vs_read,[]);
                               result:=load_high_value_node(TParaVarSym(TLoadNode(left).symtableentry))
                             end
-                           else if is_dynamicstring(left.resultdef) then
+                           else if Is_DynamicString(left.resultdef) then
                               begin
                                 result:=CInlineNode.create(in_length_x,false,left);
                                 if cs_zerobasedstrings in CurrentSettings.LocalSwitches then
@@ -3991,8 +3991,8 @@ implementation
                   { converting an int64 to double on platforms without }
                   { extended can cause precision loss                  }
                   if not(temp_pnode^.nodetype in [ordconstn,realconstn]) then
-                    inserttypeconv(temp_pnode^,pbestrealtype^);
-                  resultdef:=pbestrealtype^;
+                    inserttypeconv(temp_pnode^,PBestRealType^);
+                  resultdef:=PBestRealType^;
                 end;
 
               in_trunc_real,
@@ -4014,13 +4014,13 @@ implementation
                   else
                     removefloatupcasts(temp_pnode^,[S32Real,S64Real,s80real,sc80real,s64comp]);
                   if (inlinenumber=in_trunc_real) and
-                     is_currency(temp_pnode^.resultdef) and
+                     Is_Currency(temp_pnode^.resultdef) and
                      (nf_is_currency in temp_pnode^.flags) then
                     begin
                       result:=CModDivNode.create(divn,CTypeConvNode.Create_Internal(temp_pnode^.GetCopy,S64IntType),genintconstnode(10000));
                       exit;
                     end
-                  else if is_fpucomp(temp_pnode^.resultdef) then
+                  else if Is_FPUComp(temp_pnode^.resultdef) then
                     begin
                       result:=CTypeConvNode.Create_Internal(temp_pnode^.GetCopy,S64IntType);
                       exit;
@@ -4030,7 +4030,7 @@ implementation
 
               in_pi_real :
                 begin
-                  resultdef:=pbestrealtype^;
+                  resultdef:=PBestRealType^;
                 end;
 
               in_abs_long:
@@ -4077,7 +4077,7 @@ implementation
                     begin
                       set_varstate(TCallParaNode(left).left,vs_read,[vsf_must_be_valid]);
                       { check type }
-                      if is_boolean(left.resultdef) or
+                      if Is_Boolean(left.resultdef) or
                           (
                             (left.resultdef.typ=undefineddef) and
                             (df_generic in CurrentProcInfo.procdef.DefOptions)
@@ -4123,7 +4123,7 @@ implementation
               in_bsr_x:
                  begin
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
-                   if not is_integer(left.resultdef) then
+                   if not Is_Integer(left.resultdef) then
                      CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
                    if TOrdDef(left.resultdef).OrdType in [u64bit, s64bit] then
                      resultdef:=U64IntType
@@ -4134,7 +4134,7 @@ implementation
               in_popcnt_x:
                  begin
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
-                   if not is_integer(left.resultdef) then
+                   if not Is_Integer(left.resultdef) then
                      CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
                    resultdef:=left.resultdef;
                  end;
@@ -4250,11 +4250,11 @@ implementation
                   valid_for_var(TCallParaNode(left).left,true);
                   set_varstate(TCallParaNode(left).left,vs_readwritten,[vsf_must_be_valid]);
 
-                  if is_integer(TCallParaNode(left).resultdef) or is_pointer(TCallParaNode(left).resultdef) then
+                  if Is_Integer(TCallParaNode(left).resultdef) or Is_Pointer(TCallParaNode(left).resultdef) then
                     begin
-                      if not is_pointer(TCallParaNode(left).resultdef) then
+                      if not Is_Pointer(TCallParaNode(left).resultdef) then
                         begin
-                          resultdef:=get_signed_inttype(TCallParaNode(left).left.resultdef);
+                          resultdef:=Get_Signed_IntType(TCallParaNode(left).left.resultdef);
                           convdef:=resultdef;
                         end
                       else
@@ -4283,13 +4283,13 @@ implementation
                                   { the boolean parameter must be assignable }
                                   valid_for_var(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,true);
                                   set_varstate(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,vs_written,[]);
-                                  if not is_boolean(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left.resultdef) then
+                                  if not Is_Boolean(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left.resultdef) then
                                     inserttypeconv(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,PasBool1Type);
                                 end;
                             end;
                         end;
                     end
-                  else if is_typeparam(TCallParaNode(left).left.resultdef) then
+                  else if Is_TypeParam(TCallParaNode(left).left.resultdef) then
                     begin
                       resultdef:=TCallParaNode(left).left.resultdef;
                     end
@@ -4424,7 +4424,7 @@ implementation
 
           in_gettypekind_x:
             begin
-              sym:=TEnumDef(TypeKindType).Int2EnumSym(get_typekind(left.resultdef));
+              sym:=TEnumDef(TypeKindType).Int2EnumSym(Get_TypeKind(left.resultdef));
               if not Assigned(sym) then
                 InternalError(2017081101);
               if sym.typ<>enumsym then
@@ -4463,16 +4463,16 @@ implementation
               if (([cs_check_overflow,cs_check_range]*CurrentSettings.LocalSwitches)<>[]) and not(nf_internal in flags) then
                 begin
                   { create constant 1, ensure the data type is large enough }
-                  range_to_type(
-                    min(1,get_min_value(left.resultdef)),
-                    max(1,get_max_value(left.resultdef)),hdef);
+                  Range_To_Type(
+                    min(1,Get_Min_Value(left.resultdef)),
+                    max(1,Get_Max_Value(left.resultdef)),hdef);
                   hp:=COrdConstNode.create(1,hdef,false);
                   TypeCheckPass(hp);
-                  if not is_integer(hp.resultdef) then
+                  if not Is_Integer(hp.resultdef) then
                     inserttypeconv_internal(hp,SIntType);
 
                   { avoid type errors from the addn/subn }
-                  if not is_integer(left.resultdef) then
+                  if not Is_Integer(left.resultdef) then
                     inserttypeconv_internal(left,SIntType);
 
                   { addition/subtraction depending on succ/pred }
@@ -4486,15 +4486,15 @@ implementation
                     include(hp.flags,nf_internal);
 
                   { assign result of addition }
-                  if not(is_integer(resultdef)) then
+                  if not(Is_Integer(resultdef)) then
                     inserttypeconv(hp,COrdDef.create(
 {$ifdef cpu64bitaddr}
                       s64bit,
 {$else cpu64bitaddr}
                       s32bit,
 {$endif cpu64bitaddr}
-                      get_min_value(resultdef),
-                      get_max_value(resultdef),
+                      Get_Min_Value(resultdef),
+                      Get_Max_Value(resultdef),
                       true))
                   else
                     inserttypeconv(hp,resultdef);
@@ -4774,7 +4774,7 @@ implementation
 
     function TInlineNode.first_pi : TNode;
       begin
-        result:=CRealConstNode.create(Pi,pbestrealtype^);
+        result:=CRealConstNode.create(Pi,PBestRealType^);
       end;
 
 
@@ -4989,9 +4989,9 @@ implementation
          else
            begin
              { no, create constant 1, ensure the data type is large enough }
-             range_to_type(
-               min(1,get_min_value(TCallParaNode(left).left.resultdef)),
-               max(1,get_max_value(TCallParaNode(left).left.resultdef)),hdef);
+             Range_To_Type(
+               min(1,Get_Min_Value(TCallParaNode(left).left.resultdef)),
+               max(1,Get_Max_Value(TCallParaNode(left).left.resultdef)),hdef);
              hpp:=COrdConstNode.create(1,hdef,false)
            end;
          TypeCheckPass(hpp);
@@ -5006,7 +5006,7 @@ implementation
            Value of 3 corresponds to subscript nodes, i.e. record field. }
          if node_complexity(TCallParaNode(left).left) > 3 then
            begin
-             tempnode := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+             tempnode := CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
              addstatement(newstatement,tempnode);
              addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(tempnode),
                CAddrNode.Create_Internal(TCallParaNode(left).left.GetCopy)));
@@ -5024,7 +5024,7 @@ implementation
          Exclude(resultnode.flags, nf_modify);
 
          { avoid type errors from the addn/subn }
-         if not is_integer(resultnode.resultdef) then
+         if not Is_Integer(resultnode.resultdef) then
            begin
              inserttypeconv_internal(hp,SIntType);
              inserttypeconv_internal(hpp,SIntType);
@@ -5039,7 +5039,7 @@ implementation
          { assign result of addition }
 
          { inherit internal flag }
-         if not(is_integer(resultnode.resultdef)) then
+         if not(Is_Integer(resultnode.resultdef)) then
            begin
              if nf_internal in flags then
                inserttypeconv_internal(hpp,COrdDef.create(
@@ -5048,8 +5048,8 @@ implementation
 {$else cpu64bitaddr}
                  s32bit,
 {$endif cpu64bitaddr}
-                 get_min_value(resultnode.resultdef),
-                 get_max_value(resultnode.resultdef),
+                 Get_Min_Value(resultnode.resultdef),
+                 Get_Max_Value(resultnode.resultdef),
                  true))
              else
                inserttypeconv(hpp,COrdDef.create(
@@ -5058,8 +5058,8 @@ implementation
 {$else cpu64bitaddr}
                  s32bit,
 {$endif cpu64bitaddr}
-                 get_min_value(resultnode.resultdef),
-                 get_max_value(resultnode.resultdef),
+                 Get_Min_Value(resultnode.resultdef),
+                 Get_Max_Value(resultnode.resultdef),
                  true))
            end
          else
@@ -5150,7 +5150,7 @@ implementation
           end;
 
         destppn:=ppn.left;
-        isarray:=is_dynamic_array(destppn.resultdef);
+        isarray:=Is_Dynamic_Array(destppn.resultdef);
         { first param must be a string or dynamic array ...}
         if isarray then
          begin
@@ -5170,7 +5170,7 @@ implementation
            newblock:=internalstatements(newstatement);
 
            { get temp for array of lengths }
-           temp:=CTempCreateNode.create(CArrayDef.getreusable(SIntType,dims),dims*SIntType.size,tt_persistent,false);
+           temp:=CTempCreateNode.create(CArrayDef.getreusable(SIntType,dims),dims*SIntType.Size,tt_persistent,false);
            addstatement(newstatement,temp);
 
            { load array of lengths }
@@ -5205,7 +5205,7 @@ implementation
            addstatement(newstatement,CCallNode.createintern('fpc_dynarray_setlength',npara));
            addstatement(newstatement,CTempDeleteNode.create(temp));
          end
-        else if is_ansistring(destppn.resultdef) then
+        else if Is_AnsiString(destppn.resultdef) then
          begin
             newblock:=CCallNode.createintern(
               'fpc_'+TStringDef(destppn.resultdef).StringTypName+'_setlength',
@@ -5262,22 +5262,22 @@ implementation
             counter:=3;
           end;
 
-        if is_ansistring(resultdef) then
+        if Is_AnsiString(resultdef) then
           { keep the specific kind of ansistringdef as result }
           result:=CCallNode.createinternres('fpc_ansistr_copy',paras,resultdef)
-        else if is_widestring(resultdef) then
+        else if Is_WideString(resultdef) then
           result:=CCallNode.createintern('fpc_widestr_copy',paras)
-        else if is_unicodestring(resultdef) then
+        else if Is_UnicodeString(resultdef) then
           result:=CCallNode.createintern('fpc_unicodestr_copy',paras)
           { can't check for resultdef = cansichartype, because resultdef=
             cshortstringtype here }
-        else if is_char(paradef) then
+        else if Is_Char(paradef) then
           result:=CCallNode.createintern('fpc_char_copy',paras)
-        else if is_dynamic_array(resultdef) then
+        else if Is_Dynamic_Array(resultdef) then
           begin
             { create statements with call }
             elesizeppn:=COrdConstNode.create(TArrayDef(paradef).EleSize,SIntType,false);
-            if is_managed_type(TArrayDef(paradef).ElementDef) then
+            if Is_Managed_Type(TArrayDef(paradef).ElementDef) then
               eletypeppn:=CAddrNode.Create_Internal(
                 CRTTINode.create(TStoredDef(TArrayDef(paradef).ElementDef),initrtti,rdt_normal))
             else
@@ -5305,11 +5305,11 @@ implementation
                 InternalError(2012100703);
             end;
 
-            if is_open_array(paradef) then
+            if Is_Open_Array(paradef) then
               begin
                 arrayppn:=CAddrNode.Create_Internal(ppn.left);
               end
-            else if is_dynamic_array(paradef) then
+            else if Is_Dynamic_Array(paradef) then
               begin
                 arrayppn:=CTypeConvNode.Create_Internal(ppn.left,VoidPointerType);
               end
@@ -5350,18 +5350,18 @@ implementation
          newblock:=internalstatements(newstatement);
 
          { create temp for result }
-         temp := CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
+         temp := CTempCreateNode.create(left.resultdef,left.resultdef.Size,tt_persistent,true);
          addstatement(newstatement,temp);
 
          { create call to fpc_getmem }
          para := CCallParaNode.create(COrdConstNode.create
-             (TPointerDef(left.resultdef).PointedDef.size,S32IntType,true),nil);
+             (TPointerDef(left.resultdef).PointedDef.Size,S32IntType,true),nil);
          addstatement(newstatement,CAssignmentNode.create(
              CTempRefNode.create(temp),
              CCallNode.createintern('fpc_getmem',para)));
 
          { create call to fpc_initialize }
-         if is_managed_type(TPointerDef(left.resultdef).PointedDef) then
+         if Is_Managed_Type(TPointerDef(left.resultdef).PointedDef) then
           begin
             para := CCallParaNode.create(CAddrNode.Create_Internal(CRTTINode.create
                        (TStoredDef(TPointerDef(left.resultdef).PointedDef),initrtti,rdt_normal)),
@@ -5383,7 +5383,7 @@ implementation
      function TInlineNode.first_length: TNode;
        begin
          result:=nil;
-         if is_shortstring(left.resultdef) then
+         if Is_ShortString(left.resultdef) then
           expectloc:=left.expectloc
          else
           begin
@@ -5396,7 +5396,7 @@ implementation
      function TInlineNode.first_high: TNode;
        begin
          result:=nil;
-         if not(is_dynamic_array(left.resultdef)) then
+         if not(Is_Dynamic_Array(left.resultdef)) then
            InternalError(2019122802);
          expectloc:=LOC_REGISTER;
        end;
@@ -5473,7 +5473,7 @@ implementation
          result:=nil;
          expectloc:=LOC_REGISTER;
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
-         if is_64bitint(resultdef) then
+         if Is_64BitInt(resultdef) then
            begin
              if (inlinenumber=in_sar_x) then
                left:=CCallParaNode.create(COrdConstNode.create(1,U8IntType,false),
@@ -5552,29 +5552,29 @@ implementation
          first:=firstn.resultdef;
          secondn:=TCallParaNode(TCallParaNode(left).right).left;
          second:=secondn.resultdef;
-         if is_shortstring(second) then
+         if Is_ShortString(second) then
            begin
-             if is_char(first) then
+             if Is_Char(first) then
                procname:='fpc_shortstr_insert_char'
              else
                procname:='fpc_shortstr_insert';
            end
-         else if is_unicodestring(second) then
+         else if Is_UnicodeString(second) then
            procname:='fpc_unicodestr_insert'
-         else if is_widestring(second) then
+         else if Is_WideString(second) then
            procname:='fpc_widestr_insert'
-         else if is_ansistring(second) then
+         else if Is_AnsiString(second) then
            procname:='fpc_ansistr_insert'
-         else if is_dynamic_array(second) then
+         else if Is_Dynamic_Array(second) then
            begin
              { The first parameter needs to be
                a) a dynamic array of the same type
                b) a single element of the same type
                c) a static array of the same type (not Delphi compatible)
              }
-             isconstr:=is_array_constructor(first);
-             iscomparray:=(first.typ=arraydef) and equal_defs(TArrayDef(first).ElementDef,TArrayDef(second).ElementDef);
-             iscompelem:=compare_defs(first,TArrayDef(second).ElementDef,niln)<>te_incompatible;
+             isconstr:=Is_Array_Constructor(first);
+             iscomparray:=(first.typ=arraydef) and Equal_Defs(TArrayDef(first).ElementDef,TArrayDef(second).ElementDef);
+             iscompelem:=Compare_Defs(first,TArrayDef(second).ElementDef,niln)<>te_incompatible;
              if not iscomparray
                  and not iscompelem
                  and not isconstr then
@@ -5586,9 +5586,9 @@ implementation
              datatemp:=nil;
              if iscomparray then
                begin
-                 datatemp:=CTempCreateNode.create_value(first,first.size,tt_normal,false,firstn);
+                 datatemp:=CTempCreateNode.create_value(first,first.Size,tt_normal,false,firstn);
                  addstatement(insertstatement,datatemp);
-                 if is_dynamic_array(first) then
+                 if Is_Dynamic_Array(first) then
                    datan:=CTypeConvNode.Create_Internal(CTempRefNode.create(datatemp),VoidPointerType)
                  else
                    datan:=CAddrNode.Create_Internal(CVecNode.create(CTempRefNode.create(datatemp),COrdConstNode.create(0,SizeSIntType,false)));
@@ -5597,7 +5597,7 @@ implementation
              else if isconstr then
                begin
                  inserttypeconv(firstn,second);
-                 datatemp:=CTempCreateNode.create_value(second,second.size,tt_normal,false,firstn);
+                 datatemp:=CTempCreateNode.create_value(second,second.Size,tt_normal,false,firstn);
                  addstatement(insertstatement,datatemp);
                  datan:=CTypeConvNode.Create_Internal(CTempRefNode.create(datatemp),VoidPointerType);
                  datacountn:=CInlineNode.create(in_length_x,false,CTempRefNode.create(datatemp));
@@ -5606,7 +5606,7 @@ implementation
                begin
                  if is_const(firstn) then
                    begin
-                     datatemp:=CTempCreateNode.create_value(TArrayDef(second).ElementDef,TArrayDef(second).ElementDef.size,tt_normal,false,firstn);
+                     datatemp:=CTempCreateNode.create_value(TArrayDef(second).ElementDef,TArrayDef(second).ElementDef.Size,tt_normal,false,firstn);
                      addstatement(insertstatement,datatemp);
                      datan:=CAddrNode.Create_Internal(CTempRefNode.create(datatemp));
                    end
@@ -5678,15 +5678,15 @@ implementation
          { determine the correct function based on the first parameter }
          firstn:=TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).left;
          first:=firstn.resultdef;
-         if is_shortstring(first) then
+         if Is_ShortString(first) then
            procname:='fpc_shortstr_delete'
-         else if is_unicodestring(first) then
+         else if Is_UnicodeString(first) then
            procname:='fpc_unicodestr_delete'
-         else if is_widestring(first) then
+         else if Is_WideString(first) then
            procname:='fpc_widestr_delete'
-         else if is_ansistring(first) then
+         else if Is_AnsiString(first) then
            procname:='fpc_ansistr_delete'
-         else if is_dynamic_array(first) then
+         else if Is_Dynamic_Array(first) then
            begin
              procname:='fpc_dynarray_delete';
              { recreate the parameters as array pointer, src, count, typeinfo }
@@ -5752,7 +5752,7 @@ implementation
          while Assigned(cpn) do
            begin
              list.add(cpn.left);
-             if is_dynamic_array(cpn.left.resultdef) then
+             if Is_Dynamic_Array(cpn.left.resultdef) then
                arrn:=cpn.left;
              cpn.left:=nil;
              cpn:=TCallParaNode(cpn.right);
@@ -5766,15 +5766,15 @@ implementation
            InternalError(2017100902);
 
          { are we dealing with strings or dynamic arrays? }
-         if is_dynamic_array(firstn.resultdef) or is_array_constructor(firstn.resultdef) then
+         if Is_Dynamic_Array(firstn.resultdef) or Is_Array_Constructor(firstn.resultdef) then
            begin
              { try to combine all consecutive array constructors }
              lastchanged:=false;
              i:=0;
              repeat
-               if lastchanged or is_array_constructor(TNode(list[i]).resultdef) then
+               if lastchanged or Is_Array_Constructor(TNode(list[i]).resultdef) then
                  begin
-                   if (i<list.count-1) and is_array_constructor(TNode(list[i+1]).resultdef) then
+                   if (i<list.count-1) and Is_Array_Constructor(TNode(list[i+1]).resultdef) then
                      begin
                        arrconstr:=TArrayConstructorNode(list[i+1]);
                        while Assigned(arrconstr.right) do
@@ -5820,11 +5820,11 @@ implementation
                    begin
                      n:=TNode(list[i]);
                      { first convert to the target type }
-                     if not is_array_constructor(n.resultdef) then
+                     if not Is_Array_Constructor(n.resultdef) then
                        inserttypeconv(n,arrn.resultdef);
                      { we need to ensure that we get a reference counted
                        assignment for the temp array }
-                     tempnode:=CTempCreateNode.create(arrn.resultdef,arrn.resultdef.size,tt_persistent,true);
+                     tempnode:=CTempCreateNode.create(arrn.resultdef,arrn.resultdef.Size,tt_persistent,true);
                      addstatement(newstatement,tempnode);
                      addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(tempnode),n));
                      addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
@@ -5836,7 +5836,7 @@ implementation
                  Include(arrconstr.arrayconstructornodeflags,acnf_allow_array_constructor);
 
                  { based on the code from nopt.genmultistringadd() }
-                 tempnode:=CTempCreateNode.create(arrn.resultdef,arrn.resultdef.size,tt_persistent,true);
+                 tempnode:=CTempCreateNode.create(arrn.resultdef,arrn.resultdef.Size,tt_persistent,true);
                  addstatement(newstatement,tempnode);
 
                  cpn:=CCallParaNode.create(
@@ -5869,8 +5869,8 @@ implementation
                      { Force string type if it isn't yet }
                      if not(
                             (result.resultdef.typ=stringdef) or
-                            is_chararray(result.resultdef) or
-                            is_char(result.resultdef)
+                            Is_CharArray(result.resultdef) or
+                            Is_Char(result.resultdef)
                            ) then
                        inserttypeconv(result,CShortStringType);
                    end;
@@ -5926,7 +5926,7 @@ implementation
          loop := internalstatements(loopstatement);
          loopvar := CTempCreateNode.create(
            TArrayDef(packednode.resultdef).RangeDef,
-           TArrayDef(packednode.resultdef).RangeDef.size,
+           TArrayDef(packednode.resultdef).RangeDef.Size,
            tt_persistent,true);
          addstatement(loopstatement,loopvar);
 
@@ -5936,8 +5936,8 @@ implementation
          { and finally convert it explicitly back to the actual rangedef to avoid type      }
          { errors                                                                            }
          temprangedef:=nil;
-         getrange(unpackednode.resultdef,ulorange,uhirange);
-         getrange(packednode.resultdef,plorange,phirange);
+         GetRange(unpackednode.resultdef,ulorange,uhirange);
+         GetRange(packednode.resultdef,plorange,phirange);
          { does not really need to be registered, but then we would have to
            record it elsewhere so it still can be freed }
          temprangedef:=COrdDef.create(TOrdDef(SIntType).OrdType,ulorange,uhirange,true);
@@ -5999,7 +5999,7 @@ implementation
            in_atomic_cmp_xchg:
              result:=true;
            else
-             result:=is_void(resultdef);
+             result:=Is_Void(resultdef);
          end;
        end;
 
@@ -6032,7 +6032,7 @@ implementation
            end;
 {$endif cpucg64shiftsupport}
          result := nil;
-         if is_signed(TCallParaNode(left).right.resultdef) then
+         if Is_Signed(TCallParaNode(left).right.resultdef) then
            procname:='int64'
          else
            procname:='qword';
@@ -6063,7 +6063,7 @@ implementation
        begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          { 64 bit ints have their own shift handling }
-         if is_64bit(TCallParaNode(left).right.resultdef) and
+         if Is_64Bit(TCallParaNode(left).right.resultdef) and
             (inlinenumber in [in_sar_assign_x_y,in_shl_assign_x_y,in_shr_assign_x_y,in_rol_assign_x_y,in_ror_assign_x_y]) then
            result := first_ShiftRot_assign_64bitint
          else
@@ -6111,9 +6111,9 @@ implementation
              InternalError(2022093008);
          end;
          name:=name+'_';
-         if is_pointer(resultdef) then
-           name:=name+ToStr(VoidPointerType.size*8)
-         else if is_integer(resultdef) then
+         if Is_Pointer(resultdef) then
+           name:=name+ToStr(VoidPointerType.Size*8)
+         else if Is_Integer(resultdef) then
            case TOrdDef(resultdef).OrdType of
              s8bit:
                name:=name+'8';
@@ -6164,14 +6164,14 @@ implementation
                comparand which means that the Succeeded parameter needs to be
                True (otherwise it needs to be False). }
              n:=internalstatements(stmt);
-             tmp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+             tmp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
              addstatement(stmt,tmp);
              addstatement(stmt,CAssignmentNode.create(CTempRefNode.create(tmp),result));
              cmpn:=cmpn.GetCopy;
              inserttypeconv_internal(cmpn,resultdef);
              addstatement(stmt,
                CAssignmentNode.create(succn,
-                 CAddNode.create(equaln,cmpn,
+                 CAddNode.create(EqualN,cmpn,
                    CTempRefNode.create(tmp))));
              addstatement(stmt,CTempDeleteNode.create_normal_temp(tmp));
              addstatement(stmt,CTempRefNode.create(tmp));
@@ -6183,7 +6183,7 @@ implementation
                existing Interlocked* implementations, but the intrinsics need to return the
                resulting value so we add/sub the Value to/from the result }
              n:=internalstatements(stmt);
-             tmp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+             tmp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
              addstatement(stmt,tmp);
              if inlinenumber=in_atomic_inc then
                n2:=CAddNode.create(addn,result,valn)

@@ -119,8 +119,7 @@ implementation
         if create_smartlink_library then
          begin
            GenerateAsm(true);
-           if (af_needar in TargetAsm.flags) and
-              DrainClangAssemblerQueue then
+           if (af_needar in TargetAsm.flags) then
              Linker.MakeStaticLibrary;
          end;
 
@@ -325,7 +324,7 @@ implementation
       begin
         { The PPU's text-model flag cannot prove that System.Char was
           declared with the matching width. }
-        if Search_System_Type('CHAR').typedef.size <>
+        if Search_System_Type('CHAR').typedef.Size <>
            1+Ord(CompilerWide_Unicode_Strings) then
           Comment(VFatal,'System.Char width does not match this compiler invocation''s default text model');
       end;
@@ -2214,38 +2213,35 @@ type
                  if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
                    deffile.writefile;
 
-                 if DrainClangAssemblerQueue then
-                   begin
-                     { The sequential continuation still visits the package
-                       after linking. Remove its dependency edges before freeing
-                       their modules, as proc_create_executable does. }
-                     curr.UsedUnitList.free;
-                     curr.UsedUnitList:=TLinkedList.Create;
-                     { insert all .o files from all loaded units and
-                       unload the units, we don't need them anymore.
-                       Keep the curr because that is still needed }
-                     hp:=TModule(Loaded_Units.first);
-                     while Assigned(hp) do
+                 { The sequential continuation still visits the package
+                   after linking. Remove its dependency edges before freeing
+                   their modules, as proc_create_executable does. }
+                 curr.UsedUnitList.free;
+                 curr.UsedUnitList:=TLinkedList.Create;
+                 { insert all .o files from all loaded units and
+                   unload the units, we don't need them anymore.
+                   Keep the curr because that is still needed }
+                 hp:=TModule(Loaded_Units.first);
+                 while Assigned(hp) do
+                  begin
+                    { only link in those units which should become part of this
+                      package }
+                    if not Assigned(hp.package) then
+                      linker.AddModuleFiles(hp);
+                    hp2:=TModule(hp.next);
+                    if (hp<>curr) and
+                       (not NeedSymbolInfo) then
                       begin
-                        { only link in those units which should become part of this
-                          package }
-                        if not Assigned(hp.package) then
-                          linker.AddModuleFiles(hp);
-                        hp2:=TModule(hp.next);
-                        if (hp<>curr) and
-                           (not NeedSymbolInfo) then
-                          begin
-                            Loaded_Units.remove(hp);
-                            hp.free;
-                            hp := nil;
-                          end;
-                        hp:=hp2;
+                        Loaded_Units.remove(hp);
+                        hp.free;
+                        hp := nil;
                       end;
-                     { add the library of directly used packages }
-                     Add_Package_Libs(linker);
-                     { and now link the package library }
-                     linker.MakeSharedLibrary
-                   end
+                    hp:=hp2;
+                  end;
+                 { add the library of directly used packages }
+                 Add_Package_Libs(linker);
+                 { and now link the package library }
+                 linker.MakeSharedLibrary
                end;
 
              { Give Fatal with error count for linker errors }
@@ -2279,8 +2275,6 @@ type
             { write .def file }
             if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
              deffile.writefile;
-            if not DrainClangAssemblerQueue then
-              exit;
             { link SysInit (if any) first, to have behavior consistent with
               assembler startup files }
             if Assigned(sysinitmod) then

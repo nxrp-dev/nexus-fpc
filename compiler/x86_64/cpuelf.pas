@@ -141,16 +141,16 @@ implementation
       { Note: 8 and 16-bit relocations are known to be non-conformant with
         AMD64 ABI, so they aren't handled. }
         RELOC_RELATIVE :
-          if objrel.size=8 then
+          if objrel.Size=8 then
             result:=R_X86_64_PC64
-          else if objrel.size=4 then
+          else if objrel.Size=4 then
             result:=R_X86_64_PC32
           else
             InternalError(2012061900);
         RELOC_ABSOLUTE :
-          if objrel.size=8 then
+          if objrel.Size=8 then
             result:=R_X86_64_64
-          else if objrel.size=4 then
+          else if objrel.Size=4 then
             result:=R_X86_64_32
           else
             InternalError(2012061902);
@@ -165,18 +165,18 @@ implementation
         RELOC_PLT32 :
           result:=R_X86_64_PLT32;
         RELOC_TPOFF:
-          if objrel.size=8 then
+          if objrel.Size=8 then
             result:=R_X86_64_TPOFF64
-          else if objrel.size=4 then
+          else if objrel.Size=4 then
             result:=R_X86_64_TPOFF32
           else
             InternalError(2019091701);
         RELOC_TLSGD:
           result:=R_X86_64_TLSGD;
         RELOC_DTPOFF:
-          if objrel.size=8 then
+          if objrel.Size=8 then
             result:=R_X86_64_DTPOFF64
-          else if objrel.size=4 then
+          else if objrel.Size=4 then
             result:=R_X86_64_DTPOFF32
           else
             InternalError(2019091702);

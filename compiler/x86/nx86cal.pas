@@ -59,7 +59,7 @@ implementation
 
     procedure TX86CallNode.do_release_unused_return_value;
       begin
-        case location.loc of
+        case location.Loc of
           LOC_FPUREGISTER :
              begin
                { release FPU stack }
@@ -74,11 +74,11 @@ implementation
 
   procedure TX86CallNode.set_result_location(realresdef: TStoredDef);
     begin
-      if (retloc.location^.loc=LOC_FPUREGISTER) then
+      if (retloc.Location^.Loc=LOC_FPUREGISTER) then
         begin
           TCGX86(cg).inc_fpu_stack;
-          location_reset(location,LOC_FPUREGISTER,retloc.location^.size);
-          location.register:=retloc.location^.register;
+          Location_Reset(location,LOC_FPUREGISTER,retloc.Location^.Size);
+          location.Register:=retloc.Location^.Register;
         end
       else
         inherited set_result_location(realresdef);
@@ -96,7 +96,7 @@ implementation
       TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
       { do not use a ref. for calling conventions which allocate all registers, the reg. allocator cannot handle this, see
         also issue #28639, I were not able to create a simple example though to cause the resulting endless spilling }
-      result:=((getsupreg(ref.base)<first_int_imreg) and (getsupreg(ref.index)<first_int_imreg)) or
+      result:=((GetSupReg(ref.Base)<first_int_imreg) and (GetSupReg(ref.Index)<first_int_imreg)) or
               not(procdefinition.ProcCallOption in save_all_regs);
     end;
 
@@ -104,7 +104,7 @@ implementation
   function TX86CallNode.do_call_ref(ref: TReference): TCGPara;
     begin
       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_CALL,S_NO,ref));
-      result:=hlcg.get_call_result_cgpara(procdefinition,typedef)
+      result:=hlcg.Get_Call_Result_CGPara(procdefinition,typedef)
     end;
 
 end.

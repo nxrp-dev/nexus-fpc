@@ -1572,7 +1572,7 @@ unit raatt;
                            paravarsym :
                              l:=TAbstractVarSym(sym).GetSize;
                            TypeSym :
-                             l:=TTypeSym(sym).typedef.size;
+                             l:=TTypeSym(sym).typedef.Size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1758,14 +1758,14 @@ unit raatt;
          begin
            oper.opr.typ:=OPR_SYMBOL;
            oper.opr.symofs:=l;
-           oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
+           oper.opr.Symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
          end
         else
          begin
            oper.opr.typ:=OPR_CONSTANT;
            { cast properly to avoid a range check error }
 
-           oper.opr.val:=aint(l);
+           oper.opr.Val:=aint(l);
 
          end;
       end;
@@ -1789,7 +1789,7 @@ unit raatt;
                 if asmsym<>'' then
                  begin
                    ai:=TAIConst.create_type_sym(aitconst_rva_symbol,CurrentAsmData.RefAsmSymbol(asmsym,asmsymtyp));
-                   ai.value:=value;
+                   ai.Value:=value;
                    curlist.concat(ai);
                  end
                 else

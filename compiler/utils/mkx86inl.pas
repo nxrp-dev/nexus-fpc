@@ -204,20 +204,20 @@ function GetOper(const ATyp: string): string;
 function GetOperand(const ATyp: string; AIndex: LongInt): string;
   begin
     case ATyp of
-      'r8':    exit(format(',paraarray[%d].location.register', [AIndex]));
-      'rs8':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'r16':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'rs16':  exit(format(',paraarray[%d].location.register', [AIndex]));
-      'r32':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'rs32':  exit(format(',paraarray[%d].location.register', [AIndex]));
-      'r64':   exit(format(',paraarray[%d].location.register64.reglo,paraarray[%d].location.register64.reghi', [AIndex,AIndex]));
-      'rs64':  exit(format(',paraarray[%d].location.register64.reglo,paraarray[%d].location.register64.reghi', [AIndex,AIndex]));
-      'reg':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'sreg':  exit(format(',paraarray[%d].location.register', [AIndex]));
-      'f32':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'f64':   exit(format(',paraarray[%d].location.register', [AIndex]));
-      'mm':    exit(format(',paraarray[%d].location.register', [AIndex]));
-      'xmm':   exit(format(',paraarray[%d].location.register', [AIndex]));
+      'r8':    exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'rs8':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'r16':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'rs16':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'r32':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'rs32':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'r64':   exit(format(',paraarray[%d].Location.Register64.RegLo,paraarray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
+      'rs64':  exit(format(',paraarray[%d].Location.Register64.RegLo,paraarray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
+      'reg':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'sreg':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'f32':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'f64':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'mm':    exit(format(',paraarray[%d].Location.Register', [AIndex]));
+      'xmm':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
       'i32':   exit(format(',GetConstInt(paraarray[%d])',[AIndex]));
 
       'implicit_xmm0',
@@ -227,7 +227,7 @@ function GetOperand(const ATyp: string; AIndex: LongInt): string;
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128': exit(format(',paraarray[%d].location.reference', [AIndex]));
+      'ptr128': exit(format(',paraarray[%d].Location.Reference', [AIndex]));
     else
       exit(ATyp);
     end;
@@ -237,29 +237,29 @@ function GetOperandLoc(const ATyp: string): string;
   begin
     result:='';
     case ATyp of
-      'r8':   exit(',location.register');
-      'rs8':  exit(',location.register');
-      'r16':  exit(',location.register');
-      'rs16': exit(',location.register');
-      'r32':  exit(',location.register');
-      'rs32': exit(',location.register');
-      'r64':  exit(',location.register64.reglo,location.register64.reghi');
-      'rs64': exit(',location.register64.reglo,location.register64.reghi');
-      'reg':  exit(',location.register');
-      'sreg': exit(',location.register');
-      'f32':  exit(',location.register');
-      'f64':  exit(',location.register');
-      'mm':   exit(',location.register');
+      'r8':   exit(',location.Register');
+      'rs8':  exit(',location.Register');
+      'r16':  exit(',location.Register');
+      'rs16': exit(',location.Register');
+      'r32':  exit(',location.Register');
+      'rs32': exit(',location.Register');
+      'r64':  exit(',location.Register64.RegLo,location.Register64.RegHi');
+      'rs64': exit(',location.Register64.RegLo,location.Register64.RegHi');
+      'reg':  exit(',location.Register');
+      'sreg': exit(',location.Register');
+      'f32':  exit(',location.Register');
+      'f64':  exit(',location.Register');
+      'mm':   exit(',location.Register');
       'implicit_xmm0',
-      'xmm':  exit(',location.register');
+      'xmm':  exit(',location.Register');
 
-      'edi_ptr': exit(',location.register');
+      'edi_ptr': exit(',location.Register');
 
       'ptr8',
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128': exit(',location.register');
+      'ptr128': exit(',location.Register');
     end;
   end;
 
@@ -267,36 +267,36 @@ function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): 
   begin
     result:='';
     case ATyp of
-      'r8':    exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs8':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r16':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs16':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r32':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs32':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r64':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs64':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'reg':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'sreg':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f32':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f64':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'mm':    exit(format('location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'xmm':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r8':    exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs8':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r16':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs16':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r32':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs32':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r64':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs64':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'reg':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'sreg':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f32':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f64':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'mm':    exit(format('location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'xmm':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
 
       'implicit_xmm0':
-        exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);'+LineEnding+
-                    '    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
-                    '    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,X86_M128Type,paraarray[%d].location,NR_XMM0,nil);',
+        exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);'+LineEnding+
+                    '    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
+                    '    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,X86_M128Type,paraarray[%d].Location,NR_XMM0,nil);',
                       [AIndex+1, BoolToStr(aconst,'true','false'), AIndex+1, AIndex+1]));
       'edi_ptr':
-        exit(format('hlcg.getcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
-                    '    hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,VoidPointerType,paraarray[%d].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
+        exit(format('hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
+                    '    hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,VoidPointerType,paraarray[%d].Location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
                       [AIndex+1, AIndex+1]));
 
       'ptr8',
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128':exit(format('location_make_ref(paraarray[%d].location);', [AIndex+1]));
+      'ptr128':exit(format('location_make_ref(paraarray[%d].Location);', [AIndex+1]));
     end;
   end;
 
@@ -305,9 +305,9 @@ function GetDeallocStatement(AIndex: LongInt; const ATyp: string): string;
     result:='';
     case ATyp of
       'implicit_xmm0':
-        exit('hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);');
+        exit('hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);');
       'edi_ptr':
-        exit('hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});');
+        exit('hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});');
     end;
   end;
 
@@ -372,20 +372,20 @@ function GetLocAllocation(const ATyp: string): string;
   begin
     result:='';
     case ATyp of
-      'r8':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);');
-      'rs8': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);');
-      'r16':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);');
-      'rs16': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);');
-      'r32':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
-      'rs32': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
-      'r64':  exit('location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
-      'rs64': exit('location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
-      'reg':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);');
-      'sreg': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);');
-      'f32':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
-      'f64':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
-      'mm':   exit('location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);');
-      'xmm':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'r8':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
+      'rs8': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
+      'r16':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
+      'rs16': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
+      'r32':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs32': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'r64':  exit('location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs64': exit('location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'reg':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'sreg': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'f32':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'f64':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'mm':   exit('location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);');
+      'xmm':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
     end;
   end;
 
@@ -688,12 +688,12 @@ procedure ParseList(const APrefix, AFilename: string);
                 case opers[i].direction of
                   operOut:
                     begin
-                      fsecond.add('    location_reset(location,'+GetLoc(opers[i].typ)+');');
+                      fsecond.add('    Location_Reset(location,'+GetLoc(opers[i].typ)+');');
                       fsecond.Add('    '+GetLocAllocation(opers[i].typ));
                     end;
                   operVar:
                     begin
-                      fsecond.Add('    location:=paraarray['+IntToStr(cnt+1)+'].location;');
+                      fsecond.Add('    location:=paraarray['+IntToStr(cnt+1)+'].Location;');
                       inc(cnt);
                     end;
                   operIn:

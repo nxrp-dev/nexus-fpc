@@ -162,7 +162,7 @@ implementation
         VoidCodePointerType:=VoidPointerType;
         VoidStackPointerType:=VoidPointerType;
 
-        case VoidCodePointerType.size of
+        case VoidCodePointerType.Size of
           2:
             begin
               CodePtrUIntType:=U16IntType;
@@ -181,7 +181,7 @@ implementation
           else
             InternalError(2015112106);
         end;
-        case VoidPointerType.size of
+        case VoidPointerType.Size of
           2:
             begin
               PtrUIntType:=U16IntType;
@@ -313,13 +313,13 @@ implementation
         ParentFPVoidPointerType:=CPointerDef.create(VoidType);
 
 {$ifdef x86}
-        VoidNearPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near);
-        VoidNearCSPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_cs);
-        VoidNearDSPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_ds);
-        VoidNearSSPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_ss);
-        VoidNearESPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_es);
-        VoidNearFSPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_fs);
-        VoidNearGSPointerType:=TCPUPointerDefClass(CPointerDef).createx86(VoidType,x86pt_near_gs);
+        VoidNearPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near);
+        VoidNearCSPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_cs);
+        VoidNearDSPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_ds);
+        VoidNearSSPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_ss);
+        VoidNearESPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_es);
+        VoidNearFSPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_fs);
+        VoidNearGSPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near_gs);
 
         X86_M64Type:=CArrayDef.Create_Vector(0,1,S32IntType);
         X86_M128Type:=CArrayDef.Create_Vector(0,3,S32IntType);
@@ -352,17 +352,17 @@ implementation
             AddType('Single',S32FloatType);
             AddType('Double',S64FloatType);
             { extended size is the best real type for the target }
-            AddType('Extended',pbestrealtype^);
+            AddType('Extended',PBestRealType^);
             { CExtended corresponds to the C version of the Extended type
               (either "long double" or "double") }
             if TargetInfo.system in (systems_android+[system_x86_64_win64]) then
               { Microsoft C and Android x86 use Double at this boundary. }
               AddType('CExtended',S64FloatType)
             else
-              if TFloatDef(pbestrealtype^).FloatType=s80real then
+              if TFloatDef(PBestRealType^).FloatType=s80real then
                 AddType('CExtended',SC80FloatType)
               else
-                AddType('CExtended',pbestrealtype^);
+                AddType('CExtended',PBestRealType^);
           end;
 {$ifdef x86}
         if TargetInfo.system<>system_x86_64_win64 then
@@ -502,7 +502,7 @@ implementation
         AddType('$s64currency',S64CurrencyType);
           begin
             { Add a type for virtual method tables }
-            hrecst:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.alignment.RecordAlignMin);
+            hrecst:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
             VMTType:=CRecordDef.create('',hrecst);
             PVMTType:=CPointerDef.create(VMTType);
             { can't use addtype for pvmt because the rtti of the pointed
@@ -527,13 +527,13 @@ implementation
             AddType('$vtblarray',VMTArrayType);
           end;
         { Add a type for methodpointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.RecordAlignMin);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.Alignment.RecordAlignMin);
         AddField(hrecst,CFieldVarSym.create('$proc',vs_value,VoidCodePointerType,[]));
         AddField(hrecst,CFieldVarSym.create('$self',vs_value,VoidPointerType,[]));
         MethodPointerType:=CRecordDef.create('',hrecst);
         AddType('$methodpointer',MethodPointerType);
         { Add a type for nested proc pointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.RecordAlignMin);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.Alignment.RecordAlignMin);
         AddField(hrecst,CFieldVarSym.create('$proc',vs_value,VoidCodePointerType,[]));
         AddField(hrecst,CFieldVarSym.create('$parentfp',vs_value,ParentFPVoidPointerType,[]));
         NestedProcPointerType:=CRecordDef.create('',hrecst);
@@ -670,7 +670,7 @@ implementation
         nodeclass[lten]:=CAddNode;
         nodeclass[gtn]:=CAddNode;
         nodeclass[gten]:=CAddNode;
-        nodeclass[equaln]:=CAddNode;
+        nodeclass[EqualN]:=CAddNode;
         nodeclass[unequaln]:=CAddNode;
         nodeclass[inn]:=CInNode;
         nodeclass[orn]:=CAddNode;

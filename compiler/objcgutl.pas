@@ -338,9 +338,9 @@ procedure TObjCRTTIWriter.gen_objc_methods(list: TAsmList; objccls: TObjectDef; 
       exit;
 
     tcb:=CTAITypedConstBuilder.create(SectFlags[TargetInfo.system in systems_objc_nfabi]);
-    tcb.begin_anonymous_record(internaltypeprefixName[itp_objc_method_list]+ToStr(mcnt),
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    tcb.begin_anonymous_record(InternalTypePrefixName[itp_objc_method_list]+ToStr(mcnt),
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     if (abi=oa_fragile) then
       { not used, always zero }
@@ -349,7 +349,7 @@ procedure TObjCRTTIWriter.gen_objc_methods(list: TAsmList; objccls: TObjectDef; 
       begin
         { size of each entry -- always 32 bit value }
         mtype:=Search_Named_Unit_GlobalType('OBJC','OBJC_METHOD',true).typedef;
-        tcb.emit_ord_const(mtype.size,U32IntType);
+        tcb.emit_ord_const(mtype.Size,U32IntType);
       end;
     { number of objc_method entries in the method_list array -- always 32 bit}
     tcb.emit_ord_const(mcnt,U32IntType);
@@ -454,9 +454,9 @@ procedure TObjCRTTIWriter.gen_objc_protocol_list(list: TAsmList; classdef: TObje
       end;
 
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
-    tcb.begin_anonymous_record(internaltypeprefixName[itp_objc_proto_list]+ToStr(protolist.Count),
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    tcb.begin_anonymous_record(InternalTypePrefixName[itp_objc_proto_list]+ToStr(protolist.Count),
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     if (abi=oa_fragile) then
       { From Clang: next, always nil}
@@ -512,14 +512,14 @@ begin
 
   tcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
   tcb.begin_anonymous_record(
-    internaltypeprefixName[itp_objc_cat_methods]+ToStr(items.count),
-    C_alignment,1,
-    targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    InternalTypePrefixName[itp_objc_cat_methods]+ToStr(items.count),
+    CAlignment,1,
+    targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
   if (abi=oa_nonfragile) then
     begin
       { size of each entry -- always 32 bit value }
       mtype:=Search_Named_Unit_GlobalType('OBJC','OBJC_METHOD',true).typedef;
-      tcb.emit_ord_const(mtype.size,U32IntType);
+      tcb.emit_ord_const(mtype.Size,U32IntType);
     end;
   tcb.emit_ord_const(items.count,U32IntType);
   for i:=0 to items.Count-1 do
@@ -727,9 +727,9 @@ function TObjCRTTIWriterFragile.gen_objc_protocol_ext(list: TAsmList; optinstsym
         CurrentAsmData.getlabel(Result,alt_data);
         tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
         tcb.begin_anonymous_record(
-          internaltypeprefixName[itb_objc_fr_protocol_ext],
-          C_alignment,1,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+          InternalTypePrefixName[itb_objc_fr_protocol_ext],
+          CAlignment,1,
+          targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
         { size of this structure }
         tcb.emit_ord_const(16,U32IntType);
         { optional instance methods }
@@ -790,9 +790,9 @@ procedure TObjCRTTIWriterFragile.gen_objc_protocol(list:TAsmList; protocol: TObj
 
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_fr_protocol],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_fr_protocol],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     { protocol's isa - points to information about optional methods/properties }
     ConcatSymOrNil(tcb,protoext,VoidPointerType);
@@ -861,9 +861,9 @@ procedure TObjCRTTIWriterFragile.gen_objc_category_sections(list:TAsmList; objcc
     { category declaration section }
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_fr_category],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_fr_category],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     tcb.queue_init(VoidPointerType);
     tcb.queue_emit_asmsym(catstrsym,catstrdef);
@@ -978,9 +978,9 @@ procedure TObjCRTTIWriterFragile.gen_objc_classes_sections(list:TAsmList; objcls
 
     { 1) meta-class declaration  }
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
-    tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_fr_meta_class],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    tcb.begin_anonymous_record(InternalTypePrefixName[itb_objc_fr_meta_class],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     tcb.queue_init(VoidPointerType);
     tcb.queue_emit_asmsym(metaisaStrSym,metaisaStrDef);
@@ -1033,9 +1033,9 @@ procedure TObjCRTTIWriterFragile.gen_objc_classes_sections(list:TAsmList; objcls
     gen_objc_ivars(list,objclss,ivarslist);
 
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
-    tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_fr_class],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    tcb.begin_anonymous_record(InternalTypePrefixName[itb_objc_fr_class],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     { for class declaration: the isa points to the meta-class declaration }
     tcb.emit_tai(TAIConst.Create_sym(metasym),CPointerDef.getreusable(metaDef));
@@ -1103,8 +1103,8 @@ procedure TObjCRTTIWriterFragile.gen_objc_info_sections(list: TAsmList);
       begin
         tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
         tcb.begin_anonymous_record('',
-          C_alignment,1,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+          CAlignment,1,
+          targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
         { ??? (always 0 in Clang) }
         tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
         { ??? (From Clang: always 0, pointer to some selector) }
@@ -1134,8 +1134,8 @@ procedure TObjCRTTIWriterFragile.gen_objc_info_sections(list: TAsmList);
 
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record('',
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
     { version number = 7 (always, both for gcc and clang) }
     tcb.emit_ord_const(7,PtrUIntType);
     { sizeof(objc_module): 4 pointer-size entities }
@@ -1299,13 +1299,13 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_ivars(list: TAsmList; objccls: TObj
     CurrentAsmData.getlabel(ivarslabel,alt_data);
 
     tcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_nf_ivars]+ToStr(vcnt),
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_nf_ivars]+ToStr(vcnt),
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     { size of each entry -- always 32 bit value }
     ivtype:=Search_Named_Unit_GlobalType('OBJC','OBJC_IVAR',true).typedef;
-    tcb.emit_ord_const(ivtype.size,U32IntType);
+    tcb.emit_ord_const(ivtype.Size,U32IntType);
     { number of entries -- always 32 bit value }
     tcb.emit_ord_const(vcnt,U32IntType);
 
@@ -1323,9 +1323,9 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_ivars(list: TAsmList; objccls: TObj
         tcb.queue_init(VoidPointerType);
         tcb.queue_emit_asmsym(vars[i].TypeSym,vars[i].typedef);
         { alignment -- always 32 bit value }
-        tcb.emit_ord_const(vars[i].vf.vardef.alignment,U32IntType);
+        tcb.emit_ord_const(vars[i].vf.vardef.Alignment,U32IntType);
         { size -- always 32 bit value }
-        tcb.emit_ord_const(vars[i].vf.vardef.size,U32IntType);
+        tcb.emit_ord_const(vars[i].vf.vardef.Size,U32IntType);
       end;
     list.ConcatList(
       tcb.get_final_asmlist(
@@ -1406,7 +1406,7 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_protocol(list: TAsmList; protocol: 
     { TODO: properties }
     tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
     { size of this type }
-    tcb.emit_ord_const(prottype.size,U32IntType);
+    tcb.emit_ord_const(prottype.Size,U32IntType);
     { flags }
     tcb.emit_ord_const(0,U32IntType);
     { extendedMethodTypes }
@@ -1489,9 +1489,9 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_category_sections(list:TAsmList; ob
 
     { category declaration section }
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
-    tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_nf_category],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+    tcb.begin_anonymous_record(InternalTypePrefixName[itb_objc_nf_category],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
     tcb.queue_init(VoidPointerType);
     tcb.queue_emit_asmsym(catstrsym,catstrdef);
     tcb.emit_tai(TAIConst.Create_sym(clssym),VoidPointerType);
@@ -1662,7 +1662,7 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_class_ro_part(list: TAsmList; objcl
         rttitype:=objcmetarortti;
         { metaclass size/start: always size of objc_object }
         class_type:=Search_Named_Unit_GlobalType('OBJC','OBJC_OBJECT',true).typedef;
-        start:=class_type.size;
+        start:=class_type.Size;
         size:=start;
       end
     else
@@ -1700,9 +1700,9 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_class_ro_part(list: TAsmList; objcl
     { class declaration section }
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
     tcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_nf_class_ro_part],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_nf_class_ro_part],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     tcb.emit_ord_const(flags,U32IntType);
     tcb.emit_ord_const(start,U32IntType);
@@ -1775,15 +1775,15 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_classes_sections(list:TAsmList; obj
       for the class and metaclass symbols }
     isatcb:=CTAITypedConstBuilder.create([]);
     classdef:=isatcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_nf_class],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_nf_class],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     metatcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
     metadef:=metatcb.begin_anonymous_record(
-      internaltypeprefixName[itb_objc_nf_meta_class],
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itb_objc_nf_meta_class],
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
     clssym:=CurrentAsmData.DefineAsmSymbol(objclss.RTTIMangledName(objcclassrtti),vis,AT_DATA,classdef);
     metasym:=CurrentAsmData.DefineAsmSymbol(objclss.RTTIMangledName(objcmetartti),vis,AT_DATA,metadef);
@@ -1915,9 +1915,9 @@ procedure TObjCRTTIWriterNonFragile.gen_objc_protocol_extmethodtypes(list: TAsmL
 
     tcb:=CTAITypedConstBuilder.create([tcalo_new_section]);
     tcb.begin_anonymous_record(
-      internaltypeprefixName[itp_objc_prot_ext_methods]+ToStr(items.count),
-      C_alignment,1,
-      targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      InternalTypePrefixName[itp_objc_prot_ext_methods]+ToStr(items.count),
+      CAlignment,1,
+      targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
     for i:=0 to items.Count-1 do
       begin
         m:=TProcDef(items[i]);

@@ -123,7 +123,7 @@ unit opttail;
             calln,
             assignn:
               begin
-                if ((n.nodetype=calln) and is_optimizable_recursivecall(n) and is_void(n.resultdef)) or
+                if ((n.nodetype=calln) and is_optimizable_recursivecall(n) and Is_Void(n.resultdef)) or
                    ((n.nodetype=assignn) and is_resultassignment(TBinaryNode(n).left) and
                    is_optimizable_recursivecall(TBinaryNode(n).right)) then
                   begin
@@ -149,12 +149,12 @@ unit opttail;
                           end;
                         useaddr:=(paranode.parasym.VarSpez in [vs_var,vs_constref]) or
                           ((paranode.parasym.VarSpez=vs_const) and
-                          paramanager.push_addr_param(paranode.parasym.VarSpez,paranode.parasym.vardef,p.ProcCallOption)) or
+                          ParaManager.Push_Addr_Param(paranode.parasym.VarSpez,paranode.parasym.vardef,p.ProcCallOption)) or
                           ((paranode.parasym.VarSpez=vs_value) and
-                          is_open_array(paranode.parasym.vardef));
+                          Is_Open_Array(paranode.parasym.vardef));
                         if useaddr then
                           begin
-                            tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+                            tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
                               CAssignmentNode.create(
@@ -164,7 +164,7 @@ unit opttail;
                           end
                         else
                           begin
-                            tempnode:=CTempCreateNode.create(paranode.left.resultdef,paranode.left.resultdef.size,tt_persistent,true);
+                            tempnode:=CTempCreateNode.create(paranode.left.resultdef,paranode.left.resultdef.Size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
                               CAssignmentNode.Create_Internal(
@@ -244,12 +244,12 @@ unit opttail;
                  and slow down things anyways so a tail recursion call
                  makes no sense
                }
-               is_managed_type(vardef) then
+               Is_Managed_Type(vardef) then
               begin
 {$ifdef debug_opttail}
         WriteLn('====================================================================================');
         write('callnode: ',p.gettypename,' tail call opt disabled because parameter ',i,' ',realname,' ');
-        if is_managed_type(vardef) then
+        if Is_Managed_Type(vardef) then
           write('is managed ')
         else if (VarSpez=vs_out) then
           write('is out parameter');
@@ -263,7 +263,7 @@ unit opttail;
         { check if the local parameters should prevent tail recursion elimination }
         for i:=0 to p.LocalST.count-1 do
           with TAbstractVarSym(p.LocalST[i]) do
-            if is_managed_type(vardef) then
+            if Is_Managed_Type(vardef) then
               begin
 {$ifdef debug_opttail}
         WriteLn('====================================================================================');

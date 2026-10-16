@@ -107,7 +107,7 @@ unit optloop;
             if n.flags*[nf_modify,nf_write,nf_address_taken]<>[] then
               InternalError(2012090402);
             n.free;
-            n:=COrdConstNode.create(PReplaceInfo(arg)^.value,PReplaceInfo(arg)^.node.resultdef,false);
+            n:=COrdConstNode.create(PReplaceInfo(arg)^.Value,PReplaceInfo(arg)^.node.resultdef,false);
             DoFirstPass(n);
           end;
         result:=fen_false;
@@ -145,9 +145,9 @@ unit optloop;
             if (TForNode(node).right.nodetype=ordconstn) and (TForNode(node).t1.nodetype=ordconstn) then
               begin
                 if lnf_backward in TForNode(node).loopflags then
-                  counts:=TOrdConstNode(TForNode(node).right).value-TOrdConstNode(TForNode(node).t1).value+1
+                  counts:=TOrdConstNode(TForNode(node).right).Value-TOrdConstNode(TForNode(node).t1).Value+1
                 else
-                  counts:=TOrdConstNode(TForNode(node).t1).value-TOrdConstNode(TForNode(node).right).value+1;
+                  counts:=TOrdConstNode(TForNode(node).t1).Value-TOrdConstNode(TForNode(node).right).Value+1;
 
                 hascontrollflowstatements:=foreachnodestatic(TForNode(node).t2,@checkcontrollflowstatements,nil);
 
@@ -170,7 +170,7 @@ unit optloop;
                 if getridoffor then
                   begin
                     replaceinfo.node:=TForNode(node).left;
-                    replaceinfo.value:=TOrdConstNode(TForNode(node).right).value;
+                    replaceinfo.Value:=TOrdConstNode(TForNode(node).right).Value;
                   end
                 else
                   { we consider currently unrolling not beneficial, if we cannot get rid of the for completely, this
@@ -195,9 +195,9 @@ unit optloop;
                       begin
                         foreachnodestatic(TNode(unrollstatement),@replaceloadnodes,@replaceinfo);
                         if lnf_backward in TForNode(node).loopflags then
-                          replaceinfo.value:=replaceinfo.value-1
+                          replaceinfo.Value:=replaceinfo.Value-1
                         else
-                          replaceinfo.value:=replaceinfo.value+1;
+                          replaceinfo.Value:=replaceinfo.Value+1;
                       end
                     else
                       begin
@@ -284,7 +284,7 @@ unit optloop;
                 { no aliasing? }
                 result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(TAbstractVarSym(TLoadNode(expr).symtableentry).AddrTaken) and
                 { no definition in the loop? }
-                  not(DynSetIn(TForNode(loop).t2.optinfo^.defsum,expr.optinfo^.index));
+                  not(DynSetIn(TForNode(loop).t2.optinfo^.defsum,expr.optinfo^.Index));
             end;
           vecn:
             begin
@@ -406,7 +406,7 @@ unit optloop;
                   { did we use the same expression before already? }
                   if not(findpreviousstrengthreduction(n)) then
                     begin
-                      tempnode:=CTempCreateNode.create(n.resultdef,n.resultdef.size,tt_persistent,
+                      tempnode:=CTempCreateNode.create(n.resultdef,n.resultdef.Size,tt_persistent,
                         TStoredDef(n.resultdef).Is_IntRegable or TStoredDef(n.resultdef).Is_FPURegable);
                       addinduction(tempnode,n);
 
@@ -452,8 +452,8 @@ unit optloop;
           vecn:
             begin
               { is the index the counter variable? }
-              if not(is_special_array(TVecNode(n).left.resultdef)) and
-                not(is_packed_array(TVecNode(n).left.resultdef)) and
+              if not(Is_Special_Array(TVecNode(n).left.resultdef)) and
+                not(Is_Packed_Array(TVecNode(n).left.resultdef)) and
                 (TVecNode(n).right.isequal(currforloop.left) or
                  { fpc usually creates a type cast to access an array }
                  ((TVecNode(n).right.nodetype=typeconvn) and
@@ -478,7 +478,7 @@ unit optloop;
                   { did we use the same expression before already? }
                   if not(findpreviousstrengthreduction(n)) then
                     begin
-                      tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
+                      tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
                       addinduction(tempnode,n);
 
                       if lnf_backward in currforloop.loopflags then
@@ -494,7 +494,7 @@ unit optloop;
 
                       addstatement(initcodestatements,tempnode);
 
-                      startvaltemp:=maybereplacewithtemp(currforloop.right,initcode,initcodestatements,currforloop.right.resultdef.size,true);
+                      startvaltemp:=maybereplacewithtemp(currforloop.right,initcode,initcodestatements,currforloop.right.resultdef.Size,true);
                       nn:=CAddrNode.create(
                           CVecNode.create(TVecNode(n).left.GetCopy,CTypeConvNode.Create_Internal(currforloop.right.GetCopy,TVecNode(n).right.resultdef))
                         );
@@ -685,18 +685,18 @@ unit optloop;
             if (TSubscriptNode(n).left.nodetype=loadn) and
               (TLoadNode(TSubscriptNode(n).left).symtableentry=PRecordData(arg)^.BaseSymbol) and
               { Needs to be a basic type }
-              not is_string(TSubscriptNode(n).vs.vardef) and
+              not Is_String(TSubscriptNode(n).vs.vardef) and
               not Is_Object(TSubscriptNode(n).vs.vardef) and
-              not is_managed_type(TSubscriptNode(n).vs.vardef) and
+              not Is_Managed_Type(TSubscriptNode(n).vs.vardef) and
               (
                 (
                   TStoredDef(TSubscriptNode(n).vs.vardef).Is_IntRegable and
-                  (TSubscriptNode(n).vs.vardef.size<=sizeof(aint))
+                  (TSubscriptNode(n).vs.vardef.Size<=sizeof(aint))
                 ) or
                 TStoredDef(TSubscriptNode(n).vs.vardef).Is_FPURegable or
                 (
-                  is_vector(TStoredDef(TSubscriptNode(n).vs.vardef)) and
-                  fits_in_mm_register(TStoredDef(TSubscriptNode(n).vs.vardef))
+                  Is_Vector(TStoredDef(TSubscriptNode(n).vs.vardef)) and
+                  Fits_In_MM_Register(TStoredDef(TSubscriptNode(n).vs.vardef))
                 )
               ) then
               begin
@@ -715,7 +715,7 @@ unit optloop;
                     ThisTemp:=TFieldTempPair.Create;
                     ThisTemp.BaseSymbol:=PRecordData(arg)^.BaseSymbol;
                     ThisTemp.Field:=TSubscriptNode(n).vs;
-                    ThisTemp.TempCreate:=CTempCreateNode.Create(TSubscriptNode(n).vs.vardef,TSubscriptNode(n).vs.vardef.size,tt_persistent,True);
+                    ThisTemp.TempCreate:=CTempCreateNode.Create(TSubscriptNode(n).vs.vardef,TSubscriptNode(n).vs.vardef.Size,tt_persistent,True);
                     ThisTemp.InitialRead:=(nf_modify in TLoadNode(TSubscriptNode(n).left).flags) or not (nf_write in TLoadNode(TSubscriptNode(n).left).flags);
                     ThisTemp.FieldWritten:=False;
                     ThisTemp.Score:=0;
@@ -894,8 +894,8 @@ unit optloop;
                               if (X<>Y) and
                                 (TSym(CurrentProcInfo.procdef.LocalST.SymList[X]).typ=absolutevarsym) and
                                 (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).AbsTyp=tovar) and
-                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).ref.FirstSym^.SLType=sl_load) and
-                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).ref.FirstSym^.sym=CurrentSym) then
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).Ref.FirstSym^.SLType=sl_load) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).Ref.FirstSym^.sym=CurrentSym) then
                                 begin
                                   { Don't take any chances }
                                   AbortRecord:=True;
@@ -917,12 +917,12 @@ unit optloop;
                         else if
                           (
                             TStoredDef(TAbstractVarSym(CurrentSym).vardef).Is_IntRegable and
-                            (TAbstractVarSym(CurrentSym).vardef.size<=sizeof(aint))
+                            (TAbstractVarSym(CurrentSym).vardef.Size<=sizeof(aint))
                           ) or
                           TStoredDef(TAbstractVarSym(CurrentSym).vardef).Is_FPURegable or
                           (
-                            is_vector(TStoredDef(TAbstractVarSym(CurrentSym).vardef)) and
-                            fits_in_mm_register(TStoredDef(TAbstractVarSym(CurrentSym).vardef))
+                            Is_Vector(TStoredDef(TAbstractVarSym(CurrentSym).vardef)) and
+                            Fits_In_MM_Register(TStoredDef(TAbstractVarSym(CurrentSym).vardef))
                           ) then
                           begin
                             if foreachnodestatic(pm_postprocess, n, @recorddirectaccess, CurrentSym) then
@@ -1084,8 +1084,8 @@ unit optloop;
               InternalError(2017122801);
             if not(Assigned(TForNode(n).left.optinfo)) then
               exit;
-            if not(DynSetIn(TForNode(n).t2.optinfo^.usesum,TForNode(n).left.optinfo^.index)) and
-              not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TForNode(n).left.optinfo^.index))  then
+            if not(DynSetIn(TForNode(n).t2.optinfo^.usesum,TForNode(n).left.optinfo^.Index)) and
+              not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TForNode(n).left.optinfo^.Index))  then
               begin
                 { convert the loop from i:=a to b into i:=b-a+1 to 1 as this simplifies the
                   abort condition }

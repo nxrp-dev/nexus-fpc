@@ -93,7 +93,7 @@ implementation
         if p<>0 then
           result:=int_regname_table[p]
         else
-          result:=generic_regname(r);
+          result:=Generic_RegName(r);
       end;
 
 end.

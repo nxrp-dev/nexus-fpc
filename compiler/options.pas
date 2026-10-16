@@ -4405,27 +4405,27 @@ begin
     2. adapt defaults specifically for the target
     3. override with generic optimizer setting (little size)
     4. override with the user specified -Oa }
-  UpdateAlignment(InitSettings.alignment,TargetInfo.alignment);
+  UpdateAlignment(InitSettings.Alignment,TargetInfo.Alignment);
 
 
   if (cs_opt_size in InitSettings.OptimizerSwitches) then
    begin
-     InitSettings.alignment.ProcAlign:=1;
-     InitSettings.alignment.JumpAlign:=1;
-     InitSettings.alignment.CoalesceAlign:=1;
-     InitSettings.alignment.LoopAlign:=1;
+     InitSettings.Alignment.ProcAlign:=1;
+     InitSettings.Alignment.JumpAlign:=1;
+     InitSettings.Alignment.CoalesceAlign:=1;
+     InitSettings.Alignment.LoopAlign:=1;
 {$ifdef x86}
      { constalignmax=1 keeps the executable and thus the memory foot print small but
        all processors except x86 are really hurt by this or might even crash ... }
 {$ifndef x86_64}
      { ... and will segfault if not aligned for SSE instructions }
      if not (CPUX86_HAS_SSEUNIT in cpu_capabilities[InitSettings.CPUType]) then
-       InitSettings.alignment.ConstAlignMax:=1;
+       InitSettings.Alignment.ConstAlignMax:=1;
 {$endif not x86_64}
 {$endif x86}
    end;
 
-  UpdateAlignment(InitSettings.alignment,option.paraalignment);
+  UpdateAlignment(InitSettings.Alignment,option.paraalignment);
 
   Set_System_Macro('FPC_VERSION',VersionNr);
   Set_System_Macro('FPC_RELEASE',ReleaseNr);
@@ -4455,12 +4455,12 @@ begin
   option.free;
   Option:=nil;
 
-  clearstack_pocalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
-  cdecl_pocalls := [pocall_cdecl, pocall_cppdecl, pocall_mwpascal, pocall_sysv_abi_cdecl, pocall_ms_abi_cdecl];
+  ClearStack_PoCalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
+  CDecl_PoCalls := [pocall_cdecl, pocall_cppdecl, pocall_mwpascal, pocall_sysv_abi_cdecl, pocall_ms_abi_cdecl];
   if (tf_safecall_clearstack in TargetInfo.flags) then
     begin
-      include (cdecl_pocalls, pocall_safecall);
-      include (clearstack_pocalls, pocall_safecall)
+      include (CDecl_PoCalls, pocall_safecall);
+      include (ClearStack_PoCalls, pocall_safecall)
     end;
 end;
 

@@ -38,172 +38,172 @@ uses
   type
     THLBaseCGCPU = class(TCG)
      public
-      function makeregsize(list: TAsmList; reg: TRegister; size: TCgSize): TRegister; override;
-      procedure g_save_registers(list:TAsmList);override;
-      procedure g_restore_registers(list:TAsmList);override;
-      procedure g_stackpointer_alloc(list: TAsmList; size: LongInt); override;
-      procedure g_proc_exit(list: TAsmList; parasize: LongInt; nostackframe: boolean); override;
-      procedure g_proc_entry(list: TAsmList; localsize: LongInt; nostackframe: boolean); override;
-      procedure g_overflowcheck(list: TAsmList; const Loc: TLocation; def: TDef); override;
+      function MakeRegSize(list: TAsmList; reg: TRegister; size: TCgSize): TRegister; override;
+      procedure G_Save_Registers(list:TAsmList);override;
+      procedure G_Restore_Registers(list:TAsmList);override;
+      procedure G_StackPointer_Alloc(list: TAsmList; size: LongInt); override;
+      procedure G_Proc_Exit(list: TAsmList; parasize: LongInt; nostackframe: boolean); override;
+      procedure G_Proc_Entry(list: TAsmList; localsize: LongInt; nostackframe: boolean); override;
+      procedure G_OverflowCheck(list: TAsmList; const Loc: TLocation; def: TDef); override;
 {$ifdef cpuflags}
-      procedure g_flags2reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister); override;
-      procedure a_jmp_flags(list: TAsmList; const f: TResFlags; l: TAsmLabel); override;
+      procedure G_Flags2Reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister); override;
+      procedure A_Jmp_Flags(list: TAsmList; const f: TResFlags; l: TAsmLabel); override;
 {$endif}
-      procedure g_concatcopy(list: TAsmList; const source, dest: TReference; len: TCGInt); override;
-      procedure a_op_reg_reg(list: TAsmList; Op: TOpCG; size: TCgSize; reg1, reg2: TRegister); override;
-      procedure a_op_const_reg(list: TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister); override;
-      procedure a_load_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister); override;
-      procedure a_load_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; register: TRegister; const ref: TReference); override;
-      procedure a_load_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; register: TRegister); override;
-      procedure a_load_const_reg(list: TAsmList; size: TCgSize; a: TCGInt; register: TRegister); override;
-      procedure a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister); override;
-      procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference); override;
-      procedure a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister); override;
-      procedure a_loadaddr_ref_reg(list: TAsmList; const ref: TReference; r: TRegister); override;
-      procedure a_jmp_name(list: TAsmList; const s: string); override;
-      procedure a_jmp_always(list: TAsmList; l: TAsmLabel); override;
-      procedure a_cmp_reg_reg_label(list: TAsmList; size: TCgSize; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel); override;
-      procedure a_call_reg(list: TAsmList; reg: TRegister); override;
-      procedure a_call_name(list: TAsmList; const s: string; weak: boolean); override;
-      procedure a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister); override;
+      procedure G_ConcatCopy(list: TAsmList; const source, dest: TReference; len: TCGInt); override;
+      procedure A_Op_Reg_Reg(list: TAsmList; Op: TOpCG; size: TCgSize; reg1, reg2: TRegister); override;
+      procedure A_Op_Const_Reg(list: TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister); override;
+      procedure A_Load_Reg_Reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister); override;
+      procedure A_Load_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; register: TRegister; const ref: TReference); override;
+      procedure A_Load_Ref_Reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; register: TRegister); override;
+      procedure A_Load_Const_Reg(list: TAsmList; size: TCgSize; a: TCGInt; register: TRegister); override;
+      procedure A_LoadFPU_Reg_Reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister); override;
+      procedure A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference); override;
+      procedure A_LoadFPU_Ref_Reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister); override;
+      procedure A_LoadAddr_Ref_Reg(list: TAsmList; const ref: TReference; r: TRegister); override;
+      procedure A_Jmp_Name(list: TAsmList; const s: string); override;
+      procedure A_Jmp_Always(list: TAsmList; l: TAsmLabel); override;
+      procedure A_Cmp_Reg_Reg_Label(list: TAsmList; size: TCgSize; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel); override;
+      procedure A_Call_Reg(list: TAsmList; reg: TRegister); override;
+      procedure A_Call_Name(list: TAsmList; const s: string; weak: boolean); override;
+      procedure A_Bit_Scan_Reg_Reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister); override;
     end;
 
 implementation
 
    { thlbasecgcpu }
 
-    procedure THLBaseCGCPU.a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister);
+    procedure THLBaseCGCPU.A_Bit_Scan_Reg_Reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister);
       begin
         InternalError(2012042801);
       end;
 
 
-    procedure THLBaseCGCPU.a_call_name(list: TAsmList; const s: string; weak: boolean);
+    procedure THLBaseCGCPU.A_Call_Name(list: TAsmList; const s: string; weak: boolean);
       begin
         InternalError(2012042802);
       end;
 
 
-    procedure THLBaseCGCPU.a_call_reg(list: TAsmList; reg: TRegister);
+    procedure THLBaseCGCPU.A_Call_Reg(list: TAsmList; reg: TRegister);
       begin
         InternalError(2012042803);
       end;
 
 
-    procedure THLBaseCGCPU.a_cmp_reg_reg_label(list: TAsmList; size: TCgSize; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel);
+    procedure THLBaseCGCPU.A_Cmp_Reg_Reg_Label(list: TAsmList; size: TCgSize; cmp_op: TOpCmp; reg1, reg2: TRegister; l: TAsmLabel);
       begin
         InternalError(2012042804);
       end;
 
 
-    procedure THLBaseCGCPU.a_jmp_always(list: TAsmList; l: TAsmLabel);
+    procedure THLBaseCGCPU.A_Jmp_Always(list: TAsmList; l: TAsmLabel);
       begin
         InternalError(2012042805);
       end;
 
 {$ifdef cpuflags}
-    procedure THLBaseCGCPU.a_jmp_flags(list: TAsmList; const f: TResFlags; l: TAsmLabel);
+    procedure THLBaseCGCPU.A_Jmp_Flags(list: TAsmList; const f: TResFlags; l: TAsmLabel);
       begin
         InternalError(2012042806);
       end;
 {$endif}
 
-    procedure THLBaseCGCPU.a_jmp_name(list: TAsmList; const s: string);
+    procedure THLBaseCGCPU.A_Jmp_Name(list: TAsmList; const s: string);
       begin
         InternalError(2012042807);
       end;
 
 
-    procedure THLBaseCGCPU.a_loadaddr_ref_reg(list: TAsmList; const ref: TReference; r: TRegister);
+    procedure THLBaseCGCPU.A_LoadAddr_Ref_Reg(list: TAsmList; const ref: TReference; r: TRegister);
       begin
         InternalError(2012042808);
       end;
 
-    procedure THLBaseCGCPU.a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister);
+    procedure THLBaseCGCPU.A_LoadFPU_Ref_Reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister);
       begin
         InternalError(2012042809);
       end;
 
 
-    procedure THLBaseCGCPU.a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference);
+    procedure THLBaseCGCPU.A_LoadFPU_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference);
       begin
         InternalError(2012042810);
       end;
 
 
-    procedure THLBaseCGCPU.a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister);
+    procedure THLBaseCGCPU.A_LoadFPU_Reg_Reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister);
       begin
         InternalError(2012042811);
       end;
 
 
-    procedure THLBaseCGCPU.a_load_const_reg(list: TAsmList; size: TCgSize; a: TCGInt; register: TRegister);
+    procedure THLBaseCGCPU.A_Load_Const_Reg(list: TAsmList; size: TCgSize; a: TCGInt; register: TRegister);
       begin
         InternalError(2012042812);
       end;
 
 
-    procedure THLBaseCGCPU.a_load_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; register: TRegister);
+    procedure THLBaseCGCPU.A_Load_Ref_Reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; register: TRegister);
       begin
         InternalError(2012042813);
       end;
 
 
-    procedure THLBaseCGCPU.a_load_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; register: TRegister; const ref: TReference);
+    procedure THLBaseCGCPU.A_Load_Reg_Ref(list: TAsmList; fromsize, tosize: TCgSize; register: TRegister; const ref: TReference);
       begin
         InternalError(2012042814);
       end;
 
 
-    procedure THLBaseCGCPU.a_load_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister);
+    procedure THLBaseCGCPU.A_Load_Reg_Reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister);
       begin
         InternalError(2012042815);
       end;
 
 
-    procedure THLBaseCGCPU.a_op_const_reg(list: TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister);
+    procedure THLBaseCGCPU.A_Op_Const_Reg(list: TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister);
       begin
         InternalError(2012042816);
       end;
 
 
-    procedure THLBaseCGCPU.a_op_reg_reg(list: TAsmList; Op: TOpCG; size: TCgSize; reg1, reg2: TRegister);
+    procedure THLBaseCGCPU.A_Op_Reg_Reg(list: TAsmList; Op: TOpCG; size: TCgSize; reg1, reg2: TRegister);
       begin
         InternalError(2012042817);
       end;
 
 
-    procedure THLBaseCGCPU.g_concatcopy(list: TAsmList; const source, dest: TReference; len: TCGInt);
+    procedure THLBaseCGCPU.G_ConcatCopy(list: TAsmList; const source, dest: TReference; len: TCGInt);
       begin
         InternalError(2012042818);
       end;
 
 {$ifdef cpuflags}
-    procedure THLBaseCGCPU.g_flags2reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister);
+    procedure THLBaseCGCPU.G_Flags2Reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister);
       begin
         InternalError(2012042819);
       end;
 {$endif}
 
-    procedure THLBaseCGCPU.g_overflowcheck(list: TAsmList; const Loc: TLocation; def: TDef);
+    procedure THLBaseCGCPU.G_OverflowCheck(list: TAsmList; const Loc: TLocation; def: TDef);
       begin
         InternalError(2012042820);
       end;
 
 
-    procedure THLBaseCGCPU.g_proc_entry(list: TAsmList; localsize: LongInt; nostackframe: boolean);
+    procedure THLBaseCGCPU.G_Proc_Entry(list: TAsmList; localsize: LongInt; nostackframe: boolean);
       begin
         InternalError(2012042821);
       end;
 
 
-    procedure THLBaseCGCPU.g_proc_exit(list: TAsmList; parasize: LongInt; nostackframe: boolean);
+    procedure THLBaseCGCPU.G_Proc_Exit(list: TAsmList; parasize: LongInt; nostackframe: boolean);
       begin
         InternalError(2012042822);
       end;
 
 
-    function THLBaseCGCPU.makeregsize(list: TAsmList; reg: TRegister; size: TCgSize): TRegister;
+    function THLBaseCGCPU.MakeRegSize(list: TAsmList; reg: TRegister; size: TCgSize): TRegister;
       begin
         { you can't just change the size of a (virtual) register on high level
           targets, you have to allocate a new register of the right size and
@@ -213,17 +213,17 @@ implementation
         result:=NR_NO;
       end;
 
-    procedure THLBaseCGCPU.g_save_registers(list: TAsmList);
+    procedure THLBaseCGCPU.G_Save_Registers(list: TAsmList);
       begin
         { do nothing }
       end;
 
-    procedure THLBaseCGCPU.g_restore_registers(list: TAsmList);
+    procedure THLBaseCGCPU.G_Restore_Registers(list: TAsmList);
       begin
         { do nothing }
       end;
 
-    procedure THLBaseCGCPU.g_stackpointer_alloc(list: TAsmList; size: LongInt);
+    procedure THLBaseCGCPU.G_StackPointer_Alloc(list: TAsmList; size: LongInt);
       begin
         InternalError(2012042823);
       end;

@@ -109,9 +109,9 @@ Implementation
                   (operands[1].opr.typ=OPR_CONSTANT) or not
                     (
                       ((operands[1].opr.typ=OPR_REGISTER) and
-                        (getregtype(operands[1].opr.reg) in [R_MMXREGISTER,R_MMREGISTER])) or
+                        (GetRegType(operands[1].opr.reg) in [R_MMXREGISTER,R_MMREGISTER])) or
                       ((operands[2].opr.typ=OPR_REGISTER) and
-                        (getregtype(operands[2].opr.reg) in [R_MMXREGISTER,R_MMREGISTER]))
+                        (GetRegType(operands[2].opr.reg) in [R_MMXREGISTER,R_MMREGISTER]))
                     )
                 ) then
                 opcode:=A_MOV;
@@ -199,11 +199,11 @@ Implementation
           { we have to process the scaling }
           l:=BuildConstExpression(false,true);
           if ((l = 2) or (l = 4) or (l = 8) or (l = 1)) then
-           oper.opr.ref.scalefactor:=l
+           oper.opr.Ref.ScaleFactor:=l
           else
            Begin
              Message(asmr_e_wrong_scale_factor);
-             oper.opr.ref.scalefactor:=0;
+             oper.opr.Ref.ScaleFactor:=0;
            end;
         end;
 
@@ -238,7 +238,7 @@ Implementation
         begin
           if actasmtoken=AS_REGISTER then
            Begin
-             oper.opr.ref.index:=actasmregister;
+             oper.opr.Ref.Index:=actasmregister;
              Consume(AS_REGISTER);
              Check_Scaling;
            end
@@ -274,18 +274,18 @@ Implementation
                  AsmRegisterPara(tmp.opr.localsym) then
                 begin
                   tmp.InitRefConvertLocal;
-                  if (tmp.opr.ref.index<>NR_NO) or
-                      (tmp.opr.ref.offset<>0) or
-                      (tmp.opr.ref.scalefactor<>0) or
-                      (tmp.opr.ref.segment<>NR_NO) or
-                      (tmp.opr.ref.base=NR_NO) then
+                  if (tmp.opr.Ref.Index<>NR_NO) or
+                      (tmp.opr.Ref.Offset<>0) or
+                      (tmp.opr.Ref.ScaleFactor<>0) or
+                      (tmp.opr.Ref.Segment<>NR_NO) or
+                      (tmp.opr.Ref.Base=NR_NO) then
                     begin
                       message(asmr_e_invalid_reference_syntax);
                       RecoverConsume(false);
                       tmp.free;
                       Exit;
                     end;
-                  oper.opr.ref.index:=tmp.opr.ref.base;
+                  oper.opr.Ref.Index:=tmp.opr.Ref.Base;
                   tmp.free;
                   Check_Scaling;
                 end
@@ -332,15 +332,15 @@ Implementation
             Begin
               { Check if there is already a base (mostly ebp,esp) than this is
                 not allowed, because it will give crashing code }
-              if ((oper.opr.typ=OPR_REFERENCE) and (oper.opr.ref.base<>NR_NO)) or
-                 ((oper.opr.typ=OPR_LOCAL) and (oper.opr.localsym.LocAlloc.loc<>LOC_REGISTER)) then
+              if ((oper.opr.typ=OPR_REFERENCE) and (oper.opr.Ref.Base<>NR_NO)) or
+                 ((oper.opr.typ=OPR_LOCAL) and (oper.opr.localsym.LocAlloc.Loc<>LOC_REGISTER)) then
                 message(asmr_e_cannot_index_relative_var);
-              oper.opr.ref.base:=actasmregister;
+              oper.opr.Ref.Base:=actasmregister;
 {$ifdef x86_64}
               { non-GOT based RIP-relative accesses are also position-independent }
-              if (oper.opr.ref.base=NR_RIP) and
-                 (oper.opr.ref.refaddr<>addr_pic) then
-                oper.opr.ref.refaddr:=addr_pic_no_got;
+              if (oper.opr.Ref.Base=NR_RIP) and
+                 (oper.opr.Ref.RefAddr<>addr_pic) then
+                oper.opr.Ref.RefAddr:=addr_pic_no_got;
 {$endif x86_64}
               Consume(AS_REGISTER);
               { can either be a register, an identifier or a right parenthesis }
@@ -386,18 +386,18 @@ Implementation
                  AsmRegisterPara(tmp.opr.localsym) then
                 begin
                   tmp.InitRefConvertLocal;
-                  if (tmp.opr.ref.index<>NR_NO) or
-                      (tmp.opr.ref.offset<>0) or
-                      (tmp.opr.ref.scalefactor<>0) or
-                      (tmp.opr.ref.segment<>NR_NO) or
-                      (tmp.opr.ref.base=NR_NO) then
+                  if (tmp.opr.Ref.Index<>NR_NO) or
+                      (tmp.opr.Ref.Offset<>0) or
+                      (tmp.opr.Ref.ScaleFactor<>0) or
+                      (tmp.opr.Ref.Segment<>NR_NO) or
+                      (tmp.opr.Ref.Base=NR_NO) then
                     begin
                       message(asmr_e_invalid_reference_syntax);
                       RecoverConsume(false);
                       tmp.free;
                       Exit;
                     end;
-                  oper.opr.ref.base:=tmp.opr.ref.base;
+                  oper.opr.Ref.Base:=tmp.opr.Ref.Base;
                   tmp.free;
                 end
               else
@@ -423,7 +423,7 @@ Implementation
               { Index }
               if (actasmtoken=AS_REGISTER) then
                Begin
-                 oper.opr.ref.index:=actasmregister;
+                 oper.opr.Ref.Index:=actasmregister;
                  Consume(AS_REGISTER);
                  { check for scaling ... }
                  case actasmtoken of
@@ -491,12 +491,12 @@ Implementation
                       case oper.opr.typ of
                         OPR_SYMBOL:
                           begin
-                            sym:=oper.opr.symbol;
+                            sym:=oper.opr.Symbol;
                             if oper.opr.symofs<>0 then
                               Message(asmr_e_invalid_reference_syntax);
                             oper.opr.typ:=OPR_REFERENCE;
-                            fillchar(oper.opr.ref,sizeof(oper.opr.ref),0);
-                            oper.opr.ref.symbol:=sym;
+                            fillchar(oper.opr.Ref,sizeof(oper.opr.Ref),0);
+                            oper.opr.Ref.Symbol:=sym;
                           end;
                         OPR_REFERENCE:
                           begin
@@ -505,7 +505,7 @@ Implementation
                         else
                           Message(asmr_e_invalid_reference_syntax)
                       end;
-                      oper.opr.ref.refaddr:=addr_pic;
+                      oper.opr.Ref.RefAddr:=addr_pic;
                       consume(AS_ID);
                     end
                   else
@@ -520,12 +520,12 @@ Implementation
               Consume(AS_MINUS);
               BuildConstSymbolExpression(true,true,false,l,relsym,asmsymtyp);
               if (relsym<>'') then
-                if not Assigned(oper.opr.ref.relsymbol) then
-                  oper.opr.ref.relsymbol:=CurrentAsmData.RefAsmSymbol(relsym,asmsymtyp)
+                if not Assigned(oper.opr.Ref.RelSymbol) then
+                  oper.opr.Ref.RelSymbol:=CurrentAsmData.RefAsmSymbol(relsym,asmsymtyp)
                 else
                   Message(asmr_e_invalid_reference_syntax)
               else
-                dec(oper.opr.ref.offset,l);
+                dec(oper.opr.Ref.Offset,l);
             end;
           else
             ;
@@ -546,12 +546,12 @@ Implementation
                is_calljmp(actopcode) then
              begin
                oper.opr.typ:=OPR_SYMBOL;
-               oper.opr.symbol:=hl;
+               oper.opr.Symbol:=hl;
              end
             else
              begin
                oper.InitRef;
-               oper.opr.ref.symbol:=hl;
+               oper.opr.Ref.Symbol:=hl;
              end;
           end;
 
@@ -605,16 +605,16 @@ Implementation
               OPR_CONSTANT :
                 if (MangledName<>'') then
                   begin
-                    if (oper.opr.val<>0) then
+                    if (oper.opr.Val<>0) then
                       Message(asmr_e_wrong_sym_type);
                     oper.opr.typ:=OPR_SYMBOL;
-                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(MangledName,AT_FUNCTION);
+                    oper.opr.Symbol:=CurrentAsmData.RefAsmSymbol(MangledName,AT_FUNCTION);
                   end
                 else
-                  inc(oper.opr.val,l);
+                  inc(oper.opr.Val,l);
               OPR_REFERENCE :
                 begin
-                  inc(oper.opr.ref.offset,l);
+                  inc(oper.opr.Ref.Offset,l);
                   inc(oper.opr.constoffset,l);
                 end;
               OPR_SYMBOL:
@@ -636,7 +636,7 @@ Implementation
               AS_INTNUM:
                 Begin
                   { allow %segmentregister:number }
-                  if oper.opr.ref.segment<>NR_NO then
+                  if oper.opr.Ref.Segment<>NR_NO then
                     begin
                       // already done before calling oper.InitRef;
                       if oper.opr.Ref.Offset <> 0 Then
@@ -646,21 +646,21 @@ Implementation
                           oper.opr.Ref.Offset:=BuildConstExpression(true,false);
                           if actasmtoken=AS_LPAREN then
                             BuildReference(oper)
-                          else if (oper.opr.ref.segment <> NR_FS) and
-                            (oper.opr.ref.segment <> NR_GS) then
+                          else if (oper.opr.Ref.Segment <> NR_FS) and
+                            (oper.opr.Ref.Segment <> NR_GS) then
                            Message(asmr_w_general_segment_with_constant);
                         end;
                     end
                   else
                     begin
-                      oper.opr.ref.offset:=BuildConstExpression(True,False);
+                      oper.opr.Ref.Offset:=BuildConstExpression(True,False);
                       BuildReference(oper);
                     end;
                 end;
               AS_MINUS,
               AS_PLUS:
                 Begin
-                  oper.opr.ref.offset:=BuildConstExpression(True,False);
+                  oper.opr.Ref.Offset:=BuildConstExpression(True,False);
                   if actasmtoken<>AS_LPAREN then
                     Message(asmr_e_invalid_reference_syntax)
                   else
@@ -692,7 +692,7 @@ Implementation
                      BuildRecordOffsetSize(tempstr,l,k,MangledName,false);
                      if (MangledName<>'') then
                        Message(asmr_e_invalid_reference_syntax);
-                     inc(oper.opr.ref.offset,l);
+                     inc(oper.opr.Ref.Offset,l);
 
                      case oper.opr.typ of
                        OPR_REFERENCE: oper.opr.varsize := k;
@@ -745,7 +745,7 @@ Implementation
               { Constant memory offset }
               { This must absolutely be followed by (  }
               oper.InitRef;
-              oper.opr.ref.offset:=asizeint(BuildConstExpression(True,False));
+              oper.opr.Ref.Offset:=asizeint(BuildConstExpression(True,False));
               if actasmtoken<>AS_LPAREN then
                 Message(asmr_e_invalid_reference_syntax)
               else
@@ -759,7 +759,7 @@ Implementation
                begin
                  oper.opr.typ:=OPR_REGISTER;
                  oper.opr.reg:=actasmregister;
-                 oper.SetSize(tcgsize2size[reg_cgsize(actasmregister)],true);
+                 oper.SetSize(TCgSize2Size[reg_cgsize(actasmregister)],true);
                  Consume(AS_REGISTER);
                end
               else
@@ -857,7 +857,7 @@ Implementation
                           if ErrorCount=0 then
                             case oper.opr.typ of
                               OPR_CONSTANT :
-                                inc(oper.opr.val,l);
+                                inc(oper.opr.Val,l);
                               OPR_LOCAL :
                                 begin
                                   inc(oper.opr.localsymofs,l);
@@ -865,7 +865,7 @@ Implementation
                                 end;
                               OPR_REFERENCE :
                                 begin
-                                  inc(oper.opr.ref.offset,l);
+                                  inc(oper.opr.Ref.Offset,l);
                                   inc(oper.opr.constoffset, l);
                                 end;
                               else
@@ -894,7 +894,7 @@ Implementation
                  if (tempreg=NR_CS) or (tempreg=NR_DS) or (tempreg=NR_SS) or (tempreg=NR_ES) then
                    Message1(asmr_w_segment_override_ignored_in_64bit_mode,gas_regname(tempreg));
 {$endif x86_64}
-                 oper.opr.ref.segment:=tempreg;
+                 oper.opr.Ref.Segment:=tempreg;
                  { This must absolutely be followed by a reference }
                  if not MaybeBuildReference then
                   Begin
@@ -909,7 +909,7 @@ Implementation
                     Message(asmr_e_invalid_operand_type);
                   oper.opr.typ:=OPR_REGISTER;
                   oper.opr.reg:=tempreg;
-                  oper.SetSize(tcgsize2size[reg_cgsize(oper.opr.reg)],true);
+                  oper.SetSize(TCgSize2Size[reg_cgsize(oper.opr.reg)],true);
                 end
               else
                 Message(asmr_e_syn_operand);
@@ -1053,19 +1053,19 @@ Implementation
                   with instr.operands[si_param] do
                     if (opr.typ=OPR_REFERENCE) then
                       begin
-                        if not((((opr.ref.index<>NR_NO) and
-                                 (opr.ref.base=NR_NO) and
-                                 (getregtype(opr.ref.index)=R_INTREGISTER) and
-                                 (getsupreg(opr.ref.index)=RS_ESI)) or
-                                ((opr.ref.index=NR_NO) and
-                                 (opr.ref.base<>NR_NO) and
-                                 (getregtype(opr.ref.base)=R_INTREGISTER) and
-                                 (getsupreg(opr.ref.base)=RS_ESI))) and
-                               (opr.ref.offset=0) and
-                               (opr.ref.scalefactor<=1) and
-                               (opr.ref.refaddr=addr_no) and
-                               (opr.ref.symbol=nil) and
-                               (opr.ref.relsymbol=nil)) then
+                        if not((((opr.Ref.Index<>NR_NO) and
+                                 (opr.Ref.Base=NR_NO) and
+                                 (GetRegType(opr.Ref.Index)=R_INTREGISTER) and
+                                 (GetSupReg(opr.Ref.Index)=RS_ESI)) or
+                                ((opr.Ref.Index=NR_NO) and
+                                 (opr.Ref.Base<>NR_NO) and
+                                 (GetRegType(opr.Ref.Base)=R_INTREGISTER) and
+                                 (GetSupReg(opr.Ref.Base)=RS_ESI))) and
+                               (opr.Ref.Offset=0) and
+                               (opr.Ref.ScaleFactor<=1) and
+                               (opr.Ref.RefAddr=addr_no) and
+                               (opr.Ref.Symbol=nil) and
+                               (opr.Ref.RelSymbol=nil)) then
 {$if defined(i386)}
                           Message1(asmr_w_invalid_reference,'(%esi)');
 {$elseif defined(x86_64)}
@@ -1081,22 +1081,22 @@ Implementation
                   with instr.operands[di_param] do
                     if (opr.typ=OPR_REFERENCE) then
                       begin
-                        if (opr.ref.segment<>NR_NO) and
-                           (opr.ref.segment<>NR_ES) then
+                        if (opr.Ref.Segment<>NR_NO) and
+                           (opr.Ref.Segment<>NR_ES) then
                           Message(asmr_e_cannot_override_es_segment);
-                        if not((((opr.ref.index<>NR_NO) and
-                                 (opr.ref.base=NR_NO) and
-                                 (getregtype(opr.ref.index)=R_INTREGISTER) and
-                                 (getsupreg(opr.ref.index)=RS_EDI)) or
-                                ((opr.ref.index=NR_NO) and
-                                 (opr.ref.base<>NR_NO) and
-                                 (getregtype(opr.ref.base)=R_INTREGISTER) and
-                                 (getsupreg(opr.ref.base)=RS_EDI))) and
-                               (opr.ref.offset=0) and
-                               (opr.ref.scalefactor<=1) and
-                               (opr.ref.refaddr=addr_no) and
-                               (opr.ref.symbol=nil) and
-                               (opr.ref.relsymbol=nil)) then
+                        if not((((opr.Ref.Index<>NR_NO) and
+                                 (opr.Ref.Base=NR_NO) and
+                                 (GetRegType(opr.Ref.Index)=R_INTREGISTER) and
+                                 (GetSupReg(opr.Ref.Index)=RS_EDI)) or
+                                ((opr.Ref.Index=NR_NO) and
+                                 (opr.Ref.Base<>NR_NO) and
+                                 (GetRegType(opr.Ref.Base)=R_INTREGISTER) and
+                                 (GetSupReg(opr.Ref.Base)=RS_EDI))) and
+                               (opr.Ref.Offset=0) and
+                               (opr.Ref.ScaleFactor<=1) and
+                               (opr.Ref.RefAddr=addr_no) and
+                               (opr.Ref.Symbol=nil) and
+                               (opr.Ref.RelSymbol=nil)) then
 {$if defined(i386)}
                           Message1(asmr_w_invalid_reference,'(%edi)');
 {$elseif defined(x86_64)}
@@ -1110,8 +1110,8 @@ Implementation
                (instr.operands[si_param].opr.typ=OPR_REFERENCE) and
                (instr.operands[di_param].opr.typ=OPR_REFERENCE) then
               begin
-                if get_ref_address_size(instr.operands[si_param].opr.ref)<>
-                   get_ref_address_size(instr.operands[di_param].opr.ref) then
+                if get_ref_address_size(instr.operands[si_param].opr.Ref)<>
+                   get_ref_address_size(instr.operands[di_param].opr.Ref) then
                   Message(asmr_e_address_sizes_do_not_match);
               end;
           end;

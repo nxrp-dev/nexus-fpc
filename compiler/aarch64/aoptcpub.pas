@@ -125,8 +125,8 @@ Implementation
           top_reg:
             begin
               preg:=TAICPU(p1).oper[i]^.reg;
-              if (getregtype(preg)=getregtype(reg)) and
-                 (getsupreg(preg)=getsupreg(reg)) and
+              if (GetRegType(preg)=GetRegType(reg)) and
+                 (GetSupReg(preg)=GetSupReg(reg)) and
                  (TAICPU(p1).spilling_get_operation_type(i) in [operand_write,operand_readwrite]) then
                 begin
                   result:=true;
@@ -135,8 +135,8 @@ Implementation
             end;
           top_ref:
             begin
-              if (TAICPU(p1).oper[i]^.ref^.addressmode<>am_offset) and
-                 (reg=TAICPU(p1).oper[i]^.ref^.base) then
+              if (TAICPU(p1).oper[i]^.Ref^.AddressMode<>am_offset) and
+                 (reg=TAICPU(p1).oper[i]^.Ref^.Base) then
                 begin
                   result:=true;
                   exit

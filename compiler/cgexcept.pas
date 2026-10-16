@@ -133,9 +133,9 @@ unit cgexcept;
       begin
         if not Assigned(ExceptionReasonType) then
           ExceptionReasonType:=Search_System_Proc('fpc_setjmp').ReturnDef;
-        tg.gethltemp(list,Rec_ExceptAddr,Rec_ExceptAddr.size,tt_persistent,t.envbuf);
-        tg.gethltemp(list,Rec_Jmp_Buf,Rec_Jmp_Buf.size,tt_persistent,t.jmpbuf);
-        tg.gethltemp(list,ExceptionReasonType,ExceptionReasonType.size,tt_persistent,t.reasonbuf);
+        tg.GetHLTemp(list,Rec_ExceptAddr,Rec_ExceptAddr.Size,tt_persistent,t.envbuf);
+        tg.GetHLTemp(list,Rec_Jmp_Buf,Rec_Jmp_Buf.Size,tt_persistent,t.jmpbuf);
+        tg.GetHLTemp(list,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,t.reasonbuf);
       end;
 
 
@@ -163,56 +163,56 @@ unit cgexcept;
 
         { fpc_pushexceptaddr(exceptionframetype, setjmp_buffer, exception_address_chain_entry) }
         pd:=Search_System_Proc('fpc_pushexceptaddr');
-        paramanager.getcgtempparaloc(list,pd,1,paraloc1);
-        paramanager.getcgtempparaloc(list,pd,2,paraloc2);
-        paramanager.getcgtempparaloc(list,pd,3,paraloc3);
+        ParaManager.GetCGTempParaLoc(list,pd,1,paraloc1);
+        ParaManager.GetCGTempParaLoc(list,pd,2,paraloc2);
+        ParaManager.GetCGTempParaLoc(list,pd,3,paraloc3);
         if pd.Is_PushLeftRight then
           begin
             { type of exceptionframe }
-            hlcg.a_load_const_cgpara(list,paraloc1.def,1,paraloc1);
+            hlcg.A_Load_Const_CGPara(list,paraloc1.def,1,paraloc1);
             { setjmp buffer }
-            hlcg.a_loadaddr_ref_cgpara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
+            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
             { exception address chain entry }
-            hlcg.a_loadaddr_ref_cgpara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
+            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
           end
         else
           begin
-            hlcg.a_loadaddr_ref_cgpara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
-            hlcg.a_loadaddr_ref_cgpara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
-            hlcg.a_load_const_cgpara(list,paraloc1.def,1,paraloc1);
+            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
+            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
+            hlcg.A_Load_Const_CGPara(list,paraloc1.def,1,paraloc1);
           end;
-        paramanager.freecgpara(list,paraloc3);
-        paramanager.freecgpara(list,paraloc2);
-        paramanager.freecgpara(list,paraloc1);
+        ParaManager.FreeCGPara(list,paraloc3);
+        ParaManager.FreeCGPara(list,paraloc2);
+        ParaManager.FreeCGPara(list,paraloc1);
         { perform the fpc_pushexceptaddr call }
-        pushexceptres:=hlcg.g_call_system_proc(list,pd,[@paraloc1,@paraloc2,@paraloc3],nil);
+        pushexceptres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1,@paraloc2,@paraloc3],nil);
         paraloc1.done;
         paraloc2.done;
         paraloc3.done;
 
         { get the result }
-        location_reset(tmpresloc,LOC_REGISTER,def_cgsize(pushexceptres.def));
-        tmpresloc.register:=hlcg.getaddressregister(list,pushexceptres.def);
-        hlcg.gen_load_cgpara_loc(list,pushexceptres.def,pushexceptres,tmpresloc,true);
-        pushexceptres.resetiftemp;
+        Location_Reset(tmpresloc,LOC_REGISTER,Def_CGSize(pushexceptres.def));
+        tmpresloc.Register:=hlcg.GetAddressRegister(list,pushexceptres.def);
+        hlcg.Gen_Load_CGPara_Loc(list,pushexceptres.def,pushexceptres,tmpresloc,true);
+        pushexceptres.ResetIfTemp;
 
         { fpc_setjmp(result_of_pushexceptaddr_call) }
         pd:=Search_System_Proc('fpc_setjmp');
-        paramanager.getcgtempparaloc(list,pd,1,paraloc1);
+        ParaManager.GetCGTempParaLoc(list,pd,1,paraloc1);
 
-        hlcg.a_load_reg_cgpara(list,pushexceptres.def,tmpresloc.register,paraloc1);
-        paramanager.freecgpara(list,paraloc1);
+        hlcg.A_Load_Reg_CGPara(list,pushexceptres.def,tmpresloc.Register,paraloc1);
+        ParaManager.FreeCGPara(list,paraloc1);
         { perform the fpc_setjmp call }
-        setjmpres:=hlcg.g_call_system_proc(list,pd,[@paraloc1],nil);
+        setjmpres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1],nil);
         paraloc1.done;
-        location_reset(tmpresloc,LOC_REGISTER,def_cgsize(setjmpres.def));
-        tmpresloc.register:=hlcg.getintregister(list,setjmpres.def);
-        hlcg.gen_load_cgpara_loc(list,setjmpres.def,setjmpres,tmpresloc,true);
-        hlcg.g_exception_reason_save(list,setjmpres.def,ExceptionReasonType,tmpresloc.register,t.reasonbuf);
+        Location_Reset(tmpresloc,LOC_REGISTER,Def_CGSize(setjmpres.def));
+        tmpresloc.Register:=hlcg.GetIntRegister(list,setjmpres.def);
+        hlcg.Gen_Load_CGPara_Loc(list,setjmpres.def,setjmpres,tmpresloc,true);
+        hlcg.G_Exception_Reason_Save(list,setjmpres.def,ExceptionReasonType,tmpresloc.Register,t.reasonbuf);
         { if we get 1 here in the function result register, it means that we
           longjmp'd back here }
-        hlcg.a_cmp_const_reg_label(list,setjmpres.def,OC_NE,0,tmpresloc.register,exceptstate.exceptionlabel);
-        setjmpres.resetiftemp;
+        hlcg.A_Cmp_Const_Reg_Label(list,setjmpres.def,OC_NE,0,tmpresloc.Register,exceptstate.exceptionlabel);
+        setjmpres.ResetIfTemp;
 
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
      end;
@@ -220,7 +220,7 @@ unit cgexcept;
 
     class procedure TCGExceptionStateHandler.emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptstate: TExceptionState;var exceptiontemps:TExceptionTemps);
       begin
-        hlcg.a_label(list,exceptstate.exceptionlabel);
+        hlcg.A_Label(list,exceptstate.exceptionlabel);
       end;
 
 
@@ -238,9 +238,9 @@ unit cgexcept;
          popaddrstack(list);
          if not onlyfree then
           begin
-            reasonreg:=hlcg.getintregister(list,ExceptionReasonType);
-            hlcg.g_exception_reason_load(list,ExceptionReasonType,ExceptionReasonType,t.reasonbuf,reasonreg);
-            hlcg.a_cmp_const_reg_label(list,ExceptionReasonType,OC_EQ,a,reasonreg,endexceptlabel);
+            reasonreg:=hlcg.GetIntRegister(list,ExceptionReasonType);
+            hlcg.G_Exception_Reason_Load(list,ExceptionReasonType,ExceptionReasonType,t.reasonbuf,reasonreg);
+            hlcg.A_Cmp_Const_Reg_Label(list,ExceptionReasonType,OC_EQ,a,reasonreg,endexceptlabel);
           end;
       end;
 
@@ -249,7 +249,7 @@ unit cgexcept;
     { in the except block                                    }
     class procedure TCGExceptionStateHandler.cleanupobjectstack(list: TAsmList);
       begin
-         hlcg.g_call_system_proc(list,'fpc_doneexception',[],nil).resetiftemp;
+         hlcg.G_Call_System_Proc(list,'fpc_doneexception',[],nil).ResetIfTemp;
       end;
 
 
@@ -269,15 +269,15 @@ unit cgexcept;
          free_exception(list,t,entrystate,0,exitlabel,false);
          { we don't need to save/restore registers here because reraise never }
          { returns                                                            }
-         hlcg.g_call_system_proc(list,'fpc_raise_nested',[],nil).resetiftemp;
-         hlcg.a_label(list,exitlabel);
+         hlcg.G_Call_System_Proc(list,'fpc_raise_nested',[],nil).ResetIfTemp;
+         hlcg.A_Label(list,exitlabel);
          cleanupobjectstack(list);
       end;
 
 
     class procedure TCGExceptionStateHandler.handle_reraise(list: TAsmList; const t: TExceptionTemps; const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind);
       begin
-        hlcg.g_call_system_proc(list,'fpc_reraise',[],nil).resetiftemp;
+        hlcg.G_Call_System_Proc(list,'fpc_reraise',[],nil).ResetIfTemp;
       end;
 
 
@@ -299,24 +299,24 @@ unit cgexcept;
 
         { send the vmt parameter }
         pd:=Search_System_Proc('fpc_catches');
-        reference_reset_symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.VMT_MangledName, AT_DATA, indirect), 0, sizeof(PInt), []);
+        Reference_Reset_Symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.VMT_MangledName, AT_DATA, indirect), 0, sizeof(PInt), []);
         if otherunit then
           CurrentModule.Add_Extern_AsmSym(excepttype.VMT_MangledName, AB_EXTERNAL, AT_DATA);
-        paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
-        hlcg.a_loadaddr_ref_cgpara(list, excepttype.VMT_Def, href2, paraloc1);
-        paramanager.freecgpara(list, paraloc1);
-        fpc_catches_res:=hlcg.g_call_system_proc(list, pd, [@paraloc1], nil);
-        location_reset(exceptloc, LOC_REGISTER, def_cgsize(fpc_catches_res.def));
-        exceptloc.register:=hlcg.getaddressregister(list, fpc_catches_res.def);
-        hlcg.gen_load_cgpara_loc(list, fpc_catches_res.def, fpc_catches_res, exceptloc, true);
+        ParaManager.GetCGTempParaLoc(list, pd, 1, paraloc1);
+        hlcg.A_LoadAddr_Ref_CGPara(list, excepttype.VMT_Def, href2, paraloc1);
+        ParaManager.FreeCGPara(list, paraloc1);
+        fpc_catches_res:=hlcg.G_Call_System_Proc(list, pd, [@paraloc1], nil);
+        Location_Reset(exceptloc, LOC_REGISTER, Def_CGSize(fpc_catches_res.def));
+        exceptloc.Register:=hlcg.GetAddressRegister(list, fpc_catches_res.def);
+        hlcg.Gen_Load_CGPara_Loc(list, fpc_catches_res.def, fpc_catches_res, exceptloc, true);
 
         { is it this catch? No. go to next onlabel }
-        hlcg.a_cmp_const_reg_label(list, fpc_catches_res.def, OC_EQ, 0, exceptloc.register, nextonlabel);
+        hlcg.A_Cmp_Const_Reg_Label(list, fpc_catches_res.def, OC_EQ, 0, exceptloc.Register, nextonlabel);
 
         paraloc1.done;
 
         exceptlocdef:=fpc_catches_res.def;
-        exceptlocreg:=exceptloc.register;
+        exceptlocreg:=exceptloc.Register;
       end;
 
 
@@ -345,7 +345,7 @@ unit cgexcept;
 
     class procedure TCGExceptionStateHandler.popaddrstack(list: TAsmList);
       begin
-        hlcg.g_call_system_proc(list,'fpc_popaddrstack',[],nil).resetiftemp;
+        hlcg.G_Call_System_Proc(list,'fpc_popaddrstack',[],nil).ResetIfTemp;
       end;
 
 

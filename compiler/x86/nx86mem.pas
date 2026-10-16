@@ -54,14 +54,14 @@ implementation
      procedure TX86DerefNode.pass_generate_code;
        begin
          inherited pass_generate_code;
-         case TCPUPointerDef(left.resultdef).x86pointertyp of
+         case TCPUPointerDef(left.resultdef).X86PointerTyp of
            x86pt_near: ;
-           x86pt_near_cs: location.reference.segment:=NR_CS;
-           x86pt_near_ds: location.reference.segment:=NR_DS;
-           x86pt_near_ss: location.reference.segment:=NR_SS;
-           x86pt_near_es: location.reference.segment:=NR_ES;
-           x86pt_near_fs: location.reference.segment:=NR_FS;
-           x86pt_near_gs: location.reference.segment:=NR_GS;
+           x86pt_near_cs: location.Reference.Segment:=NR_CS;
+           x86pt_near_ds: location.Reference.Segment:=NR_DS;
+           x86pt_near_ss: location.Reference.Segment:=NR_SS;
+           x86pt_near_es: location.Reference.Segment:=NR_ES;
+           x86pt_near_fs: location.Reference.Segment:=NR_FS;
+           x86pt_near_gs: location.Reference.Segment:=NR_GS;
 
            x86pt_far: InternalError(2013050401);
            x86pt_huge: InternalError(2013050402);
@@ -89,54 +89,54 @@ implementation
          saveseg: TRegister;
        begin
          { Optimized for x86 to use the index register and scalefactor }
-         if location.reference.index=NR_NO then
+         if location.Reference.Index=NR_NO then
           begin
             { no preparations needed }
           end
-         else if location.reference.base=NR_NO then
+         else if location.Reference.Base=NR_NO then
           begin
-            if (location.reference.scalefactor > 1) then
-              hreg:=cg.getaddressregister(CurrentAsmData.CurrAsmList)
+            if (location.Reference.ScaleFactor > 1) then
+              hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList)
             else
               hreg:=NR_NO;
-            case location.reference.scalefactor of
-             0,1 : hreg:=location.reference.index;
-             2 : cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,1,location.reference.index,hreg);
-             4 : cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,2,location.reference.index,hreg);
-             8 : cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,3,location.reference.index,hreg);
+            case location.Reference.ScaleFactor of
+             0,1 : hreg:=location.Reference.Index;
+             2 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,1,location.Reference.Index,hreg);
+             4 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,2,location.Reference.Index,hreg);
+             8 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,3,location.Reference.Index,hreg);
              else
                InternalError(2008091401);
             end;
-            location.reference.base:=hreg;
+            location.Reference.Base:=hreg;
           end
          else
           begin
-            hreg:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-            cg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,location.reference,hreg);
+            hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+            cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,location.Reference,hreg);
             { reference_reset_base kills the segment, so make sure we preserve it }
-            saveseg:=location.reference.segment;
-            reference_reset_base(location.reference,hreg,0,location.reference.temppos,location.reference.alignment,location.reference.volatility);
-            location.reference.segment:=saveseg;
+            saveseg:=location.Reference.Segment;
+            Reference_Reset_Base(location.Reference,hreg,0,location.Reference.TempPos,location.Reference.Alignment,location.Reference.Volatility);
+            location.Reference.Segment:=saveseg;
           end;
          { insert the new index register and scalefactor or
            do the multiplication manual }
          case l of
           1,2,4,8 :
             begin
-              location.reference.scalefactor:=l;
+              location.Reference.ScaleFactor:=l;
               hreg:=maybe_const_reg;
             end;
          else
            begin
-              hreg:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+              hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
               if IsPowerOf2(l,l2) then
-                cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,l2,maybe_const_reg,hreg)
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,l2,maybe_const_reg,hreg)
               else
-                cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_IMUL,OS_ADDR,l,maybe_const_reg,hreg);
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,OS_ADDR,l,maybe_const_reg,hreg);
            end;
          end;
-         location.reference.index:=hreg;
-         location.reference.alignment:=NewAlignment(location.reference.alignment,l);
+         location.Reference.Index:=hreg;
+         location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,l);
        end;
 
 begin

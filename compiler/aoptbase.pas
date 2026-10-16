@@ -91,7 +91,7 @@ unit aoptbase;
         Function IsStoreRegMem(p: TAI): Boolean; Virtual; Abstract;
 
         { create a paicpu Object that loads the contents of reg1 into reg2 }
-        Function a_load_reg_reg(reg1, reg2: TRegister): TAICPU; Virtual; Abstract;
+        Function A_Load_Reg_Reg(reg1, reg2: TRegister): TAICPU; Virtual; Abstract;
 
         { returns true if reg is used by any instruction between p1 and p2 }
         Function RegUsedBetween(reg: TRegister; p1, p2: TAI): Boolean;
@@ -149,7 +149,7 @@ unit aoptbase;
     Begin
       Case op.typ Of
         Top_Reg: RegInOp := RegistersInterfere(Reg,op.reg);
-        Top_Ref: RegInOp := RegInRef(Reg, op.ref^);
+        Top_Ref: RegInOp := RegInRef(Reg, op.Ref^);
         Else RegInOp := False
       End
     End;
@@ -162,11 +162,11 @@ unit aoptbase;
     Or RegistersInterfere(Ref.Index,Reg)
 {$endif cpurefshaveindexreg}
 {$ifdef x86}
-    or (Reg=Ref.segment)
+    or (Reg=Ref.Segment)
     { if Ref.segment isn't set, the cpu uses implicitly ss or ds, depending on the base register }
-    or ((Ref.segment=NR_NO) and (
-      ((Reg=NR_SS) and (RegistersInterfere(Ref.base,NR_EBP) or RegistersInterfere(Ref.base,NR_ESP))) or
-      ((Reg=NR_DS) and not(RegistersInterfere(Ref.base,NR_EBP) or RegistersInterfere(Ref.base,NR_ESP)))
+    or ((Ref.Segment=NR_NO) and (
+      ((Reg=NR_SS) and (RegistersInterfere(Ref.Base,NR_EBP) or RegistersInterfere(Ref.Base,NR_ESP))) or
+      ((Reg=NR_DS) and not(RegistersInterfere(Ref.Base,NR_EBP) or RegistersInterfere(Ref.Base,NR_ESP)))
     ))
 {$endif x86}
   End;

@@ -149,16 +149,16 @@ unit rasm;
         isimplicitpointer:=
           (sym.typ=paravarsym) and
           (Is_Implicit_Pointer_Object_Type(sym.vardef) or
-           paramanager.push_addr_param(sym.VarSpez,sym.vardef,CurrentProcInfo.procdef.ProcCallOption));
+           ParaManager.Push_Addr_Param(sym.VarSpez,sym.vardef,CurrentProcInfo.procdef.ProcCallOption));
 
         { sym.initiallloc/localloc is not yet initialised here }
 
         { pointer parameter to aggregate passed in register to pure assembler routine }
         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
            (sym.typ=paravarsym) and
-           (TParaVarSym(sym).ParaLoc[calleeside].location^.loc=LOC_REGISTER) and
+           (TParaVarSym(sym).ParaLoc[calleeside].Location^.Loc=LOC_REGISTER) and
            { ... however this is only possible if the pointer takes only one register location }
-           not Assigned(TParaVarSym(sym).ParaLoc[calleeside].location^.Next) and
+           not Assigned(TParaVarSym(sym).ParaLoc[calleeside].Location^.Next) and
            isimplicitpointer then
           exit;
 
@@ -166,7 +166,7 @@ unit rasm;
         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
            (sym.typ=paravarsym) and
            { sym.localloc is not yet initialised here for pure assembler routines }
-           (TParaVarSym(sym).ParaLoc[calleeside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+           (TParaVarSym(sym).ParaLoc[calleeside].Location^.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
            not isimplicitpointer then
           exit;
 

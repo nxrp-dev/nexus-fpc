@@ -621,7 +621,7 @@ implementation
                     { For procvars and for nested routines we need to return
                       the proc field of the methodpointer }
                     if isprocvar or
-                       is_nested_pd(TAbstractProcDef(left.resultdef)) then
+                       Is_Nested_PD(TAbstractProcDef(left.resultdef)) then
                       begin
                         if TAbstractProcDef(left.resultdef).Is_MethodPointer then
                           procpointertype:=MethodPointerType
@@ -731,7 +731,7 @@ implementation
                 if not ((resdef.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(resdef).ArrayOptions)) then
                   exit;
 
-                index:=TOrdConstNode(TVecNode(hp).right).value.svalue;
+                index:=TOrdConstNode(TVecNode(hp).right).Value.svalue;
                 if not ((index>=TArrayDef(resdef).LowRange) and (index<=TArrayDef(resdef).HighRange)) then
                   exit;
                 index:=index-TArrayDef(resdef).LowRange;
@@ -901,7 +901,7 @@ implementation
          else
            CGMessage(parser_e_invalid_qualifier);
 
-         if is_currency(resultdef) then
+         if Is_Currency(resultdef) then
            Include(flags,nf_is_currency);
       end;
 
@@ -1008,7 +1008,7 @@ implementation
            (resultdef.typ=floatdef) then
           make_not_regable(left,[ra_addr_regable]);
 
-        if is_currency(resultdef) then
+        if Is_Currency(resultdef) then
           Include(flags,nf_is_currency);
       end;
 
@@ -1045,7 +1045,7 @@ implementation
                LOC_REGISTER,
                LOC_SUBSETREG:
                  // can happen for function results on win32 and darwin/x86
-                 if (left.resultdef.size > sizeof(PInt)) then
+                 if (left.resultdef.Size > sizeof(PInt)) then
                    expectloc:=LOC_REFERENCE
                  else
                    expectloc:=LOC_SUBSETREG;
@@ -1132,9 +1132,9 @@ implementation
            declared a shortstring or normal array that has
            undefined number of elements. Dynamic array and
            ansi/widestring needs to be valid }
-         valid:=is_dynamic_array(left.resultdef) or
-                is_ansistring(left.resultdef) or
-                is_wide_or_unicode_string(left.resultdef) or
+         valid:=Is_Dynamic_Array(left.resultdef) or
+                Is_AnsiString(left.resultdef) or
+                Is_Wide_Or_Unicode_String(left.resultdef) or
                 { implicit pointer dereference -> pointer is read }
                 (left.resultdef.typ = pointerdef);
          if valid then
@@ -1169,16 +1169,16 @@ implementation
                    larger than the int type). Exception: if it's an ordinal
                    constant, because then this check should be performed at
                    compile time }
-                 else if is_open_array(left.resultdef) or
-                    is_array_constructor(left.resultdef) then
+                 else if Is_Open_Array(left.resultdef) or
+                    Is_Array_Constructor(left.resultdef) then
                    begin
-                     if is_signed(right.resultdef) and
+                     if Is_Signed(right.resultdef) and
                         not is_constnode(right) then
                        inserttypeconv(right,SizeSIntType)
                      else
                        inserttypeconv(right,SizeUIntType)
                    end
-                 else if is_special_array(left.resultdef) then
+                 else if Is_Special_Array(left.resultdef) then
                    {Arrays without a high bound (dynamic arrays, open arrays) are zero based,
                     convert indexes into these arrays to aword.}
                    inserttypeconv(right,UIntType)
@@ -1207,7 +1207,7 @@ implementation
                       overloaded assignment }
                     (right.resultdef.typ=orddef) and
                     { don't try to create boolean types with custom ranges }
-                    not is_boolean(right.resultdef) and
+                    not Is_Boolean(right.resultdef) and
                     { ordtype determines the size of the loaded value -> make
                       sure we don't truncate }
                     ((TOrdDef(right.resultdef).OrdType<>TOrdDef(htype).OrdType) or
@@ -1222,7 +1222,7 @@ implementation
                            b) their code generators can't directly handle 64 bit
                               loads
                         }
-                        and not is_64bit(right.resultdef)
+                        and not Is_64Bit(right.resultdef)
 {$endif not cpu64bitaddr}
                         then
                         begin
@@ -1232,14 +1232,14 @@ implementation
                             This matters only if we sign extend, if the type exceeds the sint range, we can fall back only
                             to the index type
                           }
-                          if is_integer(right.resultdef) and ((TOrdDef(right.resultdef).low<0) or (TConstExprInt(TArrayDef(left.resultdef).LowRange)<0)) then
+                          if Is_Integer(right.resultdef) and ((TOrdDef(right.resultdef).low<0) or (TConstExprInt(TArrayDef(left.resultdef).LowRange)<0)) then
                             begin
                               minvalue:=min(TConstExprInt(TArrayDef(left.resultdef).LowRange),TOrdDef(right.resultdef).low);
                               maxvalue:=max(TConstExprInt(TArrayDef(left.resultdef).HighRange),TOrdDef(right.resultdef).high);
                               if maxvalue>TOrdDef(SIntType).high then
                                 newordtyp:=TOrdDef(right.resultdef).OrdType
                               else
-                                newordtyp:=range_to_basetype(minvalue,maxvalue);
+                                newordtyp:=Range_To_BaseType(minvalue,maxvalue);
                             end
                           else
                             newordtyp:=TOrdDef(right.resultdef).OrdType;
@@ -1256,14 +1256,14 @@ implementation
                    begin
                      inserttypeconv(right,htype);
                      { insert type conversion so cse can pick it up }
-                     if (htype.size<PtrSIntType.size) and is_integer(htype) and not(cs_check_range in CurrentSettings.LocalSwitches) then
+                     if (htype.Size<PtrSIntType.Size) and Is_Integer(htype) and not(cs_check_range in CurrentSettings.LocalSwitches) then
                        inserttypeconv_internal(right,PtrSIntType);
                    end;
                end;
              stringdef:
-               if is_open_string(left.resultdef) then
+               if Is_Open_String(left.resultdef) then
                  inserttypeconv(right,U8IntType)
-               else if is_shortstring(left.resultdef) then
+               else if Is_ShortString(left.resultdef) then
                  {Convert shortstring indexes to 0..length.}
                  inserttypeconv(right,COrdDef.create(u8bit,0,int64(TStringDef(left.resultdef).len),true))
                else
@@ -1281,9 +1281,9 @@ implementation
            that has a field of one of these types -> in that case the record
            can't be a regvar either }
          if ((left.resultdef.typ=arraydef) and
-             not is_special_array(left.resultdef) and
+             not Is_Special_Array(left.resultdef) and
              { arrays with elements equal to the alu size and with a constant index can be kept in register }
-             not(is_constnode(right) and (TArrayDef(left.resultdef).ElementDef.size=ALUSIntType.size))) or
+             not(is_constnode(right) and (TArrayDef(left.resultdef).ElementDef.Size=ALUSIntType.Size))) or
             ((left.resultdef.typ=stringdef) and
              (TStringDef(left.resultdef).StringType in [st_shortstring,st_longstring])) then
            make_not_regable(left,[ra_addr_regable]);
@@ -1292,7 +1292,7 @@ implementation
            arraydef :
              begin
                { check type of the index value }
-               if (compare_defs(right.resultdef,TArrayDef(left.resultdef).RangeDef,right.nodetype)=te_incompatible) then
+               if (Compare_Defs(right.resultdef,TArrayDef(left.resultdef).RangeDef,right.nodetype)=te_incompatible) then
                  IncompatibleTypes(right.resultdef,TArrayDef(left.resultdef).RangeDef);
                if right.nodetype=rangen then
                  resultdef:=left.resultdef
@@ -1309,9 +1309,9 @@ implementation
                  will currently say it's two bytes) -> create a temp enumdef
                  with packenum=1 for the resultdef as subtype of the main
                  enumdef }
-               if is_enum(resultdef) and
-                  is_packed_array(left.resultdef) and
-                  ((TArrayDef(left.resultdef).ElePackedBitSize div 8) <> resultdef.size) then
+               if Is_Enum(resultdef) and
+                  Is_Packed_Array(left.resultdef) and
+                  ((TArrayDef(left.resultdef).ElePackedBitSize div 8) <> resultdef.Size) then
                  begin
                    resultdef:=CEnumDef.Create_Subrange(TEnumDef(resultdef),TEnumDef(resultdef).min,TEnumDef(resultdef).max);
                    TEnumDef(resultdef).CalcSaveSize(1);
@@ -1322,12 +1322,12 @@ implementation
                { are we accessing a pointer[], then convert the pointer to
                  an array first, in FPC this is allowed for all pointers
                  (except voidpointer) in delphi/tp7 it's only allowed for pchars. }
-               if not is_voidpointer(left.resultdef) and
+               if not Is_VoidPointer(left.resultdef) and
                   (
                    (cs_pointermath in CurrentSettings.LocalSwitches) or
                    TPointerDef(left.resultdef).HasPointerMath or
-                   is_pchar(left.resultdef) or
-                   is_pwidechar(left.resultdef)
+                   Is_PChar(left.resultdef) or
+                   Is_PWideChar(left.resultdef)
                   ) then
                 begin
                   { convert pointer to array }
@@ -1368,8 +1368,8 @@ implementation
                    { indexed access to 0 element is only allowed for shortstrings or if
                      zero based strings is turned on }
                    if (right.nodetype=ordconstn) and
-                      (TOrdConstNode(right).value.svalue=0) and
-                      not is_shortstring(left.resultdef) and
+                      (TOrdConstNode(right).Value.svalue=0) and
+                      not Is_ShortString(left.resultdef) and
                       not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
                      CGMessage(cg_e_can_access_element_zero);
                    resultdef:=ElementDef;
@@ -1381,7 +1381,7 @@ implementation
              CGMessage(type_e_array_required);
         end;
 
-        if is_currency(resultdef) then
+        if Is_Currency(resultdef) then
           Include(flags,nf_is_currency);
       end;
 
@@ -1404,9 +1404,9 @@ implementation
            exit;
 
          if (vnf_callunique in vecnodeflags) and
-            (is_ansistring(left.resultdef) or
-             is_unicodestring(left.resultdef) or
-            (is_widestring(left.resultdef) and not(tf_winlikewidestring in TargetInfo.flags))) then
+            (Is_AnsiString(left.resultdef) or
+             Is_UnicodeString(left.resultdef) or
+            (Is_WideString(left.resultdef) and not(tf_winlikewidestring in TargetInfo.flags))) then
            begin
              left := CTypeConvNode.Create_Internal(CCallNode.createintern('fpc_'+TStringDef(left.resultdef).StringTypName+'_unique',
                CCallParaNode.create(
@@ -1417,7 +1417,7 @@ implementation
              { reset though :/                                             }
              exclude(vecnodeflags,vnf_callunique);
            end
-         else if is_widestring(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+         else if Is_WideString(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
            exclude(vecnodeflags,vnf_callunique);
 
          { a range node as array index can only appear in function calls, and
@@ -1451,8 +1451,8 @@ implementation
           (left.nodetype = stringconstn) and
           (right.nodetype = ordconstn) and
           { Ensure the index is in range }
-          (TOrdConstNode(right).value > 0) and
-          (TOrdConstNode(right).value <= TStringConstNode(left).len) then
+          (TOrdConstNode(right).Value > 0) and
+          (TOrdConstNode(right).Value <= TStringConstNode(left).len) then
           begin
 
             { The internal fields are zero-based }
@@ -1465,7 +1465,7 @@ implementation
                   it does not matter as a 32 bit host cannot handle such long strings anyways due to memory limitations
                 }
                 Result := COrdConstNode.create(
-                  TStringConstNode(left).ValueWS.data[PtrUInt(TOrdConstNode(right).value.uvalue) - 1],
+                  TStringConstNode(left).ValueWS.data[PtrUInt(TOrdConstNode(right).Value.uvalue) - 1],
                   resultdef,
                   False
                 );
@@ -1475,7 +1475,7 @@ implementation
                   it does not matter as a 32 bit host cannot handle such long strings anyways due to memory limitations
                 }
                 Result := COrdConstNode.create(
-                  Byte(TStringConstNode(left).valueas[PtrUInt(TOrdConstNode(right).value.uvalue) - 1]),
+                  Byte(TStringConstNode(left).valueas[PtrUInt(TOrdConstNode(right).Value.uvalue) - 1]),
                   resultdef,
                   False
                 );
@@ -1497,7 +1497,7 @@ implementation
     function TVecNode.first_arraydef: TNode;
       begin
         result:=nil;
-        if (not is_packed_array(left.resultdef)) or
+        if (not Is_Packed_Array(left.resultdef)) or
            ((TArrayDef(left.resultdef).ElePackedBitSize mod 8) = 0) then
           if left.expectloc=LOC_CREFERENCE then
             expectloc:=LOC_CREFERENCE
@@ -1529,8 +1529,8 @@ implementation
         array parameter -> generate te check at the node tree level
         rather than in the code generator }
       if (cs_check_range in CurrentSettings.LocalSwitches) and
-         (is_open_array(left.resultdef) or
-          is_array_of_const(left.resultdef)) and
+         (Is_Open_Array(left.resultdef) or
+          Is_Array_Of_Const(left.resultdef)) and
          (right.nodetype<>rangen) then
         begin
           { expect to find the load node }
@@ -1538,7 +1538,7 @@ implementation
             InternalError(2014040601);
           { cdecl functions don't have high() so we can not check the range }
           { (can't use current_procdef, since it may be a nested procedure) }
-          if not(TProcDef(TParaSymTable(TParaVarSym(TLoadNode(get_open_const_array(left)).symtableentry).owner).DefOwner).ProcCallOption in cdecl_pocalls) then
+          if not(TProcDef(TParaSymTable(TParaVarSym(TLoadNode(get_open_const_array(left)).symtableentry).owner).DefOwner).ProcCallOption in CDecl_PoCalls) then
             begin
               temp:=nil;
               result:=internalstatements(stat);
@@ -1546,7 +1546,7 @@ implementation
                 already been firstpassed }
               if not is_const(right) then
                 begin
-                  temp:=CTempCreateNode.create(right.resultdef,right.resultdef.size,tt_persistent,true);
+                  temp:=CTempCreateNode.create(right.resultdef,right.resultdef.Size,tt_persistent,true);
                   addstatement(stat,temp);
                   { needed so we can typecheck its temprefnodes }
                   TypeCheckPass(TNode(temp));
@@ -1565,7 +1565,7 @@ implementation
                 lower bound is always zero for these arrays, but
                 hightree can be -1 in case the array was empty ->
                 add 1 before comparing (ignoring overflows) }
-              htype:=get_unsigned_inttype(right.resultdef);
+              htype:=Get_Unsigned_IntType(right.resultdef);
               inserttypeconv_explicit(hightree,htype);
               hightree:=CAddNode.create(addn,hightree,genintconstnode(1));
               hightree.LocalSwitches:=hightree.LocalSwitches-[cs_check_range,
@@ -1631,7 +1631,7 @@ implementation
       begin
         is_big_untyped_addrnode:=(p.nodetype=addrn) and
           not (anf_typedaddr in TAddrNode(p).addrnodeflags) and
-          (TAddrNode(p).left.resultdef.size > 1);
+          (TAddrNode(p).left.resultdef.Size > 1);
       end;
 
 end.

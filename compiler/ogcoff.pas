@@ -520,7 +520,7 @@ implementation
         if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.vaddr:=SwapEndian(v.vaddr);
-            v.size:=SwapEndian(v.size);
+            v.Size:=SwapEndian(v.Size);
           end;
       end;
  (*
@@ -771,7 +771,7 @@ implementation
           begin
             if v.name[0]=#0 then
               v.strpos:=SwapEndian(v.strpos);
-            v.value:=SwapEndian(v.value);
+            v.Value:=SwapEndian(v.Value);
             v.section:=SwapEndian(v.section);
             v.empty:=SwapEndian(v.empty);
           end;
@@ -1384,7 +1384,7 @@ const pemagic : array[0..3] of byte = (
               begin
                 { For go32v2 we need to use the size as address }
                 if not win32 then
-                  symaddr:=p.size
+                  symaddr:=p.Size
                 else
                   symaddr:=0;
               end
@@ -1524,7 +1524,7 @@ const pemagic : array[0..3] of byte = (
         { symbolname }
         if length(name)>8 then
           begin
-            strpos:=FCoffStrs.size+4;
+            strpos:=FCoffStrs.Size+4;
             FCoffStrs.WriteStr(name);
             FCoffStrs.WriteStr(#0);
           end
@@ -1535,10 +1535,10 @@ const pemagic : array[0..3] of byte = (
           begin
             fillchar(bosym,sizeof(bosym),0);
             if length(name)>8 then
-              bosym.name.offset.offset:=strpos
+              bosym.name.Offset.Offset:=strpos
             else
               move(name[1],bosym.name.shortname,length(name));
-            bosym.value:=value;
+            bosym.Value:=value;
             bosym.SectionNumber:=LongWord(section);
             bosym.StorageClass:=typ;
             bosym.NumberOfAuxSymbols:=aux;
@@ -1555,7 +1555,7 @@ const pemagic : array[0..3] of byte = (
               sym.strpos:=strpos
             else
               move(name[1],sym.name,length(name));
-            sym.value:=value;
+            sym.Value:=value;
             sym.section:=section;
             sym.typ:=typ;
             sym.aux:=aux;
@@ -1606,8 +1606,8 @@ const pemagic : array[0..3] of byte = (
                       secrec.select:=IMAGE_COMDAT_SELECT_ASSOCIATIVE;
                       if not Assigned(AssociativeSection) then
                         InternalError(2026092201);
-                      secrec.assoc:=word(AssociativeSection.index and $ffff);
-                      secrec.assocHigh:=word(AssociativeSection.index shr 16);
+                      secrec.assoc:=word(AssociativeSection.Index and $ffff);
+                      secrec.assocHigh:=word(AssociativeSection.Index shr 16);
                     end;
                   oscs_largest:
                     secrec.select:=IMAGE_COMDAT_SELECT_LARGEST;
@@ -1656,15 +1656,15 @@ const pemagic : array[0..3] of byte = (
           begin
             objreloc:=TObjRelocation(TObjSection(p).ObjRelocations[i]);
             rel.address:=objreloc.dataoffset;
-            if Assigned(objreloc.symbol) then
+            if Assigned(objreloc.Symbol) then
               begin
-                if (objreloc.symbol.bind=AB_LOCAL) then
-                  rel.sym:=objreloc.symbol.objsection.secsymidx
+                if (objreloc.Symbol.bind=AB_LOCAL) then
+                  rel.sym:=objreloc.Symbol.objsection.secsymidx
                 else
                   begin
-                    if objreloc.symbol.symidx=-1 then
+                    if objreloc.Symbol.symidx=-1 then
                       InternalError(200602233);
-                    rel.sym:=objreloc.symbol.symidx;
+                    rel.sym:=objreloc.Symbol.symidx;
                   end;
               end
             else
@@ -1773,7 +1773,7 @@ const pemagic : array[0..3] of byte = (
            FCoffSyms.write(FileName[1],filenamelen);
            { Sections }
             for i:=0 to ObjSectionList.Count-1 do
-              TObjSection(ObjSectionList[i]).index:=i+1;
+              TObjSection(ObjSectionList[i]).Index:=i+1;
             secidx:=0;
            ObjSectionList.ForEachCall(@section_write_symbol,@secidx);
            { ObjSymbols }
@@ -1787,20 +1787,20 @@ const pemagic : array[0..3] of byte = (
                  AB_PRIVATE_EXTERN:
                    begin
                      globalval:=COFF_SYM_GLOBAL;
-                     sectionval:=objsym.objsection.index;
+                     sectionval:=objsym.objsection.Index;
                      value:=objsym.address;
                    end;
                  AB_LOCAL :
                    begin
                      globalval:=COFF_SYM_LOCAL;
-                     sectionval:=objsym.objsection.index;
+                     sectionval:=objsym.objsection.Index;
                      value:=objsym.address;
                    end;
                  else
                    begin
                      globalval:=COFF_SYM_GLOBAL;
                      sectionval:=0;
-                     value:=objsym.size;
+                     value:=objsym.Size;
                    end;
                end;
                { symbolname }
@@ -1837,7 +1837,7 @@ const pemagic : array[0..3] of byte = (
             s:=name;
             if length(s)>8 then
              begin
-               strpos:=FCoffStrs.size+4;
+               strpos:=FCoffStrs.Size+4;
                FCoffStrs.WriteStr(s);
                FCoffStrs.WriteStr(#0);
                if strpos>=10000000 then
@@ -1960,7 +1960,7 @@ const pemagic : array[0..3] of byte = (
              InternalError(200603051);
            FWriter.writearray(FCoffSyms);
            { Strings }
-           i:=FCoffStrs.size+4;
+           i:=FCoffStrs.Size+4;
            if SourceInfo.endian<>TargetInfo.endian then
              i:=SwapEndian(i);
            FWriter.write(i,4);
@@ -2216,7 +2216,7 @@ const pemagic : array[0..3] of byte = (
                   else
                     strname:=Read_str(sym.strpos);
                   secidx:=sym.section;
-                  symvalue:=sym.value;
+                  symvalue:=sym.Value;
                   auxcount:=sym.aux;
                   symcls:=sym.typ;
                 end;
@@ -2249,8 +2249,8 @@ const pemagic : array[0..3] of byte = (
                     objsym.bind:=bind;
                     objsym.typ:=AT_FUNCTION;
                     objsym.objsection:=objsec;
-                    objsym.offset:=address;
-                    objsym.size:=size;
+                    objsym.Offset:=address;
+                    objsym.Size:=size;
                   end;
                 COFF_SYM_LABEL,
                 COFF_SYM_LOCAL :
@@ -2265,8 +2265,8 @@ const pemagic : array[0..3] of byte = (
                        objsym.bind:=AB_LOCAL;
                        objsym.typ:=AT_FUNCTION;
                        objsym.objsection:=objsec;
-                       objsym.offset:=address;
-                       objsym.size:=size;
+                       objsym.Offset:=address;
+                       objsym.Size:=size;
                      end;
                   end;
                 COFF_SYM_SECTION :
@@ -2281,8 +2281,8 @@ const pemagic : array[0..3] of byte = (
                         objsym.bind:=AB_LOCAL;
                         objsym.typ:=AT_FUNCTION;
                         objsym.objsection:=objsec;
-                        objsym.offset:=address;
-                        objsym.size:=size;
+                        objsym.Offset:=address;
+                        objsym.Size:=size;
                       end;
                   end;
                 COFF_SYM_FUNCTION,

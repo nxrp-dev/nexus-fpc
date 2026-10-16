@@ -80,7 +80,7 @@ unit optdeadstore;
                     ((cs_opt_dead_values in CurrentSettings.OptimizerSwitches) and not(might_have_sideeffects(a.right,[mhs_exceptions])))
                    ) then
                   begin
-                    redundant:=not(Assigned(a.successor)) or not(DynSetIn(a.successor.optinfo^.life,a.left.optinfo^.index));
+                    redundant:=not(Assigned(a.successor)) or not(DynSetIn(a.successor.optinfo^.life,a.left.optinfo^.Index));
 
                     if redundant then
                       begin

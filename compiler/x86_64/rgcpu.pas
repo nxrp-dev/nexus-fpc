@@ -28,27 +28,27 @@ unit rgcpu;
   interface
 
      uses
-       cgbase,rgx86;
+       CGBase,RGX86;
 
      type
        TRGCPU = class(TRGX86)
-         procedure add_constraints(reg:TRegister); override;
+         procedure Add_Constraints(Reg:TRegister); override;
        end;
 
   implementation
 
     uses
-      cpubase;
+      CPUBase;
 
-    procedure TRGCPU.add_constraints(reg:TRegister);
+    procedure TRGCPU.Add_Constraints(Reg:TRegister);
       var
-        supreg : TSuperRegister;
+        SupReg : TSuperRegister;
       begin
-        if (getregtype(reg)=R_INTREGISTER) then
+        if (GetRegType(Reg)=R_INTREGISTER) then
           begin
-            supreg:=getsupreg(reg);
+            SupReg:=GetSupReg(Reg);
             { All registers conflict with rsp/rbp }
-            add_edge(supreg,RS_RSP);
+            Add_Edge(SupReg,RS_RSP);
             // add_edge(supreg,RS_RBP);
           end;
       end;

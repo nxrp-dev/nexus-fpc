@@ -54,7 +54,7 @@ begin
         Other:=P.GetModuleStream(U);
         try
           Check(Assigned(S) and Assigned(Other),'missing unit stream');
-          Check(S.Size=C^.size,'incorrect bounded stream size');
+          Check(S.Size=C^.Size,'incorrect bounded stream size');
           Check(S.Read(B,1)=1,'cannot read embedded PPU');
           Check(Other.Position=0,'unit streams share a cursor');
           S.Position:=S.Size;

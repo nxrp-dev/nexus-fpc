@@ -80,8 +80,8 @@ procedure TCGObjCSelectorNode.pass_generate_code;
 
     objcfinishstringrefpoolentry(entry,sp_objcvarnames,sec_objc_message_refs,sec_objc_meth_var_names);
 
-    location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),sizeof(PInt),[]);
-    location.reference.symbol:=TAsmLabel(entry^.Data);
+    Location_Reset_Ref(location,LOC_CREFERENCE,Def_CGSize(resultdef),sizeof(PInt),[]);
+    location.Reference.Symbol:=TAsmLabel(entry^.Data);
   end;
 
 

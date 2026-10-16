@@ -121,7 +121,7 @@ unit optdfa;
               if Assigned(TTempCreateNode(n).tempinfo^.tempinitcode) then
                 begin
                   PDFAInfo(arg)^.map.Add(n);
-                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index);
+                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.Index);
                 end;
             end;
           temprefn,
@@ -130,13 +130,13 @@ unit optdfa;
               PDFAInfo(arg)^.map.Add(n);
               if nf_modify in n.flags then
                 begin
-                  DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.index);
-                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index)
+                  DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.Index);
+                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.Index)
                 end
               else if nf_write in n.flags then
-                DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index)
+                DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.Index)
               else
-                DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.index);
+                DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.Index);
             end;
           else
             ;
@@ -152,7 +152,7 @@ unit optdfa;
           ResetProcessing eats a significant amount of time of CheckAndWarn
 
           the following set contains (hopefully) most of the expression nodes }
-        if n.nodetype in [calln,inlinen,assignn,callparan,andn,addn,orn,subn,muln,divn,slashn,notn,equaln,unequaln,gtn,ltn,lten,gten,loadn,
+        if n.nodetype in [calln,inlinen,assignn,callparan,andn,addn,orn,subn,muln,divn,slashn,notn,EqualN,unequaln,gtn,ltn,lten,gten,loadn,
           typeconvn,vecn,subscriptn,addrn,derefn] then
           result:=fen_norecurse_false
         else
@@ -329,7 +329,7 @@ unit optdfa;
                   optinfo might not be assigned
                 }
                 counteruse_after_loop:=Assigned(TForNode(node).left.optinfo) and Assigned(node.successor) and
-                  DynSetIn(node.successor.optinfo^.life,TForNode(node).left.optinfo^.index);
+                  DynSetIn(node.successor.optinfo^.life,TForNode(node).left.optinfo^.Index);
 
                 if counteruse_after_loop then
                   begin
@@ -354,7 +354,7 @@ unit optdfa;
                   optinfo might not be assigned
                 }
                 if Assigned(TForNode(node).left.optinfo) then
-                  DynSetInclude(l,TForNode(node).left.optinfo^.index);
+                  DynSetInclude(l,TForNode(node).left.optinfo^.Index);
 
                 { force block node life info }
                 UpdateLifeInfo(TForNode(node).loopiteration,l);
@@ -376,7 +376,7 @@ unit optdfa;
                     optinfo might not be assigned
                 }
                 if Assigned(TForNode(node).left.optinfo) then
-                  DynSetExclude(l,TForNode(node).left.optinfo^.index);
+                  DynSetExclude(l,TForNode(node).left.optinfo^.Index);
 
                 { ... but it could be that left/right use it, so do this after
                   removing the def of the counter variable }
@@ -494,9 +494,9 @@ unit optdfa;
                   DynSetIncludeSet(l,TCaseNode(node).elseblock.optinfo^.life)
                 else if Assigned(node.successor) then
                   begin
-                    if is_ordinal(TCaseNode(node).left.resultdef) then
+                    if Is_Ordinal(TCaseNode(node).left.resultdef) then
                       begin
-                        getrange(TCaseNode(node).left.resultdef,lv,hv);
+                        GetRange(TCaseNode(node).left.resultdef,lv,hv);
                         if TCaseNode(node).labelcoverage<(hv-lv) then
                           DynSetIncludeSet(l,node.successor.optinfo^.life);
                       end
@@ -623,7 +623,7 @@ unit optdfa;
           nodemap:=TIndexedNodeSet.Create;
 
         { create a fake node using the result which will be the last node }
-        if not(is_void(CurrentProcInfo.procdef.ReturnDef)) then
+        if not(Is_Void(CurrentProcInfo.procdef.ReturnDef)) then
           begin
             if CurrentProcInfo.procdef.ProcTypeOption=potype_constructor then
               resultnode:=load_self_node
@@ -754,7 +754,7 @@ unit optdfa;
                       if TCallParaNode(n).parasym.VarSpez=vs_var then
                         UninitializedVariableMessage(hpt.fileinfo,false,
                           TLoadNode(hpt).SymTable.SymTableType=LocalSymTable,
-                          is_managed_type(TLoadNode(hpt).resultdef),
+                          Is_Managed_Type(TLoadNode(hpt).resultdef),
                           TLoadNode(hpt).symtableentry.RealName);
                       AddFilepos(hpt.fileinfo);
                       result:=fen_norecurse_true;
@@ -817,7 +817,7 @@ unit optdfa;
                     begin
                       if (vo_is_funcret in varsym.VarOptions) and not(WarnedForLocation(n.fileinfo)) then
                         begin
-                          if is_managed_type(varsym.vardef) then
+                          if Is_Managed_Type(varsym.vardef) then
                             MessagePos(n.fileinfo,sym_w_managed_function_result_uninitialized)
                           else
                             MessagePos(n.fileinfo,sym_w_function_result_uninitialized);
@@ -829,7 +829,7 @@ unit optdfa;
                           { typed consts are initialized, further, warn only once per location }
                           if not (vo_is_typed_const in varsym.VarOptions) and not(WarnedForLocation(n.fileinfo)) then
                             begin
-                              UninitializedVariableMessage(n.fileinfo,true,varsym.typ=localvarsym,is_managed_type(varsym.vardef),varsym.realname);
+                              UninitializedVariableMessage(n.fileinfo,true,varsym.typ=localvarsym,Is_Managed_Type(varsym.vardef),varsym.realname);
                               AddFilepos(n.fileinfo);
                               result:=fen_norecurse_true;
                             end;
@@ -883,14 +883,14 @@ unit optdfa;
             exit;
           include(node.transientflags,tnf_processing);
 
-          if not(Assigned(node.optinfo)) or not(DynSetIn(node.optinfo^.life,nodetosearch.optinfo^.index)) then
+          if not(Assigned(node.optinfo)) or not(DynSetIn(node.optinfo^.life,nodetosearch.optinfo^.Index)) then
             exit;
 
           { we do not need this info always, so try to safe some time here, CheckAndWarn
             takes a lot of time anyways }
           if not(node.nodetype in [statementn,blockn]) then
-            touchesnode:=DynSetIn(node.optinfo^.use,nodetosearch.optinfo^.index) or
-              DynSetIn(node.optinfo^.def,nodetosearch.optinfo^.index)
+            touchesnode:=DynSetIn(node.optinfo^.use,nodetosearch.optinfo^.Index) or
+              DynSetIn(node.optinfo^.def,nodetosearch.optinfo^.Index)
           else
             touchesnode:=false;
 
@@ -941,12 +941,12 @@ unit optdfa;
 
                   successor might be assigned in case of an inlined exit node, in this case we do not warn about an unassigned
                   result as this had happened already when the routine has been compiled }
-                if not(Assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.ReturnDef)) and
+                if not(Assigned(node.successor)) and not(Result) and not(Is_Void(CurrentProcInfo.procdef.ReturnDef)) and
                   not(Assigned(TExitNode(node).resultexpr)) and
                   { don't warn about constructors }
                   not(CurrentProcInfo.procdef.ProcTypeOption in [potype_class_constructor,potype_constructor]) then
                   begin
-                    if is_managed_type(CurrentProcInfo.procdef.ReturnDef) then
+                    if Is_Managed_Type(CurrentProcInfo.procdef.ReturnDef) then
                       MessagePos(node.fileinfo,sym_w_managed_function_result_uninitialized)
                     else
                       MessagePos(node.fileinfo,sym_w_function_result_uninitialized);

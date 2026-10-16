@@ -26,55 +26,55 @@ unit rgbase;
 interface
 
     uses
-      cpuBase,cgBase;
+      CPUBase,CGBase;
 
     type
       TRegNameTable = array[TRegisterIndex] of string[19];
       TRegisterIndexTable = array[TRegisterIndex] of TRegisterIndex;
 
-    function findreg_by_number_table(r:TRegister;const regnumber_index:TRegisterIndexTable):TRegisterIndex;
-    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):TRegisterIndex;
+    function FindReg_By_Number_Table(R:TRegister;const RegNumberIndex:TRegisterIndexTable):TRegisterIndex;
+    function FindReg_By_Name_Table(const S:string;const RegNameTable:TRegNameTable;const RegNameIndex:TRegisterIndexTable):TRegisterIndex;
 
 
 implementation
 
-    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):TRegisterIndex;
+    function FindReg_By_Name_Table(const S:string;const RegNameTable:TRegNameTable;const RegNameIndex:TRegisterIndexTable):TRegisterIndex;
       var
-        i,p,q : TRegisterIndex;
+        I,P,Q : TRegisterIndex;
       begin
-        p:=Low(TRegisterIndex);
-        q:=high(TRegisterIndex);
+        P:=Low(TRegisterIndex);
+        Q:=High(TRegisterIndex);
         repeat
-          i:=(p+q) shr 1;
-          if s>regname_table[regname_index[i]] then
-            p:=i+1
+          I:=(P+Q) shr 1;
+          if S>RegNameTable[RegNameIndex[I]] then
+            P:=I+1
           else
-            q:=i;
-        until p=q;
-        if regname_table[regname_index[p]]=s then
-          result:=regname_index[p]
+            Q:=I;
+        until P=Q;
+        if RegNameTable[RegNameIndex[P]]=S then
+          Result:=RegNameIndex[P]
         else
-          result:=0;
+          Result:=0;
       end;
 
 
-    function findreg_by_number_table(r:TRegister;const regnumber_index:TRegisterIndexTable):TRegisterIndex;
+    function FindReg_By_Number_Table(R:TRegister;const RegNumberIndex:TRegisterIndexTable):TRegisterIndex;
       var
-        i,p,q : LongInt;
+        I,P,Q : LongInt;
       begin
-        p:=Low(TRegisterIndex);
-        q:=high(TRegisterIndex);
+        P:=Low(TRegisterIndex);
+        Q:=High(TRegisterIndex);
         repeat
-          i:=(p+q) shr 1;
-          if r>regnumber_table[regnumber_index[i]] then
-            p:=i+1
+          I:=(P+Q) shr 1;
+          if R>regnumber_table[RegNumberIndex[I]] then
+            P:=I+1
           else
-            q:=i;
-        until p=q;
-        if regnumber_table[regnumber_index[p]]=r then
-          result:=regnumber_index[p]
+            Q:=I;
+        until P=Q;
+        if regnumber_table[RegNumberIndex[P]]=R then
+          Result:=RegNumberIndex[P]
         else
-          result:=0;
+          Result:=0;
       end;
 
 end.

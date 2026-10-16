@@ -121,7 +121,7 @@ unit procinfo;
           }
           aktproccode : TAsmList;
           { Data (like jump tables) that belongs to this routine }
-          aktlocaldata : TAsmList;
+          AktLocalData : TAsmList;
 
           { Nexus profiler object metadata for this physical procedure. The
             section is made associative with the procedure's COMDAT leader
@@ -269,23 +269,23 @@ implementation
         maxpushedparasize:=0;
         { asmlists }
         aktproccode:=TAsmList.Create;
-        aktlocaldata:=TAsmList.Create;
+        AktLocalData:=TAsmList.Create;
         nexus_profile_descsym:=nil;
         nexus_profile_endlabel:=nil;
         nexus_profile_section:=nil;
-        reference_reset(save_regs_ref,sizeof(aint),[]);
+        Reference_Reset(save_regs_ref,sizeof(aint),[]);
         { labels }
         CurrentAsmData.getjumplabel(CurrExitLabel);
         CurrentAsmData.getjumplabel(CurrGOTLabel);
         CurrBreakLabel:=nil;
         CurrContinueLabel:=nil;
-        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel>=normal_function_level) then
+        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel>=NormalFunctionLevel) then
           parent.addnestedproc(Self);
       end;
 
     procedure TProcInfo.force_nested;
       begin
-        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel<normal_function_level) then
+        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel<NormalFunctionLevel) then
           parent.addnestedproc(Self);
       end;
 
@@ -295,8 +295,8 @@ implementation
          nestedprocs := nil;
          aktproccode.free;
          aktproccode := nil;
-         aktlocaldata.free;
-         aktlocaldata := nil;
+         AktLocalData.free;
+         AktLocalData := nil;
          localrefsyms.free;
          localrefsyms := nil;
          localrefdefs.free;
@@ -358,7 +358,7 @@ implementation
     function TProcInfo.get_normal_proc: TProcInfo;
       begin
         result:=self;
-        while Assigned(result.parent) and (result.procdef.ParaST.SymTableLevel>normal_function_level) do
+        while Assigned(result.parent) and (result.procdef.ParaST.SymTableLevel>NormalFunctionLevel) do
           result:=result.parent;
       end;
 
@@ -435,7 +435,7 @@ implementation
       begin
         result:=CProcInfo.create(self);
         result.force_nested;
-        result.procdef:=create_outline_procdef(basesymname,astruct,potype,resultdef);
+        result.procdef:=Create_Outline_ProcDef(basesymname,astruct,potype,resultdef);
         result.entrypos:=entrynodeinfo.fileinfo;
         result.entryswitches:=entrynodeinfo.LocalSwitches;
         result.exitpos:=CurrentFilePos; // filepos of last node?
@@ -518,12 +518,12 @@ implementation
         pi : TProcInfo;
         p : TParaVarSym;
       begin
-        if procdef.ParaST.SymTableLevel<=normal_function_level then
+        if procdef.ParaST.SymTableLevel<=NormalFunctionLevel then
           InternalError(2020050302);
         if procdef.ParaST.SymTableLevel<=parent_level then
           exit;
-        if parent_level<normal_function_level then
-          parent_level:=normal_function_level;
+        if parent_level<NormalFunctionLevel then
+          parent_level:=NormalFunctionLevel;
         { Mark parentfp as used for the current proc }
         pi:=Self;
         TParaVarSym(pi.procdef.ParentFPSym).VarState:=vs_read;
@@ -531,7 +531,7 @@ implementation
         while pi.procdef.ParaST.SymTableLevel>parent_level do
           begin
             pi:=pi.parent;
-            if pi.procdef.ParaST.SymTableLevel>normal_function_level then
+            if pi.procdef.ParaST.SymTableLevel>NormalFunctionLevel then
               begin
                 p:=TParaVarSym(pi.procdef.ParentFPSym);
                 p.VarState:=vs_read;

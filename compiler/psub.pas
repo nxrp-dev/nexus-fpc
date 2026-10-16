@@ -52,7 +52,7 @@ interface
         procedure add_entry_exit_code;
         procedure setup_tempgen;
         procedure TransformNodeTree;
-        procedure convert_captured_syms;
+        procedure Convert_Captured_Syms;
       protected
         procedure generate_code_exceptfilters;
       public
@@ -253,8 +253,8 @@ implementation
             case currpara.vardef.typ of
               arraydef :
                 begin
-                  if is_array_of_const(currpara.vardef) or
-                     is_variant_array(currpara.vardef) then
+                  if Is_Array_Of_Const(currpara.vardef) or
+                     Is_Variant_Array(currpara.vardef) then
                     begin
                       _no_inline('array of const');
                       exit;
@@ -262,7 +262,7 @@ implementation
                   { open arrays might need re-basing of the index, i.e. if you pass
                     an array[1..10] as open array, you have to add 1 to all index operations
                     if you directly inline it }
-                  if is_open_array(currpara.vardef) then
+                  if Is_Open_Array(currpara.vardef) then
                     begin
                       _no_inline('open array');
                       exit;
@@ -320,7 +320,7 @@ implementation
         { occurs                                                            }
         if (TSym(p).typ=localvarsym) and
            (TLocalVarSym(p).refs>0) and
-           is_managed_type(TLocalVarSym(p).vardef) then
+           Is_Managed_Type(TLocalVarSym(p).vardef) then
           begin
             include(CurrentProcInfo.flags,pi_needs_implicit_finally);
             include(CurrentProcInfo.flags,pi_do_call);
@@ -369,7 +369,7 @@ implementation
          {Unit initialization?.}
          if (
              Assigned(CurrentProcInfo.procdef.LocalST) and
-             (CurrentProcInfo.procdef.LocalST.SymTableLevel=main_program_level) and
+             (CurrentProcInfo.procdef.LocalST.SymTableLevel=MainProgramLevel) and
              (CurrentModule.IsUnit or IsLibrary)
             ) then
            begin
@@ -439,7 +439,7 @@ implementation
         if TStoredSym(p).typ=labelsym then
           begin
             addstatement(TStatementNode(arg^),
-              CIfNode.create(CAddNode.create(equaln,
+              CIfNode.create(CAddNode.create(EqualN,
                 CCallNode.createintern('fpc_setjmp',
                   CCallParaNode.create(CLoadNode.create(TLabelSym(p).JumpBuf,TLabelSym(p).JumpBuf.owner),nil)),
                 COrdConstNode.create(1,Search_System_Proc('fpc_setjmp').ReturnDef,true))
@@ -485,7 +485,7 @@ implementation
                             [],nil);
                         include(call.callnodeflags,cnf_ignore_devirt_wpo);
                         addstatement(newstatement,CIfNode.create(
-                            CAddNode.Create_Internal(equaln,
+                            CAddNode.Create_Internal(EqualN,
                                 CTypeConvNode.Create_Internal(
                                     load_vmt_pointer_node,
                                     VoidPointerType),
@@ -537,7 +537,7 @@ implementation
                   there is nothing to dispose (PFV) }
                 if Is_Class_Or_Object(CurrentStructDef) then
                   addstatement(newstatement,CIfNode.create(
-                    CAddNode.create(equaln,
+                    CAddNode.create(EqualN,
                         load_self_pointer_node,
                         CNilNode.create),
                     CExitNode.create(nil),
@@ -569,7 +569,7 @@ implementation
         if m_non_local_goto in CurrentSettings.ModeSwitches then
           TSymTable(CurrentProcInfo.procdef.LocalST).SymList.ForEachCall(@add_label_init,@newstatement);
 
-        initialize_capturer(CurrentProcInfo,newstatement);
+        Initialize_Capturer(CurrentProcInfo,newstatement);
       end;
 
 
@@ -622,7 +622,7 @@ implementation
                   if Is_Object(CurrentStructDef) then
                     begin
                       { finalize object data, but only if not in inherited call }
-                      if is_managed_type(CurrentStructDef) then
+                      if Is_Managed_Type(CurrentStructDef) then
                         begin
                           addstatement(newstatement,CIfNode.create(
                             CAddNode.create(unequaln,
@@ -671,7 +671,7 @@ implementation
 
     function TCGProcInfo.calc_stackframe_size:LongInt;
       begin
-        result:=Align(tg.direction*tg.lasttemp,CurrentSettings.alignment.LocalAlignMin);
+        result:=Align(tg.direction*tg.lasttemp,CurrentSettings.Alignment.LocalAlignMin);
       end;
 
 
@@ -721,7 +721,7 @@ implementation
             constructionsuccessful:=nil;
             if Is_Class(procdef.struct) then
               begin
-                constructionsuccessful:=CLocalVarSym.create(internaltypeprefixName[itp_vmt_afterconstruction_local],vs_value,PtrSIntType,[]);
+                constructionsuccessful:=CLocalVarSym.create(InternalTypePrefixName[itp_vmt_afterconstruction_local],vs_value,PtrSIntType,[]);
                 procdef.LocalST.InsertSym(constructionsuccessful,false);
                 srsym:=Search_Struct_Member(procdef.struct,'AFTERCONSTRUCTION');
                 if not Assigned(srsym) or
@@ -907,8 +907,8 @@ implementation
            (f_exceptions in Features) then
           begin
             { Any result of managed type must be returned in parameter }
-            if is_managed_type(procdef.ReturnDef) and
-               (not paramanager.ret_in_param(procdef.ReturnDef,procdef)) and
+            if Is_Managed_Type(procdef.ReturnDef) and
+               (not ParaManager.Ret_In_Param(procdef.ReturnDef,procdef)) and
                (not Is_Class(procdef.ReturnDef)) then
                InternalError(2013121301);
 
@@ -976,17 +976,17 @@ implementation
       end;
 
 
-    procedure translate_registers(p:TObject;list:pointer);
+    procedure Translate_Registers(p:TObject;list:pointer);
       begin
          if (TSym(p).typ in [localvarsym,paravarsym,staticvarsym]) and
-            (TAbstractNormalVarSym(p).LocAlloc.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
+            (TAbstractNormalVarSym(p).LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
               LOC_CMMREGISTER,LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
            begin
              if not(cs_no_regalloc in CurrentSettings.GlobalSwitches) then
                begin
-                 cg.translate_register(TAbstractNormalVarSym(p).LocAlloc.register);
-                 if (TAbstractNormalVarSym(p).LocAlloc.registerhi<>NR_NO) then
-                   cg.translate_register(TAbstractNormalVarSym(p).LocAlloc.registerhi);
+                 cg.Translate_Register(TAbstractNormalVarSym(p).LocAlloc.Register);
+                 if (TAbstractNormalVarSym(p).LocAlloc.RegisterHi<>NR_NO) then
+                   cg.Translate_Register(TAbstractNormalVarSym(p).LocAlloc.RegisterHi);
                end;
            end;
       end;
@@ -1032,7 +1032,7 @@ implementation
             if ((po_assembler in procdef.ProcOptions) and
                (m_delphi in CurrentSettings.ModeSwitches) and
                { localst at main_program_level is a staticsymtable }
-                (procdef.LocalST.SymTableLevel<>main_program_level) and
+                (procdef.LocalST.SymTableLevel<>MainProgramLevel) and
                 (TAbstractLocalSymTable(procdef.LocalST).Count_Locals = 0)) or
                ((cs_opt_stackframe in CurrentSettings.OptimizerSwitches) and
                 not(cs_generate_stackframes in CurrentSettings.LocalSwitches) and
@@ -1045,12 +1045,12 @@ implementation
 {$if defined(i386) or defined(x86_64)}
                { Outgoing parameter(s) on stack do not need stackframe on x86 targets
                  with fixed stack. On ARM it fails, see bug #25050 }
-                  and (not paramanager.use_fixed_stack)
+                  and (not ParaManager.Use_Fixed_Stack)
 {$endif defined(i386) or defined(x86_64)}
                   ) and
                 ((flags*([pi_has_assembler_block,pi_is_assembler,
                         pi_needs_stackframe]+
-                        exception_flags[((TargetInfo.cpu=cpu_i386) and (not paramanager.use_fixed_stack))
+                        exception_flags[((TargetInfo.cpu=cpu_i386) and (not ParaManager.Use_Fixed_Stack))
 {$ifndef DISABLE_WIN64_SEH}
                         or (TargetInfo.system=system_x86_64_win64)
 {$endif DISABLE_WIN64_SEH}
@@ -1070,9 +1070,9 @@ implementation
                    not(has_assembler_child)
                   { parasize must be really zero, this means also that no result may be returned
                     in a parameter }
-                  and not((CurrentProcInfo.procdef.ProcCallOption in clearstack_pocalls) and
+                  and not((CurrentProcInfo.procdef.ProcCallOption in ClearStack_PoCalls) and
                   not(CurrentProcInfo.procdef.Generate_SafeCall_Wrapper) and
-                  paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
+                  ParaManager.Ret_In_Param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
                   begin
                     { Only need to set the framepointer }
                     framepointer:=NR_STACK_POINTER_REG;
@@ -1481,7 +1481,7 @@ implementation
 
             PrintNodeIndent;
 
-            if Assigned(procdef.ReturnDef) and not is_void(procdef.ReturnDef) then
+            if Assigned(procdef.ReturnDef) and not Is_Void(procdef.ReturnDef) then
               WriteLn(T, PrintNodeIndention, '<returndef>', SanitiseXMLString(procdef.ReturnDef.TypeSymbolPrettyName), '</returndef>');
 
             if po_reintroduce in procdef.ProcOptions then
@@ -1647,17 +1647,17 @@ implementation
 {$else cpu64bitalu}
         cg64:=saved_cg64;
 {$endif cpu64bitalu}
-        add_reg_instruction_hook:=@cg.add_reg_instruction;
+        Add_Reg_Instruction_Hook:=@cg.Add_Reg_Instruction;
       end;
 
 
     procedure TCGProcInfo.generate_exit_label(list: TAsmList);
       begin
-        hlcg.a_label(list,CurrExitLabel);
+        hlcg.A_Label(list,CurrExitLabel);
       end;
 
 
-    procedure TCGProcInfo.convert_captured_syms;
+    procedure TCGProcInfo.Convert_Captured_Syms;
       var
         hpi : TCGProcInfo;
         old_current_procinfo : TProcInfo;
@@ -1671,12 +1671,12 @@ implementation
         hpi:=TCGProcInfo(get_first_nestedproc);
         while Assigned(hpi) do
           begin
-            hpi.convert_captured_syms;
+            hpi.Convert_Captured_Syms;
             hpi:=TCGProcInfo(hpi.next);
           end;
         { convert the captured symbols for this routine }
         if Assigned(code) then
-          procdefutil.convert_captured_syms(procdef,code);
+          procdefutil.Convert_Captured_Syms(procdef,code);
         CurrentProcInfo:=old_current_procinfo;
       end;
 
@@ -1717,7 +1717,7 @@ implementation
                   ) and
                  not(vo_is_funcret in TStaticVarSym(p).VarOptions) and
                  not(vo_is_external in TStaticVarSym(p).VarOptions) and
-                 is_managed_type(TStaticVarSym(p).vardef) then
+                 Is_Managed_Type(TStaticVarSym(p).vardef) then
                 include(CurrentProcInfo.flags,pi_uses_threadvar);
             end;
           ProcSym :
@@ -1896,7 +1896,7 @@ implementation
         procdef.ParaST.SymList.ForEachCall(@clearrefs,nil);
 
         { there's always a call to FPC_INITIALIZEUNITS/FPC_DO_EXIT in the main program }
-        if (procdef.LocalST.SymTableLevel=main_program_level) and
+        if (procdef.LocalST.SymTableLevel=MainProgramLevel) and
            (not CurrentModule.IsUnit) then
           begin
             include(flags,pi_do_call);
@@ -1957,7 +1957,7 @@ implementation
           end
         else
           begin
-            create_hlcodegen(nil);
+            Create_HLCodeGen(nil);
 
             setup_eh;
 
@@ -1965,7 +1965,7 @@ implementation
               setup_tempgen;
 
             { Create register allocator, must come after framepointer is known }
-            hlcg.init_register_allocators;
+            hlcg.Init_Register_Allocators;
 
             generate_parameter_info;
 
@@ -1990,7 +1990,7 @@ implementation
               the body is finished, because only then the position is known }
             CurrentFilePos:=entrypos;
 
-            hlcg.gen_load_para_value(templist);
+            hlcg.Gen_Load_Para_Value(templist);
 
             { caller paraloc info is also necessary in the stackframe_entry
               code of the ppc (and possibly other processors)               }
@@ -2021,11 +2021,11 @@ implementation
             CurrentFilePos:=entrypos;
             CurrentSettings.LocalSwitches:=entryswitches;
 
-            cg.set_regalloc_live_range_direction(rad_backwards);
+            cg.Set_RegAlloc_Live_Range_Direction(rad_backwards);
 
-            hlcg.gen_entry_code(templist);
+            hlcg.Gen_Entry_Code(templist);
             aktproccode.InsertListAfter(entry_asmnode.currenttai,templist);
-            hlcg.gen_initialize_code(templist);
+            hlcg.Gen_Initialize_Code(templist);
             aktproccode.InsertListAfter(init_asmnode.currenttai,templist);
 
             { now generate finalize and exit code with the correct position
@@ -2033,7 +2033,7 @@ implementation
             CurrentFilePos:=exitpos;
             CurrentSettings.LocalSwitches:=exitswitches;
 
-            cg.set_regalloc_live_range_direction(rad_forward);
+            cg.Set_RegAlloc_Live_Range_Direction(rad_forward);
 
             if Assigned(finalize_procinfo) then
               begin
@@ -2044,7 +2044,7 @@ implementation
               end
             else if not temps_finalized then
               begin
-                hlcg.gen_finalize_code(templist);
+                hlcg.Gen_Finalize_Code(templist);
                 { the finalcode must be concatenated if there was no position available,
                   using insertlistafter will result in an insert at the start
                   when currentai=nil }
@@ -2057,7 +2057,7 @@ implementation
             else
               aktproccode.ConcatList(templist);
             { exit code }
-            hlcg.gen_exit_code(templist);
+            hlcg.Gen_Exit_Code(templist);
             aktproccode.ConcatList(templist);
 
             { reset switches }
@@ -2065,7 +2065,7 @@ implementation
 
             { generate symbol and save end of header position }
             CurrentFilePos:=entrypos;
-            hlcg.gen_proc_symbol(templist);
+            hlcg.Gen_Proc_Symbol(templist);
             headertai:=TAI(templist.last);
             { insert symbol }
             aktproccode.InsertList(templist);
@@ -2079,11 +2079,11 @@ implementation
             if (tf_pic_uses_got in TargetInfo.flags) and
               (pi_needs_got in flags) and
               (got<>NR_NO) then
-              cg.a_reg_sync(aktproccode,got);
+              cg.A_Reg_Sync(aktproccode,got);
 
             if (pi_needs_tls in flags) and
               (tlsoffset<>NR_NO) then
-              cg.a_reg_sync(aktproccode,tlsoffset);
+              cg.A_Reg_Sync(aktproccode,tlsoffset);
 
             gen_free_symtable(aktproccode,procdef.LocalST);
             gen_free_symtable(aktproccode,procdef.ParaST);
@@ -2091,7 +2091,7 @@ implementation
             { add code that will load the return value, this is not done
               for assembler routines when they didn't reference the result
               variable }
-            hlcg.gen_load_return_value(templist);
+            hlcg.Gen_Load_Return_Value(templist);
             aktproccode.ConcatList(templist);
 
             { Already reserve all registers for stack checking code and
@@ -2102,7 +2102,7 @@ implementation
                (procdef.ProcTypeOption<>potype_proginit) then
               begin
                 CurrentFilePos:=entrypos;
-                hlcg.gen_stack_check_call(templist);
+                hlcg.Gen_Stack_Check_Call(templist);
                 aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist);
               end;
 
@@ -2119,14 +2119,14 @@ implementation
             {     code may need global symbols such as init rtti        }
             {  d) inserted after the stackframe allocation, because     }
             {     this register may have to be spilled                  }
-            cg.set_regalloc_live_range_direction(rad_backwards_reinit);
+            cg.Set_RegAlloc_Live_Range_Direction(rad_backwards_reinit);
             CurrentFilePos:=entrypos;
             { load got if necessary }
-            cg.g_maybe_got_init(templist);
+            cg.G_Maybe_Got_Init(templist);
             aktproccode.InsertListAfter(headertai,templist);
 
             { init tls if needed }
-            cg.g_maybe_tls_init(templist);
+            cg.G_Maybe_TLS_Init(templist);
             aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist);
 
             { re-enable if more code at the end is ever generated here
@@ -2145,18 +2145,18 @@ implementation
 
             { The procedure body is finished, we can now
               allocate the registers }
-            cg.do_register_allocation(aktproccode,headertai);
+            cg.Do_Register_Allocation(aktproccode,headertai);
 
             { translate imag. register to their real counter parts
               this is necessary for debuginfo and verbose assembler output
               when SSA will be implemented, this will be more complicated because we've to
               maintain location lists }
-            procdef.ParaST.SymList.ForEachCall(@translate_registers,templist);
-            procdef.LocalST.SymList.ForEachCall(@translate_registers,templist);
+            procdef.ParaST.SymList.ForEachCall(@Translate_Registers,templist);
+            procdef.LocalST.SymList.ForEachCall(@Translate_Registers,templist);
             if (tf_pic_uses_got in TargetInfo.flags) and (pi_needs_got in flags) and
                not(cs_no_regalloc in CurrentSettings.GlobalSwitches) and
                (got<>NR_NO) then
-              cg.translate_register(got);
+              cg.Translate_Register(got);
 
             { Add save and restore of used registers }
             CurrentFilePos:=entrypos;
@@ -2175,7 +2175,7 @@ implementation
                (procdef.ProcTypeOption<>potype_proginit) then
               begin
                 CurrentFilePos:=entrypos;
-                hlcg.gen_stack_check_size_para(templist);
+                hlcg.Gen_Stack_Check_Size_Para(templist);
                 aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist)
               end;
 
@@ -2190,7 +2190,7 @@ implementation
             if not (cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
                (tf_safecall_exceptions in TargetInfo.flags) and
                (procdef.ProcCallOption=pocall_safecall) then
-              cg.a_load_const_reg(aktproccode,OS_ADDR,0,NR_FUNCTION_RETURN_REG);
+              cg.A_Load_Const_Reg(aktproccode,OS_ADDR,0,NR_FUNCTION_RETURN_REG);
 {$endif}
             { Add exit code at the end }
             CurrentFilePos:=exitpos;
@@ -2249,7 +2249,7 @@ implementation
               so it should be inserted before the end symbol (FK)
             }
             CurrentFilePos:=exitpos;
-            hlcg.gen_proc_symbol_end(templist);
+            hlcg.Gen_Proc_Symbol_End(templist);
             aktproccode.ConcatList(templist);
 
             { insert line debuginfo }
@@ -2271,7 +2271,7 @@ implementation
 
             finish_eh;
 
-            hlcg.record_generated_code_for_procdef(CurrentProcInfo.procdef,aktproccode,aktlocaldata);
+            hlcg.Record_Generated_Code_For_ProcDef(CurrentProcInfo.procdef,aktproccode,AktLocalData);
 
             { now generate code for any exception filters (they need the tempgen) }
             generate_code_exceptfilters;
@@ -2284,8 +2284,8 @@ implementation
                 tg:=nil;
               end;
             { stop tempgen and ra }
-            hlcg.done_register_allocators;
-            destroy_hlcodegen;
+            hlcg.Done_Register_Allocators;
+            Destroy_HLCodeGen;
           end;
 
         dfabuilder.free;
@@ -2315,13 +2315,13 @@ implementation
 
         { insert parasymtable in symtablestack when parsing
           a function }
-        if procdef.ParaST.SymTableLevel>=normal_function_level then
+        if procdef.ParaST.SymTableLevel>=NormalFunctionLevel then
           SymTableStack.push(procdef.ParaST);
 
         { insert localsymtable, except for the main procedure
           (in that case the localst is the unit's static symtable,
            which is already on the stack) }
-        if procdef.LocalST.SymTableLevel>=normal_function_level then
+        if procdef.LocalST.SymTableLevel>=NormalFunctionLevel then
           SymTableStack.push(procdef.LocalST);
       end;
 
@@ -2329,11 +2329,11 @@ implementation
     procedure TCGProcInfo.remove_from_symtablestack;
       begin
         { remove localsymtable }
-        if procdef.LocalST.SymTableLevel>=normal_function_level then
+        if procdef.LocalST.SymTableLevel>=NormalFunctionLevel then
           SymTableStack.pop(procdef.LocalST);
 
         { remove parasymtable }
-        if procdef.ParaST.SymTableLevel>=normal_function_level then
+        if procdef.ParaST.SymTableLevel>=NormalFunctionLevel then
           SymTableStack.pop(procdef.ParaST);
 
         { remove symtables for the class, but only if it is no nested function }
@@ -2442,7 +2442,7 @@ implementation
          { parse the code ... }
          code:=block(CurrentModule.IsLibrary);
 
-         postprocess_capturer(self);
+         PostProcess_Capturer(self);
 
          if recordtokens then
            begin
@@ -2549,9 +2549,9 @@ implementation
         if TSym(p).typ<>paravarsym then
          exit;
         with TParaVarSym(p) do
-          if (is_managed_type(vardef) and
+          if (Is_Managed_Type(vardef) and
              (VarSpez in [vs_value,vs_out])) or
-             (is_shortstring(vardef) and
+             (Is_ShortString(vardef) and
              (VarSpez=vs_value)) then
             include(CurrentProcInfo.flags,pi_do_call);
       end;
@@ -2574,7 +2574,7 @@ implementation
         CurrentProcInfo:=CProcInfo.create(old_current_procinfo);
         CurrentModule.ProcInfo:=CurrentProcInfo;
         CurrentProcInfo.procdef:=pd;
-        isnestedproc:=(CurrentProcInfo.procdef.ParaST.SymTableLevel>normal_function_level);
+        isnestedproc:=(CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel);
         { an anonymous function is always considered as nested }
         if po_anonymous in pd.ProcOptions then
           begin
@@ -2618,7 +2618,7 @@ implementation
                 generate_specialization_procs;
                 { convert all load nodes that might have been captured by a
                   capture object }
-                TCGProcInfo(CurrentProcInfo).convert_captured_syms;
+                TCGProcInfo(CurrentProcInfo).Convert_Captured_Syms;
                 TCGProcInfo(CurrentProcInfo).generate_code_tree;
               end;
           end;
@@ -2826,8 +2826,8 @@ implementation
                  for i:=0 to TProcSym(srsym).procdeflist.count-1 do
                    begin
                      def:=TProcDef(TProcSym(srsym).procdeflist[i]);
-                     if (compare_paras(def.paras,result.paras,cp_none,[cpo_ignorehidden,cpo_openequalisexact,cpo_ignoreuniv])=te_exact) and
-                         (compare_defs(def.ReturnDef,result.ReturnDef,nothingn)=te_exact) then
+                     if (Compare_Paras(def.paras,result.paras,cp_none,[cpo_ignorehidden,cpo_openequalisexact,cpo_ignoreuniv])=te_exact) and
+                         (Compare_Defs(def.ReturnDef,result.ReturnDef,nothingn)=te_exact) then
                        begin
                          result.GenericDef:=def;
                          break;
@@ -2865,7 +2865,7 @@ implementation
                      { we cannot handle the callee-side of variadic functions (and
                        even if we could, e.g. LLVM cannot call through to something
                        else in that case) }
-                     if is_c_variadic(result) then
+                     if Is_C_Variadic(result) then
                        Message1(parser_e_callthrough_varargs,result.FullProcName(false));
                      Call_Through_New_Name(result,proc_get_importname(result));
                      include(result.ImplProcOptions,pio_thunk);
@@ -2873,12 +2873,12 @@ implementation
                  else
 {$endif cpuhighleveltarget}
                    begin
-                     create_hlcodegen(nil);
-                     hlcg.handle_external_proc(
+                     Create_HLCodeGen(nil);
+                     hlcg.Handle_External_Proc(
                        CurrentAsmData.asmlists[al_procedures],
                        result,
                        proc_get_importname(result));
-                     destroy_hlcodegen;
+                     Destroy_HLCodeGen;
                    end
                end;
            end;
@@ -3087,7 +3087,7 @@ implementation
               _EXPORTS:
                 begin
                    handle_unexpected_had_generic;
-                   if (CurrentProcInfo.procdef.LocalST.SymTableLevel>main_program_level) then
+                   if (CurrentProcInfo.procdef.LocalST.SymTableLevel>MainProgramLevel) then
                      begin
                         Message(parser_e_syntax_error);
                         consume_all_until(_SEMICOLON);

@@ -68,17 +68,17 @@ interface
       begin
         if IsFloatImmediate(TFloatDef(resultdef).FloatType,value_real) then
           begin
-            location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_realconst(A_FMOV,
-              location.register,value_real));
+              location.Register,value_real));
           end
         { cast and compare the bit pattern as we cannot handle -0.0 }
         else if IsPosZero(value_real) then
           begin
-            location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
-            hreg:=newreg(R_MMREGISTER,getsupreg(location.register),R_SUBMM16B);
+            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+            hreg:=NewReg(R_MMREGISTER,GetSupReg(location.Register),R_SUBMM16B);
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_EOR,
               hreg,hreg,hreg));
           end

@@ -475,7 +475,7 @@ implementation
           _typ:=AT_DATA;
         namestr:=s;
         if _bind in asmsymbindindirect then
-          namestr:=namestr+suffix_indirect;
+          namestr:=namestr+SuffixIndirect;
         hp:=TAsmSymbol(FAsmSymbolDict.Find(namestr));
         if Assigned(hp) then
          begin
@@ -622,7 +622,7 @@ implementation
         namestr:=s;
         if indirect then
           begin
-            namestr:=namestr+suffix_indirect;
+            namestr:=namestr+SuffixIndirect;
             bind:=AB_EXTERNAL_INDIRECT;
           end
         else

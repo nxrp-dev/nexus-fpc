@@ -47,7 +47,7 @@ unit optbase;
         usesum : TDFASet;
         avail : TDFASet;
         { estimation, how often the node is executed per subroutine call times 100, calculated by optutils.CalcExecutionWeight }
-        executionweight : LongInt;
+        ExecutionWeight : LongInt;
       end;
 
       POptInfo = ^TOptInfo;

@@ -283,14 +283,14 @@ implementation
 
     function TDef.Registered: Boolean;
       begin
-        Result:=DefID>defid_not_registered;
+        Result:=DefID>DefIDNotRegistered;
       end;
 
 
     procedure TDef.InitDefID;
       begin
         if DefID=0 then
-          DefID:=defid_not_registered;
+          DefID:=DefIDNotRegistered;
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -392,8 +392,8 @@ implementation
           begin
            if DefID>=0 then
              TModule(RegisteredInModule).DefList[DefID]:=nil
-           else if DefID<defid_not_registered then
-             TModule(RegisteredInModule).DefList[-(DefID-defid_not_registered+1)]:=nil
+           else if DefID<DefIDNotRegistered then
+             TModule(RegisteredInModule).DefList[-(DefID-DefIDNotRegistered+1)]:=nil
            else
              InternalError(2021060101);
           end;
@@ -459,8 +459,8 @@ implementation
 
     function TDef.UniqueIDStr: string;
       begin
-        if (DefID=defid_not_registered) or
-           (DefID=defid_registered_nost) then
+        if (DefID=DefIDNotRegistered) or
+           (DefID=DefIDRegisteredNoST) then
           begin
             if not Assigned(CurrentModule) then
               InternalError(2015102505);
@@ -469,7 +469,7 @@ implementation
             { invert the defid to indicate that it was only set because we
               needed a unique number -- then add defid_not_registered so we
               don't get the values between defid_registered and 0 }
-            DefID:=-(CurrentModule.DefList.Count-1)+defid_not_registered-1;
+            DefID:=-(CurrentModule.DefList.Count-1)+DefIDNotRegistered-1;
           end;
         { use deflist_index so that it will remain the same if def first gets a
           defid just for the unique id (as above) and later it gets registered
@@ -561,8 +561,8 @@ implementation
 
     function TDef.DefListIndex: LongInt;
       begin
-        if DefID<defid_not_registered then
-          Result:=-(DefID-defid_not_registered+1)
+        if DefID<DefIDNotRegistered then
+          Result:=-(DefID-DefIDNotRegistered+1)
         else if DefID>=0 then
           Result:=DefID
         else
@@ -602,7 +602,7 @@ implementation
 
     function TSym.Registered: Boolean;
       begin
-        Result:=SymID>symid_not_registered;
+        Result:=SymID>SymIDNotRegistered;
       end;
 
 
@@ -617,7 +617,7 @@ implementation
          IsDbgWritten := False;
          Visibility:=vis_public;
          DeprecatedMsg:=nil;
-         SymID:=symid_not_registered;
+         SymID:=SymIDNotRegistered;
       end;
 
     destructor  TSym.Destroy;
@@ -931,7 +931,7 @@ implementation
              begin
                { if it has been registered but it wasn't put in a symbol table,
                  this symbol shouldn't be written to a ppu }
-               if TSym(S).SymID=symid_registered_nost then
+               if TSym(S).SymID=SymIDRegisteredNoST then
                  DoInternalError(2015102504);
                if not TSym(S).Registered then
                  TSym(S).RegisterSym;
@@ -940,7 +940,7 @@ implementation
            else if S is TDef then
              begin
                { same as above }
-               if TDef(S).DefID=defid_registered_nost then
+               if TDef(S).DefID=DefIDRegisteredNoST then
                  DoInternalError(2015102501);
                if TDef(S).Typ=ErrorDef then
                  DoInternalError(2024011501);

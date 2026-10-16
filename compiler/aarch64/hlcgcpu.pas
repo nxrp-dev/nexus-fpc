@@ -37,12 +37,12 @@ interface
 
   type
     THLCGAArch64 = class(THLCG2LL)
-      procedure a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister); override;
-      procedure a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister); override;
+      procedure A_Load_SubsetReg_Reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister); override;
+      procedure A_Load_SubsetReg_SubsetReg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister); override;
 
-      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
+      procedure G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
      protected
-      procedure a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt); override;
+      procedure A_Load_RegConst_SubsetReg_Intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt); override;
     end;
 
 implementation
@@ -54,45 +54,45 @@ implementation
     cpubase,aasmcpu,parabase,
     cgobj,cgcpu;
 
-  procedure THLCGAArch64.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister);
+  procedure THLCGAArch64.A_Load_SubsetReg_Reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister);
     var
       op: TAsmOp;
       tocgsize: TCgSize;
       tmpdestreg: TRegister;
     begin
-      tocgsize:=def_cgsize(tosize);
-      if (sreg.startbit<>0) or
-         not((sreg.subsetregsize in [OS_32,OS_S32]) and
-             (sreg.bitlen=32)) or
-         not((sreg.subsetregsize in [OS_64,OS_S64]) and
-             (sreg.bitlen=64)) then
+      tocgsize:=Def_CGSize(tosize);
+      if (sreg.StartBit<>0) or
+         not((sreg.SubsetRegSize in [OS_32,OS_S32]) and
+             (sreg.BitLen=32)) or
+         not((sreg.SubsetRegSize in [OS_64,OS_S64]) and
+             (sreg.BitLen=64)) then
         begin
-          if is_signed(subsetsize) then
+          if Is_Signed(subsetsize) then
             op:=A_SBFX
           else
             op:=A_UBFX;
           { source and destination register of SBFX/UBFX have to be the same size }
-          if (sreg.subsetregsize in [OS_64,OS_S64]) and
+          if (sreg.SubsetRegSize in [OS_64,OS_S64]) and
              not(tocgsize in [OS_64,OS_S64]) then
-            tmpdestreg:=cg.getintregister(list,OS_64)
-          else if not(sreg.subsetregsize in [OS_64,OS_S64]) and
+            tmpdestreg:=cg.GetIntRegister(list,OS_64)
+          else if not(sreg.SubsetRegSize in [OS_64,OS_S64]) and
              (tocgsize in [OS_64,OS_S64]) then
-            tmpdestreg:=cg.getintregister(list,OS_32)
+            tmpdestreg:=cg.GetIntRegister(list,OS_32)
           else
             tmpdestreg:=destreg;
-          list.concat(TAICPU.op_reg_reg_const_const(op,tmpdestreg,sreg.subsetreg,sreg.startbit,sreg.bitlen));
+          list.concat(TAICPU.op_reg_reg_const_const(op,tmpdestreg,sreg.SubsetReg,sreg.StartBit,sreg.BitLen));
           { need to sign extend further or truncate? }
-          if (sreg.subsetregsize=OS_S64) and
+          if (sreg.SubsetRegSize=OS_S64) and
              not(tocgsize in [OS_64,OS_S64]) then
-            cg.a_load_reg_reg(list,OS_S64,tocgsize,tmpdestreg,destreg)
-          else if is_signed(subsetsize) and
+            cg.A_Load_Reg_Reg(list,OS_S64,tocgsize,tmpdestreg,destreg)
+          else if Is_Signed(subsetsize) and
              (tocgsize in [OS_8,OS_16]) then
-            cg.a_load_reg_reg(list,OS_32,tocgsize,tmpdestreg,destreg)
+            cg.A_Load_Reg_Reg(list,OS_32,tocgsize,tmpdestreg,destreg)
           else if tmpdestreg<>destreg then
-            cg.a_load_reg_reg(list,def_cgsize(subsetsize),tocgsize,tmpdestreg,destreg)
+            cg.A_Load_Reg_Reg(list,Def_CGSize(subsetsize),tocgsize,tmpdestreg,destreg)
         end
       else
-        cg.a_load_reg_reg(list,def_cgsize(subsetsize),tocgsize,sreg.subsetreg,destreg);
+        cg.A_Load_Reg_Reg(list,Def_CGSize(subsetsize),tocgsize,sreg.SubsetReg,destreg);
     end;
 
 
@@ -101,8 +101,8 @@ implementation
       if (fromsize in [OS_S64,OS_64])<>
          (tosize in [OS_S64,OS_64]) then
         begin
-          newfromreg:=cg.makeregsize(list,orgfromreg,OS_64);
-          newtoreg:=cg.makeregsize(list,orgtoreg,OS_64);
+          newfromreg:=cg.MakeRegSize(list,orgfromreg,OS_64);
+          newtoreg:=cg.MakeRegSize(list,orgtoreg,OS_64);
         end
       else
         begin
@@ -112,31 +112,31 @@ implementation
     end;
 
 
-  procedure THLCGAArch64.a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister);
+  procedure THLCGAArch64.A_Load_SubsetReg_SubsetReg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister);
     var
       fromreg, toreg: TRegister;
 
     begin
       { BFM can only insert a bitfield that starts at position 0 in the source
         source or destination register }
-      if (tosreg.startbit=0) and
-         (fromsreg.bitlen>=tosreg.bitlen) then
+      if (tosreg.StartBit=0) and
+         (fromsreg.BitLen>=tosreg.BitLen) then
         begin
-          makeregssamesize(list,fromsreg.subsetregsize,tosreg.subsetregsize,fromsreg.subsetreg,tosreg.subsetreg,fromreg,toreg);
-          list.concat(TAICPU.op_reg_reg_const_const(A_BFXIL,toreg,fromreg,fromsreg.startbit,tosreg.bitlen))
+          makeregssamesize(list,fromsreg.SubsetRegSize,tosreg.SubsetRegSize,fromsreg.SubsetReg,tosreg.SubsetReg,fromreg,toreg);
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFXIL,toreg,fromreg,fromsreg.StartBit,tosreg.BitLen))
         end
-      else if (fromsreg.startbit=0) and
-         (fromsreg.bitlen>=tosreg.bitlen) then
+      else if (fromsreg.StartBit=0) and
+         (fromsreg.BitLen>=tosreg.BitLen) then
         begin
-          makeregssamesize(list,fromsreg.subsetregsize,tosreg.subsetregsize,fromsreg.subsetreg,tosreg.subsetreg,fromreg,toreg);
-          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,tosreg.startbit,tosreg.bitlen))
+          makeregssamesize(list,fromsreg.SubsetRegSize,tosreg.SubsetRegSize,fromsreg.SubsetReg,tosreg.SubsetReg,fromreg,toreg);
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,tosreg.StartBit,tosreg.BitLen))
         end
       else
         inherited;
     end;
 
 
-  procedure THLCGAArch64.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
+  procedure THLCGAArch64.G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
     var
       make_global: boolean;
       href: TReference;
@@ -169,13 +169,13 @@ implementation
       if not(Assigned(hsym) and
         (hsym.typ=paravarsym)) then
         InternalError(2010103101);
-      ParaLoc:=TParaVarSym(hsym).ParaLoc[callerside].location;
+      ParaLoc:=TParaVarSym(hsym).ParaLoc[callerside].Location;
       if Assigned(ParaLoc^.next) then
         InternalError(2013020101);
 
-      case ParaLoc^.loc of
+      case ParaLoc^.Loc of
         LOC_REGISTER:
-          TCGAArch64(cg).handle_reg_imm12_reg(list,A_SUB,ParaLoc^.size,ParaLoc^.register,ioffset,ParaLoc^.register,NR_IP0,false,true);
+          TCGAArch64(cg).handle_reg_imm12_reg(list,A_SUB,ParaLoc^.Size,ParaLoc^.Register,ioffset,ParaLoc^.Register,NR_IP0,false,true);
         else
           InternalError(2010103102);
       end;
@@ -186,38 +186,38 @@ implementation
           if (procdef.ExtNumber=$ffff) then
             InternalError(2000061302);
           { mov  0(%rdi),%rax ; load vmt}
-          reference_reset_base(href,VoidPointerType,ParaLoc^.register,0,ctempposinvalid,sizeof(PInt),[]);
-          getcpuregister(list,NR_IP0);
-          a_load_ref_reg(list,VoidPointerType,VoidPointerType,href,NR_IP0);
+          Reference_Reset_Base(href,VoidPointerType,ParaLoc^.Register,0,CTempPosInvalid,sizeof(PInt),[]);
+          GetCPURegister(list,NR_IP0);
+          A_Load_Ref_Reg(list,VoidPointerType,VoidPointerType,href,NR_IP0);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,VoidPointerType,NR_IP0,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,sizeof(PInt),[]);
+          Reference_Reset_Base(href,VoidPointerType,NR_IP0,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),CTempPosInvalid,sizeof(PInt),[]);
           op:=A_LDR;
           TCGAArch64(cg).make_simple_ref(list,op,OS_ADDR,PF_None,href,NR_IP0);
           list.concat(TAICPU.op_reg_ref(op,NR_IP0,href));
-          ungetcpuregister(list,NR_IP0);
+          UngetCPURegister(list,NR_IP0);
           list.concat(TAICPU.op_reg(A_BR,NR_IP0));
         end
       else
-        cg.a_jmp_name(list,procdef.MangledName);
+        cg.A_Jmp_Name(list,procdef.MangledName);
       list.concat(TAISymbolEnd.Createname(labelname));
     end;
 
 
-  procedure THLCGAArch64.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt);
+  procedure THLCGAArch64.A_Load_RegConst_SubsetReg_Intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt);
     var
       toreg: TRegister;
     begin
       if slopt in [SL_SETZERO,SL_SETMAX] then
         inherited
-      else if not(sreg.bitlen in [32,64]) or
-              (sreg.startbit<>0) or
-              (getsubreg(fromreg)<getsubreg(sreg.subsetreg)) then
+      else if not(sreg.BitLen in [32,64]) or
+              (sreg.StartBit<>0) or
+              (GetSubReg(fromreg)<GetSubReg(sreg.SubsetReg)) then
         begin
-          makeregssamesize(list,def_cgsize(fromsize),sreg.subsetregsize,fromreg,sreg.subsetreg,fromreg,toreg);
-          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,sreg.startbit,sreg.bitlen))
+          makeregssamesize(list,Def_CGSize(fromsize),sreg.SubsetRegSize,fromreg,sreg.SubsetReg,fromreg,toreg);
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,sreg.StartBit,sreg.BitLen))
         end
       else
-        a_load_reg_reg(list,fromsize,subsetsize,fromreg,sreg.subsetreg);
+        A_Load_Reg_Reg(list,fromsize,subsetsize,fromreg,sreg.SubsetReg);
     end;
 
 
@@ -230,5 +230,5 @@ implementation
 
 begin
   CHLCGObj:=THLCGAArch64;
-  create_hlcodegen:=@create_hlcodegen_cpu;
+  Create_HLCodeGen:=@create_hlcodegen_cpu;
 end.

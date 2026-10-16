@@ -35,7 +35,7 @@ interface
 
   type
     THLCGCPU = class(THLCGX86)
-     procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
+     procedure G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
     end;
 
 implementation
@@ -48,7 +48,7 @@ implementation
     hlcgobj,
     cgbase,cgutils,cgobj,cpubase,cgcpu,cpupi;
 
-  procedure THLCGCPU.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
+  procedure THLCGCPU.G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
     var
       make_global : boolean;
       href : TReference;
@@ -75,7 +75,7 @@ implementation
         List.concat(TAISymbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
 
       { set param1 interface to self  }
-      g_adjust_self_value(list,procdef,ioffset);
+      G_Adjust_Self_Value(list,procdef,ioffset);
 
       if (po_virtualmethod in procdef.ProcOptions) and
           not Is_ObjectPascal_Helper(procdef.struct) then
@@ -85,24 +85,24 @@ implementation
           { load vmt from first parameter }
           { win64 uses a different abi }
           if x86_64_use_ms_abi(procdef.ProcCallOption) then
-            reference_reset_base(href,VoidPointerType,NR_RCX,0,ctempposinvalid,sizeof(PInt),[])
+            Reference_Reset_Base(href,VoidPointerType,NR_RCX,0,CTempPosInvalid,sizeof(PInt),[])
           else
-            reference_reset_base(href,VoidPointerType,NR_RDI,0,ctempposinvalid,sizeof(PInt),[]);
-          cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_RAX);
+            Reference_Reset_Base(href,VoidPointerType,NR_RDI,0,CTempPosInvalid,sizeof(PInt),[]);
+          cg.A_Load_Ref_Reg(list,OS_ADDR,OS_ADDR,href,NR_RAX);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,VoidPointerType,NR_RAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,sizeof(PInt),[]);
+          Reference_Reset_Base(href,VoidPointerType,NR_RAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),CTempPosInvalid,sizeof(PInt),[]);
           list.concat(TAICPU.op_ref(A_JMP,S_Q,href));
         end
       else
         begin
           sym:=CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION);
-          reference_reset_symbol(r,sym,0,sizeof(PInt),[]);
+          Reference_Reset_Symbol(r,sym,0,sizeof(PInt),[]);
           if (cs_create_pic in CurrentSettings.ModuleSwitches) and
              { darwin/x86_64's assembler doesn't want @PLT after call symbols }
              not(TargetInfo.system in systems_darwin) then
-            r.refaddr:=addr_pic
+            r.RefAddr:=addr_pic
           else
-            r.refaddr:=addr_full;
+            r.RefAddr:=addr_full;
 
           list.concat(TAICPU.op_ref(A_JMP,S_NO,r));
         end;
@@ -119,5 +119,5 @@ implementation
 
 begin
   CHLCGObj:=THLCGCPU;
-  create_hlcodegen:=@create_hlcodegen_cpu;
+  Create_HLCodeGen:=@create_hlcodegen_cpu;
 end.

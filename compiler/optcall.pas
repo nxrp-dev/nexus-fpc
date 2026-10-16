@@ -104,7 +104,7 @@ unit optcall;
           begin
             { re-init varargs paraloc that may have been invalidated by inlining }
             if Assigned(TCallNode(n).varargsparas) then
-              paramanager.create_varargs_paraloc_info(TCallNode(n).procdefinition,callerside,TCallNode(n).varargsparas);
+              ParaManager.Create_VarArgs_ParaLoc_Info(TCallNode(n).procdefinition,callerside,TCallNode(n).varargsparas);
             TCallNode(n).order_parameters;
           end;
       end;
@@ -174,7 +174,7 @@ unit optcall;
           location and type of the function result.
           This is not needed when the result is not used, also the tempnode is then
           already destroyed  by a tempdelete in the callcleanupblock tree }
-        if not is_void(callnode.resultdef) and
+        if not Is_Void(callnode.resultdef) and
            (cnf_return_value_used in callnode.callnodeflags) then
           begin
             if Assigned(callnode.funcretnode) then
@@ -203,7 +203,7 @@ unit optcall;
         { if the function result is used then verify that the blocknode
           returns the same result type as the original callnode }
         if (cnf_return_value_used in callnode.callnodeflags) and
-           not(equal_defs(_n.resultdef,callnode.resultdef)) then
+           not(Equal_Defs(_n.resultdef,callnode.resultdef)) then
           InternalError(200709171);
 
         { free the temps for the locals }

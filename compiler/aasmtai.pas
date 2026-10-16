@@ -368,7 +368,7 @@ interface
         {$endif}
         {$ifdef aarch64}
             top_regset : (basereg: TRegister; nregs, regsetindex: byte);
-            top_indexedreg : (indexedreg: TRegister; regindex: byte);
+            top_indexedreg : (indexedreg: TRegister; RegIndex: byte);
         {$endif}
 
         end;
@@ -639,7 +639,7 @@ interface
 {$ifdef EXTDEBUG}
           problem : PShortString;
 {$endif EXTDEBUG}
-          temppos,
+          TempPos,
           tempsize   : LongInt;
           constructor alloc(pos,size:LongInt);
           constructor dealloc(pos,size:LongInt);
@@ -708,12 +708,12 @@ interface
            procedure loadsymbol(opidx:LongInt;s:TAsmSymbol;sofs:LongInt);
            procedure loadlocal(opidx:LongInt;s:pointer;sofs:LongInt;indexreg:TRegister;scale:byte;getoffset,forceref:boolean);
            procedure loadref(opidx:LongInt;const r:TReference);
-           procedure loadreg(opidx:LongInt;r:TRegister);
+           procedure LoadReg(opidx:LongInt;r:TRegister);
            procedure loadoper(opidx:LongInt;o:TOper); virtual;
            procedure clearop(opidx:LongInt); virtual;
            procedure freeop(opidx:LongInt);
            { register allocator }
-           function is_same_reg_move(regtype: TRegisterType):boolean;virtual;
+           function is_same_reg_move(RegType: TRegisterType):boolean;virtual;
            function spilling_get_operation_type(opnr: LongInt): TOperType;virtual;
            function spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;virtual;
 
@@ -751,9 +751,9 @@ interface
            newlocationhi : TRegister;
            varsym : TSym;
            constructor create(sym : TSym;loc : TRegister);
-           constructor create64(sym : TSym;loc,lochi : TRegister);
+           constructor Create64(sym : TSym;loc,lochi : TRegister);
 {$ifdef cpu64bitalu}
-           constructor create128(sym : TSym;loc,lochi : TRegister);
+           constructor Create128(sym : TSym;loc,lochi : TRegister);
 {$endif cpu64bitalu}
            constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
@@ -819,7 +819,7 @@ interface
       CAISEHDirective: TAISEHDirectiveClass = TAISEHDirective;
 
       { hook to notify uses of registers }
-      add_reg_instruction_hook : TAddRegInstructionProc;
+      Add_Reg_Instruction_Hook : TAddRegInstructionProc;
 
     procedure maybe_new_object_file(list:TAsmList);
     function new_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TAsmSectionOrder=secorder_default) : TAISection;
@@ -958,7 +958,7 @@ implementation
       end;
 
 
-    constructor TAIVarLoc.create64(sym: TSym; loc, lochi: TRegister);
+    constructor TAIVarLoc.Create64(sym: TSym; loc, lochi: TRegister);
       begin
         inherited Create;
         typ:=ait_varloc;
@@ -969,7 +969,7 @@ implementation
 
 
 {$ifdef cpu64bitalu}
-    constructor TAIVarLoc.create128(sym: TSym; loc, lochi: TRegister);
+    constructor TAIVarLoc.Create128(sym: TSym; loc, lochi: TRegister);
       begin
         inherited Create;
         typ:=ait_varloc;
@@ -1806,7 +1806,7 @@ implementation
       end;
 
 
-    function TAIConst.size:LongInt;
+    function TAIConst.Size:LongInt;
       begin
         case consttype of
           aitconst_8bit :
@@ -1976,7 +1976,7 @@ implementation
     function TAIRealConst.GetCopy: TLinkedListItem;
       begin
         result:=inherited GetCopy;
-        TAIRealConst(result).value:=value;
+        TAIRealConst(result).Value:=value;
         TAIRealConst(result).realtyp:=realtyp;
         TAIRealConst(result).savesize:=savesize;
       end;
@@ -2094,7 +2094,7 @@ implementation
         inherited Create;
         typ:=ait_label;
         labsym:=_labsym;
-        labsym.is_set:=true;
+        labsym.Is_Set:=true;
       end;
 
 
@@ -2116,7 +2116,7 @@ implementation
 
     procedure TAILabel.derefimpl;
       begin
-        labsym.is_set:=true;
+        labsym.Is_Set:=true;
       end;
 
 {****************************************************************************
@@ -2278,7 +2278,7 @@ implementation
         inherited Create;
         typ:=ait_tempalloc;
         allocation:=true;
-        temppos:=pos;
+        TempPos:=pos;
         tempsize:=size;
 {$ifdef EXTDEBUG}
         problem:=nil;
@@ -2300,7 +2300,7 @@ implementation
         inherited Create;
         typ:=ait_tempalloc;
         allocation:=false;
-        temppos:=pos;
+        TempPos:=pos;
         tempsize:=size;
 {$ifdef EXTDEBUG}
         problem:=nil;
@@ -2314,7 +2314,7 @@ implementation
         inherited Create;
         typ:=ait_tempalloc;
         allocation:=false;
-        temppos:=pos;
+        TempPos:=pos;
         tempsize:=size;
         problem:=StringDup(st);
       end;
@@ -2324,7 +2324,7 @@ implementation
     constructor TAITempAlloc.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        temppos:=ppufile.GetLongInt;
+        TempPos:=ppufile.GetLongInt;
         tempsize:=ppufile.GetLongInt;
         allocation:=ppufile.GetBoolean;
 {$ifdef EXTDEBUG}
@@ -2336,7 +2336,7 @@ implementation
     procedure TAITempAlloc.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.PutLongInt(temppos);
+        ppufile.PutLongInt(TempPos);
         ppufile.PutLongInt(tempsize);
         ppufile.PutBoolean(allocation);
       end;
@@ -2476,8 +2476,8 @@ implementation
       var
         r : TReference;
       begin
-        reference_reset_symbol(r,s,sofs,1,[]);
-        r.refaddr:=addr_full;
+        Reference_Reset_Symbol(r,s,sofs,1,[]);
+        r.RefAddr:=addr_full;
         loadref(opidx,r);
       end;
 
@@ -2535,41 +2535,41 @@ implementation
                 si_param:=get_x86_string_op_si_param(opcode);
                 if (si_param<>-1) and (TAICPU(self).OperandOrder=op_att) then
                   si_param:=x86_parameterized_string_op_param_count(opcode)-si_param-1;
-                if (si_param=opidx) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
-                  segprefix:=ref^.segment;
+                if (si_param=opidx) and (ref^.Segment<>NR_NO) and (ref^.Segment<>NR_DS) then
+                  segprefix:=ref^.Segment;
               end
-            else if (opcode=A_XLAT) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
-              segprefix:=ref^.segment
-            else if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
-              segprefix:=ref^.segment;
+            else if (opcode=A_XLAT) and (ref^.Segment<>NR_NO) and (ref^.Segment<>NR_DS) then
+              segprefix:=ref^.Segment
+            else if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
+              segprefix:=ref^.Segment;
 {$endif}
 
             if (cs_create_pic in CurrentSettings.ModuleSwitches) and
-              Assigned(r.symbol) and
-              not Assigned(r.relsymbol) and
-              (r.refaddr=addr_no)
+              Assigned(r.Symbol) and
+              not Assigned(r.RelSymbol) and
+              (r.RefAddr=addr_no)
 {$ifdef aarch64}
-              and not(r.refaddr in [addr_full,addr_gotpageoffset,addr_gotpage])
+              and not(r.RefAddr in [addr_full,addr_gotpageoffset,addr_gotpage])
 {$endif aarch64}
               then
               InternalError(200502052);
 
             typ:=top_ref;
-            if Assigned(add_reg_instruction_hook) then
+            if Assigned(Add_Reg_Instruction_Hook) then
               begin
-                add_reg_instruction_hook(self,ref^.base);
-                add_reg_instruction_hook(self,ref^.index);
+                Add_Reg_Instruction_Hook(self,ref^.Base);
+                Add_Reg_Instruction_Hook(self,ref^.Index);
               end;
             { mark symbol as used }
-            if Assigned(ref^.symbol) then
-              ref^.symbol.increfs;
-            if Assigned(ref^.relsymbol) then
-              ref^.relsymbol.increfs;
+            if Assigned(ref^.Symbol) then
+              ref^.Symbol.increfs;
+            if Assigned(ref^.RelSymbol) then
+              ref^.RelSymbol.increfs;
           end;
       end;
 
 
-    procedure TAICPUAbstract.loadreg(opidx:LongInt;r:TRegister);
+    procedure TAICPUAbstract.LoadReg(opidx:LongInt;r:TRegister);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -2579,8 +2579,8 @@ implementation
            reg:=r;
            typ:=top_reg;
          end;
-        if Assigned(add_reg_instruction_hook) then
-          add_reg_instruction_hook(self,r);
+        if Assigned(Add_Reg_Instruction_Hook) then
+          Add_Reg_Instruction_Hook(self,r);
       end;
 
 
@@ -2599,13 +2599,13 @@ implementation
             case typ of
               top_reg:
                 begin
-                  if Assigned(add_reg_instruction_hook) then
-                    add_reg_instruction_hook(self,reg);
+                  if Assigned(Add_Reg_Instruction_Hook) then
+                    Add_Reg_Instruction_Hook(self,reg);
                 end;
               top_ref:
                 begin
                   new(ref);
-                  ref^:=o.ref^;
+                  ref^:=o.Ref^;
 {$ifdef x86}
                   { We allow this exception for x86, since overloading this would be
                     too much of a a speed penalty}
@@ -2614,18 +2614,18 @@ implementation
                       si_param:=get_x86_string_op_si_param(opcode);
                       if (si_param<>-1) and (TAICPU(self).OperandOrder=op_att) then
                         si_param:=x86_parameterized_string_op_param_count(opcode)-si_param-1;
-                      if (si_param=opidx) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
-                        segprefix:=ref^.segment;
+                      if (si_param=opidx) and (ref^.Segment<>NR_NO) and (ref^.Segment<>NR_DS) then
+                        segprefix:=ref^.Segment;
                     end
-                  else if (opcode=A_XLAT) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
-                    segprefix:=ref^.segment
-                  else if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
-                    segprefix:=ref^.segment;
+                  else if (opcode=A_XLAT) and (ref^.Segment<>NR_NO) and (ref^.Segment<>NR_DS) then
+                    segprefix:=ref^.Segment
+                  else if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
+                    segprefix:=ref^.Segment;
 {$endif x86}
-                  if Assigned(add_reg_instruction_hook) then
+                  if Assigned(Add_Reg_Instruction_Hook) then
                     begin
-                      add_reg_instruction_hook(self,ref^.base);
-                      add_reg_instruction_hook(self,ref^.index);
+                      Add_Reg_Instruction_Hook(self,ref^.Base);
+                      Add_Reg_Instruction_Hook(self,ref^.Index);
                     end;
                 end;
               else
@@ -2688,12 +2688,12 @@ implementation
                 end;
               top_ref :
                 begin
-                  new(p.oper[i]^.ref);
-                  p.oper[i]^.ref^:=oper[i]^.ref^;
-                  if Assigned(p.oper[i]^.ref^.symbol) then
-                    p.oper[i]^.ref^.symbol.increfs;
-                  if Assigned(p.oper[i]^.ref^.relsymbol) then
-                    p.oper[i]^.ref^.relsymbol.increfs;
+                  new(p.oper[i]^.Ref);
+                  p.oper[i]^.Ref^:=oper[i]^.Ref^;
+                  if Assigned(p.oper[i]^.Ref^.Symbol) then
+                    p.oper[i]^.Ref^.Symbol.increfs;
+                  if Assigned(p.oper[i]^.Ref^.RelSymbol) then
+                    p.oper[i]^.Ref^.RelSymbol.increfs;
                 end;
               else
                 ;
@@ -2703,7 +2703,7 @@ implementation
       end;
 
 
-    function TAICPUAbstract.is_same_reg_move(regtype: TRegisterType):boolean;
+    function TAICPUAbstract.is_same_reg_move(RegType: TRegisterType):boolean;
       begin
         { When the generic RA is used this needs to be overridden, we don't use
           virtual;abstract; to prevent a lot of warnings of unimplemented abstract methods
@@ -2810,20 +2810,20 @@ implementation
             ppufile.GetData(o.reg,sizeof(TRegister));
           top_ref :
             begin
-              new(o.ref);
+              new(o.Ref);
 {$ifdef x86}
-              ppufile.GetData(o.ref^.segment,sizeof(TRegister));
+              ppufile.GetData(o.Ref^.Segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.GetData(o.ref^.base,sizeof(TRegister));
-              ppufile.GetData(o.ref^.index,sizeof(TRegister));
-              ppufile.GetData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
-              o.ref^.scalefactor:=ppufile.GetByte;
-              o.ref^.offset:=ppufile.GetAInt;
-              o.ref^.symbol:=ppufile.GetAsmSymbol;
-              o.ref^.relsymbol:=ppufile.GetAsmSymbol;
+              ppufile.GetData(o.Ref^.Base,sizeof(TRegister));
+              ppufile.GetData(o.Ref^.Index,sizeof(TRegister));
+              ppufile.GetData(o.Ref^.RefAddr,sizeof(o.Ref^.RefAddr));
+              o.Ref^.ScaleFactor:=ppufile.GetByte;
+              o.Ref^.Offset:=ppufile.GetAInt;
+              o.Ref^.Symbol:=ppufile.GetAsmSymbol;
+              o.Ref^.RelSymbol:=ppufile.GetAsmSymbol;
             end;
           top_const :
-            o.val:=ppufile.GetAInt;
+            o.Val:=ppufile.GetAInt;
           top_local :
             begin
               new(o.localoper);
@@ -2855,18 +2855,18 @@ implementation
           top_ref :
             begin
 {$ifdef x86}
-              ppufile.PutData(o.ref^.segment,sizeof(TRegister));
+              ppufile.PutData(o.Ref^.Segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.PutData(o.ref^.base,sizeof(TRegister));
-              ppufile.PutData(o.ref^.index,sizeof(TRegister));
-              ppufile.PutData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
-              ppufile.PutByte(o.ref^.scalefactor);
-              ppufile.PutAInt(o.ref^.offset);
-              ppufile.PutAsmSymbol(o.ref^.symbol);
-              ppufile.PutAsmSymbol(o.ref^.relsymbol);
+              ppufile.PutData(o.Ref^.Base,sizeof(TRegister));
+              ppufile.PutData(o.Ref^.Index,sizeof(TRegister));
+              ppufile.PutData(o.Ref^.RefAddr,sizeof(o.Ref^.RefAddr));
+              ppufile.PutByte(o.Ref^.ScaleFactor);
+              ppufile.PutAInt(o.Ref^.Offset);
+              ppufile.PutAsmSymbol(o.Ref^.Symbol);
+              ppufile.PutAsmSymbol(o.Ref^.RelSymbol);
             end;
           top_const :
-            ppufile.PutAInt(o.val);
+            ppufile.PutAInt(o.Val);
           top_local :
             begin
               with o.localoper^ do
@@ -3056,14 +3056,14 @@ implementation
     constructor TAISEHDirective.create_offset(_kind:TAsmSehDirective;ofs:dword);
       begin
         create(_kind);
-        data.offset:=ofs;
+        data.Offset:=ofs;
       end;
 
     constructor TAISEHDirective.create_reg_offset(_kind:TAsmSehDirective;
       r:TRegister;ofs:dword);
       begin
         create(_kind);
-        data.offset:=ofs;
+        data.Offset:=ofs;
         data.reg:=r;
       end;
 
@@ -3083,7 +3083,7 @@ implementation
           sd_reg,sd_offset,sd_regoffset:
             begin
               ppufile.GetData(data.reg,sizeof(TRegister));
-              data.offset:=ppufile.GetDWord;
+              data.Offset:=ppufile.GetDWord;
             end;
         end;
       end;
@@ -3110,7 +3110,7 @@ implementation
           sd_reg,sd_offset,sd_regoffset:
             begin
               ppufile.PutData(data.reg,sizeof(TRegister));
-              ppufile.PutDWord(data.offset);
+              ppufile.PutDWord(data.Offset);
             end;
         end;
       end;

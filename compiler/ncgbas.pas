@@ -95,7 +95,7 @@ interface
 
     procedure TCGNothingNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          { avoid an abstract rte }
       end;
@@ -109,7 +109,7 @@ interface
       var
          hp : TStatementNode;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          hp:=self;
          while Assigned(hp) do
@@ -118,7 +118,7 @@ interface
              begin
                SecondPass(hp.left);
                { Compiler inserted blocks can return values }
-               location_copy(hp.location,hp.left.location);
+               Location_Copy(hp.Location,hp.left.Location);
              end;
             hp:=TStatementNode(hp.right);
           end;
@@ -154,7 +154,7 @@ interface
             forceref:=op.localoper^.localforceref;
             sym:=TAbstractNormalVarSym(pointer(op.localoper^.localsym));
             dispose(op.localoper);
-            case sym.LocAlloc.loc of
+            case sym.LocAlloc.Loc of
               LOC_REFERENCE :
                 begin
                   if getoffset then
@@ -166,29 +166,29 @@ interface
                          then
                         begin
                           op.typ:=top_const;
-                          op.val:=sym.LocAlloc.reference.offset+sofs;
+                          op.Val:=sym.LocAlloc.Reference.Offset+sofs;
                         end
                       else
                         begin
                           op.typ:=top_ref;
-                          new(op.ref);
-                          reference_reset_base(op.ref^,indexreg,sym.LocAlloc.reference.offset+sofs,
-                            sym.LocAlloc.reference.temppos,NewAlignment(sym.LocAlloc.reference.alignment,sofs),[]);
+                          new(op.Ref);
+                          Reference_Reset_Base(op.Ref^,indexreg,sym.LocAlloc.Reference.Offset+sofs,
+                            sym.LocAlloc.Reference.TempPos,NewAlignment(sym.LocAlloc.Reference.Alignment,sofs),[]);
 {$ifdef x86}
-                          op.ref^.segment:=segment;
+                          op.Ref^.Segment:=segment;
 {$endif x86}
                         end;
                     end
                   else
                     begin
                       op.typ:=top_ref;
-                      new(op.ref);
-                      reference_reset_base(op.ref^,sym.LocAlloc.reference.base,sym.LocAlloc.reference.offset+sofs,
-                        sym.LocAlloc.reference.temppos,NewAlignment(sym.LocAlloc.reference.alignment,sofs),[]);
-                      op.ref^.index:=indexreg;
+                      new(op.Ref);
+                      Reference_Reset_Base(op.Ref^,sym.LocAlloc.Reference.Base,sym.LocAlloc.Reference.Offset+sofs,
+                        sym.LocAlloc.Reference.TempPos,NewAlignment(sym.LocAlloc.Reference.Alignment,sofs),[]);
+                      op.Ref^.Index:=indexreg;
 {$ifdef x86}
-                      op.ref^.segment:=segment;
-                      op.ref^.scalefactor:=scale;
+                      op.Ref^.Segment:=segment;
+                      op.Ref^.ScaleFactor:=scale;
 {$endif x86}
                     end;
                 end;
@@ -202,21 +202,21 @@ interface
                      then
                     begin
                       op.typ:=top_ref;
-                      new(op.ref);
+                      new(op.Ref);
                       { no idea about the actual alignment }
-                      reference_reset_base(op.ref^,sym.LocAlloc.register,sofs,ctempposinvalid,1,[]);
-                      op.ref^.index:=indexreg;
+                      Reference_Reset_Base(op.Ref^,sym.LocAlloc.Register,sofs,CTempPosInvalid,1,[]);
+                      op.Ref^.Index:=indexreg;
 {$ifdef x86}
-                      op.ref^.scalefactor:=scale;
+                      op.Ref^.ScaleFactor:=scale;
 {$endif x86}
                     end
                   else
                     begin
                       op.typ:=top_reg;
-                      op.reg:=sym.LocAlloc.register;
+                      op.reg:=sym.LocAlloc.Register;
 {$ifdef x86}
-                      if reg2opsize(op.reg)<>TCGSize2Opsize[sym.LocAlloc.size] then
-                        op.reg:=newreg(getregtype(op.reg),getsupreg(op.reg),cgsize2subreg(getregtype(op.reg),sym.LocAlloc.size));
+                      if reg2opsize(op.reg)<>TCGSize2Opsize[sym.LocAlloc.Size] then
+                        op.reg:=NewReg(GetRegType(op.reg),GetSupReg(op.reg),cgsize2subreg(GetRegType(op.reg),sym.LocAlloc.Size));
 {$endif x86}
                     end;
                 end;
@@ -230,9 +230,9 @@ interface
                     MessagePos(filepos,asmr_e_invalid_reference_syntax);
                   { Using an MM/FPU register in a reference is not possible }
                   if forceref or (sofs<>0) then
-                    MessagePos1(filepos,asmr_e_invalid_ref_register,std_regname(sym.LocAlloc.register))
+                    MessagePos1(filepos,asmr_e_invalid_ref_register,std_regname(sym.LocAlloc.Register))
                   else
-                    op.reg:=sym.LocAlloc.register;
+                    op.reg:=sym.LocAlloc.Register;
                 end;
               LOC_INVALID :
                 begin
@@ -275,7 +275,7 @@ interface
         i : LongInt;
         vs : TAbstractNormalVarSym;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          if (asmnf_get_asm_position in asmnodeflags) then
            begin
@@ -290,7 +290,7 @@ interface
          { Allocate registers used in the assembler block }
          { asmnf_has_registerlist means that registers are specified and already allocated }
          if not (asmnf_has_registerlist in asmnodeflags) then
-           cg.allocallcpuregisters(CurrentAsmData.CurrAsmList);
+           cg.AllocAllCPURegisters(CurrentAsmData.CurrAsmList);
 
          if (po_inline in CurrentProcInfo.procdef.ProcOptions) then
            begin
@@ -326,13 +326,13 @@ interface
                              case typ of
                                top_ref :
                                  begin
-                                   if Assigned(ref^.symbol) then
-                                     ReLabel(ref^.symbol);
-                                   if Assigned(ref^.relsymbol) then
-                                     ReLabel(ref^.relsymbol);
+                                   if Assigned(ref^.Symbol) then
+                                     ReLabel(ref^.Symbol);
+                                   if Assigned(ref^.RelSymbol) then
+                                     ReLabel(ref^.RelSymbol);
 {$ifdef x86}
-                                   if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
-                                     TAICPU(hp2).segprefix:=ref^.segment;
+                                   if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
+                                     TAICPU(hp2).segprefix:=ref^.Segment;
 {$endif x86}
                                  end;
                                else
@@ -379,8 +379,8 @@ interface
                              begin
                                case typ of
                                  top_ref :
-                                   if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
-                                     TAICPU(hp).segprefix:=ref^.segment;
+                                   if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
+                                     TAICPU(hp).segprefix:=ref^.Segment;
                                  else
                                    ;
                                end;
@@ -403,9 +403,9 @@ interface
                             vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.LocalST.Find(sym.Name));
                           if not Assigned(vs) then
                             InternalError(2021081401);
-                          if vs.LocAlloc.loc<>LOC_REFERENCE then
+                          if vs.LocAlloc.Loc<>LOC_REFERENCE then
                             InternalError(2021081402);
-                          value:=vs.LocAlloc.reference.offset+symofs;
+                          value:=vs.LocAlloc.Reference.Offset+symofs;
                           sym:=nil;
                           symofs:=0;
                         end;
@@ -421,7 +421,7 @@ interface
 
          { Release register used in the assembler block }
          if not (asmnf_has_registerlist in asmnodeflags) then
-           cg.deallocallcpuregisters(CurrentAsmData.CurrAsmList);
+           cg.DeallocAllCPURegisters(CurrentAsmData.CurrAsmList);
 
          { Switch back to the CPU instruction set of the target CPU }
          CurrentAsmData.CurrAsmList.Concat(TAIDirective.create(asd_cpu,CPUTypeStr[CurrentSettings.CPUType]));
@@ -438,7 +438,7 @@ interface
         oldexitlabel : TAsmLabel;
         oldflowcontrol : TFlowControl;
       begin
-        location_reset(location,LOC_VOID,OS_NO);
+        Location_Reset(location,LOC_VOID,OS_NO);
         oldflowcontrol:=[];
         oldexitlabel:=nil;
 
@@ -462,9 +462,9 @@ interface
               if Assigned(hp.left) then
                begin
                  SecondPass(hp.left);
-                 location_copy(hp.location,hp.left.location);
+                 Location_Copy(hp.Location,hp.left.Location);
                end;
-              location_copy(location,hp.location);
+              Location_Copy(location,hp.Location);
               hp:=TStatementNode(hp.right);
             end;
          end;
@@ -472,7 +472,7 @@ interface
         { write exitlabel }
         if nf_block_with_exit in flags then
           begin
-            cg.a_label(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
+            cg.A_Label(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
             CurrentProcInfo.CurrExitLabel:=oldexitlabel;
             { the exit statements inside this block are not exit statements }
             { out of the parent                                             }
@@ -487,7 +487,7 @@ interface
 
     procedure TCGTempCreateNode.pass_generate_code;
       begin
-        location_reset(location,LOC_VOID,OS_NO);
+        Location_Reset(location,LOC_VOID,OS_NO);
 
         { if we're secondpassing the same tcgtempcreatenode twice, we have a bug }
         if (ti_valid in tempflags) then
@@ -498,22 +498,22 @@ interface
         if not(ti_reference in tempflags) then
           begin
             { get a (persistent) temp }
-            if is_managed_type(tempinfo^.typedef) and
+            if Is_Managed_Type(tempinfo^.typedef) and
               not(ti_const in tempflags) then
               begin
-                location_reset_ref(tempinfo^.location,LOC_REFERENCE,def_cgsize(tempinfo^.typedef),0,[]);
-                tg.gethltempmanaged(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.temptype,tempinfo^.location.reference);
+                Location_Reset_Ref(tempinfo^.Location,LOC_REFERENCE,Def_CGSize(tempinfo^.typedef),0,[]);
+                tg.gethltempmanaged(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.temptype,tempinfo^.Location.Reference);
                 if not(ti_nofini in tempflags) then
-                  hlcg.g_finalize(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.location.reference);
+                  hlcg.G_Finalize(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.Location.Reference);
               end
             else if (ti_may_be_in_reg in tempflags) then
               begin
-                location_allocate_register(CurrentAsmData.CurrAsmList,tempinfo^.location,tempinfo^.typedef,tempinfo^.temptype = tt_persistent);
+                location_allocate_register(CurrentAsmData.CurrAsmList,tempinfo^.Location,tempinfo^.typedef,tempinfo^.temptype = tt_persistent);
               end
             else
               begin
-                location_reset_ref(tempinfo^.location,LOC_REFERENCE,def_cgsize(tempinfo^.typedef),0,[]);
-                tg.gethltemp(CurrentAsmData.CurrAsmList,tempinfo^.typedef,size,tempinfo^.temptype,tempinfo^.location.reference);
+                Location_Reset_Ref(tempinfo^.Location,LOC_REFERENCE,Def_CGSize(tempinfo^.typedef),0,[]);
+                tg.GetHLTemp(CurrentAsmData.CurrAsmList,tempinfo^.typedef,size,tempinfo^.temptype,tempinfo^.Location.Reference);
               end;
           end;
         includetempflag(ti_valid);
@@ -535,7 +535,7 @@ interface
             SecondPass(tempinfo^.tempinitcode);
             if (ti_reference in tempflags) then
               begin
-                case tempinfo^.tempinitcode.location.loc of
+                case tempinfo^.tempinitcode.Location.Loc of
                   LOC_CREGISTER,
                   LOC_CFPUREGISTER,
                   LOC_CMMREGISTER,
@@ -554,17 +554,17 @@ interface
                   else
                     ;
                 end;
-                hlcg.g_reference_loc(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.tempinitcode.location,tempinfo^.location);
+                hlcg.G_Reference_Loc(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.tempinitcode.Location,tempinfo^.Location);
               end;
           end;
         { check if the temp is valid }
         if not(ti_valid in tempflags) then
           InternalError(200108231);
-        location:=tempinfo^.location;
+        location:=tempinfo^.Location;
         { Allow CPU-specific adjustment of temp references (e.g., for exceptfilters) }
-        if location.loc=LOC_REFERENCE then
-          cg.adjust_exceptfilter_ref(location.reference,false);
-        case tempinfo^.location.loc of
+        if location.Loc=LOC_REFERENCE then
+          cg.Adjust_ExceptFilter_Ref(location.Reference,false);
+        case tempinfo^.Location.Loc of
           LOC_REFERENCE:
             begin
               { ti_valid should be excluded if it's a normal temp }
@@ -584,15 +584,15 @@ interface
         { check if the temp is valid }
         if not(ti_valid in tempflags) then
           InternalError(200306081);
-        if (tempinfo^.location.loc<>LOC_REFERENCE) then
+        if (tempinfo^.Location.Loc<>LOC_REFERENCE) then
           InternalError(2004020203);
         if (tempinfo^.temptype = tt_persistent) then
-          tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.location.reference,tt_normal);
-        tg.ungettemp(CurrentAsmData.CurrAsmList,tempinfo^.location.reference);
-        tempinfo^.location.reference := ref;
-        tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.location.reference,tempinfo^.temptype);
+          tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tt_normal);
+        tg.ungettemp(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference);
+        tempinfo^.Location.Reference := ref;
+        tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tempinfo^.temptype);
         { adapt location }
-        location.reference := ref;
+        location.Reference := ref;
       end;
 
 
@@ -617,7 +617,7 @@ interface
             exit;
           end;
 
-        location_reset(location,LOC_VOID,OS_NO);
+        Location_Reset(location,LOC_VOID,OS_NO);
 
         if ti_cleanup_only in tempflags then
           exit;
@@ -630,19 +630,19 @@ interface
           begin
             if tempinfo^.tempinitcode.nodetype<>assignn then
               InternalError(2016081201);
-            if TBinaryNode(tempinfo^.tempinitcode).right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-              tg.ungetiftemp(CurrentAsmData.CurrAsmList,TBinaryNode(tempinfo^.tempinitcode).right.location.reference);
+            if TBinaryNode(tempinfo^.tempinitcode).right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+              tg.ungetiftemp(CurrentAsmData.CurrAsmList,TBinaryNode(tempinfo^.tempinitcode).right.Location.Reference);
           end;
 
 
-        case tempinfo^.location.loc of
+        case tempinfo^.Location.Loc of
           LOC_REFERENCE:
             begin
               if release_to_normal then
-                tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.location.reference,tt_normal)
+                tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tt_normal)
               else
                 begin
-                  tg.UnGetTemp(CurrentAsmData.CurrAsmList,tempinfo^.location.reference);
+                  tg.UnGetTemp(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference);
                   excludetempflag(ti_valid);
                 end;
             end;
@@ -655,17 +655,17 @@ interface
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
 {$if defined(cpu32bitalu) and not defined(cpuhighleveltarget)}
-                  if tempinfo^.location.size in [OS_64,OS_S64] then
+                  if tempinfo^.Location.Size in [OS_64,OS_S64] then
                     begin
-                      cg.a_reg_sync(CurrentAsmData.CurrAsmList,tempinfo^.location.register64.reghi);
-                      cg.a_reg_sync(CurrentAsmData.CurrAsmList,tempinfo^.location.register64.reglo);
+                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register64.RegHi);
+                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register64.RegLo);
                     end
                   else
 {$endif}
-                    cg.a_reg_sync(CurrentAsmData.CurrAsmList,tempinfo^.location.register);
+                    cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
                 end;
               if release_to_normal then
-                tempinfo^.location.loc := LOC_REGISTER
+                tempinfo^.Location.Loc := LOC_REGISTER
               else
                 excludetempflag(ti_valid);
             end;
@@ -677,10 +677,10 @@ interface
                 begin
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
-                  cg.a_reg_sync(CurrentAsmData.CurrAsmList,tempinfo^.location.register);
+                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
                 end;
               if release_to_normal then
-                tempinfo^.location.loc := LOC_FPUREGISTER
+                tempinfo^.Location.Loc := LOC_FPUREGISTER
               else
                 excludetempflag(ti_valid);
             end;
@@ -692,10 +692,10 @@ interface
                 begin
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
-                  cg.a_reg_sync(CurrentAsmData.CurrAsmList,tempinfo^.location.register);
+                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
                 end;
               if release_to_normal then
-                tempinfo^.location.loc := LOC_MMREGISTER
+                tempinfo^.Location.Loc := LOC_MMREGISTER
               else
                 excludetempflag(ti_valid);
             end;
@@ -711,8 +711,8 @@ interface
 
     procedure TCGFinalizeTempsNode.pass_generate_code;
       begin
-        hlcg.gen_finalize_code(CurrentAsmData.CurrAsmList);
-        location.loc:=LOC_VOID;
+        hlcg.Gen_Finalize_Code(CurrentAsmData.CurrAsmList);
+        location.Loc:=LOC_VOID;
       end;
 
 

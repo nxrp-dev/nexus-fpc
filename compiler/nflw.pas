@@ -408,35 +408,35 @@ implementation
 
          result:=internalstatements(mainstatement);
          { the fast enumeration state }
-         state:=CTempCreateNode.create(ObjC_FastEnumerationState,ObjC_FastEnumerationState.size,tt_persistent,false);
+         state:=CTempCreateNode.create(ObjC_FastEnumerationState,ObjC_FastEnumerationState.Size,tt_persistent,false);
          TypeCheckPass(TNode(state));
          addstatement(mainstatement,state);
          { the temporary items array }
          itemsarraydef:=CArrayDef.create(1,16,U32IntType);
          itemsarraydef.ElementDef:=ObjC_IDType;
-         items:=CTempCreateNode.create(itemsarraydef,itemsarraydef.size,tt_persistent,false);
+         items:=CTempCreateNode.create(itemsarraydef,itemsarraydef.Size,tt_persistent,false);
          addstatement(mainstatement,items);
          TypeCheckPass(TNode(items));
          { temp for the expression/collection through which we iterate }
-         expressiontemp:=CTempCreateNode.create(ObjC_FastEnumeration,ObjC_FastEnumeration.size,tt_persistent,true);
+         expressiontemp:=CTempCreateNode.create(ObjC_FastEnumeration,ObjC_FastEnumeration.Size,tt_persistent,true);
          addstatement(mainstatement,expressiontemp);
          { currentamount temp (not really clean: we use ptruint instead of
            culong) }
-         currentamount:=CTempCreateNode.create(PtrUIntType,PtrUIntType.size,tt_persistent,true);
+         currentamount:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
          TypeCheckPass(TNode(currentamount));
          addstatement(mainstatement,currentamount);
          { mutationcheck temp (idem) }
-         mutationcheck:=CTempCreateNode.create(PtrUIntType,PtrUIntType.size,tt_persistent,true);
+         mutationcheck:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
          TypeCheckPass(TNode(mutationcheck));
          addstatement(mainstatement,mutationcheck);
          { innerloopcounter temp (idem) }
-         innerloopcounter:=CTempCreateNode.create(PtrUIntType,PtrUIntType.size,tt_persistent,true);
+         innerloopcounter:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
          TypeCheckPass(TNode(innerloopcounter));
          addstatement(mainstatement,innerloopcounter);
          { initialise the state with 0 }
          addstatement(mainstatement,CCallNode.createinternfromunit('SYSTEM','FILLCHAR',
            CCallParaNode.create(genintconstnode(0),
-             CCallParaNode.create(genintconstnode(ObjC_FastEnumerationState.size),
+             CCallParaNode.create(genintconstnode(ObjC_FastEnumerationState.Size),
                CCallParaNode.create(CTempRefNode.create(state),nil)
              )
            )
@@ -468,7 +468,7 @@ implementation
              hloopvar.GetCopy,CNilNode.create));
          addstatement(tempstatement,CBreakNode.create);
          addstatement(outerloopbodystatement,CIfNode.create(
-           CAddNode.create(equaln,CTempRefNode.create(currentamount),genintconstnode(0)),
+           CAddNode.create(EqualN,CTempRefNode.create(currentamount),genintconstnode(0)),
            hp,nil));
         { initial value of mutationcheck }
         hp:=CTempRefNode.create(state);
@@ -491,7 +491,7 @@ implementation
         addstatement(innerloopbodystatement,hp);
         { if innerloopcounter=currentamount then break to the outer loop }
         addstatement(innerloopbodystatement,CIfNode.create(
-          CAddNode.create(equaln,
+          CAddNode.create(EqualN,
             CTempRefNode.create(innerloopcounter),
             CTempRefNode.create(currentamount)),
           CBreakNode.create,
@@ -562,7 +562,7 @@ implementation
         { create a temp variable for expression }
         stringvar := CTempCreateNode.create(
           expr.resultdef,
-          expr.resultdef.size,
+          expr.resultdef.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,stringvar);
@@ -571,7 +571,7 @@ implementation
         { create a loop counter: signed integer with size of string length }
         loopvar := CTempCreateNode.create(
           SIntType,
-          SIntType.size,
+          SIntType.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,loopvar);
@@ -616,7 +616,7 @@ implementation
         loopstatement, loopbodystatement: TStatementNode;
         loopvar, arrayvar: TTempCreateNode;
         arrayindex, lowbound, highbound, loopbody, forloopnode, expression: TNode;
-        is_string: boolean;
+        Is_String: boolean;
         tmpdef, convertdef: TDef;
         elementcount: aword;
       begin
@@ -625,16 +625,16 @@ implementation
         { result is a block of statements }
         result:=internalstatements(loopstatement);
 
-        is_string:=ado_IsConstString in TArrayDef(expr.resultdef).ArrayOptions;
+        Is_String:=ado_IsConstString in TArrayDef(expr.resultdef).ArrayOptions;
 
         // if array element type <> loovar type then create a conversion if possible
-        if compare_defs(TArrayDef(expression.resultdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible then
+        if Compare_Defs(TArrayDef(expression.resultdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible then
           begin
             tmpdef:=expression.resultdef;
             elementcount:=1;
             while Assigned(tmpdef) and (tmpdef.typ=arraydef) and
                   (TArrayDef(tmpdef).ArrayOptions = []) and
-                  (compare_defs(TArrayDef(tmpdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible) do
+                  (Compare_Defs(TArrayDef(tmpdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible) do
               begin
                 elementcount:=elementcount*TArrayDef(tmpdef).EleCount;
                 tmpdef:=TArrayDef(tmpdef).ElementDef;
@@ -652,15 +652,15 @@ implementation
           end;
 
         if (node_complexity(expression) > 1) and
-          not(is_open_array(expression.resultdef)) and not(is_array_of_const(expression.resultdef)) then
+          not(Is_Open_Array(expression.resultdef)) and not(Is_Array_Of_Const(expression.resultdef)) then
           begin
             { create a temp variable for expression }
             arrayvar := CTempCreateNode.create(
               expression.resultdef,
-              expression.resultdef.size,
+              expression.resultdef.Size,
               tt_persistent,true);
 
-            if is_string then
+            if Is_String then
               begin
                 lowbound:=genintconstnode(1);
                 highbound:=CInlineNode.create(in_length_x,false,CTempRefNode.create(arrayvar))
@@ -687,7 +687,7 @@ implementation
         else
           begin
             arrayvar:=nil;
-            if is_string then
+            if Is_String then
               begin
                 lowbound:=genintconstnode(1);
                 highbound:=CInlineNode.create(in_length_x,false,expression.GetCopy);
@@ -712,7 +712,7 @@ implementation
         { create a loop counter }
         loopvar := CTempCreateNode.create(
           TArrayDef(expression.resultdef).RangeDef,
-          TArrayDef(expression.resultdef).RangeDef.size,
+          TArrayDef(expression.resultdef).RangeDef.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,loopvar);
@@ -769,7 +769,7 @@ implementation
         { create a temp variable for expression }
         setvar := CTempCreateNode.create(
           expr.resultdef,
-          expr.resultdef.size,
+          expr.resultdef.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,setvar);
@@ -778,7 +778,7 @@ implementation
         { create a loop counter }
         loopvar := CTempCreateNode.create(
           TSetDef(expr.resultdef).ElementDef,
-          TSetDef(expr.resultdef).ElementDef.size,
+          TSetDef(expr.resultdef).ElementDef.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,loopvar);
@@ -831,7 +831,7 @@ implementation
         { create a temp variable for enumerator }
         enumvar := CTempCreateNode.create(
           enumerator_get.ReturnDef,
-          enumerator_get.ReturnDef.size,
+          enumerator_get.ReturnDef.Size,
           tt_persistent,true);
 
         addstatement(loopstatement,enumvar);
@@ -966,7 +966,7 @@ implementation
                   end;
               end
             { "for x in [] do ..." always results in a never executed loop body }
-            else if (is_array_constructor(expr.resultdef) and
+            else if (Is_Array_Constructor(expr.resultdef) and
                 (TArrayDef(expr.resultdef).ElementDef=VoidType)) then
               begin
                 if Assigned(hloopbody) then
@@ -975,7 +975,7 @@ implementation
               end
             else
               begin
-                if is_array_constructor(expr.resultdef) then
+                if Is_Array_Constructor(expr.resultdef) then
                   TArrayConstructorNode(expr).force_type(hloopvar.resultdef);
                 // search for operator first
                 pd:=Search_Enumerator_Operator(expr.resultdef, hloopvar.resultdef);
@@ -1349,15 +1349,15 @@ implementation
          if CodeGenError then
            exit;
 
-         if not(is_boolean(left.resultdef)) and
-           not(is_typeparam(left.resultdef)) then
+         if not(Is_Boolean(left.resultdef)) and
+           not(Is_TypeParam(left.resultdef)) then
              inserttypeconv(left,PasBool1Type);
 
          { Give warnings for code that will never be executed for
            while false do }
          if (lnf_testatbegin in loopflags) and
             (left.nodetype=ordconstn) and
-            (TOrdConstNode(left).value.uvalue=0) and
+            (TOrdConstNode(left).Value.uvalue=0) and
             not(nf_internal in left.flags) and
             Assigned(right) then
            CGMessagePos(right.fileinfo,cg_w_unreachable_code);
@@ -1375,7 +1375,7 @@ implementation
           (lnf_testatbegin in loopflags) and not(lnf_checknegate in loopflags) then
           begin
             if ((left.nodetype=gtn) and (TAddNode(left).left.nodetype=loadn) and is_constintnode(TAddNode(left).right) and
-              (TOrdConstNode(TAddNode(left).right).value=0)) then
+              (TOrdConstNode(TAddNode(left).right).Value=0)) then
               begin
                 p:=GetLastStatement(right);
                 if Assigned(p) and (p.nodetype=inlinen) and (TInlineNode(p).inlinenumber=in_dec_x) and
@@ -1385,7 +1385,7 @@ implementation
                     result:=CIfNode.Create_Internal(left.GetCopy,CWhileRepeatNode.create(left,right,false,true),nil);
                     left:=nil;
                     right:=nil;
-                    TWhileRepeatNode(TIfNode(result).right).left.nodetype:=equaln;
+                    TWhileRepeatNode(TIfNode(result).right).left.nodetype:=EqualN;
                   end;
               end
             else if not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
@@ -1591,7 +1591,7 @@ implementation
                     {Try to turn a while loop into a repeat loop.}
                     if firsttest then
                         exclude(flags,testatbegin);
-                    value:=(TOrdConstNode(condition).value<>0) xor checknegate;
+                    value:=(TOrdConstNode(condition).Value<>0) xor checknegate;
                     if value then
                         begin
                             if code.track_state_pass(exec_known) then
@@ -1670,7 +1670,7 @@ implementation
         { optimize constant expressions }
         if (left.nodetype=ordconstn) then
           begin
-             if TOrdConstNode(left).value.uvalue<>0 then
+             if TOrdConstNode(left).Value.uvalue<>0 then
                begin
                   if Assigned(right) then
                     result:=right
@@ -1717,21 +1717,21 @@ implementation
           ((t1=nil) or TAssignmentNode(thenstmnt).left.isequal(TAssignmentNode(elsestmnt).left)) and
 {$if defined(i386) or defined(x86_64)}
 {$ifdef i386}
-          (((CurrentSettings.FPUType>=fpu_sse) and is_single(TAssignmentNode(thenstmnt).left.resultdef)) or
-           ((CurrentSettings.FPUType>=fpu_sse2) and is_double(TAssignmentNode(thenstmnt).left.resultdef)) or
-           ((CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and is_32bitint(TAssignmentNode(thenstmnt).left.resultdef))
+          (((CurrentSettings.FPUType>=fpu_sse) and Is_Single(TAssignmentNode(thenstmnt).left.resultdef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and Is_Double(TAssignmentNode(thenstmnt).left.resultdef)) or
+           ((CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef))
           ) and
 {$else i386}
-          (is_single(TAssignmentNode(thenstmnt).left.resultdef) or
-           is_double(TAssignmentNode(thenstmnt).left.resultdef) or
-           is_32bitint(TAssignmentNode(thenstmnt).left.resultdef) or
-           is_64bitint(TAssignmentNode(thenstmnt).left.resultdef)
+          (Is_Single(TAssignmentNode(thenstmnt).left.resultdef) or
+           Is_Double(TAssignmentNode(thenstmnt).left.resultdef) or
+           Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef) or
+           Is_64BitInt(TAssignmentNode(thenstmnt).left.resultdef)
           ) and
 {$endif i386}
 {$endif defined(i386) or defined(x86_64)}
 {$if defined(aarch64)}
-          (is_single(TAssignmentNode(thenstmnt).left.resultdef) or is_double(TAssignmentNode(thenstmnt).left.resultdef) or
-           is_32bitint(TAssignmentNode(thenstmnt).left.resultdef) or is_64bitint(TAssignmentNode(thenstmnt).left.resultdef)) and
+          (Is_Single(TAssignmentNode(thenstmnt).left.resultdef) or Is_Double(TAssignmentNode(thenstmnt).left.resultdef) or
+           Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef) or Is_64BitInt(TAssignmentNode(thenstmnt).left.resultdef)) and
 {$endif defined(aarch64)}
           (
           { the right size of the assignment in the then clause must either }
@@ -1771,32 +1771,32 @@ implementation
               ((left.nodetype in [ltn,lten]) and
               TAssignmentNode(thenstmnt).right.isequal(TAddNode(left).right)) then
               begin
-                if is_double(paratype) then
+                if Is_Double(paratype) then
                   in_nr:=in_max_double
-                else if is_single(paratype) then
+                else if Is_Single(paratype) then
                   in_nr:=in_max_single
-                else if is_u32bitint(paratype) then
+                else if Is_U32BitInt(paratype) then
                   in_nr:=in_max_dword
-                else if is_s32bitint(paratype) then
+                else if Is_S32BitInt(paratype) then
                   in_nr:=in_max_longint
-                else if is_u64bitint(paratype) then
+                else if Is_U64BitInt(paratype) then
                   in_nr:=in_max_qword
-                else if is_s64bitint(paratype) then
+                else if Is_S64BitInt(paratype) then
                   in_nr:=in_max_int64;
               end
             else
               begin
-                if is_double(paratype) then
+                if Is_Double(paratype) then
                   in_nr:=in_min_double
-                else if is_single(paratype) then
+                else if Is_Single(paratype) then
                   in_nr:=in_min_single
-                else if is_u32bitint(paratype) then
+                else if Is_U32BitInt(paratype) then
                   in_nr:=in_min_dword
-                else if is_s32bitint(paratype) then
+                else if Is_S32BitInt(paratype) then
                   in_nr:=in_min_longint
-                else if is_u64bitint(paratype) then
+                else if Is_U64BitInt(paratype) then
                   in_nr:=in_min_qword
-                else if is_s64bitint(paratype) then
+                else if Is_S64BitInt(paratype) then
                   in_nr:=in_min_int64;
               end;
             { for inline nodes, the first parameter is the last one in the linked list
@@ -1846,8 +1846,8 @@ implementation
          if CodeGenError then
            exit;
 
-         if not(is_boolean(left.resultdef)) and
-           not(is_typeparam(left.resultdef)) then
+         if not(Is_Boolean(left.resultdef)) and
+           not(Is_TypeParam(left.resultdef)) then
              inserttypeconv(left,PasBool1Type);
 
          result:=internalsimplify(not(nf_internal in flags));
@@ -1904,11 +1904,11 @@ implementation
            (
             (
              (lnf_backward in loopflags) and
-             (TOrdConstNode(right).value>=TOrdConstNode(t1).value)
+             (TOrdConstNode(right).Value>=TOrdConstNode(t1).Value)
             ) or
             (
               not(lnf_backward in loopflags) and
-              (TOrdConstNode(right).value<=TOrdConstNode(t1).value)
+              (TOrdConstNode(right).Value<=TOrdConstNode(t1).Value)
             )
            ) then
           exclude(loopflags,lnf_testatbegin);
@@ -1918,11 +1918,11 @@ implementation
            (
             (
              (lnf_backward in loopflags) and
-             (TOrdConstNode(right).value<TOrdConstNode(t1).value)
+             (TOrdConstNode(right).Value<TOrdConstNode(t1).Value)
             ) or
             (
               not(lnf_backward in loopflags) and
-              (TOrdConstNode(right).value>TOrdConstNode(t1).value)
+              (TOrdConstNode(right).Value>TOrdConstNode(t1).Value)
             )
            ) then
           result:=CNothingNode.create;
@@ -1949,7 +1949,7 @@ implementation
          if not(m_iso in CurrentSettings.ModeSwitches) then
            RangeDef:=left.resultdef
          else
-           RangeDef:=get_iso_range_type(left.resultdef);
+           RangeDef:=Get_Iso_Range_Type(left.resultdef);
 
          check_ranges(right.fileinfo,right,RangeDef);
          inserttypeconv(right,RangeDef);
@@ -2103,7 +2103,7 @@ implementation
               no side effect might change it }
             if usefromtemp then
               begin
-                fromtemp:=CTempCreateNode.create(right.resultdef,right.resultdef.size,tt_persistent,true);
+                fromtemp:=CTempCreateNode.create(right.resultdef,right.resultdef.Size,tt_persistent,true);
                 { the if block might be optimized out, so we put the deletetempnode after the if-block, however,
                   this causes a long life time of the fromtemp. If the final regsync is left away, the reg. allocator
                   figures out the needed life time. As their are no loops involved between the uses of the fromtemp,
@@ -2117,7 +2117,7 @@ implementation
 
             if usetotemp then
               begin
-                totemp:=CTempCreateNode.create(t1.resultdef,t1.resultdef.size,tt_persistent,true);
+                totemp:=CTempCreateNode.create(t1.resultdef,t1.resultdef.Size,tt_persistent,true);
                 addstatement(statements,totemp);
                 addstatement(statements,CAssignmentNode.Create_Internal(CTempRefNode.create(totemp),t1.GetCopy));
               end;
@@ -2187,11 +2187,11 @@ implementation
 
             { checking against zero might improve the generated assembler,
               doing this transformation for other values is normally not beneficial }
-            if do_loopvar_at_end and (lnf_backward in loopflags) and is_constintnode(toexpr) and (TOrdConstNode(toexpr).value=1) and
-              (countermin<TOrdConstNode(toexpr).value) then
+            if do_loopvar_at_end and (lnf_backward in loopflags) and is_constintnode(toexpr) and (TOrdConstNode(toexpr).Value=1) and
+              (countermin<TOrdConstNode(toexpr).Value) then
               begin
-                TOrdConstNode(toexpr).value:=TOrdConstNode(toexpr).value-1;
-                addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(equaln,leftcopy,toexpr),loopblock,false,true))
+                TOrdConstNode(toexpr).Value:=TOrdConstNode(toexpr).Value-1;
+                addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(EqualN,leftcopy,toexpr),loopblock,false,true))
               end
             else
               addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(cond,leftcopy,toexpr),loopblock,false,true));
@@ -2222,7 +2222,7 @@ implementation
           begin
             { is a simple comparison for equality sufficient? }
             if do_loopvar_at_end and (lnf_backward in loopflags) and (lnf_counter_not_used in loopflags) then
-              addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(equaln,leftcopy,
+              addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(EqualN,leftcopy,
                 CAddNode.Create_Internal(subn,t1.GetCopy,COrdConstNode.create(1,t1.resultdef,false))),loopblock,false,true))
             else
               addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(cond,leftcopy,t1.GetCopy),loopblock,false,true));
@@ -2766,7 +2766,7 @@ implementation
 
     procedure TTryExceptNode.adjust_estimated_stack_size;
       begin
-        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.size*2);
+        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.Size*2);
       end;
 
 
@@ -2863,7 +2863,7 @@ implementation
 
     procedure TTryFinallyNode.adjust_estimated_stack_size;
       begin
-        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.size);
+        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.Size);
       end;
 
 

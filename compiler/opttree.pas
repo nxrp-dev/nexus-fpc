@@ -146,7 +146,7 @@ unit opttree;
                 statement chain so those inner blockns get normalized at the
                 scope where their external temp refs are still valid. }
               if not Assigned(TBlockNode(n).resultdef) or
-                 is_void(TBlockNode(n).resultdef) then
+                 Is_Void(TBlockNode(n).resultdef) then
                 begin
                   if Assigned(TBlockNode(n).left) then
                     foreachnodestatic(TBlockNode(n).left,@searchstatements,normalize_success);
@@ -203,14 +203,14 @@ unit opttree;
                             { process the newly generated statement }
                             foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                           end
-                        else if Assigned(res^.resultdef) and not(is_void(res^.resultdef)) then
+                        else if Assigned(res^.resultdef) and not(Is_Void(res^.resultdef)) then
                           begin
                             { Splice into the parent chain:
                                 tempcreate -> block (now assigns to temp) -> origstmt -> tempdelete
                               The blockn's slot in the source expression is
                               replaced by a temprefn for the new temp; the
                               statement slot at pnode(arg)^ stays a statementn. }
-                            tempcreatenode:=CTempCreateNode.create(res^.resultdef,res^.resultdef.size,tt_persistent,true);
+                            tempcreatenode:=CTempCreateNode.create(res^.resultdef,res^.resultdef.Size,tt_persistent,true);
                             { pass_1 on tempcreate sets pi_needs_implicit_finally
                               for managed typedefs; must fire before
                               add_entry_exit_code reads that flag }

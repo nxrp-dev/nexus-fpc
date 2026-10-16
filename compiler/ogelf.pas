@@ -329,7 +329,7 @@ implementation
         reloc: TObjRelocation;
       begin
         reloc:=TObjRelocation.CreateSection(Size,aTarget,reltype);
-        reloc.size:=len;
+        reloc.Size:=len;
         ObjRelocations.Add(reloc);
         if reltype=RELOC_RELATIVE then
 { ARM does not require this adjustment, other CPUs must be checked }
@@ -520,7 +520,7 @@ implementation
          end;
         if Assigned(objreloc) then
           begin
-            objreloc.size:=len;
+            objreloc.Size:=len;
             { RELOC_GOTPCREL, RELOC_REX_GOTPCRELX, RELOC_GOTPCRELX] need special handling
               this is done in x86/aasmcpu unit }
             if reltype in [RELOC_RELATIVE{$ifdef x86},RELOC_PLT32{$endif}
@@ -623,7 +623,7 @@ implementation
           elfsym.st_name:=fstrsec.WriteStr(objsym.name)
         else
           elfsym.st_name:=nameidx;
-        elfsym.st_size:=objsym.size;
+        elfsym.st_size:=objsym.Size;
         elfsym.st_value:=objsym.address;
 
         case objsym.bind of
@@ -634,7 +634,7 @@ implementation
             end;
           AB_COMMON :
             begin
-              elfsym.st_value:=Size_2_Align(objsym.size);
+              elfsym.st_value:=Size_2_Align(objsym.Size);
               elfsym.st_info:=STB_GLOBAL shl 4;
               elfsym.st_shndx:=SHN_COMMON;
             end;
@@ -673,7 +673,7 @@ implementation
         if objsym.bind<>AB_COMMON then
           begin
             if Assigned(objsym.objsection) then
-              elfsym.st_shndx:=objsym.objsection.index
+              elfsym.st_shndx:=objsym.objsection.Index
             else
               elfsym.st_shndx:=SHN_UNDEF;
             objsym.symidx:=symidx;
@@ -704,22 +704,22 @@ implementation
       begin
         { create the reloc section }
         relocsect:=TElfObjSection.create_reloc(data,s.name,false);
-        relocsect.shlink:=symtabsect.index;
-        relocsect.shinfo:=s.index;
+        relocsect.shlink:=symtabsect.Index;
+        relocsect.shinfo:=s.Index;
         { add the relocations }
         for i:=0 to s.Objrelocations.count-1 do
           begin
             objreloc:=TObjRelocation(s.Objrelocations[i]);
 
             { Symbol }
-            if Assigned(objreloc.symbol) then
+            if Assigned(objreloc.Symbol) then
               begin
-                if objreloc.symbol.symidx=-1 then
+                if objreloc.Symbol.symidx=-1 then
                   begin
-                    WriteLn(objreloc.symbol.Name);
+                    WriteLn(objreloc.Symbol.Name);
                     InternalError(200603012);
                   end;
-                relsym:=objreloc.symbol.symidx;
+                relsym:=objreloc.Symbol.symidx;
               end
             else
               begin
@@ -750,7 +750,7 @@ implementation
         if (TElfObjSection(p).shtype in [SHT_SYMTAB,SHT_STRTAB,SHT_REL,SHT_RELA]) then
           exit;
         TObjSection(p).secsymidx:=symtabsect.symidx;
-        symtabsect.writeInternalSymbol(0,0,STT_SECTION,TObjSection(p).index);
+        symtabsect.writeInternalSymbol(0,0,STT_SECTION,TObjSection(p).Index);
       end;
 
 
@@ -780,7 +780,7 @@ implementation
                  symtabsect.WriteSymbol(objsym);
              end;
            { update the .symtab section header }
-           symtabsect.shlink:=symtabsect.fstrsec.index;
+           symtabsect.shlink:=symtabsect.fstrsec.Index;
          end;
       end;
 
@@ -836,7 +836,7 @@ implementation
 
     procedure TElfObjectOutput.section_count_sections(p:TObject;arg:pointer);
       begin
-        TElfObjSection(p).index:=PWord(arg)^;
+        TElfObjSection(p).Index:=PWord(arg)^;
         inc(PWord(arg)^);
       end;
 
@@ -914,7 +914,7 @@ implementation
            header.e_machine:=ElfTarget.machine_code;
            header.e_version:=1;
            header.e_shoff:=shoffset;
-           header.e_shstrndx:=shstrtabsect.index;
+           header.e_shstrndx:=shstrtabsect.Index;
 
            header.e_shnum:=nsections;
            header.e_ehsize:=sizeof(TELFHeader);
@@ -1117,8 +1117,8 @@ implementation
             objsym.typ:=typ;
             if bind<>AB_COMMON then
               objsym.objsection:=FSecTbl[sym.st_shndx].sec;
-            objsym.offset:=sym.st_value;
-            objsym.size:=sym.st_size;
+            objsym.Offset:=sym.st_value;
+            objsym.Size:=sym.st_size;
             FSymTbl[i]:=objsym;
             if (ver>VER_NDX_GLOBAL) then
               TVersionedObjSymbol(objsym).version:=TElfVersionDef(verdefs[ver]);
@@ -1134,7 +1134,7 @@ implementation
         result:=TElfObjSection.create_ext(objdata,secname,
           shdr.sh_type,shdr.sh_flags,shdr.sh_addralign,shdr.sh_entsize);
 
-        result.index:=index;
+        result.Index:=index;
         result.DataPos:=shdr.sh_offset;
         result.MemPos:=shdr.sh_addr;
         result.Size:=shdr.sh_size;
@@ -1550,8 +1550,8 @@ implementation
                not(cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
               continue;
 
-            if FSecTbl[objsec.index].relocpos>0 then
-              LoadRelocations(FSecTbl[objsec.index]);
+            if FSecTbl[objsec.Index].relocpos>0 then
+              LoadRelocations(FSecTbl[objsec.Index]);
           end;
 
         { finish processing section groups, if any }

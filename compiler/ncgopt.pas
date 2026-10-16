@@ -59,7 +59,7 @@ begin
     exit;
   { update the curmaxlen field (before converting to a string!) }
   updatecurmaxlen;
-  if not is_shortstring(left.resultdef) then
+  if not Is_ShortString(left.resultdef) then
     inserttypeconv(left,CShortStringType);
   resultdef:=left.resultdef;
 end;
@@ -88,15 +88,15 @@ begin
   { first, we have to more or less replicate some code from }
   { ti386addnode.pass_generate_code                                     }
   SecondPass(left);
-  if not(tg.istemp(left.location.reference) and
-         (tg.sizeoftemp(CurrentAsmData.CurrAsmList,left.location.reference) = 256)) then
+  if not(tg.istemp(left.Location.Reference) and
+         (tg.sizeoftemp(CurrentAsmData.CurrAsmList,left.Location.Reference) = 256)) then
     begin
-       tg.gethltemp(CurrentAsmData.CurrAsmList,CShortStringType,256,tt_normal,href);
-       hlcg.g_copyshortstring(CurrentAsmData.CurrAsmList,left.location.reference,href,TStringDef(CShortStringType));
-       location_freetemp(CurrentAsmData.CurrAsmList,left.location);
+       tg.GetHLTemp(CurrentAsmData.CurrAsmList,CShortStringType,256,tt_normal,href);
+       hlcg.G_CopyShortString(CurrentAsmData.CurrAsmList,left.Location.Reference,href,TStringDef(CShortStringType));
+       location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
        { return temp reference }
-       location_reset_ref(left.location,LOC_REFERENCE,def_cgsize(resultdef),1,[]);
-       left.location.reference:=href;
+       Location_Reset_Ref(left.Location,LOC_REFERENCE,Def_CGSize(resultdef),1,[]);
+       left.Location.Reference:=href;
     end;
   SecondPass(right);
   { special case for string := string + char (JM) }
@@ -108,22 +108,22 @@ begin
   { is it a constant char? }
   if not is_constcharnode(right) then
     { no, make sure it is in a register }
-    if right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+    if right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
       begin
         { get register for the char }
-        hreg := cg.getintregister(CurrentAsmData.CurrAsmList,OS_8);
-        cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_8,OS_8,right.location.reference,hreg);
+        hreg := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_8);
+        cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_8,OS_8,right.Location.Reference,hreg);
         { I don't think a temp char exists, but it won't hurt (JM) }
-        tg.ungetiftemp(CurrentAsmData.CurrAsmList,right.location.reference);
+        tg.ungetiftemp(CurrentAsmData.CurrAsmList,right.Location.Reference);
       end
-    else hreg := right.location.register;
+    else hreg := right.Location.Register;
 
   { load the current string length }
-  lengthreg := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-  cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_8,OS_INT,left.location.reference,lengthreg);
+  lengthreg := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+  cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_8,OS_INT,left.Location.Reference,lengthreg);
 
   { do we have to check the length ? }
-  if tg.istemp(left.location.reference) then
+  if tg.istemp(left.Location.Reference) then
     checklength := curmaxlen = 255
   else
     checklength := curmaxlen >= TStringDef(left.resultdef).len;
@@ -131,57 +131,57 @@ begin
     begin
       { is it already maximal? }
       CurrentAsmData.getjumplabel(l);
-      if tg.istemp(left.location.reference) then
+      if tg.istemp(left.Location.Reference) then
         len:=255
       else
         len:=TStringDef(left.resultdef).len;
-      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_INT,OC_EQ,len,lengthreg,l)
+      cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,OS_INT,OC_EQ,len,lengthreg,l)
     end;
 
   { no, so increase the length and add the new character }
-  href2 := left.location.reference;
+  href2 := left.Location.Reference;
 
   { we need a new reference to store the character }
   { at the end of the string. Check if the base or }
   { index register is still free                   }
-  if (href2.base <> NR_NO) and
-     (href2.index <> NR_NO) then
+  if (href2.Base <> NR_NO) and
+     (href2.Index <> NR_NO) then
     begin
       { they're not free, so add the base reg to       }
       { the string length (since the index can         }
       { have a scalefactor) and use lengthreg as base  }
-      cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,href2.base,lengthreg);
-      href2.base := lengthreg;
+      cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,href2.Base,lengthreg);
+      href2.Base := lengthreg;
     end
   else
     { at least one is still free, so put EDI there }
-    if href2.base = NR_NO then
-      href2.base := lengthreg
+    if href2.Base = NR_NO then
+      href2.Base := lengthreg
     else
       begin
-        href2.index := lengthreg;
+        href2.Index := lengthreg;
 {$ifdef x86}
-        href2.scalefactor := 1;
+        href2.ScaleFactor := 1;
 {$endif x86}
       end;
   { we need to be one position after the last char }
-  inc(href2.offset);
+  inc(href2.Offset);
   { store the character at the end of the string }
   if (right.nodetype <> ordconstn) then
     begin
       { no new_reference(href2) because it's only }
       { used once (JM)                            }
-      cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_8,OS_8,hreg,href2);
+      cg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,OS_8,OS_8,hreg,href2);
     end
   else
-    cg.a_load_const_ref(CurrentAsmData.CurrAsmList,OS_8,TOrdConstNode(right).value.svalue,href2);
-  lengthreg:=cg.makeregsize(CurrentAsmData.CurrAsmList,lengthreg,OS_8);
+    cg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,OS_8,TOrdConstNode(right).Value.svalue,href2);
+  lengthreg:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,lengthreg,OS_8);
   { increase the string length }
-  cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_8,1,lengthreg);
-  cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_8,OS_8,lengthreg,left.location.reference);
+  cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_8,1,lengthreg);
+  cg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,OS_8,OS_8,lengthreg,left.Location.Reference);
   if checklength then
-    cg.a_label(CurrentAsmData.CurrAsmList,l);
-  location_copy(location,left.location);
+    cg.A_Label(CurrentAsmData.CurrAsmList,l);
+  Location_Copy(location,left.Location);
 end;
 
 begin

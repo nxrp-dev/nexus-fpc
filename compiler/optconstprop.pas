@@ -146,7 +146,7 @@ unit optconstprop;
                     { if it is a temprefn or its address is not taken in case of loadn }
                       ((TAssignmentNode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).AddrTaken)) and
                       { and no definition in the loop? }
-                      not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TAssignmentNode(arg).left.optinfo^.index)) then
+                      not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TAssignmentNode(arg).left.optinfo^.Index)) then
                       begin
                         result:=replaceBasicAssign(TForNode(n).t2, arg, tree_modified3);
                         tree_modified:=tree_modified or tree_modified3;

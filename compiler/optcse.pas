@@ -62,7 +62,7 @@ unit optcse;
 
     const
       cseinvariant : set of TNodeType = [addn,muln,subn,divn,slashn,modn,andn,orn,xorn,notn,vecn,
-        derefn,equaln,unequaln,ltn,gtn,lten,gten,typeconvn,subscriptn,
+        derefn,EqualN,unequaln,ltn,gtn,lten,gten,typeconvn,subscriptn,
         inn,symdifn,shrn,shln,ordconstn,realconstn,unaryminusn,pointerconstn,stringconstn,setconstn,niln,
         setelementn,{arrayconstructorn,arrayconstructorrangen,}
         isn,asn,starstarn,nothingn,temprefn,loadparentfpn {,callparan},assignn,addrn];
@@ -141,7 +141,7 @@ unit optcse;
         var
           i, rightstart : LongInt;
         begin
-          if (TBinaryNode(n).left.nodetype=t) and is_boolean(TBinaryNode(n).left.resultdef) then
+          if (TBinaryNode(n).left.nodetype=t) and Is_Boolean(TBinaryNode(n).left.resultdef) then
             recurseintobooleanchain(t,TBinaryNode(n).left)
           else
             foreachnodestatic(pm_postprocess,TBinaryNode(n).left,@collectnodes2,arg);
@@ -215,16 +215,16 @@ unit optcse;
                   (n.resultdef.typ = recorddef) and
                   TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).SymTable).Has_Single_Field(tempdef)
                 ) or
-                is_dynamic_array(n.resultdef) or
+                Is_Dynamic_Array(n.resultdef) or
                 (
-                  not(is_special_array(TStoredDef(n.resultdef))) and
+                  not(Is_Special_Array(TStoredDef(n.resultdef))) and
                   not(TStoredDef(n.resultdef).Is_IntRegable) and
                   not(TStoredDef(n.resultdef).Is_FPURegable)
                 )
               )
             ) and
             { same for voiddef }
-            not(is_void(n.resultdef)) and
+            not(Is_Void(n.resultdef)) and
             { adding tempref and callpara nodes itself is worthless but
               their complexity is probably <= 1 anyways
 
@@ -269,7 +269,7 @@ unit optcse;
               one instruction on every platform except i8086/i386
               so consider in this case loading the address of the data
             }
-            (((n.resultdef.typ in [arraydef,recorddef]) or Is_Object(n.resultdef)) and not(is_dynamic_array(n.resultdef)) and
+            (((n.resultdef.typ in [arraydef,recorddef]) or Is_Object(n.resultdef)) and not(Is_Dynamic_Array(n.resultdef)) and
              (n.nodetype=loadn) and
              (TLoadNode(n).symtableentry.typ=staticvarsym)
             )
@@ -306,7 +306,7 @@ unit optcse;
           the expressions of the right side might not be available due to short boolean
           evaluation, so after handling the right side, mark those expressions
           as unavailable }
-        if doshortbooleval(n) and is_boolean(TAddNode(n).left.resultdef) then
+        if doshortbooleval(n) and Is_Boolean(TAddNode(n).left.resultdef) then
           begin
             SetLength(maybeskipped,0);
             firstleftend:=high(LongInt);
@@ -377,23 +377,23 @@ unit optcse;
                 if (n.nodetype in [andn,orn,addn,muln]) and
                   (n.nodetype=TBinaryNode(n).left.nodetype) and
                   { do is optimizations only for integers, reals (no currency!), vectors, sets or booleans }
-                  (is_integer(n.resultdef) or is_real(n.resultdef) or is_vector(n.resultdef) or is_set(n.resultdef) or
-                   is_boolean(n.resultdef)) and
+                  (Is_Integer(n.resultdef) or Is_Real(n.resultdef) or Is_Vector(n.resultdef) or Is_Set(n.resultdef) or
+                   Is_Boolean(n.resultdef)) and
                   { either if fastmath is on }
                   ((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) or
                    { or for the logical operators, they cannot overflow }
                    (n.nodetype in [andn,orn]) or
                    { or for integers if range checking is off }
-                   ((is_integer(n.resultdef) and
+                   ((Is_Integer(n.resultdef) and
                     (n.LocalSwitches*[cs_check_range,cs_check_overflow]=[]) and
                     (TBinaryNode(n).left.LocalSwitches*[cs_check_range,cs_check_overflow]=[]))) or
                    { for sets, we can do this always }
-                   (is_set(n.resultdef))
+                   (Is_Set(n.resultdef))
                    ) then
                   while (n.nodetype=TBinaryNode(n).left.nodetype) and
                     { if not both or none of the nodes is short/full boolean evaluated, we cannot do this optimization as it might change
                       semantics, there are border cases where this might not apply, but so far it is not worth the effort to check }
-                    (not(is_boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (doshortbooleval(n)=doshortbooleval(TBinaryNode(n).left))) and
+                    (not(Is_Boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (doshortbooleval(n)=doshortbooleval(TBinaryNode(n).left))) and
                         { the resulttypes of the operands we'll swap must be equal,
                           required in case of a 32x32->64 multiplication, then we
                           cannot swap out one of the 32 bit operands for a 64 bit one
@@ -480,13 +480,13 @@ unit optcse;
                         def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
-                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(is_dynamic_array(def));
+                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(Is_Dynamic_Array(def));
 
                         if addrstored then
-                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),VoidPointerType.size,tt_persistent,
+                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),VoidPointerType.Size,tt_persistent,
                             true,CAddrNode.Create_Internal(TNode(lists.nodelist[i])))
                         else
-                          templist[i]:=CTempCreateNode.create_value(def,def.size,tt_persistent,
+                          templist[i]:=CTempCreateNode.create_value(def,def.Size,tt_persistent,
                             def.Is_IntRegable or def.Is_FPURegable or def.Is_Const_IntRegable,TNode(lists.nodelist[i]));
 
                         { the value described by the temp. is immutable and the temp. can be always in register
@@ -531,7 +531,7 @@ unit optcse;
                         def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
-                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(is_dynamic_array(def));
+                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(Is_Dynamic_Array(def));
 
 {$if defined(csedebug) or defined(csestats)}
                         WriteLn;
@@ -788,7 +788,7 @@ unit optcse;
         rootblock:=nil;
         { estimate how many int registers can be used }
         if pi_do_call in CurrentProcInfo.flags then
-          max_int_regs_assigned:=length(paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption))
+          max_int_regs_assigned:=length(ParaManager.Get_Saved_Registers_Int(CurrentProcInfo.procdef.ProcCallOption))
           { we store only addresses, so take care of the relation between address sizes and register sizes }
             div max(sizeof(PtrUInt) div sizeof(ALUUInt),1)
           { heuristics, just use a quarter of all registers at maximum }
@@ -799,13 +799,13 @@ unit optcse;
         { x86, aarch64 and arm (neglecting fpa) use mm registers for floats }
         if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption)) div 5
+          max_fpu_regs_assigned:=length(ParaManager.Get_Saved_Registers_MM(CurrentProcInfo.procdef.ProcCallOption)) div 5
         else
           max_fpu_regs_assigned:=max(first_mm_imreg div 5,1);
 {$else defined(x86) or defined(aarch64) or defined(arm)}
         if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(CurrentProcInfo.procdef.ProcCallOption)) div 5
+          max_fpu_regs_assigned:=length(ParaManager.Get_Saved_Registers_FPU(CurrentProcInfo.procdef.ProcCallOption)) div 5
         else
           max_fpu_regs_assigned:=max(first_fpu_imreg div 5,1);
 {$endif}
@@ -835,7 +835,7 @@ unit optcse;
                         deleteblock:=internalstatements(deletes);
                       end;
                      constentries[i].temp:=CTempCreateNode.create(constentries[i].valuenode.resultdef,
-                       constentries[i].valuenode.resultdef.size,tt_persistent,true);
+                       constentries[i].valuenode.resultdef.Size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
                      addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),constentries[i].valuenode));
                      CurrentFilePos:=old_current_filepos;
@@ -859,7 +859,7 @@ unit optcse;
                         deleteblock:=internalstatements(deletes);
                       end;
                      constentries[i].temp:=CTempCreateNode.create(CPointerDef.getreusable(constentries[i].valuenode.resultdef),
-                       VoidPointerType.size,tt_persistent,true);
+                       VoidPointerType.Size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
                      addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),
                        CAddrNode.Create_Internal(constentries[i].valuenode)));

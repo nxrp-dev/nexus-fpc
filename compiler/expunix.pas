@@ -175,7 +175,7 @@ var
   i : LongInt;
 begin
   pd:=nil;
-  create_hlcodegen(nil);
+  Create_HLCodeGen(nil);
   new_section(CurrentAsmData.asmlists[al_procedures],sec_code,'',0);
   hp2:=TExportedItem(CurrentModule.ExportList.first);
   while Assigned(hp2) do
@@ -198,7 +198,7 @@ begin
               break;
           end;
         if not anyhasalias then
-          hlcg.g_external_wrapper(CurrentAsmData.asmlists[al_procedures],pd,hp2.name^,pd.MangledName,true);
+          hlcg.G_External_Wrapper(CurrentAsmData.asmlists[al_procedures],pd,hp2.name^,pd.MangledName,true);
 {$endif cpuhighleveltarget}
         if not (CurrentModule.IsUnit and (TargetInfo.system in systems_linux)) then
           exportedsymnames.insert(hp2.name^);
@@ -213,7 +213,7 @@ begin
        end;
      hp2:=TExportedItem(hp2.next);
    end;
-   destroy_hlcodegen;
+   Destroy_HLCodeGen;
 end;
 
 

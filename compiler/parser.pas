@@ -52,7 +52,7 @@ implementation
       CompHook,
       Scanner,ScanDir,
       pbase,psystem,pmodules,psub,ncgrtti,
-      CPUInfo,ProcInfo,assemble;
+      CPUInfo,ProcInfo;
 
     procedure parsing_done(module: TModule);
 
@@ -60,9 +60,6 @@ implementation
        hp,hp2 :  TModule;
 
     begin
-       if module.IsInitial then
-         DrainClangAssemblerQueue;
-
        if (module.IsInitial) and
           (status.ErrorCount=0) then
          { Write Browser Collections }

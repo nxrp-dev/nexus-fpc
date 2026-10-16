@@ -38,12 +38,12 @@ unit rgobj;
   interface
 
     uses
-      CUtils, cpubase,
-      aasmtai,AAsmData,aasmsym,aasmcpu,
-      CClasses,GlobType,cgbase,cgutils;
+      CUtils, CPUBase,
+      AAsmTAI,AAsmData,AAsmSym,AAsmCPU,
+      CClasses,GlobType,CGBase,CGUtils;
 
     const
-      interferenceBitmap2Size = 256;
+      InterferenceBitmap2Size = 256;
 
     type
       {
@@ -52,21 +52,21 @@ unit rgobj;
           layer 2 - blocks of 32*256 (32 bytes = 256 bits)
       }
 
-      Tinterferencebitmap2 = array of set of byte;
-      Tinterferencebitmap1 = array[byte] of Tinterferencebitmap2;
-      tinterferencebitmap1Array = array of tinterferencebitmap1;
+      Tinterferencebitmap2 = array of set of Byte;
+      Tinterferencebitmap1 = array[Byte] of TInterferenceBitmap2;
+      tinterferencebitmap1Array = array of TInterferenceBitmap1;
 
       Tinterferencebitmap=class
       private
-        maxx1,
-        maxy1    : byte;
-        fbitmap  : tinterferencebitmap1Array;
-        function getbitmap(x,y:TSuperRegister):boolean;
-        procedure setbitmap(x,y:TSuperRegister;b:boolean);
+        MaxX1,
+        MaxY1    : Byte;
+        FBitmap  : TInterferenceBitmap1Array;
+        function GetBitmap(X,Y:TSuperRegister):Boolean;
+        procedure SetBitmap(X,Y:TSuperRegister;B:Boolean);
       public
-        constructor create;
+        constructor Create;
         destructor Destroy;override;
-        property bitmap[x,y:TSuperRegister]:boolean read getbitmap write setbitmap;default;
+        property Bitmap[X,Y:TSuperRegister]:Boolean read GetBitmap write SetBitmap;default;
       end;
 
       {In the register allocator we keep track of move instructions.
@@ -79,22 +79,22 @@ unit rgobj;
       Tmoveset=(ms_coalesced_moves,ms_constrained_moves,ms_frozen_moves,
                 ms_worklist_moves,ms_active_moves);
       Tmoveins=class(TLinkedListItem)
-        moveset:Tmoveset;
-        x,y:TSuperRegister;
-        id:LongInt;
+        MoveSet:TMoveSet;
+        X,Y:TSuperRegister;
+        ID:LongInt;
       end;
 
       Tmovelistheader=record
-        count,
-        maxcount,
-        sorted_until : cardinal;
+        Count,
+        MaxCount,
+        SortedUntil : Cardinal;
       end;
 
       Tmovelist=record
-        header : Tmovelistheader;
-        data : array[TSuperRegister] of Tmoveins;
+        Header : TMoveListHeader;
+        Data : array[TSuperRegister] of TMoveIns;
       end;
-      Pmovelist=^Tmovelist;
+      Pmovelist=^TMoveList;
 
       Treginfoflag=(
         ri_coalesced,       { the register is coalesced with other register }
@@ -102,42 +102,42 @@ unit rgobj;
         ri_spill_helper,    { the register contains a value of a previously spilled register }
         ri_has_initial_loc  { the register has the initial memory location (e.g. a parameter in the stack) }
       );
-      Treginfoflagset=set of Treginfoflag;
+      Treginfoflagset=set of TRegInfoFlag;
 
       Treginfo=record
-        live_start,
-        live_end   : TAI;
-        subreg   : TSubRegister;
-        alias    : TSuperRegister;
+        LiveStart,
+        LiveEnd   : TAI;
+        SubReg   : TSubRegister;
+        Alias    : TSuperRegister;
         { The register allocator assigns each register a colour }
-        colour   : TSuperRegister;
-        movelist : Pmovelist;
-        adjlist  : PSuperRegisterWorkList;
-        degree   : TSuperRegister;
-        flags    : Treginfoflagset;
-        weight   : LongInt;
+        Colour   : TSuperRegister;
+        MoveList : PMoveList;
+        AdjList  : PSuperRegisterWorkList;
+        Degree   : TSuperRegister;
+        Flags    : TRegInfoFlagSet;
+        Weight   : LongInt;
 
-        count_uses : LongInt;
-        total_interferences : LongInt;
-        real_reg_interferences: word;
+        CountUses : LongInt;
+        TotalInterferences : LongInt;
+        RealRegInterferences: Word;
       end;
       // Preginfo=^TReginfo;
-      TReginfoArray = Array of TReginfo;
+      TReginfoArray = Array of TRegInfo;
 
       TSpillRegInfo = record
         { a single register may appear more than once in an instruction,
           but with different subregister types -> store all subregister types
           that occur, so we can add the necessary constraints for the inline
           register that will have to replace it }
-        spillregconstraints : set of TSubRegister;
-        orgreg : TSuperRegister;
-        loadreg,
-        storereg: TRegister;
-        regread, regwritten, mustbespilled: boolean;
+        SpillRegConstraints : set of TSubRegister;
+        OrgReg : TSuperRegister;
+        LoadReg,
+        StoreReg: TRegister;
+        RegRead, RegWritten, MustBeSpilled: Boolean;
       end;
       TSpillRegsInfo = record
-        spillreginfocount: LongInt;
-        spillreginfo: array[0..3] of TSpillRegInfo;
+        SpillRegInfoCount: LongInt;
+        SpillRegInfo: array[0..3] of TSpillRegInfo;
       end;
 
 //      Pspill_temp_list=^Tspill_temp_list;
@@ -146,9 +146,9 @@ unit rgobj;
 
       { used to store where a register is spilled and what interferences it has at the point of being spilled }
       TSpillInfo = record
-        spilllocation : TReference;
-        spilled : boolean;
-        interferences : Tinterferencebitmap;
+        SpillLocation : TReference;
+        Spilled : Boolean;
+        Interferences : TInterferenceBitmap;
       end;
 
       {#------------------------------------------------------------------
@@ -162,167 +162,167 @@ unit rgobj;
 
       --------------------------------------------------------------------}
        TRGObj=class
-        preserved_by_proc : TCPURegisterSet;
-        used_in_proc : TCPURegisterSet;
+        PreservedByProc : TCPURegisterSet;
+        UsedInProc : TCPURegisterSet;
         { generate SSA code? }
-        ssa_safe: boolean;
+        SSASafe: Boolean;
 
-        constructor create(Aregtype:TRegisterType;
-                           Adefaultsub:TSubRegister;
-                           const Ausable:array of TSuperRegister;
-                           Afirst_imaginary:TSuperRegister;
-                           Apreserved_by_proc:TCPURegisterSet);
+        constructor Create(ARegType:TRegisterType;
+                           ADefaultSub:TSubRegister;
+                           const AUsable:array of TSuperRegister;
+                           AFirstImaginary:TSuperRegister;
+                           APreservedByProc:TCPURegisterSet);
         destructor Destroy;override;
 
         { Allocate a register. An internalerror will be generated if there is
          no more free registers which can be allocated.}
-        function getregister(list:TAsmList;subreg:TSubRegister):TRegister;virtual;
+        function GetRegister(List:TAsmList;SubReg:TSubRegister):TRegister;virtual;
         { Get the register specified.}
-        procedure getcpuregister(list:TAsmList;r:TRegister);virtual;
-        procedure ungetcpuregister(list:TAsmList;r:TRegister);virtual;
+        procedure GetCPURegister(List:TAsmList;R:TRegister);virtual;
+        procedure UngetCPURegister(List:TAsmList;R:TRegister);virtual;
         { Get multiple registers specified.}
-        procedure alloccpuregisters(list:TAsmList;const r:TCPURegisterSet);virtual;
+        procedure AllocCPURegisters(List:TAsmList;const R:TCPURegisterSet);virtual;
         { Free multiple registers specified.}
-        procedure dealloccpuregisters(list:TAsmList;const r:TCPURegisterSet);virtual;
-        function uses_registers:boolean;virtual;
-        procedure add_reg_instruction(instr:TAI;r:TRegister;aweight:LongInt);
-        procedure add_move_instruction(instr:TAICPU);
+        procedure DeallocCPURegisters(List:TAsmList;const R:TCPURegisterSet);virtual;
+        function Uses_Registers:Boolean;virtual;
+        procedure Add_Reg_Instruction(Instr:TAI;R:TRegister;AWeight:LongInt);
+        procedure Add_Move_Instruction(Instr:TAICPU);
         { Do the register allocation.}
-        procedure do_register_allocation(list:TAsmList;headertai:TAI);virtual;
+        procedure Do_Register_Allocation(List:TAsmList;HeaderTAI:TAI);virtual;
         { Adds an interference edge.
           don't move this to the protected section, the arm cg requires to access this (FK) }
-        procedure add_edge(u,v:TSuperRegister);
+        procedure Add_Edge(U,V:TSuperRegister);
         { translates a single given imaginary register to it's real register }
-        procedure translate_register(var reg : TRegister);
+        procedure Translate_Register(var Reg : TRegister);
         { sets the initial memory location of the register }
-        procedure set_reg_initial_location(reg: TRegister; const ref: TReference);
+        procedure Set_Reg_Initial_Location(Reg: TRegister; const Ref: TReference);
       protected
-        maxreginfo,
-        maxreginfoinc,
-        maxreg            : TSuperRegister;
+        MaxRegInfo,
+        MaxRegInfoInc,
+        MaxReg            : TSuperRegister;
 
-        regtype           : TRegisterType;
+        RegType           : TRegisterType;
         { default subregister used }
-        defaultsub        : TSubRegister;
-        live_registers:Tsuperregisterworklist;
-        spillednodes: tsuperregisterworklist;
+        DefaultSub        : TSubRegister;
+        LiveRegisters:TSuperRegisterWorkList;
+        SpilledNodes: TSuperRegisterWorkList;
 
         { can be overridden to add cpu specific interferences }
-        procedure add_cpu_interferences(p : TAI);virtual;
-        procedure add_constraints(reg:TRegister);virtual;
-        function  getregisterinline(list:TAsmList;const subregconstraints:TSubRegisterSet):TRegister;
-        procedure ungetregisterinline(list:TAsmList;r:TRegister);
-        function  get_spill_subreg(r : TRegister) : TSubRegister;virtual;
-        function  do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;virtual;
+        procedure Add_CPU_Interferences(P : TAI);virtual;
+        procedure Add_Constraints(Reg:TRegister);virtual;
+        function  GetRegisterInline(List:TAsmList;const SubRegConstraints:TSubRegisterSet):TRegister;
+        procedure UngetRegisterInline(List:TAsmList;R:TRegister);
+        function  Get_Spill_SubReg(R : TRegister) : TSubRegister;virtual;
+        function  Do_Spill_Replace(List:TAsmList;Instr:TAICPUAbstractSym;OrgReg:TSuperRegister;const SpillTemp:TReference):Boolean;virtual;
         { the orgrsupeg parameter is only here for the llvm target, so it can
           discover the def to use for the load }
-        procedure do_spill_read(list:TAsmList;pos:TAI;const spilltemp:TReference;tempreg:TRegister;orgsupreg:TSuperRegister);virtual;
-        procedure do_spill_written(list:TAsmList;pos:TAI;const spilltemp:TReference;tempreg:TRegister;orgsupreg:TSuperRegister);virtual;
+        procedure Do_Spill_Read(List:TAsmList;Pos:TAI;const SpillTemp:TReference;TempReg:TRegister;OrgSupReg:TSuperRegister);virtual;
+        procedure Do_Spill_Written(List:TAsmList;Pos:TAI;const SpillTemp:TReference;TempReg:TRegister;OrgSupReg:TSuperRegister);virtual;
 
-        function addreginfo(var spregs: TSpillRegsInfo; const r: TSuperRegisterSet; reg: TRegister; operation: TOperType): boolean;
-        function instr_get_oper_spilling_info(var spregs: TSpillRegsInfo; const r: TSuperRegisterSet; instr: TAICPUAbstractSym; opidx: LongInt): boolean; virtual;
-        procedure substitute_spilled_registers(const spregs: TSpillRegsInfo; instr: TAICPUAbstractSym; opidx: LongInt); virtual;
-        procedure try_replace_reg(const spregs: TSpillRegsInfo; var reg: TRegister; useloadreg: boolean);
-        function instr_spill_register(list:TAsmList;
-                                      instr:TAICPUAbstractSym;
-                                      const r:TSuperRegisterSet;
-                                      const spilltemplist:TSpillTempList): boolean;virtual;
-        procedure insert_regalloc_info_all(list:TAsmList);
-        procedure determine_spill_registers(list:TAsmList;headertail:TAI); virtual;
-        procedure get_spill_temp(list:TAsmList;spill_temps: TSpillTempList; supreg: TSuperRegister);virtual;
+        function AddRegInfo(var SpRegs: TSpillRegsInfo; const R: TSuperRegisterSet; Reg: TRegister; Operation: TOperType): Boolean;
+        function Instr_Get_Oper_Spilling_Info(var SpRegs: TSpillRegsInfo; const R: TSuperRegisterSet; Instr: TAICPUAbstractSym; OpIdx: LongInt): Boolean; virtual;
+        procedure Substitute_Spilled_Registers(const SpRegs: TSpillRegsInfo; Instr: TAICPUAbstractSym; OpIdx: LongInt); virtual;
+        procedure Try_Replace_Reg(const SpRegs: TSpillRegsInfo; var Reg: TRegister; UseLoadReg: Boolean);
+        function Instr_Spill_Register(List:TAsmList;
+                                      Instr:TAICPUAbstractSym;
+                                      const R:TSuperRegisterSet;
+                                      const SpillTempList:TSpillTempList): Boolean;virtual;
+        procedure Insert_RegAlloc_Info_All(List:TAsmList);
+        procedure Determine_Spill_Registers(List:TAsmList;HeaderTail:TAI); virtual;
+        procedure Get_Spill_Temp(List:TAsmList;SpillTemps: TSpillTempList; SupReg: TSuperRegister);virtual;
       strict protected
         { Highest register allocated until now.}
-        reginfo           : TReginfoArray;
-        usable_registers_cnt : word;
+        RegInfo           : TRegInfoArray;
+        UsableRegistersCount : Word;
       private
-        int_live_range_direction: TRADirection;
+        IntLiveRangeDirection: TRADirection;
         { First imaginary register.}
-        first_imaginary   : TSuperRegister;
-        usable_registers  : array[0..MaxCPURegister] of TSuperRegister;
-        usable_register_set : TCPURegisterSet;
-        ibitmap           : Tinterferencebitmap;
-        simplifyworklist,
-        freezeworklist,
-        spillworklist,
-        coalescednodes,
-        selectstack       : tsuperregisterworklist;
-        worklist_moves,
-        active_moves,
-        frozen_moves,
-        coalesced_moves,
-        constrained_moves,
+        FirstImaginary   : TSuperRegister;
+        UsableRegisters  : array[0..MaxCPURegister] of TSuperRegister;
+        UsableRegisterSet : TCPURegisterSet;
+        IBitmap           : TInterferenceBitmap;
+        SimplifyWorkList,
+        FreezeWorkList,
+        SpillWorkList,
+        CoalescedNodes,
+        SelectStack       : TSuperRegisterWorkList;
+        WorkListMoves,
+        ActiveMoves,
+        FrozenMoves,
+        CoalescedMoves,
+        ConstrainedMoves,
         { in this list we collect all moveins which should be disposed after register allocation finishes,
           we still need the moves for spill coalesce for the whole register allocation process, so they cannot be
           released as soon as they are frozen or whatever }
-        move_garbage : TLinkedList;
-        extended_backwards,
-        backwards_was_first : TBitSet;
-        has_usedmarks: boolean;
-        has_directalloc: boolean;
-        spillinfo : array of TSpillInfo;
-        moveins_id_counter: LongInt;
+        MoveGarbage : TLinkedList;
+        ExtendedBackwards,
+        BackwardsWasFirst : TBitSet;
+        HasUsedMarks: Boolean;
+        HasDirectAlloc: Boolean;
+        SpillInfo : array of TSpillInfo;
+        MoveInsIDCounter: LongInt;
 
         { Disposes of the reginfo array.}
-        procedure dispose_reginfo;
+        procedure Dispose_RegInfo;
         { Prepare the register colouring.}
-        procedure prepare_colouring;
+        procedure Prepare_Colouring;
         { Clean up after register colouring.}
-        procedure epilogue_colouring;
+        procedure Epilogue_Colouring;
         { Colour the registers; that is do the register allocation.}
-        procedure colour_registers;
-        procedure insert_regalloc_info(list:TAsmList;u:TSuperRegister);
-        procedure generate_interference_graph(list:TAsmList;headertai:TAI);
+        procedure Colour_Registers;
+        procedure Insert_RegAlloc_Info(List:TAsmList;U:TSuperRegister);
+        procedure Generate_Interference_Graph(List:TAsmList;HeaderTAI:TAI);
         { sort spilled nodes by increasing number of interferences }
-        procedure sort_spillednodes;
+        procedure Sort_SpilledNodes;
         { translates the registers in the given assembler list }
-        procedure translate_registers(list:TAsmList);
-        function  spill_registers(list:TAsmList;headertai:TAI):boolean;virtual;
-        function  getnewreg(subreg:TSubRegister):TSuperRegister;
-        procedure add_edges_used(u:TSuperRegister);
-        procedure add_to_movelist(u:TSuperRegister;ins:Tmoveins);
-        function move_related(n:TSuperRegister):boolean;
-        procedure make_work_list;
-        procedure sort_simplify_worklist;
-        procedure enable_moves(n:TSuperRegister);
-        procedure decrement_degree(m:TSuperRegister);
-        procedure simplify;
-        procedure add_worklist(u:TSuperRegister);
-        function adjacent_ok(u,v:TSuperRegister):boolean;
-        function conservative(u,v:TSuperRegister):boolean;
-        procedure coalesce;
-        procedure freeze_moves(u:TSuperRegister);
-        procedure freeze;
-        procedure select_spill;
-        procedure assign_colours;
-        procedure clear_interferences(u:TSuperRegister);
-        procedure set_live_range_direction(dir: TRADirection);
-        procedure set_live_start(reg : TSuperRegister;t : TAI);
-        function get_live_start(reg : TSuperRegister) : TAI;
-        procedure set_live_end(reg : TSuperRegister;t : TAI);
-        function get_live_end(reg : TSuperRegister) : TAI;
-        procedure alloc_spillinfo(max_reg: TSuperRegister);
+        procedure Translate_Registers(List:TAsmList);
+        function  Spill_Registers(List:TAsmList;HeaderTAI:TAI):Boolean;virtual;
+        function  GetNewReg(SubReg:TSubRegister):TSuperRegister;
+        procedure Add_Edges_Used(U:TSuperRegister);
+        procedure Add_To_MoveList(U:TSuperRegister;Ins:TMoveIns);
+        function Move_Related(N:TSuperRegister):Boolean;
+        procedure Make_Work_List;
+        procedure Sort_Simplify_WorkList;
+        procedure Enable_Moves(N:TSuperRegister);
+        procedure Decrement_Degree(M:TSuperRegister);
+        procedure Simplify;
+        procedure Add_WorkList(U:TSuperRegister);
+        function Adjacent_Ok(U,V:TSuperRegister):Boolean;
+        function Conservative(U,V:TSuperRegister):Boolean;
+        procedure Coalesce;
+        procedure Freeze_Moves(U:TSuperRegister);
+        procedure Freeze;
+        procedure Select_Spill;
+        procedure Assign_Colours;
+        procedure Clear_Interferences(U:TSuperRegister);
+        procedure Set_Live_Range_Direction(Dir: TRADirection);
+        procedure Set_Live_Start(Reg : TSuperRegister;T : TAI);
+        function Get_Live_Start(Reg : TSuperRegister) : TAI;
+        procedure Set_Live_End(Reg : TSuperRegister;T : TAI);
+        function Get_Live_End(Reg : TSuperRegister) : TAI;
+        procedure Alloc_SpillInfo(AMaxReg: TSuperRegister);
         { Remove p from the list and set p to the next element in the list }
-        procedure remove_ai(list:TAsmList; var p:TAI);
+        procedure Remove_AI(List:TAsmList; var P:TAI);
 {$ifdef DEBUG_SPILLCOALESCE}
-        procedure write_spill_stats;
+        procedure Write_Spill_Stats;
 {$endif DEBUG_SPILLCOALESCE}
        public
 {$ifdef EXTDEBUG}
-        procedure writegraph(loopidx:LongInt);
+        procedure WriteGraph(LoopIdx:LongInt);
 {$endif EXTDEBUG}
-        procedure combine(u,v:TSuperRegister);
+        procedure Combine(U,V:TSuperRegister);
         { set v as an alias for u }
-        procedure set_alias(u,v:TSuperRegister);
-        function  get_alias(n:TSuperRegister):TSuperRegister;
-        property live_range_direction: TRADirection read int_live_range_direction write set_live_range_direction;
-        property live_start[reg : TSuperRegister]: TAI read get_live_start write set_live_start;
-        property live_end[reg : TSuperRegister]: TAI read get_live_end write set_live_end;
+        procedure Set_Alias(U,V:TSuperRegister);
+        function  Get_Alias(N:TSuperRegister):TSuperRegister;
+        property LiveRangeDirection: TRADirection read IntLiveRangeDirection write Set_Live_Range_Direction;
+        property LiveStart[Reg : TSuperRegister]: TAI read Get_Live_Start write Set_Live_Start;
+        property LiveEnd[Reg : TSuperRegister]: TAI read Get_Live_End write Set_Live_End;
       end;
 
     const
-      first_reg = 0;
-      last_reg = high(TSuperRegister)-1;
-      maxspillingcounter = 20;
+      FirstReg = 0;
+      LastReg = High(TSuperRegister)-1;
+      MaxSpillingCounter = 20;
 
 
   implementation
@@ -330,35 +330,35 @@ unit rgobj;
     uses
       SysUtils,
       Globals,
-      Verbose,tgobj,ProcInfo,cgobj;
+      Verbose,TGObj,ProcInfo,CGObj;
 
-    procedure sort_movelist(ml:Pmovelist);
+    procedure SortMoveList(ML:PMoveList);
 
-    var h,i,p:LongWord;
-        t:Tmoveins;
+    var H,I,P:LongWord;
+        T:TMoveIns;
 
     begin
-      with ml^ do
+      with ML^ do
         begin
-          if header.count<2 then
-            exit;
-          p:=LongWord(1) shl BsrDWord(header.count-1);
+          if Header.Count<2 then
+            Exit;
+          P:=LongWord(1) shl BsrDWord(Header.Count-1);
           repeat
-            for h:=p to header.count-1 do
+            for H:=P to Header.Count-1 do
               begin
-                i:=h;
-                t:=data[i];
+                I:=H;
+                T:=Data[I];
                 repeat
-                  if data[i-p].id<=t.id then
-                    break;
-                  data[i]:=data[i-p];
-                  dec(i,p);
-                until i<p;
-                data[i]:=t;
+                  if Data[I-P].ID<=T.ID then
+                    Break;
+                  Data[I]:=Data[I-P];
+                  Dec(I,P);
+                until I<P;
+                Data[I]:=T;
               end;
-            p:=p shr 1;
-          until p=0;
-          header.sorted_until:=header.count-1;
+            P:=P shr 1;
+          until P=0;
+          Header.SortedUntil:=Header.Count-1;
         end;
     end;
 
@@ -366,61 +366,61 @@ unit rgobj;
                               tinterferencebitmap
 ******************************************************************************}
 
-    constructor tinterferencebitmap.create;
+    constructor TInterferenceBitmap.Create;
       begin
-        inherited create;
-        maxx1:=1;
-        SetLength(fbitmap,2);
+        inherited Create;
+        MaxX1:=1;
+        SetLength(FBitmap,2);
       end;
 
 
-    destructor tinterferencebitmap.Destroy;
+    destructor TInterferenceBitmap.Destroy;
 
-    var i,j:byte;
+    var I,J:Byte;
 
     begin
-      for i:=0 to maxx1 do
-        for j:=0 to maxy1 do
-          if Assigned(fbitmap[i,j]) then
-            fbitmap[i,j]:=nil;
-      fbitmap:=nil;
+      for I:=0 to MaxX1 do
+        for J:=0 to MaxY1 do
+          if Assigned(FBitmap[I,J]) then
+            FBitmap[I,J]:=nil;
+      FBitmap:=nil;
     end;
 
 
-    function tinterferencebitmap.getbitmap(x,y:TSuperRegister):boolean;
+    function TInterferenceBitmap.GetBitmap(X,Y:TSuperRegister):Boolean;
       var
-        page : TInterferencebitmap2;
+        Page : TInterferenceBitmap2;
       begin
-        result:=false;
-        if (x shr 8>maxx1) then
-          exit;
-        page:=fbitmap[x shr 8,y shr 8];
-        result:=Assigned(page) and
-          ((x and $ff) in page[y and $ff]);
+        Result:=False;
+        if (X shr 8>MaxX1) then
+          Exit;
+        Page:=FBitmap[X shr 8,Y shr 8];
+        Result:=Assigned(Page) and
+          ((X and $ff) in Page[Y and $ff]);
       end;
 
 
-    procedure tinterferencebitmap.setbitmap(x,y:TSuperRegister;b:boolean);
+    procedure TInterferenceBitmap.SetBitmap(X,Y:TSuperRegister;B:Boolean);
       var
-        x1,y1 : byte;
+        X1,Y1 : Byte;
       begin
-        x1:=x shr 8;
-        y1:=y shr 8;
-        if x1>maxx1 then
+        X1:=X shr 8;
+        Y1:=Y shr 8;
+        if X1>MaxX1 then
           begin
-            SetLength(fbitmap,x1+1);
-            maxx1:=x1;
+            SetLength(FBitmap,X1+1);
+            MaxX1:=X1;
           end;
-        if not Assigned(fbitmap[x1,y1]) then
+        if not Assigned(FBitmap[X1,Y1]) then
           begin
-            if y1>maxy1 then
-              maxy1:=y1;
-            SetLength(fbitmap[x1,y1],interferenceBitmap2Size);
+            if Y1>MaxY1 then
+              MaxY1:=Y1;
+            SetLength(FBitmap[X1,Y1],InterferenceBitmap2Size);
           end;
-        if b then
-          include(fbitmap[x1,y1][y and $ff],(x and $ff))
+        if B then
+          Include(FBitmap[X1,Y1][Y and $ff],(X and $ff))
         else
-          exclude(fbitmap[x1,y1][y and $ff],(x and $ff));
+          Exclude(FBitmap[X1,Y1][Y and $ff],(X and $ff));
       end;
 
 
@@ -428,216 +428,216 @@ unit rgobj;
                                 trgobj
 ******************************************************************************}
 
-    constructor TRGObj.create(Aregtype:TRegisterType;
-                              Adefaultsub:TSubRegister;
-                              const Ausable:array of TSuperRegister;
-                              Afirst_imaginary:TSuperRegister;
-                              Apreserved_by_proc:TCPURegisterSet);
+    constructor TRGObj.Create(ARegType:TRegisterType;
+                              ADefaultSub:TSubRegister;
+                              const AUsable:array of TSuperRegister;
+                              AFirstImaginary:TSuperRegister;
+                              APreservedByProc:TCPURegisterSet);
        var
-         i : cardinal;
+         I : Cardinal;
        begin
          { empty super register sets can cause very strange problems }
-         if high(Ausable)=-1 then
+         if High(AUsable)=-1 then
            InternalError(200210181);
-         live_range_direction:=rad_forward;
-         first_imaginary:=Afirst_imaginary;
-         maxreg:=Afirst_imaginary;
-         regtype:=Aregtype;
-         defaultsub:=Adefaultsub;
-         preserved_by_proc:=Apreserved_by_proc;
+         LiveRangeDirection:=rad_forward;
+         FirstImaginary:=AFirstImaginary;
+         MaxReg:=AFirstImaginary;
+         RegType:=ARegType;
+         DefaultSub:=ADefaultSub;
+         PreservedByProc:=APreservedByProc;
          // default values set by newinstance
          // used_in_proc:=[];
          // ssa_safe:=false;
-         live_registers.init;
+         LiveRegisters.Init;
          { Get reginfo for CPU registers }
-         maxreginfo:=first_imaginary;
-         maxreginfoinc:=16;
-         moveins_id_counter:=0;
-         worklist_moves:=TLinkedList.create;
-         move_garbage:=TLinkedList.Create;
-         SetLength(reginfo,first_imaginary);
-         for i:=0 to first_imaginary-1 do
+         MaxRegInfo:=FirstImaginary;
+         MaxRegInfoInc:=16;
+         MoveInsIDCounter:=0;
+         WorkListMoves:=TLinkedList.Create;
+         MoveGarbage:=TLinkedList.Create;
+         SetLength(RegInfo,FirstImaginary);
+         for I:=0 to FirstImaginary-1 do
            begin
-             reginfo[i].degree:=high(TSuperRegister);
-             reginfo[i].alias:=RS_INVALID;
+             RegInfo[I].Degree:=High(TSuperRegister);
+             RegInfo[I].Alias:=RSInvalid;
            end;
          { Usable registers }
          // default value set by constructor
          // fillchar(usable_registers,sizeof(usable_registers),0);
-         for i:=low(Ausable) to high(Ausable) do
+         for I:=Low(AUsable) to High(AUsable) do
            begin
-             usable_registers[i]:=Ausable[i];
-	     if (Ausable[i] in usable_register_set) then
+             UsableRegisters[I]:=AUsable[I];
+	     if (AUsable[I] in UsableRegisterSet) then
                InternalError(2025112601)
              else
                begin
-                 include(usable_register_set,Ausable[i]);
-                 inc(usable_registers_cnt);
+                 Include(UsableRegisterSet,AUsable[I]);
+                 Inc(UsableRegistersCount);
                end;
            end;
          { Initialize Worklists }
-         spillednodes.init;
-         simplifyworklist.init;
-         freezeworklist.init;
-         spillworklist.init;
-         coalescednodes.init;
-         selectstack.init;
+         SpilledNodes.Init;
+         SimplifyWorkList.Init;
+         FreezeWorkList.Init;
+         SpillWorkList.Init;
+         CoalescedNodes.Init;
+         SelectStack.Init;
       end;
 
 
     destructor TRGObj.Destroy;
       begin
-        spillednodes.done;
-        simplifyworklist.done;
-        freezeworklist.done;
-        spillworklist.done;
-        coalescednodes.done;
-        selectstack.done;
-        live_registers.done;
+        SpilledNodes.Done;
+        SimplifyWorkList.Done;
+        FreezeWorkList.Done;
+        SpillWorkList.Done;
+        CoalescedNodes.Done;
+        SelectStack.Done;
+        LiveRegisters.Done;
 
-        move_garbage.free;
-        move_garbage := nil;
-        worklist_moves.free;
-        worklist_moves := nil;
+        MoveGarbage.Free;
+        MoveGarbage := nil;
+        WorkListMoves.Free;
+        WorkListMoves := nil;
 
-        dispose_reginfo;
-        extended_backwards.free;
-        extended_backwards := nil;
-        backwards_was_first.free;
-        backwards_was_first := nil;
+        Dispose_RegInfo;
+        ExtendedBackwards.Free;
+        ExtendedBackwards := nil;
+        BackwardsWasFirst.Free;
+        BackwardsWasFirst := nil;
       end;
 
 
-    procedure TRGObj.dispose_reginfo;
+    procedure TRGObj.Dispose_RegInfo;
       var
-        i : cardinal;
+        I : Cardinal;
       begin
-        if reginfo<>nil then
+        if RegInfo<>nil then
           begin
-            for i:=0 to maxreg-1 do
-              with reginfo[i] do
+            for I:=0 to MaxReg-1 do
+              with RegInfo[I] do
                 begin
-                  if adjlist<>nil then
-                    dispose(adjlist,done);
-                  if movelist<>nil then
-                    dispose(movelist);
+                  if AdjList<>nil then
+                    Dispose(AdjList,Done);
+                  if MoveList<>nil then
+                    Dispose(MoveList);
                 end;
-            reginfo:=nil;
+            RegInfo:=nil;
           end;
       end;
 
 
-    function TRGObj.getnewreg(subreg:TSubRegister):TSuperRegister;
+    function TRGObj.GetNewReg(SubReg:TSubRegister):TSuperRegister;
       var
-        oldmaxreginfo : TSuperRegister;
+        OldMaxRegInfo : TSuperRegister;
       begin
-        result:=maxreg;
-        inc(maxreg);
-        if maxreg>=last_reg then
+        Result:=MaxReg;
+        Inc(MaxReg);
+        if MaxReg>=LastReg then
           Message(parser_f_too_complex_proc);
-        if maxreg>=maxreginfo then
+        if MaxReg>=MaxRegInfo then
           begin
-            oldmaxreginfo:=maxreginfo;
+            OldMaxRegInfo:=MaxRegInfo;
             { Prevent overflow }
-            if maxreginfoinc>last_reg-maxreginfo then
-              maxreginfo:=last_reg
+            if MaxRegInfoInc>LastReg-MaxRegInfo then
+              MaxRegInfo:=LastReg
             else
               begin
-                inc(maxreginfo,maxreginfoinc);
-                if maxreginfoinc<256 then
-                  maxreginfoinc:=maxreginfoinc*2;
+                Inc(MaxRegInfo,MaxRegInfoInc);
+                if MaxRegInfoInc<256 then
+                  MaxRegInfoInc:=MaxRegInfoInc*2;
               end;
-            SetLength(reginfo,maxreginfo);
+            SetLength(RegInfo,MaxRegInfo);
           end;
-        reginfo[result].subreg:=subreg;
+        RegInfo[Result].SubReg:=SubReg;
       end;
 
 
-    function TRGObj.getregister(list:TAsmList;subreg:TSubRegister):TRegister;
+    function TRGObj.GetRegister(List:TAsmList;SubReg:TSubRegister):TRegister;
       begin
         {$ifdef EXTDEBUG}
-        if reginfo=nil then
+        if RegInfo=nil then
           InternalError(2004020901);
         {$endif EXTDEBUG}
-        if defaultsub=R_SUBNONE then
-          result:=newreg(regtype,getnewreg(R_SUBNONE),R_SUBNONE)
+        if DefaultSub=R_SUBNONE then
+          Result:=NewReg(RegType,GetNewReg(R_SUBNONE),R_SUBNONE)
         else
-          result:=newreg(regtype,getnewreg(subreg),subreg);
+          Result:=NewReg(RegType,GetNewReg(SubReg),SubReg);
       end;
 
 
-    function TRGObj.uses_registers:boolean;
+    function TRGObj.Uses_Registers:Boolean;
       begin
-        result:=(maxreg>first_imaginary) or has_usedmarks or has_directalloc;
+        Result:=(MaxReg>FirstImaginary) or HasUsedMarks or HasDirectAlloc;
       end;
 
 
-    procedure TRGObj.ungetcpuregister(list:TAsmList;r:TRegister);
+    procedure TRGObj.UngetCPURegister(List:TAsmList;R:TRegister);
       begin
-        if (getsupreg(r)>=first_imaginary) then
+        if (GetSupReg(R)>=FirstImaginary) then
           InternalError(2004020902);
-        list.concat(TAIRegAlloc.dealloc(r,nil));
+        List.Concat(TAIRegAlloc.Dealloc(R,nil));
       end;
 
 
-    procedure TRGObj.getcpuregister(list:TAsmList;r:TRegister);
+    procedure TRGObj.GetCPURegister(List:TAsmList;R:TRegister);
       var
-        supreg:TSuperRegister;
+        SupReg:TSuperRegister;
       begin
-        supreg:=getsupreg(r);
-        if supreg>=first_imaginary then
+        SupReg:=GetSupReg(R);
+        if SupReg>=FirstImaginary then
           InternalError(2003121503);
-        include(used_in_proc,supreg);
-        has_directalloc:=true;
-        list.concat(TAIRegAlloc.alloc(r,nil));
+        Include(UsedInProc,SupReg);
+        HasDirectAlloc:=True;
+        List.Concat(TAIRegAlloc.Alloc(R,nil));
       end;
 
 
-    procedure TRGObj.alloccpuregisters(list:TAsmList;const r:TCPURegisterSet);
+    procedure TRGObj.AllocCPURegisters(List:TAsmList;const R:TCPURegisterSet);
 
-    var i:cardinal;
+    var I:Cardinal;
 
     begin
-      for i:=0 to first_imaginary-1 do
-        if i in r then
-          getcpuregister(list,newreg(regtype,i,defaultsub));
+      for I:=0 to FirstImaginary-1 do
+        if I in R then
+          GetCPURegister(List,NewReg(RegType,I,DefaultSub));
     end;
 
 
-    procedure TRGObj.dealloccpuregisters(list:TAsmList;const r:TCPURegisterSet);
+    procedure TRGObj.DeallocCPURegisters(List:TAsmList;const R:TCPURegisterSet);
 
-    var i:cardinal;
+    var I:Cardinal;
 
     begin
-      for i:=0 to first_imaginary-1 do
-        if i in r then
-          ungetcpuregister(list,newreg(regtype,i,defaultsub));
+      for I:=0 to FirstImaginary-1 do
+        if I in R then
+          UngetCPURegister(List,NewReg(RegType,I,DefaultSub));
     end;
 
     var
-      rtindex : LongInt = 0;
-    procedure TRGObj.do_register_allocation(list:TAsmList;headertai:TAI);
+      RTIndex : LongInt = 0;
+    procedure TRGObj.Do_Register_Allocation(List:TAsmList;HeaderTAI:TAI);
       var
-        spillingcounter:LongInt;
-        endspill:boolean;
-        i : LongInt;
+        SpillingCounter:LongInt;
+        EndSpill:Boolean;
+        I : LongInt;
       begin
         { Insert regalloc info for imaginary registers }
-        insert_regalloc_info_all(list);
-        ibitmap:=tinterferencebitmap.create;
-        generate_interference_graph(list,headertai);
+        Insert_RegAlloc_Info_All(List);
+        IBitmap:=TInterferenceBitmap.Create;
+        Generate_Interference_Graph(List,HeaderTAI);
 {$ifdef DEBUG_SPILLCOALESCE}
-        if maxreg>first_imaginary then
-          WriteLn(CurrentProcInfo.procdef.MangledName, ': register allocation [',regtype,']');
+        if MaxReg>FirstImaginary then
+          WriteLn(CurrentProcInfo.ProcDef.MangledName, ': register allocation [',RegType,']');
 {$endif DEBUG_SPILLCOALESCE}
 {$ifdef DEBUG_REGALLOC}
-        if maxreg>first_imaginary then
-          writegraph(rtindex);
+        if MaxReg>FirstImaginary then
+          WriteGraph(RTIndex);
 {$endif DEBUG_REGALLOC}
-        inc(rtindex);
+        Inc(RTIndex);
         { Don't do the real allocation when -sr is passed }
         if (cs_no_regalloc in CurrentSettings.GlobalSwitches) then
-          exit;
+          Exit;
         { Spill registers which interfere with all usable real registers.
           It is pointless to keep them for further processing. Also it may
           cause endless spilling.
@@ -651,349 +651,349 @@ unit rgobj;
           and are used only once. This allows to access the memory location
           directly, without preloading it to a register.
         }
-        for i:=first_imaginary to maxreg-1 do
-          with reginfo[i] do
-            if (real_reg_interferences>=usable_registers_cnt) or
+        for I:=FirstImaginary to MaxReg-1 do
+          with RegInfo[I] do
+            if (RealRegInterferences>=UsableRegistersCount) or
                { also spill registers which have the initial memory location
                  and are used only once }
-               ((ri_has_initial_loc in flags) and (weight<=200)) then
-              spillednodes.add(i);
-        if spillednodes.length<>0 then
+               ((ri_has_initial_loc in Flags) and (Weight<=200)) then
+              SpilledNodes.Add(I);
+        if SpilledNodes.Length<>0 then
           begin
-            spill_registers(list,headertai);
-            spillednodes.clear;
+            Spill_Registers(List,HeaderTAI);
+            SpilledNodes.Clear;
           end;
         {Do register allocation.}
-        spillingcounter:=0;
+        SpillingCounter:=0;
         repeat
-          determine_spill_registers(list,headertai);
-          endspill:=true;
-          if spillednodes.length<>0 then
+          Determine_Spill_Registers(List,HeaderTAI);
+          EndSpill:=True;
+          if SpilledNodes.Length<>0 then
             begin
-              inc(spillingcounter);
-              if spillingcounter>maxspillingcounter then
+              Inc(SpillingCounter);
+              if SpillingCounter>MaxSpillingCounter then
                 begin
 {$ifdef EXTDEBUG}
                   { Only exit here so the .s file is still generated. Assembling
                     the file will still trigger an error }
-                  exit;
+                  Exit;
 {$else}
                   InternalError(200309041);
 {$endif}
                 end;
-              endspill:=not spill_registers(list,headertai);
+              EndSpill:=not Spill_Registers(List,HeaderTAI);
             end;
-        until endspill;
-        ibitmap.free;
-        ibitmap := nil;
+        until EndSpill;
+        IBitmap.Free;
+        IBitmap := nil;
 
-        translate_registers(list);
+        Translate_Registers(List);
 
 {$ifdef DEBUG_SPILLCOALESCE}
-        write_spill_stats;
+        Write_Spill_Stats;
 {$endif DEBUG_SPILLCOALESCE}
 
         { we need the translation table for debugging info and verbose assembler output,
           so not dispose them yet (FK)
         }
 
-        for i:=0 to High(spillinfo) do
-          FreeAndNil(spillinfo[i].interferences);
-        spillinfo:=nil;
+        for I:=0 to High(SpillInfo) do
+          FreeAndNil(SpillInfo[I].Interferences);
+        SpillInfo:=nil;
       end;
 
 
-    procedure TRGObj.add_constraints(reg:TRegister);
+    procedure TRGObj.Add_Constraints(Reg:TRegister);
 
     begin
     end;
 
 
-    procedure TRGObj.add_edge(u,v:TSuperRegister);
+    procedure TRGObj.Add_Edge(U,V:TSuperRegister);
 
     {This procedure will add an edge to the virtual interference graph.}
 
-      procedure addadj(u,v:TSuperRegister);
+      procedure AddAdj(U,V:TSuperRegister);
 
       begin
 {$ifdef EXTDEBUG}
-        if (u>=maxreginfo) then
+        if (U>=MaxRegInfo) then
           InternalError(2012101901);
 {$endif}
-        with reginfo[u] do
+        with RegInfo[U] do
           begin
-            if adjlist=nil then
-              new(adjlist,init);
-            adjlist^.add(v);
-            if (v<first_imaginary) and
-               (v in usable_register_set) then
-              inc(real_reg_interferences);
+            if AdjList=nil then
+              New(AdjList,Init);
+            AdjList^.Add(V);
+            if (V<FirstImaginary) and
+               (V in UsableRegisterSet) then
+              Inc(RealRegInterferences);
           end;
       end;
 
     begin
-      if (u<>v) and not(ibitmap[v,u]) then
+      if (U<>V) and not(IBitmap[V,U]) then
         begin
-          ibitmap[v,u]:=true;
-          ibitmap[u,v]:=true;
+          IBitmap[V,U]:=True;
+          IBitmap[U,V]:=True;
           {Precoloured nodes are not stored in the interference graph.}
-          if (u>=first_imaginary) then
-            addadj(u,v);
-          if (v>=first_imaginary) then
-            addadj(v,u);
+          if (U>=FirstImaginary) then
+            AddAdj(U,V);
+          if (V>=FirstImaginary) then
+            AddAdj(V,U);
         end;
     end;
 
 
-    procedure TRGObj.add_edges_used(u:TSuperRegister);
+    procedure TRGObj.Add_Edges_Used(U:TSuperRegister);
 
-    var i:cardinal;
+    var I:Cardinal;
 
     begin
-      with live_registers do
-        if length>0 then
-          for i:=0 to length-1 do
-            add_edge(u,get_alias(buf[i]));
+      with LiveRegisters do
+        if Length>0 then
+          for I:=0 to Length-1 do
+            Add_Edge(U,Get_Alias(Buf[I]));
     end;
 
 {$ifdef EXTDEBUG}
-    procedure TRGObj.writegraph(loopidx:LongInt);
+    procedure TRGObj.WriteGraph(LoopIdx:LongInt);
 
     {This procedure writes out the current interference graph in the
     register allocator.}
 
 
-    var f:text;
-        i,j:cardinal;
+    var F:Text;
+        I,J:Cardinal;
     begin
-      assign(f,OutputUnitDir+CurrentProcInfo.procdef.MangledName+'_igraph'+ToStr(loopidx));
-      rewrite(f);
-      WriteLn(f,'Interference graph of ',CurrentProcInfo.procdef.FullProcName(true));
-      WriteLn(f,'Register type: ',regtype,', First imaginary register is ',first_imaginary,' ($',HexStr(first_imaginary,2),')');
-      WriteLn(f);
-      write(f,'                                   ');
-      for i:=0 to maxreg div 16 do
-        for j:=0 to 15 do
-          write(f,HexStr(i,1));
-      WriteLn(f);
-      write(f,'Weight Degree Uses   IntfCnt       ');
-      for i:=0 to maxreg div 16 do
-        write(f,'0123456789ABCDEF');
-      WriteLn(f);
-      for i:=0 to maxreg-1 do
+      Assign(F,OutputUnitDir+CurrentProcInfo.ProcDef.MangledName+'_igraph'+ToStr(LoopIdx));
+      Rewrite(F);
+      WriteLn(F,'Interference graph of ',CurrentProcInfo.ProcDef.FullProcName(True));
+      WriteLn(F,'Register type: ',RegType,', First imaginary register is ',FirstImaginary,' ($',HexStr(FirstImaginary,2),')');
+      WriteLn(F);
+      write(F,'                                   ');
+      for I:=0 to MaxReg div 16 do
+        for J:=0 to 15 do
+          write(F,HexStr(I,1));
+      WriteLn(F);
+      write(F,'Weight Degree Uses   IntfCnt       ');
+      for I:=0 to MaxReg div 16 do
+        write(F,'0123456789ABCDEF');
+      WriteLn(F);
+      for I:=0 to MaxReg-1 do
         begin
-          write(f,reginfo[i].weight:5,'  ',reginfo[i].degree:5,'  ',reginfo[i].count_uses:5,'  ',reginfo[i].total_interferences:5,'  ');
-          if (i<first_imaginary) and
-            (findreg_by_number(newreg(regtype,TSuperRegister(i),defaultsub))<>0) then
-            write(f,std_regname(newreg(regtype,TSuperRegister(i),defaultsub))+':'+HexStr(i,2):7)
+          write(F,RegInfo[I].Weight:5,'  ',RegInfo[I].Degree:5,'  ',RegInfo[I].CountUses:5,'  ',RegInfo[I].TotalInterferences:5,'  ');
+          if (I<FirstImaginary) and
+            (findreg_by_number(NewReg(RegType,TSuperRegister(I),DefaultSub))<>0) then
+            write(F,std_regname(NewReg(RegType,TSuperRegister(I),DefaultSub))+':'+HexStr(I,2):7)
           else
-            write(f,'   ',HexStr(i,2):4);
-          for j:=0 to maxreg-1 do
-            if ibitmap[i,j] then
-              write(f,'*')
+            write(F,'   ',HexStr(I,2):4);
+          for J:=0 to MaxReg-1 do
+            if IBitmap[I,J] then
+              write(F,'*')
             else
-              write(f,'-');
-          WriteLn(f);
+              write(F,'-');
+          WriteLn(F);
         end;
-      close(f);
+      Close(F);
     end;
 {$endif EXTDEBUG}
 
-    procedure TRGObj.add_to_movelist(u:TSuperRegister;ins:Tmoveins);
+    procedure TRGObj.Add_To_MoveList(U:TSuperRegister;Ins:TMoveIns);
     begin
 {$ifdef EXTDEBUG}
-        if (u>=maxreginfo) then
+        if (U>=MaxRegInfo) then
           InternalError(2012101902);
 {$endif}
-      with reginfo[u] do
+      with RegInfo[U] do
         begin
-          if movelist=nil then
+          if MoveList=nil then
             begin
               { don't use sizeof(tmovelistheader), because that ignores alignment }
-              GetMem(movelist,ptruint(@movelist^.data)-ptruint(movelist)+16*sizeof(pointer));
-              movelist^.header.maxcount:=16;
-              movelist^.header.count:=0;
-              movelist^.header.sorted_until:=0;
+              GetMem(MoveList,PtrUInt(@MoveList^.Data)-PtrUInt(MoveList)+16*SizeOf(Pointer));
+              MoveList^.Header.MaxCount:=16;
+              MoveList^.Header.Count:=0;
+              MoveList^.Header.SortedUntil:=0;
             end
           else
             begin
-              if movelist^.header.count>=movelist^.header.maxcount then
+              if MoveList^.Header.Count>=MoveList^.Header.MaxCount then
                 begin
-                  movelist^.header.maxcount:=movelist^.header.maxcount*2;
+                  MoveList^.Header.MaxCount:=MoveList^.Header.MaxCount*2;
                   { don't use sizeof(tmovelistheader), because that ignores alignment }
-                  reallocmem(movelist,ptruint(@movelist^.data)-ptruint(movelist)+movelist^.header.maxcount*sizeof(pointer));
+                  ReallocMem(MoveList,PtrUInt(@MoveList^.Data)-PtrUInt(MoveList)+MoveList^.Header.MaxCount*SizeOf(Pointer));
                 end;
             end;
-          movelist^.data[movelist^.header.count]:=ins;
-          inc(movelist^.header.count);
+          MoveList^.Data[MoveList^.Header.Count]:=Ins;
+          Inc(MoveList^.Header.Count);
         end;
     end;
 
 
-    procedure TRGObj.set_live_range_direction(dir: TRADirection);
+    procedure TRGObj.Set_Live_Range_Direction(Dir: TRADirection);
       begin
-        if (dir in [rad_backwards,rad_backwards_reinit]) then
+        if (Dir in [rad_backwards,rad_backwards_reinit]) then
           begin
-            if not Assigned(extended_backwards) then
+            if not Assigned(ExtendedBackwards) then
               begin
                 { create expects a "size", not a "max bit" parameter -> +1 }
-                backwards_was_first:=TBitSet.create(maxreg+1);
-                extended_backwards:=TBitSet.create(maxreg+1);
+                BackwardsWasFirst:=TBitSet.Create(MaxReg+1);
+                ExtendedBackwards:=TBitSet.Create(MaxReg+1);
               end
             else
               begin
-                if (dir=rad_backwards_reinit) then
-                  extended_backwards.clear;
-                backwards_was_first.clear;
+                if (Dir=rad_backwards_reinit) then
+                  ExtendedBackwards.Clear;
+                BackwardsWasFirst.Clear;
               end;
-            int_live_range_direction:=rad_backwards;
+            IntLiveRangeDirection:=rad_backwards;
           end
         else
-          int_live_range_direction:=rad_forward;
+          IntLiveRangeDirection:=rad_forward;
       end;
 
 
-    procedure TRGObj.set_live_start(reg: TSuperRegister; t: TAI);
+    procedure TRGObj.Set_Live_Start(Reg: TSuperRegister; T: TAI);
       begin
-        reginfo[reg].live_start:=t;
+        RegInfo[Reg].LiveStart:=T;
       end;
 
 
-    function TRGObj.get_live_start(reg: TSuperRegister): TAI;
+    function TRGObj.Get_Live_Start(Reg: TSuperRegister): TAI;
       begin
-        result:=reginfo[reg].live_start;
+        Result:=RegInfo[Reg].LiveStart;
       end;
 
 
-    procedure TRGObj.set_live_end(reg: TSuperRegister; t: TAI);
+    procedure TRGObj.Set_Live_End(Reg: TSuperRegister; T: TAI);
       begin
-        reginfo[reg].live_end:=t;
+        RegInfo[Reg].LiveEnd:=T;
       end;
 
 
-    function TRGObj.get_live_end(reg: TSuperRegister): TAI;
+    function TRGObj.Get_Live_End(Reg: TSuperRegister): TAI;
       begin
-        result:=reginfo[reg].live_end;
+        Result:=RegInfo[Reg].LiveEnd;
       end;
 
 
-    procedure TRGObj.alloc_spillinfo(max_reg: TSuperRegister);
+    procedure TRGObj.Alloc_SpillInfo(AMaxReg: TSuperRegister);
       var
-        j: LongInt;
+        J: LongInt;
       begin
-        if Length(spillinfo)<max_reg then
+        if Length(SpillInfo)<AMaxReg then
           begin
-            j:=Length(spillinfo);
-            SetLength(spillinfo,max_reg);
-            fillchar(spillinfo[j],sizeof(spillinfo[0])*(Length(spillinfo)-j),0);
+            J:=Length(SpillInfo);
+            SetLength(SpillInfo,AMaxReg);
+            FillChar(SpillInfo[J],SizeOf(SpillInfo[0])*(Length(SpillInfo)-J),0);
           end;
       end;
 
 
-    procedure TRGObj.add_reg_instruction(instr:TAI;r:TRegister;aweight:LongInt);
+    procedure TRGObj.Add_Reg_Instruction(Instr:TAI;R:TRegister;AWeight:LongInt);
       var
-        supreg : TSuperRegister;
+        SupReg : TSuperRegister;
       begin
-        supreg:=getsupreg(r);
+        SupReg:=GetSupReg(R);
 {$ifdef extdebug}
         if not (cs_no_regalloc in CurrentSettings.GlobalSwitches) and
-           (supreg>=maxreginfo) then
+           (SupReg>=MaxRegInfo) then
           InternalError(200411061);
 {$endif extdebug}
-        if supreg>=first_imaginary then
-          with reginfo[supreg] do
+        if SupReg>=FirstImaginary then
+          with RegInfo[SupReg] do
             begin
               { avoid overflow }
-              if high(weight)-aweight<weight then
-                weight:=high(weight)
+              if High(Weight)-AWeight<Weight then
+                Weight:=High(Weight)
               else
-                inc(weight,aweight);
+                Inc(Weight,AWeight);
 
-              if (live_range_direction=rad_forward) then
+              if (LiveRangeDirection=rad_forward) then
                 begin
-                  if not Assigned(live_start) then
-                    live_start:=instr;
-                  live_end:=instr;
+                  if not Assigned(LiveStart) then
+                    LiveStart:=Instr;
+                  LiveEnd:=Instr;
                 end
                else
                  begin
-                   if not extended_backwards.IsSet(supreg) then
+                   if not ExtendedBackwards.IsSet(SupReg) then
                      begin
-                       extended_backwards.include(supreg);
-                       live_start := instr;
-                       if not Assigned(live_end) then
+                       ExtendedBackwards.Include(SupReg);
+                       LiveStart := Instr;
+                       if not Assigned(LiveEnd) then
                          begin
-                           backwards_was_first.include(supreg);
-                           live_end := instr;
+                           BackwardsWasFirst.Include(SupReg);
+                           LiveEnd := Instr;
                          end;
                      end
                    else
                      begin
-                       if backwards_was_first.IsSet(supreg) then
-                         live_end := instr;
+                       if BackwardsWasFirst.IsSet(SupReg) then
+                         LiveEnd := Instr;
                      end
                  end
             end;
       end;
 
 
-    procedure TRGObj.add_move_instruction(instr:TAICPU);
+    procedure TRGObj.Add_Move_Instruction(Instr:TAICPU);
 
     {This procedure notifies a certain as a move instruction so the
      register allocator can try to eliminate it.}
 
-    var i:Tmoveins;
-        sreg, dreg : TRegister;
-        ssupreg,dsupreg:TSuperRegister;
+    var I:TMoveIns;
+        SReg, DReg : TRegister;
+        SSupReg,DSupReg:TSuperRegister;
 
     begin
     {$ifdef extdebug}
-      if (instr.oper[O_MOV_SOURCE]^.typ<>top_reg) or
-         (instr.oper[O_MOV_DEST]^.typ<>top_reg) then
+      if (Instr.Oper[O_MOV_SOURCE]^.Typ<>top_reg) or
+         (Instr.Oper[O_MOV_DEST]^.Typ<>top_reg) then
         InternalError(200311291);
     {$endif}
-      sreg:=instr.oper[O_MOV_SOURCE]^.reg;
-      dreg:=instr.oper[O_MOV_DEST]^.reg;
+      SReg:=Instr.Oper[O_MOV_SOURCE]^.Reg;
+      DReg:=Instr.Oper[O_MOV_DEST]^.Reg;
       { How should we handle m68k move %d0,%a0? }
-      if (getregtype(sreg)<>getregtype(dreg)) then
-        exit;
-      if moveins_id_counter=high(moveins_id_counter) then
+      if (GetRegType(SReg)<>GetRegType(DReg)) then
+        Exit;
+      if MoveInsIDCounter=High(MoveInsIDCounter) then
         InternalError(2021112701);
-      inc(moveins_id_counter);
-      i:=Tmoveins.create;
-      i.id:=moveins_id_counter;
-      i.moveset:=ms_worklist_moves;
-      worklist_moves.insert(i);
-      ssupreg:=getsupreg(sreg);
-      add_to_movelist(ssupreg,i);
-      dsupreg:=getsupreg(dreg);
+      Inc(MoveInsIDCounter);
+      I:=TMoveIns.Create;
+      I.ID:=MoveInsIDCounter;
+      I.MoveSet:=ms_worklist_moves;
+      WorkListMoves.Insert(I);
+      SSupReg:=GetSupReg(SReg);
+      Add_To_MoveList(SSupReg,I);
+      DSupReg:=GetSupReg(DReg);
       { On m68k move can mix address and integer registers,
         this leads to problems ... PM }
-      if (ssupreg<>dsupreg) {and (getregtype(sreg)=getregtype(dreg))} then
+      if (SSupReg<>DSupReg) {and (getregtype(sreg)=getregtype(dreg))} then
         {Avoid adding the same move instruction twice to a single register.}
-        add_to_movelist(dsupreg,i);
-      i.x:=ssupreg;
-      i.y:=dsupreg;
+        Add_To_MoveList(DSupReg,I);
+      I.X:=SSupReg;
+      I.Y:=DSupReg;
     end;
 
-    function TRGObj.move_related(n:TSuperRegister):boolean;
+    function TRGObj.Move_Related(N:TSuperRegister):Boolean;
 
-    var i:cardinal;
+    var I:Cardinal;
 
     begin
-      move_related:=false;
-      with reginfo[n] do
-        if movelist<>nil then
-          with movelist^ do
-            for i:=0 to header.count-1 do
-              if Tmoveins(data[i]).moveset in [ms_worklist_moves,ms_active_moves] then
+      Move_Related:=False;
+      with RegInfo[N] do
+        if MoveList<>nil then
+          with MoveList^ do
+            for I:=0 to Header.Count-1 do
+              if TMoveIns(Data[I]).MoveSet in [ms_worklist_moves,ms_active_moves] then
                 begin
-                  move_related:=true;
-                  break;
+                  Move_Related:=True;
+                  Break;
                 end;
     end;
 
-    procedure TRGObj.sort_simplify_worklist;
+    procedure TRGObj.Sort_Simplify_WorkList;
 
     {Sorts the simplifyworklist by the number of interferences the
      registers in it cause. This allows simplify to execute in
@@ -1009,343 +1009,343 @@ unit rgobj;
      and should lead to a better register allocation in some cases.
     }
 
-    var p,h,i,leni,lent:LongWord;
-        t:TSuperRegister;
-        adji,adjt:PSuperRegisterWorkList;
+    var P,H,I,LenI,LenT:LongWord;
+        T:TSuperRegister;
+        Adji,AdjT:PSuperRegisterWorkList;
 
     begin
-      with simplifyworklist do
+      with SimplifyWorkList do
         begin
-          if length<2 then
-            exit;
-          p:=LongWord(1) shl BsrDWord(length-1);
+          if Length<2 then
+            Exit;
+          P:=LongWord(1) shl BsrDWord(Length-1);
           repeat
-            for h:=p to length-1 do
+            for H:=P to Length-1 do
               begin
-                i:=h;
-                t:=buf[i];
-                adjt:=reginfo[buf[i]].adjlist;
-                lent:=0;
-                if adjt<>nil then
-                  lent:=adjt^.length;
+                I:=H;
+                T:=Buf[I];
+                AdjT:=RegInfo[Buf[I]].AdjList;
+                LenT:=0;
+                if AdjT<>nil then
+                  LenT:=AdjT^.Length;
                 repeat
-                  adji:=reginfo[buf[i-p]].adjlist;
-                  leni:=0;
-                  if adji<>nil then
-                    leni:=adji^.length;
-                  if leni>=lent then
-                    break;
-                  buf[i]:=buf[i-p];
-                  dec(i,p)
-                until i<p;
-                buf[i]:=t;
+                  Adji:=RegInfo[Buf[I-P]].AdjList;
+                  LenI:=0;
+                  if Adji<>nil then
+                    LenI:=Adji^.Length;
+                  if LenI>=LenT then
+                    Break;
+                  Buf[I]:=Buf[I-P];
+                  Dec(I,P)
+                until I<P;
+                Buf[I]:=T;
               end;
-            p:=p shr 1;
-          until p=0;
+            P:=P shr 1;
+          until P=0;
         end;
     end;
 
 
     { sort spilled nodes by increasing number of interferences }
-    procedure TRGObj.sort_spillednodes;
+    procedure TRGObj.Sort_SpilledNodes;
       var
-        p,h,i,leni,lent:LongWord;
-        t:TSuperRegister;
-        adji,adjt:PSuperRegisterWorkList;
+        P,H,I,LenI,LenT:LongWord;
+        T:TSuperRegister;
+        Adji,AdjT:PSuperRegisterWorkList;
       begin
-        with spillednodes do
+        with SpilledNodes do
           begin
-            if length<2 then
-              exit;
-            p:=LongWord(1) shl BsrDWord(length-1);
+            if Length<2 then
+              Exit;
+            P:=LongWord(1) shl BsrDWord(Length-1);
             repeat
-              for h:=p to length-1 do
+              for H:=P to Length-1 do
                 begin
-                  i:=h;
-                  t:=buf[i];
-                  adjt:=reginfo[buf[i]].adjlist;
-                  lent:=0;
-                  if adjt<>nil then
-                    lent:=adjt^.length;
+                  I:=H;
+                  T:=Buf[I];
+                  AdjT:=RegInfo[Buf[I]].AdjList;
+                  LenT:=0;
+                  if AdjT<>nil then
+                    LenT:=AdjT^.Length;
                   repeat
-                    adji:=reginfo[buf[i-p]].adjlist;
-                    leni:=0;
-                    if adji<>nil then
-                      leni:=adji^.length;
-                    if leni<=lent then
-                      break;
-                    buf[i]:=buf[i-p];
-                    dec(i,p)
-                  until i<p;
-                  buf[i]:=t;
+                    Adji:=RegInfo[Buf[I-P]].AdjList;
+                    LenI:=0;
+                    if Adji<>nil then
+                      LenI:=Adji^.Length;
+                    if LenI<=LenT then
+                      Break;
+                    Buf[I]:=Buf[I-P];
+                    Dec(I,P)
+                  until I<P;
+                  Buf[I]:=T;
                 end;
-              p:=p shr 1;
-            until p=0;
+              P:=P shr 1;
+            until P=0;
           end;
       end;
 
 
-    procedure TRGObj.make_work_list;
+    procedure TRGObj.Make_Work_List;
 
-    var n:cardinal;
+    var N:Cardinal;
 
     begin
       {If we have 7 cpu registers, and the degree of a node >= 7, we cannot
        assign it to any of the registers, thus it is significant.}
-      for n:=first_imaginary to maxreg-1 do
-        with reginfo[n] do
+      for N:=FirstImaginary to MaxReg-1 do
+        with RegInfo[N] do
           begin
-            if adjlist=nil then
-              degree:=0
+            if AdjList=nil then
+              Degree:=0
             else
-              degree:=adjlist^.length;
-            if degree>=usable_registers_cnt then
-              spillworklist.add(n)
-            else if move_related(n) then
-              freezeworklist.add(n)
-            else if not(ri_coalesced in flags) then
-              simplifyworklist.add(n);
+              Degree:=AdjList^.Length;
+            if Degree>=UsableRegistersCount then
+              SpillWorkList.Add(N)
+            else if Move_Related(N) then
+              FreezeWorkList.Add(N)
+            else if not(ri_coalesced in Flags) then
+              SimplifyWorkList.Add(N);
           end;
-      sort_simplify_worklist;
+      Sort_Simplify_WorkList;
     end;
 
 
-    procedure TRGObj.prepare_colouring;
+    procedure TRGObj.Prepare_Colouring;
     begin
-      make_work_list;
-      active_moves:=TLinkedList.create;
-      frozen_moves:=TLinkedList.create;
-      coalesced_moves:=TLinkedList.create;
-      constrained_moves:=TLinkedList.create;
-      selectstack.clear;
+      Make_Work_List;
+      ActiveMoves:=TLinkedList.Create;
+      FrozenMoves:=TLinkedList.Create;
+      CoalescedMoves:=TLinkedList.Create;
+      ConstrainedMoves:=TLinkedList.Create;
+      SelectStack.Clear;
     end;
 
-    procedure TRGObj.enable_moves(n:TSuperRegister);
+    procedure TRGObj.Enable_Moves(N:TSuperRegister);
 
-    var m:TLinkedListItem;
-        i:cardinal;
+    var M:TLinkedListItem;
+        I:Cardinal;
 
     begin
-      with reginfo[n] do
-        if movelist<>nil then
-          for i:=0 to movelist^.header.count-1 do
+      with RegInfo[N] do
+        if MoveList<>nil then
+          for I:=0 to MoveList^.Header.Count-1 do
             begin
-              m:=movelist^.data[i];
-              if Tmoveins(m).moveset=ms_active_moves then
+              M:=MoveList^.Data[I];
+              if TMoveIns(M).MoveSet=ms_active_moves then
                 begin
                   {Move m from the set active_moves to the set worklist_moves.}
-                  active_moves.remove(m);
-                  Tmoveins(m).moveset:=ms_worklist_moves;
-                  worklist_moves.concat(m);
+                  ActiveMoves.Remove(M);
+                  TMoveIns(M).MoveSet:=ms_worklist_moves;
+                  WorkListMoves.Concat(M);
                 end;
           end;
     end;
 
-    procedure TRGObj.decrement_degree(m:TSuperRegister);
+    procedure TRGObj.Decrement_Degree(M:TSuperRegister);
 
-    var adj : PSuperRegisterWorkList;
-        n : TSuperRegister;
-        d,i : cardinal;
+    var Adj : PSuperRegisterWorkList;
+        N : TSuperRegister;
+        D,I : Cardinal;
 
     begin
-      with reginfo[m] do
+      with RegInfo[M] do
         begin
-          d:=degree;
-          if d=0 then
+          D:=Degree;
+          if D=0 then
             InternalError(200312151);
-          dec(degree);
-          if d=usable_registers_cnt then
+          Dec(Degree);
+          if D=UsableRegistersCount then
             begin
               {Enable moves for m.}
-              enable_moves(m);
+              Enable_Moves(M);
               {Enable moves for adjacent.}
-              adj:=adjlist;
-              if adj<>nil then
-                for i:=1 to adj^.length do
+              Adj:=AdjList;
+              if Adj<>nil then
+                for I:=1 to Adj^.Length do
                   begin
-                    n:=adj^.buf[i-1];
-                    if reginfo[n].flags*[ri_selected,ri_coalesced]<>[] then
-                      enable_moves(n);
+                    N:=Adj^.Buf[I-1];
+                    if RegInfo[N].Flags*[ri_selected,ri_coalesced]<>[] then
+                      Enable_Moves(N);
                   end;
               {Remove the node from the spillworklist.}
-              if not spillworklist.delete(m) then
+              if not SpillWorkList.Delete(M) then
                 InternalError(200310145);
 
-              if move_related(m) then
-                freezeworklist.add(m)
+              if Move_Related(M) then
+                FreezeWorkList.Add(M)
               else
-                simplifyworklist.add(m);
+                SimplifyWorkList.Add(M);
             end;
         end;
     end;
 
-    procedure TRGObj.simplify;
+    procedure TRGObj.Simplify;
 
-    var adj : PSuperRegisterWorkList;
-        m,n : TSuperRegister;
-        i : cardinal;
+    var Adj : PSuperRegisterWorkList;
+        M,N : TSuperRegister;
+        I : Cardinal;
     begin
       {We take the element with the least interferences out of the
        simplifyworklist. Since the simplifyworklist is now sorted, we
        no longer need to search, but we can simply take the first element.}
-      m:=simplifyworklist.get;
+      M:=SimplifyWorkList.Get;
 
       {Push it on the selectstack.}
-      selectstack.add(m);
-      with reginfo[m] do
+      SelectStack.Add(M);
+      with RegInfo[M] do
         begin
-          include(flags,ri_selected);
-          adj:=adjlist;
+          Include(Flags,ri_selected);
+          Adj:=AdjList;
         end;
-      if adj<>nil then
-        for i:=1 to adj^.length do
+      if Adj<>nil then
+        for I:=1 to Adj^.Length do
           begin
-            n:=adj^.buf[i-1];
-            if (n>=first_imaginary) and
-               (reginfo[n].flags*[ri_selected,ri_coalesced]=[]) then
-              decrement_degree(n);
+            N:=Adj^.Buf[I-1];
+            if (N>=FirstImaginary) and
+               (RegInfo[N].Flags*[ri_selected,ri_coalesced]=[]) then
+              Decrement_Degree(N);
           end;
     end;
 
-    function TRGObj.get_alias(n:TSuperRegister):TSuperRegister;
+    function TRGObj.Get_Alias(N:TSuperRegister):TSuperRegister;
 
     begin
-      if n>=maxreg then
+      if N>=MaxReg then
         InternalError(2021121201);
-      while ri_coalesced in reginfo[n].flags do
-        n:=reginfo[n].alias;
-      get_alias:=n;
+      while ri_coalesced in RegInfo[N].Flags do
+        N:=RegInfo[N].Alias;
+      Get_Alias:=N;
     end;
 
-    procedure TRGObj.add_worklist(u:TSuperRegister);
+    procedure TRGObj.Add_WorkList(U:TSuperRegister);
       begin
-        if (u>=first_imaginary) and
-           (not move_related(u)) and
-           (reginfo[u].degree<usable_registers_cnt) then
+        if (U>=FirstImaginary) and
+           (not Move_Related(U)) and
+           (RegInfo[U].Degree<UsableRegistersCount) then
           begin
-            if not freezeworklist.delete(u) then
+            if not FreezeWorkList.Delete(U) then
               InternalError(200308161); {must be found}
-            simplifyworklist.add(u);
+            SimplifyWorkList.Add(U);
           end;
       end;
 
 
-    function TRGObj.adjacent_ok(u,v:TSuperRegister):boolean;
+    function TRGObj.Adjacent_Ok(U,V:TSuperRegister):Boolean;
 
     {Check wether u and v should be coalesced. u is precoloured.}
 
-      function ok(t,r:TSuperRegister):boolean;
+      function Ok(T,R:TSuperRegister):Boolean;
 
       begin
-        ok:=(t<first_imaginary) or
-            (reginfo[t].degree<usable_registers_cnt) or
-            ibitmap[r,t];
+        Ok:=(T<FirstImaginary) or
+            (RegInfo[T].Degree<UsableRegistersCount) or
+            IBitmap[R,T];
       end;
 
-    var adj : PSuperRegisterWorkList;
-        i : cardinal;
-        n : TSuperRegister;
+    var Adj : PSuperRegisterWorkList;
+        I : Cardinal;
+        N : TSuperRegister;
 
     begin
-      with reginfo[v] do
+      with RegInfo[V] do
         begin
-          adjacent_ok:=true;
-          adj:=adjlist;
-          if adj<>nil then
-            for i:=1 to adj^.length do
+          Adjacent_Ok:=True;
+          Adj:=AdjList;
+          if Adj<>nil then
+            for I:=1 to Adj^.Length do
               begin
-                n:=adj^.buf[i-1];
-                if (reginfo[n].flags*[ri_coalesced]=[]) and not ok(n,u) then
+                N:=Adj^.Buf[I-1];
+                if (RegInfo[N].Flags*[ri_coalesced]=[]) and not Ok(N,U) then
                   begin
-                    adjacent_ok:=false;
-                    break;
+                    Adjacent_Ok:=False;
+                    Break;
                   end;
               end;
         end;
     end;
 
-    function TRGObj.conservative(u,v:TSuperRegister):boolean;
+    function TRGObj.Conservative(U,V:TSuperRegister):Boolean;
 
-    var adj : PSuperRegisterWorkList;
-        done : TSuperRegisterSet; {To prevent that we count nodes twice.}
-        i,k:cardinal;
-        n : TSuperRegister;
+    var Adj : PSuperRegisterWorkList;
+        Done : TSuperRegisterSet; {To prevent that we count nodes twice.}
+        I,K:Cardinal;
+        N : TSuperRegister;
 
     begin
-      k:=0;
-      supregset_reset(done,false,maxreg);
-      with reginfo[u] do
+      K:=0;
+      SupRegSet_Reset(Done,False,MaxReg);
+      with RegInfo[U] do
         begin
-          adj:=adjlist;
-          if adj<>nil then
-            for i:=1 to adj^.length do
+          Adj:=AdjList;
+          if Adj<>nil then
+            for I:=1 to Adj^.Length do
               begin
-                n:=adj^.buf[i-1];
-                if reginfo[n].flags*[ri_coalesced,ri_selected]=[] then
+                N:=Adj^.Buf[I-1];
+                if RegInfo[N].Flags*[ri_coalesced,ri_selected]=[] then
                   begin
-                    supregset_include(done,n);
-                    if reginfo[n].degree>=usable_registers_cnt then
-                      inc(k);
+                    SupRegSet_Include(Done,N);
+                    if RegInfo[N].Degree>=UsableRegistersCount then
+                      Inc(K);
                   end;
               end;
         end;
-      adj:=reginfo[v].adjlist;
-      if adj<>nil then
-        for i:=1 to adj^.length do
+      Adj:=RegInfo[V].AdjList;
+      if Adj<>nil then
+        for I:=1 to Adj^.Length do
           begin
-            n:=adj^.buf[i-1];
-            if (u<first_imaginary) and
-               (n>=first_imaginary) and
-               not ibitmap[u,n] and
-               (usable_registers_cnt-reginfo[n].real_reg_interferences<=1) then
+            N:=Adj^.Buf[I-1];
+            if (U<FirstImaginary) and
+               (N>=FirstImaginary) and
+               not IBitmap[U,N] and
+               (UsableRegistersCount-RegInfo[N].RealRegInterferences<=1) then
               begin
                 { Do not coalesce if 'u' is the last usable real register available
                   for imaginary register 'n'. }
-                conservative:=false;
-                exit;
+                Conservative:=False;
+                Exit;
               end;
-            if not supregset_in(done,n) and
-               (reginfo[n].degree>=usable_registers_cnt) and
-               (reginfo[n].flags*[ri_coalesced,ri_selected]=[]) then
-              inc(k);
+            if not SupRegSet_In(Done,N) and
+               (RegInfo[N].Degree>=UsableRegistersCount) and
+               (RegInfo[N].Flags*[ri_coalesced,ri_selected]=[]) then
+              Inc(K);
           end;
-      conservative:=(k<usable_registers_cnt);
+      Conservative:=(K<UsableRegistersCount);
     end;
 
-    procedure TRGObj.set_alias(u,v:TSuperRegister);
+    procedure TRGObj.Set_Alias(U,V:TSuperRegister);
 
     begin
       { don't make registers that the register allocator shouldn't touch (such
         as stack and frame pointers) be aliases for other registers, because
         then it can propagate them and even start changing them if the aliased
         register gets changed }
-      if ((u<first_imaginary) and
-          not(u in usable_register_set)) or
-         ((v<first_imaginary) and
-          not(v in usable_register_set)) then
-        exit;
-      include(reginfo[v].flags,ri_coalesced);
-      if reginfo[v].alias<>0 then
+      if ((U<FirstImaginary) and
+          not(U in UsableRegisterSet)) or
+         ((V<FirstImaginary) and
+          not(V in UsableRegisterSet)) then
+        Exit;
+      Include(RegInfo[V].Flags,ri_coalesced);
+      if RegInfo[V].Alias<>0 then
         InternalError(200712291);
-      reginfo[v].alias:=get_alias(u);
-      coalescednodes.add(v);
+      RegInfo[V].Alias:=Get_Alias(U);
+      CoalescedNodes.Add(V);
     end;
 
 
-    procedure TRGObj.combine(u,v:TSuperRegister);
+    procedure TRGObj.Combine(U,V:TSuperRegister);
 
-    var adj : PSuperRegisterWorkList;
-        original_u_count, i,n,p,q:cardinal;
-        t : TSuperRegister;
-        searched:Tmoveins;
-        found : boolean;
+    var Adj : PSuperRegisterWorkList;
+        OriginalUCount, I,N,P,Q:Cardinal;
+        T : TSuperRegister;
+        Searched:TMoveIns;
+        Found : Boolean;
 
     begin
-      if not freezeworklist.delete(v) then
-        spillworklist.delete(v);
-      coalescednodes.add(v);
-      include(reginfo[v].flags,ri_coalesced);
-      reginfo[v].alias:=u;
+      if not FreezeWorkList.Delete(V) then
+        SpillWorkList.Delete(V);
+      CoalescedNodes.Add(V);
+      Include(RegInfo[V].Flags,ri_coalesced);
+      RegInfo[V].Alias:=U;
 
       {Combine both movelists. Since the movelists are sets, only add
        elements that are not already present. The movelists cannot be
@@ -1362,214 +1362,214 @@ unit rgobj;
        items at a time. Therefore, we split the movelist into a sorted
        and an unsorted part and search through both. If the unsorted part
        becomes too large, we sort.}
-      if Assigned(reginfo[u].movelist) then
+      if Assigned(RegInfo[U].MoveList) then
         begin
           {We have to weigh the cost of sorting the list against searching
            the cost of the unsorted part. I use factor of 8 here; if the
            number of items is less than 8 times the numer of unsorted items,
            we'll sort the list.}
-          with reginfo[u].movelist^ do
-            if header.count<8*(header.count-header.sorted_until) then
-              sort_movelist(reginfo[u].movelist);
-          if Assigned(reginfo[v].movelist) then
+          with RegInfo[U].MoveList^ do
+            if Header.Count<8*(Header.Count-Header.SortedUntil) then
+              SortMoveList(RegInfo[U].MoveList);
+          if Assigned(RegInfo[V].MoveList) then
             begin
-              original_u_count:=reginfo[u].movelist^.header.count;
-              for n:=0 to reginfo[v].movelist^.header.count-1 do
+              OriginalUCount:=RegInfo[U].MoveList^.Header.Count;
+              for N:=0 to RegInfo[V].MoveList^.Header.Count-1 do
                 begin
                   {Binary search the sorted part of the list.}
-                  searched:=reginfo[v].movelist^.data[n];
-                  p:=0;
-                  q:=reginfo[u].movelist^.header.sorted_until;
-                  i:=0;
-                  if q<>0 then
+                  Searched:=RegInfo[V].MoveList^.Data[N];
+                  P:=0;
+                  Q:=RegInfo[U].MoveList^.Header.SortedUntil;
+                  I:=0;
+                  if Q<>0 then
                     repeat
-                      i:=(p+q) shr 1;
-                      if searched.id>reginfo[u].movelist^.data[i].id then
-                        p:=i+1
+                      I:=(P+Q) shr 1;
+                      if Searched.ID>RegInfo[U].MoveList^.Data[I].ID then
+                        P:=I+1
                       else
-                        q:=i;
-                    until p=q;
-                  with reginfo[u].movelist^ do
-                    if searched<>data[i] then
+                        Q:=I;
+                    until P=Q;
+                  with RegInfo[U].MoveList^ do
+                    if Searched<>Data[I] then
                       begin
                         {Linear search the unsorted part of the list.}
-                        found:=false;
+                        Found:=False;
                         { no need to search the instructions we've already added
                           from v, we know we won't find a match there }
-                        for i:=header.sorted_until+1 to original_u_count-1 do
-                          if searched.id=data[i].id then
+                        for I:=Header.SortedUntil+1 to OriginalUCount-1 do
+                          if Searched.ID=Data[I].ID then
                             begin
-                              found:=true;
-                              break;
+                              Found:=True;
+                              Break;
                             end;
-                        if not found then
-                          add_to_movelist(u,searched);
+                        if not Found then
+                          Add_To_MoveList(U,Searched);
                       end;
                 end;
             end;
         end;
 
-      enable_moves(v);
+      Enable_Moves(V);
 
-      adj:=reginfo[v].adjlist;
-      if adj<>nil then
-        for i:=1 to adj^.length do
+      Adj:=RegInfo[V].AdjList;
+      if Adj<>nil then
+        for I:=1 to Adj^.Length do
           begin
-            t:=adj^.buf[i-1];
-            with reginfo[t] do
-              if not(ri_coalesced in flags) then
+            T:=Adj^.Buf[I-1];
+            with RegInfo[T] do
+              if not(ri_coalesced in Flags) then
                 begin
                   {t has a connection to v. Since we are adding v to u, we
                    need to connect t to u. However, beware if t was already
                    connected to u...}
-                  if (ibitmap[t,u]) and not (ri_selected in flags) then
+                  if (IBitmap[T,U]) and not (ri_selected in Flags) then
                     begin
                       {... because in that case, we are actually removing an edge
                        and the degree of t decreases.}
-                      decrement_degree(t);
+                      Decrement_Degree(T);
                       { if v is combined with a real register, retry
                         coalescing of interfering nodes since it may succeed now. }
-                      if (u<first_imaginary) and
-                         (adj^.length>=usable_registers_cnt) and
-                         (reginfo[t].degree>usable_registers_cnt) then
-                        enable_moves(t);
+                      if (U<FirstImaginary) and
+                         (Adj^.Length>=UsableRegistersCount) and
+                         (RegInfo[T].Degree>UsableRegistersCount) then
+                        Enable_Moves(T);
                     end
                   else
                     begin
-                      add_edge(t,u);
+                      Add_Edge(T,U);
                       {We have added an edge to t and u. So their degree increases.
                        However, v is added to u. That means its neighbours will
                        no longer point to v, but to u instead. Therefore, only the
                        degree of u increases.}
-                      if (u>=first_imaginary) and not (ri_selected in flags) then
-                        inc(reginfo[u].degree);
+                      if (U>=FirstImaginary) and not (ri_selected in Flags) then
+                        Inc(RegInfo[U].Degree);
                     end;
                 end;
           end;
-      if (reginfo[u].degree>=usable_registers_cnt) and freezeworklist.delete(u) then
-        spillworklist.add(u);
+      if (RegInfo[U].Degree>=UsableRegistersCount) and FreezeWorkList.Delete(U) then
+        SpillWorkList.Add(U);
     end;
 
 
-    procedure TRGObj.coalesce;
+    procedure TRGObj.Coalesce;
 
-    var m:Tmoveins;
-        x,y,u,v:cardinal;
+    var M:TMoveIns;
+        X,Y,U,V:Cardinal;
 
     begin
-      m:=Tmoveins(worklist_moves.GetFirst);
-      x:=get_alias(m.x);
-      y:=get_alias(m.y);
-      if (y<first_imaginary) then
+      M:=TMoveIns(WorkListMoves.GetFirst);
+      X:=Get_Alias(M.X);
+      Y:=Get_Alias(M.Y);
+      if (Y<FirstImaginary) then
         begin
-          u:=y;
-          v:=x;
+          U:=Y;
+          V:=X;
         end
       else
         begin
-          u:=x;
-          v:=y;
+          U:=X;
+          V:=Y;
         end;
-      if (u=v) then
+      if (U=V) then
         begin
-          m.moveset:=ms_coalesced_moves;  {Already coalesced.}
-          coalesced_moves.insert(m);
-          add_worklist(u);
+          M.MoveSet:=ms_coalesced_moves;  {Already coalesced.}
+          CoalescedMoves.Insert(M);
+          Add_WorkList(U);
         end
       {Do u and v interfere? In that case the move is constrained. Two
        precoloured nodes interfere always. If v is precoloured, by the above
        code u is precoloured, thus interference...}
-      else if (v<first_imaginary) or ibitmap[u,v] then
+      else if (V<FirstImaginary) or IBitmap[U,V] then
         begin
-          m.moveset:=ms_constrained_moves;  {Cannot coalesce yet...}
-          constrained_moves.insert(m);
-          add_worklist(u);
-          add_worklist(v);
+          M.MoveSet:=ms_constrained_moves;  {Cannot coalesce yet...}
+          ConstrainedMoves.Insert(M);
+          Add_WorkList(U);
+          Add_WorkList(V);
         end
       {Next test: is it possible and a good idea to coalesce?? Note: don't
        coalesce registers that should not be touched by the register allocator,
        such as stack/framepointers, because otherwise they can be changed }
-      else if (((u<first_imaginary) and adjacent_ok(u,v)) or
-               conservative(u,v)) and
-              ((u>=first_imaginary) or
-               (u in usable_register_set)) and
-              ((v>=first_imaginary) or
-               (v in usable_register_set)) then
+      else if (((U<FirstImaginary) and Adjacent_Ok(U,V)) or
+               Conservative(U,V)) and
+              ((U>=FirstImaginary) or
+               (U in UsableRegisterSet)) and
+              ((V>=FirstImaginary) or
+               (V in UsableRegisterSet)) then
         begin
-          m.moveset:=ms_coalesced_moves;  {Move coalesced!}
-          coalesced_moves.insert(m);
-          combine(u,v);
-          add_worklist(u);
+          M.MoveSet:=ms_coalesced_moves;  {Move coalesced!}
+          CoalescedMoves.Insert(M);
+          Combine(U,V);
+          Add_WorkList(U);
         end
       else
         begin
-          m.moveset:=ms_active_moves;
-          active_moves.insert(m);
+          M.MoveSet:=ms_active_moves;
+          ActiveMoves.Insert(M);
         end;
     end;
 
-    procedure TRGObj.freeze_moves(u:TSuperRegister);
+    procedure TRGObj.Freeze_Moves(U:TSuperRegister);
 
-    var i:cardinal;
-        m:TLinkedListItem;
-        v,x,y:TSuperRegister;
+    var I:Cardinal;
+        M:TLinkedListItem;
+        V,X,Y:TSuperRegister;
 
     begin
-      if reginfo[u].movelist<>nil then
-        for i:=0 to reginfo[u].movelist^.header.count-1 do
+      if RegInfo[U].MoveList<>nil then
+        for I:=0 to RegInfo[U].MoveList^.Header.Count-1 do
           begin
-            m:=reginfo[u].movelist^.data[i];
-            if Tmoveins(m).moveset in [ms_worklist_moves,ms_active_moves] then
+            M:=RegInfo[U].MoveList^.Data[I];
+            if TMoveIns(M).MoveSet in [ms_worklist_moves,ms_active_moves] then
               begin
-                x:=Tmoveins(m).x;
-                y:=Tmoveins(m).y;
-                if get_alias(y)=get_alias(u) then
-                  v:=get_alias(x)
+                X:=TMoveIns(M).X;
+                Y:=TMoveIns(M).Y;
+                if Get_Alias(Y)=Get_Alias(U) then
+                  V:=Get_Alias(X)
                 else
-                  v:=get_alias(y);
+                  V:=Get_Alias(Y);
                 {Move m from active_moves/worklist_moves to frozen_moves.}
-                if Tmoveins(m).moveset=ms_active_moves then
-                  active_moves.remove(m)
+                if TMoveIns(M).MoveSet=ms_active_moves then
+                  ActiveMoves.Remove(M)
                 else
-                  worklist_moves.remove(m);
-                Tmoveins(m).moveset:=ms_frozen_moves;
-                frozen_moves.insert(m);
+                  WorkListMoves.Remove(M);
+                TMoveIns(M).MoveSet:=ms_frozen_moves;
+                FrozenMoves.Insert(M);
 
-                if (v>=first_imaginary) and not(move_related(v)) and
-                   (reginfo[v].degree<usable_registers_cnt) then
+                if (V>=FirstImaginary) and not(Move_Related(V)) and
+                   (RegInfo[V].Degree<UsableRegistersCount) then
                   begin
-                    freezeworklist.delete(v);
-                    simplifyworklist.add(v);
+                    FreezeWorkList.Delete(V);
+                    SimplifyWorkList.Add(V);
                   end;
               end;
           end;
     end;
 
-    procedure TRGObj.freeze;
+    procedure TRGObj.Freeze;
 
-    var n:TSuperRegister;
+    var N:TSuperRegister;
 
     begin
       { We need to take a random element out of the freezeworklist. We take
         the last element. Dirty code! }
-      n:=freezeworklist.get;
+      N:=FreezeWorkList.Get;
       {Add it to the simplifyworklist.}
-      simplifyworklist.add(n);
-      freeze_moves(n);
+      SimplifyWorkList.Add(N);
+      Freeze_Moves(N);
     end;
 
 { $define SPILLING_NEW}
 {$ifndef SPILLING_NEW}
 {$define SPILLING_OLD}
 {$endif SPILLING_NEW}
-    procedure TRGObj.select_spill;
+    procedure TRGObj.Select_Spill;
     var
-      n : TSuperRegister;
-      adj : PSuperRegisterWorkList;
-      maxlength,minlength,p,i :word;
-      minweight: LongInt;
+      N : TSuperRegister;
+      Adj : PSuperRegisterWorkList;
+      MaxLength,MinLength,P,I :Word;
+      MinWeight: LongInt;
       {$ifdef SPILLING_NEW}
-      dist: Double;
+      Dist: Double;
       {$endif}
     begin
 {$ifdef SPILLING_NEW}
@@ -1597,26 +1597,26 @@ unit rgobj;
         spilling reg1 is a step toward solving the coloring problem as the registers used during spilling will have a lower degree
         as no register are in use at the location where reg1 is spilled.
       }
-      minweight:=high(LongInt);
-      p:=0;
-      with spillworklist do
+      MinWeight:=High(LongInt);
+      P:=0;
+      with SpillWorkList do
         begin
           { Safe: This procedure is only called if length<>0 }
-          for i:=0 to length-1 do
+          for I:=0 to Length-1 do
             begin
-              adj:=reginfo[buf^[i]].adjlist;
-              dist:=adj^.length-reginfo[buf^[i]].total_interferences/reginfo[buf^[i]].count_uses;
-              if Assigned(adj) and
-                (reginfo[buf^[i]].weight<minweight) and
-                (dist>=1) and
-                (reginfo[buf^[i]].weight>0) then
+              Adj:=RegInfo[Buf^[I]].AdjList;
+              Dist:=Adj^.Length-RegInfo[Buf^[I]].TotalInterferences/RegInfo[Buf^[I]].CountUses;
+              if Assigned(Adj) and
+                (RegInfo[Buf^[I]].Weight<MinWeight) and
+                (Dist>=1) and
+                (RegInfo[Buf^[I]].Weight>0) then
                 begin
-                  p:=i;
-                  minweight:=reginfo[buf^[i]].weight;
+                  P:=I;
+                  MinWeight:=RegInfo[Buf^[I]].Weight;
                 end;
             end;
-          n:=buf^[p];
-          deleteidx(p);
+          N:=Buf^[P];
+          DeleteIdx(P);
         end;
 {$endif SPILLING_NEW}
 {$ifdef SPILLING_OLD}
@@ -1632,30 +1632,30 @@ unit rgobj;
         We need to avoid another spilling of ri_spill_helper nodes, since it will
         likely lead to an endless loop and the register allocation will fail.
       }
-      maxlength:=0;
-      minweight:=high(LongInt);
-      p:=high(p);
-      with spillworklist do
+      MaxLength:=0;
+      MinWeight:=High(LongInt);
+      P:=High(P);
+      with SpillWorkList do
         begin
           {Safe: This procedure is only called if length<>0}
           { Search for a candidate to be spilled, ignoring nodes with the ri_spill_helper flag set. }
-          for i:=0 to length-1 do
-            if not(ri_spill_helper in reginfo[buf[i]].flags) then
+          for I:=0 to Length-1 do
+            if not(ri_spill_helper in RegInfo[Buf[I]].Flags) then
               begin
-                adj:=reginfo[buf[i]].adjlist;
-                if Assigned(adj) and
+                Adj:=RegInfo[Buf[I]].AdjList;
+                if Assigned(Adj) and
                    (
-                    (adj^.length>maxlength) or
-                    ((adj^.length=maxlength) and (reginfo[buf[i]].weight<minweight))
+                    (Adj^.Length>MaxLength) or
+                    ((Adj^.Length=MaxLength) and (RegInfo[Buf[I]].Weight<MinWeight))
                    ) then
                   begin
-                    p:=i;
-                    maxlength:=adj^.length;
-                    minweight:=reginfo[buf[i]].weight;
+                    P:=I;
+                    MaxLength:=Adj^.Length;
+                    MinWeight:=RegInfo[Buf[I]].Weight;
                   end;
               end;
 
-          if p=high(p) then
+          if P=High(P) then
             begin
               { If no normal nodes found, then only ri_spill_helper nodes are present
                 in the list. Finding the node with the least interferences and
@@ -1664,303 +1664,303 @@ unit rgobj;
                 to the top of selectstack so they will be the first to get
                 a color assigned.
               }
-              minlength:=high(maxlength);
-              minweight:=high(minweight);
-              p:=0;
-              for i:=0 to length-1 do
+              MinLength:=High(MaxLength);
+              MinWeight:=High(MinWeight);
+              P:=0;
+              for I:=0 to Length-1 do
                 begin
-                  adj:=reginfo[buf[i]].adjlist;
-                  if Assigned(adj) and
+                  Adj:=RegInfo[Buf[I]].AdjList;
+                  if Assigned(Adj) and
                      (
-                      (adj^.length<minlength) or
-                      ((adj^.length=minlength) and (reginfo[buf[i]].weight<minweight))
+                      (Adj^.Length<MinLength) or
+                      ((Adj^.Length=MinLength) and (RegInfo[Buf[I]].Weight<MinWeight))
                      ) then
                     begin
-                      p:=i;
-                      minlength:=adj^.length;
-                      minweight:=reginfo[buf[i]].weight;
+                      P:=I;
+                      MinLength:=Adj^.Length;
+                      MinWeight:=RegInfo[Buf[I]].Weight;
                     end;
                 end;
             end;
-          n:=buf[p];
-          deleteidx(p);
+          N:=Buf[P];
+          DeleteIdx(P);
         end;
 {$endif SPILLING_OLD}
-      simplifyworklist.add(n);
-      freeze_moves(n);
+      SimplifyWorkList.Add(N);
+      Freeze_Moves(N);
     end;
 
-    procedure TRGObj.assign_colours;
+    procedure TRGObj.Assign_Colours;
 
     {Assign_colours assigns the actual colours to the registers.}
 
     var
-      colourednodes : TSuperRegisterSet;
+      ColouredNodes : TSuperRegisterSet;
 
-      procedure reset_colours;
+      procedure Reset_Colours;
         var
-          n : TSuperRegister;
+          N : TSuperRegister;
         begin
-          spillednodes.clear;
+          SpilledNodes.Clear;
           {Reset colours}
-          for n:=0 to maxreg-1 do
-            reginfo[n].colour:=n;
+          for N:=0 to MaxReg-1 do
+            RegInfo[N].Colour:=N;
           {Colour the cpu registers...}
-          supregset_reset(colourednodes,false,maxreg);
-          for n:=0 to first_imaginary-1 do
-            supregset_include(colourednodes,n);
+          SupRegSet_Reset(ColouredNodes,False,MaxReg);
+          for N:=0 to FirstImaginary-1 do
+            SupRegSet_Include(ColouredNodes,N);
         end;
 
-    function colour_register(n : TSuperRegister) : boolean;
+    function Colour_Register(N : TSuperRegister) : Boolean;
       var
-        j,k : cardinal;
-        adj : PSuperRegisterWorkList;
-        adj_colours:set of 0..255;
-        a,c : TSuperRegister;
-        tmpr: TRegister;
+        J,K : Cardinal;
+        Adj : PSuperRegisterWorkList;
+        AdjColours:set of 0..255;
+        A,C : TSuperRegister;
+        TmpR: TRegister;
       begin
         {Create a list of colours that we cannot assign to n.}
-        adj_colours:=[];
-        adj:=reginfo[n].adjlist;
-        if adj<>nil then
-          for j:=0 to adj^.length-1 do
+        AdjColours:=[];
+        Adj:=RegInfo[N].AdjList;
+        if Adj<>nil then
+          for J:=0 to Adj^.Length-1 do
             begin
-              a:=get_alias(adj^.buf[j]);
-              if supregset_in(colourednodes,a) and (reginfo[a].colour<=255) then
-                include(adj_colours,reginfo[a].colour);
+              A:=Get_Alias(Adj^.Buf[J]);
+              if SupRegSet_In(ColouredNodes,A) and (RegInfo[A].Colour<=255) then
+                Include(AdjColours,RegInfo[A].Colour);
             end;
         { FIXME: temp variable r is needed here to avoid Internal error 20060521 }
         {        while compiling the compiler. }
-        tmpr:=NR_STACK_POINTER_REG;
-        if (regtype=getregtype(tmpr)) then
-          include(adj_colours,RS_STACK_POINTER_REG);
+        TmpR:=NR_STACK_POINTER_REG;
+        if (RegType=GetRegType(TmpR)) then
+          Include(AdjColours,RS_STACK_POINTER_REG);
         {Assume a spill by default...}
-        result:=false;
+        Result:=False;
         {Search for a colour not in this list.}
-        for k:=0 to usable_registers_cnt-1 do
+        for K:=0 to UsableRegistersCount-1 do
           begin
-            c:=usable_registers[k];
-            if not(c in adj_colours) then
+            C:=UsableRegisters[K];
+            if not(C in AdjColours) then
               begin
-                reginfo[n].colour:=c;
-                result:=true;
-                supregset_include(colourednodes,n);
-                break;
+                RegInfo[N].Colour:=C;
+                Result:=True;
+                SupRegSet_Include(ColouredNodes,N);
+                Break;
               end;
           end;
-        if not result then
-          spillednodes.add(n);
+        if not Result then
+          SpilledNodes.Add(N);
       end;
 
     var
-        i,k : cardinal;
-        n : TSuperRegister;
-        spill_loop : boolean;
+        I,K : Cardinal;
+        N : TSuperRegister;
+        SpillLoop : Boolean;
     begin
-      reset_colours;
+      Reset_Colours;
       {Now colour the imaginary registers on the select-stack.}
-      spill_loop:=false;
-      for i:=selectstack.length downto 1 do
+      SpillLoop:=False;
+      for I:=SelectStack.Length downto 1 do
         begin
-          n:=selectstack.buf[i-1];
-          if not colour_register(n) and
-            (ri_spill_helper in reginfo[n].flags) then
+          N:=SelectStack.Buf[I-1];
+          if not Colour_Register(N) and
+            (ri_spill_helper in RegInfo[N].Flags) then
             begin
               { Register n is a helper register which holds the value
                 of a previously spilled register. Register n must never
                 be spilled. Report the spilling loop and break. }
-              spill_loop:=true;
-              break;
+              SpillLoop:=True;
+              Break;
             end;
         end;
 
-      if spill_loop then
+      if SpillLoop then
         begin
           { Spilling loop is detected when colouring registers using the select-stack order.
             Trying to eliminate this by using a different colouring order. }
-          reset_colours;
+          Reset_Colours;
           { To prevent spilling of helper registers it is needed to assign colours to them first. }
-          for i:=selectstack.length downto 1 do
+          for I:=SelectStack.Length downto 1 do
             begin
-              n:=selectstack.buf[i-1];
-              if ri_spill_helper in reginfo[n].flags then
-                if not colour_register(n) then
+              N:=SelectStack.Buf[I-1];
+              if ri_spill_helper in RegInfo[N].Flags then
+                if not Colour_Register(N) then
                   { Can't colour the spill helper register n.
                     This can happen only when the code generator produces invalid code
                     or sue to incorrect node coalescing. }
                   InternalError(2021091001);
             end;
           { Assign colours for the rest of the registers }
-          for i:=selectstack.length downto 1 do
+          for I:=SelectStack.Length downto 1 do
             begin
-              n:=selectstack.buf[i-1];
-              if not (ri_spill_helper in reginfo[n].flags) then
-                colour_register(n);
+              N:=SelectStack.Buf[I-1];
+              if not (ri_spill_helper in RegInfo[N].Flags) then
+                Colour_Register(N);
             end;
         end;
 
       {Finally colour the nodes that were coalesced.}
-      for i:=1 to coalescednodes.length do
+      for I:=1 to CoalescedNodes.Length do
         begin
-          n:=coalescednodes.buf[i-1];
-          k:=get_alias(n);
-          reginfo[n].colour:=reginfo[k].colour;
+          N:=CoalescedNodes.Buf[I-1];
+          K:=Get_Alias(N);
+          RegInfo[N].Colour:=RegInfo[K].Colour;
         end;
     end;
 
-    procedure TRGObj.colour_registers;
+    procedure TRGObj.Colour_Registers;
 
     begin
       repeat
-        if simplifyworklist.length<>0 then
-          simplify
-        else if not(worklist_moves.empty) then
-          coalesce
-        else if freezeworklist.length<>0 then
-          freeze
-        else if spillworklist.length<>0 then
-          select_spill;
-      until (simplifyworklist.length=0) and
-            worklist_moves.empty and
-            (freezeworklist.length=0) and
-            (spillworklist.length=0);
-      assign_colours;
+        if SimplifyWorkList.Length<>0 then
+          Simplify
+        else if not(WorkListMoves.Empty) then
+          Coalesce
+        else if FreezeWorkList.Length<>0 then
+          Freeze
+        else if SpillWorkList.Length<>0 then
+          Select_Spill;
+      until (SimplifyWorkList.Length=0) and
+            WorkListMoves.Empty and
+            (FreezeWorkList.Length=0) and
+            (SpillWorkList.Length=0);
+      Assign_Colours;
     end;
 
-    procedure TRGObj.epilogue_colouring;
+    procedure TRGObj.Epilogue_Colouring;
     begin
       { remove all items from the worklists, but do not free them, they are still needed for spill coalesce }
 
-      move_garbage.ConcatList(worklist_moves);
+      MoveGarbage.ConcatList(WorkListMoves);
 
-      move_garbage.ConcatList(active_moves);
-      active_moves.Free;
-      active_moves:=nil;
+      MoveGarbage.ConcatList(ActiveMoves);
+      ActiveMoves.Free;
+      ActiveMoves:=nil;
 
-      move_garbage.ConcatList(frozen_moves);
-      frozen_moves.Free;
-      frozen_moves:=nil;
+      MoveGarbage.ConcatList(FrozenMoves);
+      FrozenMoves.Free;
+      FrozenMoves:=nil;
 
-      move_garbage.ConcatList(coalesced_moves);
-      coalesced_moves.Free;
-      coalesced_moves:=nil;
+      MoveGarbage.ConcatList(CoalescedMoves);
+      CoalescedMoves.Free;
+      CoalescedMoves:=nil;
 
-      move_garbage.ConcatList(constrained_moves);
-      constrained_moves.Free;
-      constrained_moves:=nil;
+      MoveGarbage.ConcatList(ConstrainedMoves);
+      ConstrainedMoves.Free;
+      ConstrainedMoves:=nil;
     end;
 
 
-    procedure TRGObj.clear_interferences(u:TSuperRegister);
+    procedure TRGObj.Clear_Interferences(U:TSuperRegister);
 
     {Remove node u from the interference graph and remove all collected
      move instructions it is associated with.}
 
-    var i : word;
-        v : TSuperRegister;
-        adj,adj2 : PSuperRegisterWorkList;
+    var I : Word;
+        V : TSuperRegister;
+        Adj,Adj2 : PSuperRegisterWorkList;
 
     begin
-      adj:=reginfo[u].adjlist;
-      if adj<>nil then
+      Adj:=RegInfo[U].AdjList;
+      if Adj<>nil then
         begin
-          for i:=1 to adj^.length do
+          for I:=1 to Adj^.Length do
             begin
-              v:=adj^.buf[i-1];
+              V:=Adj^.Buf[I-1];
               {Remove (u,v) and (v,u) from bitmap.}
-              ibitmap[u,v]:=false;
-              ibitmap[v,u]:=false;
+              IBitmap[U,V]:=False;
+              IBitmap[V,U]:=False;
               {Remove (v,u) from adjacency list.}
-              adj2:=reginfo[v].adjlist;
-              if adj2<>nil then
+              Adj2:=RegInfo[V].AdjList;
+              if Adj2<>nil then
                 begin
-                  adj2^.delete(u);
-                  if adj2^.length=0 then
+                  Adj2^.Delete(U);
+                  if Adj2^.Length=0 then
                     begin
-                      dispose(adj2,done);
-                      reginfo[v].adjlist:=nil;
+                      Dispose(Adj2,Done);
+                      RegInfo[V].AdjList:=nil;
                     end;
                 end;
             end;
           {Remove ( u,* ) from adjacency list.}
-          dispose(adj,done);
-          reginfo[u].adjlist:=nil;
+          Dispose(Adj,Done);
+          RegInfo[U].AdjList:=nil;
         end;
     end;
 
 
-    function TRGObj.getregisterinline(list:TAsmList;const subregconstraints:TSubRegisterSet):TRegister;
+    function TRGObj.GetRegisterInline(List:TAsmList;const SubRegConstraints:TSubRegisterSet):TRegister;
       var
-        p : TSuperRegister;
-        subreg: TSubRegister;
+        P : TSuperRegister;
+        SubReg: TSubRegister;
       begin
-        for subreg:=high(TSubRegister) downto low(TSubRegister) do
-          if subreg in subregconstraints then
-            break;
-        p:=getnewreg(subreg);
-        live_registers.add(p);
-        result:=newreg(regtype,p,subreg);
-        add_edges_used(p);
-        add_constraints(result);
+        for SubReg:=High(TSubRegister) downto Low(TSubRegister) do
+          if SubReg in SubRegConstraints then
+            Break;
+        P:=GetNewReg(SubReg);
+        LiveRegisters.Add(P);
+        Result:=NewReg(RegType,P,SubReg);
+        Add_Edges_Used(P);
+        Add_Constraints(Result);
         { also add constraints for other sizes used for this register }
-        if subreg<>low(TSubRegister) then
-          for subreg:=pred(subreg) downto low(TSubRegister) do
-            if subreg in subregconstraints then
-              add_constraints(newreg(regtype,getsupreg(result),subreg));
+        if SubReg<>Low(TSubRegister) then
+          for SubReg:=Pred(SubReg) downto Low(TSubRegister) do
+            if SubReg in SubRegConstraints then
+              Add_Constraints(NewReg(RegType,GetSupReg(Result),SubReg));
       end;
 
 
-    procedure TRGObj.ungetregisterinline(list:TAsmList;r:TRegister);
+    procedure TRGObj.UngetRegisterInline(List:TAsmList;R:TRegister);
       var
-        supreg:TSuperRegister;
+        SupReg:TSuperRegister;
       begin
-        supreg:=getsupreg(r);
-        live_registers.delete(supreg);
-        insert_regalloc_info(list,supreg);
+        SupReg:=GetSupReg(R);
+        LiveRegisters.Delete(SupReg);
+        Insert_RegAlloc_Info(List,SupReg);
       end;
 
 
-    procedure TRGObj.insert_regalloc_info(list:TAsmList;u:TSuperRegister);
+    procedure TRGObj.Insert_RegAlloc_Info(List:TAsmList;U:TSuperRegister);
       var
-        p : TAI;
-        r : TRegister;
-        palloc,
-        pdealloc : TAIRegAlloc;
+        P : TAI;
+        R : TRegister;
+        PAlloc,
+        PDealloc : TAIRegAlloc;
       begin
         { Insert regallocs for all imaginary registers }
-        with reginfo[u] do
+        with RegInfo[U] do
           begin
-            r:=newreg(regtype,u,subreg);
-            if Assigned(live_start) then
+            R:=NewReg(RegType,U,SubReg);
+            if Assigned(LiveStart) then
               begin
                 { Generate regalloc and bind it to an instruction, this
                   is needed to find all live registers belonging to an
                   instruction during the spilling }
-                if live_start.typ=ait_instruction then
-                  palloc:=TAIRegAlloc.alloc(r,live_start)
+                if LiveStart.Typ=ait_instruction then
+                  PAlloc:=TAIRegAlloc.Alloc(R,LiveStart)
                 else
-                  palloc:=TAIRegAlloc.alloc(r,nil);
-                if Assigned(live_end) and (live_end.typ=ait_instruction) then
-                  pdealloc:=TAIRegAlloc.dealloc(r,live_end)
+                  PAlloc:=TAIRegAlloc.Alloc(R,nil);
+                if Assigned(LiveEnd) and (LiveEnd.Typ=ait_instruction) then
+                  PDealloc:=TAIRegAlloc.Dealloc(R,LiveEnd)
                 else
-                  pdealloc:=TAIRegAlloc.dealloc(r,nil);
+                  PDealloc:=TAIRegAlloc.Dealloc(R,nil);
                 { Insert live start allocation before the instruction/reg_a_sync }
-                list.insertbefore(palloc,live_start);
+                List.InsertBefore(PAlloc,LiveStart);
                 { Insert live end deallocation before reg allocations
                   to reduce conflicts }
-                p:=live_end;
-                if Assigned(p) then
+                P:=LiveEnd;
+                if Assigned(P) then
                   begin
-                    while Assigned(p.previous) and
+                    while Assigned(P.Previous) and
                       (
                         (
-                          (TAI(p.previous).typ=ait_regalloc) and
+                          (TAI(P.Previous).Typ=ait_regalloc) and
                           (
                             (
-                              (TAIRegAlloc(p.previous).ratype=ra_alloc) and
-                              (TAIRegAlloc(p.previous).reg<>r)
+                              (TAIRegAlloc(P.Previous).RAType=ra_alloc) and
+                              (TAIRegAlloc(P.Previous).Reg<>R)
                             ) or (
-                              (TAIRegAlloc(p.previous).ratype=ra_resize)
+                              (TAIRegAlloc(P.Previous).RAType=ra_resize)
                               { Don't worry if a resize for the same supreg as
                                 r appears - it won't cause issues in the end
                                 since it's stripped out anyway and the deallocs
@@ -1968,146 +1968,146 @@ unit rgobj;
                             )
                           )
                         ) or
-                        (TAI(p.previous).typ in [ait_comment,ait_tempalloc,ait_varloc])
+                        (TAI(P.Previous).Typ in [ait_comment,ait_tempalloc,ait_varloc])
                       ) do
-                      p:=TAI(p.previous);
+                      P:=TAI(P.Previous);
                     { , but add release after a reg_a_sync }
-                    if (p.typ=ait_regalloc) and
-                      (TAIRegAlloc(p).ratype=ra_sync) then
-                    p:=TAI(p.next);
+                    if (P.Typ=ait_regalloc) and
+                      (TAIRegAlloc(P).RAType=ra_sync) then
+                    P:=TAI(P.Next);
                   end;
-                if Assigned(p) then
-                  list.insertbefore(pdealloc,p)
+                if Assigned(P) then
+                  List.InsertBefore(PDealloc,P)
                 else
-                  list.concat(pdealloc);
+                  List.Concat(PDealloc);
               end;
           end;
       end;
 
 
-    procedure TRGObj.insert_regalloc_info_all(list:TAsmList);
+    procedure TRGObj.Insert_RegAlloc_Info_All(List:TAsmList);
       var
-        supreg : TSuperRegister;
+        SupReg : TSuperRegister;
       begin
         { Insert regallocs for all imaginary registers }
-        for supreg:=first_imaginary to maxreg-1 do
-          insert_regalloc_info(list,supreg);
+        for SupReg:=FirstImaginary to MaxReg-1 do
+          Insert_RegAlloc_Info(List,SupReg);
       end;
 
 
-    procedure TRGObj.determine_spill_registers(list: TAsmList; headertail: TAI);
+    procedure TRGObj.Determine_Spill_Registers(List: TAsmList; HeaderTail: TAI);
       begin
-        prepare_colouring;
-        colour_registers;
-        epilogue_colouring;
+        Prepare_Colouring;
+        Colour_Registers;
+        Epilogue_Colouring;
       end;
 
 
-    procedure TRGObj.get_spill_temp(list: TAsmList; spill_temps: TSpillTempList; supreg: TSuperRegister);
+    procedure TRGObj.Get_Spill_Temp(List: TAsmList; SpillTemps: TSpillTempList; SupReg: TSuperRegister);
       var
-        size: ptrint;
+        Size: PtrInt;
       begin
         {Get a temp for the spilled register, the size must at least equal a complete register,
          take also care of the fact that subreg can be larger than a single register like doubles
          that occupy 2 registers }
         { only force the whole register in case of integers. Storing a register that contains
           a single precision value as a double can cause conversion errors on e.g. ARM VFP }
-        if (regtype=R_INTREGISTER) then
-          size:=max(tcgsize2size[reg_cgsize(newreg(regtype,supreg,R_SUBWHOLE))],
-                         tcgsize2size[reg_cgsize(newreg(regtype,supreg,reginfo[supreg].subreg))])
+        if (RegType=R_INTREGISTER) then
+          Size:=Max(TCgSize2Size[reg_cgsize(NewReg(RegType,SupReg,R_SUBWHOLE))],
+                         TCgSize2Size[reg_cgsize(NewReg(RegType,SupReg,RegInfo[SupReg].SubReg))])
         else
-          size:=tcgsize2size[reg_cgsize(newreg(regtype,supreg,reginfo[supreg].subreg))];
-        tg.gettemp(list,
-                   size,size,
-                   tt_noreuse,spill_temps[supreg]);
+          Size:=TCgSize2Size[reg_cgsize(NewReg(RegType,SupReg,RegInfo[SupReg].SubReg))];
+        TG.GetTemp(List,
+                   Size,Size,
+                   tt_noreuse,SpillTemps[SupReg]);
       end;
 
 
-    procedure TRGObj.add_cpu_interferences(p : TAI);
+    procedure TRGObj.Add_CPU_Interferences(P : TAI);
       begin
       end;
 
 
-    procedure TRGObj.generate_interference_graph(list:TAsmList;headertai:TAI);
+    procedure TRGObj.Generate_Interference_Graph(List:TAsmList;HeaderTAI:TAI);
 
-      procedure RecordUse(var r : Treginfo);
+      procedure RecordUse(var R : TRegInfo);
         begin
-          inc(r.total_interferences,live_registers.length);
-          inc(r.count_uses);
+          Inc(R.TotalInterferences,LiveRegisters.Length);
+          Inc(R.CountUses);
         end;
 
       var
-        p : TAI;
-        i : integer;
-        supreg, u: TSuperRegister;
+        P : TAI;
+        I : Integer;
+        SupReg, U: TSuperRegister;
       begin
         { All allocations are available. Now we can generate the
           interference graph. Walk through all instructions, we can
           start with the headertai, because before the header tai is
           only symbols. }
-        live_registers.clear;
-        p:=headertai;
-        while Assigned(p) do
+        LiveRegisters.Clear;
+        P:=HeaderTAI;
+        while Assigned(P) do
           begin
-            prefetch(pointer(p.next)^);
-            case p.typ of
+            Prefetch(Pointer(P.Next)^);
+            case P.Typ of
               ait_instruction:
-                with TAICPU(p) do
+                with TAICPU(P) do
                   begin
-                    CurrentFilePos:=fileinfo;
+                    CurrentFilePos:=FileInfo;
                     {For speed reasons, get_alias isn't used here, instead,
                      assign_colours will also set the colour of coalesced nodes.
                      If there are registers with colour=0, then the coalescednodes
                      list probably doesn't contain these registers, causing
                      assign_colours not to do this properly.}
-                    for i:=0 to ops-1 do
-                      with oper[i]^ do
-                        case typ of
+                    for I:=0 to Ops-1 do
+                      with Oper[I]^ do
+                        case Typ of
                           top_reg:
-                             if (getregtype(reg)=regtype) then
+                             if (GetRegType(Reg)=RegType) then
                                begin
-                                 u:=getsupreg(reg);
+                                 U:=GetSupReg(Reg);
 {$ifdef EXTDEBUG}
-                                 if (u>=maxreginfo) then
+                                 if (U>=MaxRegInfo) then
                                    InternalError(2018111701);
 {$endif}
-                                 RecordUse(reginfo[u]);
+                                 RecordUse(RegInfo[U]);
                                end;
                           top_ref:
                             begin
-                              if regtype in [R_INTREGISTER,R_ADDRESSREGISTER] then
-                                with ref^ do
+                              if RegType in [R_INTREGISTER,R_ADDRESSREGISTER] then
+                                with Ref^ do
                                   begin
-                                    if (base<>NR_NO) and
-                                       (getregtype(base)=regtype) then
+                                    if (Base<>NR_NO) and
+                                       (GetRegType(Base)=RegType) then
                                       begin
-                                        u:=getsupreg(base);
+                                        U:=GetSupReg(Base);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2018111702);
 {$endif}
-                                        RecordUse(reginfo[u]);
+                                        RecordUse(RegInfo[U]);
                                       end;
-                                    if (index<>NR_NO) and
-                                       (getregtype(index)=regtype) then
+                                    if (Index<>NR_NO) and
+                                       (GetRegType(Index)=RegType) then
                                       begin
-                                        u:=getsupreg(index);
+                                        U:=GetSupReg(Index);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2018111703);
 {$endif}
-                                        RecordUse(reginfo[u]);
+                                        RecordUse(RegInfo[U]);
                                       end;
 {$if defined(x86)}
-                                    if (segment<>NR_NO) and
-                                       (getregtype(segment)=regtype) then
+                                    if (Segment<>NR_NO) and
+                                       (GetRegType(Segment)=RegType) then
                                       begin
-                                        u:=getsupreg(segment);
+                                        U:=GetSupReg(Segment);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2018111704);
 {$endif}
-                                        RecordUse(reginfo[u]);
+                                        RecordUse(RegInfo[U]);
                                       end;
 {$endif defined(x86)}
                                   end;
@@ -2117,252 +2117,252 @@ unit rgobj;
                         end;
                   end;
               ait_regalloc:
-                with TAIRegAlloc(p) do
+                with TAIRegAlloc(P) do
                   begin
-                    if (getregtype(reg)=regtype) then
+                    if (GetRegType(Reg)=RegType) then
                       begin
-                        supreg:=getsupreg(reg);
-                        case ratype of
+                        SupReg:=GetSupReg(Reg);
+                        case RAType of
                           ra_alloc :
                             begin
-                              live_registers.add(supreg);
+                              LiveRegisters.Add(SupReg);
 {$ifdef DEBUG_REGISTERLIFE}
-                              write(live_registers.length,'  ');
-                              for i:=0 to live_registers.length-1 do
-                                write(std_regname(newreg(regtype,live_registers.buf[i],defaultsub)),' ');
+                              write(LiveRegisters.Length,'  ');
+                              for I:=0 to LiveRegisters.Length-1 do
+                                write(std_regname(NewReg(RegType,LiveRegisters.Buf[I],DefaultSub)),' ');
                               WriteLn;
 {$endif DEBUG_REGISTERLIFE}
-                              add_edges_used(supreg);
+                              Add_Edges_Used(SupReg);
                             end;
                           ra_dealloc :
                             begin
-                              live_registers.delete(supreg);
+                              LiveRegisters.Delete(SupReg);
 {$ifdef DEBUG_REGISTERLIFE}
-                              write(live_registers.length,'  ');
-                              for i:=0 to live_registers.length-1 do
-                                write(std_regname(newreg(regtype,live_registers.buf[i],defaultsub)),' ');
+                              write(LiveRegisters.Length,'  ');
+                              for I:=0 to LiveRegisters.Length-1 do
+                                write(std_regname(NewReg(RegType,LiveRegisters.Buf[I],DefaultSub)),' ');
                               WriteLn;
 {$endif DEBUG_REGISTERLIFE}
-                              add_edges_used(supreg);
+                              Add_Edges_Used(SupReg);
                             end;
                           ra_markused :
-                            if (supreg<first_imaginary) then
+                            if (SupReg<FirstImaginary) then
                               begin
-                                include(used_in_proc,supreg);
-                                has_usedmarks:=true;
+                                Include(UsedInProc,SupReg);
+                                HasUsedMarks:=True;
                               end;
                           else
                             ;
                         end;
                         { constraints needs always to be updated }
-                        add_constraints(reg);
+                        Add_Constraints(Reg);
                       end;
                   end;
               else
                 ;
             end;
-            add_cpu_interferences(p);
-            p:=TAI(p.next);
+            Add_CPU_Interferences(P);
+            P:=TAI(P.Next);
           end;
 
 {$ifdef EXTDEBUG}
-        if live_registers.length>0 then
+        if LiveRegisters.Length>0 then
           begin
-            for i:=0 to live_registers.length-1 do
+            for I:=0 to LiveRegisters.Length-1 do
               begin
                 { Only report for imaginary registers }
-                if live_registers.buf[i]>=first_imaginary then
-                  Comment(VWarning,'Register '+std_regname(newreg(regtype,live_registers.buf[i],defaultsub))+' not released');
+                if LiveRegisters.Buf[I]>=FirstImaginary then
+                  Comment(VWarning,'Register '+std_regname(NewReg(RegType,LiveRegisters.Buf[I],DefaultSub))+' not released');
               end;
           end;
 {$endif}
       end;
 
 
-    procedure TRGObj.translate_register(var reg : TRegister);
+    procedure TRGObj.Translate_Register(var Reg : TRegister);
       begin
-        if (getregtype(reg)=regtype) then
-          setsupreg(reg,reginfo[getsupreg(reg)].colour)
+        if (GetRegType(Reg)=RegType) then
+          SetSupReg(Reg,RegInfo[GetSupReg(Reg)].Colour)
         else
           InternalError(200602021);
       end;
 
 
-    procedure TRGObj.set_reg_initial_location(reg: TRegister; const ref: TReference);
+    procedure TRGObj.Set_Reg_Initial_Location(Reg: TRegister; const Ref: TReference);
       var
-        supreg: TSuperRegister;
+        SupReg: TSuperRegister;
       begin
-        supreg:=getsupreg(reg);
-        if (supreg<first_imaginary) or (supreg>=maxreg) then
+        SupReg:=GetSupReg(Reg);
+        if (SupReg<FirstImaginary) or (SupReg>=MaxReg) then
           InternalError(2020090501);
-        alloc_spillinfo(supreg+1);
-        spillinfo[supreg].spilllocation:=ref;
-        include(reginfo[supreg].flags,ri_has_initial_loc);
+        Alloc_SpillInfo(SupReg+1);
+        SpillInfo[SupReg].SpillLocation:=Ref;
+        Include(RegInfo[SupReg].Flags,ri_has_initial_loc);
       end;
 
 
-    procedure TRGObj.translate_registers(list: TAsmList);
+    procedure TRGObj.Translate_Registers(List: TAsmList);
 
-      function get_reg_name_full(r: TRegister; include_prefix: boolean): string;
+      function Get_Reg_Name_Full(R: TRegister; include_prefix: Boolean): string;
         var
-          rr:TRegister;
-          sr:TSuperRegister;
+          RR:TRegister;
+          SR:TSuperRegister;
         begin
-          sr:=getsupreg(r);
-          if reginfo[sr].live_start=nil then
+          SR:=GetSupReg(R);
+          if RegInfo[SR].LiveStart=nil then
             begin
-              result:='';
-              exit;
+              Result:='';
+              Exit;
             end;
-          if (sr<length(spillinfo)) and spillinfo[sr].spilled then
-            with spillinfo[sr].spilllocation do
+          if (SR<Length(SpillInfo)) and SpillInfo[SR].Spilled then
+            with SpillInfo[SR].SpillLocation do
               begin
-                result:='['+std_regname(base);
-                if offset>=0 then
-                  result:=result+'+';
-                result:=result+IntToStr(offset)+']';
+                Result:='['+std_regname(Base);
+                if Offset>=0 then
+                  Result:=Result+'+';
+                Result:=Result+IntToStr(Offset)+']';
                 if include_prefix then
-                  result:='stack '+result;
+                  Result:='stack '+Result;
               end
           else
             begin
-              rr:=r;
-              setsupreg(rr,reginfo[sr].colour);
-              result:=std_regname(rr);
+              RR:=R;
+              SetSupReg(RR,RegInfo[SR].Colour);
+              Result:=std_regname(RR);
               if include_prefix then
-                result:='register '+result;
+                Result:='register '+Result;
             end;
 
         end;
 
       var
-        hp,p:TAI;
-        i:shortint;
-        u:LongInt;
-        s:string;
+        HP,P:TAI;
+        I:ShortInt;
+        U:LongInt;
+        S:string;
 
       begin
         { Leave when no imaginary registers are used }
-        if maxreg<=first_imaginary then
-          exit;
-        p:=TAI(list.first);
-        while Assigned(p) do
+        if MaxReg<=FirstImaginary then
+          Exit;
+        P:=TAI(List.First);
+        while Assigned(P) do
           begin
-            prefetch(pointer(p.next)^);
-            case p.typ of
+            Prefetch(Pointer(P.Next)^);
+            case P.Typ of
               ait_regalloc:
-                with TAIRegAlloc(p) do
+                with TAIRegAlloc(P) do
                   begin
-                    if (getregtype(reg)=regtype) then
+                    if (GetRegType(Reg)=RegType) then
                       begin
                         { Only alloc/dealloc is needed for the optimizer, remove
                           other regalloc }
-                        if not(ratype in [ra_alloc,ra_dealloc]) then
+                        if not(RAType in [ra_alloc,ra_dealloc]) then
                           begin
-                            remove_ai(list,p);
-                            continue;
+                            Remove_AI(List,P);
+                            Continue;
                           end
                         else
                           begin
-                            u:=reginfo[getsupreg(reg)].colour;
-                            include(used_in_proc,u);
+                            U:=RegInfo[GetSupReg(Reg)].Colour;
+                            Include(UsedInProc,U);
 {$ifdef DEBUG_SPILLCOALESCE}
-                            if (ratype=ra_alloc) and (ri_coalesced in reginfo[getsupreg(reg)].flags) then
+                            if (RAType=ra_alloc) and (ri_coalesced in RegInfo[GetSupReg(Reg)].Flags) then
                               begin
-                                hp:=TAIComment.Create(StrPNew('Coalesced '+std_regname(reg)+'->'+
-                                                       std_regname(newreg(regtype,reginfo[getsupreg(reg)].alias,reginfo[getsupreg(reg)].subreg))+
-                                                       ' ('+std_regname(newreg(regtype,u,reginfo[getsupreg(reg)].subreg))+')'));
-                                list.insertafter(hp,p);
+                                HP:=TAIComment.Create(StrPNew('Coalesced '+std_regname(Reg)+'->'+
+                                                       std_regname(NewReg(RegType,RegInfo[GetSupReg(Reg)].Alias,RegInfo[GetSupReg(Reg)].SubReg))+
+                                                       ' ('+std_regname(NewReg(RegType,U,RegInfo[GetSupReg(Reg)].SubReg))+')'));
+                                List.InsertAfter(HP,P);
                               end;
 {$endif DEBUG_SPILLCOALESCE}
 {$ifdef EXTDEBUG}
-                            if u>=maxreginfo then
+                            if U>=MaxRegInfo then
                               InternalError(2015040501);
 {$endif}
-                            setsupreg(reg,u);
+                            SetSupReg(Reg,U);
                           end;
                       end;
                   end;
               ait_varloc:
                 begin
-                  if (getregtype(TAIVarLoc(p).newlocation)=regtype) then
+                  if (GetRegType(TAIVarLoc(P).NewLocation)=RegType) then
                     begin
                       if (cs_asm_source in CurrentSettings.GlobalSwitches) then
                         begin
-                          s:=get_reg_name_full(TAIVarLoc(p).newlocation,TAIVarLoc(p).newlocationhi=NR_NO);
-                          if s<>'' then
+                          S:=Get_Reg_Name_Full(TAIVarLoc(P).NewLocation,TAIVarLoc(P).NewLocationHi=NR_NO);
+                          if S<>'' then
                             begin
-                              if TAIVarLoc(p).newlocationhi<>NR_NO then
-                                s:=get_reg_name_full(TAIVarLoc(p).newlocationhi,true)+':'+s;
-                              hp:=TAIComment.Create(StrPNew('Var '+TAIVarLoc(p).varsym.realname+' located in '+s));
-                              list.insertafter(hp,p);
+                              if TAIVarLoc(P).NewLocationHi<>NR_NO then
+                                S:=Get_Reg_Name_Full(TAIVarLoc(P).NewLocationHi,True)+':'+S;
+                              HP:=TAIComment.Create(StrPNew('Var '+TAIVarLoc(P).VarSym.RealName+' located in '+S));
+                              List.InsertAfter(HP,P);
                             end;
-                          setsupreg(TAIVarLoc(p).newlocation,reginfo[getsupreg(TAIVarLoc(p).newlocation)].colour);
-                          if TAIVarLoc(p).newlocationhi<>NR_NO then
-                            setsupreg(TAIVarLoc(p).newlocationhi,reginfo[getsupreg(TAIVarLoc(p).newlocationhi)].colour);
+                          SetSupReg(TAIVarLoc(P).NewLocation,RegInfo[GetSupReg(TAIVarLoc(P).NewLocation)].Colour);
+                          if TAIVarLoc(P).NewLocationHi<>NR_NO then
+                            SetSupReg(TAIVarLoc(P).NewLocationHi,RegInfo[GetSupReg(TAIVarLoc(P).NewLocationHi)].Colour);
                         end;
-                      remove_ai(list,p);
-                      continue;
+                      Remove_AI(List,P);
+                      Continue;
                     end;
                 end;
 
               ait_instruction:
-                with TAICPU(p) do
+                with TAICPU(P) do
                   begin
-                    CurrentFilePos:=fileinfo;
+                    CurrentFilePos:=FileInfo;
                     {For speed reasons, get_alias isn't used here, instead,
                      assign_colours will also set the colour of coalesced nodes.
                      If there are registers with colour=0, then the coalescednodes
                      list probably doesn't contain these registers, causing
                      assign_colours not to do this properly.}
-                    for i:=0 to ops-1 do
-                      with oper[i]^ do
-                        case typ of
+                    for I:=0 to Ops-1 do
+                      with Oper[I]^ do
+                        case Typ of
                           Top_reg:
-                             if (getregtype(reg)=regtype) then
+                             if (GetRegType(Reg)=RegType) then
                                begin
-                                 u:=getsupreg(reg);
+                                 U:=GetSupReg(Reg);
 {$ifdef EXTDEBUG}
-                                 if (u>=maxreginfo) then
+                                 if (U>=MaxRegInfo) then
                                    InternalError(2012101903);
 {$endif}
-                                 setsupreg(reg,reginfo[u].colour);
+                                 SetSupReg(Reg,RegInfo[U].Colour);
                                end;
                           Top_ref:
                             begin
-                              if regtype in [R_INTREGISTER,R_ADDRESSREGISTER] then
-                                with ref^ do
+                              if RegType in [R_INTREGISTER,R_ADDRESSREGISTER] then
+                                with Ref^ do
                                   begin
-                                    if (base<>NR_NO) and
-                                       (getregtype(base)=regtype) then
+                                    if (Base<>NR_NO) and
+                                       (GetRegType(Base)=RegType) then
                                       begin
-                                        u:=getsupreg(base);
+                                        U:=GetSupReg(Base);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2012101904);
 {$endif}
-                                        setsupreg(base,reginfo[u].colour);
+                                        SetSupReg(Base,RegInfo[U].Colour);
                                       end;
-                                    if (index<>NR_NO) and
-                                       (getregtype(index)=regtype) then
+                                    if (Index<>NR_NO) and
+                                       (GetRegType(Index)=RegType) then
                                       begin
-                                        u:=getsupreg(index);
+                                        U:=GetSupReg(Index);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2012101905);
 {$endif}
-                                        setsupreg(index,reginfo[u].colour);
+                                        SetSupReg(Index,RegInfo[U].Colour);
                                       end;
 {$if defined(x86)}
-                                    if (segment<>NR_NO) and
-                                       (getregtype(segment)=regtype) then
+                                    if (Segment<>NR_NO) and
+                                       (GetRegType(Segment)=RegType) then
                                       begin
-                                        u:=getsupreg(segment);
+                                        U:=GetSupReg(Segment);
 {$ifdef EXTDEBUG}
-                                        if (u>=maxreginfo) then
+                                        if (U>=MaxRegInfo) then
                                           InternalError(2013052401);
 {$endif}
-                                        setsupreg(segment,reginfo[u].colour);
+                                        SetSupReg(Segment,RegInfo[U].Colour);
                                       end;
 {$endif defined(x86)}
                                   end;
@@ -2373,182 +2373,182 @@ unit rgobj;
 
                     { Maybe the operation can be removed when
                       it is a move and both arguments are the same }
-                    if is_same_reg_move(regtype) then
+                    if is_same_reg_move(RegType) then
                       begin
                         { Be careful of dangling pointers in previous reg_allocs,
                           ss these can confuse the register allocator }
-                        hp:=TAI(p.previous);
-                        while Assigned(hp) do
+                        HP:=TAI(P.Previous);
+                        while Assigned(HP) do
                           begin
-                            if (hp.typ in [ait_comment,ait_tempalloc,ait_varloc]) then
+                            if (HP.Typ in [ait_comment,ait_tempalloc,ait_varloc]) then
                               { Do nothing, but pass control flow to
                                 "hp:=tai(hp.previous)" and continue the loop }
-                            else if (hp.typ=ait_regalloc) then
+                            else if (HP.Typ=ait_regalloc) then
                               begin
-                                if TAIRegAlloc(hp).instr=p then
-                                  TAIRegAlloc(hp).instr:=nil;
+                                if TAIRegAlloc(HP).Instr=P then
+                                  TAIRegAlloc(HP).Instr:=nil;
                               end
                             else
                               Break;
-                            hp:=TAI(hp.previous);
+                            HP:=TAI(HP.Previous);
                           end;
-                        remove_ai(list,p);
-                        continue;
+                        Remove_AI(List,P);
+                        Continue;
                       end;
                   end;
               else
                 ;
             end;
-            p:=TAI(p.next);
+            P:=TAI(P.Next);
           end;
-        CurrentFilePos:=CurrentProcInfo.exitpos;
+        CurrentFilePos:=CurrentProcInfo.ExitPos;
       end;
 
 
-    function TRGObj.spill_registers(list:TAsmList;headertai:TAI):boolean;
+    function TRGObj.Spill_Registers(List:TAsmList;HeaderTAI:TAI):Boolean;
     { Returns true if any help registers have been used }
       var
-        i : cardinal;
-        t : TSuperRegister;
-        p : TAI;
-        regs_to_spill_set:TSuperRegisterSet;
-        spill_temps : TSpillTempList;
-        supreg,x,y : TSuperRegister;
-        templist : TAsmList;
-        j : LongInt;
-        getnewspillloc : Boolean;
+        I : Cardinal;
+        T : TSuperRegister;
+        P : TAI;
+        RegsToSpillSet:TSuperRegisterSet;
+        SpillTemps : TSpillTempList;
+        SupReg,X,Y : TSuperRegister;
+        TempList : TAsmList;
+        J : LongInt;
+        GetNewSpillLoc : Boolean;
       begin
-        spill_registers:=false;
-        live_registers.clear;
+        Spill_Registers:=False;
+        LiveRegisters.Clear;
         { spilling should start with the node with the highest number of interferences, so we can coalesce as
           much as possible spilled nodes (coalesce in case of spilled node means they share the same memory location) }
-        sort_spillednodes;
-        for i:=first_imaginary to maxreg-1 do
-          exclude(reginfo[i].flags,ri_selected);
-        SetLength(spill_temps,maxreg);
-        supregset_reset(regs_to_spill_set,false,$ffff);
+        Sort_SpilledNodes;
+        for I:=FirstImaginary to MaxReg-1 do
+          Exclude(RegInfo[I].Flags,ri_selected);
+        SetLength(SpillTemps,MaxReg);
+        SupRegSet_Reset(RegsToSpillSet,False,$ffff);
 
 {$ifdef DEBUG_SPILLCOALESCE}
-        WriteLn('trgobj.spill_registers: Got maxreg ',maxreg);
-        WriteLn('trgobj.spill_registers: Spilling ',spillednodes.length,' nodes');
+        WriteLn('trgobj.spill_registers: Got maxreg ',MaxReg);
+        WriteLn('trgobj.spill_registers: Spilling ',SpilledNodes.Length,' nodes');
 {$endif DEBUG_SPILLCOALESCE}
         { after each round of spilling, more registers could be used due to allocations for spilling }
-        alloc_spillinfo(maxreg);
+        Alloc_SpillInfo(MaxReg);
         { Allocate temps and insert in front of the list }
-        templist:=TAsmList.create;
+        TempList:=TAsmList.Create;
         { Safe: this procedure is only called if there are spilled nodes. }
-        with spillednodes do
+        with SpilledNodes do
           { the node with the highest interferences is the last one }
-          for i:=length-1 downto 0 do
+          for I:=Length-1 downto 0 do
             begin
-              t:=buf[i];
+              T:=Buf[I];
 
 {$ifdef DEBUG_SPILLCOALESCE}
-              WriteLn('trgobj.spill_registers: Spilling ',t);
+              WriteLn('trgobj.spill_registers: Spilling ',T);
 {$endif DEBUG_SPILLCOALESCE}
 
-              spillinfo[t].interferences:=Tinterferencebitmap.create;
+              SpillInfo[T].Interferences:=TInterferenceBitmap.Create;
 
               { copy interferences }
-              for j:=0 to maxreg-1 do
-                spillinfo[t].interferences[0,j]:=ibitmap[t,j];
+              for J:=0 to MaxReg-1 do
+                SpillInfo[T].Interferences[0,J]:=IBitmap[T,J];
 
               { Alternative representation. }
-              supregset_include(regs_to_spill_set,t);
+              SupRegSet_Include(RegsToSpillSet,T);
               { Clear all interferences of the spilled register. }
-              clear_interferences(t);
+              Clear_Interferences(T);
 
-              getnewspillloc:=not (ri_has_initial_loc in reginfo[t].flags);
-              if not getnewspillloc then
-                spill_temps[t]:=spillinfo[t].spilllocation;
+              GetNewSpillLoc:=not (ri_has_initial_loc in RegInfo[T].Flags);
+              if not GetNewSpillLoc then
+                SpillTemps[T]:=SpillInfo[T].SpillLocation;
 
               { check if we can "coalesce" spilled nodes. To do so, it is required that they do not
                 interfere but are connected by a move instruction
 
                 doing so might save some mem->mem moves }
               if (cs_opt_level3 in CurrentSettings.OptimizerSwitches) and
-                 getnewspillloc and
-                 Assigned(reginfo[t].movelist) then
-                for j:=0 to reginfo[t].movelist^.header.count-1 do
+                 GetNewSpillLoc and
+                 Assigned(RegInfo[T].MoveList) then
+                for J:=0 to RegInfo[T].MoveList^.Header.Count-1 do
                   begin
-                    x:=Tmoveins(reginfo[t].movelist^.data[j]).x;
-                    y:=Tmoveins(reginfo[t].movelist^.data[j]).y;
-                    if (x=t) and
-                      (spillinfo[get_alias(y)].spilled) and
-                      not(spillinfo[get_alias(y)].interferences[0,t]) then
+                    X:=TMoveIns(RegInfo[T].MoveList^.Data[J]).X;
+                    Y:=TMoveIns(RegInfo[T].MoveList^.Data[J]).Y;
+                    if (X=T) and
+                      (SpillInfo[Get_Alias(Y)].Spilled) and
+                      not(SpillInfo[Get_Alias(Y)].Interferences[0,T]) then
                       begin
-                        spill_temps[t]:=spillinfo[get_alias(y)].spilllocation;
+                        SpillTemps[T]:=SpillInfo[Get_Alias(Y)].SpillLocation;
 {$ifdef DEBUG_SPILLCOALESCE}
-                        WriteLn('trgobj.spill_registers: Spill coalesce ',t,' to ',y);
+                        WriteLn('trgobj.spill_registers: Spill coalesce ',T,' to ',Y);
 {$endif DEBUG_SPILLCOALESCE}
-                        getnewspillloc:=false;
-                        break;
+                        GetNewSpillLoc:=False;
+                        Break;
                       end
-                    else if (y=t) and
-                      (spillinfo[get_alias(x)].spilled) and
-                      not(spillinfo[get_alias(x)].interferences[0,t]) then
+                    else if (Y=T) and
+                      (SpillInfo[Get_Alias(X)].Spilled) and
+                      not(SpillInfo[Get_Alias(X)].Interferences[0,T]) then
                       begin
 {$ifdef DEBUG_SPILLCOALESCE}
-                        WriteLn('trgobj.spill_registers: Spill coalesce ',t,' to ',x);
+                        WriteLn('trgobj.spill_registers: Spill coalesce ',T,' to ',X);
 {$endif DEBUG_SPILLCOALESCE}
-                        spill_temps[t]:=spillinfo[get_alias(x)].spilllocation;
-                        getnewspillloc:=false;
-                        break;
+                        SpillTemps[T]:=SpillInfo[Get_Alias(X)].SpillLocation;
+                        GetNewSpillLoc:=False;
+                        Break;
                       end;
                   end;
 
-              if getnewspillloc then
-                get_spill_temp(templist,spill_temps,t);
+              if GetNewSpillLoc then
+                Get_Spill_Temp(TempList,SpillTemps,T);
 
 {$ifdef DEBUG_SPILLCOALESCE}
-              WriteLn('trgobj.spill_registers: Spill temp: ',getsupreg(spill_temps[t].base),'+',spill_temps[t].offset);
+              WriteLn('trgobj.spill_registers: Spill temp: ',GetSupReg(SpillTemps[T].Base),'+',SpillTemps[T].Offset);
 {$endif DEBUG_SPILLCOALESCE}
 
               { set spilled only as soon as a temp is assigned, else a mov iregX,iregX results in a spill coalesce with itself }
-              spillinfo[t].spilled:=true;
+              SpillInfo[T].Spilled:=True;
 
-              spillinfo[t].spilllocation:=spill_temps[t];
+              SpillInfo[T].SpillLocation:=SpillTemps[T];
             end;
-        list.InsertListAfter(headertai,templist);
-        templist.free;
-        templist := nil;
+        List.InsertListAfter(HeaderTAI,TempList);
+        TempList.Free;
+        TempList := nil;
         { Walk through all instructions, we can start with the headertai,
           because before the header tai is only symbols }
-        p:=headertai;
-        while Assigned(p) do
+        P:=HeaderTAI;
+        while Assigned(P) do
           begin
-            case p.typ of
+            case P.Typ of
               ait_regalloc:
-                with TAIRegAlloc(p) do
+                with TAIRegAlloc(P) do
                   begin
-                    if (getregtype(reg)=regtype) then
+                    if (GetRegType(Reg)=RegType) then
                       begin
                         {A register allocation of the spilled register (and all coalesced registers)
                          must be removed.}
-                        supreg:=get_alias(getsupreg(reg));
-                        if supregset_in(regs_to_spill_set,supreg) then
+                        SupReg:=Get_Alias(GetSupReg(Reg));
+                        if SupRegSet_In(RegsToSpillSet,SupReg) then
                           begin
                             { Remove loading of the register from its initial memory location
                               (e.g. load of a stack parameter to the register). }
-                            if (ratype=ra_alloc) and
-                               (ri_has_initial_loc in reginfo[supreg].flags) and
-                               (instr<>nil) then
+                            if (RAType=ra_alloc) and
+                               (ri_has_initial_loc in RegInfo[SupReg].Flags) and
+                               (Instr<>nil) then
                               begin
-                                list.remove(instr);
-                                FreeAndNil(instr);
-                                dec(reginfo[supreg].weight,100);
+                                List.Remove(Instr);
+                                FreeAndNil(Instr);
+                                Dec(RegInfo[SupReg].Weight,100);
                               end;
                             { Remove the regalloc }
-                            remove_ai(list,p);
-                            continue;
+                            Remove_AI(List,P);
+                            Continue;
                           end
                         else
                           begin
-                            case ratype of
+                            case RAType of
                               ra_alloc :
-                               live_registers.add(supreg);
+                               LiveRegisters.Add(SupReg);
                               ra_dealloc :
-                               live_registers.delete(supreg);
+                               LiveRegisters.Delete(SupReg);
                               else
                                 ;
                             end;
@@ -2557,135 +2557,135 @@ unit rgobj;
                   end;
 
               ait_instruction:
-                with TAICPUAbstractSym(p) do
+                with TAICPUAbstractSym(P) do
                   begin
 //                    writeln(gas_op2str[tai_cpu_abstract_sym(p).opcode]);
-                    CurrentFilePos:=fileinfo;
-                    if instr_spill_register(list,TAICPUAbstractSym(p),regs_to_spill_set,spill_temps) then
-                      spill_registers:=true;
+                    CurrentFilePos:=FileInfo;
+                    if Instr_Spill_Register(List,TAICPUAbstractSym(P),RegsToSpillSet,SpillTemps) then
+                      Spill_Registers:=True;
                   end;
               else
                 ;
             end;
-            p:=TAI(p.next);
+            P:=TAI(P.Next);
           end;
-        CurrentFilePos:=CurrentProcInfo.exitpos;
+        CurrentFilePos:=CurrentProcInfo.ExitPos;
         {Safe: this procedure is only called if there are spilled nodes.}
-        with spillednodes do
-          for i:=0 to length-1 do
+        with SpilledNodes do
+          for I:=0 to Length-1 do
             begin
-              j:=buf[i];
-              if tg.istemp(spill_temps[j]) then
-                tg.ungettemp(list,spill_temps[j]);
+              J:=Buf[I];
+              if TG.IsTemp(SpillTemps[J]) then
+                TG.UngetTemp(List,SpillTemps[J]);
             end;
-        spill_temps:=nil;
+        SpillTemps:=nil;
       end;
 
 
-    function TRGObj.do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;
+    function TRGObj.Do_Spill_Replace(List:TAsmList;Instr:TAICPUAbstractSym;OrgReg:TSuperRegister;const SpillTemp:TReference):Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
 
-    procedure TRGObj.do_spill_read(list:TAsmList;pos:TAI;const spilltemp:TReference;tempreg:TRegister;orgsupreg:TSuperRegister);
+    procedure TRGObj.Do_Spill_Read(List:TAsmList;Pos:TAI;const SpillTemp:TReference;TempReg:TRegister;OrgSupReg:TSuperRegister);
       var
-        ins:TAICPUAbstractSym;
+        Ins:TAICPUAbstractSym;
       begin
-        ins:=spilling_create_load(spilltemp,tempreg);
-        add_cpu_interferences(ins);
-        list.insertafter(ins,pos);
+        Ins:=spilling_create_load(SpillTemp,TempReg);
+        Add_CPU_Interferences(Ins);
+        List.InsertAfter(Ins,Pos);
         {$ifdef DEBUG_SPILLING}
-        list.Insertbefore(TAIComment.Create(StrPNew('Spilling: Spill Read')),ins);
+        List.InsertBefore(TAIComment.Create(StrPNew('Spilling: Spill Read')),Ins);
         {$endif}
       end;
 
 
-    procedure TRGObj.do_spill_written(list:TAsmList;pos:TAI;const spilltemp:TReference;tempreg:TRegister;orgsupreg:TSuperRegister);
+    procedure TRGObj.Do_Spill_Written(List:TAsmList;Pos:TAI;const SpillTemp:TReference;TempReg:TRegister;OrgSupReg:TSuperRegister);
       var
-        ins:TAICPUAbstractSym;
+        Ins:TAICPUAbstractSym;
       begin
-        ins:=spilling_create_store(tempreg,spilltemp);
-        add_cpu_interferences(ins);
-        list.insertafter(ins,pos);
+        Ins:=spilling_create_store(TempReg,SpillTemp);
+        Add_CPU_Interferences(Ins);
+        List.InsertAfter(Ins,Pos);
         {$ifdef DEBUG_SPILLING}
-        list.Insertbefore(TAIComment.Create(StrPNew('Spilling: Spill Write')),ins);
+        List.InsertBefore(TAIComment.Create(StrPNew('Spilling: Spill Write')),Ins);
         {$endif}
       end;
 
 
-    function TRGObj.get_spill_subreg(r : TRegister) : TSubRegister;
+    function TRGObj.Get_Spill_SubReg(R : TRegister) : TSubRegister;
       begin
-        result:=defaultsub;
+        Result:=DefaultSub;
       end;
 
 
-    function TRGObj.addreginfo(var spregs: TSpillRegsInfo; const r: TSuperRegisterSet; reg: TRegister; operation: TOperType): boolean;
+    function TRGObj.AddRegInfo(var SpRegs: TSpillRegsInfo; const R: TSuperRegisterSet; Reg: TRegister; Operation: TOperType): Boolean;
       var
-        i, tmpindex: LongInt;
-        supreg: TSuperRegister;
+        I, TmpIndex: LongInt;
+        SupReg: TSuperRegister;
       begin
-        result:=false;
-        tmpindex := spregs.spillreginfocount;
-        supreg := get_alias(getsupreg(reg));
+        Result:=False;
+        TmpIndex := SpRegs.SpillRegInfoCount;
+        SupReg := Get_Alias(GetSupReg(Reg));
         { did we already encounter this register? }
-        for i := 0 to pred(spregs.spillreginfocount) do
-          if (spregs.spillreginfo[i].orgreg = supreg) then
+        for I := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          if (SpRegs.SpillRegInfo[I].OrgReg = SupReg) then
             begin
-              tmpindex := i;
-              break;
+              TmpIndex := I;
+              Break;
             end;
-        if tmpindex > high(spregs.spillreginfo) then
+        if TmpIndex > High(SpRegs.SpillRegInfo) then
           InternalError(2003120301);
-        spregs.spillreginfo[tmpindex].orgreg := supreg;
-        include(spregs.spillreginfo[tmpindex].spillregconstraints,get_spill_subreg(reg));
-        if supregset_in(r,supreg) then
+        SpRegs.SpillRegInfo[TmpIndex].OrgReg := SupReg;
+        Include(SpRegs.SpillRegInfo[TmpIndex].SpillRegConstraints,Get_Spill_SubReg(Reg));
+        if SupRegSet_In(R,SupReg) then
           begin
             { add/update info on this register }
-            spregs.spillreginfo[tmpindex].mustbespilled := true;
-            case operation of
+            SpRegs.SpillRegInfo[TmpIndex].MustBeSpilled := True;
+            case Operation of
               operand_read:
-                spregs.spillreginfo[tmpindex].regread := true;
+                SpRegs.SpillRegInfo[TmpIndex].RegRead := True;
               operand_write:
-                spregs.spillreginfo[tmpindex].regwritten := true;
+                SpRegs.SpillRegInfo[TmpIndex].RegWritten := True;
               operand_readwrite:
                 begin
-                  spregs.spillreginfo[tmpindex].regread := true;
-                  spregs.spillreginfo[tmpindex].regwritten := true;
+                  SpRegs.SpillRegInfo[TmpIndex].RegRead := True;
+                  SpRegs.SpillRegInfo[TmpIndex].RegWritten := True;
                 end;
             end;
-            result:=true;
+            Result:=True;
           end;
-        inc(spregs.spillreginfocount,ord(spregs.spillreginfocount=tmpindex));
+        Inc(SpRegs.SpillRegInfoCount,Ord(SpRegs.SpillRegInfoCount=TmpIndex));
       end;
 
 
-    function TRGObj.instr_get_oper_spilling_info(var spregs: TSpillRegsInfo; const r: TSuperRegisterSet; instr: TAICPUAbstractSym; opidx: LongInt): boolean;
+    function TRGObj.Instr_Get_Oper_Spilling_Info(var SpRegs: TSpillRegsInfo; const R: TSuperRegisterSet; Instr: TAICPUAbstractSym; OpIdx: LongInt): Boolean;
       begin
-        result:=false;
-        with instr.oper[opidx]^ do
+        Result:=False;
+        with Instr.Oper[OpIdx]^ do
           begin
-            case typ of
+            case Typ of
               top_reg:
                 begin
-                  if (getregtype(reg) = regtype) then
-                    result:=addreginfo(spregs,r,reg,instr.spilling_get_operation_type(opidx));
+                  if (GetRegType(Reg) = RegType) then
+                    Result:=AddRegInfo(SpRegs,R,Reg,Instr.spilling_get_operation_type(OpIdx));
                 end;
               top_ref:
                 begin
-                  if regtype in [R_INTREGISTER,R_ADDRESSREGISTER] then
-                    with ref^ do
+                  if RegType in [R_INTREGISTER,R_ADDRESSREGISTER] then
+                    with Ref^ do
                       begin
-                        if (base <> NR_NO) and
-                            (getregtype(base)=regtype) then
-                          result:=addreginfo(spregs,r,base,instr.spilling_get_operation_type_ref(opidx,base));
-                        if (index <> NR_NO) and
-                            (getregtype(index)=regtype) then
-                          result:=addreginfo(spregs,r,index,instr.spilling_get_operation_type_ref(opidx,index)) or result;
+                        if (Base <> NR_NO) and
+                            (GetRegType(Base)=RegType) then
+                          Result:=AddRegInfo(SpRegs,R,Base,Instr.spilling_get_operation_type_ref(OpIdx,Base));
+                        if (Index <> NR_NO) and
+                            (GetRegType(Index)=RegType) then
+                          Result:=AddRegInfo(SpRegs,R,Index,Instr.spilling_get_operation_type_ref(OpIdx,Index)) or Result;
 {$if defined(x86)}
-                        if (segment <> NR_NO) and
-                            (getregtype(segment)=regtype) then
-                          result:=addreginfo(spregs,r,segment,instr.spilling_get_operation_type_ref(opidx,segment)) or result;
+                        if (Segment <> NR_NO) and
+                            (GetRegType(Segment)=RegType) then
+                          Result:=AddRegInfo(SpRegs,R,Segment,Instr.spilling_get_operation_type_ref(OpIdx,Segment)) or Result;
 {$endif defined(x86)}
                       end;
                 end;
@@ -2696,52 +2696,52 @@ unit rgobj;
       end;
 
 
-    procedure TRGObj.try_replace_reg(const spregs: TSpillRegsInfo; var reg: TRegister; useloadreg: boolean);
+    procedure TRGObj.Try_Replace_Reg(const SpRegs: TSpillRegsInfo; var Reg: TRegister; UseLoadReg: Boolean);
       var
-        i: LongInt;
-        supreg: TSuperRegister;
+        I: LongInt;
+        SupReg: TSuperRegister;
       begin
-        supreg:=get_alias(getsupreg(reg));
-        for i:=0 to pred(spregs.spillreginfocount) do
-          if (spregs.spillreginfo[i].mustbespilled) and
-             (spregs.spillreginfo[i].orgreg=supreg) then
+        SupReg:=Get_Alias(GetSupReg(Reg));
+        for I:=0 to Pred(SpRegs.SpillRegInfoCount) do
+          if (SpRegs.SpillRegInfo[I].MustBeSpilled) and
+             (SpRegs.SpillRegInfo[I].OrgReg=SupReg) then
             begin
               { Only replace supreg }
-              if useloadreg then
-                setsupreg(reg, getsupreg(spregs.spillreginfo[i].loadreg))
+              if UseLoadReg then
+                SetSupReg(Reg, GetSupReg(SpRegs.SpillRegInfo[I].LoadReg))
               else
-                setsupreg(reg, getsupreg(spregs.spillreginfo[i].storereg));
-              break;
+                SetSupReg(Reg, GetSupReg(SpRegs.SpillRegInfo[I].StoreReg));
+              Break;
             end;
       end;
 
 
-    procedure TRGObj.substitute_spilled_registers(const spregs: TSpillRegsInfo; instr: TAICPUAbstractSym; opidx: LongInt);
+    procedure TRGObj.Substitute_Spilled_Registers(const SpRegs: TSpillRegsInfo; Instr: TAICPUAbstractSym; OpIdx: LongInt);
       begin
-        with instr.oper[opidx]^ do
-          case typ of
+        with Instr.Oper[OpIdx]^ do
+          case Typ of
             top_reg:
               begin
-                if (getregtype(reg) = regtype) then
-                  try_replace_reg(spregs, reg, not ssa_safe or
-                    (instr.spilling_get_operation_type(opidx)=operand_read));
+                if (GetRegType(Reg) = RegType) then
+                  Try_Replace_Reg(SpRegs, Reg, not SSASafe or
+                    (Instr.spilling_get_operation_type(OpIdx)=operand_read));
               end;
             top_ref:
               begin
-                if regtype in [R_INTREGISTER, R_ADDRESSREGISTER] then
+                if RegType in [R_INTREGISTER, R_ADDRESSREGISTER] then
                   begin
-                    if (ref^.base <> NR_NO) and
-                        (getregtype(ref^.base)=regtype) then
-                      try_replace_reg(spregs, ref^.base,
-                        not ssa_safe or (instr.spilling_get_operation_type_ref(opidx, ref^.base)=operand_read));
-                    if (ref^.index <> NR_NO) and
-                        (getregtype(ref^.index)=regtype) then
-                      try_replace_reg(spregs, ref^.index,
-                        not ssa_safe or (instr.spilling_get_operation_type_ref(opidx, ref^.index)=operand_read));
+                    if (Ref^.Base <> NR_NO) and
+                        (GetRegType(Ref^.Base)=RegType) then
+                      Try_Replace_Reg(SpRegs, Ref^.Base,
+                        not SSASafe or (Instr.spilling_get_operation_type_ref(OpIdx, Ref^.Base)=operand_read));
+                    if (Ref^.Index <> NR_NO) and
+                        (GetRegType(Ref^.Index)=RegType) then
+                      Try_Replace_Reg(SpRegs, Ref^.Index,
+                        not SSASafe or (Instr.spilling_get_operation_type_ref(OpIdx, Ref^.Index)=operand_read));
   {$if defined(x86)}
-                    if (ref^.segment <> NR_NO) and
-                        (getregtype(ref^.segment)=regtype) then
-                      try_replace_reg(spregs, ref^.segment, true { always read-only });
+                    if (Ref^.Segment <> NR_NO) and
+                        (GetRegType(Ref^.Segment)=RegType) then
+                      Try_Replace_Reg(SpRegs, Ref^.Segment, True { always read-only });
   {$endif defined(x86)}
                   end;
               end;
@@ -2751,50 +2751,50 @@ unit rgobj;
       end;
 
 
-    function TRGObj.instr_spill_register(list:TAsmList;
-                                         instr:TAICPUAbstractSym;
-                                         const r:TSuperRegisterSet;
-                                         const spilltemplist:TSpillTempList): boolean;
+    function TRGObj.Instr_Spill_Register(List:TAsmList;
+                                         Instr:TAICPUAbstractSym;
+                                         const R:TSuperRegisterSet;
+                                         const SpillTempList:TSpillTempList): Boolean;
       var
-        counter: LongInt;
-        spregs: TSpillRegsInfo;
-        spilled: boolean;
+        Counter: LongInt;
+        SpRegs: TSpillRegsInfo;
+        Spilled: Boolean;
       var
-        loadpos,
-        storepos : TAI;
-        oldlive_registers : tsuperregisterworklist;
+        LoadPos,
+        StorePos : TAI;
+        OldLiveRegisters : TSuperRegisterWorkList;
       begin
-        result := false;
-        fillchar(spregs,sizeof(spregs),0);
-        for counter := low(spregs.spillreginfo) to high(spregs.spillreginfo) do
+        Result := False;
+        FillChar(SpRegs,SizeOf(SpRegs),0);
+        for Counter := Low(SpRegs.SpillRegInfo) to High(SpRegs.SpillRegInfo) do
           begin
-            spregs.spillreginfo[counter].orgreg := RS_INVALID;
-            spregs.spillreginfo[counter].loadreg := NR_INVALID;
-            spregs.spillreginfo[counter].storereg := NR_INVALID;
+            SpRegs.SpillRegInfo[Counter].OrgReg := RSInvalid;
+            SpRegs.SpillRegInfo[Counter].LoadReg := NRInvalid;
+            SpRegs.SpillRegInfo[Counter].StoreReg := NRInvalid;
           end;
-        spilled := false;
+        Spilled := False;
 
         { check whether and if so which and how (read/written) this instructions contains
           registers that must be spilled }
-        for counter := 0 to instr.ops-1 do
-          spilled:=instr_get_oper_spilling_info(spregs,r,instr,counter) or spilled;
+        for Counter := 0 to Instr.Ops-1 do
+          Spilled:=Instr_Get_Oper_Spilling_Info(SpRegs,R,Instr,Counter) or Spilled;
 
         { if no spilling for this instruction we can leave }
-        if not spilled then
-          exit;
+        if not Spilled then
+          Exit;
 
         { Check if the instruction is "OP reg1,reg2" and reg1 is coalesced with reg2 }
-        if (spregs.spillreginfocount=1) and (instr.ops=2) and
-          (instr.oper[0]^.typ=top_reg) and (instr.oper[1]^.typ=top_reg) and
-          (getregtype(instr.oper[0]^.reg)=getregtype(instr.oper[1]^.reg)) then
+        if (SpRegs.SpillRegInfoCount=1) and (Instr.Ops=2) and
+          (Instr.Oper[0]^.Typ=top_reg) and (Instr.Oper[1]^.Typ=top_reg) and
+          (GetRegType(Instr.Oper[0]^.Reg)=GetRegType(Instr.Oper[1]^.Reg)) then
           begin
             { Set both registers in the instruction to the same register }
-            setsupreg(instr.oper[0]^.reg, spregs.spillreginfo[0].orgreg);
-            setsupreg(instr.oper[1]^.reg, spregs.spillreginfo[0].orgreg);
+            SetSupReg(Instr.Oper[0]^.Reg, SpRegs.SpillRegInfo[0].OrgReg);
+            SetSupReg(Instr.Oper[1]^.Reg, SpRegs.SpillRegInfo[0].OrgReg);
             { In case of MOV reg,reg no spilling is needed.
               This MOV will be removed later in translate_registers() }
-            if instr.is_same_reg_move(regtype) then
-              exit;
+            if Instr.is_same_reg_move(RegType) then
+              Exit;
           end;
 
 {$if defined(x86)}
@@ -2803,13 +2803,13 @@ unit rgobj;
 
           For non-x86 it is nevertheless possible to replace moves to/from the register
           with loads/stores to spilltemp (Sergei) }
-        for counter := 0 to pred(spregs.spillreginfocount) do
-          with spregs.spillreginfo[counter] do
+        for Counter := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          with SpRegs.SpillRegInfo[Counter] do
             begin
-              if mustbespilled then
+              if MustBeSpilled then
                 begin
-                  if do_spill_replace(list,instr,orgreg,spilltemplist[orgreg]) then
-                    mustbespilled:=false;
+                  if Do_Spill_Replace(List,Instr,OrgReg,SpillTempList[OrgReg]) then
+                    MustBeSpilled:=False;
                 end;
             end;
 {$endif}
@@ -2845,8 +2845,8 @@ unit rgobj;
           ]
         }
 
-        result := true;
-        oldlive_registers.copyfrom(live_registers);
+        Result := True;
+        OldLiveRegisters.CopyFrom(LiveRegisters);
 
         { Process all tai_regallocs belonging to this instruction, ignore explicit
           inserted regallocs. These can happened for example in i386:
@@ -2856,49 +2856,49 @@ unit rgobj;
              lea [ireg26+ireg17],edi
           All released registers are also added to the live_registers because
           they can't be used during the spilling }
-        loadpos:=TAI(instr.previous);
-        while Assigned(loadpos) and
+        LoadPos:=TAI(Instr.Previous);
+        while Assigned(LoadPos) and
           (
-            (loadpos.typ in [ait_comment,ait_tempalloc,ait_varloc]) or
+            (LoadPos.Typ in [ait_comment,ait_tempalloc,ait_varloc]) or
             (
-              (loadpos.typ=ait_regalloc) and
+              (LoadPos.Typ=ait_regalloc) and
               (
-                (TAIRegAlloc(loadpos).instr=nil) or
-                (TAIRegAlloc(loadpos).instr=instr)
+                (TAIRegAlloc(LoadPos).Instr=nil) or
+                (TAIRegAlloc(LoadPos).Instr=Instr)
               )
             )
           ) do
           begin
             { Only add deallocs belonging to the instruction. Explicit inserted deallocs
               belong to the previous instruction and not the current instruction }
-            if (loadpos.typ=ait_regalloc) and
-               (TAIRegAlloc(loadpos).instr=instr) and
-               (TAIRegAlloc(loadpos).ratype=ra_dealloc) then
-              live_registers.add(get_alias(getsupreg(TAIRegAlloc(loadpos).reg)));
-            loadpos:=TAI(loadpos.previous);
+            if (LoadPos.Typ=ait_regalloc) and
+               (TAIRegAlloc(LoadPos).Instr=Instr) and
+               (TAIRegAlloc(LoadPos).RAType=ra_dealloc) then
+              LiveRegisters.Add(Get_Alias(GetSupReg(TAIRegAlloc(LoadPos).Reg)));
+            LoadPos:=TAI(LoadPos.Previous);
           end;
-        loadpos:=TAI(loadpos.next);
+        LoadPos:=TAI(LoadPos.Next);
 
         { Load the spilled registers }
-        for counter := 0 to pred(spregs.spillreginfocount) do
-          with spregs.spillreginfo[counter] do
+        for Counter := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          with SpRegs.SpillRegInfo[Counter] do
             begin
-              if mustbespilled and regread then
+              if MustBeSpilled and RegRead then
                 begin
-                  loadreg:=getregisterinline(list,spregs.spillreginfo[counter].spillregconstraints);
-                  do_spill_read(list,TAI(loadpos.previous),spilltemplist[orgreg],loadreg,orgreg);
-                  include(reginfo[getsupreg(loadreg)].flags,ri_spill_helper);
+                  LoadReg:=GetRegisterInline(List,SpRegs.SpillRegInfo[Counter].SpillRegConstraints);
+                  Do_Spill_Read(List,TAI(LoadPos.Previous),SpillTempList[OrgReg],LoadReg,OrgReg);
+                  Include(RegInfo[GetSupReg(LoadReg)].Flags,ri_spill_helper);
                 end;
             end;
 
         { Release temp registers of read-only registers, and add reference of the instruction
           to the reginfo }
-        for counter := 0 to pred(spregs.spillreginfocount) do
-          with spregs.spillreginfo[counter] do
+        for Counter := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          with SpRegs.SpillRegInfo[Counter] do
             begin
-              if mustbespilled and regread and
-                (ssa_safe or
-                 not regwritten) then
+              if MustBeSpilled and RegRead and
+                (SSASafe or
+                 not RegWritten) then
                 begin
                   { The original instruction will be the next that uses this register
 
@@ -2908,32 +2908,32 @@ unit rgobj;
                     is short living, see e.g. tw25164.pas
 
                     the min trick is needed to avoid an overflow in case weight=high(weight which might happen }
-                  add_reg_instruction(instr,loadreg,min(high(reginfo[orgreg].weight)-1,reginfo[orgreg].weight)+1);
-                  ungetregisterinline(list,loadreg);
+                  Add_Reg_Instruction(Instr,LoadReg,Min(High(RegInfo[OrgReg].Weight)-1,RegInfo[OrgReg].Weight)+1);
+                  UngetRegisterInline(List,LoadReg);
                 end;
             end;
 
         { Allocate temp registers of write-only registers, and add reference of the instruction
           to the reginfo }
-        for counter := 0 to pred(spregs.spillreginfocount) do
-          with spregs.spillreginfo[counter] do
+        for Counter := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          with SpRegs.SpillRegInfo[Counter] do
             begin
-              if mustbespilled and regwritten then
+              if MustBeSpilled and RegWritten then
                 begin
                   { When the register is also loaded there is already a register assigned }
-                  if (not regread) or
-                     ssa_safe then
+                  if (not RegRead) or
+                     SSASafe then
                     begin
-                      storereg:=getregisterinline(list,spregs.spillreginfo[counter].spillregconstraints);
-                      include(reginfo[getsupreg(storereg)].flags,ri_spill_helper);
+                      StoreReg:=GetRegisterInline(List,SpRegs.SpillRegInfo[Counter].SpillRegConstraints);
+                      Include(RegInfo[GetSupReg(StoreReg)].Flags,ri_spill_helper);
                       { we also use loadreg for store replacements in case we
                         don't have ensure ssa -> initialise loadreg even if
                         there are no reads }
-                      if not regread  then
-                       loadreg:=storereg;
+                      if not RegRead  then
+                       LoadReg:=StoreReg;
                     end
                   else
-                    storereg:=loadreg;
+                    StoreReg:=LoadReg;
                   { The original instruction will be the next that uses this register, this
                     also needs to be done for read-write registers,
 
@@ -2943,53 +2943,53 @@ unit rgobj;
                     is short living, see e.g. tw25164.pas
 
                     the min trick is needed to avoid an overflow in case weight=high(weight which might happen }
-                  add_reg_instruction(instr,storereg,min(high(reginfo[orgreg].weight)-1,reginfo[orgreg].weight)+1);
+                  Add_Reg_Instruction(Instr,StoreReg,Min(High(RegInfo[OrgReg].Weight)-1,RegInfo[OrgReg].Weight)+1);
                 end;
             end;
 
         { store the spilled registers }
-        if not Assigned(instr.next) then
-          list.concat(TAIMarker.Create(mark_Position));
-        storepos:=TAI(instr.next);
-        for counter := 0 to pred(spregs.spillreginfocount) do
-          with spregs.spillreginfo[counter] do
+        if not Assigned(Instr.Next) then
+          List.Concat(TAIMarker.Create(mark_Position));
+        StorePos:=TAI(Instr.Next);
+        for Counter := 0 to Pred(SpRegs.SpillRegInfoCount) do
+          with SpRegs.SpillRegInfo[Counter] do
             begin
-              if mustbespilled and regwritten then
+              if MustBeSpilled and RegWritten then
                 begin
-                  do_spill_written(list,TAI(storepos.previous),spilltemplist[orgreg],storereg,orgreg);
-                  ungetregisterinline(list,storereg);
+                  Do_Spill_Written(List,TAI(StorePos.Previous),SpillTempList[OrgReg],StoreReg,OrgReg);
+                  UngetRegisterInline(List,StoreReg);
                 end;
             end;
 
         { now all spilling code is generated we can restore the live registers. This
           must be done after the store because the store can need an extra register
           that also needs to conflict with the registers of the instruction }
-        live_registers.done;
-        live_registers:=oldlive_registers;
+        LiveRegisters.Done;
+        LiveRegisters:=OldLiveRegisters;
 
         { substitute registers }
-        for counter:=0 to instr.ops-1 do
-          substitute_spilled_registers(spregs,instr,counter);
+        for Counter:=0 to Instr.Ops-1 do
+          Substitute_Spilled_Registers(SpRegs,Instr,Counter);
         { We have modified the instruction; perhaps the new instruction has
           certain constraints regarding which imaginary registers interfere
           with certain physical registers. }
-        add_cpu_interferences(instr);
+        Add_CPU_Interferences(Instr);
       end;
 
 
-    procedure TRGObj.remove_ai(list:TAsmList; var p:TAI);
+    procedure TRGObj.Remove_AI(List:TAsmList; var P:TAI);
       var
-        q:TAI;
+        Q:TAI;
       begin
-        q:=TAI(p.next);
-        list.remove(p);
-        p.free;
-        p:=q;
+        Q:=TAI(P.Next);
+        List.Remove(P);
+        P.Free;
+        P:=Q;
       end;
 
 
 {$ifdef DEBUG_SPILLCOALESCE}
-    procedure TRGObj.write_spill_stats;
+    procedure TRGObj.Write_Spill_Stats;
 
       { This procedure outputs spilling statistics.
         If no spilling has occurred, no output is provided.
@@ -3002,40 +3002,40 @@ unit rgobj;
             Higher value is better.
       }
       var
-        i,j,spillingcounter,max_weight:LongInt;
-        all_weight,spill_weight,d: double;
+        I,J,SpillingCounter,MaxWeight:LongInt;
+        AllWeight,SpillWeight,D: Double;
       begin
-        max_weight:=1;
-        for i:=first_imaginary to maxreg-1 do
-          with reginfo[i] do
-            if weight>max_weight then
-              max_weight:=weight;
+        MaxWeight:=1;
+        for I:=FirstImaginary to MaxReg-1 do
+          with RegInfo[I] do
+            if Weight>MaxWeight then
+              MaxWeight:=Weight;
 
-        spillingcounter:=0;
-        spill_weight:=0;
-        all_weight:=0;
-        for i:=first_imaginary to maxreg-1 do
-          with reginfo[i] do
-            if not (ri_spill_helper in flags) then
+        SpillingCounter:=0;
+        SpillWeight:=0;
+        AllWeight:=0;
+        for I:=FirstImaginary to MaxReg-1 do
+          with RegInfo[I] do
+            if not (ri_spill_helper in Flags) then
               begin
-                d:=weight/max_weight;
-                all_weight:=all_weight+d;
-                if (ri_coalesced in flags) and (alias>=first_imaginary) then
-                  j:=alias
+                D:=Weight/MaxWeight;
+                AllWeight:=AllWeight+D;
+                if (ri_coalesced in Flags) and (Alias>=FirstImaginary) then
+                  J:=Alias
                 else
-                  j:=i;
-                if (reginfo[j].weight>100) and
-                   (j<=high(spillinfo)) and
-                   spillinfo[j].spilled then
+                  J:=I;
+                if (RegInfo[J].Weight>100) and
+                   (J<=High(SpillInfo)) and
+                   SpillInfo[J].Spilled then
                   begin
-                    inc(spillingcounter);
-                    spill_weight:=spill_weight+d;
+                    Inc(SpillingCounter);
+                    SpillWeight:=SpillWeight+D;
                   end;
               end;
-        if spillingcounter>0 then
+        if SpillingCounter>0 then
           begin
-            d:=(1.0-spill_weight/all_weight)*100.0;
-            WriteLn(CurrentProcInfo.procdef.MangledName,' [',regtype,']: spill stats: NUM: ',spillingcounter, ', EFF: ',d:4:1,'%');
+            D:=(1.0-SpillWeight/AllWeight)*100.0;
+            WriteLn(CurrentProcInfo.ProcDef.MangledName,' [',RegType,']: spill stats: NUM: ',SpillingCounter, ', EFF: ',D:4:1,'%');
           end;
       end;
 {$endif DEBUG_SPILLCOALESCE}

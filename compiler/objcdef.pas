@@ -72,7 +72,7 @@ implementation
         bpacked: boolean;
       begin
         result:=false;
-        bpacked:=recst.FieldAlignment=bit_alignment;
+        bpacked:=recst.FieldAlignment=BitAlignment;
         { Is the first field already the start of a variant?  }
         firstfield:=nil;
         firstfieldvariant:=false;
@@ -178,19 +178,19 @@ implementation
           orddef :
             begin
               if bpacked and
-                 not is_void(def) then
+                 not Is_Void(def) then
                 encodedstr:=encodedstr+'b'+ToStr(def.PackedBitSize)
               else
                 begin
-                  if is_void(def) then
+                  if Is_Void(def) then
                     c:='v'
                   { in gcc, sizeof(_Bool) = sizeof(char) }
-                  else if is_boolean(def) and
-                          (def.size=1) then
+                  else if Is_Boolean(def) and
+                          (def.Size=1) then
                     c:='B'
                   else
                     begin
-                      case def.size of
+                      case def.Size of
                         1:
                           c:='c';
                         2:
@@ -202,7 +202,7 @@ implementation
                         else
                           InternalError(2009081502);
                       end;
-                      if not is_signed(def) then
+                      if not Is_Signed(def) then
                         c:=upcase(c);
                     end;
                   encodedstr:=encodedstr+c;
@@ -210,7 +210,7 @@ implementation
             end;
           pointerdef :
             begin
-              if is_pchar(def) then
+              if Is_PChar(def) then
                 encodedstr:=encodedstr+'*'
               else if (def=ObjC_IDType) then
                 encodedstr:=encodedstr+'@'
@@ -323,13 +323,13 @@ implementation
             end;
           setdef :
             begin
-              addrpara:=paramanager.push_addr_param(vs_value,def,pocall_cdecl);
+              addrpara:=ParaManager.Push_Addr_Param(vs_value,def,pocall_cdecl);
               if not addrpara then
                 { encode as an record, they are always passed by value in C.  }
                 encodedstr:=encodedstr+'{?=';
               { Encode the set itself as an array. Without an encompassing
                 record, these are always passed by reference in C.  }
-              encodedstr:=encodedstr+'['+ToStr(def.size)+'C]';
+              encodedstr:=encodedstr+'['+ToStr(def.Size)+'C]';
               if not addrpara then
                 encodedstr:=encodedstr+'}';
             end;
@@ -339,14 +339,14 @@ implementation
             end;
           arraydef :
             begin
-              if is_array_of_const(def) then
+              if Is_Array_Of_Const(def) then
                 { do nothing, varargs are ignored in signatures }
-              else if is_special_array(def) then
+              else if Is_Special_Array(def) then
                 result:=false
               else
                 begin
                   len:=TArrayDef(def).HighRange-TArrayDef(def).LowRange+1;
-                  if is_packed_array(def) then
+                  if Is_Packed_Array(def) then
                     begin
                       { convert from bits to bytes for bitpacked arrays }
                       len:=(len+7) div 8;
@@ -574,13 +574,13 @@ implementation
             ;
           arraydef :
             begin
-              if is_array_of_const(def) then
+              if Is_Array_Of_Const(def) then
                 { ok, varargs are ignored in signatures }
-              else if is_special_array(def) then
+              else if Is_Special_Array(def) then
                 result:=false
               else
                 begin
-                  if not is_packed_array(def) then
+                  if not Is_Packed_Array(def) then
                     begin
                       if not objcdochecktype(TArrayDef(def).ElementDef,ris_initial,founderror) then
                         begin

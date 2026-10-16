@@ -59,7 +59,7 @@ unit cpupi;
 
     procedure TCPUProcInfo.set_first_temp_offset;
       begin
-        if paramanager.use_fixed_stack then
+        if ParaManager.Use_Fixed_Stack then
           begin
             if not(po_assembler in procdef.ProcOptions) and
                (tg.direction > 0) then
@@ -77,7 +77,7 @@ unit cpupi;
         { align to 4 bytes at least
           otherwise all those subl $2,%esp are meaningless PM }
         if TargetInfo.stackalign<=4 then
-          result:=Align(tg.direction*tg.lasttemp,min(CurrentSettings.alignment.LocalAlignMax,4))
+          result:=Align(tg.direction*tg.lasttemp,min(CurrentSettings.Alignment.LocalAlignMax,4))
         else
           { aligned during stack frame allocation, because also depends number
             of saved registers }
@@ -92,7 +92,7 @@ unit cpupi;
           from the stack at the end of the procedure (in the "ret $xx").
           If the stack is fixed, nothing has to be removed by the callee, except
           if a 16 byte aligned stack on i386-linux is used     }
-        if paramanager.use_fixed_stack and not(TargetInfo.abi=abi_i386_dynalignedstack) then
+        if ParaManager.Use_Fixed_Stack and not(TargetInfo.abi=abi_i386_dynalignedstack) then
           para_stack_size := 0;
       end;
 
@@ -104,11 +104,11 @@ unit cpupi;
             { FIXME: It is better to use an imaginary register for GOT and
               if EBX is needed for some reason just allocate EBX and
               copy GOT into it before its usage. }
-            cg.getcpuregister(list,NR_EBX);
+            cg.GetCPURegister(list,NR_EBX);
             got := NR_EBX;
           end
         else if cs_create_pic in CurrentSettings.ModuleSwitches then
-          got := cg.getaddressregister(list);
+          got := cg.GetAddressRegister(list);
       end;
 
 begin

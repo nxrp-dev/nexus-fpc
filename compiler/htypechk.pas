@@ -122,7 +122,7 @@ interface
         (tok:_MINUS      ;nod:subn     ;inr:in_none ;supported_op_overloads:[op_unary,op_binary]),
         (tok:_STAR       ;nod:muln     ;inr:in_none ;supported_op_overloads:[op_binary]),
         (tok:_SLASH      ;nod:slashn   ;inr:in_none ;supported_op_overloads:[op_binary]),
-        (tok:_EQ         ;nod:equaln   ;inr:in_none ;supported_op_overloads:[op_binary]),
+        (tok:_EQ         ;nod:EqualN   ;inr:in_none ;supported_op_overloads:[op_binary]),
         (tok:_GT         ;nod:gtn      ;inr:in_none ;supported_op_overloads:[op_binary]),
         (tok:_LT         ;nod:ltn      ;inr:in_none ;supported_op_overloads:[op_binary]),
         (tok:_GTE        ;nod:gten     ;inr:in_none ;supported_op_overloads:[op_binary]),
@@ -270,7 +270,7 @@ implementation
 
         function internal_check(treetyp:TNodeType;ld:TDef;lt:TNodeType;rd:TDef;rt:TNodeType;var allowed:boolean):boolean;
         const
-          identity_operators=[equaln,unequaln];
+          identity_operators=[EqualN,unequaln];
           order_theoretic_operators=identity_operators+[ltn,lten,gtn,gten];
           arithmetic_operators=[addn,subn,muln,divn,modn];
           rational_operators=[addn,subn,muln,slashn];
@@ -300,16 +300,16 @@ implementation
               begin
                 allowed:=not (
                            (
-                             is_set(rd) and
+                             Is_Set(rd) and
                              (treetyp in element_set_operators)
                            ) or
                            (
-                             is_enum(rd) and
+                             Is_Enum(rd) and
                              (treetyp in (order_theoretic_operators+[addn, subn]))
                            ) or
                            (
                              { for enum definitions, see tbs/tw22860.pas }
-                             is_integer(rd) and
+                             Is_Integer(rd) and
                              (treetyp in (order_theoretic_operators+bit_manipulation_operators+arithmetic_operators))
                            )
                          );
@@ -318,7 +318,7 @@ implementation
               begin
                 allowed:=not (
                            (
-                             is_set(rd) and
+                             Is_Set(rd) and
                              (treetyp in (set_set_operators+identity_operators))
                            ) or
                            (
@@ -339,7 +339,7 @@ implementation
                            ) or
                            (
                              (m_mac in CurrentSettings.ModeSwitches) and
-                             is_stringlike(rd) and
+                             Is_StringLike(rd) and
                              (ld.typ=orddef) and
                              (treetyp in string_comparison_operators)) or
                              { c.f. $(source)\tests\tmacpas5.pas }
@@ -361,35 +361,35 @@ implementation
                   is_integer(). }
                 if allowed then
                   begin
-                    if is_anychar(ld) then
+                    if Is_AnyChar(ld) then
                       allowed:=not (
-                                 is_stringlike(rd) and
+                                 Is_StringLike(rd) and
                                  (treetyp in string_operators)
                                )
-                    else if is_boolean(ld) then
+                    else if Is_Boolean(ld) then
                       allowed:=not (
-                                 is_boolean(rd) and
+                                 Is_Boolean(rd) and
                                  (treetyp in logical_operators)
                                )
-                    else if is_integer(ld) or
+                    else if Is_Integer(ld) or
                         (
                           (ld.typ=orddef) and
-                          is_currency(ld)
+                          Is_Currency(ld)
                         { Here ld is Currency but behaves like an integer }
                         ) then
                       allowed:=not (
                                  (
                                    (
-                                     is_integer(rd) or
+                                     Is_Integer(rd) or
                                      (
                                        (rd.typ=orddef) and
-                                       is_currency(rd)
+                                       Is_Currency(rd)
                                      )
                                    ) and
                                    (treetyp in (bit_manipulation_operators+numerical_operators))
                                  ) or
                                  (
-                                   is_fpu(rd) and
+                                   Is_FPU(rd) and
                                    (treetyp in rational_operators)
                                  ) or
                                  (
@@ -397,7 +397,7 @@ implementation
                                      pointer arithmetic, DI doesn’t accept minus as the
                                      operator (Currency can’t be used in pointer
                                      arithmetic even if it’s under orddef)  }
-                                   is_integer(ld) and
+                                   Is_Integer(ld) and
                                    (rd.typ=pointerdef) and
                                    (treetyp in pointer_arithmetic_operators-[subn])
                                  )
@@ -405,9 +405,9 @@ implementation
                     else  { is_fpu(ld) = True }
                       allowed:=not (
                                  (
-                                   is_fpu(rd) or
-                                   is_integer(rd) or
-                                   is_currency(rd)
+                                   Is_FPU(rd) or
+                                   Is_Integer(rd) or
+                                   Is_Currency(rd)
                                  ) and
                                  (treetyp in rational_operators)
                                );
@@ -429,8 +429,8 @@ implementation
                   The last case is only valid in DI when both sides are
                   stringlike. }
 
-                if is_stringlike(ld) then
-                  if is_stringlike(rd) then
+                if Is_StringLike(ld) then
+                  if Is_StringLike(rd) then
                     { DI in this case permits string operations and pointer
                       arithmetic. }
                     allowed:=not (treetyp in (string_operators+pointer_arithmetic_operators))
@@ -443,7 +443,7 @@ implementation
                                  order_theoretic_operators
                                )
                              )
-                  else if is_integer(rd) then
+                  else if Is_Integer(rd) then
                     { DI in this case permits pointer arithmetic. }
                     allowed:=not (treetyp in pointer_arithmetic_operators)
                   else
@@ -451,7 +451,7 @@ implementation
                 else
                   allowed:=not (
                              (
-                               is_integer(rd) and
+                               Is_Integer(rd) and
                                (treetyp in pointer_arithmetic_operators)
                              ) or
                              (
@@ -466,7 +466,7 @@ implementation
                              (
                                (lt=niln) and
                                ((rd.typ in [procvardef,procdef,classrefdef]) or
-                                (is_dynamic_array(rd))) and
+                                (Is_Dynamic_Array(rd))) and
                                (treetyp in identity_operators)
                              ) or
                              (
@@ -479,31 +479,31 @@ implementation
               begin
                 { not vector/mmx }
                 if ((cs_mmx in CurrentSettings.LocalSwitches) and
-                   is_mmx_able_array(ld)) or
+                   Is_MMX_Able_Array(ld)) or
                    ((cs_support_vectors in CurrentSettings.GlobalSwitches) and
-                   is_vector(ld)) then
+                   Is_Vector(ld)) then
                  begin
                    allowed:=false;
                    exit;
                  end;
 
-                if is_stringlike(ld) and
+                if Is_StringLike(ld) and
                     (
                       (
                         (
-                          is_stringlike(rd) or
+                          Is_StringLike(rd) or
                           (rt = niln)
                         ) and
                         (treetyp in string_operators)
                       ) or
                       (
-                        is_integer(rd) and
+                        Is_Integer(rd) and
                         (treetyp in pointer_arithmetic_operators)
                       ) or
                       (
                         (
-                          is_pchar(rd) or
-                          is_pwidechar(rd)) and
+                          Is_PChar(rd) or
+                          Is_PWideChar(rd)) and
                           (treetyp in pointer_arithmetic_operators) and
                           (TPointerDef(rd).PointedDef=TArrayDef(ld).ElementDef
                         )
@@ -515,9 +515,9 @@ implementation
                   end;
 
                 { dynamic array compare with niln }
-                if is_dynamic_array(ld) and
+                if Is_Dynamic_Array(ld) and
                     (treetyp in identity_operators) then
-                  if is_dynamic_array(rd) or
+                  if Is_Dynamic_Array(rd) or
                       (rt=niln) then
                     begin
                       allowed:=false;
@@ -527,8 +527,8 @@ implementation
                  { <dyn. array> + <dyn. array> is handled by the compiler }
                  if (m_array_operators in CurrentSettings.ModeSwitches) and
                      (treetyp=addn) and
-                     (is_dynamic_array(ld) or is_array_constructor(ld)) and
-                     (is_dynamic_array(rd) or is_array_constructor(rd)) then
+                     (Is_Dynamic_Array(ld) or Is_Array_Constructor(ld)) and
+                     (Is_Dynamic_Array(rd) or Is_Array_Constructor(rd)) then
                     begin
                       allowed:=false;
                       exit;
@@ -554,7 +554,7 @@ implementation
             stringdef :
               begin
                 allowed:=not (
-                           is_stringlike(rd) and
+                           Is_StringLike(rd) and
                            (treetyp in string_operators)
                          );
               end;
@@ -592,7 +592,7 @@ implementation
 
 {$ifdef SUPPORT_MMX}
               if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(ld) then
+                 Is_MMX_Able_Array(ld) then
                 exit;
 {$endif SUPPORT_MMX}
 
@@ -605,7 +605,7 @@ implementation
 
 {$ifdef SUPPORT_MMX}
               if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(ld) then
+                 Is_MMX_Able_Array(ld) then
                 exit;
 {$endif SUPPORT_MMX}
 
@@ -641,7 +641,7 @@ implementation
               begin
                 dec(count);
               end
-            else if is_boolean(parasym.vardef) then
+            else if Is_Boolean(parasym.vardef) then
               begin
                 if parasym.name='RANGECHECK' then
                   begin
@@ -673,7 +673,7 @@ implementation
                     cdo:=[];
                     if optoken=_OP_EXPLICIT then
                       include(cdo,cdo_explicit);
-                    eq:=compare_defs_ext(ld,pf.ReturnDef,nothingn,conv,pd,cdo);
+                    eq:=Compare_Defs_Ext(ld,pf.ReturnDef,nothingn,conv,pd,cdo);
                     result:=
                       (eq=te_exact) or
                       (eq=te_incompatible);
@@ -1060,7 +1060,7 @@ implementation
                 { if there's an implicit dereference, we can stop (just like
                   when there is an actual derefn) }
                 if ((TVecNode(p).left.resultdef.typ=arraydef) and
-                    not is_special_array(TVecNode(p).left.resultdef)) or
+                    not Is_Special_Array(TVecNode(p).left.resultdef)) or
                    ((TVecNode(p).left.resultdef.typ=stringdef) and
                     (TStringDef(TVecNode(p).left.resultdef).StringType in [st_shortstring,st_longstring])) then
                   p:=TVecNode(p).left
@@ -1141,7 +1141,7 @@ implementation
         if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
             (m_mac_procvar in CurrentSettings.ModeSwitches)) and
            (p.nodetype=typeconvn) and
-           is_voidpointer(p.resultdef) then
+           Is_VoidPointer(p.resultdef) then
           p:=TUnaryNode(p).left;
         result:=(p.nodetype=typeconvn) and
                 (TTypeConvNode(p).convtype=tc_proc_2_procvar);
@@ -1173,10 +1173,10 @@ implementation
     procedure test_local_to_procvar(from_def:TProcVarDef;to_def:TDef);
       begin
          if not(m_nested_procvars in CurrentSettings.ModeSwitches) and
-            (from_def.ParaST.SymTableLevel>normal_function_level) and
+            (from_def.ParaST.SymTableLevel>NormalFunctionLevel) and
             not (po_anonymous in from_def.ProcOptions) and
             (to_def.typ=procvardef) and
-            (TProcVarDef(to_def).ParaST.SymTableLevel <= normal_function_level) then
+            (TProcVarDef(to_def).ParaST.SymTableLevel <= NormalFunctionLevel) then
            CGMessage(type_e_cannot_local_proc_to_procvar);
       end;
 
@@ -1316,20 +1316,20 @@ implementation
                                        expects undefined contents of the string after calling SetLength(). In such
                                        case a hint need to be emitted.
                                      }
-                                     if is_managed_type(hsym.vardef) then
-                                       if not ( is_string(hsym.vardef) and (vsf_use_hint_for_string_result in varstateflags) ) then
+                                     if Is_Managed_Type(hsym.vardef) then
+                                       if not ( Is_String(hsym.vardef) and (vsf_use_hint_for_string_result in varstateflags) ) then
                                          exclude(varstateflags,vsf_use_hints);
 
                                      if vsf_use_hints in varstateflags then
                                        begin
-                                         if is_managed_type(hsym.vardef) then
+                                         if Is_Managed_Type(hsym.vardef) then
                                            CGMessagePos(p.fileinfo,sym_h_managed_function_result_uninitialized)
                                          else
                                            CGMessagePos(p.fileinfo,sym_h_function_result_uninitialized);
                                        end
                                      else
                                        begin
-                                         if is_managed_type(hsym.vardef) then
+                                         if Is_Managed_Type(hsym.vardef) then
                                            CGMessagePos(p.fileinfo,sym_w_managed_function_result_uninitialized)
                                          else
                                           CGMessagePos(p.fileinfo,sym_w_function_result_uninitialized);
@@ -1341,7 +1341,7 @@ implementation
 
                                        not(vsf_use_hints in varstateflags),
                                        TLoadNode(p).SymTable.SymTableType=LocalSymTable,
-                                       is_managed_type(TLoadNode(p).resultdef),
+                                       Is_Managed_Type(TLoadNode(p).resultdef),
                                        hsym.realname);
                                    end;
                                end;
@@ -1467,7 +1467,7 @@ implementation
         gottypeconv:=false;
         hp:=p;
         if not(valid_void in opts) and
-           is_void(hp.resultdef) then
+           Is_Void(hp.resultdef) then
          begin
            if report_errors then
              CGMessagePos(hp.fileinfo,errmsg);
@@ -1569,20 +1569,20 @@ implementation
                         ((nf_explicit in hp.flags) and
                          TTypeConvNode(hp).target_specific_explicit_typeconv) or
                         (fromdef.typ=formaldef) or
-                        is_void(fromdef) or
-                        is_open_array(fromdef) or
-                        is_open_array(todef) or
+                        Is_Void(fromdef) or
+                        Is_Open_Array(fromdef) or
+                        Is_Open_Array(todef) or
                         ((fromdef.typ=pointerdef) and (todef.typ=arraydef)) or
-                        (def_is_related(fromdef,todef))) then
+                        (Def_Is_Related(fromdef,todef))) then
                   begin
-                    if (fromdef.size<>todef.size) then
+                    if (fromdef.Size<>todef.Size) then
                       begin
                         { A cast to a smaller type cannot use a register variable. }
-                        if todef.size<fromdef.size then
+                        if todef.Size<fromdef.Size then
                           make_not_regable(hp,[ra_addr_regable])
                         else
                           if report_errors then
-                            CGMessagePos2(hp.fileinfo,type_e_typecast_wrong_size_for_assignment,ToStr(fromdef.size),ToStr(todef.size));
+                            CGMessagePos2(hp.fileinfo,type_e_typecast_wrong_size_for_assignment,ToStr(fromdef.Size),ToStr(todef.Size));
                       end
 
                   end;
@@ -1629,7 +1629,7 @@ implementation
                     (TVecNode(hp).left.resultdef.typ = arraydef) and
                     (ado_IsBitPacked in TArrayDef(TVecNode(hp).left.resultdef).ArrayOptions) and
                     ((TArrayDef(TVecNode(hp).left.resultdef).ElePackedBitSize mod 8 <> 0) or
-                     (is_ordinal(TArrayDef(TVecNode(hp).left.resultdef).ElementDef) and
+                     (Is_Ordinal(TArrayDef(TVecNode(hp).left.resultdef).ElementDef) and
                       not IsPowerOf2(TArrayDef(TVecNode(hp).left.resultdef).ElePackedBitSize div 8,temp))) then
                    begin
                      if report_errors then
@@ -1646,7 +1646,7 @@ implementation
                       returned by a function can also be changed, or you can
                       assign the dynamic array to a variable and then change
                       its elements anyway }
-                 if is_dynamic_array(TUnaryNode(hp).left.resultdef) then
+                 if Is_Dynamic_Array(TUnaryNode(hp).left.resultdef) then
                    begin
                      result:=true;
                      mayberesettypeconvs;
@@ -1672,9 +1672,9 @@ implementation
                  { only check first (= outermost) subscriptn }
                  if not gotsubscript and
                     not(valid_packed in opts) and
-                    is_packed_record_or_object(TSubscriptNode(hp).left.resultdef) and
+                    Is_Packed_Record_Or_Object(TSubscriptNode(hp).left.resultdef) and
                     ((TSubscriptNode(hp).vs.FieldOffset mod 8 <> 0) or
-                     (is_ordinal(TSubscriptNode(hp).resultdef) and
+                     (Is_Ordinal(TSubscriptNode(hp).resultdef) and
                       not IsPowerOf2(TSubscriptNode(hp).resultdef.PackedBitSize div 8,temp)))  then
                    begin
                      if report_errors then
@@ -1793,7 +1793,7 @@ implementation
              blockn,
              calln :
                begin
-                 if ((hp.nodetype=calln) and not(is_void(hp.resultdef))) or
+                 if ((hp.nodetype=calln) and not(Is_Void(hp.resultdef))) or
                     (nf_no_lvalue in hp.flags) then
                    begin
                      { Temp strings are stored in memory, for compatibility with
@@ -2006,13 +2006,13 @@ implementation
             end;
           arraydef :
             begin
-              if is_open_array(def_to) then
+              if Is_Open_Array(def_to) then
                 begin
-                  if is_dynamic_array(def_from) and
-                     equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
+                  if Is_Dynamic_Array(def_from) and
+                     Equal_Defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
                     eq:=te_convert_l2
                   else
-                    if equal_defs(def_from,TArrayDef(def_to).ElementDef) then
+                    if Equal_Defs(def_from,TArrayDef(def_to).ElementDef) then
                       eq:=te_convert_l3;
                 end;
             end;
@@ -2025,8 +2025,8 @@ implementation
           stringdef :
             begin
               { all shortstrings are allowed, size is not important }
-              if is_shortstring(def_from) and
-                 is_shortstring(def_to) then
+              if Is_ShortString(def_from) and
+                 Is_ShortString(def_to) then
                 eq:=te_equal;
             end;
           objectdef :
@@ -2040,7 +2040,7 @@ implementation
                   (TObjectDef(def_from).ObjectType=odt_object) and
                   (TObjectDef(def_to).ObjectType=odt_object)
                  ) and
-                 (def_is_related(TObjectDef(def_from),TObjectDef(def_to))) then
+                 (Def_Is_Related(TObjectDef(def_from),TObjectDef(def_to))) then
                 eq:=te_convert_l1;
             end;
           filedef :
@@ -2081,8 +2081,8 @@ implementation
             begin
               { set can also be a not yet converted array constructor }
               if (p.resultdef.typ=arraydef) and
-                 is_array_constructor(p.resultdef) and
-                 not is_variant_array(p.resultdef) then
+                 Is_Array_Constructor(p.resultdef) and
+                 not Is_Variant_Array(p.resultdef) then
                 eq:=te_equal;
             end;
           procvardef :
@@ -2092,15 +2092,15 @@ implementation
               if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                   (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                  (p.left.nodetype=calln) then
-                tmpeq:=proc_to_procvar_equal(TProcDef(TCallNode(p.left).procdefinition),TProcVarDef(def_to),false);
+                tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(p.left).procdefinition),TProcVarDef(def_to),false);
               if (tmpeq=te_incompatible) and
                  (m_nested_procvars in CurrentSettings.ModeSwitches) and
                  is_proc2procvar_load(p.left,realprocdef) then
-                tmpeq:=proc_to_procvar_equal(realprocdef,TProcVarDef(def_to),false);
+                tmpeq:=Proc_To_ProcVar_Equal(realprocdef,TProcVarDef(def_to),false);
               if (tmpeq=te_incompatible) and
                  (m_mac in CurrentSettings.ModeSwitches) and
                  is_ambiguous_funcret_load(p.left,realprocdef) then
-                tmpeq:=proc_to_procvar_equal(realprocdef,TProcVarDef(def_to),false);
+                tmpeq:=Proc_To_ProcVar_Equal(realprocdef,TProcVarDef(def_to),false);
               if tmpeq<>te_incompatible then
                 eq:=tmpeq;
             end;
@@ -2111,8 +2111,8 @@ implementation
               if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                   (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                  (p.left.nodetype=calln) and
-                 is_invokable(def_to) then
-                tmpeq:=proc_to_funcref_conv(TProcDef(TCallNode(p.left).procdefinition),TObjectDef(def_to));
+                 Is_Invokable(def_to) then
+                tmpeq:=Proc_To_FuncRef_Conv(TProcDef(TCallNode(p.left).procdefinition),TObjectDef(def_to));
               if tmpeq<>te_incompatible then
                 eq:=tmpeq;
             end;
@@ -2123,8 +2123,8 @@ implementation
               if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                   (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                  (TArrayDef(def_to).ElementDef.typ=procvardef) and
-                 is_array_constructor(p.resultdef) and
-                 not is_variant_array(p.resultdef) then
+                 Is_Array_Constructor(p.resultdef) and
+                 not Is_Variant_Array(p.resultdef) then
                 begin
                   acn:=TArrayConstructorNode(p.left);
                   if Assigned(acn.left) then
@@ -2134,9 +2134,9 @@ implementation
                             (eq<>te_incompatible) do
                         begin
                           if (acn.left.nodetype=calln) then
-                            tmpeq:=proc_to_procvar_equal(TProcDef(TCallNode(acn.left).procdefinition),TProcVarDef(TArrayDef(def_to).ElementDef),false)
+                            tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(acn.left).procdefinition),TProcVarDef(TArrayDef(def_to).ElementDef),false)
                           else
-                            tmpeq:=compare_defs(acn.left.resultdef,TArrayDef(def_to).ElementDef,acn.left.nodetype);
+                            tmpeq:=Compare_Defs(acn.left.resultdef,TArrayDef(def_to).ElementDef,acn.left.nodetype);
                           if tmpeq<eq then
                             eq:=tmpeq;
                           acn:=TArrayConstructorNode(acn.right);
@@ -2152,7 +2152,7 @@ implementation
 
     function allowenumop(nt:TNodeType):boolean;
       begin
-        result:=(nt in [equaln,unequaln,ltn,lten,gtn,gten]) or
+        result:=(nt in [EqualN,unequaln,ltn,lten,gtn,gten]) or
                 ((cs_allow_enum_calc in CurrentSettings.LocalSwitches) and
                  (nt in [addn,subn]));
       end;
@@ -2268,7 +2268,7 @@ implementation
                        (pd.MessageInf.str^<>CurrentProcInfo.procdef.MessageInf.str^) then
                       continue
                   end
-                else if (compare_paras(CurrentProcInfo.procdef.paras,pd.paras,cp_all,[cpo_ignorehidden])<te_equal) then
+                else if (Compare_Paras(CurrentProcInfo.procdef.paras,pd.paras,cp_all,[cpo_ignorehidden])<te_equal) then
                   continue;
               foundanything:=true;
               { Store first procsym found }
@@ -2333,7 +2333,7 @@ implementation
            if ((structdef.typ=recorddef) or
                  (
                    (structdef.typ=objectdef) and
-                   (TObjectDef(structdef).ObjectType in objecttypes_with_helpers)
+                   (TObjectDef(structdef).ObjectType in ObjectTypesWithHelpers)
                  )
                )
                and (cc_searchhelpers in flags) then
@@ -2374,7 +2374,7 @@ implementation
                 (TObjectDef(structdef).ExtendedDef.typ=recorddef) or
                 (
                   (TObjectDef(structdef).ExtendedDef.typ=objectdef) and
-                  (TObjectDef(TObjectDef(structdef).ExtendedDef).ObjectType in objecttypes_with_helpers)
+                  (TObjectDef(TObjectDef(structdef).ExtendedDef).ObjectType in ObjectTypesWithHelpers)
                 )
               ) then
              begin
@@ -2430,7 +2430,7 @@ implementation
             if not (cc_objcidcall in flags) then
               hashedid.id:=FProcsym.name
             else
-              hashedid.id:=class_helper_prefix+FProcsym.name;
+              hashedid.id:=ClassHelperPrefix+FProcsym.name;
           end
         else
           hashedid.id:=Overloaded_Names[FOperator];
@@ -2628,7 +2628,7 @@ implementation
 {$ifdef DISABLE_FAST_OVERLOAD_PATCH}
                 while Assigned(hp) do
                   begin
-                    if (compare_paras(hp^.data.paras,pd.paras,cp_value_equal_const,cpoptions)>=te_equal) and
+                    if (Compare_Paras(hp^.data.paras,pd.paras,cp_value_equal_const,cpoptions)>=te_equal) and
                        (not(po_objc in pd.ProcOptions) or
                         (pd.MessageInf.str^=hp^.data.MessageInf.str^)) then
                       begin
@@ -2880,9 +2880,9 @@ implementation
 
         function fp_precision_score(def: TDef): integer;
           begin
-            if is_extended(def) then
+            if Is_Extended(def) then
               result:=4
-            else if is_double(def) then
+            else if Is_Double(def) then
               result:=2
             else
               result:=1;
@@ -2942,7 +2942,7 @@ implementation
                   is compatible with the expected type. }
                 (
                  (count=1) or
-                 (compare_defs_ext(TProcVarDef(currpt.left.resultdef).ReturnDef,def_to,nothingn,convtype,pdoper,[])>te_incompatible)
+                 (Compare_Defs_Ext(TProcVarDef(currpt.left.resultdef).ReturnDef,def_to,nothingn,convtype,pdoper,[])>te_incompatible)
                 ) then
                begin
                  releasecurrpt:=true;
@@ -2961,7 +2961,7 @@ implementation
              if Assigned(def_to) and
                 (
                    (def_to.typ=procvardef) or
-                   is_funcref(def_to)
+                   Is_FuncRef(def_to)
                 ) and
                 (currpt.left.nodetype=loadn) and
                 (currpt.left.resultdef.typ=procdef) then
@@ -2983,7 +2983,7 @@ implementation
              if Assigned(def_to) and
                 (
                    (def_to.typ=procvardef) or
-                   is_funcref(def_to)
+                   Is_FuncRef(def_to)
                 ) and
                 (currpt.left.nodetype=typeconvn) and
                 (TTypeConvNode(currpt.left).convtype=tc_proc_2_procvar) and
@@ -3008,8 +3008,8 @@ implementation
               { varargs are always equal, but not exact }
               if (po_varargs in hp^.data.ProcOptions) and
                  (currparanr>hp^.data.MinParaCount) and
-                 not is_array_of_const(def_from) and
-                 not is_array_constructor(def_from) then
+                 not Is_Array_Of_Const(def_from) and
+                 not Is_Array_Constructor(def_from) then
                 eq:=te_equal
               else
               { same definition -> exact }
@@ -3020,9 +3020,9 @@ implementation
                 included in other integer -> equal and calc ordinal_distance }
                if Assigned(currpara) and
                   not(currpara.VarSpez in [vs_var,vs_out]) and
-                  is_integer(def_from) and
-                  is_integer(def_to) and
-                  is_in_limit(def_from,def_to) then
+                  Is_Integer(def_from) and
+                  Is_Integer(def_to) and
+                  Is_In_Limit(def_from,def_to) then
                  begin
                    eq:=te_equal;
                    { is_in_limit(def_from, def_to) means that def_from.low >= def_to.low and def_from.high <= def_to.high. }
@@ -3030,7 +3030,7 @@ implementation
                    hp^.increment_ordinal_distance(TOrdDef(def_to).high-TOrdDef(def_from).high);
                    { Give wrong sign a small penalty, this is need to get a difference
                      from word->[longword,longint] }
-                   if (is_signed(def_from)<>is_signed(def_to)) then
+                   if (Is_Signed(def_from)<>Is_Signed(def_to)) then
                      inc(hp^.ordinal_distance_secondary);
                  end
               else
@@ -3038,8 +3038,8 @@ implementation
                 penalty for loosing of precision. var and out parameters must match exactly }
                if Assigned(currpara) and
                   not(currpara.VarSpez in [vs_var,vs_out]) and
-                  is_real_or_cextended(def_from) and
-                  is_real_or_cextended(def_to) then
+                  Is_Real_Or_CExtended(def_from) and
+                  Is_Real_Or_CExtended(def_to) then
                  begin
                    eq:=te_equal;
                    fp_precision_distance:=fp_precision_score(def_to)-fp_precision_score(def_from);
@@ -3057,7 +3057,7 @@ implementation
                   (def_from.typ=objectdef) and
                   (def_to.typ=objectdef) and
                   (TObjectDef(def_from).ObjectType=TObjectDef(def_to).ObjectType) and
-                  def_is_related(TObjectDef(def_from),TObjectDef(def_to)) then
+                  Def_Is_Related(TObjectDef(def_from),TObjectDef(def_to)) then
                  begin
                    eq:=te_convert_l1;
                    check_valid_var:=false;
@@ -3076,18 +3076,18 @@ implementation
                  it has too little information. So we do explicitly a detailed comparison,
                  see also bug #11288 (FK)
                }
-               else if Assigned(def_to) and (def_to.typ=setdef) and is_array_constructor(currpt.left.resultdef) then
+               else if Assigned(def_to) and (def_to.typ=setdef) and Is_Array_Constructor(currpt.left.resultdef) then
                  begin
                    n:=currpt.left.GetCopy;
                    arrayconstructor_to_set(n);
-                   eq:=compare_defs_ext(n.resultdef,def_to,n.nodetype,convtype,pdoper,cdoptions);
+                   eq:=Compare_Defs_Ext(n.resultdef,def_to,n.nodetype,convtype,pdoper,cdoptions);
                    check_valid_var:=false;
                    n.free;
                    n := nil;
                  end
-              else if is_open_array(def_to) and
+              else if Is_Open_Array(def_to) and
                       Is_Class_Or_Interface_Or_DispInterface_Or_ObjC(TArrayDef(def_to).ElementDef) and
-                      is_array_constructor(currpt.left.resultdef) and
+                      Is_Array_Constructor(currpt.left.resultdef) and
                       Assigned(TArrayConstructorNode(currpt.left).left) then
                 begin
                   { ensure that [nil] can be converted to "array of tobject",
@@ -3100,7 +3100,7 @@ implementation
                     if TArrayConstructorNode(n).left.nodetype=arrayconstructorrangen then
                       eq:=te_incompatible
                     else
-                      eq:=compare_defs_ext(TArrayConstructorNode(n).left.resultdef,TArrayDef(def_to).ElementDef,TArrayConstructorNode(n).left.nodetype,convtype,pdoper,cdoptions);
+                      eq:=Compare_Defs_Ext(TArrayConstructorNode(n).left.resultdef,TArrayDef(def_to).ElementDef,TArrayConstructorNode(n).left.nodetype,convtype,pdoper,cdoptions);
                     if eq<mineq then
                       mineq:=eq;
                     if eq=te_incompatible then
@@ -3114,8 +3114,8 @@ implementation
               { generic type comparison }
                begin
                  if (hp^.data.ProcOptions*[po_rtlproc,po_compilerproc]=[]) and
-                    is_ansistring(def_from) and
-                    is_ansistring(def_to) and
+                    Is_AnsiString(def_from) and
+                    Is_AnsiString(def_to) and
                     (TStringDef(def_from).encoding<>TStringDef(def_to).encoding) and
                     (currpara.VarSpez in [vs_var,vs_out]) then
                     begin
@@ -3123,7 +3123,7 @@ implementation
                       check_valid_var:=false;
                     end
                  else
-                   eq:=compare_defs_ext(def_from,def_to,currpt.left.nodetype,convtype,pdoper,cdoptions);
+                   eq:=Compare_Defs_Ext(def_from,def_to,currpt.left.nodetype,convtype,pdoper,cdoptions);
 
                  { when the types are not equal we need to check
                    some special case for parameter passing }
@@ -3147,8 +3147,8 @@ implementation
                 "univ" character is the lowest possible match) }
                 if (eq=te_incompatible) and
                    currpara.UnivPara and
-                   is_valid_univ_para_type(def_from) and
-                   (def_from.size=def_to.size) then
+                   Is_Valid_Univ_Para_Type(def_from) and
+                   (def_from.Size=def_to.Size) then
                   eq:=te_convert_l5;
 
                { when a procvar was changed to a call an exact match is
@@ -3158,7 +3158,7 @@ implementation
                 eq:=te_equal;
               { if var or out parameter type but paranode not is_valid_for_var }
               if check_valid_var and Assigned(currpara) and (currpara.VarSpez in [vs_var,vs_out]) and not valid_for_var(currpt.left,false)
-                 and Assigned(def_to) and (def_to.typ<>formaldef) and not is_open_array(def_to) then
+                 and Assigned(def_to) and (def_to.typ<>formaldef) and not Is_Open_Array(def_to) then
                 eq:=te_incompatible;
 
               { increase correct counter }
@@ -3566,7 +3566,7 @@ implementation
           cpoptions:=cpoptions+[cpo_rtlproc];
 
         compare_by_old_sortout_check := 0; // can't decide, bestpd probably wasn't sorted out in unpatched
-        if (compare_paras(pd^.data.paras,bestpd^.data.paras,cp_value_equal_const,cpoptions)>=te_equal) and
+        if (Compare_Paras(pd^.data.paras,bestpd^.data.paras,cp_value_equal_const,cpoptions)>=te_equal) and
           (not(po_objc in bestpd^.data.ProcOptions) or (bestpd^.data.MessageInf.str^=pd^.data.MessageInf.str^)) then
           compare_by_old_sortout_check := 1; // bestpd was sorted out before patch
 
@@ -3787,7 +3787,7 @@ implementation
         if wrongpara.VarSpez in [vs_var,vs_out] then
           begin
             { Maybe passing the correct type but passing a const to var parameter }
-            if (compare_defs(pt.resultdef,wrongpara.vardef,pt.nodetype)<>te_incompatible) and
+            if (Compare_Defs(pt.resultdef,wrongpara.vardef,pt.nodetype)<>te_incompatible) and
                not valid_for_var(pt.left,true) then
               CGMessagePos(pt.left.fileinfo,type_e_variable_id_expected)
             else
@@ -3813,15 +3813,15 @@ implementation
         { ordinals, enumdef and floatdef                        }
         if Assigned(destdef) and
           (destdef.typ in [enumdef,orddef,floatdef]) and
-          not is_boolean(destdef) and
+          not Is_Boolean(destdef) and
           Assigned(source.resultdef) and
           (source.resultdef.typ in [enumdef,orddef,floatdef]) and
-          not is_boolean(source.resultdef) and
+          not Is_Boolean(source.resultdef) and
           not is_constrealnode(source) and
           { constants are handled via regular range checking }
           (source.nodetype<>ordconstn) then
          begin
-           if ((destdef.size < source.resultdef.size) and
+           if ((destdef.Size < source.resultdef.Size) and
                { s80real and sc80real have a different size but the same precision }
                not((destdef.typ=floatdef) and
                    (source.resultdef.typ=floatdef) and
@@ -3829,7 +3829,7 @@ implementation
                    (TFloatDef(destdef).FloatType in [s80real,sc80real]))) or
               ((destdef.typ<>floatdef) and
                (source.resultdef.typ<>floatdef) and
-               not is_in_limit(source.resultdef,destdef)) then
+               not Is_In_Limit(source.resultdef,destdef)) then
              begin
                if (cs_check_range in CurrentSettings.LocalSwitches) then
                  MessagePos(location,type_w_smaller_possible_range_check)
@@ -3849,7 +3849,7 @@ implementation
           for i:=0 to def.SymTable.SymList.count-1 do
             begin
               sym:=TSym(def.SymTable.SymList[i]);
-              if not is_normal_fieldvarsym(sym) then
+              if not Is_Normal_FieldVarSym(sym) then
                 continue;
               if not is_valid_for_default(TFieldVarSym(sym).vardef) then
                 begin

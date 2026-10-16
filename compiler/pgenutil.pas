@@ -147,11 +147,11 @@ uses
       begin
         if (param1.typ=orddef) and (param2.typ=orddef) then
           begin
-            if is_boolean(param2) then
-              result:=is_boolean(param1)
-            else if is_char(param2) then
-              result:=is_char(param1)
-            else if compare_orddef_by_range(TOrdDef(param1),TOrdDef(param2),constparamsym.value) then
+            if Is_Boolean(param2) then
+              result:=Is_Boolean(param1)
+            else if Is_Char(param2) then
+              result:=Is_Char(param1)
+            else if compare_orddef_by_range(TOrdDef(param1),TOrdDef(param2),constparamsym.Value) then
               result:=true
             else
               result:=false;
@@ -160,17 +160,17 @@ uses
         else if (param1.typ=arraydef) and (param2.typ=stringdef) then
           result:=true
         { integer ords are compatible with float }
-        else if (param1.typ=orddef) and is_integer(param1) and (param2.typ=floatdef) then
+        else if (param1.typ=orddef) and Is_Integer(param1) and (param2.typ=floatdef) then
           result:=true
         { chars are compatible with stringdef }
-        else if (param1.typ=orddef) and is_char(param1) and (param2.typ=stringdef) then
+        else if (param1.typ=orddef) and Is_Char(param1) and (param2.typ=stringdef) then
           result:=true
         { undefined def is compatible with all types }
         else if param2.typ=undefineddef then
           result:=true
         { sets require stricter checks }
-        else if is_set(param2) then
-          result:=equal_defs(param1,param2) or
+        else if Is_Set(param2) then
+          result:=Equal_Defs(param1,param2) or
             { constant could be empty set }
             not(Assigned(TSetDef(param1).ElementDef))
         else
@@ -195,8 +195,8 @@ uses
         case node.nodetype of
           ordconstn:
             begin
-              sym:=CConstSym.Create_Ord(undefinedname,constord,TOrdConstNode(node).value,fromdef);
-              prettyname:=ToStr(TOrdConstNode(node).value.svalue);
+              sym:=CConstSym.Create_Ord(undefinedname,constord,TOrdConstNode(node).Value,fromdef);
+              prettyname:=ToStr(TOrdConstNode(node).Value.svalue);
             end;
           stringconstn:
             begin
@@ -457,7 +457,7 @@ uses
                                         (formalobjdef.ChildOf=nil)
                                       ) then
                                     continue;
-                                  if not def_is_related(paraobjdef,formalobjdef.ChildOf) then
+                                  if not Def_Is_Related(paraobjdef,formalobjdef.ChildOf) then
                                     begin
                                       MessagePos2(filepos,type_e_incompatible_types,paraobjdef.TypeName,formalobjdef.ChildOf.TypeName);
                                       result:=false;
@@ -509,7 +509,7 @@ uses
                                   continue;
                               end;
                             if Assigned(formalobjdef.ChildOf) and
-                                not def_is_related(paradef,formalobjdef.ChildOf) then
+                                not Def_Is_Related(paradef,formalobjdef.ChildOf) then
                               begin
                                 MessagePos2(filepos,type_e_incompatible_types,paraobjdef.TypeName,formalobjdef.ChildOf.TypeName);
                                 result:=false;
@@ -522,7 +522,7 @@ uses
                                 while Assigned(objdef) do
                                   begin
                                     intffound:=Assigned(
-                                                 find_implemented_interface(objdef,
+                                                 Find_Implemented_Interface(objdef,
                                                    TImplementedInterface(formalobjdef.implementedinterfaces[j]).intfdef
                                                  )
                                                );
@@ -725,7 +725,7 @@ uses
       { returns true if the def a literal array such as [1,2,3] and not a shortstring }
       function is_array_literal(def:TDef):boolean;
         begin
-          result:=(def.typ=arraydef) and not is_conststring_array(def);
+          result:=(def.typ=arraydef) and not Is_ConstString_Array(def);
         end;
 
       { makes the specialization context from the generic proc def and generic params }
@@ -770,7 +770,7 @@ uses
           newtype: TSym;
         begin
           newtype:=nil;
-          if is_conststring_array(def) then
+          if Is_ConstString_Array(def) then
             begin
               { for constant strings we need to respect various modeswitches }
               if (cs_refcountedstrings in CurrentSettings.LocalSwitches) then
@@ -787,14 +787,14 @@ uses
             newtype:=TStringDef(def).Get_Default_String_Type.TypeSym
           else
             begin
-              if is_array_constructor(def) then
+              if Is_Array_Constructor(def) then
                 begin
                   { array constructor is not a valid parameter type; getreusable
                     avoids creating multiple implementations for calls with the
                     same number of array elements of a particular type }
                   def:=CArrayDef.getreusable(TArrayDef(def).ElementDef,TArrayDef(def).HighRange-TArrayDef(def).LowRange+1);
                 end;
-              newtype:=CTypeSym.create(def.FullOwnerHierarchyName(false,true)+typName[def.typ]+'$'+def.UniqueIDStr,def);
+              newtype:=CTypeSym.create(def.FullOwnerHierarchyName(false,true)+TypName[def.typ]+'$'+def.UniqueIDStr,def);
               include(newtype.SymOptions,sp_generic_unnamed_type);
               newtype.owner:=def.owner;
               { ensure that there's no warning }
@@ -1007,8 +1007,8 @@ uses
             exit;
 
           { a mixture of functions and procedures is not allowed }
-          if (not Assigned(target_proc.ReturnDef) or is_void(target_proc.ReturnDef)) xor
-              (not Assigned(caller_proc.ReturnDef) or is_void(caller_proc.ReturnDef)) then
+          if (not Assigned(target_proc.ReturnDef) or Is_Void(target_proc.ReturnDef)) xor
+              (not Assigned(caller_proc.ReturnDef) or Is_Void(caller_proc.ReturnDef)) then
             exit;
 
           { reject generics with constants }
@@ -1025,7 +1025,7 @@ uses
               caller_proc_para:=TParaVarSym(caller_proc.paras[i]);
 
               { the parameters are not compatible }
-              if compare_defs(caller_proc_para.vardef,target_proc_para.vardef,nothingn)=te_incompatible then
+              if Compare_Defs(caller_proc_para.vardef,target_proc_para.vardef,nothingn)=te_incompatible then
                 begin
                   newparams.free;
                   newparams := nil;
@@ -1045,10 +1045,10 @@ uses
               inc(valid_params);
             end;
 
-          if Assigned(target_proc.ReturnDef) and not is_void(target_proc.ReturnDef) then
+          if Assigned(target_proc.ReturnDef) and not Is_Void(target_proc.ReturnDef) then
             begin
               { or check for exact? }
-              if compare_defs(caller_proc.ReturnDef,target_proc.ReturnDef,nothingn)<te_equal then
+              if Compare_Defs(caller_proc.ReturnDef,target_proc.ReturnDef,nothingn)<te_equal then
                 begin
                   newparams.free;
                   newparams := nil;
@@ -1182,13 +1182,13 @@ uses
 
               { strings are compatible with "array of T" so we
                 need to use the element type for specialization }
-              if is_stringlike(caller_def) and
+              if Is_StringLike(caller_def) and
                 is_array_literal(target_def) and
                 GenericDef.Is_Generic_Param(TArrayDef(target_def).ElementDef) then
                 begin
                   target_def:=TArrayDef(target_def).ElementDef;
                   target_key:=generic_param_hash(target_def);
-                  caller_def:=chartype_for_stringlike(caller_def);
+                  caller_def:=CharType_For_StringLike(caller_def);
                 end
               { non-uniform array constructors (i.e. array of const) are not compatible
                 with normal arrays like "array of T" so we reject them }
@@ -1680,7 +1680,7 @@ uses
                               paramdef2:=TConstSym(TStoredDef(def).GenericParas[i]).ConstDef
                             else
                               paramdef2:=TTypeSym(TStoredDef(def).GenericParas[i]).typedef;
-                            if not equal_defs(paramdef1,paramdef2) then
+                            if not Equal_Defs(paramdef1,paramdef2) then
                               begin
                                 allequal:=false;
                                 break;
@@ -1688,7 +1688,7 @@ uses
                             if (TSym(generictypelist[i]).typ=constsym) and
                                 (
                                   (TConstSym(generictypelist[i]).ConstTyp<>TConstSym(TStoredDef(def).GenericParas[i]).ConstTyp) or
-                                  not Same_ConstValue(TConstSym(generictypelist[i]).ConstTyp,TConstSym(generictypelist[i]).value,TConstSym(TStoredDef(def).GenericParas[i]).value)
+                                  not Same_ConstValue(TConstSym(generictypelist[i]).ConstTyp,TConstSym(generictypelist[i]).Value,TConstSym(TStoredDef(def).GenericParas[i]).Value)
                                 ) then
                                 begin
                                   allequal:=false;
@@ -2175,7 +2175,7 @@ uses
                       if replaydepth<CurrentScanner.replay_stack_depth then
                         parse_proctype_directives(TProcVarDef(result));
                       if po_is_function_ref in TProcVarDef(result).ProcOptions then
-                        adjust_funcref(result,srsym,nil);
+                        Adjust_FuncRef(result,srsym,nil);
                       if result.typ=procvardef then
                         flags:=hcc_default_actions_intf
                       else
@@ -2617,13 +2617,13 @@ uses
                       fwdok:=false
                     else if (generictype.typ=TypeSym) then
                       begin
-                        if compare_defs_ext(TTypeSym(generictype).typedef,TTypeSym(fwdparam).typedef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact then
+                        if Compare_Defs_Ext(TTypeSym(generictype).typedef,TTypeSym(fwdparam).typedef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact then
                           fwdok:=false;
                       end
                     else if (generictype.typ=constsym) then
                       begin
                         if (TConstSym(generictype).ConstTyp<>TConstSym(fwdparam).ConstTyp) or
-                            (compare_defs_ext(TConstSym(generictype).ConstDef,TConstSym(fwdparam).ConstDef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact) then
+                            (Compare_Defs_Ext(TConstSym(generictype).ConstDef,TConstSym(fwdparam).ConstDef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact) then
                           fwdok:=false;
                       end
                     else

@@ -31,10 +31,10 @@ in_x86_movss
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_movaps
 ,in_x86_movups
@@ -71,10 +71,10 @@ in_x86_movaps
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_movss_to_mem
 ,in_x86_movapd_to_mem
@@ -103,9 +103,9 @@ in_x86_movss_to_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 in_x86_movaps_to_mem
 ,in_x86_movups_to_mem
@@ -128,9 +128,9 @@ in_x86_movaps_to_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 in_x86_movss_to_val
 : //out r0:f32;r1:xmm;
@@ -145,10 +145,10 @@ in_x86_movss_to_val
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_movss_from_val
 : //out r0:xmm;r1:f32;
@@ -163,10 +163,10 @@ in_x86_movss_from_val
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_movlps
 ,in_x86_movhps
@@ -195,10 +195,10 @@ in_x86_movlps
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_movlps_to_mem
 ,in_x86_movhps_to_mem
@@ -217,9 +217,9 @@ in_x86_movlps_to_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 in_x86_movlhps
 ,in_x86_movhlps
@@ -488,10 +488,10 @@ in_x86_movlhps
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_addss
 ,in_x86_subss
@@ -522,10 +522,10 @@ in_x86_addss
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_addss_from_mem
 ,in_x86_subss_from_mem
@@ -558,10 +558,10 @@ in_x86_addss_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_addps_from_mem
 ,in_x86_subps_from_mem
@@ -820,10 +820,10 @@ in_x86_addps_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cmpss
 : //var r0:f32;r1:f32;imm:i32;
@@ -838,10 +838,10 @@ in_x86_cmpss
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cmpss_from_mem
 : //var r0:f32;r1:ptr32;imm:i32;
@@ -856,10 +856,10 @@ in_x86_cmpss_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cmpps
 ,in_x86_shufps
@@ -904,10 +904,10 @@ in_x86_cmpps
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cmpps_from_mem
 ,in_x86_shufps_from_mem
@@ -950,10 +950,10 @@ in_x86_cmpps_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cvtsi2ss
 : //var r0:f32;r1:reg;
@@ -968,10 +968,10 @@ in_x86_cvtsi2ss
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,UIntType,true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[2].Location, paraarray[2].resultdef,UIntType,true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cvtss2si
 ,in_x86_cvttss2si
@@ -988,10 +988,10 @@ in_x86_cvtss2si
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_INT);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_INT);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_cvtss2si_from_mem
 ,in_x86_cvttss2si_from_mem
@@ -1008,10 +1008,10 @@ in_x86_cvtss2si_from_mem
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_REGISTER,OS_INT);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_REGISTER,OS_INT);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_cvtpi2ps
 ,in_x86_cvtpi2pd
@@ -1028,10 +1028,10 @@ in_x86_cvtpi2ps
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cvtps2pi
 ,in_x86_cvttps2pi
@@ -1050,10 +1050,10 @@ in_x86_cvtps2pi
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMXREGISTER,OS_M64);
+    location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_cvtps2pi_from_mem
 ,in_x86_cvttps2pi_from_mem
@@ -1070,10 +1070,10 @@ in_x86_cvtps2pi_from_mem
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMXREGISTER,OS_M64);
+    location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_pmulhuw_mmx
 ,in_x86_psadbw_mmx
@@ -1102,10 +1102,10 @@ in_x86_pmulhuw_mmx
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_pmulhuw_mmx_from_mem
 ,in_x86_psadbw_mmx_from_mem
@@ -1134,10 +1134,10 @@ in_x86_pmulhuw_mmx_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_pextrw_mmx
 : //out r0:reg;r1:mm;imm:i32;
@@ -1152,10 +1152,10 @@ in_x86_pextrw_mmx
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_INT);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_INT);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pinsrw_mmx
 : //var r0:mm;r1:reg;imm:i32;
@@ -1170,10 +1170,10 @@ in_x86_pinsrw_mmx
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,UIntType,true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[2].Location, paraarray[2].resultdef,UIntType,true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_pmovmskb_mmx
 : //out r0:reg;r1:mm;
@@ -1188,10 +1188,10 @@ in_x86_pmovmskb_mmx
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_INT);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_INT);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pshufw
 : //out r0:mm;r1:mm;imm:i32;
@@ -1206,10 +1206,10 @@ in_x86_pshufw
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMXREGISTER,OS_M64);
+    location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pshufw_from_mem
 : //out r0:mm;r1:ptr64;imm:i32;
@@ -1224,10 +1224,10 @@ in_x86_pshufw_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMXREGISTER,OS_M64);
+    location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_movmskpd
 ,in_x86_movd_to_reg
@@ -1244,10 +1244,10 @@ in_x86_movmskpd
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_32);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_32);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_movsd_to_val
 : //out r0:f64;r1:xmm;
@@ -1262,10 +1262,10 @@ in_x86_movsd_to_val
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_movsd_from_val
 : //out r0:xmm;r1:f64;
@@ -1280,10 +1280,10 @@ in_x86_movsd_from_val
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_addsd
 ,in_x86_divsd
@@ -1310,10 +1310,10 @@ in_x86_addsd
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_addsd_from_mem
 ,in_x86_divsd_from_mem
@@ -1340,10 +1340,10 @@ in_x86_addsd_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_maxsd
 ,in_x86_mulsd
@@ -1360,10 +1360,10 @@ in_x86_maxsd
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_sqrtpd
 ,in_x86_movddup
@@ -1414,10 +1414,10 @@ in_x86_sqrtpd
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_sqrtsd
 : //out r0:f64;r1:f64;
@@ -1432,10 +1432,10 @@ in_x86_sqrtsd
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_sqrtsd_from_mem
 : //out r0:f64;r1:ptr64;
@@ -1450,10 +1450,10 @@ in_x86_sqrtsd_from_mem
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_cmpsd
 : //var r0:f64;r1:f64;imm:i32;
@@ -1468,10 +1468,10 @@ in_x86_cmpsd
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cmpsd_from_mem
 : //var r0:f64;r1:ptr64;imm:i32;
@@ -1486,10 +1486,10 @@ in_x86_cmpsd_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cvtpd2pi
 ,in_x86_cvttpd2pi
@@ -1506,10 +1506,10 @@ in_x86_cvtpd2pi
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cvtpd2pi_from_mem
 ,in_x86_cvttpd2pi_from_mem
@@ -1526,10 +1526,10 @@ in_x86_cvtpd2pi_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cvtsd2si
 ,in_x86_cvttsd2si
@@ -1546,10 +1546,10 @@ in_x86_cvtsd2si
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,SIntType,false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[1].Location, paraarray[1].resultdef,SIntType,false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cvtsd2si_from_mem
 ,in_x86_cvttsd2si_from_mem
@@ -1566,10 +1566,10 @@ in_x86_cvtsd2si_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,SIntType,false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[1].Location, paraarray[1].resultdef,SIntType,false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_cvtsi2sd
 : //var r0:f64;r1:r32;
@@ -1584,10 +1584,10 @@ in_x86_cvtsi2sd
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,U32IntType,true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[2].Location, paraarray[2].resultdef,U32IntType,true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_cvtsi2sd_from_mem
 ,in_x86_cvtss2sd_from_mem
@@ -1604,10 +1604,10 @@ in_x86_cvtsi2sd_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_movd_from_reg
 : //out r0:xmm;r1:r32;
@@ -1622,10 +1622,10 @@ in_x86_movd_from_reg
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,U32IntType,true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[1].Location, paraarray[1].resultdef,U32IntType,true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_movq_from_mem
 ,in_x86_movddup_from_mem
@@ -1654,10 +1654,10 @@ in_x86_movq_from_mem
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_pmovmskb
 : //var r0:r32;r1:xmm;
@@ -1672,10 +1672,10 @@ in_x86_pmovmskb
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,U32IntType,false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[1].Location, paraarray[1].resultdef,U32IntType,false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_pextrw_sse2
 : //out r0:r16;r1:xmm;imm:i32;
@@ -1690,10 +1690,10 @@ in_x86_pextrw_sse2
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_16);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_16);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pinsrw_sse2
 ,in_x86_pinsrb
@@ -1712,10 +1712,10 @@ in_x86_pinsrw_sse2
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,U32IntType,true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[2].Location, paraarray[2].resultdef,U32IntType,true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 in_x86_pinsrw_from_mem
 : //var r0:xmm;r1:ptr16;imm:i32;
@@ -1730,10 +1730,10 @@ in_x86_pinsrw_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_psllw_sse2_imm
 ,in_x86_pslld_sse2_imm
@@ -1766,9 +1766,9 @@ in_x86_psllw_sse2_imm
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register));
   end;
 in_x86_maskmovdqu
 : //addr:edi_ptr;r0:xmm;r1:xmm;
@@ -1783,12 +1783,12 @@ in_x86_maskmovdqu
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
-    hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,VoidPointerType,paraarray[1].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[3].location.register,paraarray[2].location.register));
-    hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
+    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
+    hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,VoidPointerType,paraarray[1].Location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[3].Location.Register,paraarray[2].Location.Register));
+    hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
   end;
 in_x86_movq2dq
 : //out r0:xmm;r1:mm;
@@ -1803,10 +1803,10 @@ in_x86_movq2dq
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pshufhw
 ,in_x86_pshuflw
@@ -1831,10 +1831,10 @@ in_x86_pshufhw
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pshufhw_from_mem
 ,in_x86_pshuflw_from_mem
@@ -1857,10 +1857,10 @@ in_x86_pshufhw_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_blendvps
 ,in_x86_blendvpd
@@ -1879,14 +1879,14 @@ in_x86_blendvps
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].location, true);
-    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
-    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,X86_M128Type,paraarray[3].location,NR_XMM0,nil);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
-    hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].Location, true);
+    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);
+    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,X86_M128Type,paraarray[3].Location,NR_XMM0,nil);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].Location.Register,paraarray[1].Location.Register));
+    hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);
   end;
 in_x86_blendvps_from_mem
 ,in_x86_blendvpd_from_mem
@@ -1905,14 +1905,14 @@ in_x86_blendvps_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].location, true);
-    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
-    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,X86_M128Type,paraarray[3].location,NR_XMM0,nil);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
-    hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].Location, true);
+    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);
+    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,X86_M128Type,paraarray[3].Location,NR_XMM0,nil);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].Location.Reference,paraarray[1].Location.Register));
+    hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);
   end;
 in_x86_roundss_from_mem
 : //out r0:xmm;r1:ptr32;imm:i32;
@@ -1927,10 +1927,10 @@ in_x86_roundss_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_roundsd
 : //out r0:f64;r1:f64;imm:i32;
@@ -1945,10 +1945,10 @@ in_x86_roundsd
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_roundsd_from_mem
 : //out r0:f64;r1:ptr64;imm:i32;
@@ -1963,10 +1963,10 @@ in_x86_roundsd_from_mem
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Reference,location.Register));
   end;
 in_x86_insertps_from_mem
 ,in_x86_pinsrd_from_mem
@@ -1983,10 +1983,10 @@ in_x86_insertps_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 in_x86_extractps
 ,in_x86_pextrd
@@ -2003,10 +2003,10 @@ in_x86_extractps
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_32);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_32);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_extractps_from_mem
 ,in_x86_pextrd_to_mem
@@ -2023,9 +2023,9 @@ in_x86_extractps_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 in_x86_pinsrb_from_mem
 : //var r0:xmm;r1:ptr8;imm:i32;
@@ -2040,10 +2040,10 @@ in_x86_pinsrb_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 {$ifdef X86_64}
 in_x86_pinsrq
@@ -2059,10 +2059,10 @@ in_x86_pinsrq
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,UIntType,true);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[2].Location, paraarray[2].resultdef,UIntType,true);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Register));
   end;
 {$endif}
 {$ifdef X86_64}
@@ -2079,10 +2079,10 @@ in_x86_pinsrq_from_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
-    location_make_ref(paraarray[2].location);
-    location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, false);
+    location_make_ref(paraarray[2].Location);
+    location:=paraarray[1].Location;
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Reference,paraarray[1].Location.Register));
   end;
 {$endif}
 in_x86_pextrb
@@ -2098,10 +2098,10 @@ in_x86_pextrb
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_8);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_8);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 in_x86_pextrb_to_mem
 : //r0:ptr8;r1:xmm;imm:i32;
@@ -2116,9 +2116,9 @@ in_x86_pextrb_to_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 in_x86_pextrw_sse41_to_mem
 : //r0:ptr16;r1:xmm;imm:i32;
@@ -2133,9 +2133,9 @@ in_x86_pextrw_sse41_to_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 {$ifdef X86_64}
 in_x86_pextrq
@@ -2151,10 +2151,10 @@ in_x86_pextrq
 
     for i := 1 to 2 do SecondPass(paraarray[i]);
 
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
-    location_reset(location,LOC_REGISTER,OS_32);
-    location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].Location, true);
+    Location_Reset(location,LOC_REGISTER,OS_32);
+    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].Location.Register,location.Register));
   end;
 {$endif}
 {$ifdef X86_64}
@@ -2171,9 +2171,9 @@ in_x86_pextrq_to_mem
 
     for i := 1 to 3 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    location_make_ref(paraarray[1].Location);
+    location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].Location, true);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].Location.Register,paraarray[1].Location.Reference));
   end;
 {$endif}
 in_x86_pmovsxbq_from_mem
@@ -2191,8 +2191,8 @@ in_x86_pmovsxbq_from_mem
 
     for i := 1 to 1 do SecondPass(paraarray[i]);
 
-    location_make_ref(paraarray[1].location);
-    location_reset(location,LOC_MMREGISTER,OS_M128);
-    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location_make_ref(paraarray[1].Location);
+    Location_Reset(location,LOC_MMREGISTER,OS_M128);
+    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].Location.Reference,location.Register));
   end;

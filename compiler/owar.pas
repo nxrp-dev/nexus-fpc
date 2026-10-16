@@ -209,7 +209,7 @@ implementation
         if length(fn)>16 then
          begin
            arhdr.name[0]:='/';
-           str(lfnstr.size,tmp);
+           str(lfnstr.Size,tmp);
            move(tmp[1],arhdr.name[1],length(tmp));
            fn:=fn+#10;
            lfnstr.write(fn[1],length(fn));
@@ -220,7 +220,7 @@ implementation
         if gid<>'' then
           move(timestamp[1],arhdr.date,length(timestamp));
         str(asize,tmp);
-        move(tmp[1],arhdr.size,length(tmp));
+        move(tmp[1],arhdr.Size,length(tmp));
         move(gid[1],arhdr.gid,length(gid));
         move(uid[1],arhdr.uid,length(uid));
         move(mode[1],arhdr.mode,length(mode));
@@ -231,7 +231,7 @@ implementation
     function TArObjectWriter.CreateFile(const fn:string):boolean;
       begin
         objfn:=fn;
-        objpos:=ardata.size;
+        objpos:=ardata.Size;
         ardata.seek(objpos + sizeof(TArHdr));
         CreateFile:=true;
         fobjsize:=0;
@@ -245,9 +245,9 @@ implementation
         filesize:LongInt;
       begin
         { preserve file size, before aligning on an even boundary }
-        filesize:=ardata.size-objpos-sizeof(TArHdr);
+        filesize:=ardata.Size-objpos-sizeof(TArHdr);
         { align on an even boundary, by inserting an LF if necessary }
-        if odd(ardata.size) then
+        if odd(ardata.Size) then
           write(LF,1);
         { fix the size in the header }
         createarhdr(objfn,filesize,'42','42','644');
@@ -291,15 +291,15 @@ implementation
           end;
         arf.Write(armagic,sizeof(armagic));
         { align first, because we need the size for the fixups of the symbol reloc }
-        if lfnstr.size>0 then
+        if lfnstr.Size>0 then
          lfnstr.align(2);
-        if symreloc.size>0 then
+        if symreloc.Size>0 then
          begin
            symstr.align(2);
-           fixup:=12+sizeof(TArHdr)+symreloc.size+symstr.size;
-           if lfnstr.size>0 then
-            inc(fixup,lfnstr.size+sizeof(TArHdr));
-           relocs:=symreloc.size div 4;
+           fixup:=12+sizeof(TArHdr)+symreloc.Size+symstr.Size;
+           if lfnstr.Size>0 then
+            inc(fixup,lfnstr.Size+sizeof(TArHdr));
+           relocs:=symreloc.Size div 4;
            { fixup relocs }
            for i:=0to relocs-1 do
             begin
@@ -309,16 +309,16 @@ implementation
               l:=lsb2msb(l+fixup);
               symreloc.write(l,4);
             end;
-           createarhdr('',4+symreloc.size+symstr.size,'0','0','0');
+           createarhdr('',4+symreloc.Size+symstr.Size,'0','0','0');
            arf.Write(arhdr,sizeof(TArHdr));
            relocs:=lsb2msb(relocs);
            arf.Write(relocs,4);
            symreloc.WriteStream(arf);
            symstr.WriteStream(arf);
          end;
-        if lfnstr.size>0 then
+        if lfnstr.Size>0 then
          begin
-           createarhdr('/',lfnstr.size,'','','');
+           createarhdr('/',lfnstr.Size,'','','');
            arf.Write(arhdr,sizeof(TArHdr));
            lfnstr.WriteStream(arf);
          end;
@@ -443,7 +443,7 @@ implementation
         hsp,
         p : pchar;
       begin
-        p:=@ahdr.size[0];
+        p:=@ahdr.Size[0];
         hsp:=@hs[1];
         while p^<>' ' do
           begin

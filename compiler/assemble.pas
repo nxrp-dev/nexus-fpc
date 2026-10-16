@@ -243,8 +243,6 @@ interface
       target to write inline assembler }
     function GetExternalGnuAssemblerWithAsmInfoWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
 
-    function DrainClangAssemblerQueue: Boolean;
-
     procedure RegisterAssembler(const r:TAsmInfo;c:TAssemblerClass);
 
 
@@ -254,7 +252,7 @@ Implementation
 {$ifdef hasunix}
       unix,
 {$endif}
-      CUtils,CFileUtl,CompHook,nxclangassembler,
+      CUtils,CFileUtl,
 {$ifdef memdebug}
       CClasses,
 {$endif memdebug}
@@ -265,7 +263,6 @@ Implementation
 
     var
       CAssembler : array[TAsm] of TAssemblerClass;
-      ClangAssemblerFailureReported: Boolean;
 
     function fixline(const s:string):string;
      {
@@ -882,9 +879,6 @@ Implementation
 
 
     Function TExternalAssembler.DoAssemble:boolean;
-      var
-        command: TCmdStr;
-        para: TCmdStr;
       begin
         result:=true;
         if DoPipe then
@@ -900,37 +894,6 @@ Implementation
            Message1(exec_i_assembling,name);
          end;
 
-        if (asminfo^.id in [as_clang_gas,as_clang_asdarwin]) and
-           not(cs_asm_extern in CurrentSettings.GlobalSwitches) and
-           not(cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
-          begin
-            command:=FindAssembler;
-            para:=MakeCmdLine;
-            if Do_CheckVerbosity(VExecutable) then
-              Do_Comment(VExecutable,'Executing "'+command+
-                '" with command line "'+para+'"');
-            FlushOutput;
-            try
-              result:=NXQueueClangAssembly(command,para,AsmFileName,
-                not(cs_asm_leave in CurrentSettings.GlobalSwitches));
-              if not result and not ClangAssemblerFailureReported then
-                Message1(exec_e_error_while_assembling,
-                  ToStr(NXClangAssemblyExitCode));
-            except
-              on E:EOSError do
-                begin
-                  Message1(exec_e_cant_call_assembler,ToStr(E.ErrorCode));
-                  result:=false;
-                end;
-            end;
-            if not result and not ClangAssemblerFailureReported then
-              begin
-                ClangAssemblerFailureReported:=true;
-                GenerateError;
-              end;
-            exit;
-          end;
-
         repeat
           result:=CallAssembler(FindAssembler,MakeCmdLine)
         until not(result) or not RerunAssembler;
@@ -938,19 +901,6 @@ Implementation
           writer.RemoveAsm
         else
           GenerateError;
-      end;
-
-
-    function DrainClangAssemblerQueue: Boolean;
-      begin
-        result:=NXDrainClangAssemblies;
-        if not result and not ClangAssemblerFailureReported then
-          begin
-            ClangAssemblerFailureReported:=true;
-            Message1(exec_e_error_while_assembling,
-              ToStr(NXClangAssemblyExitCode));
-            GenerateError;
-          end;
       end;
 
 
@@ -1105,11 +1055,11 @@ Implementation
       begin
 {$ifdef EXTDEBUG}
         if Assigned(hp.problem) then
-          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.temppos)+','+
+          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.TempPos)+','+
           ToStr(hp.tempsize)+' '+hp.problem^)
         else
 {$endif EXTDEBUG}
-          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.temppos)+','+
+          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.TempPos)+','+
             ToStr(hp.tempsize)+' '+tempallocstr[hp.allocation]);
       end;
 
@@ -1128,14 +1078,14 @@ Implementation
           begin
             case TAIRealConst(hp).realtyp of
               aitrealconst_s32bit:
-                writer.AsmWriteLn(asminfo^.comment+'s32bit real value: '+single2str(TAIRealConst(hp).value.s32val));
+                writer.AsmWriteLn(asminfo^.comment+'s32bit real value: '+single2str(TAIRealConst(hp).Value.s32val));
               aitrealconst_s64bit:
-                writer.AsmWriteLn(asminfo^.comment+'s64bit real value: '+double2str(TAIRealConst(hp).value.s64val));
+                writer.AsmWriteLn(asminfo^.comment+'s64bit real value: '+double2str(TAIRealConst(hp).Value.s64val));
               aitrealconst_s80bit:
-                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+RealToStr(TAIRealConst(hp).value.s80val));
+                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+RealToStr(TAIRealConst(hp).Value.s80val));
               aitrealconst_s64comp:
                 begin
-                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+ToStr(TAIRealConst(hp).value.s64compval));
+                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+ToStr(TAIRealConst(hp).Value.s64compval));
                 end
             end;
           end;
@@ -1144,22 +1094,22 @@ Implementation
         case TAIRealConst(hp).realtyp of
           aitrealconst_s32bit:
             begin
-              ssingle:=single(TAIRealConst(hp).value.s32val);
+              ssingle:=single(TAIRealConst(hp).Value.s32val);
               pdata:=@ssingle;
             end;
           aitrealconst_s64bit:
             begin
-              ddouble:=double(TAIRealConst(hp).value.s64val);
+              ddouble:=double(TAIRealConst(hp).Value.s64val);
               pdata:=@ddouble;
             end;
           aitrealconst_s80bit:
             begin
-              eextended:=TAIRealConst(hp).value.s80val;
+              eextended:=TAIRealConst(hp).Value.s80val;
               pdata:=@eextended;
             end;
           aitrealconst_s64comp:
             begin
-              ccomp:=TAIRealConst(hp).value.s64compval;
+              ccomp:=TAIRealConst(hp).Value.s64compval;
               pdata:=@ccomp;
             end;
         end;
@@ -1333,7 +1283,7 @@ Implementation
         if not Result then
           Exit;
         objsym:=Objdata.SymbolRef(TAISymbol(hp).sym);
-        objsym.size:=0;
+        objsym.Size:=0;
 
         indsym := TObjSymbol(ObjData.ObjSymbolList.Find(indirectname));
         if not Assigned(indsym) then
@@ -1387,9 +1337,9 @@ Implementation
                  else
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).Size),0,ObjData.CurrObjSec.secalign));
                      ObjData.SymbolDefine(TAIDataBlock(hp).sym);
-                     ObjData.alloc(TAIDataBlock(hp).size);
+                     ObjData.alloc(TAIDataBlock(hp).Size);
                    end;
                end;
              ait_realconst:
@@ -1418,12 +1368,12 @@ Implementation
                                end
 {$push} {$R-}{$Q-}
                              else
-                               TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
+                               TAIConst(hp).Value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                            end;
 {$pop}
                        end;
                    end;
-                 ObjData.alloc(TAIConst(hp).size);
+                 ObjData.alloc(TAIConst(hp).Size);
                end;
              ait_directive:
                begin
@@ -1509,7 +1459,7 @@ Implementation
                  eabi_section.alloc(LengthULEB128(TAIAttribute(hp).tag));
                  case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
-                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).value));
+                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).Value));
                    eattrtype_ntbs:
                      if Assigned(TAIAttribute(hp).valuestr) then
                        eabi_section.alloc(Length(TAIAttribute(hp).valuestr^)+1)
@@ -1568,17 +1518,17 @@ Implementation
                     TAIDataBlock(hp).is_global then
                    begin
                      objsym:=ObjData.SymbolDefine(TAIDataBlock(hp).sym);
-                     objsym.size:=TAIDataBlock(hp).size;
+                     objsym.Size:=TAIDataBlock(hp).Size;
                      objsym.bind:=AB_COMMON;
-                     objsym.alignment:=needtowritealignmentalsoforELF;
+                     objsym.Alignment:=needtowritealignmentalsoforELF;
                    end
                  else
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).Size),0,ObjData.CurrObjSec.secalign));
                      objsym:=ObjData.SymbolDefine(TAIDataBlock(hp).sym);
-                     objsym.size:=TAIDataBlock(hp).size;
-                     ObjData.alloc(TAIDataBlock(hp).size);
+                     objsym.Size:=TAIDataBlock(hp).Size;
+                     ObjData.alloc(TAIDataBlock(hp).Size);
                    end;
                end;
              ait_realconst:
@@ -1595,7 +1545,7 @@ Implementation
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
                            InternalError(2019092801);
-                         TAIConst(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
+                         TAIConst(hp).Value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
                        end
                      else if objsymend.objsection<>objsym.objsection then
                        begin
@@ -1605,12 +1555,12 @@ Implementation
                        end
 {$push} {$R-}{$Q-}
                      else
-                       TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
+                       TAIConst(hp).Value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                    end;
 {$pop}
                  if (TAIConst(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) then
                    TAIConst(hp).fixsize;
-                 ObjData.alloc(TAIConst(hp).size);
+                 ObjData.alloc(TAIConst(hp).Size);
                end;
              ait_section:
                begin
@@ -1622,7 +1572,7 @@ Implementation
              ait_symbol_end :
                begin
                  objsym:=ObjData.SymbolRef(TAISymbolEnd(hp).sym);
-                 objsym.size:=ObjData.CurrObjSec.Size-objsym.offset;
+                 objsym.Size:=ObjData.CurrObjSec.Size-objsym.Offset;
                end;
              ait_symbolpair:
                with TAISymbolPair(hp) do
@@ -1689,7 +1639,7 @@ Implementation
                  eabi_section.alloc(LengthULEB128(TAIAttribute(hp).tag));
                  case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
-                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).value));
+                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).Value));
                    eattrtype_ntbs:
                      if Assigned(TAIAttribute(hp).valuestr) then
                        eabi_section.alloc(Length(TAIAttribute(hp).valuestr^)+1)
@@ -1771,7 +1721,7 @@ Implementation
                  { recalculate size, as some preceding instructions
                    could have been changed to smaller size }
                  objsym:=ObjData.SymbolRef(TAISymbolEnd(hp).sym);
-                 objsym.size:=ObjData.CurrObjSec.Size-objsym.offset;
+                 objsym.Size:=ObjData.CurrObjSec.Size-objsym.Offset;
                end;
              ait_datablock :
                begin
@@ -1781,8 +1731,8 @@ Implementation
                         TAIDataBlock(hp).is_global) then
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
-                     ObjData.alloc(TAIDataBlock(hp).size);
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).Size),0,ObjData.CurrObjSec.secalign));
+                     ObjData.alloc(TAIDataBlock(hp).Size);
                    end;
                end;
              ait_realconst:
@@ -1791,22 +1741,22 @@ Implementation
                  case TAIRealConst(hp).realtyp of
                    aitrealconst_s32bit:
                      begin
-                       ssingle:=TAIRealConst(hp).value.s32val;
+                       ssingle:=TAIRealConst(hp).Value.s32val;
                        pdata:=@ssingle;
                      end;
                    aitrealconst_s64bit:
                      begin
-                       ddouble:=TAIRealConst(hp).value.s64val;
+                       ddouble:=TAIRealConst(hp).Value.s64val;
                        pdata:=@ddouble;
                      end;
                    aitrealconst_s80bit:
                      begin
-                       eextended:=TAIRealConst(hp).value.s80val;
+                       eextended:=TAIRealConst(hp).Value.s80val;
                        pdata:=@eextended;
                      end;
                    aitrealconst_s64comp:
                      begin
-                       ccomp:=TAIRealConst(hp).value.s64compval;
+                       ccomp:=TAIRealConst(hp).Value.s64compval;
                        pdata:=@ccomp;
                      end;
                  end;
@@ -1836,13 +1786,13 @@ Implementation
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
                            InternalError(2019092802);
-                         TAIConst(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
+                         TAIConst(hp).Value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
                        end
                      else if TAIConst(hp).consttype in [aitconst_tlsgd,aitconst_tlsdesc] then
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
                            InternalError(2019092803);
-                         TAIConst(hp).value:=ObjData.CurrObjSec.Size-objsymend.address+TAIConst(hp).symofs;
+                         TAIConst(hp).Value:=ObjData.CurrObjSec.Size-objsymend.address+TAIConst(hp).symofs;
                        end
                      else if objsymend.objsection<>objsym.objsection then
                        begin
@@ -1852,7 +1802,7 @@ Implementation
                        end
                      else
 {$push} {$R-}{$Q-}
-                       TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
+                       TAIConst(hp).Value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                    end;
 {$pop}
                  case TAIConst(hp).consttype of
@@ -1866,29 +1816,29 @@ Implementation
                      begin
                        if Assigned(TAIConst(hp).sym) and
                           not Assigned(TAIConst(hp).endsym) then
-                         ObjData.writereloc(TAIConst(hp).symofs,TAIConst(hp).size,Objdata.SymbolRef(TAIConst(hp).sym),RELOC_ABSOLUTE)
+                         ObjData.writereloc(TAIConst(hp).symofs,TAIConst(hp).Size,Objdata.SymbolRef(TAIConst(hp).sym),RELOC_ABSOLUTE)
                        else if relative_reloc then
-                         ObjData.writereloc(ObjData.CurrObjSec.size+TAIConst(hp).size-objsym.address+TAIConst(hp).symofs,TAIConst(hp).size,objsymend,RELOC_RELATIVE)
+                         ObjData.writereloc(ObjData.CurrObjSec.Size+TAIConst(hp).Size-objsym.address+TAIConst(hp).symofs,TAIConst(hp).Size,objsymend,RELOC_RELATIVE)
                        else
                          if SourceInfo.endian<>TargetInfo.endian then
                            begin
-                             case TAIConst(hp).size of
+                             case TAIConst(hp).Size of
                                 1 : begin
-                                      b:=byte(TAIConst(hp).value);
+                                      b:=byte(TAIConst(hp).Value);
                                       ObjData.writebytes(b,1);
                                     end;
                                 2 : begin
-                                      w:=word(TAIConst(hp).value);
+                                      w:=word(TAIConst(hp).Value);
                                       w:=swapendian(w);
                                       ObjData.writebytes(w,2);
                                     end;
                                 4 : begin
-                                      d:=dword(TAIConst(hp).value);
+                                      d:=dword(TAIConst(hp).Value);
                                       d:=swapendian(d);
                                       ObjData.writebytes(d,4);
                                     end;
                                 8 : begin
-                                      q:=qword(TAIConst(hp).value);
+                                      q:=qword(TAIConst(hp).Value);
                                       q:=swapendian(q);
                                       ObjData.writebytes(q,8);
                                     end;
@@ -1897,7 +1847,7 @@ Implementation
                              end;
                            end
                          else
-                           ObjData.writebytes(TAIConst(hp).value,TAIConst(hp).size);
+                           ObjData.writebytes(TAIConst(hp).Value,TAIConst(hp).Size);
                      end;
                    aitconst_rva_symbol :
                      begin
@@ -1924,20 +1874,20 @@ Implementation
                        if TAIConst(hp).fixed_size=0 then
                          InternalError(2019030302);
                        if TAIConst(hp).consttype=aitconst_uleb128bit then
-                         leblen:=EncodeULEB128(qword(TAIConst(hp).value),lebbuf,TAIConst(hp).fixed_size)
+                         leblen:=EncodeULEB128(qword(TAIConst(hp).Value),lebbuf,TAIConst(hp).fixed_size)
                        else
-                         leblen:=EncodeSLEB128(TAIConst(hp).value,lebbuf,TAIConst(hp).fixed_size);
+                         leblen:=EncodeSLEB128(TAIConst(hp).Value,lebbuf,TAIConst(hp).fixed_size);
                        if leblen<>TAIConst(hp).fixed_size then
                          InternalError(200709271);
                        ObjData.writebytes(lebbuf,leblen);
                      end;
                    aitconst_darwin_dwarf_delta32,
                    aitconst_darwin_dwarf_delta64:
-                     ObjData.writebytes(TAIConst(hp).value,TAIConst(hp).size);
+                     ObjData.writebytes(TAIConst(hp).Value,TAIConst(hp).Size);
                    aitconst_half16bit,
                    aitconst_gs:
                      begin
-                       tmp:=TAIConst(hp).value div 2;
+                       tmp:=TAIConst(hp).Value div 2;
                        ObjData.writebytes(tmp,2);
                      end;
                    else
@@ -1990,9 +1940,9 @@ Implementation
                  if TAISymbolPair(hp).kind=spk_set then
                    begin
                      objsym:=ObjData.symbolref(TAISymbolPair(hp).sym^);
-                     ref:=objdata.symbolref(TAISymbolPair(hp).value^);
+                     ref:=objdata.symbolref(TAISymbolPair(hp).Value^);
 
-                     objsym.offset:=ref.offset;
+                     objsym.Offset:=ref.Offset;
                      objsym.objsection:=ref.objsection;
                    end;
                end;
@@ -2028,7 +1978,7 @@ Implementation
                  case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
                      begin
-                       leblen:=EncodeULEB128(TAIAttribute(hp).value,lebbuf,0);
+                       leblen:=EncodeULEB128(TAIAttribute(hp).Value,lebbuf,0);
                        eabi_section.write(lebbuf,leblen);
                      end;
                    eattrtype_ntbs:

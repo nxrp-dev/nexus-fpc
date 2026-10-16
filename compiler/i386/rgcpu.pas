@@ -28,14 +28,14 @@ unit rgcpu;
   interface
 
     uses
-      cpubase,
+      CPUBase,
       CPUInfo,
-      aasmbase,aasmtai,AAsmData,
-      CClasses,GlobType,cgbase,rgobj,rgx86;
+      AAsmBase,AAsmTAI,AAsmData,
+      CClasses,GlobType,CGBase,RGObj,RGX86;
 
     type
        TRGCPU = class(TRGX86)
-          procedure add_constraints(reg:TRegister);override;
+          procedure Add_Constraints(Reg:TRegister);override;
        end;
 
 implementation
@@ -47,23 +47,23 @@ implementation
     const
        { This value is used in tsaved. If the array value is equal
          to this, then this means that this register is not used.}
-       reg_not_saved = $7fffffff;
+       RegNotSaved = $7fffffff;
 
 {************************************************************************
                                  trgcpu
 *************************************************************************}
 
-    procedure TRGCPU.add_constraints(reg:TRegister);
+    procedure TRGCPU.Add_Constraints(Reg:TRegister);
       var
-        supreg : TSuperRegister;
+        SupReg : TSuperRegister;
       begin
-        if (getregtype(reg)=R_INTREGISTER) and (getsubreg(reg) in [R_SUBL,R_SUBH]) then
+        if (GetRegType(Reg)=R_INTREGISTER) and (GetSubReg(Reg) in [R_SUBL,R_SUBH]) then
           begin
             { Some registers have no 8-bit subregister }
-            supreg:=getsupreg(reg);
-            add_edge(supreg,RS_ESI);
-            add_edge(supreg,RS_EDI);
-            add_edge(supreg,RS_EBP);
+            SupReg:=GetSupReg(Reg);
+            Add_Edge(SupReg,RS_ESI);
+            Add_Edge(SupReg,RS_EDI);
+            Add_Edge(SupReg,RS_EBP);
           end;
       end;
 

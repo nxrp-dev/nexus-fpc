@@ -157,7 +157,7 @@ Unit rax64int;
             begin
               hreg:=actasmregister;
               Consume(AS_REGISTER);
-              if (getregtype(hreg)<>R_INTREGISTER) or (getsubreg(hreg)<>R_SUBQ) then
+              if (GetRegType(hreg)<>R_INTREGISTER) or (GetSubReg(hreg)<>R_SUBQ) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[ash_pushreg])
               else
                 curlist.concat(CAISEHDirective.create_reg(ash_pushreg,hreg));
@@ -167,7 +167,7 @@ Unit rax64int;
             begin
               hreg:=actasmregister;
               Consume(AS_REGISTER);
-              if (getregtype(hreg)<>R_INTREGISTER) or (getsubreg(hreg)<>R_SUBQ) then
+              if (GetRegType(hreg)<>R_INTREGISTER) or (GetSubReg(hreg)<>R_SUBQ) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[actsehdirective]);
               Consume(AS_COMMA);
               hnum:=BuildConstExpression;//(false,false);
@@ -182,7 +182,7 @@ Unit rax64int;
             begin
               hreg:=actasmregister;
               Consume(AS_REGISTER);
-              if (getregtype(hreg)<>R_MMREGISTER) then
+              if (GetRegType(hreg)<>R_MMREGISTER) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[ash_savexmm]);
               Consume(AS_COMMA);
               hnum:=BuildConstExpression;//(false,false);

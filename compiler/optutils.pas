@@ -79,12 +79,12 @@ unit optutils;
         if Assigned(p) then
           begin
             result:=false;
-            node.optinfo^.index:=p.optinfo^.index;
+            node.optinfo^.Index:=p.optinfo^.Index;
           end
         else
           begin
             i:=inherited Add(node);
-            node.optinfo^.index:=i;
+            node.optinfo^.Index:=i;
             result:=true;
           end
       end;
@@ -408,7 +408,7 @@ unit optutils;
               the counter might be undefined after the for loop, so include here the counter
               explicitly }
             if (n.nodetype=forn) and Assigned(TForNode(n).left.optinfo) then
-              DynSetInclude(defsum^,TForNode(n).left.optinfo^.index);
+              DynSetInclude(defsum^,TForNode(n).left.optinfo^.Index);
           end;
         Result:=fen_false;
       end;
@@ -460,7 +460,7 @@ unit optutils;
           else
             ;
         end;
-        n.optinfo^.executionweight:=Weight;
+        n.optinfo^.ExecutionWeight:=Weight;
       end;
 
 

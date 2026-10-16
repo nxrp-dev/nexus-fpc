@@ -250,7 +250,7 @@ implementation
       var
         htype : TDef;
       begin
-         int_to_type(v,htype);
+         Int_To_Type(v,htype);
          genintconstnode:=COrdConstNode.create(v,htype,true);
       end;
 
@@ -259,8 +259,8 @@ implementation
       var
         htype : TDef;
       begin
-        int_to_type(v,htype);
-        if htype.size<preferredinttype.size then
+        Int_To_Type(v,htype);
+        if htype.Size<preferredinttype.Size then
           htype:=preferredinttype;
         result:=COrdConstNode.create(v,htype,true);
       end;
@@ -271,7 +271,7 @@ implementation
         htype : TDef;
       begin
          htype:=v.definition;
-         genenumnode:=COrdConstNode.create(int64(v.value),htype,true);
+         genenumnode:=COrdConstNode.create(int64(v.Value),htype,true);
       end;
 
 
@@ -281,7 +281,7 @@ implementation
         if is_constnode(p) then
           begin
             if p.nodetype=ordconstn then
-              get_ordinal_value:=TOrdConstNode(p).value
+              get_ordinal_value:=TOrdConstNode(p).Value
             else
               Message(type_e_ordinal_expr_expected);
           end
@@ -298,13 +298,13 @@ implementation
         if is_constcharnode(p) then
           begin
             SetLength(stringVal,1);
-            stringVal[1]:=char(TOrdConstNode(p).value.uvalue);
+            stringVal[1]:=char(TOrdConstNode(p).Value.uvalue);
             result:=CStringConstNode.createstr(stringVal);
           end
         else if is_constwidecharnode(p) then
           begin
             InitWideString(pWideStringVal);
-            ConcatWideStringChar(pWideStringVal, TCompilerWideChar(TOrdConstNode(p).value.uvalue));
+            ConcatWideStringChar(pWideStringVal, TCompilerWideChar(TOrdConstNode(p).Value.uvalue));
             result:=CStringConstNode.createunistr(pWideStringVal);
           end
         else if p.nodetype=stringconstn then
@@ -349,37 +349,37 @@ implementation
                 InternalError(200403232);
               { no range checking; if it has a fixed type, the necessary value
                 truncation was already performed at the declaration time }
-              p1:=COrdConstNode.create(p.value.ValueOrd,p.ConstDef,false);
+              p1:=COrdConstNode.create(p.Value.ValueOrd,p.ConstDef,false);
             end;
           conststring :
             begin
-              len:=p.value.len;
+              len:=p.Value.len;
               if not(cs_refcountedstrings in CurrentSettings.LocalSwitches) and (len>255) then
                 begin
                   message(parser_e_string_const_too_long);
                   len:=255;
                 end;
               GetMem(pc,len+1);
-              move(pchar(p.value.ValuePtr)^,pc^,len);
+              move(pchar(p.Value.ValuePtr)^,pc^,len);
               pc[len]:=#0;
               p1:=CStringConstNode.createpchar(pc,len,p.ConstDef);
               FreeMem(pc);
             end;
           constwstring :
-            p1:=CStringConstNode.createunistr(p.value.ValueWS);
+            p1:=CStringConstNode.createunistr(p.Value.ValueWS);
           constreal :
             begin
               if (sp_generic_para in p.SymOptions) and not (sp_generic_const in p.SymOptions) then
                 p1:=CRealConstNode.create(default(BestReal),p.ConstDef)
               else
-                p1:=CRealConstNode.create(PBestReal(p.value.ValuePtr)^,p.ConstDef);
+                p1:=CRealConstNode.create(PBestReal(p.Value.ValuePtr)^,p.ConstDef);
             end;
           constset :
             begin
               if sp_generic_const in p.SymOptions then
                 begin
                   new(value_set);
-                  value_set^:=PConstSet(p.value.ValuePtr)^;
+                  value_set^:=PConstSet(p.Value.ValuePtr)^;
                   p1:=CSetConstNode.create(value_set,p.ConstDef);
                 end
               else if sp_generic_para in p.SymOptions then
@@ -388,14 +388,14 @@ implementation
                   p1:=CSetConstNode.create(value_set,p.ConstDef);
                 end
               else
-                p1:=CSetConstNode.create(PConstSet(p.value.ValuePtr),p.ConstDef);
+                p1:=CSetConstNode.create(PConstSet(p.Value.ValuePtr),p.ConstDef);
             end;
           constpointer :
             begin
               if sp_generic_para in p.SymOptions then
                 p1:=CPointerConstNode.create(default(TConstPtrUInt),p.ConstDef)
               else
-                p1:=CPointerConstNode.create(p.value.ValueOrdPtr,p.ConstDef);
+                p1:=CPointerConstNode.create(p.Value.ValueOrdPtr,p.ConstDef);
             end;
           constnil :
             p1:=CNilNode.create;
@@ -404,7 +404,7 @@ implementation
               if sp_generic_para in p.SymOptions then
                 p1:=CGUIDConstNode.create(default(TGUID))
               else
-                p1:=CGUIDConstNode.create(PGUID(p.value.ValuePtr)^);
+                p1:=CGUIDConstNode.create(PGUID(p.Value.ValuePtr)^);
             end;
           constnone :
             p1:=CNothingNode.create
@@ -412,7 +412,7 @@ implementation
             InternalError(200205103);
         end;
 
-        if is_currency(p.ConstDef) then
+        if Is_Currency(p.ConstDef) then
           Include(p1.flags, nf_is_currency);
 
         { transfer generic param flag from symbol to node }
@@ -425,7 +425,7 @@ implementation
     function getbooleanvalue(p : TNode) : boolean;
       begin
         if is_constboolnode(p) then
-          result:=TOrdConstNode(p).value<>0
+          result:=TOrdConstNode(p).Value<>0
         else
           InternalError(2013111601);
       end;
@@ -658,7 +658,7 @@ implementation
     function TRealConstNode.simplify(forinline : boolean) : TNode;
       begin
         result:=nil;
-        if (Frac(value_real)<>0.0) and is_currency(resultdef) and not (nf_is_currency in flags) then
+        if (Frac(value_real)<>0.0) and Is_Currency(resultdef) and not (nf_is_currency in flags) then
           begin
             { Unfortunately we can't safely store unscaled Currency values with
               fractional components in a cross-platform way, so scale it here
@@ -712,7 +712,7 @@ implementation
       begin
         inherited printnodedata(t);
         write(t,PrintNodeIndention,'value = ',RealToStr(value_real));
-        if is_currency(resultdef) then
+        if Is_Currency(resultdef) then
           WriteLn(t,', value_currency = ',value_currency)
         else
           WriteLn(t);
@@ -726,9 +726,9 @@ implementation
           S64Real:
             tcb.emit_tai(TAIRealConst.create_s64real(Double(value_real)),typedef);
           s80real:
-            tcb.emit_tai(TAIRealConst.create_s80real(value_real,S80FloatType.size),typedef);
+            tcb.emit_tai(TAIRealConst.create_s80real(value_real,S80FloatType.Size),typedef);
           sc80real:
-            tcb.emit_tai(TAIRealConst.create_s80real(value_real,SC80FloatType.size),typedef);
+            tcb.emit_tai(TAIRealConst.create_s80real(value_real,SC80FloatType.Size),typedef);
           s64comp:
             { the round is necessary for native compilers where comp isn't a float }
             tcb.emit_tai(TAIRealConst.create_s64compreal(Round(value_real)),typedef);
@@ -736,7 +736,7 @@ implementation
             { Lowered Currency nodes already contain the integer payload. }
             tcb.emit_tai(TAIRealConst.create_s64compreal(Round(value_real)),typedef);
         end;
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -810,7 +810,7 @@ implementation
 
       begin
          n:=TOrdConstNode(inherited dogetcopy);
-         n.value:=value;
+         n.Value:=value;
          n.typedef := typedef;
          dogetcopy:=n;
       end;
@@ -822,7 +822,7 @@ implementation
         { only do range checking when explicitly asked for it
           and if the type can be range checked, see tests/tbs/tb0539.pas }
         if (resultdef.typ in [orddef,enumdef]) and not(nf_generic_para in flags) then
-          adaptrange(resultdef,value,nf_internal in flags,not rangecheck,rangecheck)
+          AdaptRange(resultdef,value,nf_internal in flags,not rangecheck,rangecheck)
       end;
 
     function TOrdConstNode.pass_1 : TNode;
@@ -835,8 +835,8 @@ implementation
       begin
         docompare :=
           inherited docompare(p) and
-          (value = TOrdConstNode(p).value) and
-          equal_defs(typedef,TOrdConstNode(p).typedef);
+          (value = TOrdConstNode(p).Value) and
+          Equal_Defs(typedef,TOrdConstNode(p).typedef);
       end;
 
 
@@ -850,7 +850,7 @@ implementation
     function TOrdConstNode.emit_data(tcb:TTAITypedConstBuilder):sizeint;
       begin
         tcb.emit_ord_const(value,resultdef);
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -915,7 +915,7 @@ implementation
          n : TPointerConstNode;
       begin
         n:=TPointerConstNode(inherited dogetcopy);
-        n.value:=value;
+        n.Value:=value;
         n.typedef := typedef;
         dogetcopy:=n;
       end;
@@ -925,7 +925,7 @@ implementation
       begin
         result:=nil;
         resultdef:=typedef;
-        if is_voidpointer(resultdef) and (value=0) then
+        if Is_VoidPointer(resultdef) and (value=0) then
           result:=CNilNode.create;
       end;
 
@@ -941,7 +941,7 @@ implementation
       begin
         docompare :=
           inherited docompare(p) and
-          (value = TPointerConstNode(p).value);
+          (value = TPointerConstNode(p).Value);
       end;
 
 
@@ -957,7 +957,7 @@ implementation
           tcb.emit_tai(TAIConst.Create_int_dataptr(value),VoidPointerType)
         else
           tcb.emit_tai(TAIConst.Create_int_codeptr(value),VoidCodePointerType);
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -1009,7 +1009,7 @@ implementation
          if l>0 then
            move(s[0],valueas[0],l);
          if Assigned(def) and
-            is_ansistring(def) then
+            Is_AnsiString(def) then
            begin
              cst_type:=cst_ansistring;
              astringdef:=def;
@@ -1356,7 +1356,7 @@ implementation
             begin
               labofs:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_typedconsts],asconstpchar,len,TStringDef(resultdef).encoding);
               tcb.emit_string_offset(labofs,len,TStringDef(resultdef).StringType,false,CharPointerType);
-              result:=VoidPointerType.size;
+              result:=VoidPointerType.Size;
             end;
           st_widestring,
           st_unicodestring:
@@ -1364,7 +1364,7 @@ implementation
               winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
               labofs:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_typedconsts],ValueWS,TStringDef(resultdef).encoding,winlikewidestring);
               tcb.emit_string_offset(labofs,len,TStringDef(resultdef).StringType,false,WideCharPointerType);
-              result:=VoidPointerType.size;
+              result:=VoidPointerType.Size;
             end;
         end;
       end;
@@ -1535,7 +1535,7 @@ implementation
             { they work for big endian, it's no problem that the code below }
             { is wrong for the old big endian set format (setbase cannot be }
             { <>0 with non-packed sets).                                    }
-            for i:=0 to TSetDef(resultdef).size-1 do
+            for i:=0 to TSetDef(resultdef).Size-1 do
               begin
                 PSetBytes(value_set)^[i]:=PSetBytes(value_set)^[i+diff];
                 PSetBytes(value_set)^[i+diff]:=0;
@@ -1572,7 +1572,7 @@ implementation
     function TSetConstNode.pass_1 : TNode;
       begin
          result:=nil;
-         if is_smallset(resultdef) then
+         if Is_SmallSet(resultdef) then
           expectloc:=LOC_CONSTANT
          else
           expectloc:=LOC_CREFERENCE;
@@ -1593,7 +1593,7 @@ implementation
         result:=0;
         if not(Assigned(value_set)) then
           exit;
-        for i:=0 to TSetDef(resultdef).size-1 do
+        for i:=0 to TSetDef(resultdef).Size-1 do
           result:=result+ PopCnt(PSetBytes(value_set)^[i]);
       end;
 
@@ -1646,7 +1646,7 @@ implementation
         setval : aint;
         i : sizeint;
       begin
-        if is_smallset(resultdef) then
+        if Is_SmallSet(resultdef) then
           begin
             if (SourceInfo.endian=TargetInfo.endian) then
               begin
@@ -1661,8 +1661,8 @@ implementation
                 setval:=aint(Reverse_LongWord(Pcardinal(value_set)^));
               end;
             if (TargetInfo.endian=endian_big) then
-              setval:=setval shr (32-resultdef.size*8);
-            case resultdef.size of
+              setval:=setval shr (32-resultdef.Size*8);
+            case resultdef.Size of
               1:
                 tcb.emit_ord_const(byte(setval),U8IntType);
               2:
@@ -1678,13 +1678,13 @@ implementation
         else
           begin
             if (SourceInfo.endian=TargetInfo.endian) then
-              for i:=0 to resultdef.size-1 do
+              for i:=0 to resultdef.Size-1 do
                 tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),U8IntType)
             else
-              for i:=0 to resultdef.size-1 do
+              for i:=0 to resultdef.Size-1 do
                 tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),U8IntType);
           end;
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
 
@@ -1710,7 +1710,7 @@ implementation
           tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType)
         else
           tcb.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
     function TNilNode.pass_1 : TNode;
@@ -1749,7 +1749,7 @@ implementation
          n : TGUIDConstNode;
       begin
          n:=TGUIDConstNode(inherited dogetcopy);
-         n.value:=value;
+         n.Value:=value;
          n.lab_set:=lab_set;
          dogetcopy:=n;
       end;
@@ -1773,13 +1773,13 @@ implementation
       begin
         docompare :=
           inherited docompare(p) and
-          (GUID2String(value) = GUID2String(TGUIDConstNode(p).value));
+          (GUID2String(value) = GUID2String(TGUIDConstNode(p).Value));
       end;
 
     function TGUIDConstNode.emit_data(tcb: TTAITypedConstBuilder): sizeint;
       begin
         tcb.emit_guid_const(value);
-        result:=resultdef.size;
+        result:=resultdef.Size;
       end;
 
 end.

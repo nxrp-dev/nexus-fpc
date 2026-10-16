@@ -1238,13 +1238,13 @@ implementation
             begin
               case TAIConst(p).consttype of
                 aitconst_64bit:
-                  WriteLn(T, PrintNodeIndention, '.quad 0x', HexStr(TAIConst(p).value, 16));
+                  WriteLn(T, PrintNodeIndention, '.quad 0x', HexStr(TAIConst(p).Value, 16));
                 aitconst_32bit:
-                  WriteLn(T, PrintNodeIndention, '.long 0x', HexStr(TAIConst(p).value, 8));
+                  WriteLn(T, PrintNodeIndention, '.long 0x', HexStr(TAIConst(p).Value, 8));
                 aitconst_16bit:
-                  WriteLn(T, PrintNodeIndention, '.word 0x', HexStr(TAIConst(p).value, 4));
+                  WriteLn(T, PrintNodeIndention, '.word 0x', HexStr(TAIConst(p).Value, 4));
                 aitconst_8bit:
-                  WriteLn(T, PrintNodeIndention, '.byte 0x', HexStr(TAIConst(p).value, 2));
+                  WriteLn(T, PrintNodeIndention, '.byte 0x', HexStr(TAIConst(p).Value, 2));
                 else
                   WriteLn(T, PrintNodeIndention, '; (Other constant)');
               end;
@@ -1411,11 +1411,11 @@ implementation
            { temp must fit a single register }
            (TStoredDef(_typedef).Is_FPURegable or
             (TStoredDef(_typedef).Is_IntRegable and
-             (_size<=TCGSize2Size[OS_64]))) and
+             (_size<=TCgSize2Size[OS_64]))) and
            { size of register operations must be known }
-           (def_cgsize(_typedef)<>OS_NO) and
+           (Def_CGSize(_typedef)<>OS_NO) and
            { no init/final needed }
-           not is_managed_type(_typedef) then
+           not Is_Managed_Type(_typedef) then
           includetempflag(ti_may_be_in_reg);
       end;
 
@@ -1455,7 +1455,7 @@ implementation
         n: TTempCreateNode;
       begin
         n := TTempCreateNode(inherited dogetcopy);
-        n.size := size;
+        n.Size := size;
 
         new(n.tempinfo);
         fillchar(n.tempinfo^,sizeof(n.tempinfo^),0);
@@ -1578,9 +1578,9 @@ implementation
       begin
         result :=
           inherited docompare(p) and
-          (TTempCreateNode(p).size = size) and
+          (TTempCreateNode(p).Size = size) and
           (TTempCreateNode(p).tempflags*tempinfostoreflags=tempflags*tempinfostoreflags) and
-          equal_defs(TTempCreateNode(p).tempinfo^.typedef,tempinfo^.typedef) and
+          Equal_Defs(TTempCreateNode(p).tempinfo^.typedef,tempinfo^.typedef) and
           (TTempCreateNode(p).tempinfo^.withnode.isequal(tempinfo^.withnode)) and
           (TTempCreateNode(p).tempinfo^.tempinitcode.isequal(tempinfo^.tempinitcode));
       end;
@@ -1736,7 +1736,7 @@ implementation
         { a temp that stands in for a currency value holds it already scaled
           by 10000, the same as a currency variable does
           (see tloadnode.pass_typecheck) }
-        if is_currency(resultdef) then
+        if Is_Currency(resultdef) then
           Include(flags, nf_is_currency);
       end;
 

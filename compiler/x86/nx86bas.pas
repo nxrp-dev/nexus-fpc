@@ -57,27 +57,27 @@ implementation
       case Oper^.typ of
         top_const:
           begin
-            case Oper^.val of
+            case Oper^.Val of
               -15..15:
-                Result := '$' + ToStr(Oper^.val);
+                Result := '$' + ToStr(Oper^.Val);
               $10..$FF:
-                Result := '$0x' + HexStr(Oper^.val, 2);
+                Result := '$0x' + HexStr(Oper^.Val, 2);
               $100..$FFFF:
-                Result := '$0x' + HexStr(Oper^.val, 4);
+                Result := '$0x' + HexStr(Oper^.Val, 4);
   {$ifdef CPU64}
               $10000..$FFFFFFFF:
-                Result := '$0x' + HexStr(Oper^.val, 8);
+                Result := '$0x' + HexStr(Oper^.Val, 8);
               else
-                Result := '$0x' + HexStr(Oper^.val, 16);
+                Result := '$0x' + HexStr(Oper^.Val, 16);
   {$else CPU64}
               else
-                Result := '$0x' + HexStr(Oper^.val, 8);
+                Result := '$0x' + HexStr(Oper^.Val, 8);
   {$endif CPU64}
             end;
           end;
 
         top_ref:
-          with Oper^.ref^ do
+          with Oper^.Ref^ do
             begin
               if segment <> NR_NO then
                 Result := gas_regname(segment) + ':'
@@ -110,8 +110,8 @@ implementation
                   if index <> NR_NO then
                     Result := Result + gas_regname(index);
 
-                  if scalefactor <> 0 then
-                    Result := Result + ',' + ToStr(scalefactor) + ')'
+                  if ScaleFactor <> 0 then
+                    Result := Result + ',' + ToStr(ScaleFactor) + ')'
                   else
                     Result := Result + ')';
                 end;

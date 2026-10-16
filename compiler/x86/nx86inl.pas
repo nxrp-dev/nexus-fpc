@@ -290,7 +290,7 @@ implementation
 
          if (CPUX86_HAS_POPCNT in cpu_capabilities[CurrentSettings.CPUType])
   {$ifdef i386}
-            and not is_64bit(left.resultdef)
+            and not Is_64Bit(left.resultdef)
   {$endif i386}
            then
              expectloc:=LOC_REGISTER
@@ -304,7 +304,7 @@ implementation
        begin
 
          if ((fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]) and
-           ((is_double(resultdef)) or (is_single(resultdef))) then
+           ((Is_Double(resultdef)) or (Is_Single(resultdef))) then
            begin
              expectloc:=LOC_MMREGISTER;
              Result:=nil;
@@ -318,7 +318,7 @@ implementation
      function TX86InlineNode.first_frac_real : TNode;
        begin
          if (CurrentSettings.FPUType>=fpu_sse41) and
-           ((is_double(resultdef)) or (is_single(resultdef))) then
+           ((Is_Double(resultdef)) or (Is_Single(resultdef))) then
            begin
              maybe_remove_round_trunc_typeconv;
              expectloc:=LOC_MMREGISTER;
@@ -332,7 +332,7 @@ implementation
      function TX86InlineNode.first_int_real : TNode;
        begin
          if (CurrentSettings.FPUType>=fpu_sse41) and
-           ((is_double(resultdef)) or (is_single(resultdef))) then
+           ((Is_Double(resultdef)) or (Is_Single(resultdef))) then
            begin
              Result:=nil;
              expectloc:=LOC_MMREGISTER;
@@ -347,10 +347,10 @@ implementation
 
          if
 {$ifdef i386}
-           ((CurrentSettings.FPUType>=fpu_sse) and is_single(resultdef)) or
-           ((CurrentSettings.FPUType>=fpu_sse2) and is_double(resultdef))
+           ((CurrentSettings.FPUType>=fpu_sse) and Is_Single(resultdef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and Is_Double(resultdef))
 {$else i386}
-           ((is_double(resultdef)) or (is_single(resultdef)))
+           ((Is_Double(resultdef)) or (Is_Single(resultdef)))
 {$endif i386}
            then
            begin
@@ -365,9 +365,9 @@ implementation
 {$endif x86_64}
            (
 {$ifdef x86_64}
-             is_64bitint(resultdef) or
+             Is_64BitInt(resultdef) or
 {$endif x86_64}
-             is_32bitint(resultdef)
+             Is_32BitInt(resultdef)
            ) then
            begin
              expectloc:=LOC_REGISTER;
@@ -386,7 +386,7 @@ implementation
            (inlinenumber=in_int_real) and (left.nodetype=typeconvn) and
            not(nf_explicit in left.flags) and
            (TTypeConvNode(left).left.resultdef.typ=floatdef) and
-           ((is_double(TTypeConvNode(left).left.resultdef)) or (is_single(TTypeConvNode(left).left.resultdef))) then
+           ((Is_Double(TTypeConvNode(left).left.resultdef)) or (Is_Single(TTypeConvNode(left).left.resultdef))) then
            begin
              { get rid of the type conversion }
              temp:=TTypeConvNode(left).left;
@@ -415,28 +415,28 @@ implementation
          begin
            portnumber:=left;
            SecondPass(portnumber);
-           if (portnumber.location.loc=LOC_CONSTANT) and
-              (portnumber.location.value>=0) and
-              (portnumber.location.value<=255) then
+           if (portnumber.Location.Loc=LOC_CONSTANT) and
+              (portnumber.Location.Value>=0) and
+              (portnumber.Location.Value<=255) then
              begin
-               hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
-               CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_IN,dsize,portnumber.location.value,dreg));
-               location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-               location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-               hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,dreg);
-               hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,dtype,resultdef,dreg,location.register);
+               hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,dreg);
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_IN,dsize,portnumber.Location.Value,dreg));
+               Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+               location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+               hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,dreg);
+               hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,dtype,resultdef,dreg,location.Register);
              end
            else
              begin
-               hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
-               hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,U16IntType,portnumber.location,NR_DX);
-               hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
+               hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_DX);
+               hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,U16IntType,portnumber.Location,NR_DX);
+               hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,dreg);
                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_IN,dsize,NR_DX,dreg));
-               hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
-               location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-               location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-               hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,dreg);
-               hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,dtype,resultdef,dreg,location.register);
+               hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_DX);
+               Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+               location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+               hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,dreg);
+               hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,dtype,resultdef,dreg,location.Register);
              end;
          end;
 
@@ -449,28 +449,28 @@ implementation
            portdata:=TCallParaNode(left).left;
            SecondPass(portdata);
            SecondPass(portnumber);
-           hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
-           hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,portdata.resultdef,dtype,portdata.location,dreg);
-           if (portnumber.location.loc=LOC_CONSTANT) and
-              (portnumber.location.value>=0) and
-              (portnumber.location.value<=255) then
-             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_OUT,dsize,dreg,portnumber.location.value))
+           hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,dreg);
+           hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,portdata.resultdef,dtype,portdata.Location,dreg);
+           if (portnumber.Location.Loc=LOC_CONSTANT) and
+              (portnumber.Location.Value>=0) and
+              (portnumber.Location.Value<=255) then
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_OUT,dsize,dreg,portnumber.Location.Value))
            else
              begin
-               hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
-               hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,U16IntType,portnumber.location,NR_DX);
+               hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_DX);
+               hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,U16IntType,portnumber.Location,NR_DX);
                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_OUT,dsize,dreg,NR_DX));
-               hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
+               hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_DX);
              end;
-           hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,dreg);
+           hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,dreg);
          end;
 
 
        procedure get_segreg(segreg:TRegister);
          begin
-           location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-           location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-           CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MOV,TCGSize2OpSize[def_cgsize(resultdef)],segreg,location.register));
+           Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+           location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+           CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MOV,TCGSize2OpSize[Def_CGSize(resultdef)],segreg,location.Register));
          end;
 
 
@@ -478,7 +478,7 @@ implementation
         begin
           Result:=0;
           if is_constintnode(n) then
-            result:=TOrdConstNode(n).value.svalue
+            result:=TOrdConstNode(n).Value.svalue
           else
             Message(type_e_constant_expr_expected);
         end;
@@ -507,14 +507,14 @@ implementation
         var
           reg : TRegister;
         begin
-          if (l.loc<>LOC_MMXREGISTER)  and
-             ((l.loc<>LOC_CMMXREGISTER) or (not maybeconst)) then
+          if (l.Loc<>LOC_MMXREGISTER)  and
+             ((l.Loc<>LOC_CMMXREGISTER) or (not maybeconst)) then
             begin
-              reg:=TCGX86(cg).getmmxregister(list);
-              cg.a_loadmm_loc_reg(list,OS_M64,l,reg,nil);
+              reg:=TCGX86(cg).GetMMXRegister(list);
+              cg.A_LoadMM_Loc_Reg(list,OS_M64,l,reg,nil);
               location_freetemp(list,l);
-              location_reset(l,LOC_MMXREGISTER,OS_M64);
-              l.register:=reg;
+              Location_Reset(l,LOC_MMXREGISTER,OS_M64);
+              l.Register:=reg;
             end;
         end;
 
@@ -522,12 +522,12 @@ implementation
         var
           hloc: TLocation;
         begin
-          case loc.loc of
+          case loc.Loc of
             LOC_CREGISTER,
             LOC_REGISTER:
               begin
-                location_reset_ref(hloc, LOC_REFERENCE, OS_32, 1, []);
-                hloc.reference.base:=loc.register;
+                Location_Reset_Ref(hloc, LOC_REFERENCE, OS_32, 1, []);
+                hloc.Reference.Base:=loc.Register;
 
                 loc:=hloc;
               end;
@@ -537,10 +537,10 @@ implementation
               end;
           else
             begin
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,loc,U32IntType,U32IntType,false);
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,loc,U32IntType,U32IntType,false);
 
-              location_reset_ref(hloc, LOC_REFERENCE, OS_32, 1, []);
-              hloc.reference.base:=loc.register;
+              Location_Reset_Ref(hloc, LOC_REFERENCE, OS_32, 1, []);
+              hloc.Reference.Base:=loc.Register;
 
               loc:=hloc;
             end;
@@ -602,7 +602,7 @@ implementation
              valuenode := TCallParaNode(left).left;
              loadnode := TCallParaNode(TCallParaNode(left).right).left;
 
-             opsize := def_cgsize(loadnode.resultdef);
+             opsize := Def_CGSize(loadnode.resultdef);
 
              { BMI2 optimisations }
              if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and (inlinenumber=in_and_assign_x_y) then
@@ -612,10 +612,10 @@ implementation
                  if (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) and
                    (valuenode.nodetype = subn) and
                    (TAddNode(valuenode).right.nodetype = ordconstn) and
-                   (TOrdConstNode(TAddNode(valuenode).right).value = 1) and
+                   (TOrdConstNode(TAddNode(valuenode).right).Value = 1) and
                    (TAddNode(valuenode).left.nodetype = shln) and
                    (TShlShrNode(TAddNode(valuenode).left).left.nodetype = ordconstn) and
-                   (TOrdConstNode(TShlShrNode(TAddNode(valuenode).left).left).value = 1) then
+                   (TOrdConstNode(TShlShrNode(TAddNode(valuenode).left).left).Value = 1) then
                    begin
                      { Skip the subtract and shift nodes completely }
 
@@ -624,7 +624,7 @@ implementation
 {$ifdef x86_64}
                      { The code generator sometimes extends the shift result to 64-bit unnecessarily }
                      if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
-                       (def_cgsize(TTypeConvNode(indexnode).resultdef) in [OS_64, OS_S64]) then
+                       (Def_CGSize(TTypeConvNode(indexnode).resultdef) in [OS_64, OS_S64]) then
                        begin
                          { Convert to the 32-bit type }
                          indexnode.resultdef:=loadnode.resultdef;
@@ -642,26 +642,26 @@ implementation
                      SecondPass(loadnode);
 
                      { allocate registers }
-                     hlcg.location_force_reg(
+                     hlcg.Location_Force_Reg(
                        CurrentAsmData.CurrAsmList,
-                       indexnode.location,
+                       indexnode.Location,
                        indexnode.resultdef,
                        loadnode.resultdef,
                        false
                      );
 
-                     case loadnode.location.loc of
+                     case loadnode.Location.Loc of
                        LOC_REFERENCE,
                        LOC_CREFERENCE:
                          begin
                            { BZHI can only write to a register }
-                           DestReg := cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                           emit_reg_ref_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.location.register, loadnode.location.reference, DestReg);
-                           emit_reg_ref(A_MOV, TCGSize2OpSize[opsize], DestReg, loadnode.location.reference);
+                           DestReg := cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+                           emit_reg_ref_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.Location.Register, loadnode.Location.Reference, DestReg);
+                           emit_reg_ref(A_MOV, TCGSize2OpSize[opsize], DestReg, loadnode.Location.Reference);
                          end;
                        LOC_REGISTER,
                        LOC_CREGISTER:
-                         emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.location.register, loadnode.location.register, loadnode.location.register);
+                         emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.Location.Register, loadnode.Location.Register, loadnode.Location.Register);
                        else
                          InternalError(2022102120);
                      end;
@@ -677,37 +677,37 @@ implementation
 
      procedure TX86InlineNode.second_pi;
        begin
-         location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
+         Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
          emit_none(A_FLDPI,S_NO);
          TCGX86(cg).inc_fpu_stack;
-         location.register:=NR_FPU_RESULT_REG;
+         location.Register:=NR_FPU_RESULT_REG;
        end;
 
 
      { load the FPU into the an fpu register }
      procedure TX86InlineNode.load_fpu_location(lnode: TNode);
        begin
-         location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-         location.register:=NR_FPU_RESULT_REG;
+         Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+         location.Register:=NR_FPU_RESULT_REG;
          SecondPass(lnode);
-         case lnode.location.loc of
+         case lnode.Location.Loc of
            LOC_FPUREGISTER:
              ;
            LOC_CFPUREGISTER:
              begin
-               cg.a_loadfpu_reg_reg(CurrentAsmData.CurrAsmList,lnode.location.size,
-                 lnode.location.size,lnode.location.register,location.register);
+               cg.A_LoadFPU_Reg_Reg(CurrentAsmData.CurrAsmList,lnode.Location.Size,
+                 lnode.Location.Size,lnode.Location.Register,location.Register);
              end;
            LOC_REFERENCE,LOC_CREFERENCE:
              begin
-               cg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,
-                  lnode.location.size,lnode.location.size,
-                  lnode.location.reference,location.register);
+               cg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,
+                  lnode.Location.Size,lnode.Location.Size,
+                  lnode.Location.Reference,location.Register);
              end;
            LOC_MMREGISTER,LOC_CMMREGISTER:
              begin
-               location:=lnode.location;
-               hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,location,lnode.resultdef,false);
+               location:=lnode.Location;
+               hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,location,lnode.resultdef,false);
              end;
            else
              InternalError(309991);
@@ -741,39 +741,39 @@ implementation
          if Use_VectorFPU(resultdef) then
            begin
              SecondPass(left);
-             if left.location.loc<>LOC_MMREGISTER then
-               hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,UseAVX);
+             if left.Location.Loc<>LOC_MMREGISTER then
+               hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,UseAVX);
              if UseAVX then
                begin
-                 location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-                 location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,def_cgsize(resultdef));
+                 Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+                 location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(resultdef));
                end
              else
-               location:=left.location;
+               location:=left.Location;
              case TFloatDef(resultdef).FloatType of
                S32Real:
                  begin
                    sym:=CurrentAsmData.RefAsmSymbol(TargetInfo.cprefix+'FPC_ABSMASK_SINGLE',AT_DATA,needs_indirect);
-                   reference_reset_symbol(href,sym,0,4,[]);
+                   Reference_Reset_Symbol(href,sym,0,4,[]);
                    CurrentModule.Add_Extern_AsmSym(sym);
                    TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
                    if UseAVX then
                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg_reg(
-                       A_VANDPS,S_XMM,href,left.location.register,location.register))
+                       A_VANDPS,S_XMM,href,left.Location.Register,location.Register))
                    else
-                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPS,S_XMM,href,location.register));
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPS,S_XMM,href,location.Register));
                  end;
                S64Real:
                  begin
                    sym:=CurrentAsmData.RefAsmSymbol(TargetInfo.cprefix+'FPC_ABSMASK_DOUBLE',AT_DATA,needs_indirect);
-                   reference_reset_symbol(href,sym,0,4,[]);
+                   Reference_Reset_Symbol(href,sym,0,4,[]);
                    CurrentModule.Add_Extern_AsmSym(sym);
                    TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
                    if UseAVX then
                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg_reg(
-                       A_VANDPD,S_XMM,href,left.location.register,location.register))
+                       A_VANDPD,S_XMM,href,left.Location.Register,location.Register))
                    else
-                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPD,S_XMM,href,location.register))
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPD,S_XMM,href,location.Register))
                  end;
                else
                  InternalError(200506081);
@@ -793,24 +793,24 @@ implementation
          if Use_VectorFPU(left.resultdef) then
            begin
              SecondPass(left);
-             hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-             location_reset(location,LOC_REGISTER,OS_S64);
-             location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_S64);
+             hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+             Location_Reset(location,LOC_REGISTER,OS_S64);
+             location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_S64);
              if UseAVX then
-               case left.location.size of
+               case left.Location.Size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSS2SI,S_NO,left.Location.Register,location.Register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSD2SI,S_NO,left.Location.Register,location.Register));
                  else
                    InternalError(2007031402);
                end
              else
-               case left.location.size of
+               case left.Location.Size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSS2SI,S_NO,left.Location.Register,location.Register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSD2SI,S_NO,left.Location.Register,location.Register));
                  else
                    InternalError(2007031404);
                end;
@@ -819,9 +819,9 @@ implementation
 {$endif x86_64}
           begin
             load_fpu_location(left);
-            location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
-            tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
-            emit_ref(A_FISTP,S_IQ,location.reference);
+            Location_Reset_Ref(location,LOC_REFERENCE,OS_S64,0,[]);
+            tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.Size,resultdef.Alignment,tt_normal,location.Reference);
+            emit_ref(A_FISTP,S_IQ,location.Reference);
             TCGX86(cg).dec_fpu_stack;
             emit_none(A_FWAIT,S_NO);
            end;
@@ -834,27 +834,27 @@ implementation
        begin
 {$ifdef x86_64}
          if Use_VectorFPU(left.resultdef) and
-           not((left.location.loc=LOC_FPUREGISTER) and (CurrentSettings.FPUType>=fpu_sse3)) then
+           not((left.Location.Loc=LOC_FPUREGISTER) and (CurrentSettings.FPUType>=fpu_sse3)) then
            begin
              SecondPass(left);
-             hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-             location_reset(location,LOC_REGISTER,OS_S64);
-             location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_S64);
+             hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+             Location_Reset(location,LOC_REGISTER,OS_S64);
+             location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_S64);
              if UseAVX then
-               case left.location.size of
+               case left.Location.Size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSS2SI,S_NO,left.Location.Register,location.Register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSD2SI,S_NO,left.Location.Register,location.Register));
                  else
                    InternalError(2007031401);
                end
              else
-               case left.location.size of
+               case left.Location.Size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSS2SI,S_NO,left.Location.Register,location.Register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSD2SI,S_NO,left.Location.Register,location.Register));
                  else
                    InternalError(2007031403);
                end;
@@ -865,9 +865,9 @@ implementation
             if (CurrentSettings.FPUType>=fpu_sse3) then
               begin
                 load_fpu_location(left);
-                location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
-                tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
-                emit_ref(A_FISTTP,S_IQ,location.reference);
+                Location_Reset_Ref(location,LOC_REFERENCE,OS_S64,0,[]);
+                tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.Size,resultdef.Alignment,tt_normal,location.Reference);
+                emit_ref(A_FISTTP,S_IQ,location.Reference);
                 TCGX86(cg).dec_fpu_stack;
               end
             else
@@ -882,9 +882,9 @@ implementation
                 emit_const_ref(A_OR,S_W,$0f00,newcw);
                 load_fpu_location(left);
                 emit_ref(A_FLDCW,S_NO,newcw);
-                location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
-                tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
-                emit_ref(A_FISTP,S_IQ,location.reference);
+                Location_Reset_Ref(location,LOC_REFERENCE,OS_S64,0,[]);
+                tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.Size,resultdef.Alignment,tt_normal,location.Reference);
+                emit_ref(A_FISTP,S_IQ,location.Reference);
                 TCGX86(cg).dec_fpu_stack;
                 emit_ref(A_FLDCW,S_NO,oldcw);
                 emit_none(A_FWAIT,S_NO);
@@ -901,19 +901,19 @@ implementation
          if Use_VectorFPU(resultdef) then
            begin
              SecondPass(left);
-             location_reset(location,LOC_MMREGISTER,left.location.size);
-             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+             Location_Reset(location,LOC_MMREGISTER,left.Location.Size);
+             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
              if UseAVX then
                begin
-                 hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-                 cg.a_opmm_reg_reg_reg(CurrentAsmData.CurrAsmList,OP_MUL,left.location.size,left.location.register,left.location.register,location.register,mms_movescalar);
+                 hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+                 cg.A_OpMM_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_MUL,left.Location.Size,left.Location.Register,left.Location.Register,location.Register,MMS_MoveScalar);
                end
              else
                begin
-                 if left.location.loc in [LOC_CFPUREGISTER,LOC_FPUREGISTER] then
-                   hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-                 cg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
-                 cg.a_opmm_reg_reg(CurrentAsmData.CurrAsmList,OP_MUL,left.location.size,location.register,location.register,mms_movescalar);
+                 if left.Location.Loc in [LOC_CFPUREGISTER,LOC_FPUREGISTER] then
+                   hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+                 cg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,location.Size,left.Location,location.Register,MMS_MoveScalar);
+                 cg.A_OpMM_Reg_Reg(CurrentAsmData.CurrAsmList,OP_MUL,left.Location.Size,location.Register,location.Register,MMS_MoveScalar);
                end;
            end
          else
@@ -929,28 +929,28 @@ implementation
          if Use_VectorFPU(resultdef) then
            begin
              SecondPass(left);
-             hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-             location_reset(location,LOC_MMREGISTER,left.location.size);
-             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+             hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+             Location_Reset(location,LOC_MMREGISTER,left.Location.Size);
+             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
              if UseAVX then
                case TFloatDef(resultdef).FloatType of
                  S32Real:
                    { we use S_NO instead of S_XMM here, regardless of the register size, as the size of the memory location is 32/64 bit }
                    { using left.location.register here as 2nd parameter is crucial to break dependency chains }
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSS,S_NO,left.location.register,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSS,S_NO,left.Location.Register,left.Location.Register,location.Register));
                  S64Real:
                    { we use S_NO instead of S_XMM here, regardless of the register size, as the size of the memory location is 32/64 bit }
                    { using left.location.register here as 2nd parameter is crucial to break dependency chains }
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSD,S_NO,left.location.register,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSD,S_NO,left.Location.Register,left.Location.Register,location.Register));
                  else
                    InternalError(200510031);
                end
              else
                case TFloatDef(resultdef).FloatType of
                  S32Real:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSS,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSS,S_NO,left.Location.Register,location.Register));
                  S64Real:
-                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSD,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSD,S_NO,left.Location.Register,location.Register));
                  else
                    InternalError(2005100303);
                end;
@@ -958,8 +958,8 @@ implementation
          else
            begin
              load_fpu_location(left);
-             if left.location.loc=LOC_REFERENCE then
-               tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.location.reference);
+             if left.Location.Loc=LOC_REFERENCE then
+               tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.Location.Reference);
              emit_none(A_FSQRT,S_NO);
            end;
        end;
@@ -1003,13 +1003,13 @@ implementation
              SecondPass(left);
              if checkpointer_used then
                node_change_local_switch(left,cs_checkpointer,false);
-             case left.location.loc of
+             case left.Location.Loc of
                LOC_CREFERENCE,
                LOC_REFERENCE:
                  begin
-                   r:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_ADDR);
-                   cg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.location.reference,r);
-                   reference_reset_base(ref,r,0,left.location.reference.temppos,left.location.reference.alignment,left.location.reference.volatility);
+                   r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_ADDR);
+                   cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,left.Location.Reference,r);
+                   Reference_Reset_Base(ref,r,0,left.Location.Reference.TempPos,left.Location.Reference.Alignment,left.Location.Reference.Volatility);
                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_PREFETCHNTA,S_NO,ref));
                  end;
                else
@@ -1027,51 +1027,51 @@ implementation
         hl: TAsmLabel;
       begin
 {$if defined(i386)}
-        if is_64bitint(resultdef) then
+        if Is_64BitInt(resultdef) then
           inherited
         else if not(CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) then
           begin
-            opsize:=def_cgsize(left.resultdef);
+            opsize:=Def_CGSize(left.resultdef);
             SecondPass(left);
-            hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
-            location:=left.location;
-            location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-            cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.location.register,location.register);
-            cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SAR,opsize,tcgsize2size[opsize]*8-1,left.location.register);
-            cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,opsize,left.location.register,location.register);
-            cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_SUB,opsize,left.location.register,location.register);
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
+            location:=left.Location;
+            location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.Location.Register,location.Register);
+            cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,opsize,TCgSize2Size[opsize]*8-1,left.Location.Register);
+            cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,opsize,left.Location.Register,location.Register);
+            cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,opsize,left.Location.Register,location.Register);
             if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
                 CurrentAsmData.getjumplabel(hl);
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl);
-                cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-                cg.a_label(CurrentAsmData.CurrAsmList,hl);
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NO,hl);
+                cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+                cg.A_Label(CurrentAsmData.CurrAsmList,hl);
               end;
           end
         else
 {$endif i386}
           begin
-            opsize:=def_cgsize(left.resultdef);
+            opsize:=Def_CGSize(left.resultdef);
             SecondPass(left);
-            hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-            hregister:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-            location:=left.location;
-            location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-            cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.location.register,hregister);
-            cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.location.register,location.register);
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
+            hregister:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+            location:=left.Location;
+            location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.Location.Register,hregister);
+            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opsize,opsize,left.Location.Register,location.Register);
 
-            cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             emit_reg(A_NEG,tcgsize2opsize[opsize],hregister);
             if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
                 CurrentAsmData.getjumplabel(hl);
-                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl);
-                cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-                cg.a_label(CurrentAsmData.CurrAsmList,hl);
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NO,hl);
+                cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+                cg.A_Label(CurrentAsmData.CurrAsmList,hl);
               end;
-            hp:=TAICPU.op_reg_reg(A_CMOVcc,tcgsize2opsize[opsize],hregister,location.register);
+            hp:=TAICPU.op_reg_reg(A_CMOVcc,tcgsize2opsize[opsize],hregister,location.Register);
             hp.condition:=C_NS;
-            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             CurrentAsmData.CurrAsmList.concat(hp);
           end;
       end;
@@ -1102,24 +1102,24 @@ implementation
               exit;
             end;
 
-          if is_smallset(TCallParaNode(left).resultdef) then
+          if Is_SmallSet(TCallParaNode(left).resultdef) then
             begin
               opdef:=TCallParaNode(left).resultdef;
-              opsize:=int_cgsize(opdef.size)
+              opsize:=Int_CGSize(opdef.Size)
             end
           else
             begin
               opdef:=U32IntType;
               opsize:=OS_32;
             end;
-          bitsperop:=(8*tcgsize2size[opsize]);
+          bitsperop:=(8*TCgSize2Size[opsize]);
           SecondPass(TCallParaNode(left).left);
           SecondPass(TCallParaNode(TCallParaNode(left).right).left);
           SetBase:=TSetDef(TCallParaNode(left).left.resultdef).SetBase;
-          if TCallParaNode(TCallParaNode(left).right).left.location.loc=LOC_CONSTANT then
+          if TCallParaNode(TCallParaNode(left).right).left.Location.Loc=LOC_CONSTANT then
             begin
               { calculate bit position }
-              l:=1 shl ((TCallParaNode(TCallParaNode(left).right).left.location.value-SetBase) mod bitsperop);
+              l:=1 shl ((TCallParaNode(TCallParaNode(left).right).left.Location.Value-SetBase) mod bitsperop);
 
               { determine operator }
               if inlinenumber=in_include_x_y then
@@ -1129,16 +1129,16 @@ implementation
                   cgop:=OP_AND;
                   l:=not(l);
                 end;
-              case TCallParaNode(left).left.location.loc of
+              case TCallParaNode(left).left.Location.Loc of
                 LOC_REFERENCE :
                   begin
-                    inc(TCallParaNode(left).left.location.reference.offset,
-                      ((TCallParaNode(TCallParaNode(left).right).left.location.value-SetBase) div bitsperop)*tcgsize2size[opsize]);
-                    cg.a_op_const_ref(CurrentAsmData.CurrAsmList,cgop,opsize,l,TCallParaNode(left).left.location.reference);
+                    inc(TCallParaNode(left).left.Location.Reference.Offset,
+                      ((TCallParaNode(TCallParaNode(left).right).left.Location.Value-SetBase) div bitsperop)*TCgSize2Size[opsize]);
+                    cg.A_Op_Const_Ref(CurrentAsmData.CurrAsmList,cgop,opsize,l,TCallParaNode(left).left.Location.Reference);
                   end;
                 LOC_CSUBSETREG,
                 LOC_CREGISTER :
-                  hlcg.a_op_const_loc(CurrentAsmData.CurrAsmList,cgop,TCallParaNode(left).left.resultdef,l,TCallParaNode(left).left.location);
+                  hlcg.A_Op_Const_Loc(CurrentAsmData.CurrAsmList,cgop,TCallParaNode(left).left.resultdef,l,TCallParaNode(left).left.Location);
                 else
                   InternalError(200405022);
               end;
@@ -1157,17 +1157,17 @@ implementation
               else
                  asmop:=A_BTR;
 
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.location,TCallParaNode(TCallParaNode(left).right).left.resultdef,opdef,true);
-              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.resultdef,TCallParaNode(TCallParaNode(left).right).left.location,SetBase);
-              hregister:=TCallParaNode(TCallParaNode(left).right).left.location.register;
-              if TCallParaNode(left).left.location.loc=LOC_REFERENCE then
-                emit_reg_ref(asmop,tcgsize2opsize[opsize],hregister,TCallParaNode(left).left.location.reference)
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.Location,TCallParaNode(TCallParaNode(left).right).left.resultdef,opdef,true);
+              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.resultdef,TCallParaNode(TCallParaNode(left).right).left.Location,SetBase);
+              hregister:=TCallParaNode(TCallParaNode(left).right).left.Location.Register;
+              if TCallParaNode(left).left.Location.Loc=LOC_REFERENCE then
+                emit_reg_ref(asmop,tcgsize2opsize[opsize],hregister,TCallParaNode(left).left.Location.Reference)
               else
                 begin
                   { second argument can't be an 8 bit register either }
-                  hregister2:=TCallParaNode(left).left.location.register;
+                  hregister2:=TCallParaNode(left).left.Location.Register;
                   if (orgsize in [OS_8,OS_S8]) then
-                    hregister2:=cg.makeregsize(CurrentAsmData.CurrAsmList,hregister2,opsize);
+                    hregister2:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,hregister2,opsize);
                   emit_reg_reg(asmop,tcgsize2opsize[opsize],hregister,hregister2);
                 end;
             end;
@@ -1180,27 +1180,27 @@ implementation
       begin
         SecondPass(left);
 
-        opsize:=tcgsize2unsigned[left.location.size];
+        opsize:=TCgSize2Unsigned[left.Location.Size];
 
         { no 8 Bit popcont }
         if opsize=OS_8 then
           opsize:=OS_16;
 
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) or
-           (left.location.size<>opsize) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,cgsize_orddef(opsize),true);
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) or
+           (left.Location.Size<>opsize) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,CGSize_OrdDef(opsize),true);
 
-        location_reset(location,LOC_REGISTER,opsize);
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-        if left.location.loc in [LOC_REGISTER,LOC_CREGISTER] then
-          emit_reg_reg(A_POPCNT,TCGSize2OpSize[opsize],left.location.register,location.register)
+        Location_Reset(location,LOC_REGISTER,opsize);
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+        if left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+          emit_reg_reg(A_POPCNT,TCGSize2OpSize[opsize],left.Location.Register,location.Register)
         else
-          emit_ref_reg(A_POPCNT,TCGSize2OpSize[opsize],left.location.reference,location.register);
+          emit_ref_reg(A_POPCNT,TCGSize2OpSize[opsize],left.Location.Reference,location.Register);
 
-        if resultdef.size=1 then
+        if resultdef.Size=1 then
           begin
-            location.size:=OS_8;
-            location.register:=cg.makeregsize(CurrentAsmData.CurrAsmList,location.register,location.size);
+            location.Size:=OS_8;
+            location.Register:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,location.Register,location.Size);
           end;
       end;
 
@@ -1291,44 +1291,44 @@ implementation
                called secondpass }
              for i:=3 downto 1 do
                begin
-                 if not(paraarray[i].location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+                 if not(paraarray[i].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
                    begin
-                     if (paraarray[i].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and not(gotmem) then
+                     if (paraarray[i].Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and not(gotmem) then
                        begin
                          memop:=i;
                          gotmem:=true;
                        end
                      else
-                       hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,paraarray[i].location,paraarray[i].resultdef,true);
+                       hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,paraarray[i].Location,paraarray[i].resultdef,true);
                    end;
                end;
 
-             location_reset(location,LOC_MMREGISTER,paraarray[1].location.size);
-             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+             Location_Reset(location,LOC_MMREGISTER,paraarray[1].Location.Size);
+             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
 
              if gotmem then
                begin
                  case memop of
                    1:
                      begin
-                       hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
-                         paraarray[3].location.register,location.register,mms_movescalar);
+                       hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
+                         paraarray[3].Location.Register,location.Register,MMS_MoveScalar);
                        emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,memop],S_NO,
-                         paraarray[1].location.reference,paraarray[2].location.register,location.register);
+                         paraarray[1].Location.Reference,paraarray[2].Location.Register,location.Register);
                      end;
                    2:
                      begin
-                       hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
-                         paraarray[3].location.register,location.register,mms_movescalar);
+                       hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
+                         paraarray[3].Location.Register,location.Register,MMS_MoveScalar);
                        emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,memop],S_NO,
-                         paraarray[2].location.reference,paraarray[1].location.register,location.register);
+                         paraarray[2].Location.Reference,paraarray[1].Location.Register,location.Register);
                      end;
                    3:
                      begin
-                       hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
-                         paraarray[1].location.register,location.register,mms_movescalar);
+                       hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
+                         paraarray[1].Location.Register,location.Register,MMS_MoveScalar);
                        emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,memop],S_NO,
-                         paraarray[3].location.reference,paraarray[2].location.register,location.register);
+                         paraarray[3].Location.Reference,paraarray[2].Location.Register,location.Register);
                      end
                    else
                      InternalError(2014041301);
@@ -1338,26 +1338,26 @@ implementation
                begin
                  { try to use the location which is already in a temp. mm register as destination,
                    so the compiler might be able to re-use the register }
-                 if paraarray[1].location.loc=LOC_MMREGISTER then
+                 if paraarray[1].Location.Loc=LOC_MMREGISTER then
                    begin
-                     hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
-                       paraarray[1].location.register,location.register,mms_movescalar);
+                     hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
+                       paraarray[1].Location.Register,location.Register,MMS_MoveScalar);
                      emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,3],S_NO,
-                       paraarray[3].location.register,paraarray[2].location.register,location.register);
+                       paraarray[3].Location.Register,paraarray[2].Location.Register,location.Register);
                    end
-                 else if paraarray[2].location.loc=LOC_MMREGISTER then
+                 else if paraarray[2].Location.Loc=LOC_MMREGISTER then
                    begin
-                     hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[2].resultdef,resultdef,
-                       paraarray[2].location.register,location.register,mms_movescalar);
+                     hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[2].resultdef,resultdef,
+                       paraarray[2].Location.Register,location.Register,MMS_MoveScalar);
                      emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,3],S_NO,
-                       paraarray[3].location.register,paraarray[1].location.register,location.register);
+                       paraarray[3].Location.Register,paraarray[1].Location.Register,location.Register);
                    end
                  else
                    begin
-                     hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
-                       paraarray[3].location.register,location.register,mms_movescalar);
+                     hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
+                       paraarray[3].Location.Register,location.Register,MMS_MoveScalar);
                      emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).FloatType,0],S_NO,
-                       paraarray[1].location.register,paraarray[2].location.register,location.register);
+                       paraarray[1].Location.Register,paraarray[2].Location.Register,location.Register);
                    end;
                end;
            end
@@ -1374,35 +1374,35 @@ implementation
         if Use_VectorFPU(resultdef) then
           begin
             SecondPass(left);
-            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-            location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
             if UseAVX then
               case TFloatDef(left.resultdef).FloatType of
                 S32Real:
                   begin
 
                     if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.FPUType]) then
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESS,S_NO,3,left.location.register,left.location.register,location.register))
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESS,S_NO,3,left.Location.Register,left.Location.Register,location.Register))
                     else
 
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSS,S_NO,location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.Location.Register,left.Location.Register,location.Register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSS,S_NO,location.Register,left.Location.Register,location.Register));
                       end;
                   end;
                 S64Real:
                   begin
 
                     if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.FPUType]) then
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESD,S_NO,3,left.location.register,left.location.register,location.register))
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESD,S_NO,3,left.Location.Register,left.Location.Register,location.Register))
                     else
 
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
-                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSD,S_NO,location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.Location.Register,left.Location.Register,location.Register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSD,S_NO,location.Register,left.Location.Register,location.Register));
                       end;
                   end;
                 else
@@ -1410,25 +1410,25 @@ implementation
               end
             else
               begin
-                extrareg:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
-                cg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
+                extrareg:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+                cg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,location.Size,left.Location,location.Register,MMS_MoveScalar);
                 case TFloatDef(left.resultdef).FloatType of
                   S32Real:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,extrareg));
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSS,S_NO,extrareg,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.Location.Register,extrareg));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSS,S_NO,extrareg,location.Register));
                     end;
                   S64Real:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,extrareg));
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSD,S_NO,extrareg,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.Location.Register,extrareg));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSD,S_NO,extrareg,location.Register));
                     end;
                   else
                     InternalError(2017052103);
                 end;
               end;
             if TFloatDef(left.resultdef).FloatType<>TFloatDef(resultdef).FloatType then
-              hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,location.register,location.register,mms_movescalar);
+              hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,location.Register,location.Register,MMS_MoveScalar);
           end
         else
           InternalError(2017052101);
@@ -1440,17 +1440,17 @@ implementation
         if Use_VectorFPU(resultdef) then
           begin
             SecondPass(left);
-            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
-            location_reset(location,LOC_MMREGISTER,left.location.size);
-            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
+            Location_Reset(location,LOC_MMREGISTER,left.Location.Size);
+            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
             if UseAVX then
               case TFloatDef(resultdef).FloatType of
                 S32Real:
                   { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.Location.Register,left.Location.Register,location.Register));
                 S64Real:
                   { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.Location.Register,left.Location.Register,location.Register));
                 else
                   InternalError(2017052105);
               end
@@ -1458,9 +1458,9 @@ implementation
               begin
                 case TFloatDef(resultdef).FloatType of
                   S32Real:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.Location.Register,location.Register));
                   S64Real:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.Location.Register,location.Register));
                   else
                     InternalError(2017052106);
                 end;
@@ -1478,10 +1478,10 @@ implementation
         href : TReference;
       begin
         SecondPass(left);
-        if not(is_dynamic_array(left.resultdef)) then
+        if not(Is_Dynamic_Array(left.resultdef)) then
           InternalError(2019122809);
         { length in dynamic arrays is at offset -sizeof(pint) }
-        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
         CurrentAsmData.getjumplabel(donelab);
         { by subtracting 1 here, we get the -1 into the register we need if the dyn. array is nil and the carry
           flag is set in this case, so we can jump depending on it
@@ -1490,20 +1490,20 @@ implementation
 
           do not use the cgs, as they might emit dec instead of a sub instruction, however with dec the trick
           we are using is not working as dec does not touch the carry flag }
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_SUB,TCGSize2OpSize[def_cgsize(left.resultdef)],1,left.location.register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_SUB,TCGSize2OpSize[Def_CGSize(left.resultdef)],1,left.Location.Register));
         { volatility of the dyn. array refers to the volatility of the
           string pointer, not of the string data }
-        cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_C,donelab);
-        hlcg.reference_reset_base(href,left.resultdef,left.location.register,-OSSIntType.size+1,ctempposinvalid,OSSIntType.alignment,[]);
+        cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_C,donelab);
+        hlcg.Reference_Reset_Base(href,left.resultdef,left.Location.Register,-OSSIntType.Size+1,CTempPosInvalid,OSSIntType.Alignment,[]);
         { if the string pointer is nil, the length is 0 -> reuse the register
           that originally held the string pointer for the length, so that we
           can keep the original nil/0 as length in that case }
-        hregister:=cg.makeregsize(CurrentAsmData.CurrAsmList,left.location.register,def_cgsize(resultdef));
-        hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OSSIntType,resultdef,href,hregister);
+        hregister:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,left.Location.Register,Def_CGSize(resultdef));
+        hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OSSIntType,resultdef,href,hregister);
 
-        cg.a_label(CurrentAsmData.CurrAsmList,donelab);
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-        location.register:=hregister;
+        cg.A_Label(CurrentAsmData.CurrAsmList,donelab);
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        location.Register:=hregister;
       end;
 
 
@@ -1539,10 +1539,10 @@ implementation
 
          if
 {$ifdef i386}
-           ((CurrentSettings.FPUType>=fpu_sse) and is_single(resultdef)) or
-           ((CurrentSettings.FPUType>=fpu_sse2) and is_double(resultdef))
+           ((CurrentSettings.FPUType>=fpu_sse) and Is_Single(resultdef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and Is_Double(resultdef))
 {$else i386}
-           is_single(resultdef) or is_double(resultdef)
+           Is_Single(resultdef) or Is_Double(resultdef)
 {$endif i386}
            then
            begin
@@ -1557,15 +1557,15 @@ implementation
              memop:=0;
              for i:=low(paraarray) to high(paraarray) do
                begin
-                 if not(paraarray[i].location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+                 if not(paraarray[i].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
                    begin
-                     if (paraarray[i].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and not(gotmem) then
+                     if (paraarray[i].Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and not(gotmem) then
                        begin
                          memop:=i;
                          gotmem:=true;
                        end
                      else
-                       hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,paraarray[i].location,paraarray[i].resultdef,true);
+                       hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,paraarray[i].Location,paraarray[i].resultdef,true);
                    end;
                end;
 
@@ -1573,14 +1573,14 @@ implementation
                one of the operands is a NaN, we cannot swap operands to omit a mova operation in case fastmath is off }
              if not(cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and gotmem and (memop=1) then
                begin
-                 hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,paraarray[1].location,paraarray[1].resultdef,true);
+                 hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,paraarray[1].Location,paraarray[1].resultdef,true);
                  gotmem:=false;
                end;
 
              op:=oparray[inlinenumber in [in_max_single,in_max_double],UseAVX,TFloatDef(resultdef).FloatType];
 
-             location_reset(location,LOC_MMREGISTER,paraarray[1].location.size);
-             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+             Location_Reset(location,LOC_MMREGISTER,paraarray[1].Location.Size);
+             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
 
              if gotmem then
                begin
@@ -1588,10 +1588,10 @@ implementation
                    case memop of
                      1:
                        emit_ref_reg_reg(op,S_NO,
-                         paraarray[1].location.reference,paraarray[2].location.register,location.register);
+                         paraarray[1].Location.Reference,paraarray[2].Location.Register,location.Register);
                      2:
                        emit_ref_reg_reg(op,S_NO,
-                         paraarray[2].location.reference,paraarray[1].location.register,location.register);
+                         paraarray[2].Location.Reference,paraarray[1].Location.Register,location.Register);
                      else
                        InternalError(2020120504);
                    end
@@ -1599,17 +1599,17 @@ implementation
                    case memop of
                      1:
                        begin
-                         hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[2].resultdef,resultdef,
-                           paraarray[2].location.register,location.register,mms_movescalar);
+                         hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[2].resultdef,resultdef,
+                           paraarray[2].Location.Register,location.Register,MMS_MoveScalar);
                          emit_ref_reg(op,S_NO,
-                           paraarray[1].location.reference,location.register);
+                           paraarray[1].Location.Reference,location.Register);
                        end;
                      2:
                        begin
-                         hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
-                           paraarray[1].location.register,location.register,mms_movescalar);
+                         hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
+                           paraarray[1].Location.Register,location.Register,MMS_MoveScalar);
                          emit_ref_reg(op,S_NO,
-                           paraarray[2].location.reference,location.register);
+                           paraarray[2].Location.Reference,location.Register);
                        end;
                      else
                        InternalError(2020120601);
@@ -1619,13 +1619,13 @@ implementation
                begin
                  if UseAVX then
                    emit_reg_reg_reg(op,S_NO,
-                     paraarray[2].location.register,paraarray[1].location.register,location.register)
+                     paraarray[2].Location.Register,paraarray[1].Location.Register,location.Register)
                  else
                    begin
-                     hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
-                       paraarray[1].location.register,location.register,mms_movescalar);
+                     hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
+                       paraarray[1].Location.Register,location.Register,MMS_MoveScalar);
                      emit_reg_reg(op,S_NO,
-                       paraarray[2].location.register,location.register)
+                       paraarray[2].Location.Register,location.Register)
                    end;
                end;
            end
@@ -1637,9 +1637,9 @@ implementation
 {$endif x86_64}
            (
 {$ifdef x86_64}
-             is_64bitint(resultdef) or
+             Is_64BitInt(resultdef) or
 {$endif x86_64}
-             is_32bitint(resultdef)
+             Is_32BitInt(resultdef)
            ) then
            begin
              { paraarray[1] is the right-hand side }
@@ -1649,30 +1649,30 @@ implementation
              for i:=low(paraarray) to high(paraarray) do
                SecondPass(paraarray[i]);
 
-             if paraarray[2].location.loc = LOC_CONSTANT then
+             if paraarray[2].Location.Loc = LOC_CONSTANT then
                begin
                  { Swap the parameters so the constant is on the right }
                  paraarray[2]:=paraarray[1];
                  paraarray[1]:=TCallParaNode(parameters).paravalue;
                end;
 
-             if not(paraarray[1].location.loc in [LOC_CONSTANT,LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
-               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[1].location,
+             if not(paraarray[1].Location.Loc in [LOC_CONSTANT,LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
+               hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,paraarray[1].Location,
                  paraarray[1].resultdef,paraarray[1].resultdef,true);
 
-             if not(paraarray[2].location.loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
-               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[2].location,
+             if not(paraarray[2].Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
+               hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,paraarray[2].Location,
                  paraarray[2].resultdef,paraarray[2].resultdef,true);
 
-             location_reset(location,LOC_REGISTER,paraarray[1].location.size);
-             location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
+             Location_Reset(location,LOC_REGISTER,paraarray[1].Location.Size);
+             location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
 
 
-             hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,paraarray[1].location,location.register);
-             cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+             hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,paraarray[1].Location,location.Register);
+             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
 {$ifdef x86_64}
-             if is_64bitint(resultdef) then
+             if Is_64BitInt(resultdef) then
                opsize := S_Q
              else
 {$endif x86_64}
@@ -1681,38 +1681,38 @@ implementation
              { Try to use references as is, unless they would trigger internal
                error 200502052 }
              if (cs_create_pic in CurrentSettings.ModuleSwitches) and
-               (paraarray[1].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
-               Assigned(paraarray[1].location.reference.symbol) then
-               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[1].location,
+               (paraarray[1].Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+               Assigned(paraarray[1].Location.Reference.Symbol) then
+               hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,paraarray[1].Location,
                  paraarray[1].resultdef,paraarray[1].resultdef,true);
 
              { Try to use references as is, unless they would trigger internal
                error 200502052 }
              if (cs_create_pic in CurrentSettings.ModuleSwitches) and
-               (paraarray[2].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
-               Assigned(paraarray[2].location.reference.symbol) then
-               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[2].location,
+               (paraarray[2].Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+               Assigned(paraarray[2].Location.Reference.Symbol) then
+               hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,paraarray[2].Location,
                  paraarray[2].resultdef,paraarray[2].resultdef,true);
 
-             case paraarray[1].location.loc of
+             case paraarray[1].Location.Loc of
                LOC_CONSTANT:
-                 case paraarray[2].location.loc of
+                 case paraarray[2].Location.Loc of
                    LOC_REFERENCE,LOC_CREFERENCE:
                      begin
 {$ifdef x86_64}
                        { x86_64 only supports signed 32 bits constants directly }
                        if (opsize=S_Q) and
-                           ((paraarray[1].location.value<low(LongInt)) or (paraarray[1].location.value>high(LongInt))) then
+                           ((paraarray[1].Location.Value<low(LongInt)) or (paraarray[1].Location.Value>high(LongInt))) then
                          begin
-                           tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-                           hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].location.value,tmpreg);
-                           emit_reg_ref(A_CMP,opsize,tmpreg,paraarray[2].location.reference);
+                           tmpreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+                           hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].Location.Value,tmpreg);
+                           emit_reg_ref(A_CMP,opsize,tmpreg,paraarray[2].Location.Reference);
                          end
                        else
 {$endif x86_64}
-                         emit_const_ref(A_CMP,opsize,paraarray[1].location.value,paraarray[2].location.reference);
+                         emit_const_ref(A_CMP,opsize,paraarray[1].Location.Value,paraarray[2].Location.Reference);
 
-                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
+                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].Location.Reference,location.Register);
                        instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
@@ -1720,19 +1720,19 @@ implementation
 {$ifdef x86_64}
                        { x86_64 only supports signed 32 bits constants directly }
                        if (opsize=S_Q) and
-                           ((paraarray[1].location.value<low(LongInt)) or (paraarray[1].location.value>high(LongInt))) then
+                           ((paraarray[1].Location.Value<low(LongInt)) or (paraarray[1].Location.Value>high(LongInt))) then
                          begin
-                           tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-                           hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].location.value,tmpreg);
+                           tmpreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+                           hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].Location.Value,tmpreg);
                            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,opsize,
-                             tmpreg,paraarray[2].location.register));
+                             tmpreg,paraarray[2].Location.Register));
                          end
                        else
 {$endif x86_64}
                          CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,opsize,
-                           paraarray[1].location.value,paraarray[2].location.register));
+                           paraarray[1].Location.Value,paraarray[2].Location.Register));
 
-                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].Location.Register,location.Register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1740,18 +1740,18 @@ implementation
                  end;
 
                LOC_REFERENCE,LOC_CREFERENCE:
-                 case paraarray[2].location.loc of
+                 case paraarray[2].Location.Loc of
                    LOC_REFERENCE,LOC_CREFERENCE:
                      begin
                        { The reference has already been stored at location.register, so use that }
-                       emit_reg_ref(A_CMP,opsize,location.register,paraarray[2].location.reference);
-                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
+                       emit_reg_ref(A_CMP,opsize,location.Register,paraarray[2].Location.Reference);
+                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].Location.Reference,location.Register);
                        instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
                      begin
-                       emit_ref_reg(A_CMP,opsize,paraarray[1].location.reference,paraarray[2].location.register);
-                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       emit_ref_reg(A_CMP,opsize,paraarray[1].Location.Reference,paraarray[2].Location.Register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].Location.Register,location.Register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1759,20 +1759,20 @@ implementation
                  end;
 
                LOC_REGISTER,LOC_CREGISTER:
-                 case paraarray[2].location.loc of
+                 case paraarray[2].Location.Loc of
                    LOC_REFERENCE,LOC_CREFERENCE:
                      begin
-                       emit_reg_ref(A_CMP,opsize,paraarray[1].location.register,paraarray[2].location.reference);
+                       emit_reg_ref(A_CMP,opsize,paraarray[1].Location.Register,paraarray[2].Location.Reference);
 
-                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
+                       emit_ref_reg(A_CMOVcc,opsize,paraarray[2].Location.Reference,location.Register);
                        instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
                      begin
                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,opsize,
-                         paraarray[1].location.register,paraarray[2].location.register));
+                         paraarray[1].Location.Register,paraarray[2].Location.Register));
 
-                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].Location.Register,location.Register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1800,7 +1800,7 @@ implementation
                  InternalError(2021121903);
              end;
 
-             cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+             cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
            end
          else
            InternalError(2020120503);

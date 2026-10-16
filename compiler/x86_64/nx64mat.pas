@@ -70,33 +70,33 @@ implementation
         else
           op:=OP_SHR;
 
-        opsize:=def_cgsize(resultdef);
-        mask:=max(resultdef.size,4)*8-1;
+        opsize:=Def_CGSize(resultdef);
+        mask:=max(resultdef.Size,4)*8-1;
 
         { load left operators in a register }
-        if not(left.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
+        if not(left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
           { location_force_reg can be also used to change the size of a register }
-          (left.location.size<>opsize) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,cgsize_orddef(opsize),true);
-        location_reset(location,LOC_REGISTER,opsize);
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+          (left.Location.Size<>opsize) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,CGSize_OrdDef(opsize),true);
+        Location_Reset(location,LOC_REGISTER,opsize);
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
 
         { shifting by a constant directly coded: }
         if (right.nodetype=ordconstn) then
-          cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
-            TOrdConstNode(right).value.uvalue and mask,left.location.register,location.register)
+          cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
+            TOrdConstNode(right).Value.uvalue and mask,left.Location.Register,location.Register)
         else
           begin
             { load right operators in a register - this
               is done since most target cpu which will use this
               node do not support a shift count in a mem. location (cec)
             }
-            if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
+            if not(right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
                { location_force_reg can be also used to change the size of a register }
-              (right.location.size<>opsize) then
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,cgsize_orddef(opsize),true);
+              (right.Location.Size<>opsize) then
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,CGSize_OrdDef(opsize),true);
 
-            cg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmList,op,opsize,right.location.register,left.location.register,location.register);
+            cg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,opsize,right.Location.Register,left.Location.Register,location.Register);
           end;
       end;
 

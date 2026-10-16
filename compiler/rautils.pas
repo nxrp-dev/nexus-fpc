@@ -61,7 +61,7 @@ type
       OPR_REGISTER  : (reg:TRegister);
 {$ifdef aarch64}
       OPR_REGSET    : (basereg: TRegister; nregs, regsetindex: byte);
-      OPR_INDEXEDREG: (indexedreg: TRegister; regindex: byte);
+      OPR_INDEXEDREG: (indexedreg: TRegister; RegIndex: byte);
       OPR_SHIFTEROP : (shifterop : TShifterOp);
       OPR_COND      : (cc : TAsmCond);
 {$endif aarch64}
@@ -676,7 +676,7 @@ begin
   SetupResult:=false;
   { replace by correct offset. }
   with CurrentProcInfo.procdef do
-    if (not is_void(ReturnDef)) then
+    if (not Is_Void(ReturnDef)) then
       begin
         SetupResult:=setupvar('result',false)
       end
@@ -698,7 +698,7 @@ end;
 Function TOperand.SetupOldEBP:boolean;
 Begin
   SetupOldEBP:=false;
-  if CurrentProcInfo.procdef.ParaST.SymTableLevel>normal_function_level then
+  if CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel then
     SetupOldEBP:=setupvar('parentframe',false)
   else
     Message(asmr_e_cannot_use_OLDEBP_outside_nested_procedure);
@@ -731,12 +731,12 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
       OPR_NONE :
         begin
           opr.typ:=OPR_CONSTANT;
-          opr.val:=l;
+          opr.Val:=l;
         end;
       OPR_CONSTANT :
-        inc(opr.val,l);
+        inc(opr.Val,l);
       OPR_REFERENCE :
-        inc(opr.ref.offset,l);
+        inc(opr.Ref.Offset,l);
       OPR_LOCAL :
         inc(opr.localsymofs,l);
       else
@@ -764,10 +764,10 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
           harrdef:=TArrayDef(sym.vardef);
 
           { calc array size }
-          if is_special_array(harrdef) then
+          if Is_Special_Array(harrdef) then
              l := -1
            else
-             l := harrdef.size;
+             l := harrdef.Size;
 
           case opr.typ of
             OPR_REFERENCE: opr.varsize := l;
@@ -780,7 +780,7 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
           while Assigned(harrdef.ElementDef) and
                 (harrdef.ElementDef.typ=arraydef) do
            harrdef:=TArrayDef(harrdef.ElementDef);
-          if not is_packed_array(harrdef) then
+          if not Is_Packed_Array(harrdef) then
             SetSize(harrdef.EleSize,false)
            else
                if (harrdef.ElePackedBitSize mod 8) = 0 then
@@ -826,7 +826,7 @@ Begin
         tovar:
           begin
             { Only support simple loads }
-            plist:=TAbsoluteVarSym(sym).ref.FirstSym;
+            plist:=TAbsoluteVarSym(sym).Ref.FirstSym;
             if Assigned(plist) and
                (plist^.SLType=sl_load) then
               begin
@@ -838,7 +838,7 @@ Begin
                   (Assigned(plist^.next) and (plist^.next^.SLType=sl_vec)) then
                   begin
                     initref;
-                    opr.ref.offset:=TAbsoluteVarSym(sym).AddrOffset;
+                    opr.Ref.Offset:=TAbsoluteVarSym(sym).AddrOffset;
                     hasvar:=true;
                     Result:=true;
                     exit;
@@ -859,15 +859,15 @@ Begin
                             Message(asmr_e_unsupported_symbol_type);
                             exit;
                           end;
-                        if is_special_array(harrdef) then
+                        if Is_Special_Array(harrdef) then
                           begin
                             Message(asmr_e_unsupported_symbol_type);
                             exit;
                           end;
-                        if not is_packed_array(harrdef) then
-                          Inc(absoffset,asizeint(Int64(plist^.value-harrdef.LowRange))*harrdef.EleSize)
-                        else if (Int64(plist^.value-harrdef.LowRange)*harrdef.ElePackedBitSize mod 8)=0 then
-                          Inc(absoffset,asizeint(Int64(plist^.value-harrdef.LowRange)*harrdef.ElePackedBitSize div 8))
+                        if not Is_Packed_Array(harrdef) then
+                          Inc(absoffset,asizeint(Int64(plist^.Value-harrdef.LowRange))*harrdef.EleSize)
+                        else if (Int64(plist^.Value-harrdef.LowRange)*harrdef.ElePackedBitSize mod 8)=0 then
+                          Inc(absoffset,asizeint(Int64(plist^.Value-harrdef.LowRange)*harrdef.ElePackedBitSize div 8))
                         else
                           Message(asmr_e_packed_element);
                       end
@@ -887,7 +887,7 @@ Begin
         toaddr:
           begin
             initref;
-            opr.ref.offset:=TAbsoluteVarSym(sym).AddrOffset;
+            opr.Ref.Offset:=TAbsoluteVarSym(sym).AddrOffset;
             setvarsize(TAbstractVarSym(sym));
             size_set_from_absolute:=true;
             hasvar:=true;
@@ -931,8 +931,8 @@ Begin
           staticvarsym :
             begin
               initref;
-              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(sym).MangledName,AT_DATA);
-              Inc(opr.ref.offset,absoffset);
+              opr.Ref.Symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(sym).MangledName,AT_DATA);
+              Inc(opr.Ref.Offset,absoffset);
             end;
           paravarsym,
           localvarsym :
@@ -951,13 +951,13 @@ Begin
               if opr.typ=OPR_REFERENCE then
                 begin
 {$ifdef x86}
-                  segreg:=opr.ref.segment;
+                  segreg:=opr.Ref.Segment;
 {$endif x86}
-                  indexreg:=opr.ref.base;
-                  if opr.ref.index<>NR_NO then
+                  indexreg:=opr.Ref.Base;
+                  if opr.Ref.Index<>NR_NO then
                     begin
                       if indexreg=NR_NO then
-                        indexreg:=opr.ref.index
+                        indexreg:=opr.Ref.Index
                       else
                         Message(asmr_e_multiple_index);
                     end;
@@ -974,7 +974,7 @@ Begin
                  not(po_inline in CurrentProcInfo.procdef.ProcOptions) and
                  (sym.owner<>CurrentProcInfo.procdef.LocalST) and
                  (sym.owner<>CurrentProcInfo.procdef.ParaST) and
-                 (CurrentProcInfo.procdef.LocalST.SymTableLevel>normal_function_level) and
+                 (CurrentProcInfo.procdef.LocalST.SymTableLevel>NormalFunctionLevel) and
                  symtable_has_localvarsyms(CurrentProcInfo.procdef.LocalST) then
                 message1(asmr_e_local_para_unreachable,s);
               opr.localsym:=TAbstractNormalVarSym(sym);
@@ -985,7 +985,7 @@ Begin
               opr.localindexreg:=indexreg;
               opr.localscale:=0;
               opr.localgetoffset:=GetOffset;
-              if paramanager.push_addr_param(TAbstractVarSym(sym).VarSpez,TAbstractVarSym(sym).vardef,CurrentProcInfo.procdef.ProcCallOption) then
+              if ParaManager.Push_Addr_Param(TAbstractVarSym(sym).VarSpez,TAbstractVarSym(sym).vardef,CurrentProcInfo.procdef.ProcCallOption) then
                 SetSize(sizeof(PInt),false);
             end;
           else
@@ -1001,7 +1001,7 @@ Begin
       begin
         if TConstSym(sym).ConstTyp=constord then
          begin
-           setconst(TConstSym(sym).value.ValueOrd.svalue);
+           setconst(TConstSym(sym).Value.ValueOrd.svalue);
            SetupVar:=true;
            Exit;
          end;
@@ -1022,14 +1022,14 @@ Begin
         case opr.typ of
           OPR_REFERENCE:
             begin
-              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).MangledName,AT_FUNCTION);
-              Inc(opr.ref.offset,absoffset);
+              opr.Ref.Symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).MangledName,AT_FUNCTION);
+              Inc(opr.Ref.Offset,absoffset);
 
             end;
           OPR_NONE:
             begin
               opr.typ:=OPR_SYMBOL;
-              opr.symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).MangledName,AT_FUNCTION);
+              opr.Symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).MangledName,AT_FUNCTION);
 
               opr.symofs:=absoffset;
             end;
@@ -1071,9 +1071,9 @@ Begin
       exit;
     OPR_CONSTANT :
       begin
-        l:=opr.val;
+        l:=opr.Val;
         opr.typ:=OPR_REFERENCE;
-        Fillchar(opr.ref,sizeof(TReference),0);
+        Fillchar(opr.Ref,sizeof(TReference),0);
         opr.Ref.Offset:=l;
         opr.varsize:=0;
         opr.constoffset:=0;
@@ -1085,7 +1085,7 @@ Begin
         opr.varsize:=0;
         opr.constoffset:=0;
         opr.ref_farproc_entry:=false;
-        Fillchar(opr.ref,sizeof(TReference),0);
+        Fillchar(opr.Ref,sizeof(TReference),0);
       end;
     OPR_REGISTER :
       begin
@@ -1094,20 +1094,20 @@ Begin
         opr.varsize:=0;
         opr.constoffset:=0;
         opr.ref_farproc_entry:=false;
-        Fillchar(opr.ref,sizeof(TReference),0);
-        opr.Ref.base:=reg;
+        Fillchar(opr.Ref,sizeof(TReference),0);
+        opr.Ref.Base:=reg;
       end;
     OPR_SYMBOL :
       begin
-        hsymbol:=opr.symbol;
+        hsymbol:=opr.Symbol;
         hsymofs:=opr.symofs;
         hsym_farprocentry:=opr.sym_farproc_entry;
         opr.typ:=OPR_REFERENCE;
         opr.varsize:=0;
         opr.constoffset:=0;
-        Fillchar(opr.ref,sizeof(TReference),0);
-        opr.ref.symbol:=hsymbol;
-        opr.ref.offset:=hsymofs;
+        Fillchar(opr.Ref,sizeof(TReference),0);
+        opr.Ref.Symbol:=hsymbol;
+        opr.Ref.Offset:=hsymofs;
         opr.ref_farproc_entry:=hsym_farprocentry;
       end;
     else
@@ -1142,17 +1142,17 @@ begin
           localscale:=opr.localscale;
           opr.typ:=OPR_REFERENCE;
           hasvar:=false;
-          Fillchar(opr.ref,sizeof(TReference),0);
+          Fillchar(opr.Ref,sizeof(TReference),0);
           opr.varsize:=localvarsize;
           opr.constoffset:=localconstoffset;
           opr.ref_farproc_entry:=false;
-          opr.ref.base:=TParaVarSym(localsym).ParaLoc[calleeside].Location^.register;
-          opr.ref.offset:=localsymofs;
+          opr.Ref.Base:=TParaVarSym(localsym).ParaLoc[calleeside].Location^.Register;
+          opr.Ref.Offset:=localsymofs;
 {$ifdef x86}
-          opr.ref.segment:=localsegment;
+          opr.Ref.Segment:=localsegment;
 {$endif x86}
-          opr.ref.index:=localindexreg;
-          opr.ref.scalefactor:=localscale;
+          opr.Ref.Index:=localindexreg;
+          opr.Ref.ScaleFactor:=localscale;
         end
       else
         InitRefError;
@@ -1169,7 +1169,7 @@ begin
   opr.varsize:=0;
   opr.constoffset:=0;
   opr.ref_farproc_entry:=false;
-  Fillchar(opr.ref,sizeof(TReference),0);
+  Fillchar(opr.Ref,sizeof(TReference),0);
 end;
 
 Function TOperand.CheckOperand(ins : TInstruction): boolean;
@@ -1230,7 +1230,7 @@ end;
               OPR_CONSTANT :
                 ai.loadconst(i-1,val);
               OPR_REGISTER:
-                ai.loadreg(i-1,reg);
+                ai.LoadReg(i-1,reg);
               OPR_SYMBOL:
                 ai.loadsymbol(i-1,symbol,symofs);
               OPR_LOCAL :
@@ -1253,7 +1253,7 @@ end;
               OPR_REGSET:
                 ai.loadregset(i-1,basereg,nregs,regsetindex);
               OPR_INDEXEDREG:
-                ai.loadindexedreg(i-1,indexedreg,regindex);
+                ai.loadindexedreg(i-1,indexedreg,RegIndex);
 {$endif aarch64}
               { ignore wrong operand }
               OPR_NONE:
@@ -1313,7 +1313,7 @@ begin
       end;
     tovar:
       begin
-        SymList:=TAbsoluteVarSym(sym).ref.FirstSym;
+        SymList:=TAbsoluteVarSym(sym).Ref.FirstSym;
         repeat
           case SymList^.SLType of
             sl_load:
@@ -1409,7 +1409,7 @@ begin
   if Assigned(srsym) and
      (srsym.typ=TypeSym) then
     begin
-      size:=TTypeSym(srsym).typedef.size;
+      size:=TTypeSym(srsym).typedef.Size;
       result:=true;
     end;
 end;
@@ -1486,14 +1486,14 @@ Begin
          begin
            if TConstSym(srsym).ConstTyp=constord then
             Begin
-              l:=TConstSym(srsym).value.ValueOrd.svalue;
+              l:=TConstSym(srsym).Value.ValueOrd.svalue;
               SearchIConstant:=TRUE;
               exit;
             end;
          end;
        enumsym:
          Begin
-           l:=TEnumSym(srsym).value;
+           l:=TEnumSym(srsym).Value;
            SearchIConstant:=TRUE;
            exit;
          end;
@@ -1605,7 +1605,7 @@ Begin
                    while Assigned(harrdef.ElementDef) and
                          (harrdef.ElementDef.typ=arraydef) do
                     harrdef:=TArrayDef(harrdef.ElementDef);
-                   if not is_packed_array(harrdef) then
+                   if not Is_Packed_Array(harrdef) then
                      size:=harrdef.EleSize
                    else
                      begin
@@ -1659,7 +1659,7 @@ Begin
        asmsearchsym(s,sym,srsymtable);
        if Assigned(sym) and (sym.typ=TypeSym) then
          begin
-           size:=TTypeSym(sym).typedef.size;
+           size:=TTypeSym(sym).typedef.Size;
            s:='';
            hastypecast:=true;
          end;
@@ -1802,8 +1802,8 @@ end;
           S32Real : p.concat(TAIRealConst.create_s32real(Single(value)));
           S64Real :
              p.concat(TAIRealConst.create_s64real(Double(value)));
-          s80real : p.concat(TAIRealConst.create_s80real(value,S80FloatType.size));
-          sc80real : p.concat(TAIRealConst.create_s80real(value,SC80FloatType.size));
+          s80real : p.concat(TAIRealConst.create_s80real(value,S80FloatType.Size));
+          sc80real : p.concat(TAIRealConst.create_s80real(value,SC80FloatType.Size));
           s64comp : p.concat(TAIRealConst.create_s64compreal(Trunc(value)));
           else
             InternalError(2014050608);

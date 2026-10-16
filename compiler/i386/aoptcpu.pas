@@ -64,7 +64,7 @@ unit aoptcpu;
     function isgp32reg(reg: TRegister): boolean;
       begin
         {$push}{$warnings off}
-        isgp32reg:=(getregtype(reg)=R_INTREGISTER) and (getsupreg(reg)>=RS_EAX) and (getsupreg(reg)<=RS_EBX);
+        isgp32reg:=(GetRegType(reg)=R_INTREGISTER) and (GetSupReg(reg)>=RS_EAX) and (GetSupReg(reg)<=RS_EBX);
         {$pop}
       end;
 
@@ -77,7 +77,7 @@ unit aoptcpu;
         result:=true;
         for i:=0 to p.opercnt-1 do
           if (p.oper[i]^.typ=top_ref) and
-             (p.oper[i]^.ref^.segment<>NR_NO) then
+             (p.oper[i]^.Ref^.Segment<>NR_NO) then
             exit;
         result:=false;
       end;
@@ -204,7 +204,7 @@ unit aoptcpu;
                        (TAICPU(hp1).opsize = S_W) then
                       begin
                         TAICPU(p).changeopsize(S_L);
-                        TAICPU(p).loadConst(0,TAICPU(p).oper[0]^.val shl 16 + word(TAICPU(hp1).oper[0]^.val));
+                        TAICPU(p).loadConst(0,TAICPU(p).oper[0]^.Val shl 16 + word(TAICPU(hp1).oper[0]^.Val));
                         asml.remove(hp1);
                         hp1.free;
                         Result:=true;
@@ -412,7 +412,7 @@ unit aoptcpu;
                                       InsertLLItem(p.previous, p, hp1);
                                       TAICPU(p).opcode := A_MOV;
                                       TAICPU(p).changeopsize(S_B);
-                                      setsubreg(TAICPU(p).oper[1]^.reg,R_SUBL);
+                                      SetSubReg(TAICPU(p).oper[1]^.reg,R_SUBL);
                                       Result := True;
                                     end;
                                 end;
@@ -420,8 +420,8 @@ unit aoptcpu;
                                 ;
                             end
                           else if (TAICPU(p).oper[0]^.typ = top_ref) and
-                              (TAICPU(p).oper[0]^.ref^.base <> TAICPU(p).oper[1]^.reg) and
-                              (TAICPU(p).oper[0]^.ref^.index <> TAICPU(p).oper[1]^.reg) and
+                              (TAICPU(p).oper[0]^.Ref^.Base <> TAICPU(p).oper[1]^.reg) and
+                              (TAICPU(p).oper[0]^.Ref^.Index <> TAICPU(p).oper[1]^.reg) and
                               not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
                               IsGP32Reg(TAICPU(p).oper[1]^.reg) and
                               (CurrentSettings.OptimizeCPUType = cpu_Pentium) and
@@ -433,7 +433,7 @@ unit aoptcpu;
                                           TAICPU(p).oper[1]^.reg);
                               TAICPU(p).opcode := A_MOV;
                               TAICPU(p).changeopsize(S_B);
-                              setsubreg(TAICPU(p).oper[1]^.reg,R_SUBL);
+                              SetSubReg(TAICPU(p).oper[1]^.reg,R_SUBL);
                               InsertLLItem(p.previous, p, hp1);
                               Result := True;
                             end;

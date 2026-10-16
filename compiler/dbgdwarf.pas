@@ -490,9 +490,9 @@ implementation
     procedure TDebugInfoDwarf.WriteSearchItemToAbbrevSection(SI: PAbbrevSearchTreeItem);
       begin
         if SI^.bit8 then
-          CurrentAsmData.asmlists[al_dwarf_abbrev].concat(TAIConst.Create_8bit(SI^.value))
+          CurrentAsmData.asmlists[al_dwarf_abbrev].concat(TAIConst.Create_8bit(SI^.Value))
         else
-          CurrentAsmData.asmlists[al_dwarf_abbrev].concat(TAIConst.Create_uleb128bit(SI^.value));
+          CurrentAsmData.asmlists[al_dwarf_abbrev].concat(TAIConst.Create_uleb128bit(SI^.Value));
       end;
 
 
@@ -546,7 +546,7 @@ implementation
 
         procedure AddCurrentItemToAbbrev;
           begin
-            CurrentSearchTreeItem^.value:=value;
+            CurrentSearchTreeItem^.Value:=value;
             CurrentSearchTreeItem^.bit8:=bit8;
             WriteSearchItemToAbbrevSection(CurrentSearchTreeItem);
           end;
@@ -572,7 +572,7 @@ implementation
           si := CurrentSearchTreeItem^.NextItem;
           while Assigned(si) do
             begin
-              if (SI^.value=Value) and (si^.bit8=bit8) then
+              if (SI^.Value=Value) and (si^.bit8=bit8) then
                 begin
                 // If a match is found, set the current searchtree item to the next item
                 CurrentSearchTreeItem:=SI;
@@ -1150,7 +1150,7 @@ implementation
 
     procedure TDebugInfoDwarf.finish_entry;
       begin
-        dwarf_info_abbref_tai.value:=FinishAbbrevSearch;
+        dwarf_info_abbref_tai.Value:=FinishAbbrevSearch;
       end;
 
 
@@ -1169,7 +1169,7 @@ implementation
       begin
         OrdType:=def.OrdType;
         if OrdType=customint then
-          OrdType:=range_to_basetype(def.low,def.high);
+          OrdType:=Range_To_BaseType(def.low,def.high);
         case OrdType of
           s8bit,
           s16bit,
@@ -1192,7 +1192,7 @@ implementation
                   sign:=DW_ATE_unsigned;
                   signform:=DW_FORM_udata
                 end;
-              fullbytesize:=def.size;
+              fullbytesize:=def.Size;
               case fullbytesize of
                 1:
                   if (sign=DW_ATE_signed) then
@@ -1420,10 +1420,10 @@ implementation
                 append_entry(DW_TAG_base_type,false,[
                   DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
                   DW_AT_encoding,DW_FORM_data1,DW_ATE_float,
-                  DW_AT_byte_size,DW_FORM_data1,def.size
+                  DW_AT_byte_size,DW_FORM_data1,def.Size
                   ]);
                 if (def.FloatType in [s80real,sc80real]) and
-                   (def.size<>10) then
+                   (def.Size<>10) then
                   begin
                     append_attribute(DW_AT_bit_size,DW_FORM_data1,[10*8]);
                     { "The bit offset attribute describes the offset in bits
@@ -1431,13 +1431,13 @@ implementation
                         from the high order bit of the storage unit used to
                         contain that value." }
                     if TargetInfo.endian=endian_little then
-                      append_attribute(DW_AT_bit_offset,DW_FORM_data1,[(def.size-10)*8]);
+                      append_attribute(DW_AT_bit_offset,DW_FORM_data1,[(def.Size-10)*8]);
                   end;
               end
             else
               append_entry(DW_TAG_base_type,false,[
                 DW_AT_encoding,DW_FORM_data1,DW_ATE_float,
-                DW_AT_byte_size,DW_FORM_data1,def.size
+                DW_AT_byte_size,DW_FORM_data1,def.Size
                 ]);
           s64currency:
             { we should use DW_ATE_signed_fixed, however it isn't supported yet by GDB (FK) }
@@ -1479,16 +1479,16 @@ implementation
         if Assigned(def.TypeSym) then
           append_entry(DW_TAG_enumeration_type,true,[
             DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
-            DW_AT_byte_size,DW_FORM_data1,def.size
+            DW_AT_byte_size,DW_FORM_data1,def.Size
             ])
         else
           append_entry(DW_TAG_enumeration_type,true,[
-            DW_AT_byte_size,DW_FORM_data1,def.size
+            DW_AT_byte_size,DW_FORM_data1,def.Size
             ]);
         if Assigned(def.BaseDef) then
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(def.BaseDef))
         else
-          case def.size of
+          case def.Size of
             1:
                if def.min<0 then
                  append_labelentry_ref(DW_AT_type,def_dwarf_lab(S8IntType))
@@ -1515,7 +1515,7 @@ implementation
 
         finish_entry;
 
-        case def.size of
+        case def.Size of
           1:
              entryform:=DW_FORM_data1;
           2:
@@ -1532,18 +1532,18 @@ implementation
         for i := 0 to def.SymTable.SymList.Count - 1 do
           begin
             hp:=TEnumSym(def.SymTable.SymList[i]);
-            if hp.value<def.MinVal then
+            if hp.Value<def.MinVal then
               continue
             else
-            if hp.value>def.MaxVal then
+            if hp.Value>def.MaxVal then
               break;
-            if hp.value<0 then
+            if hp.Value<0 then
               valueform:=DW_FORM_sdata
             else
               valueform:=entryform;
             append_entry(DW_TAG_enumerator,false,[
               DW_AT_name,DW_FORM_string,symname(hp, false)+#0,
-              DW_AT_const_value,valueform,hp.value
+              DW_AT_const_value,valueform,hp.Value
             ]);
             finish_entry;
           end;
@@ -1559,7 +1559,7 @@ implementation
         elestrideattr : TDwarfAttribute;
         labsym: TAsmLabel;
       begin
-        if is_dynamic_array(def) then
+        if Is_Dynamic_Array(def) then
           begin
             { It's a pointer to the actual array }
             CurrentAsmData.getaddrlabel(labsym);
@@ -1569,7 +1569,7 @@ implementation
             CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
           end;
 
-        if not is_packed_array(def) then
+        if not Is_Packed_Array(def) then
           begin
             elestrideattr:=DW_AT_byte_stride;
             EleSize:=def.EleSize;
@@ -1580,7 +1580,7 @@ implementation
             EleSize:=def.ElePackedBitSize;
           end;
 
-        if is_special_array(def) then
+        if Is_Special_Array(def) then
           begin
             { no known size, no known upper bound }
             if Assigned(def.TypeSym) then
@@ -1601,7 +1601,7 @@ implementation
           end
         else
           begin
-            size:=def.size;
+            size:=def.Size;
             if Assigned(def.TypeSym) then
               append_entry(DW_TAG_array_type,true,[
                 DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
@@ -1641,11 +1641,11 @@ implementation
         if (name<>'') then
           append_entry(DW_TAG_structure_type,true,[
             DW_AT_name,DW_FORM_string,name+#0,
-            DW_AT_byte_size,DW_FORM_udata,def.size
+            DW_AT_byte_size,DW_FORM_udata,def.Size
             ])
         else
           append_entry(DW_TAG_structure_type,true,[
-            DW_AT_byte_size,DW_FORM_udata,def.size
+            DW_AT_byte_size,DW_FORM_udata,def.Size
             ]);
         finish_entry;
         def.SymTable.SymList.ForEachCall(@enum_membersyms_callback,nil);
@@ -1662,7 +1662,7 @@ implementation
       begin
         append_entry(DW_TAG_pointer_type,false,[]);
         append_pointerclass(list,def);
-        if not(is_voidpointer(def)) then
+        if not(Is_VoidPointer(def)) then
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(def.PointedDef));
         finish_entry;
       end;
@@ -1691,7 +1691,7 @@ implementation
             CurrentAsmData.getaddrlabel(arr);
           append_entry(DW_TAG_structure_type,true,[
             DW_AT_name,DW_FORM_string,name+#0,
-            DW_AT_byte_size,DW_FORM_udata,qword(lendef.size)+slen
+            DW_AT_byte_size,DW_FORM_udata,qword(lendef.Size)+slen
             ]);
           finish_entry;
 
@@ -1711,7 +1711,7 @@ implementation
             DW_AT_data_member_location,DW_FORM_block1,1+LengthULEB128(1)
             ]);
           CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_plus_uconst)));
-          CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(lendef.size));
+          CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(lendef.Size));
           append_labelentry_ref(DW_AT_type,arr);
           finish_entry;
 
@@ -1723,7 +1723,7 @@ implementation
           else
             CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(arr,0));
           append_entry(DW_TAG_array_type,true,[
-            DW_AT_byte_size,DW_FORM_udata,def.size,
+            DW_AT_byte_size,DW_FORM_udata,def.Size,
             DW_AT_byte_stride,DW_FORM_udata,1
             ]);
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(CAnsiCharType));
@@ -1795,7 +1795,7 @@ implementation
             append_entry(DW_TAG_subroutine_type,true,[
               DW_AT_prototyped,DW_FORM_flag,true
             ]);
-          if not(is_void(TProcVarDef(def).ReturnDef)) then
+          if not(Is_Void(TProcVarDef(def).ReturnDef)) then
             append_labelentry_ref(DW_AT_type,def_dwarf_lab(TProcVarDef(def).ReturnDef));
           finish_entry;
 
@@ -2081,7 +2081,7 @@ implementation
 
         { Externally visible.  }
         if (po_global in def.ProcOptions) and
-           (def.ParaST.SymTableLevel<=normal_function_level) then
+           (def.ParaST.SymTableLevel<=NormalFunctionLevel) then
           append_attribute(DW_AT_external,DW_FORM_flag,[true]);
         { Abstract or virtual/overriding method.  }
         if (([po_abstractmethod, po_virtualmethod, po_overridingmethod] * def.ProcOptions) <> []) and
@@ -2108,7 +2108,7 @@ implementation
           append_visibility(def.visibility);
 
         { Return type.  }
-        if not(is_void(TProcDef(def).ReturnDef)) then
+        if not(Is_Void(TProcDef(def).ReturnDef)) then
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(TProcDef(def).ReturnDef));
 
         { we can only write the start/end if this procedure is implemented in
@@ -2214,7 +2214,7 @@ implementation
                 sym:=TAbstractVarSym(SymList^.sym);
                 currdef:=TAbstractVarSym(sym).vardef;
                 if ((sym.typ=paravarsym) and
-                    paramanager.push_addr_param(TParaVarSym(sym).VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption)) then
+                    ParaManager.Push_Addr_Param(TParaVarSym(sym).VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption)) then
                   indirection:=true;
               end;
             sl_subscript:
@@ -2226,7 +2226,7 @@ implementation
                 { can't handle offsets with indirections yet }
                 if indirection then
                   exit;
-                if is_packed_record_or_object(currdef) then
+                if Is_Packed_Record_Or_Object(currdef) then
                   begin
                     { can't calculate the address of a non-byte aligned field }
                     if (TFieldVarSym(SymList^.sym).FieldOffset mod 8) <> 0 then
@@ -2253,7 +2253,7 @@ implementation
                 case currdef.typ of
                   arraydef:
                     begin
-                      if not is_packed_array(currdef) then
+                      if not Is_Packed_Array(currdef) then
                         EleSize:=TArrayDef(currdef).EleSize
                       else
                         begin
@@ -2263,7 +2263,7 @@ implementation
                             exit;
                           EleSize:=EleSize div 8;
                         end;
-                      inc(offset,(SymList^.value.svalue-TArrayDef(currdef).LowRange)*EleSize);
+                      inc(offset,(SymList^.Value.svalue-TArrayDef(currdef).LowRange)*EleSize);
                       currdef:=TArrayDef(currdef).ElementDef;
                     end;
                   stringdef:
@@ -2271,17 +2271,17 @@ implementation
                       case TStringDef(currdef).StringType of
                         st_widestring,st_unicodestring:
                           begin
-                            inc(offset,(SymList^.value.svalue-1)*2);
+                            inc(offset,(SymList^.Value.svalue-1)*2);
                             currdef:=CWideCharType;
                           end;
                         st_shortstring:
                           begin
-                            inc(offset,SymList^.value.svalue);
+                            inc(offset,SymList^.Value.svalue);
                             currdef:=CAnsiCharType;
                           end;
                         st_ansistring:
                           begin
-                            inc(offset,SymList^.value.svalue-1);
+                            inc(offset,SymList^.Value.svalue-1);
                             currdef:=CAnsiCharType;
                           end;
                         else
@@ -2332,7 +2332,7 @@ implementation
 
         templist:=TAsmList.create;
 
-        case sym.LocAlloc.loc of
+        case sym.LocAlloc.Loc of
           LOC_REGISTER,
           LOC_CREGISTER,
           LOC_MMREGISTER,
@@ -2342,17 +2342,17 @@ implementation
             begin
               { dwarf_reg_no_error might return -1
                 in case the register variable has been optimized out }
-              dreg:=dwarf_reg_no_error(sym.LocAlloc.register);
-              has_high_reg:=(sym.LocAlloc.loc in [LOC_REGISTER,LOC_CREGISTER]) and (sym.LocAlloc.registerhi<>NR_NO);
+              dreg:=dwarf_reg_no_error(sym.LocAlloc.Register);
+              has_high_reg:=(sym.LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER]) and (sym.LocAlloc.RegisterHi<>NR_NO);
               if has_high_reg then
-                dreghigh:=dwarf_reg_no_error(sym.LocAlloc.registerhi);
+                dreghigh:=dwarf_reg_no_error(sym.LocAlloc.RegisterHi);
               if dreghigh=-1 then
                 has_high_reg:=false;
-              if (sym.LocAlloc.loc in [LOC_REGISTER,LOC_CREGISTER]) and
+              if (sym.LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
                  (sym.typ=paravarsym) and
-                  paramanager.push_addr_param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
+                  ParaManager.Push_Addr_Param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
                   not(vo_has_local_copy in sym.VarOptions) and
-                  not is_open_string(sym.vardef) and (dreg>=0) then
+                  not Is_Open_String(sym.vardef) and (dreg>=0) then
                 begin
                   templist.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
                   templist.concat(TAIConst.create_uleb128bit(dreg));
@@ -2460,29 +2460,29 @@ implementation
                       implemented in the current module. Can't add a general check
                       for LOC_INVALID above, because staticvarsyms may also have it.
                     }
-                    if sym.LocAlloc.loc<> LOC_INVALID then
+                    if sym.LocAlloc.Loc<> LOC_INVALID then
                       begin
-                        if is_fbreg(sym.LocAlloc.reference.base) then
+                        if is_fbreg(sym.LocAlloc.Reference.Base) then
                           begin
                             templist.concat(TAIConst.create_8bit(ord(DW_OP_fbreg)));
-                            templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.reference.offset+offset));
-                            blocksize:=1+LengthSLEB128(sym.LocAlloc.reference.offset+offset);
+                            templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                            blocksize:=1+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                           end
                         else
                           begin
-                            dreg:=dwarf_reg(sym.LocAlloc.reference.base);
+                            dreg:=dwarf_reg(sym.LocAlloc.Reference.Base);
                             if dreg<=31 then
                               begin
                                 templist.concat(TAIConst.create_8bit(ord(DW_OP_breg0)+dreg));
-                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.reference.offset+offset));
-                                blocksize:=1+LengthSLEB128(sym.LocAlloc.reference.offset+offset);
+                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                                blocksize:=1+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                               end
                             else
                               begin
                                 templist.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
                                 templist.concat(TAIConst.create_uleb128bit(dreg));
-                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.reference.offset+offset));
-                                blocksize:=1+LengthULEB128(dreg)+LengthSLEB128(sym.LocAlloc.reference.offset+offset);
+                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                                blocksize:=1+LengthULEB128(dreg)+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                               end;
                           end;
 
@@ -2492,9 +2492,9 @@ implementation
                           in the DW_AT_location block.
                         }
                         if (sym.typ=paravarsym) and
-                            paramanager.push_addr_param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
+                            ParaManager.Push_Addr_Param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
                             not(vo_has_local_copy in sym.VarOptions) and
-                            not is_open_string(sym.vardef) then
+                            not Is_Open_String(sym.vardef) then
                           begin
                             templist.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
                             inc(blocksize);
@@ -2524,7 +2524,7 @@ implementation
           the parasymtable can con also contain e.g. absolutevarsyms
           -> check symtabletype}
         if (sym.owner.SymTableType=parasymtable) and
-           (sym.LocAlloc.loc=LOC_INVALID) then
+           (sym.LocAlloc.Loc=LOC_INVALID) then
           begin
             if (sym.owner.SymTableType<>parasymtable) then
               InternalError(2009101001);
@@ -2536,7 +2536,7 @@ implementation
               }
               ])
           end
-        else if not(sym.LocAlloc.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
+        else if not(sym.LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
                                  LOC_CMMREGISTER,LOC_FPUREGISTER,LOC_CFPUREGISTER]) and
            ((sym.owner.SymTableType = GlobalSymTable) or
             (sp_static in sym.SymOptions) or
@@ -2553,9 +2553,9 @@ implementation
             ])
 {$ifdef gdb_supports_DW_AT_variable_parameter}
         else if (sym.typ=paravarsym) and
-            paramanager.push_addr_param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
+            ParaManager.Push_Addr_Param(sym.VarSpez,sym.vardef,TProcDef(sym.owner.DefOwner).ProcCallOption) and
             not(vo_has_local_copy in sym.VarOptions) and
-            not is_open_string(sym.vardef) then
+            not Is_Open_String(sym.vardef) then
           append_entry(tag,false,[
             DW_AT_name,DW_FORM_string,name+#0,
             DW_AT_variable_parameter,DW_FORM_flag,true,
@@ -2630,14 +2630,14 @@ implementation
            (sym.visibility=vis_hidden) then
           exit;
 
-        if (TAbstractRecordSymTable(sym.owner).UseFieldAlignment<>bit_alignment) or
+        if (TAbstractRecordSymTable(sym.owner).UseFieldAlignment<>BitAlignment) or
            { only ordinals are bitpacked }
-           not is_ordinal(sym.vardef) then
+           not Is_Ordinal(sym.vardef) then
           begin
             { other kinds of fields can however also appear in a bitpacked   }
             { record, and then their offset is also specified in bits rather }
             { than in bytes                                                  }
-            if (TAbstractRecordSymTable(sym.owner).UseFieldAlignment<>bit_alignment) then
+            if (TAbstractRecordSymTable(sym.owner).UseFieldAlignment<>BitAlignment) then
               FieldOffset:=sym.FieldOffset
             else
               FieldOffset:=sym.FieldOffset div 8;
@@ -2656,7 +2656,7 @@ implementation
             { possible, i.e., equivalent to gcc's                    }
             { __attribute__((__packed__)), which is also what gpc    }
             { does.                                                  }
-            fieldnatsize:=max(sizeof(PInt),sym.vardef.size);
+            fieldnatsize:=max(sizeof(PInt),sym.vardef.Size);
             FieldOffset:=(sym.FieldOffset div (fieldnatsize*8)) * fieldnatsize;
             inc(FieldOffset,offset);
             BitOffset:=sym.FieldOffset mod (fieldnatsize*8);
@@ -2729,7 +2729,7 @@ implementation
               { note: < 255 instead of <= 255 because we have to store the
                 entire length of the string as well, and 256 does not fit in
                 a byte }
-              if (sym.value.len<255) then
+              if (sym.Value.len<255) then
                 usedef:=CShortStringType
               else
                 usedef:=CLongStringType;
@@ -2749,23 +2749,23 @@ implementation
             begin
               { DW_FORM_string isn't supported yet by the Pascal value printer
                 -> create a string using raw bytes }
-              if (sym.value.len<255) then
+              if (sym.Value.len<255) then
                 begin
                   AddConstToAbbrev(ord(DW_FORM_block1));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.value.len+1));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.value.len));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.Value.len+1));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.Value.len));
                 end
               else
                 begin
                   AddConstToAbbrev(ord(DW_FORM_block));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(sym.value.len+SizeSIntType.size));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.Create_sizeint_unaligned(sym.value.len));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(sym.Value.len+SizeSIntType.Size));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.Create_sizeint_unaligned(sym.Value.len));
                 end;
               i:=0;
-              size:=sym.value.len;
+              size:=sym.Value.len;
               while(i<size) do
                 begin
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit((PByte(sym.value.ValuePtr+i)^)));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit((PByte(sym.Value.ValuePtr+i)^)));
                   inc(i);
                 end;
             end;
@@ -2773,12 +2773,12 @@ implementation
           constset:
             begin
               AddConstToAbbrev(ord(DW_FORM_block1));
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(usedef.size));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(usedef.Size));
               i:=0;
-              size:=sym.ConstDef.size;
+              size:=sym.ConstDef.Size;
               while (i<size) do
                 begin
-                  b:=PByte(sym.value.ValuePtr+i)^;
+                  b:=PByte(sym.Value.ValuePtr+i)^;
                   if (TargetInfo.endian<>SourceInfo.endian) then
                     b:=Reverse_Byte(b);
 		  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(b));
@@ -2796,15 +2796,15 @@ implementation
             end;
           constord:
             begin
-              if (sym.value.ValueOrd<0) then
+              if (sym.Value.ValueOrd<0) then
                 begin
                   AddConstToAbbrev(ord(DW_FORM_sdata));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_sleb128bit(sym.value.ValueOrd.svalue));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_sleb128bit(sym.Value.ValueOrd.svalue));
                 end
               else
                 begin
                   AddConstToAbbrev(ord(DW_FORM_udata));
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(sym.value.ValueOrd.uvalue));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_uleb128bit(sym.Value.ValueOrd.uvalue));
                 end;
             end;
           constnil:
@@ -2821,10 +2821,10 @@ implementation
             begin
 {$ifdef cpu64bitaddr}
               AddConstToAbbrev(ord(DW_FORM_data8));
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_64bit_unaligned(int64(sym.value.ValueOrdPtr)));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_64bit_unaligned(int64(sym.Value.ValueOrdPtr)));
 {$else cpu64bitaddr}
               AddConstToAbbrev(ord(DW_FORM_data4));
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_32bit_unaligned(LongInt(sym.value.ValueOrdPtr)));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_32bit_unaligned(LongInt(sym.Value.ValueOrdPtr)));
 {$endif cpu64bitaddr}
             end;
           constreal:
@@ -2834,24 +2834,24 @@ implementation
                 S32Real:
                   begin
                     CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(4));
-                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s32real(Single(PBestReal(sym.value.ValuePtr)^)));
+                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s32real(Single(PBestReal(sym.Value.ValuePtr)^)));
                   end;
                 S64Real:
                   begin
                     CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(8));
-                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s64real(Double(PBestReal(sym.value.ValuePtr)^)));
+                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s64real(Double(PBestReal(sym.Value.ValuePtr)^)));
                   end;
                 s64comp,
                 s64currency:
                   begin
                     CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(8));
-                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_64bit_unaligned(Trunc(PBestReal(sym.value.ValuePtr)^)));
+                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_64bit_unaligned(Trunc(PBestReal(sym.Value.ValuePtr)^)));
                   end;
                 s80real,
                 sc80real:
                   begin
-                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.ConstDef.size));
-                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s80real(pextended(sym.value.ValuePtr)^,sym.ConstDef.size));
+                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(sym.ConstDef.Size));
+                    CurrentAsmData.asmlists[al_dwarf_info].concat(TAIRealConst.create_s80real(pextended(sym.Value.ValuePtr)^,sym.ConstDef.Size));
                   end;
               end;
             end;
@@ -2944,7 +2944,7 @@ implementation
             end;
           tovar:
             begin
-              SymList:=TAbsoluteVarSym(sym).ref.FirstSym;
+              SymList:=TAbsoluteVarSym(sym).Ref.FirstSym;
               if get_symlist_sym_offset(SymList,tosym,offset) then
                 begin
                   if (tosym.typ=FieldVarSym) then
@@ -3797,11 +3797,11 @@ implementation
         if Assigned(def.TypeSym) then
           append_entry(DW_TAG_structure_type,false,[
            DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
-           DW_AT_byte_size,DW_FORM_udata,def.size
+           DW_AT_byte_size,DW_FORM_udata,def.Size
           ])
         else
           append_entry(DW_TAG_structure_type,false,[
-           DW_AT_byte_size,DW_FORM_udata,def.size
+           DW_AT_byte_size,DW_FORM_udata,def.Size
           ]);
         finish_entry;
       end;
@@ -3940,11 +3940,11 @@ implementation
             if Assigned(def.TypeSym) then
               append_entry(DW_TAG_set_type,false,[
                 DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
-                DW_AT_byte_size,DW_FORM_data2,def.size
+                DW_AT_byte_size,DW_FORM_data2,def.Size
                 ])
             else
               append_entry(DW_TAG_set_type,false,[
-                DW_AT_byte_size,DW_FORM_data2,def.size
+                DW_AT_byte_size,DW_FORM_data2,def.Size
                 ]);
             if Assigned(def.ElementDef) then
               begin
@@ -3964,7 +3964,7 @@ implementation
                   actually have a larger range than the original one.  }
                 append_entry(DW_TAG_subrange_type,false,[
                   DW_AT_lower_bound,DW_FORM_sdata,def.SetBase,
-                  DW_AT_upper_bound,DW_FORM_sdata,get_max_value(def.ElementDef).svalue
+                  DW_AT_upper_bound,DW_FORM_sdata,Get_Max_Value(def.ElementDef).svalue
                   ]);
                 append_labelentry_ref(DW_AT_type,def_dwarf_lab(def.ElementDef))
               end
@@ -3977,12 +3977,12 @@ implementation
               append_entry(DW_TAG_base_type,false,[
                 DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
                 DW_AT_encoding,DW_FORM_data1,DW_ATE_unsigned,
-                DW_AT_byte_size,DW_FORM_data2,def.size
+                DW_AT_byte_size,DW_FORM_data2,def.Size
                 ])
             else
               append_entry(DW_TAG_base_type,false,[
                 DW_AT_encoding,DW_FORM_data1,DW_ATE_unsigned,
-                DW_AT_byte_size,DW_FORM_data2,def.size
+                DW_AT_byte_size,DW_FORM_data2,def.Size
                 ]);
           end;
         finish_entry;
@@ -4030,7 +4030,7 @@ implementation
 
     procedure TDebugInfoDwarf3.appenddef_array(list: TAsmList; def: TArrayDef);
       begin
-        if not is_dynamic_array(def) then
+        if not Is_Dynamic_Array(def) then
           begin
             inherited appenddef_array(list,def);
             exit;
@@ -4069,7 +4069,7 @@ implementation
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_skip)));
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_16bit_unaligned(3));
         { no -> load length }
-        CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_lit0)+SizeSIntType.size));
+        CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_lit0)+SizeSIntType.Size));
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_minus)));
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_deref)));
         { skip to past end is not allowed, thus use a nop here }
@@ -4121,7 +4121,7 @@ implementation
           { now the information about the length of the string }
           if deref then
             begin
-              if not (is_widestring(def) and (tf_winlikewidestring in TargetInfo.flags)) then
+              if not (Is_WideString(def) and (tf_winlikewidestring in TargetInfo.flags)) then
                 upperopcodes:=14
               else
                 upperopcodes:=17;
@@ -4151,7 +4151,7 @@ implementation
                 { for Windows WideString the size is always a DWORD }
                 CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_lit4)))
               else
-                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_lit0)+SizeSIntType.size));
+                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_lit0)+SizeSIntType.Size));
               CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(ord(DW_OP_minus)));
               if upperopcodes=17 then
                 begin
@@ -4228,11 +4228,11 @@ implementation
         if Assigned(def.TypeSym) then
           append_entry(DW_TAG_file_type,false,[
             DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0,
-            DW_AT_byte_size,DW_FORM_data2,def.size
+            DW_AT_byte_size,DW_FORM_data2,def.Size
             ])
         else
           append_entry(DW_TAG_file_type,false,[
-            DW_AT_byte_size,DW_FORM_data2,def.size
+            DW_AT_byte_size,DW_FORM_data2,def.Size
             ]);
         if TFileDef(def).FileTyp=ft_typed then
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(TFileDef(def).TypedFileDef));
@@ -4447,7 +4447,7 @@ implementation
         { struct }
         append_entry(DW_TAG_structure_type,true,[
           DW_AT_name,DW_FORM_string,'Variant'#0,
-          DW_AT_byte_size,DW_FORM_udata,vardatadef.size
+          DW_AT_byte_size,DW_FORM_udata,vardatadef.Size
           ]);
         finish_entry;
 
@@ -4472,7 +4472,7 @@ implementation
                 if VARIANTS[idx].name <> '' then
                   begin
                     append_entry(DW_TAG_variant,true,[
-                      DW_AT_discr_value,DW_FORM_udata,VARIANTS[idx].value
+                      DW_AT_discr_value,DW_FORM_udata,VARIANTS[idx].Value
                       ]);
                     finish_entry;
                     fs := TFieldVarSym(vardatadef.SymTable.Find(VARIANTS[idx].name));
@@ -4484,7 +4484,7 @@ implementation
                 else
                   begin
                     append_entry(DW_TAG_variant,false,[
-                      DW_AT_discr_value,DW_FORM_udata,VARIANTS[idx].value
+                      DW_AT_discr_value,DW_FORM_udata,VARIANTS[idx].Value
                       ]);
                     finish_entry;
                   end;

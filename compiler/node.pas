@@ -694,19 +694,19 @@ implementation
 
     function is_constintnode(p : TNode) : boolean;
       begin
-         is_constintnode:=(p.nodetype=ordconstn) and is_integer(p.resultdef);
+         is_constintnode:=(p.nodetype=ordconstn) and Is_Integer(p.resultdef);
       end;
 
 
     function is_constcharnode(p : TNode) : boolean;
       begin
-         is_constcharnode:=(p.nodetype=ordconstn) and is_char(p.resultdef);
+         is_constcharnode:=(p.nodetype=ordconstn) and Is_Char(p.resultdef);
       end;
 
 
     function is_constwidecharnode(p : TNode) : boolean;
       begin
-         is_constwidecharnode:=(p.nodetype=ordconstn) and is_widechar(p.resultdef);
+         is_constwidecharnode:=(p.nodetype=ordconstn) and Is_WideChar(p.resultdef);
       end;
 
 
@@ -718,7 +718,7 @@ implementation
 
     function is_constboolnode(p : TNode) : boolean;
       begin
-         is_constboolnode:=(p.nodetype=ordconstn) and is_boolean(p.resultdef);
+         is_constboolnode:=(p.nodetype=ordconstn) and Is_Boolean(p.resultdef);
       end;
 
 
@@ -737,17 +737,17 @@ implementation
       begin
          is_conststringnode :=
            (p.nodetype = stringconstn) and
-           (is_chararray(p.resultdef) or
-            is_shortstring(p.resultdef) or
-            is_ansistring(p.resultdef));
+           (Is_CharArray(p.resultdef) or
+            Is_ShortString(p.resultdef) or
+            Is_AnsiString(p.resultdef));
       end;
 
     function is_constwidestringnode(p : TNode) : boolean;
       begin
          is_constwidestringnode :=
            (p.nodetype = stringconstn) and
-           (is_widechararray(p.resultdef) or
-            is_wide_or_unicode_string(p.resultdef));
+           (Is_WideCharArray(p.resultdef) or
+            Is_Wide_Or_Unicode_String(p.resultdef));
       end;
 
     function is_conststring_or_constcharnode(p : TNode) : boolean;
@@ -771,7 +771,7 @@ implementation
          { updated by firstpass }
          expectloc:=LOC_INVALID;
          { updated by secondpass }
-         location.loc:=LOC_INVALID;
+         location.Loc:=LOC_INVALID;
          { save local info }
          fileinfo:=CurrentFilePos;
          LocalSwitches:=CurrentSettings.LocalSwitches;
@@ -799,7 +799,7 @@ implementation
         { updated by firstpass }
         expectloc:=LOC_INVALID;
         { updated by secondpass }
-        location.loc:=LOC_INVALID;
+        location.Loc:=LOC_INVALID;
       end;
 
 
@@ -889,8 +889,8 @@ implementation
         else
           write(t,', resultdef = <nil> ');
         printfileinfo(t,fileinfo);
-	write(t,', loc = ',tcgloc2str[location.loc],
-                  ', expectloc = ',tcgloc2str[expectloc],
+	write(t,', loc = ',TCGLoc2Str[location.Loc],
+                  ', expectloc = ',TCGLoc2Str[expectloc],
                   ', flags = [');
         first:=true;
         for i:=low(TNodeFlag) to high(TNodeFlag) do
@@ -1048,7 +1048,7 @@ implementation
          p:=TNodeClass(classtype).createforcopy;
          p.nodetype:=nodetype;
          p.expectloc:=expectloc;
-         p.location:=location;
+         p.Location:=location;
          p.flags:=flags;
          p.transientflags:=transientflags;
          p.resultdef:=resultdef;

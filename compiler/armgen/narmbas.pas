@@ -58,27 +58,27 @@ implementation
       case Oper^.typ of
         top_const:
           begin
-            case Oper^.val of
+            case Oper^.Val of
               -15..15:
-                Result := '#' + ToStr(Oper^.val);
+                Result := '#' + ToStr(Oper^.Val);
               $10..$FF:
-                Result := '#0x' + HexStr(Oper^.val, 2);
+                Result := '#0x' + HexStr(Oper^.Val, 2);
               $100..$FFFF:
-                Result := '#0x' + HexStr(Oper^.val, 4);
+                Result := '#0x' + HexStr(Oper^.Val, 4);
   {$ifdef CPU32}
               else
-                Result := '#0x' + HexStr(Oper^.val, 8);
+                Result := '#0x' + HexStr(Oper^.Val, 8);
   {$else CPU32}
               $10000..$FFFFFFFF:
-                Result := '#0x' + HexStr(Oper^.val, 8);
+                Result := '#0x' + HexStr(Oper^.Val, 8);
               else
-                Result := '#0x' + HexStr(Oper^.val, 16);
+                Result := '#0x' + HexStr(Oper^.Val, 16);
   {$endif CPU32}
             end;
           end;
 
         top_ref:
-          with Oper^.ref^ do
+          with Oper^.Ref^ do
             begin
               if Assigned(symbol) then
                 begin
@@ -96,9 +96,9 @@ implementation
                   if (base <> NR_NO) then
                     begin
                       Result := '[' + gas_regname(base);
-                      if addressmode = AM_POSTINDEXED then
+                      if AddressMode = AM_POSTINDEXED then
                         Result := Result + '], '
-                      else if (offset <> 0) or (shiftmode <> SM_None) then
+                      else if (offset <> 0) or (ShiftMode <> SM_None) then
                         Result := Result + ', ';
                     end
                   else { Usually a special kind of reference used by ldm/stm instructions }
@@ -106,24 +106,24 @@ implementation
 
                   if index <> NR_NO then
                     Result := Result + gas_regname(index)
-                  else if (offset <> 0) or (shiftmode <> SM_None) or (addressmode = AM_POSTINDEXED) then
+                  else if (offset <> 0) or (ShiftMode <> SM_None) or (AddressMode = AM_POSTINDEXED) then
                     Result := Result + '#' + ToStr(offset);
-                  if shiftmode <> SM_None then
-                    Result := Result + ', ' + gas_shiftmode2str[shiftmode] + ' #' + ToStr(shiftimm);
+                  if ShiftMode <> SM_None then
+                    Result := Result + ', ' + gas_shiftmode2str[ShiftMode] + ' #' + ToStr(ShiftImm);
 
-                  if addressmode <> AM_POSTINDEXED then
+                  if AddressMode <> AM_POSTINDEXED then
                     begin
                       if (base <> NR_NO) then
                         Result := Result + ']';
 
-                      if addressmode = AM_PREINDEXED then
+                      if AddressMode = AM_PREINDEXED then
                         Result := Result + '!';
                     end;
                 end;
             end;
         top_indexedreg:
           with Oper^ do
-            Result := gas_regname(indexedreg)+'['+ToStr(regindex)+']';
+            Result := gas_regname(indexedreg)+'['+ToStr(RegIndex)+']';
         top_conditioncode:
           Result := cond2str[Oper^.cc];
 
@@ -133,7 +133,7 @@ implementation
         top_shifterop:
           with Oper^.shifterop^ do
             begin
-              Result := gas_shiftmode2str[shiftmode] + ' #' + ToStr(shiftimm);
+              Result := gas_shiftmode2str[ShiftMode] + ' #' + ToStr(ShiftImm);
             end;
         else
           Result := inherited XMLFormatOp(Oper);

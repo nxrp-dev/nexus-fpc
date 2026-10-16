@@ -56,7 +56,7 @@ implementation
         a near or a far pointer }
       if (realsource.nodetype=loadn) and
          ((TLoadNode(realsource).symtableentry.typ=absolutevarsym) and
-         TCPUAbsoluteVarSym(TLoadNode(realsource).symtableentry).absseg) then
+         TCPUAbsoluteVarSym(TLoadNode(realsource).symtableentry).AbsSeg) then
         begin
           set_absvarsym_resultdef;
           result:=true;

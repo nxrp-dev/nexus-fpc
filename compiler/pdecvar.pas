@@ -190,11 +190,11 @@ implementation
                                  begin
                                    { type/range checking }
                                    inserttypeconv(p,TArrayDef(def).RangeDef);
-                                   if (TOrdConstNode(p).value<int64(low(LongInt))) or
-                                      (TOrdConstNode(p).value>int64(high(LongInt))) then
+                                   if (TOrdConstNode(p).Value<int64(low(LongInt))) or
+                                      (TOrdConstNode(p).Value>int64(high(LongInt))) then
                                      message(parser_e_array_range_out_of_bounds)
                                    else
-                                     idx:=TOrdConstNode(p).value.svalue
+                                     idx:=TOrdConstNode(p).Value.svalue
                                  end
                                else
                                 Message(type_e_ordinal_expr_expected)
@@ -232,23 +232,23 @@ implementation
 
           begin
              has_implicit_default:=
-               (is_string(p.PropDef) or
-               is_real(p.PropDef) or
-               is_pointer(p.PropDef));
+               (Is_String(p.PropDef) or
+               Is_Real(p.PropDef) or
+               Is_Pointer(p.PropDef));
           end;
 
           function allow_default_property(p : TPropertySym) : boolean;
 
           begin
              allow_default_property:=
-               (is_ordinal(p.PropDef) or
+               (Is_Ordinal(p.PropDef) or
 {$ifndef cpu64bitaddr}
-               is_64bitint(p.PropDef) or
+               Is_64BitInt(p.PropDef) or
 {$endif cpu64bitaddr}
                Is_Class(p.PropDef) or
-               is_single(p.PropDef) or
+               Is_Single(p.PropDef) or
                (p.PropDef.typ in [classrefdef,pointerdef]) or
-                 is_smallset(p.PropDef)
+                 Is_SmallSet(p.PropDef)
                ) and not
                (
                 (p.PropDef.typ=arraydef) and
@@ -301,10 +301,10 @@ implementation
                 begin
                   pt:=comp_expr([ef_accept_equal]);
                   if is_constintnode(pt) then
-                    if (TOrdConstNode(pt).value<int64(low(LongInt))) or (TOrdConstNode(pt).value>int64(high(LongInt))) then
-                      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(LongInt)),ToStr(high(LongInt)))
+                    if (TOrdConstNode(pt).Value<int64(low(LongInt))) or (TOrdConstNode(pt).Value>int64(high(LongInt))) then
+                      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
                     else
-                      hdispid:=TOrdConstNode(pt).value.svalue
+                      hdispid:=TOrdConstNode(pt).Value.svalue
                   else
                     Message(parser_e_dispid_must_be_ord_const);
                   pt.free;
@@ -364,8 +364,8 @@ implementation
          { Generate temp procdefs to search for matching read/write
            procedures. the readprocdef will store all definitions }
          ParaNr:=0;
-         ReadProcDef:=CProcDef.create(normal_function_level,false);
-         WriteProcDef:=CProcDef.create(normal_function_level,false);
+         ReadProcDef:=CProcDef.create(NormalFunctionLevel,false);
+         WriteProcDef:=CProcDef.create(NormalFunctionLevel,false);
 
          ReadProcDef.struct:=astruct;
          WriteProcDef.struct:=astruct;
@@ -462,7 +462,7 @@ implementation
               consume(_COLON);
               single_type(p.PropDef,[stoAllowSpecialization]);
 
-              if Is_DispInterface(astruct) and not is_automatable(p.PropDef) then
+              if Is_DispInterface(astruct) and not Is_Automatable(p.PropDef) then
                 Message1(type_e_not_automatable,p.PropDef.TypeName);
 
               if (CurrentScanner.idtoken=_INDEX) then
@@ -474,21 +474,21 @@ implementation
                      s16int on 16- and 8-bit) to be compatible with delphi,
                      because the procedure matching requires equal parameters }
                    if is_constnode(pt) and
-                      is_ordinal(pt.resultdef)
-                      and (not is_64bitint(pt.resultdef))
+                      Is_Ordinal(pt.resultdef)
+                      and (not Is_64BitInt(pt.resultdef))
 
                       then
                      begin
-                       if is_integer(pt.resultdef) then
+                       if Is_Integer(pt.resultdef) then
 
                          inserttypeconv_internal(pt,S32IntType);
 
-                       p.index:=TOrdConstNode(pt).value.svalue;
+                       p.Index:=TOrdConstNode(pt).Value.svalue;
                      end
                    else
                      begin
                        Message(parser_e_invalid_property_index_value);
-                       p.index:=0;
+                       p.Index:=0;
                      end;
                    p.IndexDef:=pt.resultdef;
                    include(p.PropOptions,ppo_indexed);
@@ -638,9 +638,9 @@ implementation
                           (sym.typ = constsym) then
                          begin
                             AddSymRef(sym);
-                            if not is_boolean(TConstSym(sym).ConstDef) then
+                            if not Is_Boolean(TConstSym(sym).ConstDef) then
                               Message(parser_e_stored_property_must_be_boolean)
-                            else if (TConstSym(sym).value.ValueOrd=0) then
+                            else if (TConstSym(sym).Value.ValueOrd=0) then
                               { same as for _FALSE }
                               exclude(p.PropOptions,ppo_stored)
                             else
@@ -658,7 +658,7 @@ implementation
                             ProcSym :
                               begin
                                  { Create a temporary procvardef to handle parameters }
-                                 storedprocdef:=CProcVarDef.create(normal_function_level,true);
+                                 storedprocdef:=CProcVarDef.create(NormalFunctionLevel,true);
                                  include(storedprocdef.ProcOptions,po_methodpointer);
                                  { Return type must be boolean }
                                  storedprocdef.ReturnDef:=PasBool1Type;
@@ -685,7 +685,7 @@ implementation
                                 if not Assigned(def) then
                                   InternalError(200310073);
                                 if (ppo_hasparameters in p.PropOptions) or
-                                   not(is_boolean(def)) then
+                                   not(Is_Boolean(def)) then
                                  Message(parser_e_stored_property_must_be_boolean);
                               end;
                             else
@@ -735,20 +735,20 @@ implementation
                         include(p.PropOptions,ppo_default_is_set);
                       end;
                     ordconstn :
-                      if is_real(p.PropDef) then
+                      if Is_Real(p.PropDef) then
                         begin
-                          if TOrdConstNode(pt).value.Is_Negative then
-                            s:=TOrdConstNode(pt).value.svalue
+                          if TOrdConstNode(pt).Value.Is_Negative then
+                            s:=TOrdConstNode(pt).Value.svalue
                           else
-                            s:=TOrdConstNode(pt).value.uvalue;
+                            s:=TOrdConstNode(pt).Value.uvalue;
                           p.default:=PLongInt(@s)^;
                           include(p.PropOptions,ppo_default_is_single);
                         end
-                      else if (TOrdConstNode(pt).value<int64(low(LongInt))) or
-                         (TOrdConstNode(pt).value>int64(high(cardinal))) then
-                        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(LongInt)),ToStr(high(cardinal)))
+                      else if (TOrdConstNode(pt).Value<int64(low(LongInt))) or
+                         (TOrdConstNode(pt).Value>int64(high(cardinal))) then
+                        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(cardinal)))
                       else
-                        p.default:=LongInt(TOrdConstNode(pt).value.svalue);
+                        p.default:=LongInt(TOrdConstNode(pt).Value.svalue);
                     niln :
                       p.default:=0;
                     realconstn:
@@ -785,7 +785,7 @@ implementation
              if Is_Interface(p.PropDef) then
                begin
                  { an interface type may delegate itself or one of its ancestors }
-                 if not def_is_related(p.PropDef,def) then
+                 if not Def_Is_Related(p.PropDef,def) then
                    begin
                      message2(parser_e_implements_must_have_correct_type,def.TypeName,p.PropDef.TypeName);
                      exit;
@@ -793,10 +793,10 @@ implementation
                end
              else if Is_Class(p.PropDef) then
                begin
-                 ImplIntf:=find_implemented_interface(TObjectDef(p.PropDef),TObjectDef(def));
+                 ImplIntf:=Find_Implemented_Interface(TObjectDef(p.PropDef),TObjectDef(def));
                  if Assigned(ImplIntf) then
                    begin
-                     if compare_defs(ImplIntf.IntfDef,def,nothingn)<te_equal then
+                     if Compare_Defs(ImplIntf.IntfDef,def,nothingn)<te_equal then
                        begin
                          message2(parser_e_implements_must_have_correct_type,ImplIntf.IntfDef.TypeName,def.TypeName);
                          exit;
@@ -839,7 +839,7 @@ implementation
                begin
                  ImplIntf:=TImplementedInterface(TObjectDef(astruct).ImplementedInterfaces[i]);
 
-                 if compare_defs(def,ImplIntf.IntfDef,nothingn)>=te_equal then
+                 if Compare_Defs(def,ImplIntf.IntfDef,nothingn)>=te_equal then
                    begin
                      found:=true;
                      break;
@@ -923,7 +923,7 @@ implementation
          { Process procvar directives before = and ; }
          if (
               (def.typ=procvardef) or
-              is_funcref(def)
+              Is_FuncRef(def)
             ) and
             (def.TypeSym=nil) and
             check_proc_directive(true) then
@@ -1198,7 +1198,7 @@ implementation
               if pt.nodetype=stringconstn then
                 abssym.AsmName:=StringDup(TStringConstNode(pt).asrawbytestring)
               else
-                abssym.AsmName:=StringDup(chr(TOrdConstNode(pt).value.svalue));
+                abssym.AsmName:=StringDup(chr(TOrdConstNode(pt).Value.svalue));
               abssym.AbsTyp:=toasm;
             end
           { address }
@@ -1212,14 +1212,14 @@ implementation
                 test is useless (value is a 64 bit entity) and will always fail
                 for positive values (since int64(high(abssym.addroffset))=-1
               }
-              if (TOrdConstNode(pt).value<int64(low(abssym.AddrOffset))) or
-                 (TOrdConstNode(pt).value>int64(high(abssym.AddrOffset))) then
-                message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(abssym.AddrOffset)),ToStr(high(abssym.AddrOffset)))
+              if (TOrdConstNode(pt).Value<int64(low(abssym.AddrOffset))) or
+                 (TOrdConstNode(pt).Value>int64(high(abssym.AddrOffset))) then
+                message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(abssym.AddrOffset)),ToStr(high(abssym.AddrOffset)))
              else
 {$endif}
-                abssym.AddrOffset:=TOrdConstNode(pt).value.svalue;
+                abssym.AddrOffset:=TOrdConstNode(pt).Value.svalue;
 {$if defined(i386)}
-              TCPUAbsoluteVarSym(abssym).absseg:=false;
+              TCPUAbsoluteVarSym(abssym).AbsSeg:=false;
 {$endif i386}
             end
           { variable }
@@ -1258,7 +1258,7 @@ implementation
                       if (TUnaryNode(hp).left.resultdef.typ=objectdef) and
                          (TObjectDef(TUnaryNode(hp).left.resultdef).ObjectType<>odt_object) then
                         break;
-                      if is_dynamic_array(TUnaryNode(hp).left.resultdef) then
+                      if Is_Dynamic_Array(TUnaryNode(hp).left.resultdef) then
                         break;
                     end;
                   hp:=TUnaryNode(hp).left;
@@ -1275,7 +1275,7 @@ implementation
                       abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
                       abssym.fileinfo:=vs.fileinfo;
                       abssym.AbsTyp:=tovar;
-                      abssym.ref:=node_to_propaccesslist(pt);
+                      abssym.Ref:=node_to_propaccesslist(pt);
                       { if the sizes are different, can't be a regvar since you }
                       { can't be "absolute upper 8 bits of a register" (except  }
                       { if its a record field of the same size of a record      }
@@ -1284,9 +1284,9 @@ implementation
                       { the whole record -- which is why we use pt and not hp)  }
 
                       { we can't take the size of an open array or an array of const }
-                      if is_open_array(pt.resultdef) or
-                         is_array_of_const(pt.resultdef) or
-                         (vs.vardef.size <> pt.resultdef.size) then
+                      if Is_Open_Array(pt.resultdef) or
+                         Is_Array_Of_Const(pt.resultdef) or
+                         (vs.vardef.Size <> pt.resultdef.Size) then
                         make_not_regable(pt,[ra_addr_regable]);
                       TAbsoluteVarSym(abssym).Adjust_VarRegable;
                     end;
@@ -1460,7 +1460,7 @@ implementation
                  { Add calling convention for procvar }
                  if (
                       (hdef.typ=procvardef) or
-                      is_funcref(hdef)
+                      Is_FuncRef(hdef)
                     ) and
                     (hdef.TypeSym=nil) then
                    begin
@@ -1471,7 +1471,7 @@ implementation
                            messagepos(typepos,sym_e_error_in_type_def)
                          else
                            begin
-                             if adjust_funcref(hdef,nil,nil) then
+                             if Adjust_FuncRef(hdef,nil,nil) then
                                { the def was changed, so update it }
                                for i:=0 to sc.count-1 do
                                  begin
@@ -1497,7 +1497,7 @@ implementation
              if not(hasdefaultvalue) and
                 (
                   (hdef.typ=procvardef) or
-                  is_funcref(hdef)
+                  Is_FuncRef(hdef)
                 ) and
                 (hdef.TypeSym=nil) then
                begin
@@ -1510,7 +1510,7 @@ implementation
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
                        begin
-                         if adjust_funcref(hdef,nil,nil) then
+                         if Adjust_FuncRef(hdef,nil,nil) then
                            { the def was changed, so update it }
                            for i:=0 to sc.count-1 do
                              begin
@@ -1748,7 +1748,7 @@ implementation
              { types that use init/final are not allowed in variant parts, but
                classes are allowed }
              if (variantrecordlevel>0) then
-               if is_managed_type(hdef) then
+               if Is_Managed_Type(hdef) then
                  Message(parser_e_cant_use_inittable_here);
 
              { try to parse the hint directives }
@@ -1780,7 +1780,7 @@ implementation
              { Add calling convention for procvar }
              if (
                  (hdef.typ=procvardef) or
-                 is_funcref(hdef)
+                 Is_FuncRef(hdef)
                ) and (hdef.TypeSym=nil) then
                begin
                  if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).ProcOptions) then
@@ -1790,7 +1790,7 @@ implementation
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
                        begin
-                         if adjust_funcref(hdef,nil,nil) then
+                         if Adjust_FuncRef(hdef,nil,nil) then
                            { the def was changed, so update it }
                            for i:=0 to sc.count-1 do
                              begin
@@ -1912,15 +1912,15 @@ implementation
                   fieldvs.vardef:=casetype;
                   recst.AddField(fieldvs,recst.CurrentVisibility);
                 end;
-              if not(is_ordinal(casetype))
+              if not(Is_Ordinal(casetype))
 {$ifndef cpu64bitaddr}
-                 or is_64bitint(casetype)
+                 or Is_64BitInt(casetype)
 {$endif cpu64bitaddr}
                  then
                 Message(type_e_ordinal_expr_expected);
               consume(_OF);
 
-              UnionSymtable:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.alignment.RecordAlignMin);
+              UnionSymtable:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
               UnionDef:=CRecordDef.create('',unionsymtable);
               uniondef.IsUnion:=true;
 
@@ -1947,7 +1947,7 @@ implementation
                       with variantdesc^^.branches[high(variantdesc^^.branches)] do
                         begin
                           SetLength(values,length(values)+1);
-                          values[high(values)]:=TOrdConstNode(pt).value;
+                          values[high(values)]:=TOrdConstNode(pt).Value;
                         end;
                     end;
                   pt.free;
@@ -1993,17 +1993,17 @@ implementation
                 { allow the unionsymtable to be aligned however it wants }
                 { (within the global min/max limits)                     }
                 0, { default }
-                C_alignment:
-                  usedalign:=Used_Align(unionsymtable.RecordAlignment,CurrentSettings.alignment.RecordAlignMin,CurrentSettings.alignment.MaxCRecordAlign);
+                CAlignment:
+                  usedalign:=Used_Align(unionsymtable.RecordAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.MaxCRecordAlign);
                 { 1 byte alignment if we are bitpacked }
-                bit_alignment:
+                BitAlignment:
                   usedalign:=1;
-                mac68k_alignment:
+                Mac68KAlignment:
                   usedalign:=2;
                 { otherwise alignment at the packrecords alignment of the }
                 { current record                                          }
                 else
-                  usedalign:=Used_Align(recst.FieldAlignment,CurrentSettings.alignment.RecordAlignMin,CurrentSettings.alignment.RecordAlignMax);
+                  usedalign:=Used_Align(recst.FieldAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.RecordAlignMax);
               end;
               offset:=align(recst.DataSize,usedalign);
               recst.DataSize:=offset+unionsymtable.DataSize;

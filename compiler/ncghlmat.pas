@@ -53,7 +53,7 @@ function TCGHLNotNode.pass_1: TNode;
   begin
     result:=inherited;
     if not Assigned(result) and
-       is_boolean(resultdef) then
+       Is_Boolean(resultdef) then
       expectloc:=LOC_JUMP;
   end;
 
@@ -61,9 +61,9 @@ function TCGHLNotNode.pass_1: TNode;
 procedure TCGHLNotNode.second_boolean;
   begin
     SecondPass(left);
-    hlcg.maketojumpbool(CurrentAsmData.CurrAsmList,left);
+    hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,left);
     { switch true and false labels to invert result }
-    location_reset_jump(location,left.location.falselabel,left.location.truelabel);
+    Location_Reset_Jump(location,left.Location.FalseLabel,left.Location.TrueLabel);
   end;
 
 end.

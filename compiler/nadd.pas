@@ -149,7 +149,7 @@ implementation
 
 const
     BestRealLayoutCheck = 1 div Ord(SizeOf(BestRealRec) = SizeOf(BestReal));
-    swap_relation: array [ltn..unequaln] of TNodeType=(gtn, gten, ltn, lten, equaln, unequaln);
+    swap_relation: array [ltn..unequaln] of TNodeType=(gtn, gten, ltn, lten, EqualN, unequaln);
 
 {*****************************************************************************
                                 TADDNODE
@@ -172,7 +172,7 @@ const
                 if (TFloatDef(t1).FloatType in [s64comp,s64currency]) or
                   (TFloatDef(t2).FloatType in [s64comp,s64currency]) or
                   (cs_excessprecision in CurrentSettings.LocalSwitches) then
-                  result:=pbestrealtype^
+                  result:=PBestRealType^
                 else
                   if floatweight[TFloatDef(t2).FloatType]>floatweight[TFloatDef(t1).FloatType] then
                     result:=t2;
@@ -237,20 +237,20 @@ const
         { check for comparison with known result because the ranges of the operands don't overlap }
         if (is_constintnode(right) and (left.resultdef.typ=orddef) and
             { don't ignore type checks }
-            is_subequal(right.resultdef,left.resultdef)) or
+            Is_Subequal(right.resultdef,left.resultdef)) or
            (is_constintnode(left) and (right.resultdef.typ=orddef) and
             { don't ignore type checks }
-            is_subequal(left.resultdef,right.resultdef)) then
+            Is_Subequal(left.resultdef,right.resultdef)) then
            begin
              if is_constintnode(right) then
                begin
                  hp:=left;
-                 v:=TOrdConstNode(right).value;
+                 v:=TOrdConstNode(right).Value;
                end
              else
                begin
                  hp:=right;
-                 v:=TOrdConstNode(left).value;
+                 v:=TOrdConstNode(left).Value;
                end;
 
              realdef:=hp.resultdef;
@@ -316,7 +316,7 @@ const
                         result:=true;
                         res:=true;
                       end;
-                  equaln:
+                  EqualN:
                     if (v<low) or (v>high) then
                       begin
                         result:=true;
@@ -378,7 +378,7 @@ const
                         result:=true;
                         res:=true;
                       end;
-                  equaln:
+                  EqualN:
                     if (v<low) or (v>high) then
                       begin
                         result:=true;
@@ -418,12 +418,12 @@ const
           if nodel.left.nodetype=ordconstn then
             begin
               swapl:=true;
-              cl:=TOrdConstNode(nodel.left).value;
+              cl:=TOrdConstNode(nodel.left).Value;
               value:=nodel.right;
             end
           else if nodel.right.nodetype=ordconstn then
             begin
-              cl:=TOrdConstNode(nodel.right).value;
+              cl:=TOrdConstNode(nodel.right).Value;
               value:=nodel.left;
             end
           else
@@ -432,12 +432,12 @@ const
           if noder.left.nodetype=ordconstn then
             begin
               swapl:=true;
-              cr:=TOrdConstNode(noder.left).value;
+              cr:=TOrdConstNode(noder.left).Value;
               valuer:=noder.right;
             end
           else if noder.right.nodetype=ordconstn then
             begin
-              cr:=TOrdConstNode(noder.right).value;
+              cr:=TOrdConstNode(noder.right).Value;
               valuer:=noder.left;
             end
           else
@@ -482,7 +482,7 @@ const
         begin
           result:=false;
           { Attempt to handle Length(S) = 0, <> 0, > 0, < 0, >= 0, <= 0. }
-          if not (op in [equaln,unequaln,ltn,lten,gtn,gten]) then
+          if not (op in [EqualN,unequaln,ltn,lten,gtn,gten]) then
             exit;
           if not is_inlinefunction(L,in_length_x) then
             if is_inlinefunction(R,in_length_x) then
@@ -494,23 +494,23 @@ const
               end
             else
               exit;
-          if not is_constintvalue(R,0) or is_shortstring(TInlineNode(L).left.resultdef) then
+          if not is_constintvalue(R,0) or Is_ShortString(TInlineNode(L).left.resultdef) then
             exit;
 
           { Length = 0, <> 0, > 0, <= 0 are reduced to Length = 0. }
-          if op in [equaln,unequaln,gtn,lten] then
+          if op in [EqualN,unequaln,gtn,lten] then
             begin
               { “pointer(L.left) = nil”. Steal L.left instead of getcopy, zero a bit later. }
-              resn:=CAddNode.Create_Internal(equaln,CTypeConvNode.Create_Internal(TInlineNode(L).left,VoidPointerType),
+              resn:=CAddNode.Create_Internal(EqualN,CTypeConvNode.Create_Internal(TInlineNode(L).left,VoidPointerType),
                  CPointerConstNode.create(0,VoidPointerType));
 
               { COM widestrings have 32-bit lengths, and can explicitly have 0 while being non-nil. }
-              if is_widestring(TInlineNode(L).left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+              if Is_WideString(TInlineNode(L).left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
                 begin
                   { Expand to “(pointer(L.left) = nil) or (PUint32(L.left)[-1] = 0)”. }
                   resn:=CAddNode.Create_Internal(orn,
                       resn,
-                      CAddNode.Create_Internal(equaln,
+                      CAddNode.Create_Internal(EqualN,
                         CTypeConvNode.Create_Internal(
                           CDerefNode.create(
                             CAddNode.Create_Internal(subn,CTypeConvNode.Create_Internal(TInlineNode(L).left.GetCopy,VoidPointerType),
@@ -607,9 +607,9 @@ const
               left:=CTypeConvNode.Create_Internal(left,resultdef);
               DoTypeCheckPass(left);
             end
-          else if TPointerDef(resultdef).PointedDef.size>1 then
+          else if TPointerDef(resultdef).PointedDef.Size>1 then
           { the constants were already multiplied by the pointer element size }
-            left:=CModDivNode.create(divn,left,COrdConstNode.create(TPointerDef(resultdef).PointedDef.size,left.resultdef,false));
+            left:=CModDivNode.create(divn,left,COrdConstNode.create(TPointerDef(resultdef).PointedDef.Size,left.resultdef,false));
           right:=left;
           left:=hp;
           result:=GetCopyAndTypeCheck;
@@ -660,7 +660,7 @@ const
         begin
           Result:=(rin.nodetype=subn) and
             is_constintnode(TAddNode(rin).left) and
-            (TOrdConstNode(TAddNode(rin).left).value=bitsize) and
+            (TOrdConstNode(TAddNode(rin).left).Value=bitsize) and
             not might_have_sideeffects(lin) and
             TAddNode(rin).right.isequal(lin);
         end;
@@ -671,22 +671,22 @@ const
           bitsize: asizeint;
         begin
           Result:=nil;
-          if is_integer(TShlShrNode(left).left.resultdef) and
+          if Is_Integer(TShlShrNode(left).left.resultdef) and
             { Avoid using custom integers due to the risk of unusual sizes and
               undesired effects in, say, bitpacked records. [Kit] }
             (TOrdDef(TShlShrNode(left).left.resultdef).OrdType<>customint) and
             not might_have_sideeffects(TShlShrNode(left).left) and
             TShlShrNode(left).left.isequal(TShlShrNode(right).left) then
             begin
-              bitsize:=TShlShrNode(left).left.resultdef.size*8;
+              bitsize:=TShlShrNode(left).left.resultdef.Size*8;
 
               { Check for constants first }
               if (
                   is_constintnode(TShlShrNode(left).right) and
-                  (TOrdConstNode(TShlShrNode(left).right).value>0) and
+                  (TOrdConstNode(TShlShrNode(left).right).Value>0) and
                   is_constintnode(TShlShrNode(right).right) and
-                  (TOrdConstNode(TShlShrNode(right).right).value>0) and
-                  (TOrdConstNode(TShlShrNode(right).right).value=bitsize-TOrdConstNode(TShlShrNode(left).right).value)
+                  (TOrdConstNode(TShlShrNode(right).right).Value>0) and
+                  (TOrdConstNode(TShlShrNode(right).right).Value=bitsize-TOrdConstNode(TShlShrNode(left).right).Value)
                 ) or
                   { Try (X op1 Y) or (X op2 (S-Y)) for variable rotation}
                   TryVariableShiftPair(TShlShrNode(left).right, TShlShrNode(right).right, bitsize) then
@@ -746,13 +746,13 @@ const
 
         if (nodetype = slashn) and
            (((rt = ordconstn) and
-             (TOrdConstNode(right).value = 0)) or
+             (TOrdConstNode(right).Value = 0)) or
             ((rt = realconstn) and
              (TRealConstNode(right).value_real = 0.0))) then
           begin
             if Floating_Point_Range_Check_Error then
                begin
-                 result:=CRealConstNode.create(1,pbestrealtype^);
+                 result:=CRealConstNode.create(1,PBestRealType^);
                  Message(parser_e_division_by_zero);
                  exit;
                end;
@@ -766,7 +766,7 @@ const
             (
              is_constboolnode(left) and
              is_constboolnode(right) and
-             (nodetype in [slashn,ltn,lten,gtn,gten,equaln,unequaln,andn,xorn,orn])
+             (nodetype in [slashn,ltn,lten,gtn,gten,EqualN,unequaln,andn,xorn,orn])
             ) or
             (
              is_constenumnode(left) and
@@ -786,11 +786,11 @@ const
             (
              (lt in [pointerconstn,niln]) and
              (rt in [pointerconstn,niln]) and
-             (nodetype in [ltn,lten,gtn,gten,equaln,unequaln,subn])
+             (nodetype in [ltn,lten,gtn,gten,EqualN,unequaln,subn])
             ) or
             (
-             (lt = ordconstn) and (ld.typ = orddef) and is_currency(ld) and
-             (rt = ordconstn) and (rd.typ = orddef) and is_currency(rd)
+             (lt = ordconstn) and (ld.typ = orddef) and Is_Currency(ld) and
+             (rt = ordconstn) and (rd.typ = orddef) and Is_Currency(rd)
             ) then
           begin
              t:=nil;
@@ -824,13 +824,13 @@ const
                      t:=CPointerConstNode.create(qword(v),resultdef)
                    else
                      begin
-                       if is_integer(ld) then
+                       if Is_Integer(ld) then
                          t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
                        else
                          t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
                      end;
 
-                   if is_currency(resultdef) then
+                   if Is_Currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                subn :
@@ -847,7 +847,7 @@ const
                      if (rt=pointerconstn) then
                        begin
                          if (cs_typed_addresses in CurrentSettings.LocalSwitches) and
-                            (TPointerDef(rd).PointedDef.size>1) and
+                            (TPointerDef(rd).PointedDef.Size>1) and
                             not(anf_has_pointerdiv in addnodeflags) then
                            InternalError(2008030101);
                          t:=CPointerConstNode.create(qword(v),resultdef)
@@ -856,13 +856,13 @@ const
                        t:=CPointerConstNode.create(qword(v),resultdef)
                    else
                      begin
-                       if is_integer(ld) then
+                       if Is_Integer(ld) then
                          t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
                        else
                          t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
                      end;
 
-                   if is_currency(resultdef) then
+                   if Is_Currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                muln :
@@ -878,7 +878,7 @@ const
                      begin
                        { If both are currency, we have to remove one of the
                          scalars}
-                       if is_currency(resultdef) then
+                       if Is_Currency(resultdef) then
                          begin
                            v:=v div 10000;
 
@@ -889,38 +889,38 @@ const
 
                        t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches);
 
-                       if is_currency(resultdef) then
+                       if Is_Currency(resultdef) then
                          Include(t.flags,nf_is_currency);
                      end;
                  end;
                xorn :
                  begin
-                   if is_integer(ld) then
+                   if Is_Integer(ld) then
                      t:=create_simplified_ord_const(lv xor rv,resultdef,forinline,false)
                    else
                      t:=COrdConstNode.create(lv xor rv,resultdef,true);
 
-                   if is_currency(resultdef) then
+                   if Is_Currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                orn :
                  begin
-                   if is_integer(ld) then
+                   if Is_Integer(ld) then
                      t:=create_simplified_ord_const(lv or rv,resultdef,forinline,false)
                    else
                      t:=COrdConstNode.create(lv or rv,resultdef,true);
 
-                   if is_currency(resultdef) then
+                   if Is_Currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                andn :
                  begin
-                   if is_integer(ld) then
+                   if Is_Integer(ld) then
                      t:=create_simplified_ord_const(lv and rv,resultdef,forinline,false)
                    else
                      t:=COrdConstNode.create(lv and rv,resultdef,true);
 
-                   if is_currency(resultdef) then
+                   if Is_Currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                ltn :
@@ -931,7 +931,7 @@ const
                  t:=COrdConstNode.create(ord(lv>rv),PasBool1Type,true);
                gten :
                  t:=COrdConstNode.create(ord(lv>=rv),PasBool1Type,true);
-               equaln :
+               EqualN :
                  t:=COrdConstNode.create(ord(lv=rv),PasBool1Type,true);
                unequaln :
                  t:=COrdConstNode.create(ord(lv<>rv),PasBool1Type,true);
@@ -976,13 +976,13 @@ const
 
         { For operations that follow the commutative law, put integer constants on the right }
         if (nodetype in [addn,orn,xorn,andn,muln]) and
-          is_constintnode(left) and (is_integer(right.resultdef) or is_pointer(right.resultdef)) then
+          is_constintnode(left) and (Is_Integer(right.resultdef) or Is_Pointer(right.resultdef)) then
           SwapLeftRight;
 
         { Add,Sub,Mul,Or,Xor,Andn with constant 0, 1 or -1?  }
-        if is_constintnode(right) and (is_integer(ld) or is_pointer(ld)) then
+        if is_constintnode(right) and (Is_Integer(ld) or Is_Pointer(ld)) then
           begin
-            if (TOrdConstNode(right).value = 0) and (nodetype in [addn,subn,orn,xorn,andn,muln]) then
+            if (TOrdConstNode(right).Value = 0) and (nodetype in [addn,subn,orn,xorn,andn,muln]) then
               begin
                 case nodetype of
                   addn,subn,orn,xorn:
@@ -998,7 +998,7 @@ const
                 end;
               end
 
-            else if (TOrdConstNode(right).value = 1) and (nodetype=muln) then
+            else if (TOrdConstNode(right).Value = 1) and (nodetype=muln) then
               { insert type conversion in case it is a 32*32 to 64 bit multiplication optimization,
                 the type conversion does not hurt because it is normally removed later on
               }
@@ -1014,7 +1014,7 @@ const
             else if (left.nodetype=nodetype) and
               { there might be a mul operation e.g. longint*longint => int64 in this case
                 we cannot do this optimization, see e.g. tests/tbs/tw36587.pas on arm }
-              (compare_defs(resultdef,ld,nothingn)=te_exact) then
+              (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
               begin
                 if is_constintnode(TAddNode(left).left) then
                   begin
@@ -1049,7 +1049,7 @@ const
 
             { multiplication by -1? Convert it into an unary minus if the other conversions before failed, don't do
               it before the folding above, see #40448 }
-            if (TOrdConstNode(right).value = -1) and (nodetype=muln) then
+            if (TOrdConstNode(right).Value = -1) and (nodetype=muln) then
               result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(PruneKeepLeft()),ld);
 
             if Assigned(result) then
@@ -1060,21 +1060,21 @@ const
         if (nodetype = subn) then
           begin
             { transform -1-x into not(x) }
-            if is_signed(rd) and is_constintnode(left) and (TOrdConstNode(left).value=-1)  then
+            if Is_Signed(rd) and is_constintnode(left) and (TOrdConstNode(left).Value=-1)  then
               begin
                 result:=CNotNode.create(right.GetCopy);
                 exit;
               end
 
             { change "0 - val" to "-val" }
-            else if is_constintnode(left) and (is_integer(right.resultdef) or is_pointer(right.resultdef)) then
+            else if is_constintnode(left) and (Is_Integer(right.resultdef) or Is_Pointer(right.resultdef)) then
               begin
-                if (TOrdConstNode(left).value = 0) then
+                if (TOrdConstNode(left).Value = 0) then
                   result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(right.GetCopy),right.resultdef);
               end
 
             { change "nil - val" to "-val" }
-            else if (left.nodetype=niln) and is_pointer(right.resultdef) then
+            else if (left.nodetype=niln) and Is_Pointer(right.resultdef) then
               result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(CTypeConvNode.Create_Internal(right.GetCopy,resultdef)),resultdef)
 
             { convert n - n mod const into n div const*const }
@@ -1089,7 +1089,7 @@ const
               end
 
             { transform -x-1 into not(x) }
-            else if is_signed(ld) and is_constintnode(right) and (TOrdConstNode(right).value=1) and (left.nodetype=unaryminusn) then
+            else if Is_Signed(ld) and is_constintnode(right) and (TOrdConstNode(right).Value=1) and (left.nodetype=unaryminusn) then
               begin
                 result:=CNotNode.create(TUnaryMinusNode(left).left.GetCopy);
                 exit;
@@ -1190,7 +1190,7 @@ const
                   t:=COrdConstNode.create(ord(lvd>rvd),PasBool1Type,true);
                 gten :
                   t:=COrdConstNode.create(ord(lvd>=rvd),PasBool1Type,true);
-                equaln :
+                EqualN :
                   t:=COrdConstNode.create(ord(lvd=rvd),PasBool1Type,true);
                 unequaln :
                   t:=COrdConstNode.create(ord(lvd<>rvd),PasBool1Type,true);
@@ -1201,7 +1201,7 @@ const
              exit;
           end;
 
-        if is_real(resultdef) then
+        if Is_Real(resultdef) then
           begin
             if (nodetype=addn) then
               begin
@@ -1246,7 +1246,7 @@ const
             { optimize operations with real constants, but only if fast math is switched on as
               the operations could change e.g. the sign of 0 so they cannot be optimized always
             }
-            if is_real(resultdef) then
+            if Is_Real(resultdef) then
               begin
                 if lt=realconstn then
                   begin
@@ -1348,7 +1348,7 @@ const
           folded }
         if (nodetype=slashn) and
           { do not mess with currency and comp types }
-          (not(is_currency(rd)) and
+          (not(Is_Currency(rd)) and
            not((rd.typ=floatdef) and
                (TFloatDef(rd).FloatType=s64comp)
               )
@@ -1366,10 +1366,10 @@ const
             ordconstn:
               begin
                 { the normal code handles div/0 }
-                if (TOrdConstNode(right).value<>0) then
+                if (TOrdConstNode(right).Value<>0) then
                   begin
                     nodetype:=muln;
-                    t:=CRealConstNode.create(1/TOrdConstNode(right).value,resultdef);
+                    t:=CRealConstNode.create(1/TOrdConstNode(right).Value,resultdef);
                     right.free;
                     right:=t;
                     exit;
@@ -1412,7 +1412,7 @@ const
                   t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>0),PasBool1Type,true);
                 gten :
                   t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>=0),PasBool1Type,true);
-                equaln :
+                EqualN :
                   t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)=0),PasBool1Type,true);
                 unequaln :
                   t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<>0),PasBool1Type,true);
@@ -1429,31 +1429,31 @@ const
         concatstrings:=false;
 
         if (lt=ordconstn) and (rt=ordconstn) and
-           is_char(ld) and is_char(rd) then
+           Is_Char(ld) and Is_Char(rd) then
           begin
-             c1[0]:=char(int64(TOrdConstNode(left).value));
+             c1[0]:=char(int64(TOrdConstNode(left).Value));
              c1[1]:=#0;
              l1:=1;
-             c2[0]:=char(int64(TOrdConstNode(right).value));
+             c2[0]:=char(int64(TOrdConstNode(right).Value));
              c2[1]:=#0;
              l2:=1;
              s1:=@c1[0];
              s2:=@c2[0];
              concatstrings:=true;
           end
-        else if (lt=stringconstn) and (rt=ordconstn) and is_char(rd) then
+        else if (lt=stringconstn) and (rt=ordconstn) and Is_Char(rd) then
           begin
              l1:=TStringConstNode(left).len;
              s1:=TStringConstNode(left).asconstpchar;
-             c2[0]:=char(int64(TOrdConstNode(right).value));
+             c2[0]:=char(int64(TOrdConstNode(right).Value));
              c2[1]:=#0;
              s2:=@c2[0];
              l2:=1;
              concatstrings:=true;
           end
-        else if (lt=ordconstn) and (rt=stringconstn) and is_char(ld) then
+        else if (lt=ordconstn) and (rt=stringconstn) and Is_Char(ld) then
           begin
-             c1[0]:=char(int64(TOrdConstNode(left).value));
+             c1[0]:=char(int64(TOrdConstNode(left).Value));
              c1[1]:=#0;
              l1:=1;
              s1:=@c1[0];
@@ -1478,7 +1478,7 @@ const
                     t:=CStringConstNode.createpchar(stmp,l1+l2,nil);
                     FreeMem(stmp);
                     TypeCheckPass(t);
-                    if not is_ansistring(resultdef) or
+                    if not Is_AnsiString(resultdef) or
                        (TStringDef(resultdef).encoding<>Globals.CP_NONE) then
                       TStringConstNode(t).changestringtype(resultdef)
                     else
@@ -1492,7 +1492,7 @@ const
                   t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>0),PasBool1Type,true);
                 gten :
                   t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>=0),PasBool1Type,true);
-                equaln :
+                EqualN :
                   t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)=0),PasBool1Type,true);
                 unequaln :
                   t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<>0),PasBool1Type,true);
@@ -1535,7 +1535,7 @@ const
                     b:=TSetConstNode(right).value_set^ <> TSetConstNode(left).value_set^;
                     t:=COrdConstNode.create(byte(b),PasBool1Type,true);
                   end;
-               equaln :
+               EqualN :
                   begin
                     b:=TSetConstNode(right).value_set^ = TSetConstNode(left).value_set^;
                     t:=COrdConstNode.create(byte(b),PasBool1Type,true);
@@ -1559,25 +1559,25 @@ const
 
         { in case of expressions having no side effect, we can simplify boolean expressions
           containing constants }
-        if is_boolean(ld) and is_boolean(rd) then
+        if Is_Boolean(ld) and Is_Boolean(rd) then
           begin
             if is_constboolnode(left) then
               begin
-                if ((nodetype=andn) and (TOrdConstNode(left).value<>0)) or
-                  ((nodetype=orn) and (TOrdConstNode(left).value=0)) or
-                  ((nodetype=xorn) and (TOrdConstNode(left).value=0)) then
+                if ((nodetype=andn) and (TOrdConstNode(left).Value<>0)) or
+                  ((nodetype=orn) and (TOrdConstNode(left).Value=0)) or
+                  ((nodetype=xorn) and (TOrdConstNode(left).Value=0)) then
                   begin
                     Result := PruneKeepRight();
                     exit;
                   end
                 else if not(might_have_sideeffects(right)) and
-                  (((nodetype=orn) and (TOrdConstNode(left).value<>0)) or
-                  ((nodetype=andn) and (TOrdConstNode(left).value=0))) then
+                  (((nodetype=orn) and (TOrdConstNode(left).Value<>0)) or
+                  ((nodetype=andn) and (TOrdConstNode(left).Value=0))) then
                   begin
                     Result := PruneKeepLeft();
                     exit;
                   end
-                else if ((nodetype=xorn) and (TOrdConstNode(left).value<>0)) then
+                else if ((nodetype=xorn) and (TOrdConstNode(left).Value<>0)) then
                   begin
                     Result := CNotNode.create(PruneKeepRight());
                     exit;
@@ -1585,21 +1585,21 @@ const
               end
             else if is_constboolnode(right) then
               begin
-                if ((nodetype=andn) and (TOrdConstNode(right).value<>0)) or
-                  ((nodetype=orn) and (TOrdConstNode(right).value=0)) or
-                  ((nodetype=xorn) and (TOrdConstNode(right).value=0)) then
+                if ((nodetype=andn) and (TOrdConstNode(right).Value<>0)) or
+                  ((nodetype=orn) and (TOrdConstNode(right).Value=0)) or
+                  ((nodetype=xorn) and (TOrdConstNode(right).Value=0)) then
                   begin
                     result := PruneKeepLeft();
                     exit;
                   end
                 else if not(might_have_sideeffects(left)) and
-                  (((nodetype=orn) and (TOrdConstNode(right).value<>0)) or
-                   ((nodetype=andn) and (TOrdConstNode(right).value=0))) then
+                  (((nodetype=orn) and (TOrdConstNode(right).Value<>0)) or
+                   ((nodetype=andn) and (TOrdConstNode(right).Value=0))) then
                   begin
                     result := PruneKeepRight();
                     exit;
                   end
-                else if ((nodetype=xorn) and (TOrdConstNode(right).value<>0)) then
+                else if ((nodetype=xorn) and (TOrdConstNode(right).Value<>0)) then
                   begin
                     result := CNotNode.create(PruneKeepLeft());
                     exit;
@@ -1609,14 +1609,14 @@ const
 
         { optimize @<proc>=/<>@<proc>,
           such code might appear in generic specializations }
-        if (nodetype in [equaln,unequaln]) and
-          (left.nodetype=typeconvn) and (is_voidpointer(left.resultdef)) and (TTypeConvNode(left).left.nodetype=typeconvn) and
+        if (nodetype in [EqualN,unequaln]) and
+          (left.nodetype=typeconvn) and (Is_VoidPointer(left.resultdef)) and (TTypeConvNode(left).left.nodetype=typeconvn) and
           (TTypeConvNode(TTypeConvNode(left).left).convtype=tc_proc_2_procvar) and
           (TTypeConvNode(TTypeConvNode(left).left).left.nodetype=loadn) and
           (TTypeConvNode(TTypeConvNode(left).left).left.resultdef.typ=procdef) and
           left.isequal(right) then
           begin
-            result:=COrdConstNode.create(ord(nodetype=equaln),resultdef,false);
+            result:=COrdConstNode.create(ord(nodetype=EqualN),resultdef,false);
             exit;
           end;
 
@@ -1626,13 +1626,13 @@ const
         }
         lefttarget:=actualtargetnode(@left)^;
         righttarget:=actualtargetnode(@right)^;
-        if (nodetype in [equaln,unequaln]) and (lefttarget.nodetype=inlinen) and (righttarget.nodetype=inlinen) and
+        if (nodetype in [EqualN,unequaln]) and (lefttarget.nodetype=inlinen) and (righttarget.nodetype=inlinen) and
           (TInlineNode(lefttarget).inlinenumber=in_typeinfo_x) and (TInlineNode(righttarget).inlinenumber=in_typeinfo_x) and
           not (TInlineNode(lefttarget).left.resultdef.typ in [undefineddef,errordef]) and
           not (TInlineNode(righttarget).left.resultdef.typ in [undefineddef,errordef]) then
           begin
             case nodetype of
-              equaln:
+              EqualN:
                 result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef=TInlineNode(righttarget).left.resultdef),resultdef,false);
               unequaln:
                 result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef<>TInlineNode(righttarget).left.resultdef),resultdef,false);
@@ -1647,11 +1647,11 @@ const
             p1:=0;
             p2:=0;
             if left.nodetype=pointerconstn then
-              p1:=TPointerConstNode(left).value;
+              p1:=TPointerConstNode(left).Value;
             if right.nodetype=pointerconstn then
-              p2:=TPointerConstNode(right).value;
+              p2:=TPointerConstNode(right).Value;
             case nodetype of
-              equaln:
+              EqualN:
                 result:=COrdConstNode.create(ord(p1=p2),Bool8Type,false);
               unequaln:
                 result:=COrdConstNode.create(ord(p1<>p2),Bool8Type,false);
@@ -1678,7 +1678,7 @@ const
                 if (left.nodetype=addn) and
                   (nodetype=subn) and
                   (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
-                  (compare_defs(resultdef,ld,nothingn)=te_exact) then
+                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
                   begin
                     Result:=GetCopy;
                     Result.nodetype:=addn;
@@ -1690,7 +1690,7 @@ const
                 if (left.nodetype=subn) and
                   (nodetype=addn) and
                   (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
-                  (compare_defs(resultdef,ld,nothingn)=te_exact) then
+                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
                   begin
                     Result:=GetCopy;
                     TAddNode(Result).left.nodetype:=addn;
@@ -1711,7 +1711,7 @@ const
                   (((nodetype=addn) and ((rt=stringconstn) or is_constcharnode(right)) and ((TAddNode(left).right.nodetype=stringconstn) or is_constcharnode(TAddNode(left).right))) or
                    ((nodetype in [addn,muln,subn]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn))
                   ) and
-                  (compare_defs(resultdef,ld,nothingn)=te_exact) then
+                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
                   begin
                     { SwapRightWithLeftLeft moves the nodes around in way that we need to insert a minus
                       on left.right: a-b-c becomes b-c-a so we
@@ -1746,7 +1746,7 @@ const
                   (((nodetype=addn) and ((lt=stringconstn) or is_constcharnode(left)) and ((TAddNode(right).left.nodetype=stringconstn) or is_constcharnode(TAddNode(right).left))) or
                    ((nodetype in [addn,muln]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lt=realconstn) and (TAddNode(right).left.nodetype=realconstn))
                   ) and
-                  (compare_defs(resultdef,rd,nothingn)=te_exact) then
+                  (Compare_Defs(resultdef,rd,nothingn)=te_exact) then
                   begin
                     Result:=SwapLeftWithRightRight;
                     exit;
@@ -1759,10 +1759,10 @@ const
                 }
                 hp:=self;
                 while (hp.right.nodetype=hp.nodetype) and (hp.resultdef.typ=stringdef) and
-                  (compare_defs(hp.resultdef,hp.right.resultdef,nothingn)=te_exact) and
-                  (compare_defs(hp.resultdef,hp.left.resultdef,nothingn)=te_exact) and
-                  (compare_defs(hp.resultdef,TAddNode(hp.right).left.resultdef,nothingn)=te_exact) and
-                  (compare_defs(hp.resultdef,TAddNode(hp.right).right.resultdef,nothingn)=te_exact) do
+                  (Compare_Defs(hp.resultdef,hp.right.resultdef,nothingn)=te_exact) and
+                  (Compare_Defs(hp.resultdef,hp.left.resultdef,nothingn)=te_exact) and
+                  (Compare_Defs(hp.resultdef,TAddNode(hp.right).left.resultdef,nothingn)=te_exact) and
+                  (Compare_Defs(hp.resultdef,TAddNode(hp.right).right.resultdef,nothingn)=te_exact) do
                   begin
                     t:=hp.left;
                     hp.left:=hp.right;
@@ -1777,7 +1777,7 @@ const
               equal if some previous optimizations were done so don't check
               this simplification always
             }
-            if is_boolean(ld) and is_boolean(rd) then
+            if Is_Boolean(ld) and Is_Boolean(rd) then
               begin
                 { transform unsigned comparisons of (v>=x) and (v<=y)
                   into (v-x)<=(y-x)
@@ -1791,7 +1791,7 @@ const
                    { avoid optimization being applied to (<string. var > charconst1) and (<string. var < charconst2) }
                    (vl.resultdef.typ in [orddef,enumdef]) then
                   begin
-                    hdef:=get_unsigned_inttype(vl.resultdef);
+                    hdef:=Get_Unsigned_IntType(vl.resultdef);
                     vl:=CTypeConvNode.Create_Internal(vl.GetCopy,hdef);
 
                     { If the condition is of the inverted form (v<x) or (v>y),
@@ -1816,8 +1816,8 @@ const
                   ((v1 xor const1) or (v2 xor const2))=0
                 }
                 if (nodetype=andn) and
-                   (left.nodetype=equaln) and
-                   (right.nodetype=equaln) and
+                   (left.nodetype=EqualN) and
+                   (right.nodetype=EqualN) and
                    (not might_have_sideeffects(left)) and
                    (not might_have_sideeffects(right,[mhs_exceptions])) and
                    (is_constintnode(TAddNode(left).left) or is_constintnode(TAddNode(left).right) or
@@ -1847,9 +1847,9 @@ const
                          v2p:=@TAddNode(right).left;
                          c2p:=@TAddNode(right).right;
                        end;
-                     if v1p^.resultdef.size=v2p^.resultdef.size then
+                     if v1p^.resultdef.Size=v2p^.resultdef.Size then
                        begin
-                         case v1p^.resultdef.size of
+                         case v1p^.resultdef.Size of
                            1:
                              inttype:=U8IntType;
                            2:
@@ -1868,7 +1868,7 @@ const
                          value1conv.flags:=value1conv.flags+(left.flags*[nf_load_procvar]);
                          value2conv:=CTypeConvNode.Create_Internal(v2p^.GetCopy,inttype);
                          value2conv.flags:=value2conv.flags+(right.flags*[nf_load_procvar]);
-                         result:=CAddNode.Create_Internal(equaln,
+                         result:=CAddNode.Create_Internal(EqualN,
                            CAddNode.Create_Internal(orn,
                              CAddNode.Create_Internal(xorn,value1conv,
                                CTypeConvNode.Create_Internal(c1p^.GetCopy,inttype)),
@@ -1926,7 +1926,7 @@ const
                   end
               end;
 
-            if is_integer(ld) and is_integer(rd) then
+            if Is_Integer(ld) and Is_Integer(rd) then
               begin
                 if (cs_opt_level3 in CurrentSettings.OptimizerSwitches) and
                    left.isequal(right) and not might_have_sideeffects(left) then
@@ -1946,7 +1946,7 @@ const
                           result:=COrdConstNode.create(0,resultdef,true);
                           exit;
                         end;
-                      equaln,
+                      EqualN,
                       lten,
                       gten:
                         begin
@@ -1970,8 +1970,8 @@ const
             }
             if (nodetype in [ltn,gten]) and
               (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_length_x) and
-              ((is_dynamic_array(TInlineNode(right).left.resultdef)) or
-               (is_open_array(TInlineNode(right).left.resultdef))
+              ((Is_Dynamic_Array(TInlineNode(right).left.resultdef)) or
+               (Is_Open_Array(TInlineNode(right).left.resultdef))
               ) then
               begin
                 case nodetype of
@@ -1995,8 +1995,8 @@ const
             }
             if (nodetype in [lten,gtn]) and
               (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_length_x) and
-              ((is_dynamic_array(TInlineNode(left).left.resultdef)) or
-               (is_open_array(TInlineNode(left).left.resultdef))
+              ((Is_Dynamic_Array(TInlineNode(left).left.resultdef)) or
+               (Is_Open_Array(TInlineNode(left).left.resultdef))
               ) then
               begin
                 case nodetype of
@@ -2016,7 +2016,7 @@ const
               memory accesses while sqr(<real>) has no drawback }
             if
                (nodetype=muln) and
-               is_real(ld) and is_real(rd) and
+               Is_Real(ld) and Is_Real(rd) and
                left.isequal(right) and
                not(might_have_sideeffects(left)) then
               begin
@@ -2059,7 +2059,7 @@ const
              (ld.typ=orddef) and
              (left.nodetype=andn) and
              (right.nodetype=andn) and
-             (not(is_boolean(resultdef)) or not(might_have_sideeffects(self,[mhs_exceptions])) or not(doshortbooleval(self))) and
+             (not(Is_Boolean(resultdef)) or not(might_have_sideeffects(self,[mhs_exceptions])) or not(doshortbooleval(self))) and
              { this test is not needed but it speeds up the test and allows to bail out early }
              ((TAddNode(left).left.nodetype=notn) or (TAddNode(left).right.nodetype=notn) or
               (TAddNode(right).left.nodetype=notn) or (TAddNode(right).right.nodetype=notn)
@@ -2077,18 +2077,18 @@ const
 
               (a and one_bit_mask_const) <> = 0
             }
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               begin
                 if (lt=andn) and (rt=ordconstn) then
                   begin
                     t:=left;
-                    cr:=TOrdConstNode(right).value;
+                    cr:=TOrdConstNode(right).Value;
                   end
                 else
                   if (rt=andn) and (lt=ordconstn) then
                     begin
                       t:=right;
-                      cr:=TOrdConstNode(left).value;
+                      cr:=TOrdConstNode(left).Value;
                     end
                   else
                     begin
@@ -2105,12 +2105,12 @@ const
                         vl:=TAddNode(t).right
                       else
                         vl:=nil;
-                    if (vl<>nil) and (TOrdConstNode(vl).value=cr) then
+                    if (vl<>nil) and (TOrdConstNode(vl).Value=cr) then
                       begin
-                        if nodetype=equaln then
+                        if nodetype=EqualN then
                           nt:=unequaln
                         else
-                          nt:=equaln;
+                          nt:=EqualN;
                         result:=CAddNode.create(nt,t,COrdConstNode.create(0,vl.resultdef,false));
                         Include(transientflags,tnf_do_not_execute);
                         if t=left then
@@ -2140,7 +2140,7 @@ const
       begin
         result:=
           inherited docompare(p) and
-          equal_defs(TAddNode(p).resultrealdef,resultrealdef);
+          Equal_Defs(TAddNode(p).resultrealdef,resultrealdef);
       end;
 
 
@@ -2194,8 +2194,8 @@ const
 
         function maybe_cast_ordconst(var n: TNode; adef: TDef): boolean;
           begin
-            result:=(TOrdConstNode(n).value>=TOrdDef(adef).low) and
-              (TOrdConstNode(n).value<=TOrdDef(adef).high);
+            result:=(TOrdConstNode(n).Value>=TOrdDef(adef).low) and
+              (TOrdConstNode(n).Value<=TOrdDef(adef).high);
             if result then
               inserttypeconv(n,adef);
           end;
@@ -2274,7 +2274,7 @@ const
          lhigh:=0;
 
          { avoid any problems with type parameters later on }
-         if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
+         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
            begin
              resultdef:=CUndefinedType;
              exit;
@@ -2293,30 +2293,30 @@ const
              maybe_call_procvar(right,true);
            end
          else
-           if not (nodetype in [equaln,unequaln]) then
+           if not (nodetype in [EqualN,unequaln]) then
              InternalError(2013091601);
 
          { allow operator overloading }
          hp:=self;
 
-         if is_array_constructor(left.resultdef) or is_array_constructor(right.resultdef) then
+         if Is_Array_Constructor(left.resultdef) or Is_Array_Constructor(right.resultdef) then
            begin
              { check whether there is a suitable operator for the array constructor
                (but only if the "+" array operator isn't used), if not fall back to sets }
              if (
                    (nodetype<>addn) or
                    not (m_array_operators in CurrentSettings.ModeSwitches) or
-                   (is_array_constructor(left.resultdef) and not is_dynamic_array(right.resultdef)) or
-                   (not is_dynamic_array(left.resultdef) and is_array_constructor(right.resultdef))
+                   (Is_Array_Constructor(left.resultdef) and not Is_Dynamic_Array(right.resultdef)) or
+                   (not Is_Dynamic_Array(left.resultdef) and Is_Array_Constructor(right.resultdef))
                  ) and
                  not isbinaryoverloaded(hp,[ocf_check_only]) then
                begin
-                 if is_array_constructor(left.resultdef) then
+                 if Is_Array_Constructor(left.resultdef) then
                    begin
                      arrayconstructor_to_set(left);
                      TypeCheckPass(left);
                    end;
-                 if is_array_constructor(right.resultdef) then
+                 if Is_Array_Constructor(right.resultdef) then
                    begin
                      arrayconstructor_to_set(right);
                      TypeCheckPass(right);
@@ -2324,7 +2324,7 @@ const
                end;
            end;
 
-         if is_dynamic_array(left.resultdef) and is_dynamic_array(right.resultdef) and
+         if Is_Dynamic_Array(left.resultdef) and Is_Dynamic_Array(right.resultdef) and
              (nodetype=addn) and
              (m_array_operators in CurrentSettings.ModeSwitches) and
              isbinaryoverloaded(hp,[ocf_check_non_overloadable,ocf_check_only]) then
@@ -2373,14 +2373,14 @@ const
         if not(CurrentSettings.FPUType=fpu_x87) then
           resultrealdef:=S64FloatType
         else
-          resultrealdef:=pbestrealtype^;
+          resultrealdef:=PBestRealType^;
   {$endif i386}
   {$ifdef x86_64}
         { x86-64 has no x87 only mode, so use always double as default }
         resultrealdef:=S64FloatType;
   {$endif x86_6}
 {$else not x86}
-        resultrealdef:=pbestrealtype^;
+        resultrealdef:=PBestRealType^;
 {$endif not x86}
 
         if (right.resultdef.typ=floatdef) or (left.resultdef.typ=floatdef) then
@@ -2394,7 +2394,7 @@ const
              begin
                if cs_excessprecision in CurrentSettings.LocalSwitches then
                  begin
-                   resultrealdef:=pbestrealtype^;
+                   resultrealdef:=PBestRealType^;
                    inserttypeconv(right,resultrealdef);
                    inserttypeconv(left,resultrealdef);
                  end
@@ -2404,8 +2404,8 @@ const
            { when there is a currency type then use currency, but
              only when currency is defined as float }
            else
-            if (is_currency(right.resultdef) or
-                is_currency(left.resultdef)) and
+            if (Is_Currency(right.resultdef) or
+                Is_Currency(left.resultdef)) and
                ((S64CurrencyType.typ = floatdef) or
                 (nodetype <> slashn)) then
              begin
@@ -2458,8 +2458,8 @@ const
         { If both operands are constant and there is a unicodestring
           or unicodestring then convert everything to unicodestring }
         if is_constnode(right) and is_constnode(left) and
-           (is_unicodestring(right.resultdef) or
-            is_unicodestring(left.resultdef)) then
+           (Is_UnicodeString(right.resultdef) or
+            Is_UnicodeString(left.resultdef)) then
           begin
             inserttypeconv(right,CUnicodeStringType);
             inserttypeconv(left,CUnicodeStringType);
@@ -2469,10 +2469,10 @@ const
           or widestring then convert everything to widestring. This
           allows constant folding like char+widechar }
         if is_constnode(right) and is_constnode(left) and
-           (is_widestring(right.resultdef) or
-            is_widestring(left.resultdef) or
-            is_widechar(right.resultdef) or
-            is_widechar(left.resultdef)) then
+           (Is_WideString(right.resultdef) or
+            Is_WideString(left.resultdef) or
+            Is_WideChar(right.resultdef) or
+            Is_WideChar(left.resultdef)) then
           begin
             inserttypeconv(right,CWideStringType);
             inserttypeconv(left,CWideStringType);
@@ -2489,7 +2489,7 @@ const
          if (m_mac in CurrentSettings.ModeSwitches) and
             { only allow for comparisons, additions etc are }
             { normally program errors                       }
-            (nodetype in [ltn,lten,gtn,gten,unequaln,equaln]) and
+            (nodetype in [ltn,lten,gtn,gten,unequaln,EqualN]) and
             (((lt=stringconstn) and
               (TStringConstNode(left).len=4) and
               (rd.typ=orddef)) or
@@ -2512,10 +2512,10 @@ const
            end;
 
          { but an int/int gives real/real! }
-         if (nodetype=slashn) and not(is_vector(left.resultdef)) and not(is_vector(right.resultdef)) then
+         if (nodetype=slashn) and not(Is_Vector(left.resultdef)) and not(Is_Vector(right.resultdef)) then
           begin
-            if is_currency(left.resultdef) and
-               is_currency(right.resultdef) then
+            if Is_Currency(left.resultdef) and
+               Is_Currency(right.resultdef) then
               { In case of currency, converting to float means dividing by 10000 }
               { However, since this is already a division, both divisions by     }
               { 10000 are eliminated when we divide the results -> we can skip   }
@@ -2551,12 +2551,12 @@ const
               { booleans, and always short circuit evaluation                }
               if (anf_short_bool in addnodeflags) then
                 begin
-                  if not is_boolean(ld) then
+                  if not Is_Boolean(ld) then
                     begin
                       inserttypeconv(left,PasBool1Type);
                       ld := left.resultdef;
                     end;
-                  if not is_boolean(rd) then
+                  if not Is_Boolean(rd) then
                     begin
                       inserttypeconv(right,PasBool1Type);
                       rd := right.resultdef;
@@ -2564,7 +2564,7 @@ const
                 end;
 
              { 2 booleans? }
-             if (is_boolean(ld) and is_boolean(rd)) then
+             if (Is_Boolean(ld) and Is_Boolean(rd)) then
               begin
                 case nodetype of
                   xorn,
@@ -2574,20 +2574,20 @@ const
                       { in case of xor or 'and' with cbool: convert both to Pascal bool and then
                         perform the xor/and to prevent issues with "longbool(1) and/xor
                         longbool(2)" }
-                      if (is_cbool(ld) or is_cbool(rd)) and
+                      if (Is_CBool(ld) or Is_CBool(rd)) and
                          (nodetype in [xorn,andn]) then
                         begin
                           resultdef:=nil;
-                          if is_cbool(ld) then
+                          if Is_CBool(ld) then
                             begin
                               left:=CTypeConvNode.create(left,PasBool8Type);
                               TTypeConvNode(left).convtype:=tc_bool_2_bool;
                               FirstPass(left);
-                              if not is_cbool(rd) or
-                                 (ld.size>=rd.size) then
+                              if not Is_CBool(rd) or
+                                 (ld.Size>=rd.Size) then
                                 resultdef:=ld;
                             end;
-                          if is_cbool(rd) then
+                          if Is_CBool(rd) then
                             begin
                               right:=CTypeConvNode.Create(right,PasBool8Type);
                               TTypeConvNode(right).convtype:=tc_bool_2_bool;
@@ -2602,15 +2602,15 @@ const
                           exit;
                         end;
                       { Make sides equal to the largest boolean }
-                      if (TOrdDef(left.resultdef).size>TOrdDef(right.resultdef).size) or
-                        (is_cbool(left.resultdef) and not is_cbool(right.resultdef)) then
+                      if (TOrdDef(left.resultdef).Size>TOrdDef(right.resultdef).Size) or
+                        (Is_CBool(left.resultdef) and not Is_CBool(right.resultdef)) then
                         begin
                           right:=CTypeConvNode.Create_Internal(right,left.resultdef);
                           TTypeConvNode(right).convtype:=tc_bool_2_bool;
                           TypeCheckPass(right);
                         end
-                      else if (TOrdDef(left.resultdef).size<TOrdDef(right.resultdef).size) or
-                        (not is_cbool(left.resultdef) and is_cbool(right.resultdef)) then
+                      else if (TOrdDef(left.resultdef).Size<TOrdDef(right.resultdef).Size) or
+                        (not Is_CBool(left.resultdef) and Is_CBool(right.resultdef)) then
                         begin
                           left:=CTypeConvNode.Create_Internal(left,right.resultdef);
                           TTypeConvNode(left).convtype:=tc_bool_2_bool;
@@ -2629,16 +2629,16 @@ const
                       inserttypeconv(right,PasBool1Type);
                     end;
                   unequaln,
-                  equaln:
+                  EqualN:
                     begin
                       { Remove any compares with constants }
                       if (left.nodetype=ordconstn) then
                         begin
                           hp:=right;
-                          b:=(TOrdConstNode(left).value<>0);
+                          b:=(TOrdConstNode(left).Value<>0);
                           ot:=nodetype;
                           right:=nil;
-                          if (not(b) and (ot=equaln)) or
+                          if (not(b) and (ot=EqualN)) or
                              (b and (ot=unequaln)) then
                            begin
                              hp:=CNotNode.create(hp);
@@ -2649,10 +2649,10 @@ const
                       if (right.nodetype=ordconstn) then
                         begin
                           hp:=left;
-                          b:=(TOrdConstNode(right).value<>0);
+                          b:=(TOrdConstNode(right).Value<>0);
                           ot:=nodetype;
                           left:=nil;
-                          if (not(b) and (ot=equaln)) or
+                          if (not(b) and (ot=EqualN)) or
                              (b and (ot=unequaln)) then
                            begin
                              hp:=CNotNode.create(hp);
@@ -2674,7 +2674,7 @@ const
                 end;
               end
              { Both are chars? }
-             else if is_char(rd) and is_char(ld) then
+             else if Is_Char(rd) and Is_Char(ld) then
                begin
                  if nodetype=addn then
                   begin
@@ -2689,7 +2689,7 @@ const
 {$endif addstringopt}
                      end
                   end
-                else if not(nodetype in [ltn,lten,gtn,gten,unequaln,equaln]) then
+                else if not(nodetype in [ltn,lten,gtn,gten,unequaln,EqualN]) then
                   begin
                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
                     result:=CNothingNode.create;
@@ -2697,7 +2697,7 @@ const
                   end;
                end
              { There is a widechar? }
-             else if is_widechar(rd) or is_widechar(ld) then
+             else if Is_WideChar(rd) or Is_WideChar(ld) then
                begin
                  { widechar+widechar gives unicodestring }
                  if nodetype=addn then
@@ -2750,9 +2750,9 @@ const
                because the forced type conversions below can otherwise result
                in unexpected results (such as high(qword)<high(int64) returning
                true because high(qword) gets converted to int64) }
-             else if is_integer(ld) and is_integer(rd) and
+             else if Is_Integer(ld) and Is_Integer(rd) and
                      (lt=ordconstn) and (rt=ordconstn) and
-                     (nodetype in [equaln,unequaln,gtn,gten,ltn,lten]) then
+                     (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) then
                begin
                end
              { "and" does't care about the sign of integers }
@@ -2762,38 +2762,38 @@ const
              { occupy an entire register                                   }
              { don't do it if either type is 64 bit (except for "and"),    }
              { since in that case we can't safely find a "common" type     }
-             else if is_integer(ld) and is_integer(rd) and
+             else if Is_Integer(ld) and Is_Integer(rd) and
                      ((nodetype=andn) or
-                      ((nodetype in [orn,xorn,equaln,unequaln,gtn,gten,ltn,lten]) and
-                        not is_64bitint(ld) and not is_64bitint(rd) and
-                       (is_signed(ld)=is_signed(rd)))) then
+                      ((nodetype in [orn,xorn,EqualN,unequaln,gtn,gten,ltn,lten]) and
+                        not Is_64BitInt(ld) and not Is_64BitInt(rd) and
+                       (Is_Signed(ld)=Is_Signed(rd)))) then
                begin
                  { Delphi-compatible: prefer unsigned type for "and", when the
                    unsigned type is bigger than the signed one, and also bigger
                    than min(native_int, 32-bit) }
-                 if (is_oversizedint(rd) or is_nativeint(rd) or is_32bitint(rd)) and
-                    (rd.size>=ld.size) and
-                    not is_signed(rd) and is_signed(ld) then
+                 if (Is_OversizedInt(rd) or Is_NativeInt(rd) or Is_32BitInt(rd)) and
+                    (rd.Size>=ld.Size) and
+                    not Is_Signed(rd) and Is_Signed(ld) then
                       inserttypeconv_internal(left,rd)
-                 else if (is_oversizedint(ld) or is_nativeint(ld) or is_32bitint(ld)) and
-                    (ld.size>=rd.size) and
-                    not is_signed(ld) and is_signed(rd) then
+                 else if (Is_OversizedInt(ld) or Is_NativeInt(ld) or Is_32BitInt(ld)) and
+                    (ld.Size>=rd.Size) and
+                    not Is_Signed(ld) and Is_Signed(rd) then
                       inserttypeconv_internal(right,ld)
                  else
                    begin
                      { not to left right.resultdef, because that may
                        cause a range error if left and right's def don't
                        completely overlap }
-                     nd:=get_common_intdef(TOrdDef(ld),TOrdDef(rd),true);
+                     nd:=Get_Common_IntDef(TOrdDef(ld),TOrdDef(rd),true);
                      inserttypeconv(left,nd);
                      inserttypeconv(right,nd);
                    end;
                end
              { don't extend (sign-mismatched) comparisons if either side is a constant
                whose value is within range of opposite side }
-             else if is_integer(ld) and is_integer(rd) and
-                     (nodetype in [equaln,unequaln,gtn,gten,ltn,lten]) and
-                     (is_signed(ld)<>is_signed(rd)) and
+             else if Is_Integer(ld) and Is_Integer(rd) and
+                     (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) and
+                     (Is_Signed(ld)<>Is_Signed(rd)) and
                      (
                        ((lt=ordconstn) and maybe_cast_ordconst(left,rd)) or
                        ((rt=ordconstn) and maybe_cast_ordconst(right,ld))
@@ -2818,30 +2818,30 @@ const
                    inserttypeconv(right,U64IntType);
                end
              { is there a larger int? }
-             else if is_oversizedint(rd) or is_oversizedint(ld) then
+             else if Is_OversizedInt(rd) or Is_OversizedInt(ld) then
                begin
-                 nd:=get_common_intdef(TOrdDef(ld),TOrdDef(rd),false);
+                 nd:=Get_Common_IntDef(TOrdDef(ld),TOrdDef(rd),false);
                  inserttypeconv(right,nd);
                  inserttypeconv(left,nd);
                end
              { is there a native unsigned int? }
-             else if is_nativeuint(rd) or is_nativeuint(ld) then
+             else if Is_NativeUInt(rd) or Is_NativeUInt(ld) then
                begin
                  { convert positive constants to uinttype }
-                 if (not is_nativeuint(ld)) and
+                 if (not Is_NativeUInt(ld)) and
                     is_constintnode(left) and
-                    (TOrdConstNode(left).value >= 0) then
+                    (TOrdConstNode(left).Value >= 0) then
                    inserttypeconv(left,UIntType);
-                 if (not is_nativeuint(rd)) and
+                 if (not Is_NativeUInt(rd)) and
                     is_constintnode(right) and
-                    (TOrdConstNode(right).value >= 0) then
+                    (TOrdConstNode(right).Value >= 0) then
                    inserttypeconv(right,UIntType);
                  { when one of the operand is signed or the operation is subn then perform
                    the operation in a larger signed type, can't use rd/ld here because there
                    could be already typeconvs inserted.
                    This is compatible with the code below for other unsigned types (PFV) }
-                 if is_signed(left.resultdef) or
-                    is_signed(right.resultdef) or
+                 if Is_Signed(left.resultdef) or
+                    Is_Signed(right.resultdef) or
                     ((nodetype=subn)
 
                     ) then
@@ -2855,20 +2855,20 @@ const
                      { mustn't do it here because that would change  }
                      { overload choosing behaviour etc. The code in  }
                      { ncnv.pas is run after that is already decided }
-                     if (not is_signed(left.resultdef) and
-                         not is_signed(right.resultdef)) or
+                     if (not Is_Signed(left.resultdef) and
+                         not Is_Signed(right.resultdef)) or
                         (nodetype in [orn,xorn]) then
                        include(flags,nf_internal);
                      { get next larger signed int type }
-                     nd:=get_common_intdef(TOrdDef(SIntType),TOrdDef(UIntType),false);
+                     nd:=Get_Common_IntDef(TOrdDef(SIntType),TOrdDef(UIntType),false);
                      inserttypeconv(left,nd);
                      inserttypeconv(right,nd);
                    end
                  else
                    begin
-                     if not is_nativeuint(left.resultdef) then
+                     if not Is_NativeUInt(left.resultdef) then
                        inserttypeconv(left,UIntType);
-                     if not is_nativeuint(right.resultdef) then
+                     if not Is_NativeUInt(right.resultdef) then
                        inserttypeconv(right,UIntType);
                    end;
                end
@@ -2879,8 +2879,8 @@ const
                    or in TP mode for 16-bit CPUs
                    we convert to signed int. Otherwise (both are unsigned) we keep
                    the result also unsigned. This is compatible with Delphi (PFV) }
-                 if is_signed(ld) or
-                    is_signed(rd) or
+                 if Is_Signed(ld) or
+                    Is_Signed(rd) or
                     (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) or
 
                     (nodetype=subn) then
@@ -2899,7 +2899,7 @@ const
          { if both are floatdefs, conversion is already done before constant folding }
          else if (ld.typ=floatdef) then
            begin
-             if not(nodetype in [addn,subn,muln,slashn,equaln,unequaln,ltn,lten,gtn,gten]) then
+             if not(nodetype in [addn,subn,muln,slashn,EqualN,unequaln,ltn,lten,gtn,gten]) then
                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
            end
 
@@ -2907,7 +2907,7 @@ const
            else array constructor can be seen as array of char (PFV) }
          else if (ld.typ=setdef) then
           begin
-             if not(nodetype in [addn,subn,symdifn,muln,equaln,unequaln,lten,gten]) then
+             if not(nodetype in [addn,subn,symdifn,muln,EqualN,unequaln,lten,gten]) then
               CGMessage(type_e_set_operation_unknown);
              { right must either be a set or a set element }
              if (rd.typ<>setdef) and
@@ -2917,7 +2917,7 @@ const
              { entirely inside the other's, pick the one with the largest }
              { range.  Otherwise create a new setdef with a range which   }
              { can contain both.                                          }
-             else if not(equal_defs(ld,rd)) then
+             else if not(Equal_Defs(ld,rd)) then
               begin
                 { note: ld cannot be an empty set with elementdef=nil in }
                 { case right is not a set, arrayconstructor_to_set takes }
@@ -2929,7 +2929,7 @@ const
                 if ((rd.typ=setdef) and
                     Assigned(TSetDef(rd).ElementDef) and
                     (not Assigned(TSetDef(ld).ElementDef) or
-                     is_in_limit(ld,rd))) then
+                     Is_In_Limit(ld,rd))) then
                   inserttypeconv(left,rd)
                 { 2: rd is either an empty set without elementdef or a set }
                 {    whose elementdef fits in ld's elementdef, or a set    }
@@ -2938,9 +2938,9 @@ const
                 {    previous case and "note:" above                       }
                 else if ((rd.typ=setdef) and
                          (not Assigned(TSetDef(rd).ElementDef) or
-                          is_in_limit(rd,ld))) or
+                          Is_In_Limit(rd,ld))) or
                         ((rd.typ<>setdef) and
-                         is_in_limit(rd,TSetDef(ld).ElementDef)) then
+                         Is_In_Limit(rd,TSetDef(ld).ElementDef)) then
                    if (rd.typ=setdef) then
                     inserttypeconv(right,ld)
                   else
@@ -2967,7 +2967,7 @@ const
                           rhigh:=lhigh;
                         end
                     else
-                      getrange(rd,rlow,rhigh);
+                      GetRange(rd,rlow,rhigh);
                     if not Assigned(TSetDef(ld).ElementDef) then
                       begin
                         llow:=rlow;
@@ -2989,33 +2989,33 @@ const
                  { compare/add pchar to variable (not stringconst) char arrays
                    by addresses like BP/Delphi }
                  (
-                  (nodetype in [equaln,unequaln,subn,addn]) and
+                  (nodetype in [EqualN,unequaln,subn,addn]) and
                   (
-                   ((is_pchar(ld) or (lt=niln)) and is_chararray(rd) and (rt<>stringconstn)) or
-                   ((is_pchar(rd) or (rt=niln)) and is_chararray(ld) and (lt<>stringconstn))
+                   ((Is_PChar(ld) or (lt=niln)) and Is_CharArray(rd) and (rt<>stringconstn)) or
+                   ((Is_PChar(rd) or (rt=niln)) and Is_CharArray(ld) and (lt<>stringconstn))
                   )
                  ) then
           begin
             { convert char array to pointer }
-            if is_chararray(rd) then
+            if Is_CharArray(rd) then
               begin
                 inserttypeconv(right,CharPointerType);
                 rd:=right.resultdef;
               end
-            else if is_chararray(ld) then
+            else if Is_CharArray(ld) then
               begin
                 inserttypeconv(left,CharPointerType);
                 ld:=left.resultdef;
               end;
 
             case nodetype of
-               equaln,unequaln :
+               EqualN,unequaln :
                  begin
-                    if is_voidpointer(right.resultdef) then
+                    if Is_VoidPointer(right.resultdef) then
                       inserttypeconv(right,left.resultdef)
-                    else if is_voidpointer(left.resultdef) then
+                    else if Is_VoidPointer(left.resultdef) then
                       inserttypeconv(left,right.resultdef)
-                    else if not(equal_defs(ld,rd)) then
+                    else if not(Equal_Defs(ld,rd)) then
                       IncompatibleTypes(ld,rd);
                  end;
                ltn,lten,gtn,gten:
@@ -3023,9 +3023,9 @@ const
                     if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
                        (nf_internal in flags) then
                      begin
-                       if is_voidpointer(right.resultdef) then
+                       if Is_VoidPointer(right.resultdef) then
                         inserttypeconv(right,left.resultdef)
-                       else if is_voidpointer(left.resultdef) then
+                       else if Is_VoidPointer(left.resultdef) then
                         inserttypeconv(left,right.resultdef)
                        else if not (
                            { in Delphi two different pointer types can be compared
@@ -3042,7 +3042,7 @@ const
                                TPointerDef(rd).HasPointerMath
                              )
                            )
-                         ) and not(equal_defs(ld,rd)) then
+                         ) and not(Equal_Defs(ld,rd)) then
                         IncompatibleTypes(ld,rd);
                      end
                     else
@@ -3053,27 +3053,27 @@ const
                     if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
                        (nf_internal in flags) then
                       begin
-                        if is_voidpointer(right.resultdef) then
+                        if Is_VoidPointer(right.resultdef) then
                         begin
                           if is_big_untyped_addrnode(right) then
                             CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
                           inserttypeconv(right,left.resultdef)
                         end
-                        else if is_voidpointer(left.resultdef) then
+                        else if Is_VoidPointer(left.resultdef) then
                           inserttypeconv(left,right.resultdef)
-                        else if not(equal_defs(ld,rd)) then
+                        else if not(Equal_Defs(ld,rd)) then
                           IncompatibleTypes(ld,rd);
                       end
                     else
                       CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
 
                     if not(anf_has_pointerdiv in addnodeflags) and
-                      (TPointerDef(rd).PointedDef.size>1) then
+                      (TPointerDef(rd).PointedDef.Size>1) then
                       begin
                         hp:=GetCopy;
                         include(TAddNode(hp).addnodeflags, anf_has_pointerdiv);
                         result:=CModDivNode.create(divn,hp,
-                          COrdConstNode.create(TPointerDef(rd).PointedDef.size,TPointerDef(rd).Pointer_Subtraction_Result_Type,false));
+                          COrdConstNode.create(TPointerDef(rd).PointedDef.Size,TPointerDef(rd).Pointer_Subtraction_Result_Type,false));
                       end;
                     resultdef:=TPointerDef(rd).Pointer_Subtraction_Result_Type;
                     exit;
@@ -3093,41 +3093,41 @@ const
                  { stringconstn's can be arraydefs }
                  (lt=stringconstn) or
                  (rt=stringconstn) or
-                 ((is_pchar(rd) or is_chararray(rd) or is_char(rd) or is_open_chararray(rd) or
-                   is_pwidechar(rd) or is_widechararray(rd) or is_widechar(rd) or is_open_widechararray(rd)) and
-                  (is_pchar(ld) or is_chararray(ld) or is_char(ld) or is_open_chararray(ld) or
-                   is_pwidechar(ld) or is_widechararray(ld) or is_widechar(ld) or is_open_widechararray(ld))) then
+                 ((Is_PChar(rd) or Is_CharArray(rd) or Is_Char(rd) or Is_Open_CharArray(rd) or
+                   Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_WideChar(rd) or Is_Open_WideCharArray(rd)) and
+                  (Is_PChar(ld) or Is_CharArray(ld) or Is_Char(ld) or Is_Open_CharArray(ld) or
+                   Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_WideChar(ld) or Is_Open_WideCharArray(ld))) then
           begin
-            if (nodetype in [addn,equaln,unequaln,lten,gten,ltn,gtn]) then
+            if (nodetype in [addn,EqualN,unequaln,lten,gten,ltn,gtn]) then
               begin
                 { Is there a unicodestring? }
-                if is_unicodestring(rd) or is_unicodestring(ld) or
+                if Is_UnicodeString(rd) or Is_UnicodeString(ld) or
                    ((m_default_unicodestring in CurrentSettings.ModeSwitches) and
                     (cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                     (
-                     is_pwidechar(rd) or is_widechararray(rd) or is_open_widechararray(rd) or (lt = stringconstn) or
-                     is_pwidechar(ld) or is_widechararray(ld) or is_open_widechararray(ld) or (rt = stringconstn)
+                     Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_Open_WideCharArray(rd) or (lt = stringconstn) or
+                     Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_Open_WideCharArray(ld) or (rt = stringconstn)
                     )
                    ) then
                   strtype:=st_unicodestring
                 else
                 { Is there a widestring? }
-                  if is_widestring(rd) or is_widestring(ld) or
-                     is_pwidechar(rd) or is_widechararray(rd) or is_widechar(rd) or is_open_widechararray(rd) or
-                     is_pwidechar(ld) or is_widechararray(ld) or is_widechar(ld) or is_open_widechararray(ld) then
+                  if Is_WideString(rd) or Is_WideString(ld) or
+                     Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_WideChar(rd) or Is_Open_WideCharArray(rd) or
+                     Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_WideChar(ld) or Is_Open_WideCharArray(ld) then
                     strtype:=st_widestring
                 else
-                  if is_ansistring(rd) or is_ansistring(ld) or
+                  if Is_AnsiString(rd) or Is_AnsiString(ld) or
                      ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                      //todo: Move some of this to longstring's then they are implemented?
                       (
-                       is_pchar(rd) or (is_chararray(rd) and (rd.size > 255)) or is_open_chararray(rd) or (lt = stringconstn) or
-                       is_pchar(ld) or (is_chararray(ld) and (ld.size > 255)) or is_open_chararray(ld) or (rt = stringconstn)
+                       Is_PChar(rd) or (Is_CharArray(rd) and (rd.Size > 255)) or Is_Open_CharArray(rd) or (lt = stringconstn) or
+                       Is_PChar(ld) or (Is_CharArray(ld) and (ld.Size > 255)) or Is_Open_CharArray(ld) or (rt = stringconstn)
                       )
                      ) then
                     strtype:=st_ansistring
                 else
-                  if is_longstring(rd) or is_longstring(ld) then
+                  if Is_LongString(rd) or Is_LongString(ld) then
                     strtype:=st_longstring
                 else
                   begin
@@ -3143,16 +3143,16 @@ const
                 case strtype of
                   st_widestring :
                     begin
-                      if not(is_widestring(rd)) then
+                      if not(Is_WideString(rd)) then
                         inserttypeconv(right,CWideStringType);
-                      if not(is_widestring(ld)) then
+                      if not(Is_WideString(ld)) then
                         inserttypeconv(left,CWideStringType);
                     end;
                   st_unicodestring :
                     begin
-                      if not(is_unicodestring(rd)) then
+                      if not(Is_UnicodeString(rd)) then
                         inserttypeconv(right,CUnicodeStringType);
-                      if not(is_unicodestring(ld)) then
+                      if not(Is_UnicodeString(ld)) then
                         inserttypeconv(left,CUnicodeStringType);
                     end;
                   st_ansistring :
@@ -3162,41 +3162,41 @@ const
                         CP_NONE, since then data loss can occur: the ansistring
                         helpers will convert them at run time to an encoding
                         that can represent both encodings) }
-                      if is_ansistring(ld) and
+                      if Is_AnsiString(ld) and
                          (TStringDef(ld).encoding<>0) and
                          (TStringDef(ld).encoding<>Globals.CP_NONE) and
-                         (not is_ansistring(rd) or
+                         (not Is_AnsiString(rd) or
                           (TStringDef(rd).encoding=0) or
                           (TStringDef(rd).encoding=Globals.CP_NONE)) then
                         inserttypeconv(right,ld)
-                      else if is_ansistring(rd) and
+                      else if Is_AnsiString(rd) and
                          (TStringDef(rd).encoding<>0) and
                          (TStringDef(rd).encoding<>Globals.CP_NONE) and
-                         (not is_ansistring(ld) or
+                         (not Is_AnsiString(ld) or
                           (TStringDef(ld).encoding=0) or
                           (TStringDef(ld).encoding=Globals.CP_NONE)) then
                         inserttypeconv(left,rd)
                       else
                         begin
-                          if not is_ansistring(ld) then
+                          if not Is_AnsiString(ld) then
                             inserttypeconv(left,GetAnsiStringDef);
-                          if not is_ansistring(rd) then
+                          if not Is_AnsiString(rd) then
                             inserttypeconv(right,GetAnsiStringDef);
                         end;
                     end;
                   st_longstring :
                     begin
-                      if not(is_longstring(rd)) then
+                      if not(Is_LongString(rd)) then
                         inserttypeconv(right,CLongStringType);
-                      if not(is_longstring(ld)) then
+                      if not(Is_LongString(ld)) then
                         inserttypeconv(left,CLongStringType);
                      end;
                    st_shortstring :
                      begin
-                       if not(is_shortstring(ld)) then
+                       if not(Is_ShortString(ld)) then
                          inserttypeconv(left,CShortStringType);
                        { don't convert char, that can be handled by the optimized node }
-                       if not(is_shortstring(rd) or is_char(rd)) then
+                       if not(Is_ShortString(rd) or Is_Char(rd)) then
                          inserttypeconv(right,CShortStringType);
                      end;
                 end;
@@ -3208,11 +3208,11 @@ const
          { implicit pointer object type comparison }
          else if Is_Implicit_Pointer_Object_Type(rd) or Is_Implicit_Pointer_Object_Type(ld) then
           begin
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               begin
                 if Is_Implicit_Pointer_Object_Type(rd) and Is_Implicit_Pointer_Object_Type(ld) then
                  begin
-                   if def_is_related(TObjectDef(rd),TObjectDef(ld)) then
+                   if Def_Is_Related(TObjectDef(rd),TObjectDef(ld)) then
                     inserttypeconv(right,left.resultdef)
                    else
                     inserttypeconv(left,right.resultdef);
@@ -3228,9 +3228,9 @@ const
 
          else if (rd.typ=classrefdef) and (ld.typ=classrefdef) then
           begin
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               begin
-                if def_is_related(TObjectDef(TClassRefDef(rd).PointedDef),
+                if Def_Is_Related(TObjectDef(TClassRefDef(rd).PointedDef),
                         TObjectDef(TClassRefDef(ld).PointedDef)) then
                   inserttypeconv(right,left.resultdef)
                 else
@@ -3243,7 +3243,7 @@ const
          { allow comparison with nil pointer }
          else if Is_Implicit_Pointer_Object_Type(rd) or (rd.typ=classrefdef) then
           begin
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               inserttypeconv(left,right.resultdef)
             else
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
@@ -3251,7 +3251,7 @@ const
 
          else if Is_Implicit_Pointer_Object_Type(ld) or (ld.typ=classrefdef) then
           begin
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               inserttypeconv(right,left.resultdef)
             else
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
@@ -3261,7 +3261,7 @@ const
          else if ((ld.typ=procvardef) and (rt=niln)) or
                  ((rd.typ=procvardef) and (lt=niln)) then
           begin
-            if not(nodetype in [equaln,unequaln]) then
+            if not(nodetype in [EqualN,unequaln]) then
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
             { find proc field in methodpointer record }
             hsym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
@@ -3291,7 +3291,7 @@ const
           end
 
          { <dyn. array>+<dyn. array> ? }
-         else if (nodetype=addn) and (is_dynamic_array(ld) or is_dynamic_array(rd)) then
+         else if (nodetype=addn) and (Is_Dynamic_Array(ld) or Is_Dynamic_Array(rd)) then
            begin
               { empty array to add? }
               if (right.nodetype=arrayconstructorn) and (TArrayConstructorNode(right).left=nil) then
@@ -3311,19 +3311,19 @@ const
                   result:=maybe_convert_to_insert;
                   if Assigned(result) then
                     exit;
-                  if not(is_dynamic_array(ld)) then
+                  if not(Is_Dynamic_Array(ld)) then
                     inserttypeconv(left,rd);
-                  if not(is_dynamic_array(rd)) then
+                  if not(Is_Dynamic_Array(rd)) then
                     inserttypeconv(right,ld);
                 end;
            end
 
         { support dynamicarray=nil,dynamicarray<>nil }
-         else if (is_dynamic_array(ld) and (rt=niln)) or
-                 (is_dynamic_array(rd) and (lt=niln)) or
-                 (is_dynamic_array(ld) and is_dynamic_array(rd)) then
+         else if (Is_Dynamic_Array(ld) and (rt=niln)) or
+                 (Is_Dynamic_Array(rd) and (lt=niln)) or
+                 (Is_Dynamic_Array(ld) and Is_Dynamic_Array(rd)) then
           begin
-            if not(nodetype in [equaln,unequaln]) then
+            if not(nodetype in [EqualN,unequaln]) then
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
             if lt=niln then
               inserttypeconv_explicit(left,right.resultdef)
@@ -3335,16 +3335,16 @@ const
        { mmx support, this must be before the zero based array
          check }
          else if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(ld) and
-                 is_mmx_able_array(rd) and
-                 equal_defs(ld,rd) then
+                 Is_MMX_Able_Array(ld) and
+                 Is_MMX_Able_Array(rd) and
+                 Equal_Defs(ld,rd) then
             begin
               case nodetype of
                 addn,subn,xorn,orn,andn:
                   ;
                 { mul is a little bit restricted }
                 muln:
-                  if not(mmx_type(ld) in [mmxu16bit,mmxs16bit,mmxfixed16]) then
+                  if not(MMX_Type(ld) in [mmxu16bit,mmxs16bit,mmxfixed16]) then
                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
                 else
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
@@ -3354,22 +3354,22 @@ const
          { vector support, this must be before the zero based array
            check }
          else if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
-                 fits_in_mm_register(ld) and
-                 fits_in_mm_register(rd) and
-                 equal_defs(ld,rd) then
+                 Fits_In_MM_Register(ld) and
+                 Fits_In_MM_Register(rd) and
+                 Equal_Defs(ld,rd) then
             begin
               if not(nodetype in [addn,subn,xorn,orn,andn,muln,slashn]) then
                 CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
               { both defs must be equal, so taking left or right as resultdef doesn't matter }
-              resultdef:=to_hwvectordef(left.resultdef,false);
+              resultdef:=To_HWVectorDef(left.resultdef,false);
             end
 
          { this is a little bit dangerous, also the left type }
          { pointer to should be checked! This broke the mmx support      }
          else if (rd.typ=pointerdef) or
-                 (is_zero_based_array(rd) and (rt<>stringconstn)) then
+                 (Is_Zero_Based_Array(rd) and (rt<>stringconstn)) then
           begin
-            if is_zero_based_array(rd) then
+            if Is_Zero_Based_Array(rd) then
               begin
                 resultdef:=CPointerDef.getreusable(TArrayDef(rd).ElementDef);
                 inserttypeconv(right,resultdef);
@@ -3382,15 +3382,15 @@ const
                 if (rt=niln) then
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,'NIL');
                 if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags))  or
-                   (not (is_pchar(rd) or is_chararray(rd) or is_open_chararray(rd) or is_widechar(rd) or is_widechararray(rd) or is_open_widechararray(rd)) and
+                   (not (Is_PChar(rd) or Is_CharArray(rd) or Is_Open_CharArray(rd) or Is_WideChar(rd) or Is_WideCharArray(rd) or Is_Open_WideCharArray(rd)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((rd.typ=pointerdef) and TPointerDef(rd).HasPointerMath)) then
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
                 if (rd.typ=pointerdef) and
-                   (TPointerDef(rd).PointedDef.size>1) then
+                   (TPointerDef(rd).PointedDef.Size>1) then
                    begin
                      left:=CAddNode.create(muln,left,
-                       COrdConstNode.create(TPointerDef(rd).PointedDef.size,TPointerDef(right.resultdef).Pointer_Arithmetic_Int_Type,true));
+                       COrdConstNode.create(TPointerDef(rd).PointedDef.Size,TPointerDef(right.resultdef).Pointer_Arithmetic_Int_Type,true));
                      TypeCheckPass(left);
                    end;
               end
@@ -3399,9 +3399,9 @@ const
           end
 
          else if (ld.typ=pointerdef) or
-                 (is_zero_based_array(ld) and (lt<>stringconstn)) then
+                 (Is_Zero_Based_Array(ld) and (lt<>stringconstn)) then
            begin
-             if is_zero_based_array(ld) then
+             if Is_Zero_Based_Array(ld) then
                begin
                   resultdef:=CPointerDef.getreusable(TArrayDef(ld).ElementDef);
                   inserttypeconv(left,resultdef);
@@ -3415,7 +3415,7 @@ const
                  if (lt=niln) then
                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),'NIL',rd.TypeName);
                  if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags)) or
-                   (not (is_pchar(ld) or is_chararray(ld) or is_open_chararray(ld) or is_widechar(ld) or is_widechararray(ld) or is_open_widechararray(ld)) and
+                   (not (Is_PChar(ld) or Is_CharArray(ld) or Is_Open_CharArray(ld) or Is_WideChar(ld) or Is_WideCharArray(ld) or Is_Open_WideCharArray(ld)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((ld.typ=pointerdef) and TPointerDef(ld).HasPointerMath)) then
                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
@@ -3423,18 +3423,18 @@ const
                  begin
                    if is_big_untyped_addrnode(left) then
                      CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
-                   if (TPointerDef(ld).PointedDef.size>1) then
+                   if (TPointerDef(ld).PointedDef.Size>1) then
                    begin
                      right:=CAddNode.create(muln,right,
-                       COrdConstNode.create(TPointerDef(ld).PointedDef.size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
+                       COrdConstNode.create(TPointerDef(ld).PointedDef.Size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
                      TypeCheckPass(right);
                    end
                  end else
-                   if is_zero_based_array(ld) and
-                      (TArrayDef(ld).ElementDef.size>1) then
+                   if Is_Zero_Based_Array(ld) and
+                      (TArrayDef(ld).ElementDef.Size>1) then
                      begin
                        right:=CAddNode.create(muln,right,
-                         COrdConstNode.create(TArrayDef(ld).ElementDef.size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
+                         COrdConstNode.create(TArrayDef(ld).ElementDef.Size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
                        TypeCheckPass(right);
                      end;
                end
@@ -3444,9 +3444,9 @@ const
 
          else if (rd.typ=procvardef) and
                  (ld.typ=procvardef) and
-                 equal_defs(rd,ld) then
+                 Equal_Defs(rd,ld) then
           begin
-            if (nodetype in [equaln,unequaln]) then
+            if (nodetype in [EqualN,unequaln]) then
               begin
                 if TProcVarDef(rd).Is_AddressOnly then
                   begin
@@ -3502,22 +3502,22 @@ const
          if not Assigned(resultdef) then
           begin
              case nodetype of
-                ltn,lten,gtn,gten,equaln,unequaln :
+                ltn,lten,gtn,gten,EqualN,unequaln :
                   resultdef:=PasBool1Type;
                 slashn :
                   resultdef:=resultrealdef;
                 addn:
                   begin
                     { for strings, return is always a 255 char string }
-                    if is_shortstring(left.resultdef) then
+                    if Is_ShortString(left.resultdef) then
                       resultdef:=CShortStringType
                     else
                     { for ansistrings set resultdef to assignment left node
                       if it is an assignment and left node expects ansistring }
-                    if is_ansistring(left.resultdef) and
+                    if Is_AnsiString(left.resultdef) and
                        Assigned(aktassignmentnode) and
                        (aktassignmentnode.right=self) and
-                       is_ansistring(aktassignmentnode.left.resultdef) then
+                       Is_AnsiString(aktassignmentnode.left.resultdef) then
                       resultdef:=aktassignmentnode.left.resultdef
                     else
                       resultdef:=left.resultdef;
@@ -3556,8 +3556,8 @@ const
         if not(nf_internal in flags) and
           { Can't go by the node's resultdef in the case of comparisons }
           (
-            is_currency(left.resultdef) or
-            is_currency(right.resultdef)
+            Is_Currency(left.resultdef) or
+            Is_Currency(right.resultdef)
           ) then
           begin
             case nodetype of
@@ -3656,7 +3656,7 @@ const
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
                         { int64(...) causes a cast on currency, so it is the currency value multiplied by 10000 }
-                        if (left.nodetype=realconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(TRealConstNode(left).value_real) mod 10000)=0) then
+                        if (left.nodetype=realconstn) and (Is_Currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(TRealConstNode(left).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value_real and value_currency contain valid values }
                             TRealConstNode(left).value_real:=TRealConstNode(left).value_real/BestReal(10000.0);
@@ -3668,7 +3668,7 @@ const
                             hp:=GetCopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=realconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(TRealConstNode(right).value_real) mod 10000)=0) then
+                        else if (right.nodetype=realconstn) and (Is_Currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(TRealConstNode(right).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value and value_currency contain valid values }
                             TRealConstNode(right).value_real:=TRealConstNode(right).value_real/BestReal(10000.0);
@@ -3699,9 +3699,9 @@ const
                     else
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
-                        if (left.nodetype=ordconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((TOrdConstNode(left).value mod 10000)=0) then
+                        if (left.nodetype=ordconstn) and (Is_Currency(left.resultdef)) and (nf_is_currency in left.flags) and ((TOrdConstNode(left).Value mod 10000)=0) then
                           begin
-                            TOrdConstNode(left).value:=TOrdConstNode(left).value div 10000;
+                            TOrdConstNode(left).Value:=TOrdConstNode(left).Value div 10000;
                             Exclude(left.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3709,9 +3709,9 @@ const
                             hp:=GetCopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=ordconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((TOrdConstNode(right).value mod 10000)=0) then
+                        else if (right.nodetype=ordconstn) and (Is_Currency(right.resultdef)) and (nf_is_currency in right.flags) and ((TOrdConstNode(right).Value mod 10000)=0) then
                           begin
-                            TOrdConstNode(right).value:=TOrdConstNode(right).value div 10000;
+                            TOrdConstNode(right).Value:=TOrdConstNode(right).Value div 10000;
                             Exclude(right.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3719,10 +3719,10 @@ const
                             hp:=GetCopy;
                           end
 
-                        else if (right.nodetype=muln) and is_currency(right.resultdef) and (nf_is_currency in right.flags) and
+                        else if (right.nodetype=muln) and Is_Currency(right.resultdef) and (nf_is_currency in right.flags) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          is_currency(TAddNode(right).right.resultdef) and (TAddNode(right).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(right).right).value=10000) and
-                          is_currency(TAddNode(right).left.resultdef) and not (nf_is_currency in TAddNode(right).left.flags) and (TAddNode(right).left.nodetype=typeconvn) then
+                          Is_Currency(TAddNode(right).right.resultdef) and (TAddNode(right).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(right).right).Value=10000) and
+                          Is_Currency(TAddNode(right).left.resultdef) and not (nf_is_currency in TAddNode(right).left.flags) and (TAddNode(right).left.nodetype=typeconvn) then
                           begin
                             hp:=TAddNode(right).left.GetCopy;
                             right.free;
@@ -3731,10 +3731,10 @@ const
                             { We need to force a re-evaluation }
                             hp:=GetCopy;
                           end
-                        else if (left.nodetype=muln) and is_currency(left.resultdef) and
+                        else if (left.nodetype=muln) and Is_Currency(left.resultdef) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          is_currency(TAddNode(left).right.resultdef) and (TAddNode(left).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(left).right).value=10000) and
-                          is_currency(TAddNode(left).left.resultdef) and not (nf_is_currency in TAddNode(left).left.flags) and (TAddNode(left).left.nodetype=typeconvn) then
+                          Is_Currency(TAddNode(left).right.resultdef) and (TAddNode(left).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(left).right).Value=10000) and
+                          Is_Currency(TAddNode(left).left.resultdef) and not (nf_is_currency in TAddNode(left).left.flags) and (TAddNode(left).left.nodetype=typeconvn) then
                           begin
                             hp:=TAddNode(left).left.GetCopy;
                             left.free;
@@ -3781,7 +3781,7 @@ const
               lten,
               gtn,
               gten,
-              equaln,
+              EqualN,
               unequaln:
                 { Correct absence of nf_is_currency flag in addn and subn }
                 if not
@@ -3857,8 +3857,8 @@ const
                   (
                     (aktassignmentnode.left.resultdef=resultdef) or
                     (
-                      is_shortstring(aktassignmentnode.left.resultdef) and
-                      is_shortstring(resultdef)
+                      Is_ShortString(aktassignmentnode.left.resultdef) and
+                      Is_ShortString(resultdef)
                     )
                   ) and
                   valid_for_var(aktassignmentnode.left,false) then
@@ -3870,7 +3870,7 @@ const
                             CCallParaNode.create(aktassignmentnode.left.GetCopy,nil)
                           )
                         );
-                  if is_ansistring(resultdef) then
+                  if Is_AnsiString(resultdef) then
                     para:=CCallParaNode.create(
                             COrdConstNode.create(
                               { don't use getparaencoding(), we have to know
@@ -3891,7 +3891,7 @@ const
               else
                 begin
                   result:=internalstatements(newstatement);
-                  tempnode:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                  tempnode:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
                   para:=CCallParaNode.create(
                           right,
@@ -3900,7 +3900,7 @@ const
                             CCallParaNode.create(CTempRefNode.create(tempnode),nil)
                           )
                         );
-                  if is_ansistring(resultdef) then
+                  if Is_AnsiString(resultdef) then
                     para:=CCallParaNode.create(
                             COrdConstNode.create(
                               { don't use getparaencoding(), we have to know
@@ -3925,11 +3925,11 @@ const
               left := nil;
               right := nil;
             end;
-          ltn,lten,gtn,gten,equaln,unequaln :
+          ltn,lten,gtn,gten,EqualN,unequaln :
             begin
               { generate better code for comparison with empty string, we
                 only need to compare the length with 0 }
-              if (nodetype in [equaln,unequaln,gtn,gten,ltn,lten]) and
+              if (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) and
                  (((left.nodetype=stringconstn) and (TStringConstNode(left).len=0)) or
                   ((right.nodetype=stringconstn) and (TStringConstNode(right).len=0))) then
                 begin
@@ -3941,7 +3941,7 @@ const
                       right := p;
                       nodetype:=swap_relation[nodetype];
                     end;
-                  if is_shortstring(left.resultdef) or
+                  if Is_ShortString(left.resultdef) or
                      (nodetype in [gtn,gten,ltn,lten]) then
                     { compare the length with 0 }
                     result := CAddNode.create(nodetype,
@@ -3949,12 +3949,12 @@ const
                       COrdConstNode.create(0,S8IntType,false))
                   else { nodetype in [equaln,unequaln] }
                     begin
-                      if is_widestring(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+                      if Is_WideString(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
                         begin
                           { windows like widestrings requires that we also check the length }
                           result:=CInlineNode.create(in_length_x,false,left);
                           { and compare its result with 0 }
-                          result:=CAddNode.create(equaln,result,COrdConstNode.create(0,S8IntType,false));
+                          result:=CAddNode.create(EqualN,result,COrdConstNode.create(0,S8IntType,false));
                           if nodetype=unequaln then
                             result:=CNotNode.create(result);
                         end
@@ -3977,7 +3977,7 @@ const
               { no string constant -> call compare routine }
               cmpfuncname := 'fpc_'+TStringDef(left.resultdef).StringTypName+'_compare';
               { for equality checks use optimized version }
-              if nodetype in [equaln,unequaln] then
+              if nodetype in [EqualN,unequaln] then
                 cmpfuncname := cmpfuncname + '_equal';
 
               result := CCallNode.createintern(cmpfuncname,
@@ -4008,7 +4008,7 @@ const
               valid_for_var(aktassignmentnode.left,false) then
             begin
               result:=CCallNode.createintern(n,
-                CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                 CCallParaNode.create(aktassignmentnode.left.GetCopy,
                 CCallParaNode.create(right,
                 CCallParaNode.create(left,nil))))
@@ -4027,11 +4027,11 @@ const
               result:=internalstatements(newstatement);
 
               { create temp for result }
-              temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+              temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
               addstatement(newstatement,temp);
 
               addstatement(newstatement,CCallNode.createintern(n,
-                CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                 CCallParaNode.create(CTempRefNode.create(temp),
                 CCallParaNode.create(right,
                 CCallParaNode.create(left,nil)))))
@@ -4059,10 +4059,10 @@ const
         result:=nil;
 
         case nodetype of
-          equaln,unequaln,lten,gten:
+          EqualN,unequaln,lten,gten:
             begin
               case nodetype of
-                equaln,unequaln:
+                EqualN,unequaln:
                   procname := 'fpc_varset_comp_sets';
                 lten,gten:
                   begin
@@ -4079,7 +4079,7 @@ const
                     InternalError(2013112911);
                 end;
                 result := CCallNode.createinternres(procname,
-                  CCallParaNode.create(COrdConstNode.create(left.resultdef.size,SIntType,false),
+                  CCallParaNode.create(COrdConstNode.create(left.resultdef.Size,SIntType,false),
                   CCallParaNode.create(right,
                   CCallParaNode.create(left,nil))),resultdef);
                 { left and right are reused as parameters }
@@ -4111,7 +4111,7 @@ const
                     begin
                       result:=CCallNode.createintern('fpc_varset_create_element',
                         CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                        CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                        CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                         CCallParaNode.create(TSetElementNode(right).left,nil))));
                       include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
                     end
@@ -4120,12 +4120,12 @@ const
                       result:=internalstatements(newstatement);
 
                       { create temp for result }
-                      temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                      temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                       addstatement(newstatement,temp);
 
                       addstatement(newstatement,CCallNode.createintern('fpc_varset_create_element',
                         CCallParaNode.create(CTempRefNode.create(temp),
-                        CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                        CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                         CCallParaNode.create(TSetElementNode(right).left,nil))))
                       );
 
@@ -4158,7 +4158,7 @@ const
                                 COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
 
                               result:=CCallNode.createintern('fpc_varset_set_range',
-                                CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                                 CCallParaNode.create(TSetElementNode(right).right,
                                 CCallParaNode.create(TSetElementNode(right).left,
                                 CCallParaNode.create(aktassignmentnode.left.GetCopy,
@@ -4178,7 +4178,7 @@ const
                                     COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
 
                                   result:=CCallNode.createintern('fpc_varset_set',
-                                    CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                                    CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                                     CCallParaNode.create(CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
                                     CCallParaNode.create(aktassignmentnode.left.GetCopy,
                                     CCallParaNode.create(left,nil)))));
@@ -4197,7 +4197,7 @@ const
                           result:=internalstatements(newstatement);
 
                           { create temp for result }
-                          temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                          temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                           addstatement(newstatement,temp);
 
                           { add a range or a single element? }
@@ -4208,7 +4208,7 @@ const
                                 CTypeConvNode.Create_Internal(TSetElementNode(right).right,SIntType),
                                 COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
                               addstatement(newstatement,CCallNode.createintern('fpc_varset_set_range',
-                                CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                                 CCallParaNode.create(TSetElementNode(right).right,
                                 CCallParaNode.create(TSetElementNode(right).left,
                                 CCallParaNode.create(CTempRefNode.create(temp),
@@ -4217,7 +4217,7 @@ const
                             end
                           else
                             addstatement(newstatement,CCallNode.createintern('fpc_varset_set',
-                              CCallParaNode.create(COrdConstNode.create(resultdef.size,SIntType,false),
+                              CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
                               CCallParaNode.create(CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
                               CCallParaNode.create(CTempRefNode.create(temp),
                               CCallParaNode.create(left,nil)))))
@@ -4303,7 +4303,7 @@ const
               else
                 begin
                   result:=internalstatements(newstatement);
-                  tempnode:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
+                  tempnode:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
                   para:=CCallParaNode.create(
                           CTypeConvNode.Create_Internal(right,VoidCodePointerType),
@@ -4328,7 +4328,7 @@ const
               left := nil;
               right := nil;
             end;
-          unequaln,equaln:
+          unequaln,EqualN:
             expectloc:=LOC_FLAGS;
           else
             InternalError(2018030301);
@@ -4363,14 +4363,14 @@ const
           canbesignedconst:=false;
           canbeunsignedconst:=false;
           result := (n.nodetype = ordconstn) and
-                    canbe32bitint(TOrdConstNode(n).value, canbesignedconst, canbeunsignedconst);
+                    canbe32bitint(TOrdConstNode(n).Value, canbesignedconst, canbeunsignedconst);
         end;
 
       function is_32to64typeconv(n: TNode): boolean;
         begin
           result := (n.nodetype = typeconvn) and
-                    is_integer(TTypeConvNode(n).left.resultdef) and
-                    not is_64bit(TTypeConvNode(n).left.resultdef);
+                    Is_Integer(TTypeConvNode(n).left.resultdef) and
+                    not Is_64Bit(TTypeConvNode(n).left.resultdef);
         end;
 
       var
@@ -4388,13 +4388,13 @@ const
           end;
         if is_32to64typeconv(left) then
           begin
-            leftoriginallysigned:=is_signed(TTypeConvNode(left).left.resultdef);
+            leftoriginallysigned:=Is_Signed(TTypeConvNode(left).left.resultdef);
             if ((is_32bitordconst(right,canbesignedconst, canbeunsignedconst) and
                  ((leftoriginallysigned and canbesignedconst) or
                   (not leftoriginallysigned and canbeunsignedconst))) or
                 (is_32to64typeconv(right) and
                   ((leftoriginallysigned =
-                    is_signed(TTypeConvNode(right).left.resultdef)) or
+                    Is_Signed(TTypeConvNode(right).left.resultdef)) or
                    (leftoriginallysigned and
                     (TOrdDef(TTypeConvNode(right).left.resultdef).OrdType in [u8bit,u16bit]))))) then
               begin
@@ -4409,7 +4409,7 @@ const
                     right.free;
                     right := temp;
                   end;
-                if (is_signed(left.resultdef)) then
+                if (Is_Signed(left.resultdef)) then
                   begin
                     inserttypeconv_internal(left,S32IntType);
                     inserttypeconv_internal(right,S32IntType);
@@ -4446,8 +4446,8 @@ const
           use_fma and
           (nodetype in [addn,subn]) and
           (rd.typ=floatdef) and (ld.typ=floatdef) and
-          (is_single(rd) or is_double(rd)) and
-          equal_defs(rd,ld) and
+          (Is_Single(rd) or Is_Double(rd)) and
+          Equal_Defs(rd,ld) and
           { transforming a*b+c into fma(a,b,c) makes only sense if c can be
             calculated easily. Consider a*b+c*d which results in
 
@@ -4573,9 +4573,9 @@ const
         { can we use a shift instead of a mul? }
         if not (cs_check_overflow in CurrentSettings.LocalSwitches) and
            (right.nodetype = ordconstn) and
-           IsPowerOf2(TOrdConstNode(right).value,power) then
+           IsPowerOf2(TOrdConstNode(right).Value,power) then
           begin
-            TOrdConstNode(right).value := power;
+            TOrdConstNode(right).Value := power;
             result := CShlShrNode.create(shln,left,right);
             { left and right are reused }
             left := nil;
@@ -4588,7 +4588,7 @@ const
           begin
             { this uses the same criteria for signedness as the 32 to 64-bit mul
               handling in the i386 code generator }
-            if is_signed(left.resultdef) and is_signed(right.resultdef) then
+            if Is_Signed(left.resultdef) and Is_Signed(right.resultdef) then
               procname := 'fpc_mul_longint_to_int64'
             else
               procname := 'fpc_mul_dword_to_qword';
@@ -4605,14 +4605,14 @@ const
               begin
                 { generic handling replaces this node with call to fpc_mul_int64,
                   whose result is int64 }
-                if is_currency(resultdef) then
+                if Is_Currency(resultdef) then
                   resultdef:=S64IntType;
                 exit;
               end;
 
             { when currency is used set the result of the
               parameters to s64bit, so they are not converted }
-            if is_currency(resultdef) then
+            if Is_Currency(resultdef) then
               begin
                 left.resultdef:=S64IntType;
                 right.resultdef:=S64IntType;
@@ -4623,7 +4623,7 @@ const
             left := nil;
             { only qword needs the unsigned code, the
               signed code is also used for currency }
-            if is_signed(resultdef) then
+            if Is_Signed(resultdef) then
               procname := 'fpc_mul_int64'
             else
               procname := 'fpc_mul_qword';
@@ -4701,7 +4701,7 @@ const
 
          { typical set tests like (s*[const. set])<>/=[] can be converted into an or'ed chain of in tests
            for var sets if const. set contains only a few elements }
-         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and (nodetype in [unequaln,equaln]) and (left.resultdef.typ=setdef) and not(is_smallset(left.resultdef)) then
+         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and (nodetype in [unequaln,EqualN]) and (left.resultdef.typ=setdef) and not(Is_SmallSet(left.resultdef)) then
            begin
              trycreateinnodes:=false;
              mulnode:=nil;
@@ -4746,7 +4746,7 @@ const
                            else
                              result:=tempn;
                          end;
-                     if nodetype=equaln then
+                     if nodetype=EqualN then
                        result:=CNotNode.create(result);
                      exit;
                    end;
@@ -4789,25 +4789,25 @@ const
              { optimize multiplication by a power of 2 }
              if not(cs_check_overflow in CurrentSettings.LocalSwitches) and
                 (nodetype = muln) and
-                not is_currency(resultdef) and
+                not Is_Currency(resultdef) and
                 (((left.nodetype = ordconstn) and
-                  IsPowerOf2(TOrdConstNode(left).value,i)) or
+                  IsPowerOf2(TOrdConstNode(left).Value,i)) or
                  ((right.nodetype = ordconstn) and
-                  IsPowerOf2(TOrdConstNode(right).value,i2))) then
+                  IsPowerOf2(TOrdConstNode(right).Value,i2))) then
                begin
                  { it could be that we are converting a 32x32 -> 64 multiplication:
                    in this case, we have to restore the type conversion }
                  inserttypeconv_internal(left,resultdef);
                  inserttypeconv_internal(right,resultdef);
                  if ((left.nodetype = ordconstn) and
-                     IsPowerOf2(TOrdConstNode(left).value,i)) then
+                     IsPowerOf2(TOrdConstNode(left).Value,i)) then
                    begin
-                     TOrdConstNode(left).value := i;
+                     TOrdConstNode(left).Value := i;
                      result := CShlShrNode.create(shln,right,left);
                    end
                  else
                    begin
-                     TOrdConstNode(right).value := i2;
+                     TOrdConstNode(right).Value := i2;
                      result := CShlShrNode.create(shln,left,right);
                    end;
                  result.resultdef := resultdef;
@@ -4817,13 +4817,13 @@ const
                end;
 
            { 2 booleans ? }
-             if is_boolean(ld) and is_boolean(rd) then
+             if Is_Boolean(ld) and Is_Boolean(rd) then
               begin
                 if doshortbooleval(self) then
                   expectloc:=LOC_JUMP
                 else
                  begin
-                   if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
+                   if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
                      expectloc:=LOC_FLAGS
                    else
                      expectloc:=LOC_REGISTER;
@@ -4831,14 +4831,14 @@ const
               end
              else
              { Both are chars? only convert to shortstrings for addn }
-              if is_char(ld) then
+              if Is_Char(ld) then
                begin
                  if nodetype=addn then
                   InternalError(200103291);
                  expectloc:=LOC_FLAGS;
                end
              else if (nodetype=muln) and
-                is_64bitint(resultdef) and
+                Is_64BitInt(resultdef) and
                 not use_generic_mul32to64 and
                 try_make_mul32to64 then
                begin
@@ -4897,7 +4897,7 @@ const
                   if nodetype in [addn,subn,muln,andn,orn,xorn] then
                     expectloc:=LOC_REGISTER
 {$if not defined(cpuhighleveltarget)}
-                  else if TOrdDef(ld).size>sizeof(aint) then
+                  else if TOrdDef(ld).Size>sizeof(aint) then
                     expectloc:=LOC_JUMP
 {$endif}
                   else
@@ -4911,13 +4911,13 @@ const
            begin
              { small sets are handled inline by the compiler.
                small set doesn't have support for adding ranges }
-             if is_smallset(ld) and
+             if Is_SmallSet(ld) and
                 not(
                     (right.nodetype=setelementn) and
                     Assigned(TSetElementNode(right).right)
                    ) then
                begin
-                 if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
+                 if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
                    expectloc:=LOC_FLAGS
                  else
                    expectloc:=LOC_REGISTER;
@@ -4932,7 +4932,7 @@ const
            end
 
          { compare pchar by addresses like BP/Delphi }
-         else if is_pchar(ld) then
+         else if Is_PChar(ld) then
            begin
              if nodetype in [addn,subn,muln,andn,orn,xorn] then
                result:=first_addpointer
@@ -4943,22 +4943,22 @@ const
          { is one of the operands a string }
          else if (ld.typ=stringdef) then
             begin
-              if is_widestring(ld) then
+              if Is_WideString(ld) then
                 begin
                    { this is only for add, the comparison is handled later }
                    expectloc:=LOC_REGISTER;
                 end
-              else if is_unicodestring(ld) then
+              else if Is_UnicodeString(ld) then
                 begin
                    { this is only for add, the comparison is handled later }
                    expectloc:=LOC_REGISTER;
                 end
-              else if is_ansistring(ld) then
+              else if Is_AnsiString(ld) then
                 begin
                    { this is only for add, the comparison is handled later }
                    expectloc:=LOC_REGISTER;
                 end
-              else if is_longstring(ld) then
+              else if Is_LongString(ld) then
                 begin
                    { this is only for add, the comparison is handled later }
                    expectloc:=LOC_REFERENCE;
@@ -4977,7 +4977,7 @@ const
 {$endif addstringopt}
                      begin
                        { Fix right to be shortstring }
-                       if is_char(right.resultdef) then
+                       if Is_Char(right.resultdef) then
                         begin
                           inserttypeconv(right,CShortStringType);
                           FirstPass(right);
@@ -5022,7 +5022,7 @@ const
 
          else if Is_Implicit_Pointer_Object_Type(ld) then
             begin
-              if ld.size>sizeof(aint) then
+              if ld.Size>sizeof(aint) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;
@@ -5030,7 +5030,7 @@ const
 
          else if (ld.typ=classrefdef) then
             begin
-              if ld.size>sizeof(aint) then
+              if ld.Size>sizeof(aint) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;
@@ -5040,8 +5040,8 @@ const
          else if ((ld.typ=procvardef) and (rt=niln)) or
                  ((rd.typ=procvardef) and (lt=niln)) then
             begin
-              if (ld.typ=procvardef) and (TProcVarDef(ld).size>sizeof(aint)) or
-                 (rd.typ=procvardef) and (TProcVarDef(rd).size>sizeof(aint)) then
+              if (ld.typ=procvardef) and (TProcVarDef(ld).Size>sizeof(aint)) or
+                 (rd.typ=procvardef) and (TProcVarDef(rd).Size>sizeof(aint)) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;
@@ -5050,8 +5050,8 @@ const
 {$ifdef SUPPORT_MMX}
        { mmx support, this must be before the zero based array
          check }
-         else if (cs_mmx in CurrentSettings.LocalSwitches) and is_mmx_able_array(ld) and
-                 is_mmx_able_array(rd) then
+         else if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(ld) and
+                 Is_MMX_Able_Array(rd) then
             begin
               expectloc:=LOC_MMXREGISTER;
             end
@@ -5064,9 +5064,9 @@ const
 
          else  if (rd.typ=procvardef) and
                   (ld.typ=procvardef) and
-                  equal_defs(rd,ld) then
+                  Equal_Defs(rd,ld) then
            begin
-             if TProcVarDef(ld).size>sizeof(aint) then
+             if TProcVarDef(ld).Size>sizeof(aint) then
                expectloc:=LOC_JUMP
              else
                expectloc:=LOC_FLAGS;
@@ -5074,7 +5074,7 @@ const
 
          else if (ld.typ=enumdef) then
            begin
-              if TEnumDef(ld).size>sizeof(aint) then
+              if TEnumDef(ld).Size>sizeof(aint) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;
@@ -5082,14 +5082,14 @@ const
 
 {$ifdef SUPPORT_MMX}
          else if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(ld) and
-                 is_mmx_able_array(rd) then
+                 Is_MMX_Able_Array(ld) and
+                 Is_MMX_Able_Array(rd) then
             begin
               expectloc:=LOC_MMXREGISTER;
             end
 {$endif SUPPORT_MMX}
 
-         else if is_dynamic_array(ld) or is_dynamic_array(rd) then
+         else if Is_Dynamic_Array(ld) or Is_Dynamic_Array(rd) then
            begin
              result:=first_adddynarray;
              exit;

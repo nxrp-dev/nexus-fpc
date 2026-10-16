@@ -218,7 +218,7 @@ implementation
             end;
 
           { compare parameter types only, no specifiers yet }
-          hasequalpara:=(compare_paras(vmtpd.paras,pd.paras,cp_none,[cpo_ignoreuniv,cpo_ignorehidden])>=te_equal);
+          hasequalpara:=(Compare_Paras(vmtpd.paras,pd.paras,cp_none,[cpo_ignoreuniv,cpo_ignorehidden])>=te_equal);
 
           { check that we are not trying to override a final method }
 
@@ -304,7 +304,7 @@ implementation
             begin
               { same parameter and return types (parameter specifiers will be checked below) }
               if hasequalpara and
-                 compatible_childmethod_resultdef(vmtpd.ReturnDef,pd.ReturnDef) then
+                 Compatible_ChildMethod_ResultDef(vmtpd.ReturnDef,pd.ReturnDef) then
                 begin
                   { inherit calling convention when it was explicit and the
                     current definition has none explicit set }
@@ -317,7 +317,7 @@ implementation
 
                   { All parameter specifiers and some procedure the flags have to match
                     except abstract and override }
-                  if (compare_paras(vmtpd.paras,pd.paras,cp_all,[cpo_ignoreuniv,cpo_ignorehidden])<te_equal) or
+                  if (Compare_Paras(vmtpd.paras,pd.paras,cp_all,[cpo_ignoreuniv,cpo_ignorehidden])<te_equal) or
                      (vmtpd.ProcCallOption<>pd.ProcCallOption) or
                      (vmtpd.ProcTypeOption<>pd.ProcTypeOption) or
                      ((vmtpd.ProcOptions*po_comp)<>(pd.ProcOptions*po_comp)) then
@@ -334,7 +334,7 @@ implementation
                     begin
                       MessagePos4(pd.fileinfo,parser_n_ignore_lower_visibility,
                           pd.FullProcName(false),
-                          visibilityname[pd.visibility],TObjectDef(vmtpd.owner.DefOwner).ObjRealName^,visibilityname[vmtentryvis])
+                          VisibilityName[pd.visibility],TObjectDef(vmtpd.owner.DefOwner).ObjRealName^,VisibilityName[vmtentryvis])
                       end
                   else if pd.visibility>vmtentryvis then
                     begin
@@ -474,8 +474,8 @@ implementation
                     if po_overload in implprocdef.ProcOptions then
                       overload:=true;
                     if (implprocdef.ProcSym=TProcSym(srsym)) and
-                       (compare_paras(proc.paras,implprocdef.paras,cp_all,[cpo_ignorehidden,cpo_ignoreuniv])>=te_equal) and
-                       (compare_defs(proc.ReturnDef,implprocdef.ReturnDef,nothingn)>=te_equal) and
+                       (Compare_Paras(proc.paras,implprocdef.paras,cp_all,[cpo_ignorehidden,cpo_ignoreuniv])>=te_equal) and
+                       (Compare_Defs(proc.ReturnDef,implprocdef.ReturnDef,nothingn)>=te_equal) and
                        (proc.ProcCallOption=implprocdef.ProcCallOption) and
                        (proc.ProcTypeOption=implprocdef.ProcTypeOption) and
                        ((proc.ProcOptions*po_comp)=((implprocdef.ProcOptions+[po_virtualmethod])*po_comp)) and
@@ -701,9 +701,9 @@ implementation
                 { allocate a pointer in the object memory }
                 with TObjectSymTable(_class.SymTable) do
                   begin
-                    DataSize:=align(DataSize,VoidPointerType.alignment);
+                    DataSize:=align(DataSize,VoidPointerType.Alignment);
                     ImplIntf.Ioffset:=DataSize;
-                    DataSize:=DataSize+VoidPointerType.size;
+                    DataSize:=DataSize+VoidPointerType.Size;
                   end;
               end;
           end;
@@ -750,7 +750,7 @@ implementation
         vmtdef:=CRecordDef.Create_Internal(
           '$vmtdef',
           0,
-          TargetInfo.alignment.RecordAlignMin,
+          TargetInfo.Alignment.RecordAlignMin,
           _class.SymTable);
 
         { standard VMT fields }

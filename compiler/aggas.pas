@@ -759,7 +759,7 @@ implementation
               writer.AsmWrite(' ');
               writer.AsmWrite(gas_regname(TAICFIOpRegVal(hp).reg1));
               writer.AsmWrite(',');
-              writer.AsmWrite(ToStr(TAICFIOpRegVal(hp).val));
+              writer.AsmWrite(ToStr(TAICFIOpRegVal(hp).Val));
             end;
           else
             InternalError(2019030203);
@@ -935,7 +935,7 @@ implementation
                        writer.AsmWriteln('.data');
                        writer.AsmWrite('.zerofill __DATA, __common, ');
                        writer.AsmWrite(TAIDataBlock(hp).sym.name);
-                       writer.AsmWriteln(', '+ToStr(TAIDataBlock(hp).size)+','+ToStr(last_align));
+                       writer.AsmWriteln(', '+ToStr(TAIDataBlock(hp).Size)+','+ToStr(last_align));
                        if not(LastSecType in [sec_data,sec_none]) then
                          writesection(LastSecType,'',secorder_default,1 shl last_align);
                      end
@@ -943,7 +943,7 @@ implementation
                      begin
                        writer.AsmWrite(#9'.lcomm'#9);
                        writer.AsmWrite(TAIDataBlock(hp).sym.name);
-                       writer.AsmWrite(','+ToStr(TAIDataBlock(hp).size));
+                       writer.AsmWrite(','+ToStr(TAIDataBlock(hp).Size));
                        writer.AsmWrite(','+ToStr(last_align));
                        writer.AsmLn;
                      end;
@@ -964,7 +964,7 @@ implementation
                              writer.AsmWrite(ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name))
                            else
                              writer.AsmWrite(TAIDataBlock(hp).sym.name);
-                           writer.AsmWrite(','+ToStr(TAIDataBlock(hp).size));
+                           writer.AsmWrite(','+ToStr(TAIDataBlock(hp).Size));
                            writer.AsmWrite(','+ToStr(last_align));
                            writer.AsmLn;
                          end
@@ -975,7 +975,7 @@ implementation
                              writer.AsmWrite(ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name));
                            else
                              writer.AsmWrite(TAIDataBlock(hp).sym.name);
-                           writer.AsmWrite(','+ToStr(TAIDataBlock(hp).size));
+                           writer.AsmWrite(','+ToStr(TAIDataBlock(hp).Size));
                            writer.AsmWrite(','+ToStr(last_align));
                            writer.AsmLn;
                          end
@@ -998,20 +998,20 @@ implementation
                          begin
                            if (tf_needs_symbol_type in TargetInfo.flags) then
                              writer.AsmWriteln(#9'.type '+ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name)+','+sepChar+'object');
-                           if (tf_needs_symbol_size in TargetInfo.flags) and (TAIDataBlock(hp).size > 0) then
-                              writer.AsmWriteln(#9'.size '+ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name)+','+ToStr(TAIDataBlock(hp).size));
+                           if (tf_needs_symbol_size in TargetInfo.flags) and (TAIDataBlock(hp).Size > 0) then
+                              writer.AsmWriteln(#9'.size '+ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name)+','+ToStr(TAIDataBlock(hp).Size));
                            writer.AsmWrite(ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name))
                          end
                        else
                          begin
                            if (tf_needs_symbol_type in TargetInfo.flags) then
                              writer.AsmWriteln(#9'.type '+TAIDataBlock(hp).sym.name+','+sepChar+'object');
-                           if (tf_needs_symbol_size in TargetInfo.flags) and (TAIDataBlock(hp).size > 0) then
-                             writer.AsmWriteln(#9'.size '+TAIDataBlock(hp).sym.name+','+ToStr(TAIDataBlock(hp).size));
+                           if (tf_needs_symbol_size in TargetInfo.flags) and (TAIDataBlock(hp).Size > 0) then
+                             writer.AsmWriteln(#9'.size '+TAIDataBlock(hp).sym.name+','+ToStr(TAIDataBlock(hp).Size));
                            writer.AsmWrite(TAIDataBlock(hp).sym.name);
                          end;
                        writer.AsmWriteln(':');
-                       writer.AsmWriteln(#9'.zero '+ToStr(TAIDataBlock(hp).size));
+                       writer.AsmWriteln(#9'.zero '+ToStr(TAIDataBlock(hp).Size));
                      end;
                  end;
              end;
@@ -1034,15 +1034,15 @@ implementation
                           writer.AsmWrite(ait_const2str[aitconst_32bit]);
                           if TargetInfo.endian = endian_little then
                             begin
-                              writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).value))));
+                              writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).Value))));
                               writer.AsmWrite(',');
-                              writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).value))));
+                              writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).Value))));
                             end
                           else
                             begin
-                              writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).value))));
+                              writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).Value))));
                               writer.AsmWrite(',');
-                              writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).value))));
+                              writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).Value))));
                             end;
                         end;
                       writer.AsmLn;
@@ -1103,8 +1103,8 @@ implementation
                      else
                        InternalError(2014022602);
                      end;
-                     if (TAIConst(hp).value<>0) then
-                       writer.AsmWrite(ToStr_With_Plus(TAIConst(hp).value));
+                     if (TAIConst(hp).Value<>0) then
+                       writer.AsmWrite(ToStr_With_Plus(TAIConst(hp).Value));
                      writer.AsmLn;
                    end;
 
@@ -1133,9 +1133,9 @@ implementation
                          writer.AsmWrite(ait_const2str[aitconst_8bit]);
                          case TAIConst(hp).consttype of
                            aitconst_uleb128bit:
-                             writer.AsmWrite(uleb128tostr(qword(TAIConst(hp).value)));
+                             writer.AsmWrite(uleb128tostr(qword(TAIConst(hp).Value)));
                            aitconst_sleb128bit:
-                             writer.AsmWrite(sleb128tostr(TAIConst(hp).value));
+                             writer.AsmWrite(sleb128tostr(TAIConst(hp).Value));
                            else
                              ;
                          end
@@ -1162,15 +1162,15 @@ implementation
                                  s:=TAIConst(hp).sym.name;
                                if replaceforbidden then
                                  s:=ApplyAsmSymbolRestrictions(s);
-                               if TAIConst(hp).value<>0 then
-                                 s:=s+ToStr_With_Plus(TAIConst(hp).value);
+                               if TAIConst(hp).Value<>0 then
+                                 s:=s+ToStr_With_Plus(TAIConst(hp).Value);
                              end
                            else
 {$ifdef cpu64bitaddr}
-                             s:=ToStr(TAIConst(hp).value);
+                             s:=ToStr(TAIConst(hp).Value);
 {$else cpu64bitaddr}
                              { 64 bit constants are already handled above in this case }
-                             s:=ToStr(LongInt(TAIConst(hp).value));
+                             s:=ToStr(LongInt(TAIConst(hp).Value));
 {$endif cpu64bitaddr}
                            if ConstDef = aitconst_half16bit then
                              s:='('+s+')/2';
@@ -1293,11 +1293,11 @@ implementation
                  if not(TAISymbol(hp).has_value) then
                    writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAISymbol(hp).sym.name + ':'))
                  else
-                   writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAISymbol(hp).sym.name + '=' + ToStr(TAISymbol(hp).value)))
+                   writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAISymbol(hp).sym.name + '=' + ToStr(TAISymbol(hp).Value)))
                else if not(TAISymbol(hp).has_value) then
                  writer.AsmWriteLn(TAISymbol(hp).sym.name + ':')
                else
-                 writer.AsmWriteLn(TAISymbol(hp).sym.name + '=' + ToStr(TAISymbol(hp).value));
+                 writer.AsmWriteLn(TAISymbol(hp).sym.name + '=' + ToStr(TAISymbol(hp).Value));
              end;
            ait_symbolpair:
              begin
@@ -1316,7 +1316,7 @@ implementation
                    { avoid string truncation }
                    writer.AsmWrite(ApplyAsmSymbolRestrictions(TAISymbolPair(hp).sym^));
                    writer.AsmWrite(s);
-                   writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAISymbolPair(hp).value^));
+                   writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAISymbolPair(hp).Value^));
                    if TAISymbolPair(hp).kind=spk_set_global then
                      begin
                        writer.AsmWrite(#9'.globl ');
@@ -1333,7 +1333,7 @@ implementation
                    { avoid string truncation }
                    writer.AsmWrite(TAISymbolPair(hp).sym^);
                    writer.AsmWrite(s);
-                   writer.AsmWriteLn(TAISymbolPair(hp).value^);
+                   writer.AsmWriteLn(TAISymbolPair(hp).Value^);
                    if TAISymbolPair(hp).kind=spk_set_global then
                      begin
                        writer.AsmWrite(#9'.globl ');
@@ -1440,10 +1440,10 @@ implementation
                  sd_reg:
                    writer.AsmWrite(' '+gas_regname(TAISEHDirective(hp).data.reg));
                  sd_offset:
-                   writer.AsmWrite(' '+ToStr(TAISEHDirective(hp).data.offset));
+                   writer.AsmWrite(' '+ToStr(TAISEHDirective(hp).data.Offset));
                  sd_regoffset:
                    writer.AsmWrite(' '+gas_regname(TAISEHDirective(hp).data.reg)+', '+
-                     ToStr(TAISEHDirective(hp).data.offset));
+                     ToStr(TAISEHDirective(hp).data.Offset));
                end;
                writer.AsmLn;
 {$endif DISABLE_WIN64_SEH}
@@ -1457,7 +1457,7 @@ implementation
              begin
                case TAIAttribute(hp).eattr_typ of
                  eattrtype_dword:
-                   writer.AsmWrite(#9'.eabi_attribute '+ToStr(TAIAttribute(hp).tag)+','+ToStr(TAIAttribute(hp).value));
+                   writer.AsmWrite(#9'.eabi_attribute '+ToStr(TAIAttribute(hp).tag)+','+ToStr(TAIAttribute(hp).Value));
                  eattrtype_ntbs:
                    begin
                      if Assigned(TAIAttribute(hp).valuestr) then
@@ -1475,7 +1475,7 @@ implementation
              begin
                case TAIAttribute(hp).eattr_typ of
                  eattrtype_dword:
-                   writer.AsmWrite(#9'.attribute '+ToStr(TAIAttribute(hp).tag)+','+ToStr(TAIAttribute(hp).value));
+                   writer.AsmWrite(#9'.attribute '+ToStr(TAIAttribute(hp).tag)+','+ToStr(TAIAttribute(hp).Value));
                  eattrtype_ntbs:
                    begin
                      if Assigned(TAIAttribute(hp).valuestr) then
@@ -1631,20 +1631,20 @@ implementation
           InternalError(2012010401);
         { limitation: can only write 4 bytes at a time }
         pos:=0;
-        size:=TAIConst(hp).size;
+        size:=TAIConst(hp).Size;
         while pos<(size-4) do
           begin
             writer.AsmWrite(#9'.vbyte'#9'4, ');
-            writer.AsmWriteln(ToStr(LongInt(TAIConst(hp).value shr ((size-pos-4)*8))));
+            writer.AsmWriteln(ToStr(LongInt(TAIConst(hp).Value shr ((size-pos-4)*8))));
             inc(pos,4);
          end;
         writer.AsmWrite(#9'.vbyte'#9);
         writer.AsmWrite(ToStr(size-pos));
         writer.AsmWrite(', ');
         case size-pos of
-          1: writer.AsmWrite(ToStr(byte(TAIConst(hp).value)));
-          2: writer.AsmWrite(ToStr(word(TAIConst(hp).value)));
-          4: writer.AsmWrite(ToStr(LongInt(TAIConst(hp).value)));
+          1: writer.AsmWrite(ToStr(byte(TAIConst(hp).Value)));
+          2: writer.AsmWrite(ToStr(word(TAIConst(hp).Value)));
+          4: writer.AsmWrite(ToStr(LongInt(TAIConst(hp).Value)));
           else
             InternalError(2012010402);
         end;
@@ -1654,14 +1654,14 @@ implementation
       var
         pos, size: LongInt;
       begin
-        size:=TAIConst(hp).size;
+        size:=TAIConst(hp).Size;
         writer.AsmWrite(#9'.byte'#9);
         if TargetInfo.endian=endian_big then
           begin
             pos:=size-1;
             while pos>=0 do
               begin
-                writer.AsmWrite(ToStr((TAIConst(hp).value shr (pos*8)) and $ff));
+                writer.AsmWrite(ToStr((TAIConst(hp).Value shr (pos*8)) and $ff));
                 dec(pos);
                 if pos>=0 then
                   writer.AsmWrite(', ')
@@ -1674,7 +1674,7 @@ implementation
             pos:=0;
             while pos<size do
               begin
-                writer.AsmWriteln(ToStr((TAIConst(hp).value shr (pos*8)) and $ff));
+                writer.AsmWriteln(ToStr((TAIConst(hp).Value shr (pos*8)) and $ff));
                 inc(pos);
                 if pos<=size then
                   writer.AsmWrite(', ')

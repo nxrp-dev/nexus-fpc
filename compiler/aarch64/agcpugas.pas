@@ -205,7 +205,7 @@ unit agcpugas;
 
         procedure check_reg(reg:TRegister;rt:TRegisterType;min:TSuperRegister);
           begin
-            if (getregtype(reg)<>rt) or (getsupreg(reg)<min) then
+            if (GetRegType(reg)<>rt) or (GetSupReg(reg)<min) then
               InternalError(2020041211);
           end;
 
@@ -242,23 +242,23 @@ unit agcpugas;
               case seh.kind of
                 ash_stackalloc:
                   begin
-                    if (seh.data.offset and $f)<>0 then
+                    if (seh.data.Offset and $f)<>0 then
                       InternalError(2020041207);
-                    if seh.data.offset<((1 shl 5)*16) then
-                      writebyte(byte(seh.data.offset shr 4))
-                    else if seh.data.offset<((1 shl 11)*16) then
-                      writeword($C000 or word(seh.data.offset shr 4))
-                    else if seh.data.offset<((1 shl 24)*16) then
-                      writedword($E0000000 or (seh.data.offset shr 4))
+                    if seh.data.Offset<((1 shl 5)*16) then
+                      writebyte(byte(seh.data.Offset shr 4))
+                    else if seh.data.Offset<((1 shl 11)*16) then
+                      writeword($C000 or word(seh.data.Offset shr 4))
+                    else if seh.data.Offset<((1 shl 24)*16) then
+                      writedword($E0000000 or (seh.data.Offset shr 4))
                     else begin
-                      WriteLn(HexStr(seh.data.offset,8));
+                      WriteLn(HexStr(seh.data.Offset,8));
                       InternalError(2020041209);
                     end;
                   end;
                 ash_addfp:
                   begin
-                    check_offset(seh.data.offset,(1 shl 7)*8);
-                    writeword($E200 or (seh.data.offset shr 3));
+                    check_offset(seh.data.Offset,(1 shl 7)*8);
+                    writeword($E200 or (seh.data.Offset shr 3));
                   end;
                 ash_setfp:
                   writebyte($E1);
@@ -266,61 +266,61 @@ unit agcpugas;
                   writebyte($E3);
                 ash_savefplr:
                   begin
-                    check_offset(seh.data.offset,504);
-                    writebyte($40 or (seh.data.offset shr 3));
+                    check_offset(seh.data.Offset,504);
+                    writebyte($40 or (seh.data.Offset shr 3));
                   end;
                 ash_savefplr_x:
                   begin
-                    check_offset(seh.data.offset,512);
-                    writebyte($80 or (seh.data.offset shr 3)-1);
+                    check_offset(seh.data.Offset,512);
+                    writebyte($80 or (seh.data.Offset shr 3)-1);
                   end;
                 ash_savereg:
                   begin
-                    check_offset(seh.data.offset,504);
+                    check_offset(seh.data.Offset,504);
                     check_reg(seh.data.reg,R_INTREGISTER,min_int_reg);
-                    writeword($D000 or ((getsupreg(seh.data.reg)-min_int_reg) shl 6) or (seh.data.offset shr 3));
+                    writeword($D000 or ((GetSupReg(seh.data.reg)-min_int_reg) shl 6) or (seh.data.Offset shr 3));
                   end;
                 ash_savereg_x:
                   begin
-                    check_offset(seh.data.offset,256);
+                    check_offset(seh.data.Offset,256);
                     check_reg(seh.data.reg,R_INTREGISTER,min_int_reg);
-                    writeword($D400 or ((getsupreg(seh.data.reg)-min_int_reg) shl 5) or ((seh.data.offset shr 3)-1));
+                    writeword($D400 or ((GetSupReg(seh.data.reg)-min_int_reg) shl 5) or ((seh.data.Offset shr 3)-1));
                   end;
                 ash_saveregp:
                   begin
-                    check_offset(seh.data.offset,504);
+                    check_offset(seh.data.Offset,504);
                     check_reg(seh.data.reg,R_INTREGISTER,min_int_reg);
-                    writeword($C800 or ((getsupreg(seh.data.reg)-min_int_reg) shl 6) or (seh.data.offset shr 3));
+                    writeword($C800 or ((GetSupReg(seh.data.reg)-min_int_reg) shl 6) or (seh.data.Offset shr 3));
                   end;
                 ash_saveregp_x:
                   begin
-                    check_offset(seh.data.offset,512);
+                    check_offset(seh.data.Offset,512);
                     check_reg(seh.data.reg,R_INTREGISTER,min_int_reg);
-                    writeword($CC00 or ((getsupreg(seh.data.reg)-min_int_reg) shl 6) or ((seh.data.offset shr 3)-1));
+                    writeword($CC00 or ((GetSupReg(seh.data.reg)-min_int_reg) shl 6) or ((seh.data.Offset shr 3)-1));
                   end;
                 ash_savefreg:
                   begin
-                    check_offset(seh.data.offset,504);
+                    check_offset(seh.data.Offset,504);
                     check_reg(seh.data.reg,R_MMREGISTER,min_mm_reg);
-                    writeword($DC00 or ((getsupreg(seh.data.reg)-min_mm_reg) shl 6) or (seh.data.offset shr 3));
+                    writeword($DC00 or ((GetSupReg(seh.data.reg)-min_mm_reg) shl 6) or (seh.data.Offset shr 3));
                   end;
                 ash_savefreg_x:
                   begin
-                    check_offset(seh.data.offset,256);
+                    check_offset(seh.data.Offset,256);
                     check_reg(seh.data.reg,R_MMREGISTER,min_mm_reg);
-                    writeword($DE00 or ((getsupreg(seh.data.reg)-min_mm_reg) shl 5) or ((seh.data.offset shr 3)-1));
+                    writeword($DE00 or ((GetSupReg(seh.data.reg)-min_mm_reg) shl 5) or ((seh.data.Offset shr 3)-1));
                   end;
                 ash_savefregp:
                   begin
-                    check_offset(seh.data.offset,504);
+                    check_offset(seh.data.Offset,504);
                     check_reg(seh.data.reg,R_MMREGISTER,min_mm_reg);
-                    writeword($D800 or ((getsupreg(seh.data.reg)-min_mm_reg) shl 6) or (seh.data.offset shr 3));
+                    writeword($D800 or ((GetSupReg(seh.data.reg)-min_mm_reg) shl 6) or (seh.data.Offset shr 3));
                   end;
                 ash_savefregp_x:
                   begin
-                    check_offset(seh.data.offset,512);
+                    check_offset(seh.data.Offset,512);
                     check_reg(seh.data.reg,R_MMREGISTER,min_mm_reg);
-                    writeword($DA00 or ((getsupreg(seh.data.reg)-min_mm_reg) shl 6) or ((seh.data.offset shr 3)-1));
+                    writeword($DA00 or ((GetSupReg(seh.data.reg)-min_mm_reg) shl 6) or ((seh.data.Offset shr 3)-1));
                   end;
                 else
                   InternalError(2020041503);
@@ -421,7 +421,7 @@ unit agcpugas;
                   inc(instrcount);
               ait_const:
                 if Assigned(sehlist) then
-                  inc(datacount,TAIConst(hp).size);
+                  inc(datacount,TAIConst(hp).Size);
               ait_seh_directive:
                 begin
                   if not Assigned(sehlist) and (seh.kind<>ash_proc) then
@@ -455,16 +455,16 @@ unit agcpugas;
                           prologue or a handler is set }
                         unwinddata:=convert_unwinddata(sehlist);
 
-                        if unwinddata.size>0 then
+                        if unwinddata.Size>0 then
                           begin
                             writebyte($E4);
 
                             { fill up with NOPs }
-                            while unwinddata.size mod 4<>0 do
+                            while unwinddata.Size mod 4<>0 do
                               writebyte($E3);
                           end;
 
-                        if (handlerflags<>0) or (unwinddata.size<>0) then
+                        if (handlerflags<>0) or (unwinddata.Size<>0) then
                           begin
                             { note: we can pass Nil here, because in case of a LLVM
                                     backend this whole code shouldn't be required
@@ -492,13 +492,13 @@ unit agcpugas;
                                 RegisterWin64AssociativeComdat(sectionname(xdatasection.sectype,xdatasection.name^,xdatasection.secorder),leaderinfo.Key);
                               end;
 
-                            tmplist.concat(TAIComment.Create(StrPNew('instr: '+ToStr(instrcount)+', data: '+ToStr(datacount)+', unwind: '+ToStr(unwinddata.size))));
+                            tmplist.concat(TAIComment.Create(StrPNew('instr: '+ToStr(instrcount)+', data: '+ToStr(datacount)+', unwind: '+ToStr(unwinddata.Size))));
 
                             {$ifdef EXTDEBUG}
                             comment(VDebug,'got section: '+lastsec.name^);
                             comment(VDebug,'got instructions: '+ToStr(instrcount));
                             comment(VDebug,'got data: '+ToStr(datacount));
-                            comment(VDebug,'got unwinddata: '+ToStr(unwinddata.size));
+                            comment(VDebug,'got unwinddata: '+ToStr(unwinddata.Size));
                             {$endif EXTDEBUG}
 
                             if datacount mod 4<>0 then
@@ -529,21 +529,21 @@ unit agcpugas;
                               index, so a hardcoded 1 addressed the second byte of the
                               first code as soon as that code was longer than one byte }
 
-                            if unwinddata.size div 4<=31 then
-                              unwindrec:=unwindrec or ((unwinddata.size div 4) shl 27);  { code_words in bits 27-31 }
+                            if unwinddata.Size div 4<=31 then
+                              unwindrec:=unwindrec or ((unwinddata.Size div 4) shl 27);  { code_words in bits 27-31 }
 
                             { exception record headers }
                             tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
                             if cs_asm_source in InitSettings.GlobalSwitches then
                               tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
 
-                            if unwinddata.size div 4>31 then
+                            if unwinddata.Size div 4>31 then
                               begin
                                 { once we're able to split a .pdata entry this can be
                                   removed as well }
-                                if unwinddata.size div 4>255 then
+                                if unwinddata.Size div 4>255 then
                                   comment(VError,'Too many unwind codes for SEH');
-                                unwindrec:=(unwinddata.size div 4) shl 16;
+                                unwindrec:=(unwinddata.Size div 4) shl 16;
                                 tmplist.concat(TAIConst.create_32bit(LongInt(unwindrec)));
                                 if cs_asm_source in InitSettings.GlobalSwitches then
                                   tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
@@ -551,7 +551,7 @@ unit agcpugas;
 
                             { unwind codes }
                             unwinddata.seek(0);
-                            while unwinddata.pos<unwinddata.size do
+                            while unwinddata.pos<unwinddata.Size do
                               begin
                                 unwinddata.read(unwindrec,sizeof(LongWord));
                                 tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
@@ -593,7 +593,7 @@ unit agcpugas;
                         if not Assigned(hpdata) or (hpdata.typ<>ait_const) or (TAIConst(hpdata).consttype<>aitconst_32bit) then
                           InternalError(2020041215);
                         handlerdatacount:=hpdata;
-                        SetLength(handlerdata,TAIConst(hpdata).value*4);
+                        SetLength(handlerdata,TAIConst(hpdata).Value*4);
                         handlerdataidx:=0;
                         hpnext:=TAI(hpdata.next);
                         list.remove(hpdata);
@@ -704,53 +704,53 @@ unit agcpugas;
         linux_addrpage2str: array[addr_page..addr_gotpageoffset] of string[10] =
            ('',':lo12:',':got:',':got_lo12:');
       begin
-        if ref.base=NR_NO then
+        if ref.Base=NR_NO then
           begin
-            case ref.refaddr of
+            case ref.RefAddr of
               addr_gotpage,
               addr_page,
               addr_gotpageoffset,
               addr_pageoffset:
                 begin
-                  if not Assigned(ref.symbol) or
-                     (ref.base<>NR_NO) or
-                     (ref.index<>NR_NO) or
-                     (ref.shiftmode<>SM_None) or
-                     (ref.offset<>0) then
+                  if not Assigned(ref.Symbol) or
+                     (ref.Base<>NR_NO) or
+                     (ref.Index<>NR_NO) or
+                     (ref.ShiftMode<>SM_None) or
+                     (ref.Offset<>0) then
                     InternalError(2014121501);
                   if TargetInfo.system in systems_darwin then
-                    result:=ref.symbol.name+darwin_addrpage2str[ref.refaddr]
+                    result:=ref.Symbol.name+darwin_addrpage2str[ref.RefAddr]
                   else
-                    result:=linux_addrpage2str[ref.refaddr]+ref.symbol.name
+                    result:=linux_addrpage2str[ref.RefAddr]+ref.Symbol.name
                 end;
               addr_pic,
               { for locals replaced by temp symbols on LLVM }
               addr_no:
-                result:=ref.symbol.name;
+                result:=ref.Symbol.name;
               else
                 InternalError(2015022302);
             end
           end
         else
           begin
-            result:='['+gas_regname(ref.base);
-            if ref.addressmode=AM_POSTINDEXED then
+            result:='['+gas_regname(ref.Base);
+            if ref.AddressMode=AM_POSTINDEXED then
               result:=result+']';
-            if ref.index<>NR_NO then
+            if ref.Index<>NR_NO then
               begin
-                if (ref.offset<>0) or
-                   Assigned(ref.symbol) then
+                if (ref.Offset<>0) or
+                   Assigned(ref.Symbol) then
                   InternalError(2014121504);
-                result:=result+', '+gas_regname(ref.index);
-                case ref.shiftmode of
+                result:=result+', '+gas_regname(ref.Index);
+                case ref.ShiftMode of
                   SM_None: ;
                   SM_LSL,
                   SM_UXTW, SM_UXTX, SM_SXTW, SM_SXTX:
                     begin
-                      result:=result+', '+gas_shiftmode2str[ref.shiftmode];
-                      if (ref.shiftmode=SM_LSL) or
-                         (ref.shiftimm<>0) then
-                        result:=result+' #'+ToStr(ref.shiftimm);
+                      result:=result+', '+gas_shiftmode2str[ref.ShiftMode];
+                      if (ref.ShiftMode=SM_LSL) or
+                         (ref.ShiftImm<>0) then
+                        result:=result+' #'+ToStr(ref.ShiftImm);
                     end
                   else
                     InternalError(2014121505);
@@ -758,16 +758,16 @@ unit agcpugas;
               end
             else
               begin
-                if Assigned(ref.symbol) then
+                if Assigned(ref.Symbol) then
                   begin
-                    case ref.refaddr of
+                    case ref.RefAddr of
                       addr_gotpageoffset,
                       addr_pageoffset:
                         begin
                           if TargetInfo.system in systems_darwin then
-                            result:=result+', '+ref.symbol.name+darwin_addrpage2str[ref.refaddr]
+                            result:=result+', '+ref.Symbol.name+darwin_addrpage2str[ref.RefAddr]
                           else
-                            result:=result+', '+linux_addrpage2str[ref.refaddr]+ref.symbol.name
+                            result:=result+', '+linux_addrpage2str[ref.RefAddr]+ref.Symbol.name
                         end
                       else
                         { todo: not yet generated/don't know syntax }
@@ -776,13 +776,13 @@ unit agcpugas;
                   end
                 else
                   begin
-                    if ref.refaddr<>addr_no then
+                    if ref.RefAddr<>addr_no then
                       InternalError(2014121502);
-                    if (ref.offset<>0) then
-                      result:=result+', #'+ToStr(ref.offset);
+                    if (ref.Offset<>0) then
+                      result:=result+', #'+ToStr(ref.Offset);
                   end;
               end;
-            case ref.addressmode of
+            case ref.AddressMode of
               AM_OFFSET:
                 result:=result+']';
               AM_PREINDEXED:
@@ -804,32 +804,32 @@ unit agcpugas;
             getopstr:=gas_regname(o.reg);
           top_shifterop:
             begin
-              getopstr:=gas_shiftmode2str[o.shifterop^.shiftmode];
-              if o.shifterop^.shiftimm<>0 then
-                getopstr:=getopstr+' #'+ToStr(o.shifterop^.shiftimm)
+              getopstr:=gas_shiftmode2str[o.shifterop^.ShiftMode];
+              if o.shifterop^.ShiftImm<>0 then
+                getopstr:=getopstr+' #'+ToStr(o.shifterop^.ShiftImm)
             end;
           top_const:
-            if o.val>=0 then
-              getopstr:='#'+ToStr(o.val)
+            if o.Val>=0 then
+              getopstr:='#'+ToStr(o.Val)
             else
-              getopstr:='#0x'+HexStr(o.val,16);
+              getopstr:='#0x'+HexStr(o.Val,16);
           top_conditioncode:
             getopstr:=cond2str[o.cc];
           top_ref:
             if is_calljmp(hp.opcode) then
               begin
-                if o.ref^.refaddr<>addr_full then
+                if o.Ref^.RefAddr<>addr_full then
                   InternalError(2014122220);
-                if not Assigned(o.ref^.symbol) or
-                   Assigned(o.ref^.relsymbol) or
-                   (o.ref^.base<>NR_NO) or
-                   (o.ref^.index<>NR_NO) or
-                   (o.ref^.offset<>0) then
+                if not Assigned(o.Ref^.Symbol) or
+                   Assigned(o.Ref^.RelSymbol) or
+                   (o.Ref^.Base<>NR_NO) or
+                   (o.Ref^.Index<>NR_NO) or
+                   (o.Ref^.Offset<>0) then
                   InternalError(2014122221);
-                getopstr:=o.ref^.symbol.name;
+                getopstr:=o.Ref^.Symbol.name;
               end
             else
-              getopstr:=getreferencestring(asminfo,o.ref^);
+              getopstr:=getreferencestring(asminfo,o.Ref^);
           top_realconst:
             begin
               Result:=RealToStr(o.val_real);
@@ -841,7 +841,7 @@ unit agcpugas;
               result:='{'+gas_regname(reg);
               for i:=1 to o.nregs-1 do
                 begin
-                  setsupreg(reg,succ(getsupreg(reg)) mod 32);
+                  SetSupReg(reg,succ(GetSupReg(reg)) mod 32);
                   result:=result+', '+gas_regname(reg);
                 end;
               result:=result+'}';
@@ -850,7 +850,7 @@ unit agcpugas;
             end;
           top_indexedreg:
             begin
-              result:=gas_regname(o.indexedreg)+'['+ToStr(o.regindex)+']';
+              result:=gas_regname(o.indexedreg)+'['+ToStr(o.RegIndex)+']';
             end;
           else
             InternalError(2014121507);

@@ -539,11 +539,11 @@ implementation
         field: TFieldVarSym;
       begin
         if Assigned(curfield) then
-          result:=curfield.FieldOffset+curfield.vardef.size
+          result:=curfield.FieldOffset+curfield.vardef.Size
         else if curindex<>-1 then
           begin
             field:=TFieldVarSym(TAbstractRecordDef(def).SymTable.SymList[curindex]);
-            result:=field.FieldOffset+field.vardef.size
+            result:=field.FieldOffset+field.vardef.Size
           end
         else
           result:=0
@@ -605,7 +605,7 @@ implementation
             repeat
               inc(i);
               sym:=TSym(TAbstractRecordDef(def).SymTable.SymList[i]);
-            until is_normal_fieldvarsym(sym);
+            until Is_Normal_FieldVarSym(sym);
             curfield:=TFieldVarSym(sym);
             nextoffset:=curfield.FieldOffset;
             curindex:=i;
@@ -719,7 +719,7 @@ implementation
           begin
             if ai.adetyp<>tck_simple then
               InternalError(2014070103);
-            add_to_string(newstr,TAISimpleTypedConst(ai).val);
+            add_to_string(newstr,TAISimpleTypedConst(ai).Val);
             ai.free; // no nil needed
           end;
        fvalues.count:=0;
@@ -745,11 +745,11 @@ implementation
            end;
          ait_const:
            begin
-             if TAIConst(othertai).size<>1 then
+             if TAIConst(othertai).Size<>1 then
                InternalError(2014070101);
              len1:=length(strtai.str);
              SetLength(strtai.str,len1+1);
-             strtai.str[len1]:=ansichar(TAIConst(othertai).value);
+             strtai.str[len1]:=ansichar(TAIConst(othertai).Value);
            end;
          else
            InternalError(2014070102);
@@ -777,7 +777,7 @@ implementation
          char, to unify the length and the string data }
        if fisstring or
           ((val.adetyp=tck_simple) and
-           (TAISimpleTypedConst(val).val.typ=ait_string)) then
+           (TAISimpleTypedConst(val).Val.typ=ait_string)) then
          begin
            if not fisstring and
               (fvalues.count>0) then
@@ -787,7 +787,7 @@ implementation
              0: fvalues.add(val);
              1:
                begin
-                 add_to_string(TAIString(TAISimpleTypedConst(fvalues[0]).val),TAISimpleTypedConst(val).val);
+                 add_to_string(TAIString(TAISimpleTypedConst(fvalues[0]).Val),TAISimpleTypedConst(val).Val);
                  val.free;
                  val := nil;
                end
@@ -823,7 +823,7 @@ implementation
      begin
        { must be a record of the same size as the current data }
        if Assigned(fdef) and
-          (fdef.size<>_def.size) then
+          (fdef.Size<>_def.Size) then
          InternalError(2015122402);
        fdef:=_def;
        fadetyp:=tck_record;
@@ -841,7 +841,7 @@ implementation
              data }
            if fvalues.count<>1 then
              InternalError(2014070105);
-           lString:=TAIString(TAISimpleTypedConst(fvalues[0]).val);
+           lString:=TAIString(TAISimpleTypedConst(fvalues[0]).Val);
            len:=lString.len;
            TAISimpleTypedConst(fvalues[0]).fdef:=CArrayDef.getreusable(CAnsiCharType,len);
          end;
@@ -953,13 +953,13 @@ implementation
           Is_Object(def) or
           ((def.typ=procvardef) and
            not TProcVarDef(def).Is_AddressOnly and
-           not is_block(def)) then
+           not Is_Block(def)) then
          result:=tck_record
        else if ((def.typ=arraydef) and
-           not is_dynamic_array(def)) or
+           not Is_Dynamic_Array(def)) or
           ((def.typ=setdef) and
-           not is_smallset(def)) or
-          is_shortstring(def) then
+           not Is_SmallSet(def)) or
+          Is_ShortString(def) then
          result:=tck_array
        else
          result:=tck_simple;
@@ -1076,7 +1076,7 @@ implementation
              ptrdef,
              sec_rodata,
              indsecname,
-             ptrdef.alignment));
+             ptrdef.Alignment));
 
            symind.increfs;
 
@@ -1227,12 +1227,12 @@ implementation
          2 +
          { reference count }
 {$ifdef cpu64bitaddr}
-         S32IntType.size +
+         S32IntType.Size +
 {$else !cpu64bitaddr}
-         SizeSIntType.size +
+         SizeSIntType.Size +
 {$endif !cpu64bitaddr}
          { length }
-         SizeSIntType.size;
+         SizeSIntType.Size;
        unicodestring_header_size:=ansistring_header_size;
        case typ of
          st_ansistring:
@@ -1254,9 +1254,9 @@ implementation
      begin
        result:=
          { reference count }
-         PtrSIntType.size +
+         PtrSIntType.Size +
          { high value }
-         SizeSIntType.size;
+         SizeSIntType.Size;
      end;
 
 
@@ -1401,7 +1401,7 @@ implementation
                (Is_Record(info.def) or
                 Is_Object(info.def)) and
               { may add support for these later }
-              not is_packed_record_or_object(info.def) then
+              not Is_Packed_Record_Or_Object(info.def) then
              pad_next_field(def);
          end;
        { emit the data }
@@ -1428,9 +1428,9 @@ implementation
          InternalError(2014091205);
        if (Is_Record(def) or
            Is_Object(def)) and
-          not is_packed_record_or_object(def) then
+          not Is_Packed_Record_Or_Object(def) then
          begin
-           fillbytes:=def.size-info.curoffset;
+           fillbytes:=def.Size-info.curoffset;
            while fillbytes>0 do
              begin
                do_emit_tai(TAIConst.Create_8bit(0),U8IntType);
@@ -1474,13 +1474,13 @@ implementation
        inc(result.ofs,2);
 {$ifdef cpu64bitaddr}
        emit_tai(TAIConst.Create_32bit(-1),S32IntType);
-       inc(result.ofs,S32IntType.size);
+       inc(result.ofs,S32IntType.Size);
 {$else !cpu64bitaddr}
        emit_tai(TAIConst.create_sizeint(-1),SizeSIntType);
-       inc(result.ofs,SizeSIntType.size);
+       inc(result.ofs,SizeSIntType.Size);
 {$endif !cpu64bitaddr}
        emit_tai(TAIConst.create_sizeint(len),SizeSIntType);
-       inc(result.ofs,SizeSIntType.size);
+       inc(result.ofs,SizeSIntType.Size);
        if string_symofs=0 then
          begin
            { results in slightly more efficient code }
@@ -1534,7 +1534,7 @@ implementation
            info:=curagginfo;
            if (Is_Record(curagginfo.def) or
                Is_Object(curagginfo.def)) and
-              not is_packed_record_or_object(curagginfo.def) then
+              not Is_Packed_Record_Or_Object(curagginfo.def) then
              begin
                if queue_is_active then
                  InternalError(2015073001);
@@ -1697,7 +1697,7 @@ implementation
        else
          begin
            result:=CRecordDef.Create_Global_Internal('$'+name,4,
-             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+             targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
            { length in bytes }
            result.Add_Field_By_Def('',S32IntType);
            streledef:=CWideCharType;
@@ -1726,7 +1726,7 @@ implementation
        datatcb.emit_tai(ts,datadef);
        datatcb.maybe_end_aggregate(datadef);
        ansistrrecdef:=datatcb.end_anonymous_record;
-       finish_internal_data_builder(datatcb,startlab,ansistrrecdef,Const_Align(VoidPointerType.alignment));
+       finish_internal_data_builder(datatcb,startlab,ansistrrecdef,Const_Align(VoidPointerType.Alignment));
      end;
 
 
@@ -1746,8 +1746,8 @@ implementation
            result.lab:=startlab;
            datatcb.begin_anonymous_record(get_dynstring_rec_name(st_widestring,true,strlength),
              4,4,
-             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-           datatcb.emit_tai(TAIConst.Create_32bit(strlength*CWideCharType.size),S32IntType);
+             targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
+           datatcb.emit_tai(TAIConst.Create_32bit(strlength*CWideCharType.Size),S32IntType);
            { can we optimise by placing the string constant label at the
              required offset? }
            string_symofs:=get_string_symofs(st_widestring,true);
@@ -1767,7 +1767,7 @@ implementation
          begin
            result:=datatcb.emit_string_const_common(st_unicodestring,strlength,encoding,startlab);
          end;
-       if CWideCharType.size = 2 then
+       if CWideCharType.Size = 2 then
          begin
            datadef:=CArrayDef.getreusable(CWideCharType,strlength+1);
            datatcb.maybe_begin_aggregate(datadef);
@@ -1781,7 +1781,7 @@ implementation
        else
          { code generation for other sizes must be written }
          InternalError(200904271);
-       finish_internal_data_builder(datatcb,startlab,unicodestrrecdef,Const_Align(VoidPointerType.alignment));
+       finish_internal_data_builder(datatcb,startlab,unicodestrrecdef,Const_Align(VoidPointerType.Alignment));
      end;
 
 
@@ -1809,9 +1809,9 @@ implementation
        dynarray_symofs:=get_dynarray_symofs;
        { what to do if ptrsinttype <> sizesinttype??? }
        emit_tai(TAIConst.create_sizeint(-1),PtrSIntType);
-       inc(result.ofs,PtrSIntType.size);
+       inc(result.ofs,PtrSIntType.Size);
        arrlengthloc:=emit_placeholder(SizeSIntType);
-       inc(result.ofs,SizeSIntType.size);
+       inc(result.ofs,SizeSIntType.Size);
        if dynarray_symofs=0 then
          begin
            { results in slightly more efficient code }
@@ -1899,7 +1899,7 @@ implementation
 
    procedure TTAITypedConstBuilder.emit_ord_const(value: int64; def: TDef);
      begin
-       case def.size of
+       case def.Size of
          1:
            emit_tai(TAIConst.Create_8bit(byte(value)),def);
          2:
@@ -2074,7 +2074,7 @@ implementation
            if ((info.def.typ=recorddef) or
                Is_Object(info.def)) and
               { may add support for these later }
-              not is_packed_record_or_object(info.def) then
+              not Is_Packed_Record_Or_Object(info.def) then
              pad_next_field(todef);
          end;
 
@@ -2096,7 +2096,7 @@ implementation
            ;
          arraydef :
            begin
-             if not is_packed_array(def) then
+             if not Is_Packed_Array(def) then
                begin
                  elelen:=TArrayDef(def).EleSize;
                  vecbase:=TArrayDef(def).LowRange;
@@ -2120,13 +2120,13 @@ implementation
 
    procedure TTAITypedConstBuilder.queue_pointeraddn(def: TPointerDef; const index: TConstExprInt);
      begin
-       inc(fqueue_offset,def.PointedDef.size*int64(index));
+       inc(fqueue_offset,def.PointedDef.Size*int64(index));
      end;
 
 
    procedure TTAITypedConstBuilder.queue_pointersubn(def: TPointerDef; const index: TConstExprInt);
      begin
-       dec(fqueue_offset,def.PointedDef.size*int64(index));
+       dec(fqueue_offset,def.PointedDef.Size*int64(index));
      end;
 
 
@@ -2156,7 +2156,7 @@ implementation
          begin
            sym:=Search_Struct_Member_No_Helper(TAbstractRecordDef(curdef),fields[i]);
            if not Assigned(sym) or
-              not is_normal_fieldvarsym(sym) or
+              not Is_Normal_FieldVarSym(sym) or
               ((i<>high(fields)) and
                not(TFieldVarSym(sym).vardef.typ in [objectdef,recorddef])) then
              InternalError(2015071505);

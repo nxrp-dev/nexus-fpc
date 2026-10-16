@@ -76,7 +76,7 @@ implementation
           var/out/constref parameter, that "copy" will have been a copy of the
           address so the normal handling of such parameters in ncgld is ok) }
         SecondPass(left);
-        location:=left.location;
+        location:=left.Location;
       end;
 
 

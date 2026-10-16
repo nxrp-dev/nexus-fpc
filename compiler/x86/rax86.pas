@@ -255,11 +255,11 @@ begin
     begin
       if not hasvar then
         begin
-          if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset>0) then
+          if (GetSupReg(opr.Ref.Base)=RS_EBP) and (opr.Ref.Offset>0) then
             begin
               if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBW:
                       ErrorRefStr:='[BP+offset]';
                     R_SUBD:
@@ -272,7 +272,7 @@ begin
                 end
               else
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBW:
                       ErrorRefStr:='+offset(%bp)';
                     R_SUBD:
@@ -288,11 +288,11 @@ begin
               else
                 message1(asmr_w_direct_ebp_for_parameter_regcall,ErrorRefStr);
             end
-          else if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset<0) then
+          else if (GetSupReg(opr.Ref.Base)=RS_EBP) and (opr.Ref.Offset<0) then
             begin
               if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBW:
                       ErrorRefStr:='[BP-offset]';
                     R_SUBD:
@@ -305,7 +305,7 @@ begin
                 end
               else
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBW:
                       ErrorRefStr:='-offset(%bp)';
                     R_SUBD:
@@ -318,12 +318,12 @@ begin
                 end;
               message1(asmr_w_direct_ebp_neg_offset,ErrorRefStr);
             end
-          else if ((ins.opcode<>A_LEA) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) or
-            ((ins.opcode=A_LEA) and (getsupreg(ins.operands[2].opr.reg)<>RS_ESP) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) then
+          else if ((ins.opcode<>A_LEA) and (GetSupReg(opr.Ref.Base)=RS_ESP) and (GetSubReg(opr.Ref.Base)<>R_SUBW) and (opr.Ref.Offset<0)) or
+            ((ins.opcode=A_LEA) and (GetSupReg(ins.operands[2].opr.reg)<>RS_ESP) and (GetSupReg(opr.Ref.Base)=RS_ESP) and (GetSubReg(opr.Ref.Base)<>R_SUBW) and (opr.Ref.Offset<0)) then
             begin
               if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBD:
                       ErrorRefStr:='[ESP-offset]';
                     R_SUBQ:
@@ -334,7 +334,7 @@ begin
                 end
               else
                 begin
-                  case getsubreg(opr.ref.base) of
+                  case GetSubReg(opr.Ref.Base) of
                     R_SUBD:
                       ErrorRefStr:='-offset(%esp)';
                     R_SUBQ:
@@ -347,18 +347,18 @@ begin
             end;
         end;
       if (cs_create_pic in CurrentSettings.ModuleSwitches) and
-         Assigned(opr.ref.symbol) and
-         not Assigned(opr.ref.relsymbol) then
+         Assigned(opr.Ref.Symbol) and
+         not Assigned(opr.Ref.RelSymbol) then
         begin
-          if not(opr.ref.refaddr in [addr_pic,addr_pic_no_got]) then
+          if not(opr.Ref.RefAddr in [addr_pic,addr_pic_no_got]) then
             begin
-              if (opr.ref.symbol.name <> '_GLOBAL_OFFSET_TABLE_') then
+              if (opr.Ref.Symbol.name <> '_GLOBAL_OFFSET_TABLE_') then
                 begin
                   message(asmr_e_need_pic_ref);
                   result:=false;
                 end
               else
-                opr.ref.refaddr:=addr_pic;
+                opr.Ref.RefAddr:=addr_pic;
             end
           else
             begin
@@ -366,11 +366,11 @@ begin
               { should probably be extended to i386, but there the situation
                 is more complex and ELF-style PIC still need to be
                 tested/debugged }
-              if (opr.ref.symbol.bind in [AB_LOCAL,AB_PRIVATE_EXTERN]) and
-                 (opr.ref.refaddr=addr_pic) then
+              if (opr.Ref.Symbol.bind in [AB_LOCAL,AB_PRIVATE_EXTERN]) and
+                 (opr.Ref.RefAddr=addr_pic) then
                 message(asmr_w_useless_got_for_local)
-              else if (opr.ref.symbol.bind in [AB_GLOBAL,AB_EXTERNAL,AB_COMMON,AB_WEAK_EXTERNAL]) and
-                 (opr.ref.refaddr=addr_pic_no_got) then
+              else if (opr.Ref.Symbol.bind in [AB_GLOBAL,AB_EXTERNAL,AB_COMMON,AB_WEAK_EXTERNAL]) and
+                 (opr.Ref.RefAddr=addr_pic_no_got) then
                 message(asmr_w_global_access_without_got);
 {$endif x86_64}
             end;
@@ -532,7 +532,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 16;
                       R_SUBMMY: memrefsize := 32;
                       else Message(asmr_e_unable_to_determine_reference_size);
@@ -546,7 +546,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 16;
                       R_SUBMMY: memrefsize := 32;
                       R_SUBMMZ: memrefsize := 64;
@@ -561,7 +561,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 32;
                       R_SUBMMY: memrefsize := 64;
                       else Message(asmr_e_unable_to_determine_reference_size);
@@ -575,7 +575,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 32;
                       R_SUBMMY: memrefsize := 64;
                       R_SUBMMZ: memrefsize := 128;
@@ -590,7 +590,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 64;
                       R_SUBMMY: memrefsize := 128;
                       else Message(asmr_e_unable_to_determine_reference_size);
@@ -604,7 +604,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: memrefsize := 64;
                       R_SUBMMY: memrefsize := 256;
                       else Message(asmr_e_unable_to_determine_reference_size);
@@ -619,7 +619,7 @@ begin
                   begin
                     if operands[j].Opr.Typ = OPR_REGISTER then
                     begin
-                      case getsubreg(operands[j].opr.reg) of
+                      case GetSubReg(operands[j].opr.reg) of
                         R_SUBMMX: memrefsize := 64;
                         R_SUBMMY: memrefsize := 128;
                         R_SUBMMZ: memrefsize := 256;
@@ -636,7 +636,7 @@ begin
                   begin
                     if operands[j].Opr.Typ = OPR_REGISTER then
                     begin
-                      case getsubreg(operands[j].opr.reg) of
+                      case GetSubReg(operands[j].opr.reg) of
                         R_SUBMMX: memrefsize := 64;
                         R_SUBMMY: memrefsize := 256;
                         R_SUBMMZ: memrefsize := 512;
@@ -653,7 +653,7 @@ begin
                      if operands[j].Opr.Typ = OPR_REGISTER then
                      begin
                        if (tx86operand(operands[j]).opsize <> S_NO) and
-                          (tx86operand(operands[j]).size <> OS_NO) then
+                          (tx86operand(operands[j]).Size <> OS_NO) then
                        begin
                          case tx86operand(operands[j]).opsize of
                            S_B   : memrefsize := 8;
@@ -683,7 +683,7 @@ begin
                        if operands[k].Opr.Typ = OPR_REGISTER then
                        begin
                          if (tx86operand(operands[k]).opsize <> S_NO) and
-                            (tx86operand(operands[k]).size <> OS_NO) then
+                            (tx86operand(operands[k]).Size <> OS_NO) then
                          begin
                            case tx86operand(operands[k]).opsize of
                              S_B   : memrefsize := 8;
@@ -734,7 +734,7 @@ begin
                 begin
                   if operands[j].Opr.Typ = OPR_REGISTER then
                   begin
-                    case getsubreg(operands[j].opr.reg) of
+                    case GetSubReg(operands[j].opr.reg) of
                       R_SUBMMX: begin
                                   memrefsize := ScanLowestOpsize(MemRefInfo(opcode).RegXMMSizeMask);
                                   break;
@@ -790,7 +790,7 @@ begin
             case operands[i].opr.typ of
                   OPR_LOCAL: memopsize := operands[i].opr.localvarsize * 8;
               OPR_REFERENCE:
-                  if operands[i].opr.ref.refaddr = addr_pic then
+                  if operands[i].opr.Ref.RefAddr = addr_pic then
                     memopsize := sizeof(PInt) * 8
                   else
                     memopsize := operands[i].opr.varsize * 8;
@@ -832,7 +832,7 @@ begin
                   ;
               end;
 
-              if ((operands[i].opr.ref.base=NR_ESP) or (operands[i].opr.ref.index=NR_ESP)) and (memoffset < 0) then
+              if ((operands[i].opr.Ref.Base=NR_ESP) or (operands[i].opr.Ref.Index=NR_ESP)) and (memoffset < 0) then
               begin
                 Message2(asmr_w_check_mem_operand_negative_offset,
                          //std_op2str[opcode],
@@ -886,15 +886,15 @@ begin
                     case MemRefInfo(opcode).MemRefSizeBCST of
                       msbBCST16: begin
                                    tx86operand(operands[i]).opsize := S_W;
-                                   tx86operand(operands[i]).size   := OS_16;
+                                   tx86operand(operands[i]).Size   := OS_16;
                                  end;
                       msbBCST32: begin
                                    tx86operand(operands[i]).opsize := S_L;
-                                   tx86operand(operands[i]).size   := OS_32;
+                                   tx86operand(operands[i]).Size   := OS_32;
                                  end;
                       msbBCST64: begin
                                    tx86operand(operands[i]).opsize := S_Q;
-                                   tx86operand(operands[i]).size   := OS_M64;
+                                   tx86operand(operands[i]).Size   := OS_M64;
                                  end;
                       else
                         InternalError(2019081017);
@@ -906,73 +906,73 @@ begin
                       msiMem8:
                               begin
                                 tx86operand(operands[i]).opsize := S_B;
-                                tx86operand(operands[i]).size   := OS_8;
+                                tx86operand(operands[i]).Size   := OS_8;
                               end;
                       msiMultipleMinSize8:
                               begin
                                 tx86operand(operands[i]).opsize := S_B;
-                                tx86operand(operands[i]).size   := OS_8;
+                                tx86operand(operands[i]).Size   := OS_8;
 
                                 Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"8 bit memory operand"');
                               end;
                       msiMem16:
                               begin
                                 tx86operand(operands[i]).opsize := S_W;
-                                tx86operand(operands[i]).size   := OS_16;
+                                tx86operand(operands[i]).Size   := OS_16;
                               end;
                       msiMultipleMinSize16:
                                begin
                                  tx86operand(operands[i]).opsize := S_W;
-                                 tx86operand(operands[i]).size   := OS_16;
+                                 tx86operand(operands[i]).Size   := OS_16;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"16 bit memory operand"');
                                end;
                       msiMem32:
                                begin
                                  tx86operand(operands[i]).opsize := S_L;
-                                 tx86operand(operands[i]).size   := OS_32;
+                                 tx86operand(operands[i]).Size   := OS_32;
                                end;
                       msiMultipleMinSize32:
                                begin
                                  tx86operand(operands[i]).opsize := S_L;
-                                 tx86operand(operands[i]).size   := OS_32;
+                                 tx86operand(operands[i]).Size   := OS_32;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"32 bit memory operand"');
                                end;
                       msiMem64:
                                begin
                                  tx86operand(operands[i]).opsize := S_Q;
-                                 tx86operand(operands[i]).size   := OS_M64;
+                                 tx86operand(operands[i]).Size   := OS_M64;
                                end;
                       msiMultipleMinSize64:
                                begin
                                  tx86operand(operands[i]).opsize := S_Q;
-                                 tx86operand(operands[i]).size   := OS_M64;
+                                 tx86operand(operands[i]).Size   := OS_M64;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"64 bit memory operand"');
                                end;
                       msiMem128:
                                begin
                                  tx86operand(operands[i]).opsize := S_XMM;
-                                 tx86operand(operands[i]).size   := OS_M128;
+                                 tx86operand(operands[i]).Size   := OS_M128;
                                end;
                       msiMultipleMinSize128:
                                begin
                                  tx86operand(operands[i]).opsize := S_XMM;
-                                 tx86operand(operands[i]).size   := OS_M128;
+                                 tx86operand(operands[i]).Size   := OS_M128;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"128 bit memory operand"');
                                end;
                       msiMem256:
                                begin
                                  tx86operand(operands[i]).opsize := S_YMM;
-                                 tx86operand(operands[i]).size   := OS_M256;
+                                 tx86operand(operands[i]).Size   := OS_M256;
                                  opsize := S_YMM;
                                end;
                       msiMultipleMinSize256:
                                begin
                                  tx86operand(operands[i]).opsize := S_YMM;
-                                 tx86operand(operands[i]).size   := OS_M256;
+                                 tx86operand(operands[i]).Size   := OS_M256;
                                  opsize := S_YMM;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"256 bit memory operand"');
@@ -980,13 +980,13 @@ begin
                       msiMem512:
                                begin
                                  tx86operand(operands[i]).opsize := S_ZMM;
-                                 tx86operand(operands[i]).size   := OS_M512;
+                                 tx86operand(operands[i]).Size   := OS_M512;
                                  opsize := S_ZMM;
                                end;
                       msiMultipleMinSize512:
                                begin
                                  tx86operand(operands[i]).opsize := S_ZMM;
-                                 tx86operand(operands[i]).size   := OS_M512;
+                                 tx86operand(operands[i]).Size   := OS_M512;
                                  opsize := S_ZMM;
 
                                  Message2(asmr_w_check_mem_operand_automap_multiple_size, GetString(false), '"512 bit memory operand"');
@@ -1000,10 +1000,10 @@ begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
                                      if (tx86operand(operands[j]).opsize <> S_NO) and
-                                        (tx86operand(operands[j]).size <> OS_NO) then
+                                        (tx86operand(operands[j]).Size <> OS_NO) then
                                      begin
                                        tx86operand(operands[i]).opsize := tx86operand(operands[j]).opsize;
-                                       tx86operand(operands[i]).size   := tx86operand(operands[j]).size;
+                                       tx86operand(operands[i]).Size   := tx86operand(operands[j]).Size;
                                        break;
                                      end
                                      else Message(asmr_e_unable_to_determine_reference_size);
@@ -1016,15 +1016,15 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_W;
-                                                   tx86operand(operands[i]).size   := OS_M16;
+                                                   tx86operand(operands[i]).Size   := OS_M16;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_L;
-                                                   tx86operand(operands[i]).size   := OS_M32;
+                                                   tx86operand(operands[i]).Size   := OS_M32;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1038,20 +1038,20 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_W;
-                                                   tx86operand(operands[i]).size   := OS_M16;
+                                                   tx86operand(operands[i]).Size   := OS_M16;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_L;
-                                                   tx86operand(operands[i]).size   := OS_M32;
+                                                   tx86operand(operands[i]).Size   := OS_M32;
                                                    break;
                                                  end;
                                        R_SUBMMZ: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1065,15 +1065,15 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_L;
-                                                   tx86operand(operands[i]).size   := OS_M32;
+                                                   tx86operand(operands[i]).Size   := OS_M32;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1086,20 +1086,20 @@ begin
                                begin
                                  if operands[j].Opr.Typ = OPR_REGISTER then
                                  begin
-                                   case getsubreg(operands[j].opr.reg) of
+                                   case GetSubReg(operands[j].opr.reg) of
                                      R_SUBMMX: begin
                                                  tx86operand(operands[i]).opsize := S_L;
-                                                 tx86operand(operands[i]).size   := OS_M32;
+                                                 tx86operand(operands[i]).Size   := OS_M32;
                                                  break;
                                                end;
                                      R_SUBMMY: begin
                                                  tx86operand(operands[i]).opsize := S_Q;
-                                                 tx86operand(operands[i]).size   := OS_M64;
+                                                 tx86operand(operands[i]).Size   := OS_M64;
                                                  break;
                                                end;
                                      R_SUBMMZ: begin
                                                  tx86operand(operands[i]).opsize := S_XMM;
-                                                 tx86operand(operands[i]).size   := OS_M128;
+                                                 tx86operand(operands[i]).Size   := OS_M128;
                                                  break;
                                                end;
                                           else Message(asmr_e_unable_to_determine_reference_size);
@@ -1112,15 +1112,15 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_XMM;
-                                                   tx86operand(operands[i]).size   := OS_M128;
+                                                   tx86operand(operands[i]).Size   := OS_M128;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1134,20 +1134,20 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_XMM;
-                                                   tx86operand(operands[i]).size   := OS_M128;
+                                                   tx86operand(operands[i]).Size   := OS_M128;
                                                    break;
                                                  end;
                                        R_SUBMMZ: begin
                                                    tx86operand(operands[i]).opsize := S_YMM;
-                                                   tx86operand(operands[i]).size   := OS_M256;
+                                                   tx86operand(operands[i]).Size   := OS_M256;
                                                    break;
                                                  end;
 
@@ -1162,15 +1162,15 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_YMM;
-                                                   tx86operand(operands[i]).size   := OS_M256;
+                                                   tx86operand(operands[i]).Size   := OS_M256;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1184,20 +1184,20 @@ begin
                                  begin
                                    if operands[j].Opr.Typ = OPR_REGISTER then
                                    begin
-                                     case getsubreg(operands[j].opr.reg) of
+                                     case GetSubReg(operands[j].opr.reg) of
                                        R_SUBMMX: begin
                                                    tx86operand(operands[i]).opsize := S_Q;
-                                                   tx86operand(operands[i]).size   := OS_M64;
+                                                   tx86operand(operands[i]).Size   := OS_M64;
                                                    break;
                                                  end;
                                        R_SUBMMY: begin
                                                    tx86operand(operands[i]).opsize := S_YMM;
-                                                   tx86operand(operands[i]).size   := OS_M256;
+                                                   tx86operand(operands[i]).Size   := OS_M256;
                                                    break;
                                                  end;
                                        R_SUBMMZ: begin
                                                    tx86operand(operands[i]).opsize := S_ZMM;
-                                                   tx86operand(operands[i]).size   := OS_M512;
+                                                   tx86operand(operands[i]).Size   := OS_M512;
                                                    break;
                                                  end;
                                             else Message(asmr_e_unable_to_determine_reference_size);
@@ -1227,10 +1227,10 @@ begin
                                      if operands[j].Opr.Typ = OPR_REGISTER then
                                      begin
                                        if (tx86operand(operands[j]).opsize <> S_NO) and
-                                          (tx86operand(operands[j]).size <> OS_NO) then
+                                          (tx86operand(operands[j]).Size <> OS_NO) then
                                        begin
                                          tx86operand(operands[i]).opsize := tx86operand(operands[j]).opsize;
-                                         tx86operand(operands[i]).size   := tx86operand(operands[j]).size;
+                                         tx86operand(operands[i]).Size   := tx86operand(operands[j]).Size;
                                          break;
                                        end
                                        else Message(asmr_e_unable_to_determine_reference_size);
@@ -1242,17 +1242,17 @@ begin
                                    case MemRefInfo(opcode).MemRefSize  of
                                      msiMemRegConst128: begin
                                                           tx86operand(operands[i]).opsize := S_XMM;
-                                                          tx86operand(operands[i]).size   := OS_M128;
+                                                          tx86operand(operands[i]).Size   := OS_M128;
                                                           break;
                                                         end;
                                      msiMemRegConst256: begin
                                                           tx86operand(operands[i]).opsize := S_YMM;
-                                                          tx86operand(operands[i]).size   := OS_M256;
+                                                          tx86operand(operands[i]).Size   := OS_M256;
                                                           break;
                                                         end;
                                      msiMemRegConst512: begin
                                                           tx86operand(operands[i]).opsize := S_ZMM;
-                                                          tx86operand(operands[i]).size   := OS_M512;
+                                                          tx86operand(operands[i]).Size   := OS_M512;
                                                           break;
                                                         end;
                                      else
@@ -1283,20 +1283,20 @@ begin
                 case MemRefInfo(opcode).ConstSize of
                    csiMem8: begin
                               tx86operand(operands[i]).opsize := S_B;
-                              tx86operand(operands[i]).size   := OS_8;
+                              tx86operand(operands[i]).Size   := OS_8;
                             end;
                   csiMem16: begin
                               tx86operand(operands[i]).opsize := S_W;
-                              tx86operand(operands[i]).size   := OS_16;
+                              tx86operand(operands[i]).Size   := OS_16;
                             end;
                   csiMem32: begin
                               tx86operand(operands[i]).opsize := S_L;
-                              tx86operand(operands[i]).size   := OS_32;
+                              tx86operand(operands[i]).Size   := OS_32;
                             end;
 {$ifdef x86_64}
                   csiMem64: begin
                               tx86operand(operands[i]).opsize := S_Q;
-                              tx86operand(operands[i]).size   := OS_64;
+                              tx86operand(operands[i]).Size   := OS_64;
                             end;
 {$else}
                   csiMem64: begin
@@ -1399,12 +1399,12 @@ begin
                   { Fix lea which need a reference }
                   if opcode=A_LEA then
                    begin
-                     s:=operands[i].opr.symbol;
+                     s:=operands[i].opr.Symbol;
                      so:=operands[i].opr.symofs;
                      operands[i].opr.typ:=OPR_REFERENCE;
-                     Fillchar(operands[i].opr.ref,sizeof(TReference),0);
-                     operands[i].opr.ref.symbol:=s;
-                     operands[i].opr.ref.offset:=so;
+                     Fillchar(operands[i].opr.Ref,sizeof(TReference),0);
+                     operands[i].opr.Ref.Symbol:=s;
+                     operands[i].opr.Ref.Offset:=so;
                    end;
   {$if defined(x86_64)}
                   tx86operand(operands[i]).opsize:=S_Q;
@@ -1428,9 +1428,9 @@ begin
      if operands[i].Opr.Typ in [OPR_REFERENCE, OPR_LOCAL] then vbcst := tx86operand(operands[i]).vbcst
       else if operands[i].Opr.Typ = OPR_REGISTER then
       begin
-        if getsubreg(operands[i].opr.reg) in [R_SUBMMX, R_SUBMMY, R_SUBMMZ] then
+        if GetSubReg(operands[i].opr.reg) in [R_SUBMMX, R_SUBMMY, R_SUBMMZ] then
         begin
-          include(mmregs, getsubreg(operands[i].opr.reg));
+          include(mmregs, GetSubReg(operands[i].opr.reg));
         end;
       end;
 
@@ -1794,7 +1794,7 @@ begin
   if  (
        (ops=1) and
        (operands[1].opr.typ=OPR_REGISTER) and
-       (getregtype(operands[1].opr.reg)=R_FPUREGISTER) and
+       (GetRegType(operands[1].opr.reg)=R_FPUREGISTER) and
        (operands[1].opr.reg<>NR_ST) and
        (operands[1].opr.reg<>NR_ST0)
       ) then
@@ -1941,7 +1941,7 @@ begin
   if (ops=1) and
      (
       (operands[1].opr.typ=OPR_REGISTER) and
-      (getregtype(operands[1].opr.reg)=R_FPUREGISTER) and
+      (GetRegType(operands[1].opr.reg)=R_FPUREGISTER) and
       (operands[1].opr.reg<>NR_ST) and
       (operands[1].opr.reg<>NR_ST0)
      ) and
@@ -1964,7 +1964,7 @@ begin
   if (ops=1) and
      (
       (operands[1].opr.typ=OPR_REGISTER) and
-      (getregtype(operands[1].opr.reg)=R_FPUREGISTER) and
+      (GetRegType(operands[1].opr.reg)=R_FPUREGISTER) and
       (operands[1].opr.reg<>NR_ST) and
       (operands[1].opr.reg<>NR_ST0)
      ) and
@@ -2015,12 +2015,12 @@ begin
 
     case operands[i].opr.typ of
        OPR_CONSTANT :
-         ai.loadconst(i-1,operands[i].opr.val);
+         ai.loadconst(i-1,operands[i].opr.Val);
        OPR_REGISTER:
-         ai.loadreg(i-1,operands[i].opr.reg);
+         ai.LoadReg(i-1,operands[i].opr.reg);
        OPR_SYMBOL:
 
-          ai.loadsymbol(i-1,operands[i].opr.symbol,operands[i].opr.symofs);
+          ai.loadsymbol(i-1,operands[i].opr.Symbol,operands[i].opr.symofs);
        OPR_LOCAL :
          with operands[i].opr do
            begin
@@ -2036,7 +2036,7 @@ begin
                if ((operands[i] as tx86operand).vopext and OTVE_VECTOR_BCST = OTVE_VECTOR_BCST) and
                   (MemRefInfo(opcode).MemRefSizeBCST in [msbBCST32,msbBCST64]) then
                begin
-                 case operands[i].size of
+                 case operands[i].Size of
                    OS_32,OS_M32: asize:=OT_BITS32;
                    OS_64,OS_M64: asize:=OT_BITS64;
                    else;
@@ -2053,13 +2053,13 @@ begin
 
            if CurrentSettings.OptimizerSwitches <> [] then
             if (not(MemRefInfo(opcode).MemRefSize in MemRefSizeInfoVMems)) and (opcode<>A_XLAT) and not is_x86_string_op(opcode) then
-             optimize_ref(operands[i].opr.ref,true);
+             optimize_ref(operands[i].opr.Ref,true);
 
-           ai.loadref(i-1,operands[i].opr.ref);
-           if operands[i].size<>OS_NO then
+           ai.loadref(i-1,operands[i].opr.Ref);
+           if operands[i].Size<>OS_NO then
              begin
                asize:=0;
-               case operands[i].size of
+               case operands[i].Size of
                    OS_8,OS_S8 :
                      asize:=OT_BITS8;
                    OS_16,OS_S16, OS_M16:
@@ -2146,35 +2146,35 @@ begin
 
          case operands[i].opr.typ of
             OPR_CONSTANT : begin
-                             str(operands[i].opr.val, sval);
+                             str(operands[i].opr.Val, sval);
                              s:=s+ sval;
                            end;
             OPR_REGISTER : begin
                              regnr := '';
-                             str(getsupreg(opr.reg),regnr);
+                             str(GetSupReg(opr.reg),regnr);
 
-                             if getsubreg(opr.reg)= R_SUBMMX then
+                             if GetSubReg(opr.reg)= R_SUBMMX then
                               s:=s+'xmmreg' + regnr
                              else
-                               if getsubreg(opr.reg)= R_SUBMMY then
+                               if GetSubReg(opr.reg)= R_SUBMMY then
                                 s:=s+'ymmreg' + regnr
                              else
-                               if getsubreg(opr.reg)= R_SUBMMZ then
+                               if GetSubReg(opr.reg)= R_SUBMMZ then
                                 s:=s+'zmmreg' + regnr
                              else
-                               if getregtype(opr.reg)= R_MMXREGISTER then
+                               if GetRegType(opr.reg)= R_MMXREGISTER then
                                 s:=s+'mmxreg'
                              else
-                               if getregtype(opr.reg)= R_FPUREGISTER then
+                               if GetRegType(opr.reg)= R_FPUREGISTER then
                                 s:=s+'fpureg'
                              else
-                               if getregtype(opr.reg)=R_INTREGISTER then
+                               if GetRegType(opr.reg)=R_INTREGISTER then
                                begin
                                  s:=s+'reg';
                                  addsize:=true;
                                end
                              else
-                               if getregtype(opr.reg)=R_ADDRESSREGISTER then
+                               if GetRegType(opr.reg)=R_ADDRESSREGISTER then
                                begin
                                  s:=s+'k' + regnr;
                                end;
@@ -2193,7 +2193,7 @@ begin
          if addsize then
           begin
             sval := '';
-            str(tcgsize2size[size], sval);
+            str(TCgSize2Size[size], sval);
 
             s := s + sval;
           end;

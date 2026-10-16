@@ -61,7 +61,7 @@ implementation
         if not(anf_typedaddr in addrnodeflags) then
           resultdef:=VoidNearFSPointerType
         else
-          resultdef:=TCPUPointerDefClass(CPointerDef).createx86(left.resultdef,x86pt_near_fs);
+          resultdef:=TCPUPointerDefClass(CPointerDef).CreateX86(left.resultdef,x86pt_near_fs);
       end;
 
 
@@ -82,7 +82,7 @@ implementation
       begin
         inherited pass_generate_code;
         if vnf_memseg in vecnodeflags then
-          location.reference.segment:=NR_FS;
+          location.Reference.Segment:=NR_FS;
       end;
 
 

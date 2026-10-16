@@ -872,7 +872,7 @@ implementation
       begin
         { all parameters passed to a block must be handled by the Objective-C
           runtime }
-        if is_block(TDef(Def)) and
+        if Is_Block(TDef(Def)) and
            not ObjCCheckType(TDef(Def),FoundErrorDef) then
           if Assigned(TDef(Def).TypeSym) then
             MessagePos1(TDef(Def).TypeSym.FileInfo,type_e_objc_type_unsupported,FoundErrorDef.TypeName)
@@ -987,7 +987,7 @@ implementation
             begin
               if (TSym(Sym).Refs=0) and
                  not(TSym(Sym).Typ in [EnumSym,UnitSym,NamespaceSym]) and
-                 not(is_funcret_sym(TSym(Sym))) and
+                 not(Is_FuncRet_Sym(TSym(Sym))) and
                  { don't complain about compiler generated syms for specializations, see also #13405 }
                  not((TSym(Sym).Typ=TypeSym) and (df_specialization in TTypeSym(Sym).TypeDef.DefOptions) and
                     (Pos('$',TTypeSym(Sym).RealName)<>0)) and
@@ -1087,7 +1087,7 @@ implementation
            ParaVarSym :
              begin
                if Assigned(TAbstractVarSym(Sym).VarDef) and
-                  is_managed_type(TAbstractVarSym(Sym).VarDef) then
+                  Is_Managed_Type(TAbstractVarSym(Sym).VarDef) then
                  Include(TableOptions,sto_needs_init_final);
                if Is_Record((TAbstractVarSym(Sym).VarDef)) and
                    (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(Sym).VarDef).SymTable).ManagementOperators) then
@@ -1144,10 +1144,10 @@ implementation
         { recordalign C_alignment means C record packing, that starts
           with an alignment of 1 }
         case UseAlign of
-          C_alignment,
-          bit_alignment:
+          CAlignment,
+          BitAlignment:
             FieldAlignment:=1;
-          mac68k_alignment:
+          Mac68KAlignment:
             FieldAlignment:=2;
           else
             FieldAlignment:=UseAlign;
@@ -1176,7 +1176,7 @@ implementation
         ExplicitRecordAlignment:=ShortInt(PPUFile.GetByte);
         UseFieldAlignment:=ShortInt(PPUFile.GetByte);
         RecordAlignMin:=ShortInt(PPUFile.GetByte);
-        if (UseFieldAlignment=C_alignment) then
+        if (UseFieldAlignment=CAlignment) then
           FieldAlignment:=ShortInt(PPUFile.GetByte);
         PPUFile.GetSet(TPPUSet1(HasFieldsWithMOP));
         inherited PPULoad(PPUFile);
@@ -1195,7 +1195,7 @@ implementation
          PPUFile.PutByte(Byte(ExplicitRecordAlignment));
          PPUFile.PutByte(Byte(UseFieldAlignment));
          PPUFile.PutByte(Byte(RecordAlignMin));
-         if (UseFieldAlignment=C_alignment) then
+         if (UseFieldAlignment=CAlignment) then
            PPUFile.PutByte(Byte(FieldAlignment));
          { it's not really a "symtableoption", but loading this from the record
            def requires storing the set in the recorddef at least between
@@ -1240,9 +1240,9 @@ implementation
         VarAlignRecord: ShortInt;
       begin
         case UseFieldAlignment of
-          C_alignment:
+          CAlignment:
             VarAlignRecord:=Used_Align(VarAlign,RecordAlignMin,CurrentSettings.Alignment.MaxCRecordAlign);
-          mac68k_alignment:
+          Mac68KAlignment:
             VarAlignRecord:=2;
           else
             VarAlignRecord:=Field2RecordAlignment(FieldOffset,VarAlign);
@@ -1274,11 +1274,11 @@ implementation
         VarDef:=Sym.VarDef;
         VarAlign:=VarDef.StructAlignment;
         case UseFieldAlignment of
-          bit_alignment:
+          BitAlignment:
             begin
               { bitpacking only happens for ordinals, the rest is aligned at }
               { 1 byte (compatible with GPC/GCC)                             }
-              if is_ordinal(VarDef) then
+              if Is_Ordinal(VarDef) then
                 begin
                   Sym.FieldOffset:=DataBitSize;
                   L:=Sym.GetPackedBitSize;
@@ -1499,7 +1499,7 @@ implementation
         for I:=0 to SymList.Count-1 do
           begin
             Sym:=TSym(SymList[I]);
-            if is_normal_fieldvarsym(Sym) and
+            if Is_Normal_FieldVarSym(Sym) and
                (TFieldVarSym(Sym).FieldOffset>=Offset) then
               begin
                 Result:=TFieldVarSym(Sym);
@@ -1520,13 +1520,13 @@ implementation
           used alignment. }
         if (PadAlignment = 1) then
           case UseFieldAlignment of
-            C_alignment:
+            CAlignment:
               PadAlignment:=FieldAlignment;
             { bitpacked }
-            bit_alignment:
+            BitAlignment:
               PadAlignment:=1;
             { mac68k: always round to multiple of 2 }
-            mac68k_alignment:
+            Mac68KAlignment:
               PadAlignment:=2;
             { default/no packrecords specified }
             0:
@@ -1554,7 +1554,7 @@ implementation
 
     function TAbstractRecordSymTable.Is_Packed: Boolean;
       begin
-        Result:=UseFieldAlignment=bit_alignment;
+        Result:=UseFieldAlignment=BitAlignment;
       end;
 
 
@@ -1574,14 +1574,14 @@ implementation
           Exit;
         if CurrentSymList.Count <> 2 then
           Exit;
-        if is_normal_fieldvarsym(TSym(CurrentSymList[0])) then
+        if Is_Normal_FieldVarSym(TSym(CurrentSymList[0])) then
           begin
             Sym:=TFieldVarSym(CurrentSymList[0]);
             Def1 := Sym.VarDef;
           end
         else
           Exit;
-        if is_normal_fieldvarsym(TSym(CurrentSymList[1])) then
+        if Is_Normal_FieldVarSym(TSym(CurrentSymList[1])) then
           begin
             Sym:=TFieldVarSym(CurrentSymList[1]);
             Def2 := Sym.VarDef;
@@ -1623,7 +1623,7 @@ implementation
             { record has one field? }
             for I:=0 to CurrentSymList.Count-1 do
               begin
-                if is_normal_fieldvarsym(TSym(CurrentSymList[I])) then
+                if Is_Normal_FieldVarSym(TSym(CurrentSymList[I])) then
                   begin
                     if Result then
                       begin
@@ -1639,7 +1639,7 @@ implementation
                 { if the field is an array, does it contain one element? }
                 CurrentDef:=Sym.VarDef;
                 while (CurrentDef.Typ=ArrayDef) and
-                      not is_special_array(CurrentDef) do
+                      not Is_Special_Array(CurrentDef) do
                   begin
                     if TArrayDef(CurrentDef).EleCount<>1 then
                       begin
@@ -1678,7 +1678,7 @@ implementation
         SubList : TFPList;
         I : LongInt;
       begin
-        if not is_normal_fieldvarsym(Sym) then
+        if not Is_Normal_FieldVarSym(Sym) then
           Exit;
         if not Is_Record(FSym.VarDef) and not Is_Object(FSym.VarDef) and not Is_CPPClass(FSym.VarDef) then
           Exit;
@@ -1742,7 +1742,7 @@ implementation
     procedure TAbstractRecordSymTable.SetDataSize(Val: ASizeInt);
       begin
         FDataSize:=Val;
-        if (UseFieldAlignment=bit_alignment) then
+        if (UseFieldAlignment=BitAlignment) then
           { can overflow in non bitpacked records }
           DataBitSize:=Val*8;
       end;
@@ -1759,10 +1759,10 @@ implementation
         VarDef:=Sym.VarDef;
         VarAlign:=VarDef.StructAlignment;
         case UseFieldAlignment of
-          bit_alignment:
+          BitAlignment:
             { has to be handled separately }
             InternalError(2012071301);
-          C_alignment:
+          CAlignment:
             begin
               { Calc the alignment size for C style records }
               if (VarAlign>4) and
@@ -1789,7 +1789,7 @@ implementation
                 end;
               GlobalFieldAlignment:=Min(GlobalFieldAlignment,CurrentSettings.Alignment.MaxCRecordAlign);
             end;
-          mac68k_alignment:
+          Mac68KAlignment:
             begin
               { mac68k alignment (C description):
                  * char is aligned to 1 byte
@@ -1843,7 +1843,7 @@ implementation
         StoreSize:=FDataSize;
         StoreAlign:=FieldAlignment;
         FDataSize:=Offset;
-        if (UseFieldAlignment=bit_alignment) then
+        if (UseFieldAlignment=BitAlignment) then
           DataBitSize:=Offset*8;
 
         { We move the ownership of the defs and symbols to the new recordsymtable.
@@ -1856,7 +1856,7 @@ implementation
         for I:=0 to UnionST.SymList.Count-1 do
           begin
             Sym:=TSym(UnionST.SymList[I]);
-            if not is_normal_fieldvarsym(Sym) then
+            if not Is_Normal_FieldVarSym(Sym) then
               InternalError(200601272);
             if TFieldVarSym(Sym).FieldOffset=0 then
               Include(TFieldVarSym(Sym).VarOptions,vo_is_first_field);
@@ -1868,12 +1868,12 @@ implementation
             if VarAlign=0 then
               VarAlign:=Size_2_Align(TFieldVarSym(Sym).GetSize);
             { retrieve size }
-            if (UseFieldAlignment=bit_alignment) then
+            if (UseFieldAlignment=BitAlignment) then
               begin
                 { bit packed records are limited to high(aint) bits }
                 { instead of bytes to avoid double precision        }
                 { arithmetic in offset calculations                 }
-                if is_ordinal(TFieldVarSym(Sym).VarDef) then
+                if Is_Ordinal(TFieldVarSym(Sym).VarDef) then
                   BitSize:=TFieldVarSym(Sym).GetPackedBitSize
                 else
                   begin
@@ -1910,13 +1910,13 @@ implementation
                 VarAlignRecord:=Field2RecordAlignment(TFieldVarSym(Sym).FieldOffset,VarAlign);
               end;
             { update alignment of this record }
-            if (UseFieldAlignment<>C_alignment) and
-               (UseFieldAlignment<>mac68k_alignment) then
+            if (UseFieldAlignment<>CAlignment) and
+               (UseFieldAlignment<>Mac68KAlignment) then
               RecordAlignment:=Max(RecordAlignment,VarAlignRecord);
           end;
         { update alignment for C records }
-        if (UseFieldAlignment=C_alignment) and
-           (UseFieldAlignment<>mac68k_alignment) then
+        if (UseFieldAlignment=CAlignment) and
+           (UseFieldAlignment<>Mac68KAlignment) then
           RecordAlignment:=Max(RecordAlignment,UnionST.RecordAlignment);
         { Register defs in the new record symtable }
         for I:=0 to UnionST.DefList.Count-1 do
@@ -2118,7 +2118,7 @@ implementation
         { check ObjectSymtable, skip this for funcret sym because
           that will always be positive because it has the same name
           as the procsym }
-        if not is_funcret_sym(Sym) and
+        if not Is_FuncRet_Sym(Sym) and
            (DefOwner.Typ=ProcDef) and
            Assigned(TProcDef(DefOwner).Struct) and
            (TProcDef(DefOwner).Owner.DefOwner=TProcDef(DefOwner).Struct) and
@@ -2315,7 +2315,7 @@ implementation
       begin
         inherited Create(N,ID);
         SymTableType:=StaticSymTable;
-        SymTableLevel:=main_program_level;
+        SymTableLevel:=MainProgramLevel;
         CurrentVisibility:=vis_private;
       end;
 
@@ -2363,7 +2363,7 @@ implementation
       begin
          inherited Create(N,ID);
          SymTableType:=GlobalSymTable;
-         SymTableLevel:=main_program_level;
+         SymTableLevel:=MainProgramLevel;
       end;
 
 
@@ -2469,7 +2469,7 @@ implementation
           SymTableType:=ExportedMacroSymTable
         else
           SymTableType:=LocalMacroSymTable;
-        SymTableLevel:=main_program_level;
+        SymTableLevel:=MainProgramLevel;
       end;
 
 {****************************************************************************
@@ -2879,7 +2879,7 @@ implementation
         function IsChildOf(Child, PotentialParent: TDef):Boolean;
           begin
             Result:=True;
-            if def_is_related(Child, PotentialParent) then
+            if Def_Is_Related(Child, PotentialParent) then
               Exit;
             if (Child.Typ=ObjectDef) and
                (PotentialParent.Typ=ObjectDef) and
@@ -2894,7 +2894,7 @@ implementation
                      end
                    else
                      Child:=TObjectDef(Child).ChildOf;
-                   if (Child<>nil) and equal_defs(Child, PotentialParent) then
+                   if (Child<>nil) and Equal_Defs(Child, PotentialParent) then
                      Exit;
                  until Child=nil;
               end;
@@ -3077,7 +3077,7 @@ implementation
                         Assigned(ContextObjDef) and
                         (ContextObjDef.Owner.SymTableType in [GlobalSymTable,StaticSymTable,ObjectSymTable,RecordSymTable,LocalSymTable]) and
                         IsCurrentUnitForContext(ContextObjDef.Owner) and
-                        def_is_related(ContextObjDef,SymOwnerDef)
+                        Def_Is_Related(ContextObjDef,SymOwnerDef)
                        ) or
                        (
                         { context object is inside the current unit and related to
@@ -3089,7 +3089,7 @@ implementation
                         ) and
                         (OrgContextObjDef.Owner.SymTableType in [GlobalSymTable,StaticSymTable,ObjectSymTable,RecordSymTable,LocalSymTable]) and
                         IsCurrentUnitForContext(OrgContextObjDef.Owner) and
-                        def_is_related(OrgContextObjDef,OrgSymOwnerDef)
+                        Def_Is_Related(OrgContextObjDef,OrgSymOwnerDef)
                        ) or
                        ( // the case of specialize inside the generic declaration and nested types
                         (NonLocalST.SymTableType in [ObjectSymTable,RecordSymTable]) and
@@ -3536,11 +3536,11 @@ implementation
             { The contextclassh is used for visibility. The classh must be equal to
               or be a parent of contextclassh. E.g. for inherited searches the classh is the
               parent or a class helper. }
-            if not (def_is_related(ContextClassH,ClassH) or
+            if not (Def_Is_Related(ContextClassH,ClassH) or
                 (Is_ClassHelper(ContextClassH) and
                  Assigned(TObjectDef(ContextClassH).ExtendedDef) and
                 (TObjectDef(ContextClassH).ExtendedDef.Typ=ObjectDef) and
-                def_is_related(TObjectDef(ContextClassH).ExtendedDef,ClassH))) then
+                Def_Is_Related(TObjectDef(ContextClassH).ExtendedDef,ClassH))) then
               InternalError(200811161);
           end;
         Result:=False;
@@ -3581,7 +3581,7 @@ implementation
               begin
                 { search for a class helper method first if this is an Object
                   Pascal class and we haven't yet found a helper symbol }
-                if (ClassH.ObjectType in objecttypes_with_helpers) and
+                if (ClassH.ObjectType in ObjectTypesWithHelpers) and
                     (ssf_search_helper in Flags) then
                   begin
                     Result:=Search_ObjectPascal_Helper(ClassH,ContextClassH,S,SRSym,SRSymTable);
@@ -3817,7 +3817,7 @@ implementation
           - otherwise it's a nogo }
         IsExplicit:=AssignmentType=_OP_EXPLICIT;
         ShortStringCount:=0;
-        CheckShortString:=not IsExplicit and is_shortstring(ToDef) and (TStringDef(ToDef).Len<>255);
+        CheckShortString:=not IsExplicit and Is_ShortString(ToDef) and (TStringDef(ToDef).Len<>255);
         while Assigned(StackItem) do
           begin
             Sym:=TProcSym(StackItem^.SymTable.FindWithHash(HashedID));
@@ -3831,7 +3831,7 @@ implementation
                 { we found a ShortString overload, use that and be done }
                 if CheckShortString and
                     Assigned(CurrPD) and
-                    is_shortstring(CurrPD.ReturnDef) and
+                    Is_ShortString(CurrPD.ReturnDef) and
                     (TStringDef(CurrPD.ReturnDef).Len=255) then
                   begin
                     BestEq:=CurReq;
@@ -3840,7 +3840,7 @@ implementation
                   end;
                 { independently of the operator being better count if we encountered
                   multiple String[x] operators }
-                if CheckShortString and Assigned(CurrPD) and is_shortstring(CurrPD.ReturnDef) then
+                if CheckShortString and Assigned(CurrPD) and Is_ShortString(CurrPD.ReturnDef) then
                   Inc(ShortStringCount);
                 if CurReq>BestEq then
                   begin
@@ -3880,7 +3880,7 @@ implementation
 
         { if we're assigning to a typed pointer, but we did not find a suitable assignment
           operator then we also check for a untyped pointer assignment operator }
-        if not Assigned(Result) and is_pointer(ToDef) and not is_voidpointer(ToDef) then
+        if not Assigned(Result) and Is_Pointer(ToDef) and not Is_VoidPointer(ToDef) then
           begin
             if Explicit then
               Result:=SearchSpecificAssignmentOperator(_OP_EXPLICIT,FromDef,VoidPointerType);
@@ -4229,7 +4229,7 @@ implementation
         FoundDefOwner,
         DefOwner   : TObjectDef;
       begin
-        HashedID.ID:=class_helper_prefix+S;
+        HashedID.ID:=ClassHelperPrefix+S;
         StackItem:=SymTableStack.Stack;
         Result:=False;
         SRSym:=nil;
@@ -4256,7 +4256,7 @@ implementation
                     }
                     DefOwner:=TObjectDef(TProcDef(TProcSym(SearchSym).ProcDefList[I]).Owner.DefOwner);
                     if Is_ObjCCategory(DefOwner) and
-                       def_is_related(PD,DefOwner.ChildOf) then
+                       Def_Is_Related(PD,DefOwner.ChildOf) then
                       begin
                         { we need to know if a procedure references symbols
                           in the static symtable, because then it can't be
@@ -4271,7 +4271,7 @@ implementation
                           (or a closer parent).
                         }
                         if not Result or
-                           def_is_related(DefOwner.ChildOf,FoundDefOwner) then
+                           Def_Is_Related(DefOwner.ChildOf,FoundDefOwner) then
                           begin
                             FoundDefOwner:=DefOwner.ChildOf;
                             SRSym:=TProcDef(TProcSym(SearchSym).ProcDefList[I]).ProcSym;
@@ -4302,7 +4302,7 @@ implementation
         StackItem  : PSymTableStackItem;
         I          : LongInt;
       begin
-        HashedID.ID:=class_helper_prefix+S;
+        HashedID.ID:=ClassHelperPrefix+S;
         StackItem:=SymTableStack.Stack;
         while Assigned(StackItem) do
           begin

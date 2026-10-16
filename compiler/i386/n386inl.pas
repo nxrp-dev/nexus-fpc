@@ -49,7 +49,7 @@ implementation
 
   function TI386InlineNode.first_sar: TNode;
     begin
-      if is_64bitint(resultdef) and (
+      if Is_64BitInt(resultdef) and (
         (inlinenumber=in_sar_x) or (
           (inlinenumber=in_sar_x_y) and
           (TCallParaNode(left).left.nodetype=ordconstn)
@@ -69,7 +69,7 @@ implementation
       hreg64hi,hreg64lo: TRegister;
       v: aint;
     begin
-      if is_64bitint(resultdef) and (
+      if Is_64BitInt(resultdef) and (
         (inlinenumber=in_sar_x) or (
           (inlinenumber=in_sar_x_y) and
           (TCallParaNode(left).left.nodetype=ordconstn)
@@ -81,7 +81,7 @@ implementation
             begin
               op1:=TCallParaNode(TCallParaNode(left).right).left;
               SecondPass(TCallParaNode(left).left);
-              v:=TOrdConstNode(TCallParaNode(left).left).value.svalue and 63;
+              v:=TOrdConstNode(TCallParaNode(left).left).Value.svalue and 63;
             end
           else
             begin
@@ -90,21 +90,21 @@ implementation
             end;
           SecondPass(op1);
 
-          location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
+          Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
 
           { load left operator in a register }
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,op1.location,op1.resultdef,resultdef,false);
-          hreg64hi:=op1.location.register64.reghi;
-          hreg64lo:=op1.location.register64.reglo;
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,op1.Location,op1.resultdef,resultdef,false);
+          hreg64hi:=op1.Location.Register64.RegHi;
+          hreg64lo:=op1.Location.Register64.RegLo;
 
           if (v=63) then
             begin
               emit_const_reg(A_SAR,S_L,31,hreg64hi);
-              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
             end
           else if (v>31) then
             begin
-              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
               emit_const_reg(A_SAR,S_L,31,hreg64hi);
               emit_const_reg(A_SAR,S_L,v and 31,hreg64lo);
             end
@@ -113,8 +113,8 @@ implementation
               emit_const_reg_reg(A_SHRD,S_L,v and 31,hreg64hi,hreg64lo);
               emit_const_reg(A_SAR,S_L,v and 31,hreg64hi);
             end;
-          location.register64.reghi:=hreg64hi;
-          location.register64.reglo:=hreg64lo;
+          location.Register64.RegHi:=hreg64hi;
+          location.Register64.RegLo:=hreg64lo;
         end
       else
         inherited second_rox_sar;

@@ -224,7 +224,7 @@ interface
          {$pop}
          labelnr   : LongInt;
          labeltype : TAsmLabelType;
-         is_set    : boolean;
+         Is_Set    : boolean;
          is_public : boolean;
          defined_in_asmstatement : boolean;
          constructor Createlocal(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType);
@@ -379,7 +379,7 @@ implementation
         inherited Create(AList,'_$'+ModuleName+'$_L'+asmlabeltypeprefix[ltyp]+ToStr(nr),AB_GLOBAL,AT_DATA);
         labelnr:=nr;
         labeltype:=ltyp;
-        is_set:=false;
+        Is_Set:=false;
         { write it always }
         increfs;
         global_used;
@@ -391,7 +391,7 @@ implementation
         result := inherited getaltcopy(AList,altnr);
         TAsmLabel(result).labelnr:=labelnr;
         TAsmLabel(result).labeltype:=labeltype;
-        TAsmLabel(result).is_set:=false;
+        TAsmLabel(result).Is_Set:=false;
         case bind of
           AB_GLOBAL,
           AB_PRIVATE_EXTERN:
@@ -419,7 +419,7 @@ implementation
         inherited Create(AList,prefix+asmlabeltypeprefix[ltyp]+ToStr(nr),AB_LOCAL,asmtyp);
         labelnr:=nr;
         labeltype:=ltyp;
-        is_set:=false;
+        Is_Set:=false;
       end;
 
 

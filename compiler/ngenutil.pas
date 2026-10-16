@@ -241,10 +241,10 @@ implementation
         begin
           if not Assigned(p.resultdef) then
             TypeCheckPass(p);
-          if is_ansistring(p.resultdef) or
-             is_wide_or_unicode_string(p.resultdef) or
+          if Is_AnsiString(p.resultdef) or
+             Is_Wide_Or_Unicode_String(p.resultdef) or
              Is_InterfaceCOM_Or_DispInterface(p.resultdef) or
-             is_dynamic_array(p.resultdef) then
+             Is_Dynamic_Array(p.resultdef) then
             begin
               result:=CAssignmentNode.create(
                  CTypeConvNode.Create_Internal(p,VoidPointerType),
@@ -284,11 +284,11 @@ implementation
             TypeCheckPass(p);
           { 'decr_ref' suffix is somewhat misleading, all these helpers
             set the passed pointer to nil now }
-          if is_ansistring(p.resultdef) then
+          if Is_AnsiString(p.resultdef) then
             hs:='fpc_ansistr_decr_ref'
-          else if is_widestring(p.resultdef) then
+          else if Is_WideString(p.resultdef) then
             hs:='fpc_widestr_decr_ref'
-          else if is_unicodestring(p.resultdef) then
+          else if Is_UnicodeString(p.resultdef) then
             hs:='fpc_unicodestr_decr_ref'
           else if Is_InterfaceCOM_Or_DispInterface(p.resultdef) then
             hs:='fpc_intf_decr_ref'
@@ -352,7 +352,7 @@ implementation
            not (vo_is_default_var in TAbstractVarSym(p).VarOptions) or
            (TAbstractVarSym(p).VarSpez<>vs_const)
          ) and
-         (is_managed_type(TAbstractVarSym(p).vardef) or
+         (Is_Managed_Type(TAbstractVarSym(p).vardef) or
           ((m_iso in CurrentSettings.ModeSwitches) and (TAbstractVarSym(p).vardef.typ=filedef))
          ) then
         begin
@@ -375,7 +375,7 @@ implementation
            not(vo_is_default_var in TAbstractVarSym(p).VarOptions) or
            (TAbstractVarSym(p).VarSpez<>vs_const)
          ) and
-         is_managed_type(TLocalVarSym(p).vardef) then
+         Is_Managed_Type(TLocalVarSym(p).vardef) then
         sym_maybe_finalize(TStatementNode(arg^),TSym(p));
     end;
 
@@ -402,7 +402,7 @@ implementation
                 ) and
                not(vo_is_funcret in TStaticVarSym(p).VarOptions) and
                not(vo_is_external in TStaticVarSym(p).VarOptions) and
-               is_managed_type(TStaticVarSym(p).vardef) and
+               Is_Managed_Type(TStaticVarSym(p).vardef) and
                not (
                    Assigned(TStaticVarSym(p).FieldVarSym) and
                    Assigned(TStaticVarSym(p).FieldVarSym.owner.DefOwner) and
@@ -725,8 +725,8 @@ implementation
           ((vo_is_funcret in TAbstractNormalVarSym(p).VarOptions) or
            (TAbstractNormalVarSym(p).VarSpez=vs_out)))) and
          not (vo_is_default_var in TAbstractNormalVarSym(p).VarOptions) and
-         (not is_managed_type(TAbstractNormalVarSym(p).vardef) or
-          (is_string(TAbstractNormalVarSym(p).vardef) and
+         (not Is_Managed_Type(TAbstractNormalVarSym(p).vardef) or
+          (Is_String(TAbstractNormalVarSym(p).vardef) and
            (vo_is_funcret in TAbstractNormalVarSym(p).VarOptions)
           )
          ) and
@@ -756,9 +756,9 @@ implementation
                   the procedure address -> cast to tmethod instead }
                 trashn:=CTypeConvNode.create_explicit(trashn,MethodPointerType);
             end;
-          if is_managed_type(p.vardef) then
+          if Is_Managed_Type(p.vardef) then
             begin
-              if is_string(p.vardef) then
+              if Is_String(p.vardef) then
                 begin
                   stringres:=
                     CStringConstNode.createstr(
@@ -768,7 +768,7 @@ implementation
                   { prevent attempts to convert the string to the specified
                     code page at compile time, as it may not be available (and
                     it does not matter) }
-                  if is_ansistring(p.vardef) then
+                  if Is_AnsiString(p.vardef) then
                     stringres.changestringtype(Search_System_Type('RAWBYTESTRING').typedef);
                   trash_small(stat,trashn,stringres);
                 end
@@ -777,9 +777,9 @@ implementation
             end
           else if ((p.typ=localvarsym) and
               (not(vo_is_funcret in p.VarOptions) or
-               not is_shortstring(p.vardef))) or
+               not Is_ShortString(p.vardef))) or
              ((p.typ=paravarsym) and
-              not is_shortstring(p.vardef)) then
+              not Is_ShortString(p.vardef)) then
             begin
               size:=p.GetSize;
               case size of
@@ -882,7 +882,7 @@ implementation
       storefilepos:=CurrentFilePos;
       CurrentFilePos:=sym.fileinfo;
       l:=sym.GetSize;
-      wantedalign:=sym.vardef.alignment;
+      wantedalign:=sym.vardef.Alignment;
       if sym.vardef.inheritsfrom(TAbstractRecordDef) and
          (sym.vardef.typ in [recorddef]) then
         explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(sym.vardef).SymTable).ExplicitRecordAlignment
@@ -898,7 +898,7 @@ implementation
               Message1(scanner_w_alignment_larger_than_max,sym.name);
               varalign:=explicitalign;
             end
-          else if (wantedalign>varalign) and (TargetInfo.alignment.VarAlignMax>1) then
+          else if (wantedalign>varalign) and (TargetInfo.Alignment.VarAlignMax>1) then
             begin
               { varalign:=wantedalign; this can lead to
                 troubles on systems like for instance
@@ -962,9 +962,9 @@ implementation
       pd: TProcDef;
     begin
       if potype<>potype_mainstub then
-        pd:=CProcDef.create(main_program_level,true)
+        pd:=CProcDef.create(MainProgramLevel,true)
       else
-        pd:=CProcDef.create(normal_function_level,true);
+        pd:=CProcDef.create(NormalFunctionLevel,true);
       { always register the def }
       pd.RegisterDef;
       pd.ProcSym:=ps;
@@ -1126,7 +1126,7 @@ implementation
     begin
       unitinits:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       unitinits.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
-        targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+        targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
       { tablecount }
       unitinits.emit_ord_const(entries.count,ALUUIntType);
@@ -1247,7 +1247,7 @@ implementation
         exit;
       count:=0;
       tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.alignment,targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+      tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
       placeholder:=tcb.emit_placeholder(SizeSIntType);
 
       hp:=TUsedUnit(UsedUnits.first);
@@ -1319,7 +1319,7 @@ implementation
        begin
          tcb:=TTAITypedConstBuilder(arg);
          def:=TStaticVarSym(p).vardef;
-         alignment:=def.alignment;
+         alignment:=def.Alignment;
          if (def.typ=recorddef) and
             (TAbstractRecordSymTable(TRecordDef(def).SymTable).ExplicitRecordAlignment>alignment) then
            alignment:=TAbstractRecordSymTable(TRecordDef(def).SymTable).ExplicitRecordAlignment;
@@ -1341,7 +1341,7 @@ implementation
        if (tf_section_threadvars in TargetInfo.flags) then
          exit;
        tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-       tabledef:=tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.alignment,targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+       tabledef:=tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
        if Assigned(CurrentModule.GlobalSymTable) then
          CurrentModule.GlobalSymTable.SymList.ForEachCall(@AddToThreadvarList,tcb);
        CurrentModule.LocalSymTable.SymList.ForEachCall(@AddToThreadvarList,tcb);
@@ -1374,7 +1374,7 @@ implementation
     begin
       tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
-        targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin
+        targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin
       );
       { placeholder for the count }
       countplaceholder:=tcb.emit_placeholder(SizeSIntType);
@@ -1430,15 +1430,15 @@ implementation
       s:=Make_MangledName(prefix,CurrentModule.LocalSymTable,'');
       tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
-        targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+        targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
       repeat
         { optimize away unused local/static symbols }
         if (item.sym.refs>0) or (item.sym.owner.SymTableType=GlobalSymTable) then
           begin
             { address to initialize }
             tcb.queue_init(VoidPointerType);
-            rawdatadef:=CArrayDef.getreusable(CAnsiCharType,TStaticVarSym(item.sym).vardef.size);
-            tcb.queue_vecn(rawdatadef,item.offset);
+            rawdatadef:=CArrayDef.getreusable(CAnsiCharType,TStaticVarSym(item.sym).vardef.Size);
+            tcb.queue_vecn(rawdatadef,item.Offset);
             tcb.queue_typeconvn(CPointerDef.getreusable(TStaticVarSym(item.sym).vardef),CPointerDef.getreusable(rawdatadef));
             tcb.queue_emit_staticvar(TStaticVarSym(item.sym));
             { value with which to initialize }
@@ -1495,7 +1495,7 @@ implementation
       count:=0;
       hp:=TModule(Loaded_Units.first);
       tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
-        targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+        targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
       countplaceholder:=tcb.emit_placeholder(SizeSIntType);
       while Assigned(hp) do
         begin

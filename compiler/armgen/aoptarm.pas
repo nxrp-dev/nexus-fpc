@@ -46,7 +46,7 @@ Type
     function RemoveSuperfluousMove(const p: TAI; movp: TAI; const optimizer: string): boolean;
     function RedundantMovProcess(var p: TAI; var hp1: TAI): boolean;
     function GetNextInstructionUsingReg(Current: TAI; out Next: TAI; const reg: TRegister): Boolean;
-    function USxtOp2Op(var p, hp1: TAI; shiftmode: TShiftMode): Boolean;
+    function USxtOp2Op(var p, hp1: TAI; ShiftMode: TShiftMode): Boolean;
     function OptPreSBFXUBFX(var p: TAI): Boolean;
 
     function OptPass1UXTB(var p: TAI): Boolean;
@@ -164,16 +164,16 @@ Implementation
   function RefsEqual(const r1, r2: TReference): boolean;
     begin
       refsequal :=
-        (r1.offset = r2.offset) and
-        (r1.base = r2.base) and
-        (r1.index = r2.index) and (r1.scalefactor = r2.scalefactor) and
-        (r1.symbol=r2.symbol) and (r1.refaddr = r2.refaddr) and
-        (r1.relsymbol = r2.relsymbol) and
-        (r1.shiftimm = r2.shiftimm) and
-        (r1.addressmode = r2.addressmode) and
-        (r1.shiftmode = r2.shiftmode) and
-        (r1.volatility=[]) and
-        (r2.volatility=[]);
+        (r1.Offset = r2.Offset) and
+        (r1.Base = r2.Base) and
+        (r1.Index = r2.Index) and (r1.ScaleFactor = r2.ScaleFactor) and
+        (r1.Symbol=r2.Symbol) and (r1.RefAddr = r2.RefAddr) and
+        (r1.RelSymbol = r2.RelSymbol) and
+        (r1.ShiftImm = r2.ShiftImm) and
+        (r1.AddressMode = r2.AddressMode) and
+        (r1.ShiftMode = r2.ShiftMode) and
+        (r1.Volatility=[]) and
+        (r2.Volatility=[]);
     end;
 
 
@@ -184,7 +184,7 @@ Implementation
       if result then
         case oper1.typ of
           top_const:
-            Result:=oper1.val = oper2.val;
+            Result:=oper1.Val = oper2.Val;
           top_reg:
             Result:=oper1.reg = oper2.reg;
           top_conditioncode:
@@ -192,7 +192,7 @@ Implementation
           top_realconst:
             Result:=oper1.val_real = oper2.val_real;
           top_ref:
-            Result:=RefsEqual(oper1.ref^, oper2.ref^);
+            Result:=RefsEqual(oper1.Ref^, oper2.Ref^);
           else Result:=false;
         end
     end;
@@ -200,7 +200,7 @@ Implementation
 
   function MatchOperand(const oper: TOper; const a: TCGInt): boolean; inline;
     begin
-      result := (oper.typ = top_const) and (oper.val = a);
+      result := (oper.typ = top_const) and (oper.Val = a);
     end;
 
 
@@ -243,7 +243,7 @@ Implementation
       Result:=RegWritten;
     end;
 
-  function TARMAsmOptimizer.USxtOp2Op(var p,hp1: TAI; shiftmode: TShiftMode): Boolean;
+  function TARMAsmOptimizer.USxtOp2Op(var p,hp1: TAI; ShiftMode: TShiftMode): Boolean;
     var
       so: TShifterOp;
       opoffset: Integer;
@@ -267,13 +267,13 @@ Implementation
             opoffset:=0
           else
             opoffset:=1;
-          TAICPU(hp1).loadReg(opoffset+1,TAICPU(p).oper[1]^.reg);
-          if not(shiftmode in [SM_SXTX,SM_UXTX,SM_LSL]) then
-            setsubreg(TAICPU(hp1).oper[opoffset+1]^.reg,R_SUBD);
+          TAICPU(hp1).LoadReg(opoffset+1,TAICPU(p).oper[1]^.reg);
+          if not(ShiftMode in [SM_SXTX,SM_UXTX,SM_LSL]) then
+            SetSubReg(TAICPU(hp1).oper[opoffset+1]^.reg,R_SUBD);
           TAICPU(hp1).ops:=opoffset+3;
           shifterop_reset(so);
-          so.shiftmode:=shiftmode;
-          so.shiftimm:=0;
+          so.ShiftMode:=ShiftMode;
+          so.ShiftImm:=0;
           TAICPU(hp1).loadshifterop(opoffset+2,so);
           result:=RemoveCurrentP(p);
         end;
@@ -348,7 +348,7 @@ Implementation
               AllocRegBetween(TAICPU(movp).oper[0]^.reg,p,movp,UsedRegs);
 
               { finally get rid of the mov }
-              TAICPU(p).loadreg(0,TAICPU(movp).oper[0]^.reg);
+              TAICPU(p).LoadReg(0,TAICPU(movp).oper[0]^.reg);
               { Remove preindexing and postindexing for LDR in some cases.
                 For example:
                   ldr	reg2,[reg1, xxx]!
@@ -359,9 +359,9 @@ Implementation
                 Preindexing must be removed there, since the same register is used as the base and as the target.
                 Such case is not allowed for ARM CPU and produces crash. }
               if (TAICPU(p).opcode = A_LDR) and (TAICPU(p).oper[1]^.typ = top_ref)
-                and (TAICPU(movp).oper[0]^.reg = TAICPU(p).oper[1]^.ref^.base)
+                and (TAICPU(movp).oper[0]^.reg = TAICPU(p).oper[1]^.Ref^.Base)
               then
-                TAICPU(p).oper[1]^.ref^.addressmode:=AM_OFFSET;
+                TAICPU(p).oper[1]^.Ref^.AddressMode:=AM_OFFSET;
               asml.remove(movp);
               movp.free;
             end;
@@ -409,7 +409,7 @@ Implementation
             ) and
             (TAICPU(p).oper[1]^.reg<>NR_SP) and
             { in this case you have to transform it to movk or the like }
-            (getsupreg(TAICPU(p).oper[1]^.reg)<>RS_XZR) and
+            (GetSupReg(TAICPU(p).oper[1]^.reg)<>RS_XZR) and
             not(RegUsedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
             begin
               { When we get here we still don't know if the registers match }
@@ -445,7 +445,7 @@ Implementation
               ldr/str r2, [r0, etc.]    mov     r2, r0
           }
           else if (TAICPU(p).condition = C_None) and (TAICPU(p).oper[1]^.typ = top_reg)
-            and (getsupreg(TAICPU(p).oper[0]^.reg) <> RS_STACK_POINTER_REG)
+            and (GetSupReg(TAICPU(p).oper[0]^.reg) <> RS_STACK_POINTER_REG)
             then
             begin
               current_hp := p;
@@ -461,23 +461,23 @@ Implementation
                     { If r0 is the zero register, then this sequence of instructions will cause
                       an access violation, but that's better than an assembler error caused by
                       changing r0 to xzr inside the reference (Where it's illegal). [Kit] }
-                    and (getsupreg(TAICPU(p).oper[1]^.reg) <> RS_XZR)
+                    and (GetSupReg(TAICPU(p).oper[1]^.reg) <> RS_XZR)
                     then
                     begin
 
                       { Change the registers from r1 to r0 }
-                      if (TAICPU(next_hp).oper[1]^.ref^.base = TAICPU(p).oper[0]^.reg) and
+                      if (TAICPU(next_hp).oper[1]^.Ref^.Base = TAICPU(p).oper[0]^.reg) and
                         { Don't mess around with the base register if the
                           reference is pre- or post-indexed }
-                        (TAICPU(next_hp).oper[1]^.ref^.addressmode = AM_OFFSET) then
+                        (TAICPU(next_hp).oper[1]^.Ref^.AddressMode = AM_OFFSET) then
                         begin
-                          TAICPU(next_hp).oper[1]^.ref^.base := TAICPU(p).oper[1]^.reg;
+                          TAICPU(next_hp).oper[1]^.Ref^.Base := TAICPU(p).oper[1]^.reg;
                           LDRChange := True;
                         end;
 
-                      if TAICPU(next_hp).oper[1]^.ref^.index = TAICPU(p).oper[0]^.reg then
+                      if TAICPU(next_hp).oper[1]^.Ref^.Index = TAICPU(p).oper[0]^.reg then
                         begin
-                          TAICPU(next_hp).oper[1]^.ref^.index := TAICPU(p).oper[1]^.reg;
+                          TAICPU(next_hp).oper[1]^.Ref^.Index := TAICPU(p).oper[1]^.reg;
                           LDRChange := True;
                         end;
 
@@ -485,10 +485,10 @@ Implementation
                         DebugMsg('Peephole Optimization: ' + std_regname(TAICPU(p).oper[0]^.reg) + ' = ' + std_regname(TAICPU(p).oper[1]^.reg) + ' (MovLdr2Ldr 1)', next_hp);
 
                       { Drop out if we're dealing with pre-indexed references }
-                      if (TAICPU(next_hp).oper[1]^.ref^.addressmode = AM_PREINDEXED) and
+                      if (TAICPU(next_hp).oper[1]^.Ref^.AddressMode = AM_PREINDEXED) and
                         (
-                          RegInRef(TAICPU(p).oper[0]^.reg, TAICPU(next_hp).oper[1]^.ref^) or
-                          RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(next_hp).oper[1]^.ref^)
+                          RegInRef(TAICPU(p).oper[0]^.reg, TAICPU(next_hp).oper[1]^.Ref^) or
+                          RegInRef(TAICPU(p).oper[1]^.reg, TAICPU(next_hp).oper[1]^.Ref^)
                         ) then
                         begin
                           { Remember to update register allocations }
@@ -499,7 +499,7 @@ Implementation
                         end;
 
                       { The register being stored can be potentially changed (as long as it's not the stack pointer) }
-                      if (TAICPU(next_hp).opcode = A_STR) and (getsupreg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) and
+                      if (TAICPU(next_hp).opcode = A_STR) and (GetSupReg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) and
                         MatchOperand(TAICPU(next_hp).oper[0]^, TAICPU(p).oper[0]^.reg) then
                         begin
                           DebugMsg('Peephole Optimization: ' + std_regname(TAICPU(p).oper[0]^.reg) + ' = ' + std_regname(TAICPU(p).oper[1]^.reg) + ' (MovLdr2Ldr 2)', next_hp);
@@ -507,7 +507,7 @@ Implementation
                           LDRChange := True;
                         end;
 
-                      if LDRChange and (getsupreg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) then
+                      if LDRChange and (GetSupReg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) then
                         begin
                           AllocRegBetween(TAICPU(p).oper[1]^.reg, p, next_hp, UsedRegs);
                           if (TAICPU(p).oppostfix = PF_None) and
@@ -525,7 +525,7 @@ Implementation
                               (TAICPU(next_hp).opcode = A_LDR) or
                               not RegInOp(TAICPU(p).oper[0]^.reg, TAICPU(next_hp).oper[0]^)
                             ) and
-                            not RegInRef(TAICPU(p).oper[0]^.reg, TAICPU(next_hp).oper[1]^.ref^) then
+                            not RegInRef(TAICPU(p).oper[0]^.reg, TAICPU(next_hp).oper[1]^.Ref^) then
                             begin
                               DebugMsg('Peephole Optimization: RedundantMovProcess 2a done', p);
                               RemoveCurrentP(p);
@@ -597,7 +597,7 @@ Implementation
                           if MatchOperand(TAICPU(next_hp).oper[0]^, TAICPU(p).oper[1]^.reg)
                             { Be careful - if the entire register is not used, removing this
                               instruction will leave the unused part uninitialised }
-                            and (getsubreg(TAICPU(p).oper[1]^.reg) = R_SUBQ)
+                            and (GetSubReg(TAICPU(p).oper[1]^.reg) = R_SUBQ)
                             then
                             begin
                               { Instruction will become mov r1,r1 }
@@ -634,7 +634,7 @@ Implementation
                                   remove if the register was apparently not allocated when its value is
                                   first set at the MOV command (this is especially true for the stack
                                   register). [Kit] }
-                                (getsupreg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) and
+                                (GetSupReg(TAICPU(p).oper[1]^.reg) <> RS_STACK_POINTER_REG) and
                                 RegInUsedRegs(TAICPU(p).oper[0]^.reg, UsedRegs) and
                                 not RegUsedAfterInstruction(TAICPU(p).oper[0]^.reg, next_hp, TmpUsedRegs) then
                                 begin
@@ -720,8 +720,8 @@ Implementation
               the functionality of the second UXTB and so its presence is
               not required }
             (TAICPU(hp1).opcode = A_AND) and
-            (TAICPU(hp1).oper[2]^.val >= 0) and
-            (TAICPU(hp1).oper[2]^.val <= ConstLimit)
+            (TAICPU(hp1).oper[2]^.Val >= 0) and
+            (TAICPU(hp1).oper[2]^.Val <= ConstLimit)
           ) or
           (
             GetNextInstructionUsingReg(hp1,hp2,TAICPU(p).oper[0]^.reg) and
@@ -754,8 +754,8 @@ Implementation
 
           { Simplify bitwise constants if able }
           if (TAICPU(hp1).opcode in [A_AND, A_ORR, A_EOR, A_BIC, A_ORN, A_EON]) and
-            is_shifter_const(TAICPU(hp1).oper[2]^.val and ConstLimit, OS_32) then
-            TAICPU(hp1).oper[2]^.val := TAICPU(hp1).oper[2]^.val and ConstLimit;
+            is_shifter_const(TAICPU(hp1).oper[2]^.Val and ConstLimit, OS_32) then
+            TAICPU(hp1).oper[2]^.Val := TAICPU(hp1).oper[2]^.Val and ConstLimit;
         end;
     end;
 
@@ -783,12 +783,12 @@ Implementation
               if MatchInstruction(hp1, A_STR, [C_None], [PF_B]) and
                 Assigned(FindRegDealloc(TAICPU(p).oper[0]^.reg,TAI(hp1.Next))) and
                 { the reference in strb might not use reg2 }
-                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.ref^)) and
+                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.Ref^)) and
                 { reg1 might not be modified in between }
                 not(RegModifiedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
                 begin
                   DebugMsg('Peephole UxtbStrb2Strb done', p);
-                  TAICPU(hp1).loadReg(0,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(0,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -808,7 +808,7 @@ Implementation
                 begin
                   DebugMsg('Peephole UxtbUxth2Uxtb done', p);
                   AllocRegBetween(TAICPU(hp1).oper[0]^.reg,p,hp1,UsedRegs);
-                  TAICPU(p).loadReg(0,TAICPU(hp1).oper[0]^.reg);
+                  TAICPU(p).LoadReg(0,TAICPU(hp1).oper[0]^.reg);
                   asml.remove(hp1);
                   hp1.free;
                   result:=true;
@@ -830,7 +830,7 @@ Implementation
                 begin
                   DebugMsg('Peephole UxtbUxtb2Uxtb done', p);
                   AllocRegBetween(TAICPU(hp1).oper[0]^.reg,p,hp1,UsedRegs);
-                  TAICPU(p).loadReg(0,TAICPU(hp1).oper[0]^.reg);
+                  TAICPU(p).LoadReg(0,TAICPU(hp1).oper[0]^.reg);
                   asml.remove(hp1);
                   hp1.free;
                   result:=true;
@@ -846,7 +846,7 @@ Implementation
               else if MatchInstruction(hp1, A_AND, [C_None], [PF_None]) and
                 (TAICPU(hp1).ops=3) and
                 (TAICPU(hp1).oper[2]^.typ=top_const) and
-                ((TAICPU(hp1).oper[2]^.val and $FF)=$FF) and
+                ((TAICPU(hp1).oper[2]^.Val and $FF)=$FF) and
                 MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { reg1 might not be modified in between }
@@ -855,7 +855,7 @@ Implementation
                   DebugMsg('Peephole UxtbAndImm2Uxtb done', p);
                   TAICPU(hp1).opcode:=A_UXTB;
                   TAICPU(hp1).ops:=2;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               else if DoXTArithOp(p, hp1) then
@@ -895,12 +895,12 @@ Implementation
               if MatchInstruction(hp1, A_STR, [C_None], [PF_H]) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { the reference in strb might not use reg2 }
-                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.ref^)) and
+                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.Ref^)) and
                 { reg1 might not be modified in between }
                 not(RegModifiedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
                 begin
                   DebugMsg('Peephole UXTHStrh2Strh done', p);
-                  TAICPU(hp1).loadReg(0,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(0,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -921,7 +921,7 @@ Implementation
                   DebugMsg('Peephole UxthUxth2Uxth done', p);
                   AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,UsedRegs);
                   TAICPU(hp1).opcode:=A_UXTH;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -935,7 +935,7 @@ Implementation
               else if MatchInstruction(hp1, A_AND, [C_None], [PF_None]) and
                 (TAICPU(hp1).ops=3) and
                 (TAICPU(hp1).oper[2]^.typ=top_const) and
-                ((TAICPU(hp1).oper[2]^.val and $FFFF)=$FFFF) and
+                ((TAICPU(hp1).oper[2]^.Val and $FFFF)=$FFFF) and
                 MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { reg1 might not be modified in between }
@@ -944,7 +944,7 @@ Implementation
                   DebugMsg('Peephole UxthAndImm2Uxth done', p);
                   TAICPU(hp1).opcode:=A_UXTH;
                   TAICPU(hp1).ops:=2;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               else if DoXTArithOp(p, hp1) then
@@ -984,12 +984,12 @@ Implementation
               if MatchInstruction(hp1, A_STR, [C_None], [PF_B]) and
                 Assigned(FindRegDealloc(TAICPU(p).oper[0]^.reg,TAI(hp1.Next))) and
                 { the reference in strb might not use reg2 }
-                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.ref^)) and
+                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.Ref^)) and
                 { reg1 might not be modified in between }
                 not(RegModifiedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
                 begin
                   DebugMsg('Peephole SxtbStrb2Strb done', p);
-                  TAICPU(hp1).loadReg(0,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(0,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -1009,7 +1009,7 @@ Implementation
                 begin
                   DebugMsg('Peephole SxtbSxth2Sxtb done', p);
                   AllocRegBetween(TAICPU(hp1).oper[0]^.reg,p,hp1,UsedRegs);
-                  TAICPU(p).loadReg(0,TAICPU(hp1).oper[0]^.reg);
+                  TAICPU(p).LoadReg(0,TAICPU(hp1).oper[0]^.reg);
                   asml.remove(hp1);
                   hp1.free;
                   result:=true;
@@ -1031,7 +1031,7 @@ Implementation
                 begin
                   DebugMsg('Peephole SxtbSxtb2Sxtb done', p);
                   AllocRegBetween(TAICPU(hp1).oper[0]^.reg,p,hp1,UsedRegs);
-                  TAICPU(p).loadReg(0,TAICPU(hp1).oper[0]^.reg);
+                  TAICPU(p).LoadReg(0,TAICPU(hp1).oper[0]^.reg);
                   asml.remove(hp1);
                   hp1.free;
                   result:=true;
@@ -1047,7 +1047,7 @@ Implementation
               else if MatchInstruction(hp1, A_AND, [C_None], [PF_None]) and
                 (TAICPU(hp1).ops=3) and
                 (TAICPU(hp1).oper[2]^.typ=top_const) and
-                ((TAICPU(hp1).oper[2]^.val and $FF)=$FF) and
+                ((TAICPU(hp1).oper[2]^.Val and $FF)=$FF) and
                 MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { reg1 might not be modified in between }
@@ -1056,7 +1056,7 @@ Implementation
                   DebugMsg('Peephole SxtbAndImm2Uxtb done', p);
                   TAICPU(hp1).opcode:=A_UXTB;
                   TAICPU(hp1).ops:=2;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               else if DoXTArithOp(p, hp1) then
@@ -1098,12 +1098,12 @@ Implementation
                 MatchInstruction(hp1, A_STR, [C_None], [PF_H]) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { the reference in strb might not use reg2 }
-                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.ref^)) and
+                not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.Ref^)) and
                 { reg1 might not be modified in between }
                 not(RegModifiedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
                 begin
                   DebugMsg('Peephole SxthStrh2Strh done', p);
-                  TAICPU(hp1).loadReg(0,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(0,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -1126,7 +1126,7 @@ Implementation
                   DebugMsg('Peephole SxthSxth2Sxth done', p);
                   AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,UsedRegs);
                   TAICPU(hp1).opcode:=A_SXTH;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -1149,7 +1149,7 @@ Implementation
                   DebugMsg('Peephole SxthSxtw2Sxth done', p);
                   AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,UsedRegs);
                   TAICPU(hp1).opcode:=A_SXTH;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               {
@@ -1165,7 +1165,7 @@ Implementation
                 MatchInstruction(hp1, A_AND, [C_None], [PF_None]) and
                 (TAICPU(hp1).ops=3) and
                 (TAICPU(hp1).oper[2]^.typ=top_const) and
-                ((TAICPU(hp1).oper[2]^.val and $FFFF)=$FFFF) and
+                ((TAICPU(hp1).oper[2]^.Val and $FFFF)=$FFFF) and
                 MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
                 RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
                 { reg1 might not be modified in between }
@@ -1174,7 +1174,7 @@ Implementation
                   DebugMsg('Peephole SxthAndImm2Uxth done', p);
                   TAICPU(hp1).opcode:=A_UXTH;
                   TAICPU(hp1).ops:=2;
-                  TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                  TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
               else if DoXTArithOp(p, hp1) then
@@ -1199,15 +1199,15 @@ Implementation
         To:
           mov    reg1,reg2
       }
-      if (TAICPU(p).oper[2]^.val = 0) and
+      if (TAICPU(p).oper[2]^.Val = 0) and
         (
           (
-            (getsubreg(TAICPU(p).oper[0]^.reg) = R_SUBQ) and
-            (TAICPU(p).oper[3]^.val = 64)
+            (GetSubReg(TAICPU(p).oper[0]^.reg) = R_SUBQ) and
+            (TAICPU(p).oper[3]^.Val = 64)
           ) or
           (
-            (getsubreg(TAICPU(p).oper[0]^.reg) = R_SUBD) and
-            (TAICPU(p).oper[3]^.val = 32)
+            (GetSubReg(TAICPU(p).oper[0]^.reg) = R_SUBD) and
+            (TAICPU(p).oper[3]^.Val = 32)
           )
         )
         then
@@ -1234,8 +1234,8 @@ Implementation
       if (TAICPU(p).ops <> 2) or (TAICPU(p).condition <> C_None) then
         Exit;
 
-      Reference := TAICPU(p).oper[1]^.ref^;
-      if (Reference.addressmode = AM_OFFSET) and
+      Reference := TAICPU(p).oper[1]^.Ref^;
+      if (Reference.AddressMode = AM_OFFSET) and
         not RegInRef(TAICPU(p).oper[0]^.reg, Reference) and
         { Delay calling GetNextInstruction for as long as possible }
         GetNextInstruction(p, hp1) and
@@ -1244,8 +1244,8 @@ Implementation
         (TAICPU(hp1).oppostfix = TAICPU(p).oppostfix) then
         begin
           if (TAICPU(hp1).opcode = A_STR) and
-            RefsEqual(TAICPU(hp1).oper[1]^.ref^, Reference) and
-            (getregtype(TAICPU(p).oper[0]^.reg) = getregtype(TAICPU(hp1).oper[0]^.reg)) then
+            RefsEqual(TAICPU(hp1).oper[1]^.Ref^, Reference) and
+            (GetRegType(TAICPU(p).oper[0]^.reg) = GetRegType(TAICPU(hp1).oper[0]^.reg)) then
             begin
               { With:
                   ldr reg1,[ref]
@@ -1262,7 +1262,7 @@ Implementation
                 end;
             end
           else if (TAICPU(hp1).opcode = A_LDR) and
-            RefsEqual(TAICPU(hp1).oper[1]^.ref^, Reference) then
+            RefsEqual(TAICPU(hp1).oper[1]^.Ref^, Reference) then
             begin
               { With:
                   ldr reg1,[ref]
@@ -1281,14 +1281,14 @@ Implementation
                   Exit;
                 end
               else if
-                (getregtype(TAICPU(p).oper[0]^.reg) = R_INTREGISTER) and
-                (getregtype(TAICPU(hp1).oper[0]^.reg) = R_INTREGISTER) and
-                (getsubreg(TAICPU(p).oper[0]^.reg) = getsubreg(TAICPU(hp1).oper[0]^.reg)) then
+                (GetRegType(TAICPU(p).oper[0]^.reg) = R_INTREGISTER) and
+                (GetRegType(TAICPU(hp1).oper[0]^.reg) = R_INTREGISTER) and
+                (GetSubReg(TAICPU(p).oper[0]^.reg) = GetSubReg(TAICPU(hp1).oper[0]^.reg)) then
                 begin
                   DebugMsg(SPeepholeOptimization + 'Changed second ldr' + oppostfix2str[TAICPU(hp1).oppostfix] + ' to mov (load/load -> load/move)', hp1);
                   TAICPU(hp1).opcode := A_MOV;
                   TAICPU(hp1).oppostfix := PF_None;
-                  TAICPU(hp1).loadreg(1, TAICPU(p).oper[0]^.reg);
+                  TAICPU(hp1).LoadReg(1, TAICPU(p).oper[0]^.reg);
                   AllocRegBetween(TAICPU(p).oper[0]^.reg, p, hp1, UsedRegs);
                   Result := True;
                   Exit;
@@ -1310,8 +1310,8 @@ Implementation
         if (TAICPU(p).ops <> 2) or (TAICPU(p).condition <> C_None) then
           Exit;
 
-        Reference := TAICPU(p).oper[1]^.ref^;
-        if (Reference.addressmode = AM_OFFSET) and
+        Reference := TAICPU(p).oper[1]^.Ref^;
+        if (Reference.AddressMode = AM_OFFSET) and
           not RegInRef(TAICPU(p).oper[0]^.reg, Reference) and
           { Delay calling GetNextInstruction for as long as possible }
           GetNextInstruction(p, hp1) and
@@ -1325,8 +1325,8 @@ Implementation
             DstReg := TAICPU(hp1).oper[0]^.reg;
 
             if (TAICPU(hp1).opcode = A_LDR) and
-              RefsEqual(TAICPU(hp1).oper[1]^.ref^, Reference) and
-              (TAICPU(hp1).oper[1]^.ref^.volatility=[]) and
+              RefsEqual(TAICPU(hp1).oper[1]^.Ref^, Reference) and
+              (TAICPU(hp1).oper[1]^.Ref^.Volatility=[]) and
               (
                 (TAICPU(hp1).oppostfix = TAICPU(p).oppostfix) or
                 ((TAICPU(p).oppostfix = PF_B) and (TAICPU(hp1).oppostfix = PF_SB)) or
@@ -1351,9 +1351,9 @@ Implementation
                     Result := True;
                     Exit;
                   end
-                else if (getregtype(SrcReg) = R_INTREGISTER) and
-                  (getregtype(DstReg) = R_INTREGISTER) and
-                  (getsubreg(SrcReg) = getsubreg(DstReg)) then
+                else if (GetRegType(SrcReg) = R_INTREGISTER) and
+                  (GetRegType(DstReg) = R_INTREGISTER) and
+                  (GetSubReg(SrcReg) = GetSubReg(DstReg)) then
                   begin
                     NewOp:=A_NONE;
                     if TAICPU(hp1).oppostfix=PF_None then
@@ -1381,7 +1381,7 @@ Implementation
 
                         TAICPU(hp1).oppostfix := PF_None;
                         TAICPU(hp1).opcode := NewOp;
-                        TAICPU(hp1).loadreg(1, SrcReg);
+                        TAICPU(hp1).LoadReg(1, SrcReg);
                         AllocRegBetween(SrcReg, p, hp1, UsedRegs);
                         Result := True;
                         Exit;
@@ -1389,7 +1389,7 @@ Implementation
                 end
               end
             else if (TAICPU(hp1).opcode = A_STR) and
-              RefsEqual(TAICPU(hp1).oper[1]^.ref^, Reference) then
+              RefsEqual(TAICPU(hp1).oper[1]^.Ref^, Reference) then
               begin
                 { With:
                     str reg1,[ref]
@@ -1398,7 +1398,7 @@ Implementation
                   If reg1 <> reg2, delete the first str
                   IF reg1 = reg2, delete the second str
                 }
-                if (SrcReg = DstReg) and (TAICPU(hp1).oper[1]^.ref^.volatility=[]) then
+                if (SrcReg = DstReg) and (TAICPU(hp1).oper[1]^.Ref^.Volatility=[]) then
                   begin
                     DebugMsg(SPeepholeOptimization + 'Removed duplicate store instruction (store/store -> store/nop)', hp1);
                     RemoveInstruction(hp1);
@@ -1407,8 +1407,8 @@ Implementation
                   end
                 else if
                   { Registers same byte size? }
-                  (tcgsize2size[reg_cgsize(SrcReg)] = tcgsize2size[reg_cgsize(DstReg)]) and
-                  (TAICPU(p).oper[1]^.ref^.volatility=[])  then
+                  (TCgSize2Size[reg_cgsize(SrcReg)] = TCgSize2Size[reg_cgsize(DstReg)]) and
+                  (TAICPU(p).oper[1]^.Ref^.Volatility=[])  then
                   begin
                     DebugMsg(SPeepholeOptimization + 'Removed dominated store instruction (store/store -> nop/store)', p);
                     RemoveCurrentP(p, hp1);
@@ -1448,17 +1448,17 @@ Implementation
           RegEndOfLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
           MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
           (TAICPU(hp1).oper[2]^.typ = top_const)
-          and ((((getsubreg(TAICPU(p).oper[0]^.reg)=R_SUBQ) and is_shifter_const(TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val,OS_64)) or
-               ((getsubreg(TAICPU(p).oper[0]^.reg)=R_SUBL) and is_shifter_const(TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val,OS_32))
+          and ((((GetSubReg(TAICPU(p).oper[0]^.reg)=R_SUBQ) and is_shifter_const(TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val,OS_64)) or
+               ((GetSubReg(TAICPU(p).oper[0]^.reg)=R_SUBL) and is_shifter_const(TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val,OS_32))
           ) or
-          ((TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val)=0))
+          ((TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val)=0))
           then
             begin
               if not(RegUsedBetween(TAICPU(hp1).oper[0]^.reg,p,hp1)) then
                 begin
                   DebugMsg('Peephole AndAnd2And done', p);
                   AllocRegBetween(TAICPU(hp1).oper[0]^.reg,p,hp1,UsedRegs);
-                  if (TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val)=0 then
+                  if (TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val)=0 then
                     begin
                       DebugMsg('Peephole AndAnd2Mov0 1 done', p);
                       TAICPU(p).opcode:=A_MOV;
@@ -1469,9 +1469,9 @@ Implementation
                   else
                     begin
                       DebugMsg('Peephole AndAnd2And 1 done', p);
-                      TAICPU(p).loadConst(2,TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val);
+                      TAICPU(p).loadConst(2,TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val);
                       TAICPU(p).oppostfix:=TAICPU(hp1).oppostfix;
-                      TAICPU(p).loadReg(0,TAICPU(hp1).oper[0]^.reg);
+                      TAICPU(p).LoadReg(0,TAICPU(hp1).oper[0]^.reg);
                     end;
                   asml.remove(hp1);
                   hp1.free;
@@ -1480,7 +1480,7 @@ Implementation
                 end
               else if not(RegUsedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
                 begin
-                  if (TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val)=0 then
+                  if (TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val)=0 then
                     begin
                       DebugMsg('Peephole AndAnd2Mov0 2 done', hp1);
                       TAICPU(hp1).opcode:=A_MOV;
@@ -1492,9 +1492,9 @@ Implementation
                     begin
                       DebugMsg('Peephole AndAnd2And 2 done', hp1);
                       AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,UsedRegs);
-                      TAICPU(hp1).loadConst(2,TAICPU(p).oper[2]^.val and TAICPU(hp1).oper[2]^.val);
+                      TAICPU(hp1).loadConst(2,TAICPU(p).oper[2]^.Val and TAICPU(hp1).oper[2]^.Val);
                       TAICPU(hp1).oppostfix:=TAICPU(p).oppostfix;
-                      TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
+                      TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
                     end;
                   GetNextInstruction(p, hp1);
                   RemoveCurrentP(p);
@@ -1511,18 +1511,18 @@ Implementation
             to
             strb reg1,[...]
           }
-          else if ((TAICPU(p).oper[2]^.val and $FF) = $FF) and
+          else if ((TAICPU(p).oper[2]^.Val and $FF) = $FF) and
             MatchInstruction(p, A_AND, [C_None], [PF_None]) and
             GetNextInstructionUsingReg(p,hp1,TAICPU(p).oper[0]^.reg) and
             MatchInstruction(hp1, A_STR, [C_None], [PF_B]) and
             Assigned(FindRegDealloc(TAICPU(p).oper[0]^.reg,TAI(hp1.Next))) and
             { the reference in strb might not use reg2 }
-            not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.ref^)) and
+            not(RegInRef(TAICPU(p).oper[0]^.reg,TAICPU(hp1).oper[1]^.Ref^)) and
             { reg1 might not be modified in between }
             not(RegModifiedBetween(TAICPU(p).oper[1]^.reg,p,hp1)) then
             begin
               DebugMsg('Peephole AndStrb2Strb done', p);
-              TAICPU(hp1).loadReg(0,newreg(R_INTREGISTER,getsupreg(TAICPU(p).oper[1]^.reg),R_SUBD));
+              TAICPU(hp1).LoadReg(0,NewReg(R_INTREGISTER,GetSupReg(TAICPU(p).oper[1]^.reg),R_SUBD));
               AllocRegBetween(TAICPU(p).oper[1]^.reg,p,hp1,UsedRegs);
               RemoveCurrentP(p);
               result:=true;
@@ -1538,8 +1538,8 @@ Implementation
           }
           else if MatchInstruction(p, A_AND, [C_None], [PF_None]) and
             GetNextInstructionUsingReg(p,hp1,TAICPU(p).oper[0]^.reg) and
-            ((((TAICPU(p).oper[2]^.val and $ffffff00)=0) and MatchInstruction(hp1, A_UXTB, [C_None], [PF_None])) or
-             (((TAICPU(p).oper[2]^.val and $ffff0000)=0) and MatchInstruction(hp1, A_UXTH, [C_None], [PF_None]))) and
+            ((((TAICPU(p).oper[2]^.Val and $ffffff00)=0) and MatchInstruction(hp1, A_UXTB, [C_None], [PF_None])) or
+             (((TAICPU(p).oper[2]^.Val and $ffff0000)=0) and MatchInstruction(hp1, A_UXTH, [C_None], [PF_None]))) and
             (TAICPU(hp1).ops = 2) and
             RegEndofLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) and
             MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
@@ -1549,8 +1549,8 @@ Implementation
               DebugMsg('Peephole AndUxt2And done', p);
               TAICPU(hp1).opcode:=A_AND;
               TAICPU(hp1).ops:=3;
-              TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
-              TAICPU(hp1).loadconst(2,TAICPU(p).oper[2]^.val);
+              TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
+              TAICPU(hp1).loadconst(2,TAICPU(p).oper[2]^.Val);
               GetNextInstruction(p,hp1);
               asml.remove(p);
               p.Free;
@@ -1558,7 +1558,7 @@ Implementation
               result:=true;
               exit;
             end
-          else if ((TAICPU(p).oper[2]^.val and $ffffff80)=0) and
+          else if ((TAICPU(p).oper[2]^.Val and $ffffff80)=0) and
             MatchInstruction(p, A_AND, [C_None], [PF_None]) and
             GetNextInstructionUsingReg(p,hp1,TAICPU(p).oper[0]^.reg) and
             MatchInstruction(hp1, [A_SXTB,A_SXTH], [C_None], [PF_None]) and
@@ -1571,9 +1571,9 @@ Implementation
               DebugMsg('Peephole AndSxt2And done', p);
               TAICPU(hp1).opcode:=A_AND;
               TAICPU(hp1).ops:=3;
-              TAICPU(hp1).loadReg(1,TAICPU(p).oper[1]^.reg);
-              setsubreg(TAICPU(hp1).oper[1]^.reg,getsubreg(TAICPU(hp1).oper[0]^.reg));
-              TAICPU(hp1).loadconst(2,TAICPU(p).oper[2]^.val);
+              TAICPU(hp1).LoadReg(1,TAICPU(p).oper[1]^.reg);
+              SetSubReg(TAICPU(hp1).oper[1]^.reg,GetSubReg(TAICPU(hp1).oper[0]^.reg));
+              TAICPU(hp1).loadconst(2,TAICPU(p).oper[2]^.Val);
               GetNextInstruction(p,hp1);
               asml.remove(p);
               p.Free;
@@ -1589,14 +1589,14 @@ Implementation
             remove either the and or the lsl/xsr sequence if possible
           }
 
-          else if (TAICPU(p).oper[2]^.val < high(int64)) and
-	    CUtils.IsPowerOf2(TAICPU(p).oper[2]^.val+1,i) and
+          else if (TAICPU(p).oper[2]^.Val < high(int64)) and
+	    CUtils.IsPowerOf2(TAICPU(p).oper[2]^.Val+1,i) and
             GetNextInstructionUsingReg(p,hp1,TAICPU(p).oper[0]^.reg) and
             MatchInstruction(hp1, A_MOV, [TAICPU(p).condition], [PF_None]) and
             (TAICPU(hp1).ops=3) and
             MatchOperand(TAICPU(hp1).oper[1]^, TAICPU(p).oper[0]^.reg) and
             (TAICPU(hp1).oper[2]^.typ = top_shifterop) and
-            (TAICPU(hp1).oper[2]^.shifterop^.shiftmode=SM_LSL) and
+            (TAICPU(hp1).oper[2]^.shifterop^.ShiftMode=SM_LSL) and
             RegEndOfLife(TAICPU(p).oper[0]^.reg,TAICPU(hp1)) then
             begin
               {
@@ -1612,12 +1612,12 @@ Implementation
                 (TAICPU(hp2).ops=3) and
                 MatchOperand(TAICPU(hp2).oper[1]^, TAICPU(hp1).oper[0]^.reg) and
                 (TAICPU(hp2).oper[2]^.typ = top_shifterop) and
-                (TAICPU(hp2).oper[2]^.shifterop^.shiftmode in [SM_ASR,SM_LSR]) and
-                (TAICPU(hp1).oper[2]^.shifterop^.shiftimm=TAICPU(hp2).oper[2]^.shifterop^.shiftimm) and
+                (TAICPU(hp2).oper[2]^.shifterop^.ShiftMode in [SM_ASR,SM_LSR]) and
+                (TAICPU(hp1).oper[2]^.shifterop^.ShiftImm=TAICPU(hp2).oper[2]^.shifterop^.ShiftImm) and
                 RegEndOfLife(TAICPU(hp1).oper[0]^.reg,TAICPU(hp2)) and
-                ((i<32-TAICPU(hp1).oper[2]^.shifterop^.shiftimm) or
-                ((i=32-TAICPU(hp1).oper[2]^.shifterop^.shiftimm) and
-                 (TAICPU(hp2).oper[2]^.shifterop^.shiftmode=SM_LSR))) then
+                ((i<32-TAICPU(hp1).oper[2]^.shifterop^.ShiftImm) or
+                ((i=32-TAICPU(hp1).oper[2]^.shifterop^.ShiftImm) and
+                 (TAICPU(hp2).oper[2]^.shifterop^.ShiftMode=SM_LSR))) then
                 begin
                   DebugMsg('Peephole AndLslXsr2And done', p);
                   TAICPU(p).oper[0]^.reg:=TAICPU(hp2).oper[0]^.reg;
@@ -1635,7 +1635,7 @@ Implementation
                 mov reg2,reg0, lsl imm1
                 if imm1>i
               }
-              else if (i>32-TAICPU(hp1).oper[2]^.shifterop^.shiftimm) and
+              else if (i>32-TAICPU(hp1).oper[2]^.shifterop^.ShiftImm) and
                       not(RegModifiedBetween(TAICPU(p).oper[1]^.reg, p, hp1)) then
                 begin
                   DebugMsg('Peephole AndLsl2Lsl done', p);
@@ -1700,12 +1700,12 @@ Implementation
         MatchOperand(TAICPU(hp1).oper[1]^, 0) and
         (SuperRegistersEqual(TAICPU(hp1).oper[0]^.reg, TAICPU(p).oper[0]^.reg)) and
         (
-          (getsubreg(TAICPU(hp1).oper[0]^.reg) = getsubreg(TAICPU(p).oper[0]^.reg))
+          (GetSubReg(TAICPU(hp1).oper[0]^.reg) = GetSubReg(TAICPU(p).oper[0]^.reg))
           or
           (
             (TAICPU(p).oper[2]^.typ = top_const) and
-            (TAICPU(p).oper[2]^.val >= 0) and
-            (TAICPU(p).oper[2]^.val <= $FFFFFFFF)
+            (TAICPU(p).oper[2]^.Val >= 0) and
+            (TAICPU(p).oper[2]^.Val <= $FFFFFFFF)
           )
         ) and
 
@@ -1723,7 +1723,7 @@ Implementation
                 begin
                   if (TAICPU(p).opcode <> A_AND) then
                     begin
-                      setsupreg(TAICPU(p).oper[0]^.reg, RS_XZR);
+                      SetSupReg(TAICPU(p).oper[0]^.reg, RS_XZR);
                       TAICPU(p).oppostfix := PF_S;
                       DebugMsg(SPeepholeOptimization + 'BIC; CMP -> BICS ' + gas_regname(TAICPU(p).oper[0]^.reg), p);
                     end
@@ -1731,7 +1731,7 @@ Implementation
                     begin
                       TAICPU(p).opcode := A_TST;
                       TAICPU(p).oppostfix := PF_None;
-                      TAICPU(p).loadreg(0, TAICPU(p).oper[1]^.reg);
+                      TAICPU(p).LoadReg(0, TAICPU(p).oper[1]^.reg);
                       TAICPU(p).loadoper(1, TAICPU(p).oper[2]^);
                       if (TAICPU(p).ops = 4) then
                         begin
@@ -1921,7 +1921,7 @@ Implementation
                 (ThisReg <> NR_NO) and
                 (
                   (
-                    (getsubreg(ThisReg) = R_SUBD) and
+                    (GetSubReg(ThisReg) = R_SUBD) and
                     MatchInstruction(hp1, A_MOVK, []) and
                     (TAICPU(hp1).oper[0]^.reg = ThisReg) and
                     GetNextInstruction(hp1, hp2) and
@@ -1957,7 +1957,7 @@ Implementation
               )
               or (
                 MatchInstruction(p_second, A_STR, []) and
-                (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) and
+                (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) and
                 { Negate the result because we're setting hp1_second to nil }
                 not SetAndTest(nil, hp1_second)
               )
@@ -1979,14 +1979,14 @@ Implementation
                 A_STR:
                   if SuperRegistersEqual(TAICPU(hp1).oper[0]^.reg, ThisReg) then
                     begin
-                      ThisRef := TAICPU(hp1).oper[1]^.ref^;
+                      ThisRef := TAICPU(hp1).oper[1]^.Ref^;
 
-                      if (ThisRef.addressmode = AM_OFFSET) and
-                        (ThisRef.index = NR_NO) and
+                      if (ThisRef.AddressMode = AM_OFFSET) and
+                        (ThisRef.Index = NR_NO) and
                         { Only permit writes to the stack, since we can guarantee alignment with that }
                         (
-                          (ThisRef.base = NR_STACK_POINTER_REG) or
-                          (ThisRef.base = CurrentProcInfo.framepointer)
+                          (ThisRef.Base = NR_STACK_POINTER_REG) or
+                          (ThisRef.Base = CurrentProcInfo.framepointer)
                         ) then
                         begin
                           case TAICPU(hp1).oppostfix of
@@ -2005,7 +2005,7 @@ Implementation
                                 Only use the stack pointer or frame pointer and an even offset though
                                 to guarantee alignment
                               }
-                              if ((ThisRef.offset mod 2) = 0) and
+                              if ((ThisRef.Offset mod 2) = 0) and
                                 GetNextInstruction(hp1, p_second) and
                                 (p_second.typ = ait_instruction)
                                 then
@@ -2019,8 +2019,8 @@ Implementation
                                           SuperRegistersEqual(TAICPU(hp1_second).oper[0]^.reg, ThisReg) then
                                           begin
                                             { Is the second storage location exactly one byte ahead? }
-                                            Inc(ThisRef.offset);
-                                            if RefsEqual(TAICPU(hp1_second).oper[1]^.ref^, ThisRef) and
+                                            Inc(ThisRef.Offset);
+                                            if RefsEqual(TAICPU(hp1_second).oper[1]^.Ref^, ThisRef) and
                                               { The final safety check... make sure the register used
                                                 to store the constant isn't used afterwards }
                                               RegEndOfLife(ThisReg, TAICPU(hp1_second)) then
@@ -2048,21 +2048,21 @@ Implementation
                                                   MatchInstruction(hp3_second, A_STR, [PF_B]) and
                                                   SuperRegistersEqual(TAICPU(hp3_second).oper[0]^.reg, ThisReg) then
                                                   begin
-                                                    Inc(ThisRef.offset);
-                                                    if RefsEqual(TAICPU(hp2_second).oper[1]^.ref^, ThisRef) then
+                                                    Inc(ThisRef.Offset);
+                                                    if RefsEqual(TAICPU(hp2_second).oper[1]^.Ref^, ThisRef) then
                                                       begin
-                                                        Inc(ThisRef.offset);
-                                                        if RefsEqual(TAICPU(hp3_second).oper[1]^.ref^, ThisRef) then
+                                                        Inc(ThisRef.Offset);
+                                                        if RefsEqual(TAICPU(hp3_second).oper[1]^.Ref^, ThisRef) then
                                                           begin
                                                             { Merge the constants }
                                                             DebugMsg(SPeepholeOptimization + 'Merged four byte-writes to memory into a single word-write (MovzStrbMovzStrbMovzStrbMovzStrb2MovzMovkStr)', p);
-                                                            TAICPU(p).oper[1]^.val := (TAICPU(p).oper[1]^.val and $FF) or ((TAICPU(p_second).oper[1]^.val and $FF) shl 8);
+                                                            TAICPU(p).oper[1]^.Val := (TAICPU(p).oper[1]^.Val and $FF) or ((TAICPU(p_second).oper[1]^.Val and $FF) shl 8);
 
                                                             TAICPU(hp2).opcode := HI_16_WRITE;
-                                                            TAICPU(hp2).oper[1]^.val := (TAICPU(hp2).oper[1]^.val and $FF) or ((TAICPU(hp3).oper[1]^.val and $FF) shl 8);
+                                                            TAICPU(hp2).oper[1]^.Val := (TAICPU(hp2).oper[1]^.Val and $FF) or ((TAICPU(hp3).oper[1]^.Val and $FF) shl 8);
 
-                                                            so.shiftimm := 16;
-                                                            so.shiftmode := SM_LSL;
+                                                            so.ShiftImm := 16;
+                                                            so.ShiftMode := SM_LSL;
                                                             TAICPU(hp2).loadshifterop(2, so);
                                                             TAICPU(hp2).ops := 3;
 
@@ -2083,15 +2083,15 @@ Implementation
                                                             Exit;
                                                           end;
                                                         { Reset the offset so the range check below is correct }
-                                                        Dec(ThisRef.offset);
+                                                        Dec(ThisRef.Offset);
                                                       end;
-                                                    Dec(ThisRef.offset);
+                                                    Dec(ThisRef.Offset);
                                                   end;
                                                   begin
 
                                                     { Merge the constants and remove the second pair of instructions }
                                                     DebugMsg(SPeepholeOptimization + 'Merged two byte-writes to memory into a single half-write (MovzStrbMovzStrb2MovzStrh)', p);
-                                                    TAICPU(p).oper[1]^.val := (TAICPU(p).oper[1]^.val and $FF) or ((TAICPU(p_second).oper[1]^.val and $FF) shl 8);
+                                                    TAICPU(p).oper[1]^.Val := (TAICPU(p).oper[1]^.Val and $FF) or ((TAICPU(p_second).oper[1]^.Val and $FF) shl 8);
                                                     TAICPU(hp1).oppostfix := PF_H;
                                                     RemoveInstruction(p_second);
                                                     RemoveInstruction(hp1_second);
@@ -2113,15 +2113,15 @@ Implementation
                                       }
                                       if RegEndOfLife(ThisReg, TAICPU(hp1)) and
                                         (TAICPU(p_second).oppostfix = PF_B) and
-                                        (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
+                                        (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
                                         begin
                                           { Is the second storage location exactly one byte ahead? }
-                                          Inc(ThisRef.offset);
-                                          if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                          Inc(ThisRef.Offset);
+                                          if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                             begin
                                               { Merge the constants and remove the second pair of instructions }
                                               DebugMsg(SPeepholeOptimization + 'Merged a byte-write and a zero-register byte-write to memory into a single half-write (MovzStrbStrb2MovzStrh 1)', p);
-                                              TAICPU(p).oper[1]^.val := TAICPU(p).oper[1]^.val and $FF; { In case there's some extraneous bits }
+                                              TAICPU(p).oper[1]^.Val := TAICPU(p).oper[1]^.Val and $FF; { In case there's some extraneous bits }
                                               TAICPU(hp1).oppostfix := PF_H;
                                               RemoveInstruction(p_second);
                                               Result := True;
@@ -2156,7 +2156,7 @@ Implementation
                                 Only use the stack pointer or frame pointer and an offset
                                 that's a multiple of 4 though to guarantee alignment
                               }
-                              if ((ThisRef.offset mod 4) = 0) and
+                              if ((ThisRef.Offset mod 4) = 0) and
                                 GetNextInstruction(hp1, p_second) and
                                 (p_second.typ = ait_instruction)
                                 then
@@ -2170,8 +2170,8 @@ Implementation
                                           SuperRegistersEqual(TAICPU(hp1_second).oper[0]^.reg, ThisReg) then
                                           begin
                                             { Is the second storage location exactly one byte ahead? }
-                                            Inc(ThisRef.offset, 2);
-                                            if RefsEqual(TAICPU(hp1_second).oper[1]^.ref^, ThisRef) and
+                                            Inc(ThisRef.Offset, 2);
+                                            if RefsEqual(TAICPU(hp1_second).oper[1]^.Ref^, ThisRef) and
                                               { The final safety check... make sure the register used
                                                 to store the constant isn't used afterwards }
                                               RegEndOfLife(ThisReg, TAICPU(hp1_second)) then
@@ -2180,7 +2180,7 @@ Implementation
                                                 DebugMsg(SPeepholeOptimization + 'Merged two half-writes to memory into a single word-write (MovzStrhMovzStrh2MovzMovkStr)', p);
 
                                                 { Repurpose the second MOVZ instruction into a MOVK instruction }
-                                                if TAICPU(p_second).oper[1]^.val = 0 then
+                                                if TAICPU(p_second).oper[1]^.Val = 0 then
                                                   begin
                                                     { Or just remove it if it's not needed }
                                                     RemoveInstruction(p_second);
@@ -2191,14 +2191,14 @@ Implementation
                                                     asml.Remove(p_second);
                                                     asml.InsertAfter(p_second, p);
                                                     TAICPU(p_second).opcode := HI_16_WRITE;
-                                                    so.shiftmode := SM_LSL;
-                                                    so.shiftimm := 16;
+                                                    so.ShiftMode := SM_LSL;
+                                                    so.ShiftImm := 16;
 
                                                     TAICPU(p_second).ops := 3;
                                                     TAICPU(p_second).loadshifterop(2, so);
 
                                                     { Make doubly sure we're only using the 32-bit register, otherwise STR could write 64 bits }
-                                                    setsubreg(ThisReg, R_SUBD);
+                                                    SetSubReg(ThisReg, R_SUBD);
                                                     TAICPU(p).oper[0]^.reg := ThisReg;
                                                     TAICPU(p_second).oper[0]^.reg := ThisReg;
                                                     TAICPU(hp1).oper[0]^.reg := ThisReg;
@@ -2226,17 +2226,17 @@ Implementation
                                       }
                                       if RegEndOfLife(ThisReg, TAICPU(hp1)) and
                                         (TAICPU(p_second).oppostfix = PF_H) and
-                                        (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
+                                        (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
                                         begin
                                           { Is the second storage location exactly one byte ahead? }
-                                          Inc(ThisRef.offset, 2);
-                                          if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                          Inc(ThisRef.Offset, 2);
+                                          if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                             begin
                                               { Merge the constants and remove the second pair of instructions }
                                               DebugMsg(SPeepholeOptimization + 'Merged a half-write and a zero-register half-write to memory into a single word-write (MovzStrhStrh2MovzStr)', p);
 
                                               { Make doubly sure we're only using the 32-bit register, otherwise STR could write 64 bits }
-                                              setsubreg(ThisReg, R_SUBD);
+                                              SetSubReg(ThisReg, R_SUBD);
                                               TAICPU(p).oper[0]^.reg := ThisReg;
                                               TAICPU(hp1).oper[0]^.reg := ThisReg;
 
@@ -2263,12 +2263,12 @@ Implementation
                         end;
                     end;
                 A_MOVK:
-                  if (getsubreg(ThisReg) = R_SUBD) and
+                  if (GetSubReg(ThisReg) = R_SUBD) and
                     Assigned(hp1) and
                     (TAICPU(hp1).oper[0]^.reg = ThisReg) and
                     (TAICPU(hp1).ops = 3) and
-                    (TAICPU(hp1).oper[2]^.shifterop^.shiftmode = SM_LSL) and
-                    (TAICPU(hp1).oper[2]^.shifterop^.shiftimm = 16) and
+                    (TAICPU(hp1).oper[2]^.shifterop^.ShiftMode = SM_LSL) and
+                    (TAICPU(hp1).oper[2]^.shifterop^.ShiftImm = 16) and
                     GetNextInstruction(hp1, hp2) and
                     MatchInstruction(hp2, A_STR, [PF_None]) and
                     (TAICPU(hp2).oper[0]^.reg = ThisReg) then
@@ -2292,8 +2292,8 @@ Implementation
                         Only use the stack pointer or frame pointer and an offset
                         that's a multiple of 8 though to guarantee alignment
                       }
-                      ThisRef := TAICPU(hp2).oper[1]^.ref^;
-                      if ((ThisRef.offset mod 8) = 0) and
+                      ThisRef := TAICPU(hp2).oper[1]^.Ref^;
+                      if ((ThisRef.Offset mod 8) = 0) and
                         GetNextInstruction(hp2, p_second) and
                         (p_second.typ = ait_instruction) then
                         case TAICPU(p_second).opcode of
@@ -2302,23 +2302,23 @@ Implementation
                                 (TAICPU(p_second).oper[0]^.reg = ThisReg) or
                                 (
                                   RegEndOfLife(ThisReg, TAICPU(hp2)) and
-                                  (getsubreg(TAICPU(p_second).oper[0]^.reg) = R_SUBD)
+                                  (GetSubReg(TAICPU(p_second).oper[0]^.reg) = R_SUBD)
                                 )
                               ) and GetNextInstruction(p_second, hp1_second) then
                               begin
                                 case TAICPU(hp1_second).opcode of
                                   A_MOVK:
-                                    if (TAICPU(p_second).oper[1]^.val <= $FFFF) and
+                                    if (TAICPU(p_second).oper[1]^.Val <= $FFFF) and
                                       (TAICPU(hp1_second).oper[0]^.reg = TAICPU(p_second).oper[0]^.reg) and
                                       (TAICPU(hp1_second).ops = 3) and
-                                      (TAICPU(hp1_second).oper[2]^.shifterop^.shiftmode = SM_LSL) and
-                                      (TAICPU(hp1_second).oper[2]^.shifterop^.shiftimm = 16) and
+                                      (TAICPU(hp1_second).oper[2]^.shifterop^.ShiftMode = SM_LSL) and
+                                      (TAICPU(hp1_second).oper[2]^.shifterop^.ShiftImm = 16) and
                                       GetNextInstruction(hp1_second, hp2_second) and
                                       MatchInstruction(hp2_second, A_STR, [PF_None]) and
                                       (TAICPU(hp1_second).oper[0]^.reg = TAICPU(p_second).oper[0]^.reg) then
                                       begin
-                                        Inc(ThisRef.offset, 4);
-                                        if RefsEqual(TAICPU(hp2_second).oper[1]^.ref^, ThisRef) and
+                                        Inc(ThisRef.Offset, 4);
+                                        if RefsEqual(TAICPU(hp2_second).oper[1]^.Ref^, ThisRef) and
                                           { The final safety check... make sure the register used
                                             to store the constant isn't used afterwards }
                                           RegEndOfLife(TAICPU(p_second).oper[0]^.reg, TAICPU(hp2_second)) then
@@ -2326,19 +2326,19 @@ Implementation
                                             DebugMsg(SPeepholeOptimization + 'Merged two word-writes to memory into a single extended-write (MovzMovkStrMovzMovkStr2MovzMovkMovkMovkStr)', p);
 
                                             { Extend register to 64-bit and repurpose second MOVZ to a MOVK with lsl 32 }
-                                            setsubreg(ThisReg, R_SUBQ);
+                                            SetSubReg(ThisReg, R_SUBQ);
 
                                             TAICPU(p).oper[0]^.reg := ThisReg;
                                             TAICPU(hp1).oper[0]^.reg := ThisReg;
 
                                             { If the 3rd word is zero, we can remove the instruction entirely }
-                                            if TAICPU(p_second).oper[1]^.val = 0 then
+                                            if TAICPU(p_second).oper[1]^.Val = 0 then
                                               RemoveInstruction(p_second)
                                             else
                                               begin
                                                 TAICPU(p_second).oper[0]^.reg := ThisReg;
-                                                so.shiftimm := 32;
-                                                so.shiftmode := SM_LSL;
+                                                so.ShiftImm := 32;
+                                                so.ShiftMode := SM_LSL;
                                                 TAICPU(p_second).opcode := A_MOVK;
                                                 TAICPU(p_second).ops := 3;
                                                 TAICPU(p_second).loadshifterop(2, so);
@@ -2347,7 +2347,7 @@ Implementation
                                               end;
 
                                             TAICPU(hp1_second).oper[0]^.reg := ThisReg;
-                                            TAICPU(hp1_second).oper[2]^.shifterop^.shiftimm := 48;
+                                            TAICPU(hp1_second).oper[2]^.shifterop^.ShiftImm := 48;
                                             TAICPU(hp2).oper[0]^.reg := ThisReg;
 
                                             AsmL.Remove(hp1_second);
@@ -2391,15 +2391,15 @@ Implementation
                                 (TAICPU(p_second).oper[0]^.reg = NR_WZR) then
                                 begin
                                   { Is the second storage location exactly one byte ahead? }
-                                  Inc(ThisRef.offset, 4);
-                                  if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                  Inc(ThisRef.Offset, 4);
+                                  if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                     begin
                                       { Merge the constants and remove the second pair of instructions }
                                       DebugMsg(SPeepholeOptimization + 'Merged a word-write and a zero-register word-write to memory into a single extended-write (MovzStrStr2MovzStr)', p);
 
-                                      setsubreg(TAICPU(p).oper[0]^.reg, R_SUBQ);
-                                      setsubreg(TAICPU(hp1).oper[0]^.reg, R_SUBQ);
-                                      setsubreg(TAICPU(hp2).oper[0]^.reg, R_SUBQ);
+                                      SetSubReg(TAICPU(p).oper[0]^.reg, R_SUBQ);
+                                      SetSubReg(TAICPU(hp1).oper[0]^.reg, R_SUBQ);
+                                      SetSubReg(TAICPU(hp2).oper[0]^.reg, R_SUBQ);
                                       RemoveInstruction(p_second);
                                       Result := True;
                                     end;
@@ -2415,15 +2415,15 @@ Implementation
           end;
         A_STR:
           { hp1 is probably nil }
-          if getsupreg(TAICPU(p).oper[0]^.reg) = RS_WZR then
+          if GetSupReg(TAICPU(p).oper[0]^.reg) = RS_WZR then
             begin
-              ThisRef := TAICPU(p).oper[1]^.ref^;
-              if (ThisRef.addressmode = AM_OFFSET) and
-                (ThisRef.index = NR_NO) and
+              ThisRef := TAICPU(p).oper[1]^.Ref^;
+              if (ThisRef.AddressMode = AM_OFFSET) and
+                (ThisRef.Index = NR_NO) and
                 { Only permit writes to the stack, since we can guarantee alignment with that }
                 (
-                  (ThisRef.base = NR_STACK_POINTER_REG) or
-                  (ThisRef.base = CurrentProcInfo.framepointer)
+                  (ThisRef.Base = NR_STACK_POINTER_REG) or
+                  (ThisRef.Base = CurrentProcInfo.framepointer)
                 ) then
                 begin
 
@@ -2442,7 +2442,7 @@ Implementation
                         Only use the stack pointer or frame pointer and an even offset though
                         to guarantee alignment
                       }
-                      if ((ThisRef.offset mod 2) = 0) and
+                      if ((ThisRef.Offset mod 2) = 0) and
                         GetNextInstruction(p, p_second) and
                         (p_second.typ = ait_instruction) then
                         begin
@@ -2456,18 +2456,18 @@ Implementation
                                   SuperRegistersEqual(TAICPU(hp1_second).oper[0]^.reg, ThisReg) then
                                   begin
                                     { Is the second storage location exactly one byte ahead? }
-                                    Inc(ThisRef.offset);
-                                    if RefsEqual(TAICPU(hp1_second).oper[1]^.ref^, ThisRef) and
+                                    Inc(ThisRef.Offset);
+                                    if RefsEqual(TAICPU(hp1_second).oper[1]^.Ref^, ThisRef) and
                                       { The final safety check... make sure the register used
                                         to store the constant isn't used afterwards }
                                       RegEndOfLife(ThisReg, TAICPU(hp1_second)) then
                                       begin
                                         { Merge the constants by repurposing the 2nd move, changing the register in the first STR and removing the second STR }
                                         DebugMsg(SPeepholeOptimization + 'Merged a zero-register byte-write and a byte-write to memory into a single half-write (MovzStrbStrb2MovzStrh 2)', p);
-                                        TAICPU(p_second).oper[1]^.val := (TAICPU(p_second).oper[1]^.val and $FF) shl 8;
+                                        TAICPU(p_second).oper[1]^.Val := (TAICPU(p_second).oper[1]^.Val and $FF) shl 8;
 
                                         TAICPU(hp1_second).oppostfix := PF_H;
-                                        Dec(TAICPU(hp1_second).oper[1]^.ref^.offset, 1);
+                                        Dec(TAICPU(hp1_second).oper[1]^.Ref^.Offset, 1);
 
                                         RemoveCurrentP(p, p_second);
                                         Result := True;
@@ -2485,11 +2485,11 @@ Implementation
                                   strh  wzr,[sp, #ofs]
                               }
                               if (TAICPU(p_second).oppostfix = PF_B) and
-                                (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
+                                (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
                                 begin
                                   { Is the second storage location exactly one byte ahead? }
-                                  Inc(ThisRef.offset);
-                                  if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                  Inc(ThisRef.Offset);
+                                  if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                     begin
                                       DebugMsg(SPeepholeOptimization + 'Merged two zero-register byte-writes to memory into a single zero-register half-write (StrbStrb2Strh)', p);
                                       TAICPU(p).oppostfix := PF_H;
@@ -2527,7 +2527,7 @@ Implementation
                         Only use the stack pointer or frame pointer and an offset
                         that's a multiple of 4 though to guarantee alignment
                       }
-                      if ((ThisRef.offset mod 4) = 0) and
+                      if ((ThisRef.Offset mod 4) = 0) and
                         GetNextInstruction(p, p_second) and
                         (p_second.typ = ait_instruction) then
                         begin
@@ -2540,8 +2540,8 @@ Implementation
                                   SuperRegistersEqual(TAICPU(hp1_second).oper[0]^.reg, ThisReg) then
                                   begin
                                     { Is the second storage location exactly two bytes ahead? }
-                                    Inc(ThisRef.offset, 2);
-                                    if RefsEqual(TAICPU(hp1_second).oper[1]^.ref^, ThisRef) and
+                                    Inc(ThisRef.Offset, 2);
+                                    if RefsEqual(TAICPU(hp1_second).oper[1]^.Ref^, ThisRef) and
                                       { The final safety check... make sure the register used
                                         to store the constant isn't used afterwards }
                                       RegEndOfLife(ThisReg, TAICPU(hp1_second)) then
@@ -2556,15 +2556,15 @@ Implementation
                                         TAICPU(p).oper[0]^.reg := ThisReg;
                                         TAICPU(p).loadconst(1, 0);
 
-                                        so.shiftmode := SM_LSL;
-                                        so.shiftimm := 16;
+                                        so.ShiftMode := SM_LSL;
+                                        so.ShiftImm := 16;
 
                                         TAICPU(p_second).opcode := A_MOVK;
                                         TAICPU(p_second).ops := 3;
                                         TAICPU(p_second).loadshifterop(2, so);
 
                                         { Make doubly sure we're only using the 32-bit register, otherwise STR could write 64 bits }
-                                        setsubreg(ThisReg, R_SUBD);
+                                        SetSubReg(ThisReg, R_SUBD);
                                         TAICPU(p).oper[0]^.reg := ThisReg;
                                         TAICPU(p_second).oper[0]^.reg := ThisReg;
                                         TAICPU(hp1_second).oper[0]^.reg := ThisReg;
@@ -2572,7 +2572,7 @@ Implementation
                                         { TODO: Confirm that the A_MOVZ / A_MOVK combination is the most efficient }
 
                                         TAICPU(hp1_second).oppostfix := PF_None;
-                                        Dec(TAICPU(hp1_second).oper[1]^.ref^.offset, 2);
+                                        Dec(TAICPU(hp1_second).oper[1]^.Ref^.Offset, 2);
                                         Result := True;
                                       end;
                                   end;
@@ -2586,11 +2586,11 @@ Implementation
                                   str   wzr,[sp, #ofs]
                               }
                               if (TAICPU(p_second).oppostfix = PF_H) and
-                                (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
+                                (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
                                 begin
                                   { Is the second storage location exactly one byte ahead? }
-                                  Inc(ThisRef.offset, 2);
-                                  if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                  Inc(ThisRef.Offset, 2);
+                                  if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                     begin
                                       DebugMsg(SPeepholeOptimization + 'Merged two zero-register half-writes to memory into a single zero-register word-write (StrhStrh2Str)', p);
 
@@ -2625,7 +2625,7 @@ Implementation
                         Only use the stack pointer or frame pointer and an offset
                         that's a multiple of 8 though to guarantee alignment
                       }
-                      if ((ThisRef.offset mod 8) = 0) and
+                      if ((ThisRef.Offset mod 8) = 0) and
                         GetNextInstruction(p, p_second) and
                         (p_second.typ = ait_instruction) then
                         begin
@@ -2640,8 +2640,8 @@ Implementation
                                   (TAICPU(hp2_second).oper[0]^.reg = ThisReg) then
                                   begin
                                     { Is the second storage location exactly four bytes ahead? }
-                                    Inc(ThisRef.offset, 4);
-                                    if RefsEqual(TAICPU(hp2_second).oper[1]^.ref^, ThisRef) and
+                                    Inc(ThisRef.Offset, 4);
+                                    if RefsEqual(TAICPU(hp2_second).oper[1]^.Ref^, ThisRef) and
                                       { The final safety check... make sure the register used
                                         to store the constant isn't used afterwards }
                                       RegEndOfLife(ThisReg, TAICPU(hp1_second)) then
@@ -2649,7 +2649,7 @@ Implementation
                                         { Merge the constants }
                                         DebugMsg(SPeepholeOptimization + 'Merged a zero-register word-write and a word-write to memory into a single extended-write (StrMovzMovkStr2MovzMovkMovkStr)', p);
 
-                                        setsubreg(ThisReg, R_SUBQ);
+                                        SetSubReg(ThisReg, R_SUBQ);
 
                                         { Repurpose the first STR to a MOVZ instruction }
                                         TAICPU(p).opcode := A_MOVZ;
@@ -2658,7 +2658,7 @@ Implementation
                                         TAICPU(p).loadconst(1, 0);
 
                                         { If the 3rd word is zero, we can remove the instruction entirely }
-                                        if TAICPU(p_second).oper[1]^.val = 0 then
+                                        if TAICPU(p_second).oper[1]^.Val = 0 then
                                           begin
                                             RemoveInstruction(p_second);
                                             if hp1 = p_second then { Make sure hp1 deson't become a dangling pointer }
@@ -2666,8 +2666,8 @@ Implementation
                                           end
                                         else
                                           begin
-                                            so.shiftmode := SM_LSL;
-                                            so.shiftimm := 32;
+                                            so.ShiftMode := SM_LSL;
+                                            so.ShiftImm := 32;
                                             TAICPU(p_second).opcode := A_MOVK;
                                             TAICPU(p_second).ops := 3;
                                             TAICPU(p_second).loadshifterop(2, so);
@@ -2676,12 +2676,12 @@ Implementation
 
                                         TAICPU(p).oper[0]^.reg := ThisReg;
                                         TAICPU(hp1_second).oper[0]^.reg := ThisReg;
-                                        TAICPU(hp1_second).oper[2]^.shifterop^.shiftimm := 48;
+                                        TAICPU(hp1_second).oper[2]^.shifterop^.ShiftImm := 48;
 
                                         { TODO: Confirm that the A_MOVZ / A_MOVK / A_MOVK combination is the most efficient }
 
                                         TAICPU(hp2_second).oppostfix := PF_None;
-                                        Dec(TAICPU(hp2_second).oper[1]^.ref^.offset, 4);
+                                        Dec(TAICPU(hp2_second).oper[1]^.Ref^.Offset, 4);
                                         TAICPU(hp2_second).oper[0]^.reg := ThisReg; { Remember to change the register to its 64-bit counterpart }
                                         Result := True;
                                       end;
@@ -2696,11 +2696,11 @@ Implementation
                                   str   xzr,[sp, #ofs]
                               }
                               if (TAICPU(p_second).oppostfix = PF_None) and
-                                (getsupreg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
+                                (GetSupReg(TAICPU(p_second).oper[0]^.reg) = RS_WZR) then
                                 begin
                                   { Is the second storage location exactly one byte ahead? }
-                                  Inc(ThisRef.offset, 4);
-                                  if RefsEqual(TAICPU(p_second).oper[1]^.ref^, ThisRef) then
+                                  Inc(ThisRef.Offset, 4);
+                                  if RefsEqual(TAICPU(p_second).oper[1]^.Ref^, ThisRef) then
                                     begin
                                       DebugMsg(SPeepholeOptimization + 'Merged two zero-register word-writes to memory into a single zero-register extended-write (StrStr2Str)', p);
                                       TAICPU(p).oper[0]^.reg := NR_XZR;

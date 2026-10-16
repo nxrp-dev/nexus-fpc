@@ -150,13 +150,13 @@ implementation
         { get a temporary memory reference to store the floating
           point value
         }
-        tg.gethltemp(CurrentAsmData.CurrAsmList,_size,_size.size,tt_normal,href);
+        tg.GetHLTemp(CurrentAsmData.CurrAsmList,_size,_size.Size,tt_normal,href);
         { store the floating point value in the temporary memory area }
-        case getregtype(r) of
+        case GetRegType(r) of
           R_FPUREGISTER:
-            hlcg.a_loadfpu_reg_ref(CurrentAsmData.CurrAsmList,_size,_size,r,href);
+            hlcg.A_LoadFPU_Reg_Ref(CurrentAsmData.CurrAsmList,_size,_size,r,href);
           R_MMREGISTER:
-            hlcg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,_size,_size,r,href,mms_movescalar);
+            hlcg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,_size,_size,r,href,MMS_MoveScalar);
           else
             InternalError(2015091005);
         end;
@@ -170,25 +170,25 @@ implementation
           s64comp,
           s64currency:
             if TargetInfo.endian = endian_little then
-              inc(href2.offset,4);
+              inc(href2.Offset,4);
           S32Real :
             ;
           else
             InternalError(200406021);
         end;
         { flip sign-bit (bit 31/63) of single/double }
-        hlcg.a_op_const_ref(CurrentAsmData.CurrAsmList,OP_XOR,U32IntType,
+        hlcg.A_Op_Const_Ref(CurrentAsmData.CurrAsmList,OP_XOR,U32IntType,
 {$ifdef cpu64bitalu}
           aint($80000000),
 {$else cpu64bitalu}
           LongInt($80000000),
 {$endif cpu64bitalu}
           href2);
-        case getregtype(r) of
+        case GetRegType(r) of
           R_FPUREGISTER:
-            hlcg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,_size,_size,href,r);
+            hlcg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,_size,_size,href,r);
           R_MMREGISTER:
-            hlcg.a_loadmm_ref_reg(CurrentAsmData.CurrAsmList,_size,_size,href,r,mms_movescalar);
+            hlcg.A_LoadMM_Ref_Reg(CurrentAsmData.CurrAsmList,_size,_size,href,r,MMS_MoveScalar);
           else
             InternalError(2015091006);
         end;
@@ -203,25 +203,25 @@ implementation
         hl: TAsmLabel;
       begin
         SecondPass(left);
-        location_reset(location,LOC_REGISTER,left.location.size);
-        location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-        location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-        cg64.a_op64_loc_reg(CurrentAsmData.CurrAsmList,OP_NEG,OS_S64,
-          left.location,joinreg64(location.register64.reglo,location.register64.reghi));
+        Location_Reset(location,LOC_REGISTER,left.Location.Size);
+        location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+        location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+        cg64.A_Op64_Loc_Reg(CurrentAsmData.CurrAsmList,OP_NEG,OS_S64,
+          left.Location,JoinReg64(location.Register64.RegLo,location.Register64.RegHi));
         { there's only overflow in case left was low(int64) -> -left = left }
         if (cs_check_overflow in CurrentSettings.LocalSwitches) then
           begin
-            tr:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-            cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,OS_32,
-              LongInt($80000000),location.register64.reghi,tr);
-            cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_OR,OS_32,
-              location.register64.reglo,tr);
+            tr:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,OS_32,
+              LongInt($80000000),location.Register64.RegHi,tr);
+            cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,OS_32,
+              location.Register64.RegLo,tr);
             CurrentAsmData.getjumplabel(hl);
-            cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-            cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_32,OC_NE,0,tr,hl);
-            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-            cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-            cg.a_label(CurrentAsmData.CurrAsmList,hl);
+            cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,OS_32,OC_NE,0,tr,hl);
+            cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+            cg.A_Label(CurrentAsmData.CurrAsmList,hl);
           end;
       end;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
@@ -231,39 +231,39 @@ implementation
     procedure TCGUnaryMinusNode.second_float;
       begin
         SecondPass(left);
-        location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-        case left.location.loc of
+        Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+        case left.Location.Loc of
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
-              location.register:=hlcg.getregisterfordef(CurrentAsmData.CurrAsmList,resultdef);
-              case getregtype(location.register) of
+              location.Register:=hlcg.GetRegisterForDef(CurrentAsmData.CurrAsmList,resultdef);
+              case GetRegType(location.Register) of
                 R_FPUREGISTER:
-                  hlcg.a_loadfpu_ref_reg(CurrentAsmData.CurrAsmList,
+                  hlcg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,
                      left.resultdef,resultdef,
-                     left.location.reference,location.register);
+                     left.Location.Reference,location.Register);
                 R_MMREGISTER:
-                  hlcg.a_loadmm_ref_reg(CurrentAsmData.CurrAsmList,
+                  hlcg.A_LoadMM_Ref_Reg(CurrentAsmData.CurrAsmList,
                      left.resultdef,resultdef,
-                     left.location.reference,location.register,mms_movescalar);
+                     left.Location.Reference,location.Register,MMS_MoveScalar);
                 else
                   InternalError(2015091004);
               end;
-              emit_float_sign_change(location.register,left.resultdef);
+              emit_float_sign_change(location.Register,left.resultdef);
             end;
           LOC_FPUREGISTER,
           LOC_CFPUREGISTER:
             begin
-               location.register:=hlcg.getfpuregister(CurrentAsmData.CurrAsmList,resultdef);
-               hlcg.a_loadfpu_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.register,location.register);
-               emit_float_sign_change(location.register,left.resultdef);
+               location.Register:=hlcg.GetFPURegister(CurrentAsmData.CurrAsmList,resultdef);
+               hlcg.A_LoadFPU_Reg_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.Location.Register,location.Register);
+               emit_float_sign_change(location.Register,left.resultdef);
             end;
           LOC_MMREGISTER,
           LOC_CMMREGISTER:
             begin
-               location.register:=hlcg.getmmregister(CurrentAsmData.CurrAsmList,resultdef);
-               hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.register,location.register,mms_movescalar);
-               emit_float_sign_change(location.register,left.resultdef);
+               location.Register:=hlcg.GetMMRegister(CurrentAsmData.CurrAsmList,resultdef);
+               hlcg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.Location.Register,location.Register,MMS_MoveScalar);
+               emit_float_sign_change(location.Register,left.resultdef);
             end
           else
             InternalError(200306021);
@@ -276,22 +276,22 @@ implementation
         hl: TAsmLabel;
       begin
         SecondPass(left);
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,resultdef,false);
-        location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
+        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
         if (cs_check_overflow in CurrentSettings.LocalSwitches) then
-          hlcg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+          hlcg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-        hlcg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_NEG,resultdef,left.location.register,location.register);
+        hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NEG,resultdef,left.Location.Register,location.Register);
 
         if (cs_check_overflow in CurrentSettings.LocalSwitches) then
           begin
             CurrentAsmData.getjumplabel(hl);
-            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,TOrdDef(resultdef).low.svalue,location.register,hl);
-            hlcg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-            hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_overflow',[],nil).resetiftemp;
-            hlcg.a_label(CurrentAsmData.CurrAsmList,hl);
+            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,TOrdDef(resultdef).low.svalue,location.Register,hl);
+            hlcg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+            hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,'fpc_overflow',[],nil).ResetIfTemp;
+            hlcg.A_Label(CurrentAsmData.CurrAsmList,hl);
           end;
       end;
 
@@ -299,12 +299,12 @@ implementation
     procedure TCGUnaryMinusNode.pass_generate_code;
       begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-         if is_64bit(left.resultdef) then
+         if Is_64Bit(left.resultdef) then
            second_64bit
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and is_mmx_able_array(left.resultdef) then
+           if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
              second_mmx
          else
 {$endif SUPPORT_MMX}
@@ -348,12 +348,12 @@ implementation
          SecondPass(right);
          if CodeGenError then
           exit;
-         location_copy(location,left.location);
+         Location_Copy(location,left.Location);
 
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-         if is_64bit(resultdef) then
+         if Is_64Bit(resultdef) then
            begin
-             if is_signed(left.resultdef) then
+             if Is_Signed(left.resultdef) then
                opdef:=S64IntType
              else
                opdef:=U64IntType;
@@ -361,17 +361,17 @@ implementation
              { this code valid for 64-bit cpu's only ,
                otherwise helpers are called in pass_1
              }
-             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,location,left.resultdef,opdef,false);
-             location_copy(location,left.location);
-             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,opdef,false);
-             emit64_div_reg_reg(is_signed(left.resultdef),
-               joinreg64(right.location.register64.reglo,right.location.register64.reghi),
-               joinreg64(location.register64.reglo,location.register64.reghi));
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,location,left.resultdef,opdef,false);
+             Location_Copy(location,left.Location);
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,opdef,false);
+             emit64_div_reg_reg(Is_Signed(left.resultdef),
+               JoinReg64(right.Location.Register64.RegLo,right.Location.Register64.RegHi),
+               JoinReg64(location.Register64.RegLo,location.Register64.RegHi));
            end
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
            begin
-              if is_signed(left.resultdef) then
+              if Is_Signed(left.resultdef) then
                 begin
                   opsize:=OS_SINT;
                   opdef:=OSSIntType;
@@ -383,32 +383,32 @@ implementation
                 end;
 
               { put numerator in register }
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
-              hreg1:=left.location.register;
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,false);
+              hreg1:=left.Location.Register;
 
               if (nodetype=divn) and
                  (right.nodetype=ordconstn) and
-                 IsPowerOf2(TOrdConstNode(right).value.svalue,power) then
+                 IsPowerOf2(TOrdConstNode(right).Value.svalue,power) then
                 Begin
                   { for signed numbers, the numerator must be adjusted before the
                     shift instruction, but not wih unsigned numbers! Otherwise,
                     "Cardinal($ffffffff) div 16" overflows! (JM) }
-                  If is_signed(left.resultdef) Then
+                  If Is_Signed(left.resultdef) Then
                     Begin
                       CurrentAsmData.getjumplabel(hl);
-                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_INT,OC_GT,0,hreg1,hl);
+                      cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,OS_INT,OC_GT,0,hreg1,hl);
                       if power=1 then
-                        cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,1,hreg1)
+                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,1,hreg1)
                       else
-                        cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,TOrdConstNode(right).value.svalue-1,hreg1);
-                      cg.a_label(CurrentAsmData.CurrAsmList,hl);
-                      cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SAR,OS_INT,power,hreg1);
+                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_INT,TOrdConstNode(right).Value.svalue-1,hreg1);
+                      cg.A_Label(CurrentAsmData.CurrAsmList,hl);
+                      cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,OS_INT,power,hreg1);
                     End
                   Else { not signed }
-                    cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SHR,OS_INT,power,hreg1);
+                    cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,OS_INT,power,hreg1);
 
-                  location_reset(location,LOC_REGISTER,opsize);
-                  location.register:=hreg1;
+                  Location_Reset(location,LOC_REGISTER,opsize);
+                  location.Register:=hreg1;
                 End
               else
                 begin
@@ -416,13 +416,13 @@ implementation
                   { hdenom is always free, it's }
                   { only used for temporary }
                   { purposes                }
-                  if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) then
+                  if not(right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) then
                     begin
-                      hdenom := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-                      hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,hdenom);
+                      hdenom := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+                      hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.Location,hdenom);
                     end
                   else
-                    hdenom:=right.location.register;
+                    hdenom:=right.Location.Register;
                   { verify if the divisor is zero, if so return an error immediately,
                     except if we have a const node, where we don't need this, because
                     then zero check was done earlier.
@@ -430,25 +430,25 @@ implementation
                   if (right.nodetype <> ordconstn) then
                     begin
                       CurrentAsmData.getjumplabel(hl);
-                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_INT,OC_NE,0,hdenom,hl);
+                      cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,OS_INT,OC_NE,0,hdenom,hl);
                       paraloc1.init;
                       pd:=Search_System_Proc('fpc_handleerror');
-                      paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-                      cg.a_load_const_cgpara(CurrentAsmData.CurrAsmList,OS_S32,aint(200),paraloc1);
-                      paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
-                      cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_HANDLEERROR',false);
+                      ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
+                      cg.A_Load_Const_CGPara(CurrentAsmData.CurrAsmList,OS_S32,aint(200),paraloc1);
+                      ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
+                      cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_HANDLEERROR',false);
                       paraloc1.done;
-                      cg.a_label(CurrentAsmData.CurrAsmList,hl);
+                      cg.A_Label(CurrentAsmData.CurrAsmList,hl);
                     end;
-                  location_reset(location,LOC_REGISTER,opsize);
-                  location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+                  Location_Reset(location,LOC_REGISTER,opsize);
+                  location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
                   if nodetype = modn then
-                    emit_mod_reg_reg_reg(is_signed(left.resultdef),hdenom,hreg1,location.register)
+                    emit_mod_reg_reg_reg(Is_Signed(left.resultdef),hdenom,hreg1,location.Register)
                   else
-                    emit_div_reg_reg_reg(is_signed(left.resultdef),hdenom,hreg1,location.register);
+                    emit_div_reg_reg_reg(Is_Signed(left.resultdef),hdenom,hreg1,location.Register);
                 end;
            end;
-        cg.g_overflowcheck(CurrentAsmData.CurrAsmList,location,resultdef);
+        cg.G_OverflowCheck(CurrentAsmData.CurrAsmList,location,resultdef);
       end;
 
 
@@ -472,7 +472,7 @@ implementation
          opdef,shiftcountdef: TDef;
          hcountreg : TRegister;
          opsize : TCgSize;
-         shiftval : LongInt;
+         ShiftVal : LongInt;
       begin
          { determine operator }
          case nodetype of
@@ -482,16 +482,16 @@ implementation
              InternalError(2013120102);
          end;
 {$ifdef cpunodefaultint}
-        opsize:=left.location.size;
+        opsize:=left.Location.Size;
         opdef:=left.resultdef;
         shiftcountdef:=opdef;
 {$else cpunodefaultint}
-        if left.resultdef.size<=4 then
+        if left.resultdef.Size<=4 then
           begin
-            if is_signed(left.resultdef) then
+            if Is_Signed(left.resultdef) then
               begin
                 if (sizeof(aint)<4) and
-                   (left.resultdef.size<=sizeof(aint)) then
+                   (left.resultdef.Size<=sizeof(aint)) then
                   begin
                     opsize:=OS_SINT;
                     opdef:=SIntType;
@@ -508,7 +508,7 @@ implementation
             else
               begin
                 if (sizeof(aint)<4) and
-                   (left.resultdef.size<=sizeof(aint)) then
+                   (left.resultdef.Size<=sizeof(aint)) then
                   begin
                     opsize:=OS_INT;
                     opdef:=UIntType;
@@ -525,7 +525,7 @@ implementation
           end
         else
           begin
-            if is_signed(left.resultdef) then
+            if Is_Signed(left.resultdef) then
               begin
                 opdef:=S64IntType;
                 opsize:=OS_S64;
@@ -539,12 +539,12 @@ implementation
           end;
 {$endif cpunodefaultint}
 
-         if not(left.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
+         if not(left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
            { location_force_reg can be also used to change the size of a register }
-           (left.location.size<>opsize) then
-           hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,true);
-         location_reset(location,LOC_REGISTER,opsize);
-         location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
+           (left.Location.Size<>opsize) then
+           hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,true);
+         Location_Reset(location,LOC_REGISTER,opsize);
+         location.Register:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
 
          { shifting by a constant directly coded: }
          if (right.nodetype=ordconstn) then
@@ -552,12 +552,12 @@ implementation
               { shl/shr must "wrap around", so use ... and 31 }
               { In TP, "byte/word shl 16 = 0", so no "and 15" in case of
                 a 16 bit ALU }
-              if tcgsize2size[opsize]<=4 then
-                shiftval:=TOrdConstNode(right).value.uvalue and 31
+              if TCgSize2Size[opsize]<=4 then
+                ShiftVal:=TOrdConstNode(right).Value.uvalue and 31
               else
-                shiftval:=TOrdConstNode(right).value.uvalue and 63;
-              hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,opdef,
-                shiftval,left.location.register,location.register);
+                ShiftVal:=TOrdConstNode(right).Value.uvalue and 63;
+              hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,opdef,
+                ShiftVal,left.Location.Register,location.Register);
            end
          else
            begin
@@ -565,16 +565,16 @@ implementation
                 is done since most target cpu which will use this
                 node do not support a shift count in a mem. location (cec)
               }
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,shiftcountdef,true);
-              hlcg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmList,op,opdef,right.location.register,left.location.register,location.register);
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,shiftcountdef,true);
+              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,opdef,right.Location.Register,left.Location.Register,location.Register);
            end;
          { shl/shr nodes return the same type as left, which can be different
            from opdef }
          if opdef<>resultdef then
            begin
-             hcountreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-             hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opdef,resultdef,location.register,hcountreg);
-             location.register:=hcountreg;
+             hcountreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+             hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opdef,resultdef,location.Register,hcountreg);
+             location.Register:=hcountreg;
            end;
       end;
 
@@ -584,12 +584,12 @@ implementation
          SecondPass(left);
          SecondPass(right);
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and is_mmx_able_array(left.resultdef) then
+           if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
              second_mmx
          else
 {$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-         if is_64bit(left.resultdef) then
+         if Is_64Bit(left.resultdef) then
            second_64bit
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
@@ -605,13 +605,13 @@ implementation
     procedure TCGNotNode.second_64bit;
       begin
         SecondPass(left);
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
-        location_reset(location,LOC_REGISTER,left.location.size);
-        location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
-        location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
+        Location_Reset(location,LOC_REGISTER,left.Location.Size);
+        location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+        location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
         { perform the NOT operation }
-        cg64.a_op64_reg_reg(CurrentAsmData.CurrAsmList,OP_NOT,location.size,left.location.register64,location.register64);
+        cg64.A_Op64_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,location.Size,left.Location.Register64,location.Register64);
       end;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
 
@@ -619,41 +619,41 @@ implementation
     procedure TCGNotNode.second_integer;
       begin
         SecondPass(left);
-        if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
-        location_reset(location,LOC_REGISTER,left.location.size);
-        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
+        if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
+        Location_Reset(location,LOC_REGISTER,left.Location.Size);
+        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
         { perform the NOT operation }
-        hlcg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_NOT,left.resultdef,left.location.register,location.register);
+        hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,left.resultdef,left.Location.Register,location.Register);
       end;
 
 
     function TCGNotNode.handle_locjump: boolean;
       begin
-        result:=left.location.loc=LOC_JUMP;
+        result:=left.Location.Loc=LOC_JUMP;
         if result then
           begin
             if is_constboolnode(left) then
               InternalError(2014010101);
-            if left.location.loc<>LOC_JUMP then
+            if left.Location.Loc<>LOC_JUMP then
               InternalError(2012081306);
 
             { switch true and false labels to invert result }
-            location_reset_jump(location,left.location.falselabel,left.location.truelabel);
+            Location_Reset_Jump(location,left.Location.FalseLabel,left.Location.TrueLabel);
           end;
       end;
 
 
     procedure TCGNotNode.pass_generate_code;
       begin
-        if is_boolean(resultdef) then
+        if Is_Boolean(resultdef) then
           second_boolean
 {$ifdef SUPPORT_MMX}
-        else if (cs_mmx in CurrentSettings.LocalSwitches) and is_mmx_able_array(left.resultdef) then
+        else if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
           second_mmx
 {$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-        else if is_64bit(left.resultdef) then
+        else if Is_64Bit(left.resultdef) then
           second_64bit
 {$endif not cpu64bitalu and not cpuhighleveltarget}
         else

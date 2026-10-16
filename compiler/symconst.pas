@@ -28,141 +28,141 @@ uses
   GlobType;
 
 const
-  def_alignment     = 4;
+  DefAlignment     = 4;
 
-  C_alignment       = -1;
-  bit_alignment     = -2;
-  mac68k_alignment  = -3;
+  CAlignment       = -1;
+  BitAlignment     = -2;
+  Mac68KAlignment  = -3;
 
   { if you change one of the following constants, }
   { you have also to change the typinfo unit}
   { and the rtl/i386,template/rttip.inc files    }
-  tkUnknown  = 0;
-  tkInteger  = 1;
-  tkChar     = 2;
-  tkEnumeration   = 3;
-  tkFloat    = 4;
-  tkSet      = 5;
-  tkMethod   = 6;
-  tkSString  = 7;
-  tkString   = tkSString;
-  tkLString  = 8;
-  tkAString  = 9;
-  tkWString  = 10;
-  tkVariant  = 11;
-  tkArray    = 12;
-  tkRecord   = 13;
-  tkInterface= 14;
-  tkClass    = 15;
-  tkObject   = 16;
-  tkWChar    = 17;
-  tkBool     = 18;
-  tkInt64    = 19;
-  tkQWord    = 20;
-  tkDynArray = 21;
-  tkInterfaceCorba = 22;
-  tkProcVar  = 23;
-  tkUString  = 24;
-  tkUChar    = 25;
-  tkHelper   = 26;
-  tkFile     = 27;
-  tkClassRef = 28;
-  tkPointer  = 29;
+  TkUnknown  = 0;
+  TkInteger  = 1;
+  TkChar     = 2;
+  TkEnumeration   = 3;
+  TkFloat    = 4;
+  TkSet      = 5;
+  TkMethod   = 6;
+  TkSString  = 7;
+  TkString   = TkSString;
+  TkLString  = 8;
+  TkAString  = 9;
+  TkWString  = 10;
+  TkVariant  = 11;
+  TkArray    = 12;
+  TkRecord   = 13;
+  TkInterface= 14;
+  TkClass    = 15;
+  TkObject   = 16;
+  TkWChar    = 17;
+  TkBool     = 18;
+  TkInt64    = 19;
+  TkQWord    = 20;
+  TkDynArray = 21;
+  TkInterfaceCORBA = 22;
+  TkProcVar  = 23;
+  TkUString  = 24;
+  TkUChar    = 25;
+  TkHelper   = 26;
+  TkFile     = 27;
+  TkClassRef = 28;
+  TkPointer  = 29;
 
-  otSByte     = 0;
-  otUByte     = 1;
-  otSWord     = 2;
-  otUWord     = 3;
-  otSLong     = 4;
-  otULong     = 5;
-  otSQWord    = 6;
-  otUQWord    = 7;
+  OtSByte     = 0;
+  OtUByte     = 1;
+  OtSWord     = 2;
+  OtUWord     = 3;
+  OtSLong     = 4;
+  OtULong     = 5;
+  OtSQWord    = 6;
+  OtUQWord    = 7;
 
-  ftSingle   = 0;
-  ftDouble   = 1;
-  ftExtended = 2;
-  ftComp     = 3;
-  ftCurr     = 4;
+  FtSingle   = 0;
+  FtDouble   = 1;
+  FtExtended = 2;
+  FtComp     = 3;
+  FtCurr     = 4;
 
-  mkProcedure        = 0;
-  mkFunction         = 1;
-  mkConstructor      = 2;
-  mkDestructor       = 3;
-  mkClassProcedure   = 4;
-  mkClassFunction    = 5;
-  mkClassConstructor = 6;
-  mkClassDestructor  = 7;
-  mkOperatorOverload = 8;
+  MkProcedure        = 0;
+  MkFunction         = 1;
+  MkConstructor      = 2;
+  MkDestructor       = 3;
+  MkClassProcedure   = 4;
+  MkClassFunction    = 5;
+  MkClassConstructor = 6;
+  MkClassDestructor  = 7;
+  MkOperatorOverload = 8;
 // delphi has the next too:
 //mkSafeProcedure    = 9;
 //mkSafeFunction     = 10;
 
-  pfvar      = 1;
-  pfConst    = 2;
-  pfArray    = 4;
-  pfAddress  = 8;
-  pfReference= 16;
-  pfOut      = 32;
-  pfConstRef = 64;
-  pfHidden   = 128;
-  pfHigh     = 256;
-  pfSelf     = 512;
-  pfVmt      = 1024;
-  pfResult   = 2048;
+  PfVar      = 1;
+  PfConst    = 2;
+  PfArray    = 4;
+  PfAddress  = 8;
+  PfReference= 16;
+  PfOut      = 32;
+  PfConstRef = 64;
+  PfHidden   = 128;
+  PfHigh     = 256;
+  PfSelf     = 512;
+  PfVMT      = 1024;
+  PfResult   = 2048;
 
-  riifNonTrivialChild          = 1;
-  riifParentHasNonTrivialChild = 2;
+  RIIFNonTrivialChild          = 1;
+  RIIFParentHasNonTrivialChild = 2;
 
-  unknown_level         = 0;
-  main_program_level    = 1;
-  normal_function_level = 2;
+  UnknownLevel         = 0;
+  MainProgramLevel    = 1;
+  NormalFunctionLevel = 2;
 
   { implicit parameter positions, normal parameters start at 10
     and will increase with 10 for each parameter. The high parameters
     will be inserted with n+1 }
-  paranr_blockselfpara = 1;
-  paranr_parentfp_delphi_cc_leftright = 2;
-  paranr_parentfp = 2;
-  paranr_self = 3;
-  paranr_result = 4;
+  ParaNrBlockSelfPara = 1;
+  ParaNrParentFPDelphiCCLeftRight = 2;
+  ParaNrParentFP = 2;
+  ParaNrSelf = 3;
+  ParaNrResult = 4;
   { pointers to managed result parameters must always be passed in the same way as the first regular
     parameter, regardless of ABI conventions, because the RTL expects the two following declarations
     to be handled in the same way:
       function f: com_interface;
       procedure p(out o: obj);
   }
-  paranr_result_managed = 5;
-  paranr_vmt = 6;
+  ParaNrResultManaged = 5;
+  ParaNrVMT = 6;
 
   { the implicit parameters for Objective-C methods need to come
     after the hidden result parameter }
-  paranr_objc_self = 7;
-  paranr_objc_cmd = 8;
+  ParaNrObjCSelf = 7;
+  ParaNrObjCCmd = 8;
 
   { Required to support variations of syscalls on Amiga-likes }
-  paranr_syscall_lib_first   = 9;             { for basefirst on MorphOS/ppc and AmigaOS4/ppc }
-  paranr_syscall_lib_last    = high(word)-3;  { everything else }
+  ParaNrSysCallLibFirst   = 9;             { for basefirst on MorphOS/ppc and AmigaOS4/ppc }
+  ParaNrSysCallLibLast    = high(word)-3;  { everything else }
 
-  paranr_result_leftright    = high(word)-2;
-  paranr_parentfp_delphi_cc  = high(word)-1;
+  ParaNrResultLeftRight    = high(word)-2;
+  ParaNrParentFPDelphiCC  = high(word)-1;
 
   { prefix for names of class helper procsyms added to regular symtables }
-  class_helper_prefix = 'CH$';
+  ClassHelperPrefix = 'CH$';
 
   { name of the Invoke method of a function reference interface }
-  method_name_funcref_invoke_decl = 'Invoke';
-  method_name_funcref_invoke_find = 'INVOKE';
+  MethodNameFuncRefInvokeDecl = 'Invoke';
+  MethodNameFuncRefInvokeFind = 'INVOKE';
 
   { tsym.symid value in case the sym has not yet been registered }
-  symid_not_registered = -2;
+  SymIDNotRegistered = -2;
   { tsym.symid value in case the sym has been registered, but not put in a
     symtable }
-  symid_registered_nost = -1;
+  SymIDRegisteredNoST = -1;
   { tdef.defid value in case the def has not yet been registered }
-  defid_not_registered = -2;
+  DefIDNotRegistered = -2;
   { tdef.defid value in case the sym has been registered, but not put in a
     symtable }
-  defid_registered_nost = -1;
+  DefIDRegisteredNoST = -1;
 
 type
   { keep this in sync with TIntfFlag in rtl/objpas/typinfo.pas }
@@ -470,8 +470,8 @@ type
 
   { synthetic procdef supplementary information (tprocdef.skpara) }
   TSKParaInterfaceWrapper = record
-    pd: pointer;
-    offset: LongInt;
+    PD: Pointer;
+    Offset: LongInt;
   end;
   PSKParaInterfaceWrapper = ^TSKParaInterfaceWrapper;
 
@@ -847,11 +847,11 @@ type
     x86pt_near_es, x86pt_near_fs, x86pt_near_gs, x86pt_far, x86pt_huge);
 
 var
-  clearstack_pocalls : TProcCallOptions;
-  cdecl_pocalls      : TProcCallOptions;
+  ClearStack_PoCalls : TProcCallOptions;
+  CDecl_PoCalls      : TProcCallOptions;
 
 const
-   inherited_objectoptions : TObjectOptions = [oo_has_virtual,oo_has_private,oo_has_protected,
+   Inherited_ObjectOptions : TObjectOptions = [oo_has_virtual,oo_has_private,oo_has_protected,
                 oo_has_strictprotected,oo_has_strictprivate,oo_has_constructor,oo_has_destructor,
                 oo_can_have_published,oo_inherits_not_specialized];
 
@@ -859,7 +859,7 @@ const
    { we only take this into account on i8086 and i386, on other platforms we always
      push in the same order
    }
-   pushleftright_pocalls : TProcCallOptions = [pocall_register,pocall_pascal];
+   PushLeftRight_PoCalls : TProcCallOptions = [pocall_register,pocall_pascal];
 {$endif}
 
      SymTypeName : array[TSymTyp] of string[14] = (
@@ -869,7 +869,7 @@ const
        'macrosym','namespace','undefinedsym','programparasym'
      );
 
-     typName : array[TDefTyp] of string[12] = (
+     TypName : array[TDefTyp] of string[12] = (
        'abstractdef','arraydef','recorddef','pointerdef','orddef',
        'stringdef','enumdef','procdef','objectdef','errordef',
        'filedef','formaldef','setdef','procvardef','floatdef',
@@ -881,12 +881,12 @@ const
        'convert_l2','convert_l1','equal','exact'
      );
 
-     visibilityName : array[TVisibility] of string[16] = (
+     VisibilityName : array[TVisibility] of string[16] = (
        'hidden','strict private','private','strict protected','protected',
        'public','published',''
      );
 
-     internaltypeprefixName : array[TInternalTypePrefix] of TSymStr = (
+     InternalTypePrefixName : array[TInternalTypePrefix] of TSymStr = (
        '$1byte$',
        '$emptyrec',
        '$vmt_TStringMessageTable$',
@@ -949,51 +949,51 @@ const
      );
 
 
-     default_class_type=odt_class;
+     DefaultClassType=odt_class;
 
-     objecttypes_with_helpers=[odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface];
-     objecttypes_with_thunk=[odt_interfacecorba,odt_interfacecom];
+     ObjectTypesWithHelpers=[odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface];
+     ObjectTypesWithThunk=[odt_interfacecorba,odt_interfacecom];
 
 { !! Be sure to keep these in sync with ones in rtl/inc/varianth.inc }
-      varempty = 0;
-      varnull = 1;
-      varsmallint = 2;
-      varinteger = 3;
-      varsingle = 4;
-      vardouble = 5;
-      varcurrency = 6;
-      vardate = 7;
-      varolestr = 8;
-      vardispatch = 9;
-      varerror = 10;
-      varboolean = 11;
-      varvariant = 12;
-      varunknown = 13;
-      vardecimal = 14;
-      varshortint = 16;
-      varbyte = 17;
-      varword = 18;
-      varlongword = 19;
-      varint64 = 20;
-      varqword = 21;
+      VarEmpty = 0;
+      VarNull = 1;
+      VarSmallInt = 2;
+      VarInteger = 3;
+      VarSingle = 4;
+      VarDouble = 5;
+      VarCurrency = 6;
+      VarDate = 7;
+      VarOleStr = 8;
+      VarDispatch = 9;
+      VarError = 10;
+      VarBoolean = 11;
+      VarVariant = 12;
+      VarUnknown = 13;
+      VarDecimal = 14;
+      VarShortInt = 16;
+      VarByte = 17;
+      VarWord = 18;
+      VarLongWord = 19;
+      VarInt64 = 20;
+      VarQWord = 21;
 
-      varUndefined = -1;
+      VarUndefined = -1;
 
-      varstrarg = $48;
-      varustrarg = $49;
+      VarStrArg = $48;
+      VarUStrArg = $49;
 
-      varstring = $100;
-      varany = $101;
-      varustring = $102;
-      vardefmask = $fff;
-      vararray = $2000;
-      varbyref = $4000;
+      VarString = $100;
+      VarAny = $101;
+      VarUString = $102;
+      VarDefMask = $fff;
+      VarArray = $2000;
+      VarByRef = $4000;
 
       { blocks-related constants }
-      blocks_procvar_invoke_type_name = '__FPC_invoke_pvtype';
+      BlocksProcVarInvokeTypeName = '__FPC_invoke_pvtype';
 
       { suffix for indirect symbols (AB_INDIRECT) }
-      suffix_indirect = '$indirect';
+      SuffixIndirect = '$indirect';
 
     { TProcTypeOption string identifiers for error messages }
     ProcTypeOptionKeywords: array[TProcTypeOption] of ShortString = (

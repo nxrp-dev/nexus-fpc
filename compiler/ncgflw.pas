@@ -158,10 +158,10 @@ implementation
       var
          lcont,lbreak,lloop,
          oldclabel,oldblabel : TAsmLabel;
-         truelabel,falselabel : TAsmLabel;
+         TrueLabel,FalseLabel : TAsmLabel;
          oldflowcontrol : TFlowControl;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          CurrentAsmData.getjumplabel(lloop);
          CurrentAsmData.getjumplabel(lcont);
@@ -177,14 +177,14 @@ implementation
          { handling code at the end as it is much more efficient, and makes
            while equal to repeat loop, only the end true/false is swapped (PFV) }
          if lnf_testatbegin in loopflags then
-           hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,lcont);
+           hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lcont);
 
          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
             { align loop target, as an unconditional jump is done before,
               use jump align which assume that the instructions inserted as alignment are never executed }
-            CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+            CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
 
-         hlcg.a_label(CurrentAsmData.CurrAsmList,lloop);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lloop);
 
          CurrentProcInfo.CurrContinueLabel:=lcont;
          CurrentProcInfo.CurrBreakLabel:=lbreak;
@@ -192,21 +192,21 @@ implementation
          if Assigned(right) then
            SecondPass(right);
 
-         hlcg.a_label(CurrentAsmData.CurrAsmList,lcont);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lcont);
          if lnf_checknegate in loopflags then
           begin
-             truelabel:=lbreak;
-             falselabel:=lloop;
+             TrueLabel:=lbreak;
+             FalseLabel:=lloop;
           end
          else
           begin
-             truelabel:=lloop;
-             falselabel:=lbreak;
+             TrueLabel:=lloop;
+             FalseLabel:=lbreak;
           end;
          SecondPass(left);
 
-         hlcg.maketojumpboollabels(CurrentAsmData.CurrAsmList,left,truelabel,falselabel);
-         hlcg.a_label(CurrentAsmData.CurrAsmList,lbreak);
+         hlcg.MakeToJumpBoolLabels(CurrentAsmData.CurrAsmList,left,TrueLabel,FalseLabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lbreak);
 
          sync_regvars(false);
 
@@ -239,7 +239,7 @@ implementation
 *)
 
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
          hl:=nil;
 
          oldflowcontrol := flowcontrol;
@@ -255,7 +255,7 @@ implementation
              current_asmdata.CurrAsmList := TAsmList.create;
            end;
 *)
-         hlcg.maketojumpbool(CurrentAsmData.CurrAsmList,left);
+         hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,left);
 
 (*
          if cs_opt_regvar in current_settings.optimizerswitches then
@@ -266,7 +266,7 @@ implementation
 *)
          if Assigned(right) then
            begin
-              hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.truelabel);
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.TrueLabel);
               SecondPass(right);
            end;
 
@@ -299,11 +299,11 @@ implementation
                      current_filepos:=then_list.getlasttaifilepos^
 *)
                    ;
-                   hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,hl);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,hl);
                    if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-                     CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+                     CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
                 end;
-              hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.falselabel);
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.FalseLabel);
               SecondPass(t1);
 (*
               { save current asmlist (previous instructions + else-block) }
@@ -317,7 +317,7 @@ implementation
                 end;
 *)
               if Assigned(right) then
-                hlcg.a_label(CurrentAsmData.CurrAsmList,hl);
+                hlcg.A_Label(CurrentAsmData.CurrAsmList,hl);
            end
          else
            begin
@@ -331,14 +331,14 @@ implementation
                 end;
 *)
               if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-                CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.CoalesceAlign,CurrentSettings.alignment.CoalesceAlignSkipMax));
-              hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.falselabel);
+                CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.CoalesceAlign,CurrentSettings.Alignment.CoalesceAlignSkipMax));
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.FalseLabel);
            end;
          if not(Assigned(right)) then
            begin
              if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.CoalesceAlign,CurrentSettings.alignment.CoalesceAlignSkipMax));
-             hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.truelabel);
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.CoalesceAlign,CurrentSettings.Alignment.CoalesceAlignSkipMax));
+             hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.TrueLabel);
            end;
 
 (*
@@ -399,7 +399,7 @@ implementation
 
     procedure TCGExitNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          if fc_no_direct_exit in flowcontrol then
            include(flowcontrol,fc_gotolabel);
@@ -408,11 +408,11 @@ implementation
            SecondPass(left);
 
          if (fc_unwind_exit in flowcontrol) then
-           hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel)
+           hlcg.G_Local_Unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel)
          else
-           hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
+           hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
        end;
 
 
@@ -422,17 +422,17 @@ implementation
 
     procedure TCGBreakNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_break);
          if CurrentProcInfo.CurrBreakLabel<>nil then
            begin
              if (fc_unwind_loop in flowcontrol) then
-               hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel)
+               hlcg.G_Local_Unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel)
              else
-               hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel);
+               hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel);
              if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
            end
          else
            CGMessage(cg_e_break_not_allowed);
@@ -445,17 +445,17 @@ implementation
 
     procedure TCGContinueNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_continue);
          if CurrentProcInfo.CurrContinueLabel<>nil then
            begin
              if (fc_unwind_loop in flowcontrol) then
-               hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel)
+               hlcg.G_Local_Unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel)
              else
-               hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel);
+               hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel);
              if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
            end
          else
            CGMessage(cg_e_continue_not_allowed);
@@ -469,12 +469,12 @@ implementation
     procedure TCGGotoNode.pass_generate_code;
 
        begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_gotolabel);
-         hlcg.a_jmp_always_pascal_goto(CurrentAsmData.CurrAsmList,TCGLabelNode(labelnode).getasmlabel);
+         hlcg.A_Jmp_Always_Pascal_Goto(CurrentAsmData.CurrAsmList,TCGLabelNode(labelnode).getasmlabel);
          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
-           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
+           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
        end;
 
 
@@ -498,16 +498,16 @@ implementation
 
     procedure TCGLabelNode.pass_generate_code;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
          if not (nf_internal in flags) then
            include(flowcontrol,fc_gotolabel);
-         hlcg.a_label_pascal_goto_target(CurrentAsmData.CurrAsmList,getasmlabel);
+         hlcg.A_Label_Pascal_Goto_Target(CurrentAsmData.CurrAsmList,getasmlabel);
 
          { Write also extra label if this label was referenced from
            assembler block }
          if Assigned(labsym) and
             Assigned(labsym.AsmBlockLabel) then
-           hlcg.a_label(CurrentAsmData.CurrAsmList,labsym.AsmBlockLabel);
+           hlcg.A_Label(CurrentAsmData.CurrAsmList,labsym.AsmBlockLabel);
       end;
 
 
@@ -521,17 +521,17 @@ implementation
      { jump out of an try/except block }
      procedure TCGTryExceptNode.emit_jump_out_of_try_except_frame(list: TAsmList; frametype: TFrameType; const exceptiontate: TCGExceptionStateHandler.TExceptionState; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel, outerlabel: TAsmLabel);
        begin
-          hlcg.a_label(list,framelabel);
+          hlcg.A_Label(list,framelabel);
           { we must also destroy the address frame which guards
             the exception object }
           cexceptionstatehandler.popaddrstack(list);
-          hlcg.g_exception_reason_discard(list,ExceptionReasonType,excepttemps.reasonbuf);
+          hlcg.G_Exception_Reason_Discard(list,ExceptionReasonType,excepttemps.reasonbuf);
           if frametype=ft_except then
             begin
               cexceptionstatehandler.cleanupobjectstack(list);
               cexceptionstatehandler.end_catch(list);
             end;
-          hlcg.a_jmp_always(list,outerlabel);
+          hlcg.A_Jmp_Always(list,outerlabel);
        end;
 
 
@@ -556,7 +556,7 @@ implementation
       label
          errorexit;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
          continuetrylabel:=nil;
          breaktrylabel:=nil;
          continueexceptlabel:=nil;
@@ -636,7 +636,7 @@ implementation
          { don't generate line info for internal cleanup }
          CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
-         hlcg.a_label(CurrentAsmData.CurrAsmList,lastonlabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lastonlabel);
          { default handling except handling }
          if Assigned(t1) then
            begin
@@ -674,14 +674,14 @@ implementation
 
                  cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,destroytemps);
                  cexceptionstatehandler.catch_all_end(CurrentAsmData.CurrAsmList);
-                 hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
+                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
                end
              else
                begin
                  doobjectdestroyandreraisestate.newflowcontrol:=afteronflowcontrol;
                  cexceptionstatehandler.cleanupobjectstack(CurrentAsmData.CurrAsmList);
                  cexceptionstatehandler.catch_all_end(CurrentAsmData.CurrAsmList);
-                 hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
+                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
                end;
            end
          else
@@ -709,7 +709,7 @@ implementation
            emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_try,trystate,excepttemps,continuetrylabel,oldContinueLabel);
 
          cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.a_label(CurrentAsmData.CurrAsmList,endexceptlabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,endexceptlabel);
 
          { end cleanup }
          CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
@@ -747,7 +747,7 @@ implementation
          exceptlocdef: TDef;
          exceptlocreg: TRegister;
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
          oldCurrExitLabel:=nil;
          continueonlabel:=nil;
          breakonlabel:=nil;
@@ -765,9 +765,9 @@ implementation
 
          if Assigned(exceptvarsym) then
            begin
-             location_reset_ref(exceptvarsym.LocAlloc, LOC_REFERENCE, def_cgsize(VoidPointerType), VoidPointerType.alignment, []);
-             tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.size, VoidPointerType.alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.LocAlloc.reference);
-             hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList, exceptlocdef, exceptvarsym.vardef, exceptlocreg, exceptvarsym.LocAlloc.reference);
+             Location_Reset_Ref(exceptvarsym.LocAlloc, LOC_REFERENCE, Def_CGSize(VoidPointerType), VoidPointerType.Alignment, []);
+             tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.Size, VoidPointerType.Alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.LocAlloc.Reference);
+             hlcg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList, exceptlocdef, exceptvarsym.vardef, exceptlocreg, exceptvarsym.LocAlloc.Reference);
            end;
          { in the case that another exception is risen
            we've to destroy the old one, so create a new
@@ -800,11 +800,11 @@ implementation
          { clear some stuff }
          if Assigned(exceptvarsym) then
            begin
-             tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.reference);
-             exceptvarsym.LocAlloc.loc:=LOC_INVALID;
+             tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.Reference);
+             exceptvarsym.LocAlloc.Loc:=LOC_INVALID;
            end;
          cexceptionstatehandler.end_catch(CurrentAsmData.CurrAsmList);
-         hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
+         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
 
          if Assigned(right) then
            begin
@@ -812,22 +812,22 @@ implementation
               if fc_exit in doobjectdestroyandreraisestate.newflowcontrol then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.a_label(CurrentAsmData.CurrAsmList,exitonlabel);
-                   hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,exitonlabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
                 end;
 
               if fc_break in doobjectdestroyandreraisestate.newflowcontrol then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.a_label(CurrentAsmData.CurrAsmList,breakonlabel);
-                   hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,oldBreakLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,breakonlabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldBreakLabel);
                 end;
 
               if fc_continue in doobjectdestroyandreraisestate.newflowcontrol then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.a_label(CurrentAsmData.CurrAsmList,continueonlabel);
-                   hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,oldContinueLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,continueonlabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldContinueLabel);
                 end;
 
               CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
@@ -839,7 +839,7 @@ implementation
            end;
 
          cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.a_label(CurrentAsmData.CurrAsmList,nextonlabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,nextonlabel);
          CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
          { propagate exit/break/continue }
@@ -857,10 +857,10 @@ implementation
     { jump out of a finally block }
     procedure TCGTryFinallyNode.emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
       begin
-         hlcg.a_label(list,framelabel);
-         hlcg.g_exception_reason_discard(list,ExceptionReasonType,excepttemps.reasonbuf);
-         hlcg.g_exception_reason_save_const(list,ExceptionReasonType,reason,excepttemps.reasonbuf);
-         hlcg.a_jmp_always(list,finallycodelabel);
+         hlcg.A_Label(list,framelabel);
+         hlcg.G_Exception_Reason_Discard(list,ExceptionReasonType,excepttemps.reasonbuf);
+         hlcg.G_Exception_Reason_Save_Const(list,ExceptionReasonType,reason,excepttemps.reasonbuf);
+         hlcg.A_Jmp_Always(list,finallycodelabel);
       end;
 
 
@@ -881,22 +881,22 @@ implementation
           nil otherwise. }
         pd:=Search_System_Proc('fpc_safecallhandler');
         cgpara.init;
-        paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
+        ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
         if Is_Class(CurrentProcInfo.procdef.struct) then
           begin
             selfsym:=TParaVarSym(CurrentProcInfo.procdef.ParaST.Find('self'));
             if (selfsym=nil) or (selfsym.typ<>paravarsym) then
               InternalError(2011123101);
-            hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.LocAlloc,cgpara);
+            hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.LocAlloc,cgpara);
           end
         else
-          hlcg.a_load_const_cgpara(CurrentAsmData.CurrAsmList,VoidPointerType,0,cgpara);
-        paramanager.freecgpara(CurrentAsmData.CurrAsmList,cgpara);
-        resultpara:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
+          hlcg.A_Load_Const_CGPara(CurrentAsmData.CurrAsmList,VoidPointerType,0,cgpara);
+        ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,cgpara);
+        resultpara:=hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
         cgpara.done;
         safecallresult:=TLocalVarSym(CurrentProcInfo.procdef.LocalST.Find('safecallresult'));
-        hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.LocAlloc,false);
-        resultpara.resetiftemp;
+        hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.LocAlloc,false);
+        resultpara.ResetIfTemp;
       end;
 
 
@@ -919,17 +919,17 @@ implementation
         procedure handle_breakcontinueexit(const finallycode: TAsmLabel; doreraise: boolean);
           begin
             { no exception happened, but maybe break/continue/exit }
-            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
+            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
             if fc_exit in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,2,reasonreg,oldCurrExitLabel);
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,2,reasonreg,oldCurrExitLabel);
             if fc_break in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,3,reasonreg,oldBreakLabel);
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,3,reasonreg,oldBreakLabel);
             if fc_continue in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,4,reasonreg,oldContinueLabel);
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,4,reasonreg,oldContinueLabel);
             if doreraise then
               cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,tek_normalfinally)
             else
-              hlcg.g_unreachable(CurrentAsmData.CurrAsmList);
+              hlcg.G_Unreachable(CurrentAsmData.CurrAsmList);
             { redirect break/continue/exit to the label above, with the reasonbuf set appropriately }
             if fc_exit in finallyexceptionstate.newflowcontrol then
               emit_jump_out_of_try_finally_frame(CurrentAsmData.CurrAsmList,2,finallycode,excepttemps,exitfinallylabel);
@@ -940,7 +940,7 @@ implementation
           end;
 
       begin
-         location_reset(location,LOC_VOID,OS_NO);
+         Location_Reset(location,LOC_VOID,OS_NO);
          oldBreakLabel:=nil;
          oldContinueLabel:=nil;
          continuefinallylabel:=nil;
@@ -994,7 +994,7 @@ implementation
 
              flowcontrol:=finallyexceptionstate.oldflowcontrol*[fc_inflowcontrol,fc_catching_exceptions];
              CurrentAsmData.getjumplabel(finallyNoExceptionLabel);
-             hlcg.a_label(CurrentAsmData.CurrAsmList,finallyNoExceptionLabel);
+             hlcg.A_Label(CurrentAsmData.CurrAsmList,finallyNoExceptionLabel);
              if not implicitframe then
                CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
              SecondPass(third);
@@ -1002,8 +1002,8 @@ implementation
                exit;
              if not implicitframe then
                CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
-             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
-             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
+             reasonreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
              handle_breakcontinueexit(finallyNoExceptionLabel,false);
 
              CurrentAsmData.CurrAsmList.ConcatList(tmplist);
@@ -1042,18 +1042,18 @@ implementation
          if not Assigned(third) then
            begin
              { the value should now be in the exception handler }
-             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
-             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
+             reasonreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
              if implicitframe then
                begin
-                 hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
+                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
                  { finally code only needed to be executed on exception (-> in
                    if-branch -> fc_inflowcontrol) }
                  if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
                    begin
                      handle_safecall_exception;
                      { we have to jump immediately as we have to return the value of FPC_SAFECALL }
-                     hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
+                     hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
                    end
                  else
                    cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,exceptframekind);
@@ -1081,7 +1081,7 @@ implementation
 
            end;
          cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.a_label(CurrentAsmData.CurrAsmList,endfinallylabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,endfinallylabel);
 
          { end cleanup }
          CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
@@ -1117,7 +1117,7 @@ implementation
         if not(tf_use_psabieh in TargetInfo.flags) then
           InternalError(2019021701);
 
-        location_reset(location,LOC_VOID,OS_NO);
+        Location_Reset(location,LOC_VOID,OS_NO);
         CurrentLandingPad:=nil;
         CurrentAction:=nil;
         ReRaiseLandingPad:=nil;
@@ -1139,7 +1139,7 @@ implementation
                 psabiehprocinfo.PushLandingPad(ReRaiseLandingPad);
               end;
           end;
-        hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_reraise',[],nil).resetiftemp;
+        hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,'fpc_reraise',[],nil).ResetIfTemp;
         if Assigned(CurrentLandingPad) then
           begin
             psabiehprocinfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);

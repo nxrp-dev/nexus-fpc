@@ -647,7 +647,7 @@ interface
          function  Pass1(objdata:TObjData):LongInt;override;
          procedure Pass2(objdata:TObjData);override;
          procedure SetOperandOrder(order:TOperandOrder);
-         function is_same_reg_move(regtype: TRegisterType):boolean;override;
+         function is_same_reg_move(RegType: TRegisterType):boolean;override;
          { register spilling code }
          function spilling_get_operation_type(opnr: LongInt): TOperType;override;
 
@@ -968,7 +968,7 @@ implementation
          inherited create(op);
          init(_size);
          ops:=1;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
       end;
 
 
@@ -995,8 +995,8 @@ implementation
          inherited create(op);
          init(_size);
          ops:=2;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
       end;
 
 
@@ -1005,7 +1005,7 @@ implementation
          inherited create(op);
          init(_size);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadconst(1,_op2);
       end;
 
@@ -1015,7 +1015,7 @@ implementation
          inherited create(op);
          init(_size);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadref(1,_op2);
       end;
 
@@ -1026,7 +1026,7 @@ implementation
          init(_size);
          ops:=2;
          loadconst(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(1,_op2);
       end;
 
 
@@ -1056,7 +1056,7 @@ implementation
          init(_size);
          ops:=2;
          loadref(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(1,_op2);
       end;
 
 
@@ -1065,9 +1065,9 @@ implementation
          inherited create(op);
          init(_size);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
       end;
 
 
@@ -1077,8 +1077,8 @@ implementation
          init(_size);
          ops:=3;
          loadconst(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
       end;
 
 
@@ -1087,9 +1087,9 @@ implementation
         inherited create(op);
         init(_size);
         ops:=3;
-        loadreg(0,_op1);
+        LoadReg(0,_op1);
         loadref(1,_op2);
-        loadreg(2,_op3);
+        LoadReg(2,_op3);
       end;
 
 
@@ -1099,8 +1099,8 @@ implementation
          init(_size);
          ops:=3;
          loadref(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
       end;
 
 
@@ -1111,7 +1111,7 @@ implementation
          ops:=3;
          loadconst(0,_op1);
          loadref(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(2,_op3);
       end;
 
 
@@ -1121,7 +1121,7 @@ implementation
          init(_size);
          ops:=3;
          loadconst(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(1,_op2);
          loadref(2,_op3);
       end;
 
@@ -1131,8 +1131,8 @@ implementation
         inherited create(op);
         init(_size);
         ops:=3;
-        loadreg(0,_op1);
-        loadreg(1,_op2);
+        LoadReg(0,_op1);
+        LoadReg(1,_op2);
         loadref(2,_op3);
       end;
 
@@ -1142,9 +1142,9 @@ implementation
         init(_size);
         ops:=4;
         loadconst(0,_op1);
-        loadreg(1,_op2);
-        loadreg(2,_op3);
-        loadreg(3,_op4);
+        LoadReg(1,_op2);
+        LoadReg(2,_op3);
+        LoadReg(3,_op4);
       end;
 
 
@@ -1182,7 +1182,7 @@ implementation
          init(_size);
          ops:=2;
          loadsymbol(0,_op1,_op1ofs);
-         loadreg(1,_op2);
+         LoadReg(1,_op2);
       end;
 
 
@@ -1216,8 +1216,8 @@ implementation
                addsize:=false;
 
                regnr := '';
-               if getregtype(reg) = R_MMREGISTER then
-                str(getsupreg(reg),regnr);
+               if GetRegType(reg) = R_MMREGISTER then
+                str(GetSupReg(reg),regnr);
 
                if (ot and OT_XMMREG)=OT_XMMREG then
                 s:=s+'xmmreg' + regnr
@@ -1412,7 +1412,7 @@ implementation
         if (
             (ops=1) and
             (oper[0]^.typ=top_reg) and
-            (getregtype(oper[0]^.reg)=R_FPUREGISTER) and
+            (GetRegType(oper[0]^.reg)=R_FPUREGISTER) and
             (oper[0]^.reg<>NR_ST)
            ) then
          begin
@@ -1465,52 +1465,52 @@ implementation
                 end;
               top_ref :
                 begin
-                  if (ref^.refaddr in [addr_no{$ifdef x86_64},addr_tpoff{$endif x86_64}{$ifdef i386},addr_ntpoff{$endif i386}])
+                  if (ref^.RefAddr in [addr_no{$ifdef x86_64},addr_tpoff{$endif x86_64}{$ifdef i386},addr_ntpoff{$endif i386}])
 {$ifdef i386}
                      or (
-                         (ref^.refaddr in [addr_pic,addr_tlsgd]) and
-                         ((ref^.base<>NR_NO) or (ref^.index<>NR_NO))
+                         (ref^.RefAddr in [addr_pic,addr_tlsgd]) and
+                         ((ref^.Base<>NR_NO) or (ref^.Index<>NR_NO))
                         )
 {$endif i386}
 {$ifdef x86_64}
                      or (
-                         (ref^.refaddr in [addr_pic,addr_pic_no_got,addr_tlsgd]) and
-                         (ref^.base<>NR_NO)
+                         (ref^.RefAddr in [addr_pic,addr_pic_no_got,addr_tlsgd]) and
+                         (ref^.Base<>NR_NO)
                         )
 {$endif x86_64}
                      then
                     begin
 
                       { create ot field }
-                      if (reg_ot_table[findreg_by_number(ref^.base)] and OT_REG_GPR = OT_REG_GPR) and
-                         ((reg_ot_table[findreg_by_number(ref^.index)] = OT_XMMREG) or
-                          (reg_ot_table[findreg_by_number(ref^.index)] = OT_YMMREG) or
-                          (reg_ot_table[findreg_by_number(ref^.index)] = OT_ZMMREG)
+                      if (reg_ot_table[findreg_by_number(ref^.Base)] and OT_REG_GPR = OT_REG_GPR) and
+                         ((reg_ot_table[findreg_by_number(ref^.Index)] = OT_XMMREG) or
+                          (reg_ot_table[findreg_by_number(ref^.Index)] = OT_YMMREG) or
+                          (reg_ot_table[findreg_by_number(ref^.Index)] = OT_ZMMREG)
                          ) then
                         // AVX2 - vector-memory-referenz (e.g. vgatherdpd xmm0, [rax  xmm1], xmm2)
-                        ot := (reg_ot_table[findreg_by_number(ref^.base)] and OT_REG_GPR) or
-                              (reg_ot_table[findreg_by_number(ref^.index)])
-                      else if (ref^.base = NR_NO) and
-                              ((reg_ot_table[findreg_by_number(ref^.index)] = OT_XMMREG) or
-                               (reg_ot_table[findreg_by_number(ref^.index)] = OT_YMMREG) or
-                               (reg_ot_table[findreg_by_number(ref^.index)] = OT_ZMMREG)
+                        ot := (reg_ot_table[findreg_by_number(ref^.Base)] and OT_REG_GPR) or
+                              (reg_ot_table[findreg_by_number(ref^.Index)])
+                      else if (ref^.Base = NR_NO) and
+                              ((reg_ot_table[findreg_by_number(ref^.Index)] = OT_XMMREG) or
+                               (reg_ot_table[findreg_by_number(ref^.Index)] = OT_YMMREG) or
+                               (reg_ot_table[findreg_by_number(ref^.Index)] = OT_ZMMREG)
                               ) then
                         // AVX2 - vector-memory-referenz without base-register (e.g. vgatherdpd xmm0, [xmm1], xmm2)
                         ot := (OT_REG_GPR) or
-                              (reg_ot_table[findreg_by_number(ref^.index)])
+                              (reg_ot_table[findreg_by_number(ref^.Index)])
 
                       else if (ot and OT_SIZE_MASK)=0 then
                         ot:=OT_MEMORY_ANY or opsize_2_type[i,opsize]
                       else
                         ot:=OT_MEMORY_ANY or (ot and OT_SIZE_MASK);
-                      if (ref^.base=NR_NO) and (ref^.index=NR_NO) then
+                      if (ref^.Base=NR_NO) and (ref^.Index=NR_NO) then
                         ot:=ot or OT_MEM_OFFS;
                       { fix scalefactor }
-                      if (ref^.index=NR_NO) then
-                       ref^.scalefactor:=0
+                      if (ref^.Index=NR_NO) then
+                       ref^.ScaleFactor:=0
                       else
-                       if (ref^.scalefactor=0) then
-                        ref^.scalefactor:=1;
+                       if (ref^.ScaleFactor=0) then
+                        ref^.ScaleFactor:=1;
                     end
                   else
                     begin
@@ -1520,8 +1520,8 @@ implementation
                       if Assigned(objdata) and
                          is_jmp then
                         begin
-                          currsym:=objdata.symbolref(ref^.symbol);
-                          l:=ref^.offset;
+                          currsym:=objdata.symbolref(ref^.Symbol);
+                          l:=ref^.Offset;
 {$push}
 {$r-,q-} { disable also overflow as address returns a qword for x86_64 }
                           if Assigned(currsym) then
@@ -1667,8 +1667,8 @@ implementation
            currot:=oper[i]^.ot;
 
            if (oper[i]^.typ=top_reg) and
-              (getregtype(oper[i]^.reg) = R_MMREGISTER) then
-            if getsupreg(oper[i]^.reg) and $10 = $10 then
+              (GetRegType(oper[i]^.reg) = R_MMREGISTER) then
+            if GetSupReg(oper[i]^.reg) and $10 = $10 then
               EvexRegs:=true;
            { Check the operand flags }
            if (insot and (not currot) and OT_NON_SIZE)<>0 then
@@ -1896,12 +1896,12 @@ implementation
                 with oper[i]^ do
                   begin
                     nr[i]:=-i-1;
-                    if getregtype(reg) = R_MMREGISTER then
-                      nr[i]:=getsupreg(reg);
+                    if GetRegType(reg) = R_MMREGISTER then
+                      nr[i]:=GetSupReg(reg);
                     if aAll and (nr[i]<0) then
                       if (ot and (OT_REGNORM or otf_reg_gpr))=(OT_REGNORM or otf_reg_gpr) then
                         if (ot and (otf_reg_xmm or otf_reg_ymm or otf_reg_zmm)) > 0 then
-                            nr[i]:=getsupreg(ref^.index);
+                            nr[i]:=GetSupReg(ref^.Index);
                   end;
               end;
             if nr[0]=nr[1] then result:=false;
@@ -1982,8 +1982,8 @@ implementation
       for i := 0 to ops - 1 do
       begin
         if (oper[i]^.typ=top_reg) and
-           (getregtype(oper[i]^.reg) = R_MMREGISTER) then
-         if getsupreg(oper[i]^.reg)>=16 then
+           (GetRegType(oper[i]^.reg) = R_MMREGISTER) then
+         if GetSupReg(oper[i]^.reg)>=16 then
           result := true;
 
         if (oper[i]^.vopext and OTVE_VECTOR_MASK) <> 0 then
@@ -2176,13 +2176,13 @@ implementation
           begin
             if aInput.typ = top_ref then
             begin
-              if aInput.ref^.base <> NR_NO then
+              if aInput.Ref^.Base <> NR_NO then
               begin
-                if (aInput.ref^.offset <> 0) and
-                   ((aInput.ref^.offset mod tuplesize) = 0) and
-                   (abs(aInput.ref^.offset) div tuplesize <= 127) then
+                if (aInput.Ref^.Offset <> 0) and
+                   ((aInput.Ref^.Offset mod tuplesize) = 0) and
+                   (abs(aInput.Ref^.Offset) div tuplesize <= 127) then
                 begin
-                  aInput.ref^.offset := aInput.ref^.offset div tuplesize;
+                  aInput.Ref^.Offset := aInput.Ref^.Offset div tuplesize;
                   EVEXTupleState := etsIsTuple;
                 end;
               end;
@@ -2290,11 +2290,11 @@ implementation
     function is_32_bit_ref(const ref:TReference):boolean;
       begin
 {$if defined(x86_64)}
-        result:=(ref.refaddr=addr_no) and
-                (ref.base<>NR_RIP) and
+        result:=(ref.RefAddr=addr_no) and
+                (ref.Base<>NR_RIP) and
                 (
-                 ((ref.index<>NR_NO) and (getsubreg(ref.index)=R_SUBD)) or
-                 ((ref.base<>NR_NO) and (getsubreg(ref.base)=R_SUBD))
+                 ((ref.Index<>NR_NO) and (GetSubReg(ref.Index)=R_SUBD)) or
+                 ((ref.Base<>NR_NO) and (GetSubReg(ref.Base)=R_SUBD))
                 );
 {$elseif defined(i386)}
         result:=not is_16_bit_ref(ref);
@@ -2307,12 +2307,12 @@ implementation
         ir,br : TRegister;
         isub,bsub : TSubRegister;
       begin
-        if (ref.index<>NR_NO) and (getregtype(ref.index)=R_MMREGISTER) then
+        if (ref.Index<>NR_NO) and (GetRegType(ref.Index)=R_MMREGISTER) then
           exit(false);
-        ir:=ref.index;
-        br:=ref.base;
-        isub:=getsubreg(ir);
-        bsub:=getsubreg(br);
+        ir:=ref.Index;
+        br:=ref.Base;
+        isub:=GetSubReg(ir);
+        bsub:=GetSubReg(br);
         { it's a direct address }
         if (br=NR_NO) and (ir=NR_NO) then
           begin
@@ -2348,10 +2348,10 @@ implementation
         why we also we check whether ref.index=NR_BP. For 32-bit registers,
         however, index=NR_EBP is encoded differently than base=NR_EBP and has
         a different default segment. }
-        if (ref.base=NR_BP) or (ref.index=NR_BP) or
-           (ref.base=NR_EBP) or (ref.base=NR_ESP)
+        if (ref.Base=NR_BP) or (ref.Index=NR_BP) or
+           (ref.Base=NR_EBP) or (ref.Base=NR_ESP)
 {$ifdef x86_64}
-        or (ref.base=NR_RBP) or (ref.base=NR_RSP)
+        or (ref.Base=NR_RBP) or (ref.Base=NR_RSP)
 {$endif x86_64}
            then
           result:=NR_SS
@@ -2384,56 +2384,56 @@ implementation
           ss_equals_ds:=segment_regs_equal(NR_DS,NR_SS);
 {$endif x86_64}
         { remove redundant segment overrides }
-        if (ref.segment<>NR_NO) and
-           ((inlineasm and (ref.segment=get_default_segment_of_ref(ref))) or
-            ((not inlineasm) and (segment_regs_equal(ref.segment,get_default_segment_of_ref(ref))))) then
-          ref.segment:=NR_NO;
+        if (ref.Segment<>NR_NO) and
+           ((inlineasm and (ref.Segment=get_default_segment_of_ref(ref))) or
+            ((not inlineasm) and (segment_regs_equal(ref.Segment,get_default_segment_of_ref(ref))))) then
+          ref.Segment:=NR_NO;
         if not is_16_bit_ref(ref) then
           begin
             { Switching index to base position gives shorter assembler instructions.
               Converting index*2 to base+index also gives shorter instructions. }
-            if (ref.base=NR_NO) and (ref.index<>NR_NO) and (ref.scalefactor<=2) and
-               (ss_equals_ds or (ref.segment<>NR_NO) or (ref.index<>NR_EBP))
+            if (ref.Base=NR_NO) and (ref.Index<>NR_NO) and (ref.ScaleFactor<=2) and
+               (ss_equals_ds or (ref.Segment<>NR_NO) or (ref.Index<>NR_EBP))
                { do not mess with tls references, they have the (,reg,1) format on purpose
                  else the linker cannot resolve/replace them }
-               {$ifdef i386} and (ref.refaddr<>addr_tlsgd) {$endif i386} then
+               {$ifdef i386} and (ref.RefAddr<>addr_tlsgd) {$endif i386} then
               begin
-                ref.base:=ref.index;
-                if ref.scalefactor=2 then
-                  ref.scalefactor:=1
+                ref.Base:=ref.Index;
+                if ref.ScaleFactor=2 then
+                  ref.ScaleFactor:=1
                 else
                   begin
-                    ref.index:=NR_NO;
-                    ref.scalefactor:=0;
+                    ref.Index:=NR_NO;
+                    ref.ScaleFactor:=0;
                   end;
               end;
             { Switching rBP+reg to reg+rBP sometimes gives shorter instructions (if there's no offset)
               On x86_64 this also works for switching r13+reg to reg+r13. }
-            if ((ref.base=NR_EBP) {$ifdef x86_64}or (ref.base=NR_RBP) or (ref.base=NR_R13) or (ref.base=NR_R13D){$endif}) and
-               (ref.index<>NR_NO) and
-               (ref.index<>NR_EBP) and {$ifdef x86_64}(ref.index<>NR_RBP) and (ref.index<>NR_R13) and (ref.index<>NR_R13D) and{$endif}
-               (ref.scalefactor<=1) and (ref.offset=0) and (ref.refaddr=addr_no) and
-               (ss_equals_ds or (ref.segment<>NR_NO)) then
+            if ((ref.Base=NR_EBP) {$ifdef x86_64}or (ref.Base=NR_RBP) or (ref.Base=NR_R13) or (ref.Base=NR_R13D){$endif}) and
+               (ref.Index<>NR_NO) and
+               (ref.Index<>NR_EBP) and {$ifdef x86_64}(ref.Index<>NR_RBP) and (ref.Index<>NR_R13) and (ref.Index<>NR_R13D) and{$endif}
+               (ref.ScaleFactor<=1) and (ref.Offset=0) and (ref.RefAddr=addr_no) and
+               (ss_equals_ds or (ref.Segment<>NR_NO)) then
               begin
-                tmpreg:=ref.base;
-                ref.base:=ref.index;
-                ref.index:=tmpreg;
+                tmpreg:=ref.Base;
+                ref.Base:=ref.Index;
+                ref.Index:=tmpreg;
               end;
           end;
         { remove redundant segment overrides again }
-        if (ref.segment<>NR_NO) and
-           ((inlineasm and (ref.segment=get_default_segment_of_ref(ref))) or
-            ((not inlineasm) and (segment_regs_equal(ref.segment,get_default_segment_of_ref(ref))))) then
-          ref.segment:=NR_NO;
+        if (ref.Segment<>NR_NO) and
+           ((inlineasm and (ref.Segment=get_default_segment_of_ref(ref))) or
+            ((not inlineasm) and (segment_regs_equal(ref.Segment,get_default_segment_of_ref(ref))))) then
+          ref.Segment:=NR_NO;
       end;
 
 
         function TAICPU.NeedAddrPrefix(opidx: byte): boolean;
       begin
 {$if defined(x86_64)}
-        result:=(oper[opidx]^.typ=top_ref) and is_32_bit_ref(oper[opidx]^.ref^);
+        result:=(oper[opidx]^.typ=top_ref) and is_32_bit_ref(oper[opidx]^.Ref^);
 {$elseif defined(i386)}
-        result:=(oper[opidx]^.typ=top_ref) and is_16_bit_ref(oper[opidx]^.ref^);
+        result:=(oper[opidx]^.typ=top_ref) and is_16_bit_ref(oper[opidx]^.Ref^);
 {$endif}
       end;
 
@@ -2451,7 +2451,7 @@ implementation
 
     procedure badreg(r:TRegister);
       begin
-        Message1(asmw_e_invalid_register,generic_regname(r));
+        Message1(asmw_e_invalid_register,Generic_RegName(r));
       end;
 
 
@@ -2471,8 +2471,8 @@ implementation
         rs: TSuperRegister;
         rt: TRegisterType;
       begin
-        rs:=getsupreg(r);
-        rt:=getregtype(r);
+        rs:=GetSupReg(r);
+        rt:=GetRegType(r);
 
         if (rs>=maxsupreg[rt]) then
          badreg(r);
@@ -2482,7 +2482,7 @@ implementation
           begin
             if (rs<8) then
               result:=intsupreg2opcode[rs];
-            if getsubreg(r)=R_SUBH then
+            if GetSubReg(r)=R_SUBH then
               inc(result,4);
           end;
       end;
@@ -2492,16 +2492,16 @@ implementation
     function rexbits(r: TRegister): byte;
       begin
         result:=0;
-        case getregtype(r) of
+        case GetRegType(r) of
           R_INTREGISTER:
-            if (getsupreg(r)>=RS_R8) then
+            if (GetSupReg(r)>=RS_R8) then
           { Either B,X or R bits can be set, depending on register role in instruction.
             Set all three bits here, caller will discard unnecessary ones. }
               result:=result or $47
-            else if (getsubreg(r)=R_SUBL) and
-              (getsupreg(r) in [RS_RDI,RS_RSI,RS_RBP,RS_RSP]) then
+            else if (GetSubReg(r)=R_SUBL) and
+              (GetSupReg(r) in [RS_RDI,RS_RSI,RS_RBP,RS_RSP]) then
               result:=result or $40
-            else if (getsubreg(r)=R_SUBH) then
+            else if (GetSubReg(r)=R_SUBH) then
           { Not an actual REX bit, used to detect incompatible usage of
             AH/BH/CH/DH }
               result:=result or $80;
@@ -2510,7 +2510,7 @@ implementation
             // AVX512 = 32 register
             //    rexbit = 0 => MMRegister 0..7  or 16..23
             //    rexbit = 1 => MMRegister 8..15 or 24..31
-            if (getsupreg(r) and $08) = $08 then
+            if (GetSupReg(r) and $08) = $08 then
               result:=result or $47;
           else
             ;
@@ -2523,25 +2523,25 @@ implementation
       var
         sym   : TAsmSymbol;
         md,s  : byte;
-        base,index,scalefactor,
+        base,index,ScaleFactor,
         o     : LongInt;
         ir,br : TRegister;
         isub,bsub : TSubRegister;
       begin
         result:=false;
-        ir:=input.ref^.index;
-        br:=input.ref^.base;
-        isub:=getsubreg(ir);
-        bsub:=getsubreg(br);
-        s:=input.ref^.scalefactor;
-        o:=input.ref^.offset;
-        sym:=input.ref^.symbol;
+        ir:=input.Ref^.Index;
+        br:=input.Ref^.Base;
+        isub:=GetSubReg(ir);
+        bsub:=GetSubReg(br);
+        s:=input.Ref^.ScaleFactor;
+        o:=input.Ref^.Offset;
+        sym:=input.Ref^.Symbol;
 
         //if ((ir<>NR_NO) and (getregtype(ir)<>R_INTREGISTER)) or
         //   ((br<>NR_NO) and (br<>NR_RIP) and (getregtype(br)<>R_INTREGISTER)) then
-        if ((ir<>NR_NO) and (getregtype(ir)=R_MMREGISTER) and (br<>NR_NO) and (getregtype(br)<>R_INTREGISTER)) or // vector memory (AVX2)
-           ((ir<>NR_NO) and (getregtype(ir)<>R_INTREGISTER) and (getregtype(ir)<>R_MMREGISTER)) or
-           ((br<>NR_NO) and (br<>NR_RIP) and (getregtype(br)<>R_INTREGISTER)) then
+        if ((ir<>NR_NO) and (GetRegType(ir)=R_MMREGISTER) and (br<>NR_NO) and (GetRegType(br)<>R_INTREGISTER)) or // vector memory (AVX2)
+           ((ir<>NR_NO) and (GetRegType(ir)<>R_INTREGISTER) and (GetRegType(ir)<>R_MMREGISTER)) or
+           ((br<>NR_NO) and (br<>NR_RIP) and (GetRegType(br)<>R_INTREGISTER)) then
           InternalError(200301081);
         { it's direct address }
         if (br=NR_NO) and (ir=NR_NO) then
@@ -2761,10 +2761,10 @@ implementation
            end;
            case s of
             0,
-            1 : scalefactor:=0;
-            2 : scalefactor:=1;
-            4 : scalefactor:=2;
-            8 : scalefactor:=3;
+            1 : ScaleFactor:=0;
+            2 : ScaleFactor:=1;
+            4 : ScaleFactor:=2;
+            8 : ScaleFactor:=3;
            else
             exit;
            end;
@@ -2791,10 +2791,10 @@ implementation
             begin
               Output.sib_present:=true;
               Output.modrm:=(md shl 6) or (rfield shl 3) or 4;
-              Output.sib:=(scalefactor shl 6) or (index shl 3) or base;
+              Output.sib:=(ScaleFactor shl 6) or (index shl 3) or base;
             end;
          end;
-        Output.size:=1+ord(Output.sib_present)+Output.bytes;
+        Output.Size:=1+ord(Output.sib_present)+Output.bytes;
         result:=true;
       end;
 
@@ -2805,25 +2805,25 @@ implementation
       var
         sym   : TAsmSymbol;
         md,s  : byte;
-        base,index,scalefactor,
+        base,index,ScaleFactor,
         o     : LongInt;
         ir,br : TRegister;
         isub,bsub : TSubRegister;
       begin
         result:=false;
-        if ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)=R_MMREGISTER) and (input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) or // vector memory (AVX2)
-           ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)<>R_INTREGISTER) and (getregtype(input.ref^.index)<>R_MMREGISTER)) or
-           ((input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) then
+        if ((input.Ref^.Index<>NR_NO) and (GetRegType(input.Ref^.Index)=R_MMREGISTER) and (input.Ref^.Base<>NR_NO) and (GetRegType(input.Ref^.Base)<>R_INTREGISTER)) or // vector memory (AVX2)
+           ((input.Ref^.Index<>NR_NO) and (GetRegType(input.Ref^.Index)<>R_INTREGISTER) and (GetRegType(input.Ref^.Index)<>R_MMREGISTER)) or
+           ((input.Ref^.Base<>NR_NO) and (GetRegType(input.Ref^.Base)<>R_INTREGISTER)) then
          InternalError(2003010802);
 
 
-        ir:=input.ref^.index;
-        br:=input.ref^.base;
-        isub:=getsubreg(ir);
-        bsub:=getsubreg(br);
-        s:=input.ref^.scalefactor;
-        o:=input.ref^.offset;
-        sym:=input.ref^.symbol;
+        ir:=input.Ref^.Index;
+        br:=input.Ref^.Base;
+        isub:=GetSubReg(ir);
+        bsub:=GetSubReg(br);
+        s:=input.Ref^.ScaleFactor;
+        o:=input.Ref^.Offset;
+        sym:=input.Ref^.Symbol;
       { it's direct address }
         if (br=NR_NO) and (ir=NR_NO) then
          begin
@@ -2924,10 +2924,10 @@ implementation
            end;
            case s of
             0,
-            1 : scalefactor:=0;
-            2 : scalefactor:=1;
-            4 : scalefactor:=2;
-            8 : scalefactor:=3;
+            1 : ScaleFactor:=0;
+            2 : ScaleFactor:=1;
+            4 : ScaleFactor:=2;
+            8 : ScaleFactor:=3;
            else
             exit;
            end;
@@ -2953,13 +2953,13 @@ implementation
             begin
               Output.sib_present:=true;
               Output.modrm:=(LongInt(md) shl 6) or (rfield shl 3) or 4;
-              Output.sib:=(scalefactor shl 6) or (index shl 3) or base;
+              Output.sib:=(ScaleFactor shl 6) or (index shl 3) or base;
             end;
          end;
         if Output.sib_present then
-         Output.size:=2+Output.bytes
+         Output.Size:=2+Output.bytes
         else
-         Output.size:=1+Output.bytes;
+         Output.Size:=1+Output.bytes;
         result:=true;
       end;
 
@@ -2986,18 +2986,18 @@ implementation
         isub,bsub : TSubRegister;
       begin
         result:=false;
-        if ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)<>R_INTREGISTER)) or
-           ((input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) then
+        if ((input.Ref^.Index<>NR_NO) and (GetRegType(input.Ref^.Index)<>R_INTREGISTER)) or
+           ((input.Ref^.Base<>NR_NO) and (GetRegType(input.Ref^.Base)<>R_INTREGISTER)) then
           InternalError(2003010803);
 
 
-        ir:=input.ref^.index;
-        br:=input.ref^.base;
-        isub:=getsubreg(ir);
-        bsub:=getsubreg(br);
-        s:=input.ref^.scalefactor;
-        o:=input.ref^.offset;
-        sym:=input.ref^.symbol;
+        ir:=input.Ref^.Index;
+        br:=input.Ref^.Base;
+        isub:=GetSubReg(ir);
+        bsub:=GetSubReg(br);
+        s:=input.Ref^.ScaleFactor;
+        o:=input.Ref^.Offset;
+        sym:=input.Ref^.Symbol;
         { it's a direct address }
         if (br=NR_NO) and (ir=NR_NO) then
           begin
@@ -3044,7 +3044,7 @@ implementation
             Output.bytes:=md;
             Output.modrm:=(LongInt(md) shl 6) or (rfield shl 3) or base;
           end;
-        Output.size:=1+Output.bytes;
+        Output.Size:=1+Output.bytes;
         Output.sib_present:=false;
         result:=true;
       end;
@@ -3065,7 +3065,7 @@ implementation
           begin
             rv:=regval(input.reg);
             Output.modrm:=$c0 or (rfield shl 3) or rv;
-            Output.size:=1;
+            Output.Size:=1;
 {$ifdef x86_64}
             Output.rex:=Output.rex or (rexbits(input.reg) and $F1);
 {$endif x86_64}
@@ -3078,7 +3078,7 @@ implementation
 {$if defined(x86_64)}
         result:=process_ea_ref_64_32(input,Output,rfield, uselargeoffset,forceSibByte);
 {$elseif defined(i386)}
-        if is_16_bit_ref(input.ref^) then
+        if is_16_bit_ref(input.Ref^) then
           result:=process_ea_ref_16(input,Output,rfield, uselargeoffset)
         else
           result:=process_ea_ref_32(input,Output,rfield, uselargeoffset);
@@ -3267,7 +3267,7 @@ implementation
 
 {$endif x86_64}
                 if (oper[(c shr 3) and 7]^.typ = top_ref) and
-                   (oper[(c shr 3) and 7]^.ref^.offset <> 0) then
+                   (oper[(c shr 3) and 7]^.Ref^.Offset <> 0) then
                 begin
                   if (exists_vex and exists_evex and CheckUseEVEX) or
                      (not(exists_vex) and exists_evex) then
@@ -3281,7 +3281,7 @@ implementation
 {$else x86_64}
                 if process_ea(oper[(c shr 3) and 7]^, ea_data, 0, EVEXTupleState = etsNotTuple) then
 {$endif x86_64}
-                 inc(len,ea_data.size)
+                 inc(len,ea_data.Size)
                   else Message(asmw_e_invalid_effective_address);
 
 {$ifdef x86_64}
@@ -3538,24 +3538,24 @@ implementation
             case oper[opidx]^.typ of
               top_ref :
                 begin
-                  currval:=oper[opidx]^.ref^.offset;
-                  currsym:=ObjData.symbolref(oper[opidx]^.ref^.symbol);
+                  currval:=oper[opidx]^.Ref^.Offset;
+                  currsym:=ObjData.symbolref(oper[opidx]^.Ref^.Symbol);
 
 {$ifdef i386}
-                  if (oper[opidx]^.ref^.refaddr=addr_pic) and
+                  if (oper[opidx]^.Ref^.RefAddr=addr_pic) and
                      (tf_pic_uses_got in TargetInfo.flags) then
                     begin
                       currrelreloc:=RELOC_PLT32;
                       currabsreloc:=RELOC_GOT32;
                       currabsreloc32:=RELOC_GOT32;
                     end
-                  else if oper[opidx]^.ref^.refaddr=addr_ntpoff then
+                  else if oper[opidx]^.Ref^.RefAddr=addr_ntpoff then
                     begin
                       currrelreloc:=RELOC_NTPOFF;
                       currabsreloc:=RELOC_NTPOFF;
                       currabsreloc32:=RELOC_NTPOFF;
                     end
-                  else if oper[opidx]^.ref^.refaddr=addr_tlsgd then
+                  else if oper[opidx]^.Ref^.RefAddr=addr_tlsgd then
                     begin
                       currrelreloc:=RELOC_TLSGD;
                       currabsreloc:=RELOC_TLSGD;
@@ -3564,25 +3564,25 @@ implementation
                   else
 {$endif i386}
 {$ifdef x86_64}
-                  if oper[opidx]^.ref^.refaddr=addr_pic then
+                  if oper[opidx]^.Ref^.RefAddr=addr_pic then
                     begin
                       currrelreloc:=RELOC_PLT32;
                       currabsreloc:=RELOC_GOTPCREL;
                       currabsreloc32:=RELOC_GOTPCREL;
                     end
-                  else if oper[opidx]^.ref^.refaddr=addr_pic_no_got then
+                  else if oper[opidx]^.Ref^.RefAddr=addr_pic_no_got then
                     begin
                       currrelreloc:=RELOC_RELATIVE;
                       currabsreloc:=RELOC_RELATIVE;
                       currabsreloc32:=RELOC_RELATIVE;
                     end
-                  else if oper[opidx]^.ref^.refaddr=addr_tpoff then
+                  else if oper[opidx]^.Ref^.RefAddr=addr_tpoff then
                     begin
                       currrelreloc:=RELOC_TPOFF;
                       currabsreloc:=RELOC_TPOFF;
                       currabsreloc32:=RELOC_TPOFF;
                     end
-                  else if oper[opidx]^.ref^.refaddr=addr_tlsgd then
+                  else if oper[opidx]^.Ref^.RefAddr=addr_tlsgd then
                     begin
                       currrelreloc:=RELOC_TLSGD;
                       currabsreloc:=RELOC_TLSGD;
@@ -3599,7 +3599,7 @@ implementation
               top_const :
                 begin
 
-                  currval:=aint(oper[opidx]^.val);
+                  currval:=aint(oper[opidx]^.Val);
 
                   currsym:=nil;
                   currabsreloc:=RELOC_ABSOLUTE;
@@ -3638,7 +3638,7 @@ implementation
                { We need to add the offset of the relocation
                  of _GLOBAL_OFFSET_TABLE symbol within
                  the current instruction }
-               inc(data,objdata.currobjsec.size-insoffset);
+               inc(data,objdata.currobjsec.Size-insoffset);
              end;
 {$endif i386}
            objdata.writereloc(data,len,p,Reloctype);
@@ -3649,8 +3649,8 @@ implementation
               { These relocations seem to be used only for ELF
                 which always has relocs_use_addend set to true
                 so that it is the orgsize of the last relocation which needs to be fixed PM  }
-              (insend<>objdata.CurrObjSec.size) then
-             dec(TObjRelocation(objdata.CurrObjSec.ObjRelocations.Last).orgsize,insend-objdata.CurrObjSec.size);
+              (insend<>objdata.CurrObjSec.Size) then
+             dec(TObjRelocation(objdata.CurrObjSec.ObjRelocations.Last).orgsize,insend-objdata.CurrObjSec.Size);
 {$endif}
          end;
 
@@ -3701,7 +3701,7 @@ implementation
 
       begin
         { safety check }
-        if objdata.currobjsec.size<>LongWord(insoffset) then
+        if objdata.currobjsec.Size<>LongWord(insoffset) then
           InternalError(200130121);
 
         { those variables are initialized inside local procedures, the dfa cannot handle this yet }
@@ -3779,7 +3779,7 @@ implementation
                      if ops > opidx then
                      begin
                        if (oper[opidx]^.typ=top_reg) then
-                        if getsupreg(oper[opidx]^.reg) and $10 = $0 then EVEXr := 1;
+                        if GetSupReg(oper[opidx]^.reg) and $10 = $0 then EVEXr := 1;
                      end
                    end
                    else EVEXr := 1; // modrm:reg not used =>> 1
@@ -3787,13 +3787,13 @@ implementation
                    opidx := (c shr 3) and 7;
                    if ops > opidx then
                     case oper[opidx]^.typ of
-                      top_reg: if getsupreg(oper[opidx]^.reg) and $10 = $0 then EVEXx := 1;
+                      top_reg: if GetSupReg(oper[opidx]^.reg) and $10 = $0 then EVEXx := 1;
                       top_ref: begin
-                                 if getsupreg(oper[opidx]^.ref^.index) and $08 = $0 then EVEXx := 1;
-                                 if getsubreg(oper[opidx]^.ref^.index) in [R_SUBMMX,R_SUBMMY,R_SUBMMZ] then
+                                 if GetSupReg(oper[opidx]^.Ref^.Index) and $08 = $0 then EVEXx := 1;
+                                 if GetSubReg(oper[opidx]^.Ref^.Index) in [R_SUBMMX,R_SUBMMY,R_SUBMMZ] then
                                  begin
                                    // VSIB memory addressing
-                                   if getsupreg(oper[opidx]^.ref^.index) and $10 = $0 then EVEXv := 1; // VECTOR-Index
+                                   if GetSupReg(oper[opidx]^.Ref^.Index) and $10 = $0 then EVEXv := 1; // VECTOR-Index
                                    {$ifdef x86_64}
                                    needed_VSIB := true;
                                    {$endif x86_64}
@@ -3811,7 +3811,7 @@ implementation
                 if ops > opidx then
                 begin
                   if (oper[opidx]^.typ=top_reg) then
-                    if getsupreg(oper[opidx]^.reg) and $10 = $0 then EVEXr := 1;
+                    if GetSupReg(oper[opidx]^.reg) and $10 = $0 then EVEXr := 1;
                 end else EVEXr := 1; // modrm:reg not used =>> 1
                 EVEXx:=1; //-- modrm.rm not used;
               end;
@@ -3852,7 +3852,7 @@ implementation
                       ((oper[opidx]^.ot and OT_REG_EXTRA_MASK = otf_reg_xmm) or
                        (oper[opidx]^.ot and OT_REG_EXTRA_MASK = otf_reg_ymm) or
                        (oper[opidx]^.ot and OT_REG_EXTRA_MASK = otf_reg_zmm)) then
-                    if (getsupreg(oper[opidx]^.reg) and $10 = $0) then EVEXx := 1;
+                    if (GetSupReg(oper[opidx]^.reg) and $10 = $0) then EVEXx := 1;
                  end;
            &370: begin
                    VEXmmmmm             := VEXmmmmm OR $01; // set leading opcode byte $0F
@@ -3916,7 +3916,7 @@ implementation
               if rexbits(oper[opmode]^.reg) = 0 then VEXvvvv := VEXvvvv or (1 shl 6);
 
               if rexbits(oper[opmode]^.reg) = 0 then EVEXvvvv := EVEXvvvv or (1 shl 3);
-              if getsupreg(oper[opmode]^.reg) and $10 = 0 then EVEXv := 1;
+              if GetSupReg(oper[opmode]^.reg) and $10 = 0 then EVEXv := 1;
             {$else}
               VEXvvvv := VEXvvvv or (1 shl 6);
               EVEXvvvv := EVEXvvvv or (1 shl 3);
@@ -4060,8 +4060,8 @@ implementation
           begin
             if ops > opidx then
              if (oper[opidx]^.typ=top_reg) and
-                (getregtype(oper[opidx]^.reg) = R_MMREGISTER) then
-              if getsupreg(oper[opidx]^.reg) and $10 = $10 then
+                (GetRegType(oper[opidx]^.reg) = R_MMREGISTER) then
+              if GetSupReg(oper[opidx]^.reg) and $10 = $10 then
               begin
                 Message1(asmw_e_invalid_opcode_and_operands,GetString);
                 break;
@@ -4406,7 +4406,7 @@ implementation
                    ((oper[opidx]^.ot and OT_REG_EXTRA_MASK)=otf_reg_tmm)
                   ) then
                   begin
-                    bytes[0] := ((getsupreg(oper[opidx]^.reg) and 15) shl 4);
+                    bytes[0] := ((GetSupReg(oper[opidx]^.reg) and 15) shl 4);
                     objdata.writebytes(bytes,1);
                   end
                 else
@@ -4435,7 +4435,7 @@ implementation
                       if (oper[c and 7]^.typ=top_reg) then
                         rfield:=regval(oper[c and 7]^.reg)
                       else
-                        rfield:=regval(oper[c and 7]^.ref^.base);
+                        rfield:=regval(oper[c and 7]^.Ref^.Base);
                     end
                    else
                     rfield:=c and 7;
@@ -4466,41 +4466,41 @@ implementation
                        begin
                          if (oper[opidx]^.ot and OT_MEMORY)=OT_MEMORY then
                            begin
-                             currsym:=objdata.symbolref(oper[opidx]^.ref^.symbol);
+                             currsym:=objdata.symbolref(oper[opidx]^.Ref^.Symbol);
 {$ifdef i386}
-                             if (oper[opidx]^.ref^.refaddr=addr_pic) and
+                             if (oper[opidx]^.Ref^.RefAddr=addr_pic) and
                                 (tf_pic_uses_got in TargetInfo.flags) then
                                currabsreloc:=RELOC_GOT32
                              else
 {$endif i386}
 {$ifdef x86_64}
-                             if oper[opidx]^.ref^.refaddr=addr_pic then
+                             if oper[opidx]^.Ref^.RefAddr=addr_pic then
                                currabsreloc:=RELOC_GOTPCREL
                              else
 {$endif x86_64}
                                currabsreloc:=RELOC_ABSOLUTE;
-                             objdata_writereloc(oper[opidx]^.ref^.offset,1,currsym,currabsreloc);
+                             objdata_writereloc(oper[opidx]^.Ref^.Offset,1,currsym,currabsreloc);
                            end
                          else
                           begin
-                            bytes[0]:=oper[opidx]^.ref^.offset;
+                            bytes[0]:=oper[opidx]^.Ref^.Offset;
                             objdata.writebytes(bytes,1);
                           end;
                          inc(s);
                        end;
                      2,4 :
                        begin
-                         currsym:=objdata.symbolref(oper[opidx]^.ref^.symbol);
-                         currval:=oper[opidx]^.ref^.offset;
+                         currsym:=objdata.symbolref(oper[opidx]^.Ref^.Symbol);
+                         currval:=oper[opidx]^.Ref^.Offset;
 {$ifdef x86_64}
-                         if oper[opidx]^.ref^.refaddr=addr_pic then
+                         if oper[opidx]^.Ref^.RefAddr=addr_pic then
                            currabsreloc:=RELOC_GOTPCREL
-                         else if oper[opidx]^.ref^.refaddr=addr_tlsgd then
+                         else if oper[opidx]^.Ref^.RefAddr=addr_tlsgd then
                            currabsreloc:=RELOC_TLSGD
-                         else if oper[opidx]^.ref^.refaddr=addr_tpoff then
+                         else if oper[opidx]^.Ref^.RefAddr=addr_tpoff then
                            currabsreloc:=RELOC_TPOFF
                          else
-                           if oper[opidx]^.ref^.base=NR_RIP then
+                           if oper[opidx]^.Ref^.Base=NR_RIP then
                              begin
                                currabsreloc:=RELOC_RELATIVE;
                                { Adjust reloc value by number of bytes following the displacement,
@@ -4511,12 +4511,12 @@ implementation
                            else
 {$endif x86_64}
 {$ifdef i386}
-                         if (oper[opidx]^.ref^.refaddr=addr_pic) and
+                         if (oper[opidx]^.Ref^.RefAddr=addr_pic) and
                             (tf_pic_uses_got in TargetInfo.flags) then
                            currabsreloc:=RELOC_GOT32
-                         else if oper[opidx]^.ref^.refaddr=addr_tlsgd then
+                         else if oper[opidx]^.Ref^.RefAddr=addr_tlsgd then
                            currabsreloc:=RELOC_TLSGD
-                         else if oper[opidx]^.ref^.refaddr=addr_ntpoff then
+                         else if oper[opidx]^.Ref^.RefAddr=addr_ntpoff then
                            currabsreloc:=RELOC_NTPOFF
                          else
 {$endif i386}
@@ -4524,19 +4524,19 @@ implementation
                              currabsreloc:=RELOC_ABSOLUTE32;
 
                            if (currabsreloc in [RELOC_ABSOLUTE32]) and
-                            (Assigned(oper[opidx]^.ref^.relsymbol)) then
+                            (Assigned(oper[opidx]^.Ref^.RelSymbol)) then
                            begin
-                             relsym:=objdata.symbolref(oper[opidx]^.ref^.relsymbol);
+                             relsym:=objdata.symbolref(oper[opidx]^.Ref^.RelSymbol);
                              if relsym.objsection=objdata.CurrObjSec then
                                begin
-                                 currval:=objdata.CurrObjSec.size+ea_data.bytes-relsym.offset+currval;
+                                 currval:=objdata.CurrObjSec.Size+ea_data.bytes-relsym.Offset+currval;
 
                                    currabsreloc:=RELOC_RELATIVE;
                                end
                              else
                                begin
                                  currabsreloc:=RELOC_PIC_PAIR;
-                                 currval:=relsym.offset;
+                                 currval:=relsym.Offset;
                                end;
                            end;
                          objdata_writereloc(currval,ea_data.bytes,currsym,currabsreloc);
@@ -4552,17 +4552,17 @@ implementation
       end;
 
 
-    function TAICPU.is_same_reg_move(regtype: TRegisterType):boolean;
+    function TAICPU.is_same_reg_move(RegType: TRegisterType):boolean;
       begin
         result:=(((opcode=A_MOV) or (opcode=A_XCHG)) and
-                 (regtype = R_INTREGISTER) and
+                 (RegType = R_INTREGISTER) and
                  (ops=2) and
                  (oper[0]^.typ=top_reg) and
                  (oper[1]^.typ=top_reg) and
                  (oper[0]^.reg=oper[1]^.reg)
                 ) or
                 ({ checking the opcodes is a long "or" chain, so check first the registers which is more selective }
-                 ((regtype = R_MMREGISTER) and
+                 ((RegType = R_MMREGISTER) and
                   (ops=2) and
                   (oper[0]^.typ=top_reg) and
                   (oper[1]^.typ=top_reg) and
@@ -4708,18 +4708,18 @@ implementation
       begin
         tmpref:=ref;
 
-        case getregtype(r) of
+        case GetRegType(r) of
           R_INTREGISTER :
             begin
-              if getsubreg(r)=R_SUBH then
-                inc(tmpref.offset);
+              if GetSubReg(r)=R_SUBH then
+                inc(tmpref.Offset);
               { we don't need special code here for 32 bit loads on x86_64, since
                 those will automatically zero-extend the upper 32 bits. }
               result:=TAICPU.op_ref_reg(A_MOV,reg2opsize(r),tmpref,r);
             end;
           R_MMREGISTER :
             if CurrentSettings.FPUType in fpu_avx_instructionsets then
-              case getsubreg(r) of
+              case GetSubReg(r) of
                 R_SUBMMD:
                   result:=TAICPU.op_ref_reg(A_VMOVSD,S_NO,tmpref,r);
                 R_SUBMMS:
@@ -4728,12 +4728,12 @@ implementation
                 R_SUBMMWHOLE:
                   result:=TAICPU.op_ref_reg(A_VMOVQ,S_NO,tmpref,r);
                 R_SUBMMY:
-                   if ref.alignment>=32 then
+                   if ref.Alignment>=32 then
                      result:=TAICPU.op_ref_reg(A_VMOVDQA,S_NO,tmpref,r)
                    else
                      result:=TAICPU.op_ref_reg(A_VMOVDQU,S_NO,tmpref,r);
                 R_SUBMMZ:
-                   if ref.alignment>=64 then
+                   if ref.Alignment>=64 then
                      result:=TAICPU.op_ref_reg(A_VMOVDQA64,S_NO,tmpref,r)
                    else
                      result:=TAICPU.op_ref_reg(A_VMOVDQU64,S_NO,tmpref,r);
@@ -4743,7 +4743,7 @@ implementation
                   InternalError(200506043);
               end
             else
-              case getsubreg(r) of
+              case GetSubReg(r) of
                 R_SUBMMD:
                   result:=TAICPU.op_ref_reg(A_MOVSD,S_NO,tmpref,r);
                 R_SUBMMS:
@@ -4769,11 +4769,11 @@ implementation
       begin
         tmpref:=ref;
 
-        case getregtype(r) of
+        case GetRegType(r) of
           R_INTREGISTER :
             begin
-              if getsubreg(r)=R_SUBH then
-                inc(tmpref.offset);
+              if GetSubReg(r)=R_SUBH then
+                inc(tmpref.Offset);
               size:=reg2opsize(r);
 {$ifdef x86_64}
               { even if it's a 32 bit reg, we still have to spill 64 bits
@@ -4781,25 +4781,25 @@ implementation
               if (size=S_L) then
                 begin
                   size:=S_Q;
-                  r:=newreg(getregtype(r),getsupreg(r),R_SUBWHOLE);
+                  r:=NewReg(GetRegType(r),GetSupReg(r),R_SUBWHOLE);
                 end;
 {$endif x86_64}
               result:=TAICPU.op_reg_ref(A_MOV,size,r,tmpref);
             end;
           R_MMREGISTER :
             if CurrentSettings.FPUType in fpu_avx_instructionsets then
-              case getsubreg(r) of
+              case GetSubReg(r) of
                 R_SUBMMD:
                   result:=TAICPU.op_reg_ref(A_VMOVSD,S_NO,r,tmpref);
                 R_SUBMMS:
                   result:=TAICPU.op_reg_ref(A_VMOVSS,S_NO,r,tmpref);
                 R_SUBMMY:
-                   if ref.alignment>=32 then
+                   if ref.Alignment>=32 then
                      result:=TAICPU.op_reg_ref(A_VMOVDQA,S_NO,r,tmpref)
                    else
                      result:=TAICPU.op_reg_ref(A_VMOVDQU,S_NO,r,tmpref);
                 R_SUBMMZ:
-                   if ref.alignment>=64 then
+                   if ref.Alignment>=64 then
                      result:=TAICPU.op_reg_ref(A_VMOVDQA64,S_NO,r,tmpref)
                    else
                      result:=TAICPU.op_reg_ref(A_VMOVDQU64,S_NO,r,tmpref);
@@ -4810,7 +4810,7 @@ implementation
                   InternalError(200506042);
               end
             else
-              case getsubreg(r) of
+              case GetSubReg(r) of
                 R_SUBMMD:
                   result:=TAICPU.op_reg_ref(A_MOVSD,S_NO,r,tmpref);
                 R_SUBMMS:

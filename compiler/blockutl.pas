@@ -63,7 +63,7 @@ implementation
       else if pd.Is_AddressOnly then
         result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_STATIC',true).typedef)
       { todo: nested functions and Objective-C methods }
-      else if not is_nested_pd(pd) and
+      else if not Is_Nested_PD(pd) and
               not Is_ObjCClass(TDef(pd.owner.DefOwner)) then
         result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).typedef)
       else
@@ -121,7 +121,7 @@ implementation
           set in case the invoke function returns its result via a hidden
           parameter
       }
-      if paramanager.ret_in_param(invokepd.ReturnDef,orgpd) then
+      if ParaManager.Ret_In_Param(invokepd.ReturnDef,orgpd) then
         result:=result or BLOCK_USE_STRET;
       { BLOCK_HAS_SIGNATURE:
           only if this bit is set, the above bit will actually be taken into
@@ -276,7 +276,7 @@ implementation
     begin
       result:=internalstatements(statement);
       { create new block literal structure }
-      literaltemp:=CTempCreateNode.create(blockliteraldef,blockliteraldef.size,tt_persistent,false);
+      literaltemp:=CTempCreateNode.create(blockliteraldef,blockliteraldef.Size,tt_persistent,false);
       addstatement(statement,literaltemp);
       { temp.base.isa:=@blockisasym }
       addstatement(statement,CAssignmentNode.create(
@@ -334,7 +334,7 @@ implementation
       result:=nil;
       { supported? (should be caught earlier) }
       if (procloadnode.resultdef.typ<>procdef) or
-         is_nested_pd(TProcDef(procloadnode.resultdef)) or
+         Is_Nested_PD(TProcDef(procloadnode.resultdef)) or
          Is_ObjCClass(TDef(procloadnode.resultdef.owner.DefOwner)) then
         InternalError(2014071401);
 
@@ -355,7 +355,7 @@ implementation
       { get the invoke wrapper }
       invokepd:=get_invoke_wrapper(orgpd,orgpv);
       { get the descriptor }
-      descriptor:=get_block_literal_descriptor(invokepd,blockliteraldef.size);
+      descriptor:=get_block_literal_descriptor(invokepd,blockliteraldef.Size);
       { get the ISA pointer for the literal }
       blockisasym:=get_block_literal_isa(orgpd);
       { get the flags for the block }

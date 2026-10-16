@@ -117,7 +117,7 @@ procedure exportprocsym(sym: TSym; const s : string; index: LongInt; options: TE
     hp.name:=StringDup(s);
     hp.sym:=sym;
     hp.options:=options+[eo_name];
-    hp.index:=index;
+    hp.Index:=index;
     exportlib.exportprocedure(hp);
   end;
 
@@ -131,7 +131,7 @@ procedure exportvarsym(sym: TSym; const s : string; index: LongInt; options: TEx
     hp.sym:=sym;
     hp.is_var:=true;
     hp.options:=options+[eo_name];
-    hp.index:=index;
+    hp.Index:=index;
     exportlib.exportvar(hp);
   end;
 

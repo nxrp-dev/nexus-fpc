@@ -82,7 +82,7 @@ uses
         inherited Create;
         Sym:=ASym;
         Name:=Lower(ASym.Owner.Name^+'.'+ASym.Name);
-        IsUnicode:=is_systemunit_unicode;
+        IsUnicode:=Is_SystemUnit_Unicode;
         if IsUnicode then
           begin
           T:=ASym.ConstDef;

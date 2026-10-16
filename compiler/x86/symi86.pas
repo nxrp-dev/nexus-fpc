@@ -26,68 +26,68 @@ unit symi86;
 interface
 
 uses
-  symtype,symdef,SymSym,symx86;
+  SymType,SymDef,SymSym,SymX86;
 
 type
 
   { ti86procvardef }
 
   TI86ProcVarDef = class(TX86ProcVarDef)
-    function Is_PushLeftRight: boolean; override;
+    function Is_PushLeftRight: Boolean; override;
   end;
 
   { ti86procdef }
 
   TI86ProcDef = class(TX86ProcDef)
-    function Is_PushLeftRight: boolean; override;
+    function Is_PushLeftRight: Boolean; override;
   end;
 
   { ti86absolutevarsym }
 
   TI86AbsoluteVarSym = class(TAbsoluteVarSym)
    protected
-    procedure PPULoadPlatform(ppufile: TCompilerPPUFile); override;
-    procedure PPUWritePlatform(ppufile: TCompilerPPUFile); override;
+    procedure PPULoadPlatform(PPUFile: TCompilerPPUFile); override;
+    procedure PPUWritePlatform(PPUFile: TCompilerPPUFile); override;
    public
-    absseg  : boolean;
+    AbsSeg  : Boolean;
   end;
 
 implementation
 
 uses
-  symconst;
+  SymConst;
 
 { ti86procvardef }
 
-function TI86ProcVarDef.Is_PushLeftRight: boolean;
+function TI86ProcVarDef.Is_PushLeftRight: Boolean;
   begin
-    result:=ProcCallOption in pushleftright_pocalls;
+    Result:=ProcCallOption in PushLeftRight_PoCalls;
   end;
 
 { ti86procdef }
 
-function TI86ProcDef.Is_PushLeftRight: boolean;
+function TI86ProcDef.Is_PushLeftRight: Boolean;
   begin
-    result:=ProcCallOption in pushleftright_pocalls;
+    Result:=ProcCallOption in PushLeftRight_PoCalls;
   end;
 
 { ti86absolutevarsym }
 
-procedure TI86AbsoluteVarSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
+procedure TI86AbsoluteVarSym.PPULoadPlatform(PPUFile: TCompilerPPUFile);
   begin
     inherited;
-    if AbsTyp=toaddr then
-      absseg:=ppufile.GetBoolean
+    if AbsTyp=ToAddr then
+      AbsSeg:=PPUFile.GetBoolean
     else
-      absseg:=false;
+      AbsSeg:=False;
   end;
 
 
-procedure TI86AbsoluteVarSym.PPUWritePlatform(ppufile: TCompilerPPUFile);
+procedure TI86AbsoluteVarSym.PPUWritePlatform(PPUFile: TCompilerPPUFile);
   begin
     inherited;
-    if AbsTyp=toaddr then
-      ppufile.PutBoolean(absseg);
+    if AbsTyp=ToAddr then
+      PPUFile.PutBoolean(AbsSeg);
   end;
 
 end.

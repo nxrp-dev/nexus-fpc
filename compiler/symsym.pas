@@ -758,7 +758,7 @@ implementation
             SymID:=TMod.SymList.Count-1;
           end
         else
-          SymID:=symid_registered_nost;
+          SymID:=SymIDRegisteredNoST;
       end;
 
 {****************************************************************************
@@ -1181,13 +1181,13 @@ implementation
       begin
         Result:=nil;
         if Assigned(RetDef) then
-          EQ:=compare_defs(RetDef,PD.ReturnDef,NothingN)
+          EQ:=Compare_Defs(RetDef,PD.ReturnDef,NothingN)
         else
           EQ:=te_equal;
         if (EQ>=te_equal) or
            ((cpo_allowconvert in CPOptions) and (EQ>te_incompatible)) then
           begin
-            EQ:=compare_paras(Para,PD.Paras,cp_value_equal_const,CPOptions);
+            EQ:=Compare_Paras(Para,PD.Paras,cp_value_equal_const,CPOptions);
             if (EQ>=te_equal) or
                ((cpo_allowconvert in CPOptions) and (EQ>te_incompatible)) then
               begin
@@ -1314,13 +1314,13 @@ implementation
 
     class function TProcSym.Compare_ProcVarDef(PD:TProcDef;Arg:TObject):TEqualType;
       begin
-        Result:=proc_to_procvar_equal(PD,TProcVarDef(Arg),False);
+        Result:=Proc_To_ProcVar_Equal(PD,TProcVarDef(Arg),False);
       end;
 
 
     class function TProcSym.Compare_FuncRefDef(PD:TProcDef;Arg:TObject):TEqualType;
       begin
-        Result:=proc_to_funcref_equal(PD,TObjectDef(Arg));
+        Result:=Proc_To_FuncRef_Equal(PD,TObjectDef(Arg));
       end;
 
 
@@ -1332,7 +1332,7 @@ implementation
 
     function TProcSym.Find_ProcDef_ByFuncRefDef(D:TObjectDef):TProcDef;
       begin
-        if not is_invokable(D) then
+        if not Is_Invokable(D) then
           InternalError(2022033001);
         Result:=Find_ProcDef_With_Comparer(@Compare_FuncRefDef,D);
       end;
@@ -1361,16 +1361,16 @@ implementation
           only pick one with specific length if it is the *only* one }
         ShortStringCount:=0;
         CheckShortString:=not IsExplicit and
-                          is_shortstring(ToDef) and
+                          Is_ShortString(ToDef) and
                           (TStringDef(ToDef).Len<>255);
         for I:=0 to ProcdefList.Count-1 do
           begin
             PD:=TProcDef(ProcdefList[I]);
             if (PD.Owner.SymTableType=StaticSymTable) and not PD.Owner.IsCurrentUnit then
               Continue;
-            if (equal_defs(ToDef,PD.ReturnDef) or
+            if (Equal_Defs(ToDef,PD.ReturnDef) or
                 { shortstrings of different lengths are ok as result }
-                (not IsExplicit and is_shortstring(ToDef) and is_shortstring(PD.ReturnDef))) and
+                (not IsExplicit and Is_ShortString(ToDef) and Is_ShortString(PD.ReturnDef))) and
                { the result type must be always really equal and not an alias,
                  if you mess with this code, check tw4093 }
                ((ToDef=PD.ReturnDef) or
@@ -1394,7 +1394,7 @@ implementation
                    Assigned(PD.Paras[ParaIdx]) and
                    (RealParamCount = 1) then
                   begin
-                    EQ:=compare_defs_ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
+                    EQ:=Compare_Defs_Ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
 
                     { alias? if yes, only l1 choice,
                       if you mess with this code, check tw4093 }
@@ -1405,7 +1405,7 @@ implementation
                       EQ:=te_convert_l1;
 
                     IsGenShortString:=False;
-                    if CheckShortString and is_shortstring(PD.ReturnDef) then
+                    if CheckShortString and Is_ShortString(PD.ReturnDef) then
                       if TStringDef(PD.ReturnDef).Len<>255 then
                         Inc(ShortStringCount)
                       else
@@ -1460,9 +1460,9 @@ implementation
             if (Current = nil) then
               Continue;
             // compare current result def with the todef
-            if (equal_defs(ToDef, Current.PropDef) or
+            if (Equal_Defs(ToDef, Current.PropDef) or
                 { shortstrings of different lengths are ok as result }
-                (is_shortstring(ToDef) and is_shortstring(Current.PropDef))) and
+                (Is_ShortString(ToDef) and Is_ShortString(Current.PropDef))) and
                { the result type must be always really equal and not an alias,
                  if you mess with this code, check tw4093 }
                ((ToDef=Current.PropDef) or
@@ -1486,7 +1486,7 @@ implementation
                    Assigned(PD.Paras[ParaIdx]) and
                    (RealParamCount = 1) then
                   begin
-                    EQ:=compare_defs_ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
+                    EQ:=Compare_Defs_Ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
 
                     { alias? if yes, only l1 choice,
                       if you mess with this code, check tw4093 }
@@ -1762,7 +1762,7 @@ implementation
             begin
               if not Assigned(FieldDef) then
                 InternalError(200310071);
-              if compare_defs(FieldDef,PropDef,NothingN)>=te_equal then
+              if Compare_Defs(FieldDef,PropDef,NothingN)>=te_equal then
                begin
                  { property parameters are allowed if this is
                    an indexed property, because the index is then
@@ -1923,7 +1923,7 @@ implementation
       begin
         if Assigned(VarDef) and
            ((VarDef.Typ<>ArrayDef) or
-            is_dynamic_array(VarDef) or
+            Is_Dynamic_Array(VarDef) or
             (TArrayDef(VarDef).HighRange>=TArrayDef(VarDef).LowRange)) then
           Result:=VarDef.Size
         else
@@ -1934,7 +1934,7 @@ implementation
     function  TAbstractVarSym.GetPackedBitSize : LongInt;
       begin
         { bitpacking is only done for ordinals }
-        if not is_ordinal(VarDef) then
+        if not Is_Ordinal(VarDef) then
           InternalError(2006082010);
         Result:=VarDef.PackedBitSize;
       end;
@@ -2026,8 +2026,8 @@ implementation
                 else
                   VarRegable:=vr_fpureg;
               end
-            else if is_vector(VarDef) and
-              fits_in_mm_register(VarDef) then
+            else if Is_Vector(VarDef) and
+              Fits_In_MM_Register(VarDef) then
               begin
                 VarRegable:=vr_mmreg;
               end;
@@ -2083,7 +2083,7 @@ implementation
     function TFieldVarSym.BitOffset: ASizeUInt;
       begin
         Result:=FieldOffset;
-        if TAbstractRecordSymTable(Owner).FieldAlignment<>bit_alignment then
+        if TAbstractRecordSymTable(Owner).FieldAlignment<>BitAlignment then
          Result:=Result*8;
       end;
 
@@ -2505,7 +2505,7 @@ implementation
 
          if vo_has_explicit_paraloc in VarOptions then
            begin
-             ParaLoc[CallerSide].check_simple_location;
+             ParaLoc[CallerSide].Check_Simple_Location;
              ParaLoc[CallerSide].PPUWrite(PPUFile);
            end;
          WriteEntry(PPUFile,IBParaVarSym);
@@ -2514,11 +2514,11 @@ implementation
     function TParaVarSym.Needs_Finalization:Boolean;
       begin
         Result:=(VarSpez=vs_value) and
-          (is_managed_type(VarDef) or
+          (Is_Managed_Type(VarDef) or
             (
-              (not (TAbstractProcDef(Owner.DefOwner).ProcCallOption in cdecl_pocalls)) and
-              (not ParaManager.use_stackalloc) and
-              (is_open_array(VarDef) or is_array_of_const(VarDef))
+              (not (TAbstractProcDef(Owner.DefOwner).ProcCallOption in CDecl_PoCalls)) and
+              (not ParaManager.Use_StackAlloc) and
+              (Is_Open_Array(VarDef) or Is_Array_Of_Const(VarDef))
             )
           );
       end;

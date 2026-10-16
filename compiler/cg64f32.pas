@@ -31,10 +31,10 @@ unit cg64f32;
   interface
 
     uses
-       aasmbase,aasmtai,AAsmData,aasmcpu,
-       cpubase,cpupara,
-       cgbase,cgobj,parabase,cgutils,
-       symtype
+       AAsmBase,AAsmTAI,AAsmData,AAsmCPU,
+       CPUBase,CPUPara,
+       CGBase,CGObj,ParaBase,CGUtils,
+       SymType
        ;
 
     type
@@ -42,55 +42,55 @@ unit cg64f32;
          to handle 64-bit integers.
       }
       TCG64F32 = class(TCG64)
-        procedure a_load64_const_ref(list : TAsmList;value : int64;const ref : TReference);override;
-        procedure a_load64_reg_ref(list : TAsmList;reg : TRegister64;const ref : TReference);override;
-        procedure a_load64_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister64);override;
-        procedure a_load64_reg_reg(list : TAsmList;regsrc,regdst : TRegister64);override;
-        procedure a_load64_const_reg(list : TAsmList;value: int64;reg : TRegister64);override;
+        procedure A_Load64_Const_Ref(List : TAsmList;Value : Int64;const Ref : TReference);override;
+        procedure A_Load64_Reg_Ref(List : TAsmList;Reg : TRegister64;const Ref : TReference);override;
+        procedure A_Load64_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister64);override;
+        procedure A_Load64_Reg_Reg(List : TAsmList;RegSrc,RegDst : TRegister64);override;
+        procedure A_Load64_Const_Reg(List : TAsmList;Value: Int64;Reg : TRegister64);override;
 
-        procedure a_load64_subsetref_reg(list : TAsmList; const sref: TSubsetReference; destreg: TRegister64);override;
-        procedure a_load64_reg_subsetref(list : TAsmList; fromreg: TRegister64; const sref: TSubsetReference);override;
-        procedure a_load64_const_subsetref(list: TAsmList; a: int64; const sref: TSubsetReference);override;
-        procedure a_load64_ref_subsetref(list : TAsmList; const fromref: TReference; const sref: TSubsetReference);override;
-        procedure a_load64_subsetref_subsetref(list: TAsmList; const fromsref, tosref: TSubsetReference);override;
-        procedure a_load64_subsetref_ref(list : TAsmList; const sref: TSubsetReference; const destref: TReference);override;
+        procedure A_Load64_SubsetRef_Reg(List : TAsmList; const SRef: TSubsetReference; DestReg: TRegister64);override;
+        procedure A_Load64_Reg_SubsetRef(List : TAsmList; FromReg: TRegister64; const SRef: TSubsetReference);override;
+        procedure A_Load64_Const_SubsetRef(List: TAsmList; A: Int64; const SRef: TSubsetReference);override;
+        procedure A_Load64_Ref_SubsetRef(List : TAsmList; const FromRef: TReference; const SRef: TSubsetReference);override;
+        procedure A_Load64_SubsetRef_SubsetRef(List: TAsmList; const FromSRef, ToSRef: TSubsetReference);override;
+        procedure A_Load64_SubsetRef_Ref(List : TAsmList; const SRef: TSubsetReference; const DestRef: TReference);override;
 
-        procedure a_load64_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister64);override;
-        procedure a_load64_loc_ref(list : TAsmList;const l : TLocation;const ref : TReference);override;
-        procedure a_load64_const_loc(list : TAsmList;value : int64;const l : TLocation);override;
-        procedure a_load64_reg_loc(list : TAsmList;reg : TRegister64;const l : TLocation);override;
+        procedure A_Load64_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister64);override;
+        procedure A_Load64_Loc_Ref(List : TAsmList;const L : TLocation;const Ref : TReference);override;
+        procedure A_Load64_Const_Loc(List : TAsmList;Value : Int64;const L : TLocation);override;
+        procedure A_Load64_Reg_Loc(List : TAsmList;Reg : TRegister64;const L : TLocation);override;
 
 
-        procedure a_load64high_reg_ref(list : TAsmList;reg : TRegister;const ref : TReference);override;
-        procedure a_load64low_reg_ref(list : TAsmList;reg : TRegister;const ref : TReference);override;
-        procedure a_load64high_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister);override;
-        procedure a_load64low_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister);override;
-        procedure a_load64high_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister);override;
-        procedure a_load64low_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister);override;
+        procedure A_Load64High_Reg_Ref(List : TAsmList;Reg : TRegister;const Ref : TReference);override;
+        procedure A_Load64Low_Reg_Ref(List : TAsmList;Reg : TRegister;const Ref : TReference);override;
+        procedure A_Load64High_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister);override;
+        procedure A_Load64Low_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister);override;
+        procedure A_Load64High_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister);override;
+        procedure A_Load64Low_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister);override;
 
-        procedure a_op64_ref_reg(list : TAsmList;op:TOpCG;size : TCgSize;const ref : TReference;reg : TRegister64);override;
-        procedure a_op64_reg_ref(list : TAsmList;op:TOpCG;size : TCgSize;reg : TRegister64; const ref: TReference);override;
-        procedure a_op64_const_loc(list : TAsmList;op:TOpCG;size : TCgSize;value : int64;const l: TLocation);override;
-        procedure a_op64_reg_loc(list : TAsmList;op:TOpCG;size : TCgSize;reg : TRegister64;const l : TLocation);override;
-        procedure a_op64_ref_loc(list: TAsmList; op: TOpCG; size: TCgSize;const ref: TReference; const l: TLocation);override;
-        procedure a_op64_loc_reg(list : TAsmList;op:TOpCG;size : TCgSize;const l : TLocation;reg : TRegister64);override;
-        procedure a_op64_const_ref(list : TAsmList;op:TOpCG;size : TCgSize;value : int64;const ref : TReference);override;
+        procedure A_Op64_Ref_Reg(List : TAsmList;Op:TOpCG;Size : TCgSize;const Ref : TReference;Reg : TRegister64);override;
+        procedure A_Op64_Reg_Ref(List : TAsmList;Op:TOpCG;Size : TCgSize;Reg : TRegister64; const Ref: TReference);override;
+        procedure A_Op64_Const_Loc(List : TAsmList;Op:TOpCG;Size : TCgSize;Value : Int64;const L: TLocation);override;
+        procedure A_Op64_Reg_Loc(List : TAsmList;Op:TOpCG;Size : TCgSize;Reg : TRegister64;const L : TLocation);override;
+        procedure A_Op64_Ref_Loc(List: TAsmList; Op: TOpCG; Size: TCgSize;const Ref: TReference; const L: TLocation);override;
+        procedure A_Op64_Loc_Reg(List : TAsmList;Op:TOpCG;Size : TCgSize;const L : TLocation;Reg : TRegister64);override;
+        procedure A_Op64_Const_Ref(List : TAsmList;Op:TOpCG;Size : TCgSize;Value : Int64;const Ref : TReference);override;
 
-        procedure a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const ParaLoc : TCGPara);override;
-        procedure a_load64_const_cgpara(list : TAsmList;value : int64;const ParaLoc : TCGPara);override;
-        procedure a_load64_ref_cgpara(list : TAsmList;const r : TReference;const ParaLoc : TCGPara);override;
-        procedure a_load64_loc_cgpara(list : TAsmList;const l : TLocation;const ParaLoc : TCGPara);override;
+        procedure A_Load64_Reg_CGPara(List : TAsmList;Reg : TRegister64;const ParaLoc : TCGPara);override;
+        procedure A_Load64_Const_CGPara(List : TAsmList;Value : Int64;const ParaLoc : TCGPara);override;
+        procedure A_Load64_Ref_CGPara(List : TAsmList;const R : TReference;const ParaLoc : TCGPara);override;
+        procedure A_Load64_Loc_CGPara(List : TAsmList;const L : TLocation;const ParaLoc : TCGPara);override;
 
-        procedure a_loadmm_intreg64_reg(list: TAsmList; mmsize: TCgSize; intreg: TRegister64; mmreg: TRegister);override;
-        procedure a_loadmm_reg_intreg64(list: TAsmList; mmsize: TCgSize; mmreg: TRegister; intreg: TRegister64);override;
+        procedure A_LoadMM_IntReg64_Reg(List: TAsmList; MMSize: TCgSize; IntReg: TRegister64; MMReg: TRegister);override;
+        procedure A_LoadMM_Reg_IntReg64(List: TAsmList; MMSize: TCgSize; MMReg: TRegister; IntReg: TRegister64);override;
         {# This routine tries to optimize the a_op64_const_reg operation, by
            removing superfluous opcodes. Returns TRUE if normal processing
            must continue in op64_const_reg, otherwise, everything is processed
            entirely in this routine, by emitting the appropriate 32-bit opcodes.
         }
-        function optimize64_op_const_reg(list: TAsmList; var op: TOpCG; var a : int64; var reg: TRegister64): boolean;override;
+        function Optimize64_Op_Const_Reg(List: TAsmList; var Op: TOpCG; var A : Int64; var Reg: TRegister64): Boolean;override;
 
-        procedure g_rangecheck64(list: TAsmList; const l:TLocation;fromdef,todef: TDef); override;
+        procedure G_RangeCheck64(List: TAsmList; const L:TLocation;FromDef,ToDef: TDef); override;
       end;
 
 
@@ -99,110 +99,110 @@ unit cg64f32;
     uses
        GlobType,Systems,ConstExp,
        Verbose,CUtils,
-       SymBase,symconst,symdef,SymTable,defutil,paramgr,
-       tgobj,hlcgobj;
+       SymBase,SymConst,SymDef,SymTable,DefUtil,ParaMgr,
+       TGObj,HLCGObj;
 
 {****************************************************************************
                                      Helpers
 ****************************************************************************}
 
-    procedure swap64(var q : int64);
+    procedure Swap64(var Q : Int64);
       begin
-         q:=(int64(lo(q)) shl 32) or hi(q);
+         Q:=(Int64(Lo(Q)) shl 32) or Hi(Q);
       end;
 
 
-    procedure splitparaloc64(const cgpara:TCGPara;var cgparalo,cgparahi:TCGPara);
+    procedure SplitParaLoc64(const CGPara:TCGPara;var CGParaLo,CGParaHi:TCGPara);
       var
-        paraloclo,paraloclo2,paraloclo3,paraloclo4,
-        paralochi,paralochi2,paralochi3,paralochi4 : PCGParaLocation;
-        curparaloc : PCGParaLocation;
+        ParaLocLo,ParaLocLo2,ParaLocLo3,ParaLocLo4,
+        ParaLocHi,ParaLocHi2,ParaLocHi3,ParaLocHi4 : PCGParaLocation;
+        CurParaLoc : PCGParaLocation;
       begin
-        if not(cgpara.size in [OS_64,OS_S64]) then
+        if not(CGPara.Size in [OS_64,OS_S64]) then
           InternalError(200408231);
-        if not Assigned(cgpara.location) then
+        if not Assigned(CGPara.Location) then
           InternalError(200408201);
         { init lo/hi para }
-        cgparahi.reset;
-        if cgpara.size=OS_S64 then
-          cgparahi.size:=OS_S32
+        CGParaHi.Reset;
+        if CGPara.Size=OS_S64 then
+          CGParaHi.Size:=OS_S32
         else
-          cgparahi.size:=OS_32;
-        cgparahi.intsize:=4;
-        cgparahi.alignment:=cgpara.alignment;
-        paralochi:=cgparahi.add_location;
-        cgparalo.reset;
-        cgparalo.size:=OS_32;
-        cgparalo.intsize:=4;
-        cgparalo.alignment:=cgpara.alignment;
-        paraloclo:=cgparalo.add_location;
-        case cgpara.locations_count of
+          CGParaHi.Size:=OS_32;
+        CGParaHi.IntSize:=4;
+        CGParaHi.Alignment:=CGPara.Alignment;
+        ParaLocHi:=CGParaHi.Add_Location;
+        CGParaLo.Reset;
+        CGParaLo.Size:=OS_32;
+        CGParaLo.IntSize:=4;
+        CGParaLo.Alignment:=CGPara.Alignment;
+        ParaLocLo:=CGParaLo.Add_Location;
+        case CGPara.Locations_Count of
           8:
             begin
               { 8 parameter fields? }
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.endian=ENDIAN_BIG) then
+              if (TargetInfo.Endian=ENDIAN_BIG) then
                 begin
                   { is there any big endian 8 bit ALU/16 bit Addr CPU? }
                   InternalError(2015041001);
                   { paraloc^ -> high }
-                  move(cgpara.location^,paralochi^,sizeof(paralochi^));
-                  paralochi^.next:=nil;
-                  paralochi2:=cgparahi.add_location;
-                  move(cgpara.location^.next,paralochi2^,sizeof(paralochi2^));
+                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
+                  ParaLocHi^.Next:=nil;
+                  ParaLocHi2:=CGParaHi.Add_Location;
+                  Move(CGPara.Location^.Next,ParaLocHi2^,SizeOf(ParaLocHi2^));
 
                   { paraloc^.next^.next^ -> low }
-                  move(cgpara.location^.next^.next^,paraloclo^,sizeof(paraloclo^));
-                  paraloclo^.next:=nil;
-                  paraloclo2:=cgparalo.add_location;
-                  move(cgpara.location^.next^.next^.next^,paraloclo2^,sizeof(paraloclo2^));
+                  Move(CGPara.Location^.Next^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
+                  ParaLocLo^.Next:=nil;
+                  ParaLocLo2:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
                 end
               else
                 begin
                   { paraloc^ -> low }
-                  move(cgpara.location^,paraloclo^,sizeof(paraloclo^));
-                  paraloclo^.next:=nil;
-                  paraloclo2:=cgparalo.add_location;
-                  move(cgpara.location^.next^,paraloclo2^,sizeof(paraloclo2^));
-                  paraloclo2^.next:=nil;
-                  paraloclo3:=cgparalo.add_location;
-                  move(cgpara.location^.next^.next^,paraloclo3^,sizeof(paraloclo3^));
-                  paraloclo3^.next:=nil;
-                  paraloclo4:=cgparalo.add_location;
-                  move(cgpara.location^.next^.next^.next^,paraloclo4^,sizeof(paraloclo4^));
+                  Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
+                  ParaLocLo^.Next:=nil;
+                  ParaLocLo2:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
+                  ParaLocLo2^.Next:=nil;
+                  ParaLocLo3:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^.Next^,ParaLocLo3^,SizeOf(ParaLocLo3^));
+                  ParaLocLo3^.Next:=nil;
+                  ParaLocLo4:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocLo4^,SizeOf(ParaLocLo4^));
 
                   { paraloc^.next^.next^.next^.next^ -> high }
-                  curparaloc:=cgpara.location^.next^.next^.next^.next;
-                  move(curparaloc^,paralochi^,sizeof(paralochi^));
-                  paralochi^.next:=nil;
-                  paralochi2:=cgparahi.add_location;
-                  move(curparaloc^.next^,paralochi2^,sizeof(paralochi2^));
-                  paralochi2^.next:=nil;
-                  paralochi3:=cgparahi.add_location;
-                  move(curparaloc^.next^.next^,paralochi3^,sizeof(paralochi3^));
-                  paralochi3^.next:=nil;
-                  paralochi4:=cgparahi.add_location;
-                  move(curparaloc^.next^.next^.next^,paralochi4^,sizeof(paralochi4^));
+                  CurParaLoc:=CGPara.Location^.Next^.Next^.Next^.Next;
+                  Move(CurParaLoc^,ParaLocHi^,SizeOf(ParaLocHi^));
+                  ParaLocHi^.Next:=nil;
+                  ParaLocHi2:=CGParaHi.Add_Location;
+                  Move(CurParaLoc^.Next^,ParaLocHi2^,SizeOf(ParaLocHi2^));
+                  ParaLocHi2^.Next:=nil;
+                  ParaLocHi3:=CGParaHi.Add_Location;
+                  Move(CurParaLoc^.Next^.Next^,ParaLocHi3^,SizeOf(ParaLocHi3^));
+                  ParaLocHi3^.Next:=nil;
+                  ParaLocHi4:=CGParaHi.Add_Location;
+                  Move(CurParaLoc^.Next^.Next^.Next^,ParaLocHi4^,SizeOf(ParaLocHi4^));
                 end;
 
               { fix size }
-              paraloclo^.size:=OS_8;
-              paraloclo2^.size:=OS_8;
-              paraloclo3^.size:=OS_8;
-              paraloclo4^.size:=OS_8;
-              paraloclo4^.next:=nil;
-              paralochi^.size:=OS_8;
-              paralochi2^.size:=OS_8;
-              paralochi3^.size:=OS_8;
-              paralochi4^.size:=OS_8;
-              paralochi4^.next:=nil;
-              if cgpara.size=OS_S64 then
-                if TargetInfo.endian=ENDIAN_BIG then
-                  paralochi^.size:=OS_S8
+              ParaLocLo^.Size:=OS_8;
+              ParaLocLo2^.Size:=OS_8;
+              ParaLocLo3^.Size:=OS_8;
+              ParaLocLo4^.Size:=OS_8;
+              ParaLocLo4^.Next:=nil;
+              ParaLocHi^.Size:=OS_8;
+              ParaLocHi2^.Size:=OS_8;
+              ParaLocHi3^.Size:=OS_8;
+              ParaLocHi4^.Size:=OS_8;
+              ParaLocHi4^.Next:=nil;
+              if CGPara.Size=OS_S64 then
+                if TargetInfo.Endian=ENDIAN_BIG then
+                  ParaLocHi^.Size:=OS_S8
                 else
-                  paraloclo4^.size:=OS_S8;
+                  ParaLocLo4^.Size:=OS_S8;
             end;
           4:
             begin
@@ -210,47 +210,47 @@ unit cg64f32;
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.endian=ENDIAN_BIG) then
+              if (TargetInfo.Endian=ENDIAN_BIG) then
                 begin
                   { paraloc^ -> high }
-                  move(cgpara.location^,paralochi^,sizeof(paralochi^));
-                  paralochi^.next:=nil;
-                  paralochi2:=cgparahi.add_location;
-                  move(cgpara.location^.next,paralochi2^,sizeof(paralochi2^));
+                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
+                  ParaLocHi^.Next:=nil;
+                  ParaLocHi2:=CGParaHi.Add_Location;
+                  Move(CGPara.Location^.Next,ParaLocHi2^,SizeOf(ParaLocHi2^));
 
                   { paraloc^.next^.next^ -> low }
-                  move(cgpara.location^.next^.next^,paraloclo^,sizeof(paraloclo^));
-                  paraloclo^.next:=nil;
-                  paraloclo2:=cgparalo.add_location;
-                  move(cgpara.location^.next^.next^.next^,paraloclo2^,sizeof(paraloclo2^));
+                  Move(CGPara.Location^.Next^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
+                  ParaLocLo^.Next:=nil;
+                  ParaLocLo2:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
                 end
               else
                 begin
                   { paraloc^ -> low }
-                  move(cgpara.location^,paraloclo^,sizeof(paraloclo^));
-                  paraloclo^.next:=nil;
-                  paraloclo2:=cgparalo.add_location;
-                  move(cgpara.location^.next^,paraloclo2^,sizeof(paraloclo2^));
+                  Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
+                  ParaLocLo^.Next:=nil;
+                  ParaLocLo2:=CGParaLo.Add_Location;
+                  Move(CGPara.Location^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
 
                   { paraloc^.next^.next -> high }
-                  move(cgpara.location^.next^.next^,paralochi^,sizeof(paralochi^));
-                  paralochi^.next:=nil;
-                  paralochi2:=cgparahi.add_location;
-                  move(cgpara.location^.next^.next^.next^,paralochi2^,sizeof(paralochi2^));
+                  Move(CGPara.Location^.Next^.Next^,ParaLocHi^,SizeOf(ParaLocHi^));
+                  ParaLocHi^.Next:=nil;
+                  ParaLocHi2:=CGParaHi.Add_Location;
+                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocHi2^,SizeOf(ParaLocHi2^));
                 end;
 
               { fix size }
-              paraloclo^.size:=OS_16;
-              paraloclo2^.size:=OS_16;
-              paraloclo2^.next:=nil;
-              paralochi^.size:=OS_16;
-              paralochi2^.size:=OS_16;
-              paralochi2^.next:=nil;
-              if cgpara.size=OS_S64 then
-                if TargetInfo.endian=ENDIAN_BIG then
-                  paralochi^.size:=OS_S16
+              ParaLocLo^.Size:=OS_16;
+              ParaLocLo2^.Size:=OS_16;
+              ParaLocLo2^.Next:=nil;
+              ParaLocHi^.Size:=OS_16;
+              ParaLocHi2^.Size:=OS_16;
+              ParaLocHi2^.Next:=nil;
+              if CGPara.Size=OS_S64 then
+                if TargetInfo.Endian=ENDIAN_BIG then
+                  ParaLocHi^.Size:=OS_S16
                 else
-                  paraloclo2^.size:=OS_S16;
+                  ParaLocLo2^.Size:=OS_S16;
             end;
           2:
             begin
@@ -258,51 +258,51 @@ unit cg64f32;
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.endian=ENDIAN_BIG) then
+              if (TargetInfo.Endian=ENDIAN_BIG) then
                 begin
                   { paraloc^ -> high
                     paraloc^.next -> low }
-                  move(cgpara.location^,paralochi^,sizeof(paralochi^));
-                  move(cgpara.location^.next^,paraloclo^,sizeof(paraloclo^));
+                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
+                  Move(CGPara.Location^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
                 end
               else
                 begin
                   { paraloc^ -> low
                     paraloc^.next -> high }
-                  move(cgpara.location^,paraloclo^,sizeof(paraloclo^));
-                  move(cgpara.location^.next^,paralochi^,sizeof(paralochi^));
+                  Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
+                  Move(CGPara.Location^.Next^,ParaLocHi^,SizeOf(ParaLocHi^));
                 end;
 
               { fix size }
-              paraloclo^.size:=cgparalo.size;
-              paraloclo^.next:=nil;
-              paralochi^.size:=cgparahi.size;
-              paralochi^.next:=nil;
+              ParaLocLo^.Size:=CGParaLo.Size;
+              ParaLocLo^.Next:=nil;
+              ParaLocHi^.Size:=CGParaHi.Size;
+              ParaLocHi^.Next:=nil;
             end;
           1:
             begin
               { single parameter, this can only be in memory }
-              if cgpara.location^.loc<>LOC_REFERENCE then
+              if CGPara.Location^.Loc<>LOC_REFERENCE then
                 InternalError(200408282);
-              move(cgpara.location^,paraloclo^,sizeof(paraloclo^));
-              move(cgpara.location^,paralochi^,sizeof(paralochi^));
+              Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
+              Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
               { for big endian low is at +4, for little endian high }
-              if TargetInfo.endian = endian_big then
+              if TargetInfo.Endian = endian_big then
                 begin
-                  inc(cgparalo.location^.reference.offset,4);
-                  cgparalo.alignment:=NewAlignment(cgparalo.alignment,4);
+                  Inc(CGParaLo.Location^.Reference.Offset,4);
+                  CGParaLo.Alignment:=NewAlignment(CGParaLo.Alignment,4);
                 end
               else
                 begin
-                  inc(cgparahi.location^.reference.offset,4);
-                  cgparahi.alignment:=NewAlignment(cgparahi.alignment,4);
+                  Inc(CGParaHi.Location^.Reference.Offset,4);
+                  CGParaHi.Alignment:=NewAlignment(CGParaHi.Alignment,4);
                 end;
 
               { fix size }
-              paraloclo^.size:=cgparalo.size;
-              paraloclo^.next:=nil;
-              paralochi^.size:=cgparahi.size;
-              paralochi^.next:=nil;
+              ParaLocLo^.Size:=CGParaLo.Size;
+              ParaLocLo^.Next:=nil;
+              ParaLocHi^.Size:=CGParaHi.Size;
+              ParaLocHi^.Next:=nil;
             end;
           else
             InternalError(2013051901);
@@ -314,708 +314,708 @@ unit cg64f32;
                                    TCG64F32
 ****************************************************************************}
 
-    procedure TCG64F32.a_load64_reg_ref(list : TAsmList;reg : TRegister64;const ref : TReference);
+    procedure TCG64F32.A_Load64_Reg_Ref(List : TAsmList;Reg : TRegister64;const Ref : TReference);
       var
-        tmpreg: TRegister;
-        tmpref: TReference;
+        TmpReg: TRegister;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_big then
+        if TargetInfo.Endian = endian_big then
           begin
-            tmpreg:=reg.reglo;
-            reg.reglo:=reg.reghi;
-            reg.reghi:=tmpreg;
+            TmpReg:=Reg.RegLo;
+            Reg.RegLo:=Reg.RegHi;
+            Reg.RegHi:=TmpReg;
           end;
-        tmpref := ref;
+        TmpRef := Ref;
 
-        cg.a_load_reg_ref(list,OS_32,OS_32,reg.reglo,tmpref);
-        inc(tmpref.offset,4);
-        cg.a_load_reg_ref(list,OS_32,OS_32,reg.reghi,tmpref);
+        CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg.RegLo,TmpRef);
+        Inc(TmpRef.Offset,4);
+        CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg.RegHi,TmpRef);
       end;
 
 
-    procedure TCG64F32.a_load64_const_ref(list : TAsmList;value : int64;const ref : TReference);
+    procedure TCG64F32.A_Load64_Const_Ref(List : TAsmList;Value : Int64;const Ref : TReference);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_big then
-          swap64(value);
-        cg.a_load_const_ref(list,OS_32,LongInt(lo(value)),ref);
-        tmpref := ref;
-        inc(tmpref.offset,4);
-        cg.a_load_const_ref(list,OS_32,LongInt(hi(value)),tmpref);
+        if TargetInfo.Endian = endian_big then
+          Swap64(Value);
+        CG.A_Load_Const_Ref(List,OS_32,LongInt(Lo(Value)),Ref);
+        TmpRef := Ref;
+        Inc(TmpRef.Offset,4);
+        CG.A_Load_Const_Ref(List,OS_32,LongInt(Hi(Value)),TmpRef);
       end;
 
 
-    procedure TCG64F32.a_load64_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister64);
+    procedure TCG64F32.A_Load64_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister64);
       var
-        tmpreg: TRegister;
-        tmpref: TReference;
+        TmpReg: TRegister;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_big then
+        if TargetInfo.Endian = endian_big then
           begin
-            tmpreg := reg.reglo;
-            reg.reglo := reg.reghi;
-            reg.reghi := tmpreg;
+            TmpReg := Reg.RegLo;
+            Reg.RegLo := Reg.RegHi;
+            Reg.RegHi := TmpReg;
           end;
-        tmpref := ref;
+        TmpRef := Ref;
 
-        if (tmpref.base=reg.reglo) then
+        if (TmpRef.Base=Reg.RegLo) then
          begin
-           tmpreg:=cg.getaddressregister(list);
-           cg.a_load_reg_reg(list,OS_ADDR,OS_ADDR,tmpref.base,tmpreg);
-           tmpref.base:=tmpreg;
+           TmpReg:=CG.GetAddressRegister(List);
+           CG.A_Load_Reg_Reg(List,OS_ADDR,OS_ADDR,TmpRef.Base,TmpReg);
+           TmpRef.Base:=TmpReg;
          end
         else
          { this works only for the i386, thus the i386 needs to override  }
          { this method and this method must be replaced by a more generic }
          { implementation FK                                              }
-         if (tmpref.index=reg.reglo) then
+         if (TmpRef.Index=Reg.RegLo) then
           begin
-            tmpreg:=cg.getaddressregister(list);
-            cg.a_load_reg_reg(list,OS_ADDR,OS_ADDR,tmpref.index,tmpreg);
-            tmpref.index:=tmpreg;
+            TmpReg:=CG.GetAddressRegister(List);
+            CG.A_Load_Reg_Reg(List,OS_ADDR,OS_ADDR,TmpRef.Index,TmpReg);
+            TmpRef.Index:=TmpReg;
           end;
-        cg.a_load_ref_reg(list,OS_32,OS_32,tmpref,reg.reglo);
-        inc(tmpref.offset,4);
-        cg.a_load_ref_reg(list,OS_32,OS_32,tmpref,reg.reghi);
+        CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg.RegLo);
+        Inc(TmpRef.Offset,4);
+        CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg.RegHi);
       end;
 
 
-    procedure TCG64F32.a_load64_reg_reg(list : TAsmList;regsrc,regdst : TRegister64);
+    procedure TCG64F32.A_Load64_Reg_Reg(List : TAsmList;RegSrc,RegDst : TRegister64);
 
       begin
-        cg.a_load_reg_reg(list,OS_32,OS_32,regsrc.reglo,regdst.reglo);
-        cg.a_load_reg_reg(list,OS_32,OS_32,regsrc.reghi,regdst.reghi);
+        CG.A_Load_Reg_Reg(List,OS_32,OS_32,RegSrc.RegLo,RegDst.RegLo);
+        CG.A_Load_Reg_Reg(List,OS_32,OS_32,RegSrc.RegHi,RegDst.RegHi);
       end;
 
 
-    procedure TCG64F32.a_load64_const_reg(list : TAsmList;value : int64;reg : TRegister64);
+    procedure TCG64F32.A_Load64_Const_Reg(List : TAsmList;Value : Int64;Reg : TRegister64);
 
       begin
-        cg.a_load_const_reg(list,OS_32,LongInt(lo(value)),reg.reglo);
-        cg.a_load_const_reg(list,OS_32,LongInt(hi(value)),reg.reghi);
+        CG.A_Load_Const_Reg(List,OS_32,LongInt(Lo(Value)),Reg.RegLo);
+        CG.A_Load_Const_Reg(List,OS_32,LongInt(Hi(Value)),Reg.RegHi);
       end;
 
 
-    procedure TCG64F32.a_load64_subsetref_reg(list : TAsmList; const sref: TSubsetReference; destreg: TRegister64);
+    procedure TCG64F32.A_Load64_SubsetRef_Reg(List : TAsmList; const SRef: TSubsetReference; DestReg: TRegister64);
 
       var
-        tmpreg: TRegister;
-        tmpsref: TSubsetReference;
+        TmpReg: TRegister;
+        TmpSRef: TSubsetReference;
       begin
-        if (sref.bitindexreg <> NR_NO) or
-           (sref.bitlen <> 64) then
+        if (SRef.BitIndexReg <> NR_NO) or
+           (SRef.BitLen <> 64) then
           InternalError(2006082310);
-        if (sref.startbit = 0) then
+        if (SRef.StartBit = 0) then
           begin
-            a_load64_ref_reg(list,sref.ref,destreg);
-            exit;
+            A_Load64_Ref_Reg(List,SRef.Ref,DestReg);
+            Exit;
           end;
 
-        if TargetInfo.endian = endian_big then
+        if TargetInfo.Endian = endian_big then
           begin
-            tmpreg := destreg.reglo;
-            destreg.reglo := destreg.reghi;
-            destreg.reghi := tmpreg;
+            TmpReg := DestReg.RegLo;
+            DestReg.RegLo := DestReg.RegHi;
+            DestReg.RegHi := TmpReg;
           end;
-        tmpsref:=sref;
-        if (tmpsref.ref.base=destreg.reglo) then
+        TmpSRef:=SRef;
+        if (TmpSRef.Ref.Base=DestReg.RegLo) then
          begin
-           tmpreg:=cg.getaddressregister(list);
-           cg.a_load_reg_reg(list,OS_ADDR,OS_ADDR,tmpsref.ref.base,tmpreg);
-           tmpsref.ref.base:=tmpreg;
+           TmpReg:=CG.GetAddressRegister(List);
+           CG.A_Load_Reg_Reg(List,OS_ADDR,OS_ADDR,TmpSRef.Ref.Base,TmpReg);
+           TmpSRef.Ref.Base:=TmpReg;
          end
         else
-         if (tmpsref.ref.index=destreg.reglo) then
+         if (TmpSRef.Ref.Index=DestReg.RegLo) then
           begin
-            tmpreg:=cg.getaddressregister(list);
-            cg.a_load_reg_reg(list,OS_ADDR,OS_ADDR,tmpsref.ref.index,tmpreg);
-            tmpsref.ref.index:=tmpreg;
+            TmpReg:=CG.GetAddressRegister(List);
+            CG.A_Load_Reg_Reg(List,OS_ADDR,OS_ADDR,TmpSRef.Ref.Index,TmpReg);
+            TmpSRef.Ref.Index:=TmpReg;
           end;
-        tmpsref.bitlen:=32;
-        hlcg.a_load_subsetref_reg(list,U32IntType,U32IntType,tmpsref,destreg.reglo);
-        inc(tmpsref.ref.offset,4);
-        hlcg.a_load_subsetref_reg(list,U32IntType,U32IntType,tmpsref,destreg.reghi);
+        TmpSRef.BitLen:=32;
+        HLCG.A_Load_SubsetRef_Reg(List,U32IntType,U32IntType,TmpSRef,DestReg.RegLo);
+        Inc(TmpSRef.Ref.Offset,4);
+        HLCG.A_Load_SubsetRef_Reg(List,U32IntType,U32IntType,TmpSRef,DestReg.RegHi);
       end;
 
 
-    procedure TCG64F32.a_load64_reg_subsetref(list : TAsmList; fromreg: TRegister64; const sref: TSubsetReference);
+    procedure TCG64F32.A_Load64_Reg_SubsetRef(List : TAsmList; FromReg: TRegister64; const SRef: TSubsetReference);
 
       var
-        tmpreg: TRegister;
-        tmpsref: TSubsetReference;
+        TmpReg: TRegister;
+        TmpSRef: TSubsetReference;
       begin
-        if (sref.bitindexreg <> NR_NO) or
-           (sref.bitlen <> 64) then
+        if (SRef.BitIndexReg <> NR_NO) or
+           (SRef.BitLen <> 64) then
           InternalError(2006082311);
-        if (sref.startbit = 0) then
+        if (SRef.StartBit = 0) then
           begin
-            a_load64_reg_ref(list,fromreg,sref.ref);
-            exit;
+            A_Load64_Reg_Ref(List,FromReg,SRef.Ref);
+            Exit;
           end;
 
-        if TargetInfo.endian = endian_big then
+        if TargetInfo.Endian = endian_big then
           begin
-            tmpreg:=fromreg.reglo;
-            fromreg.reglo:=fromreg.reghi;
-            fromreg.reghi:=tmpreg;
+            TmpReg:=FromReg.RegLo;
+            FromReg.RegLo:=FromReg.RegHi;
+            FromReg.RegHi:=TmpReg;
           end;
-        tmpsref:=sref;
-        tmpsref.bitlen:=32;
-        hlcg.a_load_reg_subsetref(list,U32IntType,U32IntType,fromreg.reglo,tmpsref);
-        inc(tmpsref.ref.offset,4);
-        hlcg.a_load_reg_subsetref(list,U32IntType,U32IntType,fromreg.reghi,tmpsref);
+        TmpSRef:=SRef;
+        TmpSRef.BitLen:=32;
+        HLCG.A_Load_Reg_SubsetRef(List,U32IntType,U32IntType,FromReg.RegLo,TmpSRef);
+        Inc(TmpSRef.Ref.Offset,4);
+        HLCG.A_Load_Reg_SubsetRef(List,U32IntType,U32IntType,FromReg.RegHi,TmpSRef);
       end;
 
 
-    procedure TCG64F32.a_load64_const_subsetref(list: TAsmList; a: int64; const sref: TSubsetReference);
+    procedure TCG64F32.A_Load64_Const_SubsetRef(List: TAsmList; A: Int64; const SRef: TSubsetReference);
 
       var
-        tmpsref: TSubsetReference;
+        TmpSRef: TSubsetReference;
       begin
-        if (sref.bitindexreg <> NR_NO) or
-           (sref.bitlen <> 64) then
+        if (SRef.BitIndexReg <> NR_NO) or
+           (SRef.BitLen <> 64) then
           InternalError(2006082312);
-        if TargetInfo.endian = endian_big then
-          swap64(a);
-        tmpsref := sref;
-        tmpsref.bitlen := 32;
-        hlcg.a_load_const_subsetref(list,U32IntType,LongInt(lo(a)),tmpsref);
-        inc(tmpsref.ref.offset,4);
-        hlcg.a_load_const_subsetref(list,U32IntType,LongInt(hi(a)),tmpsref);
+        if TargetInfo.Endian = endian_big then
+          Swap64(A);
+        TmpSRef := SRef;
+        TmpSRef.BitLen := 32;
+        HLCG.A_Load_Const_SubsetRef(List,U32IntType,LongInt(Lo(A)),TmpSRef);
+        Inc(TmpSRef.Ref.Offset,4);
+        HLCG.A_Load_Const_SubsetRef(List,U32IntType,LongInt(Hi(A)),TmpSRef);
       end;
 
 
-    procedure TCG64F32.a_load64_subsetref_subsetref(list: TAsmList; const fromsref, tosref: TSubsetReference);
+    procedure TCG64F32.A_Load64_SubsetRef_SubsetRef(List: TAsmList; const FromSRef, ToSRef: TSubsetReference);
 
       var
-        tmpreg64 : TRegister64;
+        TmpReg64 : TRegister64;
       begin
-        tmpreg64.reglo:=cg.getintregister(list,OS_32);
-        tmpreg64.reghi:=cg.getintregister(list,OS_32);
-        a_load64_subsetref_reg(list,fromsref,tmpreg64);
-        a_load64_reg_subsetref(list,tmpreg64,tosref);
+        TmpReg64.RegLo:=CG.GetIntRegister(List,OS_32);
+        TmpReg64.RegHi:=CG.GetIntRegister(List,OS_32);
+        A_Load64_SubsetRef_Reg(List,FromSRef,TmpReg64);
+        A_Load64_Reg_SubsetRef(List,TmpReg64,ToSRef);
       end;
 
 
-    procedure TCG64F32.a_load64_subsetref_ref(list : TAsmList; const sref: TSubsetReference; const destref: TReference);
+    procedure TCG64F32.A_Load64_SubsetRef_Ref(List : TAsmList; const SRef: TSubsetReference; const DestRef: TReference);
 
       var
-        tmpreg64 : TRegister64;
+        TmpReg64 : TRegister64;
       begin
-        tmpreg64.reglo:=cg.getintregister(list,OS_32);
-        tmpreg64.reghi:=cg.getintregister(list,OS_32);
-        a_load64_subsetref_reg(list,sref,tmpreg64);
-        a_load64_reg_ref(list,tmpreg64,destref);
+        TmpReg64.RegLo:=CG.GetIntRegister(List,OS_32);
+        TmpReg64.RegHi:=CG.GetIntRegister(List,OS_32);
+        A_Load64_SubsetRef_Reg(List,SRef,TmpReg64);
+        A_Load64_Reg_Ref(List,TmpReg64,DestRef);
       end;
 
 
-    procedure TCG64F32.a_load64_ref_subsetref(list : TAsmList; const fromref: TReference; const sref: TSubsetReference);
+    procedure TCG64F32.A_Load64_Ref_SubsetRef(List : TAsmList; const FromRef: TReference; const SRef: TSubsetReference);
 
       var
-        tmpreg64 : TRegister64;
+        TmpReg64 : TRegister64;
       begin
-        tmpreg64.reglo:=cg.getintregister(list,OS_32);
-        tmpreg64.reghi:=cg.getintregister(list,OS_32);
-        a_load64_ref_reg(list,fromref,tmpreg64);
-        a_load64_reg_subsetref(list,tmpreg64,sref);
+        TmpReg64.RegLo:=CG.GetIntRegister(List,OS_32);
+        TmpReg64.RegHi:=CG.GetIntRegister(List,OS_32);
+        A_Load64_Ref_Reg(List,FromRef,TmpReg64);
+        A_Load64_Reg_SubsetRef(List,TmpReg64,SRef);
       end;
 
 
-    procedure TCG64F32.a_load64_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister64);
+    procedure TCG64F32.A_Load64_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister64);
 
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_load64_ref_reg(list,l.reference,reg);
+            A_Load64_Ref_Reg(List,L.Reference,Reg);
           LOC_REGISTER,LOC_CREGISTER:
-            a_load64_reg_reg(list,l.register64,reg);
+            A_Load64_Reg_Reg(List,L.Register64,Reg);
           LOC_CONSTANT :
-            a_load64_const_reg(list,l.value64,reg);
+            A_Load64_Const_Reg(List,L.Value64,Reg);
           LOC_SUBSETREF, LOC_CSUBSETREF:
-            a_load64_subsetref_reg(list,l.sref,reg);
+            A_Load64_SubsetRef_Reg(List,L.SRef,Reg);
           else
             InternalError(200112292);
         end;
       end;
 
 
-    procedure TCG64F32.a_load64_loc_ref(list : TAsmList;const l : TLocation;const ref : TReference);
+    procedure TCG64F32.A_Load64_Loc_Ref(List : TAsmList;const L : TLocation;const Ref : TReference);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REGISTER,LOC_CREGISTER:
-            a_load64_reg_ref(list,l.register64,ref);
+            A_Load64_Reg_Ref(List,L.Register64,Ref);
           LOC_CONSTANT :
-            a_load64_const_ref(list,l.value64,ref);
+            A_Load64_Const_Ref(List,L.Value64,Ref);
           LOC_SUBSETREF, LOC_CSUBSETREF:
-            a_load64_subsetref_ref(list,l.sref,ref);
+            A_Load64_SubsetRef_Ref(List,L.SRef,Ref);
           else
             InternalError(200203288);
         end;
       end;
 
 
-    procedure TCG64F32.a_load64_const_loc(list : TAsmList;value : int64;const l : TLocation);
+    procedure TCG64F32.A_Load64_Const_Loc(List : TAsmList;Value : Int64;const L : TLocation);
 
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_load64_const_ref(list,value,l.reference);
+            A_Load64_Const_Ref(List,Value,L.Reference);
           LOC_REGISTER,LOC_CREGISTER:
-            a_load64_const_reg(list,value,l.register64);
+            A_Load64_Const_Reg(List,Value,L.Register64);
           LOC_SUBSETREF, LOC_CSUBSETREF:
-            a_load64_const_subsetref(list,value,l.sref);
+            A_Load64_Const_SubsetRef(List,Value,L.SRef);
           else
             InternalError(200112293);
         end;
       end;
 
 
-    procedure TCG64F32.a_load64_reg_loc(list : TAsmList;reg : TRegister64;const l : TLocation);
+    procedure TCG64F32.A_Load64_Reg_Loc(List : TAsmList;Reg : TRegister64;const L : TLocation);
 
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_load64_reg_ref(list,reg,l.reference);
+            A_Load64_Reg_Ref(List,Reg,L.Reference);
           LOC_REGISTER,LOC_CREGISTER:
-            a_load64_reg_reg(list,reg,l.register64);
+            A_Load64_Reg_Reg(List,Reg,L.Register64);
           LOC_SUBSETREF, LOC_CSUBSETREF:
-            a_load64_reg_subsetref(list,reg,l.sref);
+            A_Load64_Reg_SubsetRef(List,Reg,L.SRef);
           LOC_MMREGISTER, LOC_CMMREGISTER:
-            a_loadmm_intreg64_reg(list,l.size,reg,l.register);
+            A_LoadMM_IntReg64_Reg(List,L.Size,Reg,L.Register);
           else
             InternalError(200112294);
         end;
       end;
 
 
-    procedure TCG64F32.a_load64high_reg_ref(list : TAsmList;reg : TRegister;const ref : TReference);
+    procedure TCG64F32.A_Load64High_Reg_Ref(List : TAsmList;Reg : TRegister;const Ref : TReference);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_big then
-          cg.a_load_reg_ref(list,OS_32,OS_32,reg,ref)
+        if TargetInfo.Endian = endian_big then
+          CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,Ref)
         else
           begin
-            tmpref := ref;
-            inc(tmpref.offset,4);
-            cg.a_load_reg_ref(list,OS_32,OS_32,reg,tmpref)
+            TmpRef := Ref;
+            Inc(TmpRef.Offset,4);
+            CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,TmpRef)
           end;
       end;
 
-    procedure TCG64F32.a_load64low_reg_ref(list : TAsmList;reg : TRegister;const ref : TReference);
+    procedure TCG64F32.A_Load64Low_Reg_Ref(List : TAsmList;Reg : TRegister;const Ref : TReference);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_little then
-          cg.a_load_reg_ref(list,OS_32,OS_32,reg,ref)
+        if TargetInfo.Endian = endian_little then
+          CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,Ref)
         else
           begin
-            tmpref := ref;
-            inc(tmpref.offset,4);
-            cg.a_load_reg_ref(list,OS_32,OS_32,reg,tmpref)
-          end;
-      end;
-
-
-    procedure TCG64F32.a_load64high_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister);
-      var
-        tmpref: TReference;
-      begin
-        if TargetInfo.endian = endian_big then
-          cg.a_load_ref_reg(list,OS_32,OS_32,ref,reg)
-        else
-          begin
-            tmpref := ref;
-            inc(tmpref.offset,4);
-            cg.a_load_ref_reg(list,OS_32,OS_32,tmpref,reg)
+            TmpRef := Ref;
+            Inc(TmpRef.Offset,4);
+            CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,TmpRef)
           end;
       end;
 
 
-    procedure TCG64F32.a_load64low_ref_reg(list : TAsmList;const ref : TReference;reg : TRegister);
+    procedure TCG64F32.A_Load64High_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if TargetInfo.endian = endian_little then
-          cg.a_load_ref_reg(list,OS_32,OS_32,ref,reg)
+        if TargetInfo.Endian = endian_big then
+          CG.A_Load_Ref_Reg(List,OS_32,OS_32,Ref,Reg)
         else
           begin
-            tmpref := ref;
-            inc(tmpref.offset,4);
-            cg.a_load_ref_reg(list,OS_32,OS_32,tmpref,reg)
+            TmpRef := Ref;
+            Inc(TmpRef.Offset,4);
+            CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg)
           end;
       end;
 
 
-    procedure TCG64F32.a_load64low_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister);
+    procedure TCG64F32.A_Load64Low_Ref_Reg(List : TAsmList;const Ref : TReference;Reg : TRegister);
+      var
+        TmpRef: TReference;
       begin
-        case l.loc of
+        if TargetInfo.Endian = endian_little then
+          CG.A_Load_Ref_Reg(List,OS_32,OS_32,Ref,Reg)
+        else
+          begin
+            TmpRef := Ref;
+            Inc(TmpRef.Offset,4);
+            CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg)
+          end;
+      end;
+
+
+    procedure TCG64F32.A_Load64Low_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister);
+      begin
+        case L.Loc of
           LOC_REFERENCE,
           LOC_CREFERENCE :
-            a_load64low_ref_reg(list,l.reference,reg);
+            A_Load64Low_Ref_Reg(List,L.Reference,Reg);
           LOC_REGISTER,
           LOC_CREGISTER :
-            cg.a_load_reg_reg(list,OS_32,OS_32,l.register64.reglo,reg);
+            CG.A_Load_Reg_Reg(List,OS_32,OS_32,L.Register64.RegLo,Reg);
           LOC_CONSTANT :
-            cg.a_load_const_reg(list,OS_32,LongInt(lo(l.value64)),reg);
+            CG.A_Load_Const_Reg(List,OS_32,LongInt(Lo(L.Value64)),Reg);
           else
             InternalError(200203244);
         end;
       end;
 
 
-    procedure TCG64F32.a_load64high_loc_reg(list : TAsmList;const l : TLocation;reg : TRegister);
+    procedure TCG64F32.A_Load64High_Loc_Reg(List : TAsmList;const L : TLocation;Reg : TRegister);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE,
           LOC_CREFERENCE :
-            a_load64high_ref_reg(list,l.reference,reg);
+            A_Load64High_Ref_Reg(List,L.Reference,Reg);
           LOC_REGISTER,
           LOC_CREGISTER :
-            cg.a_load_reg_reg(list,OS_32,OS_32,l.register64.reghi,reg);
+            CG.A_Load_Reg_Reg(List,OS_32,OS_32,L.Register64.RegHi,Reg);
           LOC_CONSTANT :
-            cg.a_load_const_reg(list,OS_32,LongInt(hi(l.value64)),reg);
+            CG.A_Load_Const_Reg(List,OS_32,LongInt(Hi(L.Value64)),Reg);
           else
             InternalError(2002032411);
         end;
       end;
 
 
-    procedure TCG64F32.a_op64_const_loc(list : TAsmList;op:TOpCG;size : TCgSize;value : int64;const l: TLocation);
+    procedure TCG64F32.A_Op64_Const_Loc(List : TAsmList;Op:TOpCG;Size : TCgSize;Value : Int64;const L: TLocation);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_op64_const_ref(list,op,size,value,l.reference);
+            A_Op64_Const_Ref(List,Op,Size,Value,L.Reference);
           LOC_REGISTER,LOC_CREGISTER:
-            a_op64_const_reg(list,op,size,value,l.register64);
+            A_Op64_Const_Reg(List,Op,Size,Value,L.Register64);
           else
             InternalError(200203292);
         end;
       end;
 
 
-    procedure TCG64F32.a_op64_reg_loc(list : TAsmList;op:TOpCG;size : TCgSize;reg : TRegister64;const l : TLocation);
+    procedure TCG64F32.A_Op64_Reg_Loc(List : TAsmList;Op:TOpCG;Size : TCgSize;Reg : TRegister64;const L : TLocation);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_op64_reg_ref(list,op,size,reg,l.reference);
+            A_Op64_Reg_Ref(List,Op,Size,Reg,L.Reference);
           LOC_REGISTER,LOC_CREGISTER:
-            a_op64_reg_reg(list,op,size,reg,l.register64);
+            A_Op64_Reg_Reg(List,Op,Size,Reg,L.Register64);
           else
             InternalError(2002032422);
         end;
       end;
 
 
-    procedure TCG64F32.a_op64_ref_loc(list : TAsmList;op:TOpCG;size : TCgSize;const ref : TReference;const l : TLocation);
+    procedure TCG64F32.A_Op64_Ref_Loc(List : TAsmList;Op:TOpCG;Size : TCgSize;const Ref : TReference;const L : TLocation);
       var
-        tempreg: TRegister64;
+        TempReg: TRegister64;
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
             begin
-              tempreg.reghi:=cg.getintregister(list,OS_32);
-              tempreg.reglo:=cg.getintregister(list,OS_32);
-              a_load64_ref_reg(list,ref,tempreg);
-              a_op64_reg_ref(list,op,size,tempreg,l.reference);
+              TempReg.RegHi:=CG.GetIntRegister(List,OS_32);
+              TempReg.RegLo:=CG.GetIntRegister(List,OS_32);
+              A_Load64_Ref_Reg(List,Ref,TempReg);
+              A_Op64_Reg_Ref(List,Op,Size,TempReg,L.Reference);
             end;
           LOC_REGISTER,LOC_CREGISTER:
-            a_op64_ref_reg(list,op,size,ref,l.register64);
+            A_Op64_Ref_Reg(List,Op,Size,Ref,L.Register64);
           else
             InternalError(2020042803);
         end;
       end;
 
 
-    procedure TCG64F32.a_op64_loc_reg(list : TAsmList;op:TOpCG;size : TCgSize;const l : TLocation;reg : TRegister64);
+    procedure TCG64F32.A_Op64_Loc_Reg(List : TAsmList;Op:TOpCG;Size : TCgSize;const L : TLocation;Reg : TRegister64);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REFERENCE, LOC_CREFERENCE:
-            a_op64_ref_reg(list,op,size,l.reference,reg);
+            A_Op64_Ref_Reg(List,Op,Size,L.Reference,Reg);
           LOC_REGISTER,LOC_CREGISTER:
-            a_op64_reg_reg(list,op,size,l.register64,reg);
+            A_Op64_Reg_Reg(List,Op,Size,L.Register64,Reg);
           LOC_CONSTANT :
-            a_op64_const_reg(list,op,size,l.value64,reg);
+            A_Op64_Const_Reg(List,Op,Size,L.Value64,Reg);
           else
             InternalError(200203242);
         end;
       end;
 
 
-    procedure TCG64F32.a_op64_ref_reg(list : TAsmList;op:TOpCG;size : TCgSize;const ref : TReference;reg : TRegister64);
+    procedure TCG64F32.A_Op64_Ref_Reg(List : TAsmList;Op:TOpCG;Size : TCgSize;const Ref : TReference;Reg : TRegister64);
       var
-        tempreg: TRegister64;
+        TempReg: TRegister64;
       begin
-        tempreg.reghi:=cg.getintregister(list,OS_32);
-        tempreg.reglo:=cg.getintregister(list,OS_32);
-        a_load64_ref_reg(list,ref,tempreg);
-        a_op64_reg_reg(list,op,size,tempreg,reg);
+        TempReg.RegHi:=CG.GetIntRegister(List,OS_32);
+        TempReg.RegLo:=CG.GetIntRegister(List,OS_32);
+        A_Load64_Ref_Reg(List,Ref,TempReg);
+        A_Op64_Reg_Reg(List,Op,Size,TempReg,Reg);
       end;
 
 
-    procedure TCG64F32.a_op64_reg_ref(list : TAsmList;op:TOpCG;size : TCgSize;reg : TRegister64; const ref: TReference);
+    procedure TCG64F32.A_Op64_Reg_Ref(List : TAsmList;Op:TOpCG;Size : TCgSize;Reg : TRegister64; const Ref: TReference);
       var
-        tempreg: TRegister64;
+        TempReg: TRegister64;
       begin
-        tempreg.reghi:=cg.getintregister(list,OS_32);
-        tempreg.reglo:=cg.getintregister(list,OS_32);
-        if op in [OP_NEG,OP_NOT] then
+        TempReg.RegHi:=CG.GetIntRegister(List,OS_32);
+        TempReg.RegLo:=CG.GetIntRegister(List,OS_32);
+        if Op in [OP_NEG,OP_NOT] then
           begin
-            a_op64_reg_reg(list,op,size,reg,tempreg);
-            a_load64_reg_ref(list,tempreg,ref);
+            A_Op64_Reg_Reg(List,Op,Size,Reg,TempReg);
+            A_Load64_Reg_Ref(List,TempReg,Ref);
           end
         else
           begin
-            a_load64_ref_reg(list,ref,tempreg);
-            a_op64_reg_reg(list,op,size,reg,tempreg);
-            a_load64_reg_ref(list,tempreg,ref);
+            A_Load64_Ref_Reg(List,Ref,TempReg);
+            A_Op64_Reg_Reg(List,Op,Size,Reg,TempReg);
+            A_Load64_Reg_Ref(List,TempReg,Ref);
           end;
       end;
 
 
-    procedure TCG64F32.a_op64_const_ref(list : TAsmList;op:TOpCG;size : TCgSize;value : int64;const ref : TReference);
+    procedure TCG64F32.A_Op64_Const_Ref(List : TAsmList;Op:TOpCG;Size : TCgSize;Value : Int64;const Ref : TReference);
       var
-        tempreg: TRegister64;
+        TempReg: TRegister64;
       begin
-        tempreg.reghi:=cg.getintregister(list,OS_32);
-        tempreg.reglo:=cg.getintregister(list,OS_32);
-        a_load64_ref_reg(list,ref,tempreg);
-        a_op64_const_reg(list,op,size,value,tempreg);
-        a_load64_reg_ref(list,tempreg,ref);
+        TempReg.RegHi:=CG.GetIntRegister(List,OS_32);
+        TempReg.RegLo:=CG.GetIntRegister(List,OS_32);
+        A_Load64_Ref_Reg(List,Ref,TempReg);
+        A_Op64_Const_Reg(List,Op,Size,Value,TempReg);
+        A_Load64_Reg_Ref(List,TempReg,Ref);
       end;
 
 
-    procedure TCG64F32.a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const ParaLoc : TCGPara);
+    procedure TCG64F32.A_Load64_Reg_CGPara(List : TAsmList;Reg : TRegister64;const ParaLoc : TCGPara);
       var
-        tmplochi,tmploclo: TCGPara;
+        TmpLocHi,TmpLocLo: TCGPara;
       begin
-        tmploclo.init;
-        tmplochi.init;
-        splitparaloc64(ParaLoc,tmploclo,tmplochi);
-        if TargetInfo.endian=endian_big then
+        TmpLocLo.Init;
+        TmpLocHi.Init;
+        SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
+        if TargetInfo.Endian=endian_big then
           begin
             { Keep this order of first lo before hi to have
               the correct push order for m68k }
-            cg.a_load_reg_cgpara(list,OS_32,reg.reglo,tmploclo);
-            cg.a_load_reg_cgpara(list,OS_32,reg.reghi,tmplochi);
+            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegLo,TmpLocLo);
+            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegHi,TmpLocHi);
           end
         else
           begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
-            cg.a_load_reg_cgpara(list,OS_32,reg.reghi,tmplochi);
-            cg.a_load_reg_cgpara(list,OS_32,reg.reglo,tmploclo);
+            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegHi,TmpLocHi);
+            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegLo,TmpLocLo);
           end;
-        tmploclo.done;
-        tmplochi.done;
+        TmpLocLo.Done;
+        TmpLocHi.Done;
       end;
 
 
-    procedure TCG64F32.a_load64_const_cgpara(list : TAsmList;value : int64;const ParaLoc : TCGPara);
+    procedure TCG64F32.A_Load64_Const_CGPara(List : TAsmList;Value : Int64;const ParaLoc : TCGPara);
       var
-        tmplochi,tmploclo: TCGPara;
+        TmpLocHi,TmpLocLo: TCGPara;
       begin
-        tmploclo.init;
-        tmplochi.init;
-        splitparaloc64(ParaLoc,tmploclo,tmplochi);
-        if TargetInfo.endian=endian_big then
+        TmpLocLo.Init;
+        TmpLocHi.Init;
+        SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
+        if TargetInfo.Endian=endian_big then
           begin
             { Keep this order of first lo before hi to have
               the correct push order for m68k }
-            cg.a_load_const_cgpara(list,OS_32,LongInt(lo(value)),tmploclo);
-            cg.a_load_const_cgpara(list,OS_32,LongInt(hi(value)),tmplochi);
+            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Lo(Value)),TmpLocLo);
+            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Hi(Value)),TmpLocHi);
           end
         else
           begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
-            cg.a_load_const_cgpara(list,OS_32,LongInt(hi(value)),tmplochi);
-            cg.a_load_const_cgpara(list,OS_32,LongInt(lo(value)),tmploclo);
+            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Hi(Value)),TmpLocHi);
+            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Lo(Value)),TmpLocLo);
           end;
-        tmploclo.done;
-        tmplochi.done;
+        TmpLocLo.Done;
+        TmpLocHi.Done;
       end;
 
 
-    procedure TCG64F32.a_load64_ref_cgpara(list : TAsmList;const r : TReference;const ParaLoc : TCGPara);
+    procedure TCG64F32.A_Load64_Ref_CGPara(List : TAsmList;const R : TReference;const ParaLoc : TCGPara);
       var
-        tmprefhi,tmpreflo : TReference;
-        tmploclo,tmplochi : TCGPara;
+        TmpRefHi,TmpRefLo : TReference;
+        TmpLocLo,TmpLocHi : TCGPara;
       begin
-        tmploclo.init;
-        tmplochi.init;
-        splitparaloc64(ParaLoc,tmploclo,tmplochi);
-        tmprefhi:=r;
-        tmpreflo:=r;
-        if TargetInfo.endian=endian_big then
+        TmpLocLo.Init;
+        TmpLocHi.Init;
+        SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
+        TmpRefHi:=R;
+        TmpRefLo:=R;
+        if TargetInfo.Endian=endian_big then
           begin
             { Keep this order of first lo before hi to have
               the correct push order for m68k }
-            inc(tmpreflo.offset,4);
-            cg.a_load_ref_cgpara(list,OS_32,tmpreflo,tmploclo);
-            cg.a_load_ref_cgpara(list,OS_32,tmprefhi,tmplochi);
+            Inc(TmpRefLo.Offset,4);
+            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefLo,TmpLocLo);
+            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefHi,TmpLocHi);
           end
         else
           begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
-            inc(tmprefhi.offset,4);
-            cg.a_load_ref_cgpara(list,OS_32,tmprefhi,tmplochi);
-            cg.a_load_ref_cgpara(list,OS_32,tmpreflo,tmploclo);
+            Inc(TmpRefHi.Offset,4);
+            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefHi,TmpLocHi);
+            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefLo,TmpLocLo);
           end;
-        tmploclo.done;
-        tmplochi.done;
+        TmpLocLo.Done;
+        TmpLocHi.Done;
       end;
 
 
-    procedure TCG64F32.a_load64_loc_cgpara(list : TAsmList;const l:TLocation;const ParaLoc : TCGPara);
+    procedure TCG64F32.A_Load64_Loc_CGPara(List : TAsmList;const L:TLocation;const ParaLoc : TCGPara);
       begin
-        case l.loc of
+        case L.Loc of
           LOC_REGISTER,
           LOC_CREGISTER :
-            a_load64_reg_cgpara(list,l.register64,ParaLoc);
+            A_Load64_Reg_CGPara(List,L.Register64,ParaLoc);
           LOC_CONSTANT :
-            a_load64_const_cgpara(list,l.value64,ParaLoc);
+            A_Load64_Const_CGPara(List,L.Value64,ParaLoc);
           LOC_CREFERENCE,
           LOC_REFERENCE :
-            a_load64_ref_cgpara(list,l.reference,ParaLoc);
+            A_Load64_Ref_CGPara(List,L.Reference,ParaLoc);
           else
             InternalError(200203287);
         end;
       end;
 
 
-    procedure TCG64F32.a_loadmm_intreg64_reg(list: TAsmList; mmsize: TCgSize; intreg: TRegister64; mmreg: TRegister);
+    procedure TCG64F32.A_LoadMM_IntReg64_Reg(List: TAsmList; MMSize: TCgSize; IntReg: TRegister64; MMReg: TRegister);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if (tcgsize2size[mmsize]<>8) then
+        if (TCgSize2Size[MMSize]<>8) then
           InternalError(2009112501);
-        tg.gettemp(list,8,8,tt_normal,tmpref);
-        a_load64_reg_ref(list,intreg,tmpref);
-        cg.a_loadmm_ref_reg(list,mmsize,mmsize,tmpref,mmreg,mms_movescalar);
-        tg.ungettemp(list,tmpref);
+        TG.GetTemp(List,8,8,tt_normal,TmpRef);
+        A_Load64_Reg_Ref(List,IntReg,TmpRef);
+        CG.A_LoadMM_Ref_Reg(List,MMSize,MMSize,TmpRef,MMReg,MMS_MoveScalar);
+        TG.UngetTemp(List,TmpRef);
       end;
 
 
-    procedure TCG64F32.a_loadmm_reg_intreg64(list: TAsmList; mmsize: TCgSize; mmreg: TRegister; intreg: TRegister64);
+    procedure TCG64F32.A_LoadMM_Reg_IntReg64(List: TAsmList; MMSize: TCgSize; MMReg: TRegister; IntReg: TRegister64);
       var
-        tmpref: TReference;
+        TmpRef: TReference;
       begin
-        if (tcgsize2size[mmsize]<>8) then
+        if (TCgSize2Size[MMSize]<>8) then
           InternalError(2009112502);
-        tg.gettemp(list,8,8,tt_normal,tmpref);
-        cg.a_loadmm_reg_ref(list,mmsize,mmsize,mmreg,tmpref,mms_movescalar);
-        a_load64_ref_reg(list,tmpref,intreg);
-        tg.ungettemp(list,tmpref);
+        TG.GetTemp(List,8,8,tt_normal,TmpRef);
+        CG.A_LoadMM_Reg_Ref(List,MMSize,MMSize,MMReg,TmpRef,MMS_MoveScalar);
+        A_Load64_Ref_Reg(List,TmpRef,IntReg);
+        TG.UngetTemp(List,TmpRef);
       end;
 
 
-    procedure TCG64F32.g_rangecheck64(list : TAsmList;const l:TLocation;fromdef,todef:TDef);
+    procedure TCG64F32.G_RangeCheck64(List : TAsmList;const L:TLocation;FromDef,ToDef:TDef);
 
       var
-        neglabel,
-        poslabel,
-        endlabel: TAsmLabel;
-        hreg   : TRegister;
-        hdef   :  TOrdDef;
-        opsize   : TCgSize;
-        from_signed,to_signed: boolean;
-        temploc : TLocation;
+        NegLabel,
+        PosLabel,
+        EndLabel: TAsmLabel;
+        HReg   : TRegister;
+        HDef   :  TOrdDef;
+        OpSize   : TCgSize;
+        FromSigned,ToSigned: Boolean;
+        TempLoc : TLocation;
 
       begin
-         from_signed := is_signed(fromdef);
-         to_signed := is_signed(todef);
+         FromSigned := Is_Signed(FromDef);
+         ToSigned := Is_Signed(ToDef);
 
-         if not is_64bit(todef) then
+         if not Is_64Bit(ToDef) then
            begin
              { get the high dword in a register }
-             if l.loc in [LOC_REGISTER,LOC_CREGISTER] then
+             if L.Loc in [LOC_REGISTER,LOC_CREGISTER] then
                begin
-                 hreg := l.register64.reghi;
+                 HReg := L.Register64.RegHi;
                end
              else
                begin
-                 hreg:=cg.getintregister(list,OS_32);
-                 a_load64high_ref_reg(list,l.reference,hreg);
+                 HReg:=CG.GetIntRegister(List,OS_32);
+                 A_Load64High_Ref_Reg(List,L.Reference,HReg);
                end;
-             CurrentAsmData.getjumplabel(poslabel);
+             CurrentAsmData.GetJumpLabel(PosLabel);
 
-             cg.a_reg_alloc(list, NR_DEFAULTFLAGS);
+             CG.A_Reg_Alloc(List, NR_DEFAULTFLAGS);
 
              { check high dword, must be 0 (for positive numbers) }
-             cg.a_cmp_const_reg_label(list,OS_32,OC_EQ,0,hreg,poslabel);
+             CG.A_Cmp_Const_Reg_Label(List,OS_32,OC_EQ,0,HReg,PosLabel);
 
              { It can also be $ffffffff, but only for negative numbers }
-             if from_signed and to_signed then
+             if FromSigned and ToSigned then
                begin
-                 CurrentAsmData.getjumplabel(neglabel);
-                 cg.a_cmp_const_reg_label(list,OS_32,OC_EQ,-1,hreg,neglabel);
+                 CurrentAsmData.GetJumpLabel(NegLabel);
+                 CG.A_Cmp_Const_Reg_Label(List,OS_32,OC_EQ,-1,HReg,NegLabel);
                end
              else
                { we do not have dynamic dfa, so avoid a warning below about the unused
                  neglabel }
-               neglabel:=nil;
+               NegLabel:=nil;
 
-             cg.a_reg_dealloc(list, NR_DEFAULTFLAGS);
+             CG.A_Reg_Dealloc(List, NR_DEFAULTFLAGS);
 
              { For all other values we have a range check error }
-             cg.a_call_name(list,'fpc_rangeerror',false);
+             CG.A_Call_Name(List,'fpc_rangeerror',False);
 
              { if the high dword = 0, the low dword can be considered a }
              { simple cardinal                                          }
-             cg.a_label(list,poslabel);
-             hdef:=COrdDef.create(u32bit,0,$ffffffff,false);
+             CG.A_Label(List,PosLabel);
+             HDef:=COrdDef.Create(U32Bit,0,$ffffffff,False);
 
-             location_copy(temploc,l);
-             temploc.size:=OS_32;
+             Location_Copy(TempLoc,L);
+             TempLoc.Size:=OS_32;
 
-             if (temploc.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
-                (TargetInfo.endian = endian_big) then
+             if (TempLoc.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+                (TargetInfo.Endian = endian_big) then
                begin
-                 inc(temploc.reference.offset,4);
-                 temploc.reference.alignment:=NewAlignment(temploc.reference.alignment,4);
+                 Inc(TempLoc.Reference.Offset,4);
+                 TempLoc.Reference.Alignment:=NewAlignment(TempLoc.Reference.Alignment,4);
                end;
 
-             hlcg.g_rangecheck(list,temploc,hdef,todef);
-             hdef.free;
-             hdef := nil;
+             HLCG.G_RangeCheck(List,TempLoc,HDef,ToDef);
+             HDef.Free;
+             HDef := nil;
 
-             if from_signed and to_signed then
+             if FromSigned and ToSigned then
                begin
-                 CurrentAsmData.getjumplabel(endlabel);
-                 cg.a_jmp_always(list,endlabel);
+                 CurrentAsmData.GetJumpLabel(EndLabel);
+                 CG.A_Jmp_Always(List,EndLabel);
                  { if the high dword = $ffffffff, then the low dword (when }
                  { considered as a longint) must be < 0                    }
-                 cg.a_label(list,neglabel);
-                 if l.loc in [LOC_REGISTER,LOC_CREGISTER] then
+                 CG.A_Label(List,NegLabel);
+                 if L.Loc in [LOC_REGISTER,LOC_CREGISTER] then
                    begin
-                     hreg := l.register64.reglo;
+                     HReg := L.Register64.RegLo;
                    end
                  else
                    begin
-                     hreg:=cg.getintregister(list,OS_32);
-                     a_load64low_ref_reg(list,l.reference,hreg);
+                     HReg:=CG.GetIntRegister(List,OS_32);
+                     A_Load64Low_Ref_Reg(List,L.Reference,HReg);
                    end;
                  { get a new neglabel (JM) }
-                 CurrentAsmData.getjumplabel(neglabel);
-                 cg.a_reg_alloc(list, NR_DEFAULTFLAGS);
-                 cg.a_cmp_const_reg_label(list,OS_32,OC_LT,0,hreg,neglabel);
-                 cg.a_reg_dealloc(list, NR_DEFAULTFLAGS);
+                 CurrentAsmData.GetJumpLabel(NegLabel);
+                 CG.A_Reg_Alloc(List, NR_DEFAULTFLAGS);
+                 CG.A_Cmp_Const_Reg_Label(List,OS_32,OC_LT,0,HReg,NegLabel);
+                 CG.A_Reg_Dealloc(List, NR_DEFAULTFLAGS);
 
-                 cg.a_call_name(list,'fpc_rangeerror',false);
+                 CG.A_Call_Name(List,'fpc_rangeerror',False);
 
                  { if we get here, the 64bit value lies between }
                  { longint($80000000) and -1 (JM)               }
-                 cg.a_label(list,neglabel);
-                 hdef:=COrdDef.create(s32bit,int64(LongInt($80000000)),int64(-1),false);
-                 location_copy(temploc,l);
-                 temploc.size:=OS_32;
-                 hlcg.g_rangecheck(list,temploc,hdef,todef);
-                 hdef.free;
-                 hdef := nil;
-                 cg.a_label(list,endlabel);
+                 CG.A_Label(List,NegLabel);
+                 HDef:=COrdDef.Create(S32Bit,Int64(LongInt($80000000)),Int64(-1),False);
+                 Location_Copy(TempLoc,L);
+                 TempLoc.Size:=OS_32;
+                 HLCG.G_RangeCheck(List,TempLoc,HDef,ToDef);
+                 HDef.Free;
+                 HDef := nil;
+                 CG.A_Label(List,EndLabel);
                end;
            end
          else
@@ -1023,137 +1023,137 @@ unit cg64f32;
            { no 64bit subranges supported, so only a small check is necessary }
 
            { if both are signed or both are unsigned, no problem! }
-           if (from_signed xor to_signed) and
+           if (FromSigned xor ToSigned) and
               { also not if the fromdef is unsigned and < 64bit, since that will }
               { always fit in a 64bit int (todef is 64bit)                       }
-              (from_signed or
-               (TOrdDef(fromdef).OrdType = u64bit)) then
+              (FromSigned or
+               (TOrdDef(FromDef).OrdType = U64Bit)) then
              begin
                { in all cases, there is only a problem if the highest bit is set }
-               if l.loc in [LOC_REGISTER,LOC_CREGISTER] then
+               if L.Loc in [LOC_REGISTER,LOC_CREGISTER] then
                  begin
-                   if is_64bit(fromdef) then
+                   if Is_64Bit(FromDef) then
                      begin
-                       hreg := l.register64.reghi;
-                       opsize := OS_32;
+                       HReg := L.Register64.RegHi;
+                       OpSize := OS_32;
                      end
                    else
                      begin
-                       hreg := l.register;
-                       opsize := def_cgsize(fromdef);
+                       HReg := L.Register;
+                       OpSize := Def_CGSize(FromDef);
                      end;
                  end
                else
                  begin
-                   hreg:=cg.getintregister(list,OS_32);
-                   opsize:=OS_32;
+                   HReg:=CG.GetIntRegister(List,OS_32);
+                   OpSize:=OS_32;
 
-                   if l.size in [OS_64,OS_S64] then
-                     a_load64high_ref_reg(list,l.reference,hreg)
+                   if L.Size in [OS_64,OS_S64] then
+                     A_Load64High_Ref_Reg(List,L.Reference,HReg)
                    else
-                     cg.a_load_ref_reg(list,l.size,OS_32,l.reference,hreg);
+                     CG.A_Load_Ref_Reg(List,L.Size,OS_32,L.Reference,HReg);
                  end;
-               CurrentAsmData.getjumplabel(poslabel);
-               cg.a_reg_alloc(list, NR_DEFAULTFLAGS);
-               cg.a_cmp_const_reg_label(list,opsize,OC_GTE,0,hreg,poslabel);
-               cg.a_reg_dealloc(list, NR_DEFAULTFLAGS);
+               CurrentAsmData.GetJumpLabel(PosLabel);
+               CG.A_Reg_Alloc(List, NR_DEFAULTFLAGS);
+               CG.A_Cmp_Const_Reg_Label(List,OpSize,OC_GTE,0,HReg,PosLabel);
+               CG.A_Reg_Dealloc(List, NR_DEFAULTFLAGS);
 
-               cg.a_call_name(list,'fpc_rangeerror',false);
-               cg.a_label(list,poslabel);
+               CG.A_Call_Name(List,'fpc_rangeerror',False);
+               CG.A_Label(List,PosLabel);
              end;
       end;
 
 
-    function TCG64F32.optimize64_op_const_reg(list: TAsmList; var op: TOpCG; var a : int64; var reg: TRegister64): boolean;
+    function TCG64F32.Optimize64_Op_Const_Reg(List: TAsmList; var Op: TOpCG; var A : Int64; var Reg: TRegister64): Boolean;
       var
-        lowvalue, highvalue : LongInt;
-        hreg: TRegister;
+        LowValue, HighValue : LongInt;
+        HReg: TRegister;
       begin
-        lowvalue := LongInt(a);
-        highvalue:= LongInt(a shr 32);
+        LowValue := LongInt(A);
+        HighValue:= LongInt(A shr 32);
         { assume it will be optimized out }
-        optimize64_op_const_reg := true;
-        case op of
+        Optimize64_Op_Const_Reg := True;
+        case Op of
         OP_ADD:
            begin
-             if a = 0 then
-                exit;
+             if A = 0 then
+                Exit;
            end;
         OP_AND:
            begin
-              if lowvalue <> -1 then
-                cg.a_op_const_reg(list,op,OS_32,lowvalue,reg.reglo);
-              if highvalue <> -1 then
-                cg.a_op_const_reg(list,op,OS_32,highvalue,reg.reghi);
+              if LowValue <> -1 then
+                CG.A_Op_Const_Reg(List,Op,OS_32,LowValue,Reg.RegLo);
+              if HighValue <> -1 then
+                CG.A_Op_Const_Reg(List,Op,OS_32,HighValue,Reg.RegHi);
               { already emitted correctly }
-              exit;
+              Exit;
            end;
         OP_OR:
            begin
-              if lowvalue <> 0 then
-                cg.a_op_const_reg(list,op,OS_32,lowvalue,reg.reglo);
-              if highvalue <> 0 then
-                cg.a_op_const_reg(list,op,OS_32,highvalue,reg.reghi);
+              if LowValue <> 0 then
+                CG.A_Op_Const_Reg(List,Op,OS_32,LowValue,Reg.RegLo);
+              if HighValue <> 0 then
+                CG.A_Op_Const_Reg(List,Op,OS_32,HighValue,Reg.RegHi);
               { already emitted correctly }
-              exit;
+              Exit;
            end;
         OP_SUB:
            begin
-             if a = 0 then
-                exit;
+             if A = 0 then
+                Exit;
            end;
         OP_XOR:
            begin
            end;
         OP_SHL:
            begin
-             if a = 0 then
-                 exit;
+             if A = 0 then
+                 Exit;
              { simply clear low-register
                and shift the rest and swap
                registers.
              }
-             if (a > 31) then
+             if (A > 31) then
                begin
-                 cg.a_load_const_reg(list,OS_32,0,reg.reglo);
-                 cg.a_op_const_reg(list,OP_SHL,OS_32,a mod 32,reg.reghi);
+                 CG.A_Load_Const_Reg(List,OS_32,0,Reg.RegLo);
+                 CG.A_Op_Const_Reg(List,OP_SHL,OS_32,A mod 32,Reg.RegHi);
                  { swap the registers }
-                 hreg := reg.reghi;
-                 reg.reghi := reg.reglo;
-                 reg.reglo := hreg;
-                 exit;
+                 HReg := Reg.RegHi;
+                 Reg.RegHi := Reg.RegLo;
+                 Reg.RegLo := HReg;
+                 Exit;
                end;
            end;
         OP_SHR:
            begin
-             if a = 0 then exit;
+             if A = 0 then Exit;
              { simply clear high-register
                and shift the rest and swap
                registers.
              }
-             if (a > 31) then
+             if (A > 31) then
                begin
-                 cg.a_load_const_reg(list,OS_32,0,reg.reghi);
-                 cg.a_op_const_reg(list,OP_SHL,OS_32,a mod 32,reg.reglo);
+                 CG.A_Load_Const_Reg(List,OS_32,0,Reg.RegHi);
+                 CG.A_Op_Const_Reg(List,OP_SHL,OS_32,A mod 32,Reg.RegLo);
                  { swap the registers }
-                 hreg := reg.reghi;
-                 reg.reghi := reg.reglo;
-                 reg.reglo := hreg;
-                 exit;
+                 HReg := Reg.RegHi;
+                 Reg.RegHi := Reg.RegLo;
+                 Reg.RegLo := HReg;
+                 Exit;
                end;
            end;
         OP_IMUL,OP_MUL:
            begin
-             if a = 1 then exit;
+             if A = 1 then Exit;
            end;
         OP_IDIV,OP_DIV:
             begin
-             if a = 1 then exit;
+             if A = 1 then Exit;
             end;
         else
            InternalError(20020817);
         end;
-        optimize64_op_const_reg := false;
+        Optimize64_Op_Const_Reg := False;
       end;
 
 end.

@@ -203,7 +203,7 @@ uses
          constructor op_reg_sym_ofs(op : TAsmOp;_op1 : TRegister;_op2:TAsmSymbol;_op2ofs : LongInt);
          constructor op_sym_ofs_ref(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
 
-         function is_same_reg_move(regtype: TRegisterType):boolean; override;
+         function is_same_reg_move(RegType: TRegisterType):boolean; override;
 
          function spilling_get_operation_type(opnr: LongInt): TOperType;override;
          function spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;override;
@@ -241,7 +241,7 @@ uses
 
     function simple_ref_type(op: TAsmOp; size:TCgSize; oppostfix: TOpPostfix; const ref: TReference): TSimpleRefType;
     function can_be_shifter_operand(opc: TAsmOp; opnr: LongInt): boolean;
-    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; shiftimm: LongInt): boolean;
+    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; ShiftImm: LongInt): boolean;
 
     function spilling_create_load(const ref: TReference; r: TRegister): TAICPU;
     function spilling_create_store(r: TRegister; const ref: TReference): TAICPU;
@@ -330,7 +330,7 @@ implementation
             if typ<>top_indexedreg then
               clearop(opidx);
             indexedreg:=_indexedreg;
-            regindex:=_regindex;
+            RegIndex:=_regindex;
             typ:=top_indexedreg;
           end;
       end;
@@ -359,7 +359,7 @@ implementation
       begin
          inherited create(op);
          ops:=1;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
       end;
 
 
@@ -375,8 +375,8 @@ implementation
       begin
          inherited create(op);
          ops:=2;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
       end;
 
 
@@ -384,7 +384,7 @@ implementation
       begin
          inherited create(op);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadconst(1,aint(_op2));
       end;
 
@@ -393,7 +393,7 @@ implementation
       begin
         inherited create(op);
         ops:=3;
-        loadreg(0,_op1);
+        LoadReg(0,_op1);
         loadconst(1,_op2);
         loadshifterop(2,_op3);
       end;
@@ -403,7 +403,7 @@ implementation
       begin
          inherited create(op);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadref(1,_op2);
       end;
 
@@ -412,7 +412,7 @@ implementation
       begin
         inherited create(op);
         ops:=2;
-        loadreg(0,_op1);
+        LoadReg(0,_op1);
         loadconditioncode(1,_op2);
       end;
 
@@ -421,9 +421,9 @@ implementation
       begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
       end;
 
 
@@ -431,10 +431,10 @@ implementation
       begin
          inherited create(op);
          ops:=4;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
-         loadreg(3,_op4);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
+         LoadReg(3,_op4);
       end;
 
 
@@ -442,7 +442,7 @@ implementation
       begin
          inherited create(op);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadrealconst(1,_op2);
       end;
 
@@ -452,7 +452,7 @@ implementation
         inherited create(op);
         ops:=2;
         loadindexedreg(0,_op1,_op1index);
-        loadreg(1,_op2);
+        LoadReg(1,_op2);
       end;
 
 
@@ -460,7 +460,7 @@ implementation
       begin
         inherited create(op);
         ops:=2;
-        loadreg(0,_op1);
+        LoadReg(0,_op1);
         loadindexedreg(1,_op2,_op2index);
       end;
 
@@ -469,8 +469,8 @@ implementation
        begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadconst(2,aint(_op3));
       end;
 
@@ -479,8 +479,8 @@ implementation
        begin
          inherited create(op);
          ops:=4;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadconst(2,aint(_op3));
          loadconst(3,aint(_op4));
        end;
@@ -490,8 +490,8 @@ implementation
        begin
          inherited create(op);
          ops:=4;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadconst(2,aint(_op3));
          loadshifterop(3,_op4);
        end;
@@ -501,8 +501,8 @@ implementation
        begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadsymbol(2,_op3,_op3ofs);
       end;
 
@@ -511,8 +511,8 @@ implementation
        begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadref(2,_op3);
       end;
 
@@ -521,8 +521,8 @@ implementation
       begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
          loadshifterop(2,_op3);
       end;
 
@@ -531,9 +531,9 @@ implementation
       begin
          inherited create(op);
          ops:=4;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
          loadshifterop(3,_op4);
       end;
 
@@ -541,9 +541,9 @@ implementation
        begin
          inherited create(op);
          ops:=4;
-         loadreg(0,_op1);
-         loadreg(1,_op2);
-         loadreg(2,_op3);
+         LoadReg(0,_op1);
+         LoadReg(1,_op2);
+         LoadReg(2,_op3);
          loadconditioncode(3,_op4);
        end;
 
@@ -595,7 +595,7 @@ implementation
       begin
          inherited create(op);
          ops:=2;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadsymbol(1,_op2,_op2ofs);
       end;
 
@@ -613,18 +613,18 @@ implementation
       begin
          inherited create(op);
          ops:=3;
-         loadreg(0,_op1);
+         LoadReg(0,_op1);
          loadconst(1,_op2);
          loadref(2,_op3);
       end;
 
 
-    function TAICPU.is_same_reg_move(regtype: TRegisterType):boolean;
+    function TAICPU.is_same_reg_move(RegType: TRegisterType):boolean;
       begin
         { allow the register allocator to remove unnecessary moves }
         result:=(
-                  ((opcode=A_MOV) and (regtype = R_INTREGISTER)) or
-                  ((opcode=A_FMOV) and (regtype = R_MMREGISTER))
+                  ((opcode=A_MOV) and (RegType = R_INTREGISTER)) or
+                  ((opcode=A_FMOV) and (RegType = R_MMREGISTER))
                 ) and
                 (oppostfix in [PF_None]) and
                 (condition=C_None) and
@@ -641,17 +641,17 @@ implementation
         subreg2bytesize: array[TSubRegister] of byte =
           (0,0,0,0,4,8,0,0,0,4,8,0,0,0,0,0,0,0,0,0,0,0,0,8,16,0,16,16,16,16,16,16,16,16,16,16);
       var
-        scalefactor: byte;
+        ScaleFactor: byte;
       begin
-        scalefactor:=subreg2bytesize[getsubreg(r)];
-        if scalefactor=0 then
+        ScaleFactor:=subreg2bytesize[GetSubReg(r)];
+        if ScaleFactor=0 then
           InternalError(2014120301);
-        if (ref.offset>4095*scalefactor) or
-           ((ref.offset>255) and
-            ((ref.offset mod scalefactor)<>0)) or
-           (ref.offset<-256) then
+        if (ref.Offset>4095*ScaleFactor) or
+           ((ref.Offset>255) and
+            ((ref.Offset mod ScaleFactor)<>0)) or
+           (ref.Offset<-256) then
           InternalError(2014120302);
-        case getregtype(r) of
+        case GetRegType(r) of
           R_INTREGISTER,
           R_MMREGISTER:
             result:=TAICPU.op_reg_ref(op,r,ref);
@@ -664,43 +664,43 @@ implementation
     function is_valid_load_symbol(op: TAsmOp; oppostfix: TOpPostfix; const ref: TReference): TSimpleRefType;
       begin
         result:=sr_complex;
-        if not Assigned(ref.symboldata) and
-           not(ref.refaddr in [addr_pic,addr_gotpageoffset,addr_gotpage,addr_pageoffset,addr_page]) then
+        if not Assigned(ref.SymbolData) and
+           not(ref.RefAddr in [addr_pic,addr_gotpageoffset,addr_gotpage,addr_pageoffset,addr_page]) then
           exit;
         { can't use pre-/post-indexed mode here (makes no sense either) }
-        if ref.addressmode<>AM_OFFSET then
+        if ref.AddressMode<>AM_OFFSET then
           exit;
         { "ldr literal" must be a 32/64 bit LDR and have a symbol }
-        if (ref.refaddr=addr_pic) and
+        if (ref.RefAddr=addr_pic) and
            (not (op in [A_LDR,A_B,A_BL,A_ADR]) or
             not(oppostfix in [PF_NONE,PF_W,PF_SW]) or
-            (not Assigned(ref.symbol) and
-             not Assigned(ref.symboldata))) then
+            (not Assigned(ref.Symbol) and
+             not Assigned(ref.SymbolData))) then
           exit;
         { if this is a (got) page offset load, we must have a base register and a
           symbol (except if we have an ADD with a non-got page offset load) }
-        if (ref.refaddr in [addr_gotpageoffset,addr_pageoffset]) and
+        if (ref.RefAddr in [addr_gotpageoffset,addr_pageoffset]) and
            (
              (
                (
                  (op<>A_ADD) or
-                 (ref.refaddr=addr_gotpageoffset)
+                 (ref.RefAddr=addr_gotpageoffset)
                ) and
                (
-                 not Assigned(ref.symbol) or
-                 (ref.base=NR_NO)
+                 not Assigned(ref.Symbol) or
+                 (ref.Base=NR_NO)
                )
              ) or
              (
                (
                  (op=A_ADD) and
-                 (ref.refaddr=addr_pageoffset)
+                 (ref.RefAddr=addr_pageoffset)
                ) and
-               not Assigned(ref.symbol) and
-               (ref.base=NR_NO)
+               not Assigned(ref.Symbol) and
+               (ref.Base=NR_NO)
              ) or
-            (ref.index<>NR_NO) or
-            (ref.offset<>0)) then
+            (ref.Index<>NR_NO) or
+            (ref.Offset<>0)) then
           begin
             result:=sr_internal_illegal;
             exit;
@@ -708,9 +708,9 @@ implementation
         { cannot have base or index register (we generate these kind of
           references internally, they should never end up here with an
           extra base or offset) }
-        if (ref.refaddr in [addr_gotpage,addr_page]) and
-           ((ref.base<>NR_NO) or
-            (ref.index<>NR_NO)) then
+        if (ref.RefAddr in [addr_gotpage,addr_page]) and
+           ((ref.Base<>NR_NO) or
+            (ref.Index<>NR_NO)) then
           begin
             result:=sr_internal_illegal;
             exit;
@@ -725,35 +725,35 @@ implementation
       begin
         result:=sr_internal_illegal;
         { post-indexed is only allowed for vector and immediate loads/stores }
-        if (ref.addressmode=AM_POSTINDEXED) and
+        if (ref.AddressMode=AM_POSTINDEXED) and
            not((op = A_LD1) or (op = A_LD2) or (op = A_LD3) or (op = A_LD4) or
                (op = A_LD1R) or (op = A_LD2R) or (op = A_LD3R) or (op = A_LD4R) or
                (op = A_ST1) or (op = A_ST2) or (op = A_ST3) or (op = A_ST4)) and
            (not(op in [A_LDR,A_STR,A_LDP,A_STP]) or
-            (ref.base=NR_NO) or
-            (ref.index<>NR_NO)) then
+            (ref.Base=NR_NO) or
+            (ref.Index<>NR_NO)) then
           exit;
 
         { can only have a shift mode if we have an index }
-        if (ref.index=NR_NO) and
-           (ref.shiftmode<>SM_None) then
+        if (ref.Index=NR_NO) and
+           (ref.ShiftMode<>SM_None) then
           exit;
 
         { the index can never be the stack pointer }
-        if ref.index=NR_SP then
+        if ref.Index=NR_SP then
           exit;
 
         { no instruction supports an index without a base }
-        if (ref.base=NR_NO) and
-           (ref.index<>NR_NO) then
+        if (ref.Base=NR_NO) and
+           (ref.Index<>NR_NO) then
           begin
             result:=sr_complex;
             exit;
           end;
 
         { LDR literal or GOT entry: 32 or 64 bit, label }
-        if Assigned(ref.symboldata) or
-           Assigned(ref.symbol) then
+        if Assigned(ref.SymbolData) or
+           Assigned(ref.Symbol) then
           begin
             { we generate these kind of references internally; at least for now,
               they should never end up here with an extra base or offset or so }
@@ -762,7 +762,7 @@ implementation
           end;
 
         { any other reference cannot be gotpage/gotpageoffset/pic }
-        if ref.refaddr in [addr_gotpage,addr_gotpageoffset,addr_page,addr_pageoffset,addr_pic] then
+        if ref.RefAddr in [addr_gotpage,addr_gotpageoffset,addr_page,addr_pageoffset,addr_pic] then
           exit;
 
         { base & index:
@@ -773,20 +773,20 @@ implementation
               access size
             * no pre/post-indexing except for ldN(r)/stN
         }
-        if (ref.base<>NR_NO) and
-           (ref.index<>NR_NO) then
+        if (ref.Base<>NR_NO) and
+           (ref.Index<>NR_NO) then
           begin
             case op of
               { this holds for both integer and fpu/vector loads }
               A_LDR,A_STR:
                 begin
-                  if ref.addressmode in [AM_PREINDEXED,AM_POSTINDEXED] then
+                  if ref.AddressMode in [AM_PREINDEXED,AM_POSTINDEXED] then
                     exit;
-                  if (ref.offset=0) and
-                     (((ref.shiftmode=SM_None) and
-                       (ref.shiftimm=0)) or
-                      ((ref.shiftmode in [SM_LSL,SM_UXTW,SM_SXTW]) and
-                       (ref.shiftimm=tcgsizep2size[size]))) then
+                  if (ref.Offset=0) and
+                     (((ref.ShiftMode=SM_None) and
+                       (ref.ShiftImm=0)) or
+                      ((ref.ShiftMode in [SM_LSL,SM_UXTW,SM_SXTW]) and
+                       (ref.ShiftImm=tcgsizep2size[size]))) then
                     result:=sr_simple
                   else
                     result:=sr_complex;
@@ -795,10 +795,10 @@ implementation
               A_LD1R,A_LD2R,A_LD3R,A_LD4R,
               A_ST1,A_ST2,A_ST3,A_ST4:
                 begin
-                  if ref.addressmode in [AM_PREINDEXED] then
+                  if ref.AddressMode in [AM_PREINDEXED] then
                     exit;
-                  if (ref.offset=0) and
-                     (ref.addressmode=AM_POSTINDEXED) then
+                  if (ref.Offset=0) and
+                     (ref.AddressMode=AM_POSTINDEXED) then
                     result:=sr_simple
                   else
                    result:=sr_complex;
@@ -807,7 +807,7 @@ implementation
               A_LDUR,A_STUR,
               A_LDP,A_STP:
                 begin
-                  if ref.addressmode in [AM_PREINDEXED,AM_POSTINDEXED] then
+                  if ref.AddressMode in [AM_PREINDEXED,AM_POSTINDEXED] then
                     exit;
                   result:=sr_complex;
                 end
@@ -830,23 +830,23 @@ implementation
             * ldN(r)/stN
               - 0 or with postindex
         }
-        if ref.base<>NR_NO then
+        if ref.Base<>NR_NO then
           begin
             accesssize:=1 shl tcgsizep2size[size];
             case op of
               A_LDR,A_STR:
                 begin
-                  if (ref.addressmode=AM_OFFSET) and
-                     (ref.offset>=0) and
-                     (ref.offset<(((1 shl 12)-1)*accesssize)) and
-                     ((ref.offset mod accesssize)=0) then
+                  if (ref.AddressMode=AM_OFFSET) and
+                     (ref.Offset>=0) and
+                     (ref.Offset<(((1 shl 12)-1)*accesssize)) and
+                     ((ref.Offset mod accesssize)=0) then
                     result:=sr_simple
-                  else if (ref.offset>=-256) and
-                     (ref.offset<=255) then
+                  else if (ref.Offset>=-256) and
+                     (ref.Offset<=255) then
                     begin
                       { non pre-/post-indexed regular loads/stores can only be
                         performed using LDUR/STUR }
-                      if ref.addressmode in [AM_PREINDEXED,AM_POSTINDEXED] then
+                      if ref.AddressMode in [AM_PREINDEXED,AM_POSTINDEXED] then
                         result:=sr_simple
                       else
                         result:=sr_complex
@@ -861,21 +861,21 @@ implementation
                   if not(oppostfix in [PF_W,PF_SW,PF_None]) then
                     exit;
                   { offset must be a multiple of the access size }
-                  if (ref.offset mod accesssize)<>0 then
+                  if (ref.Offset mod accesssize)<>0 then
                     exit;
                   { offset must fit in a signed 7 bit offset }
-                  if (ref.offset>=-(1 shl (6+tcgsizep2size[size]))) and
-                     (ref.offset<=(1 shl (6+tcgsizep2size[size]))-1) then
+                  if (ref.Offset>=-(1 shl (6+tcgsizep2size[size]))) and
+                     (ref.Offset<=(1 shl (6+tcgsizep2size[size]))-1) then
                     result:=sr_simple
                   else
                     result:=sr_complex;
                 end;
               A_LDUR,A_STUR:
                 begin
-                  if ref.addressmode in [AM_PREINDEXED,AM_POSTINDEXED] then
+                  if ref.AddressMode in [AM_PREINDEXED,AM_POSTINDEXED] then
                     exit;
-                  if (ref.offset>=-256) and
-                     (ref.offset<=255) then
+                  if (ref.Offset>=-256) and
+                     (ref.Offset<=255) then
                     result:=sr_simple
                   else
                     result:=sr_complex;
@@ -884,12 +884,12 @@ implementation
               A_LD1R,A_LD2R,A_LD3R,A_LD4R,
               A_ST1,A_ST2,A_ST3,A_ST4:
                 begin
-                  if ref.addressmode in [AM_PREINDEXED] then
+                  if ref.AddressMode in [AM_PREINDEXED] then
                     exit;
-                  if (ref.offset=0) or
-                     ((ref.addressmode=AM_POSTINDEXED) and
+                  if (ref.Offset=0) or
+                     ((ref.AddressMode=AM_POSTINDEXED) and
                       { to check the validity of the offset, we'd have to analyse the regset argument }
-                      (ref.offset>0)) then
+                      (ref.Offset>0)) then
                     result:=sr_simple
                   else
                     result:=sr_complex;
@@ -921,8 +921,8 @@ implementation
               A_STXP,
               A_STXR:
                 begin
-                  if (ref.addressmode=AM_OFFSET) and
-                     (ref.offset=0) then
+                  if (ref.AddressMode=AM_OFFSET) and
+                     (ref.Offset=0) then
                     result:=sr_simple;
                 end
               else
@@ -963,7 +963,7 @@ implementation
       end;
 
 
-    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; shiftimm: LongInt): boolean;
+    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; ShiftImm: LongInt): boolean;
       begin
         case opc of
           A_ADD,
@@ -975,12 +975,12 @@ implementation
               if not useszr then
                 result:=
                   (sm in shiftedregmodes) and
-                  (shiftimm in [0..31*(ord(is64bit)+1)+ord(is64bit)]);
+                  (ShiftImm in [0..31*(ord(is64bit)+1)+ord(is64bit)]);
               if not usessp then
                 result:=
                   result or
                   ((sm in extendedregmodes) and
-                   (shiftimm in [0..31*(ord(is64bit)+1)+ord(is64bit)]));
+                   (ShiftImm in [0..31*(ord(is64bit)+1)+ord(is64bit)]));
             end;
           A_AND,
           A_BIC,
@@ -993,15 +993,15 @@ implementation
           A_TST:
             result:=
               (sm in logicalshiftedregmodes) and
-              (shiftimm in [0..31*(ord(is64bit)+1)+ord(is64bit)]);
+              (ShiftImm in [0..31*(ord(is64bit)+1)+ord(is64bit)]);
           A_MOVK,
           A_MOVZ,
           A_MOVN:
             result:=
               (sm=SM_LSL) and
-              ((shiftimm in [0,16]) or
+              ((ShiftImm in [0,16]) or
                (is64bit and
-                (shiftimm in [32,48])));
+                (ShiftImm in [32,48])));
           else
             result:=false;
         end;
@@ -1012,9 +1012,9 @@ implementation
       var
         op: TAsmOp;
       begin
-        if (ref.index<>NR_NO) or
-           (ref.offset<-256) or
-           (ref.offset>255) then
+        if (ref.Index<>NR_NO) or
+           (ref.Offset<-256) or
+           (ref.Offset>255) then
           op:=A_LDR
         else
           op:=A_LDUR;
@@ -1026,9 +1026,9 @@ implementation
       var
         op: TAsmOp;
       begin
-        if (ref.index<>NR_NO) or
-           (ref.offset<-256) or
-           (ref.offset>255) then
+        if (ref.Index<>NR_NO) or
+           (ref.Offset<-256) or
+           (ref.Offset>255) then
           op:=A_STR
         else
           op:=A_STUR;
@@ -1170,8 +1170,8 @@ implementation
     function TAICPU.spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;
       begin
         result:=operand_read;
-        if (oper[opnr]^.ref^.base = reg) and
-          (oper[opnr]^.ref^.addressmode in [AM_PREINDEXED,AM_POSTINDEXED]) then
+        if (oper[opnr]^.Ref^.Base = reg) and
+          (oper[opnr]^.Ref^.AddressMode in [AM_PREINDEXED,AM_POSTINDEXED]) then
            result:=operand_readwrite;
       end;
 

@@ -65,17 +65,17 @@ class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: TModule; Entries
         sr: TSuperRegister;
     begin
         { generate `stp x29, x30, [sp, #-16]!` }
-        reference_reset_base(ref, NR_SP, -16, ctempposinvalid, 16, []);
-        ref.addressmode := AM_PREINDEXED;
+        Reference_Reset_Base(ref, NR_SP, -16, CTempPosInvalid, 16, []);
+        ref.AddressMode := AM_PREINDEXED;
 
         rt := R_INTREGISTER;
         sub := R_SUBWHOLE;
 
         sr := RS_X29;
-        pairreg := newreg(rt, sr, sub);
+        pairreg := NewReg(rt, sr, sub);
 
         sr := RS_X30;
-        List.Concat(TAICPU.op_reg_reg_ref(A_STP, pairreg, newreg(rt, sr, sub), ref));
+        List.Concat(TAICPU.op_reg_reg_ref(A_STP, pairreg, NewReg(rt, sr, sub), ref));
 
         { TODO: generate `mov x29, sp` maybe? }
     end;
@@ -89,18 +89,18 @@ class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: TModule; Entries
         sr: TSuperRegister;
     begin
         { generate `ldp x29, x30, [sp], #16` }
-        reference_reset_base(ref, NR_SP, 16, ctempposinvalid, 16, []);
-        ref.addressmode := AM_POSTINDEXED;
+        Reference_Reset_Base(ref, NR_SP, 16, CTempPosInvalid, 16, []);
+        ref.AddressMode := AM_POSTINDEXED;
 
         rt := R_INTREGISTER;
         sub := R_SUBWHOLE;
 
         { these are backwards compared to GenEntry intentionally }
         sr := RS_X30;
-        pairreg := newreg(rt, sr, sub);
+        pairreg := NewReg(rt, sr, sub);
 
         sr := RS_X29;
-        List.Concat(TAICPU.op_reg_reg_ref(A_LDP, newreg(rt, sr, sub), pairreg, ref));
+        List.Concat(TAICPU.op_reg_reg_ref(A_LDP, NewReg(rt, sr, sub), pairreg, ref));
 
         { generate `ret` }
         List.Concat(TAICPU.op_none(A_RET));

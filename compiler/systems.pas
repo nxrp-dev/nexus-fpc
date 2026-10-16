@@ -115,7 +115,7 @@ interface
           rcbin   : string[10];
           rccmd   : string[50];
           resourcefileclass : TAbstractResourceFileClass;
-          resflags : set of TResInfoFlags;
+          ResFlags : set of TResInfoFlags;
        end;
 
        PDbgInfo = ^TDbgInfo;

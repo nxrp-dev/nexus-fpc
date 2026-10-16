@@ -27,27 +27,27 @@ unit cpupara;
 
     uses
        GlobType,
-       aasmtai,AAsmData,cpubase,cgbase,cgutils,
-       symconst,symtype,SymSym,symdef,
-       parabase,paramgr;
+       AAsmTAI,AAsmData,CPUBase,CGBase,CGUtils,
+       SymConst,SymType,SymSym,SymDef,
+       ParaBase,ParaMgr;
 
     type
        TCPUParaManager = class(TParaManager)
-          function param_use_paraloc(const cgpara:TCGPara):boolean;override;
-          function ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;override;
-          function push_addr_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;override;
-          function get_para_align(calloption : TProcCallOption):byte;override;
-          function get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;override;
-          function get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;override;
-          function get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;override;
-          function get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;override;
-          function create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):LongInt;override;
-          function create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;override;
-          procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);override;
-          function get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;override;
+          function Param_Use_ParaLoc(const CGPara:TCGPara):Boolean;override;
+          function Ret_In_Param(Def:TDef;PD:TAbstractProcDef):Boolean;override;
+          function Push_Addr_Param(VarSpez:TVarSpez;Def : TDef;CallOption : TProcCallOption) : Boolean;override;
+          function Get_Para_Align(CallOption : TProcCallOption):Byte;override;
+          function Get_Volatile_Registers_Int(CallOption : TProcCallOption):TCPURegisterSet;override;
+          function Get_Volatile_Registers_FPU(CallOption : TProcCallOption):TCPURegisterSet;override;
+          function Get_Volatile_Registers_MM(CallOption : TProcCallOption):TCPURegisterSet;override;
+          function Get_Saved_Registers_Int(CallOption : TProcCallOption):TCPURegisterArray;override;
+          function Create_ParaLoc_Info(P : TAbstractProcDef; Side: TCallerCallee):LongInt;override;
+          function Create_VarArgs_ParaLoc_Info(P : TAbstractProcDef; Side: TCallerCallee; VarArgsPara:TVarArgsParaList):LongInt;override;
+          procedure CreateTempParaLoc(List: TAsmList;CallOption : TProcCallOption;ParaSym : TParaVarSym;CanUseFinalStackLoc : Boolean;var CGPara:TCGPara);override;
+          function Get_FuncRetLoc(P : TAbstractProcDef; Side: TCallerCallee; ForceTempDef: TDef): TCGPara;override;
        private
-          procedure create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parasize:LongInt);
-          procedure create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parareg,parasize:LongInt);
+          procedure CreateStdCallParaLocInfo(P : TAbstractProcDef; Side: TCallerCallee;Paras:TParaList;var ParaSize:LongInt);
+          procedure CreateRegisterParaLocInfo(P : TAbstractProcDef; Side: TCallerCallee;Paras:TParaList;var ParaReg,ParaSize:LongInt);
        end;
 
 
@@ -57,60 +57,60 @@ unit cpupara;
        CUtils,SysUtils,
        Systems,Verbose,
        SymTable,
-       Globals,defutil;
+       Globals,DefUtil;
 
       const
-        parasupregs : array[0..2] of TSuperRegister = (RS_EAX,RS_EDX,RS_ECX);
+        ParaSupRegs : array[0..2] of TSuperRegister = (RS_EAX,RS_EDX,RS_ECX);
 
 {****************************************************************************
                                 tcpuparamanager
 ****************************************************************************}
 
-    function TCPUParaManager.param_use_paraloc(const cgpara:TCGPara):boolean;
+    function TCPUParaManager.Param_Use_ParaLoc(const CGPara:TCGPara):Boolean;
       var
         ParaLoc : PCGParaLocation;
       begin
-        if not Assigned(cgpara.location) then
+        if not Assigned(CGPara.Location) then
           InternalError(200410102);
-        result:=true;
+        Result:=True;
         { All locations are LOC_REFERENCE }
-        ParaLoc:=cgpara.location;
+        ParaLoc:=CGPara.Location;
         while Assigned(ParaLoc) do
           begin
-            if (ParaLoc^.loc<>LOC_REFERENCE) then
+            if (ParaLoc^.Loc<>LOC_REFERENCE) then
               begin
-                result:=false;
-                exit;
+                Result:=False;
+                Exit;
               end;
-            ParaLoc:=ParaLoc^.next;
+            ParaLoc:=ParaLoc^.Next;
           end;
       end;
 
 
-    function TCPUParaManager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
+    function TCPUParaManager.Ret_In_Param(Def:TDef;PD:TAbstractProcDef):Boolean;
       var
-        size: LongInt;
+        Size: LongInt;
       begin
-        if handle_common_ret_in_param(def,pd,result) then
-          exit;
-        case TargetInfo.system of
+        if Handle_Common_Ret_In_Param(Def,PD,Result) then
+          Exit;
+        case TargetInfo.System of
           system_i386_win32 :
             begin
-              case def.typ of
-                recorddef :
+              case Def.Typ of
+                RecordDef :
                   begin
                     { Win32 GCC returns small records in the FUNCTION_RETURN_REG up to 8 bytes in registers.
 
                       For stdcall and register we follow delphi instead of GCC which returns
                       only records of a size of 1,2 or 4 bytes in FUNCTION_RETURN_REG }
-                    if ((pd.ProcCallOption in [pocall_stdcall,pocall_register]) and
-                        (def.size in [1,2,4])) or
-                       ((pd.ProcCallOption in cdecl_pocalls) and
-                        (def.size>0) and
-                        (def.size<=8)) then
+                    if ((PD.ProcCallOption in [pocall_stdcall,pocall_register]) and
+                        (Def.Size in [1,2,4])) or
+                       ((PD.ProcCallOption in CDecl_PoCalls) and
+                        (Def.Size>0) and
+                        (Def.Size<=8)) then
                      begin
-                       result:=false;
-                       exit;
+                       Result:=False;
+                       Exit;
                      end;
                   end;
                 else
@@ -120,25 +120,25 @@ unit cpupara;
           system_i386_darwin,
           system_i386_iphonesim :
             begin
-              if pd.ProcCallOption in cdecl_pocalls then
+              if PD.ProcCallOption in CDecl_PoCalls then
                 begin
-                  case def.typ of
-                    recorddef :
+                  case Def.Typ of
+                    RecordDef :
                       begin
-                        size:=def.size;
-                        if (size>0) and
-                           (size<=8) and
+                        Size:=Def.Size;
+                        if (Size>0) and
+                           (Size<=8) and
                            { only if size is a power of 2 }
-                           ((size and (size-1)) = 0) then
+                           ((Size and (Size-1)) = 0) then
                           begin
-                            result:=false;
-                            exit;
+                            Result:=False;
+                            Exit;
                           end;
                       end;
-                    procvardef:
+                    ProcVarDef:
                       begin
-                        result:=false;
-                        exit;
+                        Result:=False;
+                        Exit;
                       end;
                     else
                       ;
@@ -148,22 +148,22 @@ unit cpupara;
           else
             ;
         end;
-        result:=inherited ret_in_param(def,pd);
+        Result:=inherited Ret_In_Param(Def,PD);
       end;
 
 
-    function TCPUParaManager.push_addr_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
+    function TCPUParaManager.Push_Addr_Param(VarSpez:TVarSpez;Def : TDef;CallOption : TProcCallOption) : Boolean;
       begin
-        result:=false;
+        Result:=False;
         { var,out,constref always require address }
         if VarSpez in [vs_var,vs_out,vs_constref] then
           begin
-            result:=true;
-            exit;
+            Result:=True;
+            Exit;
           end;
         { Only vs_const, vs_value here }
-        case def.typ of
-          variantdef :
+        case Def.Typ of
+          VariantDef :
             begin
               { variants are small enough to be passed by value except if
                 required by the windows api
@@ -171,76 +171,76 @@ unit cpupara;
                 variants are somethings very delphi/windows specific so do it like
                 windows/delphi (FK)
               }
-              if ((TargetInfo.system=system_i386_win32) and
-                 (calloption in [pocall_stdcall,pocall_safecall]) and
+              if ((TargetInfo.System=system_i386_win32) and
+                 (CallOption in [pocall_stdcall,pocall_safecall]) and
                  (VarSpez=vs_const)) or
-                 (calloption=pocall_register) then
-                result:=true
+                 (CallOption=pocall_register) then
+                Result:=True
               else
-                result:=false;
+                Result:=False;
             end;
-          formaldef :
-            result:=true;
-          recorddef :
+          FormalDef :
+            Result:=True;
+          RecordDef :
             begin
               { Delphi stdcall passes records on the stack for call by value }
-              if (TargetInfo.system=system_i386_win32) and
-                 (calloption=pocall_stdcall) and
+              if (TargetInfo.System=system_i386_win32) and
+                 (CallOption=pocall_stdcall) and
                  (VarSpez=vs_value) then
-                result:=false
+                Result:=False
               else
-                result:=
-                  (not(calloption in (cdecl_pocalls)) and
-                   (def.size>sizeof(aint))) or
-                  ((calloption = pocall_mwpascal) and
+                Result:=
+                  (not(CallOption in (CDecl_PoCalls)) and
+                   (Def.Size>SizeOf(AInt))) or
+                  ((CallOption = pocall_mwpascal) and
                    (VarSpez=vs_const));
             end;
-          arraydef :
+          ArrayDef :
             begin
               { array of const values are pushed on the stack as
                 well as dyn. arrays }
-              if (calloption in cdecl_pocalls) then
-                result:=not(is_array_of_const(def) or
-                        is_dynamic_array(def))
+              if (CallOption in CDecl_PoCalls) then
+                Result:=not(Is_Array_Of_Const(Def) or
+                        Is_Dynamic_Array(Def))
               else
                 begin
-                  result:=(
-                           (TArrayDef(def).HighRange>=TArrayDef(def).LowRange) and
-                           (def.size>sizeof(aint))
+                  Result:=(
+                           (TArrayDef(Def).HighRange>=TArrayDef(Def).LowRange) and
+                           (Def.Size>SizeOf(AInt))
                           ) or
-                          is_open_array(def) or
-                          is_array_of_const(def) or
-                          is_array_constructor(def);
+                          Is_Open_Array(Def) or
+                          Is_Array_Of_Const(Def) or
+                          Is_Array_Constructor(Def);
                 end;
             end;
-          objectdef :
-            result:=Is_Object(def);
-          stringdef :
-            result:= (TStringDef(def).StringType in [st_shortstring,st_longstring]);
-          procvardef :
-            result:=not(calloption in cdecl_pocalls) and not TProcVarDef(def).Is_AddressOnly;
-          setdef :
-            result:=not(calloption in cdecl_pocalls) and (not is_smallset(def));
+          ObjectDef :
+            Result:=Is_Object(Def);
+          StringDef :
+            Result:= (TStringDef(Def).StringType in [st_shortstring,st_longstring]);
+          ProcVarDef :
+            Result:=not(CallOption in CDecl_PoCalls) and not TProcVarDef(Def).Is_AddressOnly;
+          SetDef :
+            Result:=not(CallOption in CDecl_PoCalls) and (not Is_SmallSet(Def));
           else
             ;
         end;
       end;
 
 
-    function TCPUParaManager.get_para_align(calloption : TProcCallOption):byte;
+    function TCPUParaManager.Get_Para_Align(CallOption : TProcCallOption):Byte;
       begin
-        if calloption=pocall_oldfpccall then
-          result:=4
+        if CallOption=pocall_oldfpccall then
+          Result:=4
         else
-          result:=std_param_align;
+          Result:=std_param_align;
       end;
 
 
-    function TCPUParaManager.get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;
+    function TCPUParaManager.Get_Volatile_Registers_Int(CallOption : TProcCallOption):TCPURegisterSet;
       begin
-        case calloption of
+        case CallOption of
           pocall_internproc :
-            result:=[];
+            Result:=[];
           pocall_register,
           pocall_safecall,
           pocall_stdcall,
@@ -249,34 +249,34 @@ unit cpupara;
           pocall_cppdecl,
           pocall_mwpascal,
           pocall_pascal:
-            result:=[RS_EAX,RS_EDX,RS_ECX];
+            Result:=[RS_EAX,RS_EDX,RS_ECX];
           pocall_far16,
           pocall_oldfpccall :
-            result:=[RS_EAX,RS_EDX,RS_ECX,RS_ESI,RS_EDI,RS_EBX];
+            Result:=[RS_EAX,RS_EDX,RS_ECX,RS_ESI,RS_EDI,RS_EBX];
           else
             InternalError(200309071);
         end;
       end;
 
 
-    function TCPUParaManager.get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;
+    function TCPUParaManager.Get_Volatile_Registers_FPU(CallOption : TProcCallOption):TCPURegisterSet;
       begin
-        result:=[0..first_fpu_imreg-1];
+        Result:=[0..first_fpu_imreg-1];
       end;
 
 
-    function TCPUParaManager.get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;
+    function TCPUParaManager.Get_Volatile_Registers_MM(CallOption : TProcCallOption):TCPURegisterSet;
       begin
-        result:=[0..first_mm_imreg-1];
+        Result:=[0..first_mm_imreg-1];
       end;
 
 
-    function TCPUParaManager.get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;
+    function TCPUParaManager.Get_Saved_Registers_Int(CallOption : TProcCallOption):TCPURegisterArray;
       const
-        saveregs : TCPURegisterArray = (RS_EBX,RS_ESI,RS_EDI,RS_EBP);
-        saveregs_oldfpccall : TCPURegisterArray = (RS_EBP);
+        SaveRegs : TCPURegisterArray = (RS_EBX,RS_ESI,RS_EDI,RS_EBP);
+        SaveRegsOldFPCCall : TCPURegisterArray = (RS_EBP);
       begin
-        case calloption of
+        case CallOption of
           pocall_internproc,
           pocall_register,
           pocall_safecall,
@@ -286,127 +286,127 @@ unit cpupara;
           pocall_cppdecl,
           pocall_mwpascal,
           pocall_pascal:
-            result:=saveregs;
+            Result:=SaveRegs;
           pocall_far16,
           pocall_oldfpccall :
-            result:=saveregs_oldfpccall;
+            Result:=SaveRegsOldFPCCall;
           else
             InternalError(2018050401);
         end;
       end;
 
 
-    function  TCPUParaManager.get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;
+    function  TCPUParaManager.Get_FuncRetLoc(P : TAbstractProcDef; Side: TCallerCallee; ForceTempDef: TDef): TCGPara;
       var
-        retcgsize  : TCgSize;
+        RetCGSize  : TCgSize;
         ParaLoc : PCGParaLocation;
-        fdef,
-        usedef: TDef;
-        handled: boolean;
+        FDef,
+        UseDef: TDef;
+        Handled: Boolean;
       begin
-        if not Assigned(forcetempdef) then
-          usedef:=p.ReturnDef
+        if not Assigned(ForceTempDef) then
+          UseDef:=P.ReturnDef
         else
-          usedef:=forcetempdef;
+          UseDef:=ForceTempDef;
         { on darwin/i386, if a record has only one field and that field is a
           single or double, it has to be returned like a single/double }
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-           ((usedef.typ=recorddef) or
-            Is_Object(usedef)) and
-           TAbstractRecordSymTable(TAbstractRecordDef(usedef).SymTable).Has_Single_Field(fdef) and
-           (fdef.typ=floatdef) and
-           (TFloatDef(fdef).FloatType in [S32Real,S64Real]) then
-          usedef:=fdef;
+        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
+           ((UseDef.Typ=RecordDef) or
+            Is_Object(UseDef)) and
+           TAbstractRecordSymTable(TAbstractRecordDef(UseDef).SymTable).Has_Single_Field(FDef) and
+           (FDef.Typ=FloatDef) and
+           (TFloatDef(FDef).FloatType in [S32Real,S64Real]) then
+          UseDef:=FDef;
 
-        handled:=set_common_funcretloc_info(p,usedef,retcgsize,result);
+        Handled:=Set_Common_FuncRetLoc_Info(P,UseDef,RetCGSize,Result);
         { normally forcetempdef is passed straight through to
           set_common_funcretloc_info and that one will correctly determine whether
           the location is a temporary one, but that doesn't work here because we
           sometimes have to change the type }
-        result.temporary:=Assigned(forcetempdef);
-        if handled then
-          exit;
+        Result.Temporary:=Assigned(ForceTempDef);
+        if Handled then
+          Exit;
 
         { darwin/x86 requires that results < sizeof(aint) are sign/zero
           extended to sizeof(aint) }
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-           (side=calleeside) and
-           (result.intsize>0) and
-           (result.intsize<sizeof(aint)) then
+        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
+           (Side=CalleeSide) and
+           (Result.IntSize>0) and
+           (Result.IntSize<SizeOf(AInt)) then
           begin
-            result.def:=SIntType;
-            result.intsize:=sizeof(aint);
-            retcgsize:=OS_SINT;
-            result.size:=retcgsize;
+            Result.Def:=SIntType;
+            Result.IntSize:=SizeOf(AInt);
+            RetCGSize:=OS_SINT;
+            Result.Size:=RetCGSize;
           end;
 
         { Return in FPU register? }
-        if result.def.typ=floatdef then
+        if Result.Def.Typ=FloatDef then
           begin
-            ParaLoc:=result.add_location;
-            ParaLoc^.loc:=LOC_FPUREGISTER;
-            ParaLoc^.register:=NR_FPU_RESULT_REG;
-            ParaLoc^.size:=retcgsize;
-            ParaLoc^.def:=result.def;
+            ParaLoc:=Result.Add_Location;
+            ParaLoc^.Loc:=LOC_FPUREGISTER;
+            ParaLoc^.Register:=NR_FPU_RESULT_REG;
+            ParaLoc^.Size:=RetCGSize;
+            ParaLoc^.Def:=Result.Def;
           end
         else
          { Return in register }
           begin
-            ParaLoc:=result.add_location;
-            ParaLoc^.loc:=LOC_REGISTER;
-            if retcgsize in [OS_64,OS_S64] then
+            ParaLoc:=Result.Add_Location;
+            ParaLoc^.Loc:=LOC_REGISTER;
+            if RetCGSize in [OS_64,OS_S64] then
              begin
                { low 32bits }
-               if side=callerside then
-                 ParaLoc^.register:=NR_FUNCTION_RESULT64_LOW_REG
+               if Side=CallerSide then
+                 ParaLoc^.Register:=NR_FUNCTION_RESULT64_LOW_REG
                else
-                 ParaLoc^.register:=NR_FUNCTION_RETURN64_LOW_REG;
-               ParaLoc^.size:=OS_32;
-               ParaLoc^.def:=U32IntType;
+                 ParaLoc^.Register:=NR_FUNCTION_RETURN64_LOW_REG;
+               ParaLoc^.Size:=OS_32;
+               ParaLoc^.Def:=U32IntType;
 
                { high 32bits }
-               ParaLoc:=result.add_location;
-               ParaLoc^.loc:=LOC_REGISTER;
-               if side=callerside then
-                 ParaLoc^.register:=NR_FUNCTION_RESULT64_HIGH_REG
+               ParaLoc:=Result.Add_Location;
+               ParaLoc^.Loc:=LOC_REGISTER;
+               if Side=CallerSide then
+                 ParaLoc^.Register:=NR_FUNCTION_RESULT64_HIGH_REG
                else
-                 ParaLoc^.register:=NR_FUNCTION_RETURN64_HIGH_REG;
-               ParaLoc^.size:=OS_32;
-               ParaLoc^.def:=U32IntType;
+                 ParaLoc^.Register:=NR_FUNCTION_RETURN64_HIGH_REG;
+               ParaLoc^.Size:=OS_32;
+               ParaLoc^.Def:=U32IntType;
              end
             else
              begin
-               ParaLoc^.size:=retcgsize;
-               ParaLoc^.def:=result.def;
-               if side=callerside then
-                 ParaLoc^.register:=newreg(R_INTREGISTER,RS_FUNCTION_RESULT_REG,cgsize2subreg(R_INTREGISTER,retcgsize))
+               ParaLoc^.Size:=RetCGSize;
+               ParaLoc^.Def:=Result.Def;
+               if Side=CallerSide then
+                 ParaLoc^.Register:=NewReg(R_INTREGISTER,RS_FUNCTION_RESULT_REG,CGSize2SubReg(R_INTREGISTER,RetCGSize))
                else
-                 ParaLoc^.register:=newreg(R_INTREGISTER,RS_FUNCTION_RETURN_REG,cgsize2subreg(R_INTREGISTER,retcgsize));
+                 ParaLoc^.Register:=NewReg(R_INTREGISTER,RS_FUNCTION_RETURN_REG,CGSize2SubReg(R_INTREGISTER,RetCGSize));
              end;
           end;
       end;
 
 
-    procedure TCPUParaManager.create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parasize:LongInt);
+    procedure TCPUParaManager.CreateStdCallParaLocInfo(P : TAbstractProcDef; Side: TCallerCallee;Paras:TParaList;var ParaSize:LongInt);
       var
-        i  : integer;
-        hp : TParaVarSym;
-        paradef : TDef;
+        I  : Integer;
+        HP : TParaVarSym;
+        ParaDef : TDef;
         ParaLoc : PCGParaLocation;
-        l,
-        paralen,
-        varalign   : LongInt;
-        paraalign  : shortint;
-        paracgsize : TCgSize;
-        firstparaloc,
-        pushaddr   : boolean;
+        L,
+        ParaLen,
+        VarAlign   : LongInt;
+        ParaAlign  : ShortInt;
+        ParaCGSize : TCgSize;
+        FirstParaLoc,
+        PushAddr   : Boolean;
       begin
-        paraalign:=get_para_align(p.ProcCallOption);
+        ParaAlign:=Get_Para_Align(P.ProcCallOption);
         { we push Flags and CS as long
           to cope with the IRETD
           and we save 6 register + 4 selectors }
-        if (po_interrupt in p.ProcOptions) and (side=calleeside) then
-          inc(parasize,8+6*4+4*2);
+        if (po_interrupt in P.ProcOptions) and (Side=CalleeSide) then
+          Inc(ParaSize,8+6*4+4*2);
         { Offset is calculated like:
            sub esp,12
            mov [esp+8],para3
@@ -416,195 +416,195 @@ unit cpupara;
           That means for pushes the para with the
           highest offset (see para3) needs to be pushed first
         }
-        if p.ProcCallOption in pushleftright_pocalls then
-          i:=paras.count-1
+        if P.ProcCallOption in PushLeftRight_PoCalls then
+          I:=Paras.Count-1
         else
-          i:=0;
-        while ((p.ProcCallOption in pushleftright_pocalls) and (i>=0)) or
-              (not(p.ProcCallOption in pushleftright_pocalls) and (i<=paras.count-1)) do
+          I:=0;
+        while ((P.ProcCallOption in PushLeftRight_PoCalls) and (I>=0)) or
+              (not(P.ProcCallOption in PushLeftRight_PoCalls) and (I<=Paras.Count-1)) do
           begin
-            hp:=TParaVarSym(paras[i]);
-            paradef:=hp.vardef;
+            HP:=TParaVarSym(Paras[I]);
+            ParaDef:=HP.VarDef;
 
             { syscall for AROS can have already a paraloc set }
-            if (vo_has_explicit_paraloc in hp.VarOptions) then
+            if (vo_has_explicit_paraloc in HP.VarOptions) then
               begin
                 { on AROS-i386, only the libbase can have explicit paraloc }
-                if not (vo_is_syscall_lib in hp.VarOptions) then
+                if not (vo_is_syscall_lib in HP.VarOptions) then
                   InternalError(2016090105);
-                if p.ProcCallOption in pushleftright_pocalls then
-                  dec(i)
+                if P.ProcCallOption in PushLeftRight_PoCalls then
+                  Dec(I)
                 else
-                  inc(i);
-                continue;
+                  Inc(I);
+                Continue;
               end;
 
-            pushaddr:=push_addr_param(hp.VarSpez,paradef,p.ProcCallOption);
-            if pushaddr then
+            PushAddr:=Push_Addr_Param(HP.VarSpez,ParaDef,P.ProcCallOption);
+            if PushAddr then
               begin
-                paralen:=sizeof(aint);
-                paracgsize:=OS_ADDR;
-                paradef:=CPointerDef.GetReusable_No_Free(paradef);
+                ParaLen:=SizeOf(AInt);
+                ParaCGSize:=OS_ADDR;
+                ParaDef:=CPointerDef.GetReusable_No_Free(ParaDef);
               end
             else
               begin
-                paralen:=push_size(hp.VarSpez,paradef,p.ProcCallOption);
-                paracgsize:=def_cgsize(paradef);
+                ParaLen:=Push_Size(HP.VarSpez,ParaDef,P.ProcCallOption);
+                ParaCGSize:=Def_CGSize(ParaDef);
               end;
-            hp.ParaLoc[side].reset;
-            hp.ParaLoc[side].size:=paracgsize;
-            hp.ParaLoc[side].intsize:=paralen;
-            hp.ParaLoc[side].def:=paradef;
-            hp.ParaLoc[side].Alignment:=paraalign;
+            HP.ParaLoc[Side].Reset;
+            HP.ParaLoc[Side].Size:=ParaCGSize;
+            HP.ParaLoc[Side].IntSize:=ParaLen;
+            HP.ParaLoc[Side].Def:=ParaDef;
+            HP.ParaLoc[Side].Alignment:=ParaAlign;
             { darwin/x86 requires that parameters < sizeof(aint) are sign/ }
             { zero extended to sizeof(aint)                                }
-            if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-               (side = callerside) and
-               (paralen > 0) and
-               (paralen < sizeof(aint)) then
+            if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
+               (Side = CallerSide) and
+               (ParaLen > 0) and
+               (ParaLen < SizeOf(AInt)) then
               begin
-                paracgsize:=OS_SINT;
-                paradef:=SIntType;
+                ParaCGSize:=OS_SINT;
+                ParaDef:=SIntType;
               end;
             { Copy to stack? }
-            if (paracgsize=OS_NO) or
-               (use_fixed_stack) then
+            if (ParaCGSize=OS_NO) or
+               (Use_Fixed_Stack) then
               begin
-                ParaLoc:=hp.ParaLoc[side].add_location;
-                ParaLoc^.loc:=LOC_REFERENCE;
-                ParaLoc^.size:=paracgsize;
-                ParaLoc^.def:=paradef;
-                if side=callerside then
-                  ParaLoc^.reference.index:=NR_STACK_POINTER_REG
+                ParaLoc:=HP.ParaLoc[Side].Add_Location;
+                ParaLoc^.Loc:=LOC_REFERENCE;
+                ParaLoc^.Size:=ParaCGSize;
+                ParaLoc^.Def:=ParaDef;
+                if Side=CallerSide then
+                  ParaLoc^.Reference.Index:=NR_STACK_POINTER_REG
                 else
-                  ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
-                varalign:=Used_Align(Size_2_Align(paralen),paraalign,paraalign);
+                  ParaLoc^.Reference.Index:=NR_FRAME_POINTER_REG;
+                VarAlign:=Used_Align(Size_2_Align(ParaLen),ParaAlign,ParaAlign);
 
                 { don't let push_size return 16, because then we can    }
                 { read past the end of the heap since the value is only }
                 { 10 bytes long (JM)                                    }
-                if (paracgsize = OS_F80) and
-                   (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
-                  paralen:=16;
-                ParaLoc^.reference.offset:=parasize;
-                if side=calleeside then
-                  inc(ParaLoc^.reference.offset,TargetInfo.first_parm_offset);
-                parasize:=align(parasize+paralen,varalign);
+                if (ParaCGSize = OS_F80) and
+                   (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) then
+                  ParaLen:=16;
+                ParaLoc^.Reference.Offset:=ParaSize;
+                if Side=CalleeSide then
+                  Inc(ParaLoc^.Reference.Offset,TargetInfo.first_parm_offset);
+                ParaSize:=Align(ParaSize+ParaLen,VarAlign);
               end
             else
               begin
-                if paralen=0 then
+                if ParaLen=0 then
                   InternalError(2005011606);
-                firstparaloc:=true;
-                while (paralen>0) do
+                FirstParaLoc:=True;
+                while (ParaLen>0) do
                   begin
-                    ParaLoc:=hp.ParaLoc[side].add_location;
-                    ParaLoc^.loc:=LOC_REFERENCE;
+                    ParaLoc:=HP.ParaLoc[Side].Add_Location;
+                    ParaLoc^.Loc:=LOC_REFERENCE;
                     { single and double need a single location }
-                    if (paracgsize in [OS_F64,OS_F32]) then
+                    if (ParaCGSize in [OS_F64,OS_F32]) then
                       begin
-                        ParaLoc^.size:=paracgsize;
-                        ParaLoc^.def:=paradef;
-                        l:=paralen;
+                        ParaLoc^.Size:=ParaCGSize;
+                        ParaLoc^.Def:=ParaDef;
+                        L:=ParaLen;
                       end
                     else
                       begin
                         { We can allocate at maximum 32 bits per location }
-                        if paralen>sizeof(aint) then
+                        if ParaLen>SizeOf(AInt) then
                           begin
-                            l:=sizeof(aint);
-                            ParaLoc^.def:=UIntType;
+                            L:=SizeOf(AInt);
+                            ParaLoc^.Def:=UIntType;
                           end
                         else
                           begin
-                            l:=paralen;
-                            ParaLoc^.def:=get_paraloc_def(paradef,l,firstparaloc);
+                            L:=ParaLen;
+                            ParaLoc^.Def:=Get_ParaLoc_Def(ParaDef,L,FirstParaLoc);
                           end;
-                        ParaLoc^.size:=int_cgsize(l);
+                        ParaLoc^.Size:=Int_CGSize(L);
                       end;
-                    if (side=callerside) or
-                       (po_nostackframe in p.ProcOptions) then
-                      ParaLoc^.reference.index:=NR_STACK_POINTER_REG
+                    if (Side=CallerSide) or
+                       (po_nostackframe in P.ProcOptions) then
+                      ParaLoc^.Reference.Index:=NR_STACK_POINTER_REG
                     else
-                      ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
-                    varalign:=Used_Align(Size_2_Align(l),paraalign,paraalign);
-                    ParaLoc^.reference.offset:=parasize;
-                    if side=calleeside then
-                      if not(po_nostackframe in p.ProcOptions) then
-                        inc(ParaLoc^.reference.offset,TargetInfo.first_parm_offset)
+                      ParaLoc^.Reference.Index:=NR_FRAME_POINTER_REG;
+                    VarAlign:=Used_Align(Size_2_Align(L),ParaAlign,ParaAlign);
+                    ParaLoc^.Reference.Offset:=ParaSize;
+                    if Side=CalleeSide then
+                      if not(po_nostackframe in P.ProcOptions) then
+                        Inc(ParaLoc^.Reference.Offset,TargetInfo.first_parm_offset)
                       else
                         { return address }
-                        inc(ParaLoc^.reference.offset,4);
-                    parasize:=align(parasize+l,varalign);
-                    dec(paralen,l);
-                    firstparaloc:=false;
+                        Inc(ParaLoc^.Reference.Offset,4);
+                    ParaSize:=Align(ParaSize+L,VarAlign);
+                    Dec(ParaLen,L);
+                    FirstParaLoc:=False;
                   end;
               end;
-            if p.ProcCallOption in pushleftright_pocalls then
-              dec(i)
+            if P.ProcCallOption in PushLeftRight_PoCalls then
+              Dec(I)
             else
-              inc(i);
+              Inc(I);
           end;
       end;
 
 
-    procedure TCPUParaManager.create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;
-                                                            var parareg,parasize:LongInt);
+    procedure TCPUParaManager.CreateRegisterParaLocInfo(P : TAbstractProcDef; Side: TCallerCallee;Paras:TParaList;
+                                                            var ParaReg,ParaSize:LongInt);
       var
-        hp : TParaVarSym;
-        paradef : TDef;
+        HP : TParaVarSym;
+        ParaDef : TDef;
         ParaLoc : PCGParaLocation;
-        paracgsize : TCgSize;
-        i : integer;
-        l,
-        paralen,
-        varalign : LongInt;
-        paraalign : shortint;
-        pass : byte;
-        firstparaloc,
-        pushaddr : boolean;
+        ParaCGSize : TCgSize;
+        I : Integer;
+        L,
+        ParaLen,
+        VarAlign : LongInt;
+        ParaAlign : ShortInt;
+        Pass : Byte;
+        FirstParaLoc,
+        PushAddr : Boolean;
       begin
-        if paras.count=0 then
-          exit;
-        paraalign:=get_para_align(p.ProcCallOption);
+        if Paras.Count=0 then
+          Exit;
+        ParaAlign:=Get_Para_Align(P.ProcCallOption);
 
         { clean up here so we can later detect properly if a parameter has been
           assigned or not
         }
-        for i:=0 to paras.count-1 do
-          TParaVarSym(paras[i]).ParaLoc[side].reset;
+        for I:=0 to Paras.Count-1 do
+          TParaVarSym(Paras[I]).ParaLoc[Side].Reset;
         { Register parameters are assigned from left to right,
           stack parameters from right to left so assign first the
           register parameters in a first pass, in the second
           pass all unhandled parameters are done }
-        for pass:=1 to 2 do
+        for Pass:=1 to 2 do
           begin
-            if pass=1 then
-              i:=0
+            if Pass=1 then
+              I:=0
             else
-              i:=paras.count-1;
-            while true do
+              I:=Paras.Count-1;
+            while True do
               begin
-                hp:=TParaVarSym(paras[i]);
-                paradef:=hp.vardef;
-                if not(Assigned(hp.ParaLoc[side].location)) then
+                HP:=TParaVarSym(Paras[I]);
+                ParaDef:=HP.VarDef;
+                if not(Assigned(HP.ParaLoc[Side].Location)) then
                   begin
-                    pushaddr:=push_addr_param(hp.VarSpez,hp.vardef,p.ProcCallOption);
-                    if pushaddr then
+                    PushAddr:=Push_Addr_Param(HP.VarSpez,HP.VarDef,P.ProcCallOption);
+                    if PushAddr then
                       begin
-                        paralen:=sizeof(aint);
-                        paracgsize:=OS_ADDR;
-                        paradef:=CPointerDef.GetReusable_No_Free(paradef);
+                        ParaLen:=SizeOf(AInt);
+                        ParaCGSize:=OS_ADDR;
+                        ParaDef:=CPointerDef.GetReusable_No_Free(ParaDef);
                       end
                     else
                       begin
-                        paralen:=push_size(hp.VarSpez,hp.vardef,p.ProcCallOption);
-                        paracgsize:=def_cgsize(hp.vardef);
+                        ParaLen:=Push_Size(HP.VarSpez,HP.VarDef,P.ProcCallOption);
+                        ParaCGSize:=Def_CGSize(HP.VarDef);
                       end;
-                    hp.ParaLoc[side].size:=paracgsize;
-                    hp.ParaLoc[side].intsize:=paralen;
-                    hp.ParaLoc[side].Alignment:=paraalign;
-                    hp.ParaLoc[side].def:=paradef;
+                    HP.ParaLoc[Side].Size:=ParaCGSize;
+                    HP.ParaLoc[Side].IntSize:=ParaLen;
+                    HP.ParaLoc[Side].Alignment:=ParaAlign;
+                    HP.ParaLoc[Side].Def:=ParaDef;
                     {
                       EAX
                       EDX
@@ -618,103 +618,103 @@ unit cpupara;
                       In case of po_delphi_nested_cc, the parent frame pointer
                       is also always passed on the stack.
                     }
-                    if (parareg<=high(parasupregs)) and
-                       (paralen<=sizeof(aint)) and
-                       (not(hp.vardef.typ in [floatdef,recorddef,arraydef]) or
-                        pushaddr or
-                        is_dynamic_array(hp.vardef)) and
-                       (not(vo_is_parentfp in hp.VarOptions) or
-                        not(po_delphi_nested_cc in p.ProcOptions)) then
+                    if (ParaReg<=High(ParaSupRegs)) and
+                       (ParaLen<=SizeOf(AInt)) and
+                       (not(HP.VarDef.Typ in [FloatDef,RecordDef,ArrayDef]) or
+                        PushAddr or
+                        Is_Dynamic_Array(HP.VarDef)) and
+                       (not(vo_is_parentfp in HP.VarOptions) or
+                        not(po_delphi_nested_cc in P.ProcOptions)) then
                       begin
-                        if pass=1 then
+                        if Pass=1 then
                           begin
-                            ParaLoc:=hp.ParaLoc[side].add_location;
-                            ParaLoc^.size:=paracgsize;
-                            ParaLoc^.def:=paradef;
-                            ParaLoc^.loc:=LOC_REGISTER;
-                            ParaLoc^.register:=newreg(R_INTREGISTER,parasupregs[parareg],cgsize2subreg(R_INTREGISTER,paracgsize));
-                            inc(parareg);
+                            ParaLoc:=HP.ParaLoc[Side].Add_Location;
+                            ParaLoc^.Size:=ParaCGSize;
+                            ParaLoc^.Def:=ParaDef;
+                            ParaLoc^.Loc:=LOC_REGISTER;
+                            ParaLoc^.Register:=NewReg(R_INTREGISTER,ParaSupRegs[ParaReg],CGSize2SubReg(R_INTREGISTER,ParaCGSize));
+                            Inc(ParaReg);
                           end;
                       end
                     else
-                      if pass=2 then
+                      if Pass=2 then
                         begin
                           { Copy to stack? }
-                          if (use_fixed_stack) or
-                             (paracgsize=OS_NO) then
+                          if (Use_Fixed_Stack) or
+                             (ParaCGSize=OS_NO) then
                             begin
-                              ParaLoc:=hp.ParaLoc[side].add_location;
-                              ParaLoc^.loc:=LOC_REFERENCE;
-                              ParaLoc^.size:=paracgsize;
-                              ParaLoc^.def:=paradef;
-                              if side=callerside then
-                                ParaLoc^.reference.index:=NR_STACK_POINTER_REG
+                              ParaLoc:=HP.ParaLoc[Side].Add_Location;
+                              ParaLoc^.Loc:=LOC_REFERENCE;
+                              ParaLoc^.Size:=ParaCGSize;
+                              ParaLoc^.Def:=ParaDef;
+                              if Side=CallerSide then
+                                ParaLoc^.Reference.Index:=NR_STACK_POINTER_REG
                               else
-                                ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
-                              varalign:=Used_Align(Size_2_Align(paralen),paraalign,paraalign);
-                              ParaLoc^.reference.offset:=parasize;
-                              if side=calleeside then
-                                inc(ParaLoc^.reference.offset,TargetInfo.first_parm_offset);
-                              parasize:=align(parasize+paralen,varalign);
+                                ParaLoc^.Reference.Index:=NR_FRAME_POINTER_REG;
+                              VarAlign:=Used_Align(Size_2_Align(ParaLen),ParaAlign,ParaAlign);
+                              ParaLoc^.Reference.Offset:=ParaSize;
+                              if Side=CalleeSide then
+                                Inc(ParaLoc^.Reference.Offset,TargetInfo.first_parm_offset);
+                              ParaSize:=Align(ParaSize+ParaLen,VarAlign);
                             end
                           else
                             begin
-                              if paralen=0 then
+                              if ParaLen=0 then
                                 InternalError(2005011607);
-                              firstparaloc:=true;
-                              while (paralen>0) do
+                              FirstParaLoc:=True;
+                              while (ParaLen>0) do
                                 begin
-                                  ParaLoc:=hp.ParaLoc[side].add_location;
-                                  ParaLoc^.loc:=LOC_REFERENCE;
+                                  ParaLoc:=HP.ParaLoc[Side].Add_Location;
+                                  ParaLoc^.Loc:=LOC_REFERENCE;
                                   { Extended and double need a single location }
-                                  if (paracgsize in [OS_F64,OS_F32]) then
+                                  if (ParaCGSize in [OS_F64,OS_F32]) then
                                     begin
-                                      ParaLoc^.size:=paracgsize;
-                                      ParaLoc^.def:=paradef;
-                                      l:=paralen;
+                                      ParaLoc^.Size:=ParaCGSize;
+                                      ParaLoc^.Def:=ParaDef;
+                                      L:=ParaLen;
                                     end
                                   else
                                     begin
                                       { We can allocate at maximum 32 bits per location }
-                                      if paralen>sizeof(aint) then
+                                      if ParaLen>SizeOf(AInt) then
                                         begin
-                                          l:=sizeof(aint);
-                                          ParaLoc^.def:=UIntType;
+                                          L:=SizeOf(AInt);
+                                          ParaLoc^.Def:=UIntType;
                                         end
                                       else
                                         begin
-                                          l:=paralen;
-                                          ParaLoc^.def:=get_paraloc_def(paradef,l,firstparaloc);
+                                          L:=ParaLen;
+                                          ParaLoc^.Def:=Get_ParaLoc_Def(ParaDef,L,FirstParaLoc);
                                         end;
-                                      ParaLoc^.size:=int_cgsize(l);
+                                      ParaLoc^.Size:=Int_CGSize(L);
                                     end;
-                                  if side=callerside then
-                                    ParaLoc^.reference.index:=NR_STACK_POINTER_REG
+                                  if Side=CallerSide then
+                                    ParaLoc^.Reference.Index:=NR_STACK_POINTER_REG
                                   else
-                                    ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
-                                  varalign:=Used_Align(Size_2_Align(l),paraalign,paraalign);
-                                  ParaLoc^.reference.offset:=parasize;
-                                  if side=calleeside then
-                                    inc(ParaLoc^.reference.offset,TargetInfo.first_parm_offset);
-                                  parasize:=align(parasize+l,varalign);
-                                  dec(paralen,l);
-                                  firstparaloc:=false;
+                                    ParaLoc^.Reference.Index:=NR_FRAME_POINTER_REG;
+                                  VarAlign:=Used_Align(Size_2_Align(L),ParaAlign,ParaAlign);
+                                  ParaLoc^.Reference.Offset:=ParaSize;
+                                  if Side=CalleeSide then
+                                    Inc(ParaLoc^.Reference.Offset,TargetInfo.first_parm_offset);
+                                  ParaSize:=Align(ParaSize+L,VarAlign);
+                                  Dec(ParaLen,L);
+                                  FirstParaLoc:=False;
                                 end;
                             end;
                         end;
                   end;
-                case pass of
+                case Pass of
                   1:
                     begin
-                      if i=paras.count-1 then
-                        break;
-                      inc(i);
+                      if I=Paras.Count-1 then
+                        Break;
+                      Inc(I);
                     end;
                   2:
                     begin
-                      if i=0 then
-                        break;
-                      dec(i);
+                      if I=0 then
+                        Break;
+                      Dec(I);
                     end;
                 end;
               end;
@@ -722,64 +722,64 @@ unit cpupara;
       end;
 
 
-    function TCPUParaManager.create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):LongInt;
+    function TCPUParaManager.Create_ParaLoc_Info(P : TAbstractProcDef; Side: TCallerCallee):LongInt;
       var
-        parasize,
-        parareg : LongInt;
+        ParaSize,
+        ParaReg : LongInt;
       begin
-        parasize:=0;
-        parareg:=0;
-        case p.ProcCallOption of
+        ParaSize:=0;
+        ParaReg:=0;
+        case P.ProcCallOption of
           pocall_register :
-            create_register_paraloc_info(p,side,p.paras,parareg,parasize);
+            CreateRegisterParaLocInfo(P,Side,P.Paras,ParaReg,ParaSize);
           pocall_internproc :
             begin
               { Use default calling }
 {$warnings off}
               if (pocall_default=pocall_register) then
-                create_register_paraloc_info(p,side,p.paras,parareg,parasize)
+                CreateRegisterParaLocInfo(P,Side,P.Paras,ParaReg,ParaSize)
               else
-                create_stdcall_paraloc_info(p,side,p.paras,parasize);
+                CreateStdCallParaLocInfo(P,Side,P.Paras,ParaSize);
 {$warnings on}
             end;
           else
-            create_stdcall_paraloc_info(p,side,p.paras,parasize);
+            CreateStdCallParaLocInfo(P,Side,P.Paras,ParaSize);
         end;
-        create_funcretloc_info(p,side);
-        result:=parasize;
+        Create_FuncRetLoc_Info(P,Side);
+        Result:=ParaSize;
       end;
 
 
-    function TCPUParaManager.create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;
+    function TCPUParaManager.Create_VarArgs_ParaLoc_Info(P : TAbstractProcDef; Side: TCallerCallee; VarArgsPara:TVarArgsParaList):LongInt;
       var
-        parasize : LongInt;
+        ParaSize : LongInt;
       begin
-        parasize:=0;
+        ParaSize:=0;
         { calculate the registers for the normal parameters }
-        create_stdcall_paraloc_info(p,side,p.paras,parasize);
+        CreateStdCallParaLocInfo(P,Side,P.Paras,ParaSize);
         { append the varargs }
-        if Assigned(varargspara) then
+        if Assigned(VarArgsPara) then
           begin
-            if side=callerside then
-              create_stdcall_paraloc_info(p,side,varargspara,parasize)
+            if Side=CallerSide then
+              CreateStdCallParaLocInfo(P,Side,VarArgsPara,ParaSize)
             else
               InternalError(2019021926);
           end;
-        create_funcretloc_info(p,side);
-        result:=parasize;
+        Create_FuncRetLoc_Info(P,Side);
+        Result:=ParaSize;
       end;
 
 
-    procedure TCPUParaManager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure TCPUParaManager.CreateTempParaLoc(List: TAsmList;CallOption : TProcCallOption;ParaSym : TParaVarSym;CanUseFinalStackLoc : Boolean;var CGPara:TCGPara);
       begin
         { Never a need for temps when value is pushed (calls inside parameters
           will simply allocate even more stack space for their parameters) }
-        if not(use_fixed_stack) then
-          can_use_final_stack_loc:=true;
-        inherited createtempparaloc(list,calloption,parasym,can_use_final_stack_loc,cgpara);
+        if not(Use_Fixed_Stack) then
+          CanUseFinalStackLoc:=True;
+        inherited CreateTempParaLoc(List,CallOption,ParaSym,CanUseFinalStackLoc,CGPara);
       end;
 
 
 begin
-   paramanager:=TCPUParaManager.create;
+   ParaManager:=TCPUParaManager.Create;
 end.

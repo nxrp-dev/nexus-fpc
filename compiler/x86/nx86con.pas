@@ -69,45 +69,45 @@ implementation
              if (value_real=1.0) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
-                  location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-                  location.register:=NR_ST;
+                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+                  location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
              else if (value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_reg_reg(A_FADD,S_NO,NR_ST,NR_ST);
-                  location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-                  location.register:=NR_ST;
+                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+                  location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
              else if (value_real=-1.0) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_none(A_FCHS,S_NO);
-                  location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-                  location.register:=NR_ST;
+                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+                  location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
              else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) then
                begin
                  if Use_VectorFPU(resultdef) then
                    begin
-                     location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,def_cgsize(resultdef));
+                     Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+                     location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(resultdef));
                      if UseAVX then
                        begin
-                         if is_single(resultdef) then
-                           emit_reg_reg_reg(A_VXORPS,S_NO,location.register,location.register,location.register)
+                         if Is_Single(resultdef) then
+                           emit_reg_reg_reg(A_VXORPS,S_NO,location.Register,location.Register,location.Register)
                          else
-                           emit_reg_reg_reg(A_VXORPD,S_NO,location.register,location.register,location.register);
+                           emit_reg_reg_reg(A_VXORPD,S_NO,location.Register,location.Register,location.Register);
                        end
                      else
                        begin
-                         if is_single(resultdef) then
-                           emit_reg_reg(A_XORPS,S_NO,location.register,location.register)
+                         if Is_Single(resultdef) then
+                           emit_reg_reg(A_XORPS,S_NO,location.Register,location.Register)
                          else
-                           emit_reg_reg(A_XORPD,S_NO,location.register,location.register);
+                           emit_reg_reg(A_XORPD,S_NO,location.Register,location.Register);
                        end
                    end
                  else
@@ -115,8 +115,8 @@ implementation
                       emit_none(A_FLDZ,S_NO);
                       if (Get_Real_Sign(value_real) < 0) then
                         emit_none(A_FCHS,S_NO);
-                      location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-                      location.register:=NR_ST;
+                      Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
+                      location.Register:=NR_ST;
                       TCGX86(cg).inc_fpu_stack;
                    end;
                end

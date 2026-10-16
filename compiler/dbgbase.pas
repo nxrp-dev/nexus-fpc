@@ -432,7 +432,7 @@ implementation
           localvarsym :
             appendsym_localvar(list,TLocalVarSym(sym));
           paravarsym :
-            if TParaVarSym(sym).LocAlloc.loc<>LOC_VOID then
+            if TParaVarSym(sym).LocAlloc.Loc<>LOC_VOID then
               appendsym_paravar(list,TParaVarSym(sym));
           constsym :
             appendsym_const(list,TConstSym(sym));

@@ -70,7 +70,7 @@ implementation
     procedure TI386CallNode.gen_syscall_para(para: TCallParaNode);
       begin
         { lib parameter has no special type but proccalloptions must be a syscall }
-        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).libsym,TCPUProcDef(procdefinition).libsym.owner);
+        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).LibSym,TCPUProcDef(procdefinition).LibSym.owner);
       end;
 
 
@@ -86,7 +86,7 @@ implementation
         hreg : TRegister;
         href : TReference;
       begin
-        if paramanager.use_fixed_stack then
+        if ParaManager.Use_Fixed_Stack then
           begin
             { very weird: in this case the callee does a "ret $4" and the }
             { caller immediately a "subl $4,%esp". Possibly this is for   }
@@ -95,7 +95,7 @@ implementation
             dec(pop_size,pushedparasize);
             if pop_size<0 then
               begin
-                reference_reset_base(href,NR_STACK_POINTER_REG,pop_size,ctempposinvalid,0,[]);
+                Reference_Reset_Base(href,NR_STACK_POINTER_REG,pop_size,CTempPosInvalid,0,[]);
                 { it is better to use lea here }
                 CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
               end;
@@ -116,7 +116,7 @@ implementation
           so funcret is always in EAX for register calling }
         if ((TargetInfo.system = system_i386_win32) and
             not (TargetInfo.abi=abi_old_win32_gnu)) and
-            paramanager.ret_in_param(procdefinition.ReturnDef,procdefinition) and
+            ParaManager.Ret_In_Param(procdefinition.ReturnDef,procdefinition) and
             not ((procdefinition.ProcCallOption=pocall_register) or
                  ((procdefinition.ProcCallOption=pocall_internproc) and
                   (pocall_default=pocall_register))) then
@@ -125,7 +125,7 @@ implementation
         { better than an add on all processors }
         if pop_size=4 then
           begin
-            hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+            hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
           end
         { the pentium has two pipes and pop reg is pairable }
@@ -135,9 +135,9 @@ implementation
              not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
              (CurrentSettings.OptimizeCPUType=cpu_Pentium) then
             begin
-               hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+               hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
-               hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+               hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
             end
         else

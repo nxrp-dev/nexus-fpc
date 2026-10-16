@@ -108,7 +108,7 @@ implementation
          key: TFloatKey;
 
       begin
-        location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),Const_Align(resultdef.alignment),[]);
+        Location_Reset_Ref(location,LOC_CREFERENCE,Def_CGSize(resultdef),Const_Align(resultdef.Alignment),[]);
         lastlabel:=nil;
         realait:=floattype2ait[TFloatDef(resultdef).FloatType];
         { const already used ? }
@@ -116,7 +116,7 @@ implementation
           begin
             { there may be gap between record fields, zero it out }
             fillchar(key,sizeof(key),0);
-            key.value:=value_real;
+            key.Value:=value_real;
             key.typ:=TFloatDef(resultdef).FloatType;
             entry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
 
@@ -129,7 +129,7 @@ implementation
                   entry^.Data:=lastlabel;
                   lab_real:=lastlabel;
                   maybe_new_object_file(CurrentAsmData.asmlists[al_typedconsts]);
-                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,Const_Align(resultdef.alignment));
+                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,Const_Align(resultdef.Alignment));
                   CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lastlabel));
                   case realait of
                     aitrealconst_s32bit :
@@ -144,7 +144,7 @@ implementation
 
                     aitrealconst_s80bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s80real(value_real,TFloatDef(resultdef).size));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s80real(value_real,TFloatDef(resultdef).Size));
                       end;
 
                     { the round is necessary for native compilers where comp isn't a float }
@@ -158,7 +158,7 @@ implementation
                     CurrentAsmData.asmlists[al_typedconsts].concat(TAISymbolEnd.Create(lastlabel));
                end;
           end;
-        location.reference.symbol:=lab_real;
+        location.Reference.Symbol:=lab_real;
       end;
 
 {*****************************************************************************
@@ -167,11 +167,11 @@ implementation
 
     procedure TCGOrdConstNode.pass_generate_code;
       begin
-         location_reset(location,LOC_CONSTANT,def_cgsize(resultdef));
+         Location_Reset(location,LOC_CONSTANT,Def_CGSize(resultdef));
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
-         location.value:=value.svalue;
+         location.Value:=value.svalue;
 {$else cpu64bitalu or cpuhighleveltarget}
-         location.value64:=value.svalue;
+         location.Value64:=value.svalue;
 {$endif cpu64bitalu or cpuhighleveltarget}
       end;
 
@@ -183,8 +183,8 @@ implementation
     procedure TCGPointerConstNode.pass_generate_code;
       begin
          { an integer const. behaves as a memory reference }
-         location_reset(location,LOC_CONSTANT,OS_ADDR);
-         location.value:=PInt(value);
+         Location_Reset(location,LOC_CONSTANT,OS_ADDR);
+         location.Value:=PInt(value);
       end;
 
 
@@ -236,8 +236,8 @@ implementation
          { for empty ansistrings we could return a constant 0 }
          if (cst_type in [cst_ansistring,cst_widestring,cst_unicodestring]) and (len=0) then
           begin
-            location_reset(location,LOC_CONSTANT,def_cgsize(strpointerdef));
-            location.value:=0;
+            Location_Reset(location,LOC_CONSTANT,Def_CGSize(strpointerdef));
+            location.Value:=0;
             exit;
           end;
          winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
@@ -247,7 +247,7 @@ implementation
               pool := CurrentAsmData.ConstPools[PoolMap[cst_type]];
 
               if cst_type in [cst_widestring, cst_unicodestring] then
-                entry := pool.FindOrAdd(pointer(ValueWS.data),len*CWideCharType.size)
+                entry := pool.FindOrAdd(pointer(ValueWS.data),len*CWideCharType.Size)
               else
               if cst_type = cst_ansistring then
                 entry := PHashSetItem(TTagHashSet(pool).FindOrAdd(pointer(valueas),len,TStringDef(resultdef).encoding))
@@ -346,14 +346,14 @@ implementation
            end;
          if cst_type in [cst_ansistring, cst_widestring, cst_unicodestring] then
            begin
-             location_reset(location, LOC_REGISTER, def_cgsize(strpointerdef));
-             location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,strpointerdef);
+             Location_Reset(location, LOC_REGISTER, Def_CGSize(strpointerdef));
+             location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,strpointerdef);
              load_dynstring(strpointerdef, ElementDef, winlikewidestring);
            end
          else
            begin
-             location_reset_ref(location, LOC_CREFERENCE, def_cgsize(resultdef), Const_Align(strpointerdef.size), []);
-             location.reference.symbol:=lab_str;
+             Location_Reset_Ref(location, LOC_CREFERENCE, Def_CGSize(resultdef), Const_Align(strpointerdef.Size), []);
+             location.Reference.Symbol:=lab_str;
            end;
       end;
 
@@ -362,10 +362,10 @@ implementation
       var
         href: TReference;
       begin
-        reference_reset_symbol(href, lab_str,
+        Reference_Reset_Symbol(href, lab_str,
           CTAITypedConstBuilder.get_string_symofs(TStringDef(resultdef).StringType, winlikewidestring),
-          Const_Align(strpointerdef.size),[]);
-        hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, ElementDef, strpointerdef, href, location.register)
+          Const_Align(strpointerdef.Size),[]);
+        hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList, ElementDef, strpointerdef, href, location.Register)
       end;
 
 
@@ -388,10 +388,10 @@ implementation
         tcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
         tcb.maybe_begin_aggregate(resultdef);
         if (SourceInfo.endian=TargetInfo.endian) then
-          for i:=0 to resultdef.size-1 do
+          for i:=0 to resultdef.Size-1 do
             tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),U8IntType)
         else
-          for i:=0 to resultdef.size-1 do
+          for i:=0 to resultdef.Size-1 do
             tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),U8IntType);
         tcb.maybe_end_aggregate(resultdef);
         CurrentAsmData.asmlists[al_typedconsts].ConcatList(tcb.get_final_asmlist(
@@ -405,18 +405,18 @@ implementation
       var
          entry       : PHashSetItem;
       begin
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,Const_Align(8),[]);
+        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,Const_Align(8),[]);
         { const already used ? }
         if not Assigned(lab_set) then
           begin
-            entry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.size);
+            entry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.Size);
 
              { :-(, we must generate a new entry }
              if not Assigned(entry^.Data) then
                entry^.Data:=emitvarsetconst;
              lab_set := TAsmSymbol(entry^.Data);
           end;
-        location.reference.symbol:=lab_set;
+        location.Reference.Symbol:=lab_set;
       end;
 
 
@@ -427,28 +427,28 @@ implementation
 
         procedure smallsetconst;
           begin
-            location_reset(location,LOC_CONSTANT,int_cgsize(resultdef.size));
+            Location_Reset(location,LOC_CONSTANT,Int_CGSize(resultdef.Size));
             if (SourceInfo.endian=TargetInfo.endian) then
               begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
                 { cross-endian code below                                                   }
                 { Extra aint type cast to avoid range errors                                }
-                location.value:=aint(pCardinal(value_set)^)
+                location.Value:=aint(pCardinal(value_set)^)
               end
             else
               begin
-                location.value:=aint(Reverse_LongWord(Pcardinal(value_set)^));
+                location.Value:=aint(Reverse_LongWord(Pcardinal(value_set)^));
               end;
             if (TargetInfo.endian=endian_big) then
-              location.value:=location.value shr (32-resultdef.size*8);
+              location.Value:=location.Value shr (32-resultdef.Size*8);
           end;
 
       begin
         adjustforsetbase;
 
         { small sets are loaded as constants }
-        if is_smallset(resultdef) then
+        if Is_SmallSet(resultdef) then
           smallsetconst
         else
           handlevarsetconst;
@@ -461,8 +461,8 @@ implementation
 
     procedure TCGNilNode.pass_generate_code;
       begin
-         location_reset(location,LOC_CONSTANT,OS_ADDR);
-         location.value:=0;
+         Location_Reset(location,LOC_CONSTANT,OS_ADDR);
+         location.Value:=0;
       end;
 
 
@@ -476,7 +476,7 @@ implementation
          entry       : PHashSetItem;
          datatcb     : TTAITypedConstBuilder;
       begin
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,Const_Align(16),[]);
+        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,Const_Align(16),[]);
         lastlabel:=nil;
         { const already used ? }
         if not Assigned(lab_set) then
@@ -498,7 +498,7 @@ implementation
                  entry^.Data:=lastlabel;
                end;
           end;
-        location.reference.symbol:=lab_set;
+        location.Reference.Symbol:=lab_set;
       end;
 
 

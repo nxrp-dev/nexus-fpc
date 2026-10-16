@@ -60,7 +60,7 @@ unit racpu;
       begin
         result:=
           (operands[1].opr.typ=OPR_REGISTER) and
-          (getsubreg(operands[1].opr.reg)=R_SUBQ);
+          (GetSubReg(operands[1].opr.reg)=R_SUBQ);
       end;
 
     function TAArch64Instruction.cgsize: TCgSize;

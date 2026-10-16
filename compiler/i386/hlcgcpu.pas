@@ -39,17 +39,17 @@ interface
   type
     THLCGCPU = class(THLCGX86)
      protected
-      procedure gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt); override;
+      procedure Gen_LoadFPU_Loc_CGPara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt); override;
      public
-      function a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara; override;
-      procedure g_copyvaluepara_openarray(list: TAsmList; const ref: TReference; const lenloc: TLocation; arrdef: TArrayDef; destreg: TRegister); override;
-      procedure g_releasevaluepara_openarray(list: TAsmList; arrdef: TArrayDef; const l: TLocation); override;
-      procedure g_exception_reason_save(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const href: TReference); override;
-      procedure g_exception_reason_save_const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference); override;
-      procedure g_exception_reason_load(list: TAsmList; fromsize, tosize: TDef; const href: TReference; reg: TRegister); override;
-      procedure g_exception_reason_discard(list: TAsmList; size: TDef; href: TReference); override;
+      function A_Call_Name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara; override;
+      procedure G_CopyValuePara_OpenArray(list: TAsmList; const ref: TReference; const lenloc: TLocation; arrdef: TArrayDef; destreg: TRegister); override;
+      procedure G_ReleaseValuePara_OpenArray(list: TAsmList; arrdef: TArrayDef; const l: TLocation); override;
+      procedure G_Exception_Reason_Save(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const href: TReference); override;
+      procedure G_Exception_Reason_Save_Const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference); override;
+      procedure G_Exception_Reason_Load(list: TAsmList; fromsize, tosize: TDef; const href: TReference; reg: TRegister); override;
+      procedure G_Exception_Reason_Discard(list: TAsmList; size: TDef; href: TReference); override;
 
-      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
+      procedure G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
     end;
 
 implementation
@@ -65,38 +65,38 @@ implementation
 
   { thlcgcpu }
 
-  procedure THLCGCPU.gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt);
+  procedure THLCGCPU.Gen_LoadFPU_Loc_CGPara(list: TAsmList; size: TDef; const l: TLocation; const cgpara: TCGPara; locintsize: LongInt);
     var
       locsize : TCgSize;
       tmploc : TLocation;
       href   : TReference;
       StackSize   : LongInt;
     begin
-      if not(l.size in [OS_32,OS_S32,OS_64,OS_S64,OS_128,OS_S128]) then
-        locsize:=l.size
+      if not(l.Size in [OS_32,OS_S32,OS_64,OS_S64,OS_128,OS_S128]) then
+        locsize:=l.Size
       else
-        locsize:=int_float_cgsize(tcgsize2size[l.size]);
-      case l.loc of
+        locsize:=Int_Float_CGSize(TCgSize2Size[l.Size]);
+      case l.Loc of
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER:
           begin
-            case cgpara.location^.loc of
+            case cgpara.Location^.Loc of
               LOC_REFERENCE:
                 begin
-                  StackSize:=align(locintsize,cgpara.alignment);
-                  if (not paramanager.use_fixed_stack) and
-                     (cgpara.location^.reference.index=NR_STACK_POINTER_REG) then
+                  StackSize:=align(locintsize,cgpara.Alignment);
+                  if (not ParaManager.Use_Fixed_Stack) and
+                     (cgpara.Location^.Reference.Index=NR_STACK_POINTER_REG) then
                     begin
-                      cg.g_stackpointer_alloc(list,StackSize);
-                      reference_reset_base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,ctempposinvalid,VoidStackPointerType.size,[]);
+                      cg.G_StackPointer_Alloc(list,StackSize);
+                      Reference_Reset_Base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,CTempPosInvalid,VoidStackPointerType.Size,[]);
                     end
                   else
-                    reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-                  cg.a_loadfpu_reg_ref(list,locsize,locsize,l.register,href);
+                    Reference_Reset_Base(href,VoidStackPointerType,cgpara.Location^.Reference.Index,cgpara.Location^.Reference.Offset,CTempPosInvalid,cgpara.Alignment,[]);
+                  cg.A_LoadFPU_Reg_Ref(list,locsize,locsize,l.Register,href);
                 end;
               LOC_FPUREGISTER:
                 begin
-                  cg.a_loadfpu_reg_reg(list,locsize,cgpara.location^.size,l.register,cgpara.location^.register);
+                  cg.A_LoadFPU_Reg_Reg(list,locsize,cgpara.Location^.Size,l.Register,cgpara.Location^.Register);
                 end;
               { can happen if a record with only 1 "single field" is
                 returned in a floating point register and then is directly
@@ -104,16 +104,16 @@ implementation
               LOC_REGISTER:
                 begin
                   tmploc:=l;
-                  location_force_mem(list,tmploc,size);
+                  Location_Force_Mem(list,tmploc,size);
                   case locsize of
                     OS_F32:
-                      tmploc.size:=OS_32;
+                      tmploc.Size:=OS_32;
                     OS_F64:
-                      tmploc.size:=OS_64;
+                      tmploc.Size:=OS_64;
                     else
                       InternalError(2010053116);
                   end;
-                  cg.a_load_loc_cgpara(list,tmploc,cgpara);
+                  cg.A_Load_Loc_CGPara(list,tmploc,cgpara);
                   location_freetemp(list,tmploc);
                 end
               else
@@ -123,27 +123,27 @@ implementation
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            case cgpara.location^.loc of
+            case cgpara.Location^.Loc of
               LOC_REFERENCE:
                 begin
                   { can't use TCGSize2Size[l.size], because the size of an
                     80 bit extended parameter can be either 10 or 12 bytes }
-                  StackSize:=align(locintsize,cgpara.alignment);
-                  if (not paramanager.use_fixed_stack) and
-                     (cgpara.location^.reference.index=NR_STACK_POINTER_REG) then
+                  StackSize:=align(locintsize,cgpara.Alignment);
+                  if (not ParaManager.Use_Fixed_Stack) and
+                     (cgpara.Location^.Reference.Index=NR_STACK_POINTER_REG) then
                     begin
-                      cg.g_stackpointer_alloc(list,StackSize);
-                      reference_reset_base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,ctempposinvalid,VoidStackPointerType.size,[]);
+                      cg.G_StackPointer_Alloc(list,StackSize);
+                      Reference_Reset_Base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,CTempPosInvalid,VoidStackPointerType.Size,[]);
                     end
                   else
-                    reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-                  cg.a_loadmm_reg_ref(list,locsize,locsize,l.register,href,mms_movescalar);
+                    Reference_Reset_Base(href,VoidStackPointerType,cgpara.Location^.Reference.Index,cgpara.Location^.Reference.Offset,CTempPosInvalid,cgpara.Alignment,[]);
+                  cg.A_LoadMM_Reg_Ref(list,locsize,locsize,l.Register,href,MMS_MoveScalar);
                 end;
               LOC_FPUREGISTER:
                 begin
                   tmploc:=l;
-                  location_force_mem(list,tmploc,size);
-                  cg.a_loadfpu_ref_cgpara(list,tmploc.size,tmploc.reference,cgpara);
+                  Location_Force_Mem(list,tmploc,size);
+                  cg.A_LoadFPU_Ref_CGPara(list,tmploc.Size,tmploc.Reference,cgpara);
                   location_freetemp(list,tmploc);
                 end;
               else
@@ -153,22 +153,22 @@ implementation
         LOC_REFERENCE,
         LOC_CREFERENCE :
           begin
-            case cgpara.location^.loc of
+            case cgpara.Location^.Loc of
               LOC_REFERENCE:
                 begin
-                  StackSize:=align(locintsize,cgpara.alignment);
-                  if (not paramanager.use_fixed_stack) and
-                     (cgpara.location^.reference.index=NR_STACK_POINTER_REG) then
-                    cg.a_load_ref_cgpara(list,locsize,l.reference,cgpara)
+                  StackSize:=align(locintsize,cgpara.Alignment);
+                  if (not ParaManager.Use_Fixed_Stack) and
+                     (cgpara.Location^.Reference.Index=NR_STACK_POINTER_REG) then
+                    cg.A_Load_Ref_CGPara(list,locsize,l.Reference,cgpara)
                   else
                     begin
-                      reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
-                      cg.g_concatcopy(list,l.reference,href,StackSize);
+                      Reference_Reset_Base(href,VoidStackPointerType,cgpara.Location^.Reference.Index,cgpara.Location^.Reference.Offset,CTempPosInvalid,cgpara.Alignment,[]);
+                      cg.G_ConcatCopy(list,l.Reference,href,StackSize);
                     end;
                 end;
               LOC_FPUREGISTER:
                 begin
-                  cg.a_loadfpu_ref_cgpara(list,locsize,l.reference,cgpara);
+                  cg.A_LoadFPU_Ref_CGPara(list,locsize,l.Reference,cgpara);
                 end;
               else
                 InternalError(2010053005);
@@ -180,7 +180,7 @@ implementation
     end;
 
 
-  function THLCGCPU.a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara;
+  function THLCGCPU.A_Call_Name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of PCGPara; forceresdef: TDef; weak: boolean): TCGPara;
   var
     need_got_load: boolean;
   begin
@@ -194,78 +194,78 @@ implementation
     if need_got_load then
       begin
         { Alloc EBX }
-        getcpuregister(list, NR_PIC_OFFSET_REG);
+        GetCPURegister(list, NR_PIC_OFFSET_REG);
         list.concat(TAICPU.op_reg_reg(A_MOV,S_L,CurrentProcInfo.got,NR_PIC_OFFSET_REG));
         include(CurrentProcInfo.flags,pi_needs_got);
       end;
-    Result:=inherited a_call_name(list, pd, s, paras, forceresdef, weak);
+    Result:=inherited A_Call_Name(list, pd, s, paras, forceresdef, weak);
     { Free EBX }
     if need_got_load then
-      ungetcpuregister(list, NR_PIC_OFFSET_REG);
+      UngetCPURegister(list, NR_PIC_OFFSET_REG);
   end;
 
 
-  procedure THLCGCPU.g_copyvaluepara_openarray(list: TAsmList; const ref: TReference; const lenloc: TLocation; arrdef: TArrayDef; destreg: TRegister);
+  procedure THLCGCPU.G_CopyValuePara_OpenArray(list: TAsmList; const ref: TReference; const lenloc: TLocation; arrdef: TArrayDef; destreg: TRegister);
     begin
-      if paramanager.use_fixed_stack then
+      if ParaManager.Use_Fixed_Stack then
         begin
           inherited;
           exit;
         end;
-      TCG386(cg).g_copyvaluepara_openarray(list,ref,lenloc,arrdef.EleSize,destreg);
+      TCG386(cg).G_CopyValuePara_OpenArray(list,ref,lenloc,arrdef.EleSize,destreg);
     end;
 
 
-  procedure THLCGCPU.g_releasevaluepara_openarray(list: TAsmList; arrdef: TArrayDef; const l: TLocation);
+  procedure THLCGCPU.G_ReleaseValuePara_OpenArray(list: TAsmList; arrdef: TArrayDef; const l: TLocation);
     begin
-      if paramanager.use_fixed_stack then
+      if ParaManager.Use_Fixed_Stack then
         begin
           inherited;
           exit;
         end;
-      TCG386(cg).g_releasevaluepara_openarray(list,l);
+      TCG386(cg).G_ReleaseValuePara_OpenArray(list,l);
     end;
 
 
-  procedure THLCGCPU.g_exception_reason_save(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const href: TReference);
+  procedure THLCGCPU.G_Exception_Reason_Save(list: TAsmList; fromsize, tosize: TDef; reg: TRegister; const href: TReference);
     begin
-      if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
-        list.concat(TAICPU.op_reg(A_PUSH,tcgsize2opsize[def_cgsize(tosize)],reg))
+      if not(ParaManager.Use_Fixed_Stack) and not(tf_use_psabieh in TargetInfo.flags) then
+        list.concat(TAICPU.op_reg(A_PUSH,tcgsize2opsize[Def_CGSize(tosize)],reg))
       else
         inherited
     end;
 
 
-  procedure THLCGCPU.g_exception_reason_save_const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference);
+  procedure THLCGCPU.G_Exception_Reason_Save_Const(list: TAsmList; size: TDef; a: TCGInt; const href: TReference);
     begin
-      if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
-        list.concat(TAICPU.op_const(A_PUSH,tcgsize2opsize[def_cgsize(size)],a))
+      if not(ParaManager.Use_Fixed_Stack) and not(tf_use_psabieh in TargetInfo.flags) then
+        list.concat(TAICPU.op_const(A_PUSH,tcgsize2opsize[Def_CGSize(size)],a))
       else
         inherited;
     end;
 
 
-  procedure THLCGCPU.g_exception_reason_load(list: TAsmList; fromsize, tosize: TDef; const href: TReference; reg: TRegister);
+  procedure THLCGCPU.G_Exception_Reason_Load(list: TAsmList; fromsize, tosize: TDef; const href: TReference; reg: TRegister);
     begin
-      if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
-        list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[def_cgsize(tosize)],reg))
+      if not(ParaManager.Use_Fixed_Stack) and not(tf_use_psabieh in TargetInfo.flags) then
+        list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[Def_CGSize(tosize)],reg))
       else
         inherited;
     end;
 
 
-  procedure THLCGCPU.g_exception_reason_discard(list: TAsmList; size: TDef; href: TReference);
+  procedure THLCGCPU.G_Exception_Reason_Discard(list: TAsmList; size: TDef; href: TReference);
     begin
-      if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
+      if not(ParaManager.Use_Fixed_Stack) and not(tf_use_psabieh in TargetInfo.flags) then
         begin
-          getcpuregister(list,NR_FUNCTION_RESULT_REG);
-          list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[def_cgsize(size)],NR_FUNCTION_RESULT_REG));
-          ungetcpuregister(list,NR_FUNCTION_RESULT_REG);
+          GetCPURegister(list,NR_FUNCTION_RESULT_REG);
+          list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[Def_CGSize(size)],NR_FUNCTION_RESULT_REG));
+          UngetCPURegister(list,NR_FUNCTION_RESULT_REG);
         end;
     end;
 
 
-  procedure THLCGCPU.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
+  procedure THLCGCPU.G_Intf_Wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
     {
     possible calling conventions:
                   default stdcall cdecl pascal register
@@ -303,7 +303,7 @@ implementation
         hp: TParaVarSym;
         ParaLoc: PCGParaLocation;
       begin
-        if not (RS_ECX in paramanager.get_volatile_registers_int(procdef.ProcCallOption)) then
+        if not (RS_ECX in ParaManager.Get_Volatile_Registers_Int(procdef.ProcCallOption)) then
           exit(true);
         for i:=0 to procdef.paras.count-1 do
          begin
@@ -312,7 +312,7 @@ implementation
            ParaLoc:=hp.ParaLoc[calleeside].Location;
            while ParaLoc<>nil do
              begin
-               if (ParaLoc^.Loc=LOC_REGISTER) and (getsupreg(ParaLoc^.register)=RS_ECX) then
+               if (ParaLoc^.Loc=LOC_REGISTER) and (GetSupReg(ParaLoc^.Register)=RS_ECX) then
                  exit(true);
                ParaLoc:=ParaLoc^.Next;
              end;
@@ -329,12 +329,12 @@ implementation
         if (procdef.ProcCallOption<>pocall_register) then
           begin
             { framepointer is pushed for nested procs }
-            if procdef.ParaST.SymTableLevel>normal_function_level then
+            if procdef.ParaST.SymTableLevel>NormalFunctionLevel then
               selfoffsetfromsp:=2*sizeof(aint)
             else
               selfoffsetfromsp:=sizeof(aint);
-            reference_reset_base(href,VoidStackPointerType,NR_ESP,selfoffsetfromsp+offs,ctempposinvalid,4,[]);
-            cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
+            Reference_Reset_Base(href,VoidStackPointerType,NR_ESP,selfoffsetfromsp+offs,CTempPosInvalid,4,[]);
+            cg.A_Load_Ref_Reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
           end;
       end;
 
@@ -343,8 +343,8 @@ implementation
         href : TReference;
       begin
         { mov  0(%eax),%reg ; load vmt}
-        reference_reset_base(href,VoidPointerType,NR_EAX,0,ctempposinvalid,4,[]);
-        cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,reg);
+        Reference_Reset_Base(href,VoidPointerType,NR_EAX,0,CTempPosInvalid,4,[]);
+        cg.A_Load_Ref_Reg(list,OS_ADDR,OS_ADDR,href,reg);
       end;
 
     procedure op_onregmethodaddr(op: TAsmOp; reg: TRegister);
@@ -354,7 +354,7 @@ implementation
         if (procdef.ExtNumber=$ffff) then
           InternalError(2000061312);
         { call/jmp  vmtoffs(%reg) ; method offs }
-        reference_reset_base(href,VoidPointerType,reg,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,4,[]);
+        Reference_Reset_Base(href,VoidPointerType,reg,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),CTempPosInvalid,4,[]);
         list.concat(TAICPU.op_ref(op,S_L,href));
       end;
 
@@ -366,8 +366,8 @@ implementation
         if (procdef.ExtNumber=$ffff) then
           InternalError(2000061313);
         { mov vmtoffs(%eax),%eax ; method offs }
-        reference_reset_base(href,VoidPointerType,NR_EAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,4,[]);
-        cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
+        Reference_Reset_Base(href,VoidPointerType,NR_EAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),CTempPosInvalid,4,[]);
+        cg.A_Load_Ref_Reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
       end;
 
 
@@ -397,7 +397,7 @@ implementation
         List.concat(TAISymbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
 
       { set param1 interface to self  }
-      g_adjust_self_value(list,procdef,ioffset);
+      G_Adjust_Self_Value(list,procdef,ioffset);
 
       if (po_virtualmethod in procdef.ProcOptions) and
           not Is_ObjectPascal_Helper(procdef.struct) then
@@ -411,7 +411,7 @@ implementation
               loadvmtto(NR_EAX);
               loadmethodoffstoeax;
               { mov %eax,4(%esp) }
-              reference_reset_base(href,VoidStackPointerType,NR_ESP,4,ctempposinvalid,4,[]);
+              Reference_Reset_Base(href,VoidStackPointerType,NR_ESP,4,CTempPosInvalid,4,[]);
               list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
               { pop  %eax }
               list.concat(TAICPU.op_reg(A_POP,S_L,NR_EAX));
@@ -452,5 +452,5 @@ implementation
 
 begin
   CHLCGObj:=THLCGCPU;
-  create_hlcodegen:=@create_hlcodegen_cpu;
+  Create_HLCodeGen:=@create_hlcodegen_cpu;
 end.

@@ -102,7 +102,7 @@ implementation
 
     function TCPUProcInfo.calc_stackframe_size:LongInt;
       begin
-        maxpushedparasize:=align(maxpushedparasize,max(CurrentSettings.alignment.LocalAlignMin,16));
+        maxpushedparasize:=align(maxpushedparasize,max(CurrentSettings.Alignment.LocalAlignMin,16));
         { Note 1: when tg.direction>0, tg.lasttemp is already offset by maxpushedparasize
                   (because tg.setfirsttemp also sets lasttemp)
           Note 2: Align to 8 bytes here. The final 16-byte alignment is handled in

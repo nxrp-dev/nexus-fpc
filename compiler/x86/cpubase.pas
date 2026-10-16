@@ -306,7 +306,7 @@ topsize2memsize: array[TOpSize] of integer =
                                   Helpers
 *****************************************************************************}
 
-    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function cgsize2subreg(RegType: TRegisterType; s:TCgSize):TSubRegister;
     function reg2opsize(r:TRegister):TOpSize;
     function subreg2opsize(sr : TSubRegister):TOpSize;
     function reg_cgsize(const reg: TRegister): TCgSize;
@@ -392,7 +392,7 @@ implementation
                                   Helpers
 *****************************************************************************}
 
-    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function cgsize2subreg(RegType: TRegisterType; s:TCgSize):TSubRegister;
       begin
         case s of
           OS_8,OS_S8:
@@ -406,7 +406,7 @@ implementation
           OS_M64:
             cgsize2subreg:=R_SUBNONE;
           OS_F32,OS_F64,OS_C64:
-            case regtype of
+            case RegType of
               R_FPUREGISTER:
                 cgsize2subreg:=R_SUBWHOLE;
               R_MMREGISTER:
@@ -443,15 +443,15 @@ implementation
       const subreg2cgsize:array[TSubRegister] of TCgSize =
             (OS_NO,OS_8,OS_8,OS_16,OS_32,OS_64,OS_NO,OS_NO,OS_NO,OS_F32,OS_F64,OS_NO,OS_M128,OS_M256,OS_M512,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO);
       begin
-        case getregtype(reg) of
+        case GetRegType(reg) of
           R_INTREGISTER :
-            reg_cgsize:=subreg2cgsize[getsubreg(reg)];
+            reg_cgsize:=subreg2cgsize[GetSubReg(reg)];
           R_FPUREGISTER :
             reg_cgsize:=OS_F80;
           R_MMXREGISTER:
             reg_cgsize:=OS_M64;
           R_MMREGISTER:
-            reg_cgsize:=subreg2cgsize[getsubreg(reg)];
+            reg_cgsize:=subreg2cgsize[GetSubReg(reg)];
           R_SPECIALREGISTER :
             case reg of
               NR_CS,NR_DS,NR_ES,NR_SS,NR_FS,NR_GS:
@@ -486,9 +486,9 @@ implementation
     function reg2opsize(r:TRegister):TOpSize;
       begin
         reg2opsize:=S_L;
-        case getregtype(r) of
+        case GetRegType(r) of
           R_INTREGISTER :
-            reg2opsize:=subreg2opsize(getsubreg(r));
+            reg2opsize:=subreg2opsize(GetSubReg(r));
           R_FPUREGISTER :
             reg2opsize:=S_FL;
           R_MMXREGISTER,
@@ -594,11 +594,11 @@ implementation
       begin
         { for the name the sub reg doesn't matter }
         hr:=r;
-        if (getregtype(hr)=R_MMREGISTER) and
-           (getsubreg(hr)<>R_SUBMMT) and
-           (getsubreg(hr)<>R_SUBMMY) and
-           (getsubreg(hr)<>R_SUBMMZ) then
-          setsubreg(hr,R_SUBMMX);
+        if (GetRegType(hr)=R_MMREGISTER) and
+           (GetSubReg(hr)<>R_SUBMMT) and
+           (GetSubReg(hr)<>R_SUBMMY) and
+           (GetSubReg(hr)<>R_SUBMMZ) then
+          SetSubReg(hr,R_SUBMMX);
 
         //// TG TODO check
         //if (getregtype(hr)=R_MMREGISTER) then
@@ -608,13 +608,13 @@ implementation
         //   R_SUBMMZ: setsubreg(hr,R_SUBMMZ);
         //  else setsubreg(hr,R_SUBMMX);
         // end;
-        result:=findreg_by_number_table(hr,regnumber_index);
+        result:=FindReg_By_Number_Table(hr,regnumber_index);
       end;
 
 
     function std_regnum_search(const s:string):TRegister;
       begin
-        result:=regnumber_table[findreg_by_name_table(s,std_regname_table,std_regname_index)];
+        result:=regnumber_table[FindReg_By_Name_Table(s,std_regname_table,std_regname_index)];
       end;
 
 
@@ -622,14 +622,14 @@ implementation
       var
         p : TRegisterIndex;
       begin
-        if (getregtype(r)=R_MMXREGISTER) or
-          ((getregtype(r)=R_MMREGISTER) and not(getsubreg(r) in [R_SUBMMX,R_SUBMMY])) then
-          r:=newreg(getregtype(r),getsupreg(r),R_SUBNONE);
+        if (GetRegType(r)=R_MMXREGISTER) or
+          ((GetRegType(r)=R_MMREGISTER) and not(GetSubReg(r) in [R_SUBMMX,R_SUBMMY])) then
+          r:=NewReg(GetRegType(r),GetSupReg(r),R_SUBNONE);
         p:=findreg_by_number(r);
         if p<>0 then
           result:=std_regname_table[p]
         else
-          result:=generic_regname(r);
+          result:=Generic_RegName(r);
       end;
 
 

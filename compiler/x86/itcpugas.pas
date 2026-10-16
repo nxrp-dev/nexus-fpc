@@ -150,7 +150,7 @@ implementation
 
     function gas_regnum_search(const s:string):TRegister;
       begin
-        result:=regnumber_table[findreg_by_name_table(s,att_regname_table,att_regname_index)];
+        result:=regnumber_table[FindReg_By_Name_Table(s,att_regname_table,att_regname_index)];
       end;
 
 
@@ -162,7 +162,7 @@ implementation
         if p<>0 then
           result:=att_regname_table[p]
         else
-          result:='%'+generic_regname(r);
+          result:='%'+Generic_RegName(r);
       end;
 
 end.

@@ -83,7 +83,7 @@ implementation
                 pos:=1;
                 fileinfoarray[last_index].name:=copy(name,pos,MaxNameLength);
               end;
-            fileinfoarray[last_index].index:=index;
+            fileinfoarray[last_index].Index:=index;
           end
         else
           WriteLn(stderr,'file',name,' has index ',index);
@@ -96,7 +96,7 @@ implementation
       begin
         for i:=1 to last_index do
           begin
-            if fileinfoarray[i].index=index then
+            if fileinfoarray[i].Index=index then
               begin
                 getfilename:=fileinfoarray[i].name;
                 exit;

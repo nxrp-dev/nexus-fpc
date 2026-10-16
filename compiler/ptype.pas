@@ -500,7 +500,7 @@ implementation
                            Message(parser_e_no_local_para_def);
                          consume(_OF);
                          single_type(t2,[stoAllowTypeDef]);
-                         if is_managed_type(t2) then
+                         if Is_Managed_Type(t2) then
                            Message(parser_e_no_refcounted_typed_file);
                          def:=CFileDef.CreateTyped(t2);
                       end
@@ -1064,7 +1064,7 @@ implementation
          CurrentGenericDef:=nil;
          CurrentSpecializeDef:=nil;
          { create recdef }
-         recst:=TRecordSymTable.create(n,CurrentSettings.PackRecords,CurrentSettings.alignment.RecordAlignMin);
+         recst:=TRecordSymTable.create(n,CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
          { can't use recst.realname^ instead of n, because recst.realname is
            nil in case of an empty name }
          CurrentStructDef:=CRecordDef.create(n,recst);
@@ -1144,7 +1144,7 @@ implementation
          insert_struct_hidden_paras(TRecordDef(CurrentStructDef));
          { restore symtable stack }
          SymTableStack.pop(recst);
-         if TRecordDef(CurrentStructDef).Is_Packed and is_managed_type(CurrentStructDef) then
+         if TRecordDef(CurrentStructDef).Is_Packed and Is_Managed_Type(CurrentStructDef) then
            Message(type_e_no_packed_inittable);
          { restore old state }
          parse_generic:=old_parse_generic;
@@ -1196,14 +1196,14 @@ implementation
                  done when both are integer values, because typecasting
                  between -3200..3200 will result in a signed-unsigned
                  conflict and give a range check error (PFV) }
-               if not(is_integer(pt1.resultdef) and is_integer(pt2.resultdef)) then
+               if not(Is_Integer(pt1.resultdef) and Is_Integer(pt2.resultdef)) then
                  inserttypeconv(pt1,pt2.resultdef);
                { both must be evaluated to constants now }
                if (pt1.nodetype=ordconstn) and
                   (pt2.nodetype=ordconstn) then
                  begin
-                   lv:=TOrdConstNode(pt1).value;
-                   hv:=TOrdConstNode(pt2).value;
+                   lv:=TOrdConstNode(pt1).Value;
+                   hv:=TOrdConstNode(pt2).Value;
                    { Check bounds }
                    if hv<lv then
                      message(parser_e_upper_lower_than_lower)
@@ -1217,15 +1217,15 @@ implementation
                            def:=CEnumDef.Create_Subrange(TEnumDef(pt1.resultdef),lv.svalue,hv.svalue);
                          orddef :
                            begin
-                             if is_char(pt1.resultdef) then
+                             if Is_Char(pt1.resultdef) then
                                def:=COrdDef.create(uchar,lv,hv,true)
                              else
-                               if is_boolean(pt1.resultdef) then
+                               if Is_Boolean(pt1.resultdef) then
                                  def:=COrdDef.create(pasbool1,lv,hv,true)
-                               else if is_signed(pt1.resultdef) then
-                                 def:=COrdDef.create(range_to_basetype(lv,hv),lv,hv,true)
+                               else if Is_Signed(pt1.resultdef) then
+                                 def:=COrdDef.create(Range_To_BaseType(lv,hv),lv,hv,true)
                                else
-                                 def:=COrdDef.create(range_to_basetype(lv,hv),lv,hv,true);
+                                 def:=COrdDef.create(Range_To_BaseType(lv,hv),lv,hv,true);
                            end;
                          else
                            InternalError(2019050527);
@@ -1578,10 +1578,10 @@ implementation
                                    done when both are integer values, because typecasting
                                    between -3200..3200 will result in a signed-unsigned
                                    conflict and give a range check error (PFV) }
-                                 if not(is_integer(TRangeNode(pt).left.resultdef) and is_integer(TRangeNode(pt).left.resultdef)) then
+                                 if not(Is_Integer(TRangeNode(pt).left.resultdef) and Is_Integer(TRangeNode(pt).left.resultdef)) then
                                    inserttypeconv(TRangeNode(pt).left,TRangeNode(pt).right.resultdef);
-                                 lowval:=TOrdConstNode(TRangeNode(pt).left).value;
-                                 highval:=TOrdConstNode(TRangeNode(pt).right).value;
+                                 lowval:=TOrdConstNode(TRangeNode(pt).left).Value;
+                                 highval:=TOrdConstNode(TRangeNode(pt).right).Value;
                                  if highval<lowval then
                                   begin
                                     { ignore error if node is generic param }
@@ -1596,8 +1596,8 @@ implementation
                                      lowval :=0;
                                      highval:=0;
                                    end;
-                                 if is_integer(TRangeNode(pt).left.resultdef) then
-                                   range_to_type(lowval,highval,IndexDef)
+                                 if Is_Integer(TRangeNode(pt).left.resultdef) then
+                                   Range_To_Type(lowval,highval,IndexDef)
                                  else
                                    IndexDef:=TRangeNode(pt).left.resultdef;
                                end
@@ -1606,7 +1606,7 @@ implementation
                                  Message(type_e_cant_eval_constant_expr)
                                else
                                  { we need a valid range for debug information }
-                                 range_to_type(lowval,highval,IndexDef);
+                                 Range_To_Type(lowval,highval,IndexDef);
                            end
                          else
                            Message(sym_e_error_in_type_def)
@@ -1667,7 +1667,7 @@ implementation
                SymTableStack.pop(arrdef.SymTable);
                arrdef.ElementDef:=tt2;
                if Is_Packed and
-                  is_managed_type(tt2) then
+                  Is_Managed_Type(tt2) then
                  Message(type_e_no_packed_inittable);
              end;
            { restore old state }
@@ -1699,7 +1699,7 @@ implementation
               consume(CurrentScanner.token)
             else
               consume(_FUNCTION);
-            pd:=CProcVarDef.create(normal_function_level,doregister);
+            pd:=CProcVarDef.create(NormalFunctionLevel,doregister);
 
             if Assigned(sym) then
               begin
@@ -1747,7 +1747,7 @@ implementation
                     try_to_consume(_IS) then
               begin
                 consume(_NESTED);
-                pd.ParaST.SymTableLevel:=normal_function_level+1;
+                pd.ParaST.SymTableLevel:=NormalFunctionLevel+1;
                 pd.Check_Mark_As_Nested;
               end;
             SymTableStack.pop(pd.ParaST);
@@ -1867,10 +1867,10 @@ implementation
                         begin
                           { we expect an integer or an enum of the
                             same type }
-                          if is_integer(p.resultdef) or
-                             is_char(p.resultdef) or
-                             equal_defs(p.resultdef,aktenumdef) then
-                           v:=TOrdConstNode(p).value
+                          if Is_Integer(p.resultdef) or
+                             Is_Char(p.resultdef) or
+                             Equal_Defs(p.resultdef,aktenumdef) then
+                           v:=TOrdConstNode(p).Value
                           else
                            IncompatibleTypes(p.resultdef,S32IntType);
                         end
@@ -1948,7 +1948,7 @@ implementation
                        (CurrentScanner.token in [_CLASS,_OBJECT]) then
                       CurrentSettings.PackRecords:=1
                     else
-                      CurrentSettings.PackRecords:=bit_alignment;
+                      CurrentSettings.PackRecords:=BitAlignment;
                     case CurrentScanner.token of
                       _CLASS :
                         begin
@@ -2008,7 +2008,7 @@ implementation
                     def:=object_dec(odt_helper,name,newsym,GenericDef,genericlist,nil,ht_class);
                   end
                 else
-                  def:=object_dec(default_class_type,name,newsym,GenericDef,genericlist,nil,ht_none);
+                  def:=object_dec(DefaultClassType,name,newsym,GenericDef,genericlist,nil,ht_none);
               end;
             _CPPCLASS :
               begin

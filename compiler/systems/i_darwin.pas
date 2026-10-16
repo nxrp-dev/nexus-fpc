@@ -37,7 +37,7 @@ const
          rcbin  : 'windres';
          rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
          resourcefileclass : nil;
-         resflags : [];
+         ResFlags : [];
        );
    res_macosx_ext_info : TResInfo =
       (
@@ -47,7 +47,7 @@ const
          rcbin  : 'windres';
          rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
          resourcefileclass : nil;
-         resflags : [res_external_file,res_arch_in_file_name];
+         ResFlags : [res_external_file,res_arch_in_file_name];
       );
 
 

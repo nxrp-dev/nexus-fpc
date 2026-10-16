@@ -78,7 +78,7 @@ implementation
 
         Generate the division by 10000 via nodes so the 10000.0 constant can
         be reused. }
-      if is_currency(resultdef) and
+      if Is_Currency(resultdef) and
          not(nf_is_currency in flags) then
         begin
           { convert the equivalent int64 value to double without conversion
@@ -91,9 +91,9 @@ implementation
         end;
       { The only other thing we have to take care of: convert values < 32 bit
         to 32 bit }
-      if left.resultdef.size<4 then
+      if left.resultdef.Size<4 then
         begin
-          if is_signed(left.resultdef) then
+          if Is_Signed(left.resultdef) then
             inserttypeconv(left,S32IntType)
           else
             inserttypeconv(left,U32IntType)
@@ -117,12 +117,12 @@ implementation
     var
       op: TAsmOp;
     begin
-      location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-      location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
-      hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-      if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+      Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+      location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+      hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
+      if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
         InternalError(2014120401);
-      case left.location.size of
+      case left.Location.Size of
         OS_32,
         OS_64:
           op:=A_UCVTF;
@@ -134,14 +134,14 @@ implementation
         else
           InternalError(2014120402);
       end;
-      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,location.register,left.location.register));
+      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,location.Register,left.Location.Register));
       { no scaling for currency, that's handled in pass_typecheck }
     end;
 
 
   procedure TAArch64TypeConvNode.second_int_to_bool;
     var
-      resflags: TResFlags;
+      ResFlags: TResFlags;
     begin
       if (nf_explicit in flags) and
          not(left.expectloc in [LOC_FLAGS,LOC_JUMP]) then
@@ -157,7 +157,7 @@ implementation
       if CodeGenError then
        exit;
 
-      case left.location.loc of
+      case left.Location.Loc of
         LOC_SUBSETREG,
         LOC_CSUBSETREG,
         LOC_SUBSETREF,
@@ -168,28 +168,28 @@ implementation
         LOC_CREGISTER,
         LOC_JUMP:
           begin
-             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,left.location.register,0));
-             resflags:=F_NE;
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,left.Location.Register,0));
+             ResFlags:=F_NE;
           end;
         LOC_FLAGS :
-          resflags:=left.location.resflags;
+          ResFlags:=left.Location.ResFlags;
         else
           InternalError(2014122902);
       end;
       { load flags to register }
-      location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-      location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
-      if is_cbool(resultdef) then
+      Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+      location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
+      if Is_CBool(resultdef) then
         begin
-          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_cond(A_CSETM,location.register,flags_to_cond(resflags)));
+          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_cond(A_CSETM,location.Register,flags_to_cond(ResFlags)));
             { truncate? (in case cbools are ever made unsigned) }
-            if resultdef.size<4 then
-              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_32,location.size,location.register,location.register);
+            if resultdef.Size<4 then
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,location.Size,location.Register,location.Register);
         end
       else
-        cg.g_flags2reg(CurrentAsmData.CurrAsmList,location.size,resflags,location.register);
-      cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+        cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,location.Size,ResFlags,location.Register);
+      cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
     end;
 
 

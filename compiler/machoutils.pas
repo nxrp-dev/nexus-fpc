@@ -645,8 +645,8 @@ const
           sectname:=sec.sectname;
           segname:=sec.segname;
           addr:=NtoLE(sec.addr);
-          size:=NtoLE(sec.size);
-          offset:=NtoLE(sec.offset);
+          size:=NtoLE(sec.Size);
+          offset:=NtoLE(sec.Offset);
           align:=NtoLE(sec.align);
           reloff:=NtoLE(sec.reloff);
           nreloc:=NtoLE(sec.nreloc);
@@ -817,8 +817,8 @@ const
           sectname:=sec.sectname;
           segname:=sec.segname;
           addr:=NtoLE(sec.addr);
-          size:=NtoLE(sec.size);
-          offset:=NtoLE(sec.offset);
+          size:=NtoLE(sec.Size);
+          offset:=NtoLE(sec.Offset);
           align:=NtoLE(sec.align);
           reloff:=NtoLE(sec.reloff);
           nreloc:=NtoLE(sec.nreloc);
@@ -911,8 +911,8 @@ const
           sectname:=sec.sectname;
           segname:=sec.segname;
           addr:=NtoBE(sec.addr);
-          size:=NtoBE(sec.size);
-          offset:=NtoBE(sec.offset);
+          size:=NtoBE(sec.Size);
+          offset:=NtoBE(sec.Offset);
           align:=NtoBE(sec.align);
           reloff:=NtoBE(sec.reloff);
           nreloc:=NtoBE(sec.nreloc);
@@ -1083,8 +1083,8 @@ const
           sectname:=sec.sectname;
           segname:=sec.segname;
           addr:=NtoBE(sec.addr);
-          size:=NtoBE(sec.size);
-          offset:=NtoBE(sec.offset);
+          size:=NtoBE(sec.Size);
+          offset:=NtoBE(sec.Offset);
           align:=NtoBE(sec.align);
           reloff:=NtoBE(sec.reloff);
           nreloc:=NtoBE(sec.nreloc);
@@ -1419,8 +1419,8 @@ const
       section.sectname:=sec.sectname;
       section.segname:=sec.segname;
       section.addr:=LEToN(sec.addr);
-      section.size:=LEToN(sec.size);
-      section.offset:=LEToN(sec.offset);
+      section.Size:=LEToN(sec.Size);
+      section.Offset:=LEToN(sec.Offset);
       section.align:=LEToN(sec.align);
       section.reloff:=LEToN(sec.reloff);
       section.nreloc:=LEToN(sec.nreloc);
@@ -1437,8 +1437,8 @@ const
       section.sectname:=sec.sectname;
       section.segname:=sec.segname;
       section.addr:=LEToN(sec.addr);
-      section.size:=LEToN(sec.size);
-      section.offset:=LEToN(sec.offset);
+      section.Size:=LEToN(sec.Size);
+      section.Offset:=LEToN(sec.Offset);
       section.align:=LEToN(sec.align);
       section.reloff:=LEToN(sec.reloff);
       section.nreloc:=LEToN(sec.nreloc);

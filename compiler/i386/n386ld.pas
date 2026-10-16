@@ -50,8 +50,8 @@ implementation
 
     procedure TI386LoadNode.generate_absaddr_access(vs: TAbsoluteVarSym);
       begin
-        if TCPUAbsoluteVarSym(symtableentry).absseg then
-          location.reference.segment:=NR_FS;
+        if TCPUAbsoluteVarSym(symtableentry).AbsSeg then
+          location.Reference.Segment:=NR_FS;
         inherited;
       end;
 

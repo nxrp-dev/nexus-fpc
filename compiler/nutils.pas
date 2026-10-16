@@ -437,11 +437,11 @@ implementation
            (
              (p1.resultdef.typ=objectdef) and
              (
-               not is_invokable(p1.resultdef) or
+               not Is_Invokable(p1.resultdef) or
                (nf_load_procvar in p1.flags) or
                not (
-                 is_funcref(p1.resultdef) or
-                 invokable_has_argless_invoke(TObjectDef(p1.resultdef))
+                 Is_FuncRef(p1.resultdef) or
+                 Invokable_Has_Argless_Invoke(TObjectDef(p1.resultdef))
                )
              )
            ) or
@@ -625,12 +625,12 @@ implementation
             if Is_Object(self_resultdef) then
               begin
                 self_temp:=CTempCreateNode.create_value(
-                  CPointerDef.getreusable(self_resultdef),CPointerDef.getreusable(self_resultdef).size,tt_persistent,true,
+                  CPointerDef.getreusable(self_resultdef),CPointerDef.getreusable(self_resultdef).Size,tt_persistent,true,
                   CAddrNode.create(self_node));
               end
             else
               self_temp:=CTempCreateNode.create_value(
-                self_resultdef,self_resultdef.size,tt_persistent,true,
+                self_resultdef,self_resultdef.Size,tt_persistent,true,
                 self_node);
             addstatement(stat,self_temp);
 
@@ -642,7 +642,7 @@ implementation
               begin
                 check_self:=CTempRefNode.create(self_temp);
                 addstatement(stat,CIfNode.create(
-                  CAddNode.create(equaln,
+                  CAddNode.create(EqualN,
                     CTypeConvNode.create_explicit(
                       check_self,
                       VoidPointerType
@@ -683,7 +683,7 @@ implementation
         if docheck then
           begin
             { add a vmt validity check }
-            vmt_temp:=CTempCreateNode.create_value(result.resultdef,result.resultdef.size,tt_persistent,true,result);
+            vmt_temp:=CTempCreateNode.create_value(result.resultdef,result.resultdef.Size,tt_persistent,true,result);
             addstatement(stat,vmt_temp);
             paras:=CCallParaNode.create(CTempRefNode.create(vmt_temp),nil);
             if cs_check_object in CurrentSettings.LocalSwitches then
@@ -724,7 +724,7 @@ implementation
           i,maxranges,lastv: cardinal;
         begin
           { maxranges value should match the logic in nx86set.pas:tx86innode.pass_generate_code.analizeset. }
-          if is_smallset(cs.resultdef) then
+          if Is_SmallSet(cs.resultdef) then
             maxranges:=3
           else if cs_opt_size in CurrentSettings.OptimizerSwitches then
             maxranges:=8
@@ -815,7 +815,7 @@ implementation
               callparan:
                 begin
                   { call to decr? }
-                  if is_managed_type(TUnaryNode(p).left.resultdef) and
+                  if Is_Managed_Type(TUnaryNode(p).left.resultdef) and
                      Assigned(TCallParaNode(p).parasym) and (TCallParaNode(p).parasym.VarSpez=vs_out) then
                     exit;
                   inc(cv);
@@ -843,7 +843,7 @@ implementation
                 end;
               addn,subn,orn,andn,xorn,symdifn,
               shln,shrn,
-              equaln,unequaln,gtn,gten,ltn,lten,
+              EqualN,unequaln,gtn,gten,ltn,lten,
               assignn,vecn:
                 begin
                   inc(cv,node_complexity(TBinaryNode(p).left)+1);
@@ -1039,7 +1039,7 @@ implementation
             end;
           assignn,
           addn,subn,muln,slashn,
-          equaln,unequaln,gtn,gten,ltn,lten :
+          EqualN,unequaln,gtn,gten,ltn,lten :
             begin
               if (TBinaryNode(p).left.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER]) or
                  (TBinaryNode(p).right.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER])then
@@ -1179,7 +1179,7 @@ implementation
                  include(p1.flags,nf_absolute);
                end;
              sl_vec :
-               p1:=CVecNode.create(p1,COrdConstNode.create(plist^.value,plist^.ValueDef,true));
+               p1:=CVecNode.create(p1,COrdConstNode.create(plist^.Value,plist^.ValueDef,true));
              else
                InternalError(200110205);
            end;
@@ -1212,7 +1212,7 @@ implementation
               begin
                 addnode(TVecNode(p).left);
                 if TVecNode(p).right.nodetype=ordconstn then
-                  sl.AddConst(sl_vec,TOrdConstNode(TVecNode(p).right).value,TVecNode(p).right.resultdef)
+                  sl.AddConst(sl_vec,TOrdConstNode(TVecNode(p).right).Value,TVecNode(p).right.resultdef)
                 else
                   begin
                     Message(parser_e_illegal_expression);
@@ -1291,7 +1291,7 @@ implementation
             p1.free;
             p1:=nil;
             { static syms are always stored as absolutevarsym to handle scope and storage properly }
-            propaccesslist_to_node(p1,nil,TAbsoluteVarSym(sym).ref);
+            propaccesslist_to_node(p1,nil,TAbsoluteVarSym(sym).Ref);
           end;
       end;
 
@@ -1301,7 +1301,7 @@ implementation
         case n.nodetype of
           vecn:
             result:=
-              is_packed_array(TVecNode(n).left.resultdef) and
+              Is_Packed_Array(TVecNode(n).left.resultdef) and
               { only orddefs and enumdefs are actually bitpacked. Don't consider
                 e.g. an access to a 3-byte record as "bitpacked", since it
                 isn't }
@@ -1310,7 +1310,7 @@ implementation
               not(TArrayDef(TVecNode(n).left.resultdef).ElePackedBitSize in [8,16,32,64]);
           subscriptn:
             result:=
-              is_packed_record_or_object(TSubscriptNode(n).left.resultdef) and
+              Is_Packed_Record_Or_Object(TSubscriptNode(n).left.resultdef) and
               { see above }
               (TSubscriptNode(n).vs.vardef.typ in [orddef,enumdef]) and
               (not(TSubscriptNode(n).vs.vardef.PackedBitSize in [8,16,32,64]) or
@@ -1379,7 +1379,7 @@ implementation
              ((n.nodetype=subscriptn) and Is_Implicit_Pointer_Object_Type(TSubscriptNode(n).left.resultdef)) or
              ((n.nodetype in [addn,subn,muln,unaryminusn]) and (n.LocalSwitches*[cs_check_overflow,cs_check_range]<>[])) or
              { float operations could throw an exception }
-             ((n.nodetype in [addn,subn,muln,slashn,unaryminusn,equaln,unequaln,gten,gtn,lten,ltn]) and is_real_or_cextended(TUnaryNode(n).left.resultdef))
+             ((n.nodetype in [addn,subn,muln,slashn,unaryminusn,EqualN,unequaln,gten,gtn,lten,ltn]) and Is_Real_Or_CExtended(TUnaryNode(n).left.resultdef))
             )
            ) or
            ((n.nodetype=loadn) and
@@ -1411,7 +1411,7 @@ implementation
         { this check is not complete yet, but sufficient to cover the current use case: swapping
           of trees in expressions }
         if (n.nodetype in [ifn,whilerepeatn,forn,tryexceptn]) or
-          ((n.nodetype in [orn,andn]) and is_boolean(n.resultdef) and doshortbooleval(n)) then
+          ((n.nodetype in [orn,andn]) and Is_Boolean(n.resultdef) and doshortbooleval(n)) then
           result:=fen_norecurse_true;
       end;
 
@@ -1568,7 +1568,7 @@ implementation
 
     function is_constintvalue(p: TNode; l: TConstExprInt): Boolean;
       begin
-        Result:=is_constintnode(p) and (TOrdConstNode(p).value=l);
+        Result:=is_constintnode(p) and (TOrdConstNode(p).Value=l);
       end;
 
 
@@ -1576,9 +1576,9 @@ implementation
       begin
         case p.nodetype of
           ordconstn:
-            result:=TOrdConstNode(p).value;
+            result:=TOrdConstNode(p).Value;
           pointerconstn:
-            result:=TPointerConstNode(p).value;
+            result:=TPointerConstNode(p).Value;
           niln:
             result:=0;
           else
@@ -1743,7 +1743,7 @@ implementation
        begin
          result:=(is_constintnode(n) and (get_int_value(n)<>0)) or
            ((n.resultdef.typ=orddef) and ((TOrdDef(n.resultdef).low>0) or (TOrdDef(n.resultdef).high<0))) or
-           ((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_int_2_int) and (n.resultdef.size>=TTypeConvNode(n).resultdef.size) and node_not_zero(TTypeConvNode(n).left)) or
+           ((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_int_2_int) and (n.resultdef.Size>=TTypeConvNode(n).resultdef.Size) and node_not_zero(TTypeConvNode(n).left)) or
            ((n.nodetype=orn) and (node_not_zero(TAddNode(n).left) or node_not_zero(TAddNode(n).right)));
        end;
 

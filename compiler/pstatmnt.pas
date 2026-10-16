@@ -130,24 +130,24 @@ implementation
           end;
 
         { combining string/char types }
-        if is_anychar(olddef) and is_string(branchdef) then
+        if Is_AnyChar(olddef) and Is_String(branchdef) then
           result:=branchdef
-        else if is_widestring(branchdef) or is_widestring(olddef) or
-                ((is_ansistring(olddef) or is_chararray(olddef)) and is_widechar(branchdef)) then
+        else if Is_WideString(branchdef) or Is_WideString(olddef) or
+                ((Is_AnsiString(olddef) or Is_CharArray(olddef)) and Is_WideChar(branchdef)) then
           result:=CWideStringType
-        else if is_unicodestring(branchdef) or is_unicodestring(olddef) then
+        else if Is_UnicodeString(branchdef) or Is_UnicodeString(olddef) then
           result:=CUnicodeStringType
-        else if is_char(olddef) and is_widechar(branchdef) then
+        else if Is_Char(olddef) and Is_WideChar(branchdef) then
           result:=CWideCharType
         { constant strings: use longest }
-        else if is_chararray(olddef) and is_chararray(branchdef) then
+        else if Is_CharArray(olddef) and Is_CharArray(branchdef) then
           begin
             result:=olddef;
             if TArrayDef(olddef).EleCount<TArrayDef(branchdef).EleCount then
               result:=branchdef;
           end
         { shortstrings: use longest }
-        else if is_shortstring(olddef) and is_shortstring(branchdef) then
+        else if Is_ShortString(olddef) and Is_ShortString(branchdef) then
           begin
             result:=olddef;
             if TStringDef(olddef).len<TStringDef(branchdef).len then
@@ -163,9 +163,9 @@ implementation
           begin
             { combine to biggest }
             result:=olddef;
-            cmp:=compare_defs(olddef,branchdef,oldtree.nodetype);
+            cmp:=Compare_Defs(olddef,branchdef,oldtree.nodetype);
             if (cmp<te_equal) and
-                (cmp>compare_defs(branchdef,olddef,branchtree.nodetype)) then
+                (cmp>Compare_Defs(branchdef,olddef,branchtree.nodetype)) then
               result:=branchdef;
           end;
 
@@ -179,7 +179,7 @@ implementation
         out resultvar : TTempCreateNode) : TNode;
       begin
         result:=internalstatements(statements);
-        resultvar:=CTempCreateNode.create(resdef,resdef.size,tt_persistent,
+        resultvar:=CTempCreateNode.create(resdef,resdef.Size,tt_persistent,
                                           not is_anonymous_procdef(resdef));
         addstatement(statements,resultvar);
       end;
@@ -304,10 +304,10 @@ implementation
         { case of string must be rejected in Delphi and MacPas modes. }
         caseofstring :=
           ([m_delphi, m_mac] * CurrentSettings.ModeSwitches = []) and
-          is_string(casedef);
+          Is_String(casedef);
 
         if (not Assigned(casedef)) or
-            ( not(is_ordinal(casedef)) and (not caseofstring) ) then
+            ( not(Is_Ordinal(casedef)) and (not caseofstring) ) then
         begin
           CGMessage(type_e_ordinal_or_string_expr_expected);
           { create a valid tree }
@@ -332,7 +332,7 @@ implementation
       begin
         repeat
           p:=expr(true);
-          if is_widechar(casedef) then
+          if Is_WideChar(casedef) then
             begin
               if (p.nodetype=rangen) then
                 begin
@@ -349,7 +349,7 @@ implementation
             end
           else
             begin
-              if is_char(casedef) and is_widechar(p.resultdef) then
+              if Is_Char(casedef) and Is_WideChar(p.resultdef) then
                 begin
                   if (p.nodetype=ordconstn) then
                     begin
@@ -387,8 +387,8 @@ implementation
 
               { type checking for ordinal case statements }
               else if (not caseofstring) and
-                is_subequal(casedef, TRangeNode(p).left.resultdef) and
-                is_subequal(casedef, TRangeNode(p).right.resultdef) then
+                Is_Subequal(casedef, TRangeNode(p).left.resultdef) and
+                Is_Subequal(casedef, TRangeNode(p).right.resultdef) then
                 begin
                   hl1:=get_ordinal_value(TRangeNode(p).left);
                   hl2:=get_ordinal_value(TRangeNode(p).right);
@@ -396,8 +396,8 @@ implementation
                     CGMessage(parser_e_case_lower_less_than_upper_bound);
                   if not casedeferror then
                     begin
-                      adaptrange(casedef,hl1,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                      adaptrange(casedef,hl2,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                      AdaptRange(casedef,hl1,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                      AdaptRange(casedef,hl2,false,false,cs_check_range in CurrentSettings.LocalSwitches);
                     end;
                 end
               else
@@ -414,7 +414,7 @@ implementation
 
               { type check for string / ordinal case statements }
               if (caseofstring and (not is_conststring_or_constcharnode(p))) or
-                ((not caseofstring) and (not is_subequal(casedef, p.resultdef))) then
+                ((not caseofstring) and (not Is_Subequal(casedef, p.resultdef))) then
                 CGMessage(parser_e_case_mismatch);
 
               if caseofstring then
@@ -426,7 +426,7 @@ implementation
                 begin
                   hl1:=get_ordinal_value(p);
                   if not casedeferror then
-                    adaptrange(casedef,hl1,false,false,cs_check_range in CurrentSettings.LocalSwitches);
+                    AdaptRange(casedef,hl1,false,false,cs_check_range in CurrentSettings.LocalSwitches);
                   casenode.addlabel(blockid,hl1,hl1);
                 end;
             end;
@@ -520,9 +520,9 @@ implementation
             exit(true);
           if caseofstring then
             exit(false);
-          getrange(casedef,lv,hv);
+          GetRange(casedef,lv,hv);
           { low/high value of c-style booleans are not suitable for calculating their "type count" }
-          if is_cbool(casedef) then
+          if Is_CBool(casedef) then
             exit(false);
 
           typcount:=hv-lv;
@@ -653,7 +653,7 @@ implementation
                (fordef.typ<>errordef) and
                { the node was derived from a generic parameter so ignore range check }
                not(nf_generic_para in hp.flags) then
-              adaptrange(fordef,TOrdConstNode(hp).value,false,false,true);
+              AdaptRange(fordef,TOrdConstNode(hp).Value,false,false,true);
           end;
 
         function for_loop_create(hloopvar: TNode): TNode;
@@ -669,9 +669,9 @@ implementation
 
              { variable must be an ordinal, int64 is not allowed for 32bit targets }
              if (
-                 not(is_ordinal(hloopvar.resultdef))
+                 not(Is_Ordinal(hloopvar.resultdef))
     {$if not defined(cpu64bitaddr) and not defined(cpu64bitalu)}
-                 or is_64bitint(hloopvar.resultdef)
+                 or Is_64BitInt(hloopvar.resultdef)
     {$endif not cpu64bitaddr and not cpu64bitalu}
                ) and
                (hloopvar.resultdef.typ<>undefineddef)
@@ -704,7 +704,7 @@ implementation
                            3. No threadvar, readonly or typedconst
                        }
                        if (
-                           (TLoadNode(hp).SymTable.SymTableLevel=main_program_level) or
+                           (TLoadNode(hp).SymTable.SymTableLevel=MainProgramLevel) or
                            (TLoadNode(hp).SymTable.SymTableLevel=CurrentProcInfo.procdef.ParaST.SymTableLevel)
                           ) and
                           (TAbstractVarSym(TLoadNode(hp).symtableentry).VarSpez=vs_value) and
@@ -924,7 +924,7 @@ implementation
                 { since we may need its address later on                 }
                 if not valid_for_addr(p,false) then
                   begin
-                    calltempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
+                    calltempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
                     addstatement(newstatement,calltempnode);
                     addstatement(newstatement,CAssignmentNode.create(
                         CTempRefNode.create(calltempnode),
@@ -1576,9 +1576,9 @@ implementation
             else
               def:=SizeSIntType;
           end;
-          if cv.uvalue>get_max_value(def).uvalue then
-            def:=get_unsigned_inttype(def);
-          adaptrange(def,cv,rc_implicit);
+          if cv.uvalue>Get_Max_Value(def).uvalue then
+            def:=Get_Unsigned_IntType(def);
+          AdaptRange(def,cv,rc_implicit);
           result:=cv.svalue;
         end;
 
@@ -1789,7 +1789,7 @@ implementation
                              if not(m_non_local_goto in CurrentSettings.ModeSwitches) then
                                Message(parser_e_goto_outside_proc);
                              include(CurrentProcInfo.flags,pi_has_global_goto);
-                             if is_nested_pd(CurrentProcInfo.procdef) then
+                             if Is_Nested_PD(CurrentProcInfo.procdef) then
                                CurrentProcInfo.set_needs_parentfp(srsym.owner.SymTableLevel);
                            end;
                          code:=CGotoNode.create(TLabelSym(srsym));
@@ -1875,7 +1875,7 @@ implementation
               begin
                 { in iso mode, 0003: is equal to 3: }
                 if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
-                  SearchSym(ToStr(TOrdConstNode(p).value),srsym,srsymtable)
+                  SearchSym(ToStr(TOrdConstNode(p).Value),srsym,srsymtable)
                 else
                   SearchSym(s,srsym,srsymtable);
                 p.free;
@@ -1950,7 +1950,7 @@ implementation
 
                  { in $x- state, the function result must not be ignored }
                  if not(cs_extsyntax in CurrentSettings.ModuleSwitches) and
-                    not(is_void(p.resultdef)) and
+                    not(Is_Void(p.resultdef)) and
                     { can be nil in case there was an error in the expression }
                     Assigned(TCallNode(p).procdefinition) and
                     { allow constructor calls to drop the result if they are
@@ -2037,7 +2037,7 @@ implementation
            message(parser_e_no_assembler_in_generic);
 
          { Rename the funcret so that recursive calls are possible }
-         if not is_void(CurrentProcInfo.procdef.ReturnDef) then
+         if not Is_Void(CurrentProcInfo.procdef.ReturnDef) then
            begin
              srsym:=TSym(CurrentProcInfo.procdef.LocalST.Find(CurrentProcInfo.procdef.ProcSym.name));
              if Assigned(srsym) then
@@ -2074,7 +2074,7 @@ implementation
                 (not Assigned(CurrentProcInfo.procdef.FuncRetSym) or
                  (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs<=1)) and
                 not (df_generic in CurrentProcInfo.procdef.DefOptions) and
-                not(paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
+                not(ParaManager.Ret_In_Param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
                begin
                  { Only need to set the framepointer, the locals will
                    be inserted with the correct reference in tcgasmnode.pass_generate_code }
@@ -2087,7 +2087,7 @@ implementation
         }
         if Assigned(CurrentProcInfo.procdef.FuncRetSym) and
             not (df_generic in CurrentProcInfo.procdef.DefOptions) and
-           (not paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
+           (not ParaManager.Ret_In_Param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
           TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).VarState:=vs_initialised;
 
         { because the END is already read we need to get the

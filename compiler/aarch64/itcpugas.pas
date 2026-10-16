@@ -87,7 +87,7 @@ implementation
         if p<>0 then
           result:=gas_regname_table[p]
         else
-          result:=generic_regname(r);
+          result:=Generic_RegName(r);
       end;
 
 end.

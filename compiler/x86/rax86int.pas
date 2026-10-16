@@ -274,7 +274,7 @@ Unit Rax86int;
         is_register:=false;
         actasmregister:=masm_regnum_search(lower(s));
         { don't accept "flags" as register name in an instruction }
-        if (getsupreg(actasmregister)=RS_DEFAULTFLAGS) and (getregtype(actasmregister)=getregtype(NR_DEFAULTFLAGS)) then
+        if (GetSupReg(actasmregister)=RS_DEFAULTFLAGS) and (GetRegType(actasmregister)=GetRegType(NR_DEFAULTFLAGS)) then
           actasmregister:=NR_NO;
         if actasmregister<>NR_NO then
           begin
@@ -999,7 +999,7 @@ Unit Rax86int;
                           if (kreg >= NR_K1) and
                              (kreg <= NR_K7) then
                           begin
-                            aop.vopext := aop.vopext or (TRegisterRec(kreg).supreg  and $07);
+                            aop.vopext := aop.vopext or (TRegisterRec(kreg).SupReg  and $07);
                             aop.vopext := aop.vopext or OTVE_VECTOR_WRITEMASK;
                           end;
                         end;
@@ -1056,24 +1056,24 @@ Unit Rax86int;
     { Adds two references (dest:=dest+src) }
     procedure TX86IntReader.AddReferences(dest,src : tx86operand);
 
-      procedure AddRegister(reg:TRegister;scalefactor:byte);
+      procedure AddRegister(reg:TRegister;ScaleFactor:byte);
         begin
           if reg=NR_NO then
             exit;
-          if (dest.opr.ref.base=NR_NO) and (scalefactor=1) then
+          if (dest.opr.Ref.Base=NR_NO) and (ScaleFactor=1) then
             begin
-              dest.opr.ref.base:=reg;
+              dest.opr.Ref.Base:=reg;
               exit;
             end;
-          if dest.opr.ref.index=NR_NO then
+          if dest.opr.Ref.Index=NR_NO then
             begin
-              dest.opr.ref.index:=reg;
-              dest.opr.ref.scalefactor:=scalefactor;
+              dest.opr.Ref.Index:=reg;
+              dest.opr.Ref.ScaleFactor:=ScaleFactor;
               exit;
             end;
-          if dest.opr.ref.index=reg then
+          if dest.opr.Ref.Index=reg then
             begin
-              Inc(dest.opr.ref.scalefactor,scalefactor);
+              Inc(dest.opr.Ref.ScaleFactor,ScaleFactor);
               exit;
             end;
           Message(asmr_e_multiple_index);
@@ -1089,60 +1089,60 @@ Unit Rax86int;
               case src.opr.typ of
                 OPR_REFERENCE:
                   begin
-                    AddRegister(src.opr.ref.base,1);
-                    AddRegister(src.opr.ref.index,src.opr.ref.scalefactor);
-                    if src.opr.ref.segment<>NR_NO then
-                      SetSegmentOverride(dest,src.opr.ref.segment);
-                    Inc(dest.opr.ref.offset,src.opr.ref.offset);
+                    AddRegister(src.opr.Ref.Base,1);
+                    AddRegister(src.opr.Ref.Index,src.opr.Ref.ScaleFactor);
+                    if src.opr.Ref.Segment<>NR_NO then
+                      SetSegmentOverride(dest,src.opr.Ref.Segment);
+                    Inc(dest.opr.Ref.Offset,src.opr.Ref.Offset);
                     Inc(dest.opr.constoffset,src.opr.constoffset);
                     dest.haslabelref:=dest.haslabelref or src.haslabelref;
                     dest.hasproc:=dest.hasproc or src.hasproc;
                     dest.hasvar:=dest.hasvar or src.hasvar;
-                    if Assigned(src.opr.ref.symbol) then
+                    if Assigned(src.opr.Ref.Symbol) then
                       begin
-                        if Assigned(dest.opr.ref.symbol) then
+                        if Assigned(dest.opr.Ref.Symbol) then
                           Message(asmr_e_cant_have_multiple_relocatable_symbols);
-                        dest.opr.ref.symbol:=src.opr.ref.symbol;
+                        dest.opr.Ref.Symbol:=src.opr.Ref.Symbol;
                       end;
-                    if Assigned(src.opr.ref.relsymbol) then
+                    if Assigned(src.opr.Ref.RelSymbol) then
                       begin
-                        if Assigned(dest.opr.ref.relsymbol) then
+                        if Assigned(dest.opr.Ref.RelSymbol) then
                           Message(asmr_e_cant_have_multiple_relocatable_symbols);
-                        dest.opr.ref.relsymbol:=src.opr.ref.relsymbol;
+                        dest.opr.Ref.RelSymbol:=src.opr.Ref.RelSymbol;
                       end;
-                    if dest.opr.ref.refaddr=addr_no then
-                      dest.opr.ref.refaddr:=src.opr.ref.refaddr;
+                    if dest.opr.Ref.RefAddr=addr_no then
+                      dest.opr.Ref.RefAddr:=src.opr.Ref.RefAddr;
                   end;
                 OPR_LOCAL:
                   begin
                     tmplocal:=src.opr;
-                    if dest.opr.ref.base<>NR_NO then
+                    if dest.opr.Ref.Base<>NR_NO then
                       begin
                         if tmplocal.localindexreg=NR_NO then
                           begin
-                            tmplocal.localindexreg:=dest.opr.ref.base;
+                            tmplocal.localindexreg:=dest.opr.Ref.Base;
                             tmplocal.localscale:=0;
                           end
-                        else if tmplocal.localindexreg=dest.opr.ref.base then
+                        else if tmplocal.localindexreg=dest.opr.Ref.Base then
                           tmplocal.localscale:=Min(tmplocal.localscale,1)+1
                         else
                           Message(asmr_e_multiple_index);
                       end;
-                    if dest.opr.ref.index<>NR_NO then
+                    if dest.opr.Ref.Index<>NR_NO then
                       begin
                         if tmplocal.localindexreg=NR_NO then
                           begin
-                            tmplocal.localindexreg:=dest.opr.ref.index;
-                            tmplocal.localscale:=dest.opr.ref.scalefactor;
+                            tmplocal.localindexreg:=dest.opr.Ref.Index;
+                            tmplocal.localscale:=dest.opr.Ref.ScaleFactor;
                           end
-                        else if tmplocal.localindexreg=dest.opr.ref.index then
-                          tmplocal.localscale:=Min(tmplocal.localscale,1)+Min(dest.opr.ref.scalefactor,1)
+                        else if tmplocal.localindexreg=dest.opr.Ref.Index then
+                          tmplocal.localscale:=Min(tmplocal.localscale,1)+Min(dest.opr.Ref.ScaleFactor,1)
                         else
                           Message(asmr_e_multiple_index);
                       end;
                     Inc(tmplocal.localconstoffset,dest.opr.constoffset);
-                    Inc(tmplocal.localsymofs,dest.opr.ref.offset);
-                    segreg:=dest.opr.ref.segment;
+                    Inc(tmplocal.localsymofs,dest.opr.Ref.Offset);
+                    segreg:=dest.opr.Ref.Segment;
                     dest.opr:=tmplocal;
                     if segreg<>NR_NO then
                       SetSegmentOverride(dest,segreg);
@@ -1156,34 +1156,34 @@ Unit Rax86int;
               case src.opr.typ of
                 OPR_REFERENCE:
                   begin
-                    if src.opr.ref.base<>NR_NO then
+                    if src.opr.Ref.Base<>NR_NO then
                       begin
                         if dest.opr.localindexreg=NR_NO then
                           begin
-                            dest.opr.localindexreg:=src.opr.ref.base;
+                            dest.opr.localindexreg:=src.opr.Ref.Base;
                             dest.opr.localscale:=0;
                           end
-                        else if dest.opr.localindexreg=src.opr.ref.base then
+                        else if dest.opr.localindexreg=src.opr.Ref.Base then
                           dest.opr.localscale:=Min(dest.opr.localscale,1)+1
                         else
                           Message(asmr_e_multiple_index);
                       end;
-                    if src.opr.ref.index<>NR_NO then
+                    if src.opr.Ref.Index<>NR_NO then
                       begin
                         if dest.opr.localindexreg=NR_NO then
                           begin
-                            dest.opr.localindexreg:=src.opr.ref.index;
-                            dest.opr.localscale:=src.opr.ref.scalefactor;
+                            dest.opr.localindexreg:=src.opr.Ref.Index;
+                            dest.opr.localscale:=src.opr.Ref.ScaleFactor;
                           end
-                        else if dest.opr.localindexreg=src.opr.ref.index then
-                          dest.opr.localscale:=Min(dest.opr.localscale,1)+Min(src.opr.ref.scalefactor,1)
+                        else if dest.opr.localindexreg=src.opr.Ref.Index then
+                          dest.opr.localscale:=Min(dest.opr.localscale,1)+Min(src.opr.Ref.ScaleFactor,1)
                         else
                           Message(asmr_e_multiple_index);
                       end;
                     Inc(dest.opr.localconstoffset,src.opr.constoffset);
-                    Inc(dest.opr.localsymofs,src.opr.ref.offset);
-                    if src.opr.ref.segment<>NR_NO then
-                      SetSegmentOverride(dest,src.opr.ref.segment);
+                    Inc(dest.opr.localsymofs,src.opr.Ref.Offset);
+                    if src.opr.Ref.Segment<>NR_NO then
+                      SetSegmentOverride(dest,src.opr.Ref.Segment);
                   end;
                 OPR_LOCAL:
                   Message(asmr_e_no_local_or_para_allowed);
@@ -1208,11 +1208,11 @@ Unit Rax86int;
         case oper.opr.typ of
           OPR_REFERENCE:
             begin
-              if oper.opr.ref.segment<>NR_NO then
+              if oper.opr.Ref.Segment<>NR_NO then
                 begin
                   Message(asmr_e_multiple_segment_overrides);
                 end;
-              oper.opr.ref.segment:=seg;
+              oper.opr.Ref.Segment:=seg;
             end;
           OPR_LOCAL:
             begin
@@ -1459,7 +1459,7 @@ Unit Rax86int;
                            paravarsym :
                              l:=TAbstractVarSym(sym).GetSize;
                            TypeSym :
-                             l:=TTypeSym(sym).typedef.size;
+                             l:=TTypeSym(sym).typedef.Size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1574,7 +1574,7 @@ Unit Rax86int;
                              begin
                                if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
-                               size:=TTypeSym(sym).typedef.size;
+                               size:=TTypeSym(sym).typedef.Size;
                              end;
                            FieldVarSym :
                              begin
@@ -1614,7 +1614,7 @@ Unit Rax86int;
                     end;
                    if (actasmtoken=AS_DOT) or
                       (Assigned(sym) and
-                       is_normal_fieldvarsym(sym)) then
+                       Is_Normal_FieldVarSym(sym)) then
                      begin
                       BuildRecordOffsetSize(tempstr,l,size,hs,needvmtofs,hastypecast);
                       if hs <> '' then
@@ -1788,9 +1788,9 @@ Unit Rax86int;
                      OPR_REFERENCE :
                        begin
                          if GotStar then
-                          oper.opr.ref.scalefactor:=l
+                          oper.opr.Ref.ScaleFactor:=l
                          else
-                           Inc(oper.opr.ref.offset,l);
+                           Inc(oper.opr.Ref.Offset,l);
                        end;
                      else
                        InternalError(2019050715);
@@ -1801,7 +1801,7 @@ Unit Rax86int;
                    if negative and not oper.hasvar then
                      Message(asmr_e_only_add_relocatable_symbol)
                    else if oper.hasvar and not GotOffset and
-                           (not negative or Assigned(oper.opr.ref.relsymbol)) then
+                           (not negative or Assigned(oper.opr.Ref.RelSymbol)) then
                      Message(asmr_e_cant_have_multiple_relocatable_symbols);
                    HadVar:=oper.hasvar and GotOffset;
                    tempstr:=actasmpattern;
@@ -1824,11 +1824,11 @@ Unit Rax86int;
                         oper.haslabelref:=true;
                         if not negative then
                           begin
-                            oper.opr.ref.symbol:=hl;
+                            oper.opr.Ref.Symbol:=hl;
                             oper.hasvar:=true;
                           end
                         else
-                          oper.opr.ref.relsymbol:=hl;
+                          oper.opr.Ref.RelSymbol:=hl;
 
                       end
                    else
@@ -1844,7 +1844,7 @@ Unit Rax86int;
                              begin
                                { The register contains the address, so the
                                  parameter size is not the referenced data size. }
-                               oper.size:=OS_NO;
+                               oper.Size:=OS_NO;
                                oper.opsize:=S_NO;
                                { A by-reference formal is different: the register
                                  holds the address of the parameter's own type,
@@ -1855,7 +1855,7 @@ Unit Rax86int;
                                  explicit "ptr" above stays authoritative. }
                                if (refparasym.VarSpez in [vs_var,vs_out,vs_constref]) and
                                   (refparasym.vardef.typ in [orddef,enumdef,floatdef,pointerdef,classrefdef]) then
-                                 oper.SetSize(refparasym.vardef.size,false);
+                                 oper.SetSize(refparasym.vardef.Size,false);
                              end;
                          end
                        else
@@ -1867,14 +1867,14 @@ Unit Rax86int;
                                  begin
                                    Consume(AS_WRT);
                                    Consume(AS___GOTPCREL);
-                                   if (oper.opr.ref.base<>NR_NO) or
-                                      (oper.opr.ref.index<>NR_NO) or
-                                      (oper.opr.ref.offset<>0) then
+                                   if (oper.opr.Ref.Base<>NR_NO) or
+                                      (oper.opr.Ref.Index<>NR_NO) or
+                                      (oper.opr.Ref.Offset<>0) then
                                      Message(asmr_e_wrong_gotpcrel_intel_syntax);
                                    if tf_no_pic_supported in TargetInfo.flags then
                                      Message(asmr_e_no_gotpcrel_support);
-                                   oper.opr.ref.refaddr:=addr_pic;
-                                   oper.opr.ref.base:=NR_RIP;
+                                   oper.opr.Ref.RefAddr:=addr_pic;
+                                   oper.opr.Ref.Base:=NR_RIP;
                                  end
                                else
                                  message(asmr_e_invalid_reference_syntax);
@@ -1894,7 +1894,7 @@ Unit Rax86int;
                         OPR_LOCAL :
                           inc(oper.opr.localsymofs,l);
                         OPR_REFERENCE :
-                          inc(oper.opr.ref.offset,l);
+                          inc(oper.opr.Ref.Offset,l);
                         else
                           InternalError(2019050716);
                       end;
@@ -1904,10 +1904,10 @@ Unit Rax86int;
                     end;
                    if GotOffset then
                     begin
-                      if oper.hasvar and (oper.opr.ref.base=CurrentProcInfo.framepointer) then
+                      if oper.hasvar and (oper.opr.Ref.Base=CurrentProcInfo.framepointer) then
                        begin
                          if (oper.opr.typ=OPR_REFERENCE) then
-                           oper.opr.ref.base:=NR_NO;
+                           oper.opr.Ref.Base:=NR_NO;
                          oper.hasvar:=hadvar;
                        end
                       else
@@ -1968,11 +1968,11 @@ Unit Rax86int;
                       case oper.opr.typ of
                         OPR_REFERENCE :
                           begin
-                            if oper.opr.ref.scalefactor=0 then
+                            if oper.opr.Ref.ScaleFactor=0 then
                               begin
                                 if scale<>0 then
                                   begin
-                                    oper.opr.ref.scalefactor:=scale;
+                                    oper.opr.Ref.ScaleFactor:=scale;
                                     scale:=0;
                                   end
                                 else
@@ -2009,7 +2009,7 @@ Unit Rax86int;
                       val(hs,l,code);
                     case oper.opr.typ of
                       OPR_REFERENCE :
-                        oper.opr.ref.scalefactor:=l;
+                        oper.opr.Ref.ScaleFactor:=l;
                       OPR_LOCAL :
                         oper.opr.localscale:=l;
                       else
@@ -2069,25 +2069,25 @@ Unit Rax86int;
                         begin
                           if (GotStar) or
                              (actasmtoken=AS_STAR) or
-                             (oper.opr.ref.base<>NR_NO) then
+                             (oper.opr.Ref.Base<>NR_NO) then
                            begin
-                             if (oper.opr.ref.index<>NR_NO) then
+                             if (oper.opr.Ref.Index<>NR_NO) then
                               Message(asmr_e_multiple_index);
-                             oper.opr.ref.index:=hreg;
+                             oper.opr.Ref.Index:=hreg;
                              if scale<>0 then
                                begin
-                                 oper.opr.ref.scalefactor:=scale;
+                                 oper.opr.Ref.ScaleFactor:=scale;
                                  scale:=0;
                                end;
                            end
                           else
                             begin
-                              oper.opr.ref.base:=hreg;
+                              oper.opr.Ref.Base:=hreg;
 {$ifdef x86_64}
                               { non-GOT based RIP-relative accesses are also position-independent }
-                              if (oper.opr.ref.base=NR_RIP) and
-                                 (oper.opr.ref.refaddr<>addr_pic) then
-                                oper.opr.ref.refaddr:=addr_pic_no_got;
+                              if (oper.opr.Ref.Base=NR_RIP) and
+                                 (oper.opr.Ref.RefAddr<>addr_pic) then
+                                oper.opr.Ref.RefAddr:=addr_pic_no_got;
 {$endif x86_64}
                             end;
                         end;
@@ -2126,9 +2126,9 @@ Unit Rax86int;
                  begin
                    if GotStar then
                     Message(asmr_e_only_add_relocatable_symbol);
-                   if not Assigned(oper.opr.ref.symbol) then
+                   if not Assigned(oper.opr.Ref.Symbol) then
                      begin
-                       oper.opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
+                       oper.opr.Ref.Symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
 
                      end
                    else
@@ -2138,7 +2138,7 @@ Unit Rax86int;
                   OPR_REFERENCE :
                     begin
                       if GotStar then
-                       oper.opr.ref.scalefactor:=l
+                       oper.opr.Ref.ScaleFactor:=l
                       else if (prevasmtoken = AS_STAR) then
                        begin
                          if scale<>0 then
@@ -2148,7 +2148,7 @@ Unit Rax86int;
                        end
                       else
                       begin
-                        Inc(oper.opr.ref.offset,l);
+                        Inc(oper.opr.Ref.Offset,l);
                         Inc(oper.opr.constoffset,l);
                       end;
                     end;
@@ -2249,7 +2249,7 @@ Unit Rax86int;
           begin
             oper.opr.typ:=OPR_SYMBOL;
             oper.opr.symofs:=l;
-            oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
+            oper.opr.Symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
             oper.opr.symseg:=cseof_isseg in cse_out_flags;
             oper.opr.sym_farproc_entry:=cseof_is_farproc_entry in cse_out_flags;
           end
@@ -2257,10 +2257,10 @@ Unit Rax86int;
           if oper.opr.typ=OPR_NONE then
             begin
               oper.opr.typ:=OPR_CONSTANT;
-              oper.opr.val:=l;
+              oper.opr.Val:=l;
             end
           else
-            inc(oper.opr.val,l);
+            inc(oper.opr.Val,l);
       end;
 
 
@@ -2272,12 +2272,12 @@ Unit Rax86int;
              is_calljmp(actopcode) then
            begin
              oper.opr.typ:=OPR_SYMBOL;
-             oper.opr.symbol:=hl;
+             oper.opr.Symbol:=hl;
            end
           else
            begin
              oper.InitRef;
-             oper.opr.ref.symbol:=hl;
+             oper.opr.Ref.Symbol:=hl;
              oper.haslabelref:=true;
 
            end;
@@ -2326,10 +2326,10 @@ Unit Rax86int;
                         oper.opr.localvarsize := tsize;
                       end;
                     OPR_CONSTANT :
-                      inc(oper.opr.val,toffset);
+                      inc(oper.opr.Val,toffset);
                     OPR_REFERENCE :
                       begin
-                        inc(oper.opr.ref.offset,toffset);
+                        inc(oper.opr.Ref.Offset,toffset);
                         oper.opr.varsize := tsize;
                       end;
 
@@ -2338,12 +2338,12 @@ Unit Rax86int;
                         if (hs <> '') then
                           begin
                             oper.opr.typ:=OPR_SYMBOL;
-                            oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(hs,AT_FUNCTION);
+                            oper.opr.Symbol:=CurrentAsmData.RefAsmSymbol(hs,AT_FUNCTION);
                           end
                         else
                           begin
                             oper.opr.typ:=OPR_CONSTANT;
-                            oper.opr.val:=toffset;
+                            oper.opr.Val:=toffset;
                           end;
                       end;
                     OPR_REGISTER :
@@ -2395,7 +2395,7 @@ Unit Rax86int;
                        (cs_create_pic in CurrentSettings.ModuleSwitches) then
                       begin
                         Consume(AS_OFFSET);
-                        oper.opr.ref.refaddr:=addr_pic;
+                        oper.opr.Ref.RefAddr:=addr_pic;
                         BuildOperand(oper,false);
                       end
                     else
@@ -2404,7 +2404,7 @@ Unit Rax86int;
                       l := BuildRefConstExpression(tsize);
                       if tsize<>0 then
                         oper.SetSize(tsize,false);
-                      inc(oper.opr.ref.offset,l);
+                      inc(oper.opr.Ref.Offset,l);
                       inc(oper.opr.constoffset,l);
                     end;
                   OPR_LOCAL :
@@ -2428,10 +2428,10 @@ Unit Rax86int;
                   begin
                     if (oper.opr.typ=OPR_CONSTANT) then
                       begin
-                        oper.typesize:=oper.opr.val;
+                        oper.typesize:=oper.opr.Val;
                         { reset constant value of operand }
                         oper.opr.typ:=OPR_NONE;
-                        oper.opr.val:=0;
+                        oper.opr.Val:=0;
                       end
                     else
                       Message(asmr_e_syn_operand);
@@ -2496,7 +2496,7 @@ Unit Rax86int;
                             l := BuildRefConstExpression(tsize);
                             if tsize<>0 then
                               oper.SetSize(tsize,false);
-                            inc(oper.opr.ref.offset,l);
+                            inc(oper.opr.Ref.Offset,l);
                             inc(oper.opr.constoffset,l);
                           end;
 
@@ -2583,7 +2583,7 @@ Unit Rax86int;
                           if actasmtoken=AS_LBRACKET then
                             begin
                               { ... then the operand size is not known anymore }
-                              oper.size:=OS_NO;
+                              oper.Size:=OS_NO;
                               BuildReference(oper);
                             end;
                         end;
@@ -2598,7 +2598,7 @@ Unit Rax86int;
 
                 Consume(AS_REGISTER, MightHaveExtension(actopcode));
 
-                if (getregtype(tempreg) in [R_MMREGISTER, R_ADDRESSREGISTER]) then
+                if (GetRegType(tempreg) in [R_MMREGISTER, R_ADDRESSREGISTER]) then
                  begin
                    while actasmtoken in OPEXT_STARTASMTOKEN do
                   begin
@@ -2620,7 +2620,7 @@ Unit Rax86int;
                      Message(asmr_e_syn_operand);
                    oper.opr.typ:=OPR_REGISTER;
                    oper.opr.reg:=tempreg;
-                   oper.SetSize(tcgsize2size[reg_cgsize(oper.opr.reg)],true);
+                   oper.SetSize(TCgSize2Size[reg_cgsize(oper.opr.reg)],true);
                  end;
               end;
 
@@ -2929,8 +2929,8 @@ Unit Rax86int;
                 if di_param<=operandnum then
                   with instr.operands[di_param] do
                     if (opr.typ=OPR_REFERENCE) and
-                       (opr.ref.segment<>NR_NO) and
-                       (opr.ref.segment<>NR_ES) then
+                       (opr.Ref.Segment<>NR_NO) and
+                       (opr.Ref.Segment<>NR_ES) then
                       Message(asmr_e_cannot_override_es_segment);
               end;
             { if two memory parameters, check whether their address sizes are equal }
@@ -2939,8 +2939,8 @@ Unit Rax86int;
                (instr.operands[si_param].opr.typ=OPR_REFERENCE) and
                (instr.operands[di_param].opr.typ=OPR_REFERENCE) then
               begin
-                if get_ref_address_size(instr.operands[si_param].opr.ref)<>
-                   get_ref_address_size(instr.operands[di_param].opr.ref) then
+                if get_ref_address_size(instr.operands[si_param].opr.Ref)<>
+                   get_ref_address_size(instr.operands[di_param].opr.Ref) then
                   Message(asmr_e_address_sizes_do_not_match);
               end;
           end;
@@ -2955,27 +2955,27 @@ Unit Rax86int;
           for i:=1 to operandnum do
           begin
             if (instr.operands[i].opr.typ = OPR_REFERENCE) and
-               (getregtype(instr.operands[i].opr.ref.base) = R_MMREGISTER) and
-               (instr.operands[i].opr.ref.index = NR_NO) then
+               (GetRegType(instr.operands[i].opr.Ref.Base) = R_MMREGISTER) and
+               (instr.operands[i].opr.Ref.Index = NR_NO) then
             begin
-              instr.operands[i].opr.ref.index := instr.operands[i].opr.ref.base;
-              instr.operands[i].opr.ref.base  := NR_NO;
+              instr.operands[i].opr.Ref.Index := instr.operands[i].opr.Ref.Base;
+              instr.operands[i].opr.Ref.Base  := NR_NO;
             end
             else if (instr.operands[i].opr.typ = OPR_REFERENCE) and
-                    (getregtype(instr.operands[i].opr.ref.base) = R_MMREGISTER) and
-                    (getregtype(instr.operands[i].opr.ref.index) = R_INTREGISTER) and
-                    (getsubreg(instr.operands[i].opr.ref.index) = R_SUBADDR) then
+                    (GetRegType(instr.operands[i].opr.Ref.Base) = R_MMREGISTER) and
+                    (GetRegType(instr.operands[i].opr.Ref.Index) = R_INTREGISTER) and
+                    (GetSubReg(instr.operands[i].opr.Ref.Index) = R_SUBADDR) then
             begin
               // exchange base- and index-register
               // e.g. VGATHERDPD  XMM0, [XMM1 + RAX], XMM2 =>> VGATHERDPD  XMM0, [RAX + XMM1], XMM2
               // e.g. VGATHERDPD  XMM0, [XMM1 + RAX * 2], XMM2 =>> not supported
               // e.g. VGATHERDPD  XMM0, [XMM1 + RAX + 16], XMM2 =>> VGATHERDPD  XMM0, [RAX + XMM1 + 16]
-              if instr.operands[i].opr.ref.scalefactor > 1 then Message(asmr_e_invalid_reference_syntax)
+              if instr.operands[i].opr.Ref.ScaleFactor > 1 then Message(asmr_e_invalid_reference_syntax)
               else
               begin
-                t := instr.operands[i].opr.ref.base;
-                instr.operands[i].opr.ref.base := instr.operands[i].opr.ref.index;
-                instr.operands[i].opr.ref.index := t;
+                t := instr.operands[i].opr.Ref.Base;
+                instr.operands[i].opr.Ref.Base := instr.operands[i].opr.Ref.Index;
+                instr.operands[i].opr.Ref.Index := t;
               end;
             end;
           end;
