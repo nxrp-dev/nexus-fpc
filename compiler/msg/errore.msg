@@ -4050,13 +4050,12 @@ A*2CV<x>_Set section threadvar model to <x>
 **1F<x>_Set file names and paths:
 **2Fa<x>[,y]_(for a program) load units <x> and [y] before uses is parsed
 **2Fc<x>_Set input codepage to <x>
-**2FC<x>_Set RC compiler binary name to <x>
+**2FC<x>_Set LLVM RC compiler executable to <x>
 **2Fd_Disable the compiler's internal directory cache
 **2FD<x>_Set the directory where to search for compiler utilities
 **2Fe<x>_Redirect error output to <x>
 **2FE<x>_Set exe/unit output path to <x>
 **2Ff<x>_Add <x> to framework path (Darwin only), or set IDF path to <x> (Xtensa-FreeRTOS)
-**2FF_Use fpcres as RC to RES compiler instead of windres or gorc
 **2Fi<x>_Add <x> to include path
 **2FJ[+|-]_Embed compressed package metadata (default +); - writes an NXP sidecar
 **2Fl<x>_Add <x> to library path
@@ -4066,7 +4065,6 @@ A*2CV<x>_Set section threadvar model to <x>
 **2FN<x>_Add <x> to list of default unit scopes (namespaces)
 **2Fo<x>_Add <x> to object path
 **2Fr<x>_Load error message file <x>
-**2FR<x>_Set resource (.res) linker to <x>
 **2Ft_Do not search uppercased or 8.3 unit filenames on case sensitive filesystems.
 **2Fu<x>_Add <x> to unit path
 **2FU<x>_Set unit output path to <x>, overrides -FE
@@ -4346,12 +4344,6 @@ P*2WC_Specify console type application (Classic Mac OS)
 3*2WD_Use DEFFILE to export functions of DLL or EXE (Windows)
 4*2WD_Use DEFFILE to export functions of DLL or EXE (Windows)
 A*2WD_Use DEFFILE to export functions of DLL or EXE (Windows)
-3*2We_Use external resources (Darwin)
-4*2We_Use external resources (Darwin)
-a*2We_Use external resources (Darwin)
-A*2We_Use external resources (Darwin)
-P*2We_Use external resources (Darwin)
-p*2We_Use external resources (Darwin)
 3*2WF_Specify full-screen type application (EMX, OS/2)
 3*2WG_Specify graphic type application (EMX, OS/2, Windows)
 4*2WG_Specify graphic type application (Windows)

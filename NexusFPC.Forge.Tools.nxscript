@@ -160,20 +160,6 @@ Group ReleaseTools {
         Output: "build/forge-bootstrap/tools/bin/postw32.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/postw32";
     }
-    CreateDirectory Units_fpcres { Path: "build/forge-bootstrap/tools/units/fpcres"; }
-    FPC Build_fpcres (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/fpcres/fpcres.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/fpcres/fpcres.pas";
-        Output: "build/forge-bootstrap/tools/bin/fpcres.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/fpcres";
-    }
-    CreateDirectory Units_fpcreslipo { Path: "build/forge-bootstrap/tools/units/fpcreslipo"; }
-    FPC Build_fpcreslipo (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/fpcreslipo/fpcreslipo.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/fpcreslipo/fpcreslipo.pas";
-        Output: "build/forge-bootstrap/tools/bin/fpcreslipo.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/fpcreslipo";
-    }
     CreateDirectory Units_plex { Path: "build/forge-bootstrap/tools/units/plex"; }
     FPC Build_plex (HostTool) {
         Source: ["build/forge-bootstrap/tools/source/tply/plex.pas"];

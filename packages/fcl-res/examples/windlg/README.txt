@@ -1,23 +1,15 @@
 Windows Dialog Resource Demo
 ============================
 
-This test shows how to use fpcres for compiling DIALOG and DIALOGEX
-resources into binary format that Windows can display.
+This test compiles DIALOG and DIALOGEX resources through the compiler's
+Clang and LLVM RC pipeline. Both tools must be in the LLVM toolchain path.
 
-You need to compile fpcres with DIALOG/DIALOGEX support for this test to work.
-
-Then:
-1. Compile the .rc file into a .res file using fpcres:
-
-   fpcres -of res -o testdlg.res testdlg.rc
-
-   (fpcres must be in your path)
-
-2. Compile the test program:
+1. Compile the test program with the matching Nexus compiler and RTL:
 
    fpc windlgtest.lpr
 
-   The compiler will automatically link in testdlg.res because of the {$R testdlg.res} directive in the source.
+   The {$R testdlg.rc} directive compiles the script and LLD embeds the RES.
+   Use -FC<llvm-rc-path> and --resource-clang=<clang-path> for explicit tools.
 
 2. Run windlgtest.exe
 

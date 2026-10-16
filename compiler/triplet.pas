@@ -47,7 +47,7 @@ uses
           if TargetInfo.System in systems_macosx then
             Result:=Result+'-macosx'+MacOSXVersionMin.Str
           else if TargetInfo.System = system_aarch64_iphonesim then
-            Result:=Result+'-ios-simulator'+IPhoneOSVersionMin.Str
+            Result:=Result+'-ios'+IPhoneOSVersionMin.Str+'-simulator'
           else
             Result:=Result+'-ios'+IPhoneOSVersionMin.Str;
         end

@@ -13,7 +13,7 @@ param(
     [string]$SourceRoot,
     [string]$Compiler,
     [string]$Units,
-    [string]$ResourceCompiler,
+    [string]$LLVMRC,
     [string]$OutputRoot = (Join-Path $env:TEMP ('nxwc-' + [guid]::NewGuid().ToString('N').Substring(0,8)))
 )
 $ErrorActionPreference = 'Stop'
@@ -22,8 +22,6 @@ $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 if (-not $Compiler) { $Compiler = Join-Path $SourceRoot 'compiler\ppcx64.exe' }
 if (-not $Units) { $Units = Join-Path $SourceRoot 'rtl\units\x86_64-win64' }
-if (-not $ResourceCompiler) { $ResourceCompiler = Join-Path $SourceRoot 'utils\fpcres\bin\x86_64-win64\fpcres.exe' }
-$fpcres = $ResourceCompiler
 $tools = @{}
 foreach ($name in @('clang','lld-link','llvm-dlltool','llvm-rc','llvm-readobj')) {
     $tools[$name] = (Get-Command ($name+'.exe') -ErrorAction Stop).Source
@@ -31,7 +29,8 @@ foreach ($name in @('clang','lld-link','llvm-dlltool','llvm-rc','llvm-readobj'))
 if ((Split-Path $tools['lld-link']) -ne (Split-Path $tools['clang'])) {
     throw 'Clang and LLD must come from the same LLVM bin directory used by FPC -FD.'
 }
-foreach ($path in @($compiler, "$units\system.nxu", $fpcres)) {
+if ($LLVMRC) { $tools['llvm-rc'] = (Get-Command $LLVMRC -ErrorAction Stop).Source }
+foreach ($path in @($compiler, "$units\system.nxu")) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing matched build artifact: $path" }
 }
 if ((& $compiler -iTP) -ne 'x86_64' -or (& $compiler -iTO) -ne 'win64') { throw 'Requires native Win64 compiler' }
@@ -61,18 +60,16 @@ try {
     try {
         foreach ($tool in @('clang','lld-link','llvm-readobj')) { Invoke-Step ($tool+'-version') $tools[$tool] @('--version') }
         Invoke-Step 'compiler-version' $compiler @('-iV')
-        Get-FileHash -LiteralPath @($compiler, "$units\system.nxu", "$units\sysutils.nxu", "$units\windows.nxu", $fpcres) -Algorithm SHA256 |
+        Get-FileHash -LiteralPath @($compiler, "$units\system.nxu", "$units\sysutils.nxu", "$units\windows.nxu", $tools['llvm-rc']) -Algorithm SHA256 |
             Select-Object Path, Hash |
             ConvertTo-Json | Set-Content "$OutputRoot\build-inputs.json"
         Copy-Item "$PSScriptRoot\*.pas", "$PSScriptRoot\*.lpr", "$PSScriptRoot\*.c" $OutputRoot
-        $common = @('-n','-B','-O2','-g','-Xm',('-Fu'+$units),('-Fu'+$OutputRoot),('-FU'+$OutputRoot),('-FE'+$OutputRoot),('-FD'+(Split-Path $tools['clang'])))
+        $common = @('-n','-B','-O2','-g','-Xm',('-Fu'+$units),('-Fu'+$OutputRoot),('-FU'+$OutputRoot),('-FE'+$OutputRoot),('-FD'+(Split-Path $tools['clang'])),('-FC'+$tools['llvm-rc']))
         $smart = $common + @('-CX','-XX')
         Invoke-Step 'foreign-bridge' $tools['clang'] @('--target=x86_64-pc-windows-msvc','-c','-O1','-fno-stack-protector','-funwind-tables','foreign_bridge.c','-o','foreign_bridge.obj')
         foreach ($module in @('One','Two')) {
             $id = if ($module -eq 'One') {1} else {2}
             "101 RCDATA { $id }" | Set-Content fixture.rc
-            Invoke-Step ('resource-'+$module) $tools['llvm-rc'] @('/FO','fixture.res','fixture.rc')
-            Invoke-Step ('resource-coff-'+$module) $fpcres @('-o','fixture.o','-a','x86_64','-of','coff','fixture.res')
             $arguments = $smart + @('-WR','-WB180000000',('-onxContract'+$module+'.dll'))
             if ($module -eq 'Two') { $arguments += '-dMODULE_TWO' }
             Invoke-Step ('dll-'+$module) $compiler ($arguments + @('nxContractLibrary.lpr'))

@@ -24,24 +24,24 @@ cover optional units or tests; they are not necessarily required by every unit.
 2026-10-15; its `FCLJSON.nxpackage` builds the runtime units without the optional
 FPCUnit helper. `fcl-process` moved to Nexus
 `packages/nexus-packages/fcl-process` on the same date, preserving its
-source, examples, tests and static review report. The remaining listed
-directories are in this repository. `src` is the usual source root;
-exceptions and platform-specific paths are below.
+source, examples, tests and static review report. Rows marked relocated record
+other moves to Nexus; the other listed directories are in this repository.
+`src` is the usual source root; exceptions and platform-specific paths are below.
 
 | Package | Declared dependencies | Details worth preserving |
 | --- | --- | --- |
 | `cocoaint` | `univint` | Darwin, x86_64/aarch64; `MACOSALL`, `COCOAALL`, `LEGACY_SETNEEDSDISPLAY` defines. |
 | `fcl-async` | — | `fpasync.pas` uses `libasync`; the retained implementation is in `src/unix`. |
 | `fcl-base` | `rtl-objpas`; `univint` on Apple targets | OS include paths and event-log resource described below. |
-| `fcl-db` | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json` | Multiple source/include roots; old nested recipes are stale. |
+| `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression/hash helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
 | `fcl-fpcunit` | `paszlib`, `fcl-base`, `fcl-xml`; `univint` on Apple targets | Retain source/tests for later nxtest decisions. |
 | `fcl-hash` | `rtl-objpas`, `rtl-extra`, `fcl-base`, `hash` | Recipes give explicit `src/` filenames. |
-| `fcl-image` | `pasjpeg`, `paszlib`, `fcl-base` | Readers/writers and examples are separate compilation candidates. |
+| `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; transitive `hash`/CRC | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
 | `fcl-json` | `fcl-base`, `rtl-objpas`, `fcl-fpcunit` | `src/jsonfpcunit.pas` really uses `fpcunit`; do not impose that dependency on every JSON unit. |
 | `fcl-net` | `fcl-base`, `fcl-xml`, `rtl-extra`; `fcl-async` on Linux | OS-specific include directories. |
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
 | `fcl-registry` | `fcl-base`, `fcl-xml` | Includes `tests/tregtestframework.pas`. |
-| `fcl-res` | `rtl-objpas`, `fcl-base`, `tplylib` | Used by release resource tools; current Forge tool staging already includes these sources. |
+| `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM; no resource dependency on `tplylib`. |
 | `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |
 | `iconvenc` | — | Recipe marks libc required. |
@@ -81,7 +81,8 @@ are not part of this restoration.
   Its `processbody.inc` and `pipes.pas` include platform implementations by
   basename, so the include paths matter. Only select paths applicable to the
   actual Nexus target; old broad OS sets do not establish support.
-- **Database roots:** retained subdirectories under `fcl-db/src` are `base`,
+- **Database roots:** relocated subdirectories under Nexus
+  `packages/nexus-packages/db/fcl-db/src` are `base`,
   `sqldb`, `sdf`, `json`, `datadict`, `memds`, `codegen`, `export`, `dbase`,
   and `sql`. Explicit include roots were `base`, `sqldb`, `sdf`, `memds`,
   and `dbase`. The old recipe limited data-dictionary/codegen/export targets
@@ -134,7 +135,8 @@ reimplemented in Forge as part of this cleanup.
   FPCUnit support and selected package/RTL units. The source files remain.
 - Old package test entry lists include `fcl-fpcunit/src/tests/`
   (`asserttest`, `frameworktest`, `suitetest`), `fcl-registry/tests/`
-  (`tregtestframework`), `fcl-db/tests/` (`testsqlfiles.lpr`, `toolsunit`,
+  (`tregtestframework`), relocated Nexus `packages/nexus-packages/db/fcl-db/tests/`
+  (`testsqlfiles.lpr`, `toolsunit`,
   `dbftoolsunit`) and `fcl-xml/tests/` (`xmlts`, `domunit`, `testgen`).
   Preserve test/unit distinctions when migrating; not every listed file is
   a runnable program.

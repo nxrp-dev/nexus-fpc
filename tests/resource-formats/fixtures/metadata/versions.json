@@ -1,0 +1,42 @@
+[
+  {
+    "Name": "old-i386-linux",
+    "First": "old-i386-linux-v1",
+    "Second": "old-i386-linux-v2"
+  },
+  {
+    "Name": "old-x86_64-linux",
+    "First": "old-x86_64-linux-v1",
+    "Second": "old-x86_64-linux-v2"
+  },
+  {
+    "Name": "old-aarch64-linux",
+    "First": "old-aarch64-linux-v1",
+    "Second": "old-aarch64-linux-v2"
+  },
+  {
+    "Name": "i386-windows",
+    "First": "i386-windows-v1.exe",
+    "Second": "i386-windows-v2.exe"
+  },
+  {
+    "Name": "x86_64-windows",
+    "First": "x86_64-windows-v1.exe",
+    "Second": "x86_64-windows-v2.exe"
+  },
+  {
+    "Name": "aarch64-windows",
+    "First": "aarch64-windows-v1.exe",
+    "Second": "aarch64-windows-v2.exe"
+  },
+  {
+    "Name": "old-x86_64-darwin",
+    "First": "old-x86_64-darwin-v1",
+    "Second": "old-x86_64-darwin-v2"
+  },
+  {
+    "Name": "old-aarch64-darwin",
+    "First": "old-aarch64-darwin-v1",
+    "Second": "old-aarch64-darwin-v2"
+  }
+]

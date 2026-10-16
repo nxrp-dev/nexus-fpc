@@ -1,0 +1,6 @@
+LANGUAGE 9, 1
+101 RCDATA "payload.bin"
+STRINGTABLE
+BEGIN
+  1 "Alpha"
+END

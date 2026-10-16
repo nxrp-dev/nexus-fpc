@@ -165,6 +165,10 @@ const
   R_RISCV_64      =   2;
   R_LARCH_64      =   2;
 
+  //dynamic relative relocation types for offline resource metadata
+  R_X86_64_RELATIVE = 8;
+  R_AARCH64_RELATIVE = 1027;
+
 
   //fpc resource constants
   RsrcSectName    = 'fpc.resources';

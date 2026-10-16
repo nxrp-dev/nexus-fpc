@@ -30,7 +30,7 @@ interface
        GlobType,FinPut,OGBase,FPkg,
        SymBase,SymSym,
        WPOBase,
-       AAsmBase,AAsmData;
+       AAsmBase,AAsmData,ResourceMetadata,ResourceArtifacts;
 
 
     const
@@ -194,8 +194,11 @@ interface
         DebugInfo     : TObject;
         ExportList      : TLinkedList;
         DLLScannerInputList : TFPHashList;
+        ResourceFiles : TModuleResourceInputs;
+        ResourcesPrepared : Boolean;
+        ResourceLinkFile : TPathStr;
+        ResourceImageStage : TResourceArtifactStage;
         LocalNamespaceList,
-        ResourceFiles,
         LinkOrderedSymbols : TCmdStrList;
         LinkUnitOFiles,
         LinkUnitStaticLibs,
@@ -622,7 +625,7 @@ implementation
         UsedUnitList:=TLinkedList.Create;
         DependentUnitList:=TLinkedList.Create;
         LocalNamespaceList:=TCmdStrList.Create;
-        ResourceFiles:=TCmdStrList.Create;
+        ResourceFiles:=TModuleResourceInputs.Create;
         LinkOrderedSymbols:=TCmdStrList.Create;
         LinkUnitOFiles:=TLinkContainer.Create;
         LinkUnitStaticLibs:=TLinkContainer.Create;
@@ -748,6 +751,8 @@ implementation
         DependentUnitList := nil;
         ResourceFiles.Free;
         ResourceFiles := nil;
+        ResourceImageStage.Free;
+        ResourceImageStage:=nil;
         LinkOrderedSymbols.Free;
         LinkOrderedSymbols := nil;
         LinkUnitOFiles.Free;
@@ -953,7 +958,10 @@ implementation
           end;
         // keep dependent_units
         ResourceFiles.Free;
-        ResourceFiles:=TCmdStrList.Create;
+        ResourceFiles:=TModuleResourceInputs.Create;
+        FreeAndNil(ResourceImageStage);
+        ResourcesPrepared:=False;
+        ResourceLinkFile:='';
         LinkOrderedSymbols.Free;
         LinkOrderedSymbols:=TCmdStrList.Create;
         PendingSpecializations.Free;

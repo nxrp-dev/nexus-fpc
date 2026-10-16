@@ -1077,7 +1077,7 @@ Project Bootstrap Build[Bootstrap] {
 
 Project Tools Build[Tools] {
     Id: "NXRP.FPC.Tools";
-    Outputs: [Bin: "build/forge-bootstrap/tools/bin", Driver: "build/forge-bootstrap/tools/bin/fpc.exe", ResourceCompiler: "build/forge-bootstrap/tools/bin/fpcres.exe"];
+    Outputs: [Bin: "build/forge-bootstrap/tools/bin", Driver: "build/forge-bootstrap/tools/bin/fpc.exe"];
     Group BuildReleaseTools (ReleaseTools) {}
 }
 
@@ -1763,10 +1763,6 @@ Project Cross Build[Cross] {
         FPC BuildApple_fpintres (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/fpintres.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpintres.pas";
-        }
-        FPC BuildApple_fpextres (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/fpextres.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpextres.pas";
         }
         FPC BuildApple_objc (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/objc.pas"];

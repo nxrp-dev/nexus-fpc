@@ -1253,10 +1253,40 @@ end;
 procedure TOption.interpret_option(const opt:TCmdStr;ispara:boolean);
 var
   more : TCmdStr;
+  ResourceOption,ResourceValue : TCmdStr;
+  ResourceCodePage : Int64;
+  ResourceEqual : LongInt;
 
 begin
   if opt='' then
    exit;
+
+  if Copy(opt,1,11)='--resource-' then
+   begin
+    if FirstPass then Exit;
+    ResourceEqual:=Pos('=',opt);
+    if ResourceEqual=0 then IllegalPara(opt);
+    ResourceOption:=Copy(opt,1,ResourceEqual-1);
+    ResourceValue:=Copy(opt,ResourceEqual+1,Length(opt));
+    DefaultReplacements(ResourceValue);
+    if ResourceValue='' then IllegalPara(opt);
+    case ResourceOption of
+      '--resource-codepage':
+        begin
+          if not TryStrToInt64(ResourceValue,ResourceCodePage) or
+             (ResourceCodePage<=0) or (ResourceCodePage>High(Cardinal)) then
+            IllegalPara(opt);
+          ResourceConfiguration.CodePage:=Cardinal(ResourceCodePage);
+        end;
+      '--resource-include':
+        ResourceConfiguration.IncludeDirectories.Add(ExpandFileName(ResourceValue));
+      '--resource-define': ResourceConfiguration.Define(ResourceValue);
+      '--resource-undefine': ResourceConfiguration.Undefine(ResourceValue);
+      '--resource-clang': RCClang:=ResourceValue;
+      else IllegalPara(opt);
+    end;
+    Exit;
+   end;
 
   { Nexus procedure profiling is a whole-invocation option. Handle it before
     the normal first-pass filter so PPUs are evaluated with the correct state. }
@@ -2590,7 +2620,7 @@ begin
         else
           IllegalPara(opt);
     'F' :
-      RCForceFPCRes:=true;
+      Comment(VFatal,'-FF is retired: compile RC input with LLVM RC; select llvm-rc with -FC');
     'i' :
       begin
         if ispara then
@@ -2673,7 +2703,7 @@ begin
     'r' :
       MsgFileName:=More;
     'R' :
-      ResCompiler:=More;
+      Comment(VFatal,'-FR is retired: resources are embedded through LLVM; select llvm-rc with -FC');
     't' :
       begin
         AllowedFilenameTransFormations:=[ftNone,ftLowerCase];
@@ -3394,13 +3424,7 @@ begin
          end;
        'e':
          begin
-           if (TargetInfo.system in systems_darwin) then
-             begin
-               SetTargetRes(res_ext);
-               TargetInfo.resobjext:='.fpcres';
-             end
-           else
-             IllegalPara(opt);
+           Comment(VFatal,'-We external resource sidecars are retired; use embedded resources (-Wi)');
          end;
        'F':
          begin
@@ -3433,7 +3457,7 @@ begin
          begin
            if (TargetInfo.system in systems_darwin) then
              begin
-               SetTargetRes(res_macho);
+               TargetInfo.res:=res_macho;
                TargetInfo.resobjext:=
                  targetinfos[Ord(TargetInfo.system)]^.resobjext;
              end

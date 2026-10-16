@@ -1,11 +1,10 @@
-#include <windres.h>
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+// Portable language IDs match the constants in tres2.pas.
+LANGUAGE 9, 1
 
 TestFile FILE "tres1.txt"
 Test TEXT "tres2.txt"
 
-LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+LANGUAGE 16, 1
 TestFile FILE "tres1_it.txt"
 
 

@@ -68,7 +68,6 @@ const
 resourcestring
   SReaderNotFoundExt   = 'Cannot find resource reader for extension ''%s''';
   SReaderNotFoundProbe = 'Cannot find a resource reader: unknown format.';
-  SWriterNotFoundExt   = 'Cannot find resource writer for extension ''%s''';
   SDescChangeNotAllowed = 'Cannot modify %s resource description';
   SLangIDChangeNotAllowed = 'Cannot modify %s resource language ID';
   SResDuplicate = 'Duplicate resource: Type = %s, Name = %s, Lang ID = %.4x';
@@ -95,8 +94,6 @@ type
   EResourceReaderWrongFormatException = class(EResourceReaderException);
   EResourceReaderUnexpectedEndOfStreamException = class (EResourceReaderException);
 
-  EResourceWriterException = class(EResourceException);
-  EResourceWriterNotFoundException = class(EResourceWriterException);
 
 type
 
@@ -208,9 +205,7 @@ type
 
 type
   TAbstractResourceReader = class;
-  TAbstractResourceWriter = class;
   TResourceReaderClass = class of TAbstractResourceReader;
-  TResourceWriterClass = class of TAbstractResourceWriter;
 
   { TResources }
 
@@ -231,14 +226,10 @@ type
   private
     fTempRStream : TStream;
     class procedure InitReaderList;
-    class procedure InitWriterList;
     class procedure DisposeStreamerList(aList : TFPList);
     class procedure DisposeReaderList;
-    class procedure DisposeWriterList;
-    class function FindWriterClass(aExtension : string) : TResourceWriterClass;
     class procedure RegisterStreamer(aList : TFPList; aExtension : string; aClass : TClass);
 
-    procedure SendUpdateRawData;
     procedure InternalRemove(aResource: TAbstractResource);
     procedure InternalRemove(aIndex : integer);
     procedure QuietRemove(aResource : TAbstractResource; aIndex : integer; aIndexValid : boolean);
@@ -277,10 +268,6 @@ type
     procedure LoadFromFile(aFileName : string); overload;
     procedure LoadFromFile(aFileName : string; aReader : TAbstractResourceReader); overload;
     class procedure RegisterReader(const aExtension : string; aClass : TResourceReaderClass);
-    class procedure RegisterWriter(const aExtension : string; aClass : TResourceWriterClass);
-    procedure WriteToStream(aStream : TStream; aWriter : TAbstractResourceWriter);
-    procedure WriteToFile(aFileName : string); overload;
-    procedure WriteToFile(aFileName : string; aWriter : TAbstractResourceWriter); overload;
     property Count : longword read GetCount;
     property Items[Index : integer] : TAbstractResource read GetItem; default;
     property CacheData : boolean read fCacheData write SetCacheData;
@@ -308,27 +295,13 @@ type
     property Description : string read GetDescription;
   end;
 
-  { TAbstractResourceWriter }
-
-  TAbstractResourceWriter = class
-  private
-  protected
-    function GetTree(aResources : TResources) : TObject;
-    function GetExtensions : string; virtual; abstract;
-    function GetDescription : string; virtual; abstract;
-    procedure Write(aResources : TResources; aStream : TStream); virtual; abstract;
-  public
-    constructor Create; virtual; abstract;
-    property Extensions : string read GetExtensions;
-    property Description : string read GetDescription;
-  end;
 
 implementation
 
 {$IFDEF FPC_DOTTEDUNITS}
-uses System.Resources.DataStream, System.Resources.Tree, System.Resources.Merger;
+uses System.Resources.DataStream, System.Resources.Tree;
 {$ELSE FPC_DOTTEDUNITS}
-uses resdatastream, resourcetree, resmerger;
+uses resdatastream, resourcetree;
 {$ENDIF FPC_DOTTEDUNITS}
 
 type
@@ -340,7 +313,6 @@ type
   end;
 
 var RegisteredReaders : TFPList = nil;
-    RegisteredWriters : TFPList = nil;
 
 { TResourceDesc }
 
@@ -552,12 +524,6 @@ begin
     RegisteredReaders:=TFPList.Create;
 end;
 
-class procedure TResources.InitWriterList;
-begin
-  if RegisteredWriters=nil then
-    RegisteredWriters:=TFPList.Create;
-end;
-
 class procedure TResources.DisposeStreamerList(aList: TFPList);
 var p,p2 : PRegisteredStreamerEntry;
     i : integer;
@@ -579,12 +545,6 @@ class procedure TResources.DisposeReaderList;
 begin
   DisposeStreamerList(RegisteredReaders);
   FreeAndNil(RegisteredReaders);
-end;
-
-class procedure TResources.DisposeWriterList;
-begin
-  DisposeStreamerList(RegisteredWriters);
-  FreeAndNil(RegisteredWriters);
 end;
 
 class function TResources.FindReader(aStream: TStream; aExtension: string) :
@@ -669,26 +629,6 @@ begin
   end;
 end;
 
-class function TResources.FindWriterClass(aExtension: string
-  ): TResourceWriterClass;
-var i : integer;
-    p : PRegisteredStreamerEntry;
-begin
-  Result:=nil;
-  InitWriterList;
-  aExtension:=lowercase(aExtension);
-  for i:=0 to RegisteredWriters.Count-1 do
-  begin
-    p:=PRegisteredStreamerEntry(RegisteredWriters[i]);
-    if p^.ext=aExtension then
-    begin
-      Result:=TResourceWriterClass(p^._class);
-      exit;
-    end;
-  end;
-  raise EResourceWriterNotFoundException.Create(Format(SWriterNotFoundExt,[aExtension]));
-end;
-
 procedure TResources.InternalAdd(aResource : TAbstractResource; prevIdx :
   integer; prevIdxValid : boolean);
 var resold : TAbstractResource;
@@ -696,7 +636,6 @@ begin
   resold:=InternalFind(aResource._Type,aResource.Name,aResource.LangID);
   if resold<>nil then
   begin
-    if TResourceMerger.Merge(resold,aResource) then exit;
     raise EResourceDuplicateException.CreateFmt(SResDuplicate,[aResource._Type.Name,aResource.Name.Name,aResource.LangID]);
   end;
   fList.Add(aResource);
@@ -986,57 +925,11 @@ begin
   aList.Add(newp);
 end;
 
-procedure TResources.SendUpdateRawData;
-var i : integer;
-begin
-  for i:=0 to Count-1 do
-    Items[i].UpdateRawData;
-end;
-
 class procedure TResources.RegisterReader(const aExtension : string;
   aClass: TResourceReaderClass);
 begin
   InitReaderList;
   RegisterStreamer(RegisteredReaders,aExtension,aClass);
-end;
-
-class procedure TResources.RegisterWriter(const aExtension : string;
-  aClass: TResourceWriterClass);
-begin
-  InitWriterList;
-  RegisterStreamer(RegisteredWriters,aExtension,aClass);
-end;
-
-procedure TResources.WriteToStream(aStream: TStream;
-  aWriter: TAbstractResourceWriter);
-begin
-  SendUpdateRawData;
-  aWriter.Write(self,aStream);
-end;
-
-procedure TResources.WriteToFile(aFileName: string);
-var ext : string;
-    aWriter : TAbstractResourceWriter;
-begin
-  ext:=ExtractFileExt(aFileName);
-  aWriter:=FindWriterClass(ext).Create;
-  try
-    WriteToFile(aFileName,aWriter);
-  finally
-    aWriter.Free;
-  end;
-end;
-
-procedure TResources.WriteToFile(aFileName: string;
-  aWriter: TAbstractResourceWriter);
-var OutStream : TFileStream;
-begin
-  OutStream:=TFileStream.Create(aFileName,fmCreate or fmShareDenyWrite);
-  try
-    WriteToStream(OutStream,aWriter);
-  finally
-    OutStream.Free;
-  end;
 end;
 
 constructor TResources.Create;
@@ -1153,15 +1046,7 @@ begin
   inherited Destroy;
 end;
 
-{ TAbstractResourceWriter }
-
-function TAbstractResourceWriter.GetTree(aResources: TResources): TObject;
-begin
-  Result:=aResources.fTree;
-end;
-
 finalization
    TResources.DisposeReaderList;
-   TResources.DisposeWriterList;
 
 end.

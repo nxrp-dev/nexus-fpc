@@ -95,31 +95,6 @@ implementation
     ,ogcoff;
 
 
-  const
-    res_gnu_windres_info : TResInfo =
-        (
-          id     : res_gnu_windres;
-          resbin : 'fpcres';
-          rescmd : '-o $OBJ -a $ARCH -of coff $DBG';
-          rcbin  : 'windres';
-          rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-          resourcefileclass : nil;
-          ResFlags : [];
-        );
-{$ifdef x86_64}
-    res_win64_gorc_info : TResInfo =
-        (
-          id     : res_win64_gorc;
-          resbin : 'fpcres';
-          rescmd : '-o $OBJ -a $ARCH -of coff $DBG';
-          rcbin  : 'gorc';
-          rccmd  : '/machine x64 /nw /ni /r /d FPC /fo $RES $RC';
-          resourcefileclass : nil;
-          ResFlags : [];
-        );
-{$endif x86_64}
-
-
   Procedure GlobalInitSysInitUnitName(Linker : TLinker);
     var
       hp           : TModule;
@@ -1060,6 +1035,8 @@ implementation
                 if S<>'' then
                   AddFileName(MaybeQuoted(S));
               end;
+            if CurrentModule.ResourceLinkFile<>'' then
+              AddFileName(MaybeQuoted(CurrentModule.ResourceLinkFile));
             while not SharedLibFiles.Empty do
               begin
                 S:=SharedLibFiles.GetFirst;
@@ -1181,15 +1158,12 @@ initialization
   RegisterImport(system_i386_win32,TImportLibWin);
   RegisterExport(system_i386_win32,TExportLibWin);
   RegisterDLLScanner(system_i386_win32,TDLLScannerWin);
-  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
   RegisterTarget(system_i386_win32_info);
 {$endif i386}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_win64,TImportLibWin);
   RegisterExport(system_x86_64_win64,TExportLibWin);
   RegisterDLLScanner(system_x86_64_win64,TDLLScannerWin);
-  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
-  RegisterRes(res_win64_gorc_info,TWinLikeResourceFile);
   RegisterTarget(system_x64_win64_info);
 {$endif x86_64}
 {$ifdef aarch64}
@@ -1197,7 +1171,6 @@ initialization
   RegisterExport(system_aarch64_win64,TExportLibWin);
   RegisterDLLScanner(system_aarch64_win64,TDLLScannerWin);
   // ToDo?
-  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
   RegisterTarget(system_aarch64_win64_info);
 {$endif aarch64}
 end.

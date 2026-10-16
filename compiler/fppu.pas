@@ -134,7 +134,7 @@ interface
 implementation
 
 uses
-  SysUtils,
+  SysUtils,ResourceCatalog,ResourceMetadata,
   CFileUtl,
   Systems,Version,Options,
   SymTable, SymSym,
@@ -990,14 +990,21 @@ var
 
     procedure TPPUModule.WriteResources;
       var
-        Res : TCmdStrListItem;
+        Data : TResourceMetadataStream;
+        Buffer : array[0..65535] of Byte;
+        Count : LongInt;
       begin
-        Res:=TCmdStrListItem(ResourceFiles.First);
-        while Res<>nil do
-          begin
-            PPUFile.PutString(Res.FPStr);
-            Res:=TCmdStrListItem(Res.Next);
-          end;
+        Data:=TResourceMetadataStream.Create;
+        try
+          ResourceFiles.SaveToStream(Data);
+          Data.Position:=0;
+          repeat
+            Count:=Data.Read(Buffer,SizeOf(Buffer));
+            if Count<>0 then PPUFile.PutData(Buffer,Count);
+          until Count=0;
+        finally
+          Data.Free;
+        end;
         PPUFile.WriteEntry(IBResources);
       end;
 
@@ -1398,9 +1405,32 @@ var
 
 
     procedure TPPUModule.ReadResources;
+      var
+        Data : TResourceMetadataStream;
+        Buffer : array[0..65535] of Byte;
+        Count : LongInt;
       begin
-        while not PPUFile.EndOfEntry do
-          ResourceFiles.Insert(PPUFile.GetString);
+        Data:=TResourceMetadataStream.Create;
+        try
+          while not PPUFile.EndOfEntry do
+          begin
+            Count:=PPUFile.EntryLeft;
+            if (Count<0) then
+              Message1(unit_f_ppu_invalid_entry,'resource metadata length');
+            if Count>SizeOf(Buffer) then Count:=SizeOf(Buffer);
+            PPUFile.GetData(Buffer,Count);
+            Data.WriteBuffer(Buffer,Count);
+          end;
+          Data.Position:=0;
+          try
+            ResourceFiles.LoadFromStream(Data);
+          except
+            on E:EResourceCatalog do
+              Message1(unit_f_ppu_invalid_entry,E.Message);
+          end;
+        finally
+          Data.Free;
+        end;
       end;
 
 

@@ -16,7 +16,7 @@ $targets = @(
 )
 $compilers = @{i386='ppcross386.exe'; x86_64='ppcrossx64.exe'; aarch64='ppcrossa64.exe'}
 $tools = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','plex','pyacc')
+    'data2inc','ppdep','rstconv','bin2obj','postw32','plex','pyacc')
 
 function Require-File([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing release input: $Path" }
@@ -125,6 +125,7 @@ try {
     $bin = Join-Path $relocated 'bin/x86_64-win64'
     $driver = Join-Path $bin 'fpc.exe'
     $clang = (Get-Command clang.exe -CommandType Application -ErrorAction Stop).Source
+    $llvmrc = (Get-Command llvm-rc.exe -CommandType Application -ErrorAction Stop).Source
     $linker = (Get-Command ld.lld.exe -CommandType Application -ErrorAction Stop).Source
     $savedEnvironment = @{}
     foreach ($name in @('PATH','FPCDIR','WIN32UNITS','WIN64UNITS','LINUXUNITS','ANDROIDUNITS','BSDUNITS',
@@ -132,9 +133,10 @@ try {
         $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
         [Environment]::SetEnvironmentVariable($name, $null, 'Process')
     }
-    $env:PATH = ((@((Split-Path $clang), (Split-Path $linker), (Join-Path $env:SystemRoot 'System32')) | Select-Object -Unique) -join ';')
+    $env:PATH = ((@((Split-Path $clang), (Split-Path $llvmrc), (Split-Path $linker), (Join-Path $env:SystemRoot 'System32')) | Select-Object -Unique) -join ';')
     Push-Location $OutputRoot
     try {
+        [IO.File]::WriteAllText((Join-Path $OutputRoot 'smoke.rc'), '101 RCDATA { 42 }')
         [IO.File]::WriteAllText((Join-Path $OutputRoot 'releaseprobe.pas'), @'
 unit releaseprobe;
 {$mode objfpc}{$H+}
@@ -142,9 +144,13 @@ interface
 uses SysUtils, Classes, Dynlibs;
 function Probe: string;
 implementation
+{$R smoke.rc}
 function Probe: string;
-var items: TStringList;
+var items: TStringList; lStream: TResourceStream; lValue: Word;
 begin
+  lStream := TResourceStream.CreateFromID(HInstance, 101, PChar(10));
+  try lStream.ReadBuffer(lValue, SizeOf(lValue)); finally lStream.Free; end;
+  if lValue <> 42 then Halt(1);
   items := TStringList.Create;
   try
     items.Add(IntToStr(SizeOf(Pointer)));
@@ -163,15 +169,16 @@ end.
             Require-File (Join-Path $targetOutput 'releaseprobe.o')
             Assert-RelocatedUnits ('compile-'+$target) $target
         }
-        [IO.File]::WriteAllText((Join-Path $OutputRoot 'smoke.rc'), '101 RCDATA { 42 }')
-        Run-Step 'resource' (Join-Path $bin 'fpcres.exe') @('-of','res','-o','smoke.res','smoke.rc')
         [IO.File]::WriteAllText((Join-Path $OutputRoot 'smoke.pas'), @'
 program smoke;
 {$mode objfpc}{$H+}
-{$ifdef windows}{$R smoke.res}{$endif}
+{$R smoke.rc}
 uses SysUtils, Classes;
-var items: TStringList;
+var items: TStringList; lStream: TResourceStream; lValue: Word;
 begin
+  lStream := TResourceStream.CreateFromID(HInstance, 101, PChar(10));
+  try lStream.ReadBuffer(lValue, SizeOf(lValue)); finally lStream.Free; end;
+  if lValue <> 42 then Halt(1);
   items := TStringList.Create;
   try
     items.Add('relocated-release-ok');

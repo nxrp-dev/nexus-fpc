@@ -71,9 +71,9 @@ implementation
     FModule,
     aasmbase,aasmtai,aasmcpu,cpubase,
     cgbase,ogbase,
-    CompRsrc,
+    CompRsrc,NXPackageFile,
     ogelf,owar,
-    ResCmn, i_linux
+    i_linux
     ;
 
 {*****************************************************************************
@@ -555,10 +555,18 @@ begin
                  S:=SharedLibFiles.GetFirst;
                  if (s<>'c') or reorder then
                   begin
-                    i:=Pos(TargetInfo.sharedlibext,S);
-                    if i>0 then
-                     Delete(S,i,255);
-                    Add('-l'+s);
+                    if ExtractFileExt(S)=NexusPackageLibraryExtension then
+                      begin
+                        if S[1]<>':' then S:=':'+S;
+                        Add('-l'+S);
+                      end
+                    else
+                      begin
+                        i:=Pos(TargetInfo.sharedlibext,S);
+                        if i>0 then
+                          Delete(S,i,255);
+                        Add('-l'+S);
+                      end;
                     libraryadded:=true;
                   end
                  else
@@ -912,5 +920,4 @@ initialization
   RegisterExport(system_aarch64_linux,TExportLibLinux);
   RegisterTarget(system_aarch64_linux_info);
 {$endif aarch64}
-  RegisterRes(Res_ELF_Info,TWinLikeResourceFile);
 end.

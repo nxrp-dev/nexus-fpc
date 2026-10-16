@@ -66,13 +66,14 @@ the EXE are required at runtime. Metadata is compressed inside each library by d
 `EmbedPackageMetadata: Disabled` uses a development-only `.nxp` sidecar instead.
 See [package storage](../../nexusfpc-package-storage.md). Native Forge operations
 verify SDK/bundle hashes and metadata/native descriptor identities.
-Forge with its matching language definitions, LLVM Clang/LLD, and the release
-tools (including `fpcres.exe` for resources) must be available to build consumers.
+Forge with its matching language definitions, LLVM Clang/LLD/RC, and the release
+tools must be available to build consumers. The compiler handles resource inputs
+directly; no standalone FPC resource converter is required.
 The wrapper saves Forge's build log at `build/forge-bootstrap/package-sdk-forge.log`.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
 the compiler, RTL, units and packages together for `NXP004` package metadata,
-descriptor v4 and `NXU208` units with long revision 39. These
+descriptor v4 and `NXU208` units with long revision 45. These
 [artifact identities](../../nexusfpc-artifact-identity.md) belong to NexusFPC;
 upstream and previous Nexus binary artifacts must be rebuilt.
 

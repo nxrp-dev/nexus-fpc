@@ -36,7 +36,7 @@ implementation
     Verbose,Systems,GlobType,Globals,
     symconst,CScript,Triplet,
     FModule,aasmbase,aasmtai,AAsmData,aasmcpu,cpubase,SymSym,symdef,
-    import,export,link,CompRsrc,ResCmn,i_darwin,expunix,
+    import,export,link,CompRsrc,i_darwin,expunix,
     cgutils,cgbase,cgobj,CPUInfo,ogbase;
 
   type
@@ -743,7 +743,5 @@ initialization
   RegisterTarget(system_aarch64_iphonesim_info);
 {$endif aarch64}
 
-  RegisterRes(res_macho_info,TWinLikeResourceFile);
-  RegisterRes(res_macosx_ext_info,TWinLikeResourceFile);
 end.
 

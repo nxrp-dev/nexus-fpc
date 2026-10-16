@@ -18,7 +18,6 @@ dynlib.inc      Dynamic loading support for low level RTL (packages)
 dynlibh.inc     Declarations for Dynamic loading support for low level RTL (packages)
 except.inc      Delphi styled exception support
 excepth.inc     Declarations of Delphi styled exception support
-extres.inc      Generic parts of resource support implementation
 fexpand.inc     Path canonicalisation 
 file.inc        Untyped file support routines
 filerec.inc     Untyped file record definition
@@ -86,7 +85,6 @@ ctypes.pas       Aliases for common C/POSIX types
 dynlibs.pas     Dynamic library loading implementation
 exeinfo.pas      Part of traceback support
 extpas.pas       Extended pascal compatible mode runtime parts
-fpextres.pas     External resource support
 fpintres.pas     Internal resource support
 getopts.pas      Pascal implementation of the GNU Getops
 heaptrc.pas      Runtime memory leak tracer and tests for memory integrity

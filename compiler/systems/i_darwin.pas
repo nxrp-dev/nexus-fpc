@@ -29,32 +29,6 @@ uses
    Systems,NXArtifactID;
 
 const
-   res_macho_info : TResInfo =
-       (
-         id     : res_macho;
-         resbin : 'fpcres';
-         rescmd : '-o $OBJ -a $ARCH -s $SUBARCH -of mach-o $DBG';
-         rcbin  : 'windres';
-         rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-         resourcefileclass : nil;
-         ResFlags : [];
-       );
-   res_macosx_ext_info : TResInfo =
-      (
-         id     : res_ext;
-         resbin : 'fpcres';
-         rescmd : '-o $OBJ -a $ENDIAN -of external $DBG';
-         rcbin  : 'windres';
-         rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-         resourcefileclass : nil;
-         ResFlags : [res_external_file,res_arch_in_file_name];
-      );
-
-
-
-
-
-
    system_x86_64_darwin_info  : TSystemInfo =
       (
         system       : system_x86_64_darwin;

@@ -126,15 +126,7 @@
             ,ar_gnu_gar
        );
 
-       TRes = (res_none
-            ,res_gnu_windres,res_watcom_wrc_os2
-            ,res_m68k_palmos,res_m68k_mpw
-            ,res_powerpc_mpw,res_elf
-            ,res_win64_gorc, res_macho, res_ext
-       );
-
-       TResInfoFlags = (res_external_file,res_arch_in_file_name
-            ,res_single_file,res_no_compile);
+       TRes = (res_none,res_coff,res_elf,res_macho);
 
        TDbg = (dbg_none
             ,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5
@@ -142,8 +134,7 @@
 
        TScriptType = (script_none
             ,script_dos,script_unix,
-            script_mpw,
-            script_fpcres
+            script_mpw
        );
 
        TABI = (abi_default

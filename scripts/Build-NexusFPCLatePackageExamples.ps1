@@ -19,18 +19,9 @@ $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $OutputRoot -Force)) {
     throw 'OutputRoot must be new or empty.'
 }
-$rc = (Get-Command llvm-rc.exe -ErrorAction Stop).Source
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 $source = Join-Path $OutputRoot 'source'
 Copy-Item -LiteralPath "$SourceRoot\examples\dynamic-packages\late" -Destination $source -Recurse
-$rcLog = Join-Path $OutputRoot 'resources.log'
-Push-Location "$source\base"
-try {
-    $ErrorActionPreference = 'Continue'
-    & $rc /fo pluginbase.res pluginbase.rc *> $rcLog
-    $code = $LASTEXITCODE
-} finally { Pop-Location; $ErrorActionPreference = 'Stop' }
-if ($code -ne 0) { throw "Resource compilation failed ($code). See $rcLog" }
 $packages = Join-Path $OutputRoot 'packages'
 New-Item -ItemType Directory -Path $packages | Out-Null
 $compile = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'

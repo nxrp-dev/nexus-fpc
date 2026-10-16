@@ -1,0 +1,231 @@
+{
+  "baseline_revision": "ca6b3976bf5417fd73251dcb9f39d9edcf48ea07",
+  "baseline_converter_sha256": "9d596fff355e1689af17712c84cffc72c2f611a9869c3cebcf52aa459a16aa0d",
+  "purpose": "Read-only regression inputs, not executables to run. Version pairs encode 1.2.3.4 and 5.6.7.8. Old ELF and Mach-O layouts come from the retired baseline writer. PE fixtures are linked by LLVM from standard RES.",
+  "commands": [
+    {
+      "command": [
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/artifacts/baseline-fpcres/bin/fpcres",
+        "-of",
+        "mach-o",
+        "-a",
+        "x86_64",
+        "-o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/x86_64-v1.o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/trimmed-metadata-tables/version1.res"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "ld.lld",
+        "-flavor",
+        "darwin",
+        "-dylib",
+        "-arch",
+        "x86_64",
+        "-platform_version",
+        "macos",
+        "11.0",
+        "11.0",
+        "-o",
+        "/media/kcollins/dev/source/nexus-fpc/tests/resource-formats/fixtures/metadata/old-x86_64-darwin-v1",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/x86_64-v1.o"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/artifacts/baseline-fpcres/bin/fpcres",
+        "-of",
+        "mach-o",
+        "-a",
+        "x86_64",
+        "-o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/x86_64-v2.o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/trimmed-metadata-tables/version2.res"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "ld.lld",
+        "-flavor",
+        "darwin",
+        "-dylib",
+        "-arch",
+        "x86_64",
+        "-platform_version",
+        "macos",
+        "11.0",
+        "11.0",
+        "-o",
+        "/media/kcollins/dev/source/nexus-fpc/tests/resource-formats/fixtures/metadata/old-x86_64-darwin-v2",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/x86_64-v2.o"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/artifacts/baseline-fpcres/bin/fpcres",
+        "-of",
+        "mach-o",
+        "-a",
+        "aarch64",
+        "-o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/aarch64-v1.o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/trimmed-metadata-tables/version1.res"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "ld.lld",
+        "-flavor",
+        "darwin",
+        "-dylib",
+        "-arch",
+        "arm64",
+        "-platform_version",
+        "macos",
+        "11.0",
+        "11.0",
+        "-o",
+        "/media/kcollins/dev/source/nexus-fpc/tests/resource-formats/fixtures/metadata/old-aarch64-darwin-v1",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/aarch64-v1.o"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/artifacts/baseline-fpcres/bin/fpcres",
+        "-of",
+        "mach-o",
+        "-a",
+        "aarch64",
+        "-o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/aarch64-v2.o",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/trimmed-metadata-tables/version2.res"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "ld.lld",
+        "-flavor",
+        "darwin",
+        "-dylib",
+        "-arch",
+        "arm64",
+        "-platform_version",
+        "macos",
+        "11.0",
+        "11.0",
+        "-o",
+        "/media/kcollins/dev/source/nexus-fpc/tests/resource-formats/fixtures/metadata/old-aarch64-darwin-v2",
+        "/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1/integration-20261016/legacy-metadata-fixtures/aarch64-v2.o"
+      ],
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "files": [
+    {
+      "file": "aarch64-windows-v1.exe",
+      "sha256": "5077810dfe9becdc855e83043d10bb6f4bc5852570b8a38171992e4cd9a8dc70",
+      "bytes": 2048
+    },
+    {
+      "file": "aarch64-windows-v2.exe",
+      "sha256": "6f9bad52023216698f40f726a810215d6870cd9e99629c011dc9cf9affa1822f",
+      "bytes": 2048
+    },
+    {
+      "file": "i386-windows-v1.exe",
+      "sha256": "7e3ad7f2fbc00dcd72236c3f08facbc8d5d264ed4c05b32382142255cb23f003",
+      "bytes": 2048
+    },
+    {
+      "file": "i386-windows-v2.exe",
+      "sha256": "4d0508509e6f5c23203660052ad503b55d685686e69caf94550085dfcb9868d1",
+      "bytes": 2048
+    },
+    {
+      "file": "old-aarch64-darwin-v1",
+      "sha256": "c6f064b69e7096840138f8b12f2fa89a6a84ba7e51fa30eb7fa2fad6ae8ee3aa",
+      "bytes": 33360
+    },
+    {
+      "file": "old-aarch64-darwin-v2",
+      "sha256": "964d57b906212979c449dd933bfc61636e1aed3a174423ebaaaf53f3077f96d9",
+      "bytes": 33360
+    },
+    {
+      "file": "old-aarch64-linux-v1",
+      "sha256": "cb0421afc72e5175d09abff14a0eaf72936b2bd52bf6b6402c3be62043ac9a4e",
+      "bytes": 2304
+    },
+    {
+      "file": "old-aarch64-linux-v2",
+      "sha256": "211198a9bd61f35ed4d24e891b5f70dff8d34b9fdb78ce49515a6551f6563239",
+      "bytes": 2304
+    },
+    {
+      "file": "old-i386-linux-v1",
+      "sha256": "4ab3845738588c05c908cf21dc0f6d50905642581d9cc7da1bd2723471e205b8",
+      "bytes": 1492
+    },
+    {
+      "file": "old-i386-linux-v2",
+      "sha256": "8d040e19c86f85689f50155e39bf4df8c258fb8e1282d1aa04ba7f02cc95075f",
+      "bytes": 1492
+    },
+    {
+      "file": "old-x86_64-darwin-v1",
+      "sha256": "d43df49a7e64e119180518608ab2bf93c60e82ded671cb2d62e113f814950731",
+      "bytes": 8352
+    },
+    {
+      "file": "old-x86_64-darwin-v2",
+      "sha256": "a84e11e6a3750f0dd7ca15592070faf21e2e9588ce915924dc6ce6ab8cea11f8",
+      "bytes": 8352
+    },
+    {
+      "file": "old-x86_64-linux-v1",
+      "sha256": "46ff71c816141a90a035f18ff0923f642ee01e9b55513b6accae9dec2b32f4ff",
+      "bytes": 2304
+    },
+    {
+      "file": "old-x86_64-linux-v2",
+      "sha256": "bb73e7073b3776af151b2435f4979c5f4a81a7fc69401892e70dd6ff9d71c373",
+      "bytes": 2304
+    },
+    {
+      "file": "versions.json",
+      "sha256": "89b3e9b2175b177ec91fcd6daa2a005c82c60c11befb60cd7bb8183d99e66ac3",
+      "bytes": 916
+    },
+    {
+      "file": "versions.tsv",
+      "sha256": "a7a40cfe1c323e46625a2229b19d74f968ab2b0306f7837453769598c91a9f59",
+      "bytes": 465
+    },
+    {
+      "file": "x86_64-windows-v1.exe",
+      "sha256": "2d6fec51637a73b84ed5d4fefd861e77e12e52b767ecd3f5ae96f25de6f9df04",
+      "bytes": 2048
+    },
+    {
+      "file": "x86_64-windows-v2.exe",
+      "sha256": "97211b2822a27f7128a76afc8690deb5a54979d556f9c704a6cae0f6ee1460b7",
+      "bytes": 2048
+    }
+  ]
+}

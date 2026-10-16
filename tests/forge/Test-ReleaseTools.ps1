@@ -35,7 +35,7 @@ function Assert-Same([string]$Left, [string]$Right) {
     if ((Get-FileHash -LiteralPath $Left).Hash -ne (Get-FileHash -LiteralPath $Right).Hash) { throw "Generated file mismatch: $Left; $Right" }
 }
 $names = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','plex','pyacc')
+    'data2inc','ppdep','rstconv','bin2obj','postw32','plex','pyacc')
 foreach ($name in $names) {
     if (-not (Test-Path -LiteralPath (Join-Path $bin ($name+'.exe')))) { throw "Missing release tool: $name" }
 }
@@ -78,14 +78,26 @@ end.
     Run-Step 'dependencies' (Join-Path $bin 'ppdep.exe') @('dependency.pas')
     Assert-Contains 'dependencies.log' 'depunit'
 
+    # LLVM is the required toolchain. The compiler owns normalization and LLD
+    # receives RES directly; there is no standalone resource converter.
+    $null = Get-Command clang.exe, llvm-rc.exe -CommandType Application -ErrorAction Stop
     Write-Fixture 'fixture.rc' '101 RCDATA { 42 }'
-    Run-Step 'resource-parse' (Join-Path $bin 'fpcres.exe') @('-of','res','-o','fixture.res','fixture.rc')
-    Run-Step 'resource-coff' (Join-Path $bin 'fpcres.exe') @('-of','coff','-a','x86_64','-o','fixture.o','fixture.res')
-    foreach ($endian in @('littleendian','bigendian')) {
-        Run-Step ('resource-'+$endian) (Join-Path $bin 'fpcres.exe') @('-of','external','-a',$endian,'-o',($endian+'.fpcres'),'fixture.res')
-    }
-    Run-Step 'resource-share' (Join-Path $bin 'fpcreslipo.exe') @('littleendian.fpcres','bigendian.fpcres','-o','shared.fpcres')
-    if ((Get-Item -LiteralPath 'shared.fpcres').Length -eq 0) { throw 'Empty shared resource output' }
+    Write-Fixture 'resourceprobe.pas' @'
+program ResourceProbe;
+{$mode objfpc}{$H+}
+uses Classes;
+{$R fixture.rc}
+var lStream: TResourceStream; lValue: Word;
+begin
+  lStream := TResourceStream.CreateFromID(HInstance, 101, PChar(10));
+  try lStream.ReadBuffer(lValue, SizeOf(lValue)); finally lStream.Free; end;
+  if lValue <> 42 then Halt(1);
+  WriteLn('resource-ok');
+end.
+'@
+    Run-Step 'resource-compile' $driver ($compile + @('resourceprobe.pas'))
+    Run-Step 'resource-runtime' (Join-Path $OutputRoot 'resourceprobe.exe') @()
+    Assert-Contains 'resource-runtime.log' 'resource-ok'
 
     Write-Fixture 'lexer.l' @'
 %{

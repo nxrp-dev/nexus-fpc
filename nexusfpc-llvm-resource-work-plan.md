@@ -1,6 +1,157 @@
 # Replace FPC resource tooling with LLVM
 
-Planning baseline: NexusFPC `2be386ee5a`, 16 October 2026. This plan proposes implementation; it does not change compiler, runtime, or build behavior.
+Planning baseline: NexusFPC `2be386ee5a`, 16 October 2026. Implementation was approved on 16 October 2026, with stock FPC 3.2.2 compatibility required and unexpected problems to be discussed before choosing a correction.
+
+## Implementation status
+
+Implementation and the owner-amended acceptance checks are complete against source revision `ca6b3976bf` in `/media/kcollins/dev/worktree/llvm-resource-migration-20261016-ykc1idw1`. The compiler now uses the catalog, LLVM RC pipeline and assembly emitter. Production integration builds from stock FPC 3.2.2, its matching NXU-45 RTL builds, and a subsequent Nexus-built compiler builds with normal SHA-1 selection. The obsolete tools, parser/writer family and sidecars have been removed. The clean stock-seeded bootstrap and final regression/artifact checks pass. Changes remain uncommitted.
+
+### Owner's validation amendment, 16 October 2026
+
+The owner instructed: “Skip native platform validation. just make sure you verify your work via code review and artifact analysis. Continue the rest of the work.” This supersedes native Windows, Android and Apple execution/bootstrap gates throughout this plan, including deletion gates and completion criteria. Those results are **waived**, never reported as passed. Code review, target object/link inspection, metadata compatibility, compiled-unit persistence, available Linux execution and the stock-seeded Linux bootstrap remain required. Target SDK or linker limitations must be recorded explicitly. The earlier native-validation bundle is historical prototype evidence; it does not prove production integration.
+
+The integrated Linux resource API fixture passes all 12 resources through enumeration, languages, repeated handles, payloads and streams without a converter. The exact `cycle22_changec` and `cycle32_changec` first/source-change/cached scenarios also pass with their expected recompilation sets and output `980`. Evidence: `integration-20261016/runtime` and `integration-20261016/cycles`. No concurrency or thread behavior was changed.
+
+### Integrated implementation and current evidence
+
+The compiler records versioned NXRM resource metadata in NXU long revision 45
+(header revision 208 is unchanged). `ResourceCatalog`, `ResourceInputs`,
+`ResourceTools`, `ResourceArtifacts`, `ResourceMetadata`, `ResourceTables` and
+`ResourceEmit` implement bounded normalization, RTL form conversion, explicit
+LLVM invocation, transactional artifacts, unit persistence and existing runtime
+tables. `comprsrc` owns synchronous collection before assembly; no scheduling
+or concurrency algorithms changed. Windows passes canonical RES directly to
+LLD. ELF/Mach-O use writable tables and zero-fill handles in the existing
+assembly path. Imported packages retain ownership of their resources.
+
+The integrated corpus passes cached payload-only refresh, unchanged timestamps,
+failed compilation rollback, two inputs with the same basename, relocated
+source-hidden units, forms, DCR, language fallback, enumeration and deferred
+linking. All eight checked-in RC scripts pass; the event-log script uses its
+pre-generated message asset as a prerequisite. Microsoft MC generation itself
+was not exercised. The Windows artifact replacement branch cross-compiles for
+all three Windows CPUs. Native Windows execution is waived.
+
+All 13 compiler/RTL combinations build. Actual target-selected RC payloads and
+objects pass inspection. Complete resource-bearing programs link for the three
+Linux and three Windows targets. Android's two and Apple's five variants pass
+SDK-free linked artifact analysis; these are not complete SDK application
+links. ARM64 simulator metadata records iOS simulator 14.0. The retained
+metadata readers recover all resource identities/payloads from ten linked
+non-Windows table images, including old and new ELF version fixtures.
+
+On Linux, the full 12-resource runtime fixture and three repeated shared-library
+load/unload cycles pass, with resources resolved inside their owning library.
+The source-hidden NXPL provider/consumer artifact test passes using exact
+filenames. The owner approved the Linux package-link correction after the test
+exposed conventional `-lProvider.nxpl` lookup; existing exact dependencies keep
+their colon prefix.
+
+Setup's complete source closure builds against retained metadata readers. Its
+23 tests pass with the owner-approved CRC32 correction: the x86 assembler now
+uses CRC32's source width instead of the accumulator width. The regression
+checks 1,280 instruction/vector/alignment cases and 129 string-hash/dictionary
+cases; byte, word, dword and qword instruction encodings are inspected. Setup
+now copies two small LLVM-generated version RES fixtures instead of depending
+on the retired resource writer. Those consumer edits are in the sibling Nexus
+repository under `projects/setup/test`.
+
+The reviewed host suite passes with stock FPC 3.2.2 and Nexus, each with its own
+RTL: 233 catalog, 76 input, 49 artifact, 459 metadata and 104 layout checks,
+target/encoding tool probes, repeated FileInfo reads and eight frozen metadata
+pairs. The Nexus run also includes integrated compiler and CRC/hash regressions.
+Evidence is under `integration-20261016/host-reviewed`, `host-stock-reviewed`,
+`target-artifacts`, `ownership`, `package-approved-regression`, `setup` and
+`trimmed-metadata-tables` in the authorized workspace. Final bootstrap evidence
+and the subsequent validation results are recorded below.
+
+### Final clean bootstrap
+
+The integrated migration bootstraps from `/usr/bin/ppcx64` **3.2.2** using the
+established seed flags and matching stock RTL. All generators and three Nexus
+compiler/RTL cycles pass. Generations 2 and 3 have identical compiler bytes and
+all **90** RTL objects match. The resulting compiler SHA-256 is
+`668d714ab3a3dbd9ba5c3912fa5e453e6585c930c8d1bebc50c601255abdba21`.
+Its immutable source snapshot is
+`ca6b3976bf5417fd73251dcb9f39d9edcf48ea07-work-d8cdc45898`;
+`artifacts/verified-baseline/ca6b3976bf-work-d8cdc45898/build-identity.json` and
+`final-bootstrap.log` record the seed, source digest, tools and convergence.
+Despite the historical parent directory name, this snapshot includes the
+integrated replacement and approved CRC32/package-link corrections.
+No installed compiler was promoted.
+
+The final validation uses this compiler and matching RTL in `final-validation`.
+The checked-in host runner, exact six cyclic-unit scenarios, complete Setup
+source closure (**23 passed; 0 failed/errors/skipped**), PIC package ownership
+and repeated shared-library resource checks pass there. The permanent CRC32
+regression also fails at the diagnosed byte-width case when deliberately run
+against the uncorrected baseline; evidence is in
+`final-validation/crc-baseline-negative/expected-failure.json`.
+
+Production compiler/reader source matches the bootstrap snapshot. The bootstrap
+regenerates the two x86 `cpummprocs.inc` files from the checked-in generator;
+their difference from the pre-existing checkout copies is Pascal letter case
+only. Later edits are documentation and release/regression test improvements.
+
+### Final validation result
+
+`final-validation.log` ends with `FINAL VALIDATION PASSED`.
+`final-validation/results.json` records the commands, source identity, durations
+and exit codes; `artifact-review.json` records explicit machine/pointer-width,
+writable resource-section, zero-fill handle and native PE resource checks for
+all 13 targets. LLVM Clang/LLD/inspection tools are 18.1.3, with the matching
+LLVM 18 RC executable. This is the validated toolchain baseline.
+
+| Gate | Final result |
+| --- | --- |
+| Stock-seeded Linux bootstrap | Pass; matching compiler generations 2/3 and 90 RTL objects |
+| Host catalog/adapters/tools/artifacts/NXRM/readers/layout | Pass with stock 3.2.2 and matching stock RTL; pass with clean Nexus compiler and matching Nexus RTL |
+| Integrated unit resources | Pass; cached refresh, same-basename inputs, relocation, source-hidden consumption, failure rollback, DCR/forms, language fallback, enumeration, deferred links and retired options |
+| Cyclic units | All six exact first/source-change/cached scenarios pass; expected compile sets and output 980 |
+| Setup | Fresh complete source closure builds; all 23 tests pass |
+| CRC32/hash regressions | 1,280 instruction/vector/alignment checks and 129 string/hash checks pass; negative baseline proves regression sensitivity; Win32/Win64 byte/word/dword/qword encodings inspected |
+| Package/library ownership | Source-hidden NXPL consumer and provider metadata checks pass; library lookup remains in its owner through repeated load/unload |
+| Matrix build | All 13 compiler/RTL combinations pass, including startup assembly prerequisites |
+| Target artifacts | All 13 target RC macro payloads and actual objects pass; six full Linux/Windows program links and seven SDK-free Android/Apple artifact links pass |
+| Runtime resource API | All 12 resources pass lookup, enumeration, languages, repeated handles, payload and stream checks on Linux |
+| Relocated toolchain | Copied compiler/RTL compile and run RC-bearing code from a path containing spaces |
+| Generated origins/removal/distribution review | 27 namespace origin/wrapper pairs agree; parser/lexer origins and outputs removed together; no operational converter/writer/sidecar references remain; release masks already retain canonical RES files |
+| Native Windows/Android/Apple builds/execution and PowerShell execution | Waived by owner; not represented as passed; no Apple/Android SDK application link or runtime claim |
+
+The final review found no remaining implementation blocker. `git diff --check`
+and shell syntax checks pass. No concurrency change was introduced. All execution
+outputs are under the authorized worktree, with no repository `build` directory.
+Sibling Nexus changes are the Setup fixture migration and its attribution record;
+pre-existing `fcl-image` removals are outside this migration's changes.
+
+### Historical implementation batches
+
+The following records describe earlier stages and comparison oracles. References
+to prototypes, NXU 44 and pending native gates describe those stages only; the
+integrated status above and the owner's validation amendment supersede them.
+
+* The owner selected retirement of external sidecars and embedded resources as the sole output mode.
+* The owner authorized direct execution of the documented bootstrap stages for this migration because native Forge is unavailable here. All generated files remain in the external worktree.
+* The owner authorized restoration of `FileInfo` with the retained resource metadata code. `packages/fcl-res/src/fileinfo.pas` is an unchanged restoration from `b33f3bce53e299f319980d56adb40aae82ce36c4:packages/fcl-extra/src/fileinfo.pp`, immediately before removal in `f40338cf8a`. Its SHA-256 is `2622f48109d66b99df6f3852247ab3039c518ae14d6c42bc0d243a899c151715`. The existing `Fcl.FileInfo` namespace wrapper moved unchanged to `fcl-res/namespaced`.
+* The restored metadata API compiled with both stock FPC 3.2.2 and the verified Nexus compiler, and passed repeated version reads from standard RES and LLVM-generated PE files for Windows i386, x86_64 and ARM64 with each matching RTL. Reproduce with `bash tests/resource-formats/Run-NXFileInfoMetadataTests.sh <compiler> <matching-rtl-units> <external-artifact-directory>`. This does not establish a complete Setup build or target runtime execution.
+* A fresh native Linux bootstrap starting with stock FPC 3.2.2 passed all generators, three compiler/RTL cycles, compiler convergence and comparison of all 90 RTL objects in cycles 2 and 3. It followed the existing `/media/kcollins/dev/toolchain/bootstrap-nexusfpc.py` procedure, adapted only for isolated output/snapshot locations and no installed-toolchain promotion. That established procedure already selects `-dSHA1PASCAL` for the stock-built initial seed, then uses normal SHA-1 and LLVM assembly/linking in Nexus-built generations. The earlier failed reproduction omitted this existing seed-stage flag; no SHA-1 source or assembler-policy change was needed or made. The verified baseline compiler SHA-256 is `ae52d814264029ba686b609145e144c0fd3442b7f3c63c48b8c7c265ae047918`. Its source snapshot predates catalog integration. Evidence is in `established-bootstrap-adaptation.json`, `baseline-bootstrap/…/logs`, and `artifacts/verified-baseline/ca6b3976bf-work-4d64bb2de9/build-identity.json` in the workspace.
+* The new standalone `ResourceCatalog` and `ResourceInputs` units compile with stock FPC 3.2.2 and with the verified Nexus compiler, each using its own matching RTL. The current batch passes 233 catalog checks and 76 form/TLB checks with each pairing. The catalog validates RES boundaries, identifiers, string blocks and image references; reads/writes payloads in bounded chunks; merges disjoint string slots; and rebases icon/cursor child references. Direct adapters use only RTL streaming and opaque TLB payloads. Reproduce with `tests/resource-formats/Run-NXResourceCatalogTests.sh` and `Run-NXResourceInputsTests.sh`, passing the compiler, matching RTL directory and external artifact directory to each runner.
+* Differential validation covers all 15 checked-in RES/DFM/LFM/TLB files and four generated text-form cases. Fourteen checked-in inputs and all four generated cases match the existing implementation's decoded identities, metadata, payloads and resolved image references. Ten text/binary form and TLB outputs are byte-identical across the stock and Nexus RTLs. The remaining file, `packages/pasjpeg/examples/test1.dfm`, is a legacy 16-bit resource wrapper around a `TPF0` stream; the unchanged baseline `fpcres` also rejects it with “No known file format detected.” That example remains unchanged and is not counted as a supported-input pass. Evidence: `artifacts/catalog-differential/corpus-results.json` and the original converter log `logs/test1-baseline-fpcres.log`.
+* Additional differential cases passed for seven resources exercising Unicode identifiers, maximum ordinals/language, and named versus numeric IDs; and for eight resources merged from real LLVM-generated ICO/CUR inputs with colliding child IDs. The normalized image and identifier outputs are byte-identical between the stock/Nexus pairings. LLVM accepted both merged string and merged image RES files for X86, X64 and ARM64 object generation. Evidence: `artifacts/catalog-differential/extended-results.json`. These are input/object checks, not Windows runtime execution.
+* The owner approved two binary alignment corrections: remove the two excess trailing NUL bytes from `tests/test/units/system/tres4.res`, and append two missing final alignment bytes to `packages/winunits-base/src/w32default.res`. All original resource records and payload bytes are preserved; the new reader remains strict. LLVM accepts the corrected files. The associated `w32default.rc` uses a per-resource `LANGUAGE` position LLVM does not accept; its source-syntax migration belongs to phase 2 and is still pending.
+* The original `cycle22_changec` and `cycle32_changec` first/source-change sequences passed with exact expected recompilation sets, plus a cached third compile. Each of the six resulting programs printed `980`. The external harness explicitly requests informational messages (`-vi`), because this compiler's default output is quiet. Evidence: `validate-baseline-cycles.py` and `artifacts/baseline-cycles/results.json`. Package-runtime, full Setup and non-Linux runtime gates remain open.
+* The standalone `ResourceTools` suite passes with both stock FPC 3.2.2 and the verified Nexus compiler, each using its matching RTL. It covers all 13 target-macro combinations, ordered/quoted macros, explicit includes, paths with spaces/non-ASCII, payload-only refresh, and subprocess failure cleanup. The accepted encoding guard permits matching/default pragmas and rejects conflicting or malformed directives and malformed UTF-8 before LLVM runs. It preserves source/header line mappings, handles active includes and `_Pragma`, and ignores inactive directives, comments and pragma-like resource strings. Multilingual UTF-8, explicit Windows-1252 and long lines pass. The original LLVM encoding failure is now an explicit rejection under the owner-approved contract. All 24 normalized outputs and their 24 raw LLVM counterparts are byte-identical across the compiler/RTL pairings. Reproduce with `tests/resource-formats/Run-NXResourceToolsTests.sh <compiler> <matching-rtl-units> <external-artifact-directory>`. Evidence: `artifacts/tools-stock-322-encoding-policy/logs` and `artifacts/tools-nexus-encoding-policy/logs`. The prototype is not yet integrated; native Windows execution remains an open gate.
+
+* The standalone `ResourceArtifacts` unit passes 37 staging/normalization checks with each compiler/RTL pairing. It chooses formats by binary signatures before extensions (including Delphi DCR), assigns module/input-index artifact names, stages files beside their final destinations, compares content in 64 KiB chunks and atomically replaces only changed artifacts. Failure/abandonment preserves published files; unchanged artifacts preserve their timestamps. Two inputs with the same basename remain distinct after relocation and hiding original inputs, and LLVM accepts the merged result. These are artifact-layer checks, not a completed NXU/source-hidden compiler integration gate. Reproduce with `tests/resource-formats/Run-NXResourceArtifactsTests.sh <compiler> <matching-rtl-units> <external-artifact-directory>`. Evidence: `artifacts/unit-artifacts-stock-322`, `artifacts/unit-artifacts-nexus`, `artifacts/encoding-artifact-validation.json`. The Windows replacement branch still requires native Windows execution.
+* The owner approved the one-line shared ARM64 iOS simulator target correction in `compiler/triplet.pas`: put the deployment version before `-simulator`. Using the actual before/after units with a consistent ARM64 compiler dependency closure, a requested 14.0 now produces preprocessor version 140000 and Mach-O simulator deployment 14.0; a requested 17.0 produces 170000 and deployment 17.0. Before correction the preprocessor reported 70000 for both and the assembler emitted deployment 14.0 for both. The initial isolated probe mixed CPU-specific unit sets and was rejected by checksum validation; the subsequent full ARM64-target compiler build supplies a consistent closure. No dependency checks were bypassed. Evidence: `artifacts/iossim-triplet-review/actual-results.json`, `actual-commands.json` and `arm64-compiler/compile.log`. This is Linux-hosted target/preprocessor/object validation, not an Apple runtime result.
+
+* The standalone `ResourceTables` layout passes 104 checks with both compiler/RTL pairings. It emits the existing packed FPC header/tree/handle ABI for 4- and 8-byte target pointers through an abstract assembly sink, sorts identifiers by the RTL's UTF-8 byte order, rejects lossy surrogate conversion before emission, and sends payload/name bytes in chunks of at most 64 KiB. LLVM assembles all ten non-Windows objects; LLD links all ten data-only shared images with current defaults and section GC. The retained readers recover all 12 identities, language IDs and payloads from the five ELF objects and all ten linked images. The restored `TVersionInfo` API passes repeated 1.2.3.4 → 5.6.7.8 → 1.2.3.4 reads on all ten linked formats with both compiler/RTL pairings. FileInfo uses extensionless Unix executable fixture names under its existing extension registration; stream-level reader checks are independent of suffix. This is file-format and metadata API validation on Linux, not target runtime execution or compiler assembly-backend integration. Reproduce with `tests/resource-formats/Run-NXResourceTablesTests.sh <compiler> <matching-rtl-units> <external-artifact-directory>`. Evidence: `artifacts/tables-stock-322`, `artifacts/tables-nexus`.
+* The owner approved an ELF reader correction after the linked-image gate exposed an overflow on 64-bit LLD shared/PIE resource images. A minimal VERSIONINFO input through the unchanged baseline converter reproduced the same failure on x86_64 and aarch64; i386 passed. `elfsubreader.inc` now resolves symbol-free `R_X86_64_RELATIVE` / `R_AARCH64_RELATIVE` addends from `.rela.dyn` when reading `ET_DYN`. Existing relocatable-object and fixed-address paths remain covered. The relocation table uses checked bounds/chunked reads, filters relative entries, sorts dynamic offsets and rejects malformed entries/duplicates. Unsorted and five malformed-relocation cases pass for all four 64-bit ELF target rows under each compiler/RTL pairing. Repeated FileInfo version reads also pass for old-converter i386/x86_64/aarch64 images with both pairings. No linker flag or runtime resource ABI changed. Evidence: `artifacts/tables-stock-322/analysis/elf-version-baseline-results.json`, `elf-version-correction-results.json`, and the table suite logs.
+* Raw LLVM Mach-O objects contain unresolved symbol relocations that the retained Mach-O metadata reader does not apply. The original raw-object failure is preserved in `artifacts/tables-stock-322/analysis/raw-macho-reader-failure.log` with `diagnosis.json`; all five linked Mach-O images pass the full identity/payload comparison. Compiler-internal raw Mach-O objects are not counted as executable-reader passes. The broad legacy converter fixture separately rewrote non-ASCII identifiers through an ANSI conversion (`雪` became `?`, `café` used a single E9 byte). That mismatch is isolated from the relocation failure by the minimal VERSIONINFO reproduction. The new catalog/table path uses explicit UTF-8 and preserves the Unicode identifiers, including the BMP/supplementary ordering case. Evidence: `analysis/legacy-unicode-cli-diagnosis.json`; the retiring converter is unchanged.
+* `ResourceEmit` translates the validated layout into the compiler's existing section, symbol, pointer, string and zero-fill assembly items. It uses target `SizeOf(PInt)`, writable ELF/Mach-O data, and zero-fill handles. All ten non-Windows target variants assemble, link and pass retained-reader comparisons with both stock 3.2.2 and Nexus compiler/RTL pairs using consistent CPU-specific compiler-unit closures. The i386 closure emits 4-byte pointers on this 64-bit host. The native Linux RTL API test passes all 12 fixture resources, enumeration, languages, repeated handles, complete payloads and streams. This adapter test substitutes only the new resource object into the unchanged compiler's no-link output, then executes its original link recipe; it does not establish production collection/scheduling integration. The initial harness access violation was traced to its omitted parser-owned `SmartLinkOFiles` initialization and corrected in the harness. Evidence: `artifacts/compiler-resource-emit/pair-validation.json` and `native-runtime/emitter-runtime-results.json`. Reproduce object/link/reader checks with `Run-NXCompilerResourceEmitTests.sh`, supplying the matching compiler, RTL, target CPU, compiler-unit closure, compiler includes, table fixture and external output directory.
+* The standalone `ResourceMetadata` prototype preserves original input/directive locations, module/input artifact basenames, format, target identity, per-unit RC codepage, includes and ordered macro arguments. Its versioned `NXRM` stream uses checked lengths, bounded reads/writes and transactional loading. Both compiler/RTL pairs pass 459 checks and emit byte-identical metadata. Malformed records, duplicate/path-traversing artifact names and unsupported macro argument kinds are rejected. Long fields do not use short-string serialization. Tool executable paths remain current-host settings. This schema is not yet wired into NXU `IBResources`; the NXU long revision remains 44 until that integration and the required clean rebuild. Evidence: `artifacts/metadata-results.json`. Reproduce with `Run-NXResourceMetadataTests.sh <compiler> <matching-rtl> <external-output>`.
+* The owner requested test bundles and commands for the unavailable Windows, Android and Apple native checks. Host suites and target runtime gates remain separate. `Run-NXResourceHostChecks.ps1` covers native host RC invocation, normalization, staging, encoding and old/new executable metadata fixtures; `Run-NXResourceHostChecks.sh` aggregates the corresponding Unix-hosted suites. Native target runtime results and compiler integration/removal gates remain pending.
+  The prepared bundle is `validation-bundles/nx-resource-validation-20261016` in the authorized workspace, with source/fixture hashes and [native instructions](tests/resource-formats/Native-Validation.md). Its Unix host runner passes all seven suites and sixteen old/new metadata-image pairs with both compiler/RTL pairings. Its isolated runtime preparation command links and executes successfully on Linux x86_64. Simulator/device app packaging passes structural file/plist checks using minimal C Mach-O executables; these are not Apple execution results. PowerShell, native Windows/Android/Apple runtime, signing and installation checks require the owner's machines. The prototype bundle deliberately preserves the unchanged compiler's no-link recipe and the retiring converter only as an explicit comparison prerequisite.
 
 Use Clang and LLVM to compile resource scripts, let LLD construct Windows resource objects, and emit the remaining FPC resource data through the compiler's existing assembly machinery. Retire `fpcres`, the Pascal RC parser and preprocessor, and the separate resource object writers after their replacements pass the gates below. Keep the executable metadata readers needed by Nexus Setup.
 
@@ -23,11 +174,13 @@ All retained targets are little endian. Only i386 uses 32-bit pointers. Preserve
 
 Native development must work on both Linux and Windows. The checked-in Forge bootstrap is currently Windows hosted; [README.md](/media/kcollins/dev/source/nexus-fpc/README.md:35) explicitly defers Linux-hosted Forge builds. Native Linux compiler operation and Linux Forge orchestration are separate acceptance items.
 
+**Temporary compatibility requirement:** Stock FPC 3.2.2 must remain able to build the initial Nexus compiler until the project has adopted its own seed compiler. Resource modernization must not raise that minimum version. New compiler units and seed-stage generators must use syntax and host RTL APIs available in 3.2.2. Keep this requirement until an explicit seed-transition decision supersedes it.
+
 All implementation work and validation artifacts must use a unique directory under `../../worktree`, with subdirectories such as `artifacts`, `units`, `obj`, and `logs`. The current Forge recipes contain hardcoded `build/forge-bootstrap` paths. Parameterize the relevant output root before using them for this migration. Do not recreate a `build` directory.
 
 Resource tool invocation, catalog construction, and final linking remain synchronous. This work includes no thread, queue, parallel compilation, package lifecycle, or concurrency redesign.
 
-## Current resource architecture
+## Baseline resource architecture (before migration)
 
 ### Compiler flow
 
@@ -103,13 +256,29 @@ Pascal `resourcestring` tables are independent. [InsertResourceTablesTable](/med
 
 Nexus Setup imports `FileInfo`, `resource`, `versiontypes`, `winpeimagereader`, `elfreader`, and `machoreader`. Its [ReadVersion](/media/kcollins/dev/source/nexus/projects/setup/src/utNXSetupFiles.pas:175) reads executable file versions to decide installation/replacement behavior. Its [tests](/media/kcollins/dev/source/nexus/projects/setup/test/tsNXSetupTests.pas:30) also construct synthetic resources with `versionresource`, `resreader`, and `reswriter`. Removing the whole `fcl-res` package would break this dependency. Retain readers for older installed images as well as newly produced images.
 
-There is a dependency-resolution issue to settle before claiming Setup validation: `packages/fcl-base/namespaced/Fcl.FileInfo.pas` includes `fileinfo.pas`, but that implementation was absent from the inspected source roots. The Setup use site is present; its current complete build closure has not been established. Resolve its source or intended replacement in phase 0 rather than inferring a successful consumer build.
+The audit found a missing `FileInfo` implementation: it had moved upstream from `fcl-base` to `fcl-extra`, then was deleted with `fcl-extra` in `f40338cf8a` on 16 September 2026. The owner authorized restoring that unit with the retained metadata code. The restored implementation and namespace wrapper now reside in `packages/fcl-res`; the focused API validation is recorded above. Setup's complete build remains a separate gate.
 
 The compiler's resource orchestration currently does not depend on `fcl-res`; the external converter does. Forge stages `fcl-res`, its supporting packages, and `tplylib` for host tools, builds `fpcres` and `fpcreslipo`, and advertises the converter in `Build:Tools`. It builds `fpintres` across the matrix and `fpextres` for Apple. Release/SDK recipes retain unit resource artifacts. See [tool staging](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.Tools.nxscript:35), [tool compilation](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.Tools.nxscript:163), [tool output contract](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.nxscript:1080), and [Apple resource RTL](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.nxscript:1763).
 
 No filename-bearing `{$R}`/`{$RESOURCE}` directives were found in the current compiler and RTL sources. Building the compiler and resource-manager RTL units therefore does not by itself exercise resource conversion. The validation must compile explicit resource-bearing fixtures. Package examples and tests supply existing RES, RC, DFM, TLB and `.dcr` use cases; `winmanutf8lfn` embeds `w32default.res`, and the JPEG orientation test explicitly selects `-FF` for `dots.rc`.
 
-After replacement, resource handling needs the base RTL, the RTL form-streaming closure, and the existing LLVM toolchain. Reusing `Classes.ObjectTextToBinary` adds an explicit host-compiler dependency on `Classes` and its RTL dependencies, including `TypInfo`, `Types`, `SortBase`, and `RtlConsts`. The current compiler primarily uses its own `CClasses`/`CStreams`; the bootstrap must stage and compile the host RTL closure before every compiler cycle, rather than assume the later host-tool staging makes it available. Keep stream adaptation local to the form adapter. This is RTL reuse, not a dependency on optional `fcl-res`/`tplylib`. `tplylib` can leave the resource dependency closure, but remains needed if the separately shipped `plex`/`pyacc` generators remain supported.
+After replacement, resource handling needs the base RTL, the RTL form-streaming closure, and the existing LLVM toolchain. Reusing `Classes.ObjectTextToBinary` adds an explicit host-compiler dependency on `Classes`. Stock FPC 3.2.2 already supplies this API in its own RTL; the initial compiler must link that matching stock RTL. Subsequent Nexus-built stages use the project's `Classes` and its RTL dependencies, including `TypInfo`, `Types`, `SortBase`, and `RtlConsts`. The existing native Linux bootstrap already compiles `rtl/linux/buildrtl.pas`, which provides this closure before the next compiler cycle; preserve that established ordering. The current compiler primarily uses its own `CClasses`/`CStreams`; keep stream adaptation local to the form adapter. This is RTL reuse, not a dependency on optional `fcl-res`/`tplylib`. `tplylib` can leave the resource dependency closure, but remains needed if the separately shipped `plex`/`pyacc` generators remain supported.
+
+### Preserve the FPC 3.2.2 bootstrap boundary
+
+The current Windows recipe explicitly uses stock Win32 FPC 3.2.2 and its installed RTL to build the initial Nexus compiler, then uses that compiler to build the project's Win64 RTL and native compiler. See [BuildSeedCompiler](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.nxscript:86) and [BuildNativeSeedCompiler](/media/kcollins/dev/source/nexus-fpc/NexusFPC.Forge.nxscript:330). Preserve that sequence. The native Linux bootstrap likewise starts with stock FPC 3.2.2 and its matching host RTL.
+
+Do not ask stock 3.2.2 to compile the project's current `Classes` sources: they enable `FUNCTIONREFERENCES`, and `classesh.inc` contains `reference to` declarations. Those belong on the Nexus-built side of the boundary. New resource code must use the common stream/form API subset and qualify types where the compiler's own stream classes would otherwise conflict. Compare form conversion through the stock-linked initial compiler and the Nexus-linked later compiler on the retained corpus; the presence of the same API name alone does not prove identical semantics.
+
+The following are mandatory bootstrap checks:
+
+* Stock Win32 3.2.2 builds the initial compiler and generators using stock units; stock Linux x86_64 3.2.2 does the same on Linux. Do not substitute an existing Nexus compiler for this check.
+* The initial Nexus compiler builds the current RTL/form-streaming dependencies and the next compiler. Subsequent generations use matching Nexus units, with convergence checked under the established bootstrap procedure.
+* A 32-bit Windows seed compiler targeting 64-bit code emits resource fields and relocations using **target** widths. Host `SizeOf(Pointer)` or host record layouts must not determine the resource object's layout.
+* Any new NXU resource metadata is written/read by Nexus compilers. Stock 3.2.2 consumes its own compiled units when building the initial compiler; it is not required to read Nexus NXU files.
+* Retain the stock compiler's existing assembler/linker prerequisites for the initial stage. LLVM resource/assembler/linker arguments apply when the resulting Nexus compiler runs; do not pass Nexus-only switches to stock 3.2.2.
+
+External LLVM processes do not require LLVM language or ABI support in the Pascal seed. The proposed CLI integration therefore introduces no inherent need to raise the bootstrap compiler version. New Pascal syntax, unavailable RTL calls, or incorrect stage ordering could still break it and must be caught by these checks.
 
 ## LLVM capability matrix
 
@@ -135,6 +304,20 @@ The executable probes used LLVM/Clang/LLD **18.1.3 on Linux**. The public LLVM s
 Two separately compiled RES inputs containing STRINGTABLE IDs 1 and 2 both contain native `RT_STRING`, block 1, language 1033. LLD and `llvm-cvtres` reject that duplicate block. FPC's current merger combines the entries. Passing every unit's RES straight to LLD is therefore not equivalent. The same-block rejection was reproduced for Windows i386, x86_64, and aarch64. Distinct files containing identical resource tuples are also rejected. Supplying the same filename twice can be deduplicated by the driver; that is not evidence of semantic duplicate acceptance.
 
 The target-macro probe selected resource ID 201 under bare `llvm-rc` on this x86_64 Linux host because its preprocessor target was Windows x64. Explicit i386 Windows preprocessing selected ID 202. A Linux-targeted `llvm-windres` invocation selected IDs 202 and 203, showing that the target OS also changes macro behavior. The compiler must own an explicit macro policy rather than inherit host defaults.
+
+The implementation baseline additionally probed all eight checked-in RC scripts using both the unchanged Pascal RC compiler and explicit-target Clang/LLVM. Five compile through both paths. Two lack inputs in this environment in both paths: `fclel.rc` names the absolute `C:\\TEMP\\fclel.msg`, and `tresb.rc` includes the unavailable `windres.h`. These rows remain incomplete; they are not passes. `w32default.rc` compiles with the Pascal parser but LLVM rejects `LANGUAGE` between a numeric type and its filename. Moving `LANGUAGE 0, 0` to its own preceding statement and quoting the XML filename compiles with LLVM. Its manifest source matches the stored payload after CRLF normalization. The checked-in RC source is not changed yet. Evidence: `artifacts/rc-corpus-baseline/results.json`.
+
+The owner approved preserving the compiled dialog output by changing the example script at the LLVM cutover. LLVM combines default control styles with explicit styles: the password edit in `testdlg.rc` gains `WS_BORDER` (`$500100A0` becomes `$508100A0`). Its DIALOGEX font weight is 400, as written in the source; the old parser resets that weight to 0 when it applies `dialog_set_font` after `opt_font_ex`. The approved, staged two-line alternative explicitly removes the border with `NOT $00800000` and requests weight 0; LLVM then emits both original dialog payloads exactly. It has not been applied while the old path is active: the old parser interprets `NOT` as bitwise complement, producing style `$FF7FFFFF` for that expression, rather than LLVM's style-removal mask. The initial claim that the old parser rejected the syntax was incorrect. Evidence: `artifacts/rc-corpus-baseline/compatibility-review/decision.json`, its patch and `artifacts/codepage-analysis/old-dialog-not.log`. No change to LLVM behavior is proposed.
+
+The owner also approved retaining LLVM's default legacy `MemoryFlags` values for newly compiled RC resources. [Microsoft's RESOURCEHEADER documentation](https://learn.microsoft.com/en-us/windows/win32/menurc/resourceheader) and [FPC's MemoryFlags documentation](https://www.freepascal.org/docs-html/fclres/resource/tabstractresource.memoryflags.html) state that these attributes are ignored by the Windows/FPC runtimes. Preserve all metadata read from existing RES files and the old direct form/TLB defaults. No metadata-rewriting compatibility shim has been added. Apart from the two dialog fields above and those flags, all five RC scripts that compile through both paths have identical decoded resources. Evidence: `artifacts/rc-corpus-baseline/semantic-comparison.json`.
+
+**LLVM encoding limitation:** LLVM 18.1.3 ignores `#pragma code_page(...)` in the preprocessed RC input. A UTF-8 `café` string under `/C1252` is emitted as `cafÃ©` despite `#pragma code_page(65001)`. LLVM's [open issue #63426](https://github.com/llvm/llvm-project/issues/63426) documents this missing feature; source inspection of [LLVM 22.1's C++ filter](https://github.com/llvm/llvm-project/blob/llvmorg-22.1.0/llvm/tools/llvm-rc/ResourceScriptCppFilter.cpp) confirms that it still discards the pragma. These observations do not depend on the new Pascal wrapper: direct LLVM commands reproduce them. Uniform Windows-1252 and UTF-8 inputs work when their respective `/C` values are selected. The old Pascal parser also emits `cafÃ©` for the UTF-8 fixture: its escaped-string conversion calls `Ansi2UnicodeMoveProc` one byte at a time in `string_new_uni`, splitting UTF-8 sequences. It produces `café` for the 1252 fixture. This was analyzed, not counted as successful Unicode compatibility.
+
+**Accepted RC input encoding policy (16 October 2026):** Use one explicitly selected encoding for each RC compilation, including its active text includes. The default is UTF-8 (65001); a compilation may instead select a legacy encoding such as Windows-1252. This setting is independent of Pascal source `-Fc` and the host locale. Matching `#pragma code_page(number)` directives are allowed. `#pragma code_page(DEFAULT)` means the configured encoding for that invocation. A pragma requesting another encoding, a malformed encoding pragma, or malformed UTF-8 under the UTF-8 setting is an error before LLVM RC runs. Report the original source/header and line; preserve existing published artifacts on failure. Check the preprocessed input so inactive conditional branches and comments do not create false conflicts, while active included pragmas and `_Pragma` expansions remain covered. Resource text containing the words `#pragma code_page` is ordinary string data.
+
+This policy accepts a compatibility limitation in [LLVM issue #63426, llvm-rc ignores pragma code_page](https://github.com/llvm/llvm-project/issues/63426). A single UTF-8 compilation can contain any supported human languages. An older project that switches between differently encoded translations in one compilation must convert those text inputs to a common encoding, or compile them separately and merge their RES results. A uniformly encoded legacy script needs the corresponding explicit encoding selection. Encoding cannot be reliably inferred from an undeclared legacy file. This RC policy does not change Pascal source encodings, precompiled RES metadata/payloads, or opaque binary resource inputs. All eight checked-in RC scripts are ASCII and contain no encoding pragma; no present repository input requires mixed encoding support.
+
+An upstream LLVM pull request may address #63426 later. Before relaxing the restriction, qualify the corrected LLVM release against mixed-encoding includes, pragma scope/default behavior and Unicode payload tests. Do not silently enable behavior merely because a tool version is newer. No additional RC frontend or automatic transcoding is introduced for this limitation. The original `/C1252` plus UTF-8 pragma regression is retained as an explicit rejection under the accepted contract, rather than accepting corrupted text. Root-cause evidence remains in `artifacts/codepage-analysis/results.json`, `utf8-old.log`, `1252-old.log` and the associated RES files.
 
 LLVM does not provide Windows SDK headers merely by accepting RC syntax. Existing `windows.h`/`windres.h` assumptions need attention: the Pascal preprocessor aliases `windows.h` to `windres.h`, and a retained test includes `windres.h`. Choose explicit SDK include roots where required and project-owned resource constants for portable fixtures. Do not introduce GNU header/tool dependencies to hide this gap.
 
@@ -183,7 +366,7 @@ Keep canonical standard `.res` artifacts with compiled units. Use module-owned a
 
 Build one final catalog per EXE, DLL or runtime package, in deterministic order. Preserve provider-image exclusion for imported package units. There is one authoritative merge policy: combine disjoint strings within a block, reject genuine conflicts with both origins in the diagnostic, and rebase icon/cursor child IDs consistently. Preserve language variants and required RES metadata. Do not make silent last-writer-wins behavior a migration shortcut.
 
-Direct `.dfm`, `.lfm`, `.xfm`, `.fmx`, and `.tlb` inputs need bounded adapters. Forms retain root-class naming and RTL binary conversion; type libraries retain the string resource type `TYPELIB` and automatic numeric names starting at 1. Preserve standard RES signature recognition independent of extension, including Delphi `.dcr` files. Verify existing accepted variants with actual fixtures before deleting the old readers. No GUI library or optional FCL dependency belongs in the compiler bootstrap for this purpose.
+Direct `.dfm`, `.lfm`, `.xfm`, `.fmx`, and `.tlb` inputs need bounded adapters. Forms retain root-class naming and RTL binary conversion. A direct type library retains the string resource type `TYPELIB`, numeric name 1, neutral language and opaque payload. The current converter reads each direct TLB into a fresh collection before aggregation, so two direct TLBs conflict at that identity; preserve the duplicate diagnostic rather than silently renumbering them. Existing RES files can carry explicitly named/numbered TLBs. Direct form/TLB adapters preserve the old model's default memory flags `$1010`. Preserve standard RES signature recognition independent of extension, including Delphi `.dcr` files. Verify existing accepted variants with actual fixtures before deleting the old readers. No GUI library or optional FCL dependency belongs in the compiler bootstrap for this purpose.
 
 ### Windows emission
 
@@ -201,25 +384,29 @@ Use normal symbol references across sections on AArch64, not assumptions about r
 
 ### External resource decision
 
-Recommend embedded resources as the sole compiler output mode unless there is a product requirement for deployed `.fpcres` sidecars. No production consumer of `-We` or sidecars was found in the inspected Nexus application source, but that does not establish the state of deployed artifacts.
+The owner selected embedded resources as the sole compiler output mode on 16 October 2026. Retire `.fpcres` sidecars, `-We`, the external writer/loader, and `fpcreslipo` after the embedded replacements satisfy their validation gates.
 
-Phase 0 must obtain an explicit support decision after examining release/bundle practices. If retired, remove `-We`, `fpextres`, the external writer/loader, and `fpcreslipo` together after migration tests. Existing executable metadata readers can retain old-format reading where required. If sidecars remain required, the replacement retains a separately scoped FPCRES encoder/loader; LLVM does not eliminate it. Do not mark full external-format removal complete under that outcome.
+Existing executable metadata readers can retain old-format reading where a demonstrated consumer needs it. LLVM does not implement the old FPCRES container; the approved outcome removes the output mode rather than replacing it with `llvm-lipo`.
 
 ## Impact inventory
 
-The [file inventory](nexusfpc-llvm-resource-inventory.csv) contains **216 entries**, with the requested categories, classes where declared, tool/options responsibilities, changes and gates. Entries include unchanged dependencies, generated wrappers, diagnostics, tests and external consumers; this is not a claim that 216 files need editing.
+The [file inventory](nexusfpc-llvm-resource-inventory.csv) contains **256 entries**, with the requested categories, classes where declared, tool/options responsibilities, changes and gates. Entries include unchanged dependencies, generated wrappers, diagnostics, tests and external consumers; this is not a claim that 256 files need editing.
 
 | Category | Entries | Main components |
 | --- | --- | --- |
-| Retain unchanged | 67 | Public runtime resource APIs and startup contract; executable metadata reader closure initially; version model; resourcestring localization; optional parser-generator library |
-| Modify | 77 | Directive/module/compiled-unit handling, orchestration timing, target registrations, Windows link inputs, resource section policies, Forge/release/SDK rules, diagnostics and fixtures |
-| Replace | 18 | Legacy compiler tool orchestration; resource-specific native writers; broad input adapters and standard RES handling replaced by bounded compiler facilities |
-| Remove | 16 | RC parser/preprocessor origins and generated outputs/wrappers; standalone `fpcres` utility after final gates |
-| Requires further investigation | 38 | Sidecar support; graphical resource models forced by broad registration; public-library consumers; Setup/FileInfo provenance; related wrappers and external fixtures |
+| Retain unchanged | 81 | Runtime APIs, metadata reader closure, restored FileInfo, version model, optional restool extraction models and parser-generator library |
+| Modify | 120 | Compiler catalog/adapters/LLVM pipeline, NXU 45 persistence, ownership, target/link wiring, Forge/release checks, fixtures and documentation |
+| Replace | 1 | Legacy compiler resource orchestration replaced by the synchronous integrated pipeline |
+| Remove | 54 | RC parser/preprocessor origins and outputs, resource writers, sidecar runtime/tools, obsolete registrations and duplicate sidecar tests |
+| Requires further investigation | 0 | Earlier Setup and optional-model questions resolved; unsupported legacy JPEG wrapper retained unchanged and excluded from supported-input passes |
 
 The largest concrete replacement/removal candidates are 11,434 physical lines in the RC parser/preprocessor family, 2,942 in the native resource writer family, and 1,640 in standalone `fpcres`. Counts include comments and generated files, exclude namespaced wrappers, and are gross candidates rather than a net deletion estimate. A new catalog, adapters and emitter replace some of their behavior. Keep `elfdefaulttarget.inc` and `machodefaulttarget.inc`: both readers and writers include them, so writer removal does not make them dead code.
 
-The metadata package cleanup should separate read-only image/version inspection from compilation and mutation. `resource.pas` currently pulls in `resmerger`, which pulls string-table and group icon/cursor classes into the closure. Split that dependency before deleting those classes. Migrate Setup's synthetic resource fixtures if that is their remaining writer consumer. Preserve old executable reading; a wholesale package deletion is not justified.
+The metadata package now separates read-only image/version inspection from
+compilation and mutation. `resource.pas` no longer registers writers or forces
+`resmerger` into the reader closure. Setup uses frozen version fixtures and its
+policy assertions pass. The optional `restool` example demonstrates the retained
+bitmap/group/form extraction consumers. Old executable reading remains supported.
 
 All generated files follow their origins. Removing the RC implementation means removing both `.y`/`.l` origins and generated `.pas`/`.inc`, their wrappers and registrations. Diagnostic changes originate in message catalogs and must regenerate any derived tables. Do not hand-edit generated outputs alone.
 
@@ -231,7 +418,7 @@ The normal path is 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Target imp
 
 **Dependencies:** Planning approval; current source and toolchain snapshot.
 
-**Changes:** Parameterize the migration's Forge/test artifact root under the authorized worktree. Record supported LLVM versions and exact host tools, target triples, SDK include roots, codepage/macro policy, and native Linux bootstrap procedure. Make the RTL `Classes`/form-streaming dependency closure available to the host compiler at every seed/cycle stage. Resolve Setup's FileInfo dependency and decide sidecar support. Select the unit resource manifest/format revision strategy. Gather real RC/RES/forms/TLB inputs, resource outputs and runtime observations from the current toolchain. Keep an isolated old-tool oracle until semantic parity is demonstrated.
+**Changes:** Parameterize the migration's Forge/test artifact root under the authorized worktree. Record supported LLVM versions and exact host tools, target triples, SDK include roots, codepage/macro policy, and native Linux bootstrap procedure. Preserve stock FPC 3.2.2 plus its own RTL for the initial compiler; make the current RTL form-streaming closure available only to the subsequent Nexus-built stages. Resolve Setup's FileInfo dependency and decide sidecar support. Select the unit resource manifest/format revision strategy. Gather real RC/RES/forms/TLB inputs, resource outputs and runtime observations from the current toolchain. Keep an isolated old-tool oracle until semantic parity is demonstrated.
 
 **Validation:** Reproduce resource builds and Setup version comparisons with matching compiler/RTL artifacts. Run the relevant cyclic-unit and package tests. Record every failure with compiler identity, command and output. An unexplained failure blocks the affected gate even if it reproduces on the starting commit.
 
@@ -243,7 +430,7 @@ The normal path is 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Target imp
 
 **Changes:** Add the compiler-owned input/catalog layer, checked RES reader/serializer, deterministic ordering and provenance. Preserve disjoint string-block merging and icon/cursor relationships. Add form and direct type-library adapters using the current semantic behavior and existing RTL streaming. Separate syntax compilation from resource semantics. Keep the production default unchanged during this phase.
 
-**Validation:** Differentially compare decoded resource tuples and payloads against current output, including duplicate diagnostics, language variants, forms and TLB. Test malformed/truncated input, numeric overflow, invalid directory references, child-image collisions and filename collisions. Verify the new compiler dependency closure excludes optional packages.
+**Validation:** Compile the added compiler units with stock FPC 3.2.2 and its own RTL before accepting the phase. Differentially compare decoded resource tuples and payloads against current output, including duplicate diagnostics, language variants, forms and TLB. Compare form adapter behavior across stock-linked and Nexus-linked compiler stages. Test malformed/truncated input, numeric overflow, invalid directory references, child-image collisions and filename collisions. Verify the new compiler dependency closure excludes optional packages.
 
 **Exit:** All supported input families normalize to a deterministic catalog; each rejected duplicate names both origins; no required class of input depends on the old converter's broad reader registration.
 
@@ -303,7 +490,7 @@ The normal path is 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Target imp
 
 **Changes:** Update Forge tools/config/release/SDK outputs and tests, remove the advertised converter contract, and package the selected LLVM RC/Clang tools consistently. Preserve normalized unit resources in distributions. Update developer examples and tool options documentation. Rebuild compiler, RTL and affected packages using matching artifact revisions.
 
-**Validation:** Complete fresh native Windows and Linux bootstraps plus all 13 cross-target compiler/RTL builds. Use verbose command logs to prove LLVM assembler/linker/resource selection. Validate relocated SDK/distributions with source absent and no old converter on PATH. Build and run Setup metadata/version tests after resolving its real source closure. Record exact compiler/tool versions, hashes, commands, pass/fail, duration and runtime runner identity.
+**Validation:** Complete fresh native Windows and Linux bootstraps starting explicitly with stock FPC 3.2.2 and its matching RTL, then all 13 cross-target compiler/RTL builds. Record the initial stock-built compiler and subsequent generation identities and convergence. Use verbose command logs to prove LLVM assembler/linker/resource selection in Nexus-built stages. Validate relocated SDK/distributions with source absent and no old converter on PATH. Build and run Setup metadata/version tests after resolving its real source closure. Record exact compiler/tool versions, hashes, commands, pass/fail, duration and runtime runner identity.
 
 **Exit:** A clean environment can bootstrap and use the distribution without `fpcres` or an independent resource toolchain. Native Linux and Windows each pass; compile-only results remain distinct from runtime results.
 
@@ -371,23 +558,27 @@ Make deletions separately reviewable after functional replacements. Before remov
 | Sidecars used by deployed products | Unannounced loss of supported deployment behavior. | Explicit phase 0 decision and migration gate; otherwise retain the narrow FPC-specific mode. |
 | Metadata package consumers | Removing compilation code can accidentally remove Setup version readers. | Resolve FileInfo provenance, isolate reader closure, test old/new images and installation decisions. |
 | LLVM packaging/version aliases | Linux development works but Windows release lacks a needed binary or differs in behavior. | Pin/test supported tools on both hosts; prefer explicit executable paths over basename alias assumptions. |
+| FPC 3.2.2 seed compatibility | New compiler syntax, RTL APIs or early use of the current Classes sources makes the compiler impossible to bootstrap from the supported seed. | Use the 3.2.2-compatible API/syntax subset, stock RTL for the first compiler, Nexus-built RTL thereafter, and clean stock-seeded bootstrap gates on both hosts. |
 | Native Linux Forge gap and target runners | Cross-object probes could be mistaken for complete platform support. | Complete native host orchestration and schedule real target execution before final acceptance. |
 | Unit artifact schema | Old units refer to missing/stale resource files or silently reuse incompatible metadata. | Versioned manifest/NXU decision, clean rebuild policy and relocated source-hidden SDK tests. |
 
-The architectural recommendation can proceed without further format research. Implementation still needs the explicit product decision on external sidecars, resolution of the current FileInfo dependency, selection of the metadata schema, and access to the required host/target runners. These are phase 0 prerequisites, not reasons to change the underlying LLVM/object-emission design.
+The owner selected sidecar retirement and FileInfo restoration. The established seed-stage SHA-1 selection is preserved, NXU resource metadata uses revision 45, and the native-platform runner requirements were waived. Final acceptance uses the integrated evidence above and the amended completion criteria below.
 
 ## Completion criteria
 
-The replacement is complete when all of the following hold:
+Apply the owner's validation amendment above to every native platform clause.
+Linux execution/bootstrap remains required. Apple/Android SDK-free artifact
+links establish resource layout and relocation behavior, not SDK application
+linking or execution. The replacement is complete when all of the following hold:
 
 1. Native Linux and Windows builds use the declared LLVM resource tools, with explicit target/configuration behavior and no GNU/Resinator resource-tool dependency.
 2. Every retained input family, unit distribution case, merge rule, form/TLB adapter and runtime API passes the compatibility corpus.
 3. All 13 combinations pass object and final-link validation; required runtime fixtures pass on appropriate target runners. Missing runners remain open gates.
-4. Compiler, RTL and affected package bootstraps complete from clean authorized worktree directories, with matching artifact revisions and recorded commands/tool identities. Cyclic-unit and package regressions pass.
+4. Compiler, RTL and affected package bootstraps complete from clean authorized worktree directories, starting from stock FPC 3.2.2 on both supported development hosts until an explicit own-seed transition supersedes that requirement. Matching artifact revisions, stage identities and convergence are recorded. Cyclic-unit and package regressions pass.
 5. Windows final links use normalized RES directly through LLD; ELF/Mach-O resource objects use the existing LLVM assembly path. No resource-specific native object writer remains required.
 6. `fpcres`, its parser/preprocessor, converter-driver defaults and obsolete options are removed from the supported compiler/release pipeline, with no automatic legacy fallback.
 7. Setup still reads required metadata from old and new images. Remaining metadata/library code has a demonstrated consumer; unused conversion code and registrations are removed.
-8. Sidecar support is either explicitly migrated and removed with `fpcreslipo`, or explicitly retained with its implementation and tests documented. Do not claim sidecar code elimination in the retained outcome.
+8. Sidecar output support, its loader/writer, `-We`, and `fpcreslipo` are removed as selected by the owner, with retained embedded-resource migration tests passing.
 9. Generated files and their origins, Forge outputs, release/SDK manifests, tests and developer documentation agree with the new architecture. `tplylib` and resourcestring localization are handled according to their separate consumers.
 
 ## Investigation evidence

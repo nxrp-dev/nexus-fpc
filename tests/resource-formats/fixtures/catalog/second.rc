@@ -1,0 +1,6 @@
+LANGUAGE 9, 1
+102 RCDATA "payload.bin"
+STRINGTABLE
+BEGIN
+  2 "Beta"
+END

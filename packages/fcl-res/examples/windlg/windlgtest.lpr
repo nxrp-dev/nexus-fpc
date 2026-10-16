@@ -2,8 +2,8 @@ program windlgtest;
 
 {$mode objfpc}{$H+}
 
-{ Link the resource file compiled by fpcres }
-{$R testdlg.res}
+{ Compile the dialog script through Clang and LLVM RC. }
+{$R testdlg.rc}
 
 uses
   Windows;

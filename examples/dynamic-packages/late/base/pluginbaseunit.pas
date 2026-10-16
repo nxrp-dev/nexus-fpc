@@ -1,6 +1,6 @@
 unit PluginBaseUnit;
 {$mode objfpc}{$H+}
-{$R pluginbase.res}
+{$R pluginbase.rc}
 interface
 uses Classes, SysUtils, TypInfo, PkgContracts;
 type

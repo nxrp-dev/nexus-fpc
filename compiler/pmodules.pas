@@ -63,7 +63,14 @@ implementation
         DLLScanner      : TDLLScanner;
         s               : string;
         KeepShared      : TCmdStrList;
+        ImageResourcesUsed : Boolean;
       begin
+        if not PrepareModuleResources then Exit;
+        if not curr.IsUnit then
+        begin
+          if not PrepareImageResources(ImageResourcesUsed) then Exit;
+          CNodeUtils.InsertResourceInfo(ImageResourcesUsed);
+        end;
         { try to create import entries from system dlls }
         if (tf_has_dllscanner in TargetInfo.flags) and
            (not curr.LinkOtherSharedLibs.Empty) then
@@ -123,8 +130,7 @@ implementation
              Linker.MakeStaticLibrary;
          end;
 
-        { resource files }
-        CompileResourceFiles;
+        if ErrorCount=0 then PublishResourceFiles;
       end;
 
 
@@ -270,10 +276,7 @@ implementation
         if (not resources_used) and (tf_has_winlike_resources in TargetInfo.flags) then
           begin
             { resources aren't used, so we don't need this unit }
-            if TargetRes.id=res_ext then
-              unitname:='FPEXTRES'
-            else
-              unitname:='FPINTRES';
+            unitname:='FPINTRES';
             Message1(unit_u_unload_resunit,unitname);
             { find the module }
             hp:=TModule(Loaded_Units.first);
@@ -427,10 +430,7 @@ implementation
              Note: if resources aren't used this unit will be removed later,
              otherwise we need it here since it must be loaded quite early }
            if (tf_has_winlike_resources in TargetInfo.flags) then
-             if TargetRes.id=res_ext then
-               CheckAddUnit('fpextres')
-             else
-               CheckAddUnit('fpintres');
+             CheckAddUnit('fpintres');
          end
         else if (cs_checkpointer in CurrentSettings.LocalSwitches) then
           CheckAddUnit('heaptrc');
@@ -1612,7 +1612,13 @@ type
 
          { insert own objectfile, or say that it's in a library
            (no check for an .o when loading) }
+         if not PrepareModuleResources then
+           begin
+             SetCurrentModule(old_module);
+             exit(false);
+           end;
          ag:=is_assembler_generated;
+         if not ag then PublishResourceFiles;
          if ag then
            insertobjectfile(module)
          else
@@ -1689,7 +1695,10 @@ type
         store_crc:=module.crc;
 {$endif EXTDEBUG}
         if result then
+        begin
           TPPUModule(module).WritePPU;
+          CommitResourceFiles(module);
+        end;
 
         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
           begin
@@ -2099,7 +2108,6 @@ type
              Emit_Package_Descriptor;
              if TargetInfo.system=system_x86_64_linux then
                begin
-                 CNodeUtils.InsertResourceInfo(CheckResourcesUsed(curr));
                  export.exportname('FPC_RESLOCATION',[eo_name]);
                end;
            end;
@@ -2207,8 +2215,6 @@ type
              { create the executable when we are at level 1 }
              if (curr.IsInitial) then
                begin
-                 { create global resource file by collecting all resource files }
-                 CollectResourceFiles;
                  { write .def file }
                  if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
                    deffile.writefile;
@@ -2270,8 +2276,6 @@ type
         hp,hp2 : TModule;
 
       begin
-            { create global resource file by collecting all resource files }
-            CollectResourceFiles;
             { write .def file }
             if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
              deffile.writefile;
@@ -2442,9 +2446,6 @@ type
         if (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) and
            Assigned(Find_Module_From_SymTable(SystemUnit).package) then
           Emit_Package_Descriptor;
-
-        { Insert symbol to resource info }
-        CNodeUtils.InsertResourceInfo(resources_used);
 
         { create callframe info }
         create_dwarf_frame;

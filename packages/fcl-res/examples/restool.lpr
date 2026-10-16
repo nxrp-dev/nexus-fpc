@@ -1,11 +1,9 @@
 program restool;
 
-{$R program.res}
-
 uses
   custapp, sysutils, classes, resource, elfreader, resreader, coffreader, machoreader, dfmreader,
-  bitmapresource, stringtableresource, versionresource, groupiconresource, groupcursorresource,
-  acceleratorsresource, groupresource;
+  bitmapresource, versionresource, groupiconresource, groupcursorresource,
+  groupresource;
 
 Type
    TRunMode = (rmList,rmExtract);

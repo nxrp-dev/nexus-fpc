@@ -33,12 +33,6 @@ interface
 *****************************************************************************}
 
      type
-       TAbstractResourceFile = class
-         constructor create(const fn : AnsiString);virtual;abstract;
-       end;
-       TAbstractResourceFileClass = class of TAbstractResourceFile;
-
-
        PAlignmentInfo = ^TAlignmentInfo;
        { this is written to ppus during token recording for generics so it must be packed }
        TAlignmentInfo = packed record
@@ -102,20 +96,6 @@ interface
           arfirstcmd  : string[60];
           arcmd       : string[60];
           arfinishcmd : string[11];
-       end;
-
-       PResInfo = ^TResInfo;
-       TResInfo = record
-          id      : TRes;
-          { Compiler for resource (.rc or .res) to obj }
-          resbin  : string[10];
-          rescmd  : string[50];
-          { Optional compiler for resource script (.rc) to binary resource (.res). }
-          { If it is not provided resbin and rescmd will be used.                 }
-          rcbin   : string[10];
-          rccmd   : string[50];
-          resourcefileclass : TAbstractResourceFileClass;
-          ResFlags : set of TResInfoFlags;
        end;
 
        PDbgInfo = ^TDbgInfo;
@@ -390,7 +370,6 @@ interface
     var
        targetinfos   : array[0..MaxStoredSystemId] of PSystemInfo;
        arinfos       : array[TAr] of PArInfo;
-       resinfos      : array[TRes] of PResInfo;
        asminfos      : array[TAsm] of PAsmInfo;
        dbginfos      : array[TDbg] of PDbgInfo;
 
@@ -399,7 +378,6 @@ interface
        TargetInfo : TSystemInfo;
        TargetAsm  : TAsmInfo;
        TargetAr   : TArInfo;
-       TargetRes  : TResInfo;
        TargetDbg  : TDbgInfo;
        TargetCPUString,
        TargetOSString   : string[14]; { for rtl/<X>/,fcl/<X>/, etc. }
@@ -408,7 +386,6 @@ interface
     function SetTarget(t:TSystem):boolean;
     function SetTargetAsm(t:TAsm):boolean;
     function SetTargetAr(t:TAr):boolean;
-    function SetTargetRes(t:TRes):boolean;
     function SetTargetDbg(t:TDbg):boolean;
 
     function FindSystemByString(const s : string) : TSystem;
@@ -420,7 +397,6 @@ interface
     function UpdateAlignment(var d:TAlignmentInfo;const s:TAlignmentInfo) : boolean;
 
     procedure RegisterTarget(const r:TSystemInfo);
-    procedure RegisterRes(const r:TResInfo; rcf : TAbstractResourceFileClass);
     procedure RegisterAr(const r:TArInfo);
 
     procedure InitSystems;
@@ -443,7 +419,6 @@ begin
      TargetInfo:=targetinfos[Ord(t)]^;
      SetTargetAsm(TargetInfo.assem);
      SetTargetAr(TargetInfo.ar);
-     SetTargetRes(TargetInfo.res);
      SetTargetDbg(TargetInfo.dbg);
      TargetCPU:=TargetInfo.cpu;
      TargetOSString:=lower(TargetInfo.shortname);
@@ -478,20 +453,6 @@ begin
      result:=true;
      exit;
    end;
-end;
-
-
-function SetTargetRes(t:TRes):boolean;
-begin
-  result:=false;
-  if Assigned(resinfos[t]) then
-   begin
-     TargetRes:=resinfos[t]^;
-     result:=true;
-     exit;
-   end
-  else
-   FillByte(TargetRes,sizeof(TargetRes),0);
 end;
 
 
@@ -631,18 +592,6 @@ begin
 end;
 
 
-procedure RegisterRes(const r:TResInfo; rcf : TAbstractResourceFileClass);
-var
-  t : TRes;
-begin
-  t:=r.id;
-  if not Assigned(resinfos[t]) then
-    new(resinfos[t]);
-  resinfos[t]^:=r;
-  resinfos[t]^.resourcefileclass:=rcf;
-end;
-
-
 procedure RegisterAr(const r:TArInfo);
 var
   t : TAr;
@@ -662,7 +611,6 @@ var
   assem   : TAsm;
   target  : TSystem;
   ar      : TAr;
-  res     : TRes;
   dbg     : TDbg;
 begin
   for target:=low(TSystem) to high(TSystem) do
@@ -682,12 +630,6 @@ begin
     begin
       FreeMem(arinfos[ar],sizeof(TArInfo));
       arinfos[ar]:=nil;
-    end;
-  for res:=low(TRes) to high(TRes) do
-   if Assigned(resinfos[res]) then
-    begin
-      FreeMem(resinfos[res],sizeof(TResInfo));
-      resinfos[res]:=nil;
     end;
   for dbg:=low(TDbg) to high(TDbg) do
    if Assigned(dbginfos[dbg]) then

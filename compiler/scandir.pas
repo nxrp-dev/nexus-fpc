@@ -62,7 +62,7 @@ unit scandir;
       Globals,WideStr,CPUInfo,tokens,
       Verbose,CompHook,PPU,
       Scanner,Switches,
-      FModule,
+      FModule,CompRsrc,
       defutil,
       DirParse,link,
       SysCInfo,
@@ -1294,7 +1294,11 @@ unit scandir;
     procedure dir_resource;
       var
         s : string;
+        Origin : TPathStr;
+        OriginLine : LongInt;
       begin
+        Origin:=CurrentScanner.InputFile.Path+CurrentScanner.InputFile.Name;
+        OriginLine:=CurrentScanner.line_no;
         CurrentScanner.skipspace;
         if CurrentScanner.c = '''' then
           begin
@@ -1306,7 +1310,7 @@ unit scandir;
 
         { replace * with the name of the main source.
           This should always be defined. }
-        if s[1]='*' then
+        if (s<>'') and (s[1]='*') then
           if Assigned(CurrentModule) then
             begin
               delete(S,1,1);
@@ -1318,11 +1322,7 @@ unit scandir;
         if TargetInfo.res<>res_none then
           begin
             include(CurrentModule.ModuleFlags,mf_has_resourcefiles);
-            if (res_single_file in TargetRes.ResFlags) and
-                                   not (CurrentModule.ResourceFiles.Empty) then
-              Message(scan_w_only_one_resourcefile_supported)
-            else
-              CurrentModule.ResourceFiles.insert(FixFileName(s));
+            AddResourceInput(FixFileName(s),Origin,OriginLine);
           end
         else
           Message(scan_e_resourcefiles_not_supported);

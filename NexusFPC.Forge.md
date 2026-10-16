@@ -68,7 +68,7 @@ The OMF switch checks use the same three arguments as the linker checks below:
 STABS/STABX generation, register tables, and runtime readers are removed.
 `-gs`, `-gp`, and `-gostabsabsincludes` are rejected. Use `-g` or
 `-gw3`/`-gw4`/`-gw5` for DWARF, and `-gl` for runtime source locations.
-The current NXU long compatibility revision is 44; rebuild cached units and SDKs.
+The current NXU long compatibility revision is 45; rebuild cached units and SDKs.
 Validate with `bash tests/switches/Run-NXRemovedSTABSTests.sh <compiler> <rtl-units> <output>`.
 Mach-O debug-map constants and classification of foreign ELF debug sections
 remain for object-format interoperability; they do not enable STABS generation.
@@ -81,11 +81,47 @@ initialization and native Objective-C/C++ support remain. `{$namespace ...}`,
 and `-FN`. Validate the retired options and native class behavior with
 `bash tests/switches/Run-NXRemovedJavaTests.sh <compiler> <rtl-units> <output>`.
 
-XCOFF resource output and AIX-specific resource records are removed from the
-compiler, `fpcres`, and `fcl-res`. `fpcres -of xcoff` is rejected. ELF, Windows
-COFF, Mach-O, RES, and external resource support remain available. Run
-`bash tests/resource-formats/Run-NXRemovedXCOFFTests.sh <fpcres> <output>`
-to check retired output rejection and retained resource object formats.
+Resource scripts now compile through explicit target-aware Clang preprocessing and
+`llvm-rc`. Windows links receive normalized RES inputs directly through LLD;
+ELF and Mach-O resources use the existing FPC runtime tables emitted through
+LLVM assembly. The standalone `fpcres`/`fpcreslipo` tools, Pascal RC parser,
+resource object writers and external sidecars are retired. `-FF`, `-FR` and
+`-We` report retirement errors. Resources are embedded; `-Wi` remains accepted
+for Apple embedded resources. XCOFF remains unsupported.
+
+The validated resource toolchain baseline is LLVM 18.1.3. Clang and `llvm-rc`
+must be available on PATH alongside the existing LLVM
+assembler/linker tools. `-FC<path>` selects `llvm-rc` explicitly and
+`--resource-clang=<path>` selects Clang. Resource configuration uses
+`--resource-include=<directory>`, ordered `--resource-define=<name[=value]>` /
+`--resource-undefine=<name>`, and `--resource-codepage=<number>`. Pascal `-d`
+defines are not copied to RC preprocessing. Supply SDK header paths explicitly
+when a script includes platform headers.
+
+Each RC compilation uses one encoding: UTF-8 by default, or the explicitly
+selected codepage. Matching `#pragma code_page` directives are allowed;
+conflicting ones fail with their source location. LLVM currently ignores
+encoding changes within an RC compilation; see
+[LLVM issue 63426](https://github.com/llvm/llvm-project/issues/63426). Split scripts
+that need different encodings into separate resource inputs. No LLVM defaults
+were modified.
+
+NXU compatibility revision 45 records resource provenance and configuration.
+Rebuild compilers, RTLs, packages and SDKs together. Distribute the generated
+`<unit>.nxr<index>.res` files beside their NXUs. Source-hidden consumers use
+those canonical files without invoking RC tools. Source-present units refresh
+resources on each owning compiler invocation, including binary payload changes;
+unchanged resource files retain their timestamps. Changing recorded RC
+configuration requires rebuilding the unit, as with Pascal conditional defines.
+Do not let an outer build skip the compiler invocation on Pascal timestamps alone.
+
+Run `tests/resource-formats/Run-NXResourceHostChecks.sh` with a compiler, matching
+RTL and external output directory. The stock FPC 3.2.2 pairing checks the host
+units; the Nexus pairing also checks integrated resources and CRC32 widths.
+`Run-NXLinuxPackageResourceTests.sh` uses a matching PIC RTL to check exact NXPL
+links and source-hidden resource ownership. Native Windows, Android and Apple
+execution was waived by the owner for this migration; cross-target inspection
+and Linux runtime results are recorded in the resource work plan.
 
 On a Linux host, check the removed options and native LLVM linking with:
 
@@ -215,15 +251,15 @@ To rebuild just the tools after a completed bootstrap:
 & ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Tools
 ```
 
-The Tools Project exports its binary directory, driver and resource compiler.
-It builds these 18 Win64 tools using the verified native compiler:
+The Tools Project exports its binary directory and driver.
+It builds these 16 Win64 tools using the verified native compiler:
 
 | Purpose | Executables |
 | --- | --- |
 | Compiler launcher and PPU tools | `fpc`, `ppufiles`, `ppumove` |
 | Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
 | Data, dependencies and translations | `data2inc`, `bin2obj`, `ppdep`, `rstconv` |
-| Resources and executable metadata | `fpcres`, `fpcreslipo`, `postw32` |
+| Executable metadata | `postw32` |
 | Lexer/parser generators | `plex`, `pyacc` |
 
 The output directory includes `ppcx64.exe` beside `fpc.exe`, and `yylex.cod` and
@@ -250,7 +286,7 @@ Use `-f rc` directly for STRINGTABLE output. Validate with
 
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
 PPU reading, dependency and translation output,
-resource conversion/sharing, generated lexer/parser compilation and execution,
+compiler-driven RC embedding, generated lexer/parser compilation and execution,
 and regeneration of the compiler tables/messages. `ppumove` and `postw32`
 receive help/startup checks, not exhaustive behavioral tests.
 
@@ -315,7 +351,7 @@ to a new path containing spaces. With installed compiler paths and configuration
 environment variables removed from its test process, it compiles against all 13
 target RTLs and checks that every loaded PPU belongs to the relocated target.
 It also links six Windows/Linux smoke programs, runs the Win64 and Win32 programs,
-exercises the shipped resource tool, and verifies that a missing RTL produces a
+exercises the compiler resource pipeline with Clang and LLVM RC, and verifies that a missing RTL produces a
 failure. Android and Apple checks compile units only; they do not validate SDK
 linking or execution. Evidence stays in `build/forge-bootstrap/release-checks/`.
 
@@ -581,7 +617,8 @@ and `distribution-preflight-results.json`. The isolated build's `release-checks/
 contains individual relocation logs and `results.json`. Apple/Android application
 linking and non-Windows execution remain untested.
 
-The preceding tools/release-policy pass without WPO also passed in an isolated checkout:
+Historical validation before the LLVM resource migration: the preceding
+tools/release-policy pass without WPO also passed in an isolated checkout:
 
 - Clean native bootstrap including release tools: 123.85 seconds; cycles two and
   three and the compiler copied beside the driver were byte-identical.

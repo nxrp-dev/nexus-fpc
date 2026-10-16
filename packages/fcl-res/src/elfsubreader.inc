@@ -30,9 +30,11 @@ type
     fCount : integer;
   protected
   public
-    constructor Create(aStream : TStream; const aSectHdr : _TElfSectHdr_; const aOppositeEndianess : boolean);
+    constructor Create(aStream : TStream; const aSectHdr : _TElfSectHdr_;
+      const aOppositeEndianess : boolean; aRelativeType : cardinal = 0);
     destructor Destroy; override;
     function Get(aOffset : _Tword_) : _Tword_;
+    function TryGet(aOffset : _Tword_; out aValue : _Tword_) : boolean;
   end;
 
 (*
@@ -52,11 +54,14 @@ type
     fSectHeaders : array of _TElfSectHdr_;
     fResHdr : _TResHdr_;
     fRelocations : _TElfRelocTable_;
+    fDynamicRelocations : _TElfRelocTable_;
     procedure ReadElfHeader(aStream : TStream);
     procedure ReadSectionHeaders(aStream : TStream);
     procedure ReadStringTable(aStream : TStream);
     procedure ReadRelocations(aStream : TStream);
+    procedure ReadDynamicRelocations(aStream : TStream);
     procedure ReadResHeader(aStream : TStream);
+    function PointerValue(aOffset, aStoredValue : _Tword_) : _Tword_;
   protected
     function FindSection(const aName : string) : integer; override;
     procedure Load(aResources : TResources; aStream : TStream); override;
@@ -67,13 +72,61 @@ type
 
 
 constructor _TElfRelocTable_.Create(aStream : TStream;
-  const aSectHdr : _TElfSectHdr_; const aOppositeEndianess : boolean);
-var i : integer;
+  const aSectHdr : _TElfSectHdr_; const aOppositeEndianess : boolean;
+  aRelativeType : cardinal);
+var
+  i, total, readCount : integer;
+  remaining : SizeInt;
+  buffer : PByte;
+  relocType : cardinal;
+  symbolIndex : qword;
+
+  procedure Sort(left, right : integer);
+  var
+    lowIndex, highIndex : integer;
+    pivot : _Tword_;
+    temporary : _TElfRela_;
+  begin
+    lowIndex:=left;
+    highIndex:=right;
+    pivot:=fList[left+(right-left) div 2].Offset;
+    repeat
+      while fList[lowIndex].Offset<pivot do inc(lowIndex);
+      while fList[highIndex].Offset>pivot do dec(highIndex);
+      if lowIndex<=highIndex then
+      begin
+        temporary:=fList[lowIndex];
+        fList[lowIndex]:=fList[highIndex];
+        fList[highIndex]:=temporary;
+        inc(lowIndex);
+        dec(highIndex);
+      end;
+    until lowIndex>highIndex;
+    if left<highIndex then Sort(left,highIndex);
+    if lowIndex<right then Sort(lowIndex,right);
+  end;
+
 begin
+  if (aSectHdr.size mod sizeof(_TElfRela_)<>0) or
+     (qword(aSectHdr.size)>qword(High(SizeInt))) or
+     (aSectHdr.size div sizeof(_TElfRela_)>qword(High(integer))) then
+    raise EElfResourceReaderException.Create('Invalid ELF relocation section size');
+  if (qword(aSectHdr.offset)>qword(aStream.Size)) or
+     (qword(aSectHdr.size)>qword(aStream.Size)-qword(aSectHdr.offset)) then
+    raise EElfResourceReaderException.Create('ELF relocation section lies outside the file');
   aStream.Position:=aSectHdr.offset;
   fList:=GetMem(aSectHdr.size);
   fCount:=aSectHdr.size div sizeof(_TElfRela_);
-  aStream.ReadBuffer(fList[0],aSectHdr.size);
+  remaining:=aSectHdr.size;
+  buffer:=PByte(fList);
+  while remaining<>0 do
+  begin
+    readCount:=65536;
+    if remaining<readCount then readCount:=remaining;
+    aStream.ReadBuffer(buffer^,readCount);
+    inc(buffer,readCount);
+    dec(remaining,readCount);
+  end;
   if aOppositeEndianess then
     for i:=0 to fCount-1 do
     begin
@@ -81,6 +134,37 @@ begin
       fList[i].Info:=SwapEndian(fList[i].Info);
       fList[i].addend:=SwapEndian(fList[i].addend);
     end;
+  if aRelativeType<>0 then
+  begin
+    { Dynamic relocation offsets are virtual addresses. Only symbol-free
+      RELATIVE entries provide pointers without loading or binding the image.
+      Their on-disk slot may be zero: the loader uses the explicit addend. }
+    total:=fCount;
+    fCount:=0;
+    for i:=0 to total-1 do
+    begin
+      if sizeof(_Tword_)=8 then
+      begin
+        relocType:=qword(fList[i].Info) and $FFFFFFFF;
+        symbolIndex:=qword(fList[i].Info) shr 32;
+      end
+      else
+      begin
+        relocType:=fList[i].Info and $FF;
+        symbolIndex:=fList[i].Info shr 8;
+      end;
+      if relocType<>aRelativeType then continue;
+      if symbolIndex<>0 then
+        raise EElfResourceReaderException.Create('ELF relative relocation has a symbol index');
+      fList[fCount]:=fList[i];
+      inc(fCount);
+    end;
+    { .rela.dyn can group relocation kinds rather than sorting all offsets. }
+    if fCount>1 then Sort(0,fCount-1);
+    for i:=1 to fCount-1 do
+      if fList[i-1].Offset=fList[i].Offset then
+        raise EElfResourceReaderException.Create('Duplicate ELF relative relocation offset');
+  end;
 end;
 
 destructor _TElfRelocTable_.Destroy;
@@ -89,9 +173,15 @@ begin
 end;
 
 function _TElfRelocTable_.Get(aOffset : _Tword_) : _Tword_;
+begin
+  if not TryGet(aOffset,Result) then Result:=0;
+end;
+
+function _TElfRelocTable_.TryGet(aOffset : _Tword_; out aValue : _Tword_) : boolean;
 var l,r,pivot : integer;
 begin
-  Result:=0;
+  Result:=false;
+  aValue:=0;
   if fCount=0 then exit;
   l:=0; r:=fCount-1;
   while l<=r do
@@ -101,7 +191,8 @@ begin
     else if fList[pivot].Offset>aOffset then r:=pivot-1
     else
     begin
-      Result:=fList[pivot].Addend;
+      aValue:=fList[pivot].Addend;
+      Result:=true;
       exit;
     end;
   end;
@@ -204,6 +295,42 @@ begin
   fRelocations:=_TElfRelocTable_.Create(aStream,fSectHeaders[fRelSectIdx],fOppositeEndianess);
 end;
 
+procedure _TElfSubReader_.ReadDynamicRelocations(aStream : TStream);
+var
+  index : integer;
+  relativeType : cardinal;
+begin
+  if (fElfHdr._Type<>ET_DYN) or (sizeof(_Tword_)<>8) then exit;
+  case fMachineType of
+    EM_X86_64: relativeType:=R_X86_64_RELATIVE;
+    EM_AARCH64: relativeType:=R_AARCH64_RELATIVE;
+    else exit;
+  end;
+  index:=FindSection('.rela.dyn');
+  if index<>-1 then
+  begin
+    if (fSectHeaders[index]._Type<>SHT_RELA) or
+       (fSectHeaders[index].EntSize<>sizeof(_TElfRela_)) then
+      raise EElfResourceReaderException.Create('Invalid ELF dynamic relocation section');
+    fDynamicRelocations:=_TElfRelocTable_.Create(aStream,fSectHeaders[index],
+      fOppositeEndianess,relativeType);
+  end;
+end;
+
+function _TElfSubReader_.PointerValue(aOffset, aStoredValue : _Tword_) : _Tword_;
+begin
+  if fNeedsReloc then
+    Result:=fRelocations.Get(aOffset)
+  else if Assigned(fDynamicRelocations) then
+  begin
+    { Interpret the relative addend at load base zero for offline metadata. }
+    if not fDynamicRelocations.TryGet(fSectHeaders[fSectIdx].address+aOffset,Result) then
+      Result:=aStoredValue;
+  end
+  else
+    Result:=aStoredValue;
+end;
+
 procedure _TElfSubReader_.ReadResHeader(aStream: TStream);
 begin
   aStream.Position:=fSectHeaders[fSectIdx].offset;
@@ -213,8 +340,7 @@ begin
     fResHdr.rootptr:=SwapEndian(fResHdr.rootptr);
     fResHdr.count:=SwapEndian(fResHdr.count);
   end;
-  if fNeedsReloc then
-    fResHdr.rootptr:=fRelocations.Get(0);
+  fResHdr.rootptr:=PointerValue(0,fResHdr.rootptr);
   aStream.Position:=fSectHeaders[fSectIdx].offset+fResHdr.rootptr-fSectHeaders[fSectIdx].address;
 end;
 
@@ -236,11 +362,8 @@ begin
     infonode.idcountsize:=SwapEndian(infonode.idcountsize);
     infonode.subptr:=SwapEndian(infonode.subptr);
   end;
-  if fNeedsReloc then
-  begin
-    if named then infonode.nameid:=fRelocations.Get(baseofs);
-    infonode.subptr:=fRelocations.Get(baseofs+(sizeof(_Tword_)+sizeof(longword)*2));
-  end;
+  if named then infonode.nameid:=PointerValue(baseofs,infonode.nameid);
+  infonode.subptr:=PointerValue(baseofs+(sizeof(_Tword_)+sizeof(longword)*2),infonode.subptr);
   if aParent=nil then aNode:=fRoot
   else
   begin
@@ -268,15 +391,16 @@ begin
   ReadSectionHeaders(aStream);
   ReadStringTable(aStream);
   if not FindResSection then exit;
-  if fNeedsReloc then
-    ReadRelocations(aStream);
   try
+    if fNeedsReloc then ReadRelocations(aStream)
+    else ReadDynamicRelocations(aStream);
     ReadResHeader(aStream);
     if fResHdr.count=0 then exit; //no resources in this file
     LoadResources(aResources,aStream);
   finally
     if fNeedsReloc then
-      fRelocations.Free;
+      FreeAndNil(fRelocations);
+    FreeAndNil(fDynamicRelocations);
   end;
 end;
 

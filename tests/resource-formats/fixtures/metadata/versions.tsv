@@ -1,0 +1,8 @@
+old-i386-linux	old-i386-linux-v1	old-i386-linux-v2
+old-x86_64-linux	old-x86_64-linux-v1	old-x86_64-linux-v2
+old-aarch64-linux	old-aarch64-linux-v1	old-aarch64-linux-v2
+i386-windows	i386-windows-v1.exe	i386-windows-v2.exe
+x86_64-windows	x86_64-windows-v1.exe	x86_64-windows-v2.exe
+aarch64-windows	aarch64-windows-v1.exe	aarch64-windows-v2.exe
+old-x86_64-darwin	old-x86_64-darwin-v1	old-x86_64-darwin-v2
+old-aarch64-darwin	old-aarch64-darwin-v1	old-aarch64-darwin-v2

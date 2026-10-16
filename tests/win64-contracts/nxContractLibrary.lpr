@@ -12,7 +12,7 @@ SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 library nxContractLibrary;
 {$mode objfpc}{$H+}
 uses Windows, SysUtils, tpNXContractState, utNXContractLifecycle;
-{$R fixture.res}
+{$R fixture.rc}
 const
 {$ifdef MODULE_TWO}
   cIdentity = 2;

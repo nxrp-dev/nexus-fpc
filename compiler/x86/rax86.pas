@@ -1676,6 +1676,9 @@ begin
               exit;
             A_MOVQ :
               opsize:=S_IQ;
+            { CRC32's suffix describes its source, including when the
+              accumulator is wider than a byte/word source operand. }
+            A_CRC32,
             A_OUT :
               opsize:=tx86operand(operands[1]).opsize;
             else
