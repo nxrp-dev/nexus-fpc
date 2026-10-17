@@ -2,7 +2,7 @@
 .SYNOPSIS
 Build the Win64 runtime-package SDK with Forge after a completed Bootstrap.
 .EXAMPLE
-.\scripts\Build-NexusFPCPackageSDK.ps1 -OutputRoot output\nxpkg-sdk -RunExamples
+.\tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -OutputRoot C:\dev\worktree\nxpkg-sdk -RunExamples
 #>
 [CmdletBinding()]
 param(
@@ -17,9 +17,9 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
-if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
+if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '../..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
-if (-not $Forge) { $Forge = Join-Path $SourceRoot '../../nexus/output/NexusForge-next/x86_64-win64/nxforge.exe' }
+if (-not $Forge) { $Forge = Join-Path $SourceRoot '../nexus/output/NexusForge-next/x86_64-win64/nxforge.exe' }
 $Forge = (Resolve-Path -LiteralPath $Forge).Path
 $bootstrap = Join-Path $SourceRoot 'build/forge-bootstrap'
 $sdk = [IO.Path]::GetFullPath((Join-Path $bootstrap 'package-sdk'))

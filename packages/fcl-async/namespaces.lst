@@ -1,4 +1,0 @@
-src/fpasync.pas=namespaced/System.Async.Fpasync.pas
-src/unix/libasync.pas=namespaced/Api.Async.pas
-{s*:src/}=namespaced/
-{i+:src/}

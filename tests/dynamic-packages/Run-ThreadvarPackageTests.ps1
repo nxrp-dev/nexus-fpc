@@ -6,14 +6,14 @@ $ErrorActionPreference='Stop'
 Initialize-PackageTests $OutputRoot
 $lRoot=(Resolve-Path "$PSScriptRoot/../..").Path
 $SdkRoot=(Resolve-Path $SdkRoot).Path
-. "$lRoot/scripts/NexusFPCPackageArtifacts.ps1"
+. "$lRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
 $lSource="$script:TestOutput/source"; $lPackages="$script:TestOutput/packages"; $lHost="$script:TestOutput/host"
 New-Item -ItemType Directory -Force $lSource,$lPackages,$lHost | Out-Null
 function Compile([string]$Name,[string]$Source,[string[]]$Requires=@(),[bool]$Program=$false){
     $p=@{SdkRoot=$SdkRoot; Source=$Source; OutputDirectory=$(if($Program){$lHost}else{$lPackages});
         Kind=$(if($Program){'Console'}else{'Package'}); PackagePath=$lPackages; SmartLink=[bool]$SmartLink}
     if($Requires.Count){$p.RequiredPackages=$Requires}
-    $null=Invoke-TestScript $Name "$lRoot/scripts/Invoke-NexusFPCPackageCompile.ps1" $p
+    $null=Invoke-TestScript $Name "$lRoot/tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1" $p
 }
 Copy-Item "$PSScriptRoot/threadvar_contracts.pas" $lSource
 Write-TestFile "$lSource/tvcontracts.nxpk" 'package tvcontracts; requires nxrtl; contains Threadvar_Contracts; end.'

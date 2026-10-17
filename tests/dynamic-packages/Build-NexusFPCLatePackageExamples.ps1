@@ -6,7 +6,7 @@ Build and optionally run the late-load console/GUI package examples with an SDK.
 param(
     [Parameter(Mandatory=$true)][string]$SdkRoot,
     [Parameter(Mandatory=$true)][string]$OutputRoot,
-    [string]$SourceRoot = (Join-Path $PSScriptRoot '..'),
+    [string]$SourceRoot = (Join-Path $PSScriptRoot '../..'),
     [string]$Forge,
     [string]$ExampleRoot,
     [switch]$SmartLink,

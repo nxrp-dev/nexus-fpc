@@ -38,16 +38,16 @@ are saved there. Code review was explicitly waived for that relocation.
 | Package | Declared dependencies | Details worth preserving |
 | --- | --- | --- |
 | `cocoaint` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/cocoaint`. Darwin, x86_64/aarch64; `MACOSALL`, `COCOAALL`, `LEGACY_SETNEEDSDISPLAY` defines retained. |
-| `fcl-async` | — | `fpasync.pas` uses `libasync`; the retained implementation is in `src/unix`. |
+| `fcl-async` (retired) | — | Removed 2026-10-17 after confirming no production Nexus consumers. The unused FCL Net async units and dependent Lab demonstrations were removed with it. Original source remains in NexusFPC Git history. |
 | `fcl-base` | `rtl-objpas`; `univint` on Apple targets | OS include paths and event-log resource described below. |
 | `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression/hash helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
 | `fcl-fpcunit` (retired) | Historical: `paszlib`, `fcl-base`, `fcl-xml`; `univint` on Apple targets | Removed 2026-10-16. Useful retained tests now use Nexus nxtest directly; original framework and runners are archived in Nexus `docs/migrations/fpcunit`. |
 | `fcl-hash` | `rtl-objpas`, `rtl-extra`, `fcl-base`, `hash` | Recipes give explicit `src/` filenames. |
 | `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; transitive `hash`/CRC | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
 | `fcl-json` (relocated) | `fcl-base`, `rtl-objpas` | The former optional `jsonfpcunit` helper was retired; runtime JSON has no FPCUnit dependency. |
-| `fcl-net` | `fcl-base`, `fcl-xml`, `rtl-extra`; `fcl-async` on Linux | OS-specific include directories. |
+| `fcl-net` (relocated) | `fcl-base`, `rtl-extra`, `rtl-objpas` | Moved intact on 2026-10-17 to Nexus `packages/nexus-packages/network/fcl-net`; `FCLNet.nxpackage` builds the seven remaining runtime units on Linux. Synapse uses its Unix resolver and the shared OpenSSL wrappers use its TLS types. The saved review records consumers, proven fixes and the consolidation recommendation. |
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
-| `fcl-registry` | `fcl-base`, `fcl-xml` | Native nxtest runner and recipe live in `packages/fcl-registry/tests`. |
+| `fcl-registry` (relocated) | `fcl-base`, `fcl-xml` | Moved on 2026-10-17 to Nexus `packages/nexus-packages/fcl-registry`; `FCLRegistry.nxpackage` builds the native package and `tests/FCLRegistryTests.nxproject` owns direct nxtest coverage. Windows COM, Abbrevia and Synapse serial support remain consumers. Review and proven fixes are saved with the destination. |
 | `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM. |
 | `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |

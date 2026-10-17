@@ -1070,7 +1070,7 @@ Project Bootstrap Build[Bootstrap] {
     Run VerifyBuildIdentity {
         Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
-        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", "build/forge-bootstrap/cycle3/ppcx64.exe"];
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-NexusFPCBuildIdentity.ps1", "-Compiler", "build/forge-bootstrap/cycle3/ppcx64.exe"];
     }
     Group BuildReleaseTools (ReleaseTools) {}
 }
@@ -1107,7 +1107,7 @@ Project Cross Build[Cross] {
     Run VerifyCrossBuildIdentity {
         Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
-        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", @CrossTarget.Compiler];
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-NexusFPCBuildIdentity.ps1", "-Compiler", @CrossTarget.Compiler];
     }
 
     Group LinuxRTL TargetOS[linux] {

@@ -9,14 +9,14 @@ $ErrorActionPreference = 'Stop'
 $lSource = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
 $SdkRoot = (Resolve-Path -LiteralPath $SdkRoot).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
-. "$lSource/scripts/NexusFPCPackageArtifacts.ps1"
+. "$lSource/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
 $lInputs = Join-Path $OutputRoot 'inputs'
 New-Item -ItemType Directory -Force -Path "$lInputs/provider","$lInputs/consumer" | Out-Null
 Copy-Item -LiteralPath "$PSScriptRoot/uextendedabi.pas" -Destination "$lInputs/provider"
 Copy-Item -LiteralPath "$PSScriptRoot/textendedabi.pas" -Destination "$lInputs/consumer"
 'package nativeabi; requires nxrtl; contains uextendedabi; end.' |
     Set-Content -LiteralPath "$lInputs/provider/nativeabi.nxpk" -Encoding ASCII
-$lBuild = "$lSource/scripts/Invoke-NexusFPCPackageCompile.ps1"
+$lBuild = "$lSource/tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1"
 & $lBuild -SdkRoot $SdkRoot -Source "$lInputs/provider/nativeabi.nxpk" `
     -OutputDirectory "$OutputRoot/provider" -Kind Package -SmartLink:$SmartLink
 & $lBuild -SdkRoot $SdkRoot -Source "$lInputs/consumer/textendedabi.pas" `

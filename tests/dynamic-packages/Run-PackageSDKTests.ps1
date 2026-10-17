@@ -8,12 +8,12 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SourceRoot=(Resolve-Path $SourceRoot).Path; $BootstrapBin=(Resolve-Path $BootstrapBin).Path
-. "$SourceRoot/scripts/NexusFPCPackageArtifacts.ps1"
+. "$SourceRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
 if(-not $ExampleRoot){$ExampleRoot=Join-Path $SourceRoot "../nexus-lab/examples/packages/runtime-loading"}
 $ExampleRoot=(Resolve-Path -LiteralPath $ExampleRoot).Path
 $lSource="$script:TestOutput/source"
 Push-Location $SourceRoot
-try {$lPaths=@(git -c core.quotepath=false ls-files -c -o --exclude-standard -- compiler rtl scripts | Sort-Object -Unique)} finally {Pop-Location}
+try {$lPaths=@(git -c core.quotepath=false ls-files -c -o --exclude-standard -- compiler rtl tests/dynamic-packages | Sort-Object -Unique)} finally {Pop-Location}
 foreach($lPath in $lPaths){
     if(-not(Test-Path -LiteralPath "$SourceRoot/$lPath" -PathType Leaf)){continue}
     New-Item -ItemType Directory -Force (Split-Path "$lSource/$lPath") | Out-Null
@@ -25,7 +25,7 @@ Add-TestResult source-only-input @{Files=$lPaths.Count}
 foreach($lSmart in @($false,$true)){
     $lMode=if($lSmart){'smart'}else{'normal'}
     $lCase="$script:TestOutput/$lMode"; $lSdk="$lCase/sdk"
-    $null=Invoke-TestScript "$lMode-build-and-run" "$lSource/scripts/Build-NexusFPCPackageSDK.ps1" @{
+    $null=Invoke-TestScript "$lMode-build-and-run" "$lSource/tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1" @{
         SourceRoot=$lSource; ExampleRoot=$ExampleRoot; OutputRoot=$lSdk; BootstrapBin=$BootstrapBin; RunExamples=$true; SmartLink=$lSmart
     }
     Assert-PackageTest ((Get-TestHashes $lSource) -ceq $lBefore) 'SDK build modified source inputs'

@@ -80,7 +80,7 @@ try {
             else { $canonical[$cpu] = $compiler }
         }
         foreach ($compiler in $canonical.Values) {
-            & (Join-Path $SourceRoot 'scripts/Test-NexusFPCBuildIdentity.ps1') -Compiler $compiler -IdentityFile $identityFile
+            & (Join-Path $SourceRoot 'tests/forge/Test-NexusFPCBuildIdentity.ps1') -Compiler $compiler -IdentityFile $identityFile
         }
         Write-Host "PASS release inputs: $($tools.Count) tools, three matching compiler families, 13 target RTLs"
         exit 0

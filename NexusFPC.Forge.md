@@ -340,7 +340,7 @@ and matching RTL. For example, from the distribution's binary directory:
 & .\fpc.exe -Paarch64 -Tlinux app.pas
 ```
 
-`scripts/NexusFPC.Release.cfg` is copied unchanged. It uses the compiler's
+`NexusFPC.Release.cfg` is copied unchanged. It uses the compiler's
 existing `$FPCBINDIR` and `$FPCTARGET` macros. These are FPC configuration macros,
 not NexusScript reference syntax. No checkout, seed installation, or machine-specific
 path is embedded. The compiler retains its normal configuration overrides.
@@ -410,13 +410,13 @@ generation and atomically updating `current.json`. Rejected builds preserve the
 previous selection. The group explicitly clears its dedicated work directory.
 
 This is a temporary native migration of SDK policy, pending the owner's later
-architecture review. The source `Invoke-NexusFPCPackageCompile.ps1` remains a
+architecture review. The source `tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1` remains a
 thin Forge-document/log adapter for existing example/test callers. The separate
-PowerShell artifact helper still serves older test utilities and example run
+`tests/dynamic-packages/NexusFPCPackageArtifacts.ps1` helper still serves older test utilities and example run
 selection; native package builds do not call it. No general dependency resolver,
 version selection or new execution lifecycle was introduced.
 
-`Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
+`tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
 the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
 it no longer accepts a seed directory. Its `-SmartLink` option applies to example
 consumers. The foundation has one standard release build, usable by both ordinary
@@ -526,7 +526,7 @@ PowerShell writer's checks now belong to the NexusForge test suite.
 
 Cross builds reuse the captured identity and staged source. They do not relabel
 that source using the current checkout's revision. Both native and cross recipes
-finish their compiler construction with `Test-NexusFPCBuildIdentity.ps1`, which
+finish their compiler construction with `tests/forge/Test-NexusFPCBuildIdentity.ps1`, which
 checks `-iW` and `-iD` against the captured record and fails on a mismatch.
 
 The native identity replacement was verified on 2026-10-12 with Forge and its

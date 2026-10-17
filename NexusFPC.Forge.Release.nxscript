@@ -126,7 +126,7 @@ Group ReleaseAssembly {
         ExcludeNames: "work";
     }
     CopyFile ReleaseConfig {
-        Source: "scripts/NexusFPC.Release.cfg";
+        Source: "NexusFPC.Release.cfg";
         Destination: "build/forge-bootstrap/distribution/bin/x86_64-win64/fpc.cfg";
     }
     Run VerifyReleaseDistribution {

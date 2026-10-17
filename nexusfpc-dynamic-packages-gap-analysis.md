@@ -229,13 +229,13 @@ support, and the [Forge SDK recipe](NexusFPC.Forge.md#runtime-package-sdk) now
 uses the completed ordinary bootstrap. The dedicated compiler and source-only
 SDK bootstrap described below have been superseded.
 
-The [SDK build script](scripts/Build-NexusFPCPackageSDK.ps1) builds a dedicated
+The [SDK build script](tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1) builds a dedicated
 experimental `ppcpkg` compiler from FPC 3.2.2, a matching RTL, the checked-in
 `nxrtl.nxpk` foundation, and per-image startup/resource adapters into an isolated
 SDK. It generates compiler message includes itself and requires no prior ordinary
 bootstrap. The normal compiler and installation outputs remain separate.
 
-The distributed [compile helper](scripts/Invoke-NexusFPCPackageCompile.ps1)
+The distributed [compile helper](tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1)
 builds packages or console/GUI applications. Packages declare their requirements;
 hosts select package names and directories explicitly. PCP/DLL pairs provide
 package units without standalone provider PPUs, objects or source files. Commands

@@ -34,7 +34,7 @@ Tan, Cotan and Log2, including Win64's different parameter locations.
 uses a separately compiled package DLL to check the Extended ABI across images,
 then runs the Math ABI test and existing `tw1737`, `ttrig` and `twrstr8` cases
 against the shared RTL.
-Build the SDK with `scripts/Build-NexusFPCPackageSDK.ps1 -BuildExamples -RunExamples`
+Build the SDK with `tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1 -BuildExamples -RunExamples`
 to include console/GUI ownership and lifecycle checks.
 
 The native core expects positive zero from `Frac(-1.0)`, matching native RTL

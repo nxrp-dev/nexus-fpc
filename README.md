@@ -19,7 +19,8 @@ when moving from an earlier build; upstream compiled units cannot be reused.
 ## Building NexusFPC
 
 Forge is the build system for the compiler, base RTL, release tools and Win64
-runtime-package SDK. From this directory:
+runtime-package SDK. Run builds in an isolated checkout under `../../worktree`
+so generated files stay outside the source checkouts. From that checkout:
 
 ```powershell
 & ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
@@ -41,7 +42,7 @@ Complete the [Forge bootstrap](NexusFPC.Forge.md), then build the package SDK
 and validate its console/GUI examples:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -RunExamples
 ```
 
 See the [package SDK guide](../nexus-lab/examples/packages/runtime-loading/README.md) for prerequisites,
@@ -52,7 +53,7 @@ linking or runtime packages. This SDK recipe targets Win64 x86-64.
 Build and run real late-loading console/GUI examples against that SDK:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot build\forge-bootstrap\package-sdk -OutputRoot output\nxpkg-late -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot build\forge-bootstrap\package-sdk -OutputRoot output\nxpkg-late -RunExamples
 ```
 
 Use the SDK path printed by the first command. Late loading is synchronous.
