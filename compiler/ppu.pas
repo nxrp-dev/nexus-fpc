@@ -115,9 +115,6 @@ type
     function GetHeaderSize:LongInt;override;
     function GetHeaderAddr:PEntryHeader;override;
     procedure ResetFile;override;
-{$ifdef DEBUG_PPU}
-    procedure PPU_Log(ST :string);override;
-{$endif}
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
   public
     WritingInterfacePPU : Boolean;
@@ -246,32 +243,6 @@ begin
   Result:=not CRCOnly;
 end;
 
-{$ifdef DEBUG_PPU}
-procedure TPPUFile.PPU_Log(ST :string);
-begin
-  inherited PPU_Log(ST);
-  if FLogOpen then
-    begin
-      if DoCRC and (PPULogIdx < BufferedPosition) then
-        begin
-          Write(FLog,'New crc : ',HexStr(DWord(CRC),8));
-          WriteLn(FLog);
-          Write(FLog,'New interface crc : ',HexStr(DWord(InterfaceCRC),8));
-          WriteLn(FLog);
-          Write(FLog,'New indirect crc : ',HexStr(DWord(IndirectCRC),8));
-          WriteLn(FLog);
-         end;
-    end;
-{$ifdef IN_PPUDUMP}
-  if update_crc then
-    begin
-      WriteLn('New crc : ',HexStr(DWord(CRC),8));
-      WriteLn('New interface crc : ',HexStr(DWord(InterfaceCRC),8));
-      WriteLn('New indirect crc : ',HexStr(DWord(IndirectCRC),8));
-    end;
-{$endif}
-end;
-{$endif}
 
 {*****************************************************************************
                                 TPPUFile Reading

@@ -898,16 +898,6 @@ implementation
                       InternalError(200203284);
                   end;
                 end;
-{$ifdef SUPPORT_MMX}
-              LOC_CMMXREGISTER,
-              LOC_MMXREGISTER:
-                begin
-                  if left.Location.Loc=LOC_CMMXREGISTER then
-                    cg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.Location.Register,left.Location.Register,nil)
-                  else
-                    cg.A_LoadMM_Reg_Ref(CurrentAsmData.CurrAsmList,OS_M64,OS_M64,right.Location.Register,left.Location.Reference,nil);
-                end;
-{$endif SUPPORT_MMX}
               LOC_MMREGISTER,
               LOC_CMMREGISTER:
                 begin

@@ -36,7 +36,7 @@ unit cgx86;
        parabase;
 
     type
-      TCopyMode=(copy_mov,copy_mmx,copy_string,copy_mm,copy_avx,copy_avx512,copy_fpc_move);
+      TCopyMode=(copy_mov,copy_string,copy_mm,copy_avx,copy_avx512,copy_fpc_move);
 
       TCGX86 = class(TCG)
         rgfpu   : TRGX86FPU;
@@ -2724,11 +2724,6 @@ unit cgx86;
            result:=copy_mm
         else
 
-        if (cs_mmx in CurrentSettings.LocalSwitches) and
-           not(pi_uses_fpu in CurrentProcInfo.flags) and
-           ({$ifdef i386}(len=8) or {$endif i386}(len=16) or (len=24) or (len=32)) then
-          result:=copy_mmx
-        else
           if len>helpsize then
             result:=copy_string;
 
@@ -2738,7 +2733,7 @@ unit cgx86;
           result:=copy_fpc_move;
 
         if (cs_opt_size in CurrentSettings.OptimizerSwitches) and
-           not((len<=16) and (result in [copy_mmx,copy_mm,copy_avx])) and
+           not((len<=16) and (result in [copy_mm,copy_avx])) and
            not(len in copy_len_sizes) then
           result:=copy_string;
       end;
@@ -2858,49 +2853,6 @@ unit cgx86;
                 A_Load_Reg_Ref(list,cgsize,cgsize,r,dstref);
                 inc(srcref.Offset,copysize);
                 inc(dstref.Offset,copysize);
-              end;
-          end;
-
-        copy_mmx:
-          begin
-            r0:=GetMMXRegister(list);
-            r1:=NR_NO;
-            r2:=NR_NO;
-            r3:=NR_NO;
-            A_LoadMM_Ref_Reg(list,OS_M64,OS_M64,srcref,r0,nil);
-            if len>=16 then
-              begin
-                inc(srcref.Offset,8);
-                r1:=GetMMXRegister(list);
-                A_LoadMM_Ref_Reg(list,OS_M64,OS_M64,srcref,r1,nil);
-              end;
-            if len>=24 then
-              begin
-                inc(srcref.Offset,8);
-                r2:=GetMMXRegister(list);
-                A_LoadMM_Ref_Reg(list,OS_M64,OS_M64,srcref,r2,nil);
-              end;
-            if len>=32 then
-              begin
-                inc(srcref.Offset,8);
-                r3:=GetMMXRegister(list);
-                A_LoadMM_Ref_Reg(list,OS_M64,OS_M64,srcref,r3,nil);
-              end;
-            A_LoadMM_Reg_Ref(list,OS_M64,OS_M64,r0,dstref,nil);
-            if len>=16 then
-              begin
-                inc(dstref.Offset,8);
-                A_LoadMM_Reg_Ref(list,OS_M64,OS_M64,r1,dstref,nil);
-              end;
-            if len>=24 then
-              begin
-                inc(dstref.Offset,8);
-                A_LoadMM_Reg_Ref(list,OS_M64,OS_M64,r2,dstref,nil);
-              end;
-            if len>=32 then
-              begin
-                inc(dstref.Offset,8);
-                A_LoadMM_Reg_Ref(list,OS_M64,OS_M64,r3,dstref,nil);
               end;
           end;
 

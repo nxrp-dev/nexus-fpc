@@ -175,7 +175,7 @@ type
     method:  longint;                { compression method of file currently wr.}
     buffered_data: array[0..Z_BUFSIZE - 1] of byte;{ buffer contain compressed data to be written}
     dosDate: longint;
-    crc32:   longint;
+    crc32:   cardinal;
   end;
 
 type

@@ -82,7 +82,7 @@ type
     flag:    longint;                  { general purpose bit flag        2 bytes }
     compression_method: longint;       { compression method              2 bytes }
     dosDate: longint;                  { last mod file date in Dos fmt   4 bytes }
-    crc:     longint;                  { crc-32                          4 bytes }
+    crc:     cardinal;                 { crc-32                          4 bytes }
     compressed_size: longint;          { compressed size                 4 bytes }
     uncompressed_size: longint;        { uncompressed size               4 bytes }
     size_filename: longint;            { filename length                 2 bytes }
@@ -286,8 +286,8 @@ type
     size_local_extrafield:   smallint;    { size of the local extra field }
     pos_local_extrafield:    longint;   { position in the local extra field in read}
 
-    crc32:      longint;                { crc32 of all data uncompressed }
-    crc32_wait: longint;                { crc32 we must obtain after decompress all }
+    crc32:      cardinal;               { crc32 of all data uncompressed }
+    crc32_wait: cardinal;               { crc32 we must obtain after decompress all }
     rest_read_compressed: longint;      { number of byte to be decompressed }
     rest_read_uncompressed: longint;    {number of byte to be obtained after decomp}
     afile:      FILEptr;              { io structure of the zipfile }
@@ -715,6 +715,7 @@ end;
 { Get Info about the current file in the zipfile, with internal only info }
 function unzlocal_GetCurrentFileInfoInternal(afile: unzFile; pfile_info: unz_file_info_ptr; pfile_info_internal: unz_file_info_internal_ptr; szFileName: PAnsiChar; fileNameBufferSize: longint; extraField: pointer; extraFieldBufferSize: longint; szComment: PAnsiChar; commentBufferSize: longint): longint;
 var
+  lCRCBytes: LongInt;
   s:      unz_s_ptr;
   file_info: unz_file_info;
   file_info_internal: unz_file_info_internal;
@@ -762,8 +763,9 @@ begin
 
   unzlocal_DosDateToTmuDate(file_info.dosDate, file_info.tmu_date);
 
-  if (unzlocal_getLong(s^.afile, file_info.crc) <> UNZ_OK) then
+  if (unzlocal_getLong(s^.afile, lCRCBytes) <> UNZ_OK) then
     err := UNZ_ERRNO;
+  Move(lCRCBytes, file_info.crc, SizeOf(file_info.crc));
 
   if (unzlocal_getLong(s^.afile, file_info.compressed_size) <> UNZ_OK) then
     err := UNZ_ERRNO;
@@ -1011,6 +1013,7 @@ end;
 
 function unzlocal_CheckCurrentFileCoherencyHeader(s: unz_s_ptr; var piSizeVar: longint; var poffset_local_extrafield: longint; var psize_local_extrafield: smallint): longint;
 var
+  lCRC: Cardinal;
   uMagic, uData, uFlags: longint;
   size_filename: longint;
   size_extra_field: longint;
@@ -1062,9 +1065,12 @@ begin
   if (unzlocal_getLong(s^.afile, uData) <> UNZ_OK) then { crc }
     err := UNZ_ERRNO
   else
-  if ((err = UNZ_OK) and (uData <> s^.cur_file_info.crc) and
-    ((uFlags and 8) = 0)) then
-    err := UNZ_BADZIPFILE;
+  begin
+    Move(uData, lCRC, SizeOf(lCRC));
+    if ((err = UNZ_OK) and (lCRC <> s^.cur_file_info.crc) and
+      ((uFlags and 8) = 0)) then
+      err := UNZ_BADZIPFILE;
+  end;
 
   if (unzlocal_getLong(s^.afile, uData) <> UNZ_OK) then { size compr }
     err := UNZ_ERRNO

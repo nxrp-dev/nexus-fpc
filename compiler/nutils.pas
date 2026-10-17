@@ -949,9 +949,6 @@ implementation
                           { already increased above             }
                           break;
                       end;
-          {$ifdef SUPPORT_MMX}
-                    in_mmx_pcmpeqb..in_mmx_pcmpgtw,
-          {$endif SUPPORT_MMX}
                     { load from global symbol }
                     in_typeinfo_x,
                     { load frame pointer }

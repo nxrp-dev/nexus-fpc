@@ -137,20 +137,5 @@ const
    fpc_in_fma_double       = 134;
    fpc_in_fma_extended     = 135;
 
-{ MMX functions }
-{ these constants are used by the mmx unit }
-
-   { MMX }
-   fpc_in_mmx_pcmpeqb      = 200;
-   fpc_in_mmx_pcmpeqw      = 201;
-   fpc_in_mmx_pcmpeqd      = 202;
-   fpc_in_mmx_pcmpgtb      = 203;
-   fpc_in_mmx_pcmpgtw      = 204;
-   fpc_in_mmx_pcmpgtd      = 205;
-
-   { 3DNow }
-
-   { SSE }
-
    fpc_in_cpu_first        = 10000;
    fpc_in_x86_mm_first     = 11000;

@@ -30,10 +30,6 @@ interface
        SymConst,SymType,SymDef,
        CGBase,CPUBase;
 
-    type
-       TMMXType = (mmxno,mmxu8bit,mmxs8bit,mmxu16bit,mmxs16bit,
-                   mmxu32bit,mmxs32bit,mmxfixed16,mmxsingle,mmxs64bit,mmxu64bit);
-
 
 {*****************************************************************************
                           Basic type functions
@@ -351,12 +347,6 @@ interface
 
     { return a real/hardware vectordef representing this def }
     function To_HWVectorDef(P: TDef; NilOnError: Boolean): TDef;
-
-    { some type helper routines for MMX support }
-    function Is_MMX_Able_Array(P : TDef) : Boolean;
-
-    {# returns the mmx type }
-    function MMX_Type(P : TDef) : TMMXType;
 
     { returns if the passed type (array) fits into an mm register }
     function Fits_In_MM_Register(P : TDef) : Boolean;
@@ -1431,39 +1421,6 @@ implementation
       end;
 
 
-    function MMX_Type(P : TDef) : TMMXType;
-      begin
-         MMX_Type:=MMXNo;
-         if Is_MMX_Able_Array(P) then
-           begin
-              if TArrayDef(P).ElementDef.Typ=FloatDef then
-                case TFloatDef(TArrayDef(P).ElementDef).FloatType of
-                  S32Real:
-                    MMX_Type:=MMXSingle;
-                  else
-                    ;
-                end
-              else
-                case TOrdDef(TArrayDef(P).ElementDef).OrdType of
-                   U8Bit:
-                     MMX_Type:=MMXU8Bit;
-                   S8Bit:
-                     MMX_Type:=MMXS8Bit;
-                   U16Bit:
-                     MMX_Type:=MMXU16Bit;
-                   S16Bit:
-                     MMX_Type:=MMXS16Bit;
-                   U32Bit:
-                     MMX_Type:=MMXU32Bit;
-                   S32Bit:
-                     MMX_Type:=MMXS32Bit;
-                   else
-                     ;
-                end;
-           end;
-      end;
-
-
     { The range-type of an ordinal-type that is a subrange-type shall be the host-type (see 6.4.2.4) of the subrange-type.
       The range-type of an ordinal-type that is not a subrange-type shall be the ordinal-type.
 
@@ -1624,86 +1581,6 @@ implementation
           end
         else if not NilOnError then
           InternalError(2022090810);
-      end;
-
-
-    function Is_MMX_Able_Array(P : TDef) : Boolean;
-      begin
-{$ifdef SUPPORT_MMX}
-         if (cs_mmx_saturation in CurrentSettings.LocalSwitches) then
-           begin
-              Is_MMX_Able_Array:=(P.Typ=ArrayDef) and
-                not(Is_Special_Array(P)) and
-                (
-                 (
-                  (TArrayDef(P).ElementDef.Typ=OrdDef) and
-                  (
-                   (
-                    (TArrayDef(P).LowRange=0) and
-                    (TArrayDef(P).HighRange=1) and
-                    (TOrdDef(TArrayDef(P).ElementDef).OrdType in [U32Bit,S32Bit])
-                   )
-                   or
-                   (
-                    (TArrayDef(P).LowRange=0) and
-                    (TArrayDef(P).HighRange=3) and
-                    (TOrdDef(TArrayDef(P).ElementDef).OrdType in [U16Bit,S16Bit])
-                   )
-                  )
-                 )
-                 or
-                (
-                 (
-                  (TArrayDef(P).ElementDef.Typ=FloatDef) and
-                  (
-                   (TArrayDef(P).LowRange=0) and
-                   (TArrayDef(P).HighRange=1) and
-                   (TFloatDef(TArrayDef(P).ElementDef).FloatType=S32Real)
-                  )
-                 )
-                )
-              );
-           end
-         else
-           begin
-              Is_MMX_Able_Array:=(P.Typ=ArrayDef) and
-                (
-                 (
-                  (TArrayDef(P).ElementDef.Typ=OrdDef) and
-                  (
-                   (
-                    (TArrayDef(P).LowRange=0) and
-                    (TArrayDef(P).HighRange=1) and
-                    (TOrdDef(TArrayDef(P).ElementDef).OrdType in [U32Bit,S32Bit])
-                   )
-                   or
-                   (
-                    (TArrayDef(P).LowRange=0) and
-                    (TArrayDef(P).HighRange=3) and
-                    (TOrdDef(TArrayDef(P).ElementDef).OrdType in [U16Bit,S16Bit])
-                   )
-                   or
-                   (
-                    (TArrayDef(P).LowRange=0) and
-                    (TArrayDef(P).HighRange=7) and
-                    (TOrdDef(TArrayDef(P).ElementDef).OrdType in [U8Bit,S8Bit])
-                   )
-                  )
-                 )
-                 or
-                 (
-                  (TArrayDef(P).ElementDef.Typ=FloatDef) and
-                  (
-                   (TArrayDef(P).LowRange=0) and
-                   (TArrayDef(P).HighRange=1) and
-                   (TFloatDef(TArrayDef(P).ElementDef).FloatType=S32Real)
-                  )
-                 )
-                );
-           end;
-{$else SUPPORT_MMX}
-         Is_MMX_Able_Array:=False;
-{$endif SUPPORT_MMX}
       end;
 
 

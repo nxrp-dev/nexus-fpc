@@ -54,9 +54,6 @@ interface
           procedure second_addsmallset;virtual;
           procedure second_addsmallsetelement;virtual;
 {$ifdef x86}
-{$ifdef SUPPORT_MMX}
-          procedure second_opmmx;virtual;abstract;
-{$endif SUPPORT_MMX}
 {$endif x86}
           procedure second_opvector;virtual;abstract;
           procedure second_add64bit;virtual;
@@ -815,11 +812,6 @@ interface
                 if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
                    Is_Vector(left.resultdef) then
                   second_opvector
-{$ifdef SUPPORT_MMX}
-              else
-                if Is_MMX_Able_Array(left.resultdef) then
-                  second_opmmx
-{$endif SUPPORT_MMX}
               else
                 InternalError(200306016);
             end;

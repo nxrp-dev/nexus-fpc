@@ -41,12 +41,6 @@ program pp;
                       use external messagefiles, default for TP
 
   -----------------------------------------------------------------
-  I386 specific switches
-  -----------------------------------------------------------------
-  SUPPORT_MMX         only i386: releases the compiler switch
-                      MMX which allows the compiler to generate
-                      MMX instructions
-  -----------------------------------------------------------------
   Switches automatically inside fpcdefs.inc
   -----------------------------------------------------------------
   cpuflags            The target processor has status flags (on by default)
@@ -86,11 +80,6 @@ program pp;
 {$ifndef CPUDEFINED}
   {$fatal A CPU type switch must be defined}
 {$endif CPUDEFINED}
-{$ifdef support_mmx}
-  {$ifndef i386}
-    {$fatal I386 switch must be on for MMX support}
-  {$endif i386}
-{$endif support_mmx}
 
 
 {$ifdef windows}

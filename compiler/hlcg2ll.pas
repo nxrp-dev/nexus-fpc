@@ -1597,11 +1597,6 @@ implementation
                 cg.A_LoadMM_Loc_CGPara(list,l,cgpara,nil);
             end;
           end;
-{$ifdef SUPPORT_MMX}
-        LOC_MMXREGISTER,
-        LOC_CMMXREGISTER:
-          cg.A_LoadMM_Reg_CGPara(list,OS_M64,l.Register,cgpara,nil);
-{$endif SUPPORT_MMX}
         else
           InternalError(200204241);
       end;

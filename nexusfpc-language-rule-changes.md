@@ -42,6 +42,7 @@ Ordinary bug fixes that restore established Free Pascal behavior do not belong h
 | [NXLR-0006](#nxlr-0006-removal-of-nearfar-procedure-directives) | Removal of near/far procedure directives | Implemented |
 | [NXLR-0007](#nxlr-0007-removal-of-n-and-a5-legacy-options) | Removal of `$N` and `-a5` legacy options | Implemented |
 | [NXLR-0008](#nxlr-0008-c-style-assignment-operators-enabled-by-default) | C-style assignment operators enabled by default | Implemented |
+| [NXLR-0009](#nxlr-0009-retirement-of-mmx-array-arithmetic) | Retirement of MMX array arithmetic | Implemented |
 
 ## NXLR-0001: Complete Tokenization of Conditionally Compiled Source
 
@@ -644,6 +645,48 @@ opt-out, source opt-in overriding the command line, and directive ordering.
 ### Decision History
 
 - 2026-10-15: Enabled by default at the project owner's direction.
+
+## NXLR-0009: Retirement of MMX Array Arithmetic
+
+- Status: Implemented
+- Decision date: 2026-10-17
+- Implemented in: compiler type checking, code generation and directive registration
+- Released in: Not released
+- Applies to: All retained targets; removes an i386-only compiler extension
+- Supersedes: None
+
+### Rule and Compatibility
+
+`{$MMX}` and `{$SATURATION}`, including their ON/OFF and +/- forms, are retired.
+They produce the normal illegal-directive warning; `-Sew` makes it a compilation
+failure. Built-in arithmetic on the small arrays formerly recognized by
+`SUPPORT_MMX` is removed. Use ordinary Pascal operations, an explicitly declared
+operator overload, or maintained SIMD code instead.
+
+The reviewed Free Pascal-derived baseline automatically defined `SUPPORT_MMX`
+for its i386 backend. The feature was disabled by default in application source,
+but `{$MMX ON}` enabled special packed array operators and a copy optimization.
+Nexus found no source consumers enabling either directive in its retained tree.
+The owner approved retirement to reduce this legacy compiler surface.
+
+This does not change the supported target matrix. Inline-assembler MMX/SSE
+instructions, the separate i386 `MMX` unit and the RTL's MMX copy fallback remain.
+The surviving local-switch bit positions and explicit intrinsic numbers are
+preserved, so this retirement does not change unit serialization or the RTL ABI.
+Removing the six unused intrinsic-number constants changes `System`'s symbol
+table and dependency checksums. Rebuild dependent units with the refreshed RTL;
+the normal dependency checks continue to prevent mixing incompatible unit sets.
+
+### Tests
+
+`tests/switches/Run-NXRemovedMMXTests.sh` checks directive diagnostics in four
+language modes, built-in array-operator rejection, ordinary array operators and
+copies, and retained x86 assembly. The arithmetic fixture is checked against the
+untouched i386 baseline to establish the retired behavior.
+
+### Decision History
+
+- 2026-10-17: Retired at the project owner's direction.
 
 ## Change Record Format
 

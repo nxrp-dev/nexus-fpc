@@ -4858,10 +4858,6 @@ implementation
           end;
         LOC_CFPUREGISTER:
           RR.New := CG.GetFPURegister(CurrentAsmData.CurrAsmList,N.Location.Size);
-{$ifdef SUPPORT_MMX}
-        LOC_CMMXREGISTER:
-          RR.New := TCGX86(CG).GetMMXRegister(CurrentAsmData.CurrAsmList);
-{$endif SUPPORT_MMX}
         LOC_CMMREGISTER:
           RR.New := CG.GetMMRegister(CurrentAsmData.CurrAsmList,N.Location.Size);
         else
@@ -4898,10 +4894,6 @@ implementation
             end;
           LOC_CFPUREGISTER:
             CG.A_LoadFPU_Reg_Reg(List,N.Location.Size,N.Location.Size,N.Location.Register,RR.New);
-{$ifdef SUPPORT_MMX}
-          LOC_CMMXREGISTER:
-            CG.A_LoadMM_Reg_Reg(List,OS_M64,OS_M64,N.Location.Register,RR.New,nil);
-{$endif SUPPORT_MMX}
           LOC_CMMREGISTER:
             A_LoadMM_Reg_Reg(List,N.ResultDef,N.ResultDef,N.Location.Register,RR.New,nil);
           else

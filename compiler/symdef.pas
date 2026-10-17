@@ -2463,10 +2463,6 @@ implementation
             Is_IntRegable:=not(Is_Special_Array(Self)) and
               (TArrayDef(Self).Size<=8) and (TArrayDef(Self).Size in [1,2,4,8]) and
               TStoredDef(TArrayDef(Self).ElementDef).Is_IntRegable
-{$ifdef SUPPORT_MMX}
-              and not((cs_mmx in CurrentSettings.LocalSwitches) and
-                 Is_MMX_Able_Array(Self))
-{$endif SUPPORT_MMX}
 {$endif cpuhighleveltarget}
               ;
           RecordDef:

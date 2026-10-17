@@ -178,24 +178,6 @@ implementation
                 if location.Loc in [LOC_CREFERENCE,LOC_REFERENCE,LOC_SUBSETREF,LOC_CSUBSETREF] then
                   location.Reference.Volatility:=[vol_read,vol_write];
               end;
-{$ifdef SUPPORT_MMX}
-            in_mmx_pcmpeqb..in_mmx_pcmpgtw:
-              begin
-                 Location_Reset(location,LOC_MMXREGISTER,OS_NO);
-                 if left.Location.Loc=LOC_REGISTER then
-                   begin
-                      {!!!!!!!}
-                   end
-                 else if TCallParaNode(left).left.Location.Loc=LOC_REGISTER then
-                   begin
-                      {!!!!!!!}
-                   end
-                 else
-                   begin
-                      {!!!!!!!}
-                   end;
-              end;
-{$endif SUPPORT_MMX}
             in_rol_x,
             in_rol_x_y,
             in_ror_x,

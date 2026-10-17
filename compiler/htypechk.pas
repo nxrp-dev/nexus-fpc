@@ -477,11 +477,9 @@ implementation
               end;
             arraydef :
               begin
-                { not vector/mmx }
-                if ((cs_mmx in CurrentSettings.LocalSwitches) and
-                   Is_MMX_Able_Array(ld)) or
-                   ((cs_support_vectors in CurrentSettings.GlobalSwitches) and
-                   Is_Vector(ld)) then
+                { not vector }
+                if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
+                   Is_Vector(ld) then
                  begin
                    allowed:=false;
                    exit;
@@ -590,11 +588,6 @@ implementation
               if (ld.typ in [orddef,enumdef,floatdef]) then
                 exit;
 
-{$ifdef SUPPORT_MMX}
-              if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 Is_MMX_Able_Array(ld) then
-                exit;
-{$endif SUPPORT_MMX}
 
               result:=true;
             end;
@@ -603,11 +596,6 @@ implementation
             begin
               if ld.typ = orddef then exit;
 
-{$ifdef SUPPORT_MMX}
-              if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 Is_MMX_Able_Array(ld) then
-                exit;
-{$endif SUPPORT_MMX}
 
               result:=true;
             end;

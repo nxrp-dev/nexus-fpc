@@ -3331,26 +3331,6 @@ const
               inserttypeconv_explicit(right,left.resultdef)
           end
 
-{$ifdef SUPPORT_MMX}
-       { mmx support, this must be before the zero based array
-         check }
-         else if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 Is_MMX_Able_Array(ld) and
-                 Is_MMX_Able_Array(rd) and
-                 Equal_Defs(ld,rd) then
-            begin
-              case nodetype of
-                addn,subn,xorn,orn,andn:
-                  ;
-                { mul is a little bit restricted }
-                muln:
-                  if not(MMX_Type(ld) in [mmxu16bit,mmxs16bit,mmxfixed16]) then
-                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-                else
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-              end;
-            end
-{$endif SUPPORT_MMX}
          { vector support, this must be before the zero based array
            check }
          else if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
@@ -5047,15 +5027,6 @@ const
                 expectloc:=LOC_FLAGS;
             end
 
-{$ifdef SUPPORT_MMX}
-       { mmx support, this must be before the zero based array
-         check }
-         else if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(ld) and
-                 Is_MMX_Able_Array(rd) then
-            begin
-              expectloc:=LOC_MMXREGISTER;
-            end
-{$endif SUPPORT_MMX}
 
          else if (rd.typ=pointerdef) or (ld.typ=pointerdef) then
             begin
@@ -5080,14 +5051,6 @@ const
                 expectloc:=LOC_FLAGS;
            end
 
-{$ifdef SUPPORT_MMX}
-         else if (cs_mmx in CurrentSettings.LocalSwitches) and
-                 Is_MMX_Able_Array(ld) and
-                 Is_MMX_Able_Array(rd) then
-            begin
-              expectloc:=LOC_MMXREGISTER;
-            end
-{$endif SUPPORT_MMX}
 
          else if Is_Dynamic_Array(ld) or Is_Dynamic_Array(rd) then
            begin

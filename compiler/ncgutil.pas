@@ -109,9 +109,6 @@ implementation
     DbgBase,
     nadd,nbas,ncon,nld,nmem,nutils,
     tgobj,cgobj,hlcgobj,hlcgcpu
-{$ifdef SUPPORT_MMX}
-    , cgx86
-{$endif SUPPORT_MMX}
 ;
 
 

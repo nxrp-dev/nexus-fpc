@@ -8,6 +8,12 @@ sidecars or DLL pairs and require migration before reuse. Their historical pass
 counts are not validation of the new storage format. See
 [package storage verification](../../nexusfpc-package-storage.md).
 
+`NXPackageStorageTests.nxproject` builds direct nxtest checks for NXPM0002's
+20-byte structural header, raw-byte roundtrip, malformed storage and old-version
+rebuild diagnostics. It uses the existing codec/compression closure without hash
+paths. Embedded/sidecar PE/ELF cases also run in NexusForgeTests. No new compiler
+variant or bootstrap stage is involved.
+
 The source-only bootstrap orchestration below is historical: the make bootstrap
 and Linux SDK builder have been retired. The fixtures, assertions and existing-SDK
 runners remain for the later nxtest work. Use the [Forge build guide](../../NexusFPC.Forge.md)

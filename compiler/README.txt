@@ -22,9 +22,6 @@ Possible compiler switches (* marks a currently required switch):
   VIS                 generate a compile for the VIS
   DEBUG               version with debug code is generated
   EXTDEBUG            some extra debug code is executed
-  SUPPORT_MMX         only i386: releases the compiler switch
-                      MMX which allows the compiler to generate
-                      MMX instructions
   EXTERN_MSG          Don't compile the msgfiles in the compiler, always
                       use external messagefiles, default for TP
   NOAG386INT          no Intel Assembler output

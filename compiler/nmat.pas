@@ -916,20 +916,6 @@ implementation
               exit;
            end;
 
-{$ifdef SUPPORT_MMX}
-         if (cs_mmx in CurrentSettings.LocalSwitches) and
-           Is_MMX_Able_Array(left.resultdef) and
-           ((Is_MMX_Able_Array(right.resultdef) and
-             Equal_Defs(left.resultdef,right.resultdef)
-            ) or is_constintnode(right)) then
-           begin
-             if not(MMX_Type(left.resultdef) in [mmxu16bit,mmxs16bit,mmxfixed16,mmxu32bit,mmxs32bit,mmxu64bit,mmxs64bit]) then
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.TypeName,right.resultdef.TypeName);
-             if not(Is_MMX_Able_Array(right.resultdef)) then
-               inserttypeconv(right,SIntType);
-           end
-         else
-{$endif SUPPORT_MMX}
            begin
              { calculations for ordinals < 32 bit have to be done in
                32 bit for backwards compatibility. That way 'shl 33' is
@@ -1152,19 +1138,6 @@ implementation
                  resultdef:=left.resultdef
                end;
            end
-{$ifdef SUPPORT_MMX}
-         else if (cs_mmx in CurrentSettings.LocalSwitches) and
-           Is_MMX_Able_Array(left.resultdef) then
-             begin
-               { if saturation is on, left.resultdef isn't
-                 "mmx able" (FK)
-               if (cs_mmx_saturation in current_settings.localswitches^) and
-                 (torddef(tarraydef(resultdef).definition).typ in
-                 [s32bit,u32bit]) then
-                 CGMessage(type_e_mismatch);
-               }
-             end
-{$endif SUPPORT_MMX}
          else if Is_OversizedOrd(left.resultdef) then
            begin
              if Is_64Bit(left.resultdef) then
@@ -1208,11 +1181,6 @@ implementation
 
         if (left.resultdef.typ=floatdef) then
           expectloc:=LOC_FPUREGISTER
-{$ifdef SUPPORT_MMX}
-        else if (cs_mmx in CurrentSettings.LocalSwitches) and
-          Is_MMX_Able_Array(left.resultdef) then
-          expectloc:=LOC_MMXREGISTER
-{$endif SUPPORT_MMX}
         else if (left.resultdef.typ=orddef) then
           expectloc:=LOC_REGISTER;
       end;
@@ -1256,10 +1224,6 @@ implementation
            is_constrealnode(left) or
            (left.resultdef.typ=floatdef) or
            Is_Currency(left.resultdef)
-{$ifdef SUPPORT_MMX}
-           or ((cs_mmx in CurrentSettings.LocalSwitches) and
-                Is_MMX_Able_Array(left.resultdef))
-{$endif SUPPORT_MMX}
         then
           begin
             result:=left;
@@ -1405,13 +1369,6 @@ implementation
            begin
            end
          else
-{$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and
-             Is_MMX_Able_Array(left.resultdef) then
-             begin
-             end
-         else
-{$endif SUPPORT_MMX}
 {$ifndef cpu64bitaddr}
            if Is_64BitInt(left.resultdef) then
              begin
@@ -1456,12 +1413,6 @@ implementation
 {$endif defined(cpuflags) and not(defined(xtensa)}
            end
          else
-{$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and
-             Is_MMX_Able_Array(left.resultdef) then
-             expectloc:=LOC_MMXREGISTER
-         else
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
            if Is_64Bit(left.resultdef) then
              begin

@@ -95,3 +95,33 @@ or complete release matrix was rebuilt. The original optional 4 GiB Zip64 test
 remains disabled in its source and was not run; the enabled 65,537-entry Zip64
 case was run to completion on both baseline trees and the final official tree.
 
+
+## Private CRC32 and hash-consumer audit, 2026-10-17
+
+The approved hash-consumer audit consolidated the reflected IEEE CRC table/core
+from ZStream and Zipper into `src/utNXPasZLibCRC32.pas`. PasZLib, gzio, zip, unzip,
+zstream and zipper now use that private implementation. The existing
+PasZLib.crc32/get_crc_table signatures remain; retained file comparisons use byte
+equality instead of MD5. Runtime, dotted wrappers and tests have no HashLib4Pascal
+or legacy hash source dependency. There is still one canonical PasZLib tree.
+
+New independent fixtures proved an existing minizip range-check failure: running
+and stored CRC values were signed LongInt. Split reads/writes can set bit 31 even
+when the final CRC is below it; a one-byte-NUL stored ZIP has final CRC D202EF8D.
+Both fail against the untouched pre-audit source. The CRC fields are now Cardinal;
+the existing four-byte header reader's bit pattern is copied into the unsigned
+field without a numeric signed conversion. No general-purpose hash is introduced.
+
+Direct nxtest MiniZipInteroperability and MiniZipHighBitCRC cover the proof,
+stored/deflated writes, independent ZIP input and corrupted-CRC rejection. The
+11-case CRC/window/header/interoperability suite passes under native NexusFPC
+3.3.1 and stock FPC 3.2.2, with range/overflow/I/O/assertion checks. Retained
+stream-seek, single-entry and 65,537-entry ZIP tests pass. The dotted core probe
+passes compression/decompression and the public CRC facade; the full dotted RTL
+closure was not built on this host.
+
+The initial audit plan incorrectly referred to password ZIP processing. The
+current package rejects encryption and has no password implementation to
+preserve; encryption support was not added. The complete audit, unchanged
+compiler-build checks and remaining SDK limits are recorded in Nexus
+[the implementation review](../../../nexus/work/reviews/hashlib4pascal-package-and-hash-consumer-audit.md).

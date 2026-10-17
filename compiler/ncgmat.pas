@@ -43,9 +43,6 @@ interface
            in IEEE-754 format.
          }
          procedure emit_float_sign_change(r: TRegister; _size : TDef);virtual;
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;virtual;abstract;
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          procedure second_64bit;virtual;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
@@ -101,9 +98,6 @@ interface
       end;
 
       TCGShlShrNode = class(TShlShrNode)
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;virtual;abstract;
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          procedure second_64bit;virtual;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
@@ -115,9 +109,6 @@ interface
       protected
          function handle_locjump: boolean;
          procedure second_boolean;virtual;abstract;
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;virtual;abstract;
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          procedure second_64bit;virtual;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
@@ -303,11 +294,6 @@ implementation
            second_64bit
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-{$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
-             second_mmx
-         else
-{$endif SUPPORT_MMX}
             if (left.resultdef.typ=floatdef) then
               second_float
          else
@@ -583,11 +569,6 @@ implementation
       begin
          SecondPass(left);
          SecondPass(right);
-{$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
-             second_mmx
-         else
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
          if Is_64Bit(left.resultdef) then
            second_64bit
@@ -648,10 +629,6 @@ implementation
       begin
         if Is_Boolean(resultdef) then
           second_boolean
-{$ifdef SUPPORT_MMX}
-        else if (cs_mmx in CurrentSettings.LocalSwitches) and Is_MMX_Able_Array(left.resultdef) then
-          second_mmx
-{$endif SUPPORT_MMX}
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
         else if Is_64Bit(left.resultdef) then
           second_64bit

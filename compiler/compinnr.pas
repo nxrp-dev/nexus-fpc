@@ -176,21 +176,6 @@ type
      in_max_qword        = 147,
      in_max_int64        = 148,
 
-{ MMX functions }
-{ these constants are used by the mmx unit }
-
-     { MMX }
-     in_mmx_pcmpeqb      = 200,
-     in_mmx_pcmpeqw      = 201,
-     in_mmx_pcmpeqd      = 202,
-     in_mmx_pcmpgtb      = 203,
-     in_mmx_pcmpgtw      = 204,
-     in_mmx_pcmpgtd      = 205,
-
-     { 3DNow }
-
-     { SSE }
-
 { More internal functions }
      in_isconstvalue_x    = 1000,
      in_nameof_x          = 1001,

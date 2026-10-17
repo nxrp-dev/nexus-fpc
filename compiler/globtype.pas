@@ -138,10 +138,8 @@ interface
           { Preserve PPU-serialized local-switch bit positions after removing obsolete switches. }
          cs_excessprecision = 19,cs_check_fpu_exceptions,
          cs_check_all_case_coverage,
-         { mmx }
-         cs_mmx,cs_mmx_saturation,
-         { parser }
-         cs_typed_addresses,cs_strict_var_strings,cs_refcountedstrings,
+         { parser; retain serialized bit positions after retiring MMX switches }
+         cs_typed_addresses = 24,cs_strict_var_strings,cs_refcountedstrings,
          cs_bitpacking,cs_varpropsetter,cs_scopedenums,cs_pointermath,
          cs_openstring,
          { macpas specific}

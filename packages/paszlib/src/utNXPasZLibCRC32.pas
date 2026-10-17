@@ -8,9 +8,7 @@ unit utNXPasZLibCRC32;
     Copyright (c) 2007 by Daniel Mantione
       member of the Free Pascal development team
 
-    Implements a Tstream descendents that allow you to read and write
-    compressed data according to the Deflate algorithm described in
-    RFC1951.
+    Private IEEE CRC32 implementation shared by PasZLib compression units.
 
     See the file COPYING.FPC, included in this distribution,
     for details about the copyright.

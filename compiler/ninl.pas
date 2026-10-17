@@ -4054,11 +4054,6 @@ implementation
                   resultdef:=removefloatupcasts(temp_pnode^,[S32Real,S64Real,s80real,sc80real]);
                 end;
 
-{$ifdef SUPPORT_MMX}
-              in_mmx_pcmpeqb..in_mmx_pcmpgtw:
-                begin
-                end;
-{$endif SUPPORT_MMX}
               in_aligned_x,
               in_unaligned_x:
                 begin
@@ -4632,11 +4627,6 @@ implementation
              result := first_ln_real;
            end;
 
-{$ifdef SUPPORT_MMX}
-         in_mmx_pcmpeqb..in_mmx_pcmpgtw:
-           begin
-           end;
-{$endif SUPPORT_MMX}
 
          in_assert_x_y :
             begin

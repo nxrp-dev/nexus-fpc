@@ -1035,11 +1035,6 @@ unit scandir;
         do_localswitch(cs_legacyifend);
       end;
 
-    procedure dir_mmx;
-      begin
-        do_localswitch(cs_mmx);
-      end;
-
     procedure dir_note;
       begin
         do_message(scan_n_user_defined);
@@ -1412,11 +1407,6 @@ unit scandir;
 
         { set the directive in the module }
         CurrentModule.RTTIDirective:=dir;
-      end;
-
-    procedure dir_saturation;
-      begin
-        do_localswitch(cs_mmx_saturation);
       end;
 
     procedure dir_safefpuexceptions;
@@ -2008,7 +1998,6 @@ unit scandir;
         AddDirective('MINENUMSIZE',directive_all, @dir_packenum);
         AddDirective('MINFPCONSTPREC',directive_all, @dir_minfpconstprec);
         AddDirective('MINSTACKSIZE',directive_all, @dir_minstacksize);
-        AddDirective('MMX',directive_all, @dir_mmx);
         AddDirective('MODE',directive_all, @dir_mode);
         AddDirective('MODESWITCH',directive_all, @dir_modeswitch);
         AddDirective('TEXTBLOCK',directive_all, @dir_textblock);
@@ -2040,7 +2029,6 @@ unit scandir;
         AddDirective('REFERENCEINFO',directive_all, @dir_referenceinfo);
         AddDirective('REGION',directive_all, @dir_region);
         AddDirective('RESOURCE',directive_all, @dir_resource);
-        AddDirective('SATURATION',directive_all, @dir_saturation);
         AddDirective('SAFEFPUEXCEPTIONS',directive_all, @dir_safefpuexceptions);
         AddDirective('SCOPEDENUMS',directive_all, @dir_scopedenums);
         AddDirective('SETPEFLAGS', directive_all, @dir_setpeflags);

@@ -30,18 +30,12 @@ interface
 
     type
       TX86UnaryMinusNode = class(TCGUnaryMinusNode)
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;override;
-{$endif SUPPORT_MMX}
          procedure second_float;override;
          function pass_1:TNode;override;
       end;
 
       TX86NotNode = class(TCGNotNode)
          procedure second_boolean;override;
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;override;
-{$endif SUPPORT_MMX}
       end;
 
       TX86ModDivNode = class(TCGModDivNode)
@@ -49,9 +43,6 @@ interface
       end;
 
       TX86ShlShrNode = class(TCGShlShrNode)
-{$ifdef SUPPORT_MMX}
-         procedure second_mmx;override;
-{$endif SUPPORT_MMX}
       end;
 
   implementation
@@ -87,80 +78,11 @@ interface
              else
                expectloc:=LOC_FPUREGISTER;
            end
-{$ifdef SUPPORT_MMX}
-         else
-           if (cs_mmx in CurrentSettings.LocalSwitches) and
-              Is_MMX_Able_Array(left.resultdef) then
-             begin
-               expectloc:=LOC_MMXREGISTER;
-             end
-{$endif SUPPORT_MMX}
          else
            inherited pass_1;
       end;
 
 
-{$ifdef SUPPORT_MMX}
-    procedure TX86UnaryMinusNode.second_mmx;
-      var
-        op : TAsmOp;
-        hreg : TRegister;
-      begin
-        op:=A_NONE;
-        SecondPass(left);
-        Location_Reset(location,LOC_MMXREGISTER,OS_NO);
-        hreg:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-        emit_reg_reg(A_PXOR,S_NO,hreg,hreg);
-        case left.Location.Loc of
-          LOC_MMXREGISTER:
-            begin
-               location.Register:=left.Location.Register;
-            end;
-          LOC_CMMXREGISTER:
-            begin
-               location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-               emit_reg_reg(A_MOVQ,S_NO,left.Location.Register,location.Register);
-            end;
-          LOC_REFERENCE,
-          LOC_CREFERENCE:
-            begin
-               location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-               emit_ref_reg(A_MOVQ,S_NO,left.Location.Reference,location.Register);
-            end;
-          else
-            InternalError(200203225);
-        end;
-        if cs_mmx_saturation in CurrentSettings.LocalSwitches then
-          case MMX_Type(resultdef) of
-             mmxs8bit:
-               op:=A_PSUBSB;
-             mmxu8bit:
-               op:=A_PSUBUSB;
-             mmxs16bit,mmxfixed16:
-               op:=A_PSUBSW;
-             mmxu16bit:
-               op:=A_PSUBUSW;
-             else
-               ;
-          end
-        else
-          case MMX_Type(resultdef) of
-             mmxs8bit,mmxu8bit:
-               op:=A_PSUBB;
-             mmxs16bit,mmxu16bit,mmxfixed16:
-               op:=A_PSUBW;
-             mmxs32bit,mmxu32bit:
-               op:=A_PSUBD;
-             else
-               ;
-          end;
-        if op = A_NONE then
-          InternalError(201408202);
-
-        emit_reg_reg(op,S_NO,location.Register,hreg);
-        emit_reg_reg(A_MOVQ,S_NO,hreg,location.Register);
-      end;
-{$endif SUPPORT_MMX}
 
 
     procedure TX86UnaryMinusNode.second_float;
@@ -325,45 +247,6 @@ interface
       end;
 
 
-{$ifdef SUPPORT_MMX}
-    procedure TX86NotNode.second_mmx;
-
-    var hreg,r:TRegister;
-
-    begin
-      SecondPass(left);
-      Location_Reset(location,LOC_MMXREGISTER,OS_NO);
-      r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
-      emit_const_reg(A_MOV,S_L,LongInt($ffffffff),r);
-      { load operand }
-      case left.Location.Loc of
-        LOC_MMXREGISTER:
-          Location_Copy(location,left.Location);
-        LOC_CMMXREGISTER:
-          begin
-            location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-            emit_reg_reg(A_MOVQ,S_NO,left.Location.Register,location.Register);
-          end;
-        LOC_REFERENCE,
-        LOC_CREFERENCE:
-          begin
-            location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-            emit_ref_reg(A_MOVQ,S_NO,left.Location.Reference,location.Register);
-          end;
-        else
-          InternalError(2019050906);
-      end;
-      { load mask }
-      hreg:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-      emit_reg_reg(A_MOVD,S_NO,r,hreg);
-      { lower 32 bit }
-      emit_reg_reg(A_PXOR,S_NO,hreg,location.Register);
-      { shift mask }
-      emit_const_reg(A_PSLLQ,S_B,32,hreg);
-      { higher 32 bit }
-      emit_reg_reg(A_PXOR,S_NO,hreg,location.Register);
-    end;
-{$endif SUPPORT_MMX}
 
 
 {*****************************************************************************
@@ -940,96 +823,5 @@ DefaultDiv:
       end;
 
 
-{$ifdef SUPPORT_MMX}
-    procedure TX86ShlShrNode.second_mmx;
-      var
-        op         : TAsmOp;
-        mmxbase    : TMMXType;
-        hregister  : TRegister;
-      begin
-        SecondPass(left);
-        if CodeGenError then
-          exit;
-        SecondPass(right);
-        if CodeGenError then
-          exit;
-
-        op:=A_NOP;
-
-        mmxbase:=MMX_Type(left.resultdef);
-        Location_Reset(location,LOC_MMXREGISTER,Def_CGSize(resultdef));
-        case nodetype of
-          shrn :
-            case mmxbase of
-               mmxs16bit,mmxu16bit,mmxfixed16:
-                 op:=A_PSRLW;
-               mmxs32bit,mmxu32bit:
-                 op:=A_PSRLD;
-               mmxs64bit,mmxu64bit:
-                 op:=A_PSRLQ;
-               else
-                 InternalError(2018022504);
-            end;
-          shln :
-            case mmxbase of
-               mmxs16bit,mmxu16bit,mmxfixed16:
-                 op:=A_PSLLW;
-               mmxs32bit,mmxu32bit:
-                 op:=A_PSLLD;
-               mmxs64bit,mmxu64bit:
-                 op:=A_PSLLD;
-               else
-                 InternalError(2018022503);
-            end;
-          else
-            InternalError(2018022502);
-        end;
-
-        { left and right no register?  }
-        { then one must be demanded    }
-        if (left.Location.Loc<>LOC_MMXREGISTER) then
-         begin
-           { register variable ? }
-           if (left.Location.Loc=LOC_CMMXREGISTER) then
-            begin
-              hregister:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-              emit_reg_reg(A_MOVQ,S_NO,left.Location.Register,hregister);
-            end
-           else
-            begin
-              if not(left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-               InternalError(2018022505);
-
-              hregister:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);
-              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.Location.Reference);
-              emit_ref_reg(A_MOVQ,S_NO,left.Location.Reference,hregister);
-            end;
-
-           Location_Reset(left.Location,LOC_MMXREGISTER,OS_NO);
-           left.Location.Register:=hregister;
-         end;
-
-        { at this point, left.location.loc should be LOC_MMXREGISTER }
-        case right.Location.Loc of
-          LOC_MMXREGISTER,LOC_CMMXREGISTER:
-            begin
-              emit_reg_reg(op,S_NO,right.Location.Register,left.Location.Register);
-              location.Register:=left.Location.Register;
-            end;
-          LOC_CONSTANT:
-            emit_const_reg(op,S_NO,right.Location.Value,left.Location.Register);
-          LOC_REFERENCE,LOC_CREFERENCE:
-            begin
-              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.Location.Reference);
-              emit_ref_reg(op,S_NO,right.Location.Reference,left.Location.Register);
-            end;
-          else
-            InternalError(2018022506);
-        end;
-        location.Register:=left.Location.Register;
-
-        location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
-      end;
-{$endif SUPPORT_MMX}
 
 end.

@@ -40,10 +40,10 @@ are saved there. Code review was explicitly waived for that relocation.
 | `cocoaint` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/cocoaint`. Darwin, x86_64/aarch64; `MACOSALL`, `COCOAALL`, `LEGACY_SETNEEDSDISPLAY` defines retained. |
 | `fcl-async` (retired) | — | Removed 2026-10-17 after confirming no production Nexus consumers. The unused FCL Net async units and dependent Lab demonstrations were removed with it. Original source remains in NexusFPC Git history. |
 | `fcl-base` | `rtl-objpas`; `univint` on Apple targets | OS include paths and event-log resource described below. |
-| `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression/hash helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
+| `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
 | `fcl-fpcunit` (retired) | Historical: `paszlib`, `fcl-base`, `fcl-xml`; `univint` on Apple targets | Removed 2026-10-16. Useful retained tests now use Nexus nxtest directly; original framework and runners are archived in Nexus `docs/migrations/fpcunit`. |
 | `fcl-hash` | `rtl-objpas`, `rtl-extra`, `fcl-base`, `hash` | Recipes give explicit `src/` filenames. |
-| `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; transitive `hash`/CRC | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
+| `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; self-contained PasZLib CRC32 | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
 | `fcl-json` (relocated) | `fcl-base`, `rtl-objpas` | The former optional `jsonfpcunit` helper was retired; runtime JSON has no FPCUnit dependency. |
 | `fcl-net` (retired) | — | Removed on 2026-10-17 after moving the required Unix resolver into Nexus Synapse and the live certificate definitions into Nexus OpenSSL. Nexus applications use Synapse; unused FCL socket and database APIs are not retained. |
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
@@ -56,7 +56,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
 | `libffi` | `rtl-objpas` | `ffi.pas`, `ffi.manager.pas`; recipe marks libc required. The recipe builds Pascal bindings, not libffi C sources. |
 | `pasjpeg` (relocated) | — | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/pasjpeg`. `PasJPEG.nxpackage` builds the portable codec, both coefficient-transcoding units and the repaired BMP/JPEG stream API. The saved review records source hashes, direct nxtest proofs and native results. |
-| `paszlib` | `hash` | `paszlib.pas`, `zip.pas`, `unzip.pas`, `zipper.pas`, plus implicitly compiled units. Old dependency version was `3.3.1`. |
+| `paszlib` | — | `paszlib.pas`, `zip.pas`, `unzip.pas`, `zipper.pas`, plus implicitly compiled units. CRC32 is private in `utNXPasZLibCRC32`; no legacy hash or HashLib dependency. |
 | `pthreads` | — | Pascal platform bindings; preserve their source-level library declarations. |
 | `rtl-extra` | — | Retained networking/locale subset; Android selects its own `clocale`. Sorting moved to `rtl-objpas`; legacy Objects is test-only. |
 | `rtl-generics` | `rtl-objpas` | Sources in `src`, includes in `src/inc`. |

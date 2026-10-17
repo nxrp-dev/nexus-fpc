@@ -27,32 +27,39 @@ decoder. Compiler and Forge use this implementation. The existing NXP004
 metadata and its embedded NXU records remain the uncompressed payload.
 Compression uses the existing Pascal zlib implementation; it introduces no
 external compression DLL or runtime dependency. Compiler builds stage the
-Pascal compression and hash sources alongside their other build inputs.
+self-contained Pascal compression sources alongside their other build inputs.
+No general-purpose hashing package is used by metadata processing; the compiler
+bootstrap stages, flags, outputs and build order are unchanged.
 
 The native image contains a `.nxmeta` section before linking, stripping,
 publication hashing or signing. Its little-endian envelope contains:
 
 | Offset | Size | Meaning |
 | --- | --- | --- |
-| 0 | 8 | `NXPM0001` storage signature/version |
+| 0 | 8 | `NXPM0002` storage signature/version |
 | 8 | 4 | Payload placement: 1 embedded, 0 sidecar |
 | 12 | 4 | Uncompressed metadata byte count |
 | 16 | 4 | Compressed metadata byte count |
-| 20 | 20 | SHA-1 fingerprint of the uncompressed metadata |
-| 40 | variable | zlib stream, present for embedded storage |
+| 20 | variable | zlib stream, present for embedded storage |
 
 A sidecar contains the same envelope with placement 1 and the same zlib stream.
-The native image always retains the sizes and fingerprint, so replacing the
-sidecar with one from a different build fails before unit metadata is read.
-The fingerprint is a content-consistency check, not package authentication.
-SDK and package publication retain their existing SHA-256 artifact checks.
+The native image retains only the two sizes. Sidecar lookup uses the existing
+filename convention and validates storage placement/length consistency. There
+is no fingerprint or replacement identity field. A valid same-sized replacement
+payload is not rejected merely because its content differs. SDK/package identity
+and publication SHA-256 checks retain their existing separate responsibilities.
 
 The reader locates the section through PE/ELF section tables without loading
 the image. It validates ranges, the envelope version, compression termination,
-exact decoded size and fingerprint. Existing compiler target, SDK, build,
+exact decoded size and existing zlib stream integrity. Existing compiler target, SDK, build,
 dependency, unit-range and checksum checks still apply to the decoded payload.
 An embedded payload takes precedence over any stale sidecar. Corrupt embedded
 metadata is an error, not a reason to fall back to another file.
+
+Old NXPM0001 artifacts require rebuilding with the simplified codec. Compiler,
+Forge, SDK, providers and consumers must agree on storage version; unsupported
+versions produce rebuild advice. No SHA-1 compatibility decoder is retained.
+Inner NXP/NXU formats and native package descriptors are unchanged.
 
 ## Evaluation and limits
 
