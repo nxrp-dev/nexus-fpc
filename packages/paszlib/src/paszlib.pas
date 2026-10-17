@@ -114,10 +114,10 @@ implementation
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.ZLib.Zdeflate,System.ZLib.Zinflate,System.ZLib.Zcompres,System.ZLib.Zuncompr,System.ZLib.Gzio,System.ZLib.Adler,System.Hash.Crc;
+  System.ZLib.Zdeflate,System.ZLib.Zinflate,System.ZLib.Zcompres,System.ZLib.Zuncompr,System.ZLib.Gzio,System.ZLib.Adler,System.ZLib.InternalCRC32;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  zdeflate,zinflate,zcompres,zuncompr,gzio,adler,crc;
+  zdeflate,zinflate,zcompres,zuncompr,gzio,adler,utNXPasZLibCRC32;
 {$ENDIF FPC_DOTTEDUNITS}
 
 function zlibVersion:string;inline;
@@ -289,7 +289,7 @@ end;
 
 function crc32(thecrc:cardinal;buf : PAnsiChar; len:cardinal):cardinal;inline;
 begin
-  crc32:={$IFDEF FPC_DOTTEDUNITS}System.Hash.{$ENDIF}crc.crc32(thecrc,Pbyte(buf),len);
+  Result:=PasZLibCRC32(thecrc,Pbyte(buf),len);
 end;
 
 function deflateInit_(var strm:TZStream; level:longint; version:PAnsiChar; stream_size:longint):longint;inline;
@@ -344,7 +344,7 @@ end;
 
 function get_crc_table:pointer;inline;
 begin
-  get_crc_table:={$IFDEF FPC_DOTTEDUNITS}System.Hash.{$ENDIF}crc.get_crc_table;
+  Result:=PasZLibCRCTable;
 end;
 
 end.

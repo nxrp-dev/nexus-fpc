@@ -908,12 +908,7 @@ type
   begin
     writeln(f, unaligned(StackTrace.pSizeType(packedTrace + StackTrace.SizeOffset)^) + StackTrace.HeaderSize, ' b, ', nTrace, ' items, dataOfs = ', n.dataOfs, ', refcount = ', n.refcount);
     for iTrace := 0 to SizeInt(nTrace) - 1 do
-    {$if false and defined(string_test)}
-      // for testing with fictive stack traces that are composed of string pointers :).
-      write(f, pAnsiChar(' ') + ord(iTrace = 0), string(trace[iTrace]), pAnsiChar(LineEnding) + length(LineEnding) * ord(iTrace < SizeInt(nTrace) - 1));
-    {$else}
       writeln(f, BacktraceStrFunc(trace[iTrace]));
-    {$endif}
   end;
 
   class procedure StackTracesRegistry.DumpHNode(hn: HashList.pNode; var f: text);
@@ -1980,10 +1975,10 @@ var
         write(f, ')');
       end;
     if something then writeln(f);
-    if Assigned(hCheck.cur) then
+    if Assigned(nextCheckNode) then
     begin
-      write(f, 'hCheck = ');
-      DumpHNode(hCheck.cur, f);
+      write(f, 'nextCheckNode = ');
+      DumpHNode(@nextCheckNode^.hn, f);
       writeln(f);
     end;
   end;

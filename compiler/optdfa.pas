@@ -835,15 +835,6 @@ unit optdfa;
                             end;
                         end;
                     end
-{$ifdef dummy}
-                  { if a the variable we are looking for is passed as a var parameter, we stop searching }
-                  else if Assigned(varsym.owner) and
-                     (varsym.owner=CurrentProcInfo.procdef.ParaST) and
-                     (varsym.typ=paravarsym) and
-                     (CurrentProcInfo.procdef.ParaST.SymTableLevel=varsym.owner.SymTableLevel) and
-                     (TParaVarSym(varsym).VarSpez=vs_var) then
-                    result:=fen_norecurse_true;
-{$endif dummy}
                 end;
             end;
           else

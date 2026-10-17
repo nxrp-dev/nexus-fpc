@@ -36,7 +36,6 @@ Project PasZLibTests {
                 @Tools.Native.RTLPath,
                 "packages/nexus-packages/nxtest/src",
                 @Tools.NexusFPC.SourcePath + "/packages/paszlib/src",
-                @Tools.NexusFPC.SourcePath + "/packages/hash/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",

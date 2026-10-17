@@ -1,0 +1,22 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
+Project NXPackageStorageTests {
+    RootDirectory: "../../../nexus";
+    OutputRoot: "output/NXPackageStorageTests/" + @Tools.Native.Name;
+    FPC Tests {
+        CompilerPath: @Tools.Native.FPCCompiler;
+        SourceFiles: ["../nexus-fpc/tests/dynamic-packages/NXPackageStorageTests.lpr"];
+        OutputPath: @NXPackageStorageTests.OutputRoot;
+        RawOptions: ["-gl", "-Cr", "-Co", "-Ci"];
+        Config Options { DisableDefaultConfigFiles: True; }
+        Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
+        Files Paths {
+            CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
+            UnitPaths: [@Tools.Native.RTLPath,
+                "packages/nexus-packages/nxtest/src",
+                "../nexus-fpc/compiler", "../nexus-fpc/packages/paszlib/src"];
+        }
+    }
+}

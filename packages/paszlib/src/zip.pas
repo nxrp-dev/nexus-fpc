@@ -112,7 +112,7 @@ uses
   {$else}
   System.Strings,
   {$endif}
-  System.ZLib.Zdeflate, System.Hash.Crc;
+  System.ZLib.Zdeflate, System.ZLib.InternalCRC32;
 {$ELSE FPC_DOTTEDUNITS}
 uses
   {$ifdef Delphi}
@@ -120,7 +120,7 @@ uses
   {$else}
   strings,
   {$endif}
-  zDeflate, crc;
+  zDeflate, utNXPasZLibCRC32;
 {$ENDIF FPC_DOTTEDUNITS}
 
 const
@@ -600,7 +600,7 @@ begin
 
   zi^.ci.stream.next_in := buf;
   zi^.ci.stream.avail_in := len;
-  zi^.ci.crc32 := crc32(zi^.ci.crc32, buf, len);
+  zi^.ci.crc32 := PasZLibCRC32(zi^.ci.crc32, buf, len);
 
   while ((err = ZIP_OK) and (zi^.ci.stream.avail_in > 0)) do
   begin

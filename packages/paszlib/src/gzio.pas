@@ -24,7 +24,7 @@ uses
   {$else}
   TP.DOS,
   {$endif}
-  System.ZLib.Zbase, System.Hash.Crc, System.ZLib.Zdeflate, System.ZLib.Zinflate;
+  System.ZLib.Zbase, System.ZLib.InternalCRC32, System.ZLib.Zdeflate, System.ZLib.Zinflate;
 {$ELSE FPC_DOTTEDUNITS}
 uses
   {$ifdef UNIX}
@@ -32,7 +32,7 @@ uses
   {$else}
   dos,
   {$endif}
-  zbase, crc, zdeflate, zinflate;
+  zbase, utNXPasZLibCRC32, zdeflate, zinflate;
 {$ENDIF FPC_DOTTEDUNITS}
 
 type gzFile = pointer;
@@ -174,7 +174,7 @@ begin
   s^.z_eof := false;
   s^.inbuf := nil;
   s^.outbuf := nil;
-  s^.crc := crc32(0, nil, 0);
+  s^.crc := PasZLibCRC32(0, nil, 0);
   s^.msg := '';
   s^.transparent := false;
   s^.total_out:=0;
@@ -651,7 +651,7 @@ begin
       end;
     {$endif}
       { Check CRC and original size }
-      s^.crc := crc32(s^.crc, start, crclen);
+      s^.crc := PasZLibCRC32(s^.crc, start, crclen);
       start := s^.stream.next_out;
 
       filecrc := getLong (s);
@@ -670,7 +670,7 @@ begin
 	    inflateReset (s^.stream);
 	    s^.stream.total_in := total_in;
 	    s^.stream.total_out := total_out;
-	    s^.crc := crc32 (0, nil, 0);
+	    s^.crc := PasZLibCRC32(0, nil, 0);
 	  end;
       end; {IF-THEN-ELSE}
     end;
@@ -689,7 +689,7 @@ begin
     inc (crclen);   { Hack because Pascal cannot subtract pointers }
   end;
 {$endif}
-  s^.crc := crc32 (s^.crc, start, crclen);
+  s^.crc := PasZLibCRC32(s^.crc, start, crclen);
   gzread := integer(len - s^.stream.avail_out);
 
 end;
@@ -799,7 +799,7 @@ begin
 
     end; {WHILE}
 
-    s^.crc := crc32(s^.crc, buf, len);
+    s^.crc := PasZLibCRC32(s^.crc, buf, len);
     gzwrite := integer(len - s^.stream.avail_in);
 
 end;

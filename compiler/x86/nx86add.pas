@@ -1076,32 +1076,7 @@ unit nx86add;
     procedure TX86AddNode.second_addfloatavx;
       var
         op : TOpCG;
-        sqr_sum : boolean;
-        {$ifdef dummy}
-        tmp : TNode;
-        {$endif dummy}
       begin
-        sqr_sum:=false;
-{$ifdef dummy}
-        if (CurrentSettings.FPUType>=fpu_sse3) and
-           Use_VectorFPU(resultdef) and
-           (nodetype in [addn,subn]) and
-          (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
-          (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
-          begin
-            sqr_sum:=true;
-            tmp:=TInlineNode(left).left;
-            TInlineNode(left).left:=nil;
-            left.free;
-            left:=tmp;
-
-            tmp:=TInlineNode(right).left;
-            TInlineNode(right).left:=nil;
-            right.free;
-            right:=tmp;
-          end;
-{$endif dummy}
-
         pass_left_right;
         { fpu operands are always in reversed order on the stack }
         if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
@@ -1131,50 +1106,8 @@ unit nx86add;
 
         Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
 
-        if sqr_sum then
-          begin
-            if nf_swapped in flags then
-              swapleftright;
-
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false);
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,true);
-            location:=left.Location;
-            if Is_Double(resultdef) then
-              begin
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.Location.Register,location.Register));
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPD,S_NO,location.Register,location.Register));
-                case nodetype of
-                  addn:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPD,S_NO,location.Register,location.Register));
-                  subn:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPD,S_NO,location.Register,location.Register));
-                  else
-                    InternalError(2011081601);
-                end;
-              end
-            else
-              begin
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_UNPCKLPS,S_NO,right.Location.Register,location.Register));
-                { ensure that bits 64..127 contain valid values }
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.Register,location.Register));
-                { the data is now in bits 0..32 and 64..95 }
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPS,S_NO,location.Register,location.Register));
-                case nodetype of
-                  addn:
-                    begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPS,S_NO,location.Register,location.Register));
-                    end;
-                  subn:
-                    begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPS,S_NO,location.Register,location.Register));
-                    end;
-                  else
-                    InternalError(2011081604);
-                end;
-              end
-          end
         { left*2 ? }
-        else if (nodetype=muln) and is_constrealnode(right) and Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real=2) then
+        if (nodetype=muln) and is_constrealnode(right) and Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real=2) then
           begin
             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
             hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);

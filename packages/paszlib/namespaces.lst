@@ -19,3 +19,4 @@ src/trees.pas=namespaced/System.ZLib.Trees.pas
 src/zipper.pas=namespaced/System.ZLib.Zipper.pas
 src/ziputils.pas=namespaced/System.ZLib.Ziputils.pas
 src/paszlib.pas=namespaced/System.ZLib.Paszlib.pas
+src/utNXPasZLibCRC32.pas=namespaced/System.ZLib.InternalCRC32.pas

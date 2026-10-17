@@ -5,10 +5,11 @@ release tools and applications. The duplicate External Packages copy was retired
 on 2026-10-17 by owner direction. Keep one source tree here for now.
 
 Use `src` in unit/include search paths together with the matching NexusFPC RTL
-and `packages/hash/src`. Existing build recipes select this directory through
+only. CRC32 is private to this source closure; neither legacy hashing packages
+nor HashLib4Pascal are dependencies, including tests. Existing build recipes select this directory through
 `Tools.NexusFPC.SourcePath`. Do not mix units from another PasZLib copy.
 
-`tests/PasZLibTests.nxproject` builds five direct nxtest window/header regressions
+`tests/PasZLibTests.nxproject` builds direct nxtest CRC32/window/header regressions
 and the retained stream-seek, ZIP/Zip64 and single-entry extraction checks through
 Nexus nxbuild. The nxtest executable is `NXPasZLibTests`. Build output is in Nexus
 `output/PasZLibTests/<native-target>`. Run with `tests/test.zip` in a disposable

@@ -19,7 +19,7 @@ program tczipper;
 
 uses
   SysUtils, classes,
-  zipper, unzip, zdeflate, zinflate, zip, md5, zstream, nullstream;
+  zipper, unzip, zdeflate, zinflate, zip, zstream, nullstream;
 
 type
 
@@ -109,15 +109,28 @@ begin
 end;
 
 
+function ReadFileBytes(const AFileName: string): RawByteString;
+var
+  lStream: TFileStream;
+begin
+  lStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Result, lStream.Size);
+    if Result <> '' then lStream.ReadBuffer(Result[1], Length(Result));
+  finally
+    lStream.Free;
+  end;
+end;
+
 function CompareCompressDecompress: boolean;
 var
   CallBackHandler: TCallBackHandler;
   CompressedFile: ansistring;
   FileContents: TStringList;
   UncompressedFile1: ansistring;
-  UncompressedFile1Hash: ansistring;
+  UncompressedFile1Data: ansistring;
   UncompressedFile2: ansistring;
-  UncompressedFile2Hash: ansistring;
+  UncompressedFile2Data: ansistring;
   OurZipper: TZipper;
   UnZipper: TUnZipper;
 begin
@@ -142,8 +155,8 @@ begin
     UncompressedFile2:=SysUtils.GetTempFileName('', 'UN2');
     FileContents.SaveToFile(UncompressedFile2);
     // Remember their content, so we can compare later.
-    UncompressedFile1Hash:=MD5Print(MD5File(UncompressedFile1, MDDefBufSize));
-    UncompressedFile2Hash:=MD5Print(MD5File(UncompressedFile2, MDDefBufSize));
+    UncompressedFile1Data:=ReadFileBytes(UncompressedFile1);
+    UncompressedFile2Data:=ReadFileBytes(UncompressedFile2);
 
     // Test zip functionality.
     CompressedFile:=SysUtils.GetTempFileName('', 'CC');
@@ -183,11 +196,11 @@ begin
       exit(false);
     end;
 
-    // Compare hashes
+    // Compare the original and restored bytes
     if
-      (UncompressedFile1Hash<>MD5Print(MD5File(UncompressedFile1, MDDefBufSize)))
+      (UncompressedFile1Data<>ReadFileBytes(UncompressedFile1))
       or
-      (UncompressedFile2Hash<>MD5Print(MD5File(UncompressedFile2, MDDefBufSize)))
+      (UncompressedFile2Data<>ReadFileBytes(UncompressedFile2))
     then
     begin
       writeln('Unzip failed: uncompressed files are not the same as the originals.');

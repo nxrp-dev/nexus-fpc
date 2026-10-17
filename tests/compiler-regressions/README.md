@@ -79,3 +79,15 @@ do not infer its behavior from the 3.2.2 result or matching source alone.
 CORBA interfaces, and virtual/final methods after retiring JVM compiler support.
 `removed_sdcc_registration.pas` links against matching compiler units to check
 that the retained archive drivers register and no SDCC archive command remains.
+
+## Syscall directive diagnostics
+
+The obsolete compiler syscall-convention table had only a placeholder valid on
+no targets. Its removal preserves the existing warnings: an empty `{$SYSCALL}`
+reports an unusable convention, and named conventions report an invalid one.
+Linux RTL system calls and the procedure calling-convention parser are unchanged.
+
+Run `bash tests/switches/Run-NXSyscallDirectiveTests.sh <compiler> <rtl-units>
+<output-directory>` with an output directory under the development worktree.
+The 36 checks cover both warnings and warnings promoted to errors in all six
+retained modes: FPC, ObjFPC, Delphi, MacPas, ISO and ExtendedPascal.

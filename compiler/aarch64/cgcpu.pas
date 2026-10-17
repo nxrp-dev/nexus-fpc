@@ -2347,34 +2347,6 @@ implementation
                 end;
               ref.AddressMode:=orgaddressmode;
             end;
-{$ifdef dummy}
-          This could in theory be useful in case you have a concatcopy from
-          e.g. x1+255 to x1+267 *and* the reference is aligned, but this seems
-          very unlikely. Disabled because it still needs fixes, as it
-          also generates pre-indexed loads right now at the very end for the
-          left-over gencopies
-
-          { can we turn it into a pre-indexed reference for free? (after the
-            first operation, it will be turned into an offset one) }
-          if not forcepostindexing and
-             (ref.Offset<>0) then
-            begin
-              orgaddressmode:=ref.AddressMode;
-              ref.AddressMode:=AM_PREINDEXED;
-              tmpreg:=ref.Base;
-              if not basereplaced and
-                 (ref.Base=tmpreg) then
-                begin
-                  tmpreg:=GetAddressRegister(list);
-                  A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,ref.Base,tmpreg);
-                  ref.Base:=tmpreg;
-                  basereplaced:=true;
-                end;
-              if simple_ref_type(scaledop,opsize,postfix,ref)<>sr_simple then
-                make_simple_ref(list,scaledop,opsize,postfix,ref,NR_NO);
-              exit;
-            end;
-{$endif dummy}
           if not forcepostindexing then
             begin
               ref.AddressMode:=AM_OFFSET;

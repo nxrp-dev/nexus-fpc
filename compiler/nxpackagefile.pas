@@ -22,10 +22,9 @@ uses SysUtils;
 const
   NexusPackageLibraryExtension = '.nxpl';
   NexusPackageMetadataSection = '.nxmeta';
-  NexusPackageEnvelopeSize = 40;
+  NexusPackageEnvelopeSize = 20;
 
-{ The envelope is shared by the image section and the sidecar. The image always
-  carries the digest, including when its payload is stored in a sidecar. }
+{ The structural header is shared by the image section and optional sidecar. }
 function EncodePackageMetadata(const AData: TBytes): TBytes;
 function DecodePackageMetadata(const AEnvelope: TBytes): TBytes;
 function PackageMetadataReference(const AEnvelope: TBytes): TBytes;
@@ -35,10 +34,10 @@ procedure WritePackageBytes(const AFileName: string; const AData: TBytes);
 
 implementation
 
-uses ZBase, ZCompres, ZInflate, SHA1;
+uses ZBase, ZCompres, ZInflate;
 
 const
-  CMagic = 'NXPM0001';
+  CMagic = 'NXPM0002';
 
 procedure Invalid(const AReason: string);
 begin
@@ -83,7 +82,8 @@ end;
 procedure CheckHeader(const AData: TBytes);
 begin
   CheckRange(AData, 0, NexusPackageEnvelopeSize);
-  if not IsText(AData, 0, CMagic) then Invalid('unsupported storage format');
+  if not IsText(AData, 0, CMagic) then
+    Invalid('unsupported storage format; rebuild the package and SDK');
   if Number(AData, 8, 4) > 1 then Invalid('invalid storage mode');
   if (Number(AData, 12, 4) < 32) or
      (Number(AData, 12, 4) > High(LongInt)) or
@@ -95,7 +95,6 @@ end;
 function EncodePackageMetadata(const AData: TBytes): TBytes;
 var
   LSize: Cardinal;
-  LDigest: TSHA1Digest;
 begin
   Result := nil;
   if (Length(AData) < 32) or (Length(AData) > High(LongInt) div 2) then
@@ -109,15 +108,12 @@ begin
     Length(AData), Z_DEFAULT_COMPRESSION) <> Z_OK then
     Invalid('compression failed');
   PutNumber(Result, 16, LSize);
-  LDigest := SHA1Buffer(AData[0], Length(AData));
-  Move(LDigest[0], Result[20], SizeOf(LDigest));
   SetLength(Result, NexusPackageEnvelopeSize + LSize);
 end;
 
 function DecodePackageMetadata(const AEnvelope: TBytes): TBytes;
 var
   LStream: z_stream;
-  LDigest: TSHA1Digest;
   LCode: Integer;
 begin
   Result := nil;
@@ -140,9 +136,6 @@ begin
   finally
     InflateEnd(LStream);
   end;
-  LDigest := SHA1Buffer(Result[0], Length(Result));
-  if not CompareMem(@LDigest[0], @AEnvelope[20], SizeOf(LDigest)) then
-    Invalid('metadata fingerprint mismatch');
 end;
 
 function PackageMetadataReference(const AEnvelope: TBytes): TBytes;
@@ -268,7 +261,7 @@ begin
     LSidecar := ReadPackageBytes(ChangeFileExt(AImageName, '.nxp'));
     CheckHeader(LSidecar);
     if not CompareMem(@LEnvelope[12], @LSidecar[12], NexusPackageEnvelopeSize - 12) then
-      Invalid('sidecar does not match package image');
+      Invalid('sidecar metadata sizes do not match package image');
     LEnvelope := LSidecar;
   end;
   Result := DecodePackageMetadata(LEnvelope);

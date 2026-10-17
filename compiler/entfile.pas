@@ -227,16 +227,13 @@ type
   private
     FBuffer: TNXEntryBuffer;
     function GetPosition:LongInt;
-    procedure SetPosition(Value:LongInt);
+    procedure SetPosition(AValue:LongInt);
   protected
     BufStart : Integer;
     EntryBufStart,
     EntryStart,
     EntryIdx : Integer;
     Entry    : TEntry;
-    Closed,
-    TempClosed : Boolean;
-    ClosePos : Integer;
   protected
     F        : TCStream;
 {$ifdef DEBUG_PPU}
@@ -279,7 +276,6 @@ type
     procedure CloseFile;virtual;
     procedure NewEntry;
     property Position:LongInt read GetPosition write SetPosition;
-    { Warning: don't keep the stream open during a tempclose! }
     function SubStream(Ofs,Len:LongInt):TCStream;
     { Warning: don't use the put* or write* functions anymore when writing through this }
     property Stream:TCStream read F;
@@ -349,8 +345,6 @@ type
     procedure PutAnsiString(const S:AnsiString);
 
     procedure PutSet(const Arr: array of Byte);
-    procedure TempClose;        // MG: not used, obsolete?
-    function  TempOpen:Boolean; // MG: not used, obsolete?
   end;
 
 implementation
@@ -388,8 +382,6 @@ begin
   Mode:=0;
   NewHeader;
   Error:=False;
-  Closed:=True;
-  TempClosed:=False;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
   EntryFileBufSize:=AEntryFileBufSize;
 {$endif CHECK_INPUTPOINTER_LIMITS}
@@ -601,18 +593,14 @@ begin
        F.Free;
        F := nil;
      Mode:=0;
-     Closed:=True;
    end;
 end;
 
 
-procedure TEntryFile.SetPosition(Value:LongInt);
+procedure TEntryFile.SetPosition(AValue:LongInt);
 begin
   if Assigned(F) then
-    F.Position:=Value
-  else
-    if TempClosed then
-      ClosePos:=Value;
+    F.Position:=AValue;
 end;
 
 
@@ -621,10 +609,7 @@ begin
   if Assigned(F) then
     Result:=F.Position
   else
-    if TempClosed then
-      Result:=ClosePos
-    else
-      Result:=0;
+    Result:=0;
 end;
 
 
@@ -660,7 +645,6 @@ var
 begin
   OpenStream:=False;
   F:=Strm;
-  Closed:=False;
 {$ifdef DEBUG_PPU}
   {$push}
   {$I-}
@@ -1816,40 +1800,5 @@ procedure TEntryFile.PutSet(const Arr: array of Byte);
 {$endif}
   end;
 
-
-procedure TEntryFile.TempClose;
-  begin
-    if not Closed then
-     begin
-       ClosePos:=F.Position;
-       F.Free;
-       F:=nil;
-       Closed:=True;
-       TempClosed:=True;
-     end;
-  end;
-
-
-function TEntryFile.TempOpen:Boolean;
-  begin
-    TempOpen:=False;
-    if not Closed or not TempClosed then
-     Exit;
-   { MG: not sure, if this is correct
-     f.position:=0;
-       No, f was freed in tempclose above, we need to
-       recreate it.  PM 2011/06/06 }
-    try
-      F:=CFileStreamClass.Create(FName,fmOpenRead);
-    except
-      Exit;
-    end;
-    Closed:=False;
-    TempClosed:=False;
-
-  { restore state }
-    F.Position:=ClosePos;
-    TempOpen:=True;
-  end;
 
 end.

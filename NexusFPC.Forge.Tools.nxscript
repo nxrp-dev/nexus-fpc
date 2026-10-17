@@ -43,12 +43,6 @@ Group ReleaseTools {
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];
     }
-    CopyFile Stage_hash {
-        Source: "packages/hash/src";
-        Destination: "build/forge-bootstrap/tools/packages/hash/src";
-        Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc"];
-    }
     CreateDirectory Units_fpc { Path: "build/forge-bootstrap/tools/units/fpc"; }
     FPC Build_fpc (HostTool) {
         Defines: [x86_64];

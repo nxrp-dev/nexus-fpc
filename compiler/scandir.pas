@@ -65,7 +65,6 @@ unit scandir;
       FModule,CompRsrc,
       defutil,
       DirParse,link,
-      SysCInfo,
       symconst,SymTable,SymBase,symtype,SymSym,symdef,
       rabase;
 
@@ -1551,23 +1550,14 @@ unit scandir;
       end;
 
     procedure dir_syscall;
-      var
-        sctype : string;
-        syscall : PSysCallInfo;
       begin
         CurrentScanner.skipspace;
-        sctype:=CurrentScanner.readid;
-
-        syscall:=Get_SysCall_By_Name(sctype);
-        if Assigned(syscall) then
-          begin
-            if not (TargetInfo.system in syscall^.validon) then
-              Message(scan_w_syscall_convention_not_useable_on_target)
-            else
-              Set_Default_SysCall(syscall^.procoption);
-            exit;
-          end;
-        Message(scan_w_syscall_convention_invalid);
+        { No syscall convention is valid on the retained targets. Preserve
+          the existing diagnostics for empty and named directives. }
+        if CurrentScanner.readid='' then
+          Message(scan_w_syscall_convention_not_useable_on_target)
+        else
+          Message(scan_w_syscall_convention_invalid);
       end;
 
     procedure dir_targetswitch;

@@ -39,10 +39,24 @@ begin
   Assign(lReport, cReportFile);
   Rewrite(lReport);
   SetHeapTraceOutput(lReport);
+{$ifdef debug_heaptrc}
+  Dump(lReport);
+{$endif}
   DumpHeap(False);
   GetMem(lBlock, 37);
+{$ifdef debug_heaptrc}
+  Dump(lReport);
+  CheckHeap(1);
+  ReallocMem(lBlock, 83);
+  Dump(lReport);
+  ReallocMem(lBlock, 37);
+  Dump(lReport);
+{$endif}
   DumpHeap(False);
   FreeMem(lBlock);
+{$ifdef debug_heaptrc}
+  Dump(lReport);
+{$endif}
   DumpHeap(False);
   { Switching output closes the report file owned by heaptrc. }
   SetHeapTraceOutput(StdErr);

@@ -240,7 +240,7 @@ uses
   {$else}
   System.Strings,
   {$endif}
-  System.ZLib.Zinflate, System.Hash.Crc;
+  System.ZLib.Zinflate, System.ZLib.InternalCRC32;
 {$ELSE FPC_DOTTEDUNITS}
 uses
   {$ifdef Delphi}
@@ -248,7 +248,7 @@ uses
   {$else}
   strings,
   {$endif}
-  zInflate, crc;
+  zInflate, utNXPasZLibCRC32;
 {$ENDIF FPC_DOTTEDUNITS}
 
 {$ifdef unix and not def (CASESENSITIVITYDEFAULT_YES) and \
@@ -1309,7 +1309,7 @@ begin
         Pbytearray(pfile_in_zip_read_info^.stream.next_out)^[i] :=
           Pbytearray(pfile_in_zip_read_info^.stream.next_in)^[i];
 
-      pfile_in_zip_read_info^.crc32 := crc32(pfile_in_zip_read_info^.crc32,
+      pfile_in_zip_read_info^.crc32 := PasZLibCRC32(pfile_in_zip_read_info^.crc32,
         pfile_in_zip_read_info^.stream.next_out, uDoCopy);
       Dec(pfile_in_zip_read_info^.rest_read_uncompressed, uDoCopy);
       Dec(pfile_in_zip_read_info^.stream.avail_in, uDoCopy);
@@ -1338,7 +1338,7 @@ begin
       uOutThis := uTotalOutAfter - uTotalOutBefore;
 
       pfile_in_zip_read_info^.crc32 :=
-        crc32(pfile_in_zip_read_info^.crc32, bufBefore, uOutThis);
+        PasZLibCRC32(pfile_in_zip_read_info^.crc32, bufBefore, uOutThis);
 
       Dec(pfile_in_zip_read_info^.rest_read_uncompressed, uOutThis);
 

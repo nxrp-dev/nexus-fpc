@@ -71,13 +71,6 @@ type
     StringHeaderSize = sizeof(StringDataHeader);
     File0Function1 = 2;
 
-  {$if false and defined(debug_lineinfocache)}
-    StringLengthEstimation = 10;
-    MaxStrings = 8;
-    StringsHashSize = 4;
-    MaxAddresses = 8;
-    AddressesHashSize = 4;
-  {$else select cache size}
     StringLengthEstimation = 24; // Expected average string length. (Value for FPC allocation traces when compiling itself at the time of writing this comment: 15.2.)
     HashLoadFactor = 4;
 
@@ -93,7 +86,6 @@ type
     AddressesHashSize = {$ifdef can_use_ln_in_constants} 1 shl round(ln(MaxAddresses / HashLoadFactor) / ln(2)) {$else} AddressesHashSizePrecomputed {$endif};
     AddressesHashSizeMatchesPrecomputed = 1 div Ord(AddressesHashSize = AddressesHashSizePrecomputed);
     AddressesHashSizeIsPowerOfTwo = 1 div Ord((AddressesHashSize and (AddressesHashSize - 1)) = 0);
-  {$endif select cache size}
     MaxStringsData = MaxStrings * (StringHeaderSize + StringLengthEstimation);
 
   type
