@@ -8,8 +8,6 @@ FPC HostTool {
         "build/forge-bootstrap/cycle3/rtl64",
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/inc",
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/win",
-        "build/forge-bootstrap/tools/packages/rtl-extra/src/inc",
-        "build/forge-bootstrap/tools/packages/rtl-extra/src/win",
         "build/forge-bootstrap/tools/packages/fcl-base/src",
         "build/forge-bootstrap/tools/packages/fcl-base/src/win",
         "build/forge-bootstrap/tools/packages/fcl-res/src",
@@ -21,8 +19,6 @@ FPC HostTool {
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/inc",
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/win",
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/x86_64",
-        "build/forge-bootstrap/tools/packages/rtl-extra/src/inc",
-        "build/forge-bootstrap/tools/packages/rtl-extra/src/win",
         "build/forge-bootstrap/tools/packages/fcl-base/src",
         "build/forge-bootstrap/tools/packages/fcl-base/src/win",
         "build/forge-bootstrap/tools/packages/fcl-base/src/dummy"

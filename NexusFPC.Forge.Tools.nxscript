@@ -19,12 +19,6 @@ Group ReleaseTools {
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];
     }
-    CopyFile Stage_rtl_extra {
-        Source: "packages/rtl-extra/src";
-        Destination: "build/forge-bootstrap/tools/packages/rtl-extra/src";
-        Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc"];
-    }
     CopyFile Stage_fcl_base {
         Source: "packages/fcl-base/src";
         Destination: "build/forge-bootstrap/tools/packages/fcl-base/src";

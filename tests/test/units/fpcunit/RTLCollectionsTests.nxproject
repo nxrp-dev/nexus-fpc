@@ -24,15 +24,11 @@ Project RTLCollectionsTests {
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
                 "packages/nexus-packages/nxtest/src"
             ];
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.OS,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc"
             ];
         }
     }

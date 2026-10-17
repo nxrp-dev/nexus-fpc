@@ -45,7 +45,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `fcl-hash` | `rtl-objpas`, `rtl-extra`, `fcl-base`, `hash` | Recipes give explicit `src/` filenames. |
 | `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; transitive `hash`/CRC | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
 | `fcl-json` (relocated) | `fcl-base`, `rtl-objpas` | The former optional `jsonfpcunit` helper was retired; runtime JSON has no FPCUnit dependency. |
-| `fcl-net` (relocated) | `fcl-base`, `rtl-extra`, `rtl-objpas` | Moved intact on 2026-10-17 to Nexus `packages/nexus-packages/network/fcl-net`; `FCLNet.nxpackage` builds the seven remaining runtime units on Linux. Synapse uses its Unix resolver and the shared OpenSSL wrappers use its TLS types. The saved review records consumers, proven fixes and the consolidation recommendation. |
+| `fcl-net` (retired) | — | Removed on 2026-10-17 after moving the required Unix resolver into Nexus Synapse and the live certificate definitions into Nexus OpenSSL. Nexus applications use Synapse; unused FCL socket and database APIs are not retained. |
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
 | `fcl-registry` (relocated) | `fcl-base`, `fcl-xml` | Moved on 2026-10-17 to Nexus `packages/nexus-packages/fcl-registry`; `FCLRegistry.nxpackage` builds the native package and `tests/FCLRegistryTests.nxproject` owns direct nxtest coverage. Windows COM, Abbrevia and Synapse serial support remain consumers. Review and proven fixes are saved with the destination. |
 | `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM. |
@@ -55,10 +55,10 @@ are saved there. Code review was explicitly waived for that relocation.
 | `iosxlocale` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/iosxlocale`; locale and wide-string bindings. |
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
 | `libffi` | `rtl-objpas` | `ffi.pas`, `ffi.manager.pas`; recipe marks libc required. The recipe builds Pascal bindings, not libffi C sources. |
-| `pasjpeg` | — | `jctrans.pas` plus the `buildpasjpeg.pas` aggregate; `jconfig.inc`. |
+| `pasjpeg` (relocated) | — | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/pasjpeg`. `PasJPEG.nxpackage` builds the portable codec, both coefficient-transcoding units and the repaired BMP/JPEG stream API. The saved review records source hashes, direct nxtest proofs and native results. |
 | `paszlib` | `hash` | `paszlib.pas`, `zip.pas`, `unzip.pas`, `zipper.pas`, plus implicitly compiled units. Old dependency version was `3.3.1`. |
 | `pthreads` | — | Pascal platform bindings; preserve their source-level library declarations. |
-| `rtl-extra` | — | OS-specific source selection, particularly Android `clocale`. |
+| `rtl-extra` | — | Retained networking/locale subset; Android selects its own `clocale`. Sorting moved to `rtl-objpas`; legacy Objects is test-only. |
 | `rtl-generics` | `rtl-objpas` | Sources in `src`, includes in `src/inc`. |
 | `rtl-objpas` | — | Sources in `src/inc` and platform directories; CPU-specific includes. |
 | `univint` (relocated) | — | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/univint`. Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; the nxbuild recipe preserves MacPas mode. |
@@ -108,7 +108,7 @@ are not part of this restoration.
   `COCOAALL`; the old package also set `LEGACY_SETNEEDSDISPLAY`. These select
   binding configurations and must be considered when choosing entry units.
 
-The `buildpasjpeg.pas` and `buildwinutilsbase.pas` source aggregates and
+The relocated PasJPEG `buildpasjpeg.pas` and retained `buildwinutilsbase.pas` source aggregates and
 `univint/src/MacOS.pas` remain. The old recipes compiled them to pull in their
 used units but marked the aggregate itself `Install=False`. Distribution must
 include the actual compiled member units, including implicit units, rather than

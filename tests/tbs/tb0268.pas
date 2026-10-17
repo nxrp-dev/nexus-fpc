@@ -10,7 +10,7 @@
 {$endif}
 
 uses
-  objects;
+  LegacyObjects;
 
 type
 {$ifndef FPC}

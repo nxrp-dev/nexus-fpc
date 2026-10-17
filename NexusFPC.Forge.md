@@ -274,7 +274,8 @@ Makefile generators (`fpcmake`/`fpgmake`), the retrying file-deletion utility
 `rmwait`, and the configuration generator `fpcmkcfg` are retired. Forge copies
 the fixed release configuration directly. The `fpmkunit` and `fcl-process`
 sources are no longer staged for release tools; package selection remains
-separate. The JVM resource utility (`fpcjres`) has been removed.
+separate. The networking/locale `rtl-extra` package is also outside the release-tool
+dependency closure and is no longer staged. The JVM resource utility (`fpcjres`) has been removed.
 
 `rstconv` retains gettext PO and RC STRINGTABLE output. OS/2 MSG output and
 the OS/2-style inline MESSAGETABLE mode are removed; `-f msg` and `-s` are rejected.

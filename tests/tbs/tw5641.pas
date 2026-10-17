@@ -1,7 +1,7 @@
 { %cpu=x86_64}
 // Title: bad construction status of object.
 {$C+}
-uses Objects;
+uses LegacyObjects;
 
 var
   mempool: Pointer;

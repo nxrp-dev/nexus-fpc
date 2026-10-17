@@ -3,7 +3,7 @@
 
 {$mode objfpc} {$longstrings on}
 uses
-	Objects;
+	LegacyObjects;
 
 type
 	MyObjBase = object

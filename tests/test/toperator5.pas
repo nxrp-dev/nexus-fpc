@@ -1,7 +1,48 @@
 
 Program toperator5;
 
-uses ucomplex;
+{ Minimal complex operators adapted from UComplex, Copyright (c) 1999-2000
+  Pierre Muller / Free Pascal development team. Original COPYING.FPC terms
+  apply. Kept here to test compiler operator overloading independently. }
+type
+  Complex = record
+    re, im: Real;
+  end;
+
+operator := (const Value: Real) Result: Complex;
+begin
+  Result.re := Value;
+  Result.im := 0;
+end;
+
+operator + (const Left, Right: Complex) Result: Complex;
+begin
+  Result.re := Left.re + Right.re;
+  Result.im := Left.im + Right.im;
+end;
+
+operator - (const Left, Right: Complex) Result: Complex;
+begin
+  Result.re := Left.re - Right.re;
+  Result.im := Left.im - Right.im;
+end;
+
+operator * (const Left, Right: Complex) Result: Complex;
+begin
+  Result.re := Left.re * Right.re - Left.im * Right.im;
+  Result.im := Left.re * Right.im + Left.im * Right.re;
+end;
+
+operator = (const Left, Right: Complex) Result: Boolean;
+begin
+  Result := (Left.re = Right.re) and (Left.im = Right.im);
+end;
+
+operator - (const Value: Complex) Result: Complex;
+begin
+  Result.re := -Value.re;
+  Result.im := -Value.im;
+end;
 
 const
    REAL_ONE = 14.0;

@@ -1,6 +1,6 @@
 Program Testobj;
 
-uses Objects;
+uses LegacyObjects;
 
 const
  { Possible error codes returned to DOS by this program }
@@ -66,11 +66,11 @@ end;
 { Program to demonstrate the TDosStream object. }
 
 
-Const S : String = '0123456789';
+Const S : ShortString = '0123456789';
       P : Pchar = '9876543210';
 
 Var Stream : TDosStream;
-    Buf : String;
+    Buf : ShortString;
     L : word;
     f : file;
 

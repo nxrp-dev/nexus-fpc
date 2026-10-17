@@ -5,7 +5,7 @@ program Buggy;
 
 uses
   erroru,
-  Objects, Strings;
+  LegacyObjects, Strings;
 
 type
 

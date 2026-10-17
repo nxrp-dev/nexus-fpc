@@ -1,6 +1,6 @@
 program testobj3;
 uses
-  Objects;
+  LegacyObjects;
 
 procedure Error(ErrNo: Integer);
 begin

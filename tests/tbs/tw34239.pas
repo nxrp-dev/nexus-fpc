@@ -1,6 +1,6 @@
 program tw34239;
 uses
-  objects;
+  LegacyObjects;
 type
   PTObj=^TObj;
   TObj=object(TObject)

@@ -2,6 +2,8 @@
 unit ZDeflate;
 {$ENDIF FPC_DOTTEDUNITS}
 
+// Nexus, 2026-10-17: fix checked level-zero headers and expired match positions.
+
 
 {$goto on}
 
@@ -893,7 +895,10 @@ begin
   begin
 
     header := (Z_DEFLATED + ((s^.w_bits-8) shl 4)) shl 8;
-    level_flags := (s^.level-1) shr 1;
+    if s^.level < 2 then
+      level_flags := 0
+    else
+      level_flags := (s^.level-1) shr 1;
 
     if (level_flags > 3) then
       level_flags := 3;
@@ -1431,14 +1436,7 @@ distances are limited to MAX_DIST instead of WSIZE. }
 {$pop}
         end;
     nextstep:
-      { Advance to the next hash-chain entry and count down. 
-        This MUST run on every fall-through iteration 
-        (mismatch paths already advanced via DoNextStep + Continue, which skips these statements). 
-        Previously these two lines were inside "$ifndef NOGOTO", 
-        so in NOGOTO (wasm) mode a   match that was found but shorter than nice_match fell through to
-        'until' WITHOUT advancing cur_match / chain_length
-        This resulted in an infinite loop on compressible data. 
-        The goto build was unaffected (the label is here). }
+      { Advance the hash chain on fall-through and mismatch jumps. }
       cur_match := prev^[cur_match and wmask];
       dec(chain_length);
     until (cur_match <= limit) or (chain_length = 0);
@@ -1623,7 +1621,10 @@ begin
        if (s.strstart >= wsize+ {MAX_DIST}(wsize-MIN_LOOKAHEAD)) then
        begin
          move(s.window^[wsize],Pbyte(s.window)^,wsize);
-         dec(s.match_start, wsize);
+         if s.match_start >= wsize then
+           dec(s.match_start, wsize)
+         else
+           s.match_start := ZNIL; // The old match has left the retained window.
          dec(s.strstart, wsize); { we now have strstart >= MAX_DIST }
          dec(s.block_start, longint(wsize));
 

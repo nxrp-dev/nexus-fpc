@@ -1,13 +1,20 @@
+# PasZLib verification
 
-The WebAssembly version of the tczipper test reads/writes temporary files in the current
-directory and in the TMP directory (this is the directory returned by gettempdir). 
+Use NexusFPC and Nexus nxbuild with `PasZLibTests.nxproject`.
+Build output is Nexus `output/PasZLibTests/<native-target>`.
 
-You must pre-open these directories so the wasm environment can write in it. 
+- `NXPasZLibTests` runs five direct nxtest regressions covering stored zlib
+  headers and 192 KiB stream roundtrips at stored, fast, default and maximum
+  compression levels.
+- `tczstreamseek` checks decompression seek/position semantics.
+- `testsingle` extracts one member from `test.zip`.
+- `tczipper` runs its retained ZIP and Zip64 suite, including 65,537 entries.
+  Allow several minutes for that intentionally large case. Its optional 4 GiB
+  case remains disabled in the original source.
 
-Using wasmtime this can be done as follows:
+Run the retained programs in a disposable working directory containing the
+checked-in `test.zip`; direct temporary files there as well. They deliberately
+write test archives/files. Assertions and runtime checks are enabled by the
+native recipe. No FPCUnit framework or bridge is used.
 
-wasmtime --dir=.  --dir=/tmp tczipper.wasm
-
-Similarly the testsingle test needs the same 2 directories:
-
-wasmtime --dir=. --dir=/tmp testsingle.wasm
+See [reconciliation and verified results](../CONSOLIDATION.md).

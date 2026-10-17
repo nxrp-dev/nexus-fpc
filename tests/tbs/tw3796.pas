@@ -11,7 +11,7 @@ unit tw3796;
 
 interface
 
-uses objects;
+uses LegacyObjects;
 
 type
   PType                 = ^TType;

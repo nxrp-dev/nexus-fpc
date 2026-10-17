@@ -24,8 +24,6 @@ Project FCLHashTests {
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/hash/src",
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-hash/src",
                 "packages/nexus-packages/nxtest/src"
@@ -33,8 +31,6 @@ Project FCLHashTests {
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.OS,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc"
             ];
         }
     }

@@ -15,4 +15,5 @@ src/inc/widestrutils.pas=namespaced/System.WideStrUtils.pas
 src/inc/syshelpers.pas=namespaced/System.Syshelpers.pas
 src/inc/fmtbcd.pas=namespaced/Data.FMTBcd.pas
 src/inc/fpmonitor.pas=namespaced/System.MonitorSupport.pas
+src/inc/sortalgs.pas=namespaced/System.Sortalgs.pas
 src/win/fpwinmonitor.pas=namespaced/System.WindowsMonitorSupport.pas

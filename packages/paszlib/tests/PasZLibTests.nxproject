@@ -1,0 +1,59 @@
+// Copyright (c) 2026 Kevin Collins.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// This Source Code Form is "Incompatible With Secondary Licenses",
+// as defined by the Mozilla Public License, v. 2.0.
+//
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
+
+Project PasZLibTests {
+    RootDirectory: "../../../../nexus";
+    OutputRoot: "output/PasZLibTests/" + @Tools.Native.Name;
+    FPC Tests {
+        CompilerPath: @Tools.Native.FPCCompiler;
+        SourceFiles: [
+            "../nexus-fpc/packages/paszlib/tests/NXPasZLibTests.lpr",
+            "../nexus-fpc/packages/paszlib/tests/tczstreamseek.pas",
+            "../nexus-fpc/packages/paszlib/tests/tczipper.pas",
+            "../nexus-fpc/packages/paszlib/tests/testsingle.pas"
+        ];
+        OutputPath: @PasZLibTests.OutputRoot;
+        RawOptions: ["-O2", "-Sa", "-Cr", "-Co", "-Ci", "-gl"];
+        Target Platform { OperatingSystem: @Tools.Native.OS; }
+        Config Options { DisableDefaultConfigFiles: True; }
+        Language Pascal { Mode: ObjFPC; }
+        Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
+        Files Paths {
+            CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
+            UnitPaths: [
+                @PasZLibTests.OutputRoot,
+                @Tools.Native.RTLPath,
+                "packages/nexus-packages/nxtest/src",
+                @Tools.NexusFPC.SourcePath + "/packages/paszlib/src",
+                @Tools.NexusFPC.SourcePath + "/packages/hash/src",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
+                @Tools.NexusFPC.SourcePath + "/packages/pthreads/src"
+            ];
+            IncludePaths: [
+                @Tools.NexusFPC.SourcePath + "/packages/pthreads/src",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.OS,
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
+                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/dummy"
+            ];
+        }
+    }
+}
