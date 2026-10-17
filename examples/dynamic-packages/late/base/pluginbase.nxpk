@@ -1,4 +1,0 @@
-package pluginbase;
-requires nxrtl, democontracts;
-contains PluginBaseUnit;
-end.

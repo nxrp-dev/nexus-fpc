@@ -7,6 +7,7 @@ Build the Win64 runtime-package SDK with Forge after a completed Bootstrap.
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
+    [string]$ExampleRoot,
     [string]$Forge,
     [string]$OutputRoot,
     [switch]$BuildExamples,
@@ -53,7 +54,8 @@ if ($OutputRoot -ine $sdk) {
 Write-Host "Package SDK ready: $OutputRoot. Build log: $log"
 
 if ($BuildExamples -or $RunExamples) {
-    $exampleSource = Join-Path $SourceRoot 'examples\dynamic-packages'
+    if (-not $ExampleRoot) { $ExampleRoot = Join-Path $SourceRoot '../nexus-lab/examples/packages/runtime-loading' }
+    $exampleSource = (Resolve-Path -LiteralPath $ExampleRoot).Path
     $examplePackages = Join-Path $OutputRoot 'examples\packages'
     New-Item -ItemType Directory -Force -Path $examplePackages | Out-Null
     $helper = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'

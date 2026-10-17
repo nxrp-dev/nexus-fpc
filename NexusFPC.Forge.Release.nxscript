@@ -4,7 +4,7 @@
 
 Group ReleaseAssembly {
     Run CheckReleaseInputs {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
         Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseDistribution.ps1", "-SourceRoot", ".", "-InputsOnly"];
     }
@@ -130,7 +130,7 @@ Group ReleaseAssembly {
         Destination: "build/forge-bootstrap/distribution/bin/x86_64-win64/fpc.cfg";
     }
     Run VerifyReleaseDistribution {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
         Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseDistribution.ps1", "-SourceRoot", "."];
     }

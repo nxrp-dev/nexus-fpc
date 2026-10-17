@@ -32,7 +32,7 @@ Group RuntimePackageSDK {
         OutputDirectory: "build/forge-bootstrap/package-sdk";
     }
     FPC SharedRTL {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk"];
         EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk";
@@ -57,7 +57,7 @@ Group RuntimePackageSDK {
         IncludeMasks: ["fpintres.nxu", "fpintres.o", "libimpfpintres.a"];
     }
     FPC HostStartup {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pas"];
         EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pas";
@@ -71,11 +71,11 @@ Group RuntimePackageSDK {
         GenerateReleaseUnitFiles: True;
     }
     CopyFile ConsumerBuild {
-        Source: "../../nexus/projects/forge/examples/PackageBuild.nxscript";
+        Source: "../../nexus/projects/forge/templates/PackageBuild.nxscript";
         Destination: "build/forge-bootstrap/package-sdk/forge/PackageBuild.nxscript";
     }
     CopyFile ConsumerCompilerTemplate {
-        Source: "../../nexus/projects/forge/examples/FPC.mustache";
+        Source: "../../nexus/projects/forge/templates/FPC.mustache";
         Destination: "build/forge-bootstrap/package-sdk/forge/FPC.mustache";
     }
     PackageSDKManifest SDKManifest {

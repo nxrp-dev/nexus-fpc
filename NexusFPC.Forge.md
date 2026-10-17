@@ -420,7 +420,7 @@ version selection or new execution lifecycle was introduced.
 the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
 it no longer accepts a seed directory. Its `-SmartLink` option applies to example
 consumers. The foundation has one standard release build, usable by both ordinary
-and smart-linked consumers. See the [SDK guide](examples/dynamic-packages/README.md)
+and smart-linked consumers. See the [SDK guide](../nexus-lab/examples/packages/runtime-loading/README.md)
 for the layout and developer commands.
 
 The native SDK metadata migration was verified on 2026-10-12 using nxbuild and

@@ -2,15 +2,18 @@
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$OutputRoot,
       [string]$BootstrapBin='C:/lazarus/fpc/3.2.2/bin/i386-win32',
-      [string]$SourceRoot=(Join-Path $PSScriptRoot '../..'),[switch]$FullSuite)
+      [string]$SourceRoot=(Join-Path $PSScriptRoot '../..'),
+      [string]$ExampleRoot,[switch]$FullSuite)
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SourceRoot=(Resolve-Path $SourceRoot).Path; $BootstrapBin=(Resolve-Path $BootstrapBin).Path
 . "$SourceRoot/scripts/NexusFPCPackageArtifacts.ps1"
+if(-not $ExampleRoot){$ExampleRoot=Join-Path $SourceRoot "../nexus-lab/examples/packages/runtime-loading"}
+$ExampleRoot=(Resolve-Path -LiteralPath $ExampleRoot).Path
 $lSource="$script:TestOutput/source"
 Push-Location $SourceRoot
-try {$lPaths=@(git -c core.quotepath=false ls-files -c -o --exclude-standard -- compiler rtl scripts examples | Sort-Object -Unique)} finally {Pop-Location}
+try {$lPaths=@(git -c core.quotepath=false ls-files -c -o --exclude-standard -- compiler rtl scripts | Sort-Object -Unique)} finally {Pop-Location}
 foreach($lPath in $lPaths){
     if(-not(Test-Path -LiteralPath "$SourceRoot/$lPath" -PathType Leaf)){continue}
     New-Item -ItemType Directory -Force (Split-Path "$lSource/$lPath") | Out-Null
@@ -23,7 +26,7 @@ foreach($lSmart in @($false,$true)){
     $lMode=if($lSmart){'smart'}else{'normal'}
     $lCase="$script:TestOutput/$lMode"; $lSdk="$lCase/sdk"
     $null=Invoke-TestScript "$lMode-build-and-run" "$lSource/scripts/Build-NexusFPCPackageSDK.ps1" @{
-        SourceRoot=$lSource; OutputRoot=$lSdk; BootstrapBin=$BootstrapBin; RunExamples=$true; SmartLink=$lSmart
+        SourceRoot=$lSource; ExampleRoot=$ExampleRoot; OutputRoot=$lSdk; BootstrapBin=$BootstrapBin; RunExamples=$true; SmartLink=$lSmart
     }
     Assert-PackageTest ((Get-TestHashes $lSource) -ceq $lBefore) 'SDK build modified source inputs'
     Add-TestResult "$lMode-source-unchanged" @{}
@@ -51,7 +54,7 @@ end.
     Copy-Item "$lSdk/sdk.json" $lRelocated
     Get-ChildItem (Get-NexusPackageBundle "$lSdk/examples/packages") -File | Where-Object Extension -In '.nxp','.dll' | Copy-Item -Destination $lProviders
     Assert-PackageTest (@(Get-ChildItem $lProviders).Count -eq 8) 'Expected four binary package pairs'
-    Copy-Item "$lSource/examples/dynamic-packages/host" $lHostSource -Recurse
+    Copy-Item "$ExampleRoot/host" $lHostSource -Recurse
     Assert-PackageTest (@(Get-ChildItem $lHostSource | Where-Object Extension -NE '.pas').Count -eq 0) 'Host inputs must be source only'
     $lBinaryBefore=Get-TestHashes $lRelocated
     Move-TestArtifact $lSource "$script:TestOutput/source-unavailable"

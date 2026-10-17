@@ -8,6 +8,7 @@ param(
     [Parameter(Mandatory=$true)][string]$OutputRoot,
     [string]$SourceRoot = (Join-Path $PSScriptRoot '..'),
     [string]$Forge,
+    [string]$ExampleRoot,
     [switch]$SmartLink,
     [switch]$RunExamples
 )
@@ -21,7 +22,8 @@ if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $Outpu
 }
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 $source = Join-Path $OutputRoot 'source'
-Copy-Item -LiteralPath "$SourceRoot\examples\dynamic-packages\late" -Destination $source -Recurse
+if (-not $ExampleRoot) { $ExampleRoot = Join-Path $SourceRoot "../nexus-lab/examples/packages/runtime-loading" }
+Copy-Item -LiteralPath (Join-Path $ExampleRoot "late") -Destination $source -Recurse
 $packages = Join-Path $OutputRoot 'packages'
 New-Item -ItemType Directory -Path $packages | Out-Null
 $compile = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'

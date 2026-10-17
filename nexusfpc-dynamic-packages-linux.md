@@ -67,8 +67,8 @@ Use native Linux Forge with its language definitions and these composed groups
 
 ```text
 dialect "/nexus/projects/forge/language/Forge.nxscript";
-module LinuxPackageBuild "/nexus/projects/forge/examples/LinuxPackageBuild.nxscript";
-module LinuxPackageApplication "/nexus/projects/forge/examples/LinuxPackageApplication.nxscript";
+module LinuxPackageBuild "/nexus/projects/forge/templates/LinuxPackageBuild.nxscript";
+module LinuxPackageApplication "/nexus/projects/forge/templates/LinuxPackageApplication.nxscript";
 Project Build {
     Id: "MyProject.LinuxPackages";
     Group Provider (LinuxPackageBuild) {

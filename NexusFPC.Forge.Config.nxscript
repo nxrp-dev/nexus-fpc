@@ -4,7 +4,7 @@
 module "NexusFPC.Forge.Targets.nxscript";
 
 FPC CrossCompiler Build[Cross] {
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe";
     Source: ["build/forge-bootstrap/seed/source/pp.pas"];
     EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -32,7 +32,7 @@ FPC CrossCompiler Build[Cross] {
 }
 
 FPC CrossRTL Build[Cross] TargetOS[linux] {
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     TargetOS: @CrossTarget.TargetOS;
     Assembler: "as-clang";
     UseLLD: True;
@@ -56,14 +56,14 @@ FPC CrossRTL Build[Cross] TargetOS[linux] {
 }
 
 Clang CrossAssembly Build[Cross] TargetOS[linux] {
-    Template: "../../nexus/projects/forge/examples/Clang.mustache";
+    Template: "../../nexus/projects/forge/templates/Clang.mustache";
     SourceLanguage: "assembler";
     Target: @CrossTarget.Triple;
     CompileOnly: True;
 }
 
 FPC CrossRTL Build[Cross] TargetOS[win32, win64] {
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     TargetOS: @CrossTarget.TargetOS;
     Assembler: "as-clang";
     UseLLD: True;
@@ -89,7 +89,7 @@ FPC CrossRTL Build[Cross] TargetOS[win32, win64] {
 FPC CrossRTL Build[Cross] TargetOS[android] {
     PositionIndependentCode: True;
     CompilerUtilitiesPath: "C:/android/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/bin";
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     TargetOS: @CrossTarget.TargetOS;
     Assembler: "as-clang";
     UseLLD: True;
@@ -113,7 +113,7 @@ FPC CrossRTL Build[Cross] TargetOS[android] {
 }
 
 FPC CrossRTL Build[Cross] TargetOS[darwin, iphonesim, ios] {
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     TargetOS: @CrossTarget.TargetOS;
     Assembler: "as-clang";
     UseLLD: True;
@@ -139,7 +139,7 @@ FPC CrossRTL Build[Cross] TargetOS[darwin, iphonesim, ios] {
 
 Clang CrossAssembly Build[Cross] TargetOS[android] {
     AssemblerSymbols: ["CPU64=1"];
-    Template: "../../nexus/projects/forge/examples/Clang.mustache";
+    Template: "../../nexus/projects/forge/templates/Clang.mustache";
     SourceLanguage: "assembler";
     Executable: "C:/android/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe";
     Target: @CrossTarget.Triple;

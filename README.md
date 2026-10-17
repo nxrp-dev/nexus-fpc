@@ -44,7 +44,7 @@ and validate its console/GUI examples:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
 ```
 
-See the [package SDK guide](examples/dynamic-packages/README.md) for prerequisites,
+See the [package SDK guide](../nexus-lab/examples/packages/runtime-loading/README.md) for prerequisites,
 distribution, and application build commands. Runtime-package support is standard
 in the compiler on Win64 x86-64 and Linux x86-64/glibc; developers choose static
 linking or runtime packages. This SDK recipe targets Win64 x86-64.

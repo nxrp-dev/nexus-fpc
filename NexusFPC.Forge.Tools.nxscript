@@ -138,7 +138,7 @@ Group ReleaseTools {
         Destination: "build/forge-bootstrap/tools/bin/ppcx64.exe";
     }
     Run VerifyReleaseTools {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
         Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseTools.ps1", "-SourceRoot", "."];
     }

@@ -3,7 +3,7 @@
 // Composed after staging source; every output is generated inside the build tree.
 Group CompilerTables {
     FPC Build_mkx86ins {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/mkx86ins.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86ins.pas";
@@ -13,7 +13,7 @@ Group CompilerTables {
         DisableDefaultConfigFiles: True;
     }
     FPC Build_mkx86reg {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/mkx86reg.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86reg.pas";
@@ -23,7 +23,7 @@ Group CompilerTables {
         DisableDefaultConfigFiles: True;
     }
     FPC Build_mkx86inl {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/mkx86inl.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86inl.pas";
@@ -33,7 +33,7 @@ Group CompilerTables {
         DisableDefaultConfigFiles: True;
     }
     FPC Build_mka64ins {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/mka64ins.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64ins.pas";
@@ -43,7 +43,7 @@ Group CompilerTables {
         DisableDefaultConfigFiles: True;
     }
     FPC Build_mka64reg {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/mka64reg.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64reg.pas";
@@ -53,43 +53,43 @@ Group CompilerTables {
         DisableDefaultConfigFiles: True;
     }
     Run X86Instructions {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/i386";
         Arguments: ["i386"];
     }
     Run X64Instructions {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/x86_64";
         Arguments: ["x86_64"];
     }
     Run X86Registers {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/i386";
         Arguments: ["i386"];
     }
     Run X64Registers {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/x86_64";
         Arguments: ["x86_64"];
     }
     Run A64Instructions {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mka64ins.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/aarch64";
 
     }
     Run A64Registers {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mka64reg.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/aarch64";
 
     }
     Run X86Intrinsics {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "build/forge-bootstrap/seed/bin/mkx86inl.exe";
         WorkingDirectory: "build/forge-bootstrap/seed/source/x86";
 

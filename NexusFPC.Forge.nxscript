@@ -67,7 +67,7 @@ Project Bootstrap Build[Bootstrap] {
     }
     Group GenerateTables (CompilerTables) {}
     FPC BuildMessageGenerator {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/utils/msg2inc.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/utils/msg2inc.pas";
@@ -77,14 +77,14 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     Msg2Inc GenerateMessages {
-        Template: "../../nexus/projects/forge/examples/Msg2Inc.mustache";
+        Template: "../../nexus/projects/forge/templates/Msg2Inc.mustache";
         Executable: "build/forge-bootstrap/seed/bin/msg2inc.exe";
         Source: "compiler/msg/errore.msg";
         OutputPrefix: "build/forge-bootstrap/seed/source/msg";
         ConstantName: msg;
     }
     FPC BuildSeedCompiler {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
         Source: ["build/forge-bootstrap/seed/source/pp.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -117,7 +117,7 @@ Project Bootstrap Build[Bootstrap] {
         Path: "build/forge-bootstrap/seed/rtl64";
     }
     FPC BuildSeedSystem {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/system.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pas";
@@ -131,7 +131,7 @@ Project Bootstrap Build[Bootstrap] {
         LabelAndGoto: True;
     }
     FPC BuildSeedObjPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pas";
@@ -150,7 +150,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedWindows {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pas";
@@ -169,7 +169,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedSysUtils {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pas";
@@ -188,7 +188,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedRTL {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pas";
@@ -207,7 +207,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedUUChar {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pas";
@@ -226,7 +226,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedMacPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pas";
@@ -245,7 +245,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedISO7185 {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
@@ -264,7 +264,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedCodePages {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
@@ -283,7 +283,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedDwarf {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -302,7 +302,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedIntrinsics {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas";
@@ -328,7 +328,7 @@ Project Bootstrap Build[Bootstrap] {
         Path: "build/forge-bootstrap/seed/units64";
     }
     FPC BuildNativeSeedCompiler {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
         Source: ["build/forge-bootstrap/seed/source/pp.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -360,7 +360,7 @@ Project Bootstrap Build[Bootstrap] {
     CreateDirectory Cycle1RTL { Path: "build/forge-bootstrap/cycle1/rtl64"; }
     CreateDirectory Cycle1Units { Path: "build/forge-bootstrap/cycle1/units64"; }
     FPC BuildCycle1System {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/system.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pas";
@@ -374,7 +374,7 @@ Project Bootstrap Build[Bootstrap] {
         LabelAndGoto: True;
     }
     FPC BuildCycle1ObjPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pas";
@@ -393,7 +393,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Windows {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pas";
@@ -412,7 +412,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1SysUtils {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pas";
@@ -431,7 +431,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1RTL {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pas";
@@ -450,7 +450,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1UUChar {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pas";
@@ -469,7 +469,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1MacPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pas";
@@ -488,7 +488,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1ISO7185 {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
@@ -507,7 +507,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1CodePages {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
@@ -526,7 +526,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Dwarf {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -545,7 +545,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Intrinsics {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas";
@@ -564,7 +564,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Compiler {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/source/pp.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -596,7 +596,7 @@ Project Bootstrap Build[Bootstrap] {
     CreateDirectory Cycle2RTL { Path: "build/forge-bootstrap/cycle2/rtl64"; }
     CreateDirectory Cycle2Units { Path: "build/forge-bootstrap/cycle2/units64"; }
     FPC BuildCycle2System {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/system.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pas";
@@ -610,7 +610,7 @@ Project Bootstrap Build[Bootstrap] {
         LabelAndGoto: True;
     }
     FPC BuildCycle2ObjPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pas";
@@ -629,7 +629,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Windows {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pas";
@@ -648,7 +648,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2SysUtils {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pas";
@@ -667,7 +667,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2RTL {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pas";
@@ -686,7 +686,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2UUChar {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pas";
@@ -705,7 +705,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2MacPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pas";
@@ -724,7 +724,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2ISO7185 {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
@@ -743,7 +743,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2CodePages {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
@@ -762,7 +762,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Dwarf {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -781,7 +781,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Intrinsics {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas";
@@ -800,7 +800,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Compiler {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/source/pp.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -832,7 +832,7 @@ Project Bootstrap Build[Bootstrap] {
     CreateDirectory Cycle3RTL { Path: "build/forge-bootstrap/cycle3/rtl64"; }
     CreateDirectory Cycle3Units { Path: "build/forge-bootstrap/cycle3/units64"; }
     FPC BuildCycle3System {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/system.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pas";
@@ -846,7 +846,7 @@ Project Bootstrap Build[Bootstrap] {
         LabelAndGoto: True;
     }
     FPC BuildCycle3ObjPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pas";
@@ -865,7 +865,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Windows {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pas";
@@ -884,7 +884,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3SysUtils {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pas";
@@ -903,7 +903,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3RTL {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pas";
@@ -922,7 +922,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3UUChar {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pas";
@@ -941,7 +941,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3MacPas {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pas";
@@ -960,7 +960,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3ISO7185 {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
@@ -979,7 +979,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3CodePages {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
@@ -998,7 +998,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Dwarf {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -1017,7 +1017,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Intrinsics {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas"];
         EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pas";
@@ -1036,7 +1036,7 @@ Project Bootstrap Build[Bootstrap] {
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Compiler {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Template: "../../nexus/projects/forge/templates/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Source: ["build/forge-bootstrap/seed/source/pp.pas"];
         EntryPoint: "build/forge-bootstrap/seed/source/pp.pas";
@@ -1068,7 +1068,7 @@ Project Bootstrap Build[Bootstrap] {
         Right: "build/forge-bootstrap/cycle3/ppcx64.exe";
     }
     Run VerifyBuildIdentity {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
         Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", "build/forge-bootstrap/cycle3/ppcx64.exe"];
     }
@@ -1105,7 +1105,7 @@ Project Cross Build[Cross] {
     CreateDirectory CrossRTLUnits { Path: @CrossTarget.RTL; }
     FPC BuildCrossCompiler (CrossCompiler) {}
     Run VerifyCrossBuildIdentity {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Template: "../../nexus/projects/forge/templates/Run.mustache";
         Executable: "powershell.exe";
         Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", @CrossTarget.Compiler];
     }

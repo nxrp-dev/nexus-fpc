@@ -134,7 +134,7 @@ ObjPas, SysUtils dependency closure. It compiles SysInitPkg against that provide
 before linking the EXE. This is the reproducible experimental build recipe;
 ordinary installation/build rules do not publish package-enabled RTL artifacts.
 
-Item 11 adds a reusable [PowerShell SDK workflow](examples/dynamic-packages/README.md).
+Item 11 adds a reusable [PowerShell SDK workflow](../nexus-lab/examples/packages/runtime-loading/README.md).
 It builds the dedicated `ppcpkg` entry point, matching RTL, checked-in `nxrtl.nxpk`,
 and per-image startup adapters into a separate directory. Both console and GUI
 hosts use the existing approved startup sequence. Consumers need the distributed

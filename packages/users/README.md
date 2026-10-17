@@ -6,7 +6,7 @@ provide the underlying account database bindings. `crypth` supplies the separate
 `crypt` binding.
 
 Runtime units live in `src/`; `namespaced/` and `namespaces.lst` retain the
-corresponding dotted-unit mappings. Original examples live in `examples/`.
+corresponding dotted-unit mappings. Original examples live in `../../../nexus-lab/examples/system/users/`.
 Pascal sources and namespace include references use NexusFPC's `.pas` convention.
 Add `src/` to the consuming build's unit search path and use matching NexusFPC
 RTL units. Compiled units belong in the build or toolchain output directory.

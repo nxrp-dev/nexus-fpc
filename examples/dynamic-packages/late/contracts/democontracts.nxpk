@@ -1,4 +1,0 @@
-package democontracts;
-requires nxrtl;
-contains PkgContracts, PackageNative;
-end.

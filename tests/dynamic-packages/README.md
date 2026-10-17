@@ -100,7 +100,7 @@ The Pascal fixtures remain; there is no replacement ad hoc runner.
 No Linux execution is implied by a Windows bootstrap or cross-RTL build.
 
 See the [Linux guide](../../nexusfpc-dynamic-packages-linux.md),
-[SDK guide](../../examples/dynamic-packages/README.md),
+[SDK guide](../../../nexus-lab/examples/packages/runtime-loading/README.md),
 [runtime design](../../nexusfpc-dynamic-packages-runtime-design.md),
 [load/unload design](../../nexusfpc-dynamic-packages-load-unload-design.md),
 [threadvar design](../../nexusfpc-threadvar-design.md) and

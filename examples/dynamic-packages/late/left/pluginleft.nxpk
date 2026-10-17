@@ -1,4 +1,0 @@
-package pluginleft;
-requires nxrtl, democontracts, pluginbase;
-contains PluginLeftUnit;
-end.

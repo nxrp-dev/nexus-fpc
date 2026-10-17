@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 FPC HostTool {
-    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Template: "../../nexus/projects/forge/templates/FPC.mustache";
     Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe";
     UnitPaths: [
         "build/forge-bootstrap/cycle3/rtl64",

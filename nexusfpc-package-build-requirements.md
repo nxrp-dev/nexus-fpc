@@ -124,7 +124,7 @@ old explicit/implicit target lists.
 | Windows event-log resource | `packages/fcl-base/src/win/fclel.res`, with `.mc`/`.rc` inputs | Old recipe explicitly shipped it. No active Pascal reference was found in `fcl-base/src`; do not infer that every application needs it. The `.rc` contains an obsolete absolute temporary path, so regeneration needs a separate review. |
 | Resource strings | `ResourceStrings=True` target registrations | Old installation collected `.rsj`, or historical `.rst`, alongside unit artifacts. Current Forge release/SDK copy masks already include `.rsj` and `.res`. |
 | Namespace mappings | Retained package `namespaces.lst` and `namespaced/` source trees | Example: `hash` maps `src/md5.pas` to `namespaced/System.Hash.Md5.pas`. Preserve these source mappings independently of fpmake. |
-| Translation example | `packages/fcl-base/examples/intl/restest.<language>.po` and `.mo` | Old Makefile used `msgfmt -o restest.<language>.mo restest.<language>.po` for `fr`, `nl`, `de`, `pb`, `ru`, `cs`. All six input/output pairs exist. |
+| Translation example | `../nexus-lab/examples/runtime/base/intl/restest.<language>.po` and `.mo` | Old Makefile used `msgfmt -o restest.<language>.mo restest.<language>.po` for `fr`, `nl`, `de`, `pb`, `ru`, `cs`. All six input/output pairs exist. |
 
 ## Test preparation retained for nxtest
 

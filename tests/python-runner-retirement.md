@@ -104,7 +104,7 @@ Fixtures: `utNXLinuxExports.pas`, `nxLinuxExports.lpr`, `nxLinuxExportsLibrary.l
 ## Linux package runtime and publication
 
 Former runner: `dynamic-packages/run_linux_package_tests.py`.
-Fixtures: `examples/dynamic-packages`, `package_loader_failures.pas` and
+Fixtures: `../nexus-lab/examples/packages/runtime-loading`, `package_loader_failures.pas` and
 `package_native_probe.pas`.
 
 - Ordinary/smart and fresh/source-hidden cached units. Cached builds must leave

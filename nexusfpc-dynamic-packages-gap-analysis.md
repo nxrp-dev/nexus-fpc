@@ -239,7 +239,7 @@ The distributed [compile helper](scripts/Invoke-NexusFPCPackageCompile.ps1)
 builds packages or console/GUI applications. Packages declare their requirements;
 hosts select package names and directories explicitly. PCP/DLL pairs provide
 package units without standalone provider PPUs, objects or source files. Commands
-and diagnostics are retained in logs. The [example guide](examples/dynamic-packages/README.md)
+and diagnostics are retained in logs. The [example guide](../nexus-lab/examples/packages/runtime-loading/README.md)
 documents the one-command build/test workflow and distribution layout.
 
 Validation on 2026-10-09:

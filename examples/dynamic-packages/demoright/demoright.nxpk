@@ -1,4 +1,0 @@
-package demoright;
-requires nxrtl, demotypes;
-contains PkgDemoRight;
-end.
