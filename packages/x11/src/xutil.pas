@@ -4,18 +4,15 @@ unit xutil;
 interface
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.CTypes,Api.X11.X,Api.X11.Xlib,Api.X11.Keysym;
+  System.CTypes,Api.X11.X,Api.X11.Xlib,Api.X11.Keysym,Api.X11.Libraries;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  ctypes,x,xlib,keysym;
+  ctypes,x,xlib,keysym,tpX11Libraries;
 {$ENDIF FPC_DOTTEDUNITS}
 
 {$define MACROS}
 
   {$LinkLib c}
-  {$LinkLib X11}
-const
-  libX11='X11';
 
 {
   Automatically converted by H2Pas 0.99.15 from xutil.h

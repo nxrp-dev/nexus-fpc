@@ -421,7 +421,6 @@ end;
 Function TLinkerLinux.WriteResponseFile(isdll:boolean) : Boolean;
 Var
   linkres      : TLinkRes;
-  i            : LongInt;
   HPath        : TCmdStrListItem;
   s,s1,s2      : TCmdStr;
   found1,
@@ -555,18 +554,19 @@ begin
                  S:=SharedLibFiles.GetFirst;
                  if (s<>'c') or reorder then
                   begin
-                    if ExtractFileExt(S)=NexusPackageLibraryExtension then
+                    if (ExtractFileExt(S)=NexusPackageLibraryExtension) and
+                       (S[1]<>':') then
+                      S:=':'+S;
+                    if S[1]=':' then
                       begin
-                        if S[1]<>':' then S:=':'+S;
-                        Add('-l'+S);
+                        s1:=Copy(S,2,length(S)-1);
+                        if ExtractFilePath(s1)<>'' then
+                          AddFileName(MaybeQuoted(s1))
+                        else
+                          Add('-l'+S);
                       end
                     else
-                      begin
-                        i:=Pos(TargetInfo.sharedlibext,S);
-                        if i>0 then
-                          Delete(S,i,255);
-                        Add('-l'+S);
-                      end;
+                      Add('-l'+S);
                     libraryadded:=true;
                   end
                  else

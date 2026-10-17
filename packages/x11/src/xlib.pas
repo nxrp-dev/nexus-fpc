@@ -5,17 +5,14 @@ interface
 {$mode objfpc}
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.CTypes,Api.X11.X;
+  System.CTypes,Api.X11.X,Api.X11.Libraries;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  ctypes,x;
+  ctypes,x,tpX11Libraries;
 {$ENDIF FPC_DOTTEDUNITS}
 {$define MACROS}
 
   {$LinkLib c}
-  {$LinkLib X11}
-const
-  libX11='X11';
 
 type
   PPcint = ^Pcint;

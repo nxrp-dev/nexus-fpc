@@ -61,9 +61,9 @@ interface
          procedure AddModuleFiles(hp:TModule);
          Procedure AddObject(const S,unitpath : TPathStr;isunit:boolean);
          Procedure AddStaticLibrary(const S : TCmdStr);
-         Procedure AddSharedLibrary(S : TCmdStr);
+         Procedure AddSharedLibrary(ALibraryName : TCmdStr);
          Procedure AddStaticCLibrary(const S : TCmdStr);
-         Procedure AddSharedCLibrary(S : TCmdStr);
+         Procedure AddSharedCLibrary(ALibraryName : TCmdStr);
          Procedure AddFramework(S : TCmdStr);
          Procedure AddOrderedSymbol(const s: TCmdStr);
          procedure AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: LongInt;isvar:boolean);virtual;
@@ -120,7 +120,7 @@ Implementation
       BaseUnix,
 {$endif hasUnix}
       Globals,Verbose,CompHook,PPU,FPCHash,Triplet,tripletcpu,
-      aasmbase,aasmcpu,ogbase;
+      aasmbase,aasmcpu,ogbase,NXPackageFile;
 
     var
       CLinker : array[TLink] of TLinkerClass;
@@ -436,18 +436,33 @@ Implementation
       end;
 
 
-    Procedure TLinker.AddSharedLibrary(S:TCmdStr);
+    Procedure TLinker.AddSharedLibrary(ALibraryName:TCmdStr);
+      var
+        lFileName : TCmdStr;
       begin
-        if s='' then
+        if ALibraryName='' then
           exit;
-        { remove prefix 'lib' }
-        if Copy(s,1,length(TargetInfo.sharedlibprefix))=TargetInfo.sharedlibprefix then
-          Delete(s,1,length(TargetInfo.sharedlibprefix));
-        { remove extension if any }
-        if Copy(s,length(s)-length(TargetInfo.sharedlibext)+1,length(TargetInfo.sharedlibext))=TargetInfo.sharedlibext then
-          Delete(s,length(s)-length(TargetInfo.sharedlibext)+1,length(TargetInfo.sharedlibext)+1);
-        { ready to be added }
-        SharedLibFiles.Concat(S);
+        if TargetInfo.system in systems_linux then
+          begin
+            lFileName:=ExtractFileName(ALibraryName);
+            if (ALibraryName[1]=':') or
+               (Pos(TargetInfo.sharedlibext+'.',lFileName)>0) or
+               (ExtractFileExt(lFileName)=NexusPackageLibraryExtension) then
+              begin
+                { Keep explicit ELF filenames distinct from bare -l names. }
+                if ALibraryName[1]<>':' then
+                  ALibraryName:=':'+ALibraryName;
+                SharedLibFiles.Concat(ALibraryName);
+                exit;
+              end;
+          end;
+        if Copy(ALibraryName,1,length(TargetInfo.sharedlibprefix))=TargetInfo.sharedlibprefix then
+          Delete(ALibraryName,1,length(TargetInfo.sharedlibprefix));
+        if Copy(ALibraryName,length(ALibraryName)-length(TargetInfo.sharedlibext)+1,
+          length(TargetInfo.sharedlibext))=TargetInfo.sharedlibext then
+          Delete(ALibraryName,length(ALibraryName)-length(TargetInfo.sharedlibext)+1,
+            length(TargetInfo.sharedlibext)+1);
+        SharedLibFiles.Concat(ALibraryName);
       end;
 
 
@@ -465,18 +480,23 @@ Implementation
       end;
 
 
-    Procedure TLinker.AddSharedCLibrary(S:TCmdStr);
+    Procedure TLinker.AddSharedCLibrary(ALibraryName:TCmdStr);
       begin
-        if s='' then
+        if TargetInfo.system in systems_linux then
+          begin
+            AddSharedLibrary(ALibraryName);
+            exit;
+          end;
+        if ALibraryName='' then
           exit;
         { remove prefix 'lib' }
-        if Copy(s,1,length(TargetInfo.sharedclibprefix))=TargetInfo.sharedclibprefix then
-          Delete(s,1,length(TargetInfo.sharedclibprefix));
+        if Copy(ALibraryName,1,length(TargetInfo.sharedclibprefix))=TargetInfo.sharedclibprefix then
+          Delete(ALibraryName,1,length(TargetInfo.sharedclibprefix));
         { remove extension if any }
-        if Copy(s,length(s)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext))=TargetInfo.sharedclibext then
-          Delete(s,length(s)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext)+1);
+        if Copy(ALibraryName,length(ALibraryName)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext))=TargetInfo.sharedclibext then
+          Delete(ALibraryName,length(ALibraryName)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext)+1);
         { ready to be added }
-        SharedLibFiles.Concat(S);
+        SharedLibFiles.Concat(ALibraryName);
       end;
 
 

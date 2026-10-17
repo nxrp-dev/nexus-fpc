@@ -1,0 +1,209 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+unit tsNXSharedLibraryTests;
+{$mode objfpc}{$H+}
+interface
+uses obNXTestRegistry;
+procedure RegisterSharedLibraryTests(ARegistry: TNXTestRegistry;
+  const ACompiler, ARTL, AOutput, AClang, AReadObj: string);
+implementation
+uses Classes, SysUtils, Process, obNXTestContext, obNXTestSuite;
+var lCompiler, lRTL, lOutputRoot, lClang, lReadObj: string;
+
+procedure SaveText(const APath, AText: string);
+var lText: TStringList;
+begin
+  lText := TStringList.Create;
+  try
+    lText.Text := AText;
+    lText.SaveToFile(APath);
+  finally
+    lText.Free;
+  end;
+end;
+
+function CaseDirectory(const AName: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(lOutputRoot) + AName;
+  ForceDirectories(Result);
+end;
+
+procedure BuildLibrary(AContext: TNXTestContext;
+  const ADirectory, AFileName, ASONAME: string; AValue: Integer);
+var lSource, lOutput: string;
+begin
+  lSource := ADirectory + '/provider.c';
+  SaveText(lSource, 'int nx_soname_value(void) { return ' + IntToStr(AValue) + '; }');
+  AContext.AssertTrue(RunCommand(lClang, ['-shared', '-fPIC', '-nostdlib',
+    '-fuse-ld=lld', '-Wl,-soname,' + ASONAME, '-o', ADirectory + '/' + AFileName,
+    lSource], lOutput), lOutput);
+end;
+
+function CompileFile(const ADirectory, AFileName: string): Boolean;
+var lOutput: string;
+begin
+  Result := RunCommand(lCompiler, ['-n', '-Aas-clang', '-XLL', '-Fu' + lRTL,
+    '-Fu' + ADirectory, '-FU' + ADirectory, '-FE' + ADirectory,
+    '-Fl' + ADirectory, '-k-rpath=$ORIGIN', ADirectory + '/' + AFileName], lOutput, [poStderrToOutPut]);
+  SaveText(ADirectory + '/' + AFileName + '.log', lOutput);
+end;
+
+procedure WriteProbe(const ADirectory, ADeclarations: string);
+begin
+  SaveText(ADirectory + '/probe.pas', 'program probe;' + LineEnding + '{$linklib c}' + LineEnding +
+    '{$mode objfpc}' + LineEnding + ADeclarations + LineEnding +
+    'begin if NXValue <> 42 then Halt(7); WriteLn(''linked''); end.');
+end;
+
+procedure CheckProbe(AContext: TNXTestContext; const ADirectory, ASONAME: string);
+var lOutput: string;
+begin
+  AContext.AssertTrue(CompileFile(ADirectory, 'probe.pas'),
+    'Compiler failed; see ' + ADirectory + '/probe.pas.log');
+  AContext.AssertTrue(RunCommand(ADirectory + '/probe', [], lOutput, [poStderrToOutPut]), lOutput);
+  AContext.AssertEquals('linked', Trim(lOutput));
+  AContext.AssertTrue(RunCommand(lReadObj, ['--needed-libs', ADirectory + '/probe'],
+    lOutput), lOutput);
+  SaveText(ADirectory + '/needed-libs.txt', lOutput);
+  AContext.AssertTrue(Pos(ASONAME, lOutput) > 0, 'Missing DT_NEEDED ' + ASONAME);
+end;
+
+procedure TestExternalSONAME(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('external');
+  BuildLibrary(AContext, lDirectory, 'libnxexact.so.42', 'libnxexact.so.42', 42);
+  WriteProbe(lDirectory,
+    'function NXValue: LongInt; cdecl; external ''libnxexact.so.42'' name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libnxexact.so.42');
+end;
+
+procedure TestLinkLibSONAME(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('linklib');
+  BuildLibrary(AContext, lDirectory, 'libnxexact.so.42', 'libnxexact.so.42', 42);
+  WriteProbe(lDirectory, '{$linklib libnxexact.so.42}' + LineEnding +
+    'function NXValue: LongInt; cdecl; external name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libnxexact.so.42');
+end;
+
+procedure TestCachedUnitSONAME(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('cached-unit');
+  BuildLibrary(AContext, lDirectory, 'libnxexact.so.42', 'libnxexact.so.42', 42);
+  SaveText(lDirectory + '/nximport.pas', 'unit nximport; interface' + LineEnding +
+    'function NXValue: LongInt; cdecl; external ''libnxexact.so.42'' name ''nx_soname_value'';' +
+    LineEnding + 'implementation end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'nximport.pas'));
+  AContext.AssertTrue(RenameFile(lDirectory + '/nximport.pas', lDirectory + '/nximport.hidden'));
+  WriteProbe(lDirectory, 'uses nximport;');
+  CheckProbe(AContext, lDirectory, 'libnxexact.so.42');
+end;
+
+procedure TestExplicitLookup(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('explicit-lookup');
+  BuildLibrary(AContext, lDirectory, 'libnxexact.so.42', 'libnxexact.so.42', 42);
+  WriteProbe(lDirectory, '{$linklib '':libnxexact.so.42''}' + LineEnding +
+    'function NXValue: LongInt; cdecl; external name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libnxexact.so.42');
+end;
+
+procedure TestBareLibraryName(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('bare-name');
+  BuildLibrary(AContext, lDirectory, 'libnxplain.so', 'libnxplain.so', 42);
+  WriteProbe(lDirectory,
+    'function NXValue: LongInt; cdecl; external ''nxplain'' name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libnxplain.so');
+end;
+
+procedure TestBareArchiveFallback(AContext: TNXTestContext);
+var lDirectory, lOutput: string;
+begin
+  lDirectory := CaseDirectory('bare-archive');
+  SaveText(lDirectory + '/provider.c', 'int nx_soname_value(void) { return 42; }');
+  AContext.AssertTrue(RunCommand(lClang, ['-c', '-o', lDirectory + '/provider.o',
+    lDirectory + '/provider.c'], lOutput, [poStderrToOutPut]), lOutput);
+  AContext.AssertTrue(RunCommand('llvm-ar', ['rcs', lDirectory + '/libnxarchive.a',
+    lDirectory + '/provider.o'], lOutput, [poStderrToOutPut]), lOutput);
+  WriteProbe(lDirectory,
+    'function NXValue: LongInt; cdecl; external ''nxarchive'' name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libc.so.6');
+end;
+
+procedure TestExplicitFilename(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('explicit-filename');
+  BuildLibrary(AContext, lDirectory, 'oddshared.so', 'oddshared.so', 42);
+  WriteProbe(lDirectory, '{$linklib '':oddshared.so''}' + LineEnding +
+    'function NXValue: LongInt; cdecl; external name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'oddshared.so');
+end;
+
+procedure TestExactPath(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('path with spaces');
+  BuildLibrary(AContext, lDirectory, 'libnxexact.so.42', 'libnxexact.so.42', 42);
+  WriteProbe(lDirectory, '{$linklib ''' + lDirectory + '/libnxexact.so.42''}' + LineEnding +
+    'function NXValue: LongInt; cdecl; external name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'libnxexact.so.42');
+end;
+
+procedure TestMissingABIDoesNotFallback(AContext: TNXTestContext);
+var lDirectory: string; lLog: TStringList;
+begin
+  lDirectory := CaseDirectory('missing-abi');
+  BuildLibrary(AContext, lDirectory, 'libnxmissing.so', 'libnxmissing.so.43', 999);
+  WriteProbe(lDirectory,
+    'function NXValue: LongInt; cdecl; external ''libnxmissing.so.42'' name ''nx_soname_value'';');
+  AContext.AssertFalse(CompileFile(lDirectory, 'probe.pas'),
+    'A missing ABI must not link to a different library through an unversioned name');
+  lLog := TStringList.Create;
+  try
+    lLog.LoadFromFile(lDirectory + '/probe.pas.log');
+    AContext.AssertTrue(Pos('unable to find library -l:libnxmissing.so.42', lLog.Text) > 0,
+      'Expected the missing ABI diagnostic: ' + lLog.Text);
+  finally
+    lLog.Free;
+  end;
+end;
+
+procedure TestNXPLFilename(AContext: TNXTestContext);
+var lDirectory: string;
+begin
+  lDirectory := CaseDirectory('nxpl-filename');
+  BuildLibrary(AContext, lDirectory, 'ExactPackage.nxpl', 'ExactPackage.nxpl', 42);
+  WriteProbe(lDirectory, '{$linklib ExactPackage.nxpl}' + LineEnding +
+    'function NXValue: LongInt; cdecl; external name ''nx_soname_value'';');
+  CheckProbe(AContext, lDirectory, 'ExactPackage.nxpl');
+end;
+
+procedure RegisterSharedLibraryTests(ARegistry: TNXTestRegistry;
+  const ACompiler, ARTL, AOutput, AClang, AReadObj: string);
+var lSuite: TNXTestSuite;
+begin
+  lCompiler := ExpandFileName(ACompiler);
+  lRTL := ExpandFileName(ARTL);
+  lOutputRoot := ExpandFileName(AOutput);
+  lClang := ExpandFileName(AClang);
+  lReadObj := ExpandFileName(AReadObj);
+  lSuite := ARegistry.AddSuite('LinuxSharedLibraries');
+  lSuite.AddTest('ExternalSONAME', @TestExternalSONAME);
+  lSuite.AddTest('LinkLibSONAME', @TestLinkLibSONAME);
+  lSuite.AddTest('CachedUnitSONAME', @TestCachedUnitSONAME);
+  lSuite.AddTest('ExplicitLookup', @TestExplicitLookup);
+  lSuite.AddTest('BareLibraryName', @TestBareLibraryName);
+  lSuite.AddTest('BareArchiveFallback', @TestBareArchiveFallback);
+  lSuite.AddTest('ExplicitFilename', @TestExplicitFilename);
+  lSuite.AddTest('ExactPath', @TestExactPath);
+  lSuite.AddTest('MissingABIDoesNotFallback', @TestMissingABIDoesNotFallback);
+  lSuite.AddTest('NXPLFilename', @TestNXPLFilename);
+end;
+end.

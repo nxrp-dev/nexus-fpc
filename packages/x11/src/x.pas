@@ -11,7 +11,6 @@ uses
 {$ENDIF FPC_DOTTEDUNITS}
 
   {$LinkLib c}
-  {$LinkLib X11}
 
 {
   Automatically converted by H2Pas 0.99.15 from x.h

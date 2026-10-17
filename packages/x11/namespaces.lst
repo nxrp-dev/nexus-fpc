@@ -44,3 +44,4 @@ src/xv.pas=namespaced/Api.X11.Xv.pas
 src/xdbe.pas=namespaced/Api.X11.Xdbe.pas
 src/xutil.pas=namespaced/Api.X11.Xutil.pas
 src/xft.pas=namespaced/Api.X11.Xft.pas
+src/tpX11Libraries.pas=namespaced/Api.X11.Libraries.pas

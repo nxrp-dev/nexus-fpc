@@ -4,16 +4,13 @@ unit xresource; {$DEFINE MACRO}
 interface
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  Api.X11.X,Api.X11.Xlib {$IFDEF MACROS}, System.Strings{$ENDIF};
+  Api.X11.X,Api.X11.Xlib,Api.X11.Libraries {$IFDEF MACROS}, System.Strings{$ENDIF};
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  x,xlib {$IFDEF MACROS}, strings{$ENDIF};
+  x,xlib,tpX11Libraries {$IFDEF MACROS}, strings{$ENDIF};
 {$ENDIF FPC_DOTTEDUNITS}
 
   {$LinkLib c}
-  {$LinkLib X11}
-const
-  libX11='X11';
 
 {
   Automatically converted by H2Pas 0.99.15 from xresource.h

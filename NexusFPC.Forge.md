@@ -52,6 +52,15 @@ Object-file writers and Windows import-library generation remain available.
 Linux and Darwin select LLD by default (`ld.lld` and `ld64.lld` respectively).
 `-XLL` explicitly selects that default; `-XLL-` retains the explicit `ld` override.
 
+Linux preserves explicit versioned shared-library filenames from Pascal
+`external` declarations and `{$linklib}` directives. For example,
+`external 'libX11.so.6'` links that supported ABI directly without requiring
+`libX11.so`. Explicit `:filename` lookup also accepts an unversioned filename
+or a quoted path. Bare library names retain ordinary shared/static archive
+selection. A missing requested ABI fails instead of falling back to another ABI.
+Exact `.nxpl` lookup remains supported. Direct nxtest regressions and native
+build/run instructions are in `tests/linker/README.md`.
+
 NASM/MASM output writers and GNU AS/YASM assembler drivers are removed.
 Use the default Clang driver, `-Aas-clang` for non-Apple targets, or `-Aclang`
 for Apple targets. Pascal Intel/AT&T inline assembly and the internal

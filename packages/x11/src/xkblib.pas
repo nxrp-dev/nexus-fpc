@@ -57,9 +57,9 @@ unit xkblib;
 
 interface
 {$IFDEF FPC_DOTTEDUNITS}
-uses Api.X11.X, Api.X11.Xlib, Api.X11.Xkb;
+uses Api.X11.X, Api.X11.Xlib, Api.X11.Xkb, Api.X11.Libraries;
 {$ELSE FPC_DOTTEDUNITS}
-uses X, Xlib, XKB;
+uses X, Xlib, XKB, tpX11Libraries;
 {$ENDIF FPC_DOTTEDUNITS}
 
 type
