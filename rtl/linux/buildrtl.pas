@@ -18,7 +18,7 @@ unit buildrtl;
       System.CPU,
 {$endif}
 
-      System.TypInfo, System.SortBase, System.FGL, System.Classes,
+      System.TypInfo, System.SortBase, System.Classes,
       System.CharSet, System.Character, System.GetOpts,
       System.FPWideString, fpintres, System.CodePages.All;
 {$ELSE FPC_DOTTEDUNITS}
@@ -37,7 +37,7 @@ unit buildrtl;
       cpu,
 {$endif}
 
-      typinfo, sortbase, fgl, classes,
+      typinfo, sortbase, classes,
       charset, character, getopts,
       fpwidestring, fpintres;
 {$ENDIF FPC_DOTTEDUNITS}

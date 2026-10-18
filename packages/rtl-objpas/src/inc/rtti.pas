@@ -1101,7 +1101,7 @@ uses
   UnixApi.Base,
 {$endif}
   System.SysConst,
-  System.FGL;
+  System.Generics.Collections;
 {$ELSE FPC_DOTTEDUNITS}
   Variants,
 {$ifdef USE_WINDOWS_UNIT}
@@ -1111,7 +1111,7 @@ uses
   BaseUnix,
 {$endif}
   sysconst,
-  fgl;
+  Generics.Collections;
 {$ENDIF FPC_DOTTEDUNITS}
 
 
@@ -1262,7 +1262,7 @@ type
 
   TRttiPool = class
   private type
-    TRttiObjectMap = specialize TFPGMap<Pointer, TRttiObject>;
+    TRttiObjectMap = specialize TDictionary<Pointer, TRttiObject>;
   private
     FObjectMap: TRttiObjectMap;
     FTypesList: specialize TArray<TRttiType>;
@@ -1272,9 +1272,9 @@ type
     function GetTypes: specialize TArray<TRttiType>;
     function GetType(ATypeInfo: PTypeInfo): TRttiType;
     function GetType(ATypeInfo: PTypeInfo; UsePublishedOnly : Boolean): TRttiType;
-    function GetByHandle(aHandle: Pointer): TRttiObject;
-    procedure AddObject(aObject: TRttiObject);
-    function GetOrAddObject(aHandle: Pointer; aClass: TRttiMemberClass; aParent: TRttiType): TRttiMember;
+    function GetByHandle(AHandle: Pointer): TRttiObject;
+    procedure AddObject(AObject: TRttiObject);
+    function GetOrAddObject(AHandle: Pointer; AClass: TRttiMemberClass; AParent: TRttiType): TRttiMember;
     procedure Clear;
     constructor Create;
     destructor Destroy; override;
@@ -2397,21 +2397,16 @@ begin
 {$endif}
 end;
 
-function TRttiPool.GetByHandle(aHandle: Pointer): TRttiObject;
-var
-  idx: LongInt;
+function TRttiPool.GetByHandle(AHandle: Pointer): TRttiObject;
 begin
-  if not Assigned(aHandle) then
-    Exit(Nil);
+  if not Assigned(AHandle) then
+    Exit(nil);
 {$ifdef FPC_HAS_FEATURE_THREADING}
   EnterCriticalsection(FLock);
   try
 {$endif}
-    idx := FObjectMap.IndexOf(aHandle);
-    if idx < 0 then
-      Result := Nil
-    else
-      Result := FObjectMap.Data[idx];
+    if not FObjectMap.TryGetValue(AHandle, Result) then
+      Result := nil;
 {$ifdef FPC_HAS_FEATURE_THREADING}
   finally
     LeaveCriticalsection(FLock);
@@ -2419,23 +2414,22 @@ begin
 {$endif}
 end;
 
-procedure TRttiPool.AddObject(aObject: TRttiObject);
+procedure TRttiPool.AddObject(AObject: TRttiObject);
 var
-  idx: LongInt;
+  lObject: TRttiObject;
 begin
-  if not Assigned(aObject) then
+  if not Assigned(AObject) then
     Exit;
-  if not Assigned(aObject.Handle) then
+  if not Assigned(AObject.Handle) then
     raise EArgumentException.Create(SErrRttiObjectNoHandle);
 {$ifdef FPC_HAS_FEATURE_THREADING}
   EnterCriticalsection(FLock);
   try
 {$endif}
-    idx := FObjectMap.IndexOf(aObject.Handle);
-    if idx < 0 then
-      FObjectMap.Add(aObject.Handle, aObject)
-    else if FObjectMap.Data[idx] <> aObject then
-      raise EInvalidOpException.CreateFmt(SErrRttiObjectAlreadyRegistered, [aObject.Handle]);
+    if not FObjectMap.TryGetValue(AObject.Handle, lObject) then
+      FObjectMap.Add(AObject.Handle, AObject)
+    else if lObject <> AObject then
+      raise EInvalidOpException.CreateFmt(SErrRttiObjectAlreadyRegistered, [AObject.Handle]);
 {$ifdef FPC_HAS_FEATURE_THREADING}
   finally
     LeaveCriticalsection(FLock);
@@ -2443,23 +2437,22 @@ begin
 {$endif}
 end;
 
-function TRttiPool.GetOrAddObject(aHandle: Pointer; aClass: TRttiMemberClass; aParent: TRttiType): TRttiMember;
+function TRttiPool.GetOrAddObject(AHandle: Pointer; AClass: TRttiMemberClass; AParent: TRttiType): TRttiMember;
 var
-  idx: LongInt;
+  lObject: TRttiObject;
 begin
-  if not Assigned(aHandle) then
-    Exit(aClass.Create(aParent, aHandle));
+  if not Assigned(AHandle) then
+    Exit(AClass.Create(AParent, AHandle));
 {$ifdef FPC_HAS_FEATURE_THREADING}
   EnterCriticalsection(FLock);
   try
 {$endif}
-    idx:=FObjectMap.IndexOf(aHandle);
-    if idx>=0 then
-      Result:=TRttiMember(FObjectMap.Data[idx])
+    if FObjectMap.TryGetValue(AHandle, lObject) then
+      Result := TRttiMember(lObject)
     else
     begin
-      Result:=aClass.Create(aParent, aHandle);
-      FObjectMap.Add(aHandle, Result);
+      Result := AClass.Create(AParent, AHandle);
+      FObjectMap.Add(AHandle, Result);
     end;
 {$ifdef FPC_HAS_FEATURE_THREADING}
   finally
@@ -2480,15 +2473,15 @@ end;
 procedure TRttiPool.Clear;
 
 var
-  i: LongInt;
+  lObject: TRttiObject;
 
 begin
 {$ifdef FPC_HAS_FEATURE_THREADING}
   EnterCriticalsection(FLock);
   try
 {$endif}
-  for i := 0 to FObjectMap.Count - 1 do
-    FObjectMap.Data[i].Free;
+  for lObject in FObjectMap.Values do
+    lObject.Free;
   FObjectMap.Clear;
 {$ifdef FPC_HAS_FEATURE_THREADING}
   finally

@@ -393,7 +393,7 @@ implementation
       function IsByRefPara(out AAssignType: TDef): Boolean;
         begin
           Result:=(Assigned(lPara.ParaSym) and (lPara.ParaSym.VarSpez in [vs_var,vs_out,vs_constref])) or
-                  (lVariantDispatch and valid_for_var(lPara.Left,false));
+                  (lVariantDispatch and Valid_For_Var(lPara.Left,false));
 
           if Result or (lPara.Left.ResultDef.typ in [variantdef]) then
             AAssignType:=VoidPointerType
@@ -608,7 +608,7 @@ implementation
 
             { the Variant should behave similar to hidden 'self' parameter of objects/records,
               see issues #26773 and #27044 }
-            if not valid_for_var(ASelfNode,false) then
+            if not Valid_For_Var(ASelfNode,false) then
               begin
                 lSelfTemp:=CTempCreateNode.Create(ASelfNode.ResultDef,ASelfNode.ResultDef.Size,tt_persistent,false);
                 AddStatement(lStatements,lSelfTemp);
@@ -1150,7 +1150,7 @@ implementation
                or the function definition in pexpr) }
              if (m_mac in CurrentSettings.ModeSwitches) and
                 (ParaSym.vardef.typ=procvardef) and
-                is_ambiguous_funcret_load(Left,lOwningProcDef) then
+                Is_Ambiguous_FuncRet_Load(Left,lOwningProcDef) then
                begin
                  lNode:=CLoadNode.Create_ProcVar(lOwningProcDef.ProcSym,lOwningProcDef,lOwningProcDef.ProcSym.owner);
                  TypeCheckPass(lNode);
@@ -1199,7 +1199,7 @@ implementation
                  { this should only happen vor C varargs                    }
                  { the necessary conversions have already been performed in }
                  { tarrayconstructornode.insert_typeconvs                   }
-                 set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                 Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                  Insert_VarArgsTypeConv(Left,true);
                  ResultDef:=Left.ResultDef;
                  { also update parasym type to get the correct parameter location
@@ -1209,7 +1209,7 @@ implementation
              else
               if (vo_is_hidden_para in ParaSym.VarOptions) then
                begin
-                 set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                 Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                  ResultDef:=Left.ResultDef;
                end
              else
@@ -1251,7 +1251,7 @@ implementation
 
                  { check if local proc/func is assigned to procvar }
                  if Left.ResultDef.typ=procvardef then
-                   test_local_to_procvar(TProcVarDef(Left.ResultDef),ParaSym.vardef);
+                   Test_Local_To_ProcVar(TProcVarDef(Left.ResultDef),ParaSym.vardef);
 
                  { test conversions }
                  if not(Is_ShortString(Left.ResultDef) and
@@ -1269,7 +1269,7 @@ implementation
                        end
                       else
                        begin
-                         check_ranges(Left.FileInfo,Left,ParaSym.vardef);
+                         Check_Ranges(Left.FileInfo,Left,ParaSym.vardef);
                          InsertTypeConv(Left,ParaSym.vardef);
                        end;
                       if CodeGenError then
@@ -1361,17 +1361,17 @@ implementation
                        vs_var,
                        vs_out :
                          begin
-                           if not valid_for_formal_var(Left,true) then
+                           if not Valid_For_Formal_Var(Left,true) then
                             CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list);
                          end;
                        vs_constref:
                          begin
-                           if not valid_for_formal_constref(Left,true) then
+                           if not Valid_For_Formal_ConstRef(Left,true) then
                             CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list);
                          end;
                        vs_const :
                          begin
-                           if not valid_for_formal_const(Left,true) then
+                           if not Valid_For_Formal_Const(Left,true) then
                             CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list)
                          end;
                        else
@@ -1382,11 +1382,11 @@ implementation
                    begin
                      { check if the argument is allowed }
                      if (ParaSym.VarSpez in [vs_out,vs_var]) then
-                       valid_for_var(Left,true);
+                       Valid_For_Var(Left,true);
                    end;
 
                  if ParaSym.VarSpez in [vs_var,vs_out,vs_constref] then
-                   set_unique(Left);
+                   Set_Unique(Left);
 
                  if (ParaSym.VarSpez=vs_const) and (ParaSym.vardef.typ=formaldef) then
                    begin
@@ -1399,9 +1399,9 @@ implementation
                       not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
                       (TProcDef(CallNode.ProcDefinition).IsImplemented) and
                       not(ParaSym.AddrTaken)) then
-                       make_not_regable(Left,[ra_addr_regable])
+                       Make_Not_Regable(Left,[ra_addr_regable])
                      else
-                       make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
+                       Make_Not_Regable(Left,[ra_addr_regable,ra_addr_taken]);
                    end
                  else
                   case ParaSym.VarSpez of
@@ -1409,8 +1409,8 @@ implementation
                       begin
                         { first set written separately to avoid false }
                         { uninitialized warnings (tbs/tb0542)         }
-                        set_varstate(Left,vs_written,[]);
-                        set_varstate(Left,vs_readwritten,[]);
+                        Set_VarState(Left,vs_written,[]);
+                        Set_VarState(Left,vs_readwritten,[]);
                         { compilerprocs never capture the address of their
                           parameters }
                         if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
@@ -1420,13 +1420,13 @@ implementation
                          not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
                          (TProcDef(CallNode.ProcDefinition).IsImplemented) and
                          not(ParaSym.AddrTaken)) then
-                          make_not_regable(Left,[ra_addr_regable])
+                          Make_Not_Regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
+                          Make_Not_Regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     vs_var:
                       begin
-                        set_varstate(Left,vs_readwritten,[vsf_must_be_valid,vsf_use_hints]);
+                        Set_VarState(Left,vs_readwritten,[vsf_must_be_valid,vsf_use_hints]);
                         { compilerprocs never capture the address of their
                           parameters }
                         if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
@@ -1436,15 +1436,15 @@ implementation
                          not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
                          (TProcDef(CallNode.ProcDefinition).IsImplemented) and
                          not(ParaSym.AddrTaken)) then
-                          make_not_regable(Left,[ra_addr_regable])
+                          Make_Not_Regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
+                          Make_Not_Regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     vs_constref:
                       begin
                         { constref does not mean that the variable is actually written, this might only
                           happen if it's address is taken, this is handled below }
-                        set_varstate(Left,vs_read,[vsf_must_be_valid,vsf_use_hints]);
+                        Set_VarState(Left,vs_read,[vsf_must_be_valid,vsf_use_hints]);
                         { compilerprocs never capture the address of their
                           parameters }
                         if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
@@ -1454,12 +1454,12 @@ implementation
                          not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
                          (TProcDef(CallNode.ProcDefinition).IsImplemented) and
                          not(ParaSym.AddrTaken)) then
-                          make_not_regable(Left,[ra_addr_regable])
+                          Make_Not_Regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
+                          Make_Not_Regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     else
-                      set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                      Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   end;
                  { must only be done after typeconv PM }
                  ResultDef:=ParaSym.vardef;
@@ -3414,7 +3414,7 @@ implementation
           exit;
 
         { destination must be able to be passed as var parameter }
-        if not valid_for_var(AktAssignmentNode.Left,false) then
+        if not Valid_For_Var(AktAssignmentNode.Left,false) then
           exit;
 
         { destination must be a simple load so it doesn't need a temp when
@@ -3631,7 +3631,7 @@ implementation
                        parameter }
                      if ParaManager.Push_Addr_Param(lPara.ParaSym.VarSpez,lPara.ParaSym.vardef,
                          ProcDefinition.ProcCallOption) then
-                       make_not_regable(lPara.Left,[ra_addr_regable]);
+                       Make_Not_Regable(lPara.Left,[ra_addr_regable]);
                    end
                 else
                  if vo_is_vmt in lPara.ParaSym.VarOptions then
@@ -4032,7 +4032,7 @@ implementation
         { procedure variable ? }
         if Assigned(Right) then
           begin
-             set_varstate(Right,vs_read,[vsf_must_be_valid]);
+             Set_VarState(Right,vs_read,[vsf_must_be_valid]);
              TypeCheckPass(Right);
              if CodeGenError then
                exit;
@@ -4195,16 +4195,16 @@ implementation
                  end;
 
                 { Retrieve information about the candidates }
-                lCandidates.get_information;
+                lCandidates.Get_Information;
 {$ifdef EXTDEBUG}
                 { Display info when multiple candidates are found }
                 if lCandidates.count>1 then
-                  lCandidates.dump_info(VDebug);
+                  lCandidates.Dump_Info(VDebug);
 {$endif EXTDEBUG}
 
                 { Choose the best candidate and count the number of
                   candidates left }
-                lCandidateCount:=lCandidates.choose_best(ProcDefinition,
+                lCandidateCount:=lCandidates.Choose_Best(ProcDefinition,
                   Assigned(Left) and
                   not Assigned(TCallParaNode(Left).Right) and
                   (TCallParaNode(Left).Left.ResultDef.typ=variantdef));
@@ -4238,7 +4238,7 @@ implementation
                         begin
                           CGMessage(type_e_cant_choose_overload_function);
 {$ifdef EXTDEBUG}
-                          lCandidates.dump_info(VHint);
+                          lCandidates.Dump_Info(VHint);
 {$else EXTDEBUG}
                           lCandidates.list(false);
 {$endif EXTDEBUG}
@@ -4258,10 +4258,10 @@ implementation
                      is filled with the first (random) definition that is
                      found. We use this definition to display a nice error
                      message that the wrong type is passed }
-                   lCandidates.find_wrong_para;
+                   lCandidates.Find_Wrong_Para;
                    lCandidates.list(true);
 {$ifdef EXTDEBUG}
-                   lCandidates.dump_info(VHint);
+                   lCandidates.Dump_Info(VHint);
 {$endif EXTDEBUG}
 
                    { We can not proceed, release all procs and exit }
@@ -4282,7 +4282,7 @@ implementation
                 ProcDefinition.RegisterDef;
 
                 if ProcDefinition.Is_Specialization and (ProcDefinition.typ=procdef) then
-                  maybe_add_pending_specialization(ProcDefinition,lCandidates.para_anon_syms);
+                  maybe_add_pending_specialization(ProcDefinition,lCandidates.ParaAnonSyms);
 
                 lCandidates.done;
               end; { end of procedure to call determination }
@@ -4506,9 +4506,9 @@ implementation
                  ) then
                 { a constructor will and a method may write something to }
                 { the fields                                             }
-                set_varstate(MethodPointer,vs_readwritten,[])
+                Set_VarState(MethodPointer,vs_readwritten,[])
               else
-                set_varstate(MethodPointer,vs_read,[vsf_must_be_valid]);
+                Set_VarState(MethodPointer,vs_read,[vsf_must_be_valid]);
             end;
 
            { if we are calling the constructor check for abstract
@@ -4904,9 +4904,9 @@ implementation
                      (not(po_compilerproc in ProcDefinition.ProcOptions) and
                      (lParameterNode.ParaSym.VarSpez=vs_const))
                    ) then
-                  make_not_regable(lParameterNode.Left,[ra_addr_regable,ra_addr_taken])
+                  Make_Not_Regable(lParameterNode.Left,[ra_addr_regable,ra_addr_taken])
                 else
-                  make_not_regable(lParameterNode.Left,[ra_addr_regable]);
+                  Make_Not_Regable(lParameterNode.Left,[ra_addr_regable]);
               lParameterNode:=TCallParaNode(lParameterNode.Right);
             end;
         end;
@@ -5261,7 +5261,7 @@ implementation
           expression in a temp }
         if (AComplexPara and not(APara.Left.ExpectLoc in [LOC_REFERENCE,LOC_CREFERENCE]) or
            (AComplexPara and
-            (not valid_for_addr(APara.Left,false) or
+            (not Valid_For_Addr(APara.Left,false) or
              (APara.Left.NodeType=calln) or
              Is_ConstNode(APara.Left)))) then
           exit(true);
@@ -5321,7 +5321,7 @@ implementation
            { call-by-reference const's may need to be passed by reference to
              function called in the inlined code }
            (APushConstAddr and
-            not valid_for_addr(APara.Left,false)) then
+            not Valid_For_Addr(APara.Left,false)) then
           exit(true);
 
         { insert value parameters directly if they are complex instead
@@ -5421,7 +5421,7 @@ implementation
           end
         { for formaldefs, we do not need a temp., but it must be inherited if they are not regable }
         else if (APara.ParaSym.vardef.typ=formaldef) and not(TParaVarSym(APara.ParaSym).Is_RegVar(false)) then
-          make_not_regable(APara.Left,[ra_addr_regable]);
+          Make_Not_Regable(APara.Left,[ra_addr_regable]);
       end;
 
 

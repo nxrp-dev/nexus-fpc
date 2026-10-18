@@ -16,350 +16,350 @@
 {$i+}
 program mkx86reg;
 
-const Version = '1.01';
-      max_regcount = 511;
+const cVersion = '1.01';
+      cMaxRegCount = 511;
 
-var s : string;
-    i : LongInt;
-    line : LongInt;
-    regcount:LongInt;
-    regcount_bsstart:LongInt;
-    names,numbers,stdnames,intnames,attnames,dwarf16,dwarf32,dwarf64,ots,ops:
-        array[0..max_regcount-1] of string[63];
-    regnumber_index,std_regname_index,int_regname_index,att_regname_index:
-        array[0..max_regcount-1] of byte;
-    i8086  : boolean;
-    x86_64 : boolean;
-    fileprefix : string;
+var LineText : String;
+    Index : LongInt;
+    Line : LongInt;
+    RegCount:LongInt;
+    RegCountBSStart:LongInt;
+    Names,Numbers,StdNames,IntNames,ATTNames,Dwarf16,Dwarf32,Dwarf64,OTs,Ops:
+        array[0..cMaxRegCount-1] of String[63];
+    RegNumberIndex,StdRegNameIndex,IntRegNameIndex,ATTRegNameIndex:
+        array[0..cMaxRegCount-1] of Byte;
+    IsI8086  : Boolean;
+    IsX8664 : Boolean;
+    FilePrefix : String;
 
-function ToStr(l : LongInt) : string;
+function ToStr(AValue : LongInt) : String;
 
 begin
-  str(l,ToStr);
+  str(AValue,ToStr);
 end;
 
-function readstr : string;
+function ReadStr : String;
   begin
-     result:='';
-     while (s[i]<>',') and (i<=length(s)) do
+     Result:='';
+     while (LineText[Index]<>',') and (Index<=length(LineText)) do
        begin
-          result:=result+s[i];
-          inc(i);
+          Result:=Result+LineText[Index];
+          inc(Index);
        end;
-     readstr:=result;
+     ReadStr:=Result;
   end;
 
 
-procedure readcomma;
+procedure ReadComma;
   begin
-     if s[i]<>',' then
+     if LineText[Index]<>',' then
        begin
-         WriteLn('Missing "," at line ',line);
-         WriteLn('Line: "',s,'"');
+         WriteLn('Missing "," at line ',Line);
+         WriteLn('Line: "',LineText,'"');
          halt(1);
        end;
-     inc(i);
+     inc(Index);
   end;
 
 
-procedure skipspace;
+procedure SkipSpace;
 
   begin
-     while (s[i] in [' ',#9]) do
-       inc(i);
+     while (LineText[Index] in [' ',#9]) do
+       inc(Index);
   end;
 
-procedure openinc(out f:text;const fn:string);
+procedure OpenInc(out AFile:Text;const AFileName:String);
 begin
-  WriteLn('creating ',fn);
-  assign(f,fn);
-  rewrite(f);
-  WriteLn(f,'{ don''t edit, this file is generated from x86reg.dat }');
+  WriteLn('creating ',AFileName);
+  assign(AFile,AFileName);
+  rewrite(AFile);
+  WriteLn(AFile,'{ don''t edit, this file is generated from x86reg.dat }');
 end;
 
 
-procedure closeinc(var f:text);
+procedure CloseInc(var AFile:Text);
 begin
-  WriteLn(f);
-  close(f);
+  WriteLn(AFile);
+  close(AFile);
 end;
 
-procedure build_regnum_index;
+procedure BuildRegNumIndex;
 
-var h,i,j,p,t:byte;
-
-begin
-  {Build the registernumber2regindex index.
-   Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    regnumber_index[i]:=i;
-  {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
-  repeat
-    for h:=0 to regcount-p-1 do
-      begin
-        i:=h;
-        repeat
-          j:=i+p;
-          if numbers[regnumber_index[j]]>=numbers[regnumber_index[i]] then
-            break;
-          t:=regnumber_index[i];
-          regnumber_index[i]:=regnumber_index[j];
-          regnumber_index[j]:=t;
-          if i<p then
-            break;
-          dec(i,p);
-        until false;
-      end;
-    p:=p shr 1;
-  until p=0;
-end;
-
-procedure build_std_regname_index;
-
-var h,i,j,p,t:byte;
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Byte;
 
 begin
   {Build the registernumber2regindex index.
    Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    std_regname_index[i]:=i;
+  for lIndex:=0 to RegCount-1 do
+    RegNumberIndex[lIndex]:=lIndex;
   {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
+  lGap:=RegCountBSStart;
   repeat
-    for h:=0 to regcount-p-1 do
+    for lIndexH:=0 to RegCount-lGap-1 do
       begin
-        i:=h;
+        lIndex:=lIndexH;
         repeat
-          j:=i+p;
-          if stdnames[std_regname_index[j]]>=stdnames[std_regname_index[i]] then
+          lIndexJ:=lIndex+lGap;
+          if Numbers[RegNumberIndex[lIndexJ]]>=Numbers[RegNumberIndex[lIndex]] then
             break;
-          t:=std_regname_index[i];
-          std_regname_index[i]:=std_regname_index[j];
-          std_regname_index[j]:=t;
-          if i<p then
+          lTemp:=RegNumberIndex[lIndex];
+          RegNumberIndex[lIndex]:=RegNumberIndex[lIndexJ];
+          RegNumberIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
             break;
-          dec(i,p);
+          dec(lIndex,lGap);
         until false;
       end;
-    p:=p shr 1;
-  until p=0;
+    lGap:=lGap shr 1;
+  until lGap=0;
 end;
 
-procedure build_int_regname_index;
+procedure BuildStdRegNameIndex;
 
-var h,i,j,p,t:byte;
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Byte;
 
 begin
   {Build the registernumber2regindex index.
    Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    int_regname_index[i]:=i;
+  for lIndex:=0 to RegCount-1 do
+    StdRegNameIndex[lIndex]:=lIndex;
   {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
+  lGap:=RegCountBSStart;
   repeat
-    for h:=0 to regcount-p-1 do
+    for lIndexH:=0 to RegCount-lGap-1 do
       begin
-        i:=h;
+        lIndex:=lIndexH;
         repeat
-          j:=i+p;
-          if intnames[int_regname_index[j]]>=intnames[int_regname_index[i]] then
+          lIndexJ:=lIndex+lGap;
+          if StdNames[StdRegNameIndex[lIndexJ]]>=StdNames[StdRegNameIndex[lIndex]] then
             break;
-          t:=int_regname_index[i];
-          int_regname_index[i]:=int_regname_index[j];
-          int_regname_index[j]:=t;
-          if i<p then
+          lTemp:=StdRegNameIndex[lIndex];
+          StdRegNameIndex[lIndex]:=StdRegNameIndex[lIndexJ];
+          StdRegNameIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
             break;
-          dec(i,p);
+          dec(lIndex,lGap);
         until false;
       end;
-    p:=p shr 1;
-  until p=0;
+    lGap:=lGap shr 1;
+  until lGap=0;
 end;
 
-procedure build_att_regname_index;
+procedure BuildIntRegNameIndex;
 
-var h,i,j,p,t:byte;
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Byte;
 
 begin
   {Build the registernumber2regindex index.
    Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    att_regname_index[i]:=i;
+  for lIndex:=0 to RegCount-1 do
+    IntRegNameIndex[lIndex]:=lIndex;
   {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
+  lGap:=RegCountBSStart;
   repeat
-    for h:=0 to regcount-p-1 do
+    for lIndexH:=0 to RegCount-lGap-1 do
       begin
-        i:=h;
+        lIndex:=lIndexH;
         repeat
-          j:=i+p;
-          if attnames[att_regname_index[j]]>=attnames[att_regname_index[i]] then
+          lIndexJ:=lIndex+lGap;
+          if IntNames[IntRegNameIndex[lIndexJ]]>=IntNames[IntRegNameIndex[lIndex]] then
             break;
-          t:=att_regname_index[i];
-          att_regname_index[i]:=att_regname_index[j];
-          att_regname_index[j]:=t;
-          if i<p then
+          lTemp:=IntRegNameIndex[lIndex];
+          IntRegNameIndex[lIndex]:=IntRegNameIndex[lIndexJ];
+          IntRegNameIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
             break;
-          dec(i,p);
+          dec(lIndex,lGap);
         until false;
       end;
-    p:=p shr 1;
-  until p=0;
+    lGap:=lGap shr 1;
+  until lGap=0;
 end;
 
-procedure read_x86reg_file;
+procedure BuildATTRegNameIndex;
 
-var infile:text;
-    cpustr:string;
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Byte;
+
+begin
+  {Build the registernumber2regindex index.
+   Step 1: Fill.}
+  for lIndex:=0 to RegCount-1 do
+    ATTRegNameIndex[lIndex]:=lIndex;
+  {Step 2: Sort. We use a Shell-Metzner sort.}
+  lGap:=RegCountBSStart;
+  repeat
+    for lIndexH:=0 to RegCount-lGap-1 do
+      begin
+        lIndex:=lIndexH;
+        repeat
+          lIndexJ:=lIndex+lGap;
+          if ATTNames[ATTRegNameIndex[lIndexJ]]>=ATTNames[ATTRegNameIndex[lIndex]] then
+            break;
+          lTemp:=ATTRegNameIndex[lIndex];
+          ATTRegNameIndex[lIndex]:=ATTRegNameIndex[lIndexJ];
+          ATTRegNameIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
+            break;
+          dec(lIndex,lGap);
+        until false;
+      end;
+    lGap:=lGap shr 1;
+  until lGap=0;
+end;
+
+procedure ReadX86RegFile;
+
+var lInputFile:Text;
+    lCPUString:String;
 
 begin
    { open dat file }
-   assign(infile,'../x86/x86reg.dat');
-   reset(infile);
-   while not(eof(infile)) do
+   assign(lInputFile,'../x86/x86reg.dat');
+   reset(lInputFile);
+   while not(eof(lInputFile)) do
      begin
         { handle comment }
-        readln(infile,s);
-        inc(line);
-        while (s<>'') and (s[1]=' ') do
-         delete(s,1,1);
-        if (s='') or (s[1]=';') then
+        readln(lInputFile,LineText);
+        inc(Line);
+        while (LineText<>'') and (LineText[1]=' ') do
+         delete(LineText,1,1);
+        if (LineText='') or (LineText[1]=';') then
           continue;
 
-        i:=1;
-        names[regcount]:=readstr;
-        readcomma;
-        numbers[regcount]:=readstr;
-        readcomma;
-        stdnames[regcount]:=readstr;
-        readcomma;
-        attnames[regcount]:=readstr;
-        readcomma;
-        intnames[regcount]:=readstr;
-        readcomma;
-        dwarf16[regcount]:=readstr;
-        readcomma;
-        dwarf32[regcount]:=readstr;
-        readcomma;
-        dwarf64[regcount]:=readstr;
-        readcomma;
-        ots[regcount]:=readstr;
-        readcomma;
-        ops[regcount]:=readstr;
-        if s[i]=',' then
+        Index:=1;
+        Names[RegCount]:=ReadStr;
+        ReadComma;
+        Numbers[RegCount]:=ReadStr;
+        ReadComma;
+        StdNames[RegCount]:=ReadStr;
+        ReadComma;
+        ATTNames[RegCount]:=ReadStr;
+        ReadComma;
+        IntNames[RegCount]:=ReadStr;
+        ReadComma;
+        Dwarf16[RegCount]:=ReadStr;
+        ReadComma;
+        Dwarf32[RegCount]:=ReadStr;
+        ReadComma;
+        Dwarf64[RegCount]:=ReadStr;
+        ReadComma;
+        OTs[RegCount]:=ReadStr;
+        ReadComma;
+        Ops[RegCount]:=ReadStr;
+        if LineText[Index]=',' then
           begin
-            readcomma;
-            cpustr:=readstr;
+            ReadComma;
+            lCPUString:=ReadStr;
           end
         else
-          cpustr:='';
-        if i<length(s) then
+          lCPUString:='';
+        if Index<length(LineText) then
           begin
-            WriteLn('Extra chars at end of line, at line ',line);
-            WriteLn('Line: "',s,'"');
+            WriteLn('Extra chars at end of line, at line ',Line);
+            WriteLn('Line: "',LineText,'"');
             halt(1);
           end;
-        if (cpustr<>'64') or x86_64 then
+        if (lCPUString<>'64') or IsX8664 then
           begin
-            inc(regcount);
-            if regcount>max_regcount then
+            inc(RegCount);
+            if RegCount>cMaxRegCount then
               begin
                 WriteLn('Error: Too much registers, please increase maxregcount in source');
                 halt(2);
               end;
           end;
      end;
-   close(infile);
+   close(lInputFile);
 end;
 
-procedure write_inc_files;
+procedure WriteIncFiles;
 
-var attfile,intfile,otfile,
-    norfile,stdfile,
-    numfile,dwrffile,confile,
-    rnifile,irifile,srifile,
-    arifile:text;
-    first:boolean;
+var lATTFile,lIntFile,lOTFile,
+    lCountFile,lStdFile,
+    lNumberFile,lDwarfFile,lConstFile,
+    lRegNumberIndexFile,lIntRegIndexFile,lStdRegIndexFile,
+    lATTRegIndexFile:Text;
+    lFirst:Boolean;
 
 begin
   { create inc files }
-  openinc(confile,fileprefix+'con.inc');
-  openinc(numfile,fileprefix+'num.inc');
-  openinc(stdfile,fileprefix+'std.inc');
-  openinc(attfile,fileprefix+'att.inc');
-  openinc(intfile,fileprefix+'int.inc');
-  openinc(dwrffile,fileprefix+'dwrf.inc');
-  openinc(otfile,fileprefix+'ot.inc');
-  openinc(norfile,fileprefix+'nor.inc');
-  openinc(rnifile,fileprefix+'rni.inc');
-  openinc(srifile,fileprefix+'sri.inc');
-  openinc(arifile,fileprefix+'ari.inc');
-  openinc(irifile,fileprefix+'iri.inc');
-  first:=true;
-  for i:=0 to regcount-1 do
+  OpenInc(lConstFile,FilePrefix+'con.inc');
+  OpenInc(lNumberFile,FilePrefix+'num.inc');
+  OpenInc(lStdFile,FilePrefix+'std.inc');
+  OpenInc(lATTFile,FilePrefix+'att.inc');
+  OpenInc(lIntFile,FilePrefix+'int.inc');
+  OpenInc(lDwarfFile,FilePrefix+'dwrf.inc');
+  OpenInc(lOTFile,FilePrefix+'ot.inc');
+  OpenInc(lCountFile,FilePrefix+'nor.inc');
+  OpenInc(lRegNumberIndexFile,FilePrefix+'rni.inc');
+  OpenInc(lStdRegIndexFile,FilePrefix+'sri.inc');
+  OpenInc(lATTRegIndexFile,FilePrefix+'ari.inc');
+  OpenInc(lIntRegIndexFile,FilePrefix+'iri.inc');
+  lFirst:=true;
+  for Index:=0 to RegCount-1 do
     begin
-      if not first then
+      if not lFirst then
         begin
-          WriteLn(numfile,',');
-          WriteLn(stdfile,',');
-          WriteLn(attfile,',');
-          WriteLn(intfile,',');
-          WriteLn(dwrffile,',');
-          WriteLn(otfile,',');
-          WriteLn(rnifile,',');
-          WriteLn(srifile,',');
-          WriteLn(arifile,',');
-          WriteLn(irifile,',');
+          WriteLn(lNumberFile,',');
+          WriteLn(lStdFile,',');
+          WriteLn(lATTFile,',');
+          WriteLn(lIntFile,',');
+          WriteLn(lDwarfFile,',');
+          WriteLn(lOTFile,',');
+          WriteLn(lRegNumberIndexFile,',');
+          WriteLn(lStdRegIndexFile,',');
+          WriteLn(lATTRegIndexFile,',');
+          WriteLn(lIntRegIndexFile,',');
         end
       else
-        first:=false;
-      WriteLn(confile,names[i],' = ','TRegister(',numbers[i],')',';');
-      write(numfile,'TRegister(',numbers[i],')');
-      write(stdfile,'''',stdnames[i],'''');
-      write(attfile,'''',attnames[i],'''');
-      write(intfile,'''',intnames[i],'''');
-      if x86_64 then
-        write(dwrffile,dwarf64[i])
-      else if i8086 then
-        write(dwrffile,dwarf16[i])
+        lFirst:=false;
+      WriteLn(lConstFile,Names[Index],' = ','TRegister(',Numbers[Index],')',';');
+      write(lNumberFile,'TRegister(',Numbers[Index],')');
+      write(lStdFile,'''',StdNames[Index],'''');
+      write(lATTFile,'''',ATTNames[Index],'''');
+      write(lIntFile,'''',IntNames[Index],'''');
+      if IsX8664 then
+        write(lDwarfFile,Dwarf64[Index])
+      else if IsI8086 then
+        write(lDwarfFile,Dwarf16[Index])
       else
-        write(dwrffile,dwarf32[i]);
-      write(otfile,ots[i]);
-      write(rnifile,regnumber_index[i]);
-      write(srifile,std_regname_index[i]);
-      write(arifile,att_regname_index[i]);
-      write(irifile,int_regname_index[i]);
+        write(lDwarfFile,Dwarf32[Index]);
+      write(lOTFile,OTs[Index]);
+      write(lRegNumberIndexFile,RegNumberIndex[Index]);
+      write(lStdRegIndexFile,StdRegNameIndex[Index]);
+      write(lATTRegIndexFile,ATTRegNameIndex[Index]);
+      write(lIntRegIndexFile,IntRegNameIndex[Index]);
     end;
-  write(norfile,regcount);
-  close(confile);
-  closeinc(numfile);
-  closeinc(attfile);
-  closeinc(stdfile);
-  closeinc(intfile);
-  closeinc(dwrffile);
-  closeinc(otfile);
-  closeinc(norfile);
-  closeinc(rnifile);
-  closeinc(srifile);
-  closeinc(arifile);
-  closeinc(irifile);
+  write(lCountFile,RegCount);
+  close(lConstFile);
+  CloseInc(lNumberFile);
+  CloseInc(lATTFile);
+  CloseInc(lStdFile);
+  CloseInc(lIntFile);
+  CloseInc(lDwarfFile);
+  CloseInc(lOTFile);
+  CloseInc(lCountFile);
+  CloseInc(lRegNumberIndexFile);
+  CloseInc(lStdRegIndexFile);
+  CloseInc(lATTRegIndexFile);
+  CloseInc(lIntRegIndexFile);
   WriteLn('Done!');
-  WriteLn(regcount,' registers processed');
+  WriteLn(RegCount,' registers processed');
 end;
 
 
 begin
-   WriteLn('Register Table Converter Version ',Version);
+   WriteLn('Register Table Converter Version ',cVersion);
    if paramcount=0 then
      begin
-       i8086:=false;
-       x86_64:=false;
+       IsI8086:=false;
+       IsX8664:=false;
      end
    else
      begin
-       i8086:=ParamStr(1)='i8086';
-       x86_64:=ParamStr(1)='x86_64';
+       IsI8086:=ParamStr(1)='i8086';
+       IsX8664:=ParamStr(1)='x86_64';
        if (paramcount<>1) or
           ((ParamStr(1)<>'i8086') and (ParamStr(1)<>'i386') and (ParamStr(1)<>'x86_64')) then
          begin
@@ -368,30 +368,30 @@ begin
            halt(1);
          end;
      end;
-   if x86_64 then
+   if IsX8664 then
      begin
-       fileprefix:='r8664';
+       FilePrefix:='r8664';
        WriteLn('Processing for CPU x86_64');
      end
-   else if i8086 then
+   else if IsI8086 then
      begin
-       fileprefix:='r8086';
+       FilePrefix:='r8086';
        WriteLn('Processing for CPU i8086');
      end
    else
      begin
-       fileprefix:='r386';
+       FilePrefix:='r386';
        WriteLn('Processing for CPU i386');
      end;
-   line:=0;
-   regcount:=0;
-   read_x86reg_file;
-   regcount_bsstart:=1;
-   while 2*regcount_bsstart<regcount do
-     regcount_bsstart:=regcount_bsstart*2;
-   build_regnum_index;
-   build_int_regname_index;
-   build_std_regname_index;
-   build_att_regname_index;
-   write_inc_files;
+   Line:=0;
+   RegCount:=0;
+   ReadX86RegFile;
+   RegCountBSStart:=1;
+   while 2*RegCountBSStart<RegCount do
+     RegCountBSStart:=RegCountBSStart*2;
+   BuildRegNumIndex;
+   BuildIntRegNameIndex;
+   BuildStdRegNameIndex;
+   BuildATTRegNameIndex;
+   WriteIncFiles;
 end.

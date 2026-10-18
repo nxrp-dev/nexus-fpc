@@ -1222,7 +1222,7 @@ implementation
          { loop instruction }
          if Assigned(Right) then
            TypeCheckPass(Right);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -1628,7 +1628,7 @@ implementation
          { else path }
          if Assigned(T1) then
            TypeCheckPass(T1);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -1728,7 +1728,7 @@ implementation
          TypeCheckPass(Right);
          TypeCheckPass(T1);
 
-         set_varstate(Left,vs_written,[]);
+         Set_VarState(Left,vs_written,[]);
 
          { Make sure that the loop var and the
            from and to values are compatible types }
@@ -1737,10 +1737,10 @@ implementation
          else
            lRangeDef:=Get_Iso_Range_Type(Left.ResultDef);
 
-         check_ranges(Right.FileInfo,Right,lRangeDef);
+         Check_Ranges(Right.FileInfo,Right,lRangeDef);
          InsertTypeConv(Right,lRangeDef);
 
-         check_ranges(T1.FileInfo,T1,lRangeDef);
+         Check_Ranges(T1.FileInfo,T1,lRangeDef);
          InsertTypeConv(T1,lRangeDef);
 
          if Assigned(T2) then
@@ -2417,7 +2417,7 @@ implementation
            begin
              { first para must be a _class_ }
              TypeCheckPass(Left);
-             set_varstate(Left,vs_read,[vsf_must_be_valid]);
+             Set_VarState(Left,vs_read,[vsf_must_be_valid]);
              if CodeGenError then
               exit;
              if not Is_Class(Left.ResultDef) then
@@ -2427,14 +2427,14 @@ implementation
                begin
                  { addr }
                  TypeCheckPass(Right);
-                 set_varstate(Right,vs_read,[vsf_must_be_valid]);
+                 Set_VarState(Right,vs_read,[vsf_must_be_valid]);
                  InsertTypeConv(Right,VoidCodePointerType);
 
                  { frame }
                  if Assigned(Third) then
                   begin
                     TypeCheckPass(Third);
-                    set_varstate(Third,vs_read,[vsf_must_be_valid]);
+                    Set_VarState(Third,vs_read,[vsf_must_be_valid]);
                     InsertTypeConv(Third,VoidPointerType);
                   end;
                end;
@@ -2583,16 +2583,16 @@ implementation
 
         TypeCheckPass(Left);
         // "try block" is "used"? (JM)
-        set_varstate(Left,vs_readwritten,[vsf_must_be_valid]);
+        Set_VarState(Left,vs_readwritten,[vsf_must_be_valid]);
 
         TypeCheckPass(Right);
         // "except block" is "used"? (JM)
-        set_varstate(Right,vs_readwritten,[vsf_must_be_valid]);
+        Set_VarState(Right,vs_readwritten,[vsf_must_be_valid]);
 
         if Assigned(Third) then
           begin
             TypeCheckPass(Third);
-            set_varstate(Third,vs_readwritten,[vsf_must_be_valid]);
+            Set_VarState(Third,vs_readwritten,[vsf_must_be_valid]);
           end;
       end;
 

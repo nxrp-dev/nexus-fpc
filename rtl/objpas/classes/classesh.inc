@@ -468,7 +468,7 @@ Type
   TListStaticCallback = TYU.TListStaticCallback;
 
 
-{$IFNDEF FPC_TESTGENERICS}
+
 
   TListAssignOp = (laCopy, laAnd, laOr, laXor, laSrcUnique, laDestUnique);
   TFPList = class;
@@ -539,20 +539,7 @@ Type
     property List: PPointerList read FList;
   end;
 
-{$else}
 
-  TFPPtrList = specialize TFPGList<Pointer>;
-
-  TFPList = class(TFPPtrList)
-  public
-    procedure Assign(Source: TFPList);
-    procedure Sort(Compare: TListSortCompare);
-    procedure Sort(Compare: TListSortCompare; SortingAlgorithm: PSortingAlgorithm);
-    procedure ForEachCall(Proc2call: TListCallback; Arg: Pointer);
-    procedure ForEachCall(Proc2call: TListStaticCallback; Arg: Pointer);
-  end;
-
-{$endif}
 
 { TList class}
 
@@ -1073,7 +1060,7 @@ type
 
   TStringListSortCompare = function(List: TStringList; Index1, Index2: Integer): Integer;
 
-{$IFNDEF FPC_TESTGENERICS}
+
 
   PStringItem = ^TStringItem;
   TStringItem = record
@@ -1148,64 +1135,7 @@ type
     Property SortStyle : TStringsSortStyle Read FSortStyle Write SetSortStyle;
   end;
 
-{$else}
 
-  TFPStrObjMap = specialize TFPGMap<string, TObject>;
-
-  TStringListTextCompare = function(const s1, s2: string): PtrInt of object;
-
-  TStringList = class(TStrings)
-  private
-    FMap: TFPStrObjMap;
-    FCaseSensitive: Boolean;
-    FOnChange: TNotifyEvent;
-    FOnChanging: TNotifyEvent;
-    FOnCompareText: TStringListTextCompare;
-    FOwnsObjects : Boolean;
-    procedure SetCaseSensitive(NewSensitive: Boolean);
-  protected
-    procedure Changed; virtual;
-    procedure Changing; virtual;
-    function DefaultCompareText(const s1, s2: string): PtrInt;
-    function DoCompareText(const s1, s2: string): PtrInt; override;
-    function Get(Index: Integer): string; override;
-    function GetCapacity: Integer; override;
-    function GetDuplicates: TDuplicates;
-    function GetCount: Integer; override;
-    function GetObject(Index: Integer): TObject; override;
-    function GetSorted: Boolean; {$ifdef CLASSESINLINE} inline; {$endif}
-    function MapPtrCompare(Key1, Key2: Pointer): Integer;
-    procedure Put(Index: Integer; const S: string); override;
-    procedure PutObject(Index: Integer; AObject: TObject); override;
-    procedure QuickSort(L, R: Integer; CompareFn: TStringListSortCompare);
-    procedure SetCapacity(NewCapacity: Integer); override;
-    procedure SetDuplicates(NewDuplicates: TDuplicates);
-    procedure SetSorted(NewSorted: Boolean); {$ifdef CLASSESINLINE} inline; {$endif}
-    procedure SetUpdateState(Updating: Boolean); override;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function Add(const S: string): Integer; override;
-    procedure Clear; override;
-    procedure Delete(Index: Integer); override;
-    procedure Exchange(Index1, Index2: Integer); override;
-    function Find(const S: string; var Index: Integer): Boolean; virtual;
-    function IndexOf(const S: string): Integer; override;
-    procedure Insert(Index: Integer; const S: string); override;
-    procedure Sort; virtual;
-    procedure Sort(SortingAlgorithm: PSortingAlgorithm); virtual;
-    procedure CustomSort(CompareFn: TStringListSortCompare);
-    procedure CustomSort(CompareFn: TStringListSortCompare; SortingAlgorithm: PSortingAlgorithm);
-    property Duplicates: TDuplicates read GetDuplicates write SetDuplicates;
-    property Sorted: Boolean read GetSorted write SetSorted;
-    property CaseSensitive: Boolean read FCaseSensitive write SetCaseSensitive;
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
-    property OnCompareText: TStringListTextCompare read FOnCompareText write FOnCompareText;
-    property OwnsObjects : boolean read FOwnsObjects write FOwnsObjects;
-  end;
-
-{$endif}
 
 
 { TStream abstract class }

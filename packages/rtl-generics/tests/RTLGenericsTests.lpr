@@ -15,7 +15,8 @@ uses
   tests.generics.bugs,
   tests.generics.stdcollections,
   tests.generics.dictionary,
-  tests.generics.dictionary2;
+  tests.generics.dictionary2,
+  tsNXCollectionErrors;
 var
   lRegistry: TNXTestRegistry;
 begin
@@ -32,6 +33,7 @@ begin
     RegistertestsgenericsstdcollectionsTests(lRegistry);
     RegistertestsgenericsdictionaryTests(lRegistry);
     Registertestsgenericsdictionary2Tests(lRegistry);
+    RegisterNXCollectionErrorTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

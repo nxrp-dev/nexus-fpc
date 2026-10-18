@@ -30,17 +30,17 @@ interface
       node,
       Globals;
 
-    function new_dispose_statement(is_new:boolean) : TNode;
-    function new_function : TNode;
+    function New_Dispose_Statement(AIsNew:Boolean) : TNode;
+    function New_Function : TNode;
 
-    function inline_setlength : TNode;
-    function inline_setstring : TNode;
-    function inline_initialize : TNode;
-    function inline_finalize : TNode;
-    function inline_copy : TNode;
-    function inline_insert : TNode;
-    function inline_delete : TNode;
-    function inline_concat : TNode;
+    function Inline_SetLength : TNode;
+    function Inline_SetString : TNode;
+    function Inline_Initialize : TNode;
+    function Inline_Finalize : TNode;
+    function Inline_Copy : TNode;
+    function Inline_Insert : TNode;
+    function Inline_Delete : TNode;
+    function Inline_Concat : TNode;
 
 
 implementation
@@ -59,64 +59,64 @@ implementation
        pbase,pexpr;
 
 
-    function new_dispose_statement(is_new:boolean) : TNode;
+    function New_Dispose_Statement(AIsNew:Boolean) : TNode;
       var
-        newstatement : TStatementNode;
-        temp         : TTempCreateNode;
-        para         : TCallParaNode;
-        p,p2     : TNode;
-        again    : boolean; { dummy for do_proc_call }
-        destructorname : TIDString;
-        sym      : TSym;
-        classh   : TObjectDef;
-        callflag : TCallNodeFlag;
-        destructorpos,
-        storepos : TFilePosInfo;
-        variantdesc : PVariantRecDesc;
-        found : boolean;
-        variantselectsymbol : TFieldVarSym;
+        lNewStatement : TStatementNode;
+        lTemp         : TTempCreateNode;
+        lPara         : TCallParaNode;
+        lNode,lNode2     : TNode;
+        lAgain    : Boolean; { dummy for do_proc_call }
+        lDestructorName : TIDString;
+        lSym      : TSym;
+        lClassDef   : TObjectDef;
+        lCallFlags : TCallNodeFlag;
+        lDestructorPosition,
+        lStoredPosition : TFilePosInfo;
+        lVariantDesc : PVariantRecDesc;
+        lFound : Boolean;
+        lVariantSelectSym : TFieldVarSym;
 
       procedure ReadVariantRecordConstants;
         var
-          i,j : LongInt;
+          lIndex,lIndexJ : LongInt;
         begin
-          if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) and (Is_Record(TPointerDef(p.resultdef).PointedDef)) then
+          if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) and (Is_Record(TPointerDef(lNode.resultdef).PointedDef)) then
             begin
-              variantdesc:=TRecordDef(TPointerDef(p.resultdef).PointedDef).VariantRecDesc;
-              while (CurrentScanner.token=_COMMA) and Assigned(variantdesc) do
+              lVariantDesc:=TRecordDef(TPointerDef(lNode.resultdef).PointedDef).VariantRecDesc;
+              while (CurrentScanner.token=_COMMA) and Assigned(lVariantDesc) do
                 begin
                   consume(_COMMA);
-                  p2:=factor(false,[]);
-                  DoTypeCheckPass(p2);
-                  if p2.nodetype=ordconstn then
+                  lNode2:=factor(false,[]);
+                  DoTypeCheckPass(lNode2);
+                  if lNode2.nodetype=ordconstn then
                     begin
-                      found:=false;
+                      lFound:=false;
                       { we do not have dynamic dfa, so avoid warning on variantselectsymbol below }
-                      variantselectsymbol:=nil;
-                      for i:=0 to high(variantdesc^.branches) do
+                      lVariantSelectSym:=nil;
+                      for lIndex:=0 to high(lVariantDesc^.branches) do
                         begin
-                          for j:=0 to high(variantdesc^.branches[i].values) do
-                            if variantdesc^.branches[i].values[j]=TOrdConstNode(p2).Value then
+                          for lIndexJ:=0 to high(lVariantDesc^.branches[lIndex].values) do
+                            if lVariantDesc^.branches[lIndex].values[lIndexJ]=TOrdConstNode(lNode2).Value then
                               begin
-                                found:=true;
-                                variantselectsymbol:=TFieldVarSym(variantdesc^.VariantSelector);
-                                variantdesc:=variantdesc^.branches[i].NestedVariant;
+                                lFound:=true;
+                                lVariantSelectSym:=TFieldVarSym(lVariantDesc^.VariantSelector);
+                                lVariantDesc:=lVariantDesc^.branches[lIndex].NestedVariant;
                                 break;
                               end;
-                          if found then
+                          if lFound then
                             break;
                         end;
-                      if found then
+                      if lFound then
                         begin
-                          if is_new then
+                          if AIsNew then
                             begin
                               { if no tag-field is given, do not create an assignment statement for it }
-                              if Assigned(variantselectsymbol) then
+                              if Assigned(lVariantSelectSym) then
                                 { setup variant selector }
-                                AddStatement(newstatement,CAssignmentNode.Create(
-                                    CSubscriptNode.Create(variantselectsymbol,
-                                      CDerefNode.Create(CTempRefNode.Create(temp))),
-                                    p2));
+                                AddStatement(lNewStatement,CAssignmentNode.Create(
+                                    CSubscriptNode.Create(lVariantSelectSym,
+                                      CDerefNode.Create(CTempRefNode.Create(lTemp))),
+                                    lNode2));
                             end;
                         end
                       else
@@ -130,65 +130,65 @@ implementation
 
       begin
         consume(_LKLAMMER);
-        p:=comp_expr([ef_accept_equal]);
+        lNode:=comp_expr([ef_accept_equal]);
         { calc return type }
-        if is_new then
+        if AIsNew then
           begin
-            set_varstate(p,vs_written,[]);
-            valid_for_var(p,true);
+            Set_VarState(lNode,vs_written,[]);
+            Valid_For_Var(lNode,true);
           end
         else
-          set_varstate(p,vs_readwritten,[vsf_must_be_valid]);
+          Set_VarState(lNode,vs_readwritten,[vsf_must_be_valid]);
         if (m_mac in CurrentSettings.ModeSwitches) and
-           Is_Class(p.resultdef) then
+           Is_Class(lNode.resultdef) then
           begin
-            classh:=TObjectDef(p.resultdef);
+            lClassDef:=TObjectDef(lNode.resultdef);
 
             { make sure we call ObjPas.TObject.Create/Free and not a random }
             { create/free method in a macpas descendent object (since those }
             { are not supposed to be called automatically when you call     }
             { new/dispose)                                                  }
-            while Assigned(classh.ChildOf) do
-              classh := classh.ChildOf;
-            if is_new then
+            while Assigned(lClassDef.ChildOf) do
+              lClassDef := lClassDef.ChildOf;
+            if AIsNew then
               begin
-                sym:=Search_Struct_Member(classh,'CREATE');
-                p2 := CLoadVMTAddrNode.Create(CTypeNode.Create(p.resultdef));
+                lSym:=Search_Struct_Member(lClassDef,'CREATE');
+                lNode2 := CLoadVMTAddrNode.Create(CTypeNode.Create(lNode.resultdef));
               end
             else
               begin
-                sym:=Search_Struct_Member(classh,'FREE');
-                p2 := p;
+                lSym:=Search_Struct_Member(lClassDef,'FREE');
+                lNode2 := lNode;
              end;
 
-            if not(Assigned(sym)) then
+            if not(Assigned(lSym)) then
               begin
-                 p.free;
-                 p := nil;
-                 if is_new then
-                   p2.free;
-                   p2 := nil;
-                 new_dispose_statement := CErrorNode.Create;
+                 lNode.free;
+                 lNode := nil;
+                 if AIsNew then
+                   lNode2.free;
+                   lNode2 := nil;
+                 New_Dispose_Statement := CErrorNode.Create;
                  consume_all_until(_RKLAMMER);
                  consume(_RKLAMMER);
                  exit;
               end;
 
-            do_member_read(classh,false,sym,p2,again,[],nil);
+            do_member_read(lClassDef,false,lSym,lNode2,lAgain,[],nil);
 
             { we need the real called method }
-            DoTypeCheckPass(p2);
+            DoTypeCheckPass(lNode2);
 
-            if (p2.nodetype=calln) and
-               Assigned(TCallNode(p2).ProcDefinition) then
+            if (lNode2.nodetype=calln) and
+               Assigned(TCallNode(lNode2).ProcDefinition) then
               begin
-                if is_new then
+                if AIsNew then
                   begin
-                    if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_constructor) then
+                    if (TCallNode(lNode2).ProcDefinition.ProcTypeOption<>potype_constructor) then
                       Message(parser_e_expr_have_to_be_constructor_call);
-                    p2.resultdef:=p.resultdef;
-                    p2:=CAssignmentNode.Create(p,p2);
-                    TypeCheckPass(p2);
+                    lNode2.resultdef:=lNode.resultdef;
+                    lNode2:=CAssignmentNode.Create(lNode,lNode2);
+                    TypeCheckPass(lNode2);
                   end
                 else
                   begin
@@ -200,7 +200,7 @@ implementation
               end
             else
               InternalError(2005061202);
-            new_dispose_statement := p2;
+            New_Dispose_Statement := lNode2;
           end
         { constructor,destructor specified }
         else if (([m_mac,m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and
@@ -209,96 +209,96 @@ implementation
             { extended syntax of new and dispose }
             { function styled new is handled in factor }
             { destructors have no parameters }
-            destructorname:=CurrentScanner.pattern;
-            destructorpos:=CurrentTokenPos;
+            lDestructorName:=CurrentScanner.pattern;
+            lDestructorPosition:=CurrentTokenPos;
             consume(_ID);
 
-            if Is_TypeParam(p.resultdef) then
+            if Is_TypeParam(lNode.resultdef) then
               begin
-                 p.free;
-                 p:=factor(false,[]);
-                 p.free;
-                 p := nil;
+                 lNode.free;
+                 lNode:=factor(false,[]);
+                 lNode.free;
+                 lNode := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=CNothingNode.Create;
+                 New_Dispose_Statement:=CNothingNode.Create;
                  exit;
               end;
 
-            if (p.resultdef.typ<>pointerdef) then
+            if (lNode.resultdef.typ<>pointerdef) then
               begin
-                 Message1(type_e_pointer_type_expected,p.resultdef.TypeName);
-                 p.free;
-                 p:=factor(false,[]);
-                 p.free;
-                 p := nil;
+                 Message1(type_e_pointer_type_expected,lNode.resultdef.TypeName);
+                 lNode.free;
+                 lNode:=factor(false,[]);
+                 lNode.free;
+                 lNode := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=CErrorNode.Create;
+                 New_Dispose_Statement:=CErrorNode.Create;
                  exit;
               end;
             { first parameter must be an object or class }
-            if TPointerDef(p.resultdef).PointedDef.typ<>objectdef then
+            if TPointerDef(lNode.resultdef).PointedDef.typ<>objectdef then
               begin
                  Message(parser_e_pointer_to_class_expected);
-                 p.free;
-                 p := nil;
-                 new_dispose_statement:=factor(false,[]);
+                 lNode.free;
+                 lNode := nil;
+                 New_Dispose_Statement:=factor(false,[]);
                  consume_all_until(_RKLAMMER);
                  consume(_RKLAMMER);
                  exit;
               end;
             { check, if the first parameter is a pointer to a _class_ }
-            classh:=TObjectDef(TPointerDef(p.resultdef).PointedDef);
-            if Is_Class(classh) then
+            lClassDef:=TObjectDef(TPointerDef(lNode.resultdef).PointedDef);
+            if Is_Class(lClassDef) then
               begin
                  Message(parser_e_no_new_or_dispose_for_classes);
-                 new_dispose_statement:=factor(false,[]);
+                 New_Dispose_Statement:=factor(false,[]);
                  consume_all_until(_RKLAMMER);
                  consume(_RKLAMMER);
                  exit;
               end;
             { search cons-/destructor, also in parent classes }
-            storepos:=CurrentTokenPos;
-            CurrentTokenPos:=destructorpos;
-            sym:=Search_Struct_Member(classh,destructorname);
-            CurrentTokenPos:=storepos;
+            lStoredPosition:=CurrentTokenPos;
+            CurrentTokenPos:=lDestructorPosition;
+            lSym:=Search_Struct_Member(lClassDef,lDestructorName);
+            CurrentTokenPos:=lStoredPosition;
 
             { the second parameter of new/dispose must be a call }
             { to a cons-/destructor                              }
-            if (not Assigned(sym)) or (sym.typ<>ProcSym) then
+            if (not Assigned(lSym)) or (lSym.typ<>ProcSym) then
               begin
-                 if is_new then
+                 if AIsNew then
                   Message(parser_e_expr_have_to_be_constructor_call)
                  else
                   Message(parser_e_expr_have_to_be_destructor_call);
-                 p.free;
-                 p := nil;
-                 new_dispose_statement:=CErrorNode.Create;
+                 lNode.free;
+                 lNode := nil;
+                 New_Dispose_Statement:=CErrorNode.Create;
               end
             else
               begin
                 { For new(var,constructor) we need to take a copy because
                   p is also used in the assignment below }
-                if is_new then
+                if AIsNew then
                   begin
-                    p2:=CDerefNode.Create(p.GetCopy);
-                    include(TDerefNode(p2).DerefNodeFlags,drnf_no_checkpointer);
+                    lNode2:=CDerefNode.Create(lNode.GetCopy);
+                    include(TDerefNode(lNode2).DerefNodeFlags,drnf_no_checkpointer);
                   end
                 else
-                  p2:=CDerefNode.Create(p);
-                DoTypeCheckPass(p2);
-                if is_new then
-                  callflag:=cnf_new_call
+                  lNode2:=CDerefNode.Create(lNode);
+                DoTypeCheckPass(lNode2);
+                if AIsNew then
+                  lCallFlags:=cnf_new_call
                 else
-                  callflag:=cnf_dispose_call;
-                if is_new then
-                  do_member_read(classh,false,sym,p2,again,[callflag],nil)
+                  lCallFlags:=cnf_dispose_call;
+                if AIsNew then
+                  do_member_read(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
                 else
                   begin
                     if not(m_fpc in CurrentSettings.ModeSwitches) then
-                      do_member_read(classh,false,sym,p2,again,[callflag],nil)
+                      do_member_read(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
                     else
                       begin
-                        p2:=CCallNode.Create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
+                        lNode2:=CCallNode.Create(nil,TProcSym(lSym),lSym.owner,lNode2,[lCallFlags],nil);
                         { support dispose(p,done()); }
                         if try_to_consume(_LKLAMMER) then
                           begin
@@ -313,60 +313,60 @@ implementation
                   end;
 
                 { we need the real called method }
-                DoTypeCheckPass(p2);
+                DoTypeCheckPass(lNode2);
 
-                if (p2.nodetype=calln) and
-                   Assigned(TCallNode(p2).ProcDefinition) then
+                if (lNode2.nodetype=calln) and
+                   Assigned(TCallNode(lNode2).ProcDefinition) then
                   begin
-                    if is_new then
+                    if AIsNew then
                      begin
-                       if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_constructor) then
+                       if (TCallNode(lNode2).ProcDefinition.ProcTypeOption<>potype_constructor) then
                          Message(parser_e_expr_have_to_be_constructor_call);
-                       p2.resultdef:=p.resultdef;
-                       p2:=CAssignmentNode.Create(p,p2);
+                       lNode2.resultdef:=lNode.resultdef;
+                       lNode2:=CAssignmentNode.Create(lNode,lNode2);
                      end
                     else
                      begin
-                       if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_destructor) then
+                       if (TCallNode(lNode2).ProcDefinition.ProcTypeOption<>potype_destructor) then
                          Message(parser_e_expr_have_to_be_destructor_call);
                      end;
                   end
                 else
                   begin
-                    if is_new then
+                    if AIsNew then
                       CGMessage(parser_e_expr_have_to_be_constructor_call)
                     else
                       CGMessage(parser_e_expr_have_to_be_destructor_call);
                   end;
 
-                result:=p2;
+                Result:=lNode2;
               end;
           end
         else
           begin
-             if (p.resultdef.typ<>pointerdef) then
+             if (lNode.resultdef.typ<>pointerdef) then
                Begin
-                 if Is_TypeParam(p.resultdef) then
+                 if Is_TypeParam(lNode.resultdef) then
                    begin
-                      p.free;
-                      p := nil;
+                      lNode.free;
+                      lNode := nil;
                       consume(_RKLAMMER);
-                      new_dispose_statement:=CNothingNode.Create;
+                      New_Dispose_Statement:=CNothingNode.Create;
                       exit;
                    end
                  else
                    begin
-                     Message1(type_e_pointer_type_expected,p.resultdef.TypeName);
-                     new_dispose_statement:=CErrorNode.Create;
+                     Message1(type_e_pointer_type_expected,lNode.resultdef.TypeName);
+                     New_Dispose_Statement:=CErrorNode.Create;
                    end;
                end
              else
                begin
-                  if (TPointerDef(p.resultdef).PointedDef.typ=objectdef) and
-                     (oo_has_vmt in TObjectDef(TPointerDef(p.resultdef).PointedDef).ObjectOptions) then
+                  if (TPointerDef(lNode.resultdef).PointedDef.typ=objectdef) and
+                     (oo_has_vmt in TObjectDef(TPointerDef(lNode.resultdef).PointedDef).ObjectOptions) then
                     Message(parser_w_use_extended_syntax_for_objects);
-                  if (TPointerDef(p.resultdef).PointedDef.typ=orddef) and
-                     (TOrdDef(TPointerDef(p.resultdef).PointedDef).OrdType=uvoid) then
+                  if (TPointerDef(lNode.resultdef).PointedDef.typ=orddef) and
+                     (TOrdDef(TPointerDef(lNode.resultdef).PointedDef).OrdType=uvoid) then
                     begin
                       if m_delphi in CurrentSettings.ModeSwitches then
                        Message(parser_w_no_new_dispose_on_void_pointers)
@@ -376,61 +376,61 @@ implementation
 
                   { create statements with call to getmem+initialize or
                     finalize+freemem }
-                  new_dispose_statement:=InternalStatements(newstatement);
+                  New_Dispose_Statement:=InternalStatements(lNewStatement);
 
-                  if is_new then
+                  if AIsNew then
                    begin
                      { create temp for result }
-                     temp := CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent,true);
-                     AddStatement(newstatement,temp);
+                     lTemp := CTempCreateNode.Create(lNode.resultdef,lNode.resultdef.Size,tt_persistent,true);
+                     AddStatement(lNewStatement,lTemp);
 
                      { create call to fpc_getmem }
-                     para := CCallParaNode.Create(COrdConstNode.Create
-                         (TPointerDef(p.resultdef).PointedDef.Size,PtrUIntType,true),nil);
-                     AddStatement(newstatement,CAssignmentNode.Create(
-                         CTempRefNode.Create(temp),
-                         CCallNode.CreateIntern('fpc_getmem',para)));
+                     lPara := CCallParaNode.Create(COrdConstNode.Create
+                         (TPointerDef(lNode.resultdef).PointedDef.Size,PtrUIntType,true),nil);
+                     AddStatement(lNewStatement,CAssignmentNode.Create(
+                         CTempRefNode.Create(lTemp),
+                         CCallNode.CreateIntern('fpc_getmem',lPara)));
 
                      { create call to fpc_initialize }
-                     if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) or
-                       ((m_isolike_io in CurrentSettings.ModeSwitches) and (TPointerDef(p.resultdef).PointedDef.typ=filedef)) then
-                       AddStatement(newstatement,CNodeUtils.Initialize_Data_Node(CDerefNode.Create(CTempRefNode.Create(temp)),false));
+                     if Is_Managed_Type(TPointerDef(lNode.resultdef).PointedDef) or
+                       ((m_isolike_io in CurrentSettings.ModeSwitches) and (TPointerDef(lNode.resultdef).PointedDef.typ=filedef)) then
+                       AddStatement(lNewStatement,CNodeUtils.Initialize_Data_Node(CDerefNode.Create(CTempRefNode.Create(lTemp)),false));
 
                      { copy the temp to the destination }
-                     AddStatement(newstatement,CAssignmentNode.Create(
-                         p,
-                         CTempRefNode.Create(temp)));
+                     AddStatement(lNewStatement,CAssignmentNode.Create(
+                         lNode,
+                         CTempRefNode.Create(lTemp)));
 
                      ReadVariantRecordConstants;
 
                      { release temp }
-                     AddStatement(newstatement,CTempDeleteNode.Create(temp));
+                     AddStatement(lNewStatement,CTempDeleteNode.Create(lTemp));
                    end
                   else
                    begin
-                     temp:=nil;
+                     lTemp:=nil;
                      { create call to fpc_finalize }
-                     if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) then
-                       if Might_Have_SideEffects(p) then
+                     if Is_Managed_Type(TPointerDef(lNode.resultdef).PointedDef) then
+                       if Might_Have_SideEffects(lNode) then
                          begin
                            { ensure that p gets evaluated only once, in case it is e.g. a call }
-                           temp:=CTempCreateNode.Create_Value(p.resultdef,p.resultdef.Size,tt_persistent,true,p);
-                           AddStatement(newstatement,temp);
-                           AddStatement(newstatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(CTempRefNode.Create(temp))));
+                           lTemp:=CTempCreateNode.Create_Value(lNode.resultdef,lNode.resultdef.Size,tt_persistent,true,lNode);
+                           AddStatement(lNewStatement,lTemp);
+                           AddStatement(lNewStatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(CTempRefNode.Create(lTemp))));
                          end
                        else
-                         AddStatement(newstatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(p.GetCopy)));
+                         AddStatement(lNewStatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(lNode.GetCopy)));
 
                      ReadVariantRecordConstants;
 
                      { create call to fpc_freemem }
-                     if not Assigned(temp) then
-                       para := CCallParaNode.Create(p,nil)
+                     if not Assigned(lTemp) then
+                       lPara := CCallParaNode.Create(lNode,nil)
                      else
-                       para := CCallParaNode.Create(CTempRefNode.Create(temp),nil);
-                     AddStatement(newstatement,CCallNode.CreateIntern('fpc_freemem',para));
-                     if Assigned(temp) then
-                       AddStatement(newstatement,CTempDeleteNode.Create(temp));
+                       lPara := CCallParaNode.Create(CTempRefNode.Create(lTemp),nil);
+                     AddStatement(lNewStatement,CCallNode.CreateIntern('fpc_freemem',lPara));
+                     if Assigned(lTemp) then
+                       AddStatement(lNewStatement,CTempDeleteNode.Create(lTemp));
                    end;
                end;
           end;
@@ -438,185 +438,185 @@ implementation
       end;
 
 
-    function new_function : TNode;
+    function New_Function : TNode;
       var
-        p1,p2  : TNode;
-        classh : TObjectDef;
-        srsym    : TSym;
-        srsymtable : TSymTable;
-        again  : boolean; { dummy for do_proc_call }
+        lNode1,lNode2  : TNode;
+        lClassDef : TObjectDef;
+        lSym    : TSym;
+        lSymTable : TSymTable;
+        lAgain  : Boolean; { dummy for do_proc_call }
       begin
         consume(_LKLAMMER);
-        p1:=factor(false,[]);
-        if p1.nodetype<>typen then
+        lNode1:=factor(false,[]);
+        if lNode1.nodetype<>typen then
          begin
            Message(type_e_type_id_expected);
            consume_all_until(_RKLAMMER);
            consume(_RKLAMMER);
-           p1.free;
-           p1 := nil;
-           new_function:=CErrorNode.Create;
+           lNode1.free;
+           lNode1 := nil;
+           New_Function:=CErrorNode.Create;
            exit;
          end;
 
-        if (p1.resultdef.typ<>pointerdef) then
+        if (lNode1.resultdef.typ<>pointerdef) then
          begin
-           Message1(type_e_pointer_type_expected,p1.resultdef.TypeName);
+           Message1(type_e_pointer_type_expected,lNode1.resultdef.TypeName);
            consume_all_until(_RKLAMMER);
            consume(_RKLAMMER);
-           p1.free;
-           p1 := nil;
-           new_function:=CErrorNode.Create;
+           lNode1.free;
+           lNode1 := nil;
+           New_Function:=CErrorNode.Create;
            exit;
          end;
 
         if try_to_consume(_RKLAMMER) then
           begin
-            if (TPointerDef(p1.resultdef).PointedDef.typ=objectdef) and
-               (oo_has_vmt in TObjectDef(TPointerDef(p1.resultdef).PointedDef).ObjectOptions)  then
+            if (TPointerDef(lNode1.resultdef).PointedDef.typ=objectdef) and
+               (oo_has_vmt in TObjectDef(TPointerDef(lNode1.resultdef).PointedDef).ObjectOptions)  then
               Message(parser_w_use_extended_syntax_for_objects);
 
-            if p1.nodetype=typen then
-              TTypeNode(p1).allowed:=true;
+            if lNode1.nodetype=typen then
+              TTypeNode(lNode1).allowed:=true;
 
-            p1:=CInlineNode.Create(in_new_x,false,p1);
+            lNode1:=CInlineNode.Create(in_new_x,false,lNode1);
           end
         else
           begin
             consume(_COMMA);
-            if TPointerDef(p1.resultdef).PointedDef.typ<>objectdef then
+            if TPointerDef(lNode1.resultdef).PointedDef.typ<>objectdef then
              begin
                Message(parser_e_pointer_to_class_expected);
                consume_all_until(_RKLAMMER);
                consume(_RKLAMMER);
-               p1.free;
-               p1 := nil;
-               new_function:=CErrorNode.Create;
+               lNode1.free;
+               lNode1 := nil;
+               New_Function:=CErrorNode.Create;
                exit;
              end;
-            classh:=TObjectDef(TPointerDef(p1.resultdef).PointedDef);
+            lClassDef:=TObjectDef(TPointerDef(lNode1.resultdef).PointedDef);
             { use the objectdef for loading the VMT }
-            p2:=p1;
-            p1:=CTypeNode.Create(TPointerDef(p1.resultdef).PointedDef);
-            DoTypeCheckPass(p1);
+            lNode2:=lNode1;
+            lNode1:=CTypeNode.Create(TPointerDef(lNode1.resultdef).PointedDef);
+            DoTypeCheckPass(lNode1);
             { search the constructor also in the symbol tables of
               the parents }
             afterassignment:=false;
-            SearchSym_In_Class(classh,classh,CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+            SearchSym_In_Class(lClassDef,lClassDef,CurrentScanner.pattern,lSym,lSymTable,[ssf_search_helper]);
             consume(_ID);
-            do_member_read(classh,false,srsym,p1,again,[cnf_new_call],nil);
+            do_member_read(lClassDef,false,lSym,lNode1,lAgain,[cnf_new_call],nil);
             { we need to know which procedure is called }
-            DoTypeCheckPass(p1);
+            DoTypeCheckPass(lNode1);
             if not(
-                   (p1.nodetype=calln) and
-                   Assigned(TCallNode(p1).ProcDefinition) and
-                   (TCallNode(p1).ProcDefinition.ProcTypeOption=potype_constructor)
+                   (lNode1.nodetype=calln) and
+                   Assigned(TCallNode(lNode1).ProcDefinition) and
+                   (TCallNode(lNode1).ProcDefinition.ProcTypeOption=potype_constructor)
                   ) then
               Message(parser_e_expr_have_to_be_constructor_call);
             { constructors return boolean, update resultdef to return
               the pointer to the object }
-            p1.resultdef:=p2.resultdef;
-            p2.free;
-            p2 := nil;
+            lNode1.resultdef:=lNode2.resultdef;
+            lNode2.free;
+            lNode2 := nil;
             consume(_RKLAMMER);
           end;
-        new_function:=p1;
+        New_Function:=lNode1;
       end;
 
 
-    function inline_setlength : TNode;
+    function Inline_SetLength : TNode;
       var
-        paras: TNode;
+        lParas: TNode;
       begin
         consume(_LKLAMMER);
-        paras:=parse_paras(false,false,_RKLAMMER);
+        lParas:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        if not Assigned(paras) then
+        if not Assigned(lParas) then
          begin
-           result:=CErrorNode.Create;
+           Result:=CErrorNode.Create;
            CGMessage1(parser_e_wrong_parameter_size,'SetLength');
            exit;
          end;
-        result:=CInlineNode.Create(in_setlength_x,false,paras);
+        Result:=CInlineNode.Create(in_setlength_x,false,lParas);
       end;
 
 
-    function inline_setstring : TNode;
+    function Inline_SetString : TNode;
       var
-        paras, strpara, pcharpara: TNode;
-        procname: string;
-        cp: TStringEncoding;
+        lParas, lStringPara, lPCharPara: TNode;
+        lProcName: String;
+        lCallPara: TStringEncoding;
       begin
         consume(_LKLAMMER);
-        paras:=parse_paras(false,false,_RKLAMMER);
+        lParas:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        procname:='';
-        if Assigned(paras) and
-           Assigned(TCallParaNode(paras).right) and
-           Assigned(TCallParaNode(TCallParaNode(paras).right).right) then
+        lProcName:='';
+        if Assigned(lParas) and
+           Assigned(TCallParaNode(lParas).right) and
+           Assigned(TCallParaNode(TCallParaNode(lParas).right).right) then
           begin
-            DoTypeCheckPass(TCallParaNode(TCallParaNode(paras).right).left);
-            DoTypeCheckPass(TCallParaNode(TCallParaNode(TCallParaNode(paras).right).right).left);
-            pcharpara:=TCallParaNode(TCallParaNode(paras).right).left;
-            strpara:=TCallParaNode(TCallParaNode(TCallParaNode(paras).right).right).left;
-            if strpara.resultdef.typ=stringdef then
+            DoTypeCheckPass(TCallParaNode(TCallParaNode(lParas).right).left);
+            DoTypeCheckPass(TCallParaNode(TCallParaNode(TCallParaNode(lParas).right).right).left);
+            lPCharPara:=TCallParaNode(TCallParaNode(lParas).right).left;
+            lStringPara:=TCallParaNode(TCallParaNode(TCallParaNode(lParas).right).right).left;
+            if lStringPara.resultdef.typ=stringdef then
               begin
                 { if there are three parameters and the first parameter
                   ( = paras.right.right) is an ansistring, add a codepage
                   parameter }
-                if Is_AnsiString(strpara.resultdef) then
+                if Is_AnsiString(lStringPara.resultdef) then
                   begin
-                    cp:=TStringDef(strpara.resultdef).encoding;
-                    if (cp=Globals.CP_NONE) then
-                      cp:=0;
-                    paras:=CCallParaNode.Create(GenIntConstNode(cp),paras);
+                    lCallPara:=TStringDef(lStringPara.resultdef).encoding;
+                    if (lCallPara=Globals.CP_NONE) then
+                      lCallPara:=0;
+                    lParas:=CCallParaNode.Create(GenIntConstNode(lCallPara),lParas);
                   end;
-                procname:='fpc_setstring_'+TStringDef(strpara.resultdef).StringTypName;
+                lProcName:='fpc_setstring_'+TStringDef(lStringPara.resultdef).StringTypName;
                 { decide which version to call based on the second parameter }
-                if not Is_ShortString(strpara.resultdef) then
-                  if Is_PWideChar(pcharpara.resultdef) or
-                     Is_WideChar(pcharpara.resultdef) or
-                     ((pcharpara.resultdef.typ=arraydef) and
-                      Is_WideChar(TArrayDef(pcharpara.resultdef).ElementDef)) then
-                    procname:=procname+'_pwidechar'
+                if not Is_ShortString(lStringPara.resultdef) then
+                  if Is_PWideChar(lPCharPara.resultdef) or
+                     Is_WideChar(lPCharPara.resultdef) or
+                     ((lPCharPara.resultdef.typ=arraydef) and
+                      Is_WideChar(TArrayDef(lPCharPara.resultdef).ElementDef)) then
+                    lProcName:=lProcName+'_pwidechar'
                   else
-                    procname:=procname+'_pansichar';
+                    lProcName:=lProcName+'_pansichar';
               end;
           end;
         { default version (for error message) in case of missing or wrong
           parameters }
-        if procname='' then
+        if lProcName='' then
           if m_default_unicodestring in CurrentSettings.ModeSwitches then
-            procname:='fpc_setstring_unicodestr_pwidechar'
+            lProcName:='fpc_setstring_unicodestr_pwidechar'
           else if m_default_ansistring in CurrentSettings.ModeSwitches then
-            procname:='fpc_setstring_ansistr_pansichar'
+            lProcName:='fpc_setstring_ansistr_pansichar'
           else
-            procname:='fpc_setstring_shortstr';
-        result:=CCallNode.CreateIntern(procname,paras)
+            lProcName:='fpc_setstring_shortstr';
+        Result:=CCallNode.CreateIntern(lProcName,lParas)
       end;
 
 
-    function inline_initfinal(isinit: boolean): TNode;
+    function InlineInitFinal(AIsInit: Boolean): TNode;
       var
-        newblock,
-        paras   : TNode;
-        npara,
-        destppn,
-        ppn     : TCallParaNode;
+        lNewBlock,
+        lParas   : TNode;
+        lNewPara,
+        lDestParaNode,
+        lParaNode     : TCallParaNode;
       begin
         { for easy exiting if something goes wrong }
-        result := CErrorNode.Create;
+        Result := CErrorNode.Create;
 
         consume(_LKLAMMER);
-        paras:=parse_paras(false,false,_RKLAMMER);
+        lParas:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        ppn:=TCallParaNode(paras);
+        lParaNode:=TCallParaNode(lParas);
 
-        if not Assigned(paras) or
-           (Assigned(ppn.right) and
-            Assigned(TCallParaNode(ppn.right).right)) then
+        if not Assigned(lParas) or
+           (Assigned(lParaNode.right) and
+            Assigned(TCallParaNode(lParaNode.right).right)) then
          begin
-           if isinit then
+           if AIsInit then
              CGMessage1(parser_e_wrong_parameter_size,'Initialize')
            else
              CGMessage1(parser_e_wrong_parameter_size,'Finalize');
@@ -624,90 +624,90 @@ implementation
          end;
 
         { 2 arguments? }
-        if Assigned(ppn.right) then
+        if Assigned(lParaNode.right) then
          begin
-           destppn:=TCallParaNode(ppn.right);
+           lDestParaNode:=TCallParaNode(lParaNode.right);
            { create call to fpc_initialize/finalize_array }
-           npara:=CCallParaNode.Create(CTypeConvNode.Create
-                     (ppn.left,S32IntType),
+           lNewPara:=CCallParaNode.Create(CTypeConvNode.Create
+                     (lParaNode.left,S32IntType),
                   CCallParaNode.Create(CAddrNode.Create_Internal
-                     (CRTTINode.Create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
+                     (CRTTINode.Create(TStoredDef(lDestParaNode.left.resultdef),initrtti,rdt_normal)),
                   CCallParaNode.Create(CAddrNode.Create_Internal
-                     (destppn.left),nil)));
-           if isinit then
-             newblock:=CCallNode.CreateIntern('fpc_initialize_array',npara)
+                     (lDestParaNode.left),nil)));
+           if AIsInit then
+             lNewBlock:=CCallNode.CreateIntern('fpc_initialize_array',lNewPara)
            else
-             newblock:=CCallNode.CreateIntern('fpc_finalize_array',npara);
-           destppn.left:=nil;
+             lNewBlock:=CCallNode.CreateIntern('fpc_finalize_array',lNewPara);
+           lDestParaNode.left:=nil;
          end
         else
          begin
-           if isinit then
-             newblock:=CNodeUtils.Initialize_Data_Node(ppn.left,true)
+           if AIsInit then
+             lNewBlock:=CNodeUtils.Initialize_Data_Node(lParaNode.left,true)
            else
-             newblock:=CNodeUtils.Finalize_Data_Node(ppn.left);
+             lNewBlock:=CNodeUtils.Finalize_Data_Node(lParaNode.left);
          end;
-        ppn.left:=nil;
-        paras.free;
-        paras := nil;
-        result.free;
-        result:=newblock;
+        lParaNode.left:=nil;
+        lParas.free;
+        lParas := nil;
+        Result.free;
+        Result:=lNewBlock;
       end;
 
 
-    function inline_initialize : TNode;
+    function Inline_Initialize : TNode;
       begin
-        result:=inline_initfinal(true);
+        Result:=InlineInitFinal(true);
       end;
 
 
-    function inline_finalize : TNode;
+    function Inline_Finalize : TNode;
       begin
-        result:=inline_initfinal(false);
+        Result:=InlineInitFinal(false);
       end;
 
 
-    function inline_copy_insert_delete(nr:TInlineNumber;const name:string;checkempty:boolean) : TNode;
+    function InlineCopyInsertDelete(ANumber:TInlineNumber;const AName:String;ACheckEmpty:Boolean) : TNode;
       var
-        paras   : TNode;
+        lParas   : TNode;
         { for easy exiting if something goes wrong }
       begin
-        result := CErrorNode.Create;
+        Result := CErrorNode.Create;
 
         consume(_LKLAMMER);
-        paras:=parse_paras(false,false,_RKLAMMER);
+        lParas:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        if not Assigned(paras) and checkempty then
+        if not Assigned(lParas) and ACheckEmpty then
           begin
-            CGMessage1(parser_e_wrong_parameter_size,name);
+            CGMessage1(parser_e_wrong_parameter_size,AName);
             exit;
           end;
-        result.free;
-        result:=CInlineNode.Create(nr,false,paras);
+        Result.free;
+        Result:=CInlineNode.Create(ANumber,false,lParas);
       end;
 
 
-    function inline_copy: TNode;
+    function Inline_Copy: TNode;
       begin
-        result:=inline_copy_insert_delete(in_copy_x,'Copy',false);
+        Result:=InlineCopyInsertDelete(in_copy_x,'Copy',false);
       end;
 
 
-    function inline_insert: TNode;
+    function Inline_Insert: TNode;
       begin
-        result:=inline_copy_insert_delete(in_insert_x_y_z,'Insert',false);
+        Result:=InlineCopyInsertDelete(in_insert_x_y_z,'Insert',false);
       end;
 
 
-    function inline_delete: TNode;
+    function Inline_Delete: TNode;
       begin
-        result:=inline_copy_insert_delete(in_delete_x_y_z,'Delete',false);
+        Result:=InlineCopyInsertDelete(in_delete_x_y_z,'Delete',false);
       end;
 
 
-    function inline_concat: TNode;
+    function Inline_Concat: TNode;
       begin
-        result:=inline_copy_insert_delete(in_concat_x,'Concat',false);
+        Result:=InlineCopyInsertDelete(in_concat_x,'Concat',false);
       end;
 
 

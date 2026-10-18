@@ -345,7 +345,7 @@ implementation
              if check_proc_directive(true) then
                parse_proctype_directives(pv);
              { Add implicit hidden parameters and function result }
-             handle_calling_convention(pv,hcc_default_actions_intf);
+             Handle_Calling_Convention(pv,cHCCDefaultActionsIntf);
              hdef:=pv;
            end
           else
@@ -1510,7 +1510,7 @@ implementation
                     Message(parser_e_overload_impossible);
 
                   TRecordSymTable(pd.ProcSym.Owner).IncludeManagementOperator(
-                    token2managementoperator(optoken));
+                    Token2ManagementOperator(optoken));
                   pd.ReturnDef:=VoidType
                 end
               else
@@ -1547,7 +1547,7 @@ implementation
                           Equal_Defs(pd.ReturnDef,TParaVarSym(pd.ParaST.SymList[0]).vardef) and
                           (pd.ReturnDef.typ<>undefineddef) and (TParaVarSym(pd.ParaST.SymList[0]).vardef.typ<>undefineddef) then
                          message(parser_e_no_such_assignment)
-                       else if not isoperatoracceptable(pd,optoken) then
+                       else if not IsOperatorAcceptable(pd,optoken) then
                          Message(parser_e_overload_impossible);
                      end;
                  end;
@@ -1730,10 +1730,10 @@ implementation
             // we can't add hidden params here because record is not yet defined
             // and therefore record size which has influence on parameter passing rules may change too
             // look at record_dec to see where calling conventions are applied (issue #0021044)
-            handle_calling_convention(result,hcc_default_actions_intf_struct);
+            Handle_Calling_Convention(result,cHCCDefaultActionsIntfStruct);
 
             { add definition to procsym }
-            proc_add_definition(result);
+            Proc_Add_Definition(result);
 
             if result.Is_Generic then
               astruct.SymTable.IncludeOption(sto_has_generic);
@@ -2597,7 +2597,7 @@ var
       pooption : [po_virtualmethod];
       mutexclpocall : [pocall_internproc];
       mutexclpotype : [potype_class_constructor,potype_class_destructor];
-      mutexclpo     : PD_VIRTUAL_MUTEXCLPO
+      mutexclpo     : cVirtualMutuallyExclusiveProcOptions
     ),(
       idtok:_CPPDECL;
       pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];

@@ -2,17 +2,17 @@ program project1;
 {$mode objfpc}{$H+}
 
 uses
-  Classes, FGL;
+  Classes, Generics.Collections;
 
 type
   TBaseClass = class (TObject)
   end;
 
-  generic TFPGObjectListEx<T: TBaseClass> = class (specialize TFPGObjectList<T>)
+  generic TObjectListEx<T: TBaseClass> = class (specialize TObjectList<T>)
     function GetItemByID(AID: Integer): T;
   end;
 
-function TFPGObjectListEx.GetItemByID(AID: Integer): T;
+function TObjectListEx.GetItemByID(AID: Integer): T;
 begin
   Result:=nil; //T(nil);
 end;

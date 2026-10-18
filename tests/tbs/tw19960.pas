@@ -4,10 +4,10 @@ program extracttest;
 {$apptype console}
 
 uses
-  fgl;
+  Generics.Collections;
 
 type
-  TIntegerList = specialize TFPGList<Integer>;
+  TIntegerList = specialize TList<Integer>;
 
 procedure PrintList(aList: TIntegerList);
 var

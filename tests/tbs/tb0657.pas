@@ -3,10 +3,10 @@ program tb0657;
 {$mode objfpc}
 
 uses
-  fgl;
+  Generics.Collections;
 
 type
-  TIntList = specialize TFPGList<LongInt>;
+  TIntList = specialize TList<LongInt>;
 
 const
   c = 3;
@@ -21,7 +21,7 @@ begin
       l.Add(i);
 
     for i := 0 to l.Count - 1 do
-      if l.List^[i] <> i then
+      if l.List[i] <> i then
         Halt(i + 1);
   finally
     l.Free;

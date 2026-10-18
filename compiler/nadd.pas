@@ -758,7 +758,7 @@ const
             (
              Is_ConstEnumNode(Left) and
              Is_ConstEnumNode(Right) and
-             (allowenumop(NodeType) or (nf_internal in Flags))
+             (AllowEnumOp(NodeType) or (nf_internal in Flags))
             ) or
             (
              (lLeftNodeType in [pointerconstn,niln]) and
@@ -2219,7 +2219,7 @@ const
                   Left.IsEqual(AktAssignmentNode.Left) or
                   Right.IsEqual(AktAssignmentNode.Left)
                 ) or
-                not valid_for_var(AktAssignmentNode.Left,false) or
+                not Valid_For_Var(AktAssignmentNode.Left,false) or
                 (lIsLeftArrayConstructor and (ElementCount(TArrayConstructorNode(Left))>1)) or
                 (lIsRightArrayConstructor and (ElementCount(TArrayConstructorNode(Right))>1)) then
               exit;
@@ -2264,8 +2264,8 @@ const
            end;
 
          { both left and right need to be valid }
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -2292,7 +2292,7 @@ const
                    (Is_Array_Constructor(Left.ResultDef) and not Is_Dynamic_Array(Right.ResultDef)) or
                    (not Is_Dynamic_Array(Left.ResultDef) and Is_Array_Constructor(Right.ResultDef))
                  ) and
-                 not isbinaryoverloaded(lNode,[ocf_check_only]) then
+                 not IsBinaryOverloaded(lNode,[ocf_check_only]) then
                begin
                  if Is_Array_Constructor(Left.ResultDef) then
                    begin
@@ -2310,10 +2310,10 @@ const
          if Is_Dynamic_Array(Left.ResultDef) and Is_Dynamic_Array(Right.ResultDef) and
              (NodeType=addn) and
              (m_array_operators in CurrentSettings.ModeSwitches) and
-             isbinaryoverloaded(lNode,[ocf_check_non_overloadable,ocf_check_only]) then
+             IsBinaryOverloaded(lNode,[ocf_check_non_overloadable,ocf_check_only]) then
            message3(parser_w_operator_overloaded_hidden_3,Left.ResultDef.TypeName,arraytokeninfo[_PLUS].str,Right.ResultDef.TypeName);
 
-         if isbinaryoverloaded(lNode,[]) then
+         if IsBinaryOverloaded(lNode,[]) then
            begin
               Result:=lNode;
               exit;
@@ -2641,7 +2641,7 @@ const
                     end;
                   else
                     begin
-                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                      CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                       Result:=CNothingNode.Create;
                       exit;
                     end;
@@ -2665,7 +2665,7 @@ const
                   end
                 else if not(NodeType in [ltn,lten,gtn,gten,unequaln,EqualN]) then
                   begin
-                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                    CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                     Result:=CNothingNode.Create;
                     exit;
                   end;
@@ -2874,7 +2874,7 @@ const
          else if (lLeftDef.typ=floatdef) then
            begin
              if not(NodeType in [addn,subn,muln,slashn,EqualN,unequaln,ltn,lten,gtn,gten]) then
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+               CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
            end
 
          { left side a setdef, must be before string processing,
@@ -3020,7 +3020,7 @@ const
                         IncompatibleTypes(lLeftDef,lRightDef);
                      end
                     else
-                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                     CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                  end;
                subn:
                  begin
@@ -3030,7 +3030,7 @@ const
                         if Is_VoidPointer(Right.ResultDef) then
                         begin
                           if Is_Big_Untyped_AddrNode(Right) then
-                            CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(NodeType));
+                            CGMessage1(type_w_untyped_arithmetic_unportable,Node2OpStr(NodeType));
                           InsertTypeConv(Right,Left.ResultDef)
                         end
                         else if Is_VoidPointer(Left.ResultDef) then
@@ -3039,7 +3039,7 @@ const
                           IncompatibleTypes(lLeftDef,lRightDef);
                       end
                     else
-                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                      CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
 
                     if not(anf_has_pointerdiv in AddNodeFlags) and
                       (TPointerDef(lRightDef).PointedDef.Size>1) then
@@ -3053,7 +3053,7 @@ const
                     exit;
                  end;
                else
-                 CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                 CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
             end;
           end
 
@@ -3176,7 +3176,7 @@ const
                 end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { implicit pointer object type comparison }
@@ -3197,7 +3197,7 @@ const
                   InsertTypeConv(Right,Left.ResultDef);
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          else if (lRightDef.typ=classrefdef) and (lLeftDef.typ=classrefdef) then
@@ -3211,7 +3211,7 @@ const
                   InsertTypeConv(Left,Right.ResultDef);
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { allow comparison with nil pointer }
@@ -3220,7 +3220,7 @@ const
             if (NodeType in [EqualN,unequaln]) then
               InsertTypeConv(Left,Right.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          else if Is_Implicit_Pointer_Object_Type(lLeftDef) or (lLeftDef.typ=classrefdef) then
@@ -3228,7 +3228,7 @@ const
             if (NodeType in [EqualN,unequaln]) then
               InsertTypeConv(Right,Left.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
        { support procvar=nil,procvar<>nil }
@@ -3236,7 +3236,7 @@ const
                  ((lRightDef.typ=procvardef) and (lLeftNodeType=niln)) then
           begin
             if not(NodeType in [EqualN,unequaln]) then
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
             { find proc field in methodpointer record }
             lFieldSym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
             if not Assigned(lFieldSym) then
@@ -3298,7 +3298,7 @@ const
                  (Is_Dynamic_Array(lLeftDef) and Is_Dynamic_Array(lRightDef)) then
           begin
             if not(NodeType in [EqualN,unequaln]) then
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
             if lLeftNodeType=niln then
               InsertTypeConv_Explicit(Left,Right.ResultDef)
             else
@@ -3313,7 +3313,7 @@ const
                  Equal_Defs(lLeftDef,lRightDef) then
             begin
               if not(NodeType in [addn,subn,xorn,orn,andn,muln,slashn]) then
-                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
               { both defs must be equal, so taking left or right as resultdef doesn't matter }
               ResultDef:=To_HWVectorDef(Left.ResultDef,false);
             end
@@ -3334,12 +3334,12 @@ const
             if NodeType=addn then
               begin
                 if (lRightNodeType=niln) then
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,'NIL');
+                  CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,'NIL');
                 if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in Flags))  or
                    (not (Is_PChar(lRightDef) or Is_CharArray(lRightDef) or Is_Open_CharArray(lRightDef) or Is_WideChar(lRightDef) or Is_WideCharArray(lRightDef) or Is_Open_WideCharArray(lRightDef)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((lRightDef.typ=pointerdef) and TPointerDef(lRightDef).HasPointerMath)) then
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                  CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                 if (lRightDef.typ=pointerdef) and
                    (TPointerDef(lRightDef).PointedDef.Size>1) then
                    begin
@@ -3349,7 +3349,7 @@ const
                    end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          else if (lLeftDef.typ=pointerdef) or
@@ -3367,16 +3367,16 @@ const
              if NodeType in [addn,subn] then
                begin
                  if (lLeftNodeType=niln) then
-                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),'NIL',lRightDef.TypeName);
+                   CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),'NIL',lRightDef.TypeName);
                  if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in Flags)) or
                    (not (Is_PChar(lLeftDef) or Is_CharArray(lLeftDef) or Is_Open_CharArray(lLeftDef) or Is_WideChar(lLeftDef) or Is_WideCharArray(lLeftDef) or Is_Open_WideCharArray(lLeftDef)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((lLeftDef.typ=pointerdef) and TPointerDef(lLeftDef).HasPointerMath)) then
-                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                   CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                  if (lLeftDef.typ=pointerdef) then
                  begin
                    if Is_Big_Untyped_AddrNode(Left) then
-                     CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(NodeType));
+                     CGMessage1(type_w_untyped_arithmetic_unportable,Node2OpStr(NodeType));
                    if (TPointerDef(lLeftDef).PointedDef.Size>1) then
                    begin
                      Right:=CAddNode.Create(muln,Right,
@@ -3393,7 +3393,7 @@ const
                      end;
                end
              else
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+               CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
            end
 
          else if (lRightDef.typ=procvardef) and
@@ -3425,16 +3425,16 @@ const
                   end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { enums }
          else if (lLeftDef.typ=enumdef) and (lRightDef.typ=enumdef) then
           begin
-            if allowenumop(NodeType) or (nf_internal in Flags) then
+            if AllowEnumOp(NodeType) or (nf_internal in Flags) then
               InsertTypeConv(Right,Left.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,Node2OpStr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { generic conversion, this is for error recovery }
@@ -3815,7 +3815,7 @@ const
                       Is_ShortString(ResultDef)
                     )
                   ) and
-                  valid_for_var(AktAssignmentNode.Left,false) then
+                  Valid_For_Var(AktAssignmentNode.Left,false) then
                 begin
                   lPara:=CCallParaNode.Create(
                           Right,
@@ -3959,7 +3959,7 @@ const
           if Assigned(AktAssignmentNode) and
               (AktAssignmentNode.Right=Self) and
               (AktAssignmentNode.Left.ResultDef=ResultDef) and
-              valid_for_var(AktAssignmentNode.Left,false) then
+              Valid_For_Var(AktAssignmentNode.Left,false) then
             begin
               Result:=CCallNode.CreateIntern(ANode,
                 CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
@@ -4049,7 +4049,7 @@ const
               lNoTemp:=Assigned(AktAssignmentNode) and
                 (AktAssignmentNode.Right=Self) and
                 (AktAssignmentNode.Left.ResultDef=Self.ResultDef) and
-                valid_for_var(AktAssignmentNode.Left,false);
+                Valid_For_Var(AktAssignmentNode.Left,false);
 
               { optimize first loading of a set }
               if (Right.NodeType=setelementn) and
@@ -4236,7 +4236,7 @@ const
               if Assigned(AktAssignmentNode) and
                   (AktAssignmentNode.Right=Self) and
                   (AktAssignmentNode.Left.ResultDef=ResultDef) and
-                  valid_for_var(AktAssignmentNode.Left,false) then
+                  Valid_For_Var(AktAssignmentNode.Left,false) then
                 begin
                   lPara:=CCallParaNode.Create(
                           CTypeConvNode.Create_Internal(Right,VoidCodePointerType),

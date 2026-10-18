@@ -142,7 +142,7 @@ function ResetRegVars(var ANode: TNode; AArg: pointer): TForEachNodeResult;
   begin
     case ANode.nodetype of
       temprefn:
-        make_not_regable(ANode,[]);
+        Make_Not_Regable(ANode,[]);
       calln:
         include(TProcInfo(AArg).Flags,pi_do_call);
       else ;

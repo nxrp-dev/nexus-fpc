@@ -948,7 +948,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
           end
         else
           if (node.nodetype in [addrn,addn,subn]) or
-             is_proc2procvar_load(node,pd) then
+             Is_Proc2ProcVar_Load(node,pd) then
             begin
               { insert typeconv }
               InsertTypeConv(node,def);

@@ -59,8 +59,8 @@ are saved there. Code review was explicitly waived for that relocation.
 | `paszlib` | — | `paszlib.pas`, `zip.pas`, `unzip.pas`, `zipper.pas`, plus implicitly compiled units. CRC32 is private in `utNXPasZLibCRC32`; no legacy hash or HashLib dependency. |
 | `pthreads` | — | Pascal platform bindings; preserve their source-level library declarations. |
 | `rtl-extra` | — | Retained networking/locale subset; Android selects its own `clocale`. Sorting moved to `rtl-objpas`; legacy Objects is test-only. |
-| `rtl-generics` | `rtl-objpas` | Sources in `src`, includes in `src/inc`. |
-| `rtl-objpas` | — | Sources in `src/inc` and platform directories; CPU-specific includes. |
+| `rtl-generics` | `rtl-objpas` Variants; no high-level Rtti dependency | Sources in `src`, includes in `src/inc`. Missing-key exceptions use plain resource strings. |
+| `rtl-objpas` | `rtl-generics` for Rtti | Rtti caches reflection objects in `TDictionary`; its source closure needs `rtl-generics/src` and `src/inc`. Variants remains a lower-level input to Generics.Defaults. Existing source-unit dependency resolution handles this closure; compiler bootstrap is unchanged. |
 | `univint` (relocated) | — | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/univint`. Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; the nxbuild recipe preserves MacPas mode. |
 | `winunits-base` | `fcl-registry`, `fcl-base`, `rtl-extra` | `buildwinutilsbase.pas` aggregate, implicit units and `w32default.res`; recipe marks libc required. |
 | `x11` (relocated) | Native X11 runtime libraries | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/x11`. All 45 units are built by `X11.nxpackage`; namespace wrappers remain. Proven binding/helper fixes and direct nxtest/symbol checks are recorded in the destination review. |

@@ -1262,11 +1262,11 @@ implementation
       { finish creating the copy }
       Finish_Copied_ProcDef(Result,NewRealName,NewParentST,NewStruct);
       { insert hidden high parameters }
-      Result.ParaST.SymList.ForEachCall(@insert_hidden_para,Result);
+      Result.ParaST.SymList.ForEachCall(@Insert_Hidden_Para,Result);
       { now insert self/vmt }
-      insert_self_and_vmt_para(Result);
+      Insert_Self_And_VMT_Para(Result);
       { and the function result }
-      insert_funcret_para(Result);
+      Insert_FuncRet_Para(Result);
       { recalculate the parameters now that we've added the missing ones }
       Result.CalcParas;
       { set the info required to generate the implementation }
@@ -1331,7 +1331,7 @@ implementation
           SymTableStack.Pop(PD.ParaST);
         end;
       PD.CalcParas;
-      proc_add_definition(PD);
+      Proc_Add_Definition(PD);
     end;
 
 
@@ -1516,7 +1516,7 @@ implementation
       { prefixing the parameters here is useless, because the new procdef will
         just be an external declaration without a body }
       NewPD:=TProcDef(OrgPD.GetCopyAs(ProcDef,pc_bareproc,'',True));
-      insert_funcret_para(NewPD);
+      Insert_FuncRet_Para(NewPD);
       NewPD.ProcOptions:=NewPD.ProcOptions+OrgPD.ProcOptions*[po_external,po_has_importname,po_has_importdll];
       StringDispose(OrgPD.ImportName);
       StringDispose(OrgPD.ImportDLL);
@@ -1542,7 +1542,7 @@ implementation
     begin
       if TargetInfo.System in systems_all_windows then
         begin
-          insert_funcret_local(PD);
+          Insert_FuncRet_Local(PD);
           Result:=InternalStatements(Stat);
           if TargetInfo.System=system_x86_64_win64 then
             begin
@@ -1597,17 +1597,17 @@ implementation
           PD.ProcCallOption:=pocall_default;
           Include(PD.ProcOptions,po_hascallingconvention);
           PD.ReturnDef:=Class_TCustomAttribute;
-          insert_funcret_para(PD);
+          Insert_FuncRet_Para(PD);
           PD.CalcParas;
           PD.ForwardDef:=False;
           PD.AliasNames.Insert(PD.MangledName);
-          handle_calling_convention(PD,hcc_default_actions_impl);
+          Handle_Calling_Convention(PD,cHCCDefaultActionsImpl);
           { set procinfo and current_procinfo.procdef }
           PI:=TCGProcInfo(CProcInfo.Create(nil));
           PI.ProcDef:=PD;
           { we always do a call, namely to the constructor }
           Include(PI.Flags,pi_do_call);
-          insert_funcret_local(PD);
+          Insert_FuncRet_Local(PD);
           PI.Code:=CAssignmentNode.Create(
                       CLoadNode.Create(PD.FuncRetSym,PD.LocalST),
                       Attr.ConstructorCall.GetCopy

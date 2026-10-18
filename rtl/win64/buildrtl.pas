@@ -12,7 +12,7 @@ uses
   WinApi.Windows,  System.CMem, System.DynLibs,
   TP.DOS, WinApi.Messages,
   System.RtlConsts, System.SysConst, System.SysUtils, System.Math, System.Types,
-  System.TypInfo, System.FGL, System.Classes,
+  System.TypInfo, System.Classes,
   System.CharSet, System.Character, System.GetOpts,
   System.FPWideString,
   WinApi.ShareMem, System.ExeInfo, WinApi.WinDirs
@@ -27,7 +27,7 @@ uses
   windows,  cmem, dynlibs,
   dos, messages,
   rtlconsts, sysconst, sysutils, math, types,
-  typinfo, fgl, classes,
+  typinfo, classes,
   charset, character, getopts,
   fpwidestring,
   sharemem, exeinfo,  windirs

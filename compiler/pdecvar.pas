@@ -263,16 +263,16 @@ implementation
               sym: TProcSym;
             begin
               if not Assigned(astruct) then
-                handle_calling_convention(pd,hcc_default_actions_intf)
+                Handle_Calling_Convention(pd,cHCCDefaultActionsIntf)
               else
-                handle_calling_convention(pd,hcc_default_actions_intf_struct);
+                Handle_Calling_Convention(pd,cHCCDefaultActionsIntfStruct);
               sym:=CProcSym.Create(prefix+lower(p.realname));
               SymTableStack.top.InsertSym(sym);
               pd.ProcSym:=sym;
               include(pd.ProcOptions,po_dispid);
               include(pd.ProcOptions,po_global);
               pd.visibility:=vis_private;
-              proc_add_definition(pd);
+              Proc_Add_Definition(pd);
               p.PropAccessList[accesstype].AddSym(sl_call,sym);
               p.PropAccessList[accesstype].procdef:=pd;
             end;
@@ -554,9 +554,9 @@ implementation
                         ReadProcDef.ReturnDef:=p.PropDef;
                         { Insert hidden parameters }
                         if Assigned(astruct) then
-                          handle_calling_convention(ReadProcDef,hcc_default_actions_intf_struct)
+                          Handle_Calling_Convention(ReadProcDef,cHCCDefaultActionsIntfStruct)
                         else
-                          handle_calling_convention(ReadProcDef,hcc_default_actions_intf);
+                          Handle_Calling_Convention(ReadProcDef,cHCCDefaultActionsIntf);
                       end;
                     p.Add_Getter_Or_Setter_For_Sym(palt_read,sym,def,ReadProcDef);
                   end;
@@ -580,9 +580,9 @@ implementation
                         WriteProcDef.ParaST.InsertSym(hparavs);
                         { Insert hidden parameters }
                         if not Assigned(astruct) then
-                          handle_calling_convention(WriteProcDef,hcc_default_actions_intf)
+                          Handle_Calling_Convention(WriteProcDef,cHCCDefaultActionsIntf)
                         else
-                          handle_calling_convention(WriteProcDef,hcc_default_actions_intf_struct);
+                          Handle_Calling_Convention(WriteProcDef,cHCCDefaultActionsIntfStruct);
                       end;
                     p.Add_Getter_Or_Setter_For_Sym(palt_write,sym,def,WriteProcDef);
                   end;
@@ -671,9 +671,9 @@ implementation
 
                                  { Insert hidden parameters }
                                  if not Assigned(astruct) then
-                                   handle_calling_convention(storedprocdef,hcc_default_actions_intf)
+                                   Handle_Calling_Convention(storedprocdef,cHCCDefaultActionsIntf)
                                  else
-                                   handle_calling_convention(storedprocdef,hcc_default_actions_intf_struct);
+                                   Handle_Calling_Convention(storedprocdef,cHCCDefaultActionsIntfStruct);
                                  p.PropAccessList[palt_stored].procdef:=TProcSym(sym).Find_ProcDef_ByPara(storedprocdef.paras,storedprocdef.ReturnDef,[cpo_allowdefaults,cpo_ignorehidden]);
                                  if not Assigned(p.PropAccessList[palt_stored].procdef) then
                                    message(parser_e_ill_property_storage_sym);
@@ -1207,7 +1207,7 @@ implementation
               { we have to be able to take the address of the absolute
                 expression
               }
-              valid_for_addr(pt,true);
+              Valid_For_Addr(pt,true);
               { remove subscriptn before checking for loadn }
               hp:=pt;
               while (hp.nodetype in [subscriptn,typeconvn,vecn]) do
@@ -1266,7 +1266,7 @@ implementation
                       if Is_Open_Array(pt.resultdef) or
                          Is_Array_Of_Const(pt.resultdef) or
                          (vs.vardef.Size <> pt.resultdef.Size) then
-                        make_not_regable(pt,[ra_addr_regable]);
+                        Make_Not_Regable(pt,[ra_addr_regable]);
                       TAbsoluteVarSym(abssym).Adjust_VarRegable;
                     end;
                 end
@@ -1454,7 +1454,7 @@ implementation
                                hdef.RegisterDef;
                            end;
                        end;
-                     handle_calling_convention(hdef,hcc_default_actions_intf);
+                     Handle_Calling_Convention(hdef,cHCCDefaultActionsIntf);
                    end;
                  read_default_value(sc);
                  hasdefaultvalue:=true;
@@ -1495,10 +1495,10 @@ implementation
                    end;
                  { Add calling convention for procvar }
                  if hdef.typ=procvardef then
-                   flags:=hcc_default_actions_intf
+                   flags:=cHCCDefaultActionsIntf
                  else
-                   flags:=hcc_default_actions_intf_struct;
-                 handle_calling_convention(hdef,flags);
+                   flags:=cHCCDefaultActionsIntfStruct;
+                 Handle_Calling_Convention(hdef,flags);
                  { Handling of Delphi typed const = initialized vars }
                  if (CurrentScanner.token=_EQ) and
                     (SymTableStack.top.SymTableType<>parasymtable) then
@@ -1773,7 +1773,7 @@ implementation
                            hdef.RegisterDef;
                        end;
                    end;
-                 handle_calling_convention(hdef,hcc_default_actions_intf);
+                 Handle_Calling_Convention(hdef,cHCCDefaultActionsIntf);
                end;
 
              if (vd_object in options) then

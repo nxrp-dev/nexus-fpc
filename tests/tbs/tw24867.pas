@@ -6,11 +6,11 @@ program tw24867;
 {$APPTYPE CONSOLE}
 
 uses
-  fgl;
+  Generics.Collections;
 
 var
-  d: TFPGMap<string, string>; // ok
+  d: TDictionary<string, string>; // ok
 begin
-  d := TFPGMap<string, string>.Create; // Error: This type can't be a generic
+  d := TDictionary<string, string>.Create; // Error: This type can't be a generic
 end.
 

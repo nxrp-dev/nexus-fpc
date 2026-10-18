@@ -215,8 +215,8 @@ implementation
       include(result.ProcOptions,po_is_block);
       { now insert self/vmt/funcret according to the newly set calling
         convention }
-      insert_self_and_vmt_para(result);
-      insert_funcret_para(result);
+      Insert_Self_And_VMT_Para(result);
+      Insert_FuncRet_Para(result);
       Finish_Copied_ProcDef(result,wrappername,CurrentModule.LocalSymTable,nil);
       if orgpd.Is_AddressOnly then
         begin

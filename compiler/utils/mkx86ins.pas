@@ -16,38 +16,38 @@
 program mkx86ins;
 
 const
-  Version = '1.6.2';
-  max_operands = 4;
+  cVersion = '1.6.2';
+  cMaxOperands = 4;
 var
-   s : ShortString;
-   i : LongInt;
-   i8086  : boolean;
-   x86_64 : boolean;
+   LineText : ShortString;
+   Index : LongInt;
+   IsI8086  : Boolean;
+   IsX8664 : Boolean;
 
-    function lower(const s : ShortString) : ShortString;
+    function Lower(const AText : ShortString) : ShortString;
     {
       return lowercased string of s
     }
       var
-         i : LongInt;
+         lIndex : LongInt;
       begin
-         for i:=1 to length(s) do
-          if s[i] in ['A'..'Z'] then
-           lower[i]:=char(byte(s[i])+32)
+         for lIndex:=1 to length(AText) do
+          if AText[lIndex] in ['A'..'Z'] then
+           Lower[lIndex]:=Char(Byte(AText[lIndex])+32)
           else
-           lower[i]:=s[i];
-         lower[0]:=s[0];
+           Lower[lIndex]:=AText[lIndex];
+         Lower[0]:=AText[0];
       end;
 
-      function Replace(var s:ShortString;const s1,s2:ShortString):boolean;
+      function Replace(var AText:ShortString;const AOldText,ANewText:ShortString):Boolean;
       var
-        i  : LongInt;
+        lIndex  : LongInt;
       begin
-        i:=pos(s1,s);
-        if i>0 then
+        lIndex:=pos(AOldText,AText);
+        if lIndex>0 then
          begin
-           Delete(s,i,length(s1));
-           Insert(s2,s,i);
+           Delete(AText,lIndex,length(AOldText));
+           Insert(ANewText,AText,lIndex);
            Replace:=true;
          end
         else
@@ -55,10 +55,10 @@ var
       end;
 
 
-function formatop(s:ShortString;allowsizeonly:boolean):ShortString;
+function FormatOp(AText:ShortString;AAllowSizeOnly:Boolean):ShortString;
    const
-     replaces=29;
-     replacetab : array[1..replaces,1..2] of string[32]=(
+     cReplacementCount=29;
+     cReplacementTable : array[1..cReplacementCount,1..2] of String[32]=(
        (':',' or ot_colon'),
        ('reg','regnorm'),
        ('regmem','rm_gpr'),
@@ -90,432 +90,432 @@ function formatop(s:ShortString;allowsizeonly:boolean):ShortString;
        ('80','bits80')
      );
   var
-    i : LongInt;
+    lIndex : LongInt;
   begin
-    for i:=1to replaces do
+    for lIndex:=1to cReplacementCount do
       begin
-        if s=replacetab[i,1] then
+        if AText=cReplacementTable[lIndex,1] then
           begin
-            s:=replacetab[i,2];
+            AText:=cReplacementTable[lIndex,2];
             break;
           end;
       end;
-    formatop:=s;
+    FormatOp:=AText;
   end;
 
 
-function readnumber : LongInt;
+function ReadNumber : LongInt;
 
   var
-     base : LongInt;
+     lBase : LongInt;
   begin
-     result:=0;
-     if s[i]='\' then
+     Result:=0;
+     if LineText[Index]='\' then
        begin
-          base:=8;
-          inc(i);
-          if s[i]='x' then
+          lBase:=8;
+          inc(Index);
+          if LineText[Index]='x' then
             begin
-               base:=16;
-               inc(i);
+               lBase:=16;
+               inc(Index);
             end;
        end
      else
-       base:=10;
-     s[i]:=upcase(s[i]);
-     while s[i] in ['0'..'9','A'..'F'] do
+       lBase:=10;
+     LineText[Index]:=upcase(LineText[Index]);
+     while LineText[Index] in ['0'..'9','A'..'F'] do
        begin
-          case s[i] of
+          case LineText[Index] of
              '0'..'9':
-               result:=result*base+ord(s[i])-ord('0');
+               Result:=Result*lBase+ord(LineText[Index])-ord('0');
 
              'A'..'F':
-               result:=result*base+ord(s[i])-ord('A')+10;
+               Result:=Result*lBase+ord(LineText[Index])-ord('A')+10;
           end;
-          inc(i);
+          inc(Index);
        end;
   end;
 
-function ToStr(l : LongInt) : ShortString;
+function ToStr(AValue : LongInt) : ShortString;
 
   var
-     hs : ShortString;
+     lText : ShortString;
 
   begin
-     str(l,hs);
-     ToStr:=hs;
+     str(AValue,lText);
+     ToStr:=lText;
   end;
 
-function readstr : ShortString;
+function ReadStr : ShortString;
 
   begin
-     result:='';
-     while (s[i] in ['0'..'9','A'..'Z','a'..'z','_']) and (i<=length(s)) do
+     Result:='';
+     while (LineText[Index] in ['0'..'9','A'..'Z','a'..'z','_']) and (Index<=length(LineText)) do
        begin
-          result:=result+s[i];
-          inc(i);
+          Result:=Result+LineText[Index];
+          inc(Index);
        end;
   end;
 
-procedure skipspace;
+procedure SkipSpace;
 
   begin
-     while (s[i] in [' ',#9]) do
-       inc(i);
+     while (LineText[Index] in [' ',#9]) do
+       inc(Index);
   end;
 
-procedure openinc(out f:text;const fn:ShortString);
+procedure OpenInc(out AFile:Text;const AFileName:ShortString);
 begin
-  WriteLn('creating ',fn);
-  assign(f,fn);
-  rewrite(f);
-  WriteLn(f,'{ don''t edit, this file is generated from x86ins.dat }');
-  WriteLn(f,'(');
+  WriteLn('creating ',AFileName);
+  assign(AFile,AFileName);
+  rewrite(AFile);
+  WriteLn(AFile,'{ don''t edit, this file is generated from x86ins.dat }');
+  WriteLn(AFile,'(');
 end;
 
 
-procedure closeinc(var f:text);
+procedure CloseInc(var AFile:Text);
 begin
-  WriteLn(f);
-  WriteLn(f,');');
-  close(f);
+  WriteLn(AFile);
+  WriteLn(AFile,');');
+  close(AFile);
 end;
 
 
 var
-   attsuffix,
-   hs : ShortString;
-   j : LongInt;
-   firstopcode,
-   first : boolean;
-   maxinfolen,
-   code : byte;
-   insns : LongInt;
-   attsuffile,propfile,opfile,
-   nopfile,attfile,intfile,
-   infile,insfile : text;
+   ATTSuffix,
+   TempText : ShortString;
+   IndexJ : LongInt;
+   FirstOpcode,
+   First : Boolean;
+   MaxInfoLength,
+   Code : Byte;
+   InstructionCount : LongInt;
+   ATTSuffixFile,PropertyFile,OpcodeFile,
+   OpcodeCountFile,ATTFile,IntFile,
+   InputFile,InstructionFile : Text;
    { instruction fields }
-   skip : boolean;
-   literalcount,
-   ops    : LongInt;
-   intopcode,
-   attopcode,
-   opcode,
-   codes,
-   flags   : ShortString;
-   optypes : array[1..max_operands] of ShortString;
-   inschanges: ShortString;
-   instrwritten: boolean;
+   Skip : Boolean;
+   LiteralCount,
+   OperandCount    : LongInt;
+   IntOpcode,
+   ATTOpcode,
+   Opcode,
+   Codes,
+   Flags   : ShortString;
+   OperandTypes : array[1..cMaxOperands] of ShortString;
+   InstructionChanges: ShortString;
+   InstructionWritten: Boolean;
    SignCheck: Cardinal;
    StrSearch: Integer;
 
 const
-  SIGNED_INT = ' or ot_signed';
+  cSignedInt = ' or ot_signed';
 
 
 procedure DoWriteInstr;
 begin
-  if firstopcode then
-    firstopcode:=false
+  if FirstOpcode then
+    FirstOpcode:=false
   else
     begin
-      WriteLn(opfile,',');
-      WriteLn(attfile,',');
-      WriteLn(attsuffile,',');
-      WriteLn(intfile,',');
-      WriteLn(propfile,',');
+      WriteLn(OpcodeFile,',');
+      WriteLn(ATTFile,',');
+      WriteLn(ATTSuffixFile,',');
+      WriteLn(IntFile,',');
+      WriteLn(PropertyFile,',');
     end;
-  write(opfile,opcode);
-  write(intfile,'''',intopcode,'''');
-  write(attfile,'''',attopcode,'''');
-  write(attsuffile,attsuffix);
-  write(propfile,'(Ch: ',inschanges,')');
+  write(OpcodeFile,Opcode);
+  write(IntFile,'''',IntOpcode,'''');
+  write(ATTFile,'''',ATTOpcode,'''');
+  write(ATTSuffixFile,ATTSuffix);
+  write(PropertyFile,'(Ch: ',InstructionChanges,')');
 end;
 
 begin
-   WriteLn('Nasm Instruction Table Converter Version ',Version);
-   i8086:=ParamStr(1)='i8086';
-   x86_64:=ParamStr(1)='x86_64';
-   insns:=0;
-   maxinfolen:=0;
+   WriteLn('Nasm Instruction Table Converter Version ',cVersion);
+   IsI8086:=ParamStr(1)='i8086';
+   IsX8664:=ParamStr(1)='x86_64';
+   InstructionCount:=0;
+   MaxInfoLength:=0;
    { open dat file }
-   assign(infile,'../x86/x86ins.dat');
-   if x86_64 then
+   assign(InputFile,'../x86/x86ins.dat');
+   if IsX8664 then
      begin
        { create inc files }
-       openinc(insfile,'x8664tab.inc');
-       openinc(opfile,'x8664op.inc');
-       assign(nopfile,'x8664nop.inc');
-       openinc(attfile,'x8664att.inc');
-       openinc(attsuffile,'x8664ats.inc');
-       openinc(intfile,'x8664int.inc');
-       openinc(propfile,'x8664pro.inc');
+       OpenInc(InstructionFile,'x8664tab.inc');
+       OpenInc(OpcodeFile,'x8664op.inc');
+       assign(OpcodeCountFile,'x8664nop.inc');
+       OpenInc(ATTFile,'x8664att.inc');
+       OpenInc(ATTSuffixFile,'x8664ats.inc');
+       OpenInc(IntFile,'x8664int.inc');
+       OpenInc(PropertyFile,'x8664pro.inc');
      end
-   else if i8086 then
+   else if IsI8086 then
      begin
        { create inc files }
-       openinc(insfile,'i8086tab.inc');
-       openinc(opfile,'i8086op.inc');
-       assign(nopfile,'i8086nop.inc');
-       openinc(attfile,'i8086att.inc');
-       openinc(attsuffile,'i8086atts.inc');
-       openinc(intfile,'i8086int.inc');
-       openinc(propfile,'i8086prop.inc');
+       OpenInc(InstructionFile,'i8086tab.inc');
+       OpenInc(OpcodeFile,'i8086op.inc');
+       assign(OpcodeCountFile,'i8086nop.inc');
+       OpenInc(ATTFile,'i8086att.inc');
+       OpenInc(ATTSuffixFile,'i8086atts.inc');
+       OpenInc(IntFile,'i8086int.inc');
+       OpenInc(PropertyFile,'i8086prop.inc');
      end
    else
      begin
        { create inc files }
-       openinc(insfile,'i386tab.inc');
-       openinc(opfile,'i386op.inc');
-       assign(nopfile,'i386nop.inc');
-       openinc(attfile,'i386att.inc');
-       openinc(attsuffile,'i386atts.inc');
-       openinc(intfile,'i386int.inc');
-       openinc(propfile,'i386prop.inc');
+       OpenInc(InstructionFile,'i386tab.inc');
+       OpenInc(OpcodeFile,'i386op.inc');
+       assign(OpcodeCountFile,'i386nop.inc');
+       OpenInc(ATTFile,'i386att.inc');
+       OpenInc(ATTSuffixFile,'i386atts.inc');
+       OpenInc(IntFile,'i386int.inc');
+       OpenInc(PropertyFile,'i386prop.inc');
      end;
-   rewrite(nopfile);
-   WriteLn(nopfile,'{ don''t edit, this file is generated from x86ins.dat }');
-   reset(infile);
-   first:=true;
-   opcode:='';
-   firstopcode:=true;
-   while not(eof(infile)) do
+   rewrite(OpcodeCountFile);
+   WriteLn(OpcodeCountFile,'{ don''t edit, this file is generated from x86ins.dat }');
+   reset(InputFile);
+   First:=true;
+   Opcode:='';
+   FirstOpcode:=true;
+   while not(eof(InputFile)) do
      begin
         { handle comment }
-        readln(infile,s);
+        readln(InputFile,LineText);
 
-        while (s<>'') and (s[1]=' ') do
-         delete(s,1,1);
-        if (s='') or (s[1]=';') then
+        while (LineText<>'') and (LineText[1]=' ') do
+         delete(LineText,1,1);
+        if (LineText='') or (LineText[1]=';') then
           continue;
-        if (s[1]='[') then
+        if (LineText[1]='[') then
          begin
-           i:=pos(',',s);
-           j:=pos(']',s);
-           if i=0 then
+           Index:=pos(',',LineText);
+           IndexJ:=pos(']',LineText);
+           if Index=0 then
             begin
-              opcode:='A_'+Copy(s,2,j-2);
-              intopcode:=Copy(s,2,j-2);
+              Opcode:='A_'+Copy(LineText,2,IndexJ-2);
+              IntOpcode:=Copy(LineText,2,IndexJ-2);
               { Conditional }
-              if (intopcode[length(intopcode)]='c') and
-                 (intopcode[length(intopcode)-1]='c') then
-                dec(byte(intopcode[0]),2);
-              attopcode:=intopcode;
-              attsuffix:='attsufNONE';
+              if (IntOpcode[length(IntOpcode)]='c') and
+                 (IntOpcode[length(IntOpcode)-1]='c') then
+                dec(Byte(IntOpcode[0]),2);
+              ATTOpcode:=IntOpcode;
+              ATTSuffix:='attsufNONE';
             end
            else
             begin
               SignCheck := 0;
-              opcode:='A_'+Copy(s,2,i-2);
-              intopcode:=Copy(s,2,i-2);
+              Opcode:='A_'+Copy(LineText,2,Index-2);
+              IntOpcode:=Copy(LineText,2,Index-2);
               { intel conditional }
-              if (intopcode[length(intopcode)]='c') and
-                 (intopcode[length(intopcode)-1]='c') then
-                dec(byte(intopcode[0]),2);
-              attopcode:=Copy(s,i+1,j-i-1);
+              if (IntOpcode[length(IntOpcode)]='c') and
+                 (IntOpcode[length(IntOpcode)-1]='c') then
+                dec(Byte(IntOpcode[0]),2);
+              ATTOpcode:=Copy(LineText,Index+1,IndexJ-Index-1);
               { att Suffix }
-              case attopcode[length(attopcode)] of
+              case ATTOpcode[length(ATTOpcode)] of
                 'M' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufMM';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufMM';
                   end;
                 'N' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufMMX';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufMMX';
                   end;
                 'S' :
 		  begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufMMS';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufMMS';
 		  end;
                 'X' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufINT';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufINT';
                   end;
                 'Y' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufINTdual';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufINTdual';
                   end;
                 'F' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufFPU';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufFPU';
                   end;
                 'R' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufFPUint';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufFPUint';
                   end;
                 else
-                  attsuffix:='attsufNONE';
+                  ATTSuffix:='attsufNONE';
               end;
               { att Conditional }
-              if (attopcode[length(attopcode)]='C') and
-                 (attopcode[length(attopcode)-1]='C') then
-                dec(byte(attopcode[0]),2);
+              if (ATTOpcode[length(ATTOpcode)]='C') and
+                 (ATTOpcode[length(ATTOpcode)-1]='C') then
+                dec(Byte(ATTOpcode[0]),2);
             end;
-           intopcode:=Lower(intopcode);
-           attopcode:=Lower(attopcode);
-           instrwritten:=false;
+           IntOpcode:=Lower(IntOpcode);
+           ATTOpcode:=Lower(ATTOpcode);
+           InstructionWritten:=false;
 
            { read the next line which contains the Change options }
            repeat
-             readln(infile,inschanges);
-           until eof(infile) or ((inschanges<>'') and (inschanges[1]<>';'));
-           inschanges[1]:='[';
-           inschanges[length(inschanges)]:=']';
+             readln(InputFile,InstructionChanges);
+           until eof(InputFile) or ((InstructionChanges<>'') and (InstructionChanges[1]<>';'));
+           InstructionChanges[1]:='[';
+           InstructionChanges[length(InstructionChanges)]:=']';
            continue;
          end;
         { we must have an opcode }
-        if opcode='' then
+        if Opcode='' then
          runerror(234);
         { clear }
-        ops:=0;
-        for i:=low(optypes) to high(optypes) do
-          optypes[i]:='';
-        codes:='';
-        flags:='';
-        skip:=false;
+        OperandCount:=0;
+        for Index:=low(OperandTypes) to high(OperandTypes) do
+          OperandTypes[Index]:='';
+        Codes:='';
+        Flags:='';
+        Skip:=false;
         { ops and optypes }
-        i:=1;
+        Index:=1;
         repeat
-          hs:=readstr;
-          if (hs='void') or (hs='ignore') then
+          TempText:=ReadStr;
+          if (TempText='void') or (TempText='ignore') then
             break;
-          inc(ops);
-          optypes[ops]:=optypes[ops]+'ot_'+formatop(hs,false);
-          while s[i]='|' do
+          inc(OperandCount);
+          OperandTypes[OperandCount]:=OperandTypes[OperandCount]+'ot_'+FormatOp(TempText,false);
+          while LineText[Index]='|' do
             begin
-               inc(i);
-               optypes[ops]:=optypes[ops]+' or ot_'+formatop(readstr,true);
+               inc(Index);
+               OperandTypes[OperandCount]:=OperandTypes[OperandCount]+' or ot_'+FormatOp(ReadStr,true);
             end;
-          if s[i] in [',',':'] then
-            inc(i)
+          if LineText[Index] in [',',':'] then
+            inc(Index)
           else
             break;
         until false;
-        for j:=1 to max_operands-ops do
-          optypes[max_operands-j+1]:='ot_none';
+        for IndexJ:=1 to cMaxOperands-OperandCount do
+          OperandTypes[cMaxOperands-IndexJ+1]:='ot_none';
         { codes }
-        skipspace;
-        j:=0;
-        literalcount:=0;
-        if s[i] in ['\','0'..'9'] then
+        SkipSpace;
+        IndexJ:=0;
+        LiteralCount:=0;
+        if LineText[Index] in ['\','0'..'9'] then
           begin
-             while not(s[i] in [' ',#9]) do
+             while not(LineText[Index] in [' ',#9]) do
                begin
-                 code:=readnumber;
+                 Code:=ReadNumber;
                  { for some codes we want also to change the optypes, but not
                    if the code belongs to a literal sequence }
-                 if (literalcount=0) and (code>=1) and (code<=3) then
-                   literalcount:=code
+                 if (LiteralCount=0) and (Code>=1) and (Code<=3) then
+                   LiteralCount:=Code
                  else
                    begin
-                     if literalcount>0 then
-                       dec(literalcount)
+                     if LiteralCount>0 then
+                       dec(LiteralCount)
                      else
                        begin
-                         case code of
+                         case Code of
                            12,13,14:    {signed byte}
-                             optypes[code-11]:=optypes[code-11]+SIGNED_INT;
+                             OperandTypes[Code-11]:=OperandTypes[Code-11]+cSignedInt;
                            172,173,174: {signed long}
                            begin
                              { Addition by J. Gareth "Kit" Moreton }
                              { See below for workaround for routines that take a 64-bit destination but a 32-bit operand in a non-decorated opcode }
-                             SignCheck := code-171;
-                             optypes[SignCheck]:=optypes[SignCheck]+SIGNED_INT;
+                             SignCheck := Code-171;
+                             OperandTypes[SignCheck]:=OperandTypes[SignCheck]+cSignedInt;
                            end;
                          end;
                        end;
                    end;
-                 codes:=codes+'#'+ToStr(code);
-                 inc(j);
+                 Codes:=Codes+'#'+ToStr(Code);
+                 inc(IndexJ);
                end;
           end
         else
           begin
-            readstr;
-            codes:='#0';
+            ReadStr;
+            Codes:='#0';
           end;
-        if j>maxinfolen then
-         maxinfolen:=j;
+        if IndexJ>MaxInfoLength then
+         MaxInfoLength:=IndexJ;
         { flags }
-        skipspace;
-        while not(s[i] in [' ',#9,#13,#10]) and (i<=length(s)) do
+        SkipSpace;
+        while not(LineText[Index] in [' ',#9,#13,#10]) and (Index<=length(LineText)) do
           begin
-             hs:=readstr;
-             if hs='none' then
+             TempText:=ReadStr;
+             if TempText='none' then
                break;
-             if x86_64 then
+             if IsX8664 then
                begin
                  { x86_64 }
-                 if (upcase(hs)='NOX86_64') or (upcase(hs)='16BITONLY') then
-                   skip:=true;
+                 if (upcase(TempText)='NOX86_64') or (upcase(TempText)='16BITONLY') then
+                   Skip:=true;
                end
-             else if not i8086 then
+             else if not IsI8086 then
                begin
                  { i386 }
-                 if (upcase(hs)='X86_64') or (upcase(hs)='16BITONLY') then
-                   skip:=true;
+                 if (upcase(TempText)='X86_64') or (upcase(TempText)='16BITONLY') then
+                   Skip:=true;
                end
              else
                begin
                  { i8086 }
-                 if (upcase(hs)='X86_64') then
-                   skip:=true;
+                 if (upcase(TempText)='X86_64') then
+                   Skip:=true;
                end;
-             if hs<>'ND' then
+             if TempText<>'ND' then
               begin
                 { Addition by J. Gareth "Kit" Moreton }
                 { Workaround for routines that take a 64-bit destination but a 32-bit operand in a non-decorated opcode }
-                if (lower(hs)='sm') and (SignCheck > 0) then
+                if (Lower(TempText)='sm') and (SignCheck > 0) then
                  begin
                    { Remove signed flag }
-                   StrSearch := Pos(SIGNED_INT, optypes[SignCheck]);
-                   Delete(optypes[SignCheck], StrSearch, Length(SIGNED_INT));
+                   StrSearch := Pos(cSignedInt, OperandTypes[SignCheck]);
+                   Delete(OperandTypes[SignCheck], StrSearch, Length(cSignedInt));
                  end;
 
-                  if flags<>'' then
-                   flags:=flags+',';
-                  flags:=flags+'if_'+lower(hs);
+                  if Flags<>'' then
+                   Flags:=Flags+',';
+                  Flags:=Flags+'if_'+Lower(TempText);
               end;
-             if (s[i]=',') and (i<=length(s)) then
-              inc(i)
+             if (LineText[Index]=',') and (Index<=length(LineText)) then
+              inc(Index)
              else
               break;
           end;
         { write instruction }
-        if not skip then
+        if not Skip then
           begin
-            if not instrwritten then
+            if not InstructionWritten then
               DoWriteInstr;
-            instrwritten:=true;
-            if not(first) then
-              WriteLn(insfile,',')
+            InstructionWritten:=true;
+            if not(First) then
+              WriteLn(InstructionFile,',')
             else
-              first:=false;
-            WriteLn(insfile,'  (');
-            WriteLn(insfile,'    opcode  : ',opcode,';');
-            WriteLn(insfile,'    ops     : ',ops,';');
-            WriteLn(insfile,'    optypes : (',optypes[1],',',optypes[2],',',optypes[3],',',optypes[4],');');
-            WriteLn(insfile,'    code    : ',codes,';');
-            WriteLn(insfile,'    flags   : [',flags,']');
-            write(insfile,'  )');
-            inc(insns);
+              First:=false;
+            WriteLn(InstructionFile,'  (');
+            WriteLn(InstructionFile,'    opcode  : ',Opcode,';');
+            WriteLn(InstructionFile,'    ops     : ',OperandCount,';');
+            WriteLn(InstructionFile,'    optypes : (',OperandTypes[1],',',OperandTypes[2],',',OperandTypes[3],',',OperandTypes[4],');');
+            WriteLn(InstructionFile,'    code    : ',Codes,';');
+            WriteLn(InstructionFile,'    flags   : [',Flags,']');
+            write(InstructionFile,'  )');
+            inc(InstructionCount);
           end;
      end;
-   close(infile);
-   closeinc(insfile);
-   closeinc(intfile);
-   closeinc(attfile);
-   closeinc(attsuffile);
-   closeinc(opfile);
-   WriteLn(nopfile,insns,';');
-   close(nopfile);
-   closeinc(propfile);
-   WriteLn(insns,' nodes processed (maxinfolen=',maxinfolen,')');
+   close(InputFile);
+   CloseInc(InstructionFile);
+   CloseInc(IntFile);
+   CloseInc(ATTFile);
+   CloseInc(ATTSuffixFile);
+   CloseInc(OpcodeFile);
+   WriteLn(OpcodeCountFile,InstructionCount,';');
+   close(OpcodeCountFile);
+   CloseInc(PropertyFile);
+   WriteLn(InstructionCount,' nodes processed (maxinfolen=',MaxInfoLength,')');
 end.

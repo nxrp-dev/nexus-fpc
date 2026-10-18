@@ -894,7 +894,7 @@ implementation
           pd.ProcCallOption:=pocall_stdcall
         else
           pd.ProcCallOption:=pocall_cdecl;
-        handle_calling_convention(pd,hcc_default_actions_impl);
+        Handle_Calling_Convention(pd,cHCCDefaultActionsImpl);
         { set procinfo and current_procinfo.procdef }
         result:=TCGProcInfo(CProcInfo.Create(nil));
         result.procdef:=pd;

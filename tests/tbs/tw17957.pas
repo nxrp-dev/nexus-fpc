@@ -1,12 +1,12 @@
 {$mode objfpc}
-uses fgl;
+uses Generics.Collections;
 
 type
   TFoo1 = class(TObject);
 
   TFoo2 = class
     type
-      TFooList = specialize TFPGList<TFoo1>;
+      TFooList = specialize TList<TFoo1>;
   end;
 
 begin

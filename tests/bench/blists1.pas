@@ -3,7 +3,7 @@
 program testl;
 
 uses
-     fgl,
+     Generics.Collections,
      classes,
      sysutils;
 
@@ -24,7 +24,7 @@ end;
 
 { overwrite with generic one }
 Type
-   TFPList = specialize TFPGList<Pointer>;
+   TFPList = specialize TList<Pointer>;
 procedure do_generic;
 Var
   L : TFPList;

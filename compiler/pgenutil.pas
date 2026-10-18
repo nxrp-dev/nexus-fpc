@@ -2155,7 +2155,7 @@ uses
                         Build_VMT(TObjectDef(result))
                       else
                         { update the procdevs to add hidden self param }
-                        insert_struct_hidden_paras(TObjectDef(result));
+                        Insert_Struct_Hidden_Paras(TObjectDef(result));
                     end;
                   { handle params, calling convention, etc }
                   procvardef:
@@ -2177,10 +2177,10 @@ uses
                       if po_is_function_ref in TProcVarDef(result).ProcOptions then
                         Adjust_FuncRef(result,srsym,nil);
                       if result.typ=procvardef then
-                        flags:=hcc_default_actions_intf
+                        flags:=cHCCDefaultActionsIntf
                       else
-                        flags:=hcc_default_actions_intf_struct;
-                      handle_calling_convention(result,flags);
+                        flags:=cHCCDefaultActionsIntfStruct;
+                      Handle_Calling_Convention(result,flags);
                       if not hintsprocessed and (replaydepth<CurrentScanner.replay_stack_depth) then
                         begin
                           try_consume_hintdirective(TTypeSym(srsym).SymOptions,TTypeSym(srsym).DeprecatedMsg);
@@ -2199,10 +2199,10 @@ uses
                       while try_consume_hintdirective(pd.SymOptions,pd.DeprecatedMsg) do
                         consume(_SEMICOLON);
                       if parse_generic then
-                        handle_calling_convention(TProcDef(result),hcc_default_actions_intf)
+                        Handle_Calling_Convention(TProcDef(result),cHCCDefaultActionsIntf)
                       else
-                        handle_calling_convention(TProcDef(result),hcc_default_actions_impl);
-                      proc_add_definition(TProcDef(result));
+                        Handle_Calling_Convention(TProcDef(result),cHCCDefaultActionsImpl);
+                      Proc_Add_Definition(TProcDef(result));
                       { for partial specializations we implicitly declare the routine as
                         having its implementation although we'll not specialize it in reality }
                       if parse_generic then

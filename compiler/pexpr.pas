@@ -326,14 +326,14 @@ implementation
           in_new_x :
             begin
               if afterassignment or in_args then
-               statement_syssym:=new_function
+               statement_syssym:=New_Function
               else
-               statement_syssym:=new_dispose_statement(true);
+               statement_syssym:=New_Dispose_Statement(true);
             end;
 
           in_dispose_x :
             begin
-              statement_syssym:=new_dispose_statement(false);
+              statement_syssym:=New_Dispose_Statement(false);
             end;
 
           in_ord_x,
@@ -774,22 +774,22 @@ implementation
 
           in_initialize_x:
             begin
-              statement_syssym:=inline_initialize;
+              statement_syssym:=Inline_Initialize;
             end;
 
           in_finalize_x:
             begin
-              statement_syssym:=inline_finalize;
+              statement_syssym:=Inline_Finalize;
             end;
 
           in_copy_x:
             begin
-              statement_syssym:=inline_copy;
+              statement_syssym:=Inline_Copy;
             end;
 
           in_concat_x :
             begin
-              statement_syssym:=inline_concat;
+              statement_syssym:=Inline_Concat;
             end;
 
           in_read_x,
@@ -809,7 +809,7 @@ implementation
 
           in_setlength_x:
             begin
-              statement_syssym := inline_setlength;
+              statement_syssym := Inline_SetLength;
             end;
 
           in_objc_selector_x:
@@ -1013,17 +1013,17 @@ implementation
 
           in_setstring_x_y_z:
             begin
-              statement_syssym := inline_setstring;
+              statement_syssym := Inline_SetString;
             end;
 
           in_delete_x_y_z:
             begin
-              statement_syssym:=inline_delete;
+              statement_syssym:=Inline_Delete;
             end;
 
           in_insert_x_y_z:
             begin
-              statement_syssym:=inline_insert;
+              statement_syssym:=Inline_Insert;
             end;
           in_const_eh_return_data_regno:
             begin

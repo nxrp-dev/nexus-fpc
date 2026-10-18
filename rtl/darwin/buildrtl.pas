@@ -21,7 +21,7 @@ unit buildrtl;
       charset, CPAll, character, unixcp, getopts,
       errors, dl, dynlibs,
       types, sysconst, fpwidestring,
-      cthreads, sortbase, classes, fgl, rtlconsts, dos, cwstring, bsd;
+      cthreads, sortbase, classes, rtlconsts, dos, cwstring, bsd;
 
   implementation
 

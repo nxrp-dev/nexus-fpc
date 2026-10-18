@@ -1687,7 +1687,7 @@ implementation
            lParaVarSym:=CParaVarSym.Create('DLLPARAM',3,vs_const,VoidPointerType,[]);
            TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
            TProcDef(AProcDef).ReturnDef:=Bool32Type;
-           insert_funcret_para(TProcDef(AProcDef));
+           Insert_FuncRet_Para(TProcDef(AProcDef));
            TProcDef(AProcDef).CalcParas;
          end;
      end;

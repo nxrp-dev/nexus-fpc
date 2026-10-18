@@ -3,11 +3,11 @@
 
 program test;
 uses
- FGL;
+ Generics.Collections;
 
 // Type identifier expected
 // Internal error 2019112401
-generic function CopyList<T>(source: specialize FGL.TFPGObjectList<T>): specialize FGL.TFPGObjectList<T>;
+generic function CopyList<T>(source: specialize Generics.Collections.TObjectList<T>): specialize Generics.Collections.TObjectList<T>;
 begin
 end;
 

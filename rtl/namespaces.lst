@@ -137,7 +137,6 @@ netwlibc/sysutils.pas=netwlibc/System.SysUtils.pas
 objpas/character.pas=namespaced/common/System.Character.pas
 {s*:objpas/}=objpas/
 {i+:objpas/}
-objpas/fgl.pas=namespaced/common/System.FGL.pas
 objpas/fpwidestring.pas=namespaced/common/System.FPWideString.pas
 objpas/math.pas=namespaced/common/System.Math.pas
 objpas/rtlconsts.pas=namespaced/common/System.RtlConsts.pas

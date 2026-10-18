@@ -16,255 +16,255 @@
 
 program mka64reg;
 
-const Version = '1.00';
-      max_regcount = 1000;
+const cVersion = '1.00';
+      cMaxRegCount = 1000;
 
-var s : string;
-    i : LongInt;
-    line : LongInt;
-    regcount:word;
-    regcount_bsstart:word;
-    names,
-    regtypes,
-    subtypes,
-    supregs,
-    numbers,
-    stdnames,
-    dwarf : array[0..max_regcount-1] of string[63];
-    regnumber_index,
-    std_regname_index : array[0..max_regcount-1] of word;
+var LineText : String;
+    Index : LongInt;
+    Line : LongInt;
+    RegCount:Word;
+    RegCountBSStart:Word;
+    Names,
+    RegTypes,
+    SubTypes,
+    SupRegs,
+    Numbers,
+    StdNames,
+    Dwarf : array[0..cMaxRegCount-1] of String[63];
+    RegNumberIndex,
+    StdRegNameIndex : array[0..cMaxRegCount-1] of Word;
 
-function ToStr(l : LongInt) : string;
+function ToStr(AValue : LongInt) : String;
 
 begin
-  str(l,ToStr);
+  str(AValue,ToStr);
 end;
 
-function readstr : string;
+function ReadStr : String;
 
   begin
-     result:='';
-     while (s[i]<>',') and (i<=length(s)) do
+     Result:='';
+     while (LineText[Index]<>',') and (Index<=length(LineText)) do
        begin
-          result:=result+s[i];
-          inc(i);
+          Result:=Result+LineText[Index];
+          inc(Index);
        end;
   end;
 
 
-procedure readcomma;
+procedure ReadComma;
   begin
-     if s[i]<>',' then
+     if LineText[Index]<>',' then
        begin
-         WriteLn('Missing "," at line ',line);
-         WriteLn('Line: "',s,'"');
+         WriteLn('Missing "," at line ',Line);
+         WriteLn('Line: "',LineText,'"');
          halt(1);
        end;
-     inc(i);
+     inc(Index);
   end;
 
 
-procedure skipspace;
+procedure SkipSpace;
 
   begin
-     while (s[i] in [' ',#9]) do
-       inc(i);
+     while (LineText[Index] in [' ',#9]) do
+       inc(Index);
   end;
 
-procedure openinc(out f:text;const fn:string);
+procedure OpenInc(out AFile:Text;const AFileName:String);
 begin
-  WriteLn('creating ',fn);
-  assign(f,fn);
-  rewrite(f);
-  WriteLn(f,'{ don''t edit, this file is generated from a64reg.dat }');
+  WriteLn('creating ',AFileName);
+  assign(AFile,AFileName);
+  rewrite(AFile);
+  WriteLn(AFile,'{ don''t edit, this file is generated from a64reg.dat }');
 end;
 
 
-procedure closeinc(var f:text);
+procedure CloseInc(var AFile:Text);
 begin
-  WriteLn(f);
-  close(f);
+  WriteLn(AFile);
+  close(AFile);
 end;
 
-procedure build_regnum_index;
+procedure BuildRegNumIndex;
 
-var h,i,j,p,t:word;
-
-begin
-  {Build the registernumber2regindex index.
-   Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    regnumber_index[i]:=i;
-  {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
-  repeat
-    for h:=0 to regcount-p-1 do
-      begin
-        i:=h;
-        repeat
-          j:=i+p;
-          if numbers[regnumber_index[j]]>=numbers[regnumber_index[i]] then
-            break;
-          t:=regnumber_index[i];
-          regnumber_index[i]:=regnumber_index[j];
-          regnumber_index[j]:=t;
-          if i<p then
-            break;
-          dec(i,p);
-        until false;
-      end;
-    p:=p shr 1;
-  until p=0;
-end;
-
-procedure build_std_regname_index;
-
-var h,i,j,p,t:word;
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Word;
 
 begin
   {Build the registernumber2regindex index.
    Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    std_regname_index[i]:=i;
+  for lIndex:=0 to RegCount-1 do
+    RegNumberIndex[lIndex]:=lIndex;
   {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
+  lGap:=RegCountBSStart;
   repeat
-    for h:=0 to regcount-p-1 do
+    for lIndexH:=0 to RegCount-lGap-1 do
       begin
-        i:=h;
+        lIndex:=lIndexH;
         repeat
-          j:=i+p;
-          if stdnames[std_regname_index[j]]>=stdnames[std_regname_index[i]] then
+          lIndexJ:=lIndex+lGap;
+          if Numbers[RegNumberIndex[lIndexJ]]>=Numbers[RegNumberIndex[lIndex]] then
             break;
-          t:=std_regname_index[i];
-          std_regname_index[i]:=std_regname_index[j];
-          std_regname_index[j]:=t;
-          if i<p then
+          lTemp:=RegNumberIndex[lIndex];
+          RegNumberIndex[lIndex]:=RegNumberIndex[lIndexJ];
+          RegNumberIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
             break;
-          dec(i,p);
+          dec(lIndex,lGap);
         until false;
       end;
-    p:=p shr 1;
-  until p=0;
+    lGap:=lGap shr 1;
+  until lGap=0;
+end;
+
+procedure BuildStdRegNameIndex;
+
+var lIndexH,lIndex,lIndexJ,lGap,lTemp:Word;
+
+begin
+  {Build the registernumber2regindex index.
+   Step 1: Fill.}
+  for lIndex:=0 to RegCount-1 do
+    StdRegNameIndex[lIndex]:=lIndex;
+  {Step 2: Sort. We use a Shell-Metzner sort.}
+  lGap:=RegCountBSStart;
+  repeat
+    for lIndexH:=0 to RegCount-lGap-1 do
+      begin
+        lIndex:=lIndexH;
+        repeat
+          lIndexJ:=lIndex+lGap;
+          if StdNames[StdRegNameIndex[lIndexJ]]>=StdNames[StdRegNameIndex[lIndex]] then
+            break;
+          lTemp:=StdRegNameIndex[lIndex];
+          StdRegNameIndex[lIndex]:=StdRegNameIndex[lIndexJ];
+          StdRegNameIndex[lIndexJ]:=lTemp;
+          if lIndex<lGap then
+            break;
+          dec(lIndex,lGap);
+        until false;
+      end;
+    lGap:=lGap shr 1;
+  until lGap=0;
 end;
 
 
-procedure read_spreg_file;
+procedure ReadSpRegFile;
 
-var infile:text;
+var lInputFile:Text;
 
 begin
    { open dat file }
-   assign(infile,'a64reg.dat');
-   reset(infile);
-   while not(eof(infile)) do
+   assign(lInputFile,'a64reg.dat');
+   reset(lInputFile);
+   while not(eof(lInputFile)) do
      begin
         { handle comment }
-        readln(infile,s);
-        inc(line);
-        while (s<>'') and (s[1]=' ') do
-         delete(s,1,1);
-        if (s='') or (s[1]=';') then
+        readln(lInputFile,LineText);
+        inc(Line);
+        while (LineText<>'') and (LineText[1]=' ') do
+         delete(LineText,1,1);
+        if (LineText='') or (LineText[1]=';') then
           continue;
 
-        i:=1;
-        names[regcount]:=readstr;
-        readcomma;
-        regtypes[regcount]:=readstr;
-        readcomma;
-        subtypes[regcount]:=readstr;
-        readcomma;
-        supregs[regcount]:=readstr;
-        readcomma;
-        stdnames[regcount]:=readstr;
-        readcomma;
-        dwarf[regcount]:=readstr;
+        Index:=1;
+        Names[RegCount]:=ReadStr;
+        ReadComma;
+        RegTypes[RegCount]:=ReadStr;
+        ReadComma;
+        SubTypes[RegCount]:=ReadStr;
+        ReadComma;
+        SupRegs[RegCount]:=ReadStr;
+        ReadComma;
+        StdNames[RegCount]:=ReadStr;
+        ReadComma;
+        Dwarf[RegCount]:=ReadStr;
         { Create register number }
-        if supregs[regcount][1]<>'$' then
+        if SupRegs[RegCount][1]<>'$' then
           begin
-            WriteLn('Missing $ before number, at line ',line);
-            WriteLn('Line: "',s,'"');
+            WriteLn('Missing $ before number, at line ',Line);
+            WriteLn('Line: "',LineText,'"');
             halt(1);
           end;
-        numbers[regcount]:=regtypes[regcount]+copy(subtypes[regcount],2,255)+'00'+copy(supregs[regcount],2,255);
-        if i<length(s) then
+        Numbers[RegCount]:=RegTypes[RegCount]+copy(SubTypes[RegCount],2,255)+'00'+copy(SupRegs[RegCount],2,255);
+        if Index<length(LineText) then
           begin
-            WriteLn('Extra chars at end of line, at line ',line);
-            WriteLn('Line: "',s,'"');
+            WriteLn('Extra chars at end of line, at line ',Line);
+            WriteLn('Line: "',LineText,'"');
             halt(1);
           end;
-        inc(regcount);
-        if regcount>max_regcount then
+        inc(RegCount);
+        if RegCount>cMaxRegCount then
           begin
             WriteLn('Error: Too much registers, please increase maxregcount in source');
             halt(2);
           end;
      end;
-   close(infile);
+   close(lInputFile);
 end;
 
-procedure write_inc_files;
+procedure WriteIncFiles;
 
 var
-    norfile,stdfile,supfile,
-    numfile,dwarffile,confile,
-    rnifile,srifile:text;
-    first:boolean;
+    lCountFile,lStdFile,lSupRegFile,
+    lNumberFile,lDwarfFile,lConstFile,
+    lRegNumberIndexFile,lStdRegIndexFile:Text;
+    lFirst:Boolean;
 
 begin
   { create inc files }
-  openinc(confile,'ra64con.inc');
-  openinc(supfile,'ra64sup.inc');
-  openinc(numfile,'ra64num.inc');
-  openinc(stdfile,'ra64std.inc');
-  openinc(dwarffile,'ra64dwa.inc');
-  openinc(norfile,'ra64nor.inc');
-  openinc(rnifile,'ra64rni.inc');
-  openinc(srifile,'ra64sri.inc');
-  first:=true;
-  for i:=0 to regcount-1 do
+  OpenInc(lConstFile,'ra64con.inc');
+  OpenInc(lSupRegFile,'ra64sup.inc');
+  OpenInc(lNumberFile,'ra64num.inc');
+  OpenInc(lStdFile,'ra64std.inc');
+  OpenInc(lDwarfFile,'ra64dwa.inc');
+  OpenInc(lCountFile,'ra64nor.inc');
+  OpenInc(lRegNumberIndexFile,'ra64rni.inc');
+  OpenInc(lStdRegIndexFile,'ra64sri.inc');
+  lFirst:=true;
+  for Index:=0 to RegCount-1 do
     begin
-      if not first then
+      if not lFirst then
         begin
-          WriteLn(numfile,',');
-          WriteLn(stdfile,',');
-          WriteLn(dwarffile,',');
-          WriteLn(rnifile,',');
-          WriteLn(srifile,',');
+          WriteLn(lNumberFile,',');
+          WriteLn(lStdFile,',');
+          WriteLn(lDwarfFile,',');
+          WriteLn(lRegNumberIndexFile,',');
+          WriteLn(lStdRegIndexFile,',');
         end
       else
-        first:=false;
-      WriteLn(supfile,'RS_',names[i],' = ',supregs[i],';');
-      WriteLn(confile,'NR_'+names[i],' = ','TRegister(',numbers[i],')',';');
-      write(numfile,'TRegister(',numbers[i],')');
-      write(stdfile,'''',stdnames[i],'''');
-      write(dwarffile,dwarf[i]);
-      write(rnifile,regnumber_index[i]);
-      write(srifile,std_regname_index[i]);
+        lFirst:=false;
+      WriteLn(lSupRegFile,'RS_',Names[Index],' = ',SupRegs[Index],';');
+      WriteLn(lConstFile,'NR_'+Names[Index],' = ','TRegister(',Numbers[Index],')',';');
+      write(lNumberFile,'TRegister(',Numbers[Index],')');
+      write(lStdFile,'''',StdNames[Index],'''');
+      write(lDwarfFile,Dwarf[Index]);
+      write(lRegNumberIndexFile,RegNumberIndex[Index]);
+      write(lStdRegIndexFile,StdRegNameIndex[Index]);
     end;
-  write(norfile,regcount);
-  close(confile);
-  close(supfile);
-  closeinc(numfile);
-  closeinc(stdfile);
-  closeinc(dwarffile);
-  closeinc(norfile);
-  closeinc(rnifile);
-  closeinc(srifile);
+  write(lCountFile,RegCount);
+  close(lConstFile);
+  close(lSupRegFile);
+  CloseInc(lNumberFile);
+  CloseInc(lStdFile);
+  CloseInc(lDwarfFile);
+  CloseInc(lCountFile);
+  CloseInc(lRegNumberIndexFile);
+  CloseInc(lStdRegIndexFile);
   WriteLn('Done!');
-  WriteLn(regcount,' registers processed');
+  WriteLn(RegCount,' registers processed');
 end;
 
 
 begin
-   WriteLn('Register Table Converter Version ',Version);
-   line:=0;
-   regcount:=0;
-   read_spreg_file;
-   regcount_bsstart:=1;
-   while 2*regcount_bsstart<regcount do
-     regcount_bsstart:=regcount_bsstart*2;
-   build_regnum_index;
-   build_std_regname_index;
-   write_inc_files;
+   WriteLn('Register Table Converter Version ',cVersion);
+   Line:=0;
+   RegCount:=0;
+   ReadSpRegFile;
+   RegCountBSStart:=1;
+   while 2*RegCountBSStart<RegCount do
+     RegCountBSStart:=RegCountBSStart*2;
+   BuildRegNumIndex;
+   BuildStdRegNameIndex;
+   WriteIncFiles;
 end.

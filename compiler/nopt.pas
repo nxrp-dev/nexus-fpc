@@ -349,7 +349,7 @@ begin
          Is_ShortString(p.resultdef)
        )
      ) and
-     valid_for_var(AktAssignmentNode.left,false) then
+     Valid_For_Var(AktAssignmentNode.left,false) then
     begin
       para:=CCallParaNode.Create(
               arrp,
@@ -475,7 +475,7 @@ begin
   if Assigned(AktAssignmentNode) and
      (AktAssignmentNode.right=p) and
      (AktAssignmentNode.left.resultdef=p.resultdef) and
-     valid_for_var(AktAssignmentNode.left,false) then
+     Valid_For_Var(AktAssignmentNode.left,false) then
     begin
       para:=CCallParaNode.Create(
               arrp,

@@ -298,7 +298,7 @@ implementation
             caseexpr:=CTypeConvNode.Create_Internal(caseexpr,SIntType);
             DoTypeCheckPass(caseexpr);
           end;
-        set_varstate(caseexpr,vs_read,[vsf_must_be_valid]);
+        Set_VarState(caseexpr,vs_read,[vsf_must_be_valid]);
         casedeferror:=false;
         casedef:=caseexpr.resultdef;
         { case of string must be rejected in Delphi and MacPas modes. }
@@ -753,14 +753,14 @@ implementation
                needs to be done before the instruction block is
                parsed to have a valid hloopvar }
              TypeCheckPass(hfrom);
-             set_varstate(hfrom,vs_read,[vsf_must_be_valid]);
+             Set_VarState(hfrom,vs_read,[vsf_must_be_valid]);
              TypeCheckPass(hto);
-             set_varstate(hto,vs_read,[vsf_must_be_valid]);
+             Set_VarState(hto,vs_read,[vsf_must_be_valid]);
              TypeCheckPass(hloopvar);
              { in two steps, because vs_readwritten may turn on vsf_must_be_valid }
              { for some subnodes                                                  }
-             set_varstate(hloopvar,vs_written,[]);
-             set_varstate(hloopvar,vs_read,[vsf_must_be_valid]);
+             Set_VarState(hloopvar,vs_written,[]);
+             Set_VarState(hloopvar,vs_read,[vsf_must_be_valid]);
 
              { ... now the instruction block }
              hblock:=statement;
@@ -798,8 +798,8 @@ implementation
 
               consume(_DO);
 
-              set_varstate(hloopvar,vs_written,[]);
-              set_varstate(hloopvar,vs_read,[vsf_must_be_valid]);
+              Set_VarState(hloopvar,vs_written,[]);
+              Set_VarState(hloopvar,vs_read,[vsf_must_be_valid]);
 
               hloopbody:=statement;
               if Assigned(loopvarsym) then
@@ -818,7 +818,7 @@ implementation
          consume(_FOR);
 
          hloopvar:=factor(false,[]);
-         valid_for_loopvar(hloopvar,true);
+         Valid_For_LoopVar(hloopvar,true);
 
          if try_to_consume(_ASSIGNMENT) then
            result:=for_loop_create(hloopvar)
@@ -922,7 +922,7 @@ implementation
                 newblock:=InternalStatements(newstatement);
                 { when we can't take the address of p, load it in a temp }
                 { since we may need its address later on                 }
-                if not valid_for_addr(p,false) then
+                if not Valid_For_Addr(p,false) then
                   begin
                     calltempnode:=CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent,true);
                     AddStatement(newstatement,calltempnode);

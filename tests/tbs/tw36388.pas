@@ -4,9 +4,9 @@
 
 program tw36388;
 uses
-  SysUtils, FGL;
+  SysUtils, Classes;
 
-generic function CopyList<T: TFPSList> (source: T): T;
+generic function CopyList<T: TList> (source: T): T;
 begin
  // Internal error 200204175
   result := T.Create;

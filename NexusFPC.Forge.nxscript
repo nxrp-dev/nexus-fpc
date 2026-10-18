@@ -1294,10 +1294,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/unix/classes.pas";
         }
-        FPC Build_fgl (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pas";
-        }
         FPC Build_rtlconsts (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pas";
@@ -1555,10 +1551,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/unix/classes.pas";
         }
-        FPC BuildAndroid_fgl (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pas";
-        }
         FPC BuildAndroid_rtlconsts (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pas";
@@ -1671,10 +1663,6 @@ Project Cross Build[Cross] {
         FPC BuildApple_sortbase (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/sortbase.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/sortbase.pas";
-        }
-        FPC BuildApple_fgl (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pas";
         }
         FPC BuildApple_classes (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pas"];

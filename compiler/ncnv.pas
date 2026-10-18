@@ -574,11 +574,11 @@ implementation
                  lNode3:=nil;
                end;
               TypeCheckPass(lNode2);
-              set_varstate(lNode2,vs_read,[vsf_must_be_valid]);
+              Set_VarState(lNode2,vs_read,[vsf_must_be_valid]);
               if Assigned(lNode3) then
                 begin
                   TypeCheckPass(lNode3);
-                  set_varstate(lNode3,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(lNode3,vs_read,[vsf_must_be_valid]);
                 end;
               if CodeGenError then
                break;
@@ -2586,7 +2586,7 @@ implementation
                             if not Assigned(TProcDef(lProcDef).struct) then
                               InternalError(2021062204);
 
-                            insert_self_and_vmt_para(lProcDef);
+                            Insert_Self_And_VMT_Para(lProcDef);
 
                             lMapping.OldSym:=TSym(PCapturedSymInfo(TProcDef(lProcDef).CapturedSyms[0])^.sym);
                             lMapping.NewSym:=nil;
@@ -2631,7 +2631,7 @@ implementation
                               { simply add a TObject as Self parameter }
                               TProcDef(lProcDef).struct:=Class_TObject;
 
-                            insert_self_and_vmt_para(lProcDef);
+                            Insert_Self_And_VMT_Para(lProcDef);
 
                             { there is no self, so load a nil value }
                             TLoadNode(Left).Set_MP(CNilNode.Create);
@@ -2972,7 +2972,7 @@ implementation
                  register size would also have to change (but second_nothing
                  does not handle this) }
                (TStoredDef(ResultDef).Size<>TStoredDef(Left.ResultDef).Size)) then
-              make_not_regable(Left,[ra_addr_regable]);
+              Make_Not_Regable(Left,[ra_addr_regable]);
             exit;
           end;
 
@@ -3223,7 +3223,7 @@ implementation
                              { we need to make sure the result can still be
                                passed as a var parameter                    }
                              lNewBlock:=InternalStatements(lNewStatement);
-                             if (valid_for_var(Left,false)) then
+                             if (Valid_For_Var(Left,false)) then
                                begin
                                  lTempNode:=CTempCreateNode.Create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
                                  AddStatement(lNewStatement,lTempNode);
@@ -4029,7 +4029,7 @@ implementation
 
       begin
          First_Array_To_Pointer:=nil;
-         make_not_regable(Left,[ra_addr_regable]);
+         Make_Not_Regable(Left,[ra_addr_regable]);
          ExpectLoc:=LOC_REGISTER;
       end;
 
@@ -4600,7 +4600,7 @@ implementation
               not(TStoredDef(ResultDef).Is_FPURegable)) or
              ((Left.ResultDef.typ = floatdef) and
               (ResultDef.typ <> floatdef))  then
-            make_not_regable(Left,[ra_addr_regable]);
+            Make_Not_Regable(Left,[ra_addr_regable]);
 
         Result:=First_Call_Helper(ConvType);
       end;
@@ -4651,7 +4651,7 @@ implementation
             ((ResultDef.Size=Left.ResultDef.Size) and
              (Left.ResultDef.Size<sizeof(aint)) and
              (Is_Signed(ResultDef) xor Is_Signed(Left.ResultDef)))) then
-          make_not_regable(Left,[ra_addr_regable]);
+          Make_Not_Regable(Left,[ra_addr_regable]);
       end;
 
 
@@ -4882,8 +4882,8 @@ implementation
         TypeCheckPass(Right);
         TypeCheckPass(Left);
 
-        set_varstate(Right,vs_read,[vsf_must_be_valid]);
-        set_varstate(Left,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Right,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Left,vs_read,[vsf_must_be_valid]);
 
         if CodeGenError then
           exit;

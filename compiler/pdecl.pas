@@ -333,10 +333,10 @@ implementation
                        end;
                       { add default calling convention }
                       if hdef.typ=procvardef then
-                        flags:=hcc_default_actions_intf
+                        flags:=cHCCDefaultActionsIntf
                       else
-                        flags:=hcc_default_actions_intf_struct;
-                      handle_calling_convention(hdef,flags);
+                        flags:=cHCCDefaultActionsIntfStruct;
+                      Handle_Calling_Convention(hdef,flags);
                     end;
                    { Parse the initialiser }
                    if not skip_initialiser then
@@ -1067,10 +1067,10 @@ implementation
                              hdef.RegisterDef;
                          end;
                        if hdef.typ=procvardef then
-                         flags:=hcc_default_actions_intf
+                         flags:=cHCCDefaultActionsIntf
                        else
-                         flags:=hcc_default_actions_intf_struct;
-                       handle_calling_convention(hdef,flags);
+                         flags:=cHCCDefaultActionsIntfStruct;
+                       Handle_Calling_Convention(hdef,flags);
                        if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).ProcOptions) then
                          begin
                            if (po_is_block in TProcVarDef(hdef).ProcOptions) and
@@ -1113,7 +1113,7 @@ implementation
                         Build_VMT(TObjectDef(hdef))
                       else
                       { update the procdevs to add hidden self param }
-                      insert_struct_hidden_paras(TObjectDef(hdef));
+                      Insert_Struct_Hidden_Paras(TObjectDef(hdef));
 
                     { In case of an objcclass, verify that all methods have a message
                       name set. We only check this now, because message names can be set

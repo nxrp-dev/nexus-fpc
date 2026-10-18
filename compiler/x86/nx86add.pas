@@ -986,8 +986,8 @@ unit nx86add;
           (not(Use_VectorFPU(Left.ResultDef)) and not(Use_VectorFPU(Right.ResultDef)) and
            not(Use_VectorFPU(ResultDef))) then
           begin
-            make_not_regable(Left,[ra_addr_regable]);
-            make_not_regable(Right,[ra_addr_regable]);
+            Make_Not_Regable(Left,[ra_addr_regable]);
+            Make_Not_Regable(Right,[ra_addr_regable]);
           end;
         Result:=inherited Pass_1;
         { correct expectloc, it does not matter of Result is set as another pass_1 is run on it

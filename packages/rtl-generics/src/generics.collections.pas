@@ -47,11 +47,11 @@ interface
 {$IFDEF FPC_DOTTEDUNITS}
 uses
     System.RtlConsts, System.Classes, System.SysUtils, System.Generics.MemoryExpanders, System.Generics.Defaults,
-    System.Generics.Helpers, System.Generics.Strings, System.Types, System.Rtti;
+    System.Generics.Helpers, System.Generics.Strings, System.Types;
 {$ELSE FPC_DOTTEDUNITS}
 uses
     RtlConsts, Classes, SysUtils, Generics.MemoryExpanders, Generics.Defaults,
-    Generics.Helpers, Generics.Strings, Types, Rtti;
+    Generics.Helpers, Generics.Strings, Types;
 {$ENDIF FPC_DOTTEDUNITS}
 
 {.$define EXTRA_WARNINGS}
@@ -3773,22 +3773,13 @@ end;
 
 
 function TCustomAVLTreeMap<TREE_CONSTRAINTS>.GetItem(const AKey: TKey): TValue;
-
 var
-  LNode: PNode;
-  // Need to differentiate with TValue template type...
-  D : {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue;
-  K : TKey;
-
+  lNode: PNode;
 begin
-  LNode := Find(AKey);
-  if not Assigned(LNode) then
-    begin
-      K:=aKey;
-      {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue.Make(@K,TypeInfo(TKey),D);
-      raise EAVLTree.CreateFmt(SDictionaryKeyNNNDoesNotExist,[D.ToString]);
-    end;
-  result := LNode.Value;
+  lNode := Find(AKey);
+  if not Assigned(lNode) then
+    raise EAVLTree.Create(SDictionaryKeyDoesNotExist);
+  Result := lNode.Value;
 end;
 
 procedure TCustomAVLTreeMap<TREE_CONSTRAINTS>.SetItem(const AKey: TKey; const AValue: TValue);

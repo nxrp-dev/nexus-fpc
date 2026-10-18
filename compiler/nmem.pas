@@ -506,10 +506,10 @@ implementation
                 modified due to the possible use of pointers
                 To avoid false positives regarding "uninitialised"
                 warnings when using arrays, perform it in two steps         }
-              set_varstate(Left,vs_written,[]);
+              Set_VarState(Left,vs_written,[]);
               { vsf_must_be_valid so it doesn't get changed into
                 vsf_referred_not_inited                          }
-              set_varstate(Left,vs_read,[vsf_must_be_valid]);
+              Set_VarState(Left,vs_read,[vsf_must_be_valid]);
             end;
         end;
 
@@ -524,7 +524,7 @@ implementation
         if CodeGenError then
          exit;
 
-        make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
+        Make_Not_Regable(Left,[ra_addr_regable,ra_addr_taken]);
 
         { don't allow constants, for internal use we also
           allow taking the address of strings and sets }
@@ -790,7 +790,7 @@ implementation
             Result:=true;
           end
         else if (nf_internal in Flags) or
-           valid_for_addr(Left,true) then
+           Valid_For_Addr(Left,true) then
           begin
             if not(anf_typedaddr in AddrNodeFlags) then
               ResultDef:=VoidPointerType
@@ -851,7 +851,7 @@ implementation
       begin
          Result:=nil;
          TypeCheckPass(Left);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
@@ -948,7 +948,7 @@ implementation
         // in integer registers
         if (Left.ResultDef.typ=recorddef) and
            (ResultDef.typ=floatdef) then
-          make_not_regable(Left,[ra_addr_regable]);
+          Make_Not_Regable(Left,[ra_addr_regable]);
 
         if Is_Currency(ResultDef) then
           Include(Flags,nf_is_currency);
@@ -1073,13 +1073,13 @@ implementation
                 { implicit pointer dereference -> pointer is read }
                 (Left.ResultDef.typ = pointerdef);
          if lValid then
-           set_varstate(Left,vs_read,[vsf_must_be_valid]);
+           Set_VarState(Left,vs_read,[vsf_must_be_valid]);
 {
          A vecn is, just like a loadn, always part of an expression with its
          own read/write and must_be_valid semantics. Therefore we don't have
          to do anything else here, just like for loadn's
 }
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
@@ -1221,7 +1221,7 @@ implementation
              not(Is_ConstNode(Right) and (TArrayDef(Left.ResultDef).ElementDef.Size=ALUSIntType.Size))) or
             ((Left.ResultDef.typ=stringdef) and
              (TStringDef(Left.ResultDef).StringType in [st_shortstring,st_longstring])) then
-           make_not_regable(Left,[ra_addr_regable]);
+           Make_Not_Regable(Left,[ra_addr_regable]);
 
          case Left.ResultDef.typ of
            arraydef :

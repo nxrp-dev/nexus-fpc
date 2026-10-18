@@ -40,9 +40,6 @@ uses
   System.SysUtils,
   System.Types,
   System.TypInfo,
-{$ifdef FPC_TESTGENERICS}
-  System.FGL,
-{$endif}
   System.RtlConsts,
 {$ifdef FPC_USE_INTRINSICS}
   System.Intrinsics,
@@ -53,9 +50,6 @@ uses
   sysutils,
   types,
   typinfo,
-{$ifdef FPC_TESTGENERICS}
-  fgl,
-{$endif}
   rtlconsts,
 {$ifdef FPC_USE_INTRINSICS}
   intrinsics,

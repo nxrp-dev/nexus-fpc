@@ -12,7 +12,7 @@
 
  **********************************************************************}
 
-{$if not defined(FPC_TESTGENERICS)}
+
 
 {****************************************************************************}
 {*                           TFPListEnumerator                              *}
@@ -496,46 +496,7 @@ begin
   end;
 end;
 
-{$else}
 
-{ generics based implementation of TFPList follows }
-
-procedure TFPList.Assign(Source: TFPList);
-begin
-  inherited Assign(Source);
-end;
-
-type
-  TFPPtrListSortCompare = function(const Item1, Item2: Pointer): Integer;
-
-procedure TFPList.Sort(Compare: TListSortCompare);
-begin
-  inherited Sort(TFPPtrListSortCompare(Compare));
-end;
-
-procedure TFPList.Sort(Compare: TListSortCompare; SortingAlgorithm: PSortingAlgorithm);
-begin
-  inherited Sort(TFPPtrListSortCompare(Compare), SortingAlgorithm);
-end;
-
-procedure TFPList.ForEachCall(Proc2call: TListCallback; Arg: Pointer);
-var
-  I: integer;
-begin
-  for I:=0 to Count-1 do
-    proc2call(InternalItems[I],arg);
-end;
-
-
-procedure TFPList.ForEachCall(Proc2call: TListStaticCallback; Arg: Pointer);
-var
-  I: integer;
-begin
-  for I:=0 to Count-1 do
-    Proc2call(InternalItems[I], Arg);
-end;
-
-{$endif}
 
 {****************************************************************************}
 {*                TListEnumerator                                           *}

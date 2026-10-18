@@ -642,6 +642,16 @@
             "compiler/x86/x86mmsecond.inc"
           ],
           "status": "owned_roles_reviewed_with_ABI_inline_RTTI_exceptions_imported_providers_and_generator_own_roles_pending"
+        },
+        {
+          "batch": "055",
+          "name": "Typechecking/overload resolution, parameter preparation and inline parser providers",
+          "scope": [
+            "compiler/htypechk.pas",
+            "compiler/pparautl.pas",
+            "compiler/pinline.pas"
+          ],
+          "status": "owned_roles_reviewed_with_ABI_RTTI_exceptions_imported_providers_pending"
         }
       ],
       "exceptions": [
@@ -3737,6 +3747,13 @@
           "exceptions": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/exceptions.json",
           "audit": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/audit.json",
           "source_proof": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/source-checks.json"
+        },
+        {
+          "batch": "055",
+          "reason": "Public links,19 public enum members and two exact record RTTI type-name spellings preserved;78 runtime/ABI strings and all layouts unchanged. Six implementation-only enum members normalize with eight-profile loaded-byte parity. Private mangling and both overload branches verified.",
+          "exceptions": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/exceptions.json",
+          "audit": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/audit.json",
+          "source_proof": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/source-checks.json"
         }
       ],
       "remaining_candidate_report": "build/forge-bootstrap/naming-goal/compiler-type-candidates-after-batch-004.json",
@@ -46264,10 +46281,6228 @@
         "python3 /tmp/proof-naming054.py",
         "python3 /tmp/link-layout-naming054.py"
       ]
+    },
+    {
+      "id": "055",
+      "status": "validated",
+      "scope": "Typechecking, overload resolution, parameter preparation and inline parsing",
+      "baseline_commit": "867b50d8d09a92ac6999d9fa16f9bd7c5072ee52",
+      "owned_files": [
+        "compiler/htypechk.pas",
+        "compiler/pparautl.pas",
+        "compiler/pinline.pas"
+      ],
+      "source_files": 34,
+      "identifiers": 380,
+      "identifier_substitutions": 4744,
+      "generator_template_substitutions": 0,
+      "work_directory": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad",
+      "audit": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/audit.json",
+      "source_proof": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/source-checks.json",
+      "exceptions": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/exceptions.json",
+      "files": [
+        {
+          "file": "compiler/aarch64/ncpuflw.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "48e0922492c385cd68b7a5635d1f7e42eb5c20c47afa3e37fdc21da860bb7ff3",
+          "sha256_after": "83490b7ef8d7df04f1ddc05d8231a2b6558037cb009910e1caed0286205b8d1d",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/blockutl.pas",
+          "substitutions": 2,
+          "roles": [],
+          "sha256_before": "4151d66d5cd7d9b0f4204a6ee84ad6615809af4060d7b03cbce43b26cf8c92a5",
+          "sha256_after": "da5b6fd77a42f3ada957e2e6307fe77627186d0b7a5a724db4f67bd17cb402ed",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 2,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "insert_funcret_para",
+              "Insert_FuncRet_Para"
+            ],
+            [
+              "insert_self_and_vmt_para",
+              "Insert_Self_And_VMT_Para"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/htypechk.pas",
+          "substitutions": 3124,
+          "roles": [
+            {
+              "routine": "node2opstr",
+              "parameters": {
+                "nt": "ANodeType"
+              },
+              "locals": {
+                "i": "lIndex"
+              },
+              "parent": null
+            },
+            {
+              "routine": "token2managementoperator",
+              "parameters": {
+                "optoken": "AOpToken"
+              },
+              "locals": {
+                "i": "lIndex"
+              },
+              "parent": null
+            },
+            {
+              "routine": "isbinaryoperatoroverloadable",
+              "parameters": {
+                "treetyp": "ATreeType",
+                "ld": "ALeftDef",
+                "lt": "ALeftNodeType",
+                "rd": "ARightDef",
+                "rt": "ARightNodeType"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "internal_check",
+              "parameters": {
+                "treetyp": "ATreeType",
+                "ld": "ALeftDef",
+                "lt": "ALeftNodeType",
+                "rd": "ARightDef",
+                "rt": "ARightNodeType",
+                "allowed": "AAllowed"
+              },
+              "locals": {},
+              "parent": "isbinaryoperatoroverloadable"
+            },
+            {
+              "routine": "isunaryoperatoroverloadable",
+              "parameters": {
+                "treetyp": "ATreeType",
+                "inlinenumber": "AInlineNumber",
+                "ld": "ALeftDef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "isoperatoracceptable",
+              "parameters": {
+                "pf": "AProcDef",
+                "optoken": "AOpToken"
+              },
+              "locals": {
+                "ld": "lLeftDef",
+                "rd": "lRightDef",
+                "i": "lIndex",
+                "eq": "lEqualType",
+                "conv": "lConversion",
+                "cdo": "lCompareDefOptions",
+                "pd": "lProcDef",
+                "oldcount": "lOldCount",
+                "count": "lCount",
+                "sym": "lSym",
+                "parasym": "lParaSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "isunaryoverloaded",
+              "parameters": {
+                "t": "ANode",
+                "ocf": "AOverloadFlags"
+              },
+              "locals": {
+                "ld": "lLeftDef",
+                "optoken": "lOpToken",
+                "operpd": "lOperatorProcDef",
+                "ppn": "lParaNode",
+                "candidates": "lCandidates",
+                "cand_cnt": "lCandidateCount",
+                "inlinenumber": "lInlineNumber"
+              },
+              "parent": null
+            },
+            {
+              "routine": "isbinaryoverloaded",
+              "parameters": {
+                "t": "ANode",
+                "ocf": "AOverloadFlags"
+              },
+              "locals": {
+                "rd": "lRightDef",
+                "ld": "lLeftDef",
+                "optoken": "lOpToken",
+                "operpd": "lOperatorProcDef",
+                "ht": "lTempNode",
+                "ppn": "lParaNode",
+                "i": "lIndex",
+                "cand_cnt": "lCandidateCount"
+              },
+              "parent": null
+            },
+            {
+              "routine": "search_operator",
+              "parameters": {
+                "optoken": "AOpToken",
+                "generror": "AGenerateError"
+              },
+              "locals": {
+                "candidates": "lCandidates"
+              },
+              "parent": "isbinaryoverloaded"
+            },
+            {
+              "routine": "make_not_regable_intern",
+              "parameters": {
+                "p": "ANode",
+                "how": "AHow",
+                "records_only": "ARecordsOnly"
+              },
+              "locals": {
+                "lhighsym": "lHighSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "make_not_regable",
+              "parameters": {
+                "p": "ANode",
+                "how": "AHow"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_proc2procvar_load",
+              "parameters": {
+                "p": "ANode",
+                "realprocdef": "ARealProcDef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_ambiguous_funcret_load",
+              "parameters": {
+                "p": "ANode",
+                "owningprocdef": "AOwningProcDef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "test_local_to_procvar",
+              "parameters": {
+                "from_def": "AFromDef",
+                "to_def": "AToDef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "UninitializedVariableMessage",
+              "parameters": {
+                "pos": "APosition",
+                "warning": "AWarning",
+                "local": "ALocal",
+                "managed": "AManaged",
+                "name": "AName"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "set_varstate",
+              "parameters": {
+                "p": "ANode",
+                "newstate": "ANewState",
+                "varstateflags": "AVarStateFlags"
+              },
+              "locals": {
+                "hsym": "lVarSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "set_unique",
+              "parameters": {
+                "p": "ANode"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_assign",
+              "parameters": {
+                "p": "ANode",
+                "opts": "AOptions",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {
+                "typeconvs": "lTypeConvs",
+                "hp2": "lNode2",
+                "hp": "lNode",
+                "gotstring": "lGotString",
+                "gotsubscript": "lGotSubscript",
+                "gotrecord": "lGotRecord",
+                "gotvec": "lGotVec",
+                "gottypeconv": "lGotTypeConv",
+                "fromdef": "lFromDef",
+                "todef": "lToDef",
+                "errmsg": "lErrorMessage",
+                "temp": "lTemp"
+              },
+              "parent": null
+            },
+            {
+              "routine": "constaccessok",
+              "parameters": {
+                "vs": "AVarSym"
+              },
+              "locals": {},
+              "parent": "valid_for_assign"
+            },
+            {
+              "routine": "mayberesettypeconvs",
+              "parameters": {},
+              "locals": {
+                "i": "lIndex"
+              },
+              "parent": "valid_for_assign"
+            },
+            {
+              "routine": "valid_for_var",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_formal_var",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_formal_constref",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_formal_const",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_assignment",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_loopvar",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "valid_for_addr",
+              "parameters": {
+                "p": "ANode",
+                "report_errors": "AReportErrors"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "var_para_allowed",
+              "parameters": {
+                "eq": "AEqualType",
+                "def_from": "AFromDef",
+                "def_to": "AToDef",
+                "fromnode": "AFromNode"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "para_allowed",
+              "parameters": {
+                "eq": "AEqualType",
+                "p": "ANode",
+                "def_to": "AToDef"
+              },
+              "locals": {
+                "acn": "lCallNode",
+                "realprocdef": "lRealProcDef",
+                "tmpeq": "lTempEqualType"
+              },
+              "parent": null
+            },
+            {
+              "routine": "allowenumop",
+              "parameters": {
+                "nt": "ANodeType"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "TCandidate.increment_ordinal_distance",
+              "parameters": {
+                "by": "ADistance"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.init",
+              "parameters": {
+                "sym": "ASym",
+                "st": "ASymTable",
+                "ppn": "AParaNode",
+                "flags": "AFlags",
+                "spezcontext": "ASpecializationContext"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.init_operator",
+              "parameters": {
+                "op": "AOperator",
+                "ppn": "AParaNode"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.done",
+              "parameters": {},
+              "locals": {
+                "hpnext": "lNextCandidate",
+                "hp": "lCandidate",
+                "psym": "lProcSym",
+                "i": "lIndex",
+                "sym": "lSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.collect_overloads_in_struct",
+              "parameters": {
+                "structdef": "AStructDef",
+                "procdefoverloadlist": "AProcDefOverloadList",
+                "flags": "AFlags",
+                "spezcontext": "ASpecializationContext"
+              },
+              "locals": {
+                "changedhierarchy": "lChangedHierarchy",
+                "srsym": "lSym",
+                "hashedid": "lHashedID",
+                "hasoverload": "lHasOverload",
+                "foundanything": "lFoundAnything",
+                "extendeddef": "lExtendedDef",
+                "helperdef": "lHelperDef",
+                "helperlist": "lHelperList",
+                "i": "lIndex"
+              },
+              "parent": null
+            },
+            {
+              "routine": "processprocsym",
+              "parameters": {
+                "srsym": "ASym",
+                "foundanything": "AFoundAnything"
+              },
+              "locals": {
+                "j": "lIndexJ",
+                "pd": "lProcDef"
+              },
+              "parent": "TCallCandidates.collect_overloads_in_struct"
+            },
+            {
+              "routine": "processhelper",
+              "parameters": {
+                "hashedid": "AHashedID",
+                "helperdef": "AHelperDef"
+              },
+              "locals": {
+                "srsym": "lSym",
+                "hasoverload": "lHasOverload",
+                "foundanything": "lFoundAnything"
+              },
+              "parent": "TCallCandidates.collect_overloads_in_struct"
+            },
+            {
+              "routine": "TCallCandidates.collect_overloads_in_units",
+              "parameters": {
+                "procdefoverloadlist": "AProcDefOverloadList",
+                "flags": "AFlags",
+                "spezcontext": "ASpecializationContext"
+              },
+              "locals": {
+                "j": "lIndexJ",
+                "pd": "lProcDef",
+                "srsymtable": "lSymTable",
+                "srsym": "lSym",
+                "checkstack": "lCheckStack",
+                "hashedid": "lHashedID",
+                "foundanything": "lFoundAnything",
+                "hasoverload": "lHasOverload"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.create_candidate_list",
+              "parameters": {
+                "flags": "AFlags",
+                "spezcontext": "ASpecializationContext"
+              },
+              "locals": {
+                "j": "lIndexJ",
+                "pd": "lProcDef",
+                "hp": "lCandidate",
+                "pt": "lParaNode",
+                "found": "lFound",
+                "added": "lAdded",
+                "st": "lSymTable",
+                "contextstructdef": "lContextStructDef",
+                "procdefoverloadlist": "lProcDefOverloadList",
+                "cpoptions": "lCompareParaOptions"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.calc_distance",
+              "parameters": {
+                "st_root": "ARootSymTable",
+                "flags": "AFlags"
+              },
+              "locals": {
+                "pd": "lProcDef",
+                "candidate": "lCandidate",
+                "st": "lSymTable"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.proc_add",
+              "parameters": {
+                "st": "ASymTable",
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "defaultparacnt": "lDefaultParaCount"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.list",
+              "parameters": {
+                "all": "AAll"
+              },
+              "locals": {
+                "hp": "lCandidate"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.dump_info",
+              "parameters": {
+                "lvl": "ALevel"
+              },
+              "locals": {
+                "hp": "lCandidate",
+                "i": "lIndex",
+                "currpara": "lCurrentParaSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "ParaTreeStr",
+              "parameters": {
+                "p": "ANode"
+              },
+              "locals": {},
+              "parent": "TCallCandidates.dump_info"
+            },
+            {
+              "routine": "TCallCandidates.get_information",
+              "parameters": {},
+              "locals": {
+                "hp": "lCandidate",
+                "currpara": "lCurrentParaSym",
+                "paraidx": "lParaIndex",
+                "fp_precision_distance": "lFPPrecisionDistance",
+                "currparanr": "lCurrentParaNr",
+                "obj_from": "lFromObjectDef",
+                "obj_to": "lToObjectDef",
+                "def_from": "lFromDef",
+                "def_to": "lToDef",
+                "currpt": "lCurrentParaNode",
+                "pt": "lParaNode",
+                "eq": "lEqualType",
+                "mineq": "lMinEqualType",
+                "convtype": "lConversionType",
+                "pdtemp": "lTempProcDef",
+                "pdoper": "lOperatorProcDef",
+                "releasecurrpt": "lReleaseCurrentParaNode",
+                "check_valid_var": "lCheckValidVar",
+                "cdoptions": "lCompareDefOptions",
+                "n": "lNode"
+              },
+              "parent": null
+            },
+            {
+              "routine": "fp_precision_score",
+              "parameters": {
+                "def": "ADef"
+              },
+              "locals": {},
+              "parent": "TCallCandidates.get_information"
+            },
+            {
+              "routine": "get_variantequaltype",
+              "parameters": {
+                "def": "ADef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_better_candidate",
+              "parameters": {
+                "currpd": "ACurrentCandidate",
+                "bestpd": "ABestCandidate"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_better_candidate_single_variant",
+              "parameters": {
+                "currpd": "ACurrentCandidate",
+                "bestpd": "ABestCandidate"
+              },
+              "locals": {
+                "currpara": "lCurrentParaSym",
+                "bestpara": "lBestParaSym",
+                "currvcl": "lCurrentVariantClass",
+                "bestvcl": "lBestVariantClass"
+              },
+              "parent": null
+            },
+            {
+              "routine": "calculate_relation",
+              "parameters": {
+                "currvcl": "ACurrentVariantClass",
+                "bestvcl": "ABestVariantClass",
+                "testvcl": "ATestVariantClass",
+                "conflictvcls": "AConflictingVariantClasses"
+              },
+              "locals": {},
+              "parent": "is_better_candidate_single_variant"
+            },
+            {
+              "routine": "getfirstrealparaidx",
+              "parameters": {
+                "pd": "ACandidate"
+              },
+              "locals": {},
+              "parent": "is_better_candidate_single_variant"
+            },
+            {
+              "routine": "TCallCandidates.choose_best",
+              "parameters": {
+                "bestpd": "ABestProcDef",
+                "singlevariant": "ASingleVariant"
+              },
+              "locals": {
+                "pd": "lProcDef",
+                "besthpstart": "lBestCandidateStart",
+                "hp": "lCandidate",
+                "cntpd": "lProcDefCount",
+                "res": "lResult"
+              },
+              "parent": null
+            },
+            {
+              "routine": "compare_by_old_sortout_check",
+              "parameters": {
+                "pd": "ACandidate",
+                "bestpd": "ABestCandidate"
+              },
+              "locals": {
+                "cpoptions": "lCompareParaOptions"
+              },
+              "parent": null
+            },
+            {
+              "routine": "decide_restart",
+              "parameters": {
+                "pd": "ACandidate",
+                "bestpd": "ABestCandidate"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "save_validity",
+              "parameters": {
+                "c": "ACandidate"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "restore_validity",
+              "parameters": {
+                "c": "ACandidate"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.choose_best",
+              "parameters": {
+                "bestpd": "ABestProcDef",
+                "singlevariant": "ASingleVariant"
+              },
+              "locals": {
+                "pd": "lProcDef",
+                "besthpstart": "lBestCandidateStart",
+                "hp": "lCandidate",
+                "hp2": "lCandidate2",
+                "cntpd": "lProcDefCount",
+                "res": "lResult",
+                "restart": "lRestart"
+              },
+              "parent": null
+            },
+            {
+              "routine": "TCallCandidates.find_wrong_para",
+              "parameters": {},
+              "locals": {
+                "currparanr": "lCurrentParaNr",
+                "hp": "lCandidate",
+                "pt": "lParaNode",
+                "wrongpara": "lWrongPara"
+              },
+              "parent": null
+            },
+            {
+              "routine": "check_ranges",
+              "parameters": {
+                "location": "ALocation",
+                "source": "ASource",
+                "destdef": "ADestDef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_valid_for_default",
+              "parameters": {
+                "def": "ADef"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "is_valid_record_or_object",
+              "parameters": {
+                "def": "ADef"
+              },
+              "locals": {
+                "sym": "lSym",
+                "i": "lIndex"
+              },
+              "parent": "is_valid_for_default"
+            }
+          ],
+          "sha256_before": "3b808ff22b307094ba4be660c5f057b759196272a46129b67bc9f0520029fe4a",
+          "sha256_after": "e9d67d82cee522d63c120f60c7caa56f4d8b8d06141363fba00cd68d1c10b896",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 3124,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "ConvType",
+              "lConversionType"
+            ],
+            [
+              "ExtendedDef",
+              "lExtendedDef"
+            ],
+            [
+              "FProcSymtable",
+              "FProcSymTable"
+            ],
+            [
+              "FProcsym",
+              "FProcSym"
+            ],
+            [
+              "FProcsymtable",
+              "FProcSymTable"
+            ],
+            [
+              "ProcdefOverloadList",
+              "AProcDefOverloadList"
+            ],
+            [
+              "ProcdefOverloadList",
+              "lProcDefOverloadList"
+            ],
+            [
+              "Valid_Addr",
+              "ValidAddr"
+            ],
+            [
+              "Valid_Const",
+              "ValidConst"
+            ],
+            [
+              "Valid_Packed",
+              "ValidPacked"
+            ],
+            [
+              "Valid_Property",
+              "ValidProperty"
+            ],
+            [
+              "Valid_Range",
+              "ValidRange"
+            ],
+            [
+              "Valid_Void",
+              "ValidVoid"
+            ],
+            [
+              "acn",
+              "lCallNode"
+            ],
+            [
+              "added",
+              "lAdded"
+            ],
+            [
+              "all",
+              "AAll"
+            ],
+            [
+              "allowed",
+              "AAllowed"
+            ],
+            [
+              "allowenumop",
+              "AllowEnumOp"
+            ],
+            [
+              "arithmetic_operators",
+              "cArithmeticOperators"
+            ],
+            [
+              "besthpstart",
+              "lBestCandidateStart"
+            ],
+            [
+              "bestpara",
+              "lBestParaSym"
+            ],
+            [
+              "bestpd",
+              "ABestCandidate"
+            ],
+            [
+              "bestpd",
+              "ABestProcDef"
+            ],
+            [
+              "bestvcl",
+              "ABestVariantClass"
+            ],
+            [
+              "bestvcl",
+              "lBestVariantClass"
+            ],
+            [
+              "bit_manipulation_operators",
+              "cBitManipulationOperators"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "by",
+              "ADistance"
+            ],
+            [
+              "byte",
+              "Byte"
+            ],
+            [
+              "c",
+              "ACandidate"
+            ],
+            [
+              "calc_distance",
+              "CalcDistance"
+            ],
+            [
+              "calculate_relation",
+              "CalculateRelation"
+            ],
+            [
+              "cand_cnt",
+              "lCandidateCount"
+            ],
+            [
+              "candidate",
+              "lCandidate"
+            ],
+            [
+              "candidates",
+              "lCandidates"
+            ],
+            [
+              "cdo",
+              "lCompareDefOptions"
+            ],
+            [
+              "cdoptions",
+              "lCompareDefOptions"
+            ],
+            [
+              "changedhierarchy",
+              "lChangedHierarchy"
+            ],
+            [
+              "check_ranges",
+              "Check_Ranges"
+            ],
+            [
+              "check_valid_var",
+              "lCheckValidVar"
+            ],
+            [
+              "checkstack",
+              "lCheckStack"
+            ],
+            [
+              "choose_best",
+              "Choose_Best"
+            ],
+            [
+              "cntpd",
+              "lProcDefCount"
+            ],
+            [
+              "collect_overloads_in_struct",
+              "CollectOverloadsInStruct"
+            ],
+            [
+              "collect_overloads_in_units",
+              "CollectOverloadsInUnits"
+            ],
+            [
+              "compare_by_old_sortout_check",
+              "CompareByOldSortOutCheck"
+            ],
+            [
+              "conflictvcls",
+              "AConflictingVariantClasses"
+            ],
+            [
+              "constaccessok",
+              "ConstAccessOK"
+            ],
+            [
+              "contextstructdef",
+              "lContextStructDef"
+            ],
+            [
+              "conv",
+              "lConversion"
+            ],
+            [
+              "count",
+              "lCount"
+            ],
+            [
+              "cpoptions",
+              "lCompareParaOptions"
+            ],
+            [
+              "create_candidate_list",
+              "CreateCandidateList"
+            ],
+            [
+              "currpara",
+              "lCurrentParaSym"
+            ],
+            [
+              "currparanr",
+              "lCurrentParaNr"
+            ],
+            [
+              "currpd",
+              "ACurrentCandidate"
+            ],
+            [
+              "currpt",
+              "lCurrentParaNode"
+            ],
+            [
+              "currvcl",
+              "ACurrentVariantClass"
+            ],
+            [
+              "currvcl",
+              "lCurrentVariantClass"
+            ],
+            [
+              "data",
+              "Data"
+            ],
+            [
+              "decide_restart",
+              "DecideRestart"
+            ],
+            [
+              "def",
+              "ADef"
+            ],
+            [
+              "def_from",
+              "AFromDef"
+            ],
+            [
+              "def_from",
+              "lFromDef"
+            ],
+            [
+              "def_to",
+              "AToDef"
+            ],
+            [
+              "def_to",
+              "lToDef"
+            ],
+            [
+              "defaultparacnt",
+              "lDefaultParaCount"
+            ],
+            [
+              "destdef",
+              "ADestDef"
+            ],
+            [
+              "done",
+              "Done"
+            ],
+            [
+              "dump_info",
+              "Dump_Info"
+            ],
+            [
+              "element_set_operators",
+              "cElementSetOperators"
+            ],
+            [
+              "eq",
+              "AEqualType"
+            ],
+            [
+              "eq",
+              "lEqualType"
+            ],
+            [
+              "errmsg",
+              "lErrorMessage"
+            ],
+            [
+              "find_wrong_para",
+              "Find_Wrong_Para"
+            ],
+            [
+              "firstparaidx",
+              "FirstParaIdx"
+            ],
+            [
+              "flags",
+              "AFlags"
+            ],
+            [
+              "found",
+              "lFound"
+            ],
+            [
+              "foundanything",
+              "AFoundAnything"
+            ],
+            [
+              "foundanything",
+              "lFoundAnything"
+            ],
+            [
+              "fp_precision_distance",
+              "lFPPrecisionDistance"
+            ],
+            [
+              "fp_precision_score",
+              "FPPrecisionScore"
+            ],
+            [
+              "from_def",
+              "AFromDef"
+            ],
+            [
+              "fromdef",
+              "lFromDef"
+            ],
+            [
+              "fromnode",
+              "AFromNode"
+            ],
+            [
+              "generror",
+              "AGenerateError"
+            ],
+            [
+              "get_information",
+              "Get_Information"
+            ],
+            [
+              "get_variantequaltype",
+              "GetVariantEqualType"
+            ],
+            [
+              "getfirstrealparaidx",
+              "GetFirstRealParaIdx"
+            ],
+            [
+              "gotrecord",
+              "lGotRecord"
+            ],
+            [
+              "gotstring",
+              "lGotString"
+            ],
+            [
+              "gotsubscript",
+              "lGotSubscript"
+            ],
+            [
+              "gottypeconv",
+              "lGotTypeConv"
+            ],
+            [
+              "gotvec",
+              "lGotVec"
+            ],
+            [
+              "hashedid",
+              "AHashedID"
+            ],
+            [
+              "hashedid",
+              "lHashedID"
+            ],
+            [
+              "hasoverload",
+              "lHasOverload"
+            ],
+            [
+              "helperdef",
+              "AHelperDef"
+            ],
+            [
+              "helperdef",
+              "lHelperDef"
+            ],
+            [
+              "helperlist",
+              "lHelperList"
+            ],
+            [
+              "how",
+              "AHow"
+            ],
+            [
+              "hp",
+              "lCandidate"
+            ],
+            [
+              "hp",
+              "lNode"
+            ],
+            [
+              "hp2",
+              "lCandidate2"
+            ],
+            [
+              "hp2",
+              "lNode2"
+            ],
+            [
+              "hpnext",
+              "lNextCandidate"
+            ],
+            [
+              "hsym",
+              "lVarSym"
+            ],
+            [
+              "ht",
+              "lTempNode"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "identity_operators",
+              "cIdentityOperators"
+            ],
+            [
+              "increment_ordinal_distance",
+              "Increment_Ordinal_Distance"
+            ],
+            [
+              "init",
+              "Init"
+            ],
+            [
+              "init_operator",
+              "Init_Operator"
+            ],
+            [
+              "inlinenumber",
+              "AInlineNumber"
+            ],
+            [
+              "inlinenumber",
+              "lInlineNumber"
+            ],
+            [
+              "inr",
+              "Inr"
+            ],
+            [
+              "integer",
+              "Integer"
+            ],
+            [
+              "internal_check",
+              "InternalCheck"
+            ],
+            [
+              "invalid",
+              "Invalid"
+            ],
+            [
+              "is_ambiguous_funcret_load",
+              "Is_Ambiguous_FuncRet_Load"
+            ],
+            [
+              "is_better_candidate",
+              "IsBetterCandidate"
+            ],
+            [
+              "is_better_candidate_single_variant",
+              "IsBetterCandidateSingleVariant"
+            ],
+            [
+              "is_proc2procvar_load",
+              "Is_Proc2ProcVar_Load"
+            ],
+            [
+              "is_valid_for_default",
+              "Is_Valid_For_Default"
+            ],
+            [
+              "is_valid_record_or_object",
+              "IsValidRecordOrObject"
+            ],
+            [
+              "isbinaryoperatoroverloadable",
+              "IsBinaryOperatorOverloadable"
+            ],
+            [
+              "isbinaryoverloaded",
+              "IsBinaryOverloaded"
+            ],
+            [
+              "isoperatoracceptable",
+              "IsOperatorAcceptable"
+            ],
+            [
+              "isunaryoperatoroverloadable",
+              "IsUnaryOperatorOverloadable"
+            ],
+            [
+              "isunaryoverloaded",
+              "IsUnaryOverloaded"
+            ],
+            [
+              "j",
+              "lIndexJ"
+            ],
+            [
+              "ld",
+              "ALeftDef"
+            ],
+            [
+              "ld",
+              "lLeftDef"
+            ],
+            [
+              "list",
+              "List"
+            ],
+            [
+              "local",
+              "ALocal"
+            ],
+            [
+              "location",
+              "ALocation"
+            ],
+            [
+              "logical_operators",
+              "cLogicalOperators"
+            ],
+            [
+              "lt",
+              "ALeftNodeType"
+            ],
+            [
+              "lvl",
+              "ALevel"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "make_not_regable_intern",
+              "MakeNotRegableIntern"
+            ],
+            [
+              "managed",
+              "AManaged"
+            ],
+            [
+              "managementoperator",
+              "ManagementOperator"
+            ],
+            [
+              "mayberesettypeconvs",
+              "MaybeResetTypeConvs"
+            ],
+            [
+              "mineq",
+              "lMinEqualType"
+            ],
+            [
+              "msg",
+              "cUninitializedMessages"
+            ],
+            [
+              "n",
+              "lNode"
+            ],
+            [
+              "name",
+              "AName"
+            ],
+            [
+              "newstate",
+              "ANewState"
+            ],
+            [
+              "next",
+              "Next"
+            ],
+            [
+              "nod",
+              "Nod"
+            ],
+            [
+              "node2opstr",
+              "Node2OpStr"
+            ],
+            [
+              "non_commutative_op_nodes",
+              "cNonCommutativeOpNodes"
+            ],
+            [
+              "non_commutative_op_tokens",
+              "cNonCommutativeOpTokens"
+            ],
+            [
+              "nt",
+              "ANodeType"
+            ],
+            [
+              "numerical_operators",
+              "cNumericalOperators"
+            ],
+            [
+              "obj_from",
+              "lFromObjectDef"
+            ],
+            [
+              "obj_to",
+              "lToObjectDef"
+            ],
+            [
+              "ocf",
+              "AOverloadFlags"
+            ],
+            [
+              "oldcount",
+              "lOldCount"
+            ],
+            [
+              "op",
+              "AOperator"
+            ],
+            [
+              "operpd",
+              "lOperatorProcDef"
+            ],
+            [
+              "optoken",
+              "AOpToken"
+            ],
+            [
+              "optoken",
+              "lOpToken"
+            ],
+            [
+              "opts",
+              "AOptions"
+            ],
+            [
+              "order_theoretic_operators",
+              "cOrderTheoreticOperators"
+            ],
+            [
+              "ordinal_distance_hi",
+              "OrdinalDistanceHi"
+            ],
+            [
+              "ordinal_distance_lo",
+              "OrdinalDistanceLo"
+            ],
+            [
+              "ordinal_distance_secondary",
+              "OrdinalDistanceSecondary"
+            ],
+            [
+              "owningprocdef",
+              "AOwningProcDef"
+            ],
+            [
+              "p",
+              "ANode"
+            ],
+            [
+              "para_allowed",
+              "ParaAllowed"
+            ],
+            [
+              "para_anon_syms",
+              "ParaAnonSyms"
+            ],
+            [
+              "paraidx",
+              "lParaIndex"
+            ],
+            [
+              "parasym",
+              "lParaSym"
+            ],
+            [
+              "pd",
+              "ACandidate"
+            ],
+            [
+              "pd",
+              "AProcDef"
+            ],
+            [
+              "pd",
+              "lProcDef"
+            ],
+            [
+              "pdoper",
+              "lOperatorProcDef"
+            ],
+            [
+              "pdtemp",
+              "lTempProcDef"
+            ],
+            [
+              "pf",
+              "AProcDef"
+            ],
+            [
+              "pointer",
+              "Pointer"
+            ],
+            [
+              "pointer_arithmetic_operators",
+              "cPointerArithmeticOperators"
+            ],
+            [
+              "pos",
+              "APosition"
+            ],
+            [
+              "ppn",
+              "AParaNode"
+            ],
+            [
+              "ppn",
+              "lParaNode"
+            ],
+            [
+              "proc_add",
+              "ProcAdd"
+            ],
+            [
+              "processhelper",
+              "ProcessHelper"
+            ],
+            [
+              "processprocsym",
+              "ProcessProcSym"
+            ],
+            [
+              "psym",
+              "lProcSym"
+            ],
+            [
+              "pt",
+              "lParaNode"
+            ],
+            [
+              "rational_operators",
+              "cRationalOperators"
+            ],
+            [
+              "rd",
+              "ARightDef"
+            ],
+            [
+              "rd",
+              "lRightDef"
+            ],
+            [
+              "realprocdef",
+              "ARealProcDef"
+            ],
+            [
+              "realprocdef",
+              "lRealProcDef"
+            ],
+            [
+              "records_only",
+              "ARecordsOnly"
+            ],
+            [
+              "releasecurrpt",
+              "lReleaseCurrentParaNode"
+            ],
+            [
+              "report_errors",
+              "AReportErrors"
+            ],
+            [
+              "res",
+              "lResult"
+            ],
+            [
+              "restart",
+              "lRestart"
+            ],
+            [
+              "restore_validity",
+              "RestoreValidity"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "rt",
+              "ARightNodeType"
+            ],
+            [
+              "save_validity",
+              "SaveValidity"
+            ],
+            [
+              "saved_validity",
+              "SavedValidity"
+            ],
+            [
+              "search_operator",
+              "SearchOperator"
+            ],
+            [
+              "self",
+              "Self"
+            ],
+            [
+              "set_set_operators",
+              "cSetSetOperators"
+            ],
+            [
+              "set_unique",
+              "Set_Unique"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "singlevariant",
+              "ASingleVariant"
+            ],
+            [
+              "sizeint",
+              "SizeInt"
+            ],
+            [
+              "source",
+              "ASource"
+            ],
+            [
+              "spezcontext",
+              "ASpecializationContext"
+            ],
+            [
+              "srsym",
+              "ASym"
+            ],
+            [
+              "srsym",
+              "lSym"
+            ],
+            [
+              "srsymtable",
+              "lSymTable"
+            ],
+            [
+              "st",
+              "ASymTable"
+            ],
+            [
+              "st",
+              "lSymTable"
+            ],
+            [
+              "st_root",
+              "ARootSymTable"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "string_comparison_operators",
+              "cStringComparisonOperators"
+            ],
+            [
+              "string_manipulation_operators",
+              "cStringManipulationOperators"
+            ],
+            [
+              "string_operators",
+              "cStringOperators"
+            ],
+            [
+              "structdef",
+              "AStructDef"
+            ],
+            [
+              "supported_op_overloads",
+              "SupportedOpOverloads"
+            ],
+            [
+              "sym",
+              "ASym"
+            ],
+            [
+              "sym",
+              "lSym"
+            ],
+            [
+              "t",
+              "ANode"
+            ],
+            [
+              "te_count",
+              "TECount"
+            ],
+            [
+              "temp",
+              "lTemp"
+            ],
+            [
+              "test_local_to_procvar",
+              "Test_Local_To_ProcVar"
+            ],
+            [
+              "testvcl",
+              "ATestVariantClass"
+            ],
+            [
+              "tmpeq",
+              "lTempEqualType"
+            ],
+            [
+              "to_def",
+              "AToDef"
+            ],
+            [
+              "todef",
+              "lToDef"
+            ],
+            [
+              "tok",
+              "Tok"
+            ],
+            [
+              "tok2node",
+              "Tok2Node"
+            ],
+            [
+              "tok2nodes",
+              "cTok2NodeCount"
+            ],
+            [
+              "tok2op",
+              "Tok2Op"
+            ],
+            [
+              "tok2ops",
+              "cTok2OpCount"
+            ],
+            [
+              "token2managementoperator",
+              "Token2ManagementOperator"
+            ],
+            [
+              "treetyp",
+              "ATreeType"
+            ],
+            [
+              "ttok2noderec",
+              "TTok2NodeRec"
+            ],
+            [
+              "ttok2oprec",
+              "TTok2OpRec"
+            ],
+            [
+              "typeconvs",
+              "lTypeConvs"
+            ],
+            [
+              "uint32",
+              "UInt32"
+            ],
+            [
+              "uint64",
+              "UInt64"
+            ],
+            [
+              "valid_addr",
+              "ValidAddr"
+            ],
+            [
+              "valid_const",
+              "ValidConst"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ],
+            [
+              "valid_for_assign",
+              "ValidForAssign"
+            ],
+            [
+              "valid_for_assignment",
+              "Valid_For_Assignment"
+            ],
+            [
+              "valid_for_formal_const",
+              "Valid_For_Formal_Const"
+            ],
+            [
+              "valid_for_formal_constref",
+              "Valid_For_Formal_ConstRef"
+            ],
+            [
+              "valid_for_formal_var",
+              "Valid_For_Formal_Var"
+            ],
+            [
+              "valid_for_loopvar",
+              "Valid_For_LoopVar"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ],
+            [
+              "valid_packed",
+              "ValidPacked"
+            ],
+            [
+              "valid_property",
+              "ValidProperty"
+            ],
+            [
+              "valid_range",
+              "ValidRange"
+            ],
+            [
+              "valid_void",
+              "ValidVoid"
+            ],
+            [
+              "var_para_allowed",
+              "VarParaAllowed"
+            ],
+            [
+              "variantfloatdef_cl",
+              "cVariantFloatDefClasses"
+            ],
+            [
+              "variantorddef_cl",
+              "cVariantOrdDefClasses"
+            ],
+            [
+              "variantstringdef_cl",
+              "cVariantStringDefClasses"
+            ],
+            [
+              "varstateflags",
+              "AVarStateFlags"
+            ],
+            [
+              "vs",
+              "AVarSym"
+            ],
+            [
+              "vstrans",
+              "cVarStateTransitions"
+            ],
+            [
+              "warning",
+              "AWarning"
+            ],
+            [
+              "word",
+              "Word"
+            ],
+            [
+              "wrongpara",
+              "lWrongPara"
+            ],
+            [
+              "wrongparaidx",
+              "WrongParaIdx"
+            ],
+            [
+              "wrongparanr",
+              "WrongParaNr"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/i386/n386flw.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "4ccaf03660c7a6c0ae1ee75d0c9fabd6719af3115934054a695f77282d35b01f",
+          "sha256_after": "0c8fd4852b3536ca9dcd8fd2675934a440e93d1f17d1471e8cab44c665bbb516",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nadd.pas",
+          "substitutions": 36,
+          "roles": [],
+          "sha256_before": "1b8aeaf04016fc06984f74519807cb586e500061e393ae37f37bf18d00a7b2ed",
+          "sha256_after": "8ea8f27efb333a87cbc609584dc6dfcb09cfac94916290b08dbec28c81bf4ea3",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 36,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "allowenumop",
+              "AllowEnumOp"
+            ],
+            [
+              "isbinaryoverloaded",
+              "IsBinaryOverloaded"
+            ],
+            [
+              "node2opstr",
+              "Node2OpStr"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ncal.pas",
+          "substitutions": 42,
+          "roles": [],
+          "sha256_before": "d510d6a2f0feb5e048a821530c0d3ff7edce29a5d9b78fb0a95dbe1aa337f253",
+          "sha256_after": "b304c88d8bc4189ede5498b067dbcf370f40273ef8788ee0fa7e1d6004bf9323",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 42,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "check_ranges",
+              "Check_Ranges"
+            ],
+            [
+              "choose_best",
+              "Choose_Best"
+            ],
+            [
+              "dump_info",
+              "Dump_Info"
+            ],
+            [
+              "find_wrong_para",
+              "Find_Wrong_Para"
+            ],
+            [
+              "get_information",
+              "Get_Information"
+            ],
+            [
+              "is_ambiguous_funcret_load",
+              "Is_Ambiguous_FuncRet_Load"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "para_anon_syms",
+              "ParaAnonSyms"
+            ],
+            [
+              "set_unique",
+              "Set_Unique"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "test_local_to_procvar",
+              "Test_Local_To_ProcVar"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ],
+            [
+              "valid_for_formal_const",
+              "Valid_For_Formal_Const"
+            ],
+            [
+              "valid_for_formal_constref",
+              "Valid_For_Formal_ConstRef"
+            ],
+            [
+              "valid_for_formal_var",
+              "Valid_For_Formal_Var"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ncnv.pas",
+          "substitutions": 11,
+          "roles": [],
+          "sha256_before": "828923ea2d649b8019eeaae9dc05c4f61890a59c8e3c8c9d339d56b5d207a1ca",
+          "sha256_after": "081aae48056f34a539fc39b5ebcb3c6ecbd9c947c984edc26e7178c9d0a7eca6",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 11,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "insert_self_and_vmt_para",
+              "Insert_Self_And_VMT_Para"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nflw.pas",
+          "substitutions": 11,
+          "roles": [],
+          "sha256_before": "551b3d33ea0f17837d4602f90b28f653d65d773bfdfc756bad5a86e451366005",
+          "sha256_after": "350e15b89978d0b66e12d99f255413043261896f07b6bb842418b6b67d383b09",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 11,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "check_ranges",
+              "Check_Ranges"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ngenutil.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "8228414b8bbd112ad3f9c5ac5a90b9d28d7302eed299b5fd09291ccd819d1166",
+          "sha256_after": "e5d9fb9385e866507d23d000dd6e0cde52d3a3694a924672f7628caad12307c3",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "insert_funcret_para",
+              "Insert_FuncRet_Para"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ngtcon.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "3600be6e0baa7865ec77746f0d99eab5ed9730d9968070abd4bae331ca6a1e79",
+          "sha256_after": "658d872e9efc9f04cc76281353276a5db2306a0fb8b3e9b78ae8f10b0fb18ed8",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "is_proc2procvar_load",
+              "Is_Proc2ProcVar_Load"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ninl.pas",
+          "substitutions": 75,
+          "roles": [],
+          "sha256_before": "b0d7c504ec15d9d242119dbeeac20aab6f9139fc240f062b14f49a0b0726bcf0",
+          "sha256_after": "388cf35e697ecd83628ab9ef19ffc7b1509047b47ecedf7ef923f538adc69a69",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 75,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "is_valid_for_default",
+              "Is_Valid_For_Default"
+            ],
+            [
+              "isunaryoverloaded",
+              "IsUnaryOverloaded"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "set_unique",
+              "Set_Unique"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_assignment",
+              "Valid_For_Assignment"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nld.pas",
+          "substitutions": 12,
+          "roles": [],
+          "sha256_before": "17fc3d02b7285b3e905c43ac3704009fb850ee7bf42c2d77b26af74cc714dcdc",
+          "sha256_after": "e22e5aae9be0127c0342664d99c8d5e0a459bb131934e472ac7910e18c1dab23",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 12,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "check_ranges",
+              "Check_Ranges"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "set_unique",
+              "Set_Unique"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "test_local_to_procvar",
+              "Test_Local_To_ProcVar"
+            ],
+            [
+              "valid_for_assignment",
+              "Valid_For_Assignment"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nmat.pas",
+          "substitutions": 12,
+          "roles": [],
+          "sha256_before": "7759509f42b7554c2d0e94694b0036710849725edbb89d239efb2992e912243c",
+          "sha256_after": "457135bc2d213e63f7a7df14b871afa74a2a6a9b1b513810219db7b2660f3b52",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 12,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "isbinaryoverloaded",
+              "IsBinaryOverloaded"
+            ],
+            [
+              "isunaryoverloaded",
+              "IsUnaryOverloaded"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nmem.pas",
+          "substitutions": 9,
+          "roles": [],
+          "sha256_before": "47f4fc70a9c53f4a3078be6dfa8d3c30ea5b0b851376326a4a65bd5cd1878f85",
+          "sha256_after": "b5d04afa5ba7f670012d903854c62e6c35407b9e29b82ee6ee4dfe4334cff95a",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 9,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nobj.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "c3769c2c088a7416cc5598899b4e4bf59835254ac95794694da0ec95b4144c6c",
+          "sha256_after": "0e405119c1fbd20dad8b68239db8958441fa214ac18011daeb829b24f9617bb7",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "insert_struct_hidden_paras",
+              "Insert_Struct_Hidden_Paras"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nopt.pas",
+          "substitutions": 2,
+          "roles": [],
+          "sha256_before": "ac4100afe57fe8ca847d9e2f0ceebe397dbcd4aeccf0e49ba29c97f98fb91efb",
+          "sha256_after": "c5dbe3095275f5f549264ee00d16e4dd8be3e35d5d5d8ef4d42ec7d08f38ed1f",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 2,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/nset.pas",
+          "substitutions": 8,
+          "roles": [],
+          "sha256_before": "9d4b79de5cf861f343b43e383db31b5aa180767bfe7dd9eec88ee8336080228e",
+          "sha256_after": "a3e44729d601f9029075d2ae426f77f3a52cef2983c40dcfd35eff3176e77497",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 8,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "isbinaryoverloaded",
+              "IsBinaryOverloaded"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/optloadmodifystore.pas",
+          "substitutions": 13,
+          "roles": [],
+          "sha256_before": "73748962e4b979ca1ce18f0595693ce8ddd68c48dc630a9ec1abd9d7112129b0",
+          "sha256_after": "799fc855c2308a13da96a5e58145c8ee0e76a2a0594a30c6b5060f9b7c906cb0",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 13,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pdecl.pas",
+          "substitutions": 7,
+          "roles": [],
+          "sha256_before": "ae719fd71828238bfb4ce5226e98b8b9b03873a1d0f961c9f79a44be635e08bb",
+          "sha256_after": "4840ef6af1b867c084bb81734347627011f34ebd826c49380651d294fb626b6f",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 7,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "insert_struct_hidden_paras",
+              "Insert_Struct_Hidden_Paras"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pdecobj.pas",
+          "substitutions": 6,
+          "roles": [],
+          "sha256_before": "f1106f116dd5c6e6d11cf1167f421773f708b1b20d9aff7972f481bb2e645051",
+          "sha256_after": "4e28eace0313d560c8eb82126bd59f1817a7a0de59d26e323704ba22ee166c15",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 6,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pdecsub.pas",
+          "substitutions": 8,
+          "roles": [],
+          "sha256_before": "88729cc0e4839e652d9cccae47c219a2684e4aa73d25c7e474ff143b670d018b",
+          "sha256_after": "208c0bc65913ddc7852b85a701d52f9be30ee0d0ef9153ed22795a2d2a90c75e",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 8,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "PD_VIRTUAL_MUTEXCLPO",
+              "cVirtualMutuallyExclusiveProcOptions"
+            ],
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "isoperatoracceptable",
+              "IsOperatorAcceptable"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ],
+            [
+              "token2managementoperator",
+              "Token2ManagementOperator"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pdecvar.pas",
+          "substitutions": 26,
+          "roles": [],
+          "sha256_before": "b9a94b9f9dae6b25ad931f0d7eb24f06541f08add511a8c00c93fb1777a2cf4c",
+          "sha256_after": "e43c8b1d4c6053bc6ece9df54ab47f0527ba0ebe0780a666a8d250becbc0547c",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 26,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pexpr.pas",
+          "substitutions": 11,
+          "roles": [],
+          "sha256_before": "8d04af119e8ed1c0146b3575c59e5b4d16a222979c8a1b243854434a516fa47d",
+          "sha256_after": "835a9f22aeceea334ff23df298f4d372fca8e66ffc3ecf8fb0cfb02e81024498",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 11,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "inline_concat",
+              "Inline_Concat"
+            ],
+            [
+              "inline_copy",
+              "Inline_Copy"
+            ],
+            [
+              "inline_delete",
+              "Inline_Delete"
+            ],
+            [
+              "inline_finalize",
+              "Inline_Finalize"
+            ],
+            [
+              "inline_initialize",
+              "Inline_Initialize"
+            ],
+            [
+              "inline_insert",
+              "Inline_Insert"
+            ],
+            [
+              "inline_setlength",
+              "Inline_SetLength"
+            ],
+            [
+              "inline_setstring",
+              "Inline_SetString"
+            ],
+            [
+              "new_dispose_statement",
+              "New_Dispose_Statement"
+            ],
+            [
+              "new_function",
+              "New_Function"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pgenutil.pas",
+          "substitutions": 9,
+          "roles": [],
+          "sha256_before": "2bce53cd21b45ed92e01349d2ecf10cfc53b7b3c350f059f87f0f2f2978334f5",
+          "sha256_after": "1527a77b7e91423868832a6c319b4146349c654039d6fca132d903d8b398ef7e",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 9,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "insert_struct_hidden_paras",
+              "Insert_Struct_Hidden_Paras"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pinline.pas",
+          "substitutions": 423,
+          "roles": [
+            {
+              "routine": "new_dispose_statement",
+              "parameters": {
+                "is_new": "AIsNew"
+              },
+              "locals": {
+                "newstatement": "lNewStatement",
+                "temp": "lTemp",
+                "para": "lPara",
+                "p": "lNode",
+                "p2": "lNode2",
+                "again": "lAgain",
+                "destructorname": "lDestructorName",
+                "sym": "lSym",
+                "classh": "lClassDef",
+                "callflag": "lCallFlags",
+                "destructorpos": "lDestructorPosition",
+                "storepos": "lStoredPosition",
+                "variantdesc": "lVariantDesc",
+                "found": "lFound",
+                "variantselectsymbol": "lVariantSelectSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "ReadVariantRecordConstants",
+              "parameters": {},
+              "locals": {
+                "i": "lIndex",
+                "j": "lIndexJ"
+              },
+              "parent": "new_dispose_statement"
+            },
+            {
+              "routine": "new_function",
+              "parameters": {},
+              "locals": {
+                "p1": "lNode1",
+                "p2": "lNode2",
+                "classh": "lClassDef",
+                "srsym": "lSym",
+                "srsymtable": "lSymTable",
+                "again": "lAgain"
+              },
+              "parent": null
+            },
+            {
+              "routine": "inline_setlength",
+              "parameters": {},
+              "locals": {
+                "paras": "lParas"
+              },
+              "parent": null
+            },
+            {
+              "routine": "inline_setstring",
+              "parameters": {},
+              "locals": {
+                "paras": "lParas",
+                "strpara": "lStringPara",
+                "pcharpara": "lPCharPara",
+                "procname": "lProcName",
+                "cp": "lCallPara"
+              },
+              "parent": null
+            },
+            {
+              "routine": "inline_initfinal",
+              "parameters": {
+                "isinit": "AIsInit"
+              },
+              "locals": {
+                "newblock": "lNewBlock",
+                "paras": "lParas",
+                "npara": "lNewPara",
+                "destppn": "lDestParaNode",
+                "ppn": "lParaNode"
+              },
+              "parent": null
+            },
+            {
+              "routine": "inline_initialize",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "inline_finalize",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "inline_copy_insert_delete",
+              "parameters": {
+                "nr": "ANumber",
+                "name": "AName",
+                "checkempty": "ACheckEmpty"
+              },
+              "locals": {
+                "paras": "lParas"
+              },
+              "parent": null
+            },
+            {
+              "routine": "inline_copy",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "inline_insert",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "inline_delete",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "inline_concat",
+              "parameters": {},
+              "locals": {},
+              "parent": null
+            }
+          ],
+          "sha256_before": "1f9381fc6a98344c8c54c3e528a5cf05032c4bc26e119b9f827fd2cdb22e1f7d",
+          "sha256_after": "2151a35ccc6a10bafcd6d98d2f8dc93e447573bc4706be15f19910421a5d86fe",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 423,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "again",
+              "lAgain"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "callflag",
+              "lCallFlags"
+            ],
+            [
+              "checkempty",
+              "ACheckEmpty"
+            ],
+            [
+              "classh",
+              "lClassDef"
+            ],
+            [
+              "cp",
+              "lCallPara"
+            ],
+            [
+              "destppn",
+              "lDestParaNode"
+            ],
+            [
+              "destructorname",
+              "lDestructorName"
+            ],
+            [
+              "destructorpos",
+              "lDestructorPosition"
+            ],
+            [
+              "found",
+              "lFound"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "inline_concat",
+              "Inline_Concat"
+            ],
+            [
+              "inline_copy",
+              "Inline_Copy"
+            ],
+            [
+              "inline_copy_insert_delete",
+              "InlineCopyInsertDelete"
+            ],
+            [
+              "inline_delete",
+              "Inline_Delete"
+            ],
+            [
+              "inline_finalize",
+              "Inline_Finalize"
+            ],
+            [
+              "inline_initfinal",
+              "InlineInitFinal"
+            ],
+            [
+              "inline_initialize",
+              "Inline_Initialize"
+            ],
+            [
+              "inline_insert",
+              "Inline_Insert"
+            ],
+            [
+              "inline_setlength",
+              "Inline_SetLength"
+            ],
+            [
+              "inline_setstring",
+              "Inline_SetString"
+            ],
+            [
+              "is_new",
+              "AIsNew"
+            ],
+            [
+              "isinit",
+              "AIsInit"
+            ],
+            [
+              "j",
+              "lIndexJ"
+            ],
+            [
+              "name",
+              "AName"
+            ],
+            [
+              "new_dispose_statement",
+              "New_Dispose_Statement"
+            ],
+            [
+              "new_function",
+              "New_Function"
+            ],
+            [
+              "newblock",
+              "lNewBlock"
+            ],
+            [
+              "newstatement",
+              "lNewStatement"
+            ],
+            [
+              "npara",
+              "lNewPara"
+            ],
+            [
+              "nr",
+              "ANumber"
+            ],
+            [
+              "p",
+              "lNode"
+            ],
+            [
+              "p1",
+              "lNode1"
+            ],
+            [
+              "p2",
+              "lNode2"
+            ],
+            [
+              "para",
+              "lPara"
+            ],
+            [
+              "paras",
+              "lParas"
+            ],
+            [
+              "pcharpara",
+              "lPCharPara"
+            ],
+            [
+              "ppn",
+              "lParaNode"
+            ],
+            [
+              "procname",
+              "lProcName"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "srsym",
+              "lSym"
+            ],
+            [
+              "srsymtable",
+              "lSymTable"
+            ],
+            [
+              "storepos",
+              "lStoredPosition"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "strpara",
+              "lStringPara"
+            ],
+            [
+              "sym",
+              "lSym"
+            ],
+            [
+              "temp",
+              "lTemp"
+            ],
+            [
+              "valid_for_var",
+              "Valid_For_Var"
+            ],
+            [
+              "variantdesc",
+              "lVariantDesc"
+            ],
+            [
+              "variantselectsymbol",
+              "lVariantSelectSym"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pmodules.pas",
+          "substitutions": 2,
+          "roles": [],
+          "sha256_before": "782dde649dd2b205d4b4cb726b3d61c451518f366252d7ecad6cc3ade3b72781",
+          "sha256_after": "ca5eb9fc16d779276145916acd1248fade0403b0da57ece014cb370ef4c86c6e",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 2,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pparautl.pas",
+          "substitutions": 842,
+          "roles": [
+            {
+              "routine": "insert_funcret_para",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "storepos": "lStoredPosition",
+                "vs": "lVarSym",
+                "paranr": "lParaNr"
+              },
+              "parent": null
+            },
+            {
+              "routine": "insert_parentfp_para",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "storepos": "lStoredPosition",
+                "vs": "lVarSym",
+                "paranr": "lParaNr"
+              },
+              "parent": null
+            },
+            {
+              "routine": "insert_self_and_vmt_para",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "storepos": "lStoredPosition",
+                "vs": "lVarSym",
+                "hdef": "lDef",
+                "selfdef": "lSelfDef",
+                "vsp": "lParaVarSym",
+                "aliasvs": "lAliasVarSym",
+                "sl": "lSymList"
+              },
+              "parent": null
+            },
+            {
+              "routine": "insert_funcret_local",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "storepos": "lStoredPosition",
+                "vs": "lVarSym",
+                "aliasvs": "lAliasVarSym",
+                "sl": "lSymList",
+                "hs": "lSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "insert_hidden_para",
+              "parameters": {
+                "p": "AObject",
+                "arg": "AArg"
+              },
+              "locals": {
+                "n": "lName",
+                "hvs": "lHiddenVarSym",
+                "pd": "lProcDef"
+              },
+              "parent": null
+            },
+            {
+              "routine": "check_c_para",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "i": "lIndex",
+                "lastparaidx": "lLastParaIndex",
+                "sym": "lSym"
+              },
+              "parent": null
+            },
+            {
+              "routine": "insert_struct_hidden_paras",
+              "parameters": {
+                "astruct": "AStructDef"
+              },
+              "locals": {
+                "pd": "lProcDef",
+                "i": "lIndex",
+                "oldpos": "lOldPosition"
+              },
+              "parent": null
+            },
+            {
+              "routine": "set_addr_param_regable",
+              "parameters": {
+                "p": "AObject",
+                "arg": "AArg"
+              },
+              "locals": {},
+              "parent": null
+            },
+            {
+              "routine": "handle_calling_convention",
+              "parameters": {
+                "pd_or_invkdef": "AProcOrInvokableDef",
+                "flags": "AFlags"
+              },
+              "locals": {
+                "pd": "lProcDef"
+              },
+              "parent": null
+            },
+            {
+              "routine": "proc_add_definition",
+              "parameters": {
+                "currpd": "ACurrentProcDef"
+              },
+              "locals": {
+                "fwpd": "lForwardProcDef",
+                "currparasym": "lCurrentParaSym",
+                "fwparasym": "lForwardParaSym",
+                "currparacnt": "lCurrentParaCount",
+                "fwparacnt": "lForwardParaCount",
+                "curridx": "lCurrentIndex",
+                "fwidx": "lForwardIndex",
+                "i": "lIndex",
+                "po_comp": "lProcOptions",
+                "paracompopt": "lParaCompareOptions",
+                "sameparasfound": "lSameParasFound",
+                "gensameparas": "lGenericSameParas",
+                "gensameret": "lGenericSameReturn",
+                "sameparas": "lSameParas",
+                "sameret": "lSameReturn",
+                "forwardfound": "lForwardFound",
+                "symentry": "lSymEntry",
+                "item": "lItem"
+              },
+              "parent": null
+            },
+            {
+              "routine": "check_generic_parameters",
+              "parameters": {
+                "fwpd": "AForwardProcDef",
+                "currpd": "ACurrentProcDef"
+              },
+              "locals": {
+                "i": "lIndex",
+                "fwsym": "lForwardSym",
+                "currsym": "lCurrentSym",
+                "currtype": "lCurrentType",
+                "fileinfo": "lFileInfo"
+              },
+              "parent": "proc_add_definition"
+            },
+            {
+              "routine": "equal_generic_procdefs",
+              "parameters": {
+                "fwpd": "AForwardProcDef",
+                "currpd": "ACurrentProcDef",
+                "sameparas": "ASameParas",
+                "sameret": "ASameReturn"
+              },
+              "locals": {
+                "i": "lIndex",
+                "fwsym": "lForwardSym",
+                "currsym": "lCurrentSym",
+                "currtype": "lCurrentType",
+                "convdummy": "lDummyConversion",
+                "pddummy": "lDummyProcDef"
+              },
+              "parent": "proc_add_definition"
+            },
+            {
+              "routine": "equal_signature",
+              "parameters": {
+                "fwpd": "AForwardProcDef",
+                "currpd": "ACurrentProcDef",
+                "sameparas": "ASameParas",
+                "sameret": "ASameReturn"
+              },
+              "locals": {},
+              "parent": "proc_add_definition"
+            },
+            {
+              "routine": "build_parentfpstruct",
+              "parameters": {
+                "pd": "AProcDef"
+              },
+              "locals": {
+                "nestedvars": "lNestedVars",
+                "nestedvarsst": "lNestedVarsST",
+                "pnestedvarsdef": "lNestedVarsPointerDef",
+                "nestedvarsdef": "lNestedVarsDef",
+                "old_symtablestack": "lOldSymTableStack"
+              },
+              "parent": null
+            }
+          ],
+          "sha256_before": "60d446297352a04ae330f27767a0001cd90d702bb8efd38f5d946454c2a53a37",
+          "sha256_after": "71dfbc022d2e7728ab331bc8fb07b62293ae304cc2fe7dc77c92dd08be42c805",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 842,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "PD_VIRTUAL_MUTEXCLPO",
+              "cVirtualMutuallyExclusiveProcOptions"
+            ],
+            [
+              "ParaNr",
+              "lParaNr"
+            ],
+            [
+              "aliasvs",
+              "lAliasVarSym"
+            ],
+            [
+              "arg",
+              "AArg"
+            ],
+            [
+              "astruct",
+              "AStructDef"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "build_parentfpstruct",
+              "Build_ParentFPStruct"
+            ],
+            [
+              "check_c_para",
+              "Check_C_Para"
+            ],
+            [
+              "check_generic_parameters",
+              "CheckGenericParameters"
+            ],
+            [
+              "convdummy",
+              "lDummyConversion"
+            ],
+            [
+              "curridx",
+              "lCurrentIndex"
+            ],
+            [
+              "currparacnt",
+              "lCurrentParaCount"
+            ],
+            [
+              "currparasym",
+              "lCurrentParaSym"
+            ],
+            [
+              "currpd",
+              "ACurrentProcDef"
+            ],
+            [
+              "currsym",
+              "lCurrentSym"
+            ],
+            [
+              "currtype",
+              "lCurrentType"
+            ],
+            [
+              "equal_generic_procdefs",
+              "EqualGenericProcDefs"
+            ],
+            [
+              "equal_signature",
+              "EqualSignature"
+            ],
+            [
+              "fileinfo",
+              "lFileInfo"
+            ],
+            [
+              "flags",
+              "AFlags"
+            ],
+            [
+              "forwardfound",
+              "lForwardFound"
+            ],
+            [
+              "fwidx",
+              "lForwardIndex"
+            ],
+            [
+              "fwparacnt",
+              "lForwardParaCount"
+            ],
+            [
+              "fwparasym",
+              "lForwardParaSym"
+            ],
+            [
+              "fwpd",
+              "AForwardProcDef"
+            ],
+            [
+              "fwpd",
+              "lForwardProcDef"
+            ],
+            [
+              "fwsym",
+              "lForwardSym"
+            ],
+            [
+              "gensameparas",
+              "lGenericSameParas"
+            ],
+            [
+              "gensameret",
+              "lGenericSameReturn"
+            ],
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "hcc_default_actions_parse",
+              "cHCCDefaultActionsParse"
+            ],
+            [
+              "hdef",
+              "lDef"
+            ],
+            [
+              "hs",
+              "lSym"
+            ],
+            [
+              "hvs",
+              "lHiddenVarSym"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "insert_funcret_local",
+              "Insert_FuncRet_Local"
+            ],
+            [
+              "insert_funcret_para",
+              "Insert_FuncRet_Para"
+            ],
+            [
+              "insert_hidden_para",
+              "Insert_Hidden_Para"
+            ],
+            [
+              "insert_parentfp_para",
+              "Insert_ParentFP_Para"
+            ],
+            [
+              "insert_self_and_vmt_para",
+              "Insert_Self_And_VMT_Para"
+            ],
+            [
+              "insert_struct_hidden_paras",
+              "Insert_Struct_Hidden_Paras"
+            ],
+            [
+              "item",
+              "lItem"
+            ],
+            [
+              "lastparaidx",
+              "lLastParaIndex"
+            ],
+            [
+              "n",
+              "lName"
+            ],
+            [
+              "name_block_literal",
+              "cNameBlockLiteral"
+            ],
+            [
+              "name_cmd",
+              "cNameCmd"
+            ],
+            [
+              "name_high",
+              "cNameHigh"
+            ],
+            [
+              "name_parentfp",
+              "cNameParentFP"
+            ],
+            [
+              "name_result",
+              "cNameResult"
+            ],
+            [
+              "name_self",
+              "cNameSelf"
+            ],
+            [
+              "name_typinfo",
+              "cNameTypeInfo"
+            ],
+            [
+              "name_vmt",
+              "cNameVMT"
+            ],
+            [
+              "nestedvars",
+              "lNestedVars"
+            ],
+            [
+              "nestedvarsdef",
+              "lNestedVarsDef"
+            ],
+            [
+              "nestedvarsst",
+              "lNestedVarsST"
+            ],
+            [
+              "next",
+              "Next"
+            ],
+            [
+              "old_symtablestack",
+              "lOldSymTableStack"
+            ],
+            [
+              "oldpos",
+              "lOldPosition"
+            ],
+            [
+              "p",
+              "AObject"
+            ],
+            [
+              "paracompopt",
+              "lParaCompareOptions"
+            ],
+            [
+              "pd",
+              "AProcDef"
+            ],
+            [
+              "pd",
+              "lProcDef"
+            ],
+            [
+              "pd_or_invkdef",
+              "AProcOrInvokableDef"
+            ],
+            [
+              "pddummy",
+              "lDummyProcDef"
+            ],
+            [
+              "pnestedvarsdef",
+              "lNestedVarsPointerDef"
+            ],
+            [
+              "po_comp",
+              "lProcOptions"
+            ],
+            [
+              "pointer",
+              "Pointer"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "sameparas",
+              "ASameParas"
+            ],
+            [
+              "sameparas",
+              "lSameParas"
+            ],
+            [
+              "sameparasfound",
+              "lSameParasFound"
+            ],
+            [
+              "sameret",
+              "ASameReturn"
+            ],
+            [
+              "sameret",
+              "lSameReturn"
+            ],
+            [
+              "selfdef",
+              "lSelfDef"
+            ],
+            [
+              "set_addr_param_regable",
+              "SetAddrParamRegable"
+            ],
+            [
+              "sl",
+              "lSymList"
+            ],
+            [
+              "storepos",
+              "lStoredPosition"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "sym",
+              "lSym"
+            ],
+            [
+              "symentry",
+              "lSymEntry"
+            ],
+            [
+              "vs",
+              "lVarSym"
+            ],
+            [
+              "vsp",
+              "lParaVarSym"
+            ],
+            [
+              "word",
+              "Word"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/procdefutil.pas",
+          "substitutions": 17,
+          "roles": [],
+          "sha256_before": "5732fde72010de81aeef71edfeeb05e5ddf3748dd1db79d62c3eebc0b732ddc8",
+          "sha256_after": "4f36775e45bd25db7a65b80c4b89306f585959070bbd9c477f27c259ecec6f41",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 17,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ],
+            [
+              "hcc_default_actions_intf_struct",
+              "cHCCDefaultActionsIntfStruct"
+            ],
+            [
+              "insert_funcret_local",
+              "Insert_FuncRet_Local"
+            ],
+            [
+              "insert_funcret_para",
+              "Insert_FuncRet_Para"
+            ],
+            [
+              "insert_parentfp_para",
+              "Insert_ParentFP_Para"
+            ],
+            [
+              "insert_self_and_vmt_para",
+              "Insert_Self_And_VMT_Para"
+            ],
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/pstatmnt.pas",
+          "substitutions": 9,
+          "roles": [],
+          "sha256_before": "c37476ceeaba5180596d603f0a940780c5baaf1d511850724e498b6ce8a74385",
+          "sha256_after": "0fe3ccf1c375d598499a33af825643ee606e262b82318d7e3c798a19a4c30688",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 9,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "set_varstate",
+              "Set_VarState"
+            ],
+            [
+              "valid_for_addr",
+              "Valid_For_Addr"
+            ],
+            [
+              "valid_for_loopvar",
+              "Valid_For_LoopVar"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/psub.pas",
+          "substitutions": 6,
+          "roles": [],
+          "sha256_before": "0d5fa32f8ed1a5e4327cbde85c12936eabaaab5af7a2d08f997f9c6b3d8dcd47",
+          "sha256_after": "a4ab03c1ca2e6be74400c776b403d5aa8af6e72e9efc53ca3b14f9d528c8de7b",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 6,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "insert_funcret_local",
+              "Insert_FuncRet_Local"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/ptype.pas",
+          "substitutions": 3,
+          "roles": [],
+          "sha256_before": "5650ae490bd64f744bd69bdee6491fc37da387b2fd46d15790f635bf2aeb1621",
+          "sha256_after": "890c43041d8fba477e45567e1fc5d6c4265c22d2e63b2fa2f1d785141c2f0147",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 3,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_intf",
+              "cHCCDefaultActionsIntf"
+            ],
+            [
+              "insert_struct_hidden_paras",
+              "Insert_Struct_Hidden_Paras"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/symcreat.pas",
+          "substitutions": 10,
+          "roles": [],
+          "sha256_before": "a36963513f2e5680f2ee12816bfe34501aeaeb83ffd5140b1dd57a276a5b0280",
+          "sha256_after": "e831f850b684b9607f30b941e7bdbf63425d1eda41bea0b5f260948e5fcc8a52",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 10,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "handle_calling_convention",
+              "Handle_Calling_Convention"
+            ],
+            [
+              "hcc_default_actions_impl",
+              "cHCCDefaultActionsImpl"
+            ],
+            [
+              "insert_funcret_local",
+              "Insert_FuncRet_Local"
+            ],
+            [
+              "insert_funcret_para",
+              "Insert_FuncRet_Para"
+            ],
+            [
+              "insert_hidden_para",
+              "Insert_Hidden_Para"
+            ],
+            [
+              "insert_self_and_vmt_para",
+              "Insert_Self_And_VMT_Para"
+            ],
+            [
+              "proc_add_definition",
+              "Proc_Add_Definition"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/x86/nx86add.pas",
+          "substitutions": 2,
+          "roles": [],
+          "sha256_before": "60bff96bb37b8a5f735b028fdb52985d9139e8dc691351b9ef0ed1acb902d4e9",
+          "sha256_after": "f8914af5231e11d798e6b8325e8e5036e767a29393f514ea2cea3702cb7fa108",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 2,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/x86_64/nx64flw.pas",
+          "substitutions": 1,
+          "roles": [],
+          "sha256_before": "30f53f09b2ef8cbdd9e261c6eab088481257df808d59582698a7782958a42a4b",
+          "sha256_after": "aefdcac6f22c00a7ac4f36f9c0a1519910bbc783b331b29ff2080b579569f091",
+          "non_identifier_bytes_unchanged": true,
+          "non_identifier_bytes_unchanged_except_reviewed_comment_or_generator_references": true,
+          "identifier_substitutions": 1,
+          "generator_template_substitutions": 0,
+          "documentation_reference_updates": {},
+          "replacements": [
+            [
+              "make_not_regable",
+              "Make_Not_Regable"
+            ]
+          ]
+        }
+      ],
+      "scope_notes": [
+        "88 routines,15 nested scopes,two active with blocks and four record/object namespaces reviewed. Exact ancestor binding pairs and declaration namespaces pass preflight.",
+        "27 private routine identifiers change significant spelling; five case-only nested helpers inherit changed namespaces. Five private tables produce37 exact defined-symbol aliases. Every undefined/dynamic name must remain exact.",
+        "Implementation-only TValidAssign members normalize after confirming no external/literal references or emitted RTTI in all eight baseline profiles; ordinals/order/types exact and raw loaded-byte parity mandatory.",
+        "Hidden parameter/Objective-C ABI strings and all78 owned runtime string literals remain exact. No include or generated output is changed.",
+        "The separately owner-approved addstringopt repair is included in the new baseline and is not part of this naming-only patch. New baseline aligns owner commit867b50d8d0 and its reproducible timestamp.",
+        "Eight compiler profiles include both overload branches, extended debugging, prefetch/inlining, i386 range checks and repaired addstringopt. WITHDMT remains an unchanged, separately documented failure.",
+        "Fresh stock3.2.2 bootstrap converges in121.277 seconds; compiler generations2/3 and90 RTL objects raw-identical. Both cross compilers and13 supported target RTLs rebuild;539 retained tests pass.",
+        "Eight profiles/1996 compiler objects:1956 raw-identical,24 private-name metadata only,16 compiler snapshot identity only. Instructions, loaded data, symbol attributes, program headers, dynamic/undefined names and decoded relocations agree.",
+        "582 RTTI/INIT/VMT sections and40 private-table payload/layout sections exact;52 interface/public headers retain significant linker spelling. Both overload branches and repaired addstringopt are validated, with four paired runtime probes.",
+        "35 Apple Mach-O pairs differ only in one recorded compiler ID each;25 expected diagnostic sets match. All1249 target RTL/package objects exact except267 COFF file-header timestamps; every other byte matches.",
+        "The table-detail checker initially missed uppercase TC_$ assembler labels; its exact suffix selector is case-folded. All collected section rows still compare strictly. Whole-object comparisons passed before that checker correction; no source or build flags changed.",
+        "WITHDMT reproduces exactly the same five known errors. The separately owner-approved addstringopt repair is preserved and now covered by the eighth compiler profile. No naming regressions or additional product failures; goal remains active.",
+        "Final archive AST audit caught the copied Apple driver using an older before-baseline pointer. Initial passing artifacts are retained separately; all120 commands were rerun from scratch using the current055 baseline. The35 object pairs and25 expected diagnostics pass with exact baseline/after compiler identity bindings. No source or option changes."
+      ],
+      "validation_summary": {
+        "batch": "055",
+        "status": "validated",
+        "owned_files": [
+          "compiler/htypechk.pas",
+          "compiler/pparautl.pas",
+          "compiler/pinline.pas"
+        ],
+        "source_files": 34,
+        "identifiers": 380,
+        "identifier_substitutions": 4744,
+        "only_identifier_tokens_changed": true,
+        "all_other_bytes_exact": true,
+        "implementation_routines": 88,
+        "nested_scopes": 15,
+        "with_blocks": 2,
+        "record_object_namespaces": 4,
+        "runtime_literal_tokens_exact": 78,
+        "public_enum_types_frozen": 6,
+        "public_enum_members_frozen": 19,
+        "record_RTTI_type_spellings_frozen": [
+          "Ttok2nodeRec",
+          "Ttok2opRec"
+        ],
+        "private_implementation_enum_members_normalized": 6,
+        "private_routine_identifier_aliases": 27,
+        "case_only_children_with_changed_parent_namespace": 5,
+        "private_table_aliases": 5,
+        "exact_private_defined_symbol_aliases": 37,
+        "public_preserved_link_headers": 52,
+        "compiler_profiles": 8,
+        "compiler_unit_objects": 1996,
+        "raw_identical_compiler_objects": 1956,
+        "compiler_objects_with_private_metadata_only": 24,
+        "compiler_objects_with_snapshot_identity_only": 16,
+        "undefined_dynamic_symbols_exact_without_exceptions": true,
+        "RTTI_INIT_VMT_sections_exact": 582,
+        "private_table_payload_layout_sections_exact": 40,
+        "stock_seed": "3.2.2",
+        "bootstrap_generations_2_3_identical": true,
+        "matching_rtl_objects": 90,
+        "bootstrap_seconds": 121.277,
+        "cross_compilers": [
+          "i386",
+          "aarch64"
+        ],
+        "supported_rtl_targets": 13,
+        "rebuilt_rtl_nxu_units": 1191,
+        "cross_commands": 587,
+        "retained_tests": 539,
+        "test_suites": {
+          "NXPackageStorageTests-runtime.log": 3,
+          "CompilerRecompileTests-runtime.log": 30,
+          "RTLObjPasTests-runtime.log": 506
+        },
+        "cpu_model_checks": 143,
+        "cpu_macro_runtime_assembly_cases": 6,
+        "saved_generic_nxu_pairs_exact": 30,
+        "saved_generic_reads": 120,
+        "saved_generic_runtime_checks": 24,
+        "explicit_cpu_option_nxu_pairs_exact": 22,
+        "nxu_long_revision": 46,
+        "objc_commands": 120,
+        "objc_object_pairs_exact_except_single_compiler_identity": 35,
+        "objc_expected_diagnostic_sets_exact": 25,
+        "target_rtl_package_object_pairs": 1249,
+        "raw_identical_target_objects": 982,
+        "COFF_timestamp_only_target_objects": 267,
+        "all_other_target_object_bytes_exact": true,
+        "optional_runtime_comparison": {
+          "compiler_profiles": 2,
+          "before_after_runtimes": 4,
+          "cases_per_runtime": 4,
+          "commands": 8,
+          "all_passed": true
+        },
+        "WITHDMT_identical_error_count": 5,
+        "WITHDMT_repair_applied": false,
+        "approved_addstringopt_repair_in_baseline_and_preserved": true,
+        "unrelated_changes_preserved": true,
+        "whitespace_check": "passed",
+        "uncommitted": true,
+        "naming_regressions": [],
+        "goal_remains": "active/in_progress",
+        "objc_current_baseline_recheck": {
+          "status": "validated",
+          "evidence": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/objc-baseline-recheck.json",
+          "before_identity": "867b50d8d09a92ac6999d9fa16f9bd7c5072ee52-work-ff5bd7f086",
+          "after_identity": "867b50d8d09a92ac6999d9fa16f9bd7c5072ee52-work-4ab76a057c",
+          "fresh_commands": 120
+        }
+      },
+      "commands": [
+        "python3 /tmp/naming055.py --preview",
+        "python3 /tmp/derive-naming055-metadata.py",
+        "python3 /tmp/validate-naming055-baseline-cross.py",
+        "python3 /tmp/validate-naming055-profiles.py --baseline",
+        "python3 /tmp/preflight-naming055.py",
+        "python3 /tmp/naming055.py --apply",
+        "python3 /media/kcollins/dev/source/nexus-private/scripts/linux/bootstrap-nexusfpc.py /media/kcollins/dev/source/nexus-fpc --allow-dirty --no-promote --toolchain-root /media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/bootstrap",
+        "python3 /tmp/validate-naming055-cross.py",
+        "python3 /tmp/validate-naming055-integration.py integration",
+        "python3 /tmp/validate-naming055-artifacts.py",
+        "python3 /tmp/validate-naming055-profiles.py",
+        "python3 /tmp/validate-naming055-objc.py",
+        "python3 /tmp/validate-naming055-optional-runtime.py",
+        "python3 /tmp/probe-naming055-dmt.py before",
+        "python3 /tmp/probe-naming055-dmt.py after",
+        "python3 /tmp/compare-naming055-rtl.py",
+        "python3 /tmp/link-layout-naming055.py",
+        "python3 /tmp/proof-naming055.py"
+      ]
+    },
+    {
+      "id": "056",
+      "status": "pending_validation",
+      "scope": "Own declaration roles of all six bootstrap table/message generator programs",
+      "owned_files": [
+        "compiler/utils/mkx86inl.pas",
+        "compiler/utils/mkx86ins.pas",
+        "compiler/utils/mkx86reg.pas",
+        "compiler/utils/mka64ins.pas",
+        "compiler/utils/mka64reg.pas",
+        "compiler/utils/msg2inc.pas"
+      ],
+      "source_files": 6,
+      "identifiers": 212,
+      "identifier_substitutions": 2941,
+      "work_directory": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no",
+      "audit": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/audit.json",
+      "files": [
+        {
+          "file": "compiler/utils/mkx86inl.pas",
+          "identifier_substitutions": 611,
+          "sha256_before": "2496c9d0263ade8c5e46c8edf1514678a6e748f44e2a005e3242e0e0f045edd0",
+          "sha256_after": "c56cedb51d1c54bff7de7c0d1659ce59c6ace7eda93e11d3fbcccb19e7674eee",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "mkx86inl",
+            "globals": {},
+            "routines": [
+              {
+                "name": "Copy2SymbDel",
+                "parameters": {
+                  "s": "AText",
+                  "symb": "ASymbol"
+                },
+                "locals": {
+                  "p": "lPosition"
+                },
+                "parent": null
+              },
+              {
+                "name": "PosSetEx",
+                "parameters": {
+                  "c": "ACharSet",
+                  "s": "AText",
+                  "count": "ACount"
+                },
+                "locals": {
+                  "i": "lLength",
+                  "j": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "PosSet",
+                "parameters": {
+                  "c": "ACharSet",
+                  "s": "AText"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "RemoveTrailingChars",
+                "parameters": {
+                  "s": "AText",
+                  "cset": "ACharSet"
+                },
+                "locals": {
+                  "i": "lLength",
+                  "j": "lLastIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "TrimRightSet",
+                "parameters": {
+                  "s": "AText",
+                  "cset": "ACharSet"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetPascalType",
+                "parameters": {
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetTypeDef",
+                "parameters": {
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetOper",
+                "parameters": {
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetOperand",
+                "parameters": {
+                  "atyp": "AType",
+                  "aindex": "AIndex"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetOperandLoc",
+                "parameters": {
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetLocStatement",
+                "parameters": {
+                  "aindex": "AIndex",
+                  "atyp": "AType",
+                  "aconst": "AConst"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetDeallocStatement",
+                "parameters": {
+                  "aindex": "AIndex",
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetLoc",
+                "parameters": {
+                  "atyp": "AType",
+                  "awithsize": "AWithSize"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetLocAllocation",
+                "parameters": {
+                  "atyp": "AType"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "GetPostFix",
+                "parameters": {
+                  "apf": "APF"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "ParseList",
+                "parameters": {
+                  "aprefix": "APrefix",
+                  "afilename": "AFileName"
+                },
+                "locals": {
+                  "f": "lFile",
+                  "fprocs": "lProcsFile",
+                  "fcinnr": "lCompilerInlineFile",
+                  "fcpumminnr": "lCPUInlineFile",
+                  "ftypechk": "lTypeCheckLines",
+                  "ffirst": "lFirstPassLines",
+                  "fsecond": "lSecondPassLines",
+                  "str": "lText",
+                  "instrpart": "lInstructionPart",
+                  "postfix": "lPostfix",
+                  "_alias": "lAlias",
+                  "params": "lParams",
+                  "operline": "lOperLine",
+                  "opers": "lOperands",
+                  "opercnt": "lOperandCount",
+                  "hasoutput": "lHasOutput",
+                  "outputtype": "lOutputType",
+                  "cnt": "lCount",
+                  "i": "lIndex",
+                  "intrnum": "lIntrinsicNumber",
+                  "tmp": "lTemp",
+                  "condition": "lCondition",
+                  "target": "lTarget"
+                },
+                "parent": null
+              },
+              {
+                "name": "ParseOperands",
+                "parameters": {
+                  "aindex": "AIndex"
+                },
+                "locals": {
+                  "idx": "lOperandIndex",
+                  "pt": "lPosition",
+                  "c": "lChar"
+                },
+                "parent": "ParseList"
+              },
+              {
+                "name": "GetOperLine",
+                "parameters": {},
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": "ParseList"
+              },
+              {
+                "name": "GetParams",
+                "parameters": {},
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": "ParseList"
+              },
+              {
+                "name": "FindOperIdx",
+                "parameters": {
+                  "aoper": "AOper"
+                },
+                "locals": {
+                  "i": "lIndex",
+                  "cnt": "lCount"
+                },
+                "parent": "ParseList"
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "AFilename",
+              "AFileName"
+            ],
+            [
+              "ATyp",
+              "AType"
+            ],
+            [
+              "CSet",
+              "ACharSet"
+            ],
+            [
+              "DirLUT",
+              "cDirectionLookup"
+            ],
+            [
+              "I",
+              "lLength"
+            ],
+            [
+              "J",
+              "lLastIndex"
+            ],
+            [
+              "RemoveTrailingchars",
+              "RemoveTrailingChars"
+            ],
+            [
+              "S",
+              "AText"
+            ],
+            [
+              "Symb",
+              "ASymbol"
+            ],
+            [
+              "TSysCharset",
+              "TSysCharSet"
+            ],
+            [
+              "_alias",
+              "lAlias"
+            ],
+            [
+              "aconst",
+              "AConst"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "c",
+              "ACharSet"
+            ],
+            [
+              "c",
+              "lChar"
+            ],
+            [
+              "classes",
+              "Classes"
+            ],
+            [
+              "cnt",
+              "lCount"
+            ],
+            [
+              "condition",
+              "lCondition"
+            ],
+            [
+              "count",
+              "ACount"
+            ],
+            [
+              "cset",
+              "ACharSet"
+            ],
+            [
+              "direction",
+              "Direction"
+            ],
+            [
+              "f",
+              "lFile"
+            ],
+            [
+              "fcinnr",
+              "lCompilerInlineFile"
+            ],
+            [
+              "fcpumminnr",
+              "lCPUInlineFile"
+            ],
+            [
+              "ffirst",
+              "lFirstPassLines"
+            ],
+            [
+              "fprocs",
+              "lProcsFile"
+            ],
+            [
+              "fsecond",
+              "lSecondPassLines"
+            ],
+            [
+              "ftypechk",
+              "lTypeCheckLines"
+            ],
+            [
+              "hasOutput",
+              "lHasOutput"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "i",
+              "lLength"
+            ],
+            [
+              "idx",
+              "lOperandIndex"
+            ],
+            [
+              "instrPart",
+              "lInstructionPart"
+            ],
+            [
+              "intrnum",
+              "lIntrinsicNumber"
+            ],
+            [
+              "j",
+              "lIndex"
+            ],
+            [
+              "j",
+              "lLastIndex"
+            ],
+            [
+              "name",
+              "Name"
+            ],
+            [
+              "opercnt",
+              "lOperandCount"
+            ],
+            [
+              "operline",
+              "lOperLine"
+            ],
+            [
+              "opers",
+              "lOperands"
+            ],
+            [
+              "outputType",
+              "lOutputType"
+            ],
+            [
+              "p",
+              "lPosition"
+            ],
+            [
+              "params",
+              "lParams"
+            ],
+            [
+              "pchar",
+              "PChar"
+            ],
+            [
+              "pointer",
+              "Pointer"
+            ],
+            [
+              "possetex",
+              "PosSetEx"
+            ],
+            [
+              "postfix",
+              "lPostfix"
+            ],
+            [
+              "pt",
+              "lPosition"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "s",
+              "AText"
+            ],
+            [
+              "str",
+              "lText"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "target",
+              "lTarget"
+            ],
+            [
+              "tmp",
+              "lTemp"
+            ],
+            [
+              "typ",
+              "Typ"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/utils/mkx86ins.pas",
+          "identifier_substitutions": 467,
+          "sha256_before": "7fa27795bb4a61fea32b1b60f0f1a5185cb306b5ee50eaae84c5c89c54d24e5f",
+          "sha256_after": "ed92d0de3ea43ca9c1ef6795fb3418cb607bd91d320ed55d0f4a709f7c05c44b",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "mkx86ins",
+            "globals": {
+              "s": "LineText",
+              "i": "Index",
+              "i8086": "IsI8086",
+              "x86_64": "IsX8664",
+              "attsuffix": "ATTSuffix",
+              "hs": "TempText",
+              "j": "IndexJ",
+              "firstopcode": "FirstOpcode",
+              "first": "First",
+              "maxinfolen": "MaxInfoLength",
+              "code": "Code",
+              "insns": "InstructionCount",
+              "attsuffile": "ATTSuffixFile",
+              "propfile": "PropertyFile",
+              "opfile": "OpcodeFile",
+              "nopfile": "OpcodeCountFile",
+              "attfile": "ATTFile",
+              "intfile": "IntFile",
+              "infile": "InputFile",
+              "insfile": "InstructionFile",
+              "skip": "Skip",
+              "literalcount": "LiteralCount",
+              "ops": "OperandCount",
+              "intopcode": "IntOpcode",
+              "attopcode": "ATTOpcode",
+              "opcode": "Opcode",
+              "codes": "Codes",
+              "flags": "Flags",
+              "optypes": "OperandTypes",
+              "inschanges": "InstructionChanges",
+              "instrwritten": "InstructionWritten",
+              "signcheck": "SignCheck",
+              "strsearch": "StrSearch"
+            },
+            "routines": [
+              {
+                "name": "lower",
+                "parameters": {
+                  "s": "AText"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "Replace",
+                "parameters": {
+                  "s": "AText",
+                  "s1": "AOldText",
+                  "s2": "ANewText"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "formatop",
+                "parameters": {
+                  "s": "AText",
+                  "allowsizeonly": "AAllowSizeOnly"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "readnumber",
+                "parameters": {},
+                "locals": {
+                  "base": "lBase"
+                },
+                "parent": null
+              },
+              {
+                "name": "ToStr",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {
+                  "hs": "lText"
+                },
+                "parent": null
+              },
+              {
+                "name": "readstr",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "skipspace",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "openinc",
+                "parameters": {
+                  "f": "AFile",
+                  "fn": "AFileName"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "closeinc",
+                "parameters": {
+                  "f": "AFile"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "DoWriteInstr",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "SIGNED_INT",
+              "cSignedInt"
+            ],
+            [
+              "Version",
+              "cVersion"
+            ],
+            [
+              "allowsizeonly",
+              "AAllowSizeOnly"
+            ],
+            [
+              "attfile",
+              "ATTFile"
+            ],
+            [
+              "attopcode",
+              "ATTOpcode"
+            ],
+            [
+              "attsuffile",
+              "ATTSuffixFile"
+            ],
+            [
+              "attsuffix",
+              "ATTSuffix"
+            ],
+            [
+              "base",
+              "lBase"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "byte",
+              "Byte"
+            ],
+            [
+              "char",
+              "Char"
+            ],
+            [
+              "closeinc",
+              "CloseInc"
+            ],
+            [
+              "code",
+              "Code"
+            ],
+            [
+              "codes",
+              "Codes"
+            ],
+            [
+              "f",
+              "AFile"
+            ],
+            [
+              "first",
+              "First"
+            ],
+            [
+              "firstopcode",
+              "FirstOpcode"
+            ],
+            [
+              "flags",
+              "Flags"
+            ],
+            [
+              "fn",
+              "AFileName"
+            ],
+            [
+              "formatop",
+              "FormatOp"
+            ],
+            [
+              "hs",
+              "TempText"
+            ],
+            [
+              "hs",
+              "lText"
+            ],
+            [
+              "i",
+              "Index"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "i8086",
+              "IsI8086"
+            ],
+            [
+              "infile",
+              "InputFile"
+            ],
+            [
+              "inschanges",
+              "InstructionChanges"
+            ],
+            [
+              "insfile",
+              "InstructionFile"
+            ],
+            [
+              "insns",
+              "InstructionCount"
+            ],
+            [
+              "instrwritten",
+              "InstructionWritten"
+            ],
+            [
+              "intfile",
+              "IntFile"
+            ],
+            [
+              "intopcode",
+              "IntOpcode"
+            ],
+            [
+              "j",
+              "IndexJ"
+            ],
+            [
+              "l",
+              "AValue"
+            ],
+            [
+              "literalcount",
+              "LiteralCount"
+            ],
+            [
+              "lower",
+              "Lower"
+            ],
+            [
+              "max_operands",
+              "cMaxOperands"
+            ],
+            [
+              "maxinfolen",
+              "MaxInfoLength"
+            ],
+            [
+              "nopfile",
+              "OpcodeCountFile"
+            ],
+            [
+              "opcode",
+              "Opcode"
+            ],
+            [
+              "openinc",
+              "OpenInc"
+            ],
+            [
+              "opfile",
+              "OpcodeFile"
+            ],
+            [
+              "ops",
+              "OperandCount"
+            ],
+            [
+              "optypes",
+              "OperandTypes"
+            ],
+            [
+              "propfile",
+              "PropertyFile"
+            ],
+            [
+              "readnumber",
+              "ReadNumber"
+            ],
+            [
+              "readstr",
+              "ReadStr"
+            ],
+            [
+              "replaces",
+              "cReplacementCount"
+            ],
+            [
+              "replacetab",
+              "cReplacementTable"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "s",
+              "AText"
+            ],
+            [
+              "s",
+              "LineText"
+            ],
+            [
+              "s1",
+              "AOldText"
+            ],
+            [
+              "s2",
+              "ANewText"
+            ],
+            [
+              "skip",
+              "Skip"
+            ],
+            [
+              "skipspace",
+              "SkipSpace"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "text",
+              "Text"
+            ],
+            [
+              "x86_64",
+              "IsX8664"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/utils/mkx86reg.pas",
+          "identifier_substitutions": 485,
+          "sha256_before": "79693a9b2d447df9c252bda6acdb9d9a77fb302e785261d7420666c95d5389bf",
+          "sha256_after": "252cf14720cc1d725f682be8e8346553315b1c688a30234ab82f6936bf27643e",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "mkx86reg",
+            "globals": {
+              "s": "LineText",
+              "i": "Index",
+              "line": "Line",
+              "regcount": "RegCount",
+              "regcount_bsstart": "RegCountBSStart",
+              "names": "Names",
+              "numbers": "Numbers",
+              "stdnames": "StdNames",
+              "intnames": "IntNames",
+              "attnames": "ATTNames",
+              "dwarf16": "Dwarf16",
+              "dwarf32": "Dwarf32",
+              "dwarf64": "Dwarf64",
+              "ots": "OTs",
+              "ops": "Ops",
+              "regnumber_index": "RegNumberIndex",
+              "std_regname_index": "StdRegNameIndex",
+              "int_regname_index": "IntRegNameIndex",
+              "att_regname_index": "ATTRegNameIndex",
+              "i8086": "IsI8086",
+              "x86_64": "IsX8664",
+              "fileprefix": "FilePrefix"
+            },
+            "routines": [
+              {
+                "name": "ToStr",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "readstr",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "readcomma",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "skipspace",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "openinc",
+                "parameters": {
+                  "f": "AFile",
+                  "fn": "AFileName"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "closeinc",
+                "parameters": {
+                  "f": "AFile"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "build_regnum_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "build_std_regname_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "build_int_regname_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "build_att_regname_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "read_x86reg_file",
+                "parameters": {},
+                "locals": {
+                  "infile": "lInputFile",
+                  "cpustr": "lCPUString"
+                },
+                "parent": null
+              },
+              {
+                "name": "write_inc_files",
+                "parameters": {},
+                "locals": {
+                  "attfile": "lATTFile",
+                  "intfile": "lIntFile",
+                  "otfile": "lOTFile",
+                  "norfile": "lCountFile",
+                  "stdfile": "lStdFile",
+                  "numfile": "lNumberFile",
+                  "dwrffile": "lDwarfFile",
+                  "confile": "lConstFile",
+                  "rnifile": "lRegNumberIndexFile",
+                  "irifile": "lIntRegIndexFile",
+                  "srifile": "lStdRegIndexFile",
+                  "arifile": "lATTRegIndexFile",
+                  "first": "lFirst"
+                },
+                "parent": null
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "Version",
+              "cVersion"
+            ],
+            [
+              "arifile",
+              "lATTRegIndexFile"
+            ],
+            [
+              "att_regname_index",
+              "ATTRegNameIndex"
+            ],
+            [
+              "attfile",
+              "lATTFile"
+            ],
+            [
+              "attnames",
+              "ATTNames"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "build_att_regname_index",
+              "BuildATTRegNameIndex"
+            ],
+            [
+              "build_int_regname_index",
+              "BuildIntRegNameIndex"
+            ],
+            [
+              "build_regnum_index",
+              "BuildRegNumIndex"
+            ],
+            [
+              "build_std_regname_index",
+              "BuildStdRegNameIndex"
+            ],
+            [
+              "byte",
+              "Byte"
+            ],
+            [
+              "closeinc",
+              "CloseInc"
+            ],
+            [
+              "confile",
+              "lConstFile"
+            ],
+            [
+              "cpustr",
+              "lCPUString"
+            ],
+            [
+              "dwarf16",
+              "Dwarf16"
+            ],
+            [
+              "dwarf32",
+              "Dwarf32"
+            ],
+            [
+              "dwarf64",
+              "Dwarf64"
+            ],
+            [
+              "dwrffile",
+              "lDwarfFile"
+            ],
+            [
+              "f",
+              "AFile"
+            ],
+            [
+              "fileprefix",
+              "FilePrefix"
+            ],
+            [
+              "first",
+              "lFirst"
+            ],
+            [
+              "fn",
+              "AFileName"
+            ],
+            [
+              "h",
+              "lIndexH"
+            ],
+            [
+              "i",
+              "Index"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "i8086",
+              "IsI8086"
+            ],
+            [
+              "infile",
+              "lInputFile"
+            ],
+            [
+              "int_regname_index",
+              "IntRegNameIndex"
+            ],
+            [
+              "intfile",
+              "lIntFile"
+            ],
+            [
+              "intnames",
+              "IntNames"
+            ],
+            [
+              "irifile",
+              "lIntRegIndexFile"
+            ],
+            [
+              "j",
+              "lIndexJ"
+            ],
+            [
+              "l",
+              "AValue"
+            ],
+            [
+              "line",
+              "Line"
+            ],
+            [
+              "max_regcount",
+              "cMaxRegCount"
+            ],
+            [
+              "names",
+              "Names"
+            ],
+            [
+              "norfile",
+              "lCountFile"
+            ],
+            [
+              "numbers",
+              "Numbers"
+            ],
+            [
+              "numfile",
+              "lNumberFile"
+            ],
+            [
+              "openinc",
+              "OpenInc"
+            ],
+            [
+              "ops",
+              "Ops"
+            ],
+            [
+              "otfile",
+              "lOTFile"
+            ],
+            [
+              "ots",
+              "OTs"
+            ],
+            [
+              "p",
+              "lGap"
+            ],
+            [
+              "read_x86reg_file",
+              "ReadX86RegFile"
+            ],
+            [
+              "readcomma",
+              "ReadComma"
+            ],
+            [
+              "readstr",
+              "ReadStr"
+            ],
+            [
+              "regcount",
+              "RegCount"
+            ],
+            [
+              "regcount_bsstart",
+              "RegCountBSStart"
+            ],
+            [
+              "regnumber_index",
+              "RegNumberIndex"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "rnifile",
+              "lRegNumberIndexFile"
+            ],
+            [
+              "s",
+              "LineText"
+            ],
+            [
+              "skipspace",
+              "SkipSpace"
+            ],
+            [
+              "srifile",
+              "lStdRegIndexFile"
+            ],
+            [
+              "std_regname_index",
+              "StdRegNameIndex"
+            ],
+            [
+              "stdfile",
+              "lStdFile"
+            ],
+            [
+              "stdnames",
+              "StdNames"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "t",
+              "lTemp"
+            ],
+            [
+              "text",
+              "Text"
+            ],
+            [
+              "write_inc_files",
+              "WriteIncFiles"
+            ],
+            [
+              "x86_64",
+              "IsX8664"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/utils/mka64ins.pas",
+          "identifier_substitutions": 345,
+          "sha256_before": "6e4a505a64e2340cf457a2a8e7cea2dc7094d9b2b8831982764311fdd00fa748",
+          "sha256_after": "104a0a50f0a4566f9388e31b001b63b04a8230185e2460fade213c94bf23af09",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "mka64ins",
+            "globals": {
+              "s": "LineText",
+              "i": "Index",
+              "attsuffix": "ATTSuffix",
+              "hs": "TempText",
+              "j": "IndexJ",
+              "firstopcode": "FirstOpcode",
+              "first": "First",
+              "maxinfolen": "MaxInfoLength",
+              "code": "Code",
+              "insns": "InstructionCount",
+              "attsuffile": "ATTSuffixFile",
+              "opfile": "OpcodeFile",
+              "nopfile": "OpcodeCountFile",
+              "attfile": "ATTFile",
+              "infile": "InputFile",
+              "insfile": "InstructionFile",
+              "skip": "Skip",
+              "ops": "OperandCount",
+              "attopcode": "ATTOpcode",
+              "opcode": "Opcode",
+              "codes": "Codes",
+              "flags": "Flags",
+              "optypes": "OperandTypes"
+            },
+            "routines": [
+              {
+                "name": "lower",
+                "parameters": {
+                  "s": "AText"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "Replace",
+                "parameters": {
+                  "s": "AText",
+                  "s1": "AOldText",
+                  "s2": "ANewText"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "formatop",
+                "parameters": {
+                  "s": "AText"
+                },
+                "locals": {
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "readnumber",
+                "parameters": {},
+                "locals": {
+                  "base": "lBase"
+                },
+                "parent": null
+              },
+              {
+                "name": "ToStr",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {
+                  "hs": "lText"
+                },
+                "parent": null
+              },
+              {
+                "name": "readstr",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "skipspace",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "openinc",
+                "parameters": {
+                  "f": "AFile",
+                  "fn": "AFileName"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "closeinc",
+                "parameters": {
+                  "f": "AFile"
+                },
+                "locals": {},
+                "parent": null
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "Version",
+              "cVersion"
+            ],
+            [
+              "attfile",
+              "ATTFile"
+            ],
+            [
+              "attopcode",
+              "ATTOpcode"
+            ],
+            [
+              "attsuffile",
+              "ATTSuffixFile"
+            ],
+            [
+              "attsuffix",
+              "ATTSuffix"
+            ],
+            [
+              "base",
+              "lBase"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "byte",
+              "Byte"
+            ],
+            [
+              "char",
+              "Char"
+            ],
+            [
+              "closeinc",
+              "CloseInc"
+            ],
+            [
+              "code",
+              "Code"
+            ],
+            [
+              "codes",
+              "Codes"
+            ],
+            [
+              "f",
+              "AFile"
+            ],
+            [
+              "first",
+              "First"
+            ],
+            [
+              "firstopcode",
+              "FirstOpcode"
+            ],
+            [
+              "flags",
+              "Flags"
+            ],
+            [
+              "fn",
+              "AFileName"
+            ],
+            [
+              "formatop",
+              "FormatOp"
+            ],
+            [
+              "hs",
+              "TempText"
+            ],
+            [
+              "hs",
+              "lText"
+            ],
+            [
+              "i",
+              "Index"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "infile",
+              "InputFile"
+            ],
+            [
+              "insfile",
+              "InstructionFile"
+            ],
+            [
+              "insns",
+              "InstructionCount"
+            ],
+            [
+              "j",
+              "IndexJ"
+            ],
+            [
+              "l",
+              "AValue"
+            ],
+            [
+              "lower",
+              "Lower"
+            ],
+            [
+              "maxinfolen",
+              "MaxInfoLength"
+            ],
+            [
+              "nopfile",
+              "OpcodeCountFile"
+            ],
+            [
+              "opcode",
+              "Opcode"
+            ],
+            [
+              "openinc",
+              "OpenInc"
+            ],
+            [
+              "opfile",
+              "OpcodeFile"
+            ],
+            [
+              "ops",
+              "OperandCount"
+            ],
+            [
+              "optypes",
+              "OperandTypes"
+            ],
+            [
+              "readnumber",
+              "ReadNumber"
+            ],
+            [
+              "readstr",
+              "ReadStr"
+            ],
+            [
+              "replace",
+              "Replace"
+            ],
+            [
+              "replaces",
+              "cReplacementCount"
+            ],
+            [
+              "replacetab",
+              "cReplacementTable"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "s",
+              "AText"
+            ],
+            [
+              "s",
+              "LineText"
+            ],
+            [
+              "s1",
+              "AOldText"
+            ],
+            [
+              "s2",
+              "ANewText"
+            ],
+            [
+              "skip",
+              "Skip"
+            ],
+            [
+              "skipspace",
+              "SkipSpace"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "text",
+              "Text"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/utils/mka64reg.pas",
+          "identifier_substitutions": 303,
+          "sha256_before": "1a014f9a69ecad1c7c431285b1d5fc9ddcc4c763dfb417b2fd928b29efeda515",
+          "sha256_after": "b5d717960cacaf72b0a129ec1e1cce8eb353d4e75ecdac6dbf756354e223799c",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "mka64reg",
+            "globals": {
+              "s": "LineText",
+              "i": "Index",
+              "line": "Line",
+              "regcount": "RegCount",
+              "regcount_bsstart": "RegCountBSStart",
+              "names": "Names",
+              "regtypes": "RegTypes",
+              "subtypes": "SubTypes",
+              "supregs": "SupRegs",
+              "numbers": "Numbers",
+              "stdnames": "StdNames",
+              "dwarf": "Dwarf",
+              "regnumber_index": "RegNumberIndex",
+              "std_regname_index": "StdRegNameIndex"
+            },
+            "routines": [
+              {
+                "name": "ToStr",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "readstr",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "readcomma",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "skipspace",
+                "parameters": {},
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "openinc",
+                "parameters": {
+                  "f": "AFile",
+                  "fn": "AFileName"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "closeinc",
+                "parameters": {
+                  "f": "AFile"
+                },
+                "locals": {},
+                "parent": null
+              },
+              {
+                "name": "build_regnum_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "build_std_regname_index",
+                "parameters": {},
+                "locals": {
+                  "h": "lIndexH",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "p": "lGap",
+                  "t": "lTemp"
+                },
+                "parent": null
+              },
+              {
+                "name": "read_spreg_file",
+                "parameters": {},
+                "locals": {
+                  "infile": "lInputFile"
+                },
+                "parent": null
+              },
+              {
+                "name": "write_inc_files",
+                "parameters": {},
+                "locals": {
+                  "norfile": "lCountFile",
+                  "stdfile": "lStdFile",
+                  "supfile": "lSupRegFile",
+                  "numfile": "lNumberFile",
+                  "dwarffile": "lDwarfFile",
+                  "confile": "lConstFile",
+                  "rnifile": "lRegNumberIndexFile",
+                  "srifile": "lStdRegIndexFile",
+                  "first": "lFirst"
+                },
+                "parent": null
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "Version",
+              "cVersion"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "build_regnum_index",
+              "BuildRegNumIndex"
+            ],
+            [
+              "build_std_regname_index",
+              "BuildStdRegNameIndex"
+            ],
+            [
+              "closeinc",
+              "CloseInc"
+            ],
+            [
+              "confile",
+              "lConstFile"
+            ],
+            [
+              "dwarf",
+              "Dwarf"
+            ],
+            [
+              "dwarffile",
+              "lDwarfFile"
+            ],
+            [
+              "f",
+              "AFile"
+            ],
+            [
+              "first",
+              "lFirst"
+            ],
+            [
+              "fn",
+              "AFileName"
+            ],
+            [
+              "h",
+              "lIndexH"
+            ],
+            [
+              "i",
+              "Index"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "infile",
+              "lInputFile"
+            ],
+            [
+              "j",
+              "lIndexJ"
+            ],
+            [
+              "l",
+              "AValue"
+            ],
+            [
+              "line",
+              "Line"
+            ],
+            [
+              "max_regcount",
+              "cMaxRegCount"
+            ],
+            [
+              "names",
+              "Names"
+            ],
+            [
+              "norfile",
+              "lCountFile"
+            ],
+            [
+              "numbers",
+              "Numbers"
+            ],
+            [
+              "numfile",
+              "lNumberFile"
+            ],
+            [
+              "openinc",
+              "OpenInc"
+            ],
+            [
+              "p",
+              "lGap"
+            ],
+            [
+              "read_spreg_file",
+              "ReadSpRegFile"
+            ],
+            [
+              "readcomma",
+              "ReadComma"
+            ],
+            [
+              "readstr",
+              "ReadStr"
+            ],
+            [
+              "regcount",
+              "RegCount"
+            ],
+            [
+              "regcount_bsstart",
+              "RegCountBSStart"
+            ],
+            [
+              "regnumber_index",
+              "RegNumberIndex"
+            ],
+            [
+              "regtypes",
+              "RegTypes"
+            ],
+            [
+              "result",
+              "Result"
+            ],
+            [
+              "rnifile",
+              "lRegNumberIndexFile"
+            ],
+            [
+              "s",
+              "LineText"
+            ],
+            [
+              "skipspace",
+              "SkipSpace"
+            ],
+            [
+              "srifile",
+              "lStdRegIndexFile"
+            ],
+            [
+              "std_regname_index",
+              "StdRegNameIndex"
+            ],
+            [
+              "stdfile",
+              "lStdFile"
+            ],
+            [
+              "stdnames",
+              "StdNames"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "subtypes",
+              "SubTypes"
+            ],
+            [
+              "supfile",
+              "lSupRegFile"
+            ],
+            [
+              "supregs",
+              "SupRegs"
+            ],
+            [
+              "t",
+              "lTemp"
+            ],
+            [
+              "text",
+              "Text"
+            ],
+            [
+              "word",
+              "Word"
+            ],
+            [
+              "write_inc_files",
+              "WriteIncFiles"
+            ]
+          ]
+        },
+        {
+          "file": "compiler/utils/msg2inc.pas",
+          "identifier_substitutions": 730,
+          "sha256_before": "51e20f93390af04c525c56fcdef82ed87090feab832a5614d6980b7b99278bb6",
+          "sha256_after": "9cde4080f14890308df2e2e5ce295b3693b3714d6c3cce91b37aadf3290d1b81",
+          "only_identifier_tokens_changed": true,
+          "roles": {
+            "program": "msg2inc",
+            "globals": {
+              "infile": "InFile",
+              "outfile": "OutFile",
+              "outname": "OutName",
+              "mode": "Mode",
+              "texheader": "TexHeader",
+              "msgtxt": "MsgTxt",
+              "enumtxt": "EnumTxt",
+              "enumsize": "EnumSize",
+              "msgsize": "MsgSize",
+              "msgidxmax": "MsgIdxMax",
+              "msgs": "Messages",
+              "msgcodepage": "MsgCodePage"
+            },
+            "routines": [
+              {
+                "name": "LoadMsgFile",
+                "parameters": {
+                  "fn": "AFileName"
+                },
+                "locals": {
+                  "f": "lFile",
+                  "error": "lError",
+                  "multiline": "lMultiLine",
+                  "code": "lCode",
+                  "numpart": "lNumberPart",
+                  "numidx": "lNumberIndex",
+                  "line": "lLine",
+                  "i": "lIndex",
+                  "j": "lIndexJ",
+                  "num": "lNumber",
+                  "ptxt": "lTextCursor",
+                  "penum": "lEnumCursor",
+                  "number": "lNumberText",
+                  "s": "lText",
+                  "s1": "lText1"
+                },
+                "parent": null
+              },
+              {
+                "name": "err",
+                "parameters": {
+                  "msgstr": "AMessage"
+                },
+                "locals": {},
+                "parent": "LoadMsgFile"
+              },
+              {
+                "name": "WriteEnumFile",
+                "parameters": {
+                  "fn": "AFileName"
+                },
+                "locals": {
+                  "t": "lOutputFile",
+                  "i": "lIndex",
+                  "p": "lCursor",
+                  "start": "lStart"
+                },
+                "parent": null
+              },
+              {
+                "name": "WriteStringFile",
+                "parameters": {
+                  "fn": "AFileName",
+                  "constname": "AConstName"
+                },
+                "locals": {
+                  "t": "lOutputFile",
+                  "f": "lFile",
+                  "slen": "lStringLength",
+                  "len": "lLineLength",
+                  "i": "lIndex",
+                  "p": "lCursor",
+                  "s": "lText",
+                  "start": "lStart",
+                  "quote": "lQuote"
+                },
+                "parent": null
+              },
+              {
+                "name": "l0",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {
+                  "s": "lText"
+                },
+                "parent": "WriteStringFile"
+              },
+              {
+                "name": "WriteCharFile",
+                "parameters": {
+                  "fn": "AFileName",
+                  "constname": "AConstName"
+                },
+                "locals": {
+                  "t": "lOutputFile",
+                  "f": "lFile",
+                  "cidx": "lColumnIndex",
+                  "i": "lIndex",
+                  "p": "lCursor",
+                  "s": "lText"
+                },
+                "parent": null
+              },
+              {
+                "name": "l0",
+                "parameters": {
+                  "l": "AValue"
+                },
+                "locals": {
+                  "s": "lText"
+                },
+                "parent": "WriteCharFile"
+              },
+              {
+                "name": "createconst",
+                "parameters": {
+                  "b": "AValue"
+                },
+                "locals": {},
+                "parent": "WriteCharFile"
+              },
+              {
+                "name": "WriteIntelFile",
+                "parameters": {
+                  "fn": "AFileName",
+                  "constname": "AConstName"
+                },
+                "locals": {
+                  "t": "lOutputFile",
+                  "len": "lLineLength",
+                  "i": "lIndex",
+                  "p": "lCursor",
+                  "start": "lStart",
+                  "quote": "lQuote"
+                },
+                "parent": null
+              },
+              {
+                "name": "RenumberFile",
+                "parameters": {
+                  "fn": "AFileName",
+                  "name": "AName"
+                },
+                "locals": {
+                  "f": "lFile",
+                  "t": "lOutputFile",
+                  "i": "lIndex",
+                  "s": "lText",
+                  "s1": "lText1"
+                },
+                "parent": null
+              },
+              {
+                "name": "EscapeString",
+                "parameters": {
+                  "s": "AText"
+                },
+                "locals": {
+                  "i": "lIndex",
+                  "hs": "lEscapedText"
+                },
+                "parent": null
+              },
+              {
+                "name": "WriteTexFile",
+                "parameters": {
+                  "infn": "AInputFileName",
+                  "outfn": "AOutputFileName"
+                },
+                "locals": {
+                  "t": "lOutputFile",
+                  "f": "lFile",
+                  "line": "lLine",
+                  "i": "lIndex",
+                  "k": "lIndexK",
+                  "number": "lNumberText",
+                  "s": "lText",
+                  "s1": "lText1",
+                  "texoutput": "lTexOutput"
+                },
+                "parent": null
+              },
+              {
+                "name": "getpara",
+                "parameters": {},
+                "locals": {
+                  "ch": "lChar",
+                  "para": "lArgument",
+                  "files": "lFileCount",
+                  "i": "lIndex"
+                },
+                "parent": null
+              },
+              {
+                "name": "helpscreen",
+                "parameters": {},
+                "locals": {},
+                "parent": "getpara"
+              }
+            ]
+          },
+          "replacements": [
+            [
+              "Files",
+              "lFileCount"
+            ],
+            [
+              "Helpscreen",
+              "HelpScreen"
+            ],
+            [
+              "I",
+              "lIndex"
+            ],
+            [
+              "Infile",
+              "InFile"
+            ],
+            [
+              "Loadmsgfile",
+              "LoadMsgFile"
+            ],
+            [
+              "M_Char",
+              "ModeChar"
+            ],
+            [
+              "M_Intel",
+              "ModeIntel"
+            ],
+            [
+              "M_Renumber",
+              "ModeRenumber"
+            ],
+            [
+              "M_String",
+              "ModeString"
+            ],
+            [
+              "M_Tex",
+              "ModeTex"
+            ],
+            [
+              "MsgParts",
+              "cMsgParts"
+            ],
+            [
+              "Name",
+              "AName"
+            ],
+            [
+              "Outfile",
+              "OutFile"
+            ],
+            [
+              "Para",
+              "lArgument"
+            ],
+            [
+              "Renumberfile",
+              "RenumberFile"
+            ],
+            [
+              "S",
+              "AText"
+            ],
+            [
+              "S",
+              "lText"
+            ],
+            [
+              "TeXOutPut",
+              "lTexOutput"
+            ],
+            [
+              "TexOutPut",
+              "lTexOutput"
+            ],
+            [
+              "TexOutput",
+              "lTexOutput"
+            ],
+            [
+              "b",
+              "AValue"
+            ],
+            [
+              "boolean",
+              "Boolean"
+            ],
+            [
+              "byte",
+              "Byte"
+            ],
+            [
+              "ch",
+              "lChar"
+            ],
+            [
+              "char",
+              "Char"
+            ],
+            [
+              "cidx",
+              "lColumnIndex"
+            ],
+            [
+              "code",
+              "lCode"
+            ],
+            [
+              "constname",
+              "AConstName"
+            ],
+            [
+              "createconst",
+              "CreateConst"
+            ],
+            [
+              "enumsize",
+              "EnumSize"
+            ],
+            [
+              "enumtxt",
+              "EnumTxt"
+            ],
+            [
+              "eollen",
+              "cEOLLength"
+            ],
+            [
+              "err",
+              "Err"
+            ],
+            [
+              "error",
+              "lError"
+            ],
+            [
+              "escapestring",
+              "EscapeString"
+            ],
+            [
+              "f",
+              "lFile"
+            ],
+            [
+              "files",
+              "lFileCount"
+            ],
+            [
+              "fn",
+              "AFileName"
+            ],
+            [
+              "getpara",
+              "GetPara"
+            ],
+            [
+              "helpscreen",
+              "HelpScreen"
+            ],
+            [
+              "hs",
+              "lEscapedText"
+            ],
+            [
+              "i",
+              "lIndex"
+            ],
+            [
+              "infn",
+              "AInputFileName"
+            ],
+            [
+              "j",
+              "lIndexJ"
+            ],
+            [
+              "k",
+              "lIndexK"
+            ],
+            [
+              "l",
+              "AValue"
+            ],
+            [
+              "l0",
+              "PadNumber"
+            ],
+            [
+              "len",
+              "lLineLength"
+            ],
+            [
+              "line",
+              "lLine"
+            ],
+            [
+              "maxslen",
+              "cMaxStringLength"
+            ],
+            [
+              "msgs",
+              "Messages"
+            ],
+            [
+              "msgstr",
+              "AMessage"
+            ],
+            [
+              "multiline",
+              "lMultiLine"
+            ],
+            [
+              "name",
+              "AName"
+            ],
+            [
+              "num",
+              "lNumber"
+            ],
+            [
+              "number",
+              "lNumberText"
+            ],
+            [
+              "numidx",
+              "lNumberIndex"
+            ],
+            [
+              "numpart",
+              "lNumberPart"
+            ],
+            [
+              "outfn",
+              "AOutputFileName"
+            ],
+            [
+              "p",
+              "lCursor"
+            ],
+            [
+              "para",
+              "lArgument"
+            ],
+            [
+              "pchar",
+              "PChar"
+            ],
+            [
+              "penum",
+              "lEnumCursor"
+            ],
+            [
+              "ptxt",
+              "lTextCursor"
+            ],
+            [
+              "quote",
+              "lQuote"
+            ],
+            [
+              "s",
+              "AText"
+            ],
+            [
+              "s",
+              "lText"
+            ],
+            [
+              "s1",
+              "lText1"
+            ],
+            [
+              "slen",
+              "lStringLength"
+            ],
+            [
+              "start",
+              "lStart"
+            ],
+            [
+              "string",
+              "String"
+            ],
+            [
+              "t",
+              "lOutputFile"
+            ],
+            [
+              "texheader",
+              "TexHeader"
+            ],
+            [
+              "texoutput",
+              "lTexOutput"
+            ],
+            [
+              "text",
+              "Text"
+            ],
+            [
+              "version",
+              "cVersion"
+            ],
+            [
+              "word",
+              "Word"
+            ]
+          ]
+        }
+      ],
+      "scope_notes": [
+        "75 routines,9 nested scopes,104 program-global variables and one record reviewed. Formals use A,locals l,program globals PascalCase and constants c where practical. No structural changes.",
+        "Six program headings retain loaded module-identity strings. TOperDirection and its three emitted RTTI members remain exact. Five implementation-only TMode members normalize with complete loaded-byte parity.",
+        "Only identifier tokens change. All strings,comments,directives,numeric values,layouts,data files,output names and generated code templates stay exact.",
+        "61 private routine/global/table defined-symbol aliases per compiler are derived from source and verified against all untouched objects. Whole staged objects and executables match after only these defined names/section names are canonicalized. Undefined/dynamic names and all runtime bytes stay exact.",
+        "A staged compile caught a range endpoint mistaken for member access. The mapper now distinguishes single-dot member access from double-dot ranges. The failed preview and correction are preserved; no repository source/build-option workaround.",
+        "All22 message catalogs are examined with both compilers. Three existing catalog failures and bare -T runtime216 are analyzed before source edits; no functional fixes. Naming validation must preserve exact known diagnostics and generated payloads.",
+        "The current batch changes standalone tools only. All375 remaining compiler Pascal/include sources must match the validated055 baseline byte for byte. Conditional compiler profiles validated in055 remain applicable because core source and all generator outputs stay exact."
+      ]
     }
   ],
   "verification": {
-    "status": "in_progress_batch054_validated",
+    "status": "in_progress_batch055_validated",
     "required": [
       "Repository-wide audit",
       "Native Linux seed plus three compiler/RTL generations",
@@ -46276,17 +52511,17 @@
       "Relevant regressions and cached-unit checks"
     ],
     "prior_evidence": "build/forge-bootstrap/naming-cleanup-pass2/",
-    "latest_validated_batch": "054",
-    "aggregate_diff_audit": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/audit.json",
-    "latest_validated_compiler_batch": "054",
-    "unrelated_baseline_failures": "WITHDMT parser/API drift newly analyzed: five identical errors before/after, same guarded code and incompatible APIs at HEAD. No functional repair. Existing addstringopt defect remains unapplied pending optional owner decision; nadd is raw-identical in all six profiles and earlier evidence is preserved.",
+    "latest_validated_batch": "055",
+    "aggregate_diff_audit": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/audit.json",
+    "latest_validated_compiler_batch": "055",
+    "unrelated_baseline_failures": "WITHDMT remains analyzed and unchanged, with the same five parser/API errors before/after batch055; no repair. The separately owner-approved addstringopt missing-local repair is applied and validated, preserved by this naming batch and covered by its eighth compiler profile.",
     "source_files_in_aggregate_audit": 210,
     "whitespace_audit": "build/naming-batch039/whitespace-review.json",
-    "latest_native_bootstrap": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/bootstrap/nexus-fpc/x86_64-linux/0f60ce9c1b-work-5cb99f4b90/build-identity.json",
-    "latest_regression_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/validation/results.json",
-    "latest_cross_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/cross/results.json",
+    "latest_native_bootstrap": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/bootstrap/nexus-fpc/x86_64-linux/867b50d8d0-work-4ab76a057c/build-identity.json",
+    "latest_regression_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/validation/results.json",
+    "latest_cross_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/cross/results.json",
     "generated_origin_audit": "build/forge-bootstrap/naming-goal/batch-021-generated-origin-audit.json",
-    "current_checkpoint_revision": "0f60ce9c1bfd30e56fd6d5246a8ed46077f9990a",
+    "current_checkpoint_revision": "867b50d8d09a92ac6999d9fa16f9bd7c5072ee52",
     "previous_checkpoint_audit": "build/forge-bootstrap/naming-goal/batches-001-022-audit.json",
     "previous_checkpoint_revision": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9",
     "latest_cycle_results": "build/clang-concurrency-removal/cycle-raw-results.json",
@@ -46319,30 +52554,37 @@
     ],
     "latest_synthetic_results": "build/naming-batch039/synthetic-validation.json",
     "latest_visibility_layout_results": "build/naming-batch039/lookup-validation.json",
-    "latest_baseline_bootstrap": "build/naming-batch038/renamed/result.json",
+    "latest_baseline_bootstrap": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/baseline-bootstrap-result.json",
     "latest_compatibility_results": "build/naming-batch039/compat-validation.json",
     "latest_closure_results": "build/naming-batch039/closure-validation.json",
     "cyclic_rebuild_failure_analysis": "build/cyclic-rebuild-investigation/analysis.json",
-    "current_worktree_validation": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/summary.json",
+    "current_worktree_validation": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/summary.json",
     "latest_repeated_cycle_results": "build/clang-concurrency-removal/repeated-cycle-validation.json",
     "latest_assembly_lifecycle_results": "build/clang-concurrency-removal/assembly-lifecycle-validation.json",
     "resumed_on": "2026-10-17",
     "resumption_baseline": "/media/kcollins/dev/worktree/naming-batch040-20261017-cp_0aprn/baseline-identity.json",
     "historical_evidence_note": "Earlier build/ references are historical; the owner removed that output folder. Current evidence is maintained in unique folders beneath ../../worktree.",
-    "latest_compiler_image_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/image-analysis/summary.json",
-    "latest_saved_generic_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/artifacts/summary.json",
-    "source_files_in_latest_batch": 22,
+    "latest_compiler_image_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/profiles/summary.json",
+    "latest_saved_generic_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/artifacts/summary.json",
+    "source_files_in_latest_batch": 34,
     "NXULongRevision": 46,
-    "latest_conditional_compiler_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/conditional-analysis/summary.json",
-    "undefined_symbol_policy": "Every undefined linker symbol matches exactly, without substitutions or restoration exceptions.",
-    "latest_rangechecked_compiler_results": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/rangechecked-analysis/summary.json",
+    "latest_conditional_compiler_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/profiles/summary.json",
+    "undefined_symbol_policy": "Every undefined and dynamic symbol matches exactly; only exact source-derived private defined names normalize.",
+    "latest_rangechecked_compiler_results": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/profiles/summary.json",
     "latest_generator_review": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/generator-review/summary.json",
-    "latest_objc_artifact_review": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/objc-artifacts/summary.json",
-    "latest_target_rtl_object_review": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/rtl-object-comparison.json",
-    "latest_analyzed_unrelated_failure": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/dmt-probe/analysis.json"
+    "latest_objc_artifact_review": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/objc-artifacts/summary.json",
+    "latest_target_rtl_object_review": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/rtl-object-comparison.json",
+    "latest_analyzed_unrelated_failure": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/dmt-probe/analysis.json",
+    "last_separate_repair": {
+      "case": "addstringopt_missing_hp_local",
+      "status": "validated",
+      "evidence": "/media/kcollins/dev/worktree/addstringopt-repair-20261018-a2pr8y3u/Review.txt",
+      "bootstrap_identity": "0f60ce9c1bfd30e56fd6d5246a8ed46077f9990a-work-6cfdbf9983",
+      "default_compiler_unchanged": true
+    }
   },
   "next_work": [
-    "Continue typechecking, parameter preparation and inline parsing in compiler/htypechk.pas, compiler/pparautl.pas and compiler/pinline.pas. Review exported helper/inline/callback RTTI contracts before renames. Imported references alone do not complete provider role audits; compiler/utils/mkx86inl.pas own declaration-role audit remains pending.",
+    "Review declaration roles in compiler/utils/mkx86inl.pas and related opcode/register table generators; preserve all generated output identities and reproduce output with stock FPC3.2.2. Then continue parser declaration units pdecl.pas, pdecvar.pas and pdecobj.pas. Imported references alone do not complete provider audits.",
     "Continue remaining compiler constants, fields, methods, routines, variables, parameters and unit-name audits; provider references and ABI/RTTI exceptions require their own reviews.",
     "Continue all remaining RTL, packages, utilities and tests; examples require a final current-source audit. Retired or relocated components must be reconciled against the current checkout.",
     "Repeat final native three-generation bootstrap, i386/AArch64 builds and relevant regressions after the last source edits. Prove every source area reviewed; the goal remains incomplete."
@@ -46443,7 +52685,7 @@
       "file": "compiler/nadd.pas",
       "case": "addstringopt_missing_hp_local",
       "classification": "newly_diagnosed_upstream_optional_build_defect",
-      "status": "owner_approved_repair_pending_validation",
+      "status": "repaired_and_validated_by_explicit_owner_authorization",
       "reason": "The guarded hp:TNode declaration was deleted while the four guarded uses were retained.",
       "origin": {
         "commit": "e35403c3b8364f7efdc40ce0af00eefec0226e24",
@@ -46455,8 +52697,22 @@
       "evidence": "/media/kcollins/dev/worktree/naming-batch049-20261018-irukfbec/conditional-addstringopt-failure/analysis.json",
       "isolated_repair": "/media/kcollins/dev/worktree/naming-batch049-20261018-irukfbec/addstringopt-repair-probe/summary.json",
       "production_fix_applied": true,
-      "repair_evidence": "/media/kcollins/dev/worktree/addstringopt-repair-20261018-a2pr8y3u",
-      "authorization": "Owner answered: Include the verified repair separately."
+      "repair_evidence": "/media/kcollins/dev/worktree/addstringopt-repair-20261018-a2pr8y3u/Review.txt",
+      "authorization": "Owner answered: Include the verified repair separately.",
+      "validation": {
+        "before_missing_hp_errors": 4,
+        "optional_compiler_build_passed": true,
+        "default_compiler_image_raw_identical": true,
+        "default_compiler_objects_raw_identical": 252,
+        "shortstring_runtime_profiles": [
+          "optional",
+          "normal",
+          "stock FPC 3.2.2"
+        ],
+        "native_three_generation_bootstrap": "/media/kcollins/dev/worktree/addstringopt-repair-20261018-a2pr8y3u/bootstrap-result.json",
+        "compiler_cycles_2_and_3_raw_identical": true,
+        "matching_rtl_objects": 90
+      }
     },
     {
       "case": "WITHDMT_parser_API_drift",
@@ -46476,7 +52732,54 @@
       ],
       "HEAD_guarded_routine_case_only_difference": true,
       "production_fix_applied": false,
-      "scope": "WITHDMT is not enabled in retained build profiles. Compilation stops in pd_virtual before the remaining DMT code; no claim that the mode builds, and no functional repair or retirement is authorized by naming-only goal."
+      "scope": "WITHDMT is not enabled in retained build profiles. Compilation stops in pd_virtual before the remaining DMT code; no claim that the mode builds, and no functional repair or retirement is authorized by naming-only goal.",
+      "latest_comparison": {
+        "batch": "055",
+        "evidence": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/dmt-probe/analysis.json",
+        "identical_errors": 5,
+        "repair_applied": false
+      }
+    },
+    {
+      "batch": "056",
+      "case": "Polish_catalog_duplicate_02061",
+      "status": "analyzed_unchanged_sources_before_naming",
+      "files": [
+        "compiler/msg/errorpl.msg",
+        "compiler/msg/errorpli.msg"
+      ],
+      "evidence": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/catalog-analysis.json",
+      "origin": {
+        "commit": "5a277aacc09a4635dfe8decdc9512afa41443893",
+        "date": "2003-11-03",
+        "author": "michael",
+        "subject": "+ Patches from Wojciech Malinowski",
+        "cause": "Renumbered APPID from02058 to02060 and APPNAME from02059 to02061 while the string-length error remained02061. Both current Polish catalogs retain the conflict."
+      },
+      "production_fix_applied": false
+    },
+    {
+      "batch": "056",
+      "case": "Turkish_catalog_comment_marker",
+      "status": "analyzed_unchanged_source_before_naming",
+      "file": "compiler/msg/errortr.msg",
+      "evidence": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/catalog-analysis.json",
+      "origin_commit": "44af9d87de4732e5557d2397a974f0d49461b3d6",
+      "production_fix_applied": false
+    },
+    {
+      "batch": "056",
+      "case": "msg2inc_bare_T_empty_suffix",
+      "status": "analyzed_before_naming",
+      "file": "compiler/utils/msg2inc.pas",
+      "evidence": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/tex-baseline-analysis/analysis.json",
+      "origin": {
+        "commit": "e5c6e91bd0deb773586b10741d8435409313bf56",
+        "date": "2021-01-24",
+        "cause": "The H+ change converted the previously unchecked empty shortstring suffix access into a nil AnsiString dereference. Exact historical parent source builds and accepts -T; the introducing revision builds and exits216 with the same valid input.",
+        "historical_proof": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/tex-baseline-analysis/history/results.json"
+      },
+      "production_fix_applied": false
     }
   ],
   "authorized_behavioral_changes": [
@@ -46506,7 +52809,7 @@
     {
       "change": "Restore the conditional TNode local required by the optional addstringopt compiler build",
       "authorization": "Owner explicitly approved the verified repair separately from naming.",
-      "status": "pending_validation",
+      "status": "validated",
       "files": [
         "compiler/nadd.pas",
         "tests/compiler-regressions/addstringopt_shortstring.pas",

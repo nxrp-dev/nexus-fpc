@@ -1141,7 +1141,7 @@ implementation
            parameters, because that may depend on the record's size) }
          recst.AddAlignmentPadding;
 
-         insert_struct_hidden_paras(TRecordDef(CurrentStructDef));
+         Insert_Struct_Hidden_Paras(TRecordDef(CurrentStructDef));
          { restore symtable stack }
          SymTableStack.pop(recst);
          if TRecordDef(CurrentStructDef).Is_Packed and Is_Managed_Type(CurrentStructDef) then
@@ -1757,7 +1757,7 @@ implementation
                 if check_proc_directive(true) then
                   parse_proctype_directives(pd);
                 { Add implicit hidden parameters and function result }
-                handle_calling_convention(pd,hcc_default_actions_intf);
+                Handle_Calling_Convention(pd,cHCCDefaultActionsIntf);
               end;
             { restore old state }
             parse_generic:=old_parse_generic;

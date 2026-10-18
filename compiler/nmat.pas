@@ -287,8 +287,8 @@ implementation
              exit;
            end;
 
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -298,7 +298,7 @@ implementation
 
          { allow operator overloading }
          lNode:=self;
-         if isbinaryoverloaded(lNode,[]) then
+         if IsBinaryOverloaded(lNode,[]) then
            begin
               Result:=lNode;
               exit;
@@ -871,8 +871,8 @@ implementation
              exit;
            end;
 
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -882,7 +882,7 @@ implementation
 
          { allow operator overloading }
          lNode:=self;
-         if isbinaryoverloaded(lNode,[]) then
+         if IsBinaryOverloaded(lNode,[]) then
            begin
               Result:=lNode;
               exit;
@@ -1085,7 +1085,7 @@ implementation
              exit;
            end;
 
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -1131,7 +1131,7 @@ implementation
            begin
              { allow operator overloading }
              lNode:=self;
-             if isunaryoverloaded(lNode,[]) then
+             if IsUnaryOverloaded(lNode,[]) then
                begin
                   Result:=lNode;
                   exit;
@@ -1188,7 +1188,7 @@ implementation
             exit;
           end;
 
-        set_varstate(Left,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Left,vs_read,[vsf_must_be_valid]);
         if CodeGenError then
           exit;
 
@@ -1224,7 +1224,7 @@ implementation
           begin
             { allow operator overloading }
             lNode:=self;
-            if isunaryoverloaded(lNode,[]) then
+            if IsUnaryOverloaded(lNode,[]) then
               begin
                 Result:=lNode;
                 exit;
@@ -1324,7 +1324,7 @@ implementation
              exit;
            end;
 
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -1354,7 +1354,7 @@ implementation
            begin
              { allow operator overloading }
              lNode:=self;
-             if isunaryoverloaded(lNode,[]) then
+             if IsUnaryOverloaded(lNode,[]) then
                begin
                   Result:=lNode;
                   exit;

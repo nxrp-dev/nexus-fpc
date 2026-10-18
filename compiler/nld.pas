@@ -373,7 +373,7 @@ implementation
                     (SymTable.SymTableLevel<>CurrentProcInfo.ProcDef.LocalST.SymTableLevel) or
                     (CurrentProcInfo.ProcDef.ProcTypeOption=potype_unitfinalize)
                   ) then
-                 make_not_regable(self,[ra_different_scope]);
+                 Make_Not_Regable(self,[ra_different_scope]);
                ResultDef:=TAbstractVarSym(SymTableEntry).vardef;
                if vo_is_thread_var in TStaticVarSym(SymTableEntry).VarOptions then
                  Result:=Handle_ThreadVar_Access;
@@ -397,7 +397,7 @@ implementation
                    CurrentProcInfo.Add_Captured_Sym(SymTableEntry,ResultDef,FileInfo);
                    { reference in nested procedures, variable needs to be in memory }
                    { and behaves as if its address escapes its parent block         }
-                   make_not_regable(self,[ra_different_scope]);
+                   Make_Not_Regable(self,[ra_different_scope]);
                  end
                { if this is a nested function and it uses the Self parameter then
                  consider this as captured as well (needed for anonymous functions) }
@@ -690,7 +690,7 @@ implementation
         ResultDef:=VoidType;
 
         { must be made unique }
-        set_unique(Left);
+        Set_Unique(Left);
 
         TypeCheckPass(Left);
 
@@ -703,8 +703,8 @@ implementation
         TypeCheckPass(Right);
         AktAssignmentNode:=lOldAssignmentNode;
 
-        set_varstate(Right,vs_read,[vsf_must_be_valid]);
-        set_varstate(Left,vs_written,[]);
+        Set_VarState(Right,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Left,vs_written,[]);
         if CodeGenError then
           exit;
 
@@ -735,7 +735,7 @@ implementation
 
         { test if node can be assigned, properties are allowed }
         if not(nf_internal in Flags) then
-          if not valid_for_assignment(Left,true) then
+          if not Valid_For_Assignment(Left,true) then
             { errors can in situations that cause the compiler to run out of
               memory, such as assigning to an implicit pointer-to-array
               converted node (that array is 2^31 or 2^63 bytes large) }
@@ -816,13 +816,13 @@ implementation
         then
           begin
             if not(nf_internal in Flags) then
-              check_ranges(FileInfo,Right,Left.ResultDef);
+              Check_Ranges(FileInfo,Right,Left.ResultDef);
           end
         else
           begin
             { check if the assignment may cause a range check error }
             if not(nf_internal in Flags) then
-              check_ranges(FileInfo,Right,Left.ResultDef);
+              Check_Ranges(FileInfo,Right,Left.ResultDef);
 
             { beginners might be confused about an error message like
               Incompatible types: got "untyped" expected "LongInt"
@@ -883,7 +883,7 @@ implementation
 
         { check if local proc/func is assigned to procvar }
         if Right.ResultDef.Typ=procvardef then
-          test_local_to_procvar(TProcVarDef(Right.ResultDef),Left.ResultDef);
+          Test_Local_To_ProcVar(TProcVarDef(Right.ResultDef),Left.ResultDef);
       end;
 
 
@@ -1098,8 +1098,8 @@ implementation
         Result:=nil;
         TypeCheckPass(Left);
         TypeCheckPass(Right);
-        set_varstate(Left,vs_read,[vsf_must_be_valid]);
-        set_varstate(Right,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Left,vs_read,[vsf_must_be_valid]);
+        Set_VarState(Right,vs_read,[vsf_must_be_valid]);
         if CodeGenError then
          exit;
         ResultDef:=Left.ResultDef;
@@ -1208,7 +1208,7 @@ implementation
            while Assigned(lElementNode) do
             begin
               TypeCheckPass(lElementNode.Left);
-              set_varstate(lElementNode.Left,vs_read,[vsf_must_be_valid]);
+              Set_VarState(lElementNode.Left,vs_read,[vsf_must_be_valid]);
               if (lDef=nil) then
                 begin
                   lDef:=lElementNode.Left.ResultDef;

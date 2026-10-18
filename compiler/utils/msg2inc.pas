@@ -24,143 +24,143 @@ program msg2inc;
 {$endif}
 
 const
-  version='1.00';
+  cVersion='1.00';
 {$ifdef EOL_ONE_CHAR}
-  eollen=1;
+  cEOLLength=1;
 {$else}
-  eollen=2;
+  cEOLLength=2;
 {$endif}
-  MsgParts = 20;
+  cMsgParts = 20;
 
 type
-  TMode=(M_Char,M_Tex,M_Intel,M_String,M_Renumber);
+  TMode=(ModeChar,ModeTex,ModeIntel,ModeString,ModeRenumber);
 var
   InFile,
   OutFile,
-  OutName    : string;
+  OutName    : String;
   Mode       : TMode;
-  TexHeader  : boolean;
+  TexHeader  : Boolean;
 
-  MsgTxt     : pchar;
-  EnumTxt    : pchar;
-  enumsize,
+  MsgTxt     : PChar;
+  EnumTxt    : PChar;
+  EnumSize,
   MsgSize    : LongInt;
 
-  MsgIdxMax  : array[1..MsgParts] of LongInt;
-  msgs       : array[0..MsgParts,0..999] of boolean;
+  MsgIdxMax  : array[1..cMsgParts] of LongInt;
+  Messages       : array[0..cMsgParts,0..999] of Boolean;
   MsgCodePage: TSystemCodePage;
 
-procedure LoadMsgFile(const fn:string);
+procedure LoadMsgFile(const AFileName:String);
 var
-  f       : text;
-  error,
-  multiline : boolean;
-  code : word;
-  numpart,numidx,
-  line,i,j,num  : LongInt;
-  ptxt,
-  penum   : pchar;
-  number,
-  s,s1    : string;
+  lFile       : Text;
+  lError,
+  lMultiLine : Boolean;
+  lCode : Word;
+  lNumberPart,lNumberIndex,
+  lLine,lIndex,lIndexJ,lNumber  : LongInt;
+  lTextCursor,
+  lEnumCursor   : PChar;
+  lNumberText,
+  lText,lText1    : String;
 
-  procedure err(const msgstr:string);
+  procedure Err(const AMessage:String);
   begin
-    WriteLn('error in line ',line,': ',msgstr);
-    error:=true;
+    WriteLn('error in line ',lLine,': ',AMessage);
+    lError:=true;
   end;
 
 begin
-  WriteLn('Loading messagefile ',fn);
+  WriteLn('Loading messagefile ',AFileName);
   MsgCodePage:=CP_ACP;
 {Read the message file}
-  assign(f,fn);
+  assign(lFile,AFileName);
   {$push} {$I-}
-   reset(f);
+   reset(lFile);
   {$pop}
   if IOResult<>0 then
    begin
-     WriteLn('fatal error: '+fn+' not found');
+     WriteLn('fatal error: '+AFileName+' not found');
      halt(1);
    end;
 { First parse the file and count bytes needed }
   fillchar(MsgIdxMax,sizeof(MsgIdxMax),0);
-  fillchar(msgs,sizeof(msgs),0);
-  error:=false;
-  line:=0;
-  multiline:=false;
+  fillchar(Messages,sizeof(Messages),0);
+  lError:=false;
+  lLine:=0;
+  lMultiLine:=false;
   MsgSize:=0;
-  while not eof(f) do
+  while not eof(lFile) do
    begin
-     readln(f,s);
-     inc(line);
-     if multiline then
+     readln(lFile,lText);
+     inc(lLine);
+     if lMultiLine then
       begin
-        if s=']' then
-         multiline:=false
-        else if (s='') or (s[1] <> '#') then
-         inc(MsgSize,length(s)+1); { +1 for linebreak }
+        if lText=']' then
+         lMultiLine:=false
+        else if (lText='') or (lText[1] <> '#') then
+         inc(MsgSize,length(lText)+1); { +1 for linebreak }
       end
      else
       begin
-        if (s<>'') and not(s[1] in ['#',';','%']) then
+        if (lText<>'') and not(lText[1] in ['#',';','%']) then
          begin
-           i:=pos('=',s);
-           if i>0 then
+           lIndex:=pos('=',lText);
+           if lIndex>0 then
             begin
-              j:=i+1;
-              if not(s[j] in ['0'..'9']) then
-               err('no number found')
+              lIndexJ:=lIndex+1;
+              if not(lText[lIndexJ] in ['0'..'9']) then
+               Err('no number found')
               else
                begin
-                 while (s[j] in ['0'..'9']) do
-                  inc(j);
+                 while (lText[lIndexJ] in ['0'..'9']) do
+                  inc(lIndexJ);
                end;
-              if j-i-1<>5 then
-               err('number length is not 5');
-              number:=Copy(s,i+1,j-i-1);
+              if lIndexJ-lIndex-1<>5 then
+               Err('number length is not 5');
+              lNumberText:=Copy(lText,lIndex+1,lIndexJ-lIndex-1);
               { update the max index }
-              val(number,num,code);
-              numpart:=num div 1000;
-              if numpart=0 then
-               err('number should be > 1000');
-              if code<>0 then
-               err('illegal number: '+s);
-              numidx:=num mod 1000;
+              val(lNumberText,lNumber,lCode);
+              lNumberPart:=lNumber div 1000;
+              if lNumberPart=0 then
+               Err('number should be > 1000');
+              if lCode<>0 then
+               Err('illegal number: '+lText);
+              lNumberIndex:=lNumber mod 1000;
               { duplicate ? }
-              if msgs[numpart,numidx] then
-               err('duplicate number found');
-              msgs[numpart,numidx]:=true;
+              if Messages[lNumberPart,lNumberIndex] then
+               Err('duplicate number found');
+              Messages[lNumberPart,lNumberIndex]:=true;
               { check range }
-              if numpart > MsgParts then
-               err('number is to large')
+              if lNumberPart > cMsgParts then
+               Err('number is to large')
               else
-               if numidx > MsgIdxMax[numpart] then
-                MsgIdxMax[numpart]:=numidx;
-              if s[j+1]='[' then
+               if lNumberIndex > MsgIdxMax[lNumberPart] then
+                MsgIdxMax[lNumberPart]:=lNumberIndex;
+              if lText[lIndexJ+1]='[' then
                begin
-                 inc(MsgSize,j-i);
-                 multiline:=true
+                 inc(MsgSize,lIndexJ-lIndex);
+                 lMultiLine:=true
                end
               else
-               inc(MsgSize,length(s)-i+1);
-              inc(enumsize,j);
+               inc(MsgSize,length(lText)-lIndex+1);
+              inc(EnumSize,lIndexJ);
             end
            else
-            err('no = found');
+            Err('no = found');
          end
-        else if (Length(s)>11) and (Copy(s,1,11)='# CodePage ') then
+        else if (Length(lText)>11) and (Copy(lText,1,11)='# CodePage ') then
          begin
-           val(Copy(s,12,Length(s)-11),MsgCodePage,code);
-           if code<>0 then
-             err('illegal code page number: '+s);
+           val(Copy(lText,12,Length(lText)-11),MsgCodePage,lCode);
+           if lCode<>0 then
+             Err('illegal code page number: '+lText);
          end;
       end;
    end;
-  if multiline then
-   err('still in multiline mode');
-  if error then
+  if lMultiLine then
+   Err('still in multiline mode');
+  if lError then
    begin
-     close(f);
+     close(lFile);
      WriteLn('aborting');
      halt(1);
    end;
@@ -168,77 +168,77 @@ begin
   GetMem(MsgTxt,MsgSize);
 { no linebreak after last entry }
   dec(MsgSize);
-  ptxt:=MsgTxt;
-  GetMem(enumtxt,enumsize);
-  penum:=enumtxt;
+  lTextCursor:=MsgTxt;
+  GetMem(EnumTxt,EnumSize);
+  lEnumCursor:=EnumTxt;
 { now read the buffer in mem }
-  reset(f);
-  while not eof(f) do
+  reset(lFile);
+  while not eof(lFile) do
    begin
-     readln(f,s);
-     if multiline then
+     readln(lFile,lText);
+     if lMultiLine then
       begin
-        if s=']' then
+        if lText=']' then
          begin
-           multiline:=false;
+           lMultiLine:=false;
            { overwrite last eol }
-           dec(ptxt);
-           ptxt^:=#0;
-           inc(ptxt);
+           dec(lTextCursor);
+           lTextCursor^:=#0;
+           inc(lTextCursor);
          end
-        else if (s='') or (s[1] <> '#') then
+        else if (lText='') or (lText[1] <> '#') then
          begin
-           if length(s)>0 then
+           if length(lText)>0 then
              begin
-               move(s[1],ptxt^,length(s));
-               inc(ptxt,length(s));
+               move(lText[1],lTextCursor^,length(lText));
+               inc(lTextCursor,length(lText));
              end;
-           ptxt^:=#10;
-           inc(ptxt);
+           lTextCursor^:=#10;
+           inc(lTextCursor);
          end;
       end
      else
       begin
-        if (s<>'') and not(s[1] in ['#',';','%']) then
+        if (lText<>'') and not(lText[1] in ['#',';','%']) then
          begin
-           i:=pos('=',s);
-           if i>0 then
+           lIndex:=pos('=',lText);
+           if lIndex>0 then
             begin
-              j:=i+1;
-              while (s[j] in ['0'..'9']) do
-               inc(j);
+              lIndexJ:=lIndex+1;
+              while (lText[lIndexJ] in ['0'..'9']) do
+               inc(lIndexJ);
               {enum}
-              move(s[1],penum^,i-1);
-              inc(penum,i-1);
-              penum^:='=';
-              inc(penum);
-              number:=Copy(s,i+1,j-i-1);
-              move(number[1],penum^,length(number));
-              inc(penum,length(number));
-              penum^:=#0;
-              inc(penum);
+              move(lText[1],lEnumCursor^,lIndex-1);
+              inc(lEnumCursor,lIndex-1);
+              lEnumCursor^:='=';
+              inc(lEnumCursor);
+              lNumberText:=Copy(lText,lIndex+1,lIndexJ-lIndex-1);
+              move(lNumberText[1],lEnumCursor^,length(lNumberText));
+              inc(lEnumCursor,length(lNumberText));
+              lEnumCursor^:=#0;
+              inc(lEnumCursor);
               { multiline start then no txt }
-              if s[j+1]='[' then
+              if lText[lIndexJ+1]='[' then
                begin
-                 s1:=Copy(s,i+1,j-i);
-                 move(s1[1],ptxt^,length(s1));
-                 inc(ptxt,length(s1));
-                 multiline:=true;
+                 lText1:=Copy(lText,lIndex+1,lIndexJ-lIndex);
+                 move(lText1[1],lTextCursor^,length(lText1));
+                 inc(lTextCursor,length(lText1));
+                 lMultiLine:=true;
                end
               else
                begin
                  { txt including number }
-                 s1:=Copy(s,i+1,255);
-                 move(s1[1],ptxt^,length(s1));
-                 inc(ptxt,length(s1));
-                 ptxt^:=#0;
-                 inc(ptxt);
+                 lText1:=Copy(lText,lIndex+1,255);
+                 move(lText1[1],lTextCursor^,length(lText1));
+                 inc(lTextCursor,length(lText1));
+                 lTextCursor^:=#0;
+                 inc(lTextCursor);
                end;
             end;
          end;
       end;
    end;
-  close(f);
+  close(lFile);
 end;
 
 
@@ -246,60 +246,60 @@ end;
                                WriteEnumFile
 *****************************************************************************}
 
-procedure WriteEnumFile(const fn:string);
+procedure WriteEnumFile(const AFileName:String);
 var
-  t : text;
-  i : LongInt;
-  p : pchar;
-  start : boolean;
+  lOutputFile : Text;
+  lIndex : LongInt;
+  lCursor : PChar;
+  lStart : Boolean;
 begin
-  WriteLn('Writing enumfile '+fn);
+  WriteLn('Writing enumfile '+AFileName);
 {Open textfile}
-  assign(t,fn);
-  rewrite(t);
-  WriteLn(t,'const');
+  assign(lOutputFile,AFileName);
+  rewrite(lOutputFile);
+  WriteLn(lOutputFile,'const');
 {Parse buffer in msgbuf and create indexs}
-  p:=enumtxt;
-  start:=true;
-  for i:=1 to enumsize do
+  lCursor:=EnumTxt;
+  lStart:=true;
+  for lIndex:=1 to EnumSize do
    begin
-     if start then
+     if lStart then
       begin
-        write(t,'  ');
-        start:=false;
+        write(lOutputFile,'  ');
+        lStart:=false;
       end;
-     if p^=#0 then
+     if lCursor^=#0 then
       begin
-        WriteLn(t,';');
-        start:=true;
+        WriteLn(lOutputFile,';');
+        lStart:=true;
       end
      else
       begin
-        write(t,p^);
+        write(lOutputFile,lCursor^);
       end;
-     inc(p);
+     inc(lCursor);
    end;
-  WriteLn(t,'');
+  WriteLn(lOutputFile,'');
   { msgtxt size }
-  WriteLn(t,'  MsgTxtSize = ',MsgSize,';');
-  WriteLn(t,'');
+  WriteLn(lOutputFile,'  MsgTxtSize = ',MsgSize,';');
+  WriteLn(lOutputFile,'');
   { max msg idx table }
-  WriteLn(t,'  MsgIdxMax : array[1..20] of LongInt=(');
-  write(t,'    ');
-  for i:=1 to 20 do
+  WriteLn(lOutputFile,'  MsgIdxMax : array[1..20] of LongInt=(');
+  write(lOutputFile,'    ');
+  for lIndex:=1 to 20 do
    begin
-     write(t,MsgIdxMax[i]+1);
-     if i<20 then
-      write(t,',');
-     if i=10 then
+     write(lOutputFile,MsgIdxMax[lIndex]+1);
+     if lIndex<20 then
+      write(lOutputFile,',');
+     if lIndex=10 then
       begin
-        WriteLn(t,'');
-        write(t,'    ');
+        WriteLn(lOutputFile,'');
+        write(lOutputFile,'    ');
       end;
    end;
-  WriteLn(t,'');
-  WriteLn(t,'  );');
-  close(t);
+  WriteLn(lOutputFile,'');
+  WriteLn(lOutputFile,'  );');
+  close(lOutputFile);
 end;
 
 
@@ -307,116 +307,116 @@ end;
                                WriteStringFile
 *****************************************************************************}
 
-procedure WriteStringFile(const fn,constname:string);
+procedure WriteStringFile(const AFileName,AConstName:String);
 const
-  maxslen=240; { to overcome aligning problems }
+  cMaxStringLength=240; { to overcome aligning problems }
 
-  function l0(l:LongInt):string;
+  function PadNumber(AValue:LongInt):String;
   var
-    s : string[16];
+    lText : String[16];
   begin
-    str(l,s);
-    while (length(s)<5) do
-     s:='0'+s;
-    l0:=s;
+    str(AValue,lText);
+    while (length(lText)<5) do
+     lText:='0'+lText;
+    PadNumber:=lText;
   end;
 
 var
-  t      : text;
-  f      : file;
-  slen,
-  len,i  : LongInt;
-  p      : pchar;
-  s      : string;
-  start,
-  quote  : boolean;
+  lOutputFile      : Text;
+  lFile      : file;
+  lStringLength,
+  lLineLength,lIndex  : LongInt;
+  lCursor      : PChar;
+  lText      : String;
+  lStart,
+  lQuote  : Boolean;
 begin
-  WriteLn('Writing stringfile ',fn);
+  WriteLn('Writing stringfile ',AFileName);
 {Open textfile}
-  assign(t,fn);
-  rewrite(t);
-  WriteLn(t,'const '+constname+'_codepage=',MsgCodePage:5,';');
-  WriteLn(t,'{$ifdef Delphi}');
-  WriteLn(t,'const '+constname+' : array[0..000000] of string[',maxslen,']=(');
-  WriteLn(t,'{$else Delphi}');
-  WriteLn(t,'const '+constname+' : array[0..000000,1..',maxslen,'] of char=(');
-  write(t,'{$endif Delphi}');
+  assign(lOutputFile,AFileName);
+  rewrite(lOutputFile);
+  WriteLn(lOutputFile,'const '+AConstName+'_codepage=',MsgCodePage:5,';');
+  WriteLn(lOutputFile,'{$ifdef Delphi}');
+  WriteLn(lOutputFile,'const '+AConstName+' : array[0..000000] of string[',cMaxStringLength,']=(');
+  WriteLn(lOutputFile,'{$else Delphi}');
+  WriteLn(lOutputFile,'const '+AConstName+' : array[0..000000,1..',cMaxStringLength,'] of char=(');
+  write(lOutputFile,'{$endif Delphi}');
 {Parse buffer in msgbuf and create indexs}
-  p:=MsgTxt;
-  slen:=0;
-  len:=0;
-  quote:=false;
-  start:=true;
-  for i:=1 to MsgSize do
+  lCursor:=MsgTxt;
+  lStringLength:=0;
+  lLineLength:=0;
+  lQuote:=false;
+  lStart:=true;
+  for lIndex:=1 to MsgSize do
    begin
-     if slen>=maxslen then
+     if lStringLength>=cMaxStringLength then
       begin
-        if quote then
+        if lQuote then
          begin
-           write(t,'''');
-           quote:=false;
+           write(lOutputFile,'''');
+           lQuote:=false;
          end;
-        write(t,',');
-        slen:=0;
-        inc(len);
+        write(lOutputFile,',');
+        lStringLength:=0;
+        inc(lLineLength);
       end;
-     if (len>70) or (start) then
+     if (lLineLength>70) or (lStart) then
       begin
-        if quote then
+        if lQuote then
          begin
-           write(t,'''');
-           quote:=false;
+           write(lOutputFile,'''');
+           lQuote:=false;
          end;
-        if slen>0 then
-          WriteLn(t,'+')
+        if lStringLength>0 then
+          WriteLn(lOutputFile,'+')
         else
-          WriteLn(t);
-        len:=0;
-        start:=false;
+          WriteLn(lOutputFile);
+        lLineLength:=0;
+        lStart:=false;
       end;
-     if (len=0) then
-      write(t,'  ');
-     if (ord(p^)>=32) and (p^<>#39) then
+     if (lLineLength=0) then
+      write(lOutputFile,'  ');
+     if (ord(lCursor^)>=32) and (lCursor^<>#39) then
       begin
-        if not quote then
+        if not lQuote then
          begin
-           write(t,'''');
-           quote:=true;
-           inc(len);
+           write(lOutputFile,'''');
+           lQuote:=true;
+           inc(lLineLength);
          end;
-        write(t,p^);
-        inc(len);
+        write(lOutputFile,lCursor^);
+        inc(lLineLength);
       end
      else
       begin
-        if quote then
+        if lQuote then
          begin
-           write(t,'''');
-           inc(len);
-           quote:=false;
+           write(lOutputFile,'''');
+           inc(lLineLength);
+           lQuote:=false;
          end;
-        write(t,'#'+chr(ord(p^) div 100+48)+chr((ord(p^) mod 100) div 10+48)+chr(ord(p^) mod 10+48));
-        inc(len,3);
+        write(lOutputFile,'#'+chr(ord(lCursor^) div 100+48)+chr((ord(lCursor^) mod 100) div 10+48)+chr(ord(lCursor^) mod 10+48));
+        inc(lLineLength,3);
       end;
-     if p^ in [#0,#10] then
-      start:=true;
-     inc(slen);
-     inc(p);
+     if lCursor^ in [#0,#10] then
+      lStart:=true;
+     inc(lStringLength);
+     inc(lCursor);
    end;
-  if quote then
-   write(t,'''');
-  WriteLn(t,'');
-  WriteLn(t,');');
-  close(t);
+  if lQuote then
+   write(lOutputFile,'''');
+  WriteLn(lOutputFile,'');
+  WriteLn(lOutputFile,');');
+  close(lOutputFile);
 {update arraysize}
-  s:=l0((MsgSize-1) div maxslen); { we start with 0 }
-  assign(f,fn);
-  reset(f,1);
-  seek(f,22+34+2*eollen+2*length(constname));
-  blockwrite(f,s[1],5);
-  seek(f,22+90+4*eollen+3*length(constname));
-  blockwrite(f,s[1],5);
-  close(f);
+  lText:=PadNumber((MsgSize-1) div cMaxStringLength); { we start with 0 }
+  assign(lFile,AFileName);
+  reset(lFile,1);
+  seek(lFile,22+34+2*cEOLLength+2*length(AConstName));
+  blockwrite(lFile,lText[1],5);
+  seek(lFile,22+90+4*cEOLLength+3*length(AConstName));
+  blockwrite(lFile,lText[1],5);
+  close(lFile);
 end;
 
 
@@ -424,70 +424,70 @@ end;
                                WriteCharFile
 *****************************************************************************}
 
-procedure WriteCharFile(const fn,constname:string);
+procedure WriteCharFile(const AFileName,AConstName:String);
 
-  function l0(l:LongInt):string;
+  function PadNumber(AValue:LongInt):String;
   var
-    s : string[16];
+    lText : String[16];
   begin
-    str(l,s);
-    while (length(s)<5) do
-     s:='0'+s;
-    l0:=s;
+    str(AValue,lText);
+    while (length(lText)<5) do
+     lText:='0'+lText;
+    PadNumber:=lText;
   end;
 
-  function createconst(b:byte):string;
+  function CreateConst(AValue:Byte):String;
   begin
-    if (b in [32..127]) and (b<>39) then
-     createconst:=''''+chr(b)+''''
+    if (AValue in [32..127]) and (AValue<>39) then
+     CreateConst:=''''+chr(AValue)+''''
     else
-     createconst:='#'+chr(b div 100+48)+chr((b mod 100) div 10+48)+chr(b mod 10+48)
+     CreateConst:='#'+chr(AValue div 100+48)+chr((AValue mod 100) div 10+48)+chr(AValue mod 10+48)
   end;
 
 var
-  t       : text;
-  f       : file;
-  cidx,i  : LongInt;
-  p       : pchar;
-  s       : string;
+  lOutputFile       : Text;
+  lFile       : file;
+  lColumnIndex,lIndex  : LongInt;
+  lCursor       : PChar;
+  lText       : String;
 begin
-  WriteLn('Writing charfile '+fn);
+  WriteLn('Writing charfile '+AFileName);
 {Open textfile}
-  assign(t,fn);
-  rewrite(t);
-  WriteLn(t,'const ',constname,' : array[1..00000] of char=(');
+  assign(lOutputFile,AFileName);
+  rewrite(lOutputFile);
+  WriteLn(lOutputFile,'const ',AConstName,' : array[1..00000] of char=(');
 {Parse buffer in msgbuf and create indexs}
-  p:=MsgTxt;
-  cidx:=0;
-  for i:=1to MsgSize do
+  lCursor:=MsgTxt;
+  lColumnIndex:=0;
+  for lIndex:=1to MsgSize do
    begin
-     if cidx=15 then
+     if lColumnIndex=15 then
       begin
-        if cidx>0 then
-         WriteLn(t,',')
+        if lColumnIndex>0 then
+         WriteLn(lOutputFile,',')
         else
-         WriteLn(t,'');
-        write(t,'  ');
-        cidx:=0;
+         WriteLn(lOutputFile,'');
+        write(lOutputFile,'  ');
+        lColumnIndex:=0;
       end
      else
-      if cidx>0 then
-        write(t,',')
+      if lColumnIndex>0 then
+        write(lOutputFile,',')
       else
-        write(t,'  ');
-     write(t,createconst(ord(p^)));
-     inc(cidx);
-     inc(p);
+        write(lOutputFile,'  ');
+     write(lOutputFile,CreateConst(ord(lCursor^)));
+     inc(lColumnIndex);
+     inc(lCursor);
    end;
-  WriteLn(t,');');
-  close(t);
+  WriteLn(lOutputFile,');');
+  close(lOutputFile);
 {update arraysize}
-  s:=l0(MsgSize);
-  assign(f,fn);
-  reset(f,1);
-  seek(f,18+length(constname));
-  blockwrite(f,s[1],5);
-  close(f);
+  lText:=PadNumber(MsgSize);
+  assign(lFile,AFileName);
+  reset(lFile,1);
+  seek(lFile,18+length(AConstName));
+  blockwrite(lFile,lText[1],5);
+  close(lFile);
 end;
 
 
@@ -495,72 +495,72 @@ end;
                                WriteIntelFile
 *****************************************************************************}
 
-procedure WriteIntelFile(const fn,constname:string);
+procedure WriteIntelFile(const AFileName,AConstName:String);
 var
-  t      : text;
-  len,i  : LongInt;
-  p      : pchar;
-  start,
-  quote  : boolean;
+  lOutputFile      : Text;
+  lLineLength,lIndex  : LongInt;
+  lCursor      : PChar;
+  lStart,
+  lQuote  : Boolean;
 begin
-  WriteLn('Writing Intelfile ',fn);
+  WriteLn('Writing Intelfile ',AFileName);
 {Open textfile}
-  assign(t,fn);
-  rewrite(t);
-  WriteLn(t,'procedure '+constname+';assembler;');
-  WriteLn(t,'asm');
+  assign(lOutputFile,AFileName);
+  rewrite(lOutputFile);
+  WriteLn(lOutputFile,'procedure '+AConstName+';assembler;');
+  WriteLn(lOutputFile,'asm');
 {Parse buffer in msgbuf and create indexs}
-  p:=MsgTxt;
-  len:=0;
-  start:=true;
-  quote:=false;
-  for i:=1to MsgSize do
+  lCursor:=MsgTxt;
+  lLineLength:=0;
+  lStart:=true;
+  lQuote:=false;
+  for lIndex:=1to MsgSize do
    begin
-     if len>70 then
+     if lLineLength>70 then
       begin
-        if quote then
+        if lQuote then
          begin
-           write(t,'''');
-           quote:=false;
+           write(lOutputFile,'''');
+           lQuote:=false;
          end;
-        WriteLn(t,'');
-        start:=true;
+        WriteLn(lOutputFile,'');
+        lStart:=true;
       end;
-     if start then
+     if lStart then
       begin
-        write(t,'  db ''');
-        len:=0;
-        quote:=true;
+        write(lOutputFile,'  db ''');
+        lLineLength:=0;
+        lQuote:=true;
       end;
-     if (ord(p^)>=32) and (p^<>#39) then
+     if (ord(lCursor^)>=32) and (lCursor^<>#39) then
       begin
-        if not quote then
+        if not lQuote then
          begin
-           write(t,',''');
-           quote:=true;
-           inc(len);
+           write(lOutputFile,',''');
+           lQuote:=true;
+           inc(lLineLength);
          end;
-        write(t,p^);
-        inc(len);
+        write(lOutputFile,lCursor^);
+        inc(lLineLength);
       end
      else
       begin
-        if quote then
+        if lQuote then
          begin
-           write(t,'''');
-           inc(len);
-           quote:=false;
+           write(lOutputFile,'''');
+           inc(lLineLength);
+           lQuote:=false;
          end;
-        write(t,','+chr(ord(p^) div 100+48)+chr((ord(p^) mod 100) div 10+48)+chr(ord(p^) mod 10+48));
-        inc(len,4);
+        write(lOutputFile,','+chr(ord(lCursor^) div 100+48)+chr((ord(lCursor^) mod 100) div 10+48)+chr(ord(lCursor^) mod 10+48));
+        inc(lLineLength,4);
       end;
-     inc(p);
+     inc(lCursor);
    end;
-  if quote then
-   write(t,'''');
-  WriteLn(t,'');
-  WriteLn(t,'end;');
-  close(t);
+  if lQuote then
+   write(lOutputFile,'''');
+  WriteLn(lOutputFile,'');
+  WriteLn(lOutputFile,'end;');
+  close(lOutputFile);
 end;
 
 
@@ -568,45 +568,45 @@ end;
                                 RenumberFile
 *****************************************************************************}
 
-procedure RenumberFile(const fn,name:string);
+procedure RenumberFile(const AFileName,AName:String);
 var
-  f,t  : text;
-  i    : LongInt;
-  s,s1 : string;
+  lFile,lOutputFile  : Text;
+  lIndex    : LongInt;
+  lText,lText1 : String;
 begin
-  WriteLn('Renumbering ',fn);
+  WriteLn('Renumbering ',AFileName);
 {Read the message file}
-  assign(f,fn);
+  assign(lFile,AFileName);
   {$push} {$I-}
-   reset(f);
+   reset(lFile);
   {$pop}
   if IOResult<>0 then
    begin
-     WriteLn('*** message file '+fn+' not found ***');
+     WriteLn('*** message file '+AFileName+' not found ***');
      exit;
    end;
-  assign(t,'msg2inc.$$$');
-  rewrite(t);
-  i:=0;
-  while not eof(f) do
+  assign(lOutputFile,'msg2inc.$$$');
+  rewrite(lOutputFile);
+  lIndex:=0;
+  while not eof(lFile) do
    begin
-     readln(f,s);
-     if (copy(s,1,length(Name))=Name) and (s[3] in ['0'..'9']) then
+     readln(lFile,lText);
+     if (copy(lText,1,length(AName))=AName) and (lText[3] in ['0'..'9']) then
       begin
-        inc(i);
-        str(i,s1);
-        while length(s1)<3 do
-         s1:='0'+s1;
-        WriteLn(t,Name+s1+Copy(s,6,255));
+        inc(lIndex);
+        str(lIndex,lText1);
+        while length(lText1)<3 do
+         lText1:='0'+lText1;
+        WriteLn(lOutputFile,AName+lText1+Copy(lText,6,255));
       end
      else
-      WriteLn(t,s);
+      WriteLn(lOutputFile,lText);
    end;
-  close(t);
-  close(f);
+  close(lOutputFile);
+  close(lFile);
 { rename new file }
-  erase(f);
-  rename(t,fn);
+  erase(lFile);
+  rename(lOutputFile,AFileName);
 end;
 
 
@@ -614,133 +614,133 @@ end;
                                 WriteTexFile
 *****************************************************************************}
 
-Function EscapeString (Const S : String) : String;
+Function EscapeString (Const AText : String) : String;
 Var
-  I  : LongInt;
-  hs : string;
+  lIndex  : LongInt;
+  lEscapedText : String;
 begin
-  hs:='';
-  i:=1;
-  while i<=length(s) do
+  lEscapedText:='';
+  lIndex:=1;
+  while lIndex<=length(AText) do
     begin
-      case S[i] of
+      case AText[lIndex] of
         '$' :
-          if (s[i+1] in ['0'..'9']) then
+          if (AText[lIndex+1] in ['0'..'9']) then
             begin
-              hs:=hs+'\textlangle arg. '+s[i+1]+'\textrangle{}';
-              inc(i);
+              lEscapedText:=lEscapedText+'\textlangle arg. '+AText[lIndex+1]+'\textrangle{}';
+              inc(lIndex);
             end
           else
-            hs:=hs+'\$';
+            lEscapedText:=lEscapedText+'\$';
         '&','{','}','#','_','%':            // Escape these characters
-          hs := hs + '\' + S[i];
+          lEscapedText := lEscapedText + '\' + AText[lIndex];
         '~','^':
-          hs := hs + '\'+S[i]+' ';
+          lEscapedText := lEscapedText + '\'+AText[lIndex]+' ';
         '\':
-          hs:=hs+'$\backslash$'
+          lEscapedText:=lEscapedText+'$\backslash$'
       else
-        hs := hs + S[i];
+        lEscapedText := lEscapedText + AText[lIndex];
       end;
-      inc(i);
+      inc(lIndex);
     end;
-  EscapeString:=hs;
+  EscapeString:=lEscapedText;
 end;
 
-procedure WriteTexFile(const infn,outfn:string);
+procedure WriteTexFile(const AInputFileName,AOutputFileName:String);
 var
-  t,f   : text;
-  line,
-  i,k   : LongInt;
-  number,
-  s,s1  : string;
-  texoutput : boolean;
+  lOutputFile,lFile   : Text;
+  lLine,
+  lIndex,lIndexK   : LongInt;
+  lNumberText,
+  lText,lText1  : String;
+  lTexOutput : Boolean;
 begin
-  WriteLn('Loading messagefile ',infn);
-  WriteLn('Writing TeXfile ',outfn);
+  WriteLn('Loading messagefile ',AInputFileName);
+  WriteLn('Writing TeXfile ',AOutputFileName);
 { Open infile }
-  assign(f,infn);
+  assign(lFile,AInputFileName);
   {$push} {$I-}
-   reset(f);
+   reset(lFile);
   {$pop}
   if IOResult<>0 then
    begin
-     WriteLn('*** message file '+infn+' not found ***');
+     WriteLn('*** message file '+AInputFileName+' not found ***');
      exit;
    end;
 { Open outfile }
-  assign(t,outfn);
-  rewrite(t);
-  If texheader then
+  assign(lOutputFile,AOutputFileName);
+  rewrite(lOutputFile);
+  If TexHeader then
     begin
-    WriteLn (t,'\documentclass{article}');
-    WriteLn (t,'\usepackage{html}');
-    WriteLn (t,'\usepackage{fpc}');
-    WriteLn (t,'\begin{document}');
+    WriteLn (lOutputFile,'\documentclass{article}');
+    WriteLn (lOutputFile,'\usepackage{html}');
+    WriteLn (lOutputFile,'\usepackage{fpc}');
+    WriteLn (lOutputFile,'\begin{document}');
     end;
 { Parse }
-  line:=0;
-  TexOutput:=False;
-  while not eof(f) do
+  lLine:=0;
+  lTexOutput:=False;
+  while not eof(lFile) do
    begin
-     readln(f,s);
-     inc(line);
-     If Pos ('# BeginOfTeX',S)=1 then
-       TexOutPut:=True
-     else if pos ('# EndOfTeX',S)=1 then
-       TexOutPut:=False;
-     if (s<>'') and not(s[1] in ['#',';']) and TeXOutPut then
+     readln(lFile,lText);
+     inc(lLine);
+     If Pos ('# BeginOfTeX',lText)=1 then
+       lTexOutput:=True
+     else if pos ('# EndOfTeX',lText)=1 then
+       lTexOutput:=False;
+     if (lText<>'') and not(lText[1] in ['#',';']) and lTexOutput then
       begin
-        if s[1]='%' then
+        if lText[1]='%' then
          begin
-           Delete(s,1,1);
-           WriteLn(t,s);
+           Delete(lText,1,1);
+           WriteLn(lOutputFile,lText);
          end
         else
          begin
-           i:=pos('=',s);
-           if i>0 then
+           lIndex:=pos('=',lText);
+           if lIndex>0 then
             begin
-              inc(i);
-              number:='';
-              while s[i] in ['0'..'9'] do
+              inc(lIndex);
+              lNumberText:='';
+              while lText[lIndex] in ['0'..'9'] do
                begin
-                 number:=number+s[i];
-                 inc(i);
+                 lNumberText:=lNumberText+lText[lIndex];
+                 inc(lIndex);
                end;
               { strip leading zeros }
-              while number[1]='0' do
-                Delete(number,1,1);
-              inc(i);
-              s1:='';
-              k:=0;
-              while (k<5) and (s[i+k]<>'_') do
+              while lNumberText[1]='0' do
+                Delete(lNumberText,1,1);
+              inc(lIndex);
+              lText1:='';
+              lIndexK:=0;
+              while (lIndexK<5) and (lText[lIndex+lIndexK]<>'_') do
                begin
-                 case s[i+k] of
-                  'W' : s1:='Warning '+number+': ';
-                  'E' : s1:='Error '+number+': ';
-                  'F' : s1:='Fatal error '+number+': ';
-                  'N' : s1:='Note '+number+': ';
-                  'I' : s1:='Info '+number+': ';
-                  'H' : s1:='Hint '+number+': ';
+                 case lText[lIndex+lIndexK] of
+                  'W' : lText1:='Warning '+lNumberText+': ';
+                  'E' : lText1:='Error '+lNumberText+': ';
+                  'F' : lText1:='Fatal error '+lNumberText+': ';
+                  'N' : lText1:='Note '+lNumberText+': ';
+                  'I' : lText1:='Info '+lNumberText+': ';
+                  'H' : lText1:='Hint '+lNumberText+': ';
                  end;
-                 inc(k);
+                 inc(lIndexK);
                end;
-              if s[i+k]='_' then
-               inc(i,k+1);
-              if number<>'' then
-                WriteLn(t,'\index[msgnr]{',number,'}');
-              WriteLn(t,'\index[msgtxt]{',escapestring(Copy(s,i,255)),'}');
-              WriteLn(t,'\item ['+s1+escapestring(Copy(s,i,255))+'] \hfill \\');
+              if lText[lIndex+lIndexK]='_' then
+               inc(lIndex,lIndexK+1);
+              if lNumberText<>'' then
+                WriteLn(lOutputFile,'\index[msgnr]{',lNumberText,'}');
+              WriteLn(lOutputFile,'\index[msgtxt]{',EscapeString(Copy(lText,lIndex,255)),'}');
+              WriteLn(lOutputFile,'\item ['+lText1+EscapeString(Copy(lText,lIndex,255))+'] \hfill \\');
             end
            else
-            WriteLn('error in line: ',line,' skipping');
+            WriteLn('error in line: ',lLine,' skipping');
          end;
       end;
    end;
   If TexHeader then
-    WriteLn (t,'\end{document}');
-  close(t);
-  close(f);
+    WriteLn (lOutputFile,'\end{document}');
+  close(lOutputFile);
+  close(lFile);
 end;
 
 
@@ -748,13 +748,13 @@ end;
                                 Main Program
 *****************************************************************************}
 
-procedure getpara;
+procedure GetPara;
 var
-  ch      : char;
-  para    : string;
-  files,i : word;
+  lChar      : Char;
+  lArgument    : String;
+  lFileCount,lIndex : Word;
 
-  procedure helpscreen;
+  procedure HelpScreen;
   begin
     WriteLn('usage : msg2inc [Options] <msgfile> <incfile> <constname>');
     WriteLn('<Options> can be : -T     Create .doc TeX file');
@@ -769,81 +769,81 @@ var
   end;
 
 begin
-  Files:=0;
-  for i:=1 to paramcount do
+  lFileCount:=0;
+  for lIndex:=1 to paramcount do
    begin
-     para:=ParamStr(i);
-     if (para[1]='-') then
+     lArgument:=ParamStr(lIndex);
+     if (lArgument[1]='-') then
       begin
-        ch:=upcase(para[2]);
-        delete(para,1,2);
-        case ch of
+        lChar:=upcase(lArgument[2]);
+        delete(lArgument,1,2);
+        case lChar of
          'T' : begin
-                 case upcase(para[1]) of
+                 case upcase(lArgument[1]) of
                   'S' : TexHeader:=True;
                  end;
-                 Mode:=M_Tex;
+                 Mode:=ModeTex;
                end;
-         'I' : Mode:=M_Intel;
-         'S' : Mode:=M_String;
-         'C' : Mode:=M_Char;
-         'R' : Mode:=M_Renumber;
+         'I' : Mode:=ModeIntel;
+         'S' : Mode:=ModeString;
+         'C' : Mode:=ModeChar;
+         'R' : Mode:=ModeRenumber;
          'V' : begin
-                 WriteLn('Msg2Inc ',version,' for Free Pascal (C) 1998-2002 Peter Vreman');
+                 WriteLn('Msg2Inc ',cVersion,' for Free Pascal (C) 1998-2002 Peter Vreman');
                  WriteLn;
                  Halt;
                end;
-     '?','H' : helpscreen;
+     '?','H' : HelpScreen;
         end;
      end
     else
      begin
-       inc(Files);
-       if Files>3 then
+       inc(lFileCount);
+       if lFileCount>3 then
         HelpScreen;
-       case Files of
-        1 : InFile:=Para;
-        2 : OutFile:=Para;
-        3 : OutName:=Para;
+       case lFileCount of
+        1 : InFile:=lArgument;
+        2 : OutFile:=lArgument;
+        3 : OutName:=lArgument;
        end;
      end;
    end;
   case Mode of
-   M_Renumber,
-        M_Tex : if Files<2 then
-                 Helpscreen;
+   ModeRenumber,
+        ModeTex : if lFileCount<2 then
+                 HelpScreen;
   else
-   if Files<3 then
+   if lFileCount<3 then
     HelpScreen;
   end;
 end;
 
 
 begin
-  Mode:=M_String;
+  Mode:=ModeString;
   OutFile:='';
   InFile:='';
   OutName:='';
   GetPara;
   case Mode of
-   M_Renumber : begin
-                  Renumberfile(Infile,OutFile);
+   ModeRenumber : begin
+                  RenumberFile(InFile,OutFile);
                 end;
-        M_Tex : begin
-                  WriteTexFile(InFile,Outfile);
+        ModeTex : begin
+                  WriteTexFile(InFile,OutFile);
                 end;
-      M_Intel : begin
-                  Loadmsgfile(InFile);
+      ModeIntel : begin
+                  LoadMsgFile(InFile);
                   WriteEnumFile(OutFile+'idx.inc');
                   WriteIntelFile(OutFile+'txt.inc',OutName+'txt');
                 end;
-     M_String : begin
-                  Loadmsgfile(InFile);
+     ModeString : begin
+                  LoadMsgFile(InFile);
                   WriteEnumFile(OutFile+'idx.inc');
                   WriteStringFile(OutFile+'txt.inc',OutName+'txt');
                 end;
-       M_Char : begin
-                  Loadmsgfile(InFile);
+       ModeChar : begin
+                  LoadMsgFile(InFile);
                   WriteEnumFile(OutFile+'idx.inc');
                   WriteCharFile(OutFile+'txt.inc',OutName+'txt');
                 end;

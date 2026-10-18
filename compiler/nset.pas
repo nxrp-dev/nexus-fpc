@@ -180,7 +180,7 @@ implementation
          TypeCheckPass(Left);
          if Assigned(Right) then
           TypeCheckPass(Right);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
@@ -247,7 +247,7 @@ implementation
 
          ResultDef:=PasBool1Type;
          TypeCheckPass(Right);
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
@@ -260,7 +260,7 @@ implementation
           end;
 
          TypeCheckPass(Left);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
@@ -275,7 +275,7 @@ implementation
            end;
 
          lNode:=self;
-         if isbinaryoverloaded(lNode,[]) then
+         if IsBinaryOverloaded(lNode,[]) then
            begin
              Result:=lNode;
              exit;
@@ -428,8 +428,8 @@ implementation
          Result:=nil;
          TypeCheckPass(Left);
          TypeCheckPass(Right);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
-         set_varstate(Right,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
          { both types must be compatible }
@@ -817,14 +817,14 @@ implementation
 
          { evaluates the case expression }
          FirstPass(Left);
-         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         Set_VarState(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
          { Load caseexpr into temp var if complex. }
          { No need to do this for ordinal, because }
          { in that case caseexpr is generated once }
-         if (FLabels^.LabelType = ltConstString) and (not valid_for_addr(Left, false)) and
+         if (FLabels^.LabelType = ltConstString) and (not Valid_For_Addr(Left, false)) and
            (Blocks.Count > 0) then
            begin
              lInitBlock := InternalStatements(lStatement);

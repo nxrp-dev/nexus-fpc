@@ -835,7 +835,7 @@ implementation
                   AddNewVMTEntry(TProcDef(lDef),lOverridesClassHelper);
               end;
           end;
-        insert_struct_hidden_paras(FClass);
+        Insert_Struct_Hidden_Paras(FClass);
         BuildInterfaceMappings;
         if Assigned(FClass.ImplementedInterfaces) and
            not(Is_ObjC_Class_Or_Protocol(FClass)) then

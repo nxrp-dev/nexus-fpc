@@ -566,7 +566,7 @@ implementation
                     { Delphi does not recursively check whether
                       an object contains unsupported types }
                     if not (m_delphi in CurrentSettings.ModeSwitches) and
-                        not is_valid_for_default(lDef) then
+                        not Is_Valid_For_Default(lDef) then
                       Message(type_e_type_not_allowed_for_default);
                     Result:=GetDefaultVarSym(lDef);
                   end
@@ -579,7 +579,7 @@ implementation
               { Delphi does not recursively check whether a record
                 contains unsupported types }
               if (lDef.typ=recorddef) and not (m_delphi in CurrentSettings.ModeSwitches) and
-                  not is_valid_for_default(lDef) then
+                  not Is_Valid_For_Default(lDef) then
                 Message(type_e_type_not_allowed_for_default);
               Result:=GetDefaultVarSym(lDef);
             end;
@@ -1098,7 +1098,7 @@ implementation
                   { to the read function, manually check whether the parameter   }
                   { can be used as var-parameter (e.g., whether it isn't a       }
                   { property)                                                    }
-                  valid_for_var(lPara.Left,true);
+                  Valid_For_Var(lPara.Left,true);
 
                   { create the parameter list: the temp ... }
                   lTempNode := CTempCreateNode.Create(lReadFuncType,lReadFuncType.Size,tt_persistent,false);
@@ -1440,7 +1440,7 @@ implementation
             { the file para is a var parameter, but it is properly initialized,
               so it should be actually an out parameter }
             if not(lDoRead) then
-              set_varstate(lFilePara.Left,vs_written,[]);
+              Set_VarState(lFilePara.Left,vs_written,[]);
             { remove the source/destination string parameter from the }
             { parameter chain                                         }
             Left:=lFilePara.Right;
@@ -1493,7 +1493,7 @@ implementation
             Left := lFilePara.Right;
             lFilePara.Right := nil;
             { the file para is a var parameter, but it must be valid already }
-            set_varstate(lFilePara.Left,vs_readwritten,[vsf_must_be_valid]);
+            Set_VarState(lFilePara.Left,vs_readwritten,[vsf_must_be_valid]);
             { check if we should make a temp to store the result of a complex }
             { expression (better heuristics, anyone?) (JM)                    }
             if (lFilePara.Left.NodeType <> loadn) then
@@ -1853,7 +1853,7 @@ implementation
            lPara:=TCallParaNode(lParas);
            while Assigned(lPara.Right) do
             begin
-              set_varstate(lPara.Left,vs_read,[vsf_must_be_valid]);
+              Set_VarState(lPara.Left,vs_read,[vsf_must_be_valid]);
               InsertTypeConv(lPara.Left,SIntType);
               inc(lDimensions);
               lPara:=TCallParaNode(lPara.Right);
@@ -1868,8 +1868,8 @@ implementation
          end;
         { last param must be var }
         lDestPara:=lPara.Left;
-        valid_for_var(lDestPara,true);
-        set_varstate(lDestPara,vs_written,[vsf_must_be_valid,vsf_use_hints,vsf_use_hint_for_string_result]);
+        Valid_For_Var(lDestPara,true);
+        Set_VarState(lDestPara,vs_written,[vsf_must_be_valid,vsf_use_hints,vsf_use_hint_for_string_result]);
         { first param must be a string or dynamic array ...}
         lIsArray:=Is_Dynamic_Array(lDestPara.ResultDef);
         if not((lDestPara.ResultDef.typ=stringdef) or
@@ -1963,10 +1963,10 @@ implementation
         while Assigned(lPara.Right) do
          begin
            inc(lCounter);
-           set_varstate(lPara.Left,vs_read,[vsf_must_be_valid]);
+           Set_VarState(lPara.Left,vs_read,[vsf_must_be_valid]);
            lPara:=TCallParaNode(lPara.Right);
          end;
-        set_varstate(lPara.Left,vs_read,[vsf_must_be_valid]);
+        Set_VarState(lPara.Left,vs_read,[vsf_must_be_valid]);
         lParaDef:=lPara.Left.ResultDef;
         { the string variants all require 2 or 3 args, only the array one allows less }
         lMinArgs:=2;
@@ -2051,7 +2051,7 @@ implementation
            case ADef.typ of
              orddef:
                begin
-                  set_varstate(Left,vs_read,[]);
+                  Set_VarState(Left,vs_read,[]);
                   if InlineNumber=in_low_x then
                     lValue:=TOrdDef(ADef).low
                   else
@@ -2062,7 +2062,7 @@ implementation
                end;
              enumdef:
                begin
-                  set_varstate(Left,vs_read,[]);
+                  Set_VarState(Left,vs_read,[]);
                   if InlineNumber=in_high_x then
                     lValue:=TEnumDef(ADef).MaxVal
                   else
@@ -3306,12 +3306,12 @@ implementation
             end;
 
           { source array is read and must be valid }
-          set_varstate(lSource.Left,vs_read,[vsf_must_be_valid]);
+          Set_VarState(lSource.Left,vs_read,[vsf_must_be_valid]);
           { target array is written }
-          valid_for_assignment(lTarget.Left,true);
-          set_varstate(lTarget.Left,vs_written,[]);
+          Valid_For_Assignment(lTarget.Left,true);
+          Set_VarState(lTarget.Left,vs_written,[]);
           { index in the unpacked array is read and must be valid }
-          set_varstate(lIndexNode.Left,vs_read,[vsf_must_be_valid]);
+          Set_VarState(lIndexNode.Left,vs_read,[vsf_must_be_valid]);
           { if the size of the arrays is 0 (array of empty records), }
           { do nothing                                               }
           if (lSource.ResultDef.Size = 0) then
@@ -3360,7 +3360,7 @@ implementation
                   if (InlineNumber in [in_lo_long,in_hi_long,in_lo_qword,in_hi_qword]) and
                      (m_delphi in CurrentSettings.ModeSwitches) then
                     CGMessage(type_w_maybe_wrong_hi_lo);
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   if not Is_Integer(Left.ResultDef) then
                     CGMessage1(type_e_integer_expr_expected,Left.ResultDef.TypeName);
                   case InlineNumber of
@@ -3382,7 +3382,7 @@ implementation
                 begin
                   { the constant evaluation of in_sizeof_x happens in pexpr where possible,
                     though for generics it can reach here as well }
-                  set_varstate(Left,vs_read,[]);
+                  Set_VarState(Left,vs_read,[]);
                   if (Left.ResultDef.typ<>undefineddef) and
                       Assigned(CurrentProcInfo) and
                       ParaManager.Push_High_Param(vs_value,Left.ResultDef,CurrentProcInfo.procdef.ProcCallOption) then
@@ -3432,7 +3432,7 @@ implementation
               in_typeof_x:
                 begin
                   TypeCheckPass(Left);
-                  set_varstate(Left,vs_read,[]);
+                  Set_VarState(Left,vs_read,[]);
                   if (Left.ResultDef.typ=objectdef) and
                     not(oo_has_vmt in TObjectDef(Left.ResultDef).ObjectOptions) then
                       message(type_e_typeof_requires_vmt);
@@ -3441,7 +3441,7 @@ implementation
 
               in_ord_x:
                 begin
-                   set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                   Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                    case Left.ResultDef.typ of
                      orddef,
                      enumdef,
@@ -3459,7 +3459,7 @@ implementation
 
              in_chr_byte:
                begin
-                 set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                 Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                end;
 
               in_length_x:
@@ -3468,9 +3468,9 @@ implementation
                       (not Is_Special_Array(Left.ResultDef) or
                        Is_Open_Array(Left.ResultDef))) or
                      (Left.ResultDef.typ=orddef) then
-                    set_varstate(Left,vs_read,[])
+                    Set_VarState(Left,vs_read,[])
                   else
-                    set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                    Set_VarState(Left,vs_read,[vsf_must_be_valid]);
 
                   case Left.ResultDef.typ of
                     variantdef:
@@ -3569,25 +3569,25 @@ implementation
                         not (sp_generic_para in TTypeNode(Left).TypeSym.SymOptions)
                       ) then
                      CGMessage(type_e_no_type_info);
-                   set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                   Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                    ResultDef:=VoidPointerType;
                 end;
 
               in_gettypekind_x:
                 begin
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=TypeKindType;
                 end;
 
               in_ismanagedtype_x:
                 begin
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=PasBool1Type;
                 end;
 
               in_isconstvalue_x:
                 begin
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=PasBool1Type;
                 end;
 
@@ -3606,7 +3606,7 @@ implementation
 
                   { Postpone conversion into addnode until firstpass, so targets
                     may override first_assigned and insert specific code. }
-                  set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=PasBool1Type;
                 end;
 
@@ -3621,7 +3621,7 @@ implementation
               in_pred_x,
               in_succ_x:
                 begin
-                   set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                   Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                    ResultDef:=Left.ResultDef;
                    if Is_Ordinal(ResultDef) or Is_TypeParam(ResultDef) then
                      begin
@@ -3657,21 +3657,21 @@ implementation
                       if Assigned(Left) then
                         begin
                            { first param must be var }
-                           valid_for_var(TCallParaNode(Left).Left,true);
-                           set_varstate(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
+                           Valid_For_Var(TCallParaNode(Left).Left,true);
+                           Set_VarState(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
 
                            if (Left.ResultDef.typ in [enumdef,pointerdef]) or
                               Is_Ordinal(Left.ResultDef) or
                               Is_Currency(Left.ResultDef) then
                             begin
                               { value of left gets changed -> must be unique }
-                              set_unique(TCallParaNode(Left).Left);
+                              Set_Unique(TCallParaNode(Left).Left);
                               { two paras ? }
                               if Assigned(TCallParaNode(Left).Right) then
                                begin
                                  if Is_Integer(TCallParaNode(Left).Right.ResultDef) then
                                    begin
-                                     set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                                     Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
                                      { when range/overflow checking is on, we
                                        convert this to a regular add, and for proper
                                        checking we need the original type }
@@ -3708,7 +3708,7 @@ implementation
                            else
                              begin
                                lNode:=Self;
-                               if isunaryoverloaded(lNode,[]) then
+                               if IsUnaryOverloaded(lNode,[]) then
                                  begin
                                    { inc(rec) and dec(rec) assigns result value to argument }
                                    Result:=CAssignmentNode.Create(TCallParaNode(Left).Left.GetCopy,lNode);
@@ -3745,16 +3745,16 @@ implementation
                       if Assigned(TCallParaNode(TCallParaNode(Left).Right).Right) then
                         InternalError(2017032503);
 
-                      valid_for_var(TCallParaNode(TCallParaNode(Left).Right).Left,true);
-                      set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_readwritten,[vsf_must_be_valid]);
+                      Valid_For_Var(TCallParaNode(TCallParaNode(Left).Right).Left,true);
+                      Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_readwritten,[vsf_must_be_valid]);
 
                       if Is_Integer(TCallParaNode(Left).Right.ResultDef) then
                         begin
                           { value of right gets changed -> must be unique }
-                          set_unique(TCallParaNode(TCallParaNode(Left).Right).Left);
+                          Set_Unique(TCallParaNode(TCallParaNode(Left).Right).Left);
                           if Is_Integer(Left.ResultDef) then
                             begin
-                              set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                              Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
                               { these nodes shouldn't be created, when range checking is on }
                               if [cs_check_range,cs_check_overflow]*LocalSwitches<>[] then
                                 InternalError(2017032701);
@@ -3783,13 +3783,13 @@ implementation
                   ResultDef:=VoidType;
                   if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
                     begin
-                      valid_for_var(Left,true);
-                      set_varstate(Left,vs_readwritten,[vsf_must_be_valid]);
+                      Valid_For_Var(Left,true);
+                      Set_VarState(Left,vs_readwritten,[vsf_must_be_valid]);
 
                       if Is_Integer(Left.ResultDef) then
                         begin
                           { value of left gets changed -> must be unique }
-                          set_unique(Left);
+                          Set_Unique(Left);
                           { these nodes shouldn't be created, when range checking is on }
                           if [cs_check_range,cs_check_overflow]*CurrentSettings.LocalSwitches<>[] then
                             InternalError(2017040703);
@@ -3851,14 +3851,14 @@ implementation
                   { the parser already checks whether we have two (and exactly two) }
                   { parameters (JM)                                                 }
                   { first param must be var }
-                  valid_for_var(TCallParaNode(Left).Left,true);
-                  set_varstate(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
+                  Valid_For_Var(TCallParaNode(Left).Left,true);
+                  Set_VarState(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
                   { check type }
                   if (Left.ResultDef.typ=setdef) then
                     begin
                       { insert a type conversion       }
                       { to the type of the set elements  }
-                      set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                      Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
                       InsertTypeConv(TCallParaNode(TCallParaNode(Left).Right).Left,
                         TSetDef(Left.ResultDef).ElementDef);
                     end
@@ -3900,18 +3900,18 @@ implementation
                     arraydef:
                       begin
                         if (InlineNumber=in_low_x) then
-                          set_varstate(Left,vs_read,[])
+                          Set_VarState(Left,vs_read,[])
                         else
                          begin
                            if Is_Open_Array(Left.ResultDef) or
                               Is_Array_Of_Const(Left.ResultDef) then
                             begin
-                              set_varstate(Left,vs_read,[]);
+                              Set_VarState(Left,vs_read,[]);
                               Result:=Load_High_Value_Node(TParaVarSym(TLoadNode(Left).SymTableEntry));
                             end
                            else
                              begin
-                               set_varstate(Left,vs_read,[]);
+                               Set_VarState(Left,vs_read,[]);
                                ResultDef:=SizeSIntType;
                              end;
                          end;
@@ -3920,13 +3920,13 @@ implementation
                       begin
                         if InlineNumber=in_low_x then
                          begin
-                           set_varstate(Left,vs_read,[]);
+                           Set_VarState(Left,vs_read,[]);
                          end
                         else
                          begin
                            if Is_Open_String(Left.ResultDef) then
                             begin
-                              set_varstate(Left,vs_read,[]);
+                              Set_VarState(Left,vs_read,[]);
                               Result:=Load_High_Value_Node(TParaVarSym(TLoadNode(Left).SymTableEntry))
                             end
                            else if Is_DynamicString(Left.ResultDef) then
@@ -3960,7 +3960,7 @@ implementation
                     lTempNodePointer := @TCallParaNode(Left).Left
                   else
                     lTempNodePointer := @Left;
-                  set_varstate(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
                   { converting an int64 to double on platforms without }
                   { extended can cause precision loss                  }
                   if not(lTempNodePointer^.NodeType in [ordconstn,realconstn]) then
@@ -3978,7 +3978,7 @@ implementation
                     lTempNodePointer:=@TCallParaNode(Left).Left
                   else
                     lTempNodePointer:=@Left;
-                  set_varstate(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
                   { on platforms where comp and currency are "type int64", this is
                     handled via inlined system helpers (-> no need for special
                     handling of s64currency/s64comp for them) }
@@ -4008,7 +4008,7 @@ implementation
 
               in_abs_long:
                 begin
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=Left.ResultDef;
                 end;
 
@@ -4023,7 +4023,7 @@ implementation
                     lTempNodePointer := @TCallParaNode(Left).Left
                   else
                     lTempNodePointer := @Left;
-                  set_varstate(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(lTempNodePointer^,vs_read,[vsf_must_be_valid]);
                   ResultDef:=RemoveFloatUpcasts(lTempNodePointer^,[S32Real,S64Real,s80real,sc80real]);
                 end;
 
@@ -4036,14 +4036,14 @@ implementation
                 begin
                   ResultDef:=Left.ResultDef;
                   { volatile only makes sense if the value is in memory }
-                  make_not_regable(Left,[ra_addr_regable]);
+                  Make_Not_Regable(Left,[ra_addr_regable]);
                 end;
               in_assert_x_y :
                 begin
                   ResultDef:=VoidType;
                   if Assigned(Left) then
                     begin
-                      set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                      Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
                       { check type }
                       if Is_Boolean(Left.ResultDef) or
                           (
@@ -4051,7 +4051,7 @@ implementation
                             (df_generic in CurrentProcInfo.procdef.DefOptions)
                           ) then
                         begin
-                           set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                           Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
                            { must always be a string }
                            InsertTypeConv(TCallParaNode(TCallParaNode(Left).Right).Left,CShortStringType);
                          end
@@ -4076,21 +4076,21 @@ implementation
               in_ror_x,
               in_sar_x:
                 begin
-                  set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=Left.ResultDef;
                 end;
               in_rol_x_y,
               in_ror_x_y,
               in_sar_x_y:
                 begin
-                  set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
-                  set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=TCallParaNode(TCallParaNode(Left).Right).Left.ResultDef;
                 end;
               in_bsf_x,
               in_bsr_x:
                  begin
-                   set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                   Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                    if not Is_Integer(Left.ResultDef) then
                      CGMessage1(type_e_integer_expr_expected,Left.ResultDef.TypeName);
                    if TOrdDef(Left.ResultDef).OrdType in [u64bit, s64bit] then
@@ -4101,7 +4101,7 @@ implementation
 
               in_popcnt_x:
                  begin
-                   set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                   Set_VarState(Left,vs_read,[vsf_must_be_valid]);
                    if not Is_Integer(Left.ResultDef) then
                      CGMessage1(type_e_integer_expr_expected,Left.ResultDef.TypeName);
                    ResultDef:=Left.ResultDef;
@@ -4139,9 +4139,9 @@ implementation
               in_fma_double,
               in_fma_extended:
                 begin
-                  set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
-                  set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
-                  set_varstate(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=TCallParaNode(Left).Left.ResultDef;
                 end;
               in_max_longint,
@@ -4157,8 +4157,8 @@ implementation
               in_min_single,
               in_min_double:
                 begin
-                  set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
-                  set_varstate(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid]);
+                  Set_VarState(TCallParaNode(TCallParaNode(Left).Right).Left,vs_read,[vsf_must_be_valid]);
                   ResultDef:=TCallParaNode(Left).Left.ResultDef;
                 end;
               in_delete_x_y_z:
@@ -4215,8 +4215,8 @@ implementation
                         InternalError(2022093005);
                     end;
 
-                  valid_for_var(TCallParaNode(Left).Left,true);
-                  set_varstate(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
+                  Valid_For_Var(TCallParaNode(Left).Left,true);
+                  Set_VarState(TCallParaNode(Left).Left,vs_readwritten,[vsf_must_be_valid]);
 
                   if Is_Integer(TCallParaNode(Left).ResultDef) or Is_Pointer(TCallParaNode(Left).ResultDef) then
                     begin
@@ -4234,7 +4234,7 @@ implementation
                           lConvDef:=PtrSIntType;
                         end;
                       { left gets changed -> must be unique }
-                      set_unique(TCallParaNode(Left).Left);
+                      Set_Unique(TCallParaNode(Left).Left);
                       InsertTypeConv_Internal(TCallParaNode(Left).Left,lConvDef);
                       if Assigned(TCallParaNode(Left).Right) then
                         begin
@@ -4249,8 +4249,8 @@ implementation
                               if Assigned(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right) then
                                 begin
                                   { the boolean parameter must be assignable }
-                                  valid_for_var(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left,true);
-                                  set_varstate(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left,vs_written,[]);
+                                  Valid_For_Var(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left,true);
+                                  Set_VarState(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left,vs_written,[]);
                                   if not Is_Boolean(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left.ResultDef) then
                                     InsertTypeConv(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(Left).Right).Right).Right).Left,PasBool1Type);
                                 end;
@@ -5419,7 +5419,7 @@ implementation
 
      function TInlineNode.TypeCheck_Seg: TNode;
        begin
-         set_varstate(Left,vs_read,[]);
+         Set_VarState(Left,vs_read,[]);
          Result:=COrdConstNode.Create(0,S32IntType,false);
        end;
 
@@ -6175,16 +6175,16 @@ implementation
            begin
              // Sometimes there are more callparanodes
              if Left is TCallParaNode then
-               set_varstate(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid])
+               Set_VarState(TCallParaNode(Left).Left,vs_read,[vsf_must_be_valid])
              else
-               set_varstate(Left,vs_read,[vsf_must_be_valid])
+               Set_VarState(Left,vs_read,[vsf_must_be_valid])
            end
          else
            begin
              lNode:=Left;
              while ACount>0 do
                begin
-                 set_varstate(TCallParaNode(lNode).Left,vs_read,[vsf_must_be_valid]);
+                 Set_VarState(TCallParaNode(lNode).Left,vs_read,[vsf_must_be_valid]);
 
                  lNode:=TCallParaNode(lNode).Right;
                  dec(ACount);

@@ -17,7 +17,8 @@ uses
   utmathvectorbase,
   utcvector,
   utcpoint,
-  tests.rtti.intercept;
+  tests.rtti.intercept,
+  tsNXRttiCache;
 var
   lRegistry: TNXTestRegistry;
 begin
@@ -36,6 +37,7 @@ begin
     RegisterutcvectorTests(lRegistry);
     RegisterutcpointTests(lRegistry);
     RegistertestsrttiinterceptTests(lRegistry);
+    RegisterNXRttiCacheTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

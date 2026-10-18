@@ -639,19 +639,12 @@ end;
 
 function TOpenAddressing<OPEN_ADDRESSING_CONSTRAINTS>.GetItem(const AKey: TKey): TValue;
 var
-  LIndex: SizeInt;
-  D : {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue;
-  K : TKey;
-
+  lIndex: SizeInt;
 begin
-  LIndex := FindBucketIndex(AKey);
-  if LIndex < 0 then
-    begin
-      K:=aKey;
-      {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue.Make(@K,TypeInfo(TKey),D);
-      raise EListError.CreateFmt(SDictionaryKeyNNNDoesNotExist,[D.ToString]);
-    end;
-  Result := FItems[LIndex].Pair.Value;
+  lIndex := FindBucketIndex(AKey);
+  if lIndex < 0 then
+    raise EListError.Create(SDictionaryKeyDoesNotExist);
+  Result := FItems[lIndex].Pair.Value;
 end;
 
 procedure TOpenAddressing<OPEN_ADDRESSING_CONSTRAINTS>.TrimExcess;
@@ -2135,8 +2128,6 @@ var
   LHashListOrIndex: PUint32;
   LLookupResult: SizeInt;
   LIndex: UInt32;
-  D : {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue;
-  K : TKey;
 
 begin
   LHashListOrIndex := @LHashList[0];
@@ -2146,11 +2137,7 @@ begin
     LR_QUEUE:
       Result := FQueue.FItems[PtrInt(LHashListOrIndex)].Pair.Value.Pair.Value;
     LR_NIL:
-      begin
-      K:=aKey;
-      {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.TValue.Make(@K,TypeInfo(TKey),D);
-      raise EListError.CreateFmt(SDictionaryKeyNNNDoesNotExist,[D.ToString]);
-      end;
+      raise EListError.Create(SDictionaryKeyDoesNotExist);
   else
     LIndex := LHashListOrIndex[LLookupResult + 1] and (Length(FItems[0]) - 1);
     Result := FItems[LLookupResult][LIndex].Pair.Value;

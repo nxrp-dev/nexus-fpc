@@ -17,36 +17,36 @@
 program mka64ins;
 
 const
-  Version = '0.9';
+  cVersion = '0.9';
 
 var
-   s : ShortString;
-   i : LongInt;
+   LineText : ShortString;
+   Index : LongInt;
 
-    function lower(const s : ShortString) : ShortString;
+    function Lower(const AText : ShortString) : ShortString;
     {
       return lowercased string of s
     }
       var
-         i : LongInt;
+         lIndex : LongInt;
       begin
-         for i:=1 to length(s) do
-          if s[i] in ['A'..'Z'] then
-           lower[i]:=char(byte(s[i])+32)
+         for lIndex:=1 to length(AText) do
+          if AText[lIndex] in ['A'..'Z'] then
+           Lower[lIndex]:=Char(Byte(AText[lIndex])+32)
           else
-           lower[i]:=s[i];
-         lower[0]:=s[0];
+           Lower[lIndex]:=AText[lIndex];
+         Lower[0]:=AText[0];
       end;
 
-      function Replace(var s:ShortString;const s1,s2:ShortString):boolean;
+      function Replace(var AText:ShortString;const AOldText,ANewText:ShortString):Boolean;
       var
-        i  : LongInt;
+        lIndex  : LongInt;
       begin
-        i:=pos(s1,s);
-        if i>0 then
+        lIndex:=pos(AOldText,AText);
+        if lIndex>0 then
          begin
-           Delete(s,i,length(s1));
-           Insert(s2,s,i);
+           Delete(AText,lIndex,length(AOldText));
+           Insert(ANewText,AText,lIndex);
            Replace:=true;
          end
         else
@@ -54,10 +54,10 @@ var
       end;
 
 
-function formatop(s:ShortString):ShortString;
+function FormatOp(AText:ShortString):ShortString;
    const
-     replaces=19;
-     replacetab : array[1..replaces,1..2] of string[32]=(
+     cReplacementCount=19;
+     cReplacementTable : array[1..cReplacementCount,1..2] of String[32]=(
        (':',' or ot_colon'),
        ('mem8','mem or ot_bits8'),
        ('mem16','mem or ot_bits16'),
@@ -79,204 +79,204 @@ function formatop(s:ShortString):ShortString;
        ('rm80','regmem or ot_bits80')
      );
   var
-    i : LongInt;
+    lIndex : LongInt;
   begin
-    for i:=1to replaces do
-     replace(s,replacetab[i,1],replacetab[i,2]);
-    formatop:=s;
+    for lIndex:=1to cReplacementCount do
+     Replace(AText,cReplacementTable[lIndex,1],cReplacementTable[lIndex,2]);
+    FormatOp:=AText;
   end;
 
 
-function readnumber : LongInt;
+function ReadNumber : LongInt;
 
   var
-     base : LongInt;
+     lBase : LongInt;
 
   begin
-     result:=0;
-     if s[i]='\' then
+     Result:=0;
+     if LineText[Index]='\' then
        begin
-          base:=8;
-          inc(i);
-          if s[i]='x' then
+          lBase:=8;
+          inc(Index);
+          if LineText[Index]='x' then
             begin
-               base:=16;
-               inc(i);
+               lBase:=16;
+               inc(Index);
             end;
        end
      else
-       base:=10;
-     s[i]:=upcase(s[i]);
-     while s[i] in ['0'..'9','A'..'F'] do
+       lBase:=10;
+     LineText[Index]:=upcase(LineText[Index]);
+     while LineText[Index] in ['0'..'9','A'..'F'] do
        begin
-          case s[i] of
+          case LineText[Index] of
              '0'..'9':
-               result:=result*base+ord(s[i])-ord('0');
+               Result:=Result*lBase+ord(LineText[Index])-ord('0');
 
              'A'..'F':
-               result:=result*base+ord(s[i])-ord('A')+10;
+               Result:=Result*lBase+ord(LineText[Index])-ord('A')+10;
           end;
-          inc(i);
+          inc(Index);
        end;
   end;
 
- function ToStr(l : LongInt) : ShortString;
+ function ToStr(AValue : LongInt) : ShortString;
 
   var
-      hs : ShortString;
+      lText : ShortString;
 
   begin
-     str(l,hs);
-     ToStr:=hs;
+     str(AValue,lText);
+     ToStr:=lText;
   end;
 
- function readstr : ShortString;
+ function ReadStr : ShortString;
 
   begin
-     result:='';
-     while (s[i] in ['0'..'9','A'..'Z','a'..'z','_']) and (i<=length(s)) do
+     Result:='';
+     while (LineText[Index] in ['0'..'9','A'..'Z','a'..'z','_']) and (Index<=length(LineText)) do
        begin
-          result:=result+s[i];
-          inc(i);
+          Result:=Result+LineText[Index];
+          inc(Index);
        end;
   end;
 
-procedure skipspace;
+procedure SkipSpace;
 
   begin
-     while (s[i] in [' ',#9]) do
-       inc(i);
+     while (LineText[Index] in [' ',#9]) do
+       inc(Index);
   end;
 
- procedure openinc(out f:text;const fn:ShortString);
+ procedure OpenInc(out AFile:Text;const AFileName:ShortString);
 begin
-  WriteLn('creating ',fn);
-  assign(f,fn);
-  rewrite(f);
-  WriteLn(f,'{ don''t edit, this file is generated from a64ins.dat }');
-  WriteLn(f,'(');
+  WriteLn('creating ',AFileName);
+  assign(AFile,AFileName);
+  rewrite(AFile);
+  WriteLn(AFile,'{ don''t edit, this file is generated from a64ins.dat }');
+  WriteLn(AFile,'(');
 end;
 
 
-procedure closeinc(var f:text);
+procedure CloseInc(var AFile:Text);
 begin
-  WriteLn(f);
-  WriteLn(f,');');
-  close(f);
+  WriteLn(AFile);
+  WriteLn(AFile,');');
+  close(AFile);
 end;
 
 
 var
-   attsuffix,
-    hs : ShortString;
-   j : LongInt;
-   firstopcode,
-   first : boolean;
-   maxinfolen,
-   code : byte;
-   insns : LongInt;
-   attsuffile,{propfile,}opfile,
-   nopfile,attfile,
-   infile,insfile : text;
+   ATTSuffix,
+    TempText : ShortString;
+   IndexJ : LongInt;
+   FirstOpcode,
+   First : Boolean;
+   MaxInfoLength,
+   Code : Byte;
+   InstructionCount : LongInt;
+   ATTSuffixFile,{propfile,}OpcodeFile,
+   OpcodeCountFile,ATTFile,
+   InputFile,InstructionFile : Text;
    { instruction fields }
-   skip : boolean;
+   Skip : Boolean;
    {last,}
-   ops    : LongInt;
-   attopcode,
-   opcode,
-   codes,
-    flags   : ShortString;
-    optypes : array[1..4] of ShortString;
+   OperandCount    : LongInt;
+   ATTOpcode,
+   Opcode,
+   Codes,
+    Flags   : ShortString;
+    OperandTypes : array[1..4] of ShortString;
 begin
-   WriteLn('FPC Instruction Table Converter Version ',Version);
+   WriteLn('FPC Instruction Table Converter Version ',cVersion);
    WriteLn('Based on Narm Instruction Table Converter ');
-   insns:=0;
-   maxinfolen:=0;
+   InstructionCount:=0;
+   MaxInfoLength:=0;
    { open dat file }
-   assign(infile,'../aarch64/a64ins.dat');
+   assign(InputFile,'../aarch64/a64ins.dat');
    { create inc files }
-   openinc(insfile,'a64tab.inc');
-   openinc(opfile,'a64op.inc');
-   assign(nopfile,'a64nop.inc');
-   openinc(attfile,'a64att.inc');
-   openinc(attsuffile,'a64atts.inc');
-   rewrite(nopfile);
-   WriteLn(nopfile,'{ don''t edit, this file is generated from a64ins.dat }');
-   reset(infile);
-   first:=true;
-   opcode:='';
-   firstopcode:=true;
-   while not(eof(infile)) do
+   OpenInc(InstructionFile,'a64tab.inc');
+   OpenInc(OpcodeFile,'a64op.inc');
+   assign(OpcodeCountFile,'a64nop.inc');
+   OpenInc(ATTFile,'a64att.inc');
+   OpenInc(ATTSuffixFile,'a64atts.inc');
+   rewrite(OpcodeCountFile);
+   WriteLn(OpcodeCountFile,'{ don''t edit, this file is generated from a64ins.dat }');
+   reset(InputFile);
+   First:=true;
+   Opcode:='';
+   FirstOpcode:=true;
+   while not(eof(InputFile)) do
      begin
         { handle comment }
-        readln(infile,s);
-        while (s<>'') and (s[1]=' ') do
-         delete(s,1,1);
-        if (s='') or (s[1]=';') then
+        readln(InputFile,LineText);
+        while (LineText<>'') and (LineText[1]=' ') do
+         delete(LineText,1,1);
+        if (LineText='') or (LineText[1]=';') then
           continue;
-        if (s[1]='[') then
+        if (LineText[1]='[') then
          begin
-           i:=pos(',',s);
-           j:=pos(']',s);
-           if i=0 then
+           Index:=pos(',',LineText);
+           IndexJ:=pos(']',LineText);
+           if Index=0 then
             begin
-              opcode:='A_'+Copy(s,2,j-2);
-              attopcode:=Copy(s,2,j-2);
+              Opcode:='A_'+Copy(LineText,2,IndexJ-2);
+              ATTOpcode:=Copy(LineText,2,IndexJ-2);
               { Conditional }
-              if (attopcode[length(attopcode)]='c') and
-                 (attopcode[length(attopcode)-1]='c') then
+              if (ATTOpcode[length(ATTOpcode)]='c') and
+                 (ATTOpcode[length(ATTOpcode)-1]='c') then
                 begin
-                  dec(byte(attopcode[0]),2);
-                  dec(byte(opcode[0]),2);
+                  dec(Byte(ATTOpcode[0]),2);
+                  dec(Byte(Opcode[0]),2);
                 end;
-              attsuffix:='attsufNONE';
+              ATTSuffix:='attsufNONE';
             end
            else
             begin
-              opcode:='A_'+Copy(s,2,i-2);
+              Opcode:='A_'+Copy(LineText,2,Index-2);
               { intel conditional }
-              if (opcode[length(attopcode)]='c') and
-                 (opcode[length(attopcode)-1]='c') then
-                dec(byte(opcode[0]),2);
-              attopcode:=Copy(s,i+1,j-i-1);
+              if (Opcode[length(ATTOpcode)]='c') and
+                 (Opcode[length(ATTOpcode)-1]='c') then
+                dec(Byte(Opcode[0]),2);
+              ATTOpcode:=Copy(LineText,Index+1,IndexJ-Index-1);
               { att Suffix }
-              case attopcode[length(attopcode)] of
+              case ATTOpcode[length(ATTOpcode)] of
                 'X' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufINT';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufINT';
                   end;
                 'F' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufFPU';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufFPU';
                   end;
                 'R' :
                   begin
-                    dec(attopcode[0]);
-                    attsuffix:='attsufFPUint';
+                    dec(ATTOpcode[0]);
+                    ATTSuffix:='attsufFPUint';
                   end;
                 else
-                  attsuffix:='attsufNONE';
+                  ATTSuffix:='attsufNONE';
               end;
               { att Conditional }
-              if (attopcode[length(attopcode)]='C') and
-                 (attopcode[length(attopcode)-1]='C') then
-                dec(byte(attopcode[0]),2);
+              if (ATTOpcode[length(ATTOpcode)]='C') and
+                 (ATTOpcode[length(ATTOpcode)-1]='C') then
+                dec(Byte(ATTOpcode[0]),2);
             end;
-           attopcode:=Lower(attopcode);
-           if firstopcode then
-            firstopcode:=false
+           ATTOpcode:=Lower(ATTOpcode);
+           if FirstOpcode then
+            FirstOpcode:=false
            else
             begin
-              WriteLn(opfile,',');
-              WriteLn(attfile,',');
-              WriteLn(attsuffile,',');
+              WriteLn(OpcodeFile,',');
+              WriteLn(ATTFile,',');
+              WriteLn(ATTSuffixFile,',');
 {              writeln(propfile,','); }
             end;
-           write(opfile,opcode);
-           write(attfile,'''',attopcode,'''');
-           write(attsuffile,attsuffix);
+           write(OpcodeFile,Opcode);
+           write(ATTFile,'''',ATTOpcode,'''');
+           write(ATTSuffixFile,ATTSuffix);
            { read the next line which contains the Change options }
            {
            repeat
@@ -287,51 +287,51 @@ begin
            continue;
          end;
         { we must have an opcode }
-        if opcode='' then
+        if Opcode='' then
          runerror(234);
         { clear }
-        ops:=0;
-        optypes[1]:='';
-        optypes[2]:='';
-        optypes[3]:='';
-        optypes[4]:='';
-        codes:='';
-        flags:='';
-        skip:=false;
+        OperandCount:=0;
+        OperandTypes[1]:='';
+        OperandTypes[2]:='';
+        OperandTypes[3]:='';
+        OperandTypes[4]:='';
+        Codes:='';
+        Flags:='';
+        Skip:=false;
         { ops and optypes }
-        i:=1;
+        Index:=1;
         repeat
-          hs:=readstr;
-          if (hs='void') or (hs='ignore') then
+          TempText:=ReadStr;
+          if (TempText='void') or (TempText='ignore') then
             break;
-          inc(ops);
-          optypes[ops]:=optypes[ops]+'ot_'+formatop(hs);
+          inc(OperandCount);
+          OperandTypes[OperandCount]:=OperandTypes[OperandCount]+'ot_'+FormatOp(TempText);
 {          if s[i]=':' then
             begin
                inc(i);
                optypes[ops]:=optypes[ops]+' or ot_'+formatop(readstr);
             end;}
-          while s[i]='|' do
+          while LineText[Index]='|' do
             begin
-               inc(i);
-               optypes[ops]:=optypes[ops]+' or ot_'+formatop(readstr);
+               inc(Index);
+               OperandTypes[OperandCount]:=OperandTypes[OperandCount]+' or ot_'+FormatOp(ReadStr);
             end;
-          if s[i] in [',',':'] then
-            inc(i)
+          if LineText[Index] in [',',':'] then
+            inc(Index)
           else
             break;
         until false;
-        for j:=1 to 4-ops do
-          optypes[4-j+1]:='ot_none';
+        for IndexJ:=1 to 4-OperandCount do
+          OperandTypes[4-IndexJ+1]:='ot_none';
         { codes }
-        skipspace;
-        j:=0;
+        SkipSpace;
+        IndexJ:=0;
 (*        last:=0;*)
-        if s[i] in ['\','0'..'9'] then
+        if LineText[Index] in ['\','0'..'9'] then
           begin
-             while not(s[i] in [' ',#9]) do
+             while not(LineText[Index] in [' ',#9]) do
                begin
-                 code:=readnumber;
+                 Code:=ReadNumber;
 (*
                  { for some codes we want also to change the optypes, but not
                    if the last byte was a 1 then this byte belongs to a direct
@@ -344,58 +344,58 @@ begin
                     end;
                   end;
 *)
-                 codes:=codes+'#'+ToStr(code);
+                 Codes:=Codes+'#'+ToStr(Code);
 (*                 last:=code;*)
-                 inc(j);
+                 inc(IndexJ);
                end;
           end
         else
           begin
-            readstr;
-            codes:='#0';
+            ReadStr;
+            Codes:='#0';
           end;
-        if j>maxinfolen then
-         maxinfolen:=j;
+        if IndexJ>MaxInfoLength then
+         MaxInfoLength:=IndexJ;
         { flags }
-        skipspace;
-        while not(s[i] in [' ',#9,#13,#10]) and (i<=length(s)) do
+        SkipSpace;
+        while not(LineText[Index] in [' ',#9,#13,#10]) and (Index<=length(LineText)) do
           begin
-             hs:=readstr;
-             if hs<>'ND' then
+             TempText:=ReadStr;
+             if TempText<>'ND' then
               begin
-                if flags<>'' then
-                 flags:=flags+' or ';
-                flags:=flags+'if_'+lower(hs);
+                if Flags<>'' then
+                 Flags:=Flags+' or ';
+                Flags:=Flags+'if_'+Lower(TempText);
               end;
-             if (s[i]=',') and (i<=length(s)) then
-              inc(i)
+             if (LineText[Index]=',') and (Index<=length(LineText)) then
+              inc(Index)
              else
               break;
           end;
         { write instruction }
-        if not skip then
+        if not Skip then
           begin
-            if not(first) then
-              WriteLn(insfile,',')
+            if not(First) then
+              WriteLn(InstructionFile,',')
             else
-              first:=false;
-            WriteLn(insfile,'  (');
-            WriteLn(insfile,'    opcode  : ',opcode,';');
-            WriteLn(insfile,'    ops     : ',ops,';');
-            WriteLn(insfile,'    optypes : (',optypes[1],',',optypes[2],',',optypes[3],',',optypes[4],');');
-            WriteLn(insfile,'    code    : ',codes,';');
-            WriteLn(insfile,'    flags   : ',flags);
-            write(insfile,'  )');
-            inc(insns);
+              First:=false;
+            WriteLn(InstructionFile,'  (');
+            WriteLn(InstructionFile,'    opcode  : ',Opcode,';');
+            WriteLn(InstructionFile,'    ops     : ',OperandCount,';');
+            WriteLn(InstructionFile,'    optypes : (',OperandTypes[1],',',OperandTypes[2],',',OperandTypes[3],',',OperandTypes[4],');');
+            WriteLn(InstructionFile,'    code    : ',Codes,';');
+            WriteLn(InstructionFile,'    flags   : ',Flags);
+            write(InstructionFile,'  )');
+            inc(InstructionCount);
           end;
      end;
-   close(infile);
-   closeinc(insfile);
-   closeinc(attfile);
-   closeinc(attsuffile);
-   closeinc(opfile);
-   WriteLn(nopfile,insns,';');
-   close(nopfile);
+   close(InputFile);
+   CloseInc(InstructionFile);
+   CloseInc(ATTFile);
+   CloseInc(ATTSuffixFile);
+   CloseInc(OpcodeFile);
+   WriteLn(OpcodeCountFile,InstructionCount,';');
+   close(OpcodeCountFile);
 {   closeinc(propfile); }
-   WriteLn(insns,' nodes processed (maxinfolen=',maxinfolen,')');
+   WriteLn(InstructionCount,' nodes processed (maxinfolen=',MaxInfoLength,')');
 end.

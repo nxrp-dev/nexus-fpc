@@ -71,7 +71,7 @@ unit optloadmodifystore;
               (TInlineNode(right).left.IsEqual(left)) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(TInlineNode(right).left,false) and
+              Valid_For_Var(TInlineNode(right).left,false) and
               not(Might_Have_SideEffects(TInlineNode(right).left)) then
               begin
                 if TInlineNode(right).InlineNumber=in_succ_x then
@@ -98,7 +98,7 @@ unit optloadmodifystore;
               Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(TAddNode(right).left,false) and
+              Valid_For_Var(TAddNode(right).left,false) and
               not(Might_Have_SideEffects(TAddNode(right).left)) then
               begin
                 case right.nodetype of
@@ -154,7 +154,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,false) and
+               Valid_For_Var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
@@ -197,7 +197,7 @@ unit optloadmodifystore;
               Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(TAddNode(right).right,false) and
+              Valid_For_Var(TAddNode(right).right,false) and
               not(Might_Have_SideEffects(TAddNode(right).right)) then
               begin
                 case right.nodetype of
@@ -250,7 +250,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,false) and
+               Valid_For_Var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
@@ -290,7 +290,7 @@ unit optloadmodifystore;
               Is_Integer(TUnaryNode(right).left.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(TUnaryNode(right).left,false) and
+              Valid_For_Var(TUnaryNode(right).left,false) and
               not(Might_Have_SideEffects(TUnaryNode(right).left)) then
               begin
                 if right.nodetype=notn then
@@ -325,7 +325,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left,false) and
+               Valid_For_Var(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left)) then
               begin
                 if TTypeConvNode(right).left.nodetype=notn then
@@ -360,7 +360,7 @@ unit optloadmodifystore;
 {$endif}
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(TShlShrNode(right).left,false) and
+              Valid_For_Var(TShlShrNode(right).left,false) and
               not(Might_Have_SideEffects(TShlShrNode(right).left)) then
               begin
                 case right.nodetype of
@@ -407,7 +407,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,false) and
+               Valid_For_Var(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
@@ -452,7 +452,7 @@ unit optloadmodifystore;
 {$endif}
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TInlineNode(right).left,false) and
+               Valid_For_Var(TInlineNode(right).left,false) and
                not(Might_Have_SideEffects(TInlineNode(right).left)) then
               begin
                 case TInlineNode(right).InlineNumber of
@@ -503,7 +503,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,false) and
+               Valid_For_Var(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left)) then
               begin
                 case TInlineNode(TTypeConvNode(right).left).InlineNumber of
@@ -548,7 +548,7 @@ unit optloadmodifystore;
 {$endif}
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left,false) and
+               Valid_For_Var(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left,false) and
                not(Might_Have_SideEffects(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left)) then
               begin
                 case TInlineNode(right).InlineNumber of
@@ -603,7 +603,7 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,false) and
+               Valid_For_Var(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,false) and
                not(Might_Have_SideEffects(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left)) then
               begin
                 case TInlineNode(TTypeConvNode(right).left).InlineNumber of

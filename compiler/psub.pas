@@ -2383,7 +2383,7 @@ implementation
         AProcDef.AliasNames.insert(AProcDef.MangledName);
 
         { Insert result variables in the localst }
-        insert_funcret_local(AProcDef);
+        Insert_FuncRet_Local(AProcDef);
 
         { check if there are para's which require initing -> set }
         { pi_do_call (if not yet set)                            }
@@ -2544,13 +2544,13 @@ implementation
 
              { Set calling convention }
              if parse_only then
-               handle_calling_convention(Result,hcc_default_actions_intf)
+               Handle_Calling_Convention(Result,cHCCDefaultActionsIntf)
              else
-               handle_calling_convention(Result,hcc_default_actions_impl)
+               Handle_Calling_Convention(Result,cHCCDefaultActionsImpl)
            end;
 
          { search for forward declarations }
-         if not proc_add_definition(Result) then
+         if not Proc_Add_Definition(Result) then
            begin
              { One may not implement a method of a type declared in a different unit }
              if Assigned(Result.struct) and

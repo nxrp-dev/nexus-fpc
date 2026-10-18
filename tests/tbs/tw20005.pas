@@ -1,9 +1,9 @@
 { %OPT=-gl -gh }
 {$mode objfpc}{$H+}
-uses Classes, SysUtils, FGL;
+uses Classes, SysUtils, Generics.Collections;
 
 type
-  TMessages = specialize TFPGList<string>;
+  TMessages = specialize TList<string>;
 
 var
   Messages: TMessages;

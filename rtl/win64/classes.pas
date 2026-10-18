@@ -38,9 +38,6 @@ uses
   System.SysUtils,
   System.Types,
   System.SortBase,
-{$ifdef FPC_TESTGENERICS}
-  System.FGL,
-{$endif}
   System.TypInfo,
 {$ifdef FPC_USE_INTRINSICS}
   System.Intrinsics,
@@ -52,9 +49,6 @@ uses
   sysutils,
   types,
   sortbase,
-{$ifdef FPC_TESTGENERICS}
-  fgl,
-{$endif}
   typinfo,
 {$ifdef FPC_USE_INTRINSICS}
   intrinsics,

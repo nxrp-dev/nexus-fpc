@@ -3,10 +3,10 @@ program Project1;
 {$mode objfpc}{$H+}
 
 uses
-  fgl;
+  Generics.Collections;
 
 type
-  TMyMap = specialize TFPGMap<string, string>;
+  TMyMap = specialize TDictionary<string, string>;
 
 var
   m: TMyMap;

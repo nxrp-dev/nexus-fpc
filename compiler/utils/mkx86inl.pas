@@ -4,19 +4,19 @@ program mkx86inl;
 {$H+}
 
 uses
-  SysUtils, classes;
+  SysUtils, Classes;
 
 type
   TOperDirection = (operIn, operVar, operOut);
 
   TOperand = record
-    name,
-    typ: string;
-    direction: TOperDirection;
+    Name,
+    Typ: String;
+    Direction: TOperDirection;
   end;
 
 const
-  DirLUT: array[TOperDirection] of string = ('','var ','out ');
+  cDirectionLookup: array[TOperDirection] of String = ('','var ','out ');
 
 { ***************************************************************************
   the routines Copy2SymbDel, PosSetEx, PosSet, RemoveTrailingChars, TrimRightSet are copied and reformatted
@@ -34,80 +34,80 @@ const
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *************************************************************************** }
 
-function Copy2SymbDel(var S: string; Symb: Char): string;
+function Copy2SymbDel(var AText: String; ASymbol: Char): String;
   var
-    p: SizeInt;
+    lPosition: SizeInt;
   begin
-    p:=Pos(Symb,S);
-    if p=0 then
+    lPosition:=Pos(ASymbol,AText);
+    if lPosition=0 then
       begin
-        result:=s;
-        s:='';
+        Result:=AText;
+        AText:='';
       end
     else
       begin
-        Result:=Copy(S,1,p-1);
-        delete(s,1,p);
+        Result:=Copy(AText,1,lPosition-1);
+        delete(AText,1,lPosition);
       end;
   end;
 
 
-function PosSetEx(const c: TSysCharSet; const s: AnsiString; count: Integer): SizeInt;
+function PosSetEx(const ACharSet: TSysCharSet; const AText: AnsiString; ACount: Integer): SizeInt;
   var
-    i,j:SizeInt;
+    lLength,lIndex:SizeInt;
   begin
-   if pchar(pointer(s))=nil then
-    j:=0
+   if PChar(Pointer(AText))=nil then
+    lIndex:=0
    else
     begin
-     i:=length(s);
-     j:=count;
-     if j>i then
+     lLength:=length(AText);
+     lIndex:=ACount;
+     if lIndex>lLength then
       begin
-       result:=0;
+       Result:=0;
        exit;
       end;
-     while (j<=i) and (not (s[j] in c)) do inc(j);
-     if (j>i) then
-      j:=0;                                         // not found.
+     while (lIndex<=lLength) and (not (AText[lIndex] in ACharSet)) do inc(lIndex);
+     if (lIndex>lLength) then
+      lIndex:=0;                                         // not found.
     end;
-   result:=j;
+   Result:=lIndex;
   end;
 
-function PosSet(const c: TSysCharSet; const s: AnsiString): SizeInt;
+function PosSet(const ACharSet: TSysCharSet; const AText: AnsiString): SizeInt;
   begin
-    result:=possetex(c,s,1);
+    Result:=PosSetEx(ACharSet,AText,1);
   end;
 
-procedure RemoveTrailingChars(VAR S: AnsiString; const CSet: TSysCharset);
+procedure RemoveTrailingChars(VAR AText: AnsiString; const ACharSet: TSysCharSet);
   var
-    I,J: LongInt;
+    lLength,lLastIndex: LongInt;
 
   Begin
-   I:=Length(S);
-   IF (I>0) Then
+   lLength:=Length(AText);
+   IF (lLength>0) Then
     Begin
-     J:=I;
-     While (j>0) and (S[J] IN CSet) DO DEC(J);
-     IF J<>I Then
-      SetLength(S,J);
+     lLastIndex:=lLength;
+     While (lLastIndex>0) and (AText[lLastIndex] IN ACharSet) DO DEC(lLastIndex);
+     IF lLastIndex<>lLength Then
+      SetLength(AText,lLastIndex);
     End;
   End;
 
-function TrimRightSet(const S: String; const CSet: TSysCharSet): String;
+function TrimRightSet(const AText: String; const ACharSet: TSysCharSet): String;
 
 begin
-  result:=s;
-  RemoveTrailingchars(result,cset);
+  Result:=AText;
+  RemoveTrailingChars(Result,ACharSet);
 end;
 
 { ***************************************************************************
    end of StrUtils code
   ***************************************************************************}
 
-function GetPascalType(const ATyp: string): string;
+function GetPascalType(const AType: String): String;
   begin
-    case ATyp of
+    case AType of
       'r8':    exit('byte');
       'rs8':   exit('shortint');
       'r16':   exit('word');
@@ -133,13 +133,13 @@ function GetPascalType(const ATyp: string): string;
       'ptr64',
       'ptr128': exit('pointer');
     else
-      exit(ATyp);
+      exit(AType);
     end;
   end;
 
-function GetTypeDef(const ATyp: string): string;
+function GetTypeDef(const AType: String): String;
   begin
-    case ATyp of
+    case AType of
       'r8':    exit('U8IntType');
       'rs8':   exit('S8IntType');
       'r16':   exit('U16IntType');
@@ -165,13 +165,13 @@ function GetTypeDef(const ATyp: string): string;
       'ptr64',
       'ptr128': exit('VoidPointerType');
     else
-      exit(ATyp);
+      exit(AType);
     end;
   end;
 
-function GetOper(const ATyp: string): string;
+function GetOper(const AType: String): String;
   begin
-    case ATyp of
+    case AType of
       'r8':    exit('_reg');
       'rs8':   exit('_reg');
       'r16':   exit('_reg');
@@ -201,9 +201,9 @@ function GetOper(const ATyp: string): string;
     end;
   end;
 
-function GetOperand(const ATyp: string; AIndex: LongInt): string;
+function GetOperand(const AType: String; AIndex: LongInt): String;
   begin
-    case ATyp of
+    case AType of
       'r8':    exit(format(',lParaArray[%d].Location.Register', [AIndex]));
       'rs8':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
       'r16':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
@@ -229,14 +229,14 @@ function GetOperand(const ATyp: string; AIndex: LongInt): string;
       'ptr64',
       'ptr128': exit(format(',lParaArray[%d].Location.Reference', [AIndex]));
     else
-      exit(ATyp);
+      exit(AType);
     end;
   end;
 
-function GetOperandLoc(const ATyp: string): string;
+function GetOperandLoc(const AType: String): String;
   begin
-    result:='';
-    case ATyp of
+    Result:='';
+    case AType of
       'r8':   exit(',Location.Register');
       'rs8':  exit(',Location.Register');
       'r16':  exit(',Location.Register');
@@ -263,30 +263,30 @@ function GetOperandLoc(const ATyp: string): string;
     end;
   end;
 
-function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): string;
+function GetLocStatement(AIndex: LongInt; const AType: String; AConst: Boolean): String;
   begin
-    result:='';
-    case ATyp of
-      'r8':    exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs8':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r16':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs16':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r32':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs32':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r64':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs64':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'reg':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'sreg':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f32':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f64':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'mm':    exit(format('LocationForceMMXReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'xmm':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+    Result:='';
+    case AType of
+      'r8':    exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'rs8':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'r16':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'rs16':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'r32':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'rs32':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'r64':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'rs64':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'reg':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'sreg':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(AConst,'true','false')]));
+      'f32':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(AConst,'true','false')]));
+      'f64':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(AConst,'true','false')]));
+      'mm':    exit(format('LocationForceMMXReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(AConst,'true','false')]));
+      'xmm':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(AConst,'true','false')]));
 
       'implicit_xmm0':
         exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);'+LineEnding+
                     '    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
                     '    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,lParaArray[%d].ResultDef,X86_M128Type,lParaArray[%d].Location,NR_XMM0,nil);',
-                      [AIndex+1, BoolToStr(aconst,'true','false'), AIndex+1, AIndex+1]));
+                      [AIndex+1, BoolToStr(AConst,'true','false'), AIndex+1, AIndex+1]));
       'edi_ptr':
         exit(format('hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
                     '    hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,lParaArray[%d].ResultDef,VoidPointerType,lParaArray[%d].Location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
@@ -300,10 +300,10 @@ function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): 
     end;
   end;
 
-function GetDeallocStatement(AIndex: LongInt; const ATyp: string): string;
+function GetDeallocStatement(AIndex: LongInt; const AType: String): String;
   begin
-    result:='';
-    case ATyp of
+    Result:='';
+    case AType of
       'implicit_xmm0':
         exit('hlcg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);');
       'edi_ptr':
@@ -311,11 +311,11 @@ function GetDeallocStatement(AIndex: LongInt; const ATyp: string): string;
     end;
   end;
 
-function GetLoc(const ATyp: string; AWithSize: boolean = true): string;
+function GetLoc(const AType: String; AWithSize: Boolean = true): String;
   begin
-    result:='';
+    Result:='';
     if AWithSize then
-      case ATyp of
+      case AType of
         'r8':    exit('LOC_REGISTER,OS_8');
         'rs8':   exit('LOC_REGISTER,OS_S8');
         'r16':   exit('LOC_REGISTER,OS_16');
@@ -341,7 +341,7 @@ function GetLoc(const ATyp: string; AWithSize: boolean = true): string;
         'ptr128':exit('LOC_MEM,OS_128');
       end
     else
-      case ATyp of
+      case AType of
         'r8':    exit('LOC_REGISTER');
         'rs8':   exit('LOC_REGISTER');
         'r16':   exit('LOC_REGISTER');
@@ -368,10 +368,10 @@ function GetLoc(const ATyp: string; AWithSize: boolean = true): string;
       end;
   end;
 
-function GetLocAllocation(const ATyp: string): string;
+function GetLocAllocation(const AType: String): String;
   begin
-    result:='';
-    case ATyp of
+    Result:='';
+    case AType of
       'r8':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
       'rs8': exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
       'r16':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
@@ -389,292 +389,292 @@ function GetLocAllocation(const ATyp: string): string;
     end;
   end;
 
-function GetPostFix(const APF: string): string;
+function GetPostFix(const APF: String): String;
   begin
     if APF<>'' then
-      result:='PF_'+APF
+      Result:='PF_'+APF
     else
-      result:='PF_None';
+      Result:='PF_None';
   end;
 
-procedure ParseList(const APrefix, AFilename: string);
+procedure ParseList(const APrefix, AFileName: String);
   var
-    f: TextFile;
+    lFile: TextFile;
 
-    fprocs,
-    fcinnr, fcpumminnr: TextFile;
-    ftypechk, ffirst, fsecond: TStringList;
+    lProcsFile,
+    lCompilerInlineFile, lCPUInlineFile: TextFile;
+    lTypeCheckLines, lFirstPassLines, lSecondPassLines: TStringList;
 
-    str,
-    instrPart,postfix,_alias,
-    params, operline: String;
+    lText,
+    lInstructionPart,lPostfix,lAlias,
+    lParams, lOperLine: String;
 
-    opers: array[0..7] of TOperand;
-    opercnt: LongInt;
+    lOperands: array[0..7] of TOperand;
+    lOperandCount: LongInt;
 
-    hasOutput: boolean;
-    outputType: string;
-    cnt,
-    i, intrnum: LongInt;
-    tmp, condition, target: String;
+    lHasOutput: Boolean;
+    lOutputType: String;
+    lCount,
+    lIndex, lIntrinsicNumber: LongInt;
+    lTemp, lCondition, lTarget: String;
 
-  function ParseOperands(AIndex: LongInt = -1): string;
+  function ParseOperands(AIndex: LongInt = -1): String;
     var
-      idx: LongInt;
-      pt: Integer;
-      c: Char;
+      lOperandIndex: LongInt;
+      lPosition: Integer;
+      lChar: Char;
     begin
-      idx:=opercnt;
+      lOperandIndex:=lOperandCount;
 
-      params:=trim(params);
-      if params='' then
+      lParams:=trim(lParams);
+      if lParams='' then
         exit('');
 
-      inc(opercnt);
+      inc(lOperandCount);
 
-      if pos('var ', params)=1 then
+      if pos('var ', lParams)=1 then
         begin
-          opers[idx].direction:=operVar;
-          Delete(params,1,4);
-          params:=trim(params);
-          hasOutput:=true;
+          lOperands[lOperandIndex].Direction:=operVar;
+          Delete(lParams,1,4);
+          lParams:=trim(lParams);
+          lHasOutput:=true;
         end
-      else if pos('out ', params)=1 then
+      else if pos('out ', lParams)=1 then
         begin
-          opers[idx].direction:=operOut;
-          Delete(params,1,4);
-          params:=trim(params);
-          hasOutput:=true;
+          lOperands[lOperandIndex].Direction:=operOut;
+          Delete(lParams,1,4);
+          lParams:=trim(lParams);
+          lHasOutput:=true;
         end
       else
         begin
           if AIndex<>-1 then
-            opers[idx].direction:=opers[AIndex].direction
+            lOperands[lOperandIndex].Direction:=lOperands[AIndex].Direction
           else
-            opers[idx].direction:=operIn;
+            lOperands[lOperandIndex].Direction:=operIn;
         end;
 
-          pt:=PosSet([',',':'], params);
+          lPosition:=PosSet([',',':'], lParams);
 
-      c:=params[pt];
-      opers[idx].name:=Copy2SymbDel(params, c);
-      params:=trim(params);
+      lChar:=lParams[lPosition];
+      lOperands[lOperandIndex].Name:=Copy2SymbDel(lParams, lChar);
+      lParams:=trim(lParams);
 
-      if c = ':' then
+      if lChar = ':' then
         begin
-          opers[idx].typ:=Copy2SymbDel(params, ';');
-          result:=opers[idx].typ;
+          lOperands[lOperandIndex].Typ:=Copy2SymbDel(lParams, ';');
+          Result:=lOperands[lOperandIndex].Typ;
         end
       else
         begin
-          opers[idx].typ:=ParseOperands(idx);
-          result:=opers[idx].typ;
+          lOperands[lOperandIndex].Typ:=ParseOperands(lOperandIndex);
+          Result:=lOperands[lOperandIndex].Typ;
         end;
 
-      if opers[idx].direction<>operIn then
-        outputType:=opers[idx].typ;
+      if lOperands[lOperandIndex].Direction<>operIn then
+        lOutputType:=lOperands[lOperandIndex].Typ;
     end;
 
-  function GetOperLine: string;
+  function GetOperLine: String;
     var
-      i: LongInt;
+      lIndex: LongInt;
     begin
-      result:='';
-      for i := 0 to opercnt-1 do
-        result:=result+DirLUT[opers[i].direction]+opers[i].name+':'+opers[i].typ+';';
+      Result:='';
+      for lIndex := 0 to lOperandCount-1 do
+        Result:=Result+cDirectionLookup[lOperands[lIndex].Direction]+lOperands[lIndex].Name+':'+lOperands[lIndex].Typ+';';
     end;
 
   function GetParams: LongInt;
     var
-      i: LongInt;
+      lIndex: LongInt;
     begin
-      result:=0;
-      for i := 0 to opercnt-1 do
-        if opers[i].direction in [operIn,operVar] then
-          inc(result);
+      Result:=0;
+      for lIndex := 0 to lOperandCount-1 do
+        if lOperands[lIndex].Direction in [operIn,operVar] then
+          inc(Result);
     end;
 
-  function FindOperIdx(const AOper: string): LongInt;
+  function FindOperIdx(const AOper: String): LongInt;
     var
-      i,cnt: LongInt;
+      lIndex,lCount: LongInt;
     begin
-      cnt:=0;
-      result:=0;
-      for i := 0 to opercnt-1 do
-        if (opers[i].direction in [operIn,operVar]) then
+      lCount:=0;
+      Result:=0;
+      for lIndex := 0 to lOperandCount-1 do
+        if (lOperands[lIndex].Direction in [operIn,operVar]) then
           begin
-            if opers[i].name=AOper then
-              exit(cnt);
-            inc(cnt);
+            if lOperands[lIndex].Name=AOper then
+              exit(lCount);
+            inc(lCount);
           end;
     end;
 
   begin
-    intrnum:=0;
+    lIntrinsicNumber:=0;
 
-    assignfile(f, AFilename);
-    reset(f);
+    assignfile(lFile, AFileName);
+    reset(lFile);
 
-    assignfile(fprocs, 'cpummprocs.inc'); rewrite(fprocs);
-    assignfile(fcinnr, 'c'+APrefix+'mminnr.inc'); rewrite(fcinnr);
-    assignfile(fcpumminnr, 'cpumminnr.inc'); rewrite(fcpumminnr);
+    assignfile(lProcsFile, 'cpummprocs.inc'); rewrite(lProcsFile);
+    assignfile(lCompilerInlineFile, 'c'+APrefix+'mminnr.inc'); rewrite(lCompilerInlineFile);
+    assignfile(lCPUInlineFile, 'cpumminnr.inc'); rewrite(lCPUInlineFile);
 
 //    writeln(finnr,'const');
 
-    ftypechk:=TStringList.Create;
-    ffirst:=TStringList.Create;
-    fsecond:=TStringList.Create;
+    lTypeCheckLines:=TStringList.Create;
+    lFirstPassLines:=TStringList.Create;
+    lSecondPassLines:=TStringList.Create;
 
 //    writeln(finnr, '  fpc_in_', APrefix,'_first = fpc_in_',APrefix,'_base;');
 
-    while not EOF(f) do
+    while not EOF(lFile) do
       begin
-        readln(f, str);
+        readln(lFile, lText);
 
-        str:=trim(str);
+        lText:=trim(lText);
 
-        if (str='') or (Pos(';',str)=1) then
+        if (lText='') or (Pos(';',lText)=1) then
           continue;
 
-        instrPart:=Copy2SymbDel(str, '(');
+        lInstructionPart:=Copy2SymbDel(lText, '(');
 
         // Check for postfix
-        if pos('{',instrPart)>0 then
+        if pos('{',lInstructionPart)>0 then
           begin
-            postfix:=instrPart;
-            instrPart:=Copy2SymbDel(postfix, '{');
-            postfix:=TrimRightSet(postfix,['}']);
+            lPostfix:=lInstructionPart;
+            lInstructionPart:=Copy2SymbDel(lPostfix, '{');
+            lPostfix:=TrimRightSet(lPostfix,['}']);
           end
         else
-          postfix:='';
+          lPostfix:='';
 
         // Check for alias
-        if pos('[',instrPart)>0 then
+        if pos('[',lInstructionPart)>0 then
           begin
-            _alias:=instrPart;
-            instrPart:=Copy2SymbDel(_alias, '[');
-            _alias:='_'+TrimRightSet(_alias,[']']);
+            lAlias:=lInstructionPart;
+            lInstructionPart:=Copy2SymbDel(lAlias, '[');
+            lAlias:='_'+TrimRightSet(lAlias,[']']);
           end
         else
-          _alias:='';
+          lAlias:='';
 
         // Get parameters
-        params:=trim(Copy2SymbDel(str,')'));
-        str:=trim(str);
+        lParams:=trim(Copy2SymbDel(lText,')'));
+        lText:=trim(lText);
 
         // Parse condition and target
-        if pos('|', str)>0 then
+        if pos('|', lText)>0 then
         begin
-          condition:=trim(Copy2SymbDel(str, '|'));
-          target:=trim(str);
+          lCondition:=trim(Copy2SymbDel(lText, '|'));
+          lTarget:=trim(lText);
         end
         else
         begin
-          condition:=str;
-          target:='';
+          lCondition:=lText;
+          lTarget:='';
         end;
 
-        hasOutput:=false;
-        opercnt:=0;
-        outputType:='';
+        lHasOutput:=false;
+        lOperandCount:=0;
+        lOutputType:='';
 
-        while params<>'' do
+        while lParams<>'' do
           ParseOperands;
 
-        operline:=GetOperLine;
+        lOperLine:=GetOperLine;
         // Write typecheck code
-        i:=ftypechk.IndexOf(': //'+operline);
-        if (i>=0) and (target='') then
-          ftypechk.Insert(i,',in_'+APrefix+'_'+instrPart+postfix+_alias)
+        lIndex:=lTypeCheckLines.IndexOf(': //'+lOperLine);
+        if (lIndex>=0) and (lTarget='') then
+          lTypeCheckLines.Insert(lIndex,',in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias)
         else
           begin
-            if target<>'' then
-              ftypechk.add(format('{$ifdef %s}', [target]));
+            if lTarget<>'' then
+              lTypeCheckLines.add(format('{$ifdef %s}', [lTarget]));
 
-            ftypechk.Add('in_'+APrefix+'_'+instrPart+postfix+_alias);
-            ftypechk.Add(': //'+operline);
-            ftypechk.Add('  begin');
-            ftypechk.Add('    CheckParameters('+IntToStr(GetParams())+');');
-            if hasOutput then
-              ftypechk.Add('    ResultDef:='+GetTypeDef(outputType)+';')
+            lTypeCheckLines.Add('in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias);
+            lTypeCheckLines.Add(': //'+lOperLine);
+            lTypeCheckLines.Add('  begin');
+            lTypeCheckLines.Add('    CheckParameters('+IntToStr(GetParams())+');');
+            if lHasOutput then
+              lTypeCheckLines.Add('    ResultDef:='+GetTypeDef(lOutputType)+';')
             else
-              ftypechk.Add('    ResultDef:=VoidType;');
-            ftypechk.Add('  end;');
+              lTypeCheckLines.Add('    ResultDef:=VoidType;');
+            lTypeCheckLines.Add('  end;');
 
-            if target<>'' then
-              ftypechk.add('{$endif}');
+            if lTarget<>'' then
+              lTypeCheckLines.add('{$endif}');
           end;
 
         // Write firstpass code
-        i:=ffirst.IndexOf(': //'+operline);
-        if (i>=0) and (target='') then
-          ffirst.Insert(i,',in_'+APrefix+'_'+instrPart+postfix+_alias)
+        lIndex:=lFirstPassLines.IndexOf(': //'+lOperLine);
+        if (lIndex>=0) and (lTarget='') then
+          lFirstPassLines.Insert(lIndex,',in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias)
         else
           begin
-            if target<>'' then
-              ffirst.add(format('{$ifdef %s}', [target]));
+            if lTarget<>'' then
+              lFirstPassLines.add(format('{$ifdef %s}', [lTarget]));
 
-            ffirst.Add('in_'+APrefix+'_'+instrPart+postfix+_alias);
-            ffirst.Add(': //'+operline);
-            ffirst.Add('  begin');
-            if hasOutput then
-              ffirst.Add('    ExpectLoc:='+GetLoc(outputType,false)+';')
+            lFirstPassLines.Add('in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias);
+            lFirstPassLines.Add(': //'+lOperLine);
+            lFirstPassLines.Add('  begin');
+            if lHasOutput then
+              lFirstPassLines.Add('    ExpectLoc:='+GetLoc(lOutputType,false)+';')
             else
-              ffirst.Add('    ExpectLoc:=LOC_VOID;');
-            ffirst.Add('    Result:=nil;');
-            ffirst.Add('  end;');
+              lFirstPassLines.Add('    ExpectLoc:=LOC_VOID;');
+            lFirstPassLines.Add('    Result:=nil;');
+            lFirstPassLines.Add('  end;');
 
-            if target<>'' then
-              ffirst.add('{$endif}');
+            if lTarget<>'' then
+              lFirstPassLines.add('{$endif}');
           end;
 
         // Write secondpass code
-        i:=fsecond.IndexOf(': //'+operline);
-        if (i>=0) and (target='') then
+        lIndex:=lSecondPassLines.IndexOf(': //'+lOperLine);
+        if (lIndex>=0) and (lTarget='') then
           begin
-            fsecond.Insert(i+3,'      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin lOp:=A_'+instrPart+' end;');
-            fsecond.Insert(i,',in_'+APrefix+'_'+instrPart+postfix+_alias);
+            lSecondPassLines.Insert(lIndex+3,'      in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias+': begin lOp:=A_'+lInstructionPart+' end;');
+            lSecondPassLines.Insert(lIndex,',in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias);
           end
         else
           begin
-            if target<>'' then
-              fsecond.add(format('{$ifdef %s}', [target]));
+            if lTarget<>'' then
+              lSecondPassLines.add(format('{$ifdef %s}', [lTarget]));
 
-            fsecond.Add('in_'+APrefix+'_'+instrPart+postfix+_alias);
-            fsecond.Add(': //'+operline);
-            fsecond.Add('  begin');
-            fsecond.Add('    case InlineNumber of');
-            fsecond.Add('      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin lOp:=A_'+instrPart+'; end;');
-            fsecond.Add('      else');
-            fsecond.Add('        InternalError(2020010201);');
-            fsecond.Add('    end;');
-            fsecond.Add('');
+            lSecondPassLines.Add('in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias);
+            lSecondPassLines.Add(': //'+lOperLine);
+            lSecondPassLines.Add('  begin');
+            lSecondPassLines.Add('    case InlineNumber of');
+            lSecondPassLines.Add('      in_'+APrefix+'_'+lInstructionPart+lPostfix+lAlias+': begin lOp:=A_'+lInstructionPart+'; end;');
+            lSecondPassLines.Add('      else');
+            lSecondPassLines.Add('        InternalError(2020010201);');
+            lSecondPassLines.Add('    end;');
+            lSecondPassLines.Add('');
 
-            i:=GetParams;
-            fsecond.Add('    GetParameters('+IntToStr(i)+');');
-            fsecond.Add('');
+            lIndex:=GetParams;
+            lSecondPassLines.Add('    GetParameters('+IntToStr(lIndex)+');');
+            lSecondPassLines.Add('');
 
-            fsecond.Add('    for lIndex := 1 to '+IntToStr(i)+' do SecondPass(lParaArray[lIndex]);');
-            fsecond.Add('');
+            lSecondPassLines.Add('    for lIndex := 1 to '+IntToStr(lIndex)+' do SecondPass(lParaArray[lIndex]);');
+            lSecondPassLines.Add('');
 
             // Force inputs
-            cnt:=0;
-            for i := 0 to opercnt-1 do
+            lCount:=0;
+            for lIndex := 0 to lOperandCount-1 do
               begin
-                case opers[i].direction of
+                case lOperands[lIndex].Direction of
                   operIn:
                     begin
-                      tmp:=GetLocStatement(cnt, opers[i].typ, true);
-                      if tmp<>'' then
-                        fsecond.add('    '+tmp);
-                      inc(cnt);
+                      lTemp:=GetLocStatement(lCount, lOperands[lIndex].Typ, true);
+                      if lTemp<>'' then
+                        lSecondPassLines.add('    '+lTemp);
+                      inc(lCount);
                     end;
                   operVar:
                     begin
-                      tmp:=GetLocStatement(cnt, opers[i].typ, false);
-                      if tmp<>'' then
-                        fsecond.add('    '+tmp);
-                      inc(cnt);
+                      lTemp:=GetLocStatement(lCount, lOperands[lIndex].Typ, false);
+                      if lTemp<>'' then
+                        lSecondPassLines.add('    '+lTemp);
+                      inc(lCount);
                     end;
                   else
                     ;
@@ -682,137 +682,137 @@ procedure ParseList(const APrefix, AFilename: string);
               end;
 
             // Allocate output
-            cnt:=0;
-            for i := 0 to opercnt-1 do
+            lCount:=0;
+            for lIndex := 0 to lOperandCount-1 do
               begin
-                case opers[i].direction of
+                case lOperands[lIndex].Direction of
                   operOut:
                     begin
-                      fsecond.add('    Location_Reset(Location,'+GetLoc(opers[i].typ)+');');
-                      fsecond.Add('    '+GetLocAllocation(opers[i].typ));
+                      lSecondPassLines.add('    Location_Reset(Location,'+GetLoc(lOperands[lIndex].Typ)+');');
+                      lSecondPassLines.Add('    '+GetLocAllocation(lOperands[lIndex].Typ));
                     end;
                   operVar:
                     begin
-                      fsecond.Add('    Location:=lParaArray['+IntToStr(cnt+1)+'].Location;');
-                      inc(cnt);
+                      lSecondPassLines.Add('    Location:=lParaArray['+IntToStr(lCount+1)+'].Location;');
+                      inc(lCount);
                     end;
                   operIn:
-                    inc(cnt);
+                    inc(lCount);
                 end;
               end;
 
-            operline:='TAICPU.op';
+            lOperLine:='TAICPU.op';
             //for i := 0 to opercnt-1 do
-            for i := opercnt-1 downto 0 do
+            for lIndex := lOperandCount-1 downto 0 do
               begin
-                case opers[i].direction of
+                case lOperands[lIndex].Direction of
                   operOut:
-                    operline:=operline+GetOper(opers[i].typ);
+                    lOperLine:=lOperLine+GetOper(lOperands[lIndex].Typ);
                   operVar:
-                    operline:=operline+GetOper(opers[i].typ);
+                    lOperLine:=lOperLine+GetOper(lOperands[lIndex].Typ);
                   operIn:
-                    operline:=operline+GetOper(opers[i].typ);
+                    lOperLine:=lOperLine+GetOper(lOperands[lIndex].Typ);
                 end;
               end;
 
-            if operline='TAICPU.op' then
-              operline:='TAICPU.op_none(lOp,S_NO'
+            if lOperLine='TAICPU.op' then
+              lOperLine:='TAICPU.op_none(lOp,S_NO'
             else
-              operline:=operline+'(lOp,S_NO';
+              lOperLine:=lOperLine+'(lOp,S_NO';
 
             //for i := 0 to opercnt-1 do
-            for i := opercnt-1 downto 0 do
+            for lIndex := lOperandCount-1 downto 0 do
               begin
-                case opers[i].direction of
+                case lOperands[lIndex].Direction of
                   operOut:
-                    operline:=operline+GetOperandLoc(opers[i].typ);
+                    lOperLine:=lOperLine+GetOperandLoc(lOperands[lIndex].Typ);
                   operIn,
                   operVar:
                     begin
-                      dec(cnt);
-                      operline:=operline+GetOperand(opers[i].typ, cnt+1);
+                      dec(lCount);
+                      lOperLine:=lOperLine+GetOperand(lOperands[lIndex].Typ, lCount+1);
                     end;
                 end;
               end;
 
-            operline:=operline+')';
+            lOperLine:=lOperLine+')';
 
-            fsecond.Add('    CurrentAsmData.CurrAsmList.concat('+operline+');');
+            lSecondPassLines.Add('    CurrentAsmData.CurrAsmList.concat('+lOperLine+');');
 
             // Deallocate CPU registers
-            for i := 0 to opercnt-1 do
+            for lIndex := 0 to lOperandCount-1 do
               begin
-                tmp:=GetDeallocStatement(cnt, opers[i].typ);
-                if tmp<>'' then
-                  fsecond.add('    '+tmp);
+                lTemp:=GetDeallocStatement(lCount, lOperands[lIndex].Typ);
+                if lTemp<>'' then
+                  lSecondPassLines.add('    '+lTemp);
               end;
 
-            fsecond.Add('  end;');
+            lSecondPassLines.Add('  end;');
 
-            if target<>'' then
-              fsecond.add('{$endif}');
+            if lTarget<>'' then
+              lSecondPassLines.add('{$endif}');
           end;
 
         // Write innr
-        WriteLn(fcinnr, '  in_', APrefix,'_',instrPart,postfix+_alias,' = in_',APrefix,'_mm_first+',intrnum,',');
-        WriteLn(fcpumminnr, '  fpc_in_', APrefix,'_',instrPart,postfix+_alias,' = fpc_in_',APrefix,'_mm_first+',intrnum,';');
+        WriteLn(lCompilerInlineFile, '  in_', APrefix,'_',lInstructionPart,lPostfix+lAlias,' = in_',APrefix,'_mm_first+',lIntrinsicNumber,',');
+        WriteLn(lCPUInlineFile, '  fpc_in_', APrefix,'_',lInstructionPart,lPostfix+lAlias,' = fpc_in_',APrefix,'_mm_first+',lIntrinsicNumber,';');
 
         // Write function
-        if target<>'' then
-          WriteLn(fprocs, '{$ifdef ',target,'}');
+        if lTarget<>'' then
+          WriteLn(lProcsFile, '{$ifdef ',lTarget,'}');
 
-        if hasOutput then write(fprocs,'function ') else write(fprocs,'procedure ');
-        write(fprocs,APrefix,'_',instrPart,postfix,'(');
+        if lHasOutput then write(lProcsFile,'function ') else write(lProcsFile,'procedure ');
+        write(lProcsFile,APrefix,'_',lInstructionPart,lPostfix,'(');
 
-        cnt:=0;
-        for i:=0 to opercnt-1 do
+        lCount:=0;
+        for lIndex:=0 to lOperandCount-1 do
           begin
-            if opers[i].direction=operOut then
+            if lOperands[lIndex].Direction=operOut then
               Continue;
 
-            if cnt>0 then
+            if lCount>0 then
               begin
-                if opers[i].typ<>opers[i-1].typ then
-                  write(fprocs,': ',GetPascalType(opers[i-1].typ),'; ')
+                if lOperands[lIndex].Typ<>lOperands[lIndex-1].Typ then
+                  write(lProcsFile,': ',GetPascalType(lOperands[lIndex-1].Typ),'; ')
                 else
-                  write(fprocs,', ');
+                  write(lProcsFile,', ');
               end;
 
-            write(fprocs,opers[i].name);
-            if i=opercnt-1 then
-              write(fprocs,': ',GetPascalType(opers[i].typ));
+            write(lProcsFile,lOperands[lIndex].Name);
+            if lIndex=lOperandCount-1 then
+              write(lProcsFile,': ',GetPascalType(lOperands[lIndex].Typ));
 
-            inc(cnt);
+            inc(lCount);
           end;
 
-        write(fprocs,')');
+        write(lProcsFile,')');
 
-        if hasOutput then write(fprocs,': ',GetPascalType(outputType));
-        WriteLn(fprocs,'; [INTERNPROC: fpc_in_',APrefix,'_',instrPart,postfix+_alias,'];');
+        if lHasOutput then write(lProcsFile,': ',GetPascalType(lOutputType));
+        WriteLn(lProcsFile,'; [INTERNPROC: fpc_in_',APrefix,'_',lInstructionPart,lPostfix+lAlias,'];');
 
-        if target<>'' then
-          WriteLn(fprocs, '{$endif}');
+        if lTarget<>'' then
+          WriteLn(lProcsFile, '{$endif}');
 
         // Str now contains conditionals
 
-        inc(intrnum);
+        inc(lIntrinsicNumber);
       end;
 
-    WriteLn(fcinnr, '  in_', APrefix,'mm_last = in_',APrefix,'_mm_first+',intrnum-1);
+    WriteLn(lCompilerInlineFile, '  in_', APrefix,'mm_last = in_',APrefix,'_mm_first+',lIntrinsicNumber-1);
 
-    ftypechk.SaveToFile(APrefix+'mmtype.inc');
-    ffirst.SaveToFile(APrefix+'mmfirst.inc');
-    fsecond.SaveToFile(APrefix+'mmsecond.inc');
+    lTypeCheckLines.SaveToFile(APrefix+'mmtype.inc');
+    lFirstPassLines.SaveToFile(APrefix+'mmfirst.inc');
+    lSecondPassLines.SaveToFile(APrefix+'mmsecond.inc');
 
-    ftypechk.Free;
-    ffirst.Free;
-    fsecond.Free;
+    lTypeCheckLines.Free;
+    lFirstPassLines.Free;
+    lSecondPassLines.Free;
 
-    CloseFile(fprocs);
-    CloseFile(fcinnr);
-    CloseFile(fcpumminnr);
+    CloseFile(lProcsFile);
+    CloseFile(lCompilerInlineFile);
+    CloseFile(lCPUInlineFile);
 
-    CloseFile(f);
+    CloseFile(lFile);
   end;
 
 begin

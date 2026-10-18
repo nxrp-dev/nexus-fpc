@@ -100,12 +100,12 @@ implementation
       { always use the default calling convention }
       Result.ProcCallOption:=pocall_default;
       Include(Result.ProcOptions,po_hascallingconvention);
-      handle_calling_convention(Result,hcc_default_actions_impl);
+      Handle_Calling_Convention(Result,cHCCDefaultActionsImpl);
       Sym:=CProcSym.Create(BaseSymName+Result.UniqueIDStr);
       ST.InsertSym(Sym);
 
       Result.ProcSym:=Sym;
-      proc_add_definition(Result);
+      Proc_Add_Definition(Result);
       { the code will be assigned directly to the "code" field later }
       Result.ForwardDef:=False;
       Result.AliasNames.Insert(Result.MangledName);
@@ -231,8 +231,8 @@ implementation
       if InvokeDef.ReturnDef=PVDef then
         InvokeDef.ReturnDef:=IntfDef;
 
-      handle_calling_convention(InvokeDef,hcc_default_actions_intf_struct);
-      proc_add_definition(InvokeDef);
+      Handle_Calling_Convention(InvokeDef,cHCCDefaultActionsIntfStruct);
+      Proc_Add_Definition(InvokeDef);
       InvokeDef.CalcParas;
       { def is not owned, so it can be simply freed }
       Def.Free;
@@ -342,7 +342,7 @@ implementation
       Result.SymTable.InsertSym(InvokeDef.ProcSym);
       Result.SymTable.InsertDef(InvokeDef);
 
-      proc_add_definition(InvokeDef);
+      Proc_Add_Definition(InvokeDef);
       InvokeDef.CalcParas;
       Include(Result.ObjectOptions,oo_has_virtual);
 
@@ -982,8 +982,8 @@ implementation
       PI.ProcDef:=PD;
       if not Assigned(PINested) then
         begin
-          insert_funcret_para(PD);
-          insert_funcret_local(PD);
+          Insert_FuncRet_Para(PD);
+          Insert_FuncRet_Local(PD);
           { we always do a call, namely to the provided function }
           Include(PI.Flags,pi_do_call);
         end
@@ -998,11 +998,11 @@ implementation
           PD.FuncRetSym:=PINested.ProcDef.FuncRetSym;
           PINested.ProcDef.FuncRetSym:=nil;
           PINested.ProcDef.Reset_After_Conv;
-          insert_funcret_para(PINested.ProcDef);
-          insert_funcret_local(PINested.ProcDef);
+          Insert_FuncRet_Para(PINested.ProcDef);
+          Insert_FuncRet_Local(PINested.ProcDef);
           { the nested function needs access to the parent's framepointer to
             access the capturer }
-          insert_parentfp_para(PINested.ProcDef);
+          Insert_ParentFP_Para(PINested.ProcDef);
           PD.CopiedFrom:=PINested.ProcDef;
         end;
       { to simplify some checks, but only after insert_funcret_para }
@@ -1034,7 +1034,7 @@ implementation
       if Assigned(PINested) then
         PINested.ProcDef.CalcParas;
 
-      insert_self_and_vmt_para(PD);
+      Insert_Self_And_VMT_Para(PD);
 
       if Assigned(PINested) then
         begin
@@ -1056,7 +1056,7 @@ implementation
         begin
           N1:=CCallNode.Create(CreateParas(PINested.ProcDef),PS,CaptureDef.SymTable,CLoadNode.Create(Capturer,Capturer.Owner),[],nil);
           { captured variables cannot be in registers }
-          make_not_regable(TCallNode(N1).MethodPointer,[ra_addr_regable,ra_addr_taken]);
+          Make_Not_Regable(TCallNode(N1).MethodPointer,[ra_addr_regable,ra_addr_taken]);
         end
       else if N.ResultDef.Typ=ProcVarDef then
         begin
@@ -1095,7 +1095,7 @@ implementation
                       N1
                     );
           { captured variables cannot be in registers }
-          make_not_regable(TAssignmentNode(N1).Left,[ra_addr_regable,ra_addr_taken]);
+          Make_Not_Regable(TAssignmentNode(N1).Left,[ra_addr_regable,ra_addr_taken]);
         end;
       AddStatement(Stmt,N1);
       PD.AliasNames.Insert(PD.MangledName);
@@ -1380,12 +1380,12 @@ implementation
           if not Assigned(OuterCapturer) then
             InternalError(2022011605);
           SelfNode:=CLoadNode.Create(OuterCapturer,OuterCapturer.Owner);
-          make_not_regable(SelfNode,[ra_different_scope]);
+          Make_Not_Regable(SelfNode,[ra_different_scope]);
           OuterAlive:=GetCapturerAlive(TProcDef(Ctx.ProcDef.Owner.DefOwner));
           if not Assigned(OuterAlive) then
             InternalError(2022051706);
           AliveNode:=CLoadNode.Create(OuterAlive,OuterAlive.Owner);
-          make_not_regable(AliveNode,[ra_different_scope]);
+          Make_Not_Regable(AliveNode,[ra_different_scope]);
         end;
       AddStatement(Stmt,CAssignmentNode.Create(
                           CSubscriptNode.Create(
