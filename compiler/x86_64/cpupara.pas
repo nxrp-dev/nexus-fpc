@@ -1653,19 +1653,6 @@ unit cpupara;
             ParaDef:=HP.VarDef;
             ParaLocDef:=HP.VarDef;
 
-            { in syscalls the libbase might be set as explicit paraloc }
-            if (vo_has_explicit_paraloc in HP.VarOptions) then
-              if not (vo_is_syscall_lib in HP.VarOptions) then
-                InternalError(2022010501)
-              else
-                begin
-                  ParaCGSize:=Def_CGSize(ParaDef);
-                  HP.ParaLoc[Side].Def:=ParaDef;
-                  HP.ParaLoc[Side].Size:=ParaCGSize;
-                  HP.ParaLoc[Side].IntSize:=TCgSize2Size[ParaCGSize];
-                  HP.ParaLoc[Side].Alignment:=SizeOf(PInt);
-                  Continue;
-                end;
 
             { on vectorcall, if a record has only one field and that field is a
               single or double, it has to be handled like a single/double }

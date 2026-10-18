@@ -181,7 +181,7 @@ implementation
     function TVMTBuilder.is_new_vmt_entry(pd:TProcDef; out overridesclasshelper: boolean):boolean;
       const
         po_comp = [po_classmethod,po_virtualmethod,po_staticmethod,po_interrupt,po_iocheck,po_msgint,
-                   po_exports,po_varargs,po_explicitparaloc,po_nostackframe];
+                   po_exports,po_varargs,po_nostackframe];
       var
         i : LongInt;
         hasequalpara,
@@ -447,7 +447,7 @@ implementation
     function TVMTBuilder.intf_search_procdef_by_name(proc: TProcDef;const name: string): TProcDef;
       const
         po_comp = [po_classmethod,po_staticmethod,po_interrupt,po_iocheck,po_msgint,
-                   po_exports,po_varargs,po_explicitparaloc,po_nostackframe];
+                   po_exports,po_varargs,po_nostackframe];
       var
         implprocdef : TProcDef;
         i: cardinal;

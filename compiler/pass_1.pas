@@ -34,9 +34,6 @@ interface
 
     procedure FirstPass(var p : TNode);
     function  DoFirstPass(var p : TNode) : boolean;
-{$ifdef state_tracking}
-    procedure  DoTrackStatePass(p:TNode);
-{$endif}
 
 
 implementation
@@ -51,9 +48,6 @@ implementation
       ,htypechk
       ,cgbase
 {$endif extdebug}
-{$ifdef state_tracking}
-      ,nstate
-{$endif}
       ;
 
 {*****************************************************************************
@@ -227,27 +221,8 @@ implementation
       begin
          CodeGenError:=false;
          FirstPass(p);
-{$ifdef state_tracking}
-         WriteLn('TRACKSTART');
-         WriteLn('before');
-         writenode(p);
-         DoTrackStatePass(p);
-         WriteLn('after');
-         writenode(p);
-         WriteLn('TRACKDONE');
-{$endif}
          DoFirstPass:=CodeGenError;
       end;
 
-{$ifdef state_tracking}
-     procedure DoTrackStatePass(p:TNode);
-
-     begin
-        aktstate:=Tstate_storage.create;
-        p.track_state_pass(true);
-            aktstate.free;
-            aktstate := nil;
-     end;
-{$endif}
 
 end.

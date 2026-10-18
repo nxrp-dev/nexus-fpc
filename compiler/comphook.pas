@@ -26,11 +26,7 @@ unit comphook;
 interface
 
 uses
-{$IFNDEF USE_FAKE_SYSUTILS}
   SysUtils,
-{$ELSE}
-  FKSysUtl,
-{$ENDIF}
   GlobType,
   FinPut;
 

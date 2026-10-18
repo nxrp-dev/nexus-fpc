@@ -994,18 +994,6 @@ parser_e_illegal_calling_convention=03195_W_Тип вызова игнориро
 % не-i386 поддерживаются только типы вызова стандартного ABI.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE нельзя использовать для объектов
 % Директива \var{reintroduce} не поддерживается для объектов.
-parser_e_paraloc_only_one_para=03197_E_Расположение аргументов не может совпадать
-% Если расположение аргументов указываются явно, как того требуют некоторые
-% типы вызовов syscall, расположение каждого из аргументов должно быть уникальным,
-% конструкции вида \var{procedure p(i,j : longint 'r1');} не допускаются.
-parser_e_paraloc_all_paras=03198_E_Нужно указать расположение для всех аргументов
-% Если расположение указано для одного аргументов, его нужно указать и для всех
-% остальных.
-parser_e_illegal_explicit_paraloc=03199_E_Неизвестное расположение аргумента
-% Указанное расположение не является допустимым с точки зрения компилятора.
-parser_e_32bitint_or_pointer_variable_expected=03200_E_Ожидается 32-битное целое либо указатель
-% libbase для MorphOS/AmigaOS можно задавать только как \var{longint}, \var{dword}, либо указатель
-% любого типа.
 parser_e_goto_outside_proc=03201_E_Не допускается goto между различными процедурами
 % Не допускается использование \var{goto} для перехода на метку, определенную вне
 % текущей процедуры. Следующий пример демонстрирует проблему:
@@ -3385,8 +3373,6 @@ Compiler CPU Target: $FPCCPU
   All
   $WPOPTIMIZATIONS
 
-Поддерживаемые типы микроконтроллеров:
-  $CONTROLLERTYPES
 
 This program comes under the GNU General Public Licence
 For more information read COPYING.v2

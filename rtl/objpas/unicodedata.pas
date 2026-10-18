@@ -1301,7 +1301,7 @@ begin
   if not(TCollationField.VariableLowLimit in AChangedFields) then
     p^.VariableLowLimit := base^.VariableLowLimit;
   if not(TCollationField.VariableHighLimit in AChangedFields) then
-    p^.VariableLowLimit := base^.VariableHighLimit;
+    p^.VariableHighLimit := base^.VariableHighLimit;
   if not(TCollationField.Alternate in AChangedFields) then
     p^.VariableWeight := base^.VariableWeight;
   if not(TCollationField.Normalization in AChangedFields) then

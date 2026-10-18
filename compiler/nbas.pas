@@ -121,9 +121,6 @@ interface
           function simplify(forinline : boolean) : TNode; override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
-{$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-{$endif state_tracking}
           property statements : TNode read left write left;
        end;
        TBlockNodeClass = class of TBlockNode;
@@ -964,22 +961,6 @@ implementation
            end;
       end;
 
-{$ifdef state_tracking}
-      function TBlockNode.track_state_pass(exec_known:boolean):boolean;
-
-      var hp:TStatementNode;
-
-      begin
-        track_state_pass:=false;
-        hp:=TStatementNode(left);
-        while Assigned(hp) do
-            begin
-                if hp.left.track_state_pass(exec_known) then
-                    track_state_pass:=true;
-                hp:=TStatementNode(hp.right);
-            end;
-      end;
-{$endif state_tracking}
 
 {*****************************************************************************
                              TASMNODE

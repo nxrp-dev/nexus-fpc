@@ -2459,8 +2459,6 @@ implementation
 
          ParaLoc[CalleeSide].Init;
          ParaLoc[CallerSide].Init;
-         if vo_has_explicit_paraloc in VarOptions then
-           ParaLoc[CallerSide].PPULoad(PPUFile);
 
          PPULoadPlatform(PPUFile);
       end;
@@ -2486,11 +2484,6 @@ implementation
          PPUFile.PutByte(Min(1,Refs));
          PPUFile.DoCRC:=OldCRC;
 
-         if vo_has_explicit_paraloc in VarOptions then
-           begin
-             ParaLoc[CallerSide].Check_Simple_Location;
-             ParaLoc[CallerSide].PPUWrite(PPUFile);
-           end;
          WriteEntry(PPUFile,IBParaVarSym);
       end;
 

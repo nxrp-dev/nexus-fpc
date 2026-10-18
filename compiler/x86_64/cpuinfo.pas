@@ -75,34 +75,14 @@ Type
       fpu_x86_64_v4
      );
 
-   TControllerType =
-     (ct_none
-     );
-
-   TControllerDataType = record
-      ControllerTypeStr, controllerunitstr: string[20];
-      CPUType: TCPUType; FPUType: TFPUType;
-      flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
-   end;
 
 
 Const
-   { Is there support for dealing with multiple microcontrollers available }
-   { for this platform? }
-   ControllerSupport = false;
    { Size of native extended type }
    extended_size = 10;
    { target cpu string (used by compiler options) }
    TargetCPUString = 'x86_64';
 
-   { We know that there are fields after sramsize
-     but we don't care about this warning }
-   {$PUSH}
-    {$WARN 3177 OFF}
-   embedded_controllers : array [TControllerType] of TControllerDataType =
-   (
-      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
-   {$POP}
 
 var
    { calling conventions supported by the code generator }

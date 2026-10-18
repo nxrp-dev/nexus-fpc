@@ -27,8 +27,13 @@ partial data and caller ownership after failure. Running in isolated working and
 temporary directories leaves **zero files** behind. Source-archive packaging also
 preserves the nested fixture ZIP byte for byte and excludes its own checkpoints.
 
-The original three collation programs already fail to compile because `unicodeducet`
-is absent. It belonged to `packages/rtl-unicode`, removed in NexusFPC commit
-`334e806fea1b1ee4cd89d6ccf4ac8a74e19cb83c`. The unchanged `tuca1` was compiled
-before this edit and failed at that missing unit. This storage change does not
-restore the retired provider or claim a collation algorithm test run.
+The restored RTL Unicode package now supplies `unicodeducet` from the main
+package repository. Its explicit source paths and matching-mode collation build
+recipe are in
+[`CollationConformance.nxproject`](../../../../../nexus/packages/nexus-packages/rtl-unicode/tests/CollationConformance.nxproject).
+All three original programs pass in both ANSI-default and Unicode-default builds:
+206,308 non-ignorable lines and 227,819 shifted lines per program, with zero
+errors. The fixture ZIP and memory loader remain here in one maintained location.
+See the package's
+[review](../../../../../nexus/packages/nexus-packages/rtl-unicode/CODE_REVIEW.md)
+for the restored provider's regression and conformance results.

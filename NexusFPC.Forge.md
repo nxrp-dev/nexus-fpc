@@ -83,7 +83,7 @@ The OMF switch checks use the same three arguments as the linker checks below:
 STABS/STABX generation, register tables, and runtime readers are removed.
 `-gs`, `-gp`, and `-gostabsabsincludes` are rejected. Use `-g` or
 `-gw3`/`-gw4`/`-gw5` for DWARF, and `-gl` for runtime source locations.
-The current NXU long compatibility revision is 45; rebuild cached units and SDKs.
+The current NXU long compatibility revision is 46; rebuild cached units and SDKs.
 Validate with `bash tests/switches/Run-NXRemovedSTABSTests.sh <compiler> <rtl-units> <output>`.
 Mach-O debug-map constants and classification of foreign ELF debug sections
 remain for object-format interoperability; they do not enable STABS generation.
@@ -495,6 +495,15 @@ ordinary native compiler and RTL. Stripping removes compiler debugging symbols.
 The compiler's former `DEBUG_NODE_XML` exporter has been removed. Defining that
 name while building the compiler no longer enables XML node dumps. The existing
 `-vp` plain-text node diagnostics remain available.
+
+The abandoned `state_tracking` pass and `USE_FAKE_SYSUTILS` fallback are removed.
+All compiler builds use normal `SysUtils`, including the FPC 3.2.2 bootstrap.
+Bare-metal controller tables, `-iu` reporting and controller state in generic
+token records are removed. The Amiga `syscall` procedure convention and its
+parameter-location machinery are removed; `{$SYSCALL ...}` receives the ordinary
+unknown-directive diagnostic. Public RTTI calling-convention values are unchanged.
+NXU long revision 46 covers the changed tokens, option sets and generic records;
+rebuild all cached units, packages and SDKs.
 
 The owner explicitly declined additional whole-program optimization passes on
 2026-10-11 after measurement. The WPO recipe and the Forge settings added for it

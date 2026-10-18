@@ -34,11 +34,7 @@ interface
 {$ifdef win32}
       Windows,
 {$endif win32}
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       GlobType,
       CUtils,CClasses,
       Systems;

@@ -61,9 +61,6 @@ interface
           function dogetcopy : TNode;override;
           function docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
-    {$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-    {$endif}
          protected
           { override the following if you want to implement }
           { parts explicitely in the code generator (JM)    }
@@ -126,11 +123,7 @@ interface
 implementation
 
     uses
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       GlobType,Systems,ConstExp,compinnr,
       CUtils,Verbose,Globals,WideStr,
       tokens,
@@ -138,9 +131,6 @@ implementation
       cgbase,
       htypechk,pass_1,
       nld,nbas,nmat,ncnv,ncon,nset,nopt,ncal,ninl,nmem,nutils,
-      {$ifdef state_tracking}
-      nstate,
-      {$endif}
       CPUInfo,
       PPU;
 
@@ -2184,10 +2174,6 @@ const
         b           : boolean;
         lt,rt       : TNodeType;
         ot          : TNodeType;
-{$ifdef state_tracking}
-        factval     : TNode;
-        change      : boolean;
-{$endif}
 
         function maybe_cast_ordconst(var n: TNode; adef: TDef): boolean;
           begin
@@ -5052,40 +5038,5 @@ const
            end;
       end;
 
-{$ifdef state_tracking}
-    function TAddNode.track_state_pass(exec_known:boolean):boolean;
-
-    var factval:TNode;
-
-    begin
-    track_state_pass:=false;
-    if left.track_state_pass(exec_known) then
-      begin
-        track_state_pass:=true;
-        left.resultdef:=nil;
-        DoTypeCheckPass(left);
-      end;
-    factval:=aktstate.find_fact(left);
-    if factval<>nil then
-        begin
-        track_state_pass:=true;
-            left.free;
-            left:=factval.GetCopy;
-        end;
-    if right.track_state_pass(exec_known) then
-        begin
-        track_state_pass:=true;
-        right.resultdef:=nil;
-        DoTypeCheckPass(right);
-        end;
-    factval:=aktstate.find_fact(right);
-    if factval<>nil then
-        begin
-        track_state_pass:=true;
-            right.free;
-            right:=factval.GetCopy;
-        end;
-    end;
-{$endif}
 
 end.

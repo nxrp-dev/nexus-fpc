@@ -90,9 +90,6 @@ interface
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
-       {$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-       {$endif}
        end;
        TNotNodeClass = class of TNotNode;
 
@@ -1400,16 +1397,5 @@ implementation
              expectloc:=LOC_REGISTER;
       end;
 
-{$ifdef state_tracking}
-    function TNotNode.track_state_pass(exec_known:boolean):boolean;
-      begin
-        track_state_pass:=true;
-        if left.track_state_pass(exec_known) then
-          begin
-            left.resultdef:=nil;
-            DoTypeCheckPass(left);
-          end;
-      end;
-{$endif}
 
 end.

@@ -1539,17 +1539,6 @@ unit scandir;
         // different places. Skip it for now.
       end;
 
-    procedure dir_syscall;
-      begin
-        CurrentScanner.skipspace;
-        { No syscall convention is valid on the retained targets. Preserve
-          the existing diagnostics for empty and named directives. }
-        if CurrentScanner.readid='' then
-          Message(scan_w_syscall_convention_not_useable_on_target)
-        else
-          Message(scan_w_syscall_convention_invalid);
-      end;
-
     procedure dir_targetswitch;
       var
         name, value: string;
@@ -2041,7 +2030,6 @@ unit scandir;
         AddDirective('STACKFRAMES',directive_all, @dir_stackframes);
         AddDirective('STOP',directive_all, @dir_stop);
         AddDirective('STRINGCHECKS', directive_all, @dir_stringchecks);
-        AddDirective('SYSCALL',directive_all, @dir_syscall);
         AddDirective('TARGETSWITCH',directive_all, @dir_targetswitch);
         AddDirective('TYPEDADDRESS',directive_all, @dir_typedaddress);
         AddDirective('TYPEINFO',directive_all, @dir_typeinfo);

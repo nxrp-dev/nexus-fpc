@@ -32,9 +32,6 @@ interface
        GlobType,ConstExp,
        paramgr,parabase,cgbase,
        node,nbas,nutils,
-       {$ifdef state_tracking}
-       nstate,
-       {$endif state_tracking}
        SymBase,symtype,SymSym,symdef,SymTable,
        pgentype,compinnr;
 
@@ -97,7 +94,6 @@ interface
           function safe_call_self_node: TNode;
           procedure load_in_temp(var p:TNode);
           procedure gen_vmt_entry_load; virtual;
-          procedure gen_syscall_para(para: TCallParaNode); virtual;
           procedure objc_convert_to_message_send;virtual;
 
        public
@@ -202,9 +198,6 @@ interface
           function  pass_1 : TNode;override;
           function  pass_typecheck:TNode;override;
           function  simplify(forinline : boolean) : TNode;override;
-       {$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-       {$endif state_tracking}
           function  docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
           function  para_count:LongInt;
@@ -3074,13 +3067,6 @@ implementation
       end;
 
 
-    procedure TCallNode.gen_syscall_para(para: TCallParaNode);
-      begin
-        { unsupported }
-        InternalError(2014040101);
-      end;
-
-
     procedure TCallNode.objc_convert_to_message_send;
       var
         block,
@@ -3652,9 +3638,6 @@ implementation
                    begin
                      para.left:=gen_vmt_tree;
                    end
-                else
-                 if vo_is_syscall_lib in para.parasym.VarOptions then
-                   gen_syscall_para(para)
                 else
                  if vo_is_range_check in para.parasym.VarOptions then
                    begin
@@ -5127,34 +5110,6 @@ implementation
          gen_vmt_entry_load;
       end;
 
-{$ifdef state_tracking}
-    function TCallNode.track_state_pass(exec_known:boolean):boolean;
-
-    var hp:TCallParaNode;
-        value:TNode;
-
-    begin
-        track_state_pass:=false;
-        hp:=TCallParaNode(left);
-        while Assigned(hp) do
-            begin
-                if left.track_state_pass(exec_known) then
-                    begin
-                        left.resultdef:=nil;
-                        DoTypeCheckPass(left);
-                    end;
-                value:=aktstate.find_fact(hp.left);
-                if value<>nil then
-                    begin
-                        track_state_pass:=true;
-                        hp.left.free;
-                        hp.left:=value.GetCopy;
-                        DoTypeCheckPass(hp.left);
-                    end;
-                hp:=TCallParaNode(hp.right);
-            end;
-    end;
-{$endif}
 
 
 {**************************************************************************

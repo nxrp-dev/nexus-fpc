@@ -245,7 +245,6 @@ unit cpupara;
           pocall_safecall,
           pocall_stdcall,
           pocall_cdecl,
-          pocall_syscall,
           pocall_cppdecl,
           pocall_mwpascal,
           pocall_pascal:
@@ -282,7 +281,6 @@ unit cpupara;
           pocall_safecall,
           pocall_stdcall,
           pocall_cdecl,
-          pocall_syscall,
           pocall_cppdecl,
           pocall_mwpascal,
           pocall_pascal:
@@ -426,18 +424,6 @@ unit cpupara;
             HP:=TParaVarSym(Paras[I]);
             ParaDef:=HP.VarDef;
 
-            { syscall for AROS can have already a paraloc set }
-            if (vo_has_explicit_paraloc in HP.VarOptions) then
-              begin
-                { on AROS-i386, only the libbase can have explicit paraloc }
-                if not (vo_is_syscall_lib in HP.VarOptions) then
-                  InternalError(2016090105);
-                if P.ProcCallOption in PushLeftRight_PoCalls then
-                  Dec(I)
-                else
-                  Inc(I);
-                Continue;
-              end;
 
             PushAddr:=Push_Addr_Param(HP.VarSpez,ParaDef,P.ProcCallOption);
             if PushAddr then

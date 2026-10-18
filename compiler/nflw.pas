@@ -81,9 +81,6 @@ interface
           constructor create(l,r:TNode;tab,cn:boolean);virtual;reintroduce;
           function pass_typecheck:TNode;override;
           function pass_1 : TNode;override;
-{$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-{$endif}
           function simplify(forinline: boolean): TNode;override;
 
           function internalsimplify(forinline: boolean): TNode;
@@ -297,9 +294,6 @@ implementation
       CUtils,Verbose,Globals,PPU,
       SymTable,paramgr,defcmp,defutil,htypechk,pass_1,
       ncal,nadd,ncon,nmem,nld,ncnv,nbas,nutils,ninl,nset,ngenutil,
-    {$ifdef state_tracking}
-      nstate,
-    {$endif}
 
     {$if defined(i386)}
       CPUInfo,
@@ -1427,97 +1421,6 @@ implementation
 {$endif prefetchnext}
       end;
 
-{$ifdef state_tracking}
-    function TWhileRepeatNode.track_state_pass(exec_known:boolean):boolean;
-
-    var condition:TNode;
-        code:TNode;
-        done:boolean;
-        value:boolean;
-        change:boolean;
-        firsttest:boolean;
-        factval:TNode;
-
-    begin
-        track_state_pass:=false;
-        done:=false;
-        firsttest:=true;
-        {For repeat until statements, first do a pass through the code.}
-        if not(lnf_testatbegin in flags) then
-            begin
-                code:=right.GetCopy;
-                if code.track_state_pass(exec_known) then
-                    track_state_pass:=true;
-                code.free;
-                code := nil;
-            end;
-        repeat
-            condition:=left.GetCopy;
-            code:=right.GetCopy;
-            change:=condition.track_state_pass(exec_known);
-            factval:=aktstate.find_fact(left);
-            if factval<>nil then
-                begin
-                    condition.free;
-                    condition:=factval.GetCopy;
-                    change:=true;
-                end;
-            if change then
-                begin
-                    track_state_pass:=true;
-                    {Force new resultdef pass.}
-                    condition.resultdef:=nil;
-                    DoTypeCheckPass(condition);
-                end;
-            if is_constboolnode(condition) then
-                begin
-                    {Try to turn a while loop into a repeat loop.}
-                    if firsttest then
-                        exclude(flags,testatbegin);
-                    value:=(TOrdConstNode(condition).Value<>0) xor checknegate;
-                    if value then
-                        begin
-                            if code.track_state_pass(exec_known) then
-                                track_state_pass:=true;
-                        end
-                    else
-                        done:=true;
-                end
-            else
-                begin
-                    {Remove any modified variables from the state.}
-                    code.track_state_pass(false);
-                    done:=true;
-                end;
-            code.free;
-            code := nil;
-            condition.free;
-            condition := nil;
-            firsttest:=false;
-        until done;
-        {The loop condition is also known, for example:
-         while i<10 do
-            begin
-                ...
-            end;
-
-         When the loop is done, we do know that i<10 = false.
-        }
-        condition:=left.GetCopy;
-        if condition.track_state_pass(exec_known) then
-            begin
-                track_state_pass:=true;
-                {Force new resultdef pass.}
-                condition.resultdef:=nil;
-                DoTypeCheckPass(condition);
-            end;
-        if not is_constboolnode(condition) then
-            aktstate.store_fact(condition,
-             COrdConstNode.create(byte(checknegate),PasBool1Type,true))
-        else
-            condition.free; // no nil needed
-    end;
-{$endif}
 
 {*****************************************************************************
                                TIFNODE

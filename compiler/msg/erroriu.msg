@@ -997,21 +997,6 @@ parser_e_illegal_calling_convention=03195_W_Direttiva di convenzione di chiamata
 % only the standard ABI calling convention of the CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE non si può usare negli oggetti
 % \var{reintroduce} is not supported for objects.
-parser_e_paraloc_only_one_para=03197_E_Ogni argomento deve avere la sua collocazione
-% If locations for arguments are specified explicitly as it is required by
-% some syscall conventions, each argument must have its own location. Things
-% like
-% \begin{verbatim}
-% procedure p(i,j : longint 'r1');
-% \end{verbatim}
-% aren't allowed.
-parser_e_paraloc_all_paras=03198_E_Ogni argomento deve avere una collocazione esplicita
-% If one argument has an explicit argument location, all arguments of a procedure
-% must have one.
-parser_e_illegal_explicit_paraloc=03199_E_Collocazione dell'argomento sconosciuta
-% The location specified for an argument isn't recognized by the compiler.
-parser_e_32bitint_or_pointer_variable_expected=03200_E_Qui era attesa una variabile intera o puntatore a 32 Bit (ma non c'è)
-% The libbase for MorphOS/AmigaOS can be given only as \var{longint}, \var{dword} or any pointer variable.
 parser_e_goto_outside_proc=03201_E_Le istruzioni Goto fra procedure diverse non sono permesse
 % It isn't allowed to use \var{goto} statements referencing labels outside the
 % current procedure. The following example shows the problem:
@@ -2710,8 +2695,6 @@ Ottimizzazioni globali supportate:
   All
   $WPOPTIMIZATIONS
 
-Tipi di microcontroller supportati:
-  $CONTROLLERTYPES
 
 Questo programma è distribuito sotto la GNU General Public Licence
 Per ulteriori informazioni leggere il file COPYING.v2

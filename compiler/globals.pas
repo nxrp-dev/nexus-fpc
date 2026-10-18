@@ -34,11 +34,7 @@ TPCompilerReal,
       BaseUnix,Unix,
 {$endif}
 
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       { comphook pulls in sysutils anyways }
       CUtils,CClasses,CFileUtl,
       CPUInfo,
@@ -187,9 +183,6 @@ Const
          DisableDirCache : Boolean;
 
          TLSModel : TTLSModel;
-
-        { CPU targets with microcontroller support can add a controller specific unit }
-         ControllerType   : TControllerType;
 
          { WARNING: pmessage cannot be written as such in record token
               pmessage is the top of a stack of message/verbosity changes
@@ -533,7 +526,6 @@ Const
         DisableDirCache : False;
 
         TLSModel : tlsm_none;
-        ControllerType : ct_none;
         PMessage : nil;
         LineEndingType : le_platform;
         WhitespaceTrimCount : 0;
@@ -576,7 +568,6 @@ Const
     function SetOptimizeCPUType(const S:string;var A:TCPUType):Boolean;
     function SetCPUType(const S:string;var A:TSettings):Boolean;
     function SetFPUType(const S:string;var A:TFPUType):Boolean;
-    function SetControllerType(const S:string;var A:TControllerType):Boolean;
     function HandleFeature(const S : string) : Boolean;
     function SetMinFPConstPrec(const S: string; var A: TFloatType) : Boolean;
 
@@ -1103,7 +1094,6 @@ implementation
          'FAR16',
          'OLDFPCCALL',
          '', { internproc }
-         '', { syscall }
          'PASCAL',
          'REGISTER',
          'SAFECALL',
@@ -1208,36 +1198,6 @@ implementation
               Result:=True;
               Break;
             end;
-      end;
-
-
-    function SetControllerType(const S:string;var A:TControllerType):Boolean;
-      var
-        T  : TControllerType;
-        HS : string;
-      begin
-{ The following check allows to reduce amount of code for platforms  }
-{ not supporting microcontrollers due to evaluation at compile time. }
-{$PUSH}
- {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-        if ControllerSupport then
-         begin
-          Result:=False;
-          HS:=Upper(S);
-          for T:=Low(TControllerType) to High(TControllerType) do
-            if embedded_controllers[T].ControllerTypeStr=HS then
-              begin
-                A:=T;
-                Result:=True;
-                Break;
-              end;
-         end
-        else
-         begin
-          A := ct_none;
-          Result := True;
-         end;
-{$POP}
       end;
 
 

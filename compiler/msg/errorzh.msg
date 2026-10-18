@@ -410,18 +410,12 @@ scan_e_illegal_hugepointernormalization=02098_E_HUGEPOINTERNORMALIZATION 的参�
 scan_e_illegal_asmcpu_specifier=02099_E_指定了非法的汇编器 CPU 指令集 "$1"
 % 当您使用 \var{\{\$ASMCPU xxx\}} 指令指定汇编器 CPU 时，
 % 编译器无法识别您指定的 CPU。
-scan_w_syscall_convention_not_useable_on_target=02100_W_指定的系统调用约定在此目标上不可用
-% 使用 \var{\{\$SYSCALL xxx\}} 指令指定的系统调用约定，
-% 在当前目标系统上不可用。
-scan_w_syscall_convention_invalid=02101_W_指定的系统调用约定无效
-% 编译器无法识别由 \var{\{\$SYSCALL xxx\}} 指令指定的系统调用约定。
 scan_w_setpeuserversion_not_support=02102_W_目标操作系统不支持 SETPEUSERVERSION
 % 目标操作系统不支持 \var{\{\$SETPEUSERVERSION\}} 指令。
 scan_w_setpeosversion_not_support=02103_W_目标操作系统不支持 SETPEOSVERSION
 % 目标操作系统不支持 \var{\{\$SETPEOSVERSION\}} 指令。
 scan_w_setpesubsysversion_not_support=02104_W_目标操作系统不支持 SETPESUBSYSVERSION
 % 目标操作系统不支持 \var{\{\$SETPESUBSYSVERSION\}} 指令。
-scan_n_changecputype=02105_N_更改 CPU 类型以与指定的控制器保持一致
 scan_e_emptymacroname=02106_E_宏/编译器变量名不能为空
 scan_e_unexpected_ifend=02107_E_找到 $IFEND 指令，但没有匹配的 $IF 指令
 % 当通过指令 \var{\$LEGACYIFEND} 开启旧式 ifend 时，
@@ -954,18 +948,6 @@ parser_e_illegal_calling_convention=03195_W_调用约定指令被忽略："$1"
 % 某些调用约定仅受某些 CPU 支持。例如，大多数非 i386 移植版本仅支持 CPU 的标准 ABI 调用约定。
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE 不能在对象中使用
 % \var{reintroduce} 不支持对象、Objective-C 类和 Objective-C 协议。
-parser_e_paraloc_only_one_para=03197_E_每个参数必须有自己的位置
-% 如果按照某些系统调用约定的要求显式指定参数位置，每个参数必须有自己的位置。像
-% \begin{verbatim}
-% procedure p(i,j : longint 'r1');
-% \end{verbatim}
-% 这样的代码是不允许的。
-parser_e_paraloc_all_paras=03198_E_每个参数必须有显式位置
-% 如果一个参数有显式参数位置，过程的所有参数都必须有一个。
-parser_e_illegal_explicit_paraloc=03199_E_指定的显式参数位置无效
-% 系统调用特定：为此参数指定的显式位置字符串无法解析、无效，或编译器无法识别为参数指定的位置。
-parser_e_32bitint_or_pointer_variable_expected=03200_E_需要32位整数或指针变量
-% MorphOS/AmigaOS 的 libbase 只能作为 \var{longint}、\var{dword} 或任何指针变量给出。
 parser_e_goto_outside_proc=03201_E_不允许在不同过程之间使用 goto 语句
 % 不允许使用引用当前过程外部标签的 \var{goto} 语句。以下示例说明了这个问题：
 % \begin{verbatim}
@@ -1392,14 +1374,6 @@ parser_e_method_for_type_in_other_unit=03354_E_为在另一个单元中声明的
 parser_e_generic_constraints_not_allowed_here=03355_E_此处不允许泛型约束
 % 在当前位置不允许指定约束。例如在 delphi 模式下，
 % 不能在实现的头部指定约束。
-parser_e_location_size_too_small=03356_E_显式位置对于参数来说太小
-% AmigaOS/MorphOS 系统调用特定：对于 int64/qword 参数只指定了单个寄存器位置
-parser_e_location_size_too_large=03357_E_显式位置大小大于参数所需
-% AmigaOS/MorphOS 系统调用特定：对于小于 64 位的参数，指定了一对寄存器
-parser_e_location_regpair_only_data=03358_E_显式位置寄存器对只支持数据寄存器
-% AmigaOS/MorphOS 系统调用特定：对于 64 位寄存器对，只支持数据寄存器
-parser_e_location_regpair_only_consecutive=03359_E_显式位置寄存器对只支持连续寄存器
-% MorphOS 系统调用特定：64 位寄存器对只支持连续(例如：d1-d2)寄存器
 parser_e_constructors_cannot_take_type_parameters=03360_E_构造函数不能接受类型参数
 % 不允许在构造函数中使用类型参数。
 parser_e_raise_with_noreturn_not_allowed=03361_E_在声明为 noreturn 的子程序中不允许 raise
@@ -1408,10 +1382,6 @@ parser_e_raise_with_noreturn_not_allowed=03361_E_在声明为 noreturn 的子程
 parser_e_section_directive_not_allowed_for_target=03362_E_此目标不允许 section 指令
 % 只有某些目标(例如嵌入式和 FreeRTOS)支持 section 指令。
 parser_e_absolute_sym_cannot_reference_itself=03363_E_absolute 变量不能引用自身
-parser_e_syscall_format_not_support=03364_E_当前目标不支持 syscall 指令的语法
-% 在某些目标上，syscall 指令的并非所有语法变体都有意义，因此
-% 那些没有意义的语法不受支持
-% 不允许像 \var{var i: Integer absolute i;} 这样的声明
 parser_w_ignoring_published_property=03365_W_此属性将不会被发布
 % published 属性被忽略
 parser_e_wasm_ref_types_can_only_be_passed_by_value=03366_E_WebAssembly 引用类型只能按值传递
@@ -2721,10 +2691,6 @@ exec_w_init_file_not_found=09034_W_找不到 "$1"，这可能会导致链接失�
 % gcc 的目标与 FPC 的目标相同。
 exec_e_static_lib_not_supported=09035_E_不支持创建静态库
 % 不支持为此平台创建静态库，因为编译器尚未实现此功能。
-exec_f_controllertype_expected=09036_F_要生成正确的链接器调用，必须通过指令 -Wp 设置控制器类型
-% Xtensa 微控制器需要一个依赖于目标控制器的详细规范链接器命令。
-% 如果没有设置目标控制器，就无法构建此命令，因此无法进行链接。
-%
 % \end{description}
 # EndOfTeX
 
@@ -3328,7 +3294,6 @@ Free Pascal 编译器版本 $FPCVERSION
   $CODEGENERATIONBACKEND
 
 
-支持的微控制器类型:$\n  $CONTROLLERTYPES$\n
 本程序遵循 GNU 通用公共许可证
 更多信息请阅读 COPYING.v2
 
@@ -3530,7 +3495,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 **2it_返回支持的目标列表
 **2iTO_返回目标操作系统
 **2iTP_返回目标处理器
-**2iu_返回支持的微控制器类型列表
 **2iV_返回编译器简短版本
 **2iw_返回支持的整体程序优化列表
 **2iW_返回编译器完整版本
@@ -3812,11 +3776,6 @@ P*2WM<x>_最低 Mac OS X 部署版本：10.4、10.5.1、...(Darwin)
 3*2WN_不生成重定位代码，调试时需要(Windows)
 4*2WN_不生成重定位代码，调试时需要(Windows)
 A*2WN_不生成重定位代码，调试时需要(Windows)
-A*2Wp<x>_指定控制器类型；使用 fpc -i 或 fpc -iu 查看可用值
-m*2Wp<x>_指定控制器类型；使用 fpc -i 或 fpc -iu 查看可用值
-R*2Wp<x>_指定控制器类型；使用 fpc -i 或 fpc -iu 查看可用值
-V*2Wp<x>_指定控制器类型；使用 fpc -i 或 fpc -iu 查看可用值
-x*2Wp<x>_指定控制器类型；使用 fpc -i 或 fpc -iu 查看可用值
 3*2WP<x>_最低 iOS 部署版本：3.0、5.0.1、...(iphonesim)
 4*2WP<x>_最低 iOS 部署版本：8.0、8.0.2、...(iphonesim)
 a*2WP<x>_最低 iOS 部署版本：7.0、7.1.2、...(Darwin)

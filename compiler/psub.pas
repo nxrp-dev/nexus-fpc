@@ -138,9 +138,6 @@ implementation
        { pass 1 }
        ngenutil,nld,ncal,ncon,nflw,nadd,ncnv,nmem,
        pass_1,
-    {$ifdef state_tracking}
-       nstate,
-    {$endif state_tracking}
        { pass 2 }
 {$ifndef NOPASS2}
        pass_2,
@@ -2222,9 +2219,6 @@ implementation
            Message(parser_e_too_much_lexlevel);
          Block_Type:=bt_body;
 
-    {$ifdef state_tracking}
-{    aktstate:=Tstate_storage.create;}
-    {$endif state_tracking}
 
          { allocate the symbol for this procedure }
          alloc_proc_symbol(procdef);
@@ -2330,9 +2324,6 @@ implementation
          { ... remove symbol tables }
          remove_from_symtablestack;
 
-    {$ifdef state_tracking}
-{    aktstate.destroy;}
-    {$endif state_tracking}
 
          CurrentStructDef:=old_current_structdef;
          CurrentGenericDef:=old_current_genericdef;

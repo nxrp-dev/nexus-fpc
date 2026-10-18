@@ -267,7 +267,6 @@ const
   OptListPlaceholder = '$OPTIMIZATIONS';
   WPOListPlaceholder = '$WPOPTIMIZATIONS';
   AsmModeListPlaceholder = '$ASMMODES';
-  ControllerListPlaceholder = '$CONTROLLERTYPES';
   FeatureListPlaceholder = '$FEATURELIST';
   ModeSwitchListPlaceholder = '$MODESWITCHES';
   CodeGenerationBackendPlaceholder = '$CODEGENERATIONBACKEND';
@@ -589,69 +588,6 @@ const
     WriteLn(xmloutput,'    </asmmodes>');
   end;
 
-  procedure ListControllerTypes (OrigString: TCmdStr);
-  var
-    ControllerType : TControllerType;
-  begin
-{$PUSH}
- {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-    if (ControllerSupport) then
-     begin
-      SplitLine (OrigString, ControllerListPlaceholder, HS3);
-      hs1:='';
-      for ControllerType:=low(TControllerType) to high(TControllerType) do
-       begin
-        if (OrigString = '') then
-         begin
-          if Embedded_Controllers [ControllerType].ControllerTypeStr <> '' then
-           Comment (VNormal, Embedded_Controllers [ControllerType].ControllerTypeStr);
-         end
-        else
-         begin
-          if length(hs1+embedded_controllers[ControllerType].ControllerTypeStr)
-                                                                       >70 then
-           begin
-            hs:=OrigString;
-            HS1 := HS1 + ',';
-            Replace(hs,ControllerListPlaceholder,hs1);
-            Comment(VNormal,hs);
-            hs1:=''
-           end
-          else if hs1<>'' then
-           hs1:=hs1+',';
-          if embedded_controllers[ControllerType].ControllerTypeStr<>'' then
-           hs1:=hs1+embedded_controllers[ControllerType].ControllerTypeStr;
-         end;
-       end;
-      if (OrigString <> '') and (hs1<>'') then
-       begin
-        hs:=OrigString;
-        Replace(hs,ControllerListPlaceholder,hs1);
-        Comment(VNormal,hs);
-        hs1:=''
-       end;
-     end;
-{$POP}
-  end;
-
-  procedure ListControllerTypesXML;
-  var
-    ControllerType : TControllerType;
-  begin
-{$PUSH}
- {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-    if (ControllerSupport) then
-     begin
-      WriteLn(xmloutput,'    <controllertypes>');
-      for ControllerType:=low(TControllerType) to high(TControllerType) do
-        if embedded_controllers[ControllerType].ControllerTypeStr<>'' then
-          WriteLn(xmloutput,'      <controllertype name="',embedded_controllers[ControllerType].ControllerTypeStr,
-            '" controllerunit="',embedded_controllers[ControllerType].controllerunitstr, '"/>');
-      WriteLn(xmloutput,'    </controllertypes>');
-     end;
-{$POP}
-  end;
-
   procedure ListFeatures (OrigString: TCmdStr);
   var
     Feature: TFeature;
@@ -795,8 +731,6 @@ begin
        ListModeswitches (S)
       else if pos(AsmModeListPlaceholder,s)>0 then
        ListAsmModes (S)
-      else if pos(ControllerListPlaceholder,s)>0 then
-       ListControllerTypes (S)
       else if pos(FeatureListPlaceholder,s)>0 then
        ListFeatures (S)
       else if pos(CodeGenerationBackendPlaceholder,s)>0 then
@@ -820,7 +754,6 @@ begin
       ListWPOptimizationsXML;
       ListModeswitchesXML;
       ListAsmModesXML;
-      ListControllerTypesXML;
       ListFeaturesXML;
       ListCodeGenerationBackendXML;
       WriteLn(xmloutput,'  </info>');
@@ -845,7 +778,6 @@ begin
         'o': ListOptimizations ('');
         'r': ListFeatures ('');
         't': ListOSTargets ('');
-        'u': ListControllerTypes ('');
         'w': ListWPOptimizations ('');
        else
         IllegalPara ('-i' + More);
@@ -3802,7 +3734,6 @@ procedure read_arguments(cmd:TCmdStr);
       abi : TABI;
       FPUType : TFPUType;
       CPUType : TCPUType;
-      controller: TControllerType;
       s: string;
     begin
 
@@ -3814,21 +3745,6 @@ procedure read_arguments(cmd:TCmdStr);
         Undef_System_Macro('FPU'+FPUTypeStr[FPUType]);
       Def_System_Macro('FPU'+FPUTypeStr[InitSettings.FPUType]);
 
-{$PUSH}
-{$WARN 6018 OFF} { Unreachable code due to compile time evaluation }
-      if ControllerSupport then
-        begin
-          for controller:=low(TControllerType) to high(TControllerType) do
-            begin
-              s:=embedded_controllers[controller].ControllerTypeStr;
-              if s<>'' then
-                Undef_System_Macro('FPC_MCU_'+s);
-            end;
-          s:=embedded_controllers[InitSettings.ControllerType].ControllerTypeStr;
-          if s<>'' then
-            Def_System_Macro('FPC_MCU_'+s);
-        end;
-{$POP}
 
       { define abi }
       for abi:=low(TABI) to high(TABI) do
@@ -4476,7 +4392,7 @@ begin
   option.free;
   Option:=nil;
 
-  ClearStack_PoCalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
+  ClearStack_PoCalls := [pocall_cdecl,pocall_cppdecl,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
   CDecl_PoCalls := [pocall_cdecl, pocall_cppdecl, pocall_mwpascal, pocall_sysv_abi_cdecl, pocall_ms_abi_cdecl];
   if (tf_safecall_clearstack in TargetInfo.flags) then
     begin

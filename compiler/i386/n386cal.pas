@@ -33,11 +33,8 @@ interface
     type
        TI386CallNode = class(TX86CallNode)
        protected
-          procedure gen_syscall_para(para: TCallParaNode); override;
           procedure pop_parasize(pop_size:LongInt);override;
           procedure extra_interrupt_code;override;
-       public
-         procedure do_syscall;override;
        end;
 
 
@@ -59,19 +56,6 @@ implementation
 {*****************************************************************************
                              TI386CALLNODE
 *****************************************************************************}
-
-
-    procedure TI386CallNode.do_syscall;
-      begin
-        InternalError(2014081801);
-      end;
-
-
-    procedure TI386CallNode.gen_syscall_para(para: TCallParaNode);
-      begin
-        { lib parameter has no special type but proccalloptions must be a syscall }
-        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).LibSym,TCPUProcDef(procdefinition).LibSym.owner);
-      end;
 
 
     procedure TI386CallNode.extra_interrupt_code;

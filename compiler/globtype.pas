@@ -519,8 +519,6 @@ interface
          pocall_oldfpccall,
          { Procedure has compiler magic}
          pocall_internproc,
-         { procedure is a system call, applies e.g. to MorphOS and PalmOS }
-         pocall_syscall,
          { pascal standard left to right }
          pocall_pascal,
          { procedure uses register (fastcall) calling }
@@ -573,7 +571,6 @@ interface
            'Far16',
            'OldFPCCall',
            'InternProc',
-           'SysCall',
            'Pascal',
            'Register',
            'SafeCall',

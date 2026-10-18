@@ -38,11 +38,7 @@ uses FModule;
 implementation
 
     uses
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       CClasses,
       GlobType,tokens,Systems,Globals,Verbose,GlobStat,
       SymBase,SymTable,symdef,

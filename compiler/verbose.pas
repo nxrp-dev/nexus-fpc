@@ -26,11 +26,7 @@ unit verbose;
 interface
 
     uses
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       CUtils,
       GlobType,FinPut,
       CMsgs;

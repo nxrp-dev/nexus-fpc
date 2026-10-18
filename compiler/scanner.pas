@@ -3488,18 +3488,6 @@ type
             DisableDirCache:=boolean(tokenreadbyte);
 
             TLSModel:=TTLSModel(tokenreadenum(sizeof(TTLSModel)));
-{ TH: Since the field was conditional originally, it was not stored in PPUs.  }
-{ While adding ControllerSupport constant, I decided not to store ct_none     }
-{ on targets not supporting controllers, but this might be changed here and   }
-{ in tokenwritesettings in the future to unify the PPU structure and handling }
-{ of this field in the compiler.                                              }
-{$PUSH}
- {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-            if ControllerSupport then
-             ControllerType:=TControllerType(tokenreadenum(sizeof(TControllerType)))
-            else
-             ControllerType:=ct_none;
-{$POP}
             LineEndingType:=TLineEndingType(tokenreadenum(sizeof(TLineEndingType)));
             WhitespaceTrimCount:=tokenreadword;
             WhitespaceTrimAuto:=boolean(tokenreadbyte);
@@ -3577,12 +3565,6 @@ type
 
             tokenwriteenum(TLSModel,sizeof(TLSModel));
 
-{ TH: See note about controllertype field in tokenreadsettings. }
-{$PUSH}
- {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-            if ControllerSupport then
-              tokenwriteenum(ControllerType,sizeof(TControllerType));
-{$POP}
             tokenwriteenum(LineEndingType,sizeof(TLineEndingType));
             tokenwriteword(WhitespaceTrimCount);
             tokenwritebyte(byte(WhitespaceTrimAuto));

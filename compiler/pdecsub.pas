@@ -211,9 +211,7 @@ implementation
         old_block_type : TBlockType;
         currparast : TParaSymTable;
         parseprocvar : TPPV;
-        locationstr : string;
         ParaNr : integer;
-        explicit_paraloc,
         need_array,
         is_univ: boolean;
         stoptions : TSingleTypeOptions;
@@ -265,7 +263,6 @@ implementation
 
       begin
         old_block_type:=Block_Type;
-        explicit_paraloc:=false;
         consume(_LKLAMMER);
         { Delphi/Kylix supports nonsense like }
         { procedure p();                      }
@@ -330,7 +327,6 @@ implementation
              vs.free; // no nil needed
             consume(_ID);
           until not try_to_consume(_COMMA);
-          locationstr:='';
           { macpas anonymous procvar }
           if parseprocvar<>pv_none then
            begin
@@ -435,7 +431,6 @@ implementation
                         ;
                     end;
                   end;
-                locationstr:='';
 
                 { default parameter }
                 if (m_default_para in CurrentSettings.ModeSwitches) then
@@ -474,9 +469,6 @@ implementation
 
             end;
         until not try_to_consume(_SEMICOLON);
-
-        if explicit_paraloc then
-          include(pd.ProcOptions,po_explicitparaloc);
 
         { remove parasymtable from stack }
         sc.free;
@@ -1318,7 +1310,6 @@ implementation
 
     procedure parse_proc_dec_finish(pd:TProcDef;flags:TParseProcFlags;astruct:TAbstractRecordDef);
       var
-        locationstr: string;
         i: integer;
         found: boolean;
 
@@ -1397,7 +1388,6 @@ implementation
           end;
 
       begin
-        locationstr:='';
         case pd.ProcTypeOption of
           potype_procedure:
             begin
@@ -1585,12 +1575,6 @@ implementation
               consume(_SEMICOLON);
           end;
 
-        if locationstr<>'' then
-         begin
-           if not(ParaManager.ParseFuncRetLoc(pd,upper(locationstr))) then
-             { I guess this needs a new message... (KB) }
-             message(parser_e_illegal_explicit_paraloc);
-         end;
       end;
 
     function parse_proc_dec(flags:TParseProcFlags;astruct:TAbstractRecordDef):TProcDef;
@@ -2127,72 +2111,6 @@ begin
 end;
 
 
-procedure pd_syscall(pd:TAbstractProcDef);
-
-      function po_syscall_to_varoptions: TVarOptions;
-        begin
-          result:=[vo_is_syscall_lib,vo_is_hidden_para];
-          if ([po_syscall_legacy,po_syscall_basereg,po_syscall_basenone] * TProcDef(pd).ProcOptions) <> [] then
-            include(result,vo_has_explicit_paraloc);
-        end;
-
-      function po_syscall_to_regname: string;
-        begin
-          result:='';
-          InternalError(2016090101);
-        end;
-
-{$if defined(i386) or defined(x86_64)}
-const
-  syscall_paranr: array[boolean] of aint =
-      ( ParaNrSysCallLibLast, ParaNrSysCallLibFirst );
-var
-  vs  : TParaVarSym;
-  sym : TSym;
-  SymTable : TSymTable;
-  v: TConstExprInt;
-  vo: TVarOptions;
-  ParaNr: aint;
-{$endif}
-begin
-  if pd.typ<>procdef then
-    InternalError(2003042614);
-  TProcDef(pd).ForwardDef:=false;
-{$if defined(i386) or defined(x86_64)}
-  Message(parser_e_syscall_format_not_support);
-
-  if consume_sym(sym,SymTable) then
-    if ((sym.typ=staticvarsym) or
-        (sym.typ=absolutevarsym) and (TAbsoluteVarSym(sym).AbsTyp=toaddr)) and
-       ((TAbstractVarSym(sym).vardef.typ=pointerdef) or
-        Is_32BitInt(TAbstractVarSym(sym).vardef)) then
-      begin
-        include(pd.ProcOptions,po_syscall_has_libsym);
-        TCPUProcDef(pd).LibSym:=sym;
-
-        vo:=po_syscall_to_varoptions;
-        ParaNr:=syscall_paranr[po_syscall_basefirst in TProcDef(pd).ProcOptions];
-        vs:=CParaVarSym.create('$syscalllib',ParaNr,vs_value,TAbstractVarSym(sym).vardef,vo);
-        if vo_has_explicit_paraloc in vo then
-          if not ParaManager.ParseParaLoc(vs,po_syscall_to_regname) then
-            InternalError(2016120301);
-        pd.ParaST.InsertSym(vs);
-      end
-    else
-      Message(parser_e_32bitint_or_pointer_variable_expected);
-
-  ParaManager.Create_FuncRetLoc_Info(pd,calleeside);
-  ParaManager.Create_FuncRetLoc_Info(pd,callerside);
-
-  v:=get_intconst;
-  if (v<low(TProcDef(pd).ExtNumber)) or (v>high(TProcDef(pd).ExtNumber)) then
-    message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(TProcDef(pd).ExtNumber)),ToStr(high(TProcDef(pd).ExtNumber)))
-  else
-    TProcDef(pd).ExtNumber:=v.uvalue;
-{$endif}
-end;
-
-
 procedure pd_external(pd:TAbstractProcDef);
 {
   If import_dll=nil the procedure is assumed to be in another
@@ -2326,7 +2244,7 @@ type
    end;
 const
   {Should contain the number of procedure directives we support.}
-  num_proc_directives=53;
+  num_proc_directives=52;
 var
   proc_direcdata:array[1..num_proc_directives] of TProcDirRec=
    (
@@ -2426,7 +2344,7 @@ var
       handler  : @pd_external;
       pocall   : pocall_none;
       pooption : [po_external];
-      mutexclpocall : [pocall_syscall];
+      mutexclpocall : [];
       { allowed for external cpp classes }
       mutexclpotype : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
       mutexclpo     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
@@ -2672,18 +2590,6 @@ var
       mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
       mutexclpo     : [po_external]
     ),(
-      idtok:_SYSCALL;
-      { Different kind of syscalls are valid for AOS68k, AOSPPC and MOS. }
-      { FIX ME!!! MorphOS/AOS68k pd_flags should be:
-        pd_interface, pd_implemen, pd_notobject, pd_notobjintf (KB) }
-      pd_flags : [pd_interface,pd_implemen,pd_procvar];
-      handler  : @pd_syscall;
-      pocall   : pocall_syscall;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external,po_assembler,po_interrupt,po_exports]
-    ),(
       idtok:_VIRTUAL;
       pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
       handler  : @pd_virtual;
@@ -2729,7 +2635,7 @@ var
         adapt all code for external symbols to also check for weak external
       }
       pooption : [po_external,po_weakexternal];
-      mutexclpocall : [pocall_internproc,pocall_syscall];
+      mutexclpocall : [pocall_internproc];
       { allowed for external cpp classes }
       mutexclpotype : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
       mutexclpo     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]

@@ -1067,17 +1067,6 @@ parser_e_illegal_calling_convention=03195_W_Kaldkonventions-direktiv ignoreret: 
 % only the standard ABI calling convention of the CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE kan ikke bruges i objekter
 % \var{reintroduce} is not supported for objects.
-parser_e_paraloc_only_one_para=03197_E_Hvert argument skal have sin egen pladsspecifikation
-% If locations for arguments are specified explicitly as it is required by
-% some syscall conventions, each argument must have it's only location, things
-% like \var{procedure p(i,j : longint 'r1');} aren't allowed
-parser_e_paraloc_all_paras=03198_E_Hvert argument skal have en specifik pladsspecifikatino
-% If one argument has an explicit argument location, all arguments of a procedure
-% must have one.
-parser_e_illegal_explicit_paraloc=03199_E_Ukendt pladsspecifikation parameter
-% The location specified for an argument isn't recognized by the compiler
-parser_e_32bitint_or_pointer_variable_expected=03200_E_32-bit heltal eller pointer forventet
-% The libbase for MorphOS/AmigaOS can be give only as \var{longint}, \var{dword} or any pointer variable.
 parser_e_goto_outside_proc=03201_E_Goto-erklæring ikke tilladt mellem forskellige procedurer
 % It isn't allowed to use the \var{goto} statements referencing labels outside the
 % current procedure. The following example shows the problem:

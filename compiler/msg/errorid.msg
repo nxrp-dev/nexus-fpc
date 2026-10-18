@@ -1055,17 +1055,6 @@ parser_e_illegal_calling_convention=03195_W_Direktif konvensi pemanggilan diabai
 % hanya konvensi pemanggilan standar ABI pada CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE tidak bisa dipakai dalam obyek
 % \var{reintroduce} tidak didukung untuk obyek.
-parser_e_paraloc_only_one_para=03197_E_Setiap argumen harus memiliki lokasi sendiri
-% Jika lokasi untuk argumen ditetapkan secara eksplisit karena ia diperlukan oleh
-% beberapa konvensi syscall, setiap argumen harus memiliki lokasinya sendiri, hal
-% seperti \var{procedure p(i,j : longint 'r1');} tidak diijinkan
-parser_e_paraloc_all_paras=03198_E_Setiap argumen harus memiliki lokasi eksplisit
-% Jika satu argumen mempunyai lokasi argumen eksplisit, semua argument pada 
-% prosedur harus memilikinya.
-parser_e_illegal_explicit_paraloc=03199_E_Lokasi argumen tidak dikenal
-% Lokasi yang ditetapkan untuk argumen tidak dikenal oleh kompilator
-parser_e_32bitint_or_pointer_variable_expected=03200_E_32 Bit-Integer atau variabel pointer diharapkan
-% Libbase untuk MorphOS/AmigaOS hanya dapat diberikan sebagai \var{longint}, \var{dword} atau variabel pointer.
 parser_e_goto_outside_proc=03201_E_Pernyataan goto tidak dibolehkan diantara prosedure yang berbeda
 % Tidak diperkenankan menggunakan pernyataan \var{goto} mereferensi label di luar
 % prosedur saat ini. Contoh berikut menampilkan masalah ini:

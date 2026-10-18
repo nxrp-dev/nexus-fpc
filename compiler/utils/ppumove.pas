@@ -24,11 +24,7 @@
 Program ppumove;
 uses
 
-{$IFNDEF USE_FAKE_SYSUTILS}
   SysUtils,
-{$ELSE}
-  FKSysUtl,
-{$ENDIF}
 
 {$ifdef unix}
   BaseUnix,Unix, Dos,

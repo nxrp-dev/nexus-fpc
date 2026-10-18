@@ -139,9 +139,6 @@ const
   ParaNrObjCSelf = 7;
   ParaNrObjCCmd = 8;
 
-  { Required to support variations of syscalls on Amiga-likes }
-  ParaNrSysCallLibFirst   = 9;             { for basefirst on MorphOS/ppc and AmigaOS4/ppc }
-  ParaNrSysCallLibLast    = high(word)-3;  { everything else }
 
   ParaNrResultLeftRight    = high(word)-2;
   ParaNrParentFPDelphiCC  = high(word)-1;
@@ -346,27 +343,12 @@ type
     po_hascallingconvention,
     { reintroduce flag }
     po_reintroduce,
-    { location of parameters is given explicitly as it is necessary for some syscall
-      conventions like that one of MorphOS }
-    po_explicitparaloc,
     { no stackframe will be generated, used by lowlevel assembler like get_frame }
     po_nostackframe,
     po_has_mangledname,
     po_has_public_name,
     po_forward,
     po_global,
-    { Generic syscall procoption, for systems like Atari, Palm, etc }
-    po_syscall,
-    { The different kind of syscalls on Amiga-like systems }
-    po_syscall_legacy,
-    po_syscall_basenone,
-    po_syscall_basefirst,
-    po_syscall_baselast,
-    po_syscall_basereg,
-    { Used to record the fact that a symbol is associated to this syscall }
-    po_syscall_has_libsym,
-    { Syscall uses the import Nr. }
-    po_syscall_has_importnr,
     { Procedure can be inlined }
     po_inline,
     { Procedure is used for internal compiler calls }
@@ -588,8 +570,6 @@ type
     vo_is_parentfp,
     vo_is_loop_counter, { used to detect assignments to loop counter }
     vo_is_hidden_para,
-    vo_has_explicit_paraloc,
-    vo_is_syscall_lib,
     vo_has_mangledname,
     vo_is_typed_const,
     vo_is_range_check,
@@ -1040,20 +1020,11 @@ const
       '"PUBLIC"',           {po_public}
       'po_hascallingconvention',{po_hascallingconvention}
       '"REINTRODUCE"',      {po_reintroduce}
-      'po_explicitparaloc', {po_explicitparaloc}
       '"NOSTACKFRAME"',     {po_nostackframe}
       'po_has_mangledname', {po_has_mangledname}
       'po_has_public_name', {po_has_public_name}
       '"FORWARD"',          {po_forward}
       'global routines',    {po_global}
-      '"SYSCALL"',          {po_syscall}
-      '"SYSCALL"',          {po_syscall_legacy}
-      '"SYSCALL"',          {po_syscall_basenone}
-      '"SYSCALL"',          {po_syscall_basefirst}
-      '"SYSCALL"',          {po_syscall_baselast}
-      '"SYSCALL"',          {po_syscall_basereg}
-      '"SYSCALL"',          {po_syscall_has_libsym}
-      '"SYSCALL"',          {po_syscall_has_importnr}
       '"INLINE"',           {po_inline}
       '"COMPILERPROC"',     {po_compilerproc}
       'po_has_importdll',   {po_has_importdll}

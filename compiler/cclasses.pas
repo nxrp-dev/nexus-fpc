@@ -28,11 +28,7 @@ unit cclasses;
 interface
 
     uses
-{$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
-{$ELSE}
-      FKSysUtl,
-{$ENDIF}
       GlobType,
       CUtils,CStreams;
 

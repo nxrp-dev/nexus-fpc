@@ -452,18 +452,12 @@ scan_e_illegal_hugepointernormalization=02098_E_Illegales Argument fÅr HUGEPOINT
 scan_e_illegal_asmcpu_specifier=02099_E_UngÅltiger Assembler-CPU-Befehlssatz "$1" angegeben
 % When you specify an assembler CPU with the \var{\{\$ASMCPU xxx\}} directive,
 % the compiler didn't recognize the CPU you specified.
-scan_w_syscall_convention_not_useable_on_target=02100_W_Die angegebene SysCall-Konvention kann auf diesem Ziel nicht verwendet werden
-% The specified syscall convention using the \var{\{\$SYSCALL xxx\}} directive,
-% is not useable on the current target system.
-scan_w_syscall_convention_invalid=02101_W_UngÅltige SysCall-Konvention angegeben
-% The compiler did not recognize the syscall convention specified by the \var{\{\$SYSCALL xxx\}} directive.
 scan_w_setpeuserversion_not_support=02102_W_SETPEUSERVERSION wird vom Zielbetriebssystem nicht unterstÅtzt
 % The \var{\{\$SETPEUSERVERSION\}} directive is not supported by the target OS.
 scan_w_setpeosversion_not_support=02103_W_SETPEOSVERSION wird vom Zielbetriebssystem nicht unterstÅtzt
 % The \var{\{\$SETPEOSVERSION\}} directive is not supported by the target OS.
 scan_w_setpesubsysversion_not_support=02104_W_SETPESUBSYSVERSION wird vom Zielbetriebssystem nicht unterstÅtzt
 % The \var{\{\$SETPESUBSYSVERSION\}} directive is not supported by the target OS.
-scan_n_changecputype=02105_N_GeÑnderter Prozessortyp muss zum angegebenen Controller passen
 scan_e_emptymacroname=02106_E_Der Name einer macro/compiler-Variablen kann nicht leer sein
 scan_e_unexpected_ifend=02107_E_$IFEND Direktive ohne entsprechende $IF Direktive gefunden
 % When legacy ifend is turned on by the directive \var{\$LEGACYIFEND}, then the
@@ -1131,22 +1125,6 @@ parser_e_illegal_calling_convention=03195_W_Aufrufkonventionsdirektive ignoriert
 % only the standard ABI calling convention of the CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE kann in Objekten nicht benutzt werden
 % \var{reintroduce} is not supported for objects, Objective-C classes and Objective-C protocols.
-parser_e_paraloc_only_one_para=03197_E_Jedes Argument muss seine eigene "location" haben
-% If locations for arguments are specified explicitly as it is required by
-% some syscall conventions, each argument must have its own location. Things
-% like
-% \begin{verbatim}
-% procedure p(i,j : longint 'r1');
-% \end{verbatim}
-% are not allowed.
-parser_e_paraloc_all_paras=03198_E_Jedes Argument muss seine explizite "location" haben
-% If one argument has an explicit argument location, all arguments of a procedure
-% must have one.
-parser_e_illegal_explicit_paraloc=03199_E_UngÅltiger expliziter Parameter "location" spezifiziert
-% Syscalls specific: the specified explicit location string for this parameter cannot be parsed, invalid,
-% or the location specified for an argument isn't recognized by the compiler.
-parser_e_32bitint_or_pointer_variable_expected=03200_E_32-Bit-Integer oder Zeiger-Variable erwartet
-% The libbase for MorphOS/AmigaOS can be given only as \var{longint}, \var{dword} or any pointer variable.
 parser_e_goto_outside_proc=03201_E_Goto Statements zwischen verschiedenen Prozeduren sind nicht erlaubt
 % It isn't allowed to use \var{goto} statements referencing labels outside the
 % current procedure. The following example shows the problem:
@@ -1672,14 +1650,6 @@ parser_e_method_for_type_in_other_unit=03354_E_Implementierung einer Methods fÅr
 parser_e_generic_constraints_not_allowed_here=03355_E_Eine generische EinschrÑnkung ist hier nicht erlaubt
 % At the current location specifying a constraint is not allowed. For example
 % in delphi mode, a constraint might not be specified in the header of the implementation.
-parser_e_location_size_too_small=03356_E_Die explizite "location" ist zu klein fÅr den Parameter
-% AmigaOS/MorphOS syscall specific: for int64/qword parameter only a single register location is specified
-parser_e_location_size_too_large=03357_E_Die Grî·e der expliziten "location" ist grî·er als vom Parameter verlangt
-% AmigaOS/MorphOS syscall specific: for a parameter which is smaller than 64 bits, a register pair is specified
-parser_e_location_regpair_only_data=03358_E_Nur Daten-Register werden fÅr explizite "location" Registerpaare unterstÅtzt
-% AmigaOS/MorphOS syscall specific: for 64 bit register pairs, only data registers are supported
-parser_e_location_regpair_only_consecutive=03359_E_Nur aufeinander folgende Register werden fÅr explizite "location" Registerpaare unterstÅtzt
-% MorphOS syscall specific: only consecutive (f.e.: d1-d2) registers are supported for 64 bit register pairs
 parser_e_constructors_cannot_take_type_parameters=03360_E_Konstruktoren kînnen keine Type-Parameter Åbernehmen
 % The use of type parameters in constructors is not allowed.
 parser_e_raise_with_noreturn_not_allowed=03361_E_Deklaration von Raise in einer Subroutine als noreturn ist nicht erlaubt
@@ -1688,9 +1658,6 @@ parser_e_raise_with_noreturn_not_allowed=03361_E_Deklaration von Raise in einer 
 parser_e_section_directive_not_allowed_for_target=03362_E_Direktiven-Bereich ist fÅr dieses Ziel nicht erlaubt
 % Only some targets (e.g. Embedded and FreeRTOS) support the section directive.
 parser_e_absolute_sym_cannot_reference_itself=03363_E_Eine absolute Variable kann sich nicht selbst referenzieren
-parser_e_syscall_format_not_support=03364_E_Syntax der syscall-Direktive wird auf dem aktuellen Zielsystem nicht unterstÅtzt
-% On a certain target, not all syntax variants of the syscall directive make sense and thus those making
-% no sense are not supported
 % Declarations like \var{var i: Integer absolute i;} are not allowed
 parser_w_ignoring_published_property=03365_W_Diese Eigenschaft wird nicht verîffentlicht
 % Published property is ignored
@@ -3218,10 +3185,6 @@ exec_w_init_file_not_found=09034_W_"$1" nicht gefunden; dies wird wahrscheinlich
 exec_e_static_lib_not_supported=09035_E_Statische Bibliotheken nicht unterstÅtzt
 % Creating static libraries is not supported for this platform, because it was
 % not yet implemented in the compiler.
-exec_f_controllertype_expected=09036_F_Um den korrekten Aufruf des Linkers zu erzeugen, muss ein Controller-Typ mit der Direktive -Wp gesetzt werden
-% Xtensa micro controller require a detailed specification linker command which depends on the target controller.
-% If no target controller is set, this command cannot be build and thus linking cannot be carried out.
-%
 % \end{description}
 # EndOfTeX
 
@@ -3967,8 +3930,6 @@ Backend der Codeerzeugung:
   $CODEGENERATIONBACKEND
 
 
-UnterstÅtzte Mikro-Kontroller:
-  $CONTROLLERTYPES
 
 Dieses Programm unterliegt der GNU General Public Licence
 Weitere Informationen sind in COPYING.v2 zu finden
@@ -4169,7 +4130,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2iTO_Zeige Zielbetriebssystem
 **2iTP_Zeige Zielprozessor
 **2iV_Zeige kurze Compilerversion
-**2iu_Zeige Liste der unterstÅtzten Mikro-Kontrollertypen
 **2iW_Zeige vollstÑndige Compilerversion
 **2iw_Zeige Liste der unterstÅtzten Gesamtprogramm-Optimierungen
 **1I<x>_ErgÑnze <x> zum Include-Pfad
@@ -4449,11 +4409,6 @@ P*2WM<x>_Minimale macOS Deployment Version: 10.4, 10.5.1, ... (Darwin)
 3*2WN_Erzeuge keinen "relocation code" (notwendig fÅr debugging) (Windows)
 4*2WN_Erzeuge keinen "relocation code" (notwendig fÅr debugging) (Windows)
 A*2WN_Erzeuge keinen "relocation code" (notwendig fÅr debugging) (Windows)
-A*2Wp<x>_Spezifiziere den Kontrollertyp; fpc -i oder fpc -iu geben mîgliche Werte aus
-m*2Wp<x>_Spezifiziere den Kontrollertyp; fpc -i oder fpc -iu geben mîgliche Werte aus
-R*2Wp<x>_Spezifiziere den Kontrollertyp; fpc -i oder fpc -iu geben mîgliche Werte aus
-V*2Wp<x>_Spezifiziere den Kontrollertyp; fpc -i oder fpc -iu geben mîgliche Werte aus
-x*2Wp<x>_Spezifiziere den Kontrollertyp; fpc -i oder fpc -iu geben mîgliche Werte aus
 3*2WP<x>_Minimale iOS Deployment Version: 3.0, 5.0.1, ... (iphonesim)
 4*2WP<x>_Minimale iOS Deployment Version: 8.0, 8.0.2, ... (iphonesim)
 a*2WP<x>_Minimale iOS Deployment Version: 7.0, 7.1.2, ... (Darwin)

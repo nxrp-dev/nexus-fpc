@@ -5592,8 +5592,6 @@ implementation
            Exit;
          inherited BuildDeref;
          ReturnDefDeref.Build(ReturnDef);
-         if po_explicitparaloc in ProcOptions then
-           FuncRetLoc[CallerSide].BuildDeref;
          { parast }
          TParaSymTable(ParaST).BuildDeref;
       end;
@@ -5603,20 +5601,12 @@ implementation
       begin
          inherited Deref;
          ReturnDef:=TDef(ReturnDefDeref.Resolve);
-         if po_explicitparaloc in ProcOptions then
-           begin
-             FuncRetLoc[CallerSide].Deref;
-             HasParaLocInfo:=CallerSide;
-            end
-         else
-           begin
-             { deref is called after loading from a ppu, but also after another
-               unit has been reloaded/recompiled and all references must be
-               re-resolved. Since the funcretloc contains a reference to a tdef,
-               reset it so that we won't try to access the stale def }
-             FuncRetLoc[CallerSide].Init;
-             HasParaLocInfo:=CallNoSide;
-           end;
+         { deref is called after loading from a ppu, but also after another
+           unit has been reloaded/recompiled and all references must be
+           re-resolved. Since the funcretloc contains a reference to a tdef,
+           reset it so that we won't try to access the stale def }
+         FuncRetLoc[CallerSide].Init;
+         HasParaLocInfo:=CallNoSide;
          { parast }
          TParaSymTable(ParaST).Deref(False);
          { recalculated parameters }
@@ -5634,15 +5624,11 @@ implementation
          PPUFile.GetDeref(ReturnDefDeref);
          ProcTypeOption:=TProcTypeOption(PPUFile.GetByte);
          ProcCallOption:=TProcCallOption(PPUFile.GetByte);
-         PPUFile.GetSet(TPPUSet8(ProcOptions));
+         PPUFile.GetSet(TPPUSet7(ProcOptions));
 
          FuncRetLoc[CallerSide].Init;
-         if po_explicitparaloc in ProcOptions then
-           FuncRetLoc[CallerSide].PPULoad(PPUFile);
 
          SaveSize:=SizeOf(PInt);
-         if (po_explicitparaloc in ProcOptions) then
-           HasParaLocInfo:=CallerSide;
       end;
 
 
@@ -5655,10 +5641,8 @@ implementation
          PPUFile.PutDeref(ReturnDefDeref);
          PPUFile.PutByte(Ord(ProcTypeOption));
          PPUFile.PutByte(Ord(ProcCallOption));
-         PPUFile.PutSet(TPPUSet8(ProcOptions));
+         PPUFile.PutSet(TPPUSet7(ProcOptions));
 
-         if (po_explicitparaloc in ProcOptions) then
-           FuncRetLoc[CallerSide].PPUWrite(PPUFile);
       end;
 
 
@@ -5896,7 +5880,7 @@ implementation
         TAbstractProcDef(Result).ProcCallOption:=ProcCallOption;
         TAbstractProcDef(Result).ProcOptions:=ProcOptions;
         if (CopyTyp=pc_bareproc) then
-          TAbstractProcDef(Result).ProcOptions:=TAbstractProcDef(Result).ProcOptions*[po_explicitparaloc,po_hascallingconvention,po_varargs,po_iocheck,po_has_importname,po_has_importdll];
+          TAbstractProcDef(Result).ProcOptions:=TAbstractProcDef(Result).ProcOptions*[po_hascallingconvention,po_varargs,po_iocheck,po_has_importname,po_has_importdll];
         if NewTyp=ProcVarDef then
           TAbstractProcDef(Result).ProcOptions:=TAbstractProcDef(Result).ProcOptions-[po_has_importname,po_has_importdll];
         if CopyTyp=pc_address_only then
@@ -5906,8 +5890,6 @@ implementation
         TAbstractProcDef(Result).CalleeArgAreaSize:=CalleeArgAreaSize;
         TAbstractProcDef(Result).MaxParaCount:=MaxParaCount;
         TAbstractProcDef(Result).MinParaCount:=MinParaCount;
-        if po_explicitparaloc in ProcOptions then
-          TAbstractProcDef(Result).FuncRetLoc[CallerSide]:=FuncRetLoc[CallerSide].GetCopy;
         { recalculate parameter info }
         TAbstractProcDef(Result).HasParaLocInfo:=CallNoSide;
         if (Typ=ProcDef) and

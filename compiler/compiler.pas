@@ -35,11 +35,7 @@ uses
   unixcp,
   fpwidestring,
 {$endif}
-{$IFNDEF USE_FAKE_SYSUTILS}
   SysUtils,math,
-{$ELSE}
-  FKSysUtl,
-{$ENDIF}
   Verbose,CompHook,Systems,
   CUtils,CFileUtl,CClasses,Globals,options,Switches,FModule,parser,SymTable,
   assemble,link,DbgBase,import,export,tokens,wpo

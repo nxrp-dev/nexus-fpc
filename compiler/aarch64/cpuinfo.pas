@@ -47,44 +47,14 @@ Type
       fpu_vfp
      );
 
-   TControllerType =
-     (ct_none,
-
-      { Raspberry Pi 3/4 }
-      ct_raspi3,
-      ct_raspi4
-     );
-
-   TControllerDataType = record
-      ControllerTypeStr, controllerunitstr: string[20];
-      CPUType: TCPUType; FPUType: TFPUType;
-      flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
-   end;
 
 
 Const
-   { Is there support for dealing with multiple microcontrollers available }
-   { for this platform? }
-   ControllerSupport = true; (* Not yet at least ;-) *)
    {# Size of native extended floating point type }
    extended_size = 8;
    { target cpu string (used by compiler options) }
    TargetCPUString = 'aarch64';
 
-   { We know that there are fields after sramsize
-     but we don't care about this warning }
-   {$PUSH}
-    {$WARN 3177 OFF}
-   embedded_controllers : array [TControllerType] of TControllerDataType =
-   (
-      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0),
-
-      { Raspberry Pi 3/4 }
-      (ControllerTypeStr:'RASPI3'; controllerunitstr:'RASPI3'; CPUType:cpu_armv8a; FPUType:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000),
-      (ControllerTypeStr:'RASPI4'; controllerunitstr:'RASPI4'; CPUType:cpu_armv8a; FPUType:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000)
-
-      );
-   {$POP}
 
 var
    { calling conventions supported by the code generator }

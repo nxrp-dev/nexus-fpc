@@ -146,7 +146,6 @@ type
     _NEAR,
     _READ,
     _SELF,
-    _SYSV,
     _THEN,
     _TYPE,
     _UNIT,
@@ -180,7 +179,6 @@ type
     _EXPORT,
     _HELPER,
     _INLINE,
-    _LEGACY,
     _NESTED,
     _OBJECT,
     _PACKED,
@@ -198,7 +196,6 @@ type
     _SYSTEM,
     _WINAPI,
     _ASMNAME,
-    _BASEREG,
     _CPPDECL,
     _DEFAULT,
     _DYNAMIC,
@@ -213,18 +210,13 @@ type
     _PACKAGE,
     _PRIVATE,
     _PROGRAM,
-    _R12BASE,
     _RTLPROC,
     _SECTION,
     _STDCALL,
-    _SYSCALL,
     _VARARGS,
     _VIRTUAL,
     _ABSOLUTE,
     _ABSTRACT,
-    _BASELAST,
-    _BASENONE,
-    _BASESYSV,
     _CONSTREF,
     _CONTAINS,
     _CONTINUE,
@@ -256,9 +248,7 @@ type
     _RESIDENT,
     _SAFECALL,
     _SUBTRACT,
-    _SYSVBASE,
     _ASSEMBLER,
-    _BASEFIRST,
     _BITPACKED,
     _BITWISEOR,
     _HARDFLOAT,
@@ -493,7 +483,6 @@ var
       (str:'NEAR'          ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'READ'          ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'SELF'          ;special:false;keyword:[m_none];op:NOTOKEN), {set inside methods only PM }
-      (str:'SYSV'          ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on MorphOS }
       (str:'THEN'          ;special:false;keyword:alllanguagemodes;op:NOTOKEN),
       (str:'TYPE'          ;special:false;keyword:alllanguagemodes;op:NOTOKEN),
       (str:'UNIT'          ;special:false;keyword:alllanguagemodes-[m_iso,m_extpas];op:NOTOKEN),
@@ -527,7 +516,6 @@ var
       (str:'EXPORT'        ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'HELPER'        ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'INLINE'        ;special:false;keyword:[];op:NOTOKEN),
-      (str:'LEGACY'        ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on MorphOS }
       (str:'NESTED'        ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'OBJECT'        ;special:false;keyword:alllanguagemodes-[m_iso,m_extpas];op:NOTOKEN),
       (str:'PACKED'        ;special:false;keyword:alllanguagemodes;op:NOTOKEN),
@@ -545,7 +533,6 @@ var
       (str:'SYSTEM'        ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'WINAPI'        ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'ASMNAME'       ;special:false;keyword:[m_none];op:NOTOKEN),
-      (str:'BASEREG'       ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on Amiga-likes }
       (str:'CPPDECL'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'DEFAULT'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'DYNAMIC'       ;special:false;keyword:[m_none];op:NOTOKEN),
@@ -560,18 +547,13 @@ var
       (str:'PACKAGE'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'PRIVATE'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'PROGRAM'       ;special:false;keyword:alllanguagemodes;op:NOTOKEN),
-      (str:'R12BASE'       ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on MorphOS }
       (str:'RTLPROC'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'SECTION'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'STDCALL'       ;special:false;keyword:[m_none];op:NOTOKEN),
-      (str:'SYSCALL'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'VARARGS'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'VIRTUAL'       ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'ABSOLUTE'      ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'ABSTRACT'      ;special:false;keyword:[m_none];op:NOTOKEN),
-      (str:'BASELAST'      ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on Amiga-likes }
-      (str:'BASENONE'      ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on Amiga-likes }
-      (str:'BASESYSV'      ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on MorphOS }
       (str:'CONSTREF'      ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'CONTAINS'      ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'CONTINUE'      ;special:false;keyword:[m_none];op:NOTOKEN),
@@ -603,9 +585,7 @@ var
       (str:'RESIDENT'      ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'SAFECALL'      ;special:false;keyword:[m_none];op:NOTOKEN),
       (str:'SUBTRACT'      ;special:false;keyword:[m_none];op:NOTOKEN), { delphi operator name }
-      (str:'SYSVBASE'      ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on MorphOS }
       (str:'ASSEMBLER'     ;special:false;keyword:[m_none];op:NOTOKEN),
-      (str:'BASEFIRST'     ;special:false;keyword:[m_none];op:NOTOKEN),   { Syscall variation on Amiga-likes }
       (str:'BITPACKED'     ;special:false;keyword:alllanguagemodes-[m_iso,m_extpas];op:NOTOKEN),
       (str:'BITWISEOR'     ;special:false;keyword:[m_none];op:NOTOKEN), { delphi operator name }
       (str:'HARDFLOAT'     ;special:false;keyword:[m_none];op:NOTOKEN),

@@ -17,10 +17,8 @@ for mode in FPC ObjFPC Delphi MacPas ISO ExtendedPascal; do
         mkdir -p "$directory"
         if [[ $convention == empty ]]; then
             directive='{$SYSCALL}'
-            diagnostic='Specified syscall convention is not useable on this target'
         else
             directive="{\$SYSCALL $convention}"
-            diagnostic='Invalid syscall convention specified'
         fi
         printf '%s\n' 'program SyscallDirective;' "$directive" 'begin end.' \
             >"$directory/directive.pas"
@@ -28,13 +26,13 @@ for mode in FPC ObjFPC Delphi MacPas ISO ExtendedPascal; do
             "-FU$directory" "-FE$directory")
         "$compiler" "${options[@]}" "$directory/directive.pas" \
             >"$directory/warning.log" 2>&1
-        grep -F "$diagnostic" "$directory/warning.log" >/dev/null
+        grep -F 'Illegal compiler directive' "$directory/warning.log" | grep -F 'SYSCALL' >/dev/null
         if "$compiler" "${options[@]}" -Sew "$directory/directive.pas" \
             >"$directory/error.log" 2>&1; then
             echo "Warning-as-error unexpectedly accepted: $mode $convention" >&2
             exit 1
         fi
-        grep -F "$diagnostic" "$directory/error.log" >/dev/null
+        grep -F 'Illegal compiler directive' "$directory/error.log" | grep -F 'SYSCALL' >/dev/null
         if grep -F 'Internal error' "$directory/error.log" >/dev/null; then
             cat "$directory/error.log" >&2
             exit 1
@@ -42,4 +40,4 @@ for mode in FPC ObjFPC Delphi MacPas ISO ExtendedPascal; do
         checks=$((checks + 2))
     done
 done
-echo "PASS: $checks syscall directive diagnostic checks"
+echo "PASS: $checks ordinary unknown-directive checks for retired SYSCALL"

@@ -150,8 +150,6 @@ unit paramgr;
           procedure DuplicateCGParaLoc(const OrgParaLoc: PCGParaLocation; IntoNewParaLoc: PCGParaLocation);
           procedure DuplicateParaLoc(List: TAsmList;CallOption : TProcCallOption;ParaSym : TParaVarSym;var CGPara:TCGPara);
 
-          function ParseParaLoc(ParaSym : TParaVarSym;const S : string) : Boolean;virtual;
-          function ParseFuncRetLoc(P : TAbstractProcDef; const S : string) : Boolean;virtual;
 
           { Convert a list of CGParaLocation entries to a RTTIParaLoc array that
             can be written by ncgrtti }
@@ -519,20 +517,12 @@ implementation
             case NewParaLoc^.Loc of
               LOC_REGISTER :
                 begin
-                  if (vo_has_explicit_paraloc in ParaSym.VarOptions) and (ParaLoc^.Loc = LOC_REGISTER) then
-                    if GetRegType(ParaLoc^.Register) = R_ADDRESSREGISTER then
-                      NewParaLoc^.Register:=CG.GetAddressRegister(List)
-                    else
-                      NewParaLoc^.Register:=CG.GetIntRegister(List,ParaLoc^.Size)
+                  {$ifdef cpu_uses_separate_address_registers}
+                  if HLCG.Def2RegTyp(ParaLoc^.Def) = R_ADDRESSREGISTER then
+                    NewParaLoc^.Register:=HLCG.GetAddressRegister(List,ParaLoc^.Def)
                   else
-                    begin
-                      {$ifdef cpu_uses_separate_address_registers}
-                      if HLCG.Def2RegTyp(ParaLoc^.Def) = R_ADDRESSREGISTER then
-                        NewParaLoc^.Register:=HLCG.GetAddressRegister(List,ParaLoc^.Def)
-                      else
-                      {$endif}
-                        NewParaLoc^.Register:=CG.GetIntRegister(List,ParaLoc^.Size);
-                    end;
+                  {$endif}
+                    NewParaLoc^.Register:=CG.GetIntRegister(List,ParaLoc^.Size);
                 end;
               LOC_FPUREGISTER :
                 NewParaLoc^.Register:=CG.GetFPURegister(List,ParaLoc^.Size);
@@ -600,34 +590,6 @@ implementation
         { We need to return the size allocated }
         P.Init_ParaLoc_Info(CallBothSides);
         Result:=P.CalleeArgAreaSize;
-      end;
-
-
-    { used by syscall conventions which require explicit paralocation support }
-    { this is the standard implementation, CGs might overwrite it }
-    function TParaManager.ParseParaLoc(ParaSym: TParaVarSym; const S: string): Boolean;
-      var
-        ParaLoc : PCGParaLocation;
-      begin
-        ParaSym.ParaLoc[CallerSide].Alignment:=SizeOf(PInt);
-        ParaLoc:=ParaSym.ParaLoc[CallerSide].Add_Location;
-        ParaLoc^.Loc:=LOC_REGISTER;
-        ParaLoc^.Size:=Def_CGSize(ParaSym.VarDef);
-        ParaLoc^.Def:=ParaSym.VarDef;
-        ParaLoc^.Register:=std_regnum_search(LowerCase(S));
-
-        { copy to callee side }
-        ParaSym.ParaLoc[CalleeSide].Add_Location^:=ParaLoc^;
-
-        Result:=(ParaLoc^.Register <> NR_NO) and
-                (ParaLoc^.Register <> NR_STACK_POINTER_REG);
-      end;
-
-
-    function TParaManager.ParseFuncRetLoc(P: TAbstractProcDef; const S: string): Boolean;
-      begin
-        Result:=False;
-        InternalError(200807236);
       end;
 
 

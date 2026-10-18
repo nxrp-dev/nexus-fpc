@@ -27,9 +27,6 @@ interface
 
     uses
        node,
-       {$ifdef state_tracking}
-       nstate,
-       {$endif}
        symconst,SymBase,symtype,SymSym,symdef;
 
     type
@@ -103,9 +100,6 @@ interface
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
-       {$ifdef state_tracking}
-          function track_state_pass(exec_known:boolean):boolean;override;
-       {$endif state_tracking}
           function docompare(p: TNode): boolean; override;
        end;
        TAssignmentNodeClass = class of TAssignmentNode;
@@ -1085,26 +1079,6 @@ implementation
           (assigntype = TAssignmentNode(p).assigntype);
       end;
 
-{$ifdef state_tracking}
-    function TAssignmentNode.track_state_pass(exec_known:boolean):boolean;
-
-    var se:Tstate_entry;
-
-    begin
-        track_state_pass:=false;
-        if exec_known then
-            begin
-                track_state_pass:=right.track_state_pass(exec_known);
-                {Force a new resultdef pass.}
-                right.resultdef:=nil;
-                DoTypeCheckPass(right);
-                TypeCheckPass(right);
-                aktstate.store_fact(left.GetCopy,right.GetCopy);
-            end
-        else
-            aktstate.delete_fact(left);
-    end;
-{$endif}
 
 
 

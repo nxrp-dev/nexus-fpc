@@ -448,18 +448,12 @@ scan_e_illegal_hugepointernormalization=02098_E_Illegal argument for HUGEPOINTER
 scan_e_illegal_asmcpu_specifier=02099_E_Illegal assembler CPU instruction set specified "$1"
 % When you specify an assembler CPU with the \var{\{\$ASMCPU xxx\}} directive,
 % the compiler didn't recognize the CPU you specified.
-scan_w_syscall_convention_not_useable_on_target=02100_W_Specified syscall convention is not useable on this target
-% The specified syscall convention using the \var{\{\$SYSCALL xxx\}} directive,
-% is not useable on the current target system.
-scan_w_syscall_convention_invalid=02101_W_Invalid syscall convention specified
-% The compiler did not recognize the syscall convention specified by the \var{\{\$SYSCALL xxx\}} directive.
 scan_w_setpeuserversion_not_support=02102_W_SETPEUSERVERSION is not supported by the target OS
 % The \var{\{\$SETPEUSERVERSION\}} directive is not supported by the target OS.
 scan_w_setpeosversion_not_support=02103_W_SETPEOSVERSION is not supported by the target OS
 % The \var{\{\$SETPEOSVERSION\}} directive is not supported by the target OS.
 scan_w_setpesubsysversion_not_support=02104_W_SETPESUBSYSVERSION is not supported by the target OS
 % The \var{\{\$SETPESUBSYSVERSION\}} directive is not supported by the target OS.
-scan_n_changecputype=02105_N_Changed CPU type to be consistent with specified controller
 scan_e_emptymacroname=02106_E_A macro/compiler variable name cannot be empty
 scan_e_unexpected_ifend=02107_E_$IFEND directive found without a matching $IF directive
 % When legacy ifend is turned on by the directive \var{\$LEGACYIFEND}, then the
@@ -1117,22 +1111,6 @@ parser_e_illegal_calling_convention=03195_W_Calling convention directive ignored
 % only the standard ABI calling convention of the CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE cannot be used in objects
 % \var{reintroduce} is not supported for objects, Objective-C classes and Objective-C protocols.
-parser_e_paraloc_only_one_para=03197_E_Each argument must have its own location
-% If locations for arguments are specified explicitly as it is required by
-% some syscall conventions, each argument must have its own location. Things
-% like
-% \begin{verbatim}
-% procedure p(i,j : longint 'r1');
-% \end{verbatim}
-% are not allowed.
-parser_e_paraloc_all_paras=03198_E_Each argument must have an explicit location
-% If one argument has an explicit argument location, all arguments of a procedure
-% must have one.
-parser_e_illegal_explicit_paraloc=03199_E_Invalid explicit parameter location specified
-% Syscalls specific: the specified explicit location string for this parameter cannot be parsed, invalid,
-% or The location specified for an argument isn't recognized by the compiler.
-parser_e_32bitint_or_pointer_variable_expected=03200_E_32 Bit-Integer or pointer variable expected
-% The libbase for MorphOS/AmigaOS can be given only as \var{longint}, \var{dword} or any pointer variable.
 parser_e_goto_outside_proc=03201_E_Goto statements are not allowed between different procedures
 % It isn't allowed to use \var{goto} statements referencing labels outside the
 % current procedure. The following example shows the problem:
@@ -1657,14 +1635,6 @@ parser_e_method_for_type_in_other_unit=03354_E_Implementing a method for type "$
 parser_e_generic_constraints_not_allowed_here=03355_E_Generic constraint not allowed here
 % At the current location specifying a constraint is not allowed. For example
 % in delphi mode, a constraint might not be specified in the header of the implementation.
-parser_e_location_size_too_small=03356_E_Explicit location is too small for parameter
-% AmigaOS/MorphOS syscall specific: for int64/qword parameter only a single register location is specified
-parser_e_location_size_too_large=03357_E_Explicit location size is larger than required by parameter
-% AmigaOS/MorphOS syscall specific: for a parameter which is smaller than 64 bits, a register pair is specified
-parser_e_location_regpair_only_data=03358_E_Only data registers are supported for explicit location register pairs
-% AmigaOS/MorphOS syscall specific: for 64 bit register pairs, only data registers are supported
-parser_e_location_regpair_only_consecutive=03359_E_Only consecutive registers are supported for explicit location register pairs
-% MorphOS syscall specific: only consecutive (f.e.: d1-d2) registers are supported for 64 bit register pairs
 parser_e_constructors_cannot_take_type_parameters=03360_E_Constructors cannot take type parameters
 % The use of type parameters in constructors is not allowed.
 parser_e_raise_with_noreturn_not_allowed=03361_E_Raise in subroutines declared as noreturn is not allowed
@@ -1673,9 +1643,6 @@ parser_e_raise_with_noreturn_not_allowed=03361_E_Raise in subroutines declared a
 parser_e_section_directive_not_allowed_for_target=03362_E_Directive section not allowed for this target
 % Only some targets (e.g. Embedded and FreeRTOS) support the section directive.
 parser_e_absolute_sym_cannot_reference_itself=03363_E_Absolute variable cannot reference itself
-parser_e_syscall_format_not_support=03364_E_Syntax of syscall directive not supported by current target
-% On a certain target, not all syntax variants of the syscall directive make sense and thus those making
-% no sense are not supported
 % Declarations like \var{var i: Integer absolute i;} are not allowed
 parser_w_ignoring_published_property=03365_W_This property will not be published
 % Published property is ignored
@@ -3202,10 +3169,6 @@ exec_w_init_file_not_found=09034_W_"$1" not found, this will probably cause a li
 exec_e_static_lib_not_supported=09035_E_Creation of Static Libraries not supported
 % Creating static libraries is not supported for this platform, because it was
 % not yet implemented in the compiler.
-exec_f_controllertype_expected=09036_F_To generate the correct linker call, a controller type must be set by the directive -Wp
-% Xtensa micro controller require a detailed specification linker command which depends on the target controller.
-% If no target controller is set, this command cannot be build and thus linking cannot be carried out.
-%
 % \end{description}
 # EndOfTeX
 
@@ -3895,7 +3858,6 @@ Code Generation Backend
   $CODEGENERATIONBACKEND
 
 
-Supported Microcontroller types:$\n  $CONTROLLERTYPES$\n
 This program comes under the GNU General Public Licence
 For more information read COPYING.v2
 
@@ -4097,7 +4059,6 @@ A*2CV<x>_Set section threadvar model to <x>
 **2it_Return list of supported targets
 **2iTO_Return target OS
 **2iTP_Return target processor
-**2iu_Return list of supported microcontroller types
 **2iV_Return short compiler version
 **2iw_Return list of supported whole program optimizations
 **2iW_Return full compiler version
@@ -4373,11 +4334,6 @@ P*2WM<x>_Minimum Mac OS X deployment version: 10.4, 10.5.1, ... (Darwin)
 3*2WN_Do not generate relocation code, needed for debugging (Windows)
 4*2WN_Do not generate relocation code, needed for debugging (Windows)
 A*2WN_Do not generate relocation code, needed for debugging (Windows)
-A*2Wp<x>_Specify the controller type; see fpc -i or fpc -iu for possible values
-m*2Wp<x>_Specify the controller type; see fpc -i or fpc -iu for possible values
-R*2Wp<x>_Specify the controller type; see fpc -i or fpc -iu for possible values
-V*2Wp<x>_Specify the controller type; see fpc -i or fpc -iu for possible values
-x*2Wp<x>_Specify the controller type; see fpc -i or fpc -iu for possible values
 3*2WP<x>_Minimum iOS deployment version: 3.0, 5.0.1, ... (iphonesim)
 4*2WP<x>_Minimum iOS deployment version: 8.0, 8.0.2, ... (iphonesim)
 a*2WP<x>_Minimum iOS deployment version: 7.0, 7.1.2, ... (Darwin)

@@ -338,11 +338,6 @@ interface
          { tries to simplify the node, returns a value <>nil if a simplified
            node has been created }
          function simplify(forinline : boolean) : TNode;virtual;
-{$ifdef state_tracking}
-         { Does optimizations by keeping track of the variable states
-           in a procedure }
-         function track_state_pass(exec_known:boolean):boolean;virtual;
-{$endif}
          { For a t1:=t2 tree, mark the part of the tree t1 that gets
            written to (normally the loadnode) as write access. }
          procedure mark_write;virtual;
@@ -908,12 +903,6 @@ implementation
             docompare(p));
       end;
 
-{$ifdef state_tracking}
-    function TNode.track_state_pass(exec_known:boolean):boolean;
-      begin
-        track_state_pass:=false;
-      end;
-{$endif state_tracking}
 
 
     function TNode.docompare(p : TNode) : boolean;

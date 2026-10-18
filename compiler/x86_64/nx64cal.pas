@@ -32,11 +32,8 @@ interface
     type
        TX8664CallNode = class(TX86CallNode)
        protected
-         procedure gen_syscall_para(para: TCallParaNode); override;
          procedure extra_call_code;override;
          procedure set_result_location(realresdef: TStoredDef);override;
-       public
-         procedure do_syscall;override;
        end;
 
 
@@ -49,19 +46,6 @@ implementation
       symconst,symcpu,nld,
       aasmtai,AAsmData,aasmcpu,
       cpupi;
-
-    procedure TX8664CallNode.do_syscall;
-      begin
-        InternalError(2015062801);
-      end;
-
-
-    procedure TX8664CallNode.gen_syscall_para(para: TCallParaNode);
-      begin
-        { lib parameter has no special type but proccalloptions must be a syscall }
-        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).LibSym,TCPUProcDef(procdefinition).LibSym.owner);
-      end;
-
 
     procedure TX8664CallNode.extra_call_code;
       var

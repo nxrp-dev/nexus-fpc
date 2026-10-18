@@ -82,9 +82,6 @@ interface
           procedure extra_call_code;virtual;
           procedure extra_post_call_code;virtual;
 
-          function get_syscall_libbase_paraloc: PCGParaLocation;virtual;
-          procedure get_syscall_call_ref(out tmpref: TReference; reg: TRegister);virtual;
-          procedure do_syscall;virtual;abstract;
 
           { The function result is returned in a tcgpara. This tcgpara has to
             be translated into a tlocation so the rest of the code generator
@@ -479,41 +476,6 @@ implementation
 
     procedure TCGCallNode.extra_post_call_code;
       begin
-      end;
-
-    function TCGCallNode.get_syscall_libbase_paraloc: PCGParaLocation;
-      var
-        hsym: TSym;
-      begin
-        hsym:=TSym(procdefinition.ParaST.Find('syscalllib'));
-        if not Assigned(hsym) then
-          InternalError(2016110605);
-        result:=TParaVarSym(hsym).ParaLoc[callerside].Location;
-        if not Assigned(result) then
-          InternalError(2016110604);
-      end;
-
-    procedure TCGCallNode.get_syscall_call_ref(out tmpref: TReference; reg: TRegister);
-      var
-        libparaloc: PCGParaLocation;
-      begin
-        libparaloc:=get_syscall_libbase_paraloc;
-
-        case libparaloc^.Loc of
-          LOC_REGISTER:
-            Reference_Reset_Base(tmpref,libparaloc^.Register,-TProcDef(procdefinition).ExtNumber,CTempPosInvalid,sizeof(PInt),[]);
-          LOC_REFERENCE:
-            begin
-              Reference_Reset_Base(tmpref,libparaloc^.Reference.Index,libparaloc^.Reference.Offset,CTempPosInvalid,sizeof(PInt),[]);
-              cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,tmpref,reg);
-              Reference_Reset_Base(tmpref,reg,-TProcDef(procdefinition).ExtNumber,CTempPosInvalid,sizeof(PInt),[]);
-            end;
-          else
-            begin
-              Reference_Reset(tmpref,0,[]);
-              InternalError(2016090205);
-            end;
-        end;
       end;
 
     function TCGCallNode.can_call_ref(var ref: TReference): boolean;
@@ -1171,34 +1133,29 @@ implementation
                   if cg.Uses_Registers(R_MMREGISTER) then
                     cg.AllocCPURegisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
 
-                  if procdefinition.ProcCallOption=pocall_syscall then
-                    do_syscall
-                  else
+                  { Calling interrupt from the same code requires some
+                    extra code }
+                  if (po_interrupt in procdefinition.ProcOptions) then
+                    extra_interrupt_code;
+                  extra_call_code;
+                  retloc.ResetIfTemp;
+                  if name_to_call='' then
                     begin
-                      { Calling interrupt from the same code requires some
-                        extra code }
-                      if (po_interrupt in procdefinition.ProcOptions) then
-                        extra_interrupt_code;
-                      extra_call_code;
-                      retloc.ResetIfTemp;
-                      if name_to_call='' then
-                        begin
-                          if not Assigned(overrideprocnamedef) then
-                            name_to_call:=TProcDef(procdefinition).MangledName
-                          else
-                            name_to_call:=overrideprocnamedef.MangledName;
-                        end;
-                      if cnf_inherited in callnodeflags then
-                        retloc:=hlcg.A_Call_Name_Inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
-                      { under certain conditions, a static call (i.e. without PIC) can be generated }
-                      else if ((procdefinition.owner=CurrentProcInfo.procdef.owner) or
-                         (procdefinition.owner.SymTableType in [LocalSymTable,staticsymtable])
-                        ) and ((procdefinition.ProcOptions*[po_weakexternal,po_external])=[]) then
-                        retloc:=hlcg.A_Call_Name_Static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
+                      if not Assigned(overrideprocnamedef) then
+                        name_to_call:=TProcDef(procdefinition).MangledName
                       else
-                        retloc:=hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.ProcOptions);
-                      extra_post_call_code;
+                        name_to_call:=overrideprocnamedef.MangledName;
                     end;
+                  if cnf_inherited in callnodeflags then
+                    retloc:=hlcg.A_Call_Name_Inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
+                  { under certain conditions, a static call (i.e. without PIC) can be generated }
+                  else if ((procdefinition.owner=CurrentProcInfo.procdef.owner) or
+                     (procdefinition.owner.SymTableType in [LocalSymTable,staticsymtable])
+                    ) and ((procdefinition.ProcOptions*[po_weakexternal,po_external])=[]) then
+                    retloc:=hlcg.A_Call_Name_Static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
+                  else
+                    retloc:=hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.ProcOptions);
+                  extra_post_call_code;
                end;
            end
          else

@@ -416,7 +416,6 @@ implementation
          { pocall_far16      } 6,
          { pocall_oldfpccall } 7,
          { pocall_internproc } 8,
-         { pocall_syscall    } 9,
          { pocall_pascal     } 2,
          { pocall_register   } 0,
          { pocall_safecall   } 4,

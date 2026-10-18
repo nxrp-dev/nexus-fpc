@@ -950,21 +950,6 @@ parser_e_illegal_calling_convention=03195_W_Calling convention directive ignored
 % only the standard ABI calling convention of the CPU.
 parser_e_no_object_reintroduce=03196_E_REINTRODUCE cannot be used in objects
 % \var{reintroduce} is not supported for objects, Objective-C classes and Objective-C protocols.
-parser_e_paraloc_only_one_para=03197_E_Each argument must have its own location
-% If locations for arguments are specified explicitly as it is required by
-% some syscall conventions, each argument must have its own location. Things
-% like
-% \begin{verbatim}
-% procedure p(i,j : longint 'r1');
-% \end{verbatim}
-% are not allowed.
-parser_e_paraloc_all_paras=03198_E_Each argument must have an explicit location
-% If one argument has an explicit argument location, all arguments of a procedure
-% must have one.
-parser_e_illegal_explicit_paraloc=03199_E_Unknown argument location
-% The location specified for an argument isn't recognized by the compiler.
-parser_e_32bitint_or_pointer_variable_expected=03200_E_32 Bit-Integer or pointer variable expected
-% The libbase for MorphOS/AmigaOS can be given only as \var{longint}, \var{dword} or any pointer variable.
 parser_e_goto_outside_proc=03201_E_Goto statements are not allowed between different procedures
 % It isn't allowed to use \var{goto} statements referencing labels outside the
 % current procedure. The following example shows the problem:
@@ -3285,7 +3270,6 @@ Supported Whole Program Optimizations:
   All
   $WPOPTIMIZATIONS
 
-Supported Microcontroller types:$\n  $CONTROLLERTYPES$\n
 This program comes under the GNU General Public Licence
 For more information read COPYING.v2
 
@@ -3445,7 +3429,6 @@ A*2CT<x>_Target-specific code generation options
 **2io_Return list of supported optimizations
 **2ir_Return list of recognized compiler and RTL features
 **2it_Return list of supported targets
-**2iu_Return list of supported microcontroller types
 **2iw_Return list of supported whole program optimizations
 **1I<x>_Add <x> to include path
 **1k<x>_Pass <x> to the linker

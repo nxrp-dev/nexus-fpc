@@ -91,15 +91,6 @@ type
   TCPUProcVarDefClass = class of TCPUProcVarDef;
 
   TCPUProcDef = class(TX86ProcDef)
-    procedure PPULoadPlatform(PPUFile: TCompilerPPUFile); override;
-    procedure PPUWritePlatform(PPUFile: TCompilerPPUFile); override;
-   public
-    { library symbol for AROS }
-    LibSym : TSym;
-    LibSymDeref : TDeref;
-    function GetCopyAs(NewTyp: TDefTyp; CopyTyp: TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef; override;
-    procedure BuildDeref; override;
-    procedure Deref; override;
   end;
   TCPUProcDefClass = class of TCPUProcDef;
 
@@ -186,47 +177,6 @@ implementation
 {****************************************************************************
                              tcpuprocdef
 ****************************************************************************}
-
-  procedure TCPUProcDef.PPULoadPlatform(PPUFile: TCompilerPPUFile);
-    begin
-      inherited;
-      if po_syscall_has_libsym in ProcOptions then
-        PPUFile.GetDeref(LibSymDeref);
-    end;
-
-
-  procedure TCPUProcDef.PPUWritePlatform(PPUFile: TCompilerPPUFile);
-    begin
-      inherited;
-      if po_syscall_has_libsym in ProcOptions then
-        PPUFile.PutDeref(LibSymDeref);
-    end;
-
-
-  function TCPUProcDef.GetCopyAs(NewTyp: TDefTyp; CopyTyp: TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef;
-    begin
-      Result:=inherited;
-      if NewTyp=ProcDef then
-        TCPUProcDef(Result).LibSym:=LibSym;
-    end;
-
-
-  procedure TCPUProcDef.BuildDeref;
-    begin
-      inherited;
-      if po_syscall_has_libsym in ProcOptions then
-        LibSymDeref.Build(LibSym);
-    end;
-
-
-  procedure TCPUProcDef.Deref;
-    begin
-      inherited;
-      if po_syscall_has_libsym in ProcOptions then
-        LibSym:=TSym(LibSymDeref.Resolve)
-      else
-        LibSym:=nil;
-    end;
 
 
 begin
