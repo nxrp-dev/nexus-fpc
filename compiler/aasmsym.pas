@@ -52,7 +52,7 @@ implementation
       begin
         case o.typ of
           top_local :
-            o.localoper^.localsymderef.build(TLocalVarSym(o.localoper^.localsym));
+            o.localoper^.localsymderef.Build(TLocalVarSym(o.localoper^.localsym));
           else
             ;
         end;

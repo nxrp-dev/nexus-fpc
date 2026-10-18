@@ -52,7 +52,7 @@ implementation
   uses
     CUtils,CClasses,Verbose,Globals,
     FModule,
-    pass_1,
+    Pass_1,
     NObj,NCal,NMem,NLd,NUtils,
     NGenUtil,
     SymBase,SymSym,SymTable,DefUtil,DefCmp,
@@ -271,7 +271,7 @@ implementation
             TTypeSym(Sym).TypeDef:=Def;
           if Assigned(DummySym) then
             TTypeSym(DummySym).TypeDef:=Def;
-          build_vmt(TObjectDef(Def));
+          Build_VMT(TObjectDef(Def));
           Result:=True;
         end
       else
@@ -350,7 +350,7 @@ implementation
       SymOwner.InsertDef(Result);
       AddSymRef(Sym);
 
-      build_vmt(Result);
+      Build_VMT(Result);
     end;
 
 
@@ -712,7 +712,7 @@ implementation
         end
       else if N.NodeType=SubscriptN then
         begin
-          Sym^:=TSubscriptNode(N).VS;
+          Sym^:=TSubscriptNode(N).FieldSym;
           Result:=fen_norecurse_true;
         end;
     end;
@@ -820,7 +820,7 @@ implementation
           Tmp:=Owner;
           while Assigned(Tmp) and (Tmp.ProcDef.ParaST.SymTableLevel>=NormalFunctionLevel) do
             begin
-              Res:=Tmp.find_nestedproc_by_pd(PD);
+              Res:=Tmp.Find_NestedProc_By_PD(PD);
               if Assigned(Res) then
                 Exit(TCGProcInfo(Res));
               Tmp:=Tmp.Parent;
@@ -1073,7 +1073,7 @@ implementation
           if not Assigned(SelfSym) then
             InternalError(2022052301);
           SelfInfo.Ignore:=SelfSym;
-          N1:=CCallNode.create_procvar(CreateParas(PD),CSubscriptNode.Create(FieldSym,CLoadNode.Create(SelfSym,SelfSym.Owner)));
+          N1:=CCallNode.Create_ProcVar(CreateParas(PD),CSubscriptNode.Create(FieldSym,CLoadNode.Create(SelfSym,SelfSym.Owner)));
         end
       else
         begin
@@ -1254,13 +1254,13 @@ implementation
                         with the real self parameter symbol from the surrounding
                         method }
                       if not Assigned(OuterSelf) then
-                        OuterSelf:=TSym(Owner.get_normal_proc.ProcDef.ParaST.Find('self'));
+                        OuterSelf:=TSym(Owner.Get_Normal_Proc.ProcDef.ParaST.Find('self'));
                       if not Assigned(OuterSelf) then
                         InternalError(2022010905);
 
                       { the anonymous function can only be a direct child of the
                         owner }
-                      PI:=Owner.get_first_nestedproc;
+                      PI:=Owner.Get_First_NestedProc;
                       while Assigned(PI) do
                         begin
                           if PI.ProcDef=PD then
@@ -1371,7 +1371,7 @@ implementation
         InternalError(2022051701);
       if Ctx.ProcDef.WasAnonymous then
         begin
-          SelfNode:=load_self_node;
+          SelfNode:=Load_Self_Node;
           AliveNode:=SelfNode.GetCopy;
         end
       else
@@ -1441,7 +1441,7 @@ implementation
         ... we have been adding fields on-the-fly }
       TAbstractRecordSymTable(Def.SymTable).AddAlignmentPadding;
       { ... we have been adding interfaces on-the-fly }
-      build_vmt(Def);
+      Build_VMT(Def);
     end;
 
 

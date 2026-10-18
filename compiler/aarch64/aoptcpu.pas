@@ -976,7 +976,7 @@ Implementation
         (TAICPU(hp2).oper[0]^.typ = top_ref) and
         GetNextInstruction(hp2, hp3) and
         (hp3.typ = ait_label) and
-        (TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol) = TAILabel(hp3).labsym) and
+        (TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol) = TAILabel(hp3).LabSym) and
         GetNextInstruction(hp3, hp4) and
         { As before, check individually instead of using MatchInstruction in order to save time }
         (hp4.typ = ait_instruction) and
@@ -1021,18 +1021,18 @@ Implementation
         ) and
         GetNextInstruction(hp4, hp5) and
         (hp5.typ = ait_label) and
-        (TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol) = TAILabel(hp5).labsym) then
+        (TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol) = TAILabel(hp5).LabSym) then
         begin
           Invert := MatchOperand(TAICPU(hp1).oper[1]^, 1); { if true, hp4 will be mov reg,0 in some form }
           if Invert then
             TAICPU(p).condition := inverse_cond(TAICPU(p).condition);
 
-          TAILabel(hp3).labsym.DecRefs;
+          TAILabel(hp3).LabSym.DecRefs;
 
           { If this isn't the only reference to the middle label, we can
             still make a saving - only that the first jump and everything
             that follows will remain. }
-          if (TAILabel(hp3).labsym.getrefs = 0) then
+          if (TAILabel(hp3).LabSym.getrefs = 0) then
             begin
               if Invert then
                 DebugMsg(SPeepholeOptimization + 'B(c)Movz1BMovz0 -> Cset(~c)',p)
@@ -1052,7 +1052,7 @@ Implementation
               { Don't decrement reference count before the removal loop
                 above, otherwise GetNextInstruction won't stop on the
                 the label }
-              TAILabel(hp5).labsym.DecRefs;
+              TAILabel(hp5).LabSym.DecRefs;
             end
           else
             begin
@@ -1740,7 +1740,7 @@ Implementation
       Result := NR_NO;
       RegSet :=
         ParaManager.Get_Volatile_Registers_Int(CurrentProcInfo.procdef.ProcCallOption) +
-        CurrentProcInfo.saved_regs_int;
+        CurrentProcInfo.SavedRegsInt;
 (*
       { Don't use the frame register unless explicitly allowed (fixes i40111) }
       if ([cs_useebp, cs_userbp] * current_settings.optimizerswitches) = [] then
@@ -2026,7 +2026,7 @@ Implementation
       else
         fMidLabel := hp1;
 
-      if TAILabel(fMidLabel).labsym <> AFirstLabel then
+      if TAILabel(fMidLabel).LabSym <> AFirstLabel then
         { Not the correct label }
         fMidLabel := nil;
 
@@ -2104,7 +2104,7 @@ Implementation
           else
             fEndLabel := hp1;
 
-          if TAILabel(fEndLabel).labsym <> JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol then
+          if TAILabel(fEndLabel).LabSym <> JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol then
             { Second jump doesn't go to the end }
             fEndLabel := nil;
 

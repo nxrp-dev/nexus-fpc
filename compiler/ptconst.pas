@@ -60,7 +60,7 @@ implementation
         CurrentFilePos:=sym.fileinfo;
 
         maybe_new_object_file(list);
-        tcbuilder:=TAsmListTypedConstBuilderClass(CTypedConstBuilder).create(sym);
+        tcbuilder:=TAsmListTypedConstBuilderClass(CTypedConstBuilder).Create(sym);
         TAsmListTypedConstBuilder(tcbuilder).parse_into_asmlist;
 
         { Parse hints }

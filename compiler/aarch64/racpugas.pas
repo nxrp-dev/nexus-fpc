@@ -1333,7 +1333,7 @@ Unit racpugas;
           ash_setfp,
           ash_endprologue,
           ash_handlerdata:
-            curlist.concat(CAISEHDirective.create(actsehdirective));
+            curlist.concat(CAISEHDirective.Create(actsehdirective));
 
           ash_handler:
             begin

@@ -31,7 +31,7 @@ unit rabase;
 
     type
        TBaseAsmReader = class
-         constructor create;virtual;
+         constructor Create;virtual;
          { the real return type is TAsmList, but this would introduce too much unit circles }
          function Assemble: TLinkedList;virtual;abstract;
        end;
@@ -45,7 +45,7 @@ unit rabase;
        end;
 
     var
-      asmmodeinfos  : array[TAsmMode] of PAsmModeInfo;
+      asmmodeinfos  : array[0..Ord(High(TAsmMode))] of PAsmModeInfo;
 
     function SetAsmReadMode(const s:string;var t:TAsmMode):boolean;
     procedure RegisterAsmMode(const r:TAsmModeInfo);
@@ -61,11 +61,11 @@ unit rabase;
         t : TAsmMode;
       begin
         t:=r.id;
-        if Assigned(asmmodeinfos[t]) then
+        if Assigned(asmmodeinfos[Ord(t)]) then
           WriteLn('Warning: Asmmode is already registered!')
         else
-          new(asmmodeinfos[t]);
-        asmmodeinfos[t]^:=r;
+          new(asmmodeinfos[Ord(t)]);
+        asmmodeinfos[Ord(t)]^:=r;
       end;
 
 
@@ -80,18 +80,18 @@ unit rabase;
         if hs='DEFAULT' then
           hs:='STANDARD';
         for ht:=low(TAsmMode) to high(TAsmMode) do
-         if Assigned(asmmodeinfos[ht]) and
-            (asmmodeinfos[ht]^.idtxt=hs) then
+         if Assigned(asmmodeinfos[Ord(ht)]) and
+            (asmmodeinfos[Ord(ht)]^.idtxt=hs) then
           begin
-            t:=asmmodeinfos[ht]^.id;
+            t:=asmmodeinfos[Ord(ht)]^.id;
             result:=true;
           end;
       end;
 
 
-    constructor TBaseAsmReader.create;
+    constructor TBaseAsmReader.Create;
       begin
-        inherited create;
+        inherited Create;
       end;
 
 var
@@ -99,9 +99,9 @@ var
 
 finalization
   for AsmMode:=low(TAsmMode) to high(TAsmMode) do
-   if Assigned(asmmodeinfos[AsmMode]) then
+   if Assigned(asmmodeinfos[Ord(AsmMode)]) then
     begin
-      dispose(asmmodeinfos[AsmMode]);
-      asmmodeinfos[AsmMode]:=nil;
+      dispose(asmmodeinfos[Ord(AsmMode)]);
+      asmmodeinfos[Ord(AsmMode)]:=nil;
     end;
 end.

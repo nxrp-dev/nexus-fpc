@@ -45,7 +45,7 @@ implementation
   procedure InitWpo;
     begin
       { always create so we don't have to litter the source with if-tests }
-      wpoinfomanager:=TWPOInfoManager.create;
+      wpoinfomanager:=TWPOInfoManager.Create;
 
       { register the classes we can/should potentially use }
       wpoinfomanager.registerwpocomponentclass(TProgDevirtInfo);

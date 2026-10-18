@@ -1077,7 +1077,7 @@ implementation
       end;
 
     { See "is_cyclic" below }
-    function IsCyclicInternal(const Def: TDef; const First: PDefListItem): Boolean;
+    function Is_Cyclic_Internal(const Def: TDef; const First: PDefListItem): Boolean;
       var
         ThisDef: TDefListItem;
         CurItem: PDefListItem;
@@ -1098,9 +1098,9 @@ implementation
 
         case Def.Typ of
           ArrayDef:
-            Result := IsCyclicInternal(TArrayDef(Def).ElementDef, @ThisDef);
+            Result := Is_Cyclic_Internal(TArrayDef(Def).ElementDef, @ThisDef);
           PointerDef:
-            Result := IsCyclicInternal(TAbstractPointerDef(Def).PointedDef, @ThisDef);
+            Result := Is_Cyclic_Internal(TAbstractPointerDef(Def).PointedDef, @ThisDef);
           else
             InternalError(2022120301);
         end;
@@ -1109,7 +1109,7 @@ implementation
     { true, if p is a cyclic reference (refers to itself at some point via pointer or array) }
     function Is_Cyclic(P : TDef): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result := IsCyclicInternal(P, nil);
+        Result := Is_Cyclic_Internal(P, nil);
       end;
 
     { true, if def is a 8 bit int type }

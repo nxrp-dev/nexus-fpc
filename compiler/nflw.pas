@@ -54,47 +54,47 @@ interface
 
     const
          { loop flags which must match to consider loop nodes equal regarding the flags }
-         loopflagsequal = [lnf_backward];
+         cLoopFlagsEqual = [lnf_backward];
 
     type
        TLabelNode = class;
 
        TLoopNode = class(TBinaryNode)
-          t1,t2 : TNode;
-          loopflags : TLoopFlags;
-          constructor create(tt : TNodeType;l,r,_t1,_t2 : TNode);virtual;
+          T1,T2 : TNode;
+          LoopFlags : TLoopFlags;
+          constructor Create(ANodeType : TNodeType;ALeft,ARight,AT1,AT2 : TNode);virtual;
           destructor Destroy;override;
-          function dogetcopy : TNode;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          function DoGetCopy : TNode;override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          procedure insertintolist(l : TNodeList);override;
-          procedure printnodetree(var t:text);override;
-          function docompare(p: TNode): boolean; override;
+          procedure DerefImpl;override;
+          procedure InsertIntoList(AList : TNodeList);override;
+          procedure PrintNodeTree(var AText:Text);override;
+          function DoCompare(ANode: TNode): Boolean; override;
        end;
 
        TWhileRepeatNode = class(TLoopNode)
           { l: condition; r: body; tab: test at begin; cn: negate condition
             x,y,true,false: while loop
             x,y,false,true: repeat until loop }
-          constructor create(l,r:TNode;tab,cn:boolean);virtual;reintroduce;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function simplify(forinline: boolean): TNode;override;
+          constructor Create(ALeft,ARight:TNode;ATestAtBegin,ACheckNegate:Boolean);virtual;reintroduce;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function Simplify(AForInline: Boolean): TNode;override;
 
-          function internalsimplify(forinline: boolean): TNode;
+          function InternalSimplify(AForInline: Boolean): TNode;
        end;
        TWhileRepeatNodeClass = class of TWhileRepeatNode;
 
        TIfNode = class(TLoopNode)
-          constructor create(l,r,_t1 : TNode);virtual;reintroduce;
-          constructor Create_Internal(l,r,_t1 : TNode);virtual;reintroduce;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function simplify(forinline : boolean) : TNode;override;
+          constructor Create(ALeft,ARight,AT1 : TNode);virtual;reintroduce;
+          constructor Create_Internal(ALeft,ARight,AT1 : TNode);virtual;reintroduce;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function Simplify(AForInline : Boolean) : TNode;override;
          private
-          function internalsimplify(warn: boolean) : TNode;
+          function InternalSimplify(AWarn: Boolean) : TNode;
        end;
        TIfNodeClass = class of TIfNode;
 
@@ -102,46 +102,46 @@ interface
           { if count isn't divisible by unrolls then
             the for loop must jump to this label to get the correct
             number of executions }
-          entrylabel,
+          EntryLabel,
           { this is a dummy node used by the dfa to store life information for the loop iteration }
-          loopiteration : TNode;
-          loopvar_notid:cardinal;
-          constructor create(l,r,_t1,_t2 : TNode;back : boolean);virtual;reintroduce;
+          LoopIteration : TNode;
+          LoopVarNotID:cardinal;
+          constructor Create(ALeft,ARight,AT1,AT2 : TNode;ABackward : Boolean);virtual;reintroduce;
           destructor Destroy;override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function makewhileloop : TNode;
-          function simplify(forinline : boolean) : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function MakeWhileLoop : TNode;
+          function Simplify(AForInline : Boolean) : TNode;override;
        end;
        TForNodeClass = class of TForNode;
 
        TExitNode = class(TUnaryNode)
-          constructor create(l:TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          property resultexpr : TNode read left write left;
+          constructor Create(ALeft:TNode);virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          property ResultExpr : TNode read Left write Left;
        end;
        TExitNodeClass = class of TExitNode;
 
        TBreakNode = class(TNode)
-          constructor create;virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create;virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TBreakNodeClass = class of TBreakNode;
 
        TContinueNode = class(TNode)
-          constructor create;virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create;virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TContinueNodeClass = class of TContinueNode;
 
        TGotoNode = class(TNode)
        private
-          labelnodeidx : LongInt;
+          FLabelNodeIdx : LongInt;
        public
           { * Set when creating the gotonode (since that's all we know at that
               point).
@@ -179,54 +179,54 @@ interface
                 when performing a dogetcopy of such a load node and assign this
                 labelsym to the copied labelnode (and vice versa)
           }
-          labelsym : TLabelSym;
-          labelnode : TLabelNode;
-          exceptionblock : integer;
-          constructor create(p : TLabelSym);virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          LabelSym : TLabelSym;
+          LabelNode : TLabelNode;
+          ExceptionBlock : integer;
+          constructor Create(ALabelSym : TLabelSym);virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          procedure resolveppuidx;override;
-          function dogetcopy : TNode;override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function docompare(p: TNode): boolean; override;
+          procedure DerefImpl;override;
+          procedure ResolvePPUIdx;override;
+          function DoGetCopy : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
        end;
        TGotoNodeClass = class of TGotoNode;
 
        TLabelNode = class(TNode)
-          exceptionblock : integer;
+          ExceptionBlock : integer;
           { when copying trees, this points to the newly created copy of a label }
-          copiedto : TLabelNode;
-          labsym : TLabelSym;
-          constructor create(l:TNode;alabsym:TLabelSym);virtual;
+          CopiedTo : TLabelNode;
+          LabSym : TLabelSym;
+          constructor Create(ALeft:TNode;ALabSym:TLabelSym);virtual;
           destructor Destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function dogetcopy : TNode;override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function docompare(p: TNode): boolean; override;
+          procedure DerefImpl;override;
+          function DoGetCopy : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
        end;
        TLabelNodeClass = class of TLabelNode;
 
        TRaiseNode = class(TTertiaryNode)
-          constructor create(l,taddr,tframe:TNode);virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create(ALeft,AAddress,AFrame:TNode);virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TRaiseNodeClass = class of TRaiseNode;
 
        TTryExceptNode = class(TLoopNode)
-          constructor create(l,r,_t1 : TNode);virtual;reintroduce;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function simplify(forinline: boolean): TNode; override;
+          constructor Create(ALeft,ARight,AT1 : TNode);virtual;reintroduce;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function Simplify(AForInline: Boolean): TNode; override;
          protected
-          procedure adjust_estimated_stack_size; virtual;
+          procedure Adjust_Estimated_Stack_Size; virtual;
        end;
        TTryExceptNodeClass = class of TTryExceptNode;
 
@@ -234,29 +234,29 @@ interface
          it needs one copy to execute in case an exception occurs, and
          one in case no exception occurs }
        TTryFinallyNode = class(TTertiaryNode)
-          implicitframe : boolean;
-          constructor create(l,r:TNode);virtual;reintroduce;
-          constructor create_implicit(l,r:TNode);virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function simplify(forinline:boolean): TNode;override;
+          ImplicitFrame : Boolean;
+          constructor Create(ALeft,ARight:TNode);virtual;reintroduce;
+          constructor Create_Implicit(ALeft,ARight:TNode);virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function Simplify(AForInline:Boolean): TNode;override;
        protected
-          procedure adjust_estimated_stack_size; virtual;
+          procedure Adjust_Estimated_Stack_Size; virtual;
        public
-          function dogetcopy: TNode;override;
+          function DoGetCopy: TNode;override;
        end;
        TTryFinallyNodeClass = class of TTryFinallyNode;
 
        TOnNode = class(TBinaryNode)
-          excepTSymtable : TSymTable;
-          excepttype : TObjectDef;
-          constructor create(l,r:TNode);virtual;
+          ExceptSymTable : TSymTable;
+          ExceptType : TObjectDef;
+          constructor Create(ALeft,ARight:TNode);virtual;
           destructor Destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function dogetcopy : TNode;override;
-          function docompare(p: TNode): boolean; override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function DoGetCopy : TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
        end;
        TOnNodeClass = class of TOnNode;
 
@@ -275,24 +275,24 @@ interface
        CContinueNode : TContinueNodeClass = TContinueNode;
 
     // for-in loop helpers
-    function create_type_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
-    function create_string_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
-    function create_array_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
-    function create_set_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
-    function create_enumerator_for_in_loop(hloopvar, hloopbody, expr: TNode;
-       enumerator_get, enumerator_move: TProcDef; enumerator_current: TPropertySym): TNode;
-    function create_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_Type_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
+    function Create_String_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
+    function Create_Array_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
+    function Create_Set_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
+    function Create_Enumerator_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode;
+       AEnumeratorGet, AEnumeratorMove: TProcDef; AEnumeratorCurrent: TPropertySym): TNode;
+    function Create_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
 
     { converts all for nodes in the tree into while nodes,
       returns true if something was converted }
-    function ConvertForLoops(var n : TNode) : Boolean;
+    function ConvertForLoops(var ANode : TNode) : Boolean;
 
 implementation
 
     uses
       GlobType,Systems,ConstExp,compinnr,
       CUtils,Verbose,Globals,PPU,
-      SymTable,paramgr,defcmp,defutil,htypechk,pass_1,
+      SymTable,paramgr,defcmp,defutil,htypechk,Pass_1,
       ncal,nadd,ncon,nmem,nld,ncnv,nbas,nutils,ninl,nset,ngenutil,
 
     {$if defined(i386)}
@@ -304,29 +304,29 @@ implementation
 
     // for-in loop helpers
 
-    function create_type_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_Type_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       begin
-        result:=CForNode.create(hloopvar,
-          CInlineNode.create(in_low_x,false,expr.GetCopy),
-          CInlineNode.create(in_high_x,false,expr.GetCopy),
-          hloopbody,
+        Result:=CForNode.Create(ALoopVar,
+          CInlineNode.Create(in_low_x,false,AExpr.GetCopy),
+          CInlineNode.Create(in_high_x,false,AExpr.GetCopy),
+          ALoopBody,
           false);
       end;
 
 
-    function create_objc_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function CreateObjCForInLoop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       var
-        mainstatement, outerloopbodystatement, innerloopbodystatement, tempstatement: TStatementNode;
-        state, mutationcheck, currentamount, innerloopcounter, items, expressiontemp: TTempCreateNode;
-        outerloop, innerloop, hp: TNode;
-        itemsarraydef: TArrayDef;
-        sym: TSym;
+        lMainStatement, lOuterLoopBodyStatement, lInnerLoopBodyStatement, lTempStatement: TStatementNode;
+        lState, lMutationCheck, lCurrentAmount, lInnerLoopCounter, lItems, lExpressionTemp: TTempCreateNode;
+        lOuterLoop, lInnerLoop, lNode: TNode;
+        lItemsArrayDef: TArrayDef;
+        lSym: TSym;
       begin
         { Objective-C enumerators require Objective-C 2.0 }
         if not(m_objectivec2 in CurrentSettings.ModeSwitches) then
           begin
-            result:=CErrorNode.create;
-            MessagePos(expr.fileinfo,parser_e_objc_enumerator_2_0);
+            Result:=CErrorNode.Create;
+            MessagePos(AExpr.FileInfo,parser_e_objc_enumerator_2_0);
             exit;
           end;
         { Requires the NSFastEnumeration protocol and NSFastEnumerationState
@@ -335,8 +335,8 @@ implementation
         if not Assigned(ObjC_FastEnumeration) or
            not Assigned(ObjC_FastEnumerationState) then
           begin
-            result:=CErrorNode.create;
-            MessagePos(expr.fileinfo,parser_e_objc_missing_enumeration_defs);
+            Result:=CErrorNode.Create;
+            MessagePos(AExpr.FileInfo,parser_e_objc_missing_enumeration_defs);
             exit;
           end;
 
@@ -396,382 +396,382 @@ implementation
             end;
          *)
 
-         result:=internalstatements(mainstatement);
+         Result:=InternalStatements(lMainStatement);
          { the fast enumeration state }
-         state:=CTempCreateNode.create(ObjC_FastEnumerationState,ObjC_FastEnumerationState.Size,tt_persistent,false);
-         TypeCheckPass(TNode(state));
-         addstatement(mainstatement,state);
+         lState:=CTempCreateNode.Create(ObjC_FastEnumerationState,ObjC_FastEnumerationState.Size,tt_persistent,false);
+         TypeCheckPass(TNode(lState));
+         AddStatement(lMainStatement,lState);
          { the temporary items array }
-         itemsarraydef:=CArrayDef.create(1,16,U32IntType);
-         itemsarraydef.ElementDef:=ObjC_IDType;
-         items:=CTempCreateNode.create(itemsarraydef,itemsarraydef.Size,tt_persistent,false);
-         addstatement(mainstatement,items);
-         TypeCheckPass(TNode(items));
+         lItemsArrayDef:=CArrayDef.Create(1,16,U32IntType);
+         lItemsArrayDef.ElementDef:=ObjC_IDType;
+         lItems:=CTempCreateNode.Create(lItemsArrayDef,lItemsArrayDef.Size,tt_persistent,false);
+         AddStatement(lMainStatement,lItems);
+         TypeCheckPass(TNode(lItems));
          { temp for the expression/collection through which we iterate }
-         expressiontemp:=CTempCreateNode.create(ObjC_FastEnumeration,ObjC_FastEnumeration.Size,tt_persistent,true);
-         addstatement(mainstatement,expressiontemp);
+         lExpressionTemp:=CTempCreateNode.Create(ObjC_FastEnumeration,ObjC_FastEnumeration.Size,tt_persistent,true);
+         AddStatement(lMainStatement,lExpressionTemp);
          { currentamount temp (not really clean: we use ptruint instead of
            culong) }
-         currentamount:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
-         TypeCheckPass(TNode(currentamount));
-         addstatement(mainstatement,currentamount);
+         lCurrentAmount:=CTempCreateNode.Create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
+         TypeCheckPass(TNode(lCurrentAmount));
+         AddStatement(lMainStatement,lCurrentAmount);
          { mutationcheck temp (idem) }
-         mutationcheck:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
-         TypeCheckPass(TNode(mutationcheck));
-         addstatement(mainstatement,mutationcheck);
+         lMutationCheck:=CTempCreateNode.Create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
+         TypeCheckPass(TNode(lMutationCheck));
+         AddStatement(lMainStatement,lMutationCheck);
          { innerloopcounter temp (idem) }
-         innerloopcounter:=CTempCreateNode.create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
-         TypeCheckPass(TNode(innerloopcounter));
-         addstatement(mainstatement,innerloopcounter);
+         lInnerLoopCounter:=CTempCreateNode.Create(PtrUIntType,PtrUIntType.Size,tt_persistent,true);
+         TypeCheckPass(TNode(lInnerLoopCounter));
+         AddStatement(lMainStatement,lInnerLoopCounter);
          { initialise the state with 0 }
-         addstatement(mainstatement,CCallNode.createinternfromunit('SYSTEM','FILLCHAR',
-           CCallParaNode.create(genintconstnode(0),
-             CCallParaNode.create(genintconstnode(ObjC_FastEnumerationState.Size),
-               CCallParaNode.create(CTempRefNode.create(state),nil)
+         AddStatement(lMainStatement,CCallNode.CreateInternFromUnit('SYSTEM','FILLCHAR',
+           CCallParaNode.Create(GenIntConstNode(0),
+             CCallParaNode.Create(GenIntConstNode(ObjC_FastEnumerationState.Size),
+               CCallParaNode.Create(CTempRefNode.Create(lState),nil)
              )
            )
          ));
          { this will also check whether the expression (potentially) conforms
            to the NSFastEnumeration protocol (use expr.getcopy, because the
            caller will free expr) }
-         addstatement(mainstatement,CAssignmentNode.create(CTempRefNode.create(expressiontemp),expr.GetCopy));
+         AddStatement(lMainStatement,CAssignmentNode.Create(CTempRefNode.Create(lExpressionTemp),AExpr.GetCopy));
 
          { we add the "repeat..until" afterwards, now just create the body }
-         outerloop:=internalstatements(outerloopbodystatement);
+         lOuterLoop:=InternalStatements(lOuterLoopBodyStatement);
          { the countByEnumeratingWithState_objects_count call }
-         hp:=CCallParaNode.create(CInlineNode.create(in_length_x,false,CTypeNode.create(itemsarraydef)),
-               CCallParaNode.create(CAddrNode.create(CTempRefNode.create(items)),
-                 CCallParaNode.create(CAddrNode.create(CTempRefNode.create(state)),nil)
+         lNode:=CCallParaNode.Create(CInlineNode.Create(in_length_x,false,CTypeNode.Create(lItemsArrayDef)),
+               CCallParaNode.Create(CAddrNode.Create(CTempRefNode.Create(lItems)),
+                 CCallParaNode.Create(CAddrNode.Create(CTempRefNode.Create(lState)),nil)
                )
              );
-         sym:=Search_Struct_Member(ObjC_FastEnumeration,'COUNTBYENUMERATINGWITHSTATE_OBJECTS_COUNT');
-         if not Assigned(sym) or
-            (sym.typ<>ProcSym) then
+         lSym:=Search_Struct_Member(ObjC_FastEnumeration,'COUNTBYENUMERATINGWITHSTATE_OBJECTS_COUNT');
+         if not Assigned(lSym) or
+            (lSym.typ<>ProcSym) then
            InternalError(2010061901);
-         hp:=CCallNode.create(hp,TProcSym(sym),sym.owner,CTempRefNode.create(expressiontemp),[],nil);
-         addstatement(outerloopbodystatement,CAssignmentNode.create(
-           CTempRefNode.create(currentamount),hp));
+         lNode:=CCallNode.Create(lNode,TProcSym(lSym),lSym.Owner,CTempRefNode.Create(lExpressionTemp),[],nil);
+         AddStatement(lOuterLoopBodyStatement,CAssignmentNode.Create(
+           CTempRefNode.Create(lCurrentAmount),lNode));
          { if currentamount = 0, bail out (use copy of hloopvar, because we
            have to use it again below) }
-         hp:=internalstatements(tempstatement);
-         addstatement(tempstatement,CAssignmentNode.create(
-             hloopvar.GetCopy,CNilNode.create));
-         addstatement(tempstatement,CBreakNode.create);
-         addstatement(outerloopbodystatement,CIfNode.create(
-           CAddNode.create(EqualN,CTempRefNode.create(currentamount),genintconstnode(0)),
-           hp,nil));
+         lNode:=InternalStatements(lTempStatement);
+         AddStatement(lTempStatement,CAssignmentNode.Create(
+             ALoopVar.GetCopy,CNilNode.Create));
+         AddStatement(lTempStatement,CBreakNode.Create);
+         AddStatement(lOuterLoopBodyStatement,CIfNode.Create(
+           CAddNode.Create(EqualN,CTempRefNode.Create(lCurrentAmount),GenIntConstNode(0)),
+           lNode,nil));
         { initial value of mutationcheck }
-        hp:=CTempRefNode.create(state);
-        TypeCheckPass(hp);
-        hp:=CDerefNode.create(genloadfield(hp,'MUTATIONSPTR'));
-        addstatement(outerloopbodystatement,CAssignmentNode.create(
-          CTempRefNode.create(mutationcheck),hp));
+        lNode:=CTempRefNode.Create(lState);
+        TypeCheckPass(lNode);
+        lNode:=CDerefNode.Create(GenLoadField(lNode,'MUTATIONSPTR'));
+        AddStatement(lOuterLoopBodyStatement,CAssignmentNode.Create(
+          CTempRefNode.Create(lMutationCheck),lNode));
         { initialise innerloopcounter }
-        addstatement(outerloopbodystatement,CAssignmentNode.create(
-          CTempRefNode.create(innerloopcounter),COrdConstNode.create(-1,PtrUIntType,false)));
+        AddStatement(lOuterLoopBodyStatement,CAssignmentNode.Create(
+          CTempRefNode.Create(lInnerLoopCounter),COrdConstNode.Create(-1,PtrUIntType,false)));
 
         { and now the inner loop, again adding the repeat/until afterwards }
-        innerloop:=internalstatements(innerloopbodystatement);
+        lInnerLoop:=InternalStatements(lInnerLoopBodyStatement);
         { inc(innerloopcounter) without range/overflowchecking (because
           we go from culong(-1) to 0 during the first iteration }
-        hp:=CInlineNode.create(
-          in_inc_x,false,CCallParaNode.create(
-            CTempRefNode.create(innerloopcounter),nil));
-        hp.LocalSwitches:=hp.LocalSwitches-[cs_check_range,cs_check_overflow];
-        addstatement(innerloopbodystatement,hp);
+        lNode:=CInlineNode.Create(
+          in_inc_x,false,CCallParaNode.Create(
+            CTempRefNode.Create(lInnerLoopCounter),nil));
+        lNode.LocalSwitches:=lNode.LocalSwitches-[cs_check_range,cs_check_overflow];
+        AddStatement(lInnerLoopBodyStatement,lNode);
         { if innerloopcounter=currentamount then break to the outer loop }
-        addstatement(innerloopbodystatement,CIfNode.create(
-          CAddNode.create(EqualN,
-            CTempRefNode.create(innerloopcounter),
-            CTempRefNode.create(currentamount)),
-          CBreakNode.create,
+        AddStatement(lInnerLoopBodyStatement,CIfNode.Create(
+          CAddNode.Create(EqualN,
+            CTempRefNode.Create(lInnerLoopCounter),
+            CTempRefNode.Create(lCurrentAmount)),
+          CBreakNode.Create,
           nil));
         { verify that the collection didn't change in the mean time }
-        hp:=CTempRefNode.create(state);
-        TypeCheckPass(hp);
-        addstatement(innerloopbodystatement,CIfNode.create(
-          CAddNode.create(unequaln,
-            CTempRefNode.create(mutationcheck),
-            CDerefNode.create(genloadfield(hp,'MUTATIONSPTR'))
+        lNode:=CTempRefNode.Create(lState);
+        TypeCheckPass(lNode);
+        AddStatement(lInnerLoopBodyStatement,CIfNode.Create(
+          CAddNode.Create(unequaln,
+            CTempRefNode.Create(lMutationCheck),
+            CDerefNode.Create(GenLoadField(lNode,'MUTATIONSPTR'))
           ),
-          CCallNode.createinternfromunit('OBJC','OBJC_ENUMERATIONMUTATION',
-            CCallParaNode.create(CTempRefNode.create(expressiontemp),nil)),
+          CCallNode.CreateInternFromUnit('OBJC','OBJC_ENUMERATIONMUTATION',
+            CCallParaNode.Create(CTempRefNode.Create(lExpressionTemp),nil)),
           nil));
         { finally: actually get the next element }
-        hp:=CTempRefNode.create(state);
-        TypeCheckPass(hp);
-        hp:=genloadfield(hp,'ITEMSPTR');
-        TypeCheckPass(hp);
+        lNode:=CTempRefNode.Create(lState);
+        TypeCheckPass(lNode);
+        lNode:=GenLoadField(lNode,'ITEMSPTR');
+        TypeCheckPass(lNode);
         { don't simply use a vecn, because indexing a pointer won't work in
           non-FPC modes }
-        if hp.resultdef.typ<>pointerdef then
+        if lNode.ResultDef.typ<>pointerdef then
           InternalError(2010061904);
-        inserttypeconv(hp,
-          CArrayDef.Create_From_Pointer(TPointerDef(hp.resultdef)));
-        hp:=CVecNode.create(hp,CTempRefNode.create(innerloopcounter));
-        addstatement(innerloopbodystatement,
-          CAssignmentNode.create(hloopvar,hp));
+        InsertTypeConv(lNode,
+          CArrayDef.Create_From_Pointer(TPointerDef(lNode.ResultDef)));
+        lNode:=CVecNode.Create(lNode,CTempRefNode.Create(lInnerLoopCounter));
+        AddStatement(lInnerLoopBodyStatement,
+          CAssignmentNode.Create(ALoopVar,lNode));
         { the actual loop body! }
-        addstatement(innerloopbodystatement,hloopbody);
+        AddStatement(lInnerLoopBodyStatement,ALoopBody);
 
         { create the inner repeat/until and add it to the body of the outer
           one }
-        hp:=CWhileRepeatNode.create(
+        lNode:=CWhileRepeatNode.Create(
           { repeat .. until false }
-          COrdConstNode.create(0,PasBool1Type,false),innerloop,false,true);
-        addstatement(outerloopbodystatement,hp);
+          COrdConstNode.Create(0,PasBool1Type,false),lInnerLoop,false,true);
+        AddStatement(lOuterLoopBodyStatement,lNode);
 
         { create the outer repeat/until and add it to the the main body }
-        hp:=CWhileRepeatNode.create(
+        lNode:=CWhileRepeatNode.Create(
           { repeat .. until innerloopcounter<currentamount }
-          CAddNode.create(ltn,
-            CTempRefNode.create(innerloopcounter),
-            CTempRefNode.create(currentamount)),
-          outerloop,false,true);
-        addstatement(mainstatement,hp);
+          CAddNode.Create(ltn,
+            CTempRefNode.Create(lInnerLoopCounter),
+            CTempRefNode.Create(lCurrentAmount)),
+          lOuterLoop,false,true);
+        AddStatement(lMainStatement,lNode);
 
         { release the temps }
-        addstatement(mainstatement,CTempDeleteNode.create(state));
-        addstatement(mainstatement,CTempDeleteNode.create(mutationcheck));
-        addstatement(mainstatement,CTempDeleteNode.create(currentamount));
-        addstatement(mainstatement,CTempDeleteNode.create(innerloopcounter));
-        addstatement(mainstatement,CTempDeleteNode.create(items));
-        addstatement(mainstatement,CTempDeleteNode.create(expressiontemp));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lState));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lMutationCheck));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lCurrentAmount));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lInnerLoopCounter));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lItems));
+        AddStatement(lMainStatement,CTempDeleteNode.Create(lExpressionTemp));
       end;
 
 
-    function create_string_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_String_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       var
-        loopstatement, loopbodystatement: TStatementNode;
-        loopvar, stringvar: TTempCreateNode;
-        stringindex, loopbody, forloopnode, fromn, ton: TNode;
+        lLoopStatement, lLoopBodyStatement: TStatementNode;
+        lLoopVar, lStringVar: TTempCreateNode;
+        lStringIndex, lLoopBody, lForLoopNode, lFromNode, lToNode: TNode;
       begin
         { result is a block of statements }
-        result:=internalstatements(loopstatement);
+        Result:=InternalStatements(lLoopStatement);
 
         { create a temp variable for expression }
-        stringvar := CTempCreateNode.create(
-          expr.resultdef,
-          expr.resultdef.Size,
+        lStringVar := CTempCreateNode.Create(
+          AExpr.ResultDef,
+          AExpr.ResultDef.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,stringvar);
-        addstatement(loopstatement,CAssignmentNode.create(CTempRefNode.create(stringvar),expr.GetCopy));
+        AddStatement(lLoopStatement,lStringVar);
+        AddStatement(lLoopStatement,CAssignmentNode.Create(CTempRefNode.Create(lStringVar),AExpr.GetCopy));
 
         { create a loop counter: signed integer with size of string length }
-        loopvar := CTempCreateNode.create(
+        lLoopVar := CTempCreateNode.Create(
           SIntType,
           SIntType.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,loopvar);
+        AddStatement(lLoopStatement,lLoopVar);
 
-        stringindex:=CTempRefNode.create(loopvar);
+        lStringIndex:=CTempRefNode.Create(lLoopVar);
 
-        loopbody:=internalstatements(loopbodystatement);
+        lLoopBody:=InternalStatements(lLoopBodyStatement);
         // for-in loop variable := string_expression[index]
-        addstatement(loopbodystatement,
-          CAssignmentNode.create(hloopvar, CVecNode.create(CTempRefNode.create(stringvar),stringindex)));
+        AddStatement(lLoopBodyStatement,
+          CAssignmentNode.Create(ALoopVar, CVecNode.Create(CTempRefNode.Create(lStringVar),lStringIndex)));
 
         { add the actual statement to the loop }
-        addstatement(loopbodystatement,hloopbody);
+        AddStatement(lLoopBodyStatement,ALoopBody);
 
-        if TStringDef(expr.resultdef).StringType=st_shortstring then
+        if TStringDef(AExpr.ResultDef).StringType=st_shortstring then
           begin
-            fromn:=genintconstnode(1);
-            ton:=CInlineNode.create(in_length_x,false,CTempRefNode.create(stringvar));
+            lFromNode:=GenIntConstNode(1);
+            lToNode:=CInlineNode.Create(in_length_x,false,CTempRefNode.Create(lStringVar));
           end
         else
           begin
-             fromn:=CInlineNode.createintern(in_low_x,false,CTempRefNode.create(stringvar));
-             ton:= CInlineNode.create(in_high_x,false,CTempRefNode.create(stringvar));
+             lFromNode:=CInlineNode.CreateIntern(in_low_x,false,CTempRefNode.Create(lStringVar));
+             lToNode:= CInlineNode.Create(in_high_x,false,CTempRefNode.Create(lStringVar));
            end;
 
-        forloopnode:=CForNode.create(CTempRefNode.create(loopvar),
-          fromn,
-          ton,
-          loopbody,
+        lForLoopNode:=CForNode.Create(CTempRefNode.Create(lLoopVar),
+          lFromNode,
+          lToNode,
+          lLoopBody,
           false);
 
-        addstatement(loopstatement,forloopnode);
+        AddStatement(lLoopStatement,lForLoopNode);
         { free the loop counter }
-        addstatement(loopstatement,CTempDeleteNode.create(loopvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lLoopVar));
         { free the temp variable for expression }
-        addstatement(loopstatement,CTempDeleteNode.create(stringvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lStringVar));
       end;
 
 
-    function create_array_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_Array_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       var
-        loopstatement, loopbodystatement: TStatementNode;
-        loopvar, arrayvar: TTempCreateNode;
-        arrayindex, lowbound, highbound, loopbody, forloopnode, expression: TNode;
-        Is_String: boolean;
-        tmpdef, convertdef: TDef;
-        elementcount: aword;
+        lLoopStatement, lLoopBodyStatement: TStatementNode;
+        lLoopVar, lArrayVar: TTempCreateNode;
+        lArrayIndex, lLowBound, lHighBound, lLoopBody, lForLoopNode, lExpression: TNode;
+        lIsString: Boolean;
+        lTempDef, lConvertDef: TDef;
+        lElementCount: aword;
       begin
-        expression := expr;
+        lExpression := AExpr;
 
         { result is a block of statements }
-        result:=internalstatements(loopstatement);
+        Result:=InternalStatements(lLoopStatement);
 
-        Is_String:=ado_IsConstString in TArrayDef(expr.resultdef).ArrayOptions;
+        lIsString:=ado_IsConstString in TArrayDef(AExpr.ResultDef).ArrayOptions;
 
         // if array element type <> loovar type then create a conversion if possible
-        if Compare_Defs(TArrayDef(expression.resultdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible then
+        if Compare_Defs(TArrayDef(lExpression.ResultDef).ElementDef,ALoopVar.ResultDef,nothingn)=te_incompatible then
           begin
-            tmpdef:=expression.resultdef;
-            elementcount:=1;
-            while Assigned(tmpdef) and (tmpdef.typ=arraydef) and
-                  (TArrayDef(tmpdef).ArrayOptions = []) and
-                  (Compare_Defs(TArrayDef(tmpdef).ElementDef,hloopvar.resultdef,nothingn)=te_incompatible) do
+            lTempDef:=lExpression.ResultDef;
+            lElementCount:=1;
+            while Assigned(lTempDef) and (lTempDef.typ=arraydef) and
+                  (TArrayDef(lTempDef).ArrayOptions = []) and
+                  (Compare_Defs(TArrayDef(lTempDef).ElementDef,ALoopVar.ResultDef,nothingn)=te_incompatible) do
               begin
-                elementcount:=elementcount*TArrayDef(tmpdef).EleCount;
-                tmpdef:=TArrayDef(tmpdef).ElementDef;
+                lElementCount:=lElementCount*TArrayDef(lTempDef).EleCount;
+                lTempDef:=TArrayDef(lTempDef).ElementDef;
               end;
-            if Assigned(tmpdef) and (tmpdef.typ=arraydef) and (TArrayDef(tmpdef).ArrayOptions = []) then
+            if Assigned(lTempDef) and (lTempDef.typ=arraydef) and (TArrayDef(lTempDef).ArrayOptions = []) then
               begin
-                elementcount:=elementcount*TArrayDef(tmpdef).EleCount;
-                convertdef:=CArrayDef.create(0,elementcount-1,S32IntType);
-                TArrayDef(convertdef).ElementDef:=TArrayDef(tmpdef).ElementDef;
-                expression:=expr.GetCopy;
-                expression:=CTypeConvNode.Create_Internal(expression,convertdef);
-                TypeCheckPass(expression);
-                addstatement(loopstatement,expression);
+                lElementCount:=lElementCount*TArrayDef(lTempDef).EleCount;
+                lConvertDef:=CArrayDef.Create(0,lElementCount-1,S32IntType);
+                TArrayDef(lConvertDef).ElementDef:=TArrayDef(lTempDef).ElementDef;
+                lExpression:=AExpr.GetCopy;
+                lExpression:=CTypeConvNode.Create_Internal(lExpression,lConvertDef);
+                TypeCheckPass(lExpression);
+                AddStatement(lLoopStatement,lExpression);
               end;
           end;
 
-        if (node_complexity(expression) > 1) and
-          not(Is_Open_Array(expression.resultdef)) and not(Is_Array_Of_Const(expression.resultdef)) then
+        if (Node_Complexity(lExpression) > 1) and
+          not(Is_Open_Array(lExpression.ResultDef)) and not(Is_Array_Of_Const(lExpression.ResultDef)) then
           begin
             { create a temp variable for expression }
-            arrayvar := CTempCreateNode.create(
-              expression.resultdef,
-              expression.resultdef.Size,
+            lArrayVar := CTempCreateNode.Create(
+              lExpression.ResultDef,
+              lExpression.ResultDef.Size,
               tt_persistent,true);
 
-            if Is_String then
+            if lIsString then
               begin
-                lowbound:=genintconstnode(1);
-                highbound:=CInlineNode.create(in_length_x,false,CTempRefNode.create(arrayvar))
+                lLowBound:=GenIntConstNode(1);
+                lHighBound:=CInlineNode.Create(in_length_x,false,CTempRefNode.Create(lArrayVar))
               end
             else
               begin
                 { Iterating through slice }
-                if (expression.nodetype=vecn) and (TVecNode(expression).right.nodetype=rangen) then
+                if (lExpression.NodeType=vecn) and (TVecNode(lExpression).Right.NodeType=rangen) then
                   begin
-                    lowbound:=TRangeNode(TVecNode(expression).right).left.GetCopy;
-                    highbound:=TRangeNode(TVecNode(expression).right).right.GetCopy;
-                    expression:=TVecNode(expression).left.GetCopy;
+                    lLowBound:=TRangeNode(TVecNode(lExpression).Right).Left.GetCopy;
+                    lHighBound:=TRangeNode(TVecNode(lExpression).Right).Right.GetCopy;
+                    lExpression:=TVecNode(lExpression).Left.GetCopy;
                   end
                 else
                   begin
-                    lowbound:=CInlineNode.create(in_low_x,false,CTempRefNode.create(arrayvar));
-                    highbound:=CInlineNode.create(in_high_x,false,CTempRefNode.create(arrayvar));
+                    lLowBound:=CInlineNode.Create(in_low_x,false,CTempRefNode.Create(lArrayVar));
+                    lHighBound:=CInlineNode.Create(in_high_x,false,CTempRefNode.Create(lArrayVar));
                   end;
               end;
 
-            addstatement(loopstatement,arrayvar);
-            addstatement(loopstatement,CAssignmentNode.create(CTempRefNode.create(arrayvar),expression.GetCopy));
+            AddStatement(lLoopStatement,lArrayVar);
+            AddStatement(lLoopStatement,CAssignmentNode.Create(CTempRefNode.Create(lArrayVar),lExpression.GetCopy));
           end
         else
           begin
-            arrayvar:=nil;
-            if Is_String then
+            lArrayVar:=nil;
+            if lIsString then
               begin
-                lowbound:=genintconstnode(1);
-                highbound:=CInlineNode.create(in_length_x,false,expression.GetCopy);
+                lLowBound:=GenIntConstNode(1);
+                lHighBound:=CInlineNode.Create(in_length_x,false,lExpression.GetCopy);
               end
             else
               begin
                 { Iterating through slice }
-                if (expression.nodetype=vecn) and (TVecNode(expression).right.nodetype=rangen) then
+                if (lExpression.NodeType=vecn) and (TVecNode(lExpression).Right.NodeType=rangen) then
                   begin
-                    lowbound:=TRangeNode(TVecNode(expression).right).left.GetCopy;
-                    highbound:=TRangeNode(TVecNode(expression).right).right.GetCopy;
-                    expression:=TVecNode(expression).left.GetCopy;
+                    lLowBound:=TRangeNode(TVecNode(lExpression).Right).Left.GetCopy;
+                    lHighBound:=TRangeNode(TVecNode(lExpression).Right).Right.GetCopy;
+                    lExpression:=TVecNode(lExpression).Left.GetCopy;
                   end
                 else
                   begin
-                    lowbound:=CInlineNode.create(in_low_x,false,expression.GetCopy);
-                    highbound:=CInlineNode.create(in_high_x,false,expression.GetCopy);
+                    lLowBound:=CInlineNode.Create(in_low_x,false,lExpression.GetCopy);
+                    lHighBound:=CInlineNode.Create(in_high_x,false,lExpression.GetCopy);
                   end;
               end;
           end;
 
         { create a loop counter }
-        loopvar := CTempCreateNode.create(
-          TArrayDef(expression.resultdef).RangeDef,
-          TArrayDef(expression.resultdef).RangeDef.Size,
+        lLoopVar := CTempCreateNode.Create(
+          TArrayDef(lExpression.ResultDef).RangeDef,
+          TArrayDef(lExpression.ResultDef).RangeDef.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,loopvar);
+        AddStatement(lLoopStatement,lLoopVar);
 
-        arrayindex:=CTempRefNode.create(loopvar);
+        lArrayIndex:=CTempRefNode.Create(lLoopVar);
 
-        loopbody:=internalstatements(loopbodystatement);
+        lLoopBody:=InternalStatements(lLoopBodyStatement);
         // for-in loop variable := array_expression[index]
-        if Assigned(arrayvar) then
-          addstatement(loopbodystatement,
-            CAssignmentNode.create(hloopvar,CVecNode.create(CTempRefNode.create(arrayvar),arrayindex)))
+        if Assigned(lArrayVar) then
+          AddStatement(lLoopBodyStatement,
+            CAssignmentNode.Create(ALoopVar,CVecNode.Create(CTempRefNode.Create(lArrayVar),lArrayIndex)))
         else
-          addstatement(loopbodystatement,
-            CAssignmentNode.create(hloopvar,CVecNode.create(expression.GetCopy,arrayindex)));
+          AddStatement(lLoopBodyStatement,
+            CAssignmentNode.Create(ALoopVar,CVecNode.Create(lExpression.GetCopy,lArrayIndex)));
 
         { add the actual statement to the loop }
-        addstatement(loopbodystatement,hloopbody);
+        AddStatement(lLoopBodyStatement,ALoopBody);
 
-        forloopnode:=CForNode.create(CTempRefNode.create(loopvar),
-          lowbound,
-          highbound,
-          loopbody,
+        lForLoopNode:=CForNode.Create(CTempRefNode.Create(lLoopVar),
+          lLowBound,
+          lHighBound,
+          lLoopBody,
           false);
 
-        addstatement(loopstatement,forloopnode);
+        AddStatement(lLoopStatement,lForLoopNode);
         { free the loop counter }
-        addstatement(loopstatement,CTempDeleteNode.create(loopvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lLoopVar));
         { free the temp variable for expression if needed }
-        if arrayvar<>nil then
-          addstatement(loopstatement,CTempDeleteNode.create(arrayvar));
+        if lArrayVar<>nil then
+          AddStatement(lLoopStatement,CTempDeleteNode.Create(lArrayVar));
       end;
 
 
-    function create_set_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_Set_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       var
-        loopstatement, loopbodystatement: TStatementNode;
-        loopvar, setvar: TTempCreateNode;
-        loopbody, forloopnode: TNode;
+        lLoopStatement, lLoopBodyStatement: TStatementNode;
+        lLoopVar, lSetVar: TTempCreateNode;
+        lLoopBody, lForLoopNode: TNode;
       begin
         // first check is set is empty and if it so then skip other processing
-        if not Assigned(TSetDef(expr.resultdef).ElementDef) then
+        if not Assigned(TSetDef(AExpr.ResultDef).ElementDef) then
           begin
-            result:=CNothingNode.create;
+            Result:=CNothingNode.Create;
             // free unused nodes
-            hloopvar.free;
-            hloopvar := nil;
-            hloopbody.free;
-            hloopbody := nil;
+            ALoopVar.free;
+            ALoopVar := nil;
+            ALoopBody.free;
+            ALoopBody := nil;
             exit;
           end;
         { result is a block of statements }
-        result:=internalstatements(loopstatement);
+        Result:=InternalStatements(lLoopStatement);
 
         { create a temp variable for expression }
-        setvar := CTempCreateNode.create(
-          expr.resultdef,
-          expr.resultdef.Size,
+        lSetVar := CTempCreateNode.Create(
+          AExpr.ResultDef,
+          AExpr.ResultDef.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,setvar);
-        addstatement(loopstatement,CAssignmentNode.create(CTempRefNode.create(setvar),expr.GetCopy));
+        AddStatement(lLoopStatement,lSetVar);
+        AddStatement(lLoopStatement,CAssignmentNode.Create(CTempRefNode.Create(lSetVar),AExpr.GetCopy));
 
         { create a loop counter }
-        loopvar := CTempCreateNode.create(
-          TSetDef(expr.resultdef).ElementDef,
-          TSetDef(expr.resultdef).ElementDef.Size,
+        lLoopVar := CTempCreateNode.Create(
+          TSetDef(AExpr.ResultDef).ElementDef,
+          TSetDef(AExpr.ResultDef).ElementDef.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,loopvar);
+        AddStatement(lLoopStatement,lLoopVar);
 
         // if loopvar in set then
         // begin
@@ -779,506 +779,506 @@ implementation
         //   for-in loop body
         // end
 
-        loopbody:=CIfNode.create(
-          CInNode.create(CTempRefNode.create(loopvar),CTempRefNode.create(setvar)),
-          internalstatements(loopbodystatement),
+        lLoopBody:=CIfNode.Create(
+          CInNode.Create(CTempRefNode.Create(lLoopVar),CTempRefNode.Create(lSetVar)),
+          InternalStatements(lLoopBodyStatement),
           nil);
 
-        addstatement(loopbodystatement,CAssignmentNode.create(hloopvar,CTempRefNode.create(loopvar)));
+        AddStatement(lLoopBodyStatement,CAssignmentNode.Create(ALoopVar,CTempRefNode.Create(lLoopVar)));
         { add the actual statement to the loop }
-        addstatement(loopbodystatement,hloopbody);
+        AddStatement(lLoopBodyStatement,ALoopBody);
 
-        forloopnode:=CForNode.create(CTempRefNode.create(loopvar),
-          CInlineNode.create(in_low_x,false,CTempRefNode.create(setvar)),
-          CInlineNode.create(in_high_x,false,CTempRefNode.create(setvar)),
-          loopbody,
+        lForLoopNode:=CForNode.Create(CTempRefNode.Create(lLoopVar),
+          CInlineNode.Create(in_low_x,false,CTempRefNode.Create(lSetVar)),
+          CInlineNode.Create(in_high_x,false,CTempRefNode.Create(lSetVar)),
+          lLoopBody,
           false);
 
-        addstatement(loopstatement,forloopnode);
+        AddStatement(lLoopStatement,lForLoopNode);
         { free the loop counter }
-        addstatement(loopstatement,CTempDeleteNode.create(loopvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lLoopVar));
         { free the temp variable for expression }
-        addstatement(loopstatement,CTempDeleteNode.create(setvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lSetVar));
       end;
 
 
-    function create_enumerator_for_in_loop(hloopvar, hloopbody, expr: TNode;
-       enumerator_get, enumerator_move: TProcDef; enumerator_current: TPropertySym): TNode;
+    function Create_Enumerator_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode;
+       AEnumeratorGet, AEnumeratorMove: TProcDef; AEnumeratorCurrent: TPropertySym): TNode;
       var
-        loopstatement, loopbodystatement: TStatementNode;
-        enumvar: TTempCreateNode;
-        loopbody, whileloopnode,
-        enum_get, enum_move, enum_current, enum_get_params: TNode;
-        PropAccessList: TPropAccessList;
-        enumerator_is_class: boolean;
-        enumerator_destructor: TProcDef;
+        lLoopStatement, lLoopBodyStatement: TStatementNode;
+        lEnumVar: TTempCreateNode;
+        lLoopBody, lWhileLoopNode,
+        lEnumGet, lEnumMove, lEnumCurrent, lEnumGetParams: TNode;
+        lPropAccessList: TPropAccessList;
+        lEnumeratorIsClass: Boolean;
+        lEnumeratorDestructor: TProcDef;
       begin
         { result is a block of statements }
-        result:=internalstatements(loopstatement);
+        Result:=InternalStatements(lLoopStatement);
 
-        enumerator_is_class := Is_Class(enumerator_get.ReturnDef);
+        lEnumeratorIsClass := Is_Class(AEnumeratorGet.ReturnDef);
 
         { create a temp variable for enumerator }
-        enumvar := CTempCreateNode.create(
-          enumerator_get.ReturnDef,
-          enumerator_get.ReturnDef.Size,
+        lEnumVar := CTempCreateNode.Create(
+          AEnumeratorGet.ReturnDef,
+          AEnumeratorGet.ReturnDef.Size,
           tt_persistent,true);
 
-        addstatement(loopstatement,enumvar);
+        AddStatement(lLoopStatement,lEnumVar);
 
-        if enumerator_get.ProcTypeOption=potype_operator then
+        if AEnumeratorGet.ProcTypeOption=potype_operator then
           begin
-            enum_get_params:=CCallParaNode.create(expr.GetCopy,nil);
-            enum_get:=CCallNode.create(enum_get_params, TProcSym(enumerator_get.ProcSym), nil, nil, [],nil);
-            TCallNode(enum_get).procdefinition:=enumerator_get;
-            AddSymRef(enumerator_get.ProcSym,enumerator_get);
+            lEnumGetParams:=CCallParaNode.Create(AExpr.GetCopy,nil);
+            lEnumGet:=CCallNode.Create(lEnumGetParams, TProcSym(AEnumeratorGet.ProcSym), nil, nil, [],nil);
+            TCallNode(lEnumGet).ProcDefinition:=AEnumeratorGet;
+            AddSymRef(AEnumeratorGet.ProcSym,AEnumeratorGet);
           end
         else
-          enum_get:=CCallNode.create(nil, TProcSym(enumerator_get.ProcSym), enumerator_get.owner, expr.GetCopy, [],nil);
+          lEnumGet:=CCallNode.Create(nil, TProcSym(AEnumeratorGet.ProcSym), AEnumeratorGet.Owner, AExpr.GetCopy, [],nil);
 
-        addstatement(loopstatement,
-          CAssignmentNode.create(
-            CTempRefNode.create(enumvar),
-            enum_get
+        AddStatement(lLoopStatement,
+          CAssignmentNode.Create(
+            CTempRefNode.Create(lEnumVar),
+            lEnumGet
           ));
 
-        loopbody:=internalstatements(loopbodystatement);
+        lLoopBody:=InternalStatements(lLoopBodyStatement);
         { for-in loop variable := enumerator.current }
-        if enumerator_current.GetPropAccessList(palt_read,PropAccessList) then
+        if AEnumeratorCurrent.GetPropAccessList(palt_read,lPropAccessList) then
           begin
-             case PropAccessList.FirstSym^.sym.typ of
+             case lPropAccessList.FirstSym^.Sym.typ of
                FieldVarSym :
                  begin
                    { generate access code }
-                   enum_current:=CTempRefNode.create(enumvar);
-                   propaccesslist_to_node(enum_current,enumerator_current.owner,PropAccessList);
-                   include(enum_current.flags,nf_isproperty);
+                   lEnumCurrent:=CTempRefNode.Create(lEnumVar);
+                   PropAccessList_To_Node(lEnumCurrent,AEnumeratorCurrent.Owner,lPropAccessList);
+                   include(lEnumCurrent.Flags,nf_isproperty);
                  end;
                ProcSym :
                  begin
                    { generate the method call }
-                   enum_current:=CCallNode.create(nil,TProcSym(PropAccessList.FirstSym^.sym),enumerator_current.owner,CTempRefNode.create(enumvar),[],nil);
-                   include(enum_current.flags,nf_isproperty);
+                   lEnumCurrent:=CCallNode.Create(nil,TProcSym(lPropAccessList.FirstSym^.Sym),AEnumeratorCurrent.Owner,CTempRefNode.Create(lEnumVar),[],nil);
+                   include(lEnumCurrent.Flags,nf_isproperty);
                  end
                else
                  begin
-                   enum_current:=CErrorNode.create;
+                   lEnumCurrent:=CErrorNode.Create;
                    Message(type_e_mismatch);
                  end;
             end;
           end
         else
-          enum_current:=CErrorNode.create;
+          lEnumCurrent:=CErrorNode.Create;
 
-        addstatement(loopbodystatement,
-          CAssignmentNode.create(hloopvar, enum_current));
+        AddStatement(lLoopBodyStatement,
+          CAssignmentNode.Create(ALoopVar, lEnumCurrent));
 
         { add the actual statement to the loop }
-        addstatement(loopbodystatement,hloopbody);
+        AddStatement(lLoopBodyStatement,ALoopBody);
 
-        enum_move:=CCallNode.create(nil, TProcSym(enumerator_move.ProcSym), enumerator_move.owner, CTempRefNode.create(enumvar), [],nil);
-        whileloopnode:=CWhileRepeatNode.create(enum_move,loopbody,true,false);
+        lEnumMove:=CCallNode.Create(nil, TProcSym(AEnumeratorMove.ProcSym), AEnumeratorMove.Owner, CTempRefNode.Create(lEnumVar), [],nil);
+        lWhileLoopNode:=CWhileRepeatNode.Create(lEnumMove,lLoopBody,true,false);
 
-        if enumerator_is_class then
+        if lEnumeratorIsClass then
           begin
             { insert a try-finally and call the destructor for the enumerator in the finally section }
-            enumerator_destructor:=TObjectDef(enumerator_get.ReturnDef).Find_Destructor;
-            if Assigned(enumerator_destructor) then
+            lEnumeratorDestructor:=TObjectDef(AEnumeratorGet.ReturnDef).Find_Destructor;
+            if Assigned(lEnumeratorDestructor) then
               begin
-                whileloopnode:=CTryFinallyNode.create(
-                  whileloopnode, // try node
-                  CCallNode.create(nil,TProcSym(enumerator_destructor.ProcSym), // finally node
-                    enumerator_destructor.ProcSym.owner,CTempRefNode.create(enumvar),[],nil));
+                lWhileLoopNode:=CTryFinallyNode.Create(
+                  lWhileLoopNode, // try node
+                  CCallNode.Create(nil,TProcSym(lEnumeratorDestructor.ProcSym), // finally node
+                    lEnumeratorDestructor.ProcSym.Owner,CTempRefNode.Create(lEnumVar),[],nil));
               end;
             { if getenumerator <> nil then do the loop }
-            whileloopnode:=CIfNode.create(
-              CAddNode.create(unequaln, CTempRefNode.create(enumvar), CNilNode.create),
-              whileloopnode,
+            lWhileLoopNode:=CIfNode.Create(
+              CAddNode.Create(unequaln, CTempRefNode.Create(lEnumVar), CNilNode.Create),
+              lWhileLoopNode,
               nil);
           end;
 
-        addstatement(loopstatement, whileloopnode);
+        AddStatement(lLoopStatement, lWhileLoopNode);
 
-        if Is_Object(enumerator_get.ReturnDef) then
+        if Is_Object(AEnumeratorGet.ReturnDef) then
           begin
             // call the object destructor too
-            enumerator_destructor:=TObjectDef(enumerator_get.ReturnDef).Find_Destructor;
-            if Assigned(enumerator_destructor) then
+            lEnumeratorDestructor:=TObjectDef(AEnumeratorGet.ReturnDef).Find_Destructor;
+            if Assigned(lEnumeratorDestructor) then
               begin
-                addstatement(loopstatement,
-                  CCallNode.create(nil,TProcSym(enumerator_destructor.ProcSym),
-                    enumerator_destructor.ProcSym.owner,CTempRefNode.create(enumvar),[],nil));
+                AddStatement(lLoopStatement,
+                  CCallNode.Create(nil,TProcSym(lEnumeratorDestructor.ProcSym),
+                    lEnumeratorDestructor.ProcSym.Owner,CTempRefNode.Create(lEnumVar),[],nil));
               end;
           end;
 
         { free the temp variable for enumerator }
-        addstatement(loopstatement,CTempDeleteNode.create(enumvar));
+        AddStatement(lLoopStatement,CTempDeleteNode.Create(lEnumVar));
       end;
 
 
-    function create_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
+    function Create_For_In_Loop(ALoopVar, ALoopBody, AExpr: TNode): TNode;
       var
-        pd, movenext: TProcDef;
-        helperdef: TObjectDef;
-        current: TPropertySym;
-        storefilepos: TFilePosInfo;
+        lProcDef, lMoveNext: TProcDef;
+        lHelperDef: TObjectDef;
+        lCurrentProperty: TPropertySym;
+        lSavedFilePos: TFilePosInfo;
       begin
-        storefilepos:=CurrentFilePos;
-        CurrentFilePos:=hloopvar.fileinfo;
-        if expr.nodetype=typen then
+        lSavedFilePos:=CurrentFilePos;
+        CurrentFilePos:=ALoopVar.FileInfo;
+        if AExpr.NodeType=typen then
           begin
-            if (expr.resultdef.typ=enumdef) and TEnumDef(expr.resultdef).HasJumps then
+            if (AExpr.ResultDef.typ=enumdef) and TEnumDef(AExpr.ResultDef).HasJumps then
               begin
-                result:=CErrorNode.create;
-                hloopvar.free;
-                hloopvar := nil;
-                hloopbody.free;
-                hloopbody := nil;
-                MessagePos1(expr.fileinfo,parser_e_for_in_loop_cannot_be_used_for_the_type,expr.resultdef.TypeName);
+                Result:=CErrorNode.Create;
+                ALoopVar.free;
+                ALoopVar := nil;
+                ALoopBody.free;
+                ALoopBody := nil;
+                MessagePos1(AExpr.FileInfo,parser_e_for_in_loop_cannot_be_used_for_the_type,AExpr.ResultDef.TypeName);
               end
             else
-              result:=create_type_for_in_loop(hloopvar, hloopbody, expr);
+              Result:=Create_Type_For_In_Loop(ALoopVar, ALoopBody, AExpr);
           end
         else
           begin
             { loop is made for an expression }
             // Objective-C uses different conventions (and it's only supported for Objective-C 2.0)
-            if Is_ObjC_Class_Or_Protocol(hloopvar.resultdef) or
-               Is_ObjC_Class_Or_Protocol(expr.resultdef) then
+            if Is_ObjC_Class_Or_Protocol(ALoopVar.ResultDef) or
+               Is_ObjC_Class_Or_Protocol(AExpr.ResultDef) then
               begin
-                result:=create_objc_for_in_loop(hloopvar,hloopbody,expr);
-                if result.nodetype=errorn then
+                Result:=CreateObjCForInLoop(ALoopVar,ALoopBody,AExpr);
+                if Result.NodeType=errorn then
                   begin
-                    hloopvar.free;
-                    hloopvar := nil;
-                    hloopbody.free;
-                    hloopbody := nil;
+                    ALoopVar.free;
+                    ALoopVar := nil;
+                    ALoopBody.free;
+                    ALoopBody := nil;
                   end;
               end
             { "for x in [] do ..." always results in a never executed loop body }
-            else if (Is_Array_Constructor(expr.resultdef) and
-                (TArrayDef(expr.resultdef).ElementDef=VoidType)) then
+            else if (Is_Array_Constructor(AExpr.ResultDef) and
+                (TArrayDef(AExpr.ResultDef).ElementDef=VoidType)) then
               begin
-                if Assigned(hloopbody) then
-                  MessagePos(hloopbody.fileinfo,cg_w_unreachable_code);
-                result:=CNothingNode.create;
+                if Assigned(ALoopBody) then
+                  MessagePos(ALoopBody.FileInfo,cg_w_unreachable_code);
+                Result:=CNothingNode.Create;
               end
             else
               begin
-                if Is_Array_Constructor(expr.resultdef) then
-                  TArrayConstructorNode(expr).force_type(hloopvar.resultdef);
+                if Is_Array_Constructor(AExpr.ResultDef) then
+                  TArrayConstructorNode(AExpr).Force_Type(ALoopVar.ResultDef);
                 // search for operator first
-                pd:=Search_Enumerator_Operator(expr.resultdef, hloopvar.resultdef);
+                lProcDef:=Search_Enumerator_Operator(AExpr.ResultDef, ALoopVar.ResultDef);
                 // if there is no operator then search for class/object enumerator method
-                if (pd=nil) and (expr.resultdef.typ in [objectdef,recorddef]) then
+                if (lProcDef=nil) and (AExpr.ResultDef.typ in [objectdef,recorddef]) then
                   begin
                     { first search using the helper hierarchy }
-                    if Search_Last_ObjectPascal_Helper(TAbstractRecordDef(expr.resultdef),nil,helperdef) then
+                    if Search_Last_ObjectPascal_Helper(TAbstractRecordDef(AExpr.ResultDef),nil,lHelperDef) then
                       repeat
-                        pd:=helperdef.Search_Enumerator_Get;
-                        helperdef:=helperdef.ChildOf;
-                      until (pd<>nil) or (helperdef=nil);
+                        lProcDef:=lHelperDef.Search_Enumerator_Get;
+                        lHelperDef:=lHelperDef.ChildOf;
+                      until (lProcDef<>nil) or (lHelperDef=nil);
                     { we didn't find an enumerator in a helper, so search in the
                       class/record/object itself }
-                    if pd=nil then
-                      pd:=TAbstractRecordDef(expr.resultdef).Search_Enumerator_Get;
+                    if lProcDef=nil then
+                      lProcDef:=TAbstractRecordDef(AExpr.ResultDef).Search_Enumerator_Get;
                   end;
-                if pd<>nil then
+                if lProcDef<>nil then
                   begin
                     // seach movenext and current symbols
-                    movenext:=TAbstractRecordDef(pd.ReturnDef).Search_Enumerator_Move;
-                    if movenext = nil then
+                    lMoveNext:=TAbstractRecordDef(lProcDef.ReturnDef).Search_Enumerator_Move;
+                    if lMoveNext = nil then
                       begin
-                        result:=CErrorNode.create;
-                        hloopvar.free;
-                        hloopvar := nil;
-                        hloopbody.free;
-                        hloopbody := nil;
-                        MessagePos1(expr.fileinfo,sym_e_no_enumerator_move,pd.ReturnDef.TypeName);
+                        Result:=CErrorNode.Create;
+                        ALoopVar.free;
+                        ALoopVar := nil;
+                        ALoopBody.free;
+                        ALoopBody := nil;
+                        MessagePos1(AExpr.FileInfo,sym_e_no_enumerator_move,lProcDef.ReturnDef.TypeName);
                       end
                     else
                       begin
-                        current:=TPropertySym(TAbstractRecordDef(pd.ReturnDef).Search_Enumerator_Current);
-                        if current = nil then
+                        lCurrentProperty:=TPropertySym(TAbstractRecordDef(lProcDef.ReturnDef).Search_Enumerator_Current);
+                        if lCurrentProperty = nil then
                           begin
-                            result:=CErrorNode.create;
-                            hloopvar.free;
-                            hloopvar := nil;
-                            hloopbody.free;
-                            hloopbody := nil;
-                            MessagePos1(expr.fileinfo,sym_e_no_enumerator_current,pd.ReturnDef.TypeName);
+                            Result:=CErrorNode.Create;
+                            ALoopVar.free;
+                            ALoopVar := nil;
+                            ALoopBody.free;
+                            ALoopBody := nil;
+                            MessagePos1(AExpr.FileInfo,sym_e_no_enumerator_current,lProcDef.ReturnDef.TypeName);
                           end
                         else
-                          result:=create_enumerator_for_in_loop(hloopvar, hloopbody, expr, pd, movenext, current);
+                          Result:=Create_Enumerator_For_In_Loop(ALoopVar, ALoopBody, AExpr, lProcDef, lMoveNext, lCurrentProperty);
                       end;
                   end
                 else
                   begin
                     { prefer set if loop var could be a set var and the loop
                       expression can indeed be a set }
-                    if (expr.nodetype=arrayconstructorn) and
-                        (hloopvar.resultdef.typ in [enumdef,orddef]) and
-                        arrayconstructor_can_be_set(expr) then
+                    if (AExpr.NodeType=arrayconstructorn) and
+                        (ALoopVar.ResultDef.typ in [enumdef,orddef]) and
+                        ArrayConstructor_Can_Be_Set(AExpr) then
                       begin
-                        expr:=arrayconstructor_to_set(expr,false);
-                        TypeCheckPass(expr);
+                        AExpr:=ArrayConstructor_To_Set(AExpr,false);
+                        TypeCheckPass(AExpr);
                       end;
-                    case expr.resultdef.typ of
+                    case AExpr.ResultDef.typ of
                       stringdef:
-                        result:=create_string_for_in_loop(hloopvar, hloopbody, expr);
+                        Result:=Create_String_For_In_Loop(ALoopVar, ALoopBody, AExpr);
                       arraydef:
-                        result:=create_array_for_in_loop(hloopvar, hloopbody, expr);
+                        Result:=Create_Array_For_In_Loop(ALoopVar, ALoopBody, AExpr);
                       setdef:
-                        result:=create_set_for_in_loop(hloopvar, hloopbody, expr);
+                        Result:=Create_Set_For_In_Loop(ALoopVar, ALoopBody, AExpr);
                       undefineddef:
-                        result:=CNothingNode.create;
+                        Result:=CNothingNode.Create;
                     else
                       begin
-                        result:=CErrorNode.create;
-                        hloopvar.free;
-                        hloopvar := nil;
-                        hloopbody.free;
-                        hloopbody := nil;
-                        MessagePos1(expr.fileinfo,sym_e_no_enumerator,expr.resultdef.TypeName);
+                        Result:=CErrorNode.Create;
+                        ALoopVar.free;
+                        ALoopVar := nil;
+                        ALoopBody.free;
+                        ALoopBody := nil;
+                        MessagePos1(AExpr.FileInfo,sym_e_no_enumerator,AExpr.ResultDef.TypeName);
                       end;
                     end;
                   end;
               end;
           end;
-        CurrentFilePos:=storefilepos;
+        CurrentFilePos:=lSavedFilePos;
       end;
 
 
-    function _ConvertForLoops(var n: TNode; arg: pointer): TForEachNodeResult;
+    function ConvertForLoopsNode(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        hp : TNode;
+        lNode : TNode;
       begin
         Result:=fen_false;
-        if n.nodetype=forn then
+        if ANode.NodeType=forn then
           begin
             Result:=fen_true;
-            hp:=n;
-            n:=TForNode(n).makewhileloop;
-            DoFirstPass(n);
-            hp.Free;
-            hp := nil;
+            lNode:=ANode;
+            ANode:=TForNode(ANode).MakeWhileLoop;
+            DoFirstPass(ANode);
+            lNode.Free;
+            lNode := nil;
           end;
       end;
 
 
-    function ConvertForLoops(var n : TNode) : boolean;
+    function ConvertForLoops(var ANode : TNode) : Boolean;
       begin
-        result:=foreachnodestatic(pm_postprocess,n,@_ConvertForLoops,nil);
+        Result:=ForEachNodeStatic(pm_postprocess,ANode,@ConvertForLoopsNode,nil);
       end;
 
 {****************************************************************************
                                  TLOOPNODE
 *****************************************************************************}
 
-    constructor TLoopNode.create(tt : TNodeType;l,r,_t1,_t2 : TNode);
+    constructor TLoopNode.Create(ANodeType : TNodeType;ALeft,ARight,AT1,AT2 : TNode);
 
       begin
-         inherited create(tt,l,r);
-         t1:=_t1;
-         t2:=_t2;
-         fileinfo:=l.fileinfo;
+         inherited Create(ANodeType,ALeft,ARight);
+         T1:=AT1;
+         T2:=AT2;
+         FileInfo:=ALeft.FileInfo;
       end;
 
     destructor TLoopNode.Destroy;
 
       begin
-         t1.free;
-         t1 := nil;
-         t2.free;
-         t2 := nil;
+         T1.free;
+         T1 := nil;
+         T2.free;
+         T2 := nil;
          inherited Destroy;
       end;
 
 
-    constructor TLoopNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TLoopNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        t1:=ppuloadnode(ppufile);
-        t2:=ppuloadnode(ppufile);
-        ppufile.GetSet(TPPUSet1(loopflags));
+        inherited PPULoad(ANodeType,APPUFile);
+        T1:=PPULoadNode(APPUFile);
+        T2:=PPULoadNode(APPUFile);
+        APPUFile.GetSet(TPPUSet1(LoopFlags));
       end;
 
 
-    procedure TLoopNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TLoopNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppuwritenode(ppufile,t1);
-        ppuwritenode(ppufile,t2);
-        ppufile.PutSet(TPPUSet1(loopflags));
+        inherited PPUWrite(APPUFile);
+        PPUWriteNode(APPUFile,T1);
+        PPUWriteNode(APPUFile,T2);
+        APPUFile.PutSet(TPPUSet1(LoopFlags));
       end;
 
 
     procedure TLoopNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        if Assigned(t1) then
-          t1.BuildDerefImpl;
-        if Assigned(t2) then
-          t2.BuildDerefImpl;
+        if Assigned(T1) then
+          T1.BuildDerefImpl;
+        if Assigned(T2) then
+          T2.BuildDerefImpl;
       end;
 
 
-    procedure TLoopNode.derefimpl;
+    procedure TLoopNode.DerefImpl;
       begin
-        inherited derefimpl;
-        if Assigned(t1) then
-          t1.derefimpl;
-        if Assigned(t2) then
-          t2.derefimpl;
+        inherited DerefImpl;
+        if Assigned(T1) then
+          T1.DerefImpl;
+        if Assigned(T2) then
+          T2.DerefImpl;
       end;
 
 
-    function TLoopNode.dogetcopy : TNode;
+    function TLoopNode.DoGetCopy : TNode;
 
       var
-         p : TLoopNode;
+         lCopy : TLoopNode;
 
       begin
-         p:=TLoopNode(inherited dogetcopy);
-         if Assigned(t1) then
-           p.t1:=t1.dogetcopy
+         lCopy:=TLoopNode(inherited DoGetCopy);
+         if Assigned(T1) then
+           lCopy.T1:=T1.DoGetCopy
          else
-           p.t1:=nil;
-         if Assigned(t2) then
-           p.t2:=t2.dogetcopy
+           lCopy.T1:=nil;
+         if Assigned(T2) then
+           lCopy.T2:=T2.DoGetCopy
          else
-           p.t2:=nil;
-         p.loopflags:=loopflags;
-         dogetcopy:=p;
+           lCopy.T2:=nil;
+         lCopy.LoopFlags:=LoopFlags;
+         DoGetCopy:=lCopy;
       end;
 
-    procedure TLoopNode.insertintolist(l : TNodeList);
+    procedure TLoopNode.InsertIntoList(AList : TNodeList);
 
       begin
       end;
 
 
-    procedure TLoopNode.printnodetree(var t:text);
+    procedure TLoopNode.PrintNodeTree(var AText:Text);
       begin
-        write(t,PrintNodeIndention,'(');
+        write(AText,PrintNodeIndention,'(');
         PrintNodeIndent;
-        printnodeinfo(t);
-        WriteLn(t);
-        printnode(t,left);
-        printnode(t,right);
-        printnode(t,t1);
-        printnode(t,t2);
+        PrintNodeInfo(AText);
+        WriteLn(AText);
+        PrintNode(AText,Left);
+        PrintNode(AText,Right);
+        PrintNode(AText,T1);
+        PrintNode(AText,T2);
         PrintNodeUnindent;
-        WriteLn(t,PrintNodeIndention,')');
+        WriteLn(AText,PrintNodeIndention,')');
       end;
 
 
-    function TLoopNode.docompare(p: TNode): boolean;
+    function TLoopNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare :=
-          inherited docompare(p) and
-          (loopflags*loopflagsequal=TLoopNode(p).loopflags*loopflagsequal) and
-          t1.isequal(TLoopNode(p).t1) and
-          t2.isequal(TLoopNode(p).t2);
+        DoCompare :=
+          inherited DoCompare(ANode) and
+          (LoopFlags*cLoopFlagsEqual=TLoopNode(ANode).LoopFlags*cLoopFlagsEqual) and
+          T1.IsEqual(TLoopNode(ANode).T1) and
+          T2.IsEqual(TLoopNode(ANode).T2);
       end;
 
 {****************************************************************************
                                TWHILEREPEATNODE
 *****************************************************************************}
 
-    constructor TWhileRepeatNode.create(l,r:TNode;tab,cn:boolean);
+    constructor TWhileRepeatNode.Create(ALeft,ARight:TNode;ATestAtBegin,ACheckNegate:Boolean);
       begin
-        inherited create(whilerepeatn,l,r,nil,nil);
-        if tab then
-          include(loopflags, lnf_testatbegin);
-        if cn then
-          include(loopflags,lnf_checknegate);
+        inherited Create(whilerepeatn,ALeft,ARight,nil,nil);
+        if ATestAtBegin then
+          include(LoopFlags, lnf_testatbegin);
+        if ACheckNegate then
+          include(LoopFlags,lnf_checknegate);
       end;
 
 
-    function TWhileRepeatNode.pass_typecheck:TNode;
+    function TWhileRepeatNode.Pass_TypeCheck:TNode;
       var
-         t:TUnaryNode;
+         lNode:TUnaryNode;
       begin
-         result:=nil;
-         resultdef:=VoidType;
+         Result:=nil;
+         ResultDef:=VoidType;
 
-         TypeCheckPass(left);
+         TypeCheckPass(Left);
 
          { tp procvar support }
-         maybe_call_procvar(left,true);
+         Maybe_Call_ProcVar(Left,true);
 
          {A not node can be removed.}
-         if left.nodetype=notn then
+         if Left.NodeType=notn then
            begin
-             t:=TUnaryNode(left);
-             left:=TUnaryNode(left).left;
-             t.left:=nil;
-             t.free;
-             t := nil;
+             lNode:=TUnaryNode(Left);
+             Left:=TUnaryNode(Left).Left;
+             lNode.Left:=nil;
+             lNode.free;
+             lNode := nil;
              {Symdif operator, in case you are wondering:}
-             loopflags:=loopflags >< [lnf_checknegate];
+             LoopFlags:=LoopFlags >< [lnf_checknegate];
            end;
          { loop instruction }
-         if Assigned(right) then
-           TypeCheckPass(right);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         if Assigned(Right) then
+           TypeCheckPass(Right);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
-         if not(Is_Boolean(left.resultdef)) and
-           not(Is_TypeParam(left.resultdef)) then
-             inserttypeconv(left,PasBool1Type);
+         if not(Is_Boolean(Left.ResultDef)) and
+           not(Is_TypeParam(Left.ResultDef)) then
+             InsertTypeConv(Left,PasBool1Type);
 
          { Give warnings for code that will never be executed for
            while false do }
-         if (lnf_testatbegin in loopflags) and
-            (left.nodetype=ordconstn) and
-            (TOrdConstNode(left).Value.uvalue=0) and
-            not(nf_internal in left.flags) and
-            Assigned(right) then
-           CGMessagePos(right.fileinfo,cg_w_unreachable_code);
+         if (lnf_testatbegin in LoopFlags) and
+            (Left.NodeType=ordconstn) and
+            (TOrdConstNode(Left).Value.uvalue=0) and
+            not(nf_internal in Left.Flags) and
+            Assigned(Right) then
+           CGMessagePos(Right.FileInfo,cg_w_unreachable_code);
       end;
 
 
-    function TWhileRepeatNode.internalsimplify(forinline : boolean) : TNode;
+    function TWhileRepeatNode.InternalSimplify(AForInline : Boolean) : TNode;
       var
-        p: TNode;
+        lNode: TNode;
       begin
-        result:=nil;
+        Result:=nil;
         { convert while i>0 do ... dec(i); to if i>0 then repeat ... dec(i) until i=0; ? }
         if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) and
           { while loop? }
-          (lnf_testatbegin in loopflags) and not(lnf_checknegate in loopflags) then
+          (lnf_testatbegin in LoopFlags) and not(lnf_checknegate in LoopFlags) then
           begin
-            if ((left.nodetype=gtn) and (TAddNode(left).left.nodetype=loadn) and is_constintnode(TAddNode(left).right) and
-              (TOrdConstNode(TAddNode(left).right).Value=0)) then
+            if ((Left.NodeType=gtn) and (TAddNode(Left).Left.NodeType=loadn) and Is_ConstIntNode(TAddNode(Left).Right) and
+              (TOrdConstNode(TAddNode(Left).Right).Value=0)) then
               begin
-                p:=GetLastStatement(right);
-                if Assigned(p) and (p.nodetype=inlinen) and (TInlineNode(p).inlinenumber=in_dec_x) and
-                  TAddNode(left).left.isequal(TCallParaNode(TInlineNode(p).left).left) and
-                  not(Assigned(TCallParaNode(TInlineNode(p).left).right)) then
+                lNode:=GetLastStatement(Right);
+                if Assigned(lNode) and (lNode.NodeType=inlinen) and (TInlineNode(lNode).InlineNumber=in_dec_x) and
+                  TAddNode(Left).Left.IsEqual(TCallParaNode(TInlineNode(lNode).Left).Left) and
+                  not(Assigned(TCallParaNode(TInlineNode(lNode).Left).Right)) then
                   begin
-                    result:=CIfNode.Create_Internal(left.GetCopy,CWhileRepeatNode.create(left,right,false,true),nil);
-                    left:=nil;
-                    right:=nil;
-                    TWhileRepeatNode(TIfNode(result).right).left.nodetype:=EqualN;
+                    Result:=CIfNode.Create_Internal(Left.GetCopy,CWhileRepeatNode.Create(Left,Right,false,true),nil);
+                    Left:=nil;
+                    Right:=nil;
+                    TWhileRepeatNode(TIfNode(Result).Right).Left.NodeType:=EqualN;
                   end;
               end
             else if not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
-              (node_complexity(left)<=3) then
+              (Node_Complexity(Left)<=3) then
               begin
-                result:=CIfNode.Create_Internal(left.GetCopy,CWhileRepeatNode.create(left,right,false,false),nil);
-                left:=nil;
-                right:=nil;
+                Result:=CIfNode.Create_Internal(Left.GetCopy,CWhileRepeatNode.Create(Left,Right,false,false),nil);
+                Left:=nil;
+                Right:=nil;
               end;
           end;
       end;
 
 
-    function TWhileRepeatNode.simplify(forinline : boolean) : TNode;
+    function TWhileRepeatNode.Simplify(AForInline : Boolean) : TNode;
       begin
-        result:=internalsimplify(false);
+        Result:=InternalSimplify(false);
       end;
 
 
@@ -1286,99 +1286,99 @@ implementation
     type
       PAssignmentQuery = ^TAssignmentQuery;
       TAssignmentQuery = record
-        towhat: TNode;
-        source: TAssignmentNode;
-        statementcount: cardinal;
+        ToWhat: TNode;
+        Source: TAssignmentNode;
+        StatementCount: cardinal;
       end;
 
-    function checkassignment(var n: TNode; arg: pointer): TForEachNodeResult;
+    function CheckAssignment(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        query: PAssignmentQuery absolute arg;
-        temp, prederef: TNode;
+        lQuery: PAssignmentQuery absolute AArg;
+        lTemp, lPreDeref: TNode;
       begin
-        result := fen_norecurse_false;
-        if (n.nodetype in [assignn,inlinen,forn,calln,whilerepeatn,casen,ifn]) then
-          inc(query^.statementcount);
+        Result := fen_norecurse_false;
+        if (ANode.NodeType in [assignn,inlinen,forn,calln,whilerepeatn,casen,ifn]) then
+          inc(lQuery^.StatementCount);
         { make sure there's something else in the loop besides going to the }
         { next item                                                         }
-        if (query^.statementcount > 1) and
-           (n.nodetype = assignn) then
+        if (lQuery^.StatementCount > 1) and
+           (ANode.NodeType = assignn) then
           begin
             { skip type conversions of assignment target }
-            temp := TAssignmentNode(n).left;
-            while (temp.nodetype = typeconvn) do
-              temp := TTypeConvNode(temp).left;
+            lTemp := TAssignmentNode(ANode).Left;
+            while (lTemp.NodeType = typeconvn) do
+              lTemp := TTypeConvNode(lTemp).Left;
 
             { assignment to x of the while assigned(x) check? }
-            if not(temp.isequal(query^.towhat)) then
+            if not(lTemp.IsEqual(lQuery^.ToWhat)) then
               exit;
 
             { right hand side of assignment dereferenced field of }
             { x? (no derefn in case of class)                     }
-            temp := TAssignmentNode(n).right;
-            while (temp.nodetype = typeconvn) do
-              temp := TTypeConvNode(temp).left;
-            if (temp.nodetype <> subscriptn) then
+            lTemp := TAssignmentNode(ANode).Right;
+            while (lTemp.NodeType = typeconvn) do
+              lTemp := TTypeConvNode(lTemp).Left;
+            if (lTemp.NodeType <> subscriptn) then
               exit;
 
-            prederef := TSubscriptNode(temp).left;
-            temp := prederef;
-            while (temp.nodetype = typeconvn) do
-              temp := TTypeConvNode(temp).left;
+            lPreDeref := TSubscriptNode(lTemp).Left;
+            lTemp := lPreDeref;
+            while (lTemp.NodeType = typeconvn) do
+              lTemp := TTypeConvNode(lTemp).Left;
 
             { see tests/test/prefetch1.pas }
-            if (temp.nodetype = derefn) then
-              temp := TDerefNode(temp).left
+            if (lTemp.NodeType = derefn) then
+              lTemp := TDerefNode(lTemp).Left
             else
-              temp := prederef;
+              lTemp := lPreDeref;
 
-            if temp.isequal(query^.towhat) then
+            if lTemp.IsEqual(lQuery^.ToWhat) then
               begin
-                query^.source := TAssignmentNode(n);
-                result := fen_norecurse_true;
+                lQuery^.Source := TAssignmentNode(ANode);
+                Result := fen_norecurse_true;
                end
           end
         { don't check nodes which can't contain an assignment or whose }
         { final assignment can vary a lot                              }
-        else if not(n.nodetype in [calln,inlinen,casen,whilerepeatn,forn]) then
-          result := fen_false;
+        else if not(ANode.NodeType in [calln,inlinen,casen,whilerepeatn,forn]) then
+          Result := fen_false;
       end;
 
 
-    function findassignment(where: TNode; towhat: TNode): TAssignmentNode;
+    function FindAssignment(AWhere: TNode; AToWhat: TNode): TAssignmentNode;
       var
-        query: TAssignmentQuery;
+        lQuery: TAssignmentQuery;
       begin
-        query.towhat := towhat;
-        query.source := nil;
-        query.statementcount := 0;
-        if foreachnodestatic(where,@checkassignment,@query) then
-          result := query.source
+        lQuery.ToWhat := AToWhat;
+        lQuery.Source := nil;
+        lQuery.StatementCount := 0;
+        if ForEachNodeStatic(AWhere,@CheckAssignment,@lQuery) then
+          Result := lQuery.Source
         else
-           result := nil;
+           Result := nil;
       end;
 {$endif prefetchnext}
 
 
-    function TWhileRepeatNode.pass_1 : TNode;
+    function TWhileRepeatNode.Pass_1 : TNode;
 {$ifdef prefetchnext}
       var
-         runnernode, prefetchcode: TNode;
-         assignmentnode: TAssignmentNode;
-         prefetchstatements: TStatementNode;
+         lRunnerNode, lPrefetchCode: TNode;
+         lAssignmentNode: TAssignmentNode;
+         lPrefetchStatements: TStatementNode;
 {$endif prefetchnext}
       begin
-         result:=nil;
-         expectloc:=LOC_VOID;
+         Result:=nil;
+         ExpectLoc:=LOC_VOID;
 
-         FirstPass(left);
+         FirstPass(Left);
          if CodeGenError then
            exit;
 
          { loop instruction }
-         if Assigned(right) then
+         if Assigned(Right) then
            begin
-              FirstPass(right);
+              FirstPass(Right);
               if CodeGenError then
                 exit;
            end;
@@ -1387,34 +1387,34 @@ implementation
          { do at the end so all complex typeconversions are already }
          { converted to calln's                                     }
          if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and
-            (lnf_testatbegin in loopflags) then
+            (lnf_testatbegin in LoopFlags) then
            begin
              { get first component of the while check }
-             runnernode := left;
-             while (runnernode.nodetype in [andn,orn,notn,xorn,typeconvn]) do
-               runnernode := TUnaryNode(runnernode).left;
+             lRunnerNode := Left;
+             while (lRunnerNode.NodeType in [andn,orn,notn,xorn,typeconvn]) do
+               lRunnerNode := TUnaryNode(lRunnerNode).Left;
              { is it an assigned(x) check? }
-             if ((runnernode.nodetype = inlinen) and
-                 (TInlineNode(runnernode).inlinenumber = in_assigned_x)) or
-                ((runnernode.nodetype = unequaln) and
-                 (TAddNode(runnernode).right.nodetype = niln)) then
+             if ((lRunnerNode.NodeType = inlinen) and
+                 (TInlineNode(lRunnerNode).InlineNumber = in_assigned_x)) or
+                ((lRunnerNode.NodeType = unequaln) and
+                 (TAddNode(lRunnerNode).Right.NodeType = niln)) then
                begin
-                 runnernode := TUnaryNode(runnernode).left;
+                 lRunnerNode := TUnaryNode(lRunnerNode).Left;
                  { in case of in_assigned_x, there's a callparan in between }
-                 if (runnernode.nodetype = callparan) then
-                   runnernode := TCallParaNode(runnernode).left;
-                 while (runnernode.nodetype = typeconvn) do
-                   runnernode := TTypeConvNode(runnernode).left;
+                 if (lRunnerNode.NodeType = callparan) then
+                   lRunnerNode := TCallParaNode(lRunnerNode).Left;
+                 while (lRunnerNode.NodeType = typeconvn) do
+                   lRunnerNode := TTypeConvNode(lRunnerNode).Left;
                  { is there an "x := x(^).somefield"? }
-                 assignmentnode := findassignment(right,runnernode);
-                 if Assigned(assignmentnode) then
+                 lAssignmentNode := FindAssignment(Right,lRunnerNode);
+                 if Assigned(lAssignmentNode) then
                    begin
-                     prefetchcode := internalstatements(prefetchstatements);
-                     addstatement(prefetchstatements,geninlinenode(in_prefetch_var,false,
-                       CDerefNode.create(CTypeConvNode.create(assignmentnode.right.GetCopy,VoidPointerType))));
-                     addstatement(prefetchstatements,right);
-                     right := prefetchcode;
-                     TypeCheckPass(right);
+                     lPrefetchCode := InternalStatements(lPrefetchStatements);
+                     AddStatement(lPrefetchStatements,GenInlineNode(in_prefetch_var,false,
+                       CDerefNode.Create(CTypeConvNode.Create(lAssignmentNode.Right.GetCopy,VoidPointerType))));
+                     AddStatement(lPrefetchStatements,Right);
+                     Right := lPrefetchCode;
+                     TypeCheckPass(Right);
                    end;
                end;
            end;
@@ -1426,16 +1426,16 @@ implementation
                                TIFNODE
 *****************************************************************************}
 
-    constructor TIfNode.create(l,r,_t1 : TNode);
+    constructor TIfNode.Create(ALeft,ARight,AT1 : TNode);
       begin
-         inherited create(ifn,l,r,_t1,nil);
+         inherited Create(ifn,ALeft,ARight,AT1,nil);
       end;
 
 
-    constructor TIfNode.Create_Internal(l,r,_t1 : TNode);
+    constructor TIfNode.Create_Internal(ALeft,ARight,AT1 : TNode);
       begin
-        create(l,r,_t1);
-        include(flags,nf_internal);
+        Create(ALeft,ARight,AT1);
+        include(Flags,nf_internal);
       end;
 
 
@@ -1444,37 +1444,37 @@ implementation
   {$endif defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
 
 
-    function TIfNode.internalsimplify(warn: boolean) : TNode;
+    function TIfNode.InternalSimplify(AWarn: Boolean) : TNode;
 {$if defined(HAS_MINMAX_INTRINSICS)}
       var
-        thenstmnt, elsestmnt: TNode;
-        in_nr: TInlineNumber;
-        paratype: TDef;
+        lThenStatement, lElseStatement: TNode;
+        lInlineNumber: TInlineNumber;
+        lParaType: TDef;
 {$endif defined(HAS_MINMAX_INTRINSICS)}
       begin
-        result:=nil;
+        Result:=nil;
         { optimize constant expressions }
-        if (left.nodetype=ordconstn) then
+        if (Left.NodeType=ordconstn) then
           begin
-             if TOrdConstNode(left).Value.uvalue<>0 then
+             if TOrdConstNode(Left).Value.uvalue<>0 then
                begin
-                  if Assigned(right) then
-                    result:=right
+                  if Assigned(Right) then
+                    Result:=Right
                   else
-                    result:=CNothingNode.create;
-                  right:=nil;
-                  if warn and Assigned(t1) and not(nf_internal in left.flags) then
-                    CGMessagePos(t1.fileinfo,cg_w_unreachable_code);
+                    Result:=CNothingNode.Create;
+                  Right:=nil;
+                  if AWarn and Assigned(T1) and not(nf_internal in Left.Flags) then
+                    CGMessagePos(T1.FileInfo,cg_w_unreachable_code);
                end
              else
                begin
-                  if Assigned(t1) then
-                    result:=t1
+                  if Assigned(T1) then
+                    Result:=T1
                   else
-                    result:=CNothingNode.create;
-                  t1:=nil;
-                  if warn and Assigned(right) and not(nf_internal in left.flags) then
-                    CGMessagePos(right.fileinfo,cg_w_unreachable_code);
+                    Result:=CNothingNode.Create;
+                  T1:=nil;
+                  if AWarn and Assigned(Right) and not(nf_internal in Left.Flags) then
+                    CGMessagePos(Right.FileInfo,cg_w_unreachable_code);
                end;
           end;
 {$if defined(HAS_MINMAX_INTRINSICS)}
@@ -1493,166 +1493,166 @@ implementation
           into appropriate min/max intrinsics
 
           }
-        elsestmnt:=nil;
-        in_nr:=Default(TInlineNumber);
+        lElseStatement:=nil;
+        lInlineNumber:=Default(TInlineNumber);
         if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) and
-           (left.nodetype in [gtn,gten,ltn,lten]) and IsSingleStatement(right,thenstmnt) and
-           ((t1=nil) or IsSingleStatement(t1,elsestmnt)) and
-          (thenstmnt.nodetype=assignn) and ((t1=nil) or (elsestmnt.nodetype=assignn)) and
-          not(might_have_sideeffects(left)) and
-          ((t1=nil) or TAssignmentNode(thenstmnt).left.isequal(TAssignmentNode(elsestmnt).left)) and
+           (Left.NodeType in [gtn,gten,ltn,lten]) and IsSingleStatement(Right,lThenStatement) and
+           ((T1=nil) or IsSingleStatement(T1,lElseStatement)) and
+          (lThenStatement.NodeType=assignn) and ((T1=nil) or (lElseStatement.NodeType=assignn)) and
+          not(Might_Have_SideEffects(Left)) and
+          ((T1=nil) or TAssignmentNode(lThenStatement).Left.IsEqual(TAssignmentNode(lElseStatement).Left)) and
 {$if defined(i386) or defined(x86_64)}
 {$ifdef i386}
-          (((CurrentSettings.FPUType>=fpu_sse) and Is_Single(TAssignmentNode(thenstmnt).left.resultdef)) or
-           ((CurrentSettings.FPUType>=fpu_sse2) and Is_Double(TAssignmentNode(thenstmnt).left.resultdef)) or
-           ((CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef))
+          (((CurrentSettings.FPUType>=fpu_sse) and Is_Single(TAssignmentNode(lThenStatement).Left.ResultDef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and Is_Double(TAssignmentNode(lThenStatement).Left.ResultDef)) or
+           ((CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and Is_32BitInt(TAssignmentNode(lThenStatement).Left.ResultDef))
           ) and
 {$else i386}
-          (Is_Single(TAssignmentNode(thenstmnt).left.resultdef) or
-           Is_Double(TAssignmentNode(thenstmnt).left.resultdef) or
-           Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef) or
-           Is_64BitInt(TAssignmentNode(thenstmnt).left.resultdef)
+          (Is_Single(TAssignmentNode(lThenStatement).Left.ResultDef) or
+           Is_Double(TAssignmentNode(lThenStatement).Left.ResultDef) or
+           Is_32BitInt(TAssignmentNode(lThenStatement).Left.ResultDef) or
+           Is_64BitInt(TAssignmentNode(lThenStatement).Left.ResultDef)
           ) and
 {$endif i386}
 {$endif defined(i386) or defined(x86_64)}
 {$if defined(aarch64)}
-          (Is_Single(TAssignmentNode(thenstmnt).left.resultdef) or Is_Double(TAssignmentNode(thenstmnt).left.resultdef) or
-           Is_32BitInt(TAssignmentNode(thenstmnt).left.resultdef) or Is_64BitInt(TAssignmentNode(thenstmnt).left.resultdef)) and
+          (Is_Single(TAssignmentNode(lThenStatement).Left.ResultDef) or Is_Double(TAssignmentNode(lThenStatement).Left.ResultDef) or
+           Is_32BitInt(TAssignmentNode(lThenStatement).Left.ResultDef) or Is_64BitInt(TAssignmentNode(lThenStatement).Left.ResultDef)) and
 {$endif defined(aarch64)}
           (
           { the right size of the assignment in the then clause must either }
 
           { equal to the left ... }
-           (TAssignmentNode(thenstmnt).right.isequal(TAddNode(left).left) and
+           (TAssignmentNode(lThenStatement).Right.IsEqual(TAddNode(Left).Left) and
 
             { ... and the else clause must be either not exist                 }
             { and the left side of the assignment in the then clause must be   }
             {  equal to the right operand of the comparison operator           }
             (
-              ((t1=nil) and (TAssignmentNode(thenstmnt).left.isequal(TAddNode(left).right))) or
+              ((T1=nil) and (TAssignmentNode(lThenStatement).Left.IsEqual(TAddNode(Left).Right))) or
 
               { or the else clause exists and the right side of the assignment in the else clause }
               { must be equal to the right side of the comparison operator                        }
-              (Assigned(elsestmnt) and TAssignmentNode(elsestmnt).right.isequal(TAddNode(left).right)))
+              (Assigned(lElseStatement) and TAssignmentNode(lElseStatement).Right.IsEqual(TAddNode(Left).Right)))
            ) or
            { ... or right operand of the comparison operator }
 
-            (TAssignmentNode(thenstmnt).right.isequal(TAddNode(left).right) and
+            (TAssignmentNode(lThenStatement).Right.IsEqual(TAddNode(Left).Right) and
             { ... and the else clause must be either not exist                 }
             { and the left side of the assignment in the then clause must be   }
             {  equal to the left operand of the comparison operator            }
              (
-              ((t1=nil) and (TAssignmentNode(thenstmnt).left.isequal(TAddNode(left).left))) or
+              ((T1=nil) and (TAssignmentNode(lThenStatement).Left.IsEqual(TAddNode(Left).Left))) or
 
               { or the else clause exists and the right side of the assignment in the else clause }
               { must be equal to the left side of the comparison operator                         }
-              (Assigned(elsestmnt) and TAssignmentNode(elsestmnt).right.isequal(TAddNode(left).left))
+              (Assigned(lElseStatement) and TAssignmentNode(lElseStatement).Right.IsEqual(TAddNode(Left).Left))
              )
            )
           ) then
           begin
-            paratype:=TAssignmentNode(thenstmnt).left.resultdef;
-            if ((left.nodetype in [gtn,gten]) and
-              TAssignmentNode(thenstmnt).right.isequal(TAddNode(left).left)) or
-              ((left.nodetype in [ltn,lten]) and
-              TAssignmentNode(thenstmnt).right.isequal(TAddNode(left).right)) then
+            lParaType:=TAssignmentNode(lThenStatement).Left.ResultDef;
+            if ((Left.NodeType in [gtn,gten]) and
+              TAssignmentNode(lThenStatement).Right.IsEqual(TAddNode(Left).Left)) or
+              ((Left.NodeType in [ltn,lten]) and
+              TAssignmentNode(lThenStatement).Right.IsEqual(TAddNode(Left).Right)) then
               begin
-                if Is_Double(paratype) then
-                  in_nr:=in_max_double
-                else if Is_Single(paratype) then
-                  in_nr:=in_max_single
-                else if Is_U32BitInt(paratype) then
-                  in_nr:=in_max_dword
-                else if Is_S32BitInt(paratype) then
-                  in_nr:=in_max_longint
-                else if Is_U64BitInt(paratype) then
-                  in_nr:=in_max_qword
-                else if Is_S64BitInt(paratype) then
-                  in_nr:=in_max_int64;
+                if Is_Double(lParaType) then
+                  lInlineNumber:=in_max_double
+                else if Is_Single(lParaType) then
+                  lInlineNumber:=in_max_single
+                else if Is_U32BitInt(lParaType) then
+                  lInlineNumber:=in_max_dword
+                else if Is_S32BitInt(lParaType) then
+                  lInlineNumber:=in_max_longint
+                else if Is_U64BitInt(lParaType) then
+                  lInlineNumber:=in_max_qword
+                else if Is_S64BitInt(lParaType) then
+                  lInlineNumber:=in_max_int64;
               end
             else
               begin
-                if Is_Double(paratype) then
-                  in_nr:=in_min_double
-                else if Is_Single(paratype) then
-                  in_nr:=in_min_single
-                else if Is_U32BitInt(paratype) then
-                  in_nr:=in_min_dword
-                else if Is_S32BitInt(paratype) then
-                  in_nr:=in_min_longint
-                else if Is_U64BitInt(paratype) then
-                  in_nr:=in_min_qword
-                else if Is_S64BitInt(paratype) then
-                  in_nr:=in_min_int64;
+                if Is_Double(lParaType) then
+                  lInlineNumber:=in_min_double
+                else if Is_Single(lParaType) then
+                  lInlineNumber:=in_min_single
+                else if Is_U32BitInt(lParaType) then
+                  lInlineNumber:=in_min_dword
+                else if Is_S32BitInt(lParaType) then
+                  lInlineNumber:=in_min_longint
+                else if Is_U64BitInt(lParaType) then
+                  lInlineNumber:=in_min_qword
+                else if Is_S64BitInt(lParaType) then
+                  lInlineNumber:=in_min_int64;
               end;
             { for inline nodes, the first parameter is the last one in the linked list
 
               Due to the defined behaviour for the min/max intrinsics that in case of a NaN
               the second parameter is taken, we have to put the else part into the second parameter
               thus pass it to the first callparanode call }
-            if t1=nil then
-              Result:=CAssignmentNode.Create_Internal(TAssignmentNode(thenstmnt).left.GetCopy,
-                CInlineNode.create(in_nr,false,CCallParaNode.create(TAssignmentNode(thenstmnt).left.GetCopy,
-                      CCallParaNode.create(TAssignmentNode(thenstmnt).right.GetCopy,nil)))
+            if T1=nil then
+              Result:=CAssignmentNode.Create_Internal(TAssignmentNode(lThenStatement).Left.GetCopy,
+                CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(TAssignmentNode(lThenStatement).Left.GetCopy,
+                      CCallParaNode.Create(TAssignmentNode(lThenStatement).Right.GetCopy,nil)))
                 )
             else
-              Result:=CAssignmentNode.Create_Internal(TAssignmentNode(thenstmnt).left.GetCopy,
-                CInlineNode.create(in_nr,false,CCallParaNode.create(TAssignmentNode(elsestmnt).right.GetCopy,
-                      CCallParaNode.create(TAssignmentNode(thenstmnt).right.GetCopy,nil)))
+              Result:=CAssignmentNode.Create_Internal(TAssignmentNode(lThenStatement).Left.GetCopy,
+                CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(TAssignmentNode(lElseStatement).Right.GetCopy,
+                      CCallParaNode.Create(TAssignmentNode(lThenStatement).Right.GetCopy,nil)))
                 );
-            node_reset_pass1_write(Result);
+            Node_Reset_Pass1_Write(Result);
           end;
 {$endif defined(HAS_MINMAX_INTRINSICS)}
       end;
 
 
-    function TIfNode.simplify(forinline : boolean) : TNode;
+    function TIfNode.Simplify(AForInline : Boolean) : TNode;
       begin
-        result:=internalsimplify(false);
+        Result:=InternalSimplify(false);
       end;
 
 
-    function TIfNode.pass_typecheck:TNode;
+    function TIfNode.Pass_TypeCheck:TNode;
       begin
-         result:=nil;
-         resultdef:=VoidType;
+         Result:=nil;
+         ResultDef:=VoidType;
 
-         TypeCheckPass(left);
+         TypeCheckPass(Left);
 
          { tp procvar support }
-         maybe_call_procvar(left,true);
+         Maybe_Call_ProcVar(Left,true);
 
          { if path }
-         if Assigned(right) then
-           TypeCheckPass(right);
+         if Assigned(Right) then
+           TypeCheckPass(Right);
          { else path }
-         if Assigned(t1) then
-           TypeCheckPass(t1);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         if Assigned(T1) then
+           TypeCheckPass(T1);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
-         if not(Is_Boolean(left.resultdef)) and
-           not(Is_TypeParam(left.resultdef)) then
-             inserttypeconv(left,PasBool1Type);
+         if not(Is_Boolean(Left.ResultDef)) and
+           not(Is_TypeParam(Left.ResultDef)) then
+             InsertTypeConv(Left,PasBool1Type);
 
-         result:=internalsimplify(not(nf_internal in flags));
+         Result:=InternalSimplify(not(nf_internal in Flags));
       end;
 
 
-    function TIfNode.pass_1 : TNode;
+    function TIfNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         expectloc:=LOC_VOID;
-         FirstPass(left);
+         Result:=nil;
+         ExpectLoc:=LOC_VOID;
+         FirstPass(Left);
 
          { if path }
-         if Assigned(right) then
-           FirstPass(right);
+         if Assigned(Right) then
+           FirstPass(Right);
 
          { else path }
-         if Assigned(t1) then
-           FirstPass(t1);
+         if Assigned(T1) then
+           FirstPass(T1);
 
          { leave if we've got an error in one of the paths }
 
@@ -1665,104 +1665,104 @@ implementation
                               TFORNODE
 *****************************************************************************}
 
-    constructor TForNode.create(l,r,_t1,_t2 : TNode;back : boolean);
+    constructor TForNode.Create(ALeft,ARight,AT1,AT2 : TNode;ABackward : Boolean);
 
       begin
-         inherited create(forn,l,r,_t1,_t2);
-         if back then
-           include(loopflags,lnf_backward);
-         include(loopflags,lnf_testatbegin);
+         inherited Create(forn,ALeft,ARight,AT1,AT2);
+         if ABackward then
+           include(LoopFlags,lnf_backward);
+         include(LoopFlags,lnf_testatbegin);
       end;
 
     destructor TForNode.Destroy;
       begin
-         loopiteration.free;
-         loopiteration := nil;
+         LoopIteration.free;
+         LoopIteration := nil;
          inherited Destroy;
       end;
 
-    function TForNode.simplify(forinline : boolean) : TNode;
+    function TForNode.Simplify(AForInline : Boolean) : TNode;
       begin
-        result:=nil;
+        Result:=nil;
         { Can we spare the first comparison? }
-        if (t1.nodetype=ordconstn) and
-           (right.nodetype=ordconstn) and
+        if (T1.NodeType=ordconstn) and
+           (Right.NodeType=ordconstn) and
            (
             (
-             (lnf_backward in loopflags) and
-             (TOrdConstNode(right).Value>=TOrdConstNode(t1).Value)
+             (lnf_backward in LoopFlags) and
+             (TOrdConstNode(Right).Value>=TOrdConstNode(T1).Value)
             ) or
             (
-              not(lnf_backward in loopflags) and
-              (TOrdConstNode(right).Value<=TOrdConstNode(t1).Value)
+              not(lnf_backward in LoopFlags) and
+              (TOrdConstNode(Right).Value<=TOrdConstNode(T1).Value)
             )
            ) then
-          exclude(loopflags,lnf_testatbegin);
+          exclude(LoopFlags,lnf_testatbegin);
 
-        if (t1.nodetype=ordconstn) and
-           (right.nodetype=ordconstn) and
+        if (T1.NodeType=ordconstn) and
+           (Right.NodeType=ordconstn) and
            (
             (
-             (lnf_backward in loopflags) and
-             (TOrdConstNode(right).Value<TOrdConstNode(t1).Value)
+             (lnf_backward in LoopFlags) and
+             (TOrdConstNode(Right).Value<TOrdConstNode(T1).Value)
             ) or
             (
-              not(lnf_backward in loopflags) and
-              (TOrdConstNode(right).Value>TOrdConstNode(t1).Value)
+              not(lnf_backward in LoopFlags) and
+              (TOrdConstNode(Right).Value>TOrdConstNode(T1).Value)
             )
            ) then
-          result:=CNothingNode.create;
+          Result:=CNothingNode.Create;
       end;
 
 
-    function TForNode.pass_typecheck:TNode;
+    function TForNode.Pass_TypeCheck:TNode;
       var
-        res : TNode;
-        RangeDef: TDef;
+        lResultNode : TNode;
+        lRangeDef: TDef;
       begin
-         result:=nil;
-         resultdef:=VoidType;
+         Result:=nil;
+         ResultDef:=VoidType;
 
          { process the loopvar, from and to, varstates are already set }
-         TypeCheckPass(left);
-         TypeCheckPass(right);
-         TypeCheckPass(t1);
+         TypeCheckPass(Left);
+         TypeCheckPass(Right);
+         TypeCheckPass(T1);
 
-         set_varstate(left,vs_written,[]);
+         set_varstate(Left,vs_written,[]);
 
          { Make sure that the loop var and the
            from and to values are compatible types }
          if not(m_iso in CurrentSettings.ModeSwitches) then
-           RangeDef:=left.resultdef
+           lRangeDef:=Left.ResultDef
          else
-           RangeDef:=Get_Iso_Range_Type(left.resultdef);
+           lRangeDef:=Get_Iso_Range_Type(Left.ResultDef);
 
-         check_ranges(right.fileinfo,right,RangeDef);
-         inserttypeconv(right,RangeDef);
+         check_ranges(Right.FileInfo,Right,lRangeDef);
+         InsertTypeConv(Right,lRangeDef);
 
-         check_ranges(t1.fileinfo,t1,RangeDef);
-         inserttypeconv(t1,RangeDef);
+         check_ranges(T1.FileInfo,T1,lRangeDef);
+         InsertTypeConv(T1,lRangeDef);
 
-         if Assigned(t2) then
-           TypeCheckPass(t2);
-         result:=simplify(false);
+         if Assigned(T2) then
+           TypeCheckPass(T2);
+         Result:=Simplify(false);
 
          { loop unrolling }
-         if not(Assigned(result)) and
+         if not(Assigned(Result)) and
            (cs_opt_loopunroll in CurrentSettings.OptimizerSwitches) and
-           Assigned(t2) and
+           Assigned(T2) and
            { statements must be error free }
-           not(tnf_error in t2.transientflags) then
+           not(tnf_error in T2.TransientFlags) then
            begin
-             TypeCheckPass(t2);
-             res:=t2.simplify(false);
-             if Assigned(res) then
-               t2:=res;
-             res:=unroll_loop(self);
-             if Assigned(res) then
+             TypeCheckPass(T2);
+             lResultNode:=T2.Simplify(false);
+             if Assigned(lResultNode) then
+               T2:=lResultNode;
+             lResultNode:=unroll_loop(self);
+             if Assigned(lResultNode) then
                begin
-                 TypeCheckPass(res);
-                 result:=res;
+                 TypeCheckPass(lResultNode);
+                 Result:=lResultNode;
                  exit;
                end;
            end;
@@ -1770,87 +1770,87 @@ implementation
       end;
 
 
-    function TForNode.pass_1 : TNode;
+    function TForNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
 
-        FirstPass(left);
-        FirstPass(right);
-        FirstPass(t1);
+        FirstPass(Left);
+        FirstPass(Right);
+        FirstPass(T1);
 
-        if Assigned(t2) then
-          FirstPass(t2);
+        if Assigned(T2) then
+          FirstPass(T2);
       end;
 
 
-    function TForNode.makewhileloop : TNode;
+    function TForNode.MakeWhileLoop : TNode;
       var
-        ifblock,loopblock : TBlockNode;
-        ifstatements,statements,loopstatements : TStatementNode;
-        fromtemp,totemp : TTempCreateNode;
-        do_loopvar_at_end : Boolean;
+        lIfBlock,lLoopBlock : TBlockNode;
+        lIfStatements,lStatements,lLoopStatements : TStatementNode;
+        lFromTemp,lToTemp : TTempCreateNode;
+        lLoopVarAtEnd : Boolean;
         { if the lower and/or upper bound are variable, we need a surrounding if }
-        needsifblock : Boolean;
-        cond : TNodeType;
-        fromexpr : TNode;
-        toexpr, leftcopy: TNode;
+        lNeedsIfBlock : Boolean;
+        lCondition : TNodeType;
+        lFromExpr : TNode;
+        lToExpr, lLeftCopy: TNode;
         { if the upper bound is not constant, it must be store in a temp initially }
-        usetotemp : boolean;
+        lUseToTemp : Boolean;
         { if the lower bound is not constant, it must be store in a temp before calculating the upper bound }
-        usefromtemp : boolean;
-        storefilepos: TFilePosInfo;
-        countermin, countermax: TConstExprInt;
+        lUseFromTemp : Boolean;
+        lSavedFilePos: TFilePosInfo;
+        lCounterMin, lCounterMax: TConstExprInt;
 
-      procedure iterate_counter(var s : TStatementNode;fw : boolean);
+      procedure IterateCounter(var AStatement : TStatementNode;AForward : Boolean);
         var
-          leftcopy: TNode;
+          lLeftCopy: TNode;
         begin
           { get rid of nf_write etc. as the left node is now only read }
-          leftcopy:=left.GetCopy;
-          node_reset_flags(leftcopy,[nf_modify,nf_write],[tnf_pass1_done]);
+          lLeftCopy:=Left.GetCopy;
+          Node_Reset_Flags(lLeftCopy,[nf_modify,nf_write],[tnf_pass1_done]);
 
-          if fw then
-            addstatement(s,
-              CAssignmentNode.Create_Internal(left.GetCopy,CInlineNode.createintern(in_succ_x,false,leftcopy)))
+          if AForward then
+            AddStatement(AStatement,
+              CAssignmentNode.Create_Internal(Left.GetCopy,CInlineNode.CreateIntern(in_succ_x,false,lLeftCopy)))
           else
-            addstatement(s,
-              CAssignmentNode.Create_Internal(left.GetCopy,CInlineNode.createintern(in_pred_x,false,leftcopy)));
+            AddStatement(AStatement,
+              CAssignmentNode.Create_Internal(Left.GetCopy,CInlineNode.CreateIntern(in_pred_x,false,lLeftCopy)));
         end;
 
-      function iterate_counter_func(arg : TNode;fw : boolean) : TNode;
+      function IterateCounterFunc(AArg : TNode;AForward : Boolean) : TNode;
         begin
-          if fw then
-            result:=CInlineNode.createintern(in_succ_x,false,arg)
+          if AForward then
+            Result:=CInlineNode.CreateIntern(in_succ_x,false,AArg)
           else
-            result:=CInlineNode.createintern(in_pred_x,false,arg);
+            Result:=CInlineNode.CreateIntern(in_pred_x,false,AArg);
         end;
 
       begin
-        result:=nil;
-        totemp:=nil;
-        fromtemp:=nil;
-        storefilepos:=CurrentFilePos;
-        CurrentFilePos:=fileinfo;
+        Result:=nil;
+        lToTemp:=nil;
+        lFromTemp:=nil;
+        lSavedFilePos:=CurrentFilePos;
+        CurrentFilePos:=FileInfo;
 
-        case left.resultdef.typ of
+        case Left.ResultDef.typ of
           enumdef:
             begin
-              countermin:=TEnumDef(left.resultdef).min;
-              countermax:=TEnumDef(left.resultdef).max;
+              lCounterMin:=TEnumDef(Left.ResultDef).min;
+              lCounterMax:=TEnumDef(Left.ResultDef).max;
             end;
           orddef:
             begin
-              countermin:=TOrdDef(left.resultdef).low;
-              countermax:=TOrdDef(left.resultdef).high;
+              lCounterMin:=TOrdDef(Left.ResultDef).low;
+              lCounterMax:=TOrdDef(Left.ResultDef).high;
             end;
           else
             InternalError(2020012601);
         end;
 
         { check if we can pred/succ the loop var at the end }
-        do_loopvar_at_end:=(lnf_dont_mind_loopvar_on_exit in loopflags) and
-          is_constnode(t1) and
+        lLoopVarAtEnd:=(lnf_dont_mind_loopvar_on_exit in LoopFlags) and
+          Is_ConstNode(T1) and
           { we cannot test at the end after the pred/succ if the to value is equal to the max./min. value of the counter variable
             because we either get an overflow/underflow or the compiler removes the check as it never can be true }
 
@@ -1862,159 +1862,159 @@ implementation
           not((lnf_backward in loopflags) and is_signed(left.resultdef) and (get_ordinal_value(t1)=(-Tconstexprint(1 shl (left.resultdef.size*8-1))))) and
           }
 
-          not(not(lnf_backward in loopflags) and (get_ordinal_value(t1)=countermax)) and
-          not((lnf_backward in loopflags) and (get_ordinal_value(t1)=countermin)) and
+          not(not(lnf_backward in LoopFlags) and (Get_Ordinal_Value(T1)=lCounterMax)) and
+          not((lnf_backward in LoopFlags) and (Get_Ordinal_Value(T1)=lCounterMin)) and
           { neither might the for loop contain a continue statement as continue in a while loop would skip the increment at the end
             of the loop, this could be overcome by replacing the continue statement with an pred/succ; continue sequence }
-          not(has_node_of_type(t2,[continuen])) and
+          not(Has_Node_Of_Type(T2,[continuen])) and
           { if the loop is unrolled and there is a jump into the loop,
             then we can't do the trick with incrementing the loop var only at the
             end
           }
-          not(Assigned(entrylabel));
+          not(Assigned(EntryLabel));
 
-        needsifblock:=not(is_constnode(right)) or not(is_constnode(t1));
+        lNeedsIfBlock:=not(Is_ConstNode(Right)) or not(Is_ConstNode(T1));
 
         { convert the for loop into a while loop }
-        result:=internalstatements(statements);
-        ifblock:=internalstatements(ifstatements);
-        loopblock:=internalstatements(loopstatements);
+        Result:=InternalStatements(lStatements);
+        lIfBlock:=InternalStatements(lIfStatements);
+        lLoopBlock:=InternalStatements(lLoopStatements);
 
-        usefromtemp:=(might_have_sideeffects(t1) and not(is_const(right))) or (node_complexity(right)>1);
-        usetotemp:=not(is_const(t1));
+        lUseFromTemp:=(Might_Have_SideEffects(T1) and not(Is_Const(Right))) or (Node_Complexity(Right)>1);
+        lUseToTemp:=not(Is_Const(T1));
 
-        if needsifblock then
+        if lNeedsIfBlock then
           begin
             { do not generate a temp. for the from node, if it is a const, it can be copied directly since
               no side effect might change it }
-            if usefromtemp then
+            if lUseFromTemp then
               begin
-                fromtemp:=CTempCreateNode.create(right.resultdef,right.resultdef.Size,tt_persistent,true);
+                lFromTemp:=CTempCreateNode.Create(Right.ResultDef,Right.ResultDef.Size,tt_persistent,true);
                 { the if block might be optimized out, so we put the deletetempnode after the if-block, however,
                   this causes a long life time of the fromtemp. If the final regsync is left away, the reg. allocator
                   figures out the needed life time. As their are no loops involved between the uses of the fromtemp,
                   this does no hurt }
-                fromtemp.includetempflag(ti_no_final_regsync);
-                addstatement(statements,fromtemp);
+                lFromTemp.IncludeTempFlag(ti_no_final_regsync);
+                AddStatement(lStatements,lFromTemp);
                 { while it would be beneficial to fold the initial reverse succ/pred into this assignment, this is
                   not possible because it might wrap around and the if check later on goes wrong }
-                addstatement(statements,CAssignmentNode.Create_Internal(CTempRefNode.create(fromtemp),right.GetCopy));
+                AddStatement(lStatements,CAssignmentNode.Create_Internal(CTempRefNode.Create(lFromTemp),Right.GetCopy));
               end;
 
-            if usetotemp then
+            if lUseToTemp then
               begin
-                totemp:=CTempCreateNode.create(t1.resultdef,t1.resultdef.Size,tt_persistent,true);
-                addstatement(statements,totemp);
-                addstatement(statements,CAssignmentNode.Create_Internal(CTempRefNode.create(totemp),t1.GetCopy));
+                lToTemp:=CTempCreateNode.Create(T1.ResultDef,T1.ResultDef.Size,tt_persistent,true);
+                AddStatement(lStatements,lToTemp);
+                AddStatement(lStatements,CAssignmentNode.Create_Internal(CTempRefNode.Create(lToTemp),T1.GetCopy));
               end;
 
-            if usefromtemp then
+            if lUseFromTemp then
               begin
-                addstatement(ifstatements,CAssignmentNode.Create_Internal(left.GetCopy,CTempRefNode.create(fromtemp)));
-                if not(do_loopvar_at_end) then
-                  iterate_counter(ifstatements,lnf_backward in loopflags);
+                AddStatement(lIfStatements,CAssignmentNode.Create_Internal(Left.GetCopy,CTempRefNode.Create(lFromTemp)));
+                if not(lLoopVarAtEnd) then
+                  IterateCounter(lIfStatements,lnf_backward in LoopFlags);
               end
             else
               begin
-                if not(do_loopvar_at_end) then
-                  addstatement(ifstatements,CAssignmentNode.Create_Internal(left.GetCopy,
-                    iterate_counter_func(right.GetCopy,lnf_backward in loopflags)))
+                if not(lLoopVarAtEnd) then
+                  AddStatement(lIfStatements,CAssignmentNode.Create_Internal(Left.GetCopy,
+                    IterateCounterFunc(Right.GetCopy,lnf_backward in LoopFlags)))
                 else
-                  addstatement(ifstatements,CAssignmentNode.Create_Internal(left.GetCopy,right.GetCopy));
+                  AddStatement(lIfStatements,CAssignmentNode.Create_Internal(Left.GetCopy,Right.GetCopy));
               end;
           end
         else
           begin
-            if not(do_loopvar_at_end) then
-              addstatement(ifstatements,CAssignmentNode.Create_Internal(left.GetCopy,
-                iterate_counter_func(right.GetCopy,lnf_backward in loopflags)))
+            if not(lLoopVarAtEnd) then
+              AddStatement(lIfStatements,CAssignmentNode.Create_Internal(Left.GetCopy,
+                IterateCounterFunc(Right.GetCopy,lnf_backward in LoopFlags)))
             else
-              addstatement(ifstatements,CAssignmentNode.Create_Internal(left.GetCopy,right.GetCopy));
+              AddStatement(lIfStatements,CAssignmentNode.Create_Internal(Left.GetCopy,Right.GetCopy));
           end;
 
-        if Assigned(entrylabel) then
-          addstatement(ifstatements,CGotoNode.create(TLabelNode(entrylabel).labsym));
+        if Assigned(EntryLabel) then
+          AddStatement(lIfStatements,CGotoNode.Create(TLabelNode(EntryLabel).LabSym));
 
-        if not(do_loopvar_at_end) then
-          iterate_counter(loopstatements,not(lnf_backward in loopflags));
+        if not(lLoopVarAtEnd) then
+          IterateCounter(lLoopStatements,not(lnf_backward in LoopFlags));
 
         { avoid copying t2, it is used only once and it might be big }
-        addstatement(loopstatements,t2);
-        t2:=nil;
+        AddStatement(lLoopStatements,T2);
+        T2:=nil;
 
-        if do_loopvar_at_end then
-         iterate_counter(loopstatements,not(lnf_backward in loopflags));
+        if lLoopVarAtEnd then
+         IterateCounter(lLoopStatements,not(lnf_backward in LoopFlags));
 
-        if do_loopvar_at_end then
+        if lLoopVarAtEnd then
           begin
-            if lnf_backward in loopflags then
-              cond:=ltn
+            if lnf_backward in LoopFlags then
+              lCondition:=ltn
             else
-              cond:=gtn;
+              lCondition:=gtn;
           end
         else
           begin
-            if lnf_backward in loopflags then
-              cond:=lten
+            if lnf_backward in LoopFlags then
+              lCondition:=lten
             else
-              cond:=gten;
+              lCondition:=gten;
           end;
 
         { get rid of nf_write etc. as the left node is now only read }
-        leftcopy:=left.GetCopy;
-        node_reset_flags(leftcopy,[nf_modify,nf_write],[tnf_pass1_done]);
+        lLeftCopy:=Left.GetCopy;
+        Node_Reset_Flags(lLeftCopy,[nf_modify,nf_write],[tnf_pass1_done]);
 
-        if needsifblock then
+        if lNeedsIfBlock then
           begin
-            if usetotemp then
-              toexpr:=CTempRefNode.create(totemp)
+            if lUseToTemp then
+              lToExpr:=CTempRefNode.Create(lToTemp)
             else
-              toexpr:=t1.GetCopy;
+              lToExpr:=T1.GetCopy;
 
             { checking against zero might improve the generated assembler,
               doing this transformation for other values is normally not beneficial }
-            if do_loopvar_at_end and (lnf_backward in loopflags) and is_constintnode(toexpr) and (TOrdConstNode(toexpr).Value=1) and
-              (countermin<TOrdConstNode(toexpr).Value) then
+            if lLoopVarAtEnd and (lnf_backward in LoopFlags) and Is_ConstIntNode(lToExpr) and (TOrdConstNode(lToExpr).Value=1) and
+              (lCounterMin<TOrdConstNode(lToExpr).Value) then
               begin
-                TOrdConstNode(toexpr).Value:=TOrdConstNode(toexpr).Value-1;
-                addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(EqualN,leftcopy,toexpr),loopblock,false,true))
+                TOrdConstNode(lToExpr).Value:=TOrdConstNode(lToExpr).Value-1;
+                AddStatement(lIfStatements,CWhileRepeatNode.Create(CAddNode.Create_Internal(EqualN,lLeftCopy,lToExpr),lLoopBlock,false,true))
               end
             else
-              addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(cond,leftcopy,toexpr),loopblock,false,true));
+              AddStatement(lIfStatements,CWhileRepeatNode.Create(CAddNode.Create_Internal(lCondition,lLeftCopy,lToExpr),lLoopBlock,false,true));
 
-            if usefromtemp then
-              fromexpr:=CTempRefNode.create(fromtemp)
+            if lUseFromTemp then
+              lFromExpr:=CTempRefNode.Create(lFromTemp)
             else
-              fromexpr:=right.GetCopy;
+              lFromExpr:=Right.GetCopy;
 
-            if usetotemp then
-              toexpr:=CTempRefNode.create(totemp)
+            if lUseToTemp then
+              lToExpr:=CTempRefNode.Create(lToTemp)
             else
-              toexpr:=t1.GetCopy;
+              lToExpr:=T1.GetCopy;
 
-            if lnf_backward in loopflags then
-              addstatement(statements,CIfNode.create(CAddNode.Create_Internal(gten,
-                fromexpr,toexpr),ifblock,nil))
+            if lnf_backward in LoopFlags then
+              AddStatement(lStatements,CIfNode.Create(CAddNode.Create_Internal(gten,
+                lFromExpr,lToExpr),lIfBlock,nil))
             else
-              addstatement(statements,CIfNode.create(CAddNode.Create_Internal(lten,
-                fromexpr,toexpr),ifblock,nil));
+              AddStatement(lStatements,CIfNode.Create(CAddNode.Create_Internal(lten,
+                lFromExpr,lToExpr),lIfBlock,nil));
 
-            if usetotemp then
-              addstatement(statements,CTempDeleteNode.create(totemp));
-            if usefromtemp then
-              addstatement(statements,CTempDeleteNode.create(fromtemp));
+            if lUseToTemp then
+              AddStatement(lStatements,CTempDeleteNode.Create(lToTemp));
+            if lUseFromTemp then
+              AddStatement(lStatements,CTempDeleteNode.Create(lFromTemp));
           end
         else
           begin
             { is a simple comparison for equality sufficient? }
-            if do_loopvar_at_end and (lnf_backward in loopflags) and (lnf_counter_not_used in loopflags) then
-              addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(EqualN,leftcopy,
-                CAddNode.Create_Internal(subn,t1.GetCopy,COrdConstNode.create(1,t1.resultdef,false))),loopblock,false,true))
+            if lLoopVarAtEnd and (lnf_backward in LoopFlags) and (lnf_counter_not_used in LoopFlags) then
+              AddStatement(lIfStatements,CWhileRepeatNode.Create(CAddNode.Create_Internal(EqualN,lLeftCopy,
+                CAddNode.Create_Internal(subn,T1.GetCopy,COrdConstNode.Create(1,T1.ResultDef,false))),lLoopBlock,false,true))
             else
-              addstatement(ifstatements,CWhileRepeatNode.create(CAddNode.Create_Internal(cond,leftcopy,t1.GetCopy),loopblock,false,true));
-            addstatement(statements,ifblock);
+              AddStatement(lIfStatements,CWhileRepeatNode.Create(CAddNode.Create_Internal(lCondition,lLeftCopy,T1.GetCopy),lLoopBlock,false,true));
+            AddStatement(lStatements,lIfBlock);
           end;
-        CurrentFilePos:=storefilepos;
+        CurrentFilePos:=lSavedFilePos;
       end;
 
 
@@ -2022,45 +2022,45 @@ implementation
                              TEXITNODE
 *****************************************************************************}
 
-    constructor TExitNode.create(l:TNode);
+    constructor TExitNode.Create(ALeft:TNode);
       begin
-        inherited create(exitn,l);
-        if Assigned(left) then
+        inherited Create(exitn,ALeft);
+        if Assigned(Left) then
           begin
             { add assignment to funcretsym }
-            left:=CTypeConvNode.create(left,CurrentProcInfo.procdef.ReturnDef);
-            left:=CAssignmentNode.create(
-              CLoadNode.create(CurrentProcInfo.procdef.FuncRetSym,CurrentProcInfo.procdef.FuncRetSym.owner),
-              left);
+            Left:=CTypeConvNode.Create(Left,CurrentProcInfo.procdef.ReturnDef);
+            Left:=CAssignmentNode.Create(
+              CLoadNode.Create(CurrentProcInfo.procdef.FuncRetSym,CurrentProcInfo.procdef.FuncRetSym.Owner),
+              Left);
           end;
       end;
 
 
-    constructor TExitNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TExitNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
       end;
 
 
-    procedure TExitNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TExitNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
+        inherited PPUWrite(APPUFile);
       end;
 
 
-    function TExitNode.pass_typecheck:TNode;
+    function TExitNode.Pass_TypeCheck:TNode;
       var
-        newstatement : TStatementNode;
-        ressym: TSym;
-        resdef: TDef;
+        lNewStatement : TStatementNode;
+        lResultSym: TSym;
+        lResultDef: TDef;
       begin
-        result:=nil;
-        newstatement:=nil;
-        if Assigned(left) then
+        Result:=nil;
+        lNewStatement:=nil;
+        if Assigned(Left) then
           begin
-             result:=internalstatements(newstatement);
-             addstatement(newstatement,left);
-             left:=nil;
+             Result:=InternalStatements(lNewStatement);
+             AddStatement(lNewStatement,Left);
+             Left:=nil;
           end;
         { if the function result has been migrated to the parentfpstruct,
           we have to load it back to the original location (from which the
@@ -2068,22 +2068,22 @@ implementation
           because the code to this that we add in tnodeutils.wrap_proc_body()
           gets inserted before the exit label to which this node will jump }
 
-        if Assigned(result) then
+        if Assigned(Result) then
           begin
-            addstatement(newstatement,self.GetCopy);
+            AddStatement(lNewStatement,self.GetCopy);
             { ensure we don't insert the function result loading code again for
               this node }
-            include(newstatement.left.flags,nf_internal);
+            include(lNewStatement.Left.Flags,nf_internal);
           end;
-        resultdef:=VoidType;
+        ResultDef:=VoidType;
       end;
 
 
-    function TExitNode.pass_1 : TNode;
+    function TExitNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         expectloc:=LOC_VOID;
-         if Assigned(left) then
+         Result:=nil;
+         ExpectLoc:=LOC_VOID;
+         if Assigned(Left) then
            InternalError(2011052801);
       end;
 
@@ -2092,24 +2092,24 @@ implementation
                              TBREAKNODE
 *****************************************************************************}
 
-    constructor TBreakNode.create;
+    constructor TBreakNode.Create;
 
       begin
-        inherited create(breakn);
+        inherited Create(breakn);
       end;
 
 
-    function TBreakNode.pass_typecheck:TNode;
+    function TBreakNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=VoidType;
+        Result:=nil;
+        ResultDef:=VoidType;
       end;
 
 
-    function TBreakNode.pass_1 : TNode;
+    function TBreakNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
       end;
 
 
@@ -2117,23 +2117,23 @@ implementation
                              TCONTINUENODE
 *****************************************************************************}
 
-    constructor TContinueNode.create;
+    constructor TContinueNode.Create;
       begin
-        inherited create(continuen);
+        inherited Create(continuen);
       end;
 
 
-    function TContinueNode.pass_typecheck:TNode;
+    function TContinueNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=VoidType;
+        Result:=nil;
+        ResultDef:=VoidType;
       end;
 
 
-    function TContinueNode.pass_1 : TNode;
+    function TContinueNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
       end;
 
 
@@ -2141,29 +2141,29 @@ implementation
                              TGOTONODE
 *****************************************************************************}
 
-    constructor TGotoNode.create(p : TLabelSym);
+    constructor TGotoNode.Create(ALabelSym : TLabelSym);
       begin
-        inherited create(goton);
-        exceptionblock:=Current_ExceptBlock;
-        labelnode:=nil;
-        labelsym:=p;
+        inherited Create(goton);
+        ExceptionBlock:=Current_ExceptBlock;
+        LabelNode:=nil;
+        LabelSym:=ALabelSym;
       end;
 
 
-    constructor TGotoNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TGotoNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        labelnodeidx:=ppufile.GetLongInt;
-        exceptionblock:=ppufile.GetByte;
+        inherited PPULoad(ANodeType,APPUFile);
+        FLabelNodeIdx:=APPUFile.GetLongInt;
+        ExceptionBlock:=APPUFile.GetByte;
       end;
 
 
-    procedure TGotoNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TGotoNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        labelnodeidx:=labelnode.ppuidx;
-        ppufile.PutLongInt(labelnodeidx);
-        ppufile.PutByte(exceptionblock);
+        inherited PPUWrite(APPUFile);
+        FLabelNodeIdx:=LabelNode.PPUIdx;
+        APPUFile.PutLongInt(FLabelNodeIdx);
+        APPUFile.PutByte(ExceptionBlock);
       end;
 
 
@@ -2173,53 +2173,53 @@ implementation
       end;
 
 
-    procedure TGotoNode.derefimpl;
+    procedure TGotoNode.DerefImpl;
       begin
-        inherited derefimpl;
+        inherited DerefImpl;
       end;
 
 
-    procedure TGotoNode.resolveppuidx;
+    procedure TGotoNode.ResolvePPUIdx;
       begin
-        labelnode:=TLabelNode(nodeppuidxget(labelnodeidx));
-        if labelnode.nodetype<>labeln then
+        LabelNode:=TLabelNode(NodePPUIdxGet(FLabelNodeIdx));
+        if LabelNode.NodeType<>labeln then
           InternalError(200809021);
       end;
 
 
-    function TGotoNode.pass_typecheck:TNode;
+    function TGotoNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=VoidType;
+        Result:=nil;
+        ResultDef:=VoidType;
       end;
 
 
-    function TGotoNode.pass_1 : TNode;
+    function TGotoNode.Pass_1 : TNode;
       var
-        p2 : TProcInfo;
+        lProcInfo : TProcInfo;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
 
         { The labelnode can already be set when
           this node was copied }
-        if not(Assigned(labelnode)) then
+        if not(Assigned(LabelNode)) then
           begin
             { inner procedure goto? }
-            if Assigned(labelsym.code) and
-              ((Assigned(labelsym.owner) and (CurrentProcInfo.procdef.ParaST.SymTableLevel=labelsym.owner.SymTableLevel)) or
+            if Assigned(LabelSym.code) and
+              ((Assigned(LabelSym.Owner) and (CurrentProcInfo.procdef.ParaST.SymTableLevel=LabelSym.Owner.SymTableLevel)) or
               { generated by the optimizer? }
-               not(Assigned(labelsym.owner))) then
-              labelnode:=TLabelNode(labelsym.code)
+               not(Assigned(LabelSym.Owner))) then
+              LabelNode:=TLabelNode(LabelSym.code)
             else if ((m_non_local_goto in CurrentSettings.ModeSwitches) and
-              Assigned(labelsym.owner)) or
+              Assigned(LabelSym.Owner)) or
               { nested exits don't need the non local goto switch }
-              (labelsym.realname='$nestedexit') then
+              (LabelSym.realname='$nestedexit') then
               begin
-                if CurrentProcInfo.procdef.ParaST.SymTableLevel>=labelsym.owner.SymTableLevel then
+                if CurrentProcInfo.procdef.ParaST.SymTableLevel>=LabelSym.Owner.SymTableLevel then
                   begin
                     { don't mess with the exception blocks, global gotos in/out side exception blocks are not allowed }
-                    if exceptionblock>0 then
+                    if ExceptionBlock>0 then
                       CGMessage(cg_e_goto_inout_of_exception_block);
 
                     { goto across procedures using exception?
@@ -2227,78 +2227,78 @@ implementation
                       easily unwind the exception frame
                       stack
                     }
-                    p2:=CurrentProcInfo;
+                    lProcInfo:=CurrentProcInfo;
                     while true do
                       begin
-                        if ((cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and ((p2.flags*[pi_needs_implicit_finally,pi_has_implicit_finally])<>[])) or
-                        ((p2.flags*[pi_uses_exceptions])<>[]) then
+                        if ((cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and ((lProcInfo.Flags*[pi_needs_implicit_finally,pi_has_implicit_finally])<>[])) or
+                        ((lProcInfo.Flags*[pi_uses_exceptions])<>[]) then
                           Message(cg_e_goto_across_procedures_with_exceptions_not_allowed);
-                        if labelsym.owner=p2.procdef.LocalST then
+                        if LabelSym.Owner=lProcInfo.procdef.LocalST then
                           break;
-                        p2:=p2.parent
+                        lProcInfo:=lProcInfo.Parent
                       end;
 
-                    if Assigned(labelsym.JumpBuf) then
+                    if Assigned(LabelSym.JumpBuf) then
                       begin
-                        result:=CCallNode.createintern('fpc_longjmp',
-                          CCallParaNode.create(COrdConstNode.create(1,SIntType,true),
-                          CCallParaNode.create(CLoadNode.create(labelsym.JumpBuf,labelsym.JumpBuf.owner),
+                        Result:=CCallNode.CreateIntern('fpc_longjmp',
+                          CCallParaNode.Create(COrdConstNode.Create(1,SIntType,true),
+                          CCallParaNode.Create(CLoadNode.Create(LabelSym.JumpBuf,LabelSym.JumpBuf.Owner),
                         nil)));
                       end
                     else
-                      CGMessage1(cg_e_goto_label_not_found,labelsym.realname);
+                      CGMessage1(cg_e_goto_label_not_found,LabelSym.realname);
                   end
                 else
-                  CGMessagePos(self.fileinfo,cg_e_interprocedural_goto_only_to_outer_scope_allowed);
+                  CGMessagePos(self.FileInfo,cg_e_interprocedural_goto_only_to_outer_scope_allowed);
               end
             else
-              CGMessage1(cg_e_goto_label_not_found,labelsym.realname);
+              CGMessage1(cg_e_goto_label_not_found,LabelSym.realname);
           end;
 
         { check if we don't mess with exception blocks }
-        if Assigned(labelnode) and
-           (exceptionblock<>labelnode.exceptionblock) then
+        if Assigned(LabelNode) and
+           (ExceptionBlock<>LabelNode.ExceptionBlock) then
           CGMessage(cg_e_goto_inout_of_exception_block);
       end;
 
 
-   function TGotoNode.dogetcopy : TNode;
+   function TGotoNode.DoGetCopy : TNode;
      var
-       p : TGotoNode;
+       lCopy : TGotoNode;
      begin
-        p:=TGotoNode(inherited dogetcopy);
-        p.exceptionblock:=exceptionblock;
+        lCopy:=TGotoNode(inherited DoGetCopy);
+        lCopy.ExceptionBlock:=ExceptionBlock;
 
         { generate labelnode if not done yet }
-        if not(Assigned(labelnode)) then
+        if not(Assigned(LabelNode)) then
           begin
-            if Assigned(labelsym) and Assigned(labelsym.code) then
-              labelnode:=TLabelNode(labelsym.code)
+            if Assigned(LabelSym) and Assigned(LabelSym.code) then
+              LabelNode:=TLabelNode(LabelSym.code)
           end;
 
-        p.labelsym:=labelsym;
+        lCopy.LabelSym:=LabelSym;
         { do not copy the label node here as we do not know if the label node is part of the tree or not,
           this will be fixed after the copying in node.setuplabelnode: if the labelnode has copiedto set,
           labelnode of the goto node is update }
-        if Assigned(labelnode) then
-          p.labelnode:=labelnode
+        if Assigned(LabelNode) then
+          lCopy.LabelNode:=LabelNode
         else
           begin
             { don't trigger IE when there was already an error, i.e. the
               label is not defined. See tw11763 (PFV) }
             if (ErrorCount=0) and
             { don't trigger IE if it's a global goto }
-               ((Assigned(labelsym.owner) and (CurrentProcInfo.procdef.ParaST.SymTableLevel=labelsym.owner.SymTableLevel)) or
-               not(Assigned(labelsym.owner))) then
+               ((Assigned(LabelSym.Owner) and (CurrentProcInfo.procdef.ParaST.SymTableLevel=LabelSym.Owner.SymTableLevel)) or
+               not(Assigned(LabelSym.Owner))) then
               InternalError(200610291);
           end;
-        result:=p;
+        Result:=lCopy;
      end;
 
 
-    function TGotoNode.docompare(p: TNode): boolean;
+    function TGotoNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare := false;
+        DoCompare := false;
       end;
 
 
@@ -2306,45 +2306,45 @@ implementation
                              TLABELNODE
 *****************************************************************************}
 
-    constructor TLabelNode.create(l:TNode;alabsym:TLabelSym);
+    constructor TLabelNode.Create(ALeft:TNode;ALabSym:TLabelSym);
       begin
-        inherited create(labeln);
-        exceptionblock:=Current_ExceptBlock;
-        labsym:=alabsym;
+        inherited Create(labeln);
+        ExceptionBlock:=Current_ExceptBlock;
+        LabSym:=ALabSym;
         { Register labelnode in labelsym }
-        labsym.code:=self;
+        LabSym.code:=self;
       end;
 
 
-    constructor TLabelNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TLabelNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        exceptionblock:=ppufile.GetByte;
+        inherited PPULoad(ANodeType,APPUFile);
+        ExceptionBlock:=APPUFile.GetByte;
       end;
 
 
     destructor TLabelNode.Destroy;
       begin
-        if Assigned(labsym) then
+        if Assigned(LabSym) then
           begin
-            if not Assigned(labsym.Owner) then
-              labsym.Free // Free labelsym if it has no owner
+            if not Assigned(LabSym.Owner) then
+              LabSym.Free // Free labelsym if it has no owner
             else
-              if labsym.code=pointer(self) then
+              if LabSym.code=Pointer(self) then
                 begin
                   { Remove reference in labelsym, this is to prevent
                     goto's to this label }
-                  labsym.code:=nil;
+                  LabSym.code:=nil;
                 end;
           end;
         inherited Destroy;
       end;
 
 
-    procedure TLabelNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TLabelNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutByte(exceptionblock);
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutByte(ExceptionBlock);
       end;
 
 
@@ -2354,48 +2354,48 @@ implementation
       end;
 
 
-    procedure TLabelNode.derefimpl;
+    procedure TLabelNode.DerefImpl;
       begin
-        inherited derefimpl;
+        inherited DerefImpl;
       end;
 
 
-    function TLabelNode.pass_typecheck:TNode;
+    function TLabelNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=VoidType;
+        Result:=nil;
+        ResultDef:=VoidType;
       end;
 
 
-    function TLabelNode.pass_1 : TNode;
+    function TLabelNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
 
-        if not (nf_internal in flags) then
-          include(CurrentProcInfo.flags,pi_has_label);
+        if not (nf_internal in Flags) then
+          include(CurrentProcInfo.Flags,pi_has_label);
 
         if (m_non_local_goto in CurrentSettings.ModeSwitches) and
             { the owner can be Nil for internal labels }
-            Assigned(labsym.owner) and
-          (CurrentProcInfo.procdef.ParaST.SymTableLevel<>labsym.owner.SymTableLevel) then
+            Assigned(LabSym.Owner) and
+          (CurrentProcInfo.procdef.ParaST.SymTableLevel<>LabSym.Owner.SymTableLevel) then
           CGMessage(cg_e_labels_cannot_defined_outside_declaration_scope)
       end;
 
 
-   function TLabelNode.dogetcopy : TNode;
+   function TLabelNode.DoGetCopy : TNode;
      begin
-       if not(Assigned(copiedto)) then
-         copiedto:=TLabelNode(inherited dogetcopy);
-       copiedto.exceptionblock:=exceptionblock;
+       if not(Assigned(CopiedTo)) then
+         CopiedTo:=TLabelNode(inherited DoGetCopy);
+       CopiedTo.ExceptionBlock:=ExceptionBlock;
 
-       result:=copiedto;
+       Result:=CopiedTo;
      end;
 
 
-    function TLabelNode.docompare(p: TNode): boolean;
+    function TLabelNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare := false;
+        DoCompare := false;
       end;
 
 
@@ -2403,156 +2403,156 @@ implementation
                             TRAISENODE
 *****************************************************************************}
 
-    constructor TRaiseNode.create(l,taddr,tframe:TNode);
+    constructor TRaiseNode.Create(ALeft,AAddress,AFrame:TNode);
       begin
-         inherited create(raisen,l,taddr,tframe);
+         inherited Create(raisen,ALeft,AAddress,AFrame);
       end;
 
 
-    function TRaiseNode.pass_typecheck:TNode;
+    function TRaiseNode.Pass_TypeCheck:TNode;
       begin
-         result:=nil;
-         resultdef:=VoidType;
-         if Assigned(left) then
+         Result:=nil;
+         ResultDef:=VoidType;
+         if Assigned(Left) then
            begin
              { first para must be a _class_ }
-             TypeCheckPass(left);
-             set_varstate(left,vs_read,[vsf_must_be_valid]);
+             TypeCheckPass(Left);
+             set_varstate(Left,vs_read,[vsf_must_be_valid]);
              if CodeGenError then
               exit;
-             if not Is_Class(left.resultdef) then
-               CGMessage1(type_e_class_type_expected,left.resultdef.TypeName);
+             if not Is_Class(Left.ResultDef) then
+               CGMessage1(type_e_class_type_expected,Left.ResultDef.TypeName);
              { insert needed typeconvs for addr,frame }
-             if Assigned(right) then
+             if Assigned(Right) then
                begin
                  { addr }
-                 TypeCheckPass(right);
-                 set_varstate(right,vs_read,[vsf_must_be_valid]);
-                 inserttypeconv(right,VoidCodePointerType);
+                 TypeCheckPass(Right);
+                 set_varstate(Right,vs_read,[vsf_must_be_valid]);
+                 InsertTypeConv(Right,VoidCodePointerType);
 
                  { frame }
-                 if Assigned(third) then
+                 if Assigned(Third) then
                   begin
-                    TypeCheckPass(third);
-                    set_varstate(third,vs_read,[vsf_must_be_valid]);
-                    inserttypeconv(third,VoidPointerType);
+                    TypeCheckPass(Third);
+                    set_varstate(Third,vs_read,[vsf_must_be_valid]);
+                    InsertTypeConv(Third,VoidPointerType);
                   end;
                end;
            end;
       end;
 
 
-    function TRaiseNode.pass_1 : TNode;
+    function TRaiseNode.Pass_1 : TNode;
       var
-        statements : TStatementNode;
-        current_addr : TLabelNode;
-        raisenode : TCallNode;
+        lStatements : TStatementNode;
+        lCurrentAddress : TLabelNode;
+        lRaiseNode : TCallNode;
       begin
-        result:=internalstatements(statements);
+        Result:=InternalStatements(lStatements);
 
-        if Assigned(left) then
+        if Assigned(Left) then
           begin
             { first para must be a class }
-            FirstPass(left);
+            FirstPass(Left);
             { insert needed typeconvs for addr,frame }
-            if Assigned(right) then
+            if Assigned(Right) then
               begin
                 { addr }
-                FirstPass(right);
+                FirstPass(Right);
                 { frame }
-                if Assigned(third) then
-                  FirstPass(third)
+                if Assigned(Third) then
+                  FirstPass(Third)
                 else
-                  third:=CPointerConstNode.Create(0,VoidPointerType);
+                  Third:=CPointerConstNode.Create(0,VoidPointerType);
               end
             else
               begin
-                third:=CInlineNode.create(in_get_frame,false,nil);
-                current_addr:=CLabelNode.create(CNothingNode.create,CLabelSym.create('$raiseaddr'));
-                include(current_addr.flags,nf_internal);
-                addstatement(statements,current_addr);
-                right:=CAddrNode.create(CLoadNode.create(current_addr.labsym,current_addr.labsym.owner));
+                Third:=CInlineNode.Create(in_get_frame,false,nil);
+                lCurrentAddress:=CLabelNode.Create(CNothingNode.Create,CLabelSym.Create('$raiseaddr'));
+                include(lCurrentAddress.Flags,nf_internal);
+                AddStatement(lStatements,lCurrentAddress);
+                Right:=CAddrNode.Create(CLoadNode.Create(lCurrentAddress.LabSym,lCurrentAddress.LabSym.Owner));
 
                 { raise address off by one so we are for sure inside the action area for the raise }
-                if tf_use_psabieh in TargetInfo.flags then
-                  right:=CAddNode.Create_Internal(addn,right,COrdConstNode.create(1,SizeSIntType,false));
+                if tf_use_psabieh in TargetInfo.Flags then
+                  Right:=CAddNode.Create_Internal(addn,Right,COrdConstNode.Create(1,SizeSIntType,false));
               end;
 
-            raisenode:=CCallNode.createintern('fpc_raiseexception',
-              CCallParaNode.create(third,
-              CCallParaNode.create(right,
-              CCallParaNode.create(left,nil)))
+            lRaiseNode:=CCallNode.CreateIntern('fpc_raiseexception',
+              CCallParaNode.Create(Third,
+              CCallParaNode.Create(Right,
+              CCallParaNode.Create(Left,nil)))
               );
-            include(raisenode.callnodeflags,cnf_call_never_returns);
-            addstatement(statements,raisenode);
+            include(lRaiseNode.CallNodeFlags,cnf_call_never_returns);
+            AddStatement(lStatements,lRaiseNode);
           end
         else
           begin
-            addstatement(statements,CCallNode.createintern('fpc_popaddrstack',nil));
-            raisenode:=CCallNode.createintern('fpc_reraise',nil);
-            include(raisenode.callnodeflags,cnf_call_never_returns);
-            addstatement(statements,raisenode);
+            AddStatement(lStatements,CCallNode.CreateIntern('fpc_popaddrstack',nil));
+            lRaiseNode:=CCallNode.CreateIntern('fpc_reraise',nil);
+            include(lRaiseNode.CallNodeFlags,cnf_call_never_returns);
+            AddStatement(lStatements,lRaiseNode);
           end;
-        left:=nil;
-        right:=nil;
-        third:=nil;
+        Left:=nil;
+        Right:=nil;
+        Third:=nil;
       end;
 
 {*****************************************************************************
                              TTRYEXCEPTNODE
 *****************************************************************************}
 
-    constructor TTryExceptNode.create(l,r,_t1 : TNode);
+    constructor TTryExceptNode.Create(ALeft,ARight,AT1 : TNode);
       begin
-         inherited create(tryexceptn,l,r,_t1,nil);
+         inherited Create(tryexceptn,ALeft,ARight,AT1,nil);
       end;
 
 
-    function TTryExceptNode.pass_typecheck:TNode;
+    function TTryExceptNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        TypeCheckPass(left);
+        Result:=nil;
+        TypeCheckPass(Left);
         { on statements }
-        if Assigned(right) then
-          TypeCheckPass(right);
+        if Assigned(Right) then
+          TypeCheckPass(Right);
         { else block }
-        if Assigned(t1) then
-          TypeCheckPass(t1);
-        resultdef:=VoidType;
+        if Assigned(T1) then
+          TypeCheckPass(T1);
+        ResultDef:=VoidType;
       end;
 
 
-    function TTryExceptNode.pass_1 : TNode;
+    function TTryExceptNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
-        FirstPass(left);
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
+        FirstPass(Left);
         { on statements }
-        if Assigned(right) then
-          FirstPass(right);
+        if Assigned(Right) then
+          FirstPass(Right);
         { else block }
-        if Assigned(t1) then
-          FirstPass(t1);
+        if Assigned(T1) then
+          FirstPass(T1);
 
-        include(CurrentProcInfo.flags,pi_do_call);
-        include(CurrentProcInfo.flags,pi_uses_exceptions);
+        include(CurrentProcInfo.Flags,pi_do_call);
+        include(CurrentProcInfo.Flags,pi_uses_exceptions);
 
-        adjust_estimated_stack_size;
+        Adjust_Estimated_Stack_Size;
       end;
 
 
-    function TTryExceptNode.simplify(forinline: boolean): TNode;
+    function TTryExceptNode.Simplify(AForInline: Boolean): TNode;
       begin
-        result:=nil;
+        Result:=nil;
         { empty try -> can never raise exception -> do nothing }
-        if has_no_code(left) then
-          result:=CNothingNode.create;
+        if Has_No_Code(Left) then
+          Result:=CNothingNode.Create;
       end;
 
 
-    procedure TTryExceptNode.adjust_estimated_stack_size;
+    procedure TTryExceptNode.Adjust_Estimated_Stack_Size;
       begin
-        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.Size*2);
+        inc(CurrentProcInfo.EstimatedTempSize,Rec_Jmp_Buf.Size*2);
       end;
 
 
@@ -2560,96 +2560,96 @@ implementation
                            TTRYFINALLYNODE
 *****************************************************************************}
 
-    constructor TTryFinallyNode.create(l,r:TNode);
+    constructor TTryFinallyNode.Create(ALeft,ARight:TNode);
       begin
-        inherited create(tryfinallyn,l,r,nil);
-        third:=nil;
-        implicitframe:=false;
+        inherited Create(tryfinallyn,ALeft,ARight,nil);
+        Third:=nil;
+        ImplicitFrame:=false;
       end;
 
 
-    constructor TTryFinallyNode.create_implicit(l,r:TNode);
+    constructor TTryFinallyNode.Create_Implicit(ALeft,ARight:TNode);
       begin
-        inherited create(tryfinallyn,l,r,nil);
-        third:=nil;
-        implicitframe:=true;
+        inherited Create(tryfinallyn,ALeft,ARight,nil);
+        Third:=nil;
+        ImplicitFrame:=true;
       end;
 
 
-    function TTryFinallyNode.pass_typecheck:TNode;
+    function TTryFinallyNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=VoidType;
+        Result:=nil;
+        ResultDef:=VoidType;
 
-        TypeCheckPass(left);
+        TypeCheckPass(Left);
         // "try block" is "used"? (JM)
-        set_varstate(left,vs_readwritten,[vsf_must_be_valid]);
+        set_varstate(Left,vs_readwritten,[vsf_must_be_valid]);
 
-        TypeCheckPass(right);
+        TypeCheckPass(Right);
         // "except block" is "used"? (JM)
-        set_varstate(right,vs_readwritten,[vsf_must_be_valid]);
+        set_varstate(Right,vs_readwritten,[vsf_must_be_valid]);
 
-        if Assigned(third) then
+        if Assigned(Third) then
           begin
-            TypeCheckPass(third);
-            set_varstate(third,vs_readwritten,[vsf_must_be_valid]);
+            TypeCheckPass(Third);
+            set_varstate(Third,vs_readwritten,[vsf_must_be_valid]);
           end;
       end;
 
 
-    function TTryFinallyNode.pass_1 : TNode;
+    function TTryFinallyNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_VOID;
-        FirstPass(left);
+        Result:=nil;
+        ExpectLoc:=LOC_VOID;
+        FirstPass(Left);
 
-        FirstPass(right);
-        if Assigned(third) then
-          FirstPass(third);
+        FirstPass(Right);
+        if Assigned(Third) then
+          FirstPass(Third);
 
-        include(CurrentProcInfo.flags,pi_do_call);
+        include(CurrentProcInfo.Flags,pi_do_call);
 
         { pi_uses_exceptions is an information for the optimizer and it
           is only interested in exceptions if they appear inside the body,
           so ignore implicit frames when setting the flag }
-        if not(implicitframe) then
-          include(CurrentProcInfo.flags,pi_uses_exceptions);
+        if not(ImplicitFrame) then
+          include(CurrentProcInfo.Flags,pi_uses_exceptions);
 
-        adjust_estimated_stack_size;
+        Adjust_Estimated_Stack_Size;
       end;
 
 
-   function TTryFinallyNode.simplify(forinline : boolean): TNode;
+   function TTryFinallyNode.Simplify(AForInline : Boolean): TNode;
      begin
-       result:=nil;
+       Result:=nil;
        { if the try contains no code, we can kill
          the try and except and return only the
          finally part }
-       if has_no_code(left) then
+       if Has_No_Code(Left) then
          begin
-           result:=right;
-           right:=nil;
+           Result:=Right;
+           Right:=nil;
          end
        { if the finally block contains no code, we can kill
          it and just return the try part }
-       else if has_no_code(right) and not(Assigned(third)) and not(implicitframe) then
+       else if Has_No_Code(Right) and not(Assigned(Third)) and not(ImplicitFrame) then
          begin
-           result:=left;
-           left:=nil;
+           Result:=Left;
+           Left:=nil;
          end;
      end;
 
 
-    function TTryFinallyNode.dogetcopy: TNode;
+    function TTryFinallyNode.DoGetCopy: TNode;
        begin
-         result:=inherited dogetcopy;
-         TTryFinallyNode(result).implicitframe:=implicitframe;
+         Result:=inherited DoGetCopy;
+         TTryFinallyNode(Result).ImplicitFrame:=ImplicitFrame;
        end;
 
 
-    procedure TTryFinallyNode.adjust_estimated_stack_size;
+    procedure TTryFinallyNode.Adjust_Estimated_Stack_Size;
       begin
-        inc(CurrentProcInfo.estimatedtempsize,Rec_Jmp_Buf.Size);
+        inc(CurrentProcInfo.EstimatedTempSize,Rec_Jmp_Buf.Size);
       end;
 
 
@@ -2657,75 +2657,75 @@ implementation
                                 TONNODE
 *****************************************************************************}
 
-    constructor TOnNode.create(l,r:TNode);
+    constructor TOnNode.Create(ALeft,ARight:TNode);
       begin
-         inherited create(onn,l,r);
-         excepTSymtable:=nil;
-         excepttype:=nil;
+         inherited Create(onn,ALeft,ARight);
+         ExceptSymTable:=nil;
+         ExceptType:=nil;
       end;
 
 
     destructor TOnNode.Destroy;
       begin
         { copied nodes don't need to release the symtable }
-        if Assigned(excepTSymtable) then
-         excepTSymtable.free;
-         excepTSymtable := nil;
+        if Assigned(ExceptSymTable) then
+         ExceptSymTable.free;
+         ExceptSymTable := nil;
         inherited Destroy;
       end;
 
 
-    constructor TOnNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TOnNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        excepTSymtable:=nil;
-        excepttype:=nil;
+        inherited PPULoad(ANodeType,APPUFile);
+        ExceptSymTable:=nil;
+        ExceptType:=nil;
       end;
 
 
-    function TOnNode.dogetcopy : TNode;
+    function TOnNode.DoGetCopy : TNode;
       var
-         n : TOnNode;
+         lCopy : TOnNode;
       begin
-         n:=TOnNode(inherited dogetcopy);
-         if Assigned(exceptsymtable) then
-           n.exceptsymtable:=exceptsymtable.GetCopy
+         lCopy:=TOnNode(inherited DoGetCopy);
+         if Assigned(ExceptSymTable) then
+           lCopy.ExceptSymTable:=ExceptSymTable.GetCopy
          else
-           n.exceptsymtable:=nil;
-         n.excepttype:=excepttype;
-         result:=n;
+           lCopy.ExceptSymTable:=nil;
+         lCopy.ExceptType:=ExceptType;
+         Result:=lCopy;
       end;
 
 
-    function TOnNode.pass_typecheck:TNode;
+    function TOnNode.Pass_TypeCheck:TNode;
       begin
-         result:=nil;
-         resultdef:=VoidType;
-         if not Is_Class(excepttype) then
-           CGMessage1(type_e_class_type_expected,excepttype.TypeName);
-         if Assigned(left) then
-           TypeCheckPass(left);
-         if Assigned(right) then
-           TypeCheckPass(right);
+         Result:=nil;
+         ResultDef:=VoidType;
+         if not Is_Class(ExceptType) then
+           CGMessage1(type_e_class_type_expected,ExceptType.TypeName);
+         if Assigned(Left) then
+           TypeCheckPass(Left);
+         if Assigned(Right) then
+           TypeCheckPass(Right);
       end;
 
 
-    function TOnNode.pass_1 : TNode;
+    function TOnNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         include(CurrentProcInfo.flags,pi_do_call);
-         expectloc:=LOC_VOID;
-         if Assigned(left) then
-           FirstPass(left);
+         Result:=nil;
+         include(CurrentProcInfo.Flags,pi_do_call);
+         ExpectLoc:=LOC_VOID;
+         if Assigned(Left) then
+           FirstPass(Left);
 
-         if Assigned(right) then
-           FirstPass(right);
+         if Assigned(Right) then
+           FirstPass(Right);
       end;
 
 
-    function TOnNode.docompare(p: TNode): boolean;
+    function TOnNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare := false;
+        DoCompare := false;
       end;
 
 end.

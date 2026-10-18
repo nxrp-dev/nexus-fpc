@@ -35,36 +35,36 @@ interface
 
   type
     TInitFinalEntry = record
-      initfunc : TSymStr;
-      finifunc : TSymStr;
-      initpd : TProcDef;
-      finipd : TProcDef;
-      module : TModule;
+      InitFunc : TSymStr;
+      FiniFunc : TSymStr;
+      InitPD : TProcDef;
+      FiniPD : TProcDef;
+      Module : TModule;
     end;
     PInitFinalEntry = ^TInitFinalEntry;
 
     TNodeUtils = class
-      class function call_fail_node:TNode; virtual;
-      class function initialize_data_node(p:TNode; force: boolean):TNode; virtual;
-      class function finalize_data_node(p:TNode):TNode; virtual;
+      class function Call_Fail_Node:TNode; virtual;
+      class function Initialize_Data_Node(ANode:TNode; AForce: Boolean):TNode; virtual;
+      class function Finalize_Data_Node(ANode:TNode):TNode; virtual;
      strict protected
       type
         TStructIniFiniPOType = potype_class_constructor..potype_class_destructor;
-      class procedure sym_maybe_initialize(p: TObject; arg: pointer);
+      class procedure Sym_Maybe_Initialize(AObject: TObject; AArg: Pointer);
       { generates the code for finalisation of local variables }
-      class procedure local_varsyms_finalize(p:TObject;arg:pointer);
+      class procedure Local_VarSyms_Finalize(AObject:TObject;AArg:Pointer);
       { generates the code for finalization of static symtable and
         all local (static) typed consts }
-      class procedure static_syms_finalize(p: TObject; arg: pointer);
-      class procedure sym_maybe_finalize(var stat: TStatementNode; sym: TSym);
-      class procedure append_struct_initfinis(u: TModule; initfini: TStructIniFiniPOType; var stat: TStatementNode); virtual;
+      class procedure Static_Syms_Finalize(AObject: TObject; AArg: Pointer);
+      class procedure Sym_Maybe_Finalize(var AStatement: TStatementNode; ASym: TSym);
+      class procedure Append_Struct_InitFinis(AModule: TModule; AInitFini: TStructIniFiniPOType; var AStatement: TStatementNode); virtual;
      public
-      class procedure procdef_block_add_implicit_initialize_nodes(pd: TProcDef; var stat: TStatementNode);
-      class procedure procdef_block_add_implicit_finalize_nodes(pd: TProcDef; var stat: TStatementNode);
+      class procedure ProcDef_Block_Add_Implicit_Initialize_Nodes(AProcDef: TProcDef; var AStatement: TStatementNode);
+      class procedure ProcDef_Block_Add_Implicit_Finalize_Nodes(AProcDef: TProcDef; var AStatement: TStatementNode);
 
-      class function force_init: boolean; virtual;
+      class function Force_Init: Boolean; virtual;
       { idem for finalization }
-      class function force_final: boolean; virtual;
+      class function Force_Final: Boolean; virtual;
 
       { if the funcretsym was moved to the parentfpstruct, use this method to
         move its value back back into the funcretsym before the function exit, as
@@ -72,54 +72,54 @@ interface
         the value to be returned; replacing it with an absolutevarsym that
         redirects to the field in the parentfpstruct doesn't work, as the code
         generator cannot deal with such symbols }
-       class procedure load_parentfpstruct_nested_funcret(ressym: TSym; resdef: TDef; var stat: TStatementNode);
+       class procedure Load_ParentFPStruct_Nested_FuncRet(AResultSym: TSym; AResultDef: TDef; var AStatement: TStatementNode);
       { called after parsing a routine with the code of the entire routine
         as argument; can be used to modify the node tree. By default handles
         insertion of code for systems that perform the typed constant
         initialisation via the node tree }
-      class function wrap_proc_body(pd: TProcDef; n: TNode): TNode; virtual;
+      class function Wrap_Proc_Body(AProcDef: TProcDef; ANode: TNode): TNode; virtual;
 
       { trashes a paravarsym or localvarsym if possible (not a managed type,
         "out" in case of parameter, ...) }
-      class procedure maybe_trash_variable(var stat: TStatementNode; p: TAbstractNormalVarSym; trashn: TNode); virtual;
+      class procedure Maybe_Trash_Variable(var AStatement: TStatementNode; AVarSym: TAbstractNormalVarSym; ATrashNode: TNode); virtual;
 
-      class function  check_insert_trashing(pd: TProcDef): boolean; virtual;
+      class function  Check_Insert_Trashing(AProcDef: TProcDef): Boolean; virtual;
      strict protected
       { called from wrap_proc_body to insert the trashing for the wrapped
         routine's local variables and parameters }
-      class function  maybe_insert_trashing(pd: TProcDef; n: TNode): TNode;
+      class function  Maybe_Insert_Trashing(AProcDef: TProcDef; ANode: TNode): TNode;
       { callback called for every local variable and parameter by
         maybe_insert_trashing(), calls through to maybe_trash_variable() }
-      class procedure maybe_trash_variable_callback(p: TObject; statn: pointer);
+      class procedure Maybe_Trash_Variable_Callback(AObject: TObject; AStatementPtr: Pointer);
       { returns whether a particular sym can be trashed. If not,
         maybe_trash_variable won't do anything }
-      class function  trashable_sym(p: TSym): boolean; virtual;
+      class function  Trashable_Sym(ASym: TSym): Boolean; virtual;
       { trashing for 1/2/3/4/8-byte sized variables }
-      class procedure trash_small(var stat: TStatementNode; trashn: TNode; trashvaln: TNode); virtual;
+      class procedure Trash_Small(var AStatement: TStatementNode; ATrashNode: TNode; ATrashValueNode: TNode); virtual;
       { trashing for differently sized variables that those handled by
         trash_small() }
-      class procedure trash_large(var stat: TStatementNode; trashn, sizen: TNode; trashintval: int64); virtual;
+      class procedure Trash_Large(var AStatement: TStatementNode; ATrashNode, ASizeNode: TNode; ATrashIntValue: Int64); virtual;
       { insert a single bss sym, called by insert bssdata (factored out
         non-common part for llvm) }
-      class procedure insertbsssym(list: TAsmList; sym: TStaticVarSym; size: asizeint; varalign: shortint; _typ: TAsmsymtype); virtual;
+      class procedure InsertBSSSym(AList: TAsmList; ASym: TStaticVarSym; ASize: ASizeInt; AVarAlign: ShortInt; AType: TAsmsymtype); virtual;
 
       { initialization of iso styled program parameters }
-      class procedure initialize_filerecs(p : TObject; statn : pointer);
+      class procedure Initialize_FileRecs(AObject : TObject; AStatementPtr : Pointer);
       { finalization of iso styled program parameters }
-      class procedure finalize_filerecs(p : TObject; statn : pointer);
+      class procedure Finalize_FileRecs(AObject : TObject; AStatementPtr : Pointer);
      public
-      class procedure insertbssdata(sym : TStaticVarSym); virtual;
+      class procedure InsertBSSData(ASym : TStaticVarSym); virtual;
 
-      class function create_main_procdef(const name: string; potype:TProcTypeOption; ps: TProcSym):TDef; virtual;
-      class procedure InsertInitFinalTable(main : TModule);
+      class function Create_Main_ProcDef(const AName: string; AProcType:TProcTypeOption; AProcSym: TProcSym):TDef; virtual;
+      class procedure InsertInitFinalTable(AMainModule : TModule);
      protected
-      class procedure InsertRuntimeInits(const prefix:string;list:TLinkedList;unitflag:TModuleFlag); virtual;
-      class procedure InsertRuntimeInitsTablesTable(const prefix,tablename:string;unitflag:TModuleFlag); virtual;
+      class procedure InsertRuntimeInits(const APrefix:string;AList:TLinkedList;AUnitFlag:TModuleFlag); virtual;
+      class procedure InsertRuntimeInitsTablesTable(const APrefix,ATableName:string;AUnitFlag:TModuleFlag); virtual;
 
-      class procedure insert_init_final_table(main: TModule; entries:TFPList); virtual;
+      class procedure Insert_Init_Final_Table(AMainModule: TModule; AEntries:TFPList); virtual;
 
-      class function get_init_final_list(main : TModule): TFPList;
-      class procedure release_init_final_list(list:TFPList);
+      class function Get_Init_Final_List(AMainModule : TModule): TFPList;
+      class procedure Release_Init_Final_List(AList:TFPList);
      public
       class procedure InsertThreadvarTablesTable; virtual;
       class procedure InsertThreadvars; virtual;
@@ -128,12 +128,12 @@ interface
       class procedure InsertResStrInits; virtual;
       class procedure InsertResStrTablesTable; virtual;
       class procedure InsertResourceTablesTable; virtual;
-      class procedure InsertResourceInfo(ResourcesUsed : boolean); virtual;
+      class procedure InsertResourceInfo(AResourcesUsed : Boolean); virtual;
 
       class procedure InsertMemorySizes; virtual;
 
       { Call this to check if init code is required }
-      class function has_init_list: boolean; static;
+      class function Has_Init_List: Boolean; static;
 
       { called right before an object is assembled, can be used to insert
         global information into the assembler list (used by LLVM to insert type
@@ -143,13 +143,13 @@ interface
       { register that asm symbol sym with type def has to be considered as "used" even if not
         references to it can be found. If compileronly, this is only for the compiler, otherwise
         also for the linker }
-      class procedure RegisterUsedAsmSym(sym: TAsmSymbol; def: TDef; compileronly: boolean); virtual;
+      class procedure RegisterUsedAsmSym(ASym: TAsmSymbol; ADef: TDef; ACompilerOnly: Boolean); virtual;
 
-      class procedure RegisterModuleInitFunction(pd: TProcDef); virtual;
-      class procedure RegisterModuleFiniFunction(pd: TProcDef); virtual;
+      class procedure RegisterModuleInitFunction(AProcDef: TProcDef); virtual;
+      class procedure RegisterModuleFiniFunction(AProcDef: TProcDef); virtual;
 
      strict protected
-      class procedure add_main_procdef_paras(pd: TDef); virtual;
+      class procedure Add_Main_ProcDef_Paras(AProcDef: TDef); virtual;
     end;
     TNodeUtilsClass = class of TNodeUtils;
 
@@ -166,34 +166,34 @@ implementation
       SymBase,SymTable,defutil,
       nadd,ncal,ncnv,ncon,nflw,ninl,nld,nmem,nutils,
       PPU,
-      pass_1,
+      Pass_1,
       export;
 
-  class function TNodeUtils.call_fail_node:TNode;
+  class function TNodeUtils.Call_Fail_Node:TNode;
     var
-      para : TCallParaNode;
-      newstatement : TStatementNode;
-      srsym : TSym;
+      lPara : TCallParaNode;
+      lNewStatement : TStatementNode;
+      lSymbol : TSym;
     begin
-      result:=internalstatements(newstatement);
+      Result:=InternalStatements(lNewStatement);
 
       { call fail helper and exit normal }
       if Is_Class(CurrentStructDef) then
         begin
-          srsym:=Search_Struct_Member(CurrentStructDef,'FREEINSTANCE');
-          if Assigned(srsym) and
-             (srsym.typ=ProcSym) then
+          lSymbol:=Search_Struct_Member(CurrentStructDef,'FREEINSTANCE');
+          if Assigned(lSymbol) and
+             (lSymbol.typ=ProcSym) then
             begin
               { if self<>0 and vmt<>0 then freeinstance }
-              addstatement(newstatement,CIfNode.create(
-                  CAddNode.create(andn,
-                      CAddNode.create(unequaln,
-                          load_self_pointer_node,
-                          CNilNode.create),
-                      CAddNode.create(unequaln,
-                          load_vmt_pointer_node,
-                          CNilNode.create)),
-                  CCallNode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[],nil),
+              AddStatement(lNewStatement,CIfNode.Create(
+                  CAddNode.Create(andn,
+                      CAddNode.Create(unequaln,
+                          Load_Self_Pointer_Node,
+                          CNilNode.Create),
+                      CAddNode.Create(unequaln,
+                          Load_VMT_Pointer_Node,
+                          CNilNode.Create)),
+                  CCallNode.Create(nil,TProcSym(lSymbol),lSymbol.Owner,Load_Self_Node,[],nil),
                   nil));
             end
           else
@@ -205,32 +205,32 @@ implementation
             { parameter 3 : vmt_offset }
             { parameter 2 : pointer to vmt }
             { parameter 1 : self pointer }
-            para:=CCallParaNode.create(
-                      COrdConstNode.create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
-                  CCallParaNode.create(
+            lPara:=CCallParaNode.Create(
+                      COrdConstNode.Create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
+                  CCallParaNode.Create(
                       CTypeConvNode.Create_Internal(
-                          load_vmt_pointer_node,
+                          Load_VMT_Pointer_Node,
                           VoidPointerType),
-                  CCallParaNode.create(
+                  CCallParaNode.Create(
                       CTypeConvNode.Create_Internal(
-                          load_self_pointer_node,
+                          Load_Self_Pointer_Node,
                           VoidPointerType),
                   nil)));
-            addstatement(newstatement,
-                CCallNode.createintern('fpc_help_fail',para));
+            AddStatement(lNewStatement,
+                CCallNode.CreateIntern('fpc_help_fail',lPara));
           end
       else
         InternalError(200305132);
       { self:=nil }
-      addstatement(newstatement,CAssignmentNode.create(
-          load_self_pointer_node,
-          CNilNode.create));
+      AddStatement(lNewStatement,CAssignmentNode.Create(
+          Load_Self_Pointer_Node,
+          CNilNode.Create));
       { exit }
-      addstatement(newstatement,CExitNode.create(nil));
+      AddStatement(lNewStatement,CExitNode.Create(nil));
     end;
 
 
-  class function TNodeUtils.initialize_data_node(p:TNode; force: boolean):TNode;
+  class function TNodeUtils.Initialize_Data_Node(ANode:TNode; AForce: Boolean):TNode;
     begin
       { prevent initialisation of hidden syms that were moved to
         parentfpstructs: the original symbol isn't used anymore, the version
@@ -239,187 +239,187 @@ implementation
         field in the parentfpstruct (so we'll initialise it twice) }
 
         begin
-          if not Assigned(p.resultdef) then
-            TypeCheckPass(p);
-          if Is_AnsiString(p.resultdef) or
-             Is_Wide_Or_Unicode_String(p.resultdef) or
-             Is_InterfaceCOM_Or_DispInterface(p.resultdef) or
-             Is_Dynamic_Array(p.resultdef) then
+          if not Assigned(ANode.ResultDef) then
+            TypeCheckPass(ANode);
+          if Is_AnsiString(ANode.ResultDef) or
+             Is_Wide_Or_Unicode_String(ANode.ResultDef) or
+             Is_InterfaceCOM_Or_DispInterface(ANode.ResultDef) or
+             Is_Dynamic_Array(ANode.ResultDef) then
             begin
-              result:=CAssignmentNode.create(
-                 CTypeConvNode.Create_Internal(p,VoidPointerType),
-                 CNilNode.create
+              Result:=CAssignmentNode.Create(
+                 CTypeConvNode.Create_Internal(ANode,VoidPointerType),
+                 CNilNode.Create
                  );
             end
-          else if (p.resultdef.typ=variantdef) then
+          else if (ANode.ResultDef.typ=variantdef) then
             begin
-              result:=CCallNode.createintern('fpc_variant_init',
-                CCallParaNode.create(
-                  CTypeConvNode.Create_Internal(p,Search_System_Type('TVARDATA').typedef),
+              Result:=CCallNode.CreateIntern('fpc_variant_init',
+                CCallParaNode.Create(
+                  CTypeConvNode.Create_Internal(ANode,Search_System_Type('TVARDATA').TypeDef),
                 nil));
             end
           else
             begin
-              result:=CCallNode.createintern('fpc_initialize',
-                    CCallParaNode.create(
+              Result:=CCallNode.CreateIntern('fpc_initialize',
+                    CCallParaNode.Create(
                         CAddrNode.Create_Internal(
-                            CRTTINode.create(
-                                TStoredDef(p.resultdef),initrtti,rdt_normal)),
-                    CCallParaNode.create(
-                        CAddrNode.Create_Internal(p),
+                            CRTTINode.Create(
+                                TStoredDef(ANode.ResultDef),initrtti,rdt_normal)),
+                    CCallParaNode.Create(
+                        CAddrNode.Create_Internal(ANode),
                     nil)));
             end;
         end;
     end;
 
 
-  class function TNodeUtils.finalize_data_node(p:TNode):TNode;
+  class function TNodeUtils.Finalize_Data_Node(ANode:TNode):TNode;
     var
-      hs : string;
+      lHelperName : string;
     begin
       { see comment in initialize_data_node above }
 
         begin
-          if not Assigned(p.resultdef) then
-            TypeCheckPass(p);
+          if not Assigned(ANode.ResultDef) then
+            TypeCheckPass(ANode);
           { 'decr_ref' suffix is somewhat misleading, all these helpers
             set the passed pointer to nil now }
-          if Is_AnsiString(p.resultdef) then
-            hs:='fpc_ansistr_decr_ref'
-          else if Is_WideString(p.resultdef) then
-            hs:='fpc_widestr_decr_ref'
-          else if Is_UnicodeString(p.resultdef) then
-            hs:='fpc_unicodestr_decr_ref'
-          else if Is_InterfaceCOM_Or_DispInterface(p.resultdef) then
-            hs:='fpc_intf_decr_ref'
+          if Is_AnsiString(ANode.ResultDef) then
+            lHelperName:='fpc_ansistr_decr_ref'
+          else if Is_WideString(ANode.ResultDef) then
+            lHelperName:='fpc_widestr_decr_ref'
+          else if Is_UnicodeString(ANode.ResultDef) then
+            lHelperName:='fpc_unicodestr_decr_ref'
+          else if Is_InterfaceCOM_Or_DispInterface(ANode.ResultDef) then
+            lHelperName:='fpc_intf_decr_ref'
           else
-            hs:='';
-          if hs<>'' then
-            result:=CCallNode.createintern(hs,
-               CCallParaNode.create(
-                 CTypeConvNode.Create_Internal(p,VoidPointerType),
+            lHelperName:='';
+          if lHelperName<>'' then
+            Result:=CCallNode.CreateIntern(lHelperName,
+               CCallParaNode.Create(
+                 CTypeConvNode.Create_Internal(ANode,VoidPointerType),
                  nil))
-          else if p.resultdef.typ=variantdef then
+          else if ANode.ResultDef.typ=variantdef then
             begin
-              result:=CCallNode.createintern('fpc_variant_clear',
-                CCallParaNode.create(
-                  CTypeConvNode.Create_Internal(p,Search_System_Type('TVARDATA').typedef),
+              Result:=CCallNode.CreateIntern('fpc_variant_clear',
+                CCallParaNode.Create(
+                  CTypeConvNode.Create_Internal(ANode,Search_System_Type('TVARDATA').TypeDef),
                 nil));
             end
           else
-            result:=CCallNode.createintern('fpc_finalize',
-                  CCallParaNode.create(
+            Result:=CCallNode.CreateIntern('fpc_finalize',
+                  CCallParaNode.Create(
                       CAddrNode.Create_Internal(
-                          CRTTINode.create(
-                              TStoredDef(p.resultdef),initrtti,rdt_normal)),
-                  CCallParaNode.create(
-                      CAddrNode.Create_Internal(p),
+                          CRTTINode.Create(
+                              TStoredDef(ANode.ResultDef),initrtti,rdt_normal)),
+                  CCallParaNode.Create(
+                      CAddrNode.Create_Internal(ANode),
                   nil)));
         end;
     end;
 
 
-  class procedure TNodeUtils.sym_maybe_initialize(p: TObject; arg: pointer);
+  class procedure TNodeUtils.Sym_Maybe_Initialize(AObject: TObject; AArg: Pointer);
     var
-      hp : TNode;
+      lNode : TNode;
     begin
-      if ((TSym(p).typ = localvarsym) or
+      if ((TSym(AObject).typ = localvarsym) or
           { check staticvarsym for record management operators and for objects
             which might contain record with management operators }
-          ((TSym(p).typ = staticvarsym) and
+          ((TSym(AObject).typ = staticvarsym) and
            (
-             Is_Record(TAbstractVarSym(p).vardef) or
-             Is_Object(TAbstractVarSym(p).vardef)
+             Is_Record(TAbstractVarSym(AObject).vardef) or
+             Is_Object(TAbstractVarSym(AObject).vardef)
            )
           )
          ) and
          { local (procedure or unit) variables only need initialization if
            they are used }
-         ((TAbstractVarSym(p).refs>0) or
+         ((TAbstractVarSym(AObject).refs>0) or
           { managed return symbols must be inited }
-          ((TSym(p).typ=localvarsym) and (vo_is_funcret in TLocalVarSym(p).VarOptions)) or
+          ((TSym(AObject).typ=localvarsym) and (vo_is_funcret in TLocalVarSym(AObject).VarOptions)) or
           { public managed records with Initialize operator need to be initialized
             even if they aren't referenced in *this* unit }
           (
-            (TSym(p).owner.SymTableType=GlobalSymTable) and
-            Is_Record(TAbstractVarSym(p).vardef) and
-            (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(p).vardef).SymTable).ManagementOperators)
+            (TSym(AObject).Owner.SymTableType=GlobalSymTable) and
+            Is_Record(TAbstractVarSym(AObject).vardef) and
+            (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(AObject).vardef).SymTable).ManagementOperators)
           )
          ) and
-         not(vo_is_typed_const in TAbstractVarSym(p).VarOptions) and
-         not(vo_is_external in TAbstractVarSym(p).VarOptions) and
+         not(vo_is_typed_const in TAbstractVarSym(AObject).VarOptions) and
+         not(vo_is_external in TAbstractVarSym(AObject).VarOptions) and
          (
-           not (vo_is_default_var in TAbstractVarSym(p).VarOptions) or
-           (TAbstractVarSym(p).VarSpez<>vs_const)
+           not (vo_is_default_var in TAbstractVarSym(AObject).VarOptions) or
+           (TAbstractVarSym(AObject).VarSpez<>vs_const)
          ) and
-         (Is_Managed_Type(TAbstractVarSym(p).vardef) or
-          ((m_iso in CurrentSettings.ModeSwitches) and (TAbstractVarSym(p).vardef.typ=filedef))
+         (Is_Managed_Type(TAbstractVarSym(AObject).vardef) or
+          ((m_iso in CurrentSettings.ModeSwitches) and (TAbstractVarSym(AObject).vardef.typ=filedef))
          ) then
         begin
-          hp:=CLoadNode.create(TSym(p),TSym(p).owner);
+          lNode:=CLoadNode.Create(TSym(AObject),TSym(AObject).Owner);
           { ensure that a function reference is not converted to a call }
-          include(hp.flags,nf_load_procvar);
-          addstatement(TStatementNode(arg^),initialize_data_node(hp,false));
+          include(lNode.Flags,nf_load_procvar);
+          AddStatement(TStatementNode(AArg^),Initialize_Data_Node(lNode,false));
         end;
     end;
 
 
-  class procedure TNodeUtils.local_varsyms_finalize(p: TObject; arg: pointer);
+  class procedure TNodeUtils.Local_VarSyms_Finalize(AObject: TObject; AArg: Pointer);
     begin
-      if (TSym(p).typ=localvarsym) and
-         (TLocalVarSym(p).refs>0) and
-         not(vo_is_typed_const in TLocalVarSym(p).VarOptions) and
-         not(vo_is_external in TLocalVarSym(p).VarOptions) and
-         not(vo_is_funcret in TLocalVarSym(p).VarOptions) and
+      if (TSym(AObject).typ=localvarsym) and
+         (TLocalVarSym(AObject).refs>0) and
+         not(vo_is_typed_const in TLocalVarSym(AObject).VarOptions) and
+         not(vo_is_external in TLocalVarSym(AObject).VarOptions) and
+         not(vo_is_funcret in TLocalVarSym(AObject).VarOptions) and
          (
-           not(vo_is_default_var in TAbstractVarSym(p).VarOptions) or
-           (TAbstractVarSym(p).VarSpez<>vs_const)
+           not(vo_is_default_var in TAbstractVarSym(AObject).VarOptions) or
+           (TAbstractVarSym(AObject).VarSpez<>vs_const)
          ) and
-         Is_Managed_Type(TLocalVarSym(p).vardef) then
-        sym_maybe_finalize(TStatementNode(arg^),TSym(p));
+         Is_Managed_Type(TLocalVarSym(AObject).vardef) then
+        Sym_Maybe_Finalize(TStatementNode(AArg^),TSym(AObject));
     end;
 
 
-  class procedure TNodeUtils.static_syms_finalize(p: TObject; arg: pointer);
+  class procedure TNodeUtils.Static_Syms_Finalize(AObject: TObject; AArg: Pointer);
     var
-      i : LongInt;
-      pd : TProcDef;
+      lIndex : LongInt;
+      lProcDef : TProcDef;
     begin
-      case TSym(p).typ of
+      case TSym(AObject).typ of
         staticvarsym :
           begin
             { local (procedure or unit) variables only need finalization
               if they are used
             }
-            if ((TStaticVarSym(p).refs>0) or
+            if ((TStaticVarSym(AObject).refs>0) or
                 { global (unit) variables always need finalization, since
                   they may also be used in another unit
                 }
-                (TStaticVarSym(p).owner.SymTableType=GlobalSymTable)) and
+                (TStaticVarSym(AObject).Owner.SymTableType=GlobalSymTable)) and
                 (
-                  (TStaticVarSym(p).VarSpez<>vs_const) or
-                  (vo_force_finalize in TStaticVarSym(p).VarOptions)
+                  (TStaticVarSym(AObject).VarSpez<>vs_const) or
+                  (vo_force_finalize in TStaticVarSym(AObject).VarOptions)
                 ) and
-               not(vo_is_funcret in TStaticVarSym(p).VarOptions) and
-               not(vo_is_external in TStaticVarSym(p).VarOptions) and
-               Is_Managed_Type(TStaticVarSym(p).vardef) and
+               not(vo_is_funcret in TStaticVarSym(AObject).VarOptions) and
+               not(vo_is_external in TStaticVarSym(AObject).VarOptions) and
+               Is_Managed_Type(TStaticVarSym(AObject).vardef) and
                not (
-                   Assigned(TStaticVarSym(p).FieldVarSym) and
-                   Assigned(TStaticVarSym(p).FieldVarSym.owner.DefOwner) and
-                   (df_generic in TDef(TStaticVarSym(p).FieldVarSym.owner.DefOwner).DefOptions)
+                   Assigned(TStaticVarSym(AObject).FieldVarSym) and
+                   Assigned(TStaticVarSym(AObject).FieldVarSym.Owner.DefOwner) and
+                   (df_generic in TDef(TStaticVarSym(AObject).FieldVarSym.Owner.DefOwner).DefOptions)
                  )
                then
-              sym_maybe_finalize(TStatementNode(arg^),TSym(p));
+              Sym_Maybe_Finalize(TStatementNode(AArg^),TSym(AObject));
           end;
         ProcSym :
           begin
-            for i:=0 to TProcSym(p).ProcdefList.Count-1 do
+            for lIndex:=0 to TProcSym(AObject).ProcdefList.Count-1 do
               begin
-                pd:=TProcDef(TProcSym(p).ProcdefList[i]);
-                if Assigned(pd.LocalST) and
-                   (pd.ProcSym=TProcSym(p)) and
-                   (pd.LocalST.SymTableType<>staticsymtable) then
-                  pd.LocalST.SymList.ForEachCall(@static_syms_finalize,arg);
+                lProcDef:=TProcDef(TProcSym(AObject).ProcdefList[lIndex]);
+                if Assigned(lProcDef.LocalST) and
+                   (lProcDef.ProcSym=TProcSym(AObject)) and
+                   (lProcDef.LocalST.SymTableType<>staticsymtable) then
+                  lProcDef.LocalST.SymList.ForEachCall(@Static_Syms_Finalize,AArg);
               end;
           end;
         else
@@ -428,88 +428,88 @@ implementation
     end;
 
 
-  class procedure TNodeUtils.sym_maybe_finalize(var stat: TStatementNode; sym: TSym);
+  class procedure TNodeUtils.Sym_Maybe_Finalize(var AStatement: TStatementNode; ASym: TSym);
     var
-      hp: TNode;
+      lNode: TNode;
     begin
-      include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-      hp:=CLoadNode.create(sym,sym.owner);
-      if (sym.typ=staticvarsym) and (vo_force_finalize in TStaticVarSym(sym).VarOptions) then
-        include(TLoadNode(hp).loadnodeflags,loadnf_isinternal_ignoreconst);
+      include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
+      lNode:=CLoadNode.Create(ASym,ASym.Owner);
+      if (ASym.typ=staticvarsym) and (vo_force_finalize in TStaticVarSym(ASym).VarOptions) then
+        include(TLoadNode(lNode).LoadNodeFlags,loadnf_isinternal_ignoreconst);
       { ensure that a function reference interface is not converted to a call }
-      include(hp.flags,nf_load_procvar);
-      addstatement(stat,finalize_data_node(hp));
+      include(lNode.Flags,nf_load_procvar);
+      AddStatement(AStatement,Finalize_Data_Node(lNode));
     end;
 
 
-  procedure AddToStructInits(p:TObject;arg:pointer);
+  procedure AddToStructInits(AObject:TObject;AArg:Pointer);
     var
-      StructList: TFPList absolute arg;
+      lStructList: TFPList absolute AArg;
     begin
-      if (TDef(p).typ in [objectdef,recorddef]) and
-         not (df_generic in TDef(p).DefOptions) then
+      if (TDef(AObject).typ in [objectdef,recorddef]) and
+         not (df_generic in TDef(AObject).DefOptions) then
         begin
           { first add the class... }
-          if ([oo_has_class_constructor,oo_has_class_destructor] * TAbstractRecordDef(p).ObjectOptions <> []) then
-            StructList.Add(p);
+          if ([oo_has_class_constructor,oo_has_class_destructor] * TAbstractRecordDef(AObject).ObjectOptions <> []) then
+            lStructList.Add(AObject);
           { ... and then also add all subclasses }
-          TAbstractRecordDef(p).SymTable.DefList.foreachcall(@AddToStructInits,arg);
+          TAbstractRecordDef(AObject).SymTable.DefList.foreachcall(@AddToStructInits,AArg);
         end;
     end;
 
 
-  class procedure TNodeUtils.append_struct_initfinis(u: TModule; initfini: TStructIniFiniPOType; var stat: TStatementNode);
+  class procedure TNodeUtils.Append_Struct_InitFinis(AModule: TModule; AInitFini: TStructIniFiniPOType; var AStatement: TStatementNode);
     var
-      structlist: TFPList;
-      i: integer;
-      pd: TProcDef;
+      lStructList: TFPList;
+      lIndex: integer;
+      lProcDef: TProcDef;
     begin
-      structlist:=TFPList.Create;
-      if Assigned(u.GlobalSymTable) then
-        u.GlobalSymTable.DefList.ForEachCall(@AddToStructInits,structlist);
-      u.LocalSymTable.DefList.ForEachCall(@AddToStructInits,structlist);
+      lStructList:=TFPList.Create;
+      if Assigned(AModule.GlobalSymTable) then
+        AModule.GlobalSymTable.DefList.ForEachCall(@AddToStructInits,lStructList);
+      AModule.LocalSymTable.DefList.ForEachCall(@AddToStructInits,lStructList);
       { write structures }
-      for i:=0 to structlist.Count-1 do
+      for lIndex:=0 to lStructList.Count-1 do
         begin
-          pd:=TAbstractRecordDef(structlist[i]).Find_ProcDef_ByType(initfini);
-          if Assigned(pd) then
+          lProcDef:=TAbstractRecordDef(lStructList[lIndex]).Find_ProcDef_ByType(AInitFini);
+          if Assigned(lProcDef) then
             begin
               { class constructors are private -> ignore visibility checks }
-              addstatement(stat,
-                CCallNode.create(nil,TProcSym(pd.ProcSym),pd.owner,nil,[cnf_ignore_visibility],nil))
+              AddStatement(AStatement,
+                CCallNode.Create(nil,TProcSym(lProcDef.ProcSym),lProcDef.Owner,nil,[cnf_ignore_visibility],nil))
             end;
         end;
-      structlist.free;
-      structlist := nil;
+      lStructList.free;
+      lStructList := nil;
     end;
 
 
-  class procedure TNodeUtils.procdef_block_add_implicit_initialize_nodes(pd: TProcDef; var stat: TStatementNode);
+  class procedure TNodeUtils.ProcDef_Block_Add_Implicit_Initialize_Nodes(AProcDef: TProcDef; var AStatement: TStatementNode);
     begin
       { initialize local data like ansistrings }
-      case pd.ProcTypeOption of
+      case AProcDef.ProcTypeOption of
          potype_unitinit:
            begin
              { this is also used for initialization of variables in a
                program which does not have a globalsymtable }
              if Assigned(CurrentModule.GlobalSymTable) then
-               TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
-             TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
+               TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@Sym_Maybe_Initialize,@AStatement);
+             TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@Sym_Maybe_Initialize,@AStatement);
              { insert class constructors  }
              if mf_classinits in CurrentModule.ModuleFlags then
-               append_struct_initfinis(CurrentModule, potype_class_constructor, stat);
+               Append_Struct_InitFinis(CurrentModule, potype_class_constructor, AStatement);
            end;
          { units have separate code for initialization and finalization }
          potype_unitfinalize: ;
          { program init/final is generated in separate procedure }
          potype_proginit: ;
          else
-           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@sym_maybe_initialize,@stat);
+           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@Sym_Maybe_Initialize,@AStatement);
       end;
     end;
 
 
-  class procedure TNodeUtils.procdef_block_add_implicit_finalize_nodes(pd: TProcDef; var stat: TStatementNode);
+  class procedure TNodeUtils.ProcDef_Block_Add_Implicit_Finalize_Nodes(AProcDef: TProcDef; var AStatement: TStatementNode);
     begin
       { no finalization in exceptfilters, they /are/ the finalization code }
       if CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter then
@@ -521,79 +521,79 @@ implementation
            begin
              { insert class destructors  }
              if mf_classinits in CurrentModule.ModuleFlags then
-               append_struct_initfinis(CurrentModule, potype_class_destructor, stat);
+               Append_Struct_InitFinis(CurrentModule, potype_class_destructor, AStatement);
              { this is also used for initialization of variables in a
                program which does not have a globalsymtable }
              if Assigned(CurrentModule.GlobalSymTable) then
-               TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@static_syms_finalize,@stat);
-             TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@static_syms_finalize,@stat);
+               TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@Static_Syms_Finalize,@AStatement);
+             TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@Static_Syms_Finalize,@AStatement);
            end;
          { units/progs have separate code for initialization and finalization }
          potype_unitinit: ;
          { program init/final is generated in separate procedure }
          potype_proginit: ;
          else
-           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@local_varsyms_finalize,@stat);
+           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@Local_VarSyms_Finalize,@AStatement);
       end;
     end;
 
 
-  class function TNodeUtils.force_init: boolean;
+  class function TNodeUtils.Force_Init: Boolean;
     begin
-      result:=false;
+      Result:=false;
     end;
 
 
-  class function TNodeUtils.force_final: boolean;
+  class function TNodeUtils.Force_Final: Boolean;
     begin
-      result:=false;
+      Result:=false;
     end;
 
 
-  class procedure TNodeUtils.initialize_filerecs(p:TObject;statn:pointer);
+  class procedure TNodeUtils.Initialize_FileRecs(AObject:TObject;AStatementPtr:Pointer);
     var
-      stat: ^TStatementNode absolute statn;
+      lStatement: ^TStatementNode absolute AStatementPtr;
     begin
-      if (TSym(p).typ=staticvarsym) and
-        (TStaticVarSym(p).vardef.typ=filedef) and
-        (TStaticVarSym(p).IsoIndex<>0) then
-        case TFileDef(TStaticVarSym(p).vardef).FileTyp of
+      if (TSym(AObject).typ=staticvarsym) and
+        (TStaticVarSym(AObject).vardef.typ=filedef) and
+        (TStaticVarSym(AObject).IsoIndex<>0) then
+        case TFileDef(TStaticVarSym(AObject).vardef).FileTyp of
           ft_text:
             begin
               if cs_transparent_file_names in CurrentSettings.GlobalSwitches then
-                addstatement(stat^,CCallNode.createintern('fpc_textinit_filename_iso',
-                  CCallParaNode.create(
-                    CStringConstNode.createstr(TStaticVarSym(p).Name),
-                  CCallParaNode.create(
-                    COrdConstNode.create(TStaticVarSym(p).IsoIndex,UIntType,false),
-                  CCallParaNode.create(
-                    CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+                AddStatement(lStatement^,CCallNode.CreateIntern('fpc_textinit_filename_iso',
+                  CCallParaNode.Create(
+                    CStringConstNode.CreateStr(TStaticVarSym(AObject).Name),
+                  CCallParaNode.Create(
+                    COrdConstNode.Create(TStaticVarSym(AObject).IsoIndex,UIntType,false),
+                  CCallParaNode.Create(
+                    CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                   nil)))))
               else
-                addstatement(stat^,CCallNode.createintern('fpc_textinit_iso',
-                  CCallParaNode.create(
-                    COrdConstNode.create(TStaticVarSym(p).IsoIndex,UIntType,false),
-                  CCallParaNode.create(
-                    CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+                AddStatement(lStatement^,CCallNode.CreateIntern('fpc_textinit_iso',
+                  CCallParaNode.Create(
+                    COrdConstNode.Create(TStaticVarSym(AObject).IsoIndex,UIntType,false),
+                  CCallParaNode.Create(
+                    CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                   nil))));
             end;
           ft_typed:
             begin
               if cs_transparent_file_names in CurrentSettings.GlobalSwitches then
-                addstatement(stat^,CCallNode.createintern('fpc_typedfile_init_filename_iso',
-                  CCallParaNode.create(
-                    CStringConstNode.createstr(TStaticVarSym(p).Name),
-                  CCallParaNode.create(
-                    COrdConstNode.create(TStaticVarSym(p).IsoIndex,UIntType,false),
-                  CCallParaNode.create(
-                    CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+                AddStatement(lStatement^,CCallNode.CreateIntern('fpc_typedfile_init_filename_iso',
+                  CCallParaNode.Create(
+                    CStringConstNode.CreateStr(TStaticVarSym(AObject).Name),
+                  CCallParaNode.Create(
+                    COrdConstNode.Create(TStaticVarSym(AObject).IsoIndex,UIntType,false),
+                  CCallParaNode.Create(
+                    CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                   nil)))))
               else
-                addstatement(stat^,CCallNode.createintern('fpc_typedfile_init_iso',
-                  CCallParaNode.create(
-                    COrdConstNode.create(TStaticVarSym(p).IsoIndex,UIntType,false),
-                  CCallParaNode.create(
-                    CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+                AddStatement(lStatement^,CCallNode.CreateIntern('fpc_typedfile_init_iso',
+                  CCallParaNode.Create(
+                    COrdConstNode.Create(TStaticVarSym(AObject).IsoIndex,UIntType,false),
+                  CCallParaNode.Create(
+                    CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                   nil))));
             end;
           else
@@ -602,26 +602,26 @@ implementation
     end;
 
 
-  class procedure TNodeUtils.finalize_filerecs(p:TObject;statn:pointer);
+  class procedure TNodeUtils.Finalize_FileRecs(AObject:TObject;AStatementPtr:Pointer);
     var
-      stat: ^TStatementNode absolute statn;
+      lStatement: ^TStatementNode absolute AStatementPtr;
     begin
-      if (TSym(p).typ=staticvarsym) and
-        (TStaticVarSym(p).vardef.typ=filedef) and
-        (TStaticVarSym(p).IsoIndex<>0) then
-        case TFileDef(TStaticVarSym(p).vardef).FileTyp of
+      if (TSym(AObject).typ=staticvarsym) and
+        (TStaticVarSym(AObject).vardef.typ=filedef) and
+        (TStaticVarSym(AObject).IsoIndex<>0) then
+        case TFileDef(TStaticVarSym(AObject).vardef).FileTyp of
           ft_text:
             begin
-              addstatement(stat^,CCallNode.createintern('fpc_textclose_iso',
-                CCallParaNode.create(
-                  CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+              AddStatement(lStatement^,CCallNode.CreateIntern('fpc_textclose_iso',
+                CCallParaNode.Create(
+                  CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                 nil)));
             end;
           ft_typed:
             begin
-              addstatement(stat^,CCallNode.createintern('fpc_typedfile_close_iso',
-                CCallParaNode.create(
-                  CLoadNode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
+              AddStatement(lStatement^,CCallNode.CreateIntern('fpc_typedfile_close_iso',
+                CCallParaNode.Create(
+                  CLoadNode.Create(TStaticVarSym(AObject),TStaticVarSym(AObject).Owner),
                 nil)));
             end;
           else
@@ -630,183 +630,183 @@ implementation
     end;
 
 
-  class procedure TNodeUtils.load_parentfpstruct_nested_funcret(ressym: TSym; resdef: TDef; var stat: TStatementNode);
+  class procedure TNodeUtils.Load_ParentFPStruct_Nested_FuncRet(AResultSym: TSym; AResultDef: TDef; var AStatement: TStatementNode);
     var
-      src, target: TLoadNode;
+      lSource, lTarget: TLoadNode;
     begin
-      target:=CLoadNode.create(ressym, ressym.owner);
+      lTarget:=CLoadNode.Create(AResultSym, AResultSym.Owner);
       { ensure the target of this assignment doesn't translate the
         funcretsym also to its alias in the parentfpstruct }
-      include(target.flags, nf_internal);
-      src:=CLoadNode.create(ressym, ressym.owner);
-      if TAbstractNormalVarSym(ressym).vardef<>resdef then
+      include(lTarget.Flags, nf_internal);
+      lSource:=CLoadNode.Create(AResultSym, AResultSym.Owner);
+      if TAbstractNormalVarSym(AResultSym).vardef<>AResultDef then
         begin
           { the resultdef of TP-style object constructors is the object itself,
             but in practice they return a pointer to the object (the self
             pointer) }
-          if (resdef.typ<>pointerdef) or
-             (TPointerDef(resdef).PointedDef<>TAbstractNormalVarSym(ressym).vardef) then
+          if (AResultDef.typ<>pointerdef) or
+             (TPointerDef(AResultDef).PointedDef<>TAbstractNormalVarSym(AResultSym).vardef) then
             InternalError(2026072310);
-          include(src.loadnodeflags, loadnf_load_addr);
-          include(target.loadnodeflags, loadnf_load_addr);
+          include(lSource.LoadNodeFlags, loadnf_load_addr);
+          include(lTarget.LoadNodeFlags, loadnf_load_addr);
         end;
 
-      addstatement(stat,
-        CAssignmentNode.create(target,src)
+      AddStatement(AStatement,
+        CAssignmentNode.Create(lTarget,lSource)
       );
     end;
 
 
-  class function TNodeUtils.wrap_proc_body(pd: TProcDef; n: TNode): TNode;
+  class function TNodeUtils.Wrap_Proc_Body(AProcDef: TProcDef; ANode: TNode): TNode;
     var
-      stat: TStatementNode;
-      block: TNode;
-      ressym: TSym;
-      resdef: TDef;
+      lStatement: TStatementNode;
+      lBlock: TNode;
+      lResultSym: TSym;
+      lResultDef: TDef;
     begin
-      result:=maybe_insert_trashing(pd,n);
+      Result:=Maybe_Insert_Trashing(AProcDef,ANode);
 
       { initialise safecall result variable }
-      if pd.Generate_SafeCall_Wrapper then
+      if AProcDef.Generate_SafeCall_Wrapper then
         begin
-          ressym:=TSym(pd.LocalST.Find('safecallresult'));
-          block:=internalstatements(stat);
-          addstatement(stat,
-            CAssignmentNode.create(
-              CLoadNode.create(ressym,ressym.owner),
-              genintconstnode(0)
+          lResultSym:=TSym(AProcDef.LocalST.Find('safecallresult'));
+          lBlock:=InternalStatements(lStatement);
+          AddStatement(lStatement,
+            CAssignmentNode.Create(
+              CLoadNode.Create(lResultSym,lResultSym.Owner),
+              GenIntConstNode(0)
             )
           );
-          addstatement(stat,result);
-          result:=block;
+          AddStatement(lStatement,Result);
+          Result:=lBlock;
         end;
 
       if (m_isolike_program_para in CurrentSettings.ModeSwitches) and
-        (pd.ProcTypeOption=potype_proginit) then
+        (AProcDef.ProcTypeOption=potype_proginit) then
         begin
-          block:=internalstatements(stat);
-          pd.LocalST.SymList.ForEachCall(@initialize_filerecs,@stat);
-          addstatement(stat,result);
-          pd.LocalST.SymList.ForEachCall(@finalize_filerecs,@stat);
-          result:=block;
+          lBlock:=InternalStatements(lStatement);
+          AProcDef.LocalST.SymList.ForEachCall(@Initialize_FileRecs,@lStatement);
+          AddStatement(lStatement,Result);
+          AProcDef.LocalST.SymList.ForEachCall(@Finalize_FileRecs,@lStatement);
+          Result:=lBlock;
         end;
 
 
     end;
 
 
-  class function TNodeUtils.maybe_insert_trashing(pd: TProcDef; n: TNode): TNode;
+  class function TNodeUtils.Maybe_Insert_Trashing(AProcDef: TProcDef; ANode: TNode): TNode;
     var
-      stat: TStatementNode;
+      lStatement: TStatementNode;
     begin
-      result:=n;
-      if check_insert_trashing(pd) then
+      Result:=ANode;
+      if Check_Insert_Trashing(AProcDef) then
         begin
-          result:=internalstatements(stat);
-          pd.ParaST.SymList.ForEachCall(@maybe_trash_variable_callback,@stat);
-          pd.LocalST.SymList.ForEachCall(@maybe_trash_variable_callback,@stat);
-          addstatement(stat,n);
+          Result:=InternalStatements(lStatement);
+          AProcDef.ParaST.SymList.ForEachCall(@Maybe_Trash_Variable_Callback,@lStatement);
+          AProcDef.LocalST.SymList.ForEachCall(@Maybe_Trash_Variable_Callback,@lStatement);
+          AddStatement(lStatement,ANode);
         end;
     end;
 
-  class function TNodeUtils.check_insert_trashing(pd: TProcDef): boolean;
+  class function TNodeUtils.Check_Insert_Trashing(AProcDef: TProcDef): Boolean;
     begin
-      result:=
+      Result:=
         (LocalVarTrashing<>-1) and
-        not(po_assembler in pd.ProcOptions);
+        not(po_assembler in AProcDef.ProcOptions);
     end;
 
 
-  class function TNodeUtils.trashable_sym(p: TSym): boolean;
+  class function TNodeUtils.Trashable_Sym(ASym: TSym): Boolean;
     begin
-      result:=
-        ((p.typ=localvarsym) or
-         ((p.typ=paravarsym) and
-          ((vo_is_funcret in TAbstractNormalVarSym(p).VarOptions) or
-           (TAbstractNormalVarSym(p).VarSpez=vs_out)))) and
-         not (vo_is_default_var in TAbstractNormalVarSym(p).VarOptions) and
-         (not Is_Managed_Type(TAbstractNormalVarSym(p).vardef) or
-          (Is_String(TAbstractNormalVarSym(p).vardef) and
-           (vo_is_funcret in TAbstractNormalVarSym(p).VarOptions)
+      Result:=
+        ((ASym.typ=localvarsym) or
+         ((ASym.typ=paravarsym) and
+          ((vo_is_funcret in TAbstractNormalVarSym(ASym).VarOptions) or
+           (TAbstractNormalVarSym(ASym).VarSpez=vs_out)))) and
+         not (vo_is_default_var in TAbstractNormalVarSym(ASym).VarOptions) and
+         (not Is_Managed_Type(TAbstractNormalVarSym(ASym).vardef) or
+          (Is_String(TAbstractNormalVarSym(ASym).vardef) and
+           (vo_is_funcret in TAbstractNormalVarSym(ASym).VarOptions)
           )
          ) and
-         (TAbstractNormalVarSym(p).VarOptions*[vo_is_parentfp,vo_is_internal]=[]) and
-         not Assigned(TAbstractNormalVarSym(p).DefaultConstSym);
+         (TAbstractNormalVarSym(ASym).VarOptions*[vo_is_parentfp,vo_is_internal]=[]) and
+         not Assigned(TAbstractNormalVarSym(ASym).DefaultConstSym);
     end;
 
 
-  class procedure TNodeUtils.maybe_trash_variable(var stat: TStatementNode; p: TAbstractNormalVarSym; trashn: TNode);
+  class procedure TNodeUtils.Maybe_Trash_Variable(var AStatement: TStatementNode; AVarSym: TAbstractNormalVarSym; ATrashNode: TNode);
     var
-      size: asizeint;
-      trashintval: int64;
-      stringres: TStringConstNode;
+      lSize: ASizeInt;
+      lTrashIntValue: Int64;
+      lStringResult: TStringConstNode;
     begin
-      if trashable_sym(p) then
+      if Trashable_Sym(AVarSym) then
         begin
-          trashintval:=TrashIntValues[LocalVarTrashing];
-          if (p.vardef.typ=procvardef) and
+          lTrashIntValue:=TrashIntValues[LocalVarTrashing];
+          if (AVarSym.vardef.typ=procvardef) and
              ([m_tp_procvar,m_mac_procvar]*CurrentSettings.ModeSwitches<>[]) then
             begin
-              if TProcVarDef(p.vardef).Is_AddressOnly then
+              if TProcVarDef(AVarSym.vardef).Is_AddressOnly then
                 { in tp/delphi mode, you need @procvar to get at the contents of
                   a procvar ... }
-                trashn:=CAddrNode.create(trashn)
+                ATrashNode:=CAddrNode.Create(ATrashNode)
               else
                 { ... but if it's a procedure of object, that will only return
                   the procedure address -> cast to tmethod instead }
-                trashn:=CTypeConvNode.create_explicit(trashn,MethodPointerType);
+                ATrashNode:=CTypeConvNode.Create_Explicit(ATrashNode,MethodPointerType);
             end;
-          if Is_Managed_Type(p.vardef) then
+          if Is_Managed_Type(AVarSym.vardef) then
             begin
-              if Is_String(p.vardef) then
+              if Is_String(AVarSym.vardef) then
                 begin
-                  stringres:=
-                    CStringConstNode.createstr(
+                  lStringResult:=
+                    CStringConstNode.CreateStr(
                       'uninitialized function result in '+
-                      TProcDef(p.owner.DefOwner).CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker])
+                      TProcDef(AVarSym.Owner.DefOwner).CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker])
                     );
                   { prevent attempts to convert the string to the specified
                     code page at compile time, as it may not be available (and
                     it does not matter) }
-                  if Is_AnsiString(p.vardef) then
-                    stringres.changestringtype(Search_System_Type('RAWBYTESTRING').typedef);
-                  trash_small(stat,trashn,stringres);
+                  if Is_AnsiString(AVarSym.vardef) then
+                    lStringResult.ChangeStringType(Search_System_Type('RAWBYTESTRING').TypeDef);
+                  Trash_Small(AStatement,ATrashNode,lStringResult);
                 end
               else
                 InternalError(2016030601);
             end
-          else if ((p.typ=localvarsym) and
-              (not(vo_is_funcret in p.VarOptions) or
-               not Is_ShortString(p.vardef))) or
-             ((p.typ=paravarsym) and
-              not Is_ShortString(p.vardef)) then
+          else if ((AVarSym.typ=localvarsym) and
+              (not(vo_is_funcret in AVarSym.VarOptions) or
+               not Is_ShortString(AVarSym.vardef))) or
+             ((AVarSym.typ=paravarsym) and
+              not Is_ShortString(AVarSym.vardef)) then
             begin
-              size:=p.GetSize;
-              case size of
+              lSize:=AVarSym.GetSize;
+              case lSize of
                 0:
                   begin
                     { open array -> at least size 1. Can also be zero-sized
                       record, so check it's actually an array }
-                    if p.vardef.typ=arraydef then
-                      trash_large(stat,trashn,CAddNode.create(addn,CInlineNode.create(in_high_x,false,trashn.GetCopy),genintconstnode(1)),trashintval)
+                    if AVarSym.vardef.typ=arraydef then
+                      Trash_Large(AStatement,ATrashNode,CAddNode.Create(addn,CInlineNode.Create(in_high_x,false,ATrashNode.GetCopy),GenIntConstNode(1)),lTrashIntValue)
                     else
-                      trashn.free;
-                      trashn := nil;
+                      ATrashNode.free;
+                      ATrashNode := nil;
                   end;
-                1: trash_small(stat,
-                  CTypeConvNode.Create_Internal(trashn,S8IntType),
-                    genintconstnode(shortint(trashintval)));
-                2: trash_small(stat,
-                  CTypeConvNode.Create_Internal(trashn,S16IntType),
-                    genintconstnode(smallint(trashintval)));
-                4: trash_small(stat,
-                  CTypeConvNode.Create_Internal(trashn,S32IntType),
-                    genintconstnode(LongInt(trashintval)));
-                8: trash_small(stat,
-                  CTypeConvNode.Create_Internal(trashn,S64IntType),
-                    genintconstnode(int64(trashintval)));
+                1: Trash_Small(AStatement,
+                  CTypeConvNode.Create_Internal(ATrashNode,S8IntType),
+                    GenIntConstNode(ShortInt(lTrashIntValue)));
+                2: Trash_Small(AStatement,
+                  CTypeConvNode.Create_Internal(ATrashNode,S16IntType),
+                    GenIntConstNode(smallint(lTrashIntValue)));
+                4: Trash_Small(AStatement,
+                  CTypeConvNode.Create_Internal(ATrashNode,S32IntType),
+                    GenIntConstNode(LongInt(lTrashIntValue)));
+                8: Trash_Small(AStatement,
+                  CTypeConvNode.Create_Internal(ATrashNode,S64IntType),
+                    GenIntConstNode(Int64(lTrashIntValue)));
                 else
-                  trash_large(stat,trashn,genintconstnode(size),trashintval);
+                  Trash_Large(AStatement,ATrashNode,GenIntConstNode(lSize),lTrashIntValue);
               end;
             end
           else
@@ -814,404 +814,404 @@ implementation
               { may be an open string, even if is_open_string() returns false
                 (for some helpers in the system unit)             }
               { an open string has at least size 2                      }
-              trash_small(stat,
-                CVecNode.create(trashn.GetCopy,genintconstnode(0)),
-                COrdConstNode.create(TConstExprInt(byte(trashintval)),CAnsiCharType,false));
-              trash_small(stat,
-                CVecNode.create(trashn,genintconstnode(1)),
-                COrdConstNode.create(TConstExprInt(byte(trashintval)),CAnsiCharType,false));
+              Trash_Small(AStatement,
+                CVecNode.Create(ATrashNode.GetCopy,GenIntConstNode(0)),
+                COrdConstNode.Create(TConstExprInt(Byte(lTrashIntValue)),CAnsiCharType,false));
+              Trash_Small(AStatement,
+                CVecNode.Create(ATrashNode,GenIntConstNode(1)),
+                COrdConstNode.Create(TConstExprInt(Byte(lTrashIntValue)),CAnsiCharType,false));
             end;
         end
       else
-        trashn.free;
-        trashn := nil;
+        ATrashNode.free;
+        ATrashNode := nil;
     end;
 
 
-  class procedure TNodeUtils.maybe_trash_variable_callback(p:TObject;statn:pointer);
+  class procedure TNodeUtils.Maybe_Trash_Variable_Callback(AObject:TObject;AStatementPtr:Pointer);
     var
-      stat: ^TStatementNode absolute statn;
+      lStatement: ^TStatementNode absolute AStatementPtr;
     begin
-      if not(TSym(p).typ in [localvarsym,paravarsym]) then
+      if not(TSym(AObject).typ in [localvarsym,paravarsym]) then
         exit;
-      if sp_internal in TSym(p).SymOptions then
+      if sp_internal in TSym(AObject).SymOptions then
         exit;
-      maybe_trash_variable(stat^,TAbstractNormalVarSym(p),CLoadNode.create(TSym(p),TSym(p).owner));
+      Maybe_Trash_Variable(lStatement^,TAbstractNormalVarSym(AObject),CLoadNode.Create(TSym(AObject),TSym(AObject).Owner));
     end;
 
 
-  class procedure TNodeUtils.trash_small(var stat: TStatementNode; trashn: TNode; trashvaln: TNode);
+  class procedure TNodeUtils.Trash_Small(var AStatement: TStatementNode; ATrashNode: TNode; ATrashValueNode: TNode);
     begin
-      addstatement(stat,CAssignmentNode.create(trashn,trashvaln));
+      AddStatement(AStatement,CAssignmentNode.Create(ATrashNode,ATrashValueNode));
     end;
 
 
-  class procedure TNodeUtils.trash_large(var stat: TStatementNode; trashn, sizen: TNode; trashintval: int64);
+  class procedure TNodeUtils.Trash_Large(var AStatement: TStatementNode; ATrashNode, ASizeNode: TNode; ATrashIntValue: Int64);
     begin
-      addstatement(stat,CCallNode.createintern('fpc_fillmem',
-        CCallParaNode.Create(COrdConstNode.create(TConstExprInt(byte(trashintval)),U8IntType,false),
-        CCallParaNode.Create(sizen,
-        CCallParaNode.Create(trashn,nil)))
+      AddStatement(AStatement,CCallNode.CreateIntern('fpc_fillmem',
+        CCallParaNode.Create(COrdConstNode.Create(TConstExprInt(Byte(ATrashIntValue)),U8IntType,false),
+        CCallParaNode.Create(ASizeNode,
+        CCallParaNode.Create(ATrashNode,nil)))
         ));
     end;
 
 
-  class procedure TNodeUtils.insertbsssym(list: TAsmList; sym: TStaticVarSym; size: asizeint; varalign: shortint; _typ:TAsmsymtype);
+  class procedure TNodeUtils.InsertBSSSym(AList: TAsmList; ASym: TStaticVarSym; ASize: ASizeInt; AVarAlign: ShortInt; AType:TAsmsymtype);
     begin
-      if sym.GlobalAsmSym then
+      if ASym.GlobalAsmSym then
         begin
-          list.concat(TAIDataBlock.create_global(sym.MangledName,size,sym.vardef,_typ));
+          AList.concat(TAIDataBlock.create_global(ASym.MangledName,ASize,ASym.vardef,AType));
         end
       else
-        list.concat(TAIDataBlock.create_hidden(sym.MangledName,size,sym.vardef,_typ));
+        AList.concat(TAIDataBlock.create_hidden(ASym.MangledName,ASize,ASym.vardef,AType));
     end;
 
 
-  class procedure TNodeUtils.insertbssdata(sym: TStaticVarSym);
+  class procedure TNodeUtils.InsertBSSData(ASym: TStaticVarSym);
     var
-      l : asizeint;
-      varalign,wantedalign,explicitalign : shortint;
-      storefilepos : TFilePosInfo;
-      list : TAsmList;
-      sectype : TAsmSectiontype;
-      asmtype: TAsmsymtype;
-      builder: TTAITypedConstBuilder;
-      descriptor: TDef;
-      descriptorbind: TAsmsymbind;
+      lSize : ASizeInt;
+      lVarAlign,lWantedAlign,lExplicitAlign : ShortInt;
+      lSavedFilePos : TFilePosInfo;
+      lList : TAsmList;
+      lSectionType : TAsmSectiontype;
+      lAsmType: TAsmsymtype;
+      lBuilder: TTAITypedConstBuilder;
+      lDescriptor: TDef;
+      lDescriptorBind: TAsmsymbind;
     begin
-      storefilepos:=CurrentFilePos;
-      CurrentFilePos:=sym.fileinfo;
-      l:=sym.GetSize;
-      wantedalign:=sym.vardef.Alignment;
-      if sym.vardef.inheritsfrom(TAbstractRecordDef) and
-         (sym.vardef.typ in [recorddef]) then
-        explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(sym.vardef).SymTable).ExplicitRecordAlignment
+      lSavedFilePos:=CurrentFilePos;
+      CurrentFilePos:=ASym.FileInfo;
+      lSize:=ASym.GetSize;
+      lWantedAlign:=ASym.vardef.Alignment;
+      if ASym.vardef.inheritsfrom(TAbstractRecordDef) and
+         (ASym.vardef.typ in [recorddef]) then
+        lExplicitAlign:=TAbstractRecordSymTable(TAbstractRecordDef(ASym.vardef).SymTable).ExplicitRecordAlignment
       else
-        explicitalign:=0;
-      if (wantedalign=0) then
-        varalign:=Var_Align_Size(l)
+        lExplicitAlign:=0;
+      if (lWantedAlign=0) then
+        lVarAlign:=Var_Align_Size(lSize)
       else
         begin
-          varalign:=Var_Align(wantedalign);
-          if (explicitalign>varalign) then
+          lVarAlign:=Var_Align(lWantedAlign);
+          if (lExplicitAlign>lVarAlign) then
             begin
-              Message1(scanner_w_alignment_larger_than_max,sym.name);
-              varalign:=explicitalign;
+              Message1(scanner_w_alignment_larger_than_max,ASym.name);
+              lVarAlign:=lExplicitAlign;
             end
-          else if (wantedalign>varalign) and (TargetInfo.Alignment.VarAlignMax>1) then
+          else if (lWantedAlign>lVarAlign) and (TargetInfo.Alignment.VarAlignMax>1) then
             begin
               { varalign:=wantedalign; this can lead to
                 troubles on systems like for instance
                 msdos which do not support 8-byte alignment }
-              Message1(scanner_n_alignment_larger_than_max,sym.name);
+              Message1(scanner_n_alignment_larger_than_max,ASym.name);
 	    end;
 	end;
-      asmtype:=AT_DATA;
-      if tf_section_threadvars in TargetInfo.flags then
+      lAsmType:=AT_DATA;
+      if tf_section_threadvars in TargetInfo.Flags then
         begin
-          if (vo_is_thread_var in sym.VarOptions) then
+          if (vo_is_thread_var in ASym.VarOptions) then
             begin
-              list:=CurrentAsmData.asmlists[al_threadvars];
-              sectype:=sec_threadvar;
-              asmtype:=AT_TLS;
+              lList:=CurrentAsmData.asmlists[al_threadvars];
+              lSectionType:=sec_threadvar;
+              lAsmType:=AT_TLS;
             end
           else
             begin
-              list:=CurrentAsmData.asmlists[al_globals];
-              sectype:=sec_bss;
+              lList:=CurrentAsmData.asmlists[al_globals];
+              lSectionType:=sec_bss;
             end;
         end
       else
         begin
-          if (vo_is_thread_var in sym.VarOptions) then
+          if (vo_is_thread_var in ASym.VarOptions) then
             begin
               { The exported symbol is a two-word descriptor, never storage. }
-              builder:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-              builder.begin_anonymous_record('',sizeof(PInt),sizeof(PInt),sizeof(PInt));
-              builder.emit_tai(TAIConst.Createname('FPC_THREADVAROWNER',0),VoidPointerType);
-              builder.emit_ord_const(0,SizeUIntType);
-              descriptor:=builder.end_anonymous_record;
-              if sym.GlobalAsmSym then
-                descriptorbind:=AB_GLOBAL
-              else if tf_supports_hidden_symbols in TargetInfo.flags then
-                descriptorbind:=AB_PRIVATE_EXTERN
+              lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+              lBuilder.begin_anonymous_record('',sizeof(PInt),sizeof(PInt),sizeof(PInt));
+              lBuilder.emit_tai(TAIConst.Createname('FPC_THREADVAROWNER',0),VoidPointerType);
+              lBuilder.emit_ord_const(0,SizeUIntType);
+              lDescriptor:=lBuilder.end_anonymous_record;
+              if ASym.GlobalAsmSym then
+                lDescriptorBind:=AB_GLOBAL
+              else if tf_supports_hidden_symbols in TargetInfo.Flags then
+                lDescriptorBind:=AB_PRIVATE_EXTERN
               else
-                descriptorbind:=AB_LOCAL;
-              CurrentAsmData.asmlists[al_globals].ConcatList(builder.get_final_asmlist(
-                CurrentAsmData.DefineAsmSymbol(sym.MangledName,descriptorbind,AT_DATA,descriptor),
-                descriptor,sec_data,lower(sym.MangledName),sizeof(PInt)));
-              builder.free;
-              CurrentFilePos:=storefilepos;
+                lDescriptorBind:=AB_LOCAL;
+              CurrentAsmData.asmlists[al_globals].ConcatList(lBuilder.get_final_asmlist(
+                CurrentAsmData.DefineAsmSymbol(ASym.MangledName,lDescriptorBind,AT_DATA,lDescriptor),
+                lDescriptor,sec_data,lower(ASym.MangledName),sizeof(PInt)));
+              lBuilder.free;
+              CurrentFilePos:=lSavedFilePos;
               exit;
             end;
-          list:=CurrentAsmData.asmlists[al_globals];
-          sectype:=sec_bss;
+          lList:=CurrentAsmData.asmlists[al_globals];
+          lSectionType:=sec_bss;
         end;
-      maybe_new_object_file(list);
-      if vo_has_section in sym.VarOptions then
-        new_section(list,sec_user,sym.section,varalign)
+      maybe_new_object_file(lList);
+      if vo_has_section in ASym.VarOptions then
+        new_section(lList,sec_user,ASym.section,lVarAlign)
       else
-        new_section(list,sectype,lower(sym.MangledName),varalign);
-      insertbsssym(list,sym,l,varalign,asmtype);
-      CurrentFilePos:=storefilepos;
+        new_section(lList,lSectionType,lower(ASym.MangledName),lVarAlign);
+      InsertBSSSym(lList,ASym,lSize,lVarAlign,lAsmType);
+      CurrentFilePos:=lSavedFilePos;
     end;
 
 
-  class function TNodeUtils.create_main_procdef(const name: string; potype: TProcTypeOption; ps: TProcSym): TDef;
+  class function TNodeUtils.Create_Main_ProcDef(const AName: string; AProcType: TProcTypeOption; AProcSym: TProcSym): TDef;
     var
-      pd: TProcDef;
+      lProcDef: TProcDef;
     begin
-      if potype<>potype_mainstub then
-        pd:=CProcDef.create(MainProgramLevel,true)
+      if AProcType<>potype_mainstub then
+        lProcDef:=CProcDef.Create(MainProgramLevel,true)
       else
-        pd:=CProcDef.create(NormalFunctionLevel,true);
+        lProcDef:=CProcDef.Create(NormalFunctionLevel,true);
       { always register the def }
-      pd.RegisterDef;
-      pd.ProcSym:=ps;
-      ps.ProcdefList.Add(pd);
-      include(pd.ProcOptions,po_global);
+      lProcDef.RegisterDef;
+      lProcDef.ProcSym:=AProcSym;
+      AProcSym.ProcdefList.Add(lProcDef);
+      include(lProcDef.ProcOptions,po_global);
       { set procdef options }
-      pd.ProcTypeOption:=potype;
-      pd.ProcCallOption:=pocall_default;
-      include(pd.ProcOptions,po_hascallingconvention);
-      pd.ForwardDef:=false;
+      lProcDef.ProcTypeOption:=AProcType;
+      lProcDef.ProcCallOption:=pocall_default;
+      include(lProcDef.ProcOptions,po_hascallingconvention);
+      lProcDef.ForwardDef:=false;
       { may be required to calculate the mangled name }
-      add_main_procdef_paras(pd);
-      pd.SetMangledName(name);
+      Add_Main_ProcDef_Paras(lProcDef);
+      lProcDef.SetMangledName(AName);
       { the mainstub is generated via a synthetic proc -> parsed via
         psub.read_proc_body() -> that one will insert the mangled name in the
         alias names already }
-      if not(potype in [potype_mainstub,potype_libmainstub]) then
-        pd.AliasNames.insert(pd.MangledName);
-      result:=pd;
+      if not(AProcType in [potype_mainstub,potype_libmainstub]) then
+        lProcDef.AliasNames.insert(lProcDef.MangledName);
+      Result:=lProcDef;
     end;
 
 
-  class function TNodeUtils.get_init_final_list(main : TModule):TFPList;
+  class function TNodeUtils.Get_Init_Final_List(AMainModule : TModule):TFPList;
 
-    procedure addusedunits(m : TModule);
+    procedure AddUsedUnits(AModule : TModule);
 
     var
-      hp : TUsedUnit;
-      entry : PInitFinalEntry;
+      lUsedUnit : TUsedUnit;
+      lEntry : PInitFinalEntry;
     begin
-      hp:=TUsedUnit(m.UsedUnitList.first);
-      while Assigned(hp) do
+      lUsedUnit:=TUsedUnit(AModule.UsedUnitList.first);
+      while Assigned(lUsedUnit) do
        begin
-         if (not hp.u.InitFinalChecked) then
+         if (not lUsedUnit.u.InitFinalChecked) then
            begin
-           hp.u.InitFinalChecked:=True;
-           addusedunits(hp.u);
-           if not Assigned(hp.u.package) and
-              ((hp.u.ModuleFlags * [mf_init,mf_finalize])<>[]) then
+           lUsedUnit.u.InitFinalChecked:=True;
+           AddUsedUnits(lUsedUnit.u);
+           if not Assigned(lUsedUnit.u.package) and
+              ((lUsedUnit.u.ModuleFlags * [mf_init,mf_finalize])<>[]) then
              begin
-               new(entry);
-               entry^.module:=hp.u;
-               entry^.initpd:=nil;
-               entry^.finipd:=nil;
-               if mf_init in hp.u.ModuleFlags then
-                 entry^.initfunc:=Make_MangledName('INIT$',hp.u.GlobalSymTable,'')
+               new(lEntry);
+               lEntry^.Module:=lUsedUnit.u;
+               lEntry^.InitPD:=nil;
+               lEntry^.FiniPD:=nil;
+               if mf_init in lUsedUnit.u.ModuleFlags then
+                 lEntry^.InitFunc:=Make_MangledName('INIT$',lUsedUnit.u.GlobalSymTable,'')
                else
-                 entry^.initfunc:='';
-               if mf_finalize in hp.u.ModuleFlags then
-                 entry^.finifunc:=Make_MangledName('FINALIZE$',hp.u.GlobalSymTable,'')
+                 lEntry^.InitFunc:='';
+               if mf_finalize in lUsedUnit.u.ModuleFlags then
+                 lEntry^.FiniFunc:=Make_MangledName('FINALIZE$',lUsedUnit.u.GlobalSymTable,'')
                else
-                 entry^.finifunc:='';
-               result.add(entry);
+                 lEntry^.FiniFunc:='';
+               Result.add(lEntry);
              end;
            end;
-         hp:=TUsedUnit(hp.next);
+         lUsedUnit:=TUsedUnit(lUsedUnit.next);
        end;
 
     end;
 
     var
-      entry : PInitFinalEntry;
+      lEntry : PInitFinalEntry;
     begin
-      result:=TFPList.create;
+      Result:=TFPList.Create;
 
       { Insert initialization/finalization of the used units }
-      addusedunits(main);
+      AddUsedUnits(AMainModule);
 
       { Insert initialization/finalization of the program }
-      if (main.ModuleFlags * [mf_init,mf_finalize])<>[] then
+      if (AMainModule.ModuleFlags * [mf_init,mf_finalize])<>[] then
         begin
-          new(entry);
-          entry^.module:=CurrentModule;
-          entry^.initpd:=nil;
-          entry^.finipd:=nil;
+          new(lEntry);
+          lEntry^.Module:=CurrentModule;
+          lEntry^.InitPD:=nil;
+          lEntry^.FiniPD:=nil;
           if mf_init in CurrentModule.ModuleFlags then
-            entry^.initfunc:=Make_MangledName('INIT$',CurrentModule.LocalSymTable,'')
+            lEntry^.InitFunc:=Make_MangledName('INIT$',CurrentModule.LocalSymTable,'')
           else
-            entry^.initfunc:='';
+            lEntry^.InitFunc:='';
           if mf_finalize in CurrentModule.ModuleFlags then
-            entry^.finifunc:=Make_MangledName('FINALIZE$',CurrentModule.LocalSymTable,'')
+            lEntry^.FiniFunc:=Make_MangledName('FINALIZE$',CurrentModule.LocalSymTable,'')
           else
-            entry^.finifunc:='';
-          result.add(entry);
+            lEntry^.FiniFunc:='';
+          Result.add(lEntry);
         end;
     end;
 
 
-  class procedure TNodeUtils.release_init_final_list(list:TFPList);
+  class procedure TNodeUtils.Release_Init_Final_List(AList:TFPList);
     begin
-      if not Assigned(list) then
+      if not Assigned(AList) then
         InternalError(2017051901);
-      TFPList.FreeAndNilDisposing(list,typeinfo(TInitFinalEntry));
+      TFPList.FreeAndNilDisposing(AList,typeinfo(TInitFinalEntry));
     end;
 
 
-  class procedure TNodeUtils.InsertInitFinalTable(main : TModule);
+  class procedure TNodeUtils.InsertInitFinalTable(AMainModule : TModule);
     var
-      entries : TFPList;
+      lEntries : TFPList;
     begin
-      entries := get_init_final_list(main);
+      lEntries := Get_Init_Final_List(AMainModule);
 
-      insert_init_final_table(main,entries);
+      Insert_Init_Final_Table(AMainModule,lEntries);
 
-      release_init_final_list(entries);
+      Release_Init_Final_List(lEntries);
     end;
 
 
-  class procedure TNodeUtils.insert_init_final_table(main : TModule; entries:TFPList);
+  class procedure TNodeUtils.Insert_Init_Final_Table(AMainModule : TModule; AEntries:TFPList);
     var
-      i : LongInt;
-      unitinits : TTAITypedConstBuilder;
-      nameinit,namefini : TSymStr;
-      tabledef: TDef;
-      entry : PInitFinalEntry;
-      unitnametcb : TTAITypedConstBuilder;
-      unitnamedef : TDef;
-      unitnamelbl : TAsmLabel;
+      lIndex : LongInt;
+      lUnitInits : TTAITypedConstBuilder;
+      lInitName,lFiniName : TSymStr;
+      lTableDef: TDef;
+      lEntry : PInitFinalEntry;
+      lUnitNameBuilder : TTAITypedConstBuilder;
+      lUnitNameDef : TDef;
+      lUnitNameLabel : TAsmLabel;
 
-      procedure add_initfinal_import(SymTable:TSymTable);
+      procedure AddInitFinalImport(ASymTable:TSymTable);
         var
-          i,j : LongInt;
-          foundinit,foundfini : boolean;
-          sym : TSymEntry;
-          pd : TProcDef;
+          lIndex,lOverloadIndex : LongInt;
+          lFoundInit,lFoundFini : Boolean;
+          lSymbol : TSymEntry;
+          lProcDef : TProcDef;
         begin
-          if (nameinit='') and (namefini='') then
+          if (lInitName='') and (lFiniName='') then
             exit;
-          foundinit:=nameinit='';
-          foundfini:=namefini='';
-          for i:=0 to SymTable.SymList.Count-1 do
+          lFoundInit:=lInitName='';
+          lFoundFini:=lFiniName='';
+          for lIndex:=0 to ASymTable.SymList.Count-1 do
             begin
-              sym:=TSymEntry(SymTable.SymList[i]);
-              if sym.typ<>ProcSym then
+              lSymbol:=TSymEntry(ASymTable.SymList[lIndex]);
+              if lSymbol.typ<>ProcSym then
                 continue;
-              for j:=0 to TProcSym(sym).procdeflist.count-1 do
+              for lOverloadIndex:=0 to TProcSym(lSymbol).procdeflist.count-1 do
                 begin
-                  pd:=TProcDef(TProcSym(sym).procdeflist[j]);
-                  if (nameinit<>'') and not foundinit and pd.Has_Alias_Name(nameinit) then
+                  lProcDef:=TProcDef(TProcSym(lSymbol).procdeflist[lOverloadIndex]);
+                  if (lInitName<>'') and not lFoundInit and lProcDef.Has_Alias_Name(lInitName) then
                     begin
-                      CurrentModule.AddImportedSym(sym);
-                      foundinit:=true;
+                      CurrentModule.AddImportedSym(lSymbol);
+                      lFoundInit:=true;
                     end;
-                  if (namefini<>'') and not foundfini and pd.Has_Alias_Name(namefini) then
+                  if (lFiniName<>'') and not lFoundFini and lProcDef.Has_Alias_Name(lFiniName) then
                     begin
-                      CurrentModule.AddImportedSym(sym);
-                      foundfini:=true;
+                      CurrentModule.AddImportedSym(lSymbol);
+                      lFoundFini:=true;
                     end;
-                  if foundinit and foundfini then
+                  if lFoundInit and lFoundFini then
                     break;
                 end;
-              if foundinit and foundfini then
+              if lFoundInit and lFoundFini then
                 break;
             end;
-          if not foundinit or not foundfini then
+          if not lFoundInit or not lFoundFini then
             InternalError(2016041401);
         end;
 
     begin
-      unitinits:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      unitinits.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
+      lUnitInits:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lUnitInits.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
         targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
 
       { tablecount }
-      unitinits.emit_ord_const(entries.count,ALUUIntType);
+      lUnitInits.emit_ord_const(AEntries.count,ALUUIntType);
       { initcount (initialised at run time }
-      unitinits.emit_ord_const(0,ALUUIntType);
+      lUnitInits.emit_ord_const(0,ALUUIntType);
 
-      for i:=0 to entries.count-1 do
+      for lIndex:=0 to AEntries.count-1 do
         begin
-          entry:=PInitFinalEntry(entries[i]);
-          if Assigned(entry^.initpd) or Assigned(entry^.finipd) then
+          lEntry:=PInitFinalEntry(AEntries[lIndex]);
+          if Assigned(lEntry^.InitPD) or Assigned(lEntry^.FiniPD) then
             begin
-              if Assigned(entry^.initpd) then
+              if Assigned(lEntry^.InitPD) then
                 begin
-                  unitinits.emit_procdef_const(entry^.initpd);
-                  if entry^.module<>CurrentModule then
-                    CurrentModule.AddImportedSym(entry^.initpd.ProcSym);
+                  lUnitInits.emit_procdef_const(lEntry^.InitPD);
+                  if lEntry^.Module<>CurrentModule then
+                    CurrentModule.AddImportedSym(lEntry^.InitPD.ProcSym);
                 end
               else
-                unitinits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
-              if Assigned(entry^.finipd) then
+                lUnitInits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
+              if Assigned(lEntry^.FiniPD) then
                 begin
-                  unitinits.emit_procdef_const(entry^.finipd);
-                  if entry^.module<>CurrentModule then
-                    CurrentModule.AddImportedSym(entry^.finipd.ProcSym);
+                  lUnitInits.emit_procdef_const(lEntry^.FiniPD);
+                  if lEntry^.Module<>CurrentModule then
+                    CurrentModule.AddImportedSym(lEntry^.FiniPD.ProcSym);
                 end
               else
-                unitinits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
+                lUnitInits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
             end
           else
             begin
-              nameinit:='';
-              namefini:='';
-              if entry^.initfunc<>'' then
+              lInitName:='';
+              lFiniName:='';
+              if lEntry^.InitFunc<>'' then
                 begin
-                  nameinit:=entry^.initfunc;
-                  unitinits.emit_tai(
-                    TAIConst.Createname(nameinit,AT_FUNCTION,0),
+                  lInitName:=lEntry^.InitFunc;
+                  lUnitInits.emit_tai(
+                    TAIConst.Createname(lInitName,AT_FUNCTION,0),
                     VoidCodePointerType);
                 end
               else
-                unitinits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
-              if entry^.finifunc<>'' then
+                lUnitInits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
+              if lEntry^.FiniFunc<>'' then
                 begin
-                  namefini:=entry^.finifunc;
-                  unitinits.emit_tai(
-                    TAIConst.Createname(namefini,AT_FUNCTION,0),
+                  lFiniName:=lEntry^.FiniFunc;
+                  lUnitInits.emit_tai(
+                    TAIConst.Createname(lFiniName,AT_FUNCTION,0),
                     VoidCodePointerType);
                 end
               else
-                unitinits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
-              if entry^.module<>CurrentModule then
-                add_initfinal_import(entry^.module.LocalSymTable);
+                lUnitInits.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType);
+              if lEntry^.Module<>CurrentModule then
+                AddInitFinalImport(lEntry^.Module.LocalSymTable);
             end;
           { Add pointer to unit name }
-          if Assigned(entry^.module.RealModuleName) then
+          if Assigned(lEntry^.Module.RealModuleName) then
             begin
               { Create string constant and emit pointer to it }
-              unitinits.start_internal_data_builder(CurrentAsmData.asmlists[al_globals],sec_rodata,'',unitnametcb,unitnamelbl);
-              unitnamedef:=unitnametcb.emit_shortstring_const(entry^.module.RealModuleName^);
-              unitinits.finish_internal_data_builder(unitnametcb,unitnamelbl,unitnamedef,sizeof(PInt));
-              unitinits.queue_init(CharPointerType);
-              unitinits.queue_emit_asmsym(unitnamelbl,unitnamedef);
+              lUnitInits.start_internal_data_builder(CurrentAsmData.asmlists[al_globals],sec_rodata,'',lUnitNameBuilder,lUnitNameLabel);
+              lUnitNameDef:=lUnitNameBuilder.emit_shortstring_const(lEntry^.Module.RealModuleName^);
+              lUnitInits.finish_internal_data_builder(lUnitNameBuilder,lUnitNameLabel,lUnitNameDef,sizeof(PInt));
+              lUnitInits.queue_init(CharPointerType);
+              lUnitInits.queue_emit_asmsym(lUnitNameLabel,lUnitNameDef);
             end
           else
-            unitinits.emit_tai(TAIConst.Create_nil_dataptr,CharPointerType);
+            lUnitInits.emit_tai(TAIConst.Create_nil_dataptr,CharPointerType);
         end;
 
       { Add to data segment }
-      tabledef:=unitinits.end_anonymous_record;
+      lTableDef:=lUnitInits.end_anonymous_record;
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        unitinits.get_final_asmlist(
-          CurrentAsmData.DefineAsmSymbol('INITFINAL',AB_GLOBAL,AT_DATA,tabledef),
-          tabledef,
+        lUnitInits.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol('INITFINAL',AB_GLOBAL,AT_DATA,lTableDef),
+          lTableDef,
           sec_data,'INITFINAL',Const_Align(sizeof(PInt))
         )
       );
 
-      unitinits.free;
-      unitinits := nil;
+      lUnitInits.free;
+      lUnitInits := nil;
     end;
 
 
-  class function TNodeUtils.has_init_list: boolean;
+  class function TNodeUtils.Has_Init_List: Boolean;
     var
-      hp : TUsedUnit;
+      lUsedUnit : TUsedUnit;
     begin
       Result:=True;
 
@@ -1220,12 +1220,12 @@ implementation
         Exit;
 
       { Check used units }
-      hp:=TUsedUnit(UsedUnits.first);
-      while Assigned(hp) do
+      lUsedUnit:=TUsedUnit(UsedUnits.first);
+      while Assigned(lUsedUnit) do
         begin
-          if mf_init in hp.u.ModuleFlags then
+          if mf_init in lUsedUnit.u.ModuleFlags then
             Exit;
-          hp:=TUsedUnit(hp.next);
+          lUsedUnit:=TUsedUnit(lUsedUnit.next);
         end;
 
       { We reach this point, none of the used units have an initialisation list }
@@ -1235,227 +1235,227 @@ implementation
 
   class procedure TNodeUtils.InsertThreadvarTablesTable;
     var
-      hp : TUsedUnit;
-      tcb: TTAITypedConstBuilder;
-      count: LongInt;
-      sym: TAsmSymbol;
-      placeholder: TTypedConstPlaceholder;
-      tabledef: TDef;
-      ownerbind: TAsmsymbind;
+      lUsedUnit : TUsedUnit;
+      lBuilder: TTAITypedConstBuilder;
+      lCount: LongInt;
+      lSymbol: TAsmSymbol;
+      lPlaceholder: TTypedConstPlaceholder;
+      lTableDef: TDef;
+      lOwnerBind: TAsmsymbind;
     begin
-      if (tf_section_threadvars in TargetInfo.flags) then
+      if (tf_section_threadvars in TargetInfo.Flags) then
         exit;
-      count:=0;
-      tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
-      placeholder:=tcb.emit_placeholder(SizeSIntType);
+      lCount:=0;
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lBuilder.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
+      lPlaceholder:=lBuilder.emit_placeholder(SizeSIntType);
 
-      hp:=TUsedUnit(UsedUnits.first);
-      while Assigned(hp) do
+      lUsedUnit:=TUsedUnit(UsedUnits.first);
+      while Assigned(lUsedUnit) do
        begin
-         if not Assigned(hp.u.package) and (mf_threadvars in hp.u.ModuleFlags) then
+         if not Assigned(lUsedUnit.u.package) and (mf_threadvars in lUsedUnit.u.ModuleFlags) then
            begin
-             sym:=CurrentAsmData.RefAsmSymbol(Make_MangledName('THREADVARLIST',hp.u.GlobalSymTable,''),AT_DATA,true);
-             tcb.emit_tai(
-               TAIConst.Create_sym(sym),
+             lSymbol:=CurrentAsmData.RefAsmSymbol(Make_MangledName('THREADVARLIST',lUsedUnit.u.GlobalSymTable,''),AT_DATA,true);
+             lBuilder.emit_tai(
+               TAIConst.Create_sym(lSymbol),
                VoidPointerType);
-             CurrentModule.Add_Extern_AsmSym(sym);
-             inc(count);
+             CurrentModule.Add_Extern_AsmSym(lSymbol);
+             inc(lCount);
            end;
-         hp:=TUsedUnit(hp.next);
+         lUsedUnit:=TUsedUnit(lUsedUnit.next);
        end;
       { Add program threadvars, if any }
       if mf_threadvars in CurrentModule.ModuleFlags then
         begin
-          sym:=CurrentAsmData.RefAsmSymbol(Make_MangledName('THREADVARLIST',CurrentModule.LocalSymTable,''),AT_DATA,true);
-          tcb.emit_tai(
-            TAIConst.Create_sym(sym),
+          lSymbol:=CurrentAsmData.RefAsmSymbol(Make_MangledName('THREADVARLIST',CurrentModule.LocalSymTable,''),AT_DATA,true);
+          lBuilder.emit_tai(
+            TAIConst.Create_sym(lSymbol),
             VoidPointerType);
-          inc(count);
+          inc(lCount);
         end;
       { set the count at the start }
-      placeholder.replace(TAIConst.Create_sizeint(count),SizeSIntType);
-      placeholder.free;
-      placeholder := nil;
+      lPlaceholder.replace(TAIConst.Create_sizeint(lCount),SizeSIntType);
+      lPlaceholder.free;
+      lPlaceholder := nil;
       { insert in data segment }
-      tabledef:=tcb.end_anonymous_record;
-      if tf_supports_hidden_symbols in TargetInfo.flags then
-        ownerbind:=AB_PRIVATE_EXTERN
+      lTableDef:=lBuilder.end_anonymous_record;
+      if tf_supports_hidden_symbols in TargetInfo.Flags then
+        lOwnerBind:=AB_PRIVATE_EXTERN
       else
-        ownerbind:=AB_GLOBAL;
-      sym:=CurrentAsmData.DefineAsmSymbol('FPC_THREADVARTABLES',ownerbind,AT_DATA,tabledef);
+        lOwnerBind:=AB_GLOBAL;
+      lSymbol:=CurrentAsmData.DefineAsmSymbol('FPC_THREADVARTABLES',lOwnerBind,AT_DATA,lTableDef);
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(
-          sym,tabledef,sec_data,'FPC_THREADVARTABLES',Const_Align(sizeof(PInt))
+        lBuilder.get_final_asmlist(
+          lSymbol,lTableDef,sec_data,'FPC_THREADVARTABLES',Const_Align(sizeof(PInt))
         )
       );
-      tcb.free;
+      lBuilder.free;
       { All unit objects bind this local image owner at final link time. }
-      tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',sizeof(PInt),sizeof(PInt),sizeof(PInt));
-      tcb.emit_tai(TAIConst.Createname('FPC_THREADVARTABLES',0),VoidPointerType);
-      tcb.emit_ord_const(0,SizeUIntType); { runtime identity }
-      tcb.emit_ord_const(0,SizeUIntType); { block size }
-      tcb.emit_ord_const(0,SizeUIntType); { block alignment }
-      tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType); { main context debugger view }
-      tabledef:=tcb.end_anonymous_record;
-      CurrentAsmData.asmlists[al_globals].ConcatList(tcb.get_final_asmlist(
-        CurrentAsmData.DefineAsmSymbol('FPC_THREADVAROWNER',ownerbind,AT_DATA,tabledef),
-        tabledef,sec_data,'FPC_THREADVAROWNER',sizeof(PInt)));
-      tcb.free;
-      tcb := nil;
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lBuilder.begin_anonymous_record('',sizeof(PInt),sizeof(PInt),sizeof(PInt));
+      lBuilder.emit_tai(TAIConst.Createname('FPC_THREADVARTABLES',0),VoidPointerType);
+      lBuilder.emit_ord_const(0,SizeUIntType); { runtime identity }
+      lBuilder.emit_ord_const(0,SizeUIntType); { block size }
+      lBuilder.emit_ord_const(0,SizeUIntType); { block alignment }
+      lBuilder.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType); { main context debugger view }
+      lTableDef:=lBuilder.end_anonymous_record;
+      CurrentAsmData.asmlists[al_globals].ConcatList(lBuilder.get_final_asmlist(
+        CurrentAsmData.DefineAsmSymbol('FPC_THREADVAROWNER',lOwnerBind,AT_DATA,lTableDef),
+        lTableDef,sec_data,'FPC_THREADVAROWNER',sizeof(PInt)));
+      lBuilder.free;
+      lBuilder := nil;
     end;
 
 
 
-  procedure AddToThreadvarList(p:TObject;arg:pointer);
+  procedure AddToThreadvarList(AObject:TObject;AArg:Pointer);
     var
-      tcb: TTAITypedConstBuilder;
-      def: TDef;
-      alignment: shortint;
+      lBuilder: TTAITypedConstBuilder;
+      lDef: TDef;
+      lAlignment: ShortInt;
     begin
-      if (TSym(p).typ=staticvarsym) and
-         (vo_is_thread_var in TStaticVarSym(p).VarOptions) then
+      if (TSym(AObject).typ=staticvarsym) and
+         (vo_is_thread_var in TStaticVarSym(AObject).VarOptions) then
        begin
-         tcb:=TTAITypedConstBuilder(arg);
-         def:=TStaticVarSym(p).vardef;
-         alignment:=def.Alignment;
-         if (def.typ=recorddef) and
-            (TAbstractRecordSymTable(TRecordDef(def).SymTable).ExplicitRecordAlignment>alignment) then
-           alignment:=TAbstractRecordSymTable(TRecordDef(def).SymTable).ExplicitRecordAlignment;
-         tcb.emit_tai(TAIConst.Createname(TStaticVarSym(p).MangledName,0),VoidPointerType);
-         tcb.emit_ord_const(TStaticVarSym(p).GetSize,SizeUIntType);
-         tcb.emit_ord_const(alignment,SizeUIntType);
+         lBuilder:=TTAITypedConstBuilder(AArg);
+         lDef:=TStaticVarSym(AObject).vardef;
+         lAlignment:=lDef.Alignment;
+         if (lDef.typ=recorddef) and
+            (TAbstractRecordSymTable(TRecordDef(lDef).SymTable).ExplicitRecordAlignment>lAlignment) then
+           lAlignment:=TAbstractRecordSymTable(TRecordDef(lDef).SymTable).ExplicitRecordAlignment;
+         lBuilder.emit_tai(TAIConst.Createname(TStaticVarSym(AObject).MangledName,0),VoidPointerType);
+         lBuilder.emit_ord_const(TStaticVarSym(AObject).GetSize,SizeUIntType);
+         lBuilder.emit_ord_const(lAlignment,SizeUIntType);
        end;
     end;
 
 
   class procedure TNodeUtils.InsertThreadvars;
     var
-      s : TSymStr;
-      tcb: TTAITypedConstBuilder;
-      sym: TAsmSymbol;
-      tabledef: TRecordDef;
-      add : boolean;
+      lName : TSymStr;
+      lBuilder: TTAITypedConstBuilder;
+      lSymbol: TAsmSymbol;
+      lTableDef: TRecordDef;
+      lAdd : Boolean;
     begin
-       if (tf_section_threadvars in TargetInfo.flags) then
+       if (tf_section_threadvars in TargetInfo.Flags) then
          exit;
-       tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-       tabledef:=tcb.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
+       lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+       lTableDef:=lBuilder.begin_anonymous_record('',Default_Settings.PackRecords,VoidPointerType.Alignment,targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
        if Assigned(CurrentModule.GlobalSymTable) then
-         CurrentModule.GlobalSymTable.SymList.ForEachCall(@AddToThreadvarList,tcb);
-       CurrentModule.LocalSymTable.SymList.ForEachCall(@AddToThreadvarList,tcb);
-       if TRecordSymTable(tabledef.SymTable).DataSize<>0 then
+         CurrentModule.GlobalSymTable.SymList.ForEachCall(@AddToThreadvarList,lBuilder);
+       CurrentModule.LocalSymTable.SymList.ForEachCall(@AddToThreadvarList,lBuilder);
+       if TRecordSymTable(lTableDef.SymTable).DataSize<>0 then
          { terminator }
-         tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
-       tcb.end_anonymous_record;
-       add:=TRecordSymTable(tabledef.SymTable).DataSize<>0;
-       if add then
+         lBuilder.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
+       lBuilder.end_anonymous_record;
+       lAdd:=TRecordSymTable(lTableDef.SymTable).DataSize<>0;
+       if lAdd then
          begin
-           s:=Make_MangledName('THREADVARLIST',CurrentModule.LocalSymTable,'');
-           sym:=CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA_FORCEINDIRECT,tabledef);
+           lName:=Make_MangledName('THREADVARLIST',CurrentModule.LocalSymTable,'');
+           lSymbol:=CurrentAsmData.DefineAsmSymbol(lName,AB_GLOBAL,AT_DATA_FORCEINDIRECT,lTableDef);
            CurrentAsmData.asmlists[al_globals].ConcatList(
-             tcb.get_final_asmlist(sym,tabledef,sec_data,s,Const_Align(sizeof(PInt))));
+             lBuilder.get_final_asmlist(lSymbol,lTableDef,sec_data,lName,Const_Align(sizeof(PInt))));
            include(CurrentModule.ModuleFlags,mf_threadvars);
-           CurrentModule.Add_Public_AsmSym(sym);
+           CurrentModule.Add_Public_AsmSym(lSymbol);
          end;
-       tcb.Free;
-       tcb := nil;
+       lBuilder.Free;
+       lBuilder := nil;
     end;
 
 
-  class procedure TNodeUtils.InsertRuntimeInitsTablesTable(const prefix,tablename:string;unitflag:TModuleFlag);
+  class procedure TNodeUtils.InsertRuntimeInitsTablesTable(const APrefix,ATableName:string;AUnitFlag:TModuleFlag);
     var
-      hp: TUsedUnit;
-      tcb: TTAITypedConstBuilder;
-      countplaceholder: TTypedConstPlaceholder;
-      tabledef: TDef;
-      count: LongInt;
+      lUsedUnit: TUsedUnit;
+      lBuilder: TTAITypedConstBuilder;
+      lCountPlaceholder: TTypedConstPlaceholder;
+      lTableDef: TDef;
+      lCount: LongInt;
     begin
-      tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lBuilder.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
         targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin
       );
       { placeholder for the count }
-      countplaceholder:=tcb.emit_placeholder(SizeSIntType);
-      count:=0;
-      hp:=TUsedUnit(UsedUnits.first);
-      while Assigned(hp) do
+      lCountPlaceholder:=lBuilder.emit_placeholder(SizeSIntType);
+      lCount:=0;
+      lUsedUnit:=TUsedUnit(UsedUnits.first);
+      while Assigned(lUsedUnit) do
        begin
-         if not Assigned(hp.u.package) and (unitflag in hp.u.ModuleFlags) then
+         if not Assigned(lUsedUnit.u.package) and (AUnitFlag in lUsedUnit.u.ModuleFlags) then
           begin
-            tcb.emit_tai(
-              TAIConst.Createname(Make_MangledName(prefix,hp.u.GlobalSymTable,''),0),
+            lBuilder.emit_tai(
+              TAIConst.Createname(Make_MangledName(APrefix,lUsedUnit.u.GlobalSymTable,''),0),
               VoidCodePointerType);
-            inc(count);
+            inc(lCount);
           end;
-         hp:=TUsedUnit(hp.next);
+         lUsedUnit:=TUsedUnit(lUsedUnit.next);
        end;
       { Add items from program, if any }
-      if unitflag in CurrentModule.ModuleFlags then
+      if AUnitFlag in CurrentModule.ModuleFlags then
        begin
-         tcb.emit_tai(
-           TAIConst.Createname(Make_MangledName(prefix,CurrentModule.LocalSymTable,''),0),
+         lBuilder.emit_tai(
+           TAIConst.Createname(Make_MangledName(APrefix,CurrentModule.LocalSymTable,''),0),
            VoidCodePointerType);
-         inc(count);
+         inc(lCount);
        end;
       { Insert TableCount at start }
-      countplaceholder.replace(TAIConst.Create_sizeint(count),SizeSIntType);
-      countplaceholder.free;
-      countplaceholder := nil;
+      lCountPlaceholder.replace(TAIConst.Create_sizeint(lCount),SizeSIntType);
+      lCountPlaceholder.free;
+      lCountPlaceholder := nil;
       { insert in data segment }
-      tabledef:=tcb.end_anonymous_record;
+      lTableDef:=lBuilder.end_anonymous_record;
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(
-          CurrentAsmData.DefineAsmSymbol(tablename,AB_GLOBAL,AT_DATA,tabledef),
-          tabledef,
-          sec_data,tablename,Const_Align(sizeof(PInt))
+        lBuilder.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol(ATableName,AB_GLOBAL,AT_DATA,lTableDef),
+          lTableDef,
+          sec_data,ATableName,Const_Align(sizeof(PInt))
         )
       );
-      tcb.free;
-      tcb := nil;
+      lBuilder.free;
+      lBuilder := nil;
     end;
 
 
-  class procedure TNodeUtils.InsertRuntimeInits(const prefix:string;list:TLinkedList;unitflag:TModuleFlag);
+  class procedure TNodeUtils.InsertRuntimeInits(const APrefix:string;AList:TLinkedList;AUnitFlag:TModuleFlag);
     var
-      s: string;
-      item: TTCInitItem;
-      tcb: TTAITypedConstBuilder;
-      rawdatadef: TDef;
+      lName: string;
+      lItem: TTCInitItem;
+      lBuilder: TTAITypedConstBuilder;
+      lRawDataDef: TDef;
     begin
-      item:=TTCInitItem(list.First);
-      if item=nil then
+      lItem:=TTCInitItem(AList.First);
+      if lItem=nil then
         exit;
-      s:=Make_MangledName(prefix,CurrentModule.LocalSymTable,'');
-      tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
+      lName:=Make_MangledName(APrefix,CurrentModule.LocalSymTable,'');
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lBuilder.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
         targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
       repeat
         { optimize away unused local/static symbols }
-        if (item.sym.refs>0) or (item.sym.owner.SymTableType=GlobalSymTable) then
+        if (lItem.sym.refs>0) or (lItem.sym.Owner.SymTableType=GlobalSymTable) then
           begin
             { address to initialize }
-            tcb.queue_init(VoidPointerType);
-            rawdatadef:=CArrayDef.getreusable(CAnsiCharType,TStaticVarSym(item.sym).vardef.Size);
-            tcb.queue_vecn(rawdatadef,item.Offset);
-            tcb.queue_typeconvn(CPointerDef.getreusable(TStaticVarSym(item.sym).vardef),CPointerDef.getreusable(rawdatadef));
-            tcb.queue_emit_staticvar(TStaticVarSym(item.sym));
+            lBuilder.queue_init(VoidPointerType);
+            lRawDataDef:=CArrayDef.getreusable(CAnsiCharType,TStaticVarSym(lItem.sym).vardef.Size);
+            lBuilder.queue_vecn(lRawDataDef,lItem.Offset);
+            lBuilder.queue_typeconvn(CPointerDef.getreusable(TStaticVarSym(lItem.sym).vardef),CPointerDef.getreusable(lRawDataDef));
+            lBuilder.queue_emit_staticvar(TStaticVarSym(lItem.sym));
             { value with which to initialize }
-            tcb.emit_tai(TAIConst.Create_sym(item.datalabel),item.datadef)
+            lBuilder.emit_tai(TAIConst.Create_sym(lItem.datalabel),lItem.datadef)
           end;
-        item:=TTCInitItem(item.Next);
-      until item=nil;
+        lItem:=TTCInitItem(lItem.Next);
+      until lItem=nil;
       { end-of-list marker }
-      tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
-      rawdatadef:=tcb.end_anonymous_record;
+      lBuilder.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
+      lRawDataDef:=lBuilder.end_anonymous_record;
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(
-          CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA,rawdatadef),
-          rawdatadef,sec_data,s,Const_Align(sizeof(PInt))));
-      tcb.free;
-      tcb := nil;
-      include(CurrentModule.ModuleFlags,unitflag);
+        lBuilder.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol(lName,AB_GLOBAL,AT_DATA,lRawDataDef),
+          lRawDataDef,sec_data,lName,Const_Align(sizeof(PInt))));
+      lBuilder.free;
+      lBuilder := nil;
+      include(CurrentModule.ModuleFlags,AUnitFlag);
     end;
 
 
@@ -1485,66 +1485,66 @@ implementation
 
   class procedure TNodeUtils.InsertResourceTablesTable;
     var
-      hp : TModule;
-      count : LongInt;
-      tcb : TTAITypedConstBuilder;
-      countplaceholder : TTypedConstPlaceholder;
-      tabledef: TDef;
+      lModule : TModule;
+      lCount : LongInt;
+      lBuilder : TTAITypedConstBuilder;
+      lCountPlaceholder : TTypedConstPlaceholder;
+      lTableDef: TDef;
     begin
-      tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      count:=0;
-      hp:=TModule(Loaded_Units.first);
-      tcb.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+      lCount:=0;
+      lModule:=TModule(Loaded_Units.first);
+      lBuilder.begin_anonymous_record('',Default_Settings.PackRecords,sizeof(PInt),
         targetinfos[Ord(TargetInfo.system)]^.Alignment.RecordAlignMin);
-      countplaceholder:=tcb.emit_placeholder(SizeSIntType);
-      while Assigned(hp) do
+      lCountPlaceholder:=lBuilder.emit_placeholder(SizeSIntType);
+      while Assigned(lModule) do
         begin
-          if not Assigned(hp.package) and (mf_has_resourcestrings in hp.ModuleFlags) then
+          if not Assigned(lModule.package) and (mf_has_resourcestrings in lModule.ModuleFlags) then
             begin
-              tcb.emit_tai(TAIConst.Create_sym(
-                CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',hp.LocalSymTable,[tcdssso_register_asmsym,tcdssso_use_indirect])),
+              lBuilder.emit_tai(TAIConst.Create_sym(
+                CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',lModule.LocalSymTable,[tcdssso_register_asmsym,tcdssso_use_indirect])),
                 VoidPointerType
               );
-              tcb.emit_tai(TAIConst.Create_sym(
-                CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_end('RESSTR',hp.LocalSymTable,[tcdssso_register_asmsym,tcdssso_use_indirect])),
+              lBuilder.emit_tai(TAIConst.Create_sym(
+                CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_end('RESSTR',lModule.LocalSymTable,[tcdssso_register_asmsym,tcdssso_use_indirect])),
                 VoidPointerType
               );
-              inc(count);
+              inc(lCount);
             end;
-          hp:=TModule(hp.next);
+          lModule:=TModule(lModule.next);
         end;
       { Insert TableCount at start }
-      countplaceholder.replace(TAIConst.Create_sizeint(count),SizeSIntType);
-      countplaceholder.free;
-      countplaceholder := nil;
+      lCountPlaceholder.replace(TAIConst.Create_sizeint(lCount),SizeSIntType);
+      lCountPlaceholder.free;
+      lCountPlaceholder := nil;
       { Add to data segment }
-      tabledef:=tcb.end_anonymous_record;
+      lTableDef:=lBuilder.end_anonymous_record;
       CurrentAsmData.AsmLists[al_globals].ConcatList(
-        tcb.get_final_asmlist(
-          CurrentAsmData.DefineAsmSymbol('FPC_RESOURCESTRINGTABLES',AB_GLOBAL,AT_DATA,tabledef),
-          tabledef,sec_rodata,'FPC_RESOURCESTRINGTABLES',Const_Align(sizeof(PInt))
+        lBuilder.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol('FPC_RESOURCESTRINGTABLES',AB_GLOBAL,AT_DATA,lTableDef),
+          lTableDef,sec_rodata,'FPC_RESOURCESTRINGTABLES',Const_Align(sizeof(PInt))
         )
       );
-      tcb.free;
-      tcb := nil;
+      lBuilder.free;
+      lBuilder := nil;
     end;
 
 
-  class procedure TNodeUtils.InsertResourceInfo(ResourcesUsed: boolean);
+  class procedure TNodeUtils.InsertResourceInfo(AResourcesUsed: Boolean);
     var
-      tcb: TTAITypedConstBuilder;
+      lBuilder: TTAITypedConstBuilder;
     begin
       if TargetInfo.res in [res_elf,res_macho] then
         begin
-          tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
+          lBuilder:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
 
-          if ResourcesUsed then
-            tcb.emit_tai(TAIConst.Createname('FPC_RESSYMBOL',0),VoidPointerType)
+          if AResourcesUsed then
+            lBuilder.emit_tai(TAIConst.Createname('FPC_RESSYMBOL',0),VoidPointerType)
           else
             { Nil pointer to resource information }
-            tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
+            lBuilder.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
           CurrentAsmData.asmlists[al_globals].ConcatList(
-            tcb.get_final_asmlist(
+            lBuilder.get_final_asmlist(
               CurrentAsmData.DefineAsmSymbol('FPC_RESLOCATION',AB_GLOBAL,AT_DATA,VoidPointerType),
               VoidPointerType,
               sec_rodata,
@@ -1553,72 +1553,72 @@ implementation
             )
           );
 
-          tcb.free;
-          tcb := nil;
+          lBuilder.free;
+          lBuilder := nil;
         end;
     end;
 
 
   class procedure TNodeUtils.InsertMemorySizes;
     var
-      tcb: TTAITypedConstBuilder;
-      s: shortstring;
-      sym: TAsmSymbol;
-      def: TDef;
+      lBuilder: TTAITypedConstBuilder;
+      lName: ShortString;
+      lSymbol: TAsmSymbol;
+      lDef: TDef;
     begin
       { Insert Ident of the compiler in the .fpc.version section }
-      tcb:=CTAITypedConstBuilder.create([tcalo_no_dead_strip]);
-      s:='FPC '+Full_Version_String+
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_no_dead_strip]);
+      lName:='FPC '+Full_Version_String+
         ' ['+DateString+'] for '+TargetCPUString+' - '+TargetInfo.shortname;
-      def:=CArrayDef.getreusable(CAnsiCharType,length(s));
-      tcb.maybe_begin_aggregate(def);
-      tcb.emit_tai(TAIString.Create(s),def);
-      tcb.maybe_end_aggregate(def);
-      sym:=CurrentAsmData.DefineAsmSymbol('__fpc_ident',AB_LOCAL,AT_DATA,def);
+      lDef:=CArrayDef.getreusable(CAnsiCharType,length(lName));
+      lBuilder.maybe_begin_aggregate(lDef);
+      lBuilder.emit_tai(TAIString.Create(lName),lDef);
+      lBuilder.maybe_end_aggregate(lDef);
+      lSymbol:=CurrentAsmData.DefineAsmSymbol('__fpc_ident',AB_LOCAL,AT_DATA,lDef);
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(sym,def,sec_fpc,'version',Const_Align(32))
+        lBuilder.get_final_asmlist(lSymbol,lDef,sec_fpc,'version',Const_Align(32))
       );
-      tcb.free;
+      lBuilder.free;
 
-      if (tf_emit_stklen in TargetInfo.flags) or
-          not(tf_no_generic_stackcheck in TargetInfo.flags) then
+      if (tf_emit_stklen in TargetInfo.Flags) or
+          not(tf_no_generic_stackcheck in TargetInfo.Flags) then
         begin
           { stacksize can be specified and is now simulated }
-          tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
-          tcb.emit_tai(TAIConst.Create_int_dataptr(StackSize),PtrUIntType);
-          sym:=CurrentAsmData.DefineAsmSymbol('__stklen',AB_GLOBAL,AT_DATA,PtrUIntType);
+          lBuilder:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
+          lBuilder.emit_tai(TAIConst.Create_int_dataptr(StackSize),PtrUIntType);
+          lSymbol:=CurrentAsmData.DefineAsmSymbol('__stklen',AB_GLOBAL,AT_DATA,PtrUIntType);
           CurrentAsmData.asmlists[al_globals].ConcatList(
-            tcb.get_final_asmlist(sym,PtrUIntType,sec_data,'__stklen',Const_Align(sizeof(PInt)))
+            lBuilder.get_final_asmlist(lSymbol,PtrUIntType,sec_data,'__stklen',Const_Align(sizeof(PInt)))
           );
-          tcb.free;
-          tcb := nil;
+          lBuilder.free;
+          lBuilder := nil;
         end;
 
       { Initial heapsize }
-      tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
-      tcb.emit_tai(TAIConst.Create_int_dataptr(HeapSize),PtrUIntType);
-      sym:=CurrentAsmData.DefineAsmSymbol('__heapsize',AB_GLOBAL,AT_DATA,PtrUIntType);
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
+      lBuilder.emit_tai(TAIConst.Create_int_dataptr(HeapSize),PtrUIntType);
+      lSymbol:=CurrentAsmData.DefineAsmSymbol('__heapsize',AB_GLOBAL,AT_DATA,PtrUIntType);
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(sym,PtrUIntType,sec_data,'__heapsize',Const_Align(sizeof(PInt)))
+        lBuilder.get_final_asmlist(lSymbol,PtrUIntType,sec_data,'__heapsize',Const_Align(sizeof(PInt)))
       );
-      tcb.free;
-      tcb := nil;
+      lBuilder.free;
+      lBuilder := nil;
 
       { Valgrind usage }
-      tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
-      tcb.emit_ord_const(byte(cs_gdb_valgrind in CurrentSettings.GlobalSwitches),U8IntType);
-      sym:=CurrentAsmData.DefineAsmSymbol('__fpc_valgrind',AB_GLOBAL,AT_DATA,U8IntType);
+      lBuilder:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
+      lBuilder.emit_ord_const(Byte(cs_gdb_valgrind in CurrentSettings.GlobalSwitches),U8IntType);
+      lSymbol:=CurrentAsmData.DefineAsmSymbol('__fpc_valgrind',AB_GLOBAL,AT_DATA,U8IntType);
       CurrentAsmData.asmlists[al_globals].ConcatList(
-        tcb.get_final_asmlist(sym,U8IntType,sec_data,'__fpc_valgrind',Const_Align(sizeof(PInt)))
+        lBuilder.get_final_asmlist(lSymbol,U8IntType,sec_data,'__fpc_valgrind',Const_Align(sizeof(PInt)))
       );
-      tcb.free;
-      tcb := nil;
+      lBuilder.free;
+      lBuilder := nil;
     end;
 
 
   class procedure TNodeUtils.InsertObjectInfo;
     var
-      tcb: TTAITypedConstBuilder;
+      lBuilder: TTAITypedConstBuilder;
     begin
       if (m_objectivec1 in CurrentSettings.ModeSwitches) then
         begin
@@ -1626,69 +1626,69 @@ implementation
             next 4 bytes contain flags (currently only regarding whether the code in the object
             file supports or requires garbage collection)
           }
-          tcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
-          tcb.emit_ord_const(0,U64IntType);
+          lBuilder:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_no_dead_strip]);
+          lBuilder.emit_ord_const(0,U64IntType);
           CurrentAsmData.asmlists[al_objc_data].ConcatList(
-            tcb.get_final_asmlist(
+            lBuilder.get_final_asmlist(
               CurrentAsmData.DefineAsmSymbol(TargetAsm.labelprefix+'_OBJC_IMAGE_INFO',AB_LOCAL,AT_DATA,U64IntType),
               U64IntType,sec_objc_image_info,'_OBJC_IMAGE_INFO',Const_Align(sizeof(PInt))
             )
           );
-          tcb.free;
-          tcb := nil;
+          lBuilder.free;
+          lBuilder := nil;
         end;
     end;
 
 
-  class procedure TNodeUtils.RegisterUsedAsmSym(sym: TAsmSymbol; def: TDef; compileronly: boolean);
+  class procedure TNodeUtils.RegisterUsedAsmSym(ASym: TAsmSymbol; ADef: TDef; ACompilerOnly: Boolean);
     begin
       { don't do anything by default }
     end;
 
 
-  class procedure TNodeUtils.RegisterModuleInitFunction(pd: TProcDef);
+  class procedure TNodeUtils.RegisterModuleInitFunction(AProcDef: TProcDef);
     begin
       { setinitname may generate a new section -> don't add to the
         current list, because we assume this remains a text section }
-      exportlib.setinitname(CurrentAsmData.AsmLists[al_pure_assembler],pd.MangledName);
+      exportlib.setinitname(CurrentAsmData.AsmLists[al_pure_assembler],AProcDef.MangledName);
     end;
 
 
-  class procedure TNodeUtils.RegisterModuleFiniFunction(pd: TProcDef);
+  class procedure TNodeUtils.RegisterModuleFiniFunction(AProcDef: TProcDef);
     begin
-      exportlib.setfininame(CurrentAsmData.AsmLists[al_pure_assembler],pd.MangledName);
+      exportlib.setfininame(CurrentAsmData.AsmLists[al_pure_assembler],AProcDef.MangledName);
     end;
 
 
-   class procedure TNodeUtils.add_main_procdef_paras(pd: TDef);
+   class procedure TNodeUtils.Add_Main_ProcDef_Paras(AProcDef: TDef);
      var
-       pvs: TParaVarSym;
+       lParaVarSym: TParaVarSym;
      begin
        { stub for calling FPC_SYSTEMMAIN from the C main -> add argc/argv/argp }
-       if (TProcDef(pd).ProcTypeOption=potype_mainstub) and
+       if (TProcDef(AProcDef).ProcTypeOption=potype_mainstub) and
           (TargetInfo.system in systems_darwin) then
          begin
-           pvs:=CParaVarSym.create('ARGC',1,vs_const,S32IntType,[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           pvs:=CParaVarSym.create('ARGV',2,vs_const,CPointerDef.getreusable(CharPointerType),[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           pvs:=CParaVarSym.create('ARGP',3,vs_const,CPointerDef.getreusable(CharPointerType),[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           TProcDef(pd).CalcParas;
+           lParaVarSym:=CParaVarSym.Create('ARGC',1,vs_const,S32IntType,[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           lParaVarSym:=CParaVarSym.Create('ARGV',2,vs_const,CPointerDef.getreusable(CharPointerType),[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           lParaVarSym:=CParaVarSym.Create('ARGP',3,vs_const,CPointerDef.getreusable(CharPointerType),[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           TProcDef(AProcDef).CalcParas;
          end
        { package stub for Windows is a DLLMain }
-       else if (TProcDef(pd).ProcTypeOption=potype_pkgstub) and
+       else if (TProcDef(AProcDef).ProcTypeOption=potype_pkgstub) and
            (TargetInfo.system in systems_all_windows) then
          begin
-           pvs:=CParaVarSym.create('HINSTANCE',1,vs_const,UIntType,[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           pvs:=CParaVarSym.create('DLLREASON',2,vs_const,U32IntType,[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           pvs:=CParaVarSym.create('DLLPARAM',3,vs_const,VoidPointerType,[]);
-           TProcDef(pd).ParaST.InsertSym(pvs);
-           TProcDef(pd).ReturnDef:=Bool32Type;
-           insert_funcret_para(TProcDef(pd));
-           TProcDef(pd).CalcParas;
+           lParaVarSym:=CParaVarSym.Create('HINSTANCE',1,vs_const,UIntType,[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           lParaVarSym:=CParaVarSym.Create('DLLREASON',2,vs_const,U32IntType,[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           lParaVarSym:=CParaVarSym.Create('DLLPARAM',3,vs_const,VoidPointerType,[]);
+           TProcDef(AProcDef).ParaST.InsertSym(lParaVarSym);
+           TProcDef(AProcDef).ReturnDef:=Bool32Type;
+           insert_funcret_para(TProcDef(AProcDef));
+           TProcDef(AProcDef).CalcParas;
          end;
      end;
 

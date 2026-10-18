@@ -30,9 +30,9 @@ interface
 
     type
        TX8664AddNode = class(TX86AddNode)
-         function use_generic_mul64bit: boolean; override;
-         procedure second_addordinal; override;
-         procedure second_mul;
+         function Use_Generic_Mul64Bit: Boolean; override;
+         procedure Second_AddOrdinal; override;
+         procedure Second_Mul;
        end;
 
   implementation
@@ -44,114 +44,114 @@ interface
       cgbase,cgutils,cga,cgobj,hlcgobj,cgx86,
       tgobj;
 
-    function TX8664AddNode.use_generic_mul64bit: boolean;
+    function TX8664AddNode.Use_Generic_Mul64Bit: Boolean;
     begin
-      result:=false;
+      Result:=false;
     end;
 
 {*****************************************************************************
                                 Addordinal
 *****************************************************************************}
 
-    procedure TX8664AddNode.second_addordinal;
+    procedure TX8664AddNode.Second_AddOrdinal;
     begin
       { filter unsigned MUL opcode, which requires special handling.
         Note that when overflow checking is off, we can use IMUL instead. }
-      if (nodetype=muln) and
-        needoverflowcheck and
-        (not(Is_Signed(left.resultdef)) or
-         not(Is_Signed(right.resultdef))) then
+      if (NodeType=muln) and
+        NeedOverflowCheck and
+        (not(Is_Signed(Left.ResultDef)) or
+         not(Is_Signed(Right.ResultDef))) then
       begin
-        second_mul;
+        Second_Mul;
         exit;
       end;
 
-      inherited second_addordinal;
+      inherited Second_AddOrdinal;
     end;
 
 {*****************************************************************************
                                 MUL
 *****************************************************************************}
 
-    procedure TX8664AddNode.second_mul;
+    procedure TX8664AddNode.Second_Mul;
       var
-        reg,rega,regd:TRegister;
-        ref:TReference;
-        use_ref:boolean;
-        hl4 : TAsmLabel;
-        cgsize:TCgSize;
-        opsize:TOpSize;
+        lRegister,lAccumulatorReg,lDataReg:TRegister;
+        lReference:TReference;
+        lUseReference:Boolean;
+        lOverflowLabel : TAsmLabel;
+        lCGSize:TCgSize;
+        lOpSize:TOpSize;
       begin
-        Reference_Reset(ref,0,[]);
-        reg:=NR_NO;
+        Reference_Reset(lReference,0,[]);
+        lRegister:=NR_NO;
 
-        cgsize:=Def_CGSize(resultdef);
-        opsize:=TCGSize2OpSize[cgsize];
-        case cgsize of
+        lCGSize:=Def_CGSize(ResultDef);
+        lOpSize:=TCGSize2OpSize[lCGSize];
+        case lCGSize of
           OS_S64,OS_64:
             begin
-              rega:=NR_RAX;
-              regd:=NR_RDX;
+              lAccumulatorReg:=NR_RAX;
+              lDataReg:=NR_RDX;
             end;
           OS_S32,OS_32:
             begin
-              rega:=NR_EAX;
-              regd:=NR_EDX;
+              lAccumulatorReg:=NR_EAX;
+              lDataReg:=NR_EDX;
             end;
           else
             InternalError(2013102703);
         end;
 
-        pass_left_right;
+        Pass_Left_Right;
 
         { The location.register will be filled in later (JM) }
-        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
         { Mul supports registers and references, so if not register/reference,
           load the location into a register}
-        use_ref:=false;
-        if left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
-          reg:=left.Location.Register
-        else if left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+        lUseReference:=false;
+        if Left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+          lRegister:=Left.Location.Register
+        else if Left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
           begin
-            ref:=left.Location.Reference;
-            use_ref:=true;
+            lReference:=Left.Location.Reference;
+            lUseReference:=true;
           end
         else
           begin
             {LOC_CONSTANT for example.}
-            reg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-            hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.Location,reg);
+            lRegister:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+            hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,ResultDef,Left.Location,lRegister);
           end;
         { Allocate RAX. }
-        cg.GetCPURegister(CurrentAsmData.CurrAsmList,rega);
+        cg.GetCPURegister(CurrentAsmData.CurrAsmList,lAccumulatorReg);
         { Load the right value. }
-        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,resultdef,right.Location,rega);
+        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,ResultDef,Right.Location,lAccumulatorReg);
         { Also allocate RDX, since it is also modified by a mul (JM). }
-        cg.GetCPURegister(CurrentAsmData.CurrAsmList,regd);
+        cg.GetCPURegister(CurrentAsmData.CurrAsmList,lDataReg);
 
-        if needoverflowcheck then
+        if NeedOverflowCheck then
           cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
-        if use_ref then
-          emit_ref(A_MUL,opsize,ref)
+        if lUseReference then
+          emit_ref(A_MUL,lOpSize,lReference)
         else
-          emit_reg(A_MUL,opsize,reg);
-        if needoverflowcheck then
+          emit_reg(A_MUL,lOpSize,lRegister);
+        if NeedOverflowCheck then
          begin
-           CurrentAsmData.getjumplabel(hl4);
-           cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,hl4);
+           CurrentAsmData.getjumplabel(lOverflowLabel);
+           cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,lOverflowLabel);
            cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
            cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-           cg.A_Label(CurrentAsmData.CurrAsmList,hl4);
+           cg.A_Label(CurrentAsmData.CurrAsmList,lOverflowLabel);
          end;
         { Free RDX,RAX }
-        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,regd);
-        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,rega);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lDataReg);
+        cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lAccumulatorReg);
         { Allocate a new register and store the result in RAX in it. }
-        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-        emit_reg_reg(A_MOV,opsize,rega,location.Register);
-        location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
-        location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
+        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+        emit_reg_reg(A_MOV,lOpSize,lAccumulatorReg,Location.Register);
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
       end;
 
 

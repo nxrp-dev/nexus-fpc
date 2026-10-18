@@ -47,11 +47,11 @@ type
 
     destructor Destroy; override;
 
-    procedure ppuwrite(ppufile:TCompilerPPUFile);
-    constructor ppuload(ppufile:TCompilerPPUFile);
+    procedure PPUWrite(ppufile:TCompilerPPUFile);
+    constructor PPULoad(ppufile:TCompilerPPUFile);
 
     procedure deref;
-    procedure derefimpl;
+    procedure DerefImpl;
     procedure BuildDeref;
     procedure BuildDerefImpl;
   end;
@@ -91,7 +91,7 @@ implementation
     end;
 
 
-  procedure TUnitWPOInfo.ppuwrite(ppufile:TCompilerPPUFile);
+  procedure TUnitWPOInfo.PPUWrite(ppufile:TCompilerPPUFile);
     var
       i: LongInt;
     begin
@@ -110,7 +110,7 @@ implementation
 
       ppufile.PutLongInt(fcalledvmtentriestemplist.count);
       for i:=0 to fcalledvmtentriestemplist.count-1 do
-        TCalledVMTEntries(fcalledvmtentriestemplist[i]).ppuwrite(ppufile);
+        TCalledVMTEntries(fcalledvmtentriestemplist[i]).PPUWrite(ppufile);
 
       ppufile.WriteEntry(IBCreatedObjTypes);
 
@@ -120,7 +120,7 @@ implementation
     end;
 
 
-  constructor TUnitWPOInfo.ppuload(ppufile:TCompilerPPUFile);
+  constructor TUnitWPOInfo.PPULoad(ppufile:TCompilerPPUFile);
     var
       i, len: LongInt;
     begin
@@ -136,32 +136,32 @@ implementation
       else
         begin
           len:=ppufile.GetLongInt;
-          fcreatedobjtypes:=TFPObjectList.create(false);
+          fcreatedobjtypes:=TFPObjectList.Create(false);
           fcreatedobjtypes.count:=len;
           SetLength(fcreatedobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.GetDeref(fcreatedobjtypesderefs[i]);
 
           len:=ppufile.GetLongInt;
-          fcreatedclassrefobjtypes:=TFPObjectList.create(false);
+          fcreatedclassrefobjtypes:=TFPObjectList.Create(false);
           fcreatedclassrefobjtypes.count:=len;
           SetLength(fcreatedclassrefobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.GetDeref(fcreatedclassrefobjtypesderefs[i]);
 
           len:=ppufile.GetLongInt;
-          fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
+          fmaybecreatedbyclassrefdeftypes:=TFPObjectList.Create(false);
           fmaybecreatedbyclassrefdeftypes.count:=len;
           SetLength(fmaybecreatedbyclassrefdeftypesderefs,len);
           for i:=0 to len-1 do
             ppufile.GetDeref(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
           len:=ppufile.GetLongInt;
-          fcalledvmtentriestemplist:=TFPObjectList.create(false);
+          fcalledvmtentriestemplist:=TFPObjectList.Create(false);
           fcalledvmtentriestemplist.count:=len;
-          fcalledvmtentries:=TFPHashList.create;
+          fcalledvmtentries:=TFPHashList.Create;
           for i:=0 to len-1 do
-            fcalledvmtentriestemplist[i]:=TCalledVMTEntries.ppuload(ppufile);
+            fcalledvmtentriestemplist[i]:=TCalledVMTEntries.PPULoad(ppufile);
         end;
     end;
 
@@ -176,17 +176,17 @@ implementation
 
       SetLength(fcreatedobjtypesderefs,fcreatedobjtypes.count);
       for i:=0 to fcreatedobjtypes.count-1 do
-        fcreatedobjtypesderefs[i].build(fcreatedobjtypes[i]);
+        fcreatedobjtypesderefs[i].Build(fcreatedobjtypes[i]);
 
       SetLength(fcreatedclassrefobjtypesderefs,fcreatedclassrefobjtypes.count);
       for i:=0 to fcreatedclassrefobjtypes.count-1 do
-        fcreatedclassrefobjtypesderefs[i].build(fcreatedclassrefobjtypes[i]);
+        fcreatedclassrefobjtypesderefs[i].Build(fcreatedclassrefobjtypes[i]);
 
       SetLength(fmaybecreatedbyclassrefdeftypesderefs,fmaybecreatedbyclassrefdeftypes.count);
       for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
-        fmaybecreatedbyclassrefdeftypesderefs[i].build(fmaybecreatedbyclassrefdeftypes[i]);
+        fmaybecreatedbyclassrefdeftypesderefs[i].Build(fmaybecreatedbyclassrefdeftypes[i]);
 
-      fcalledvmtentriestemplist:=TFPObjectList.create(false);
+      fcalledvmtentriestemplist:=TFPObjectList.Create(false);
       fcalledvmtentriestemplist.count:=fcalledvmtentries.count;
       for i:=0 to fcalledvmtentries.count-1 do
         begin
@@ -251,7 +251,7 @@ implementation
     end;
 
 
-  procedure TUnitWPOInfo.derefimpl;
+  procedure TUnitWPOInfo.DerefImpl;
     var
       i: LongInt;
     begin
@@ -261,7 +261,7 @@ implementation
 
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         begin
-          TCalledVMTEntries(fcalledvmtentriestemplist[i]).derefimpl;
+          TCalledVMTEntries(fcalledvmtentriestemplist[i]).DerefImpl;
         end;
     end;
 

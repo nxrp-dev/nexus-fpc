@@ -35,13 +35,13 @@ type
 
   TAddOptNode = class(TAddNode)
      subnodetype: TSubNodeType;
-     constructor create(ts: TSubNodeType; l,r : TNode); virtual; reintroduce;
+     constructor Create(ts: TSubNodeType; l,r : TNode); virtual; reintroduce;
      { pass_1 will be overridden by the separate subclasses    }
      { By default, pass_generate_code is the same as for addnode           }
      { Only if there's a processor specific implementation, it }
      { will be overridden.                                     }
-     function dogetcopy: TNode; override;
-     function docompare(p: TNode): boolean; override;
+     function DoGetCopy: TNode; override;
+     function DoCompare(p: TNode): boolean; override;
   end;
 
   TAddSStringOptNode = class(TAddOptNode)
@@ -49,24 +49,24 @@ type
     { sometimes (it's initialized/updated by calling updatecurmaxlen)     }
     curmaxlen: byte;
     { pass_1 must be overridden, otherwise we get an endless loop }
-    function pass_typecheck: TNode; override;
-    function pass_1: TNode; override;
-    function dogetcopy: TNode; override;
-    function docompare(p: TNode): boolean; override;
+    function Pass_TypeCheck: TNode; override;
+    function Pass_1: TNode; override;
+    function DoGetCopy: TNode; override;
+    function DoCompare(p: TNode): boolean; override;
    protected
     procedure updatecurmaxlen;
   end;
 
   { add a char to a shortstring }
   TAddSStringCharOptNode = class(TAddSStringOptNode)
-    constructor create(l,r : TNode); virtual; reintroduce;
+    constructor Create(l,r : TNode); virtual; reintroduce;
   end;
   TAddSStringCharOptNodeClass = class of TAddSStringCharOptNode;
 
   { add a constant string to a short string }
   TAddSStringCSStringOptNode = class(TAddSStringOptNode)
-    constructor create(l,r : TNode); virtual; reintroduce;
-    function pass_1: TNode; override;
+    constructor Create(l,r : TNode); virtual; reintroduce;
+    function Pass_1: TNode; override;
   end;
   TAddSStringCSStringOptNodeClass = class of TAddSStringCSStringOptNode;
 
@@ -98,28 +98,28 @@ uses CUtils, Systems,
                              TADDOPTNODE
 *****************************************************************************}
 
-constructor TAddOptNode.create(ts: TSubNodeType; l,r : TNode);
+constructor TAddOptNode.Create(ts: TSubNodeType; l,r : TNode);
 begin
   { we need to keep the addn nodetype, otherwise taddnode.pass_generate_code will be }
   { confused. Comparison for equal nodetypes therefore has to be         }
   { implemented using the classtype() method (JM)                        }
-  inherited create(addn,l,r);
+  inherited Create(addn,l,r);
   subnodetype := ts;
 end;
 
-function TAddOptNode.dogetcopy: TNode;
+function TAddOptNode.DoGetCopy: TNode;
 var
   hp: TAddOptNode;
 begin
-  hp := TAddOptNode(inherited dogetcopy);
+  hp := TAddOptNode(inherited DoGetCopy);
   hp.subnodetype := subnodetype;
-  dogetcopy := hp;
+  DoGetCopy := hp;
 end;
 
-function TAddOptNode.docompare(p: TNode): boolean;
+function TAddOptNode.DoCompare(p: TNode): boolean;
 begin
-  docompare :=
-    inherited docompare(p) and
+  DoCompare :=
+    inherited DoCompare(p) and
     (subnodetype = TAddOptNode(p).subnodetype);
 end;
 
@@ -128,39 +128,39 @@ end;
                         TADDSSTRINGOPTNODE
 *****************************************************************************}
 
-function TAddSStringOptNode.pass_typecheck: TNode;
+function TAddSStringOptNode.Pass_TypeCheck: TNode;
 begin
   result := nil;
   updatecurmaxlen;
   { left and right are already firstpass'ed by taddnode.pass_1 }
   if not Is_ShortString(left.resultdef) then
-   inserttypeconv(left,CShortStringType);
+   InsertTypeConv(left,CShortStringType);
   if not Is_ShortString(right.resultdef) then
-   inserttypeconv(right,CShortStringType);
+   InsertTypeConv(right,CShortStringType);
   resultdef := left.resultdef;
 end;
 
-function TAddSStringOptNode.pass_1: TNode;
+function TAddSStringOptNode.Pass_1: TNode;
 begin
-  pass_1 := nil;
+  Pass_1 := nil;
   expectloc:= LOC_REFERENCE;
   { here we call STRCONCAT or STRCMP or STRCOPY }
   include(CurrentProcInfo.flags,pi_do_call);
 end;
 
-function TAddSStringOptNode.dogetcopy: TNode;
+function TAddSStringOptNode.DoGetCopy: TNode;
 var
   hp: TAddSStringOptNode;
 begin
-  hp := TAddSStringOptNode(inherited dogetcopy);
+  hp := TAddSStringOptNode(inherited DoGetCopy);
   hp.curmaxlen := curmaxlen;
-  dogetcopy := hp;
+  DoGetCopy := hp;
 end;
 
-function TAddSStringOptNode.docompare(p: TNode): boolean;
+function TAddSStringOptNode.DoCompare(p: TNode): boolean;
 begin
-  docompare :=
-    inherited docompare(p) and
+  DoCompare :=
+    inherited DoCompare(p) and
     (curmaxlen = TAddSStringCharOptNode(p).curmaxlen);
 end;
 
@@ -194,7 +194,7 @@ begin
     curmaxlen := 1
   else if (left.nodetype = typeconvn) then
     begin
-      case TTypeConvNode(left).convtype of
+      case TTypeConvNode(left).ConvType of
         tc_char_2_string:
           curmaxlen := 1;
 {       doesn't work yet, don't know why (JM)
@@ -213,9 +213,9 @@ end;
 *****************************************************************************}
 
 
-constructor TAddSStringCharOptNode.create(l,r : TNode);
+constructor TAddSStringCharOptNode.Create(l,r : TNode);
 begin
-  inherited create(addsstringcharoptn,l,r);
+  inherited Create(addsstringcharoptn,l,r);
 end;
 
 {*****************************************************************************
@@ -223,17 +223,17 @@ end;
 *****************************************************************************}
 
 
-constructor TAddSStringCSStringOptNode.create(l,r : TNode);
+constructor TAddSStringCSStringOptNode.Create(l,r : TNode);
 begin
-  inherited create(addsstringcsstringoptn,l,r);
+  inherited Create(addsstringcsstringoptn,l,r);
 end;
 
 
-function TAddSStringCSStringOptNode.pass_1: TNode;
+function TAddSStringCSStringOptNode.Pass_1: TNode;
 begin
   { create the call to the concat routine both strings as arguments }
-  result := CCallNode.createintern('fpc_shortstr_append_shortstr',
-    CCallParaNode.create(left,CCallParaNode.create(right,nil)));
+  result := CCallNode.CreateIntern('fpc_shortstr_append_shortstr',
+    CCallParaNode.Create(left,CCallParaNode.Create(right,nil)));
   left:=nil;
   right:=nil;
 end;
@@ -258,7 +258,7 @@ function genaddsstringcharoptnode(p: TAddNode): TNode;
 var
   hp: TNode;
 begin
-  hp := CAddSStringCharOptNode.create(p.left.GetCopy,p.right.GetCopy);
+  hp := CAddSStringCharOptNode.Create(p.left.GetCopy,p.right.GetCopy);
   hp.flags := p.flags;
   genaddsstringcharoptnode := hp;
 end;
@@ -280,7 +280,7 @@ function genaddsstringcsstringoptnode(p: TAddNode): TNode;
 var
   hp: TNode;
 begin
-  hp := CAddSStringCSStringOptNode.create(p.left.GetCopy,p.right.GetCopy);
+  hp := CAddSStringCSStringOptNode.Create(p.left.GetCopy,p.right.GetCopy);
   hp.flags := p.flags;
   genaddsstringcsstringoptnode := hp;
 end;
@@ -321,43 +321,43 @@ begin
     begin
       sn:=TAddNode(hp).right.GetCopy;
       if not is_shortstr or not Is_ShortString(sn.resultdef) then
-        inserttypeconv(sn,p.resultdef);
+        InsertTypeConv(sn,p.resultdef);
       if is_shortstr then
         begin
-          sn:=CAddrNode.create(sn);
+          sn:=CAddrNode.Create(sn);
           include(sn.flags,nf_internal);
         end;
-      arrp:=CArrayConstructorNode.create(sn,arrp);
+      arrp:=CArrayConstructorNode.Create(sn,arrp);
       hp:=TAddNode(hp).left;
     end;
   sn:=hp.GetCopy;
   if not is_shortstr or not Is_ShortString(sn.resultdef) then
-    inserttypeconv(sn,p.resultdef);
+    InsertTypeConv(sn,p.resultdef);
   if is_shortstr then
     begin
-      sn:=CAddrNode.create(sn);
+      sn:=CAddrNode.Create(sn);
       include(sn.flags,nf_internal);
     end;
-  arrp:=CArrayConstructorNode.create(sn,arrp);
-  Include(arrp.arrayconstructornodeflags, acnf_allow_array_constructor);
-  if Assigned(aktassignmentnode) and
-     (aktassignmentnode.right=p) and
+  arrp:=CArrayConstructorNode.Create(sn,arrp);
+  Include(arrp.ArrayConstructorNodeFlags, acnf_allow_array_constructor);
+  if Assigned(AktAssignmentNode) and
+     (AktAssignmentNode.right=p) and
      (
-       (aktassignmentnode.left.resultdef=p.resultdef) or
+       (AktAssignmentNode.left.resultdef=p.resultdef) or
        (
-         Is_ShortString(aktassignmentnode.left.resultdef) and
+         Is_ShortString(AktAssignmentNode.left.resultdef) and
          Is_ShortString(p.resultdef)
        )
      ) and
-     valid_for_var(aktassignmentnode.left,false) then
+     valid_for_var(AktAssignmentNode.left,false) then
     begin
-      para:=CCallParaNode.create(
+      para:=CCallParaNode.Create(
               arrp,
-              CCallParaNode.create(aktassignmentnode.left.GetCopy,nil)
+              CCallParaNode.Create(AktAssignmentNode.left.GetCopy,nil)
             );
       if Is_AnsiString(p.resultdef) then
-        para:=CCallParaNode.create(
-                COrdConstNode.create(
+        para:=CCallParaNode.Create(
+                COrdConstNode.Create(
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
                   TStringDef(p.resultdef).encoding,
@@ -366,24 +366,24 @@ begin
                 ),
                 para
               );
-      result:=CCallNode.createintern(
+      result:=CCallNode.CreateIntern(
                 'fpc_'+TStringDef(p.resultdef).StringTypName+'_concat_multi',
                 para
               );
-      include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+      include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
     end
   else
     begin
-      result:=internalstatements(newstatement);
-      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
-      addstatement(newstatement,tempnode);
-      para:=CCallParaNode.create(
+      result:=InternalStatements(newstatement);
+      tempnode:=CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
+      AddStatement(newstatement,tempnode);
+      para:=CCallParaNode.Create(
               arrp,
-              CCallParaNode.create(CTempRefNode.create(tempnode),nil)
+              CCallParaNode.Create(CTempRefNode.Create(tempnode),nil)
             );
       if Is_AnsiString(p.resultdef) then
-        para:=CCallParaNode.create(
-                COrdConstNode.create(
+        para:=CCallParaNode.Create(
+                COrdConstNode.Create(
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
                   TStringDef(p.resultdef).encoding,
@@ -392,15 +392,15 @@ begin
                 ),
                 para
               );
-      addstatement(
+      AddStatement(
         newstatement,
-        CCallNode.createintern(
+        CCallNode.CreateIntern(
           'fpc_'+TStringDef(p.resultdef).StringTypName+'_concat_multi',
           para
         )
       );
-      addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
-      addstatement(newstatement,CTempRefNode.create(tempnode));
+      AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(tempnode));
+      AddStatement(newstatement,CTempRefNode.Create(tempnode));
     end;
 end;
 
@@ -453,65 +453,65 @@ var
       if is_stored_operand(n) then
         exit(CTypeConvNode.Create_Internal(n,VoidPointerType));
       if not Is_Array_Constructor(n.resultdef) then
-        inserttypeconv(n,p.resultdef);
-      optemp:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
-      addstatement(newstatement,optemp);
-      addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(optemp),n));
-      addstatement(newstatement,CTempDeleteNode.create_normal_temp(optemp));
-      operandref:=CTypeConvNode.Create_Internal(CTempRefNode.create(optemp),VoidPointerType);
+        InsertTypeConv(n,p.resultdef);
+      optemp:=CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent,true);
+      AddStatement(newstatement,optemp);
+      AddStatement(newstatement,CAssignmentNode.Create(CTempRefNode.Create(optemp),n));
+      AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(optemp));
+      operandref:=CTypeConvNode.Create_Internal(CTempRefNode.Create(optemp),VoidPointerType);
     end;
 
 begin
-  result:=internalstatements(newstatement);
+  result:=InternalStatements(newstatement);
   arrp:=nil;
   hp:=p;
   while Assigned(hp) and (hp.nodetype=addn) do
     begin
-      arrp:=CArrayConstructorNode.create(operandref(TAddNode(hp).right.GetCopy),arrp);
+      arrp:=CArrayConstructorNode.Create(operandref(TAddNode(hp).right.GetCopy),arrp);
       hp:=TAddNode(hp).left;
     end;
-  arrp:=CArrayConstructorNode.create(operandref(hp.GetCopy),arrp);
-  Include(arrp.arrayconstructornodeflags, acnf_allow_array_constructor);
-  if Assigned(aktassignmentnode) and
-     (aktassignmentnode.right=p) and
-     (aktassignmentnode.left.resultdef=p.resultdef) and
-     valid_for_var(aktassignmentnode.left,false) then
+  arrp:=CArrayConstructorNode.Create(operandref(hp.GetCopy),arrp);
+  Include(arrp.ArrayConstructorNodeFlags, acnf_allow_array_constructor);
+  if Assigned(AktAssignmentNode) and
+     (AktAssignmentNode.right=p) and
+     (AktAssignmentNode.left.resultdef=p.resultdef) and
+     valid_for_var(AktAssignmentNode.left,false) then
     begin
-      para:=CCallParaNode.create(
+      para:=CCallParaNode.Create(
               arrp,
-            CCallParaNode.create(
-              CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
-            CCallParaNode.create(
-              CTypeConvNode.Create_Internal(aktassignmentnode.left.GetCopy,VoidPointerType),nil)
+            CCallParaNode.Create(
+              CAddrNode.Create_Internal(CRTTINode.Create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
+            CCallParaNode.Create(
+              CTypeConvNode.Create_Internal(AktAssignmentNode.left.GetCopy,VoidPointerType),nil)
           ));
-      addstatement(newstatement,
-        CCallNode.createintern(
+      AddStatement(newstatement,
+        CCallNode.CreateIntern(
           'fpc_dynarray_concat_multi',
           para
         )
       );
-      include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+      include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
     end
   else
     begin
-      tempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
-      addstatement(newstatement,tempnode);
-      para:=CCallParaNode.create(
+      tempnode:=CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent ,true);
+      AddStatement(newstatement,tempnode);
+      para:=CCallParaNode.Create(
               arrp,
-            CCallParaNode.create(
-              CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
-            CCallParaNode.create(
-              CTypeConvNode.Create_Internal(CTempRefNode.create(tempnode),VoidPointerType),nil)
+            CCallParaNode.Create(
+              CAddrNode.Create_Internal(CRTTINode.Create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
+            CCallParaNode.Create(
+              CTypeConvNode.Create_Internal(CTempRefNode.Create(tempnode),VoidPointerType),nil)
           ));
-      addstatement(
+      AddStatement(
         newstatement,
-        CCallNode.createintern(
+        CCallNode.CreateIntern(
           'fpc_dynarray_concat_multi',
           para
         )
       );
-      addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
-      addstatement(newstatement,CTempRefNode.create(tempnode));
+      AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(tempnode));
+      AddStatement(newstatement,CTempRefNode.Create(tempnode));
     end;
 end;
 

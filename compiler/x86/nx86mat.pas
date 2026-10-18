@@ -30,16 +30,16 @@ interface
 
     type
       TX86UnaryMinusNode = class(TCGUnaryMinusNode)
-         procedure second_float;override;
-         function pass_1:TNode;override;
+         procedure Second_Float;override;
+         function Pass_1:TNode;override;
       end;
 
       TX86NotNode = class(TCGNotNode)
-         procedure second_boolean;override;
+         procedure Second_Boolean;override;
       end;
 
       TX86ModDivNode = class(TCGModDivNode)
-         procedure pass_generate_code;override;
+         procedure Pass_Generate_Code;override;
       end;
 
       TX86ShlShrNode = class(TCGShlShrNode)
@@ -53,7 +53,7 @@ interface
       CUtils,Verbose,Globals,
       symconst,symdef,
       aasmbase,aasmtai,aasmcpu,AAsmData,defutil,
-      cgbase,pass_1,pass_2,
+      cgbase,Pass_1,pass_2,
       ncon,
       cpubase,CPUInfo,
       cga,cgobj,hlcgobj,cgx86,cgutils,
@@ -64,55 +64,55 @@ interface
                           TI386UNARYMINUSNODE
 *****************************************************************************}
 
-    function TX86UnaryMinusNode.pass_1 : TNode;
+    function TX86UnaryMinusNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
+         Result:=nil;
+         FirstPass(Left);
          if CodeGenError then
            exit;
 
-         if (left.resultdef.typ=floatdef) then
+         if (Left.ResultDef.typ=floatdef) then
            begin
-             if Use_VectorFPU(left.resultdef) then
-               expectloc:=LOC_MMREGISTER
+             if Use_VectorFPU(Left.ResultDef) then
+               ExpectLoc:=LOC_MMREGISTER
              else
-               expectloc:=LOC_FPUREGISTER;
+               ExpectLoc:=LOC_FPUREGISTER;
            end
          else
-           inherited pass_1;
+           inherited Pass_1;
       end;
 
 
 
 
-    procedure TX86UnaryMinusNode.second_float;
+    procedure TX86UnaryMinusNode.Second_Float;
       var
-        l1: TAsmLabel;
-        href: TReference;
-        reg: TRegister;
+        lLabel: TAsmLabel;
+        lReference: TReference;
+        lReg: TRegister;
       begin
-        SecondPass(left);
+        SecondPass(Left);
 
-        if expectloc=LOC_MMREGISTER then
+        if ExpectLoc=LOC_MMREGISTER then
           begin
             if cs_opt_fastmath in CurrentSettings.OptimizerSwitches then
               begin
-                if not(left.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER,LOC_CREFERENCE,LOC_REFERENCE]) then
-                  hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-                Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+                if not(Left.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER,LOC_CREFERENCE,LOC_REFERENCE]) then
+                  hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+                Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
 
-                location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(resultdef));
-                cg.A_OpMM_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,location.Size,location.Register,location.Register,nil);
-                cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,OP_SUB,location.Size,left.Location,location.Register,MMS_MoveScalar);
+                Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(ResultDef));
+                cg.A_OpMM_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,Location.Size,Location.Register,Location.Register,nil);
+                cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,OP_SUB,Location.Size,Left.Location,Location.Register,MMS_MoveScalar);
               end
             else
               begin
-                Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+                Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
 
-                CurrentAsmData.getdatalabel(l1);
-                new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,Const_Align(16));
-                CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(l1));
-                case Def_CGSize(resultdef) of
+                CurrentAsmData.getdatalabel(lLabel);
+                new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lLabel.name,Const_Align(16));
+                CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lLabel));
+                case Def_CGSize(ResultDef) of
                   OS_F32:
                     CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.create_32bit(LongInt(1 shl 31)));
                   OS_F64:
@@ -124,43 +124,43 @@ interface
                     InternalError(2004110215);
                 end;
 
-                Reference_Reset_Symbol(href,l1,0,resultdef.Alignment,[]);
+                Reference_Reset_Symbol(lReference,lLabel,0,ResultDef.Alignment,[]);
 
                 if UseAVX then
                   begin
-                    if not(left.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
-                      hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-                    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(resultdef));
-                    cg.A_OpMM_Ref_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,left.Location.Size,href,left.Location.Register,location.Register,nil)
+                    if not(Left.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+                      hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+                    Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(ResultDef));
+                    cg.A_OpMM_Ref_Reg_Reg(CurrentAsmData.CurrAsmList,OP_XOR,Left.Location.Size,lReference,Left.Location.Register,Location.Register,nil)
                   end
                 else
                   begin
-                    if not(left.Location.Loc=LOC_MMREGISTER) then
-                      hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false);
-                    location.Register:=left.Location.Register;
-                    cg.A_OpMM_Ref_Reg(CurrentAsmData.CurrAsmList,OP_XOR,left.Location.Size,href,location.Register,MMS_MoveScalar);
+                    if not(Left.Location.Loc=LOC_MMREGISTER) then
+                      hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,false);
+                    Location.Register:=Left.Location.Register;
+                    cg.A_OpMM_Ref_Reg(CurrentAsmData.CurrAsmList,OP_XOR,Left.Location.Size,lReference,Location.Register,MMS_MoveScalar);
                   end;
               end;
           end
         else
           begin
-            Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-            case left.Location.Loc of
+            Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+            case Left.Location.Loc of
               LOC_REFERENCE,
               LOC_CREFERENCE:
                 begin
-                  location.Register:=NR_ST;
+                  Location.Register:=NR_ST;
                   cg.A_LoadFPU_Ref_Reg(CurrentAsmData.CurrAsmList,
-                     left.Location.Size,location.Size,
-                     left.Location.Reference,location.Register);
+                     Left.Location.Size,Location.Size,
+                     Left.Location.Reference,Location.Register);
                   emit_none(A_FCHS,S_NO);
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER:
                 begin
                    { "load st,st" is ignored by the code generator }
-                   cg.A_LoadFPU_Reg_Reg(CurrentAsmData.CurrAsmList,left.Location.Size,location.Size,left.Location.Register,NR_ST);
-                   location.Register:=NR_ST;
+                   cg.A_LoadFPU_Reg_Reg(CurrentAsmData.CurrAsmList,Left.Location.Size,Location.Size,Left.Location.Register,NR_ST);
+                   Location.Register:=NR_ST;
                    emit_none(A_FCHS,S_NO);
                 end;
               else
@@ -174,46 +174,46 @@ interface
                                TX86NOTNODE
 *****************************************************************************}
 
-    procedure TX86NotNode.second_boolean;
+    procedure TX86NotNode.Second_Boolean;
       var
-         opsize : TCgSize;
+         lOpSize : TCgSize;
          {$if defined(cpu32bitalu)}
-         hreg: TRegister;
+         lReg: TRegister;
          {$endif}
       begin
-        opsize:=Def_CGSize(resultdef);
+        lOpSize:=Def_CGSize(ResultDef);
 
-        SecondPass(left);
-        if not handle_locjump then
+        SecondPass(Left);
+        if not Handle_LocJump then
          begin
-           case left.Location.Loc of
+           case Left.Location.Loc of
              LOC_FLAGS :
                begin
-                 Location_Reset(location,LOC_FLAGS,OS_NO);
-                 location.ResFlags:=left.Location.ResFlags;
-                 inverse_flags(location.ResFlags);
+                 Location_Reset(Location,LOC_FLAGS,OS_NO);
+                 Location.ResFlags:=Left.Location.ResFlags;
+                 inverse_flags(Location.ResFlags);
                end;
              LOC_CREFERENCE,
              LOC_REFERENCE:
                begin
 {$if defined(cpu32bitalu)}
-                 if Is_64Bit(resultdef) then
+                 if Is_64Bit(ResultDef) then
                    begin
-                     hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
-                     TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.Location.Reference);
-                     cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,left.Location.Reference,hreg);
-                     inc(left.Location.Reference.Offset,4);
+                     lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                     TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,Left.Location.Reference);
+                     cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,Left.Location.Reference,lReg);
+                     inc(Left.Location.Reference.Offset,4);
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                     cg.A_Op_Ref_Reg(CurrentAsmData.CurrAsmList,OP_OR,OS_32,left.Location.Reference,hreg);
+                     cg.A_Op_Ref_Reg(CurrentAsmData.CurrAsmList,OP_OR,OS_32,Left.Location.Reference,lReg);
                    end
                  else
 {$endif}
                    begin
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                     emit_const_ref(A_CMP, TCGSize2Opsize[opsize], 0, left.Location.Reference);
+                     emit_const_ref(A_CMP, TCGSize2Opsize[lOpSize], 0, Left.Location.Reference);
                    end;
-                 Location_Reset(location,LOC_FLAGS,OS_NO);
-                 location.ResFlags:=F_E;
+                 Location_Reset(Location,LOC_FLAGS,OS_NO);
+                 Location.ResFlags:=F_E;
                end;
              LOC_CONSTANT,
              LOC_REGISTER,
@@ -224,21 +224,21 @@ interface
              LOC_CSUBSETREF :
                begin
 {$if defined(cpu32bitalu)}
-                 if Is_64Bit(resultdef) then
+                 if Is_64Bit(ResultDef) then
                    begin
-                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                     emit_reg_reg(A_OR,S_L,left.Location.Register64.RegHi,left.Location.Register64.RegLo);
+                     emit_reg_reg(A_OR,S_L,Left.Location.Register64.RegHi,Left.Location.Register64.RegLo);
                    end
                  else
 {$endif}
                    begin
-                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,true);
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,true);
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                     emit_reg_reg(A_TEST,TCGSize2Opsize[opsize],left.Location.Register,left.Location.Register);
+                     emit_reg_reg(A_TEST,TCGSize2Opsize[lOpSize],Left.Location.Register,Left.Location.Register);
                    end;
-                 Location_Reset(location,LOC_FLAGS,OS_NO);
-                 location.ResFlags:=F_E;
+                 Location_Reset(Location,LOC_FLAGS,OS_NO);
+                 Location.ResFlags:=F_E;
                end;
             else
                InternalError(200203224);
@@ -253,166 +253,166 @@ interface
                              TX86MODDIVNODE
 *****************************************************************************}
 
-    procedure TX86ModDivNode.pass_generate_code;
+    procedure TX86ModDivNode.Pass_Generate_Code;
       var
-        hreg1,hreg2,hreg3,hreg4,rega,regd,tempreg:TRegister;
-        power:LongInt;
-        instr:TAICPU;
-        op:TAsmOp;
-        cgsize:TCgSize;
-        opsize:TOpSize;
-        e, sm: aint;
-        d,m: aword;
-        m_add, invertsign: boolean;
-        s: byte;
+        lReg1,lReg2,lReg3,lReg4,lRegA,lRegD,lTempReg:TRegister;
+        lPower:LongInt;
+        lInstruction:TAICPU;
+        lOp:TAsmOp;
+        lCGSize:TCgSize;
+        lOpSize:TOpSize;
+        lSignedDivisor, lSignedMultiplier: aint;
+        lUnsignedDivisor,lMagicValue: aword;
+        lMagicAdd, lInvertSign: Boolean;
+        lShift: Byte;
       label
         DefaultDiv;
 
 
         procedure DoBMI2ReciprocalDivision;
           var
-            exp_regd: TRegister;
-            exp_opsize: TOpSize;
-            DoMod: Boolean;
-            SubSize: TSubRegister;
-            divsize: Byte;
+            lExpandedRegD: TRegister;
+            lExpandedOpSize: TOpSize;
+            lDoMod: Boolean;
+            lSubSize: TSubRegister;
+            lDivSize: Byte;
           begin
-            DoMod := (nodetype = modn);
+            lDoMod := (NodeType = modn);
 
             { Extend 32-bit divides to 64-bit registers and 16-bit
               divides to 32-bit registers.  Because the domain of
               the left input is only up to 2^(X/2 - 1) - 1, (i.e.
               2^31 - 1 for 64-bit and 2^15 - 1 for 32-bit), a much
               larger error in the reciprocal is permitted. }
-            if (resultdef.Size <= {$ifdef x86_64}4{$else x86_64}2{$endif x86_64}) then
+            if (ResultDef.Size <= {$ifdef x86_64}4{$else x86_64}2{$endif x86_64}) then
               begin
 {$ifdef x86_64}
-                if resultdef.Size = 4 then
-                  divsize := 64
+                if ResultDef.Size = 4 then
+                  lDivSize := 64
                 else
 {$endif x86_64}
-                  divsize := 32;
+                  lDivSize := 32;
 
-                Calc_DivConst_Magic_Unsigned(divsize, d, m, m_add, s);
+                Calc_DivConst_Magic_Unsigned(lDivSize, lUnsignedDivisor, lMagicValue, lMagicAdd, lShift);
 
                 { Should never have a zero shift and a magic add together }
-                if (s = 0) and m_add then
+                if (lShift = 0) and lMagicAdd then
                   InternalError(2021090203);
 
                 { Extend the input and out registers (the peephole optimizer should
                   help clean up unnecessary MOVZX instructions }
-                hreg3 := hreg1;
-                case resultdef.Size of
+                lReg3 := lReg1;
+                case ResultDef.Size of
 {$ifdef x86_64}
                   4:
                     begin
-                      SubSize := R_SUBQ;
-                      SetSubReg(hreg3, R_SUBQ);
+                      lSubSize := R_SUBQ;
+                      SetSubReg(lReg3, R_SUBQ);
                       { Make sure the upper 32 bits are zero; the peephole
                         optimizer will remove this instruction via MovAnd2Mov
                         if it's not needed }
-                      emit_const_reg(A_AND, S_L, $FFFFFFFF, hreg1);
-                      exp_regd := NR_RDX;
-                      exp_opsize := S_Q;
+                      emit_const_reg(A_AND, S_L, $FFFFFFFF, lReg1);
+                      lExpandedRegD := NR_RDX;
+                      lExpandedOpSize := S_Q;
 
-                      if m_add then
+                      if lMagicAdd then
                         { Append 1 to the tail end of the result }
-                        m := (m shr s) or ($8000000000000000 shr (s - 1))
+                        lMagicValue := (lMagicValue shr lShift) or ($8000000000000000 shr (lShift - 1))
                       else
-                        m := m shr s;
+                        lMagicValue := lMagicValue shr lShift;
                     end;
 {$endif x86_64}
                   1, 2:
                     begin
                       { MULX doesn't have a 16-bit version }
-                      SubSize := R_SUBD;
-                      SetSubReg(hreg3, R_SUBD);
-                      if resultdef.Size = 1 then
-                        exp_opsize := S_BL
+                      lSubSize := R_SUBD;
+                      SetSubReg(lReg3, R_SUBD);
+                      if ResultDef.Size = 1 then
+                        lExpandedOpSize := S_BL
                       else
-                        exp_opsize := S_WL;
-                      emit_reg_reg(A_MOVZX, exp_opsize, hreg1, hreg3);
-                      exp_regd := NR_EDX;
-                      exp_opsize := S_L;
+                        lExpandedOpSize := S_WL;
+                      emit_reg_reg(A_MOVZX, lExpandedOpSize, lReg1, lReg3);
+                      lExpandedRegD := NR_EDX;
+                      lExpandedOpSize := S_L;
 
-                      if m_add then
+                      if lMagicAdd then
                         { Append 1 to the tail end of the result }
-                        m := (m shr s) or ($80000000 shr (s - 1))
+                        lMagicValue := (lMagicValue shr lShift) or ($80000000 shr (lShift - 1))
                       else
-                        m := m shr s;
+                        lMagicValue := lMagicValue shr lShift;
                     end;
                   else
                     InternalError(2021090211);
                 end;
 
-                Inc(m);
+                Inc(lMagicValue);
 
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList, exp_regd);
-                emit_const_reg(A_MOV, exp_opsize, aint(m), exp_regd);
-                hreg2 := cg.GetIntRegister(CurrentAsmData.CurrAsmList, cgsize);
-                hreg4 := hreg2;
-                SetSubReg(hreg4, SubSize);
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList, lExpandedRegD);
+                emit_const_reg(A_MOV, lExpandedOpSize, aint(lMagicValue), lExpandedRegD);
+                lReg2 := cg.GetIntRegister(CurrentAsmData.CurrAsmList, lCGSize);
+                lReg4 := lReg2;
+                SetSubReg(lReg4, lSubSize);
 
-                cg.UngetCPURegister(CurrentAsmData.CurrAsmList, exp_regd);
-                emit_reg_reg_reg(A_MULX, exp_opsize, hreg3, hreg4, hreg4);
+                cg.UngetCPURegister(CurrentAsmData.CurrAsmList, lExpandedRegD);
+                emit_reg_reg_reg(A_MULX, lExpandedOpSize, lReg3, lReg4, lReg4);
               end
             else
               begin
-                Calc_DivConst_Magic_Unsigned(resultdef.Size * 8, d, m, m_add, s);
+                Calc_DivConst_Magic_Unsigned(ResultDef.Size * 8, lUnsignedDivisor, lMagicValue, lMagicAdd, lShift);
 
                 { Should never have a zero shift and a magic add together }
-                if (s = 0) and m_add then
+                if (lShift = 0) and lMagicAdd then
                   InternalError(2021090204);
 
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList, regd);
-                emit_const_reg(A_MOV, opsize, aint(m), regd);
-                hreg2 := cg.GetIntRegister(CurrentAsmData.CurrAsmList, cgsize);
-                cg.UngetCPURegister(CurrentAsmData.CurrAsmList, regd);
-                emit_reg_reg_reg(A_MULX, opsize, hreg1, hreg2, hreg2);
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList, lRegD);
+                emit_const_reg(A_MOV, lOpSize, aint(lMagicValue), lRegD);
+                lReg2 := cg.GetIntRegister(CurrentAsmData.CurrAsmList, lCGSize);
+                cg.UngetCPURegister(CurrentAsmData.CurrAsmList, lRegD);
+                emit_reg_reg_reg(A_MULX, lOpSize, lReg1, lReg2, lReg2);
 
-                if m_add then
+                if lMagicAdd then
                   begin
                     { addition can overflow, shift first bit considering carry,
                       then shift remaining bits in regular way. }
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                    emit_reg_reg(A_ADD, opsize, hreg1, hreg2);
-                    emit_const_reg(A_RCR, opsize, 1, hreg2);
+                    emit_reg_reg(A_ADD, lOpSize, lReg1, lReg2);
+                    emit_const_reg(A_RCR, lOpSize, 1, lReg2);
                     cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                    dec(s);
+                    dec(lShift);
                   end;
-                if s<>0 then
-                  emit_const_reg(A_SHR, opsize, aint(s), hreg2);
+                if lShift<>0 then
+                  emit_const_reg(A_SHR, lOpSize, aint(lShift), lReg2);
               end;
 
-            if DoMod then
+            if lDoMod then
               begin
                 { Now multiply the quotient by the original denominator and
                   subtract the product from the original numerator to get
                   the remainder. }
 {$ifdef x86_64}
-                if (cgsize in [OS_64,OS_S64]) and (d > $7FFFFFFF) then { Cannot use 64-bit constants in IMUL }
+                if (lCGSize in [OS_64,OS_S64]) and (lUnsignedDivisor > $7FFFFFFF) then { Cannot use 64-bit constants in IMUL }
                   begin
-                    hreg4 := cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    emit_const_reg(A_MOV, opsize, aint(d), hreg4);
-                    emit_reg_reg(A_IMUL, opsize, hreg4, hreg2);
+                    lReg4 := cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    emit_const_reg(A_MOV, lOpSize, aint(lUnsignedDivisor), lReg4);
+                    emit_reg_reg(A_IMUL, lOpSize, lReg4, lReg2);
                   end
                 else
 {$endif x86_64}
-                  emit_const_reg(A_IMUL, opsize, aint(d), hreg2);
+                  emit_const_reg(A_IMUL, lOpSize, aint(lUnsignedDivisor), lReg2);
 
-                emit_reg_reg(A_SUB, opsize, hreg2, hreg1);
-                location.Register := hreg1;
+                emit_reg_reg(A_SUB, lOpSize, lReg2, lReg1);
+                Location.Register := lReg1;
               end
             else
-              location.Register := hreg2;
+              Location.Register := lReg2;
           end;
 
 
         procedure DoUnsignedReciprocalDivision;
           var
-            exp_rega,exp_regd:TRegister;
-            exp_opsize:TOpSize;
-            DoMod: Boolean;
+            lExpandedRegA,lExpandedRegD:TRegister;
+            lExpandedOpSize:TOpSize;
+            lDoMod: Boolean;
           begin
 
             IF (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) then
@@ -423,265 +423,265 @@ interface
               end;
 
 
-            DoMod := (nodetype = modn);
+            lDoMod := (NodeType = modn);
             { Extend 32-bit divides to 64-bit registers and 16-bit
               divides to 32-bit registers.  Because the domain of
               the left input is only up to 2^(X/2 - 1) - 1, (i.e.
               2^31 - 1 for 64-bit and 2^15 - 1 for 32-bit), a much
               larger error in the reciprocal is permitted. }
-            if (resultdef.Size <= {$ifdef x86_64}4{$else x86_64}2{$endif x86_64}) then
+            if (ResultDef.Size <= {$ifdef x86_64}4{$else x86_64}2{$endif x86_64}) then
               begin
-                Calc_DivConst_Magic_Unsigned(resultdef.Size * 2 * 8,d,m,m_add,s);
+                Calc_DivConst_Magic_Unsigned(ResultDef.Size * 2 * 8,lUnsignedDivisor,lMagicValue,lMagicAdd,lShift);
 
                 { Should never have a zero shift and a magic add together }
-                if (s = 0) and m_add then
+                if (lShift = 0) and lMagicAdd then
                   InternalError(2021090201);
 
                 { Extend the input register (the peephole optimizer should
                   help clean up unnecessary MOVZX instructions }
-                hreg3 := hreg1;
-                case resultdef.Size of
+                lReg3 := lReg1;
+                case ResultDef.Size of
 {$ifdef x86_64}
                   4:
                     begin
-                      SetSubReg(hreg3, R_SUBQ);
+                      SetSubReg(lReg3, R_SUBQ);
                       { Make sure the upper 32 bits are zero; the peephole
                         optimizer will remove this instruction via MovAnd2Mov
                         if it's not needed }
-                      emit_const_reg(A_AND, S_L, $FFFFFFFF, hreg1);
-                      exp_rega := NR_RAX;
-                      exp_regd := NR_RDX;
-                      exp_opsize := S_Q;
+                      emit_const_reg(A_AND, S_L, $FFFFFFFF, lReg1);
+                      lExpandedRegA := NR_RAX;
+                      lExpandedRegD := NR_RDX;
+                      lExpandedOpSize := S_Q;
 
-                      if m_add then
+                      if lMagicAdd then
                         { Append 1 to the tail end of the result }
-                        m := (m shr s) or ($8000000000000000 shr (s - 1))
+                        lMagicValue := (lMagicValue shr lShift) or ($8000000000000000 shr (lShift - 1))
                       else
-                        m := m shr s;
+                        lMagicValue := lMagicValue shr lShift;
                     end;
 {$endif x86_64}
                   2:
                     begin
-                      SetSubReg(hreg3, R_SUBD);
-                      emit_reg_reg(A_MOVZX, S_WL, hreg1, hreg3);
-                      exp_rega := NR_EAX;
-                      exp_regd := NR_EDX;
-                      exp_opsize := S_L;
+                      SetSubReg(lReg3, R_SUBD);
+                      emit_reg_reg(A_MOVZX, S_WL, lReg1, lReg3);
+                      lExpandedRegA := NR_EAX;
+                      lExpandedRegD := NR_EDX;
+                      lExpandedOpSize := S_L;
 
-                      if m_add then
+                      if lMagicAdd then
                         { Append 1 to the tail end of the result }
-                        m := (m shr s) or ($80000000 shr (s - 1))
+                        lMagicValue := (lMagicValue shr lShift) or ($80000000 shr (lShift - 1))
                       else
-                        m := m shr s;
+                        lMagicValue := lMagicValue shr lShift;
                     end;
                   1:
                     begin
-                      SetSubReg(hreg3, R_SUBW);
-                      emit_reg_reg(A_MOVZX, S_BW, hreg1, hreg3);
-                      exp_rega := NR_AX;
-                      exp_regd := NR_DX;
-                      regd := NR_DL; { We need to change this from AH }
-                      exp_opsize := S_W;
+                      SetSubReg(lReg3, R_SUBW);
+                      emit_reg_reg(A_MOVZX, S_BW, lReg1, lReg3);
+                      lExpandedRegA := NR_AX;
+                      lExpandedRegD := NR_DX;
+                      lRegD := NR_DL; { We need to change this from AH }
+                      lExpandedOpSize := S_W;
 
-                      if m_add then
+                      if lMagicAdd then
                         { Append 1 to the tail end of the result }
-                        m := (m shr s) or ($8000 shr (s - 1))
+                        lMagicValue := (lMagicValue shr lShift) or ($8000 shr (lShift - 1))
                       else
-                        m := m shr s;
+                        lMagicValue := lMagicValue shr lShift;
                     end;
                   else
                     InternalError(2021090210);
                 end;
 
-                Inc(m);
+                Inc(lMagicValue);
 
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList,exp_rega);
-                emit_const_reg(A_MOV,exp_opsize,aint(m),exp_rega);
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList,exp_regd);
-                emit_reg(A_MUL,exp_opsize,hreg3);
-                cg.UngetCPURegister(CurrentAsmData.CurrAsmList,exp_rega);
-                if DoMod then
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList,lExpandedRegA);
+                emit_const_reg(A_MOV,lExpandedOpSize,aint(lMagicValue),lExpandedRegA);
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList,lExpandedRegD);
+                emit_reg(A_MUL,lExpandedOpSize,lReg3);
+                cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lExpandedRegA);
+                if lDoMod then
                   begin
-                    hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    emit_reg_reg(A_MOV,opsize,hreg1,hreg2);
+                    lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    emit_reg_reg(A_MOV,lOpSize,lReg1,lReg2);
                   end;
               end
             else
               begin
-                Calc_DivConst_Magic_Unsigned(resultdef.Size*8,d,m,m_add,s);
+                Calc_DivConst_Magic_Unsigned(ResultDef.Size*8,lUnsignedDivisor,lMagicValue,lMagicAdd,lShift);
 
                 { Should never have a zero shift and a magic add together }
-                if (s = 0) and m_add then
+                if (lShift = 0) and lMagicAdd then
                   InternalError(2021090202);
 
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList,rega);
-                emit_const_reg(A_MOV,opsize,aint(m),rega);
-                cg.GetCPURegister(CurrentAsmData.CurrAsmList,regd);
-                emit_reg(A_MUL,opsize,hreg1);
-                cg.UngetCPURegister(CurrentAsmData.CurrAsmList,rega);
-                if DoMod then
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
+                emit_const_reg(A_MOV,lOpSize,aint(lMagicValue),lRegA);
+                cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
+                emit_reg(A_MUL,lOpSize,lReg1);
+                cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
+                if lDoMod then
                   begin
-                    hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    emit_reg_reg(A_MOV,opsize,hreg1,hreg2);
+                    lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    emit_reg_reg(A_MOV,lOpSize,lReg1,lReg2);
                   end;
 
-                if m_add then
+                if lMagicAdd then
                   begin
                     { addition can overflow, shift first bit considering carry,
                       then shift remaining bits in regular way. }
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                    emit_reg_reg(A_ADD,opsize,hreg1,regd);
-                    emit_const_reg(A_RCR,opsize,1,regd);
+                    emit_reg_reg(A_ADD,lOpSize,lReg1,lRegD);
+                    emit_const_reg(A_RCR,lOpSize,1,lRegD);
                     cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                    dec(s);
+                    dec(lShift);
                   end;
-                if s<>0 then
-                  emit_const_reg(A_SHR,opsize,aint(s),regd);
+                if lShift<>0 then
+                  emit_const_reg(A_SHR,lOpSize,aint(lShift),lRegD);
               end;
 
-            if DoMod then
+            if lDoMod then
               begin
                 { Now multiply the quotient by the original denominator and
                   subtract the product from the original numerator to get
                   the remainder. }
 {$ifdef x86_64}
-                if (cgsize in [OS_64,OS_S64]) and (d > $7FFFFFFF) then { Cannot use 64-bit constants in IMUL }
+                if (lCGSize in [OS_64,OS_S64]) and (lUnsignedDivisor > $7FFFFFFF) then { Cannot use 64-bit constants in IMUL }
                   begin
-                    hreg3:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    emit_const_reg(A_MOV,opsize,aint(d),hreg3);
-                    emit_reg_reg(A_IMUL,opsize,hreg3,regd);
+                    lReg3:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    emit_const_reg(A_MOV,lOpSize,aint(lUnsignedDivisor),lReg3);
+                    emit_reg_reg(A_IMUL,lOpSize,lReg3,lRegD);
                   end
                 else
 {$endif x86_64}
-                  emit_const_reg(A_IMUL,opsize,aint(d),regd);
+                  emit_const_reg(A_IMUL,lOpSize,aint(lUnsignedDivisor),lRegD);
 
-                emit_reg_reg(A_SUB,opsize,regd,hreg2);
+                emit_reg_reg(A_SUB,lOpSize,lRegD,lReg2);
               end;
 
-            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,regd);
-            if not DoMod then
+            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
+            if not lDoMod then
               begin
-                hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,cgsize,cgsize,regd,hreg2);
+                lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lCGSize,lCGSize,lRegD,lReg2);
               end;
 
-            location.Register:=hreg2;
+            Location.Register:=lReg2;
           end;
 
       begin
-        SecondPass(left);
+        SecondPass(Left);
         if CodeGenError then
           exit;
-        SecondPass(right);
+        SecondPass(Right);
         if CodeGenError then
           exit;
 
         { put numerator in register }
-        cgsize:=Def_CGSize(resultdef);
-        opsize:=TCGSize2OpSize[cgsize];
-        rega:=NewReg(R_INTREGISTER,RS_EAX,cgsize2subreg(R_INTREGISTER,cgsize));
-        if cgsize in [OS_8,OS_S8] then
-          regd:=NR_AH
+        lCGSize:=Def_CGSize(ResultDef);
+        lOpSize:=TCGSize2OpSize[lCGSize];
+        lRegA:=NewReg(R_INTREGISTER,RS_EAX,cgsize2subreg(R_INTREGISTER,lCGSize));
+        if lCGSize in [OS_8,OS_S8] then
+          lRegD:=NR_AH
         else
-          regd:=NewReg(R_INTREGISTER,RS_EDX,cgsize2subreg(R_INTREGISTER,cgsize));
+          lRegD:=NewReg(R_INTREGISTER,RS_EDX,cgsize2subreg(R_INTREGISTER,lCGSize));
 
-        Location_Reset(location,LOC_REGISTER,cgsize);
-        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
-        hreg1:=left.Location.Register;
+        Location_Reset(Location,LOC_REGISTER,lCGSize);
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
+        lReg1:=Left.Location.Register;
 
-        if (nodetype=divn) and (right.nodetype=ordconstn) then
+        if (NodeType=divn) and (Right.NodeType=ordconstn) then
           begin
-            if IsAbsPowerOf2(TOrdConstNode(right).Value,power) then
+            if IsAbsPowerOf2(TOrdConstNode(Right).Value,lPower) then
               begin
                 { for signed numbers, the numerator must be adjusted before the
                   shift instruction, but not with unsigned numbers! Otherwise,
                   "Cardinal($ffffffff) div 16" overflows! (JM) }
-                if Is_Signed(left.resultdef) Then
+                if Is_Signed(Left.ResultDef) Then
                   begin
-                    invertsign:=TOrdConstNode(right).Value<0;
+                    lInvertSign:=TOrdConstNode(Right).Value<0;
                     { use a sequence without jumps, saw this in
                       comp.compilers (JM) }
                     { no jumps, but more operations }
-                    hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    emit_reg_reg(A_MOV,opsize,hreg1,hreg2);
-                    if power=1 then
+                    lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    emit_reg_reg(A_MOV,lOpSize,lReg1,lReg2);
+                    if lPower=1 then
                       begin
                         {If the left value is negative, hreg2=(1 shl power)-1=1, otherwise 0.}
-                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,cgsize,resultdef.Size*8-1,hreg2);
+                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,lCGSize,ResultDef.Size*8-1,lReg2);
                       end
                     else
                       begin
                         {If the left value is negative, hreg2=$ffffffff, otherwise 0.}
-                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,cgsize,resultdef.Size*8-1,hreg2);
+                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,lCGSize,ResultDef.Size*8-1,lReg2);
                         {If negative, hreg2=(1 shl power)-1, otherwise 0.}
                         { (don't use emit_const_reg, because if value>high(longint)
                            then it must first be loaded into a register) }
-                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,cgsize,(aint(1) shl power)-1,hreg2);
+                        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,lCGSize,(aint(1) shl lPower)-1,lReg2);
                       end;
                     { add to the left value }
-                    emit_reg_reg(A_ADD,opsize,hreg2,hreg1);
+                    emit_reg_reg(A_ADD,lOpSize,lReg2,lReg1);
                     { do the shift }
-                    cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,cgsize,power,hreg1);
-                    if invertsign then
-                      emit_reg(A_NEG,opsize,hreg1);
+                    cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SAR,lCGSize,lPower,lReg1);
+                    if lInvertSign then
+                      emit_reg(A_NEG,lOpSize,lReg1);
                   end
                 else
-                  cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,cgsize,power,hreg1);
-                location.Register:=hreg1;
+                  cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHR,lCGSize,lPower,lReg1);
+                Location.Register:=lReg1;
               end
             else
               begin
-                if Is_Signed(left.resultdef) then
+                if Is_Signed(Left.ResultDef) then
                   begin
-                    e:=TOrdConstNode(right).Value.svalue;
-                    Calc_DivConst_Magic_Signed(resultdef.Size*8,e,sm,s);
-                    cg.GetCPURegister(CurrentAsmData.CurrAsmList,rega);
-                    emit_const_reg(A_MOV,opsize,sm,rega);
-                    cg.GetCPURegister(CurrentAsmData.CurrAsmList,regd);
-                    emit_reg(A_IMUL,opsize,hreg1);
+                    lSignedDivisor:=TOrdConstNode(Right).Value.svalue;
+                    Calc_DivConst_Magic_Signed(ResultDef.Size*8,lSignedDivisor,lSignedMultiplier,lShift);
+                    cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
+                    emit_const_reg(A_MOV,lOpSize,lSignedMultiplier,lRegA);
+                    cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
+                    emit_reg(A_IMUL,lOpSize,lReg1);
                     { only the high half of result is used }
-                    cg.UngetCPURegister(CurrentAsmData.CurrAsmList,rega);
+                    cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
                     { add or subtract dividend }
-                    if (e>0) and (sm<0) then
-                      emit_reg_reg(A_ADD,opsize,hreg1,regd)
-                    else if (e<0) and (sm>0) then
-                      emit_reg_reg(A_SUB,opsize,hreg1,regd);
+                    if (lSignedDivisor>0) and (lSignedMultiplier<0) then
+                      emit_reg_reg(A_ADD,lOpSize,lReg1,lRegD)
+                    else if (lSignedDivisor<0) and (lSignedMultiplier>0) then
+                      emit_reg_reg(A_SUB,lOpSize,lReg1,lRegD);
                     { shift if necessary }
-                    if (s<>0) then
-                      emit_const_reg(A_SAR,opsize,s,regd);
+                    if (lShift<>0) then
+                      emit_const_reg(A_SAR,lOpSize,lShift,lRegD);
                     { extract and add the sign bit }
-                    if (e<0) then
-                      emit_reg_reg(A_MOV,opsize,regd,hreg1);
+                    if (lSignedDivisor<0) then
+                      emit_reg_reg(A_MOV,lOpSize,lRegD,lReg1);
                     { if e>=0, hreg1 still contains dividend }
-                    emit_const_reg(A_SHR,opsize,left.resultdef.Size*8-1,hreg1);
-                    emit_reg_reg(A_ADD,opsize,hreg1,regd);
-                    cg.UngetCPURegister(CurrentAsmData.CurrAsmList,regd);
-                    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,cgsize,cgsize,regd,location.Register)
+                    emit_const_reg(A_SHR,lOpSize,Left.ResultDef.Size*8-1,lReg1);
+                    emit_reg_reg(A_ADD,lOpSize,lReg1,lRegD);
+                    cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
+                    Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lCGSize,lCGSize,lRegD,Location.Register)
                   end
                 else
                   begin
-                    d:=TOrdConstNode(right).Value.uvalue;
-                    if d>=aword(1) shl (left.resultdef.Size*8-1) then
+                    lUnsignedDivisor:=TOrdConstNode(Right).Value.uvalue;
+                    if lUnsignedDivisor>=aword(1) shl (Left.ResultDef.Size*8-1) then
                       begin
-                        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
+                        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
                         { Ensure that the whole register is 0, since SETcc only sets the lowest byte }
 
                         { If the operands are 64 bits, this XOR routine will be shrunk by the
                           peephole optimizer. [Kit] }
-                        emit_reg_reg(A_XOR,opsize,location.Register,location.Register);
+                        emit_reg_reg(A_XOR,lOpSize,Location.Register,Location.Register);
 
-                        if (cgsize in [OS_64,OS_S64]) then { Cannot use 64-bit constants in CMP }
+                        if (lCGSize in [OS_64,OS_S64]) then { Cannot use 64-bit constants in CMP }
                           begin
-                            hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                            emit_const_reg(A_MOV,opsize,aint(d),hreg2);
+                            lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                            emit_const_reg(A_MOV,lOpSize,aint(lUnsignedDivisor),lReg2);
                             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                            emit_reg_reg(A_CMP,opsize,hreg2,hreg1);
+                            emit_reg_reg(A_CMP,lOpSize,lReg2,lReg1);
                           end
                         else
                           begin
                             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                            emit_const_reg(A_CMP,opsize,aint(d),hreg1);
+                            emit_const_reg(A_CMP,lOpSize,aint(lUnsignedDivisor),lReg1);
                           end;
                         { NOTE: SBB and SETAE are both 3 bytes long without the REX prefix,
                           both use an ALU for their execution and take a single cycle to
@@ -690,10 +690,10 @@ interface
 
                         { Emit a SETcc instruction that depends on the carry bit being zero,
                           that is, the numerator is greater than or equal to the denominator. }
-                        tempreg:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,location.Register,OS_8);
-                        instr:=TAICPU.op_reg(A_SETcc,S_B,tempreg);
-                        instr.condition:=C_AE;
-                        CurrentAsmData.CurrAsmList.concat(instr);
+                        lTempReg:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,Location.Register,OS_8);
+                        lInstruction:=TAICPU.op_reg(A_SETcc,S_B,lTempReg);
+                        lInstruction.condition:=C_AE;
+                        CurrentAsmData.CurrAsmList.concat(lInstruction);
                         cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                       end
                     else
@@ -702,54 +702,54 @@ interface
                   end;
               end;
           end
-        else if (nodetype=modn) and (right.nodetype=ordconstn) and not(Is_Signed(left.resultdef)) then
+        else if (NodeType=modn) and (Right.NodeType=ordconstn) and not(Is_Signed(Left.ResultDef)) then
           begin
             { unsigned modulus by a (+/-)power-of-2 constant? }
-            if IsAbsPowerOf2(TOrdConstNode(right).Value,power) then
+            if IsAbsPowerOf2(TOrdConstNode(Right).Value,lPower) then
               begin
-                emit_const_reg(A_AND,opsize,(aint(1) shl power)-1,hreg1);
-                location.Register:=hreg1;
+                emit_const_reg(A_AND,lOpSize,(aint(1) shl lPower)-1,lReg1);
+                Location.Register:=lReg1;
               end
             else
               begin
-                d:=TOrdConstNode(right).Value.uvalue;
-                if d>=aword(1) shl (left.resultdef.Size*8-1) then
+                lUnsignedDivisor:=TOrdConstNode(Right).Value.uvalue;
+                if lUnsignedDivisor>=aword(1) shl (Left.ResultDef.Size*8-1) then
                   begin
 
                     if not (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) then
                       goto DefaultDiv;
 
-                    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                    hreg3:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
+                    Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                    lReg3:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
 
-                    m := aword(-aint(d)); { Two's complement of d }
+                    lMagicValue := aword(-aint(lUnsignedDivisor)); { Two's complement of d }
 
-                    if (cgsize in [OS_64,OS_S64]) then { Cannot use 64-bit constants in CMP }
+                    if (lCGSize in [OS_64,OS_S64]) then { Cannot use 64-bit constants in CMP }
                       begin
-                        hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-                        emit_const_reg(A_MOV,opsize,aint(d),hreg2);
-                        emit_const_reg(A_MOV,opsize,aint(m),hreg3);
-                        emit_reg_reg(A_XOR,opsize,location.Register,location.Register);
+                        lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+                        emit_const_reg(A_MOV,lOpSize,aint(lUnsignedDivisor),lReg2);
+                        emit_const_reg(A_MOV,lOpSize,aint(lMagicValue),lReg3);
+                        emit_reg_reg(A_XOR,lOpSize,Location.Register,Location.Register);
                         cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                        emit_reg_reg(A_CMP,opsize,hreg2,hreg1);
+                        emit_reg_reg(A_CMP,lOpSize,lReg2,lReg1);
                       end
                     else
                       begin
-                        emit_const_reg(A_MOV,opsize,aint(m),hreg3);
-                        emit_reg_reg(A_XOR,opsize,location.Register,location.Register);
+                        emit_const_reg(A_MOV,lOpSize,aint(lMagicValue),lReg3);
+                        emit_reg_reg(A_XOR,lOpSize,Location.Register,Location.Register);
 
                         cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                        emit_const_reg(A_CMP,opsize,aint(d),hreg1);
+                        emit_const_reg(A_CMP,lOpSize,aint(lUnsignedDivisor),lReg1);
                       end;
 
                     { Emit conditional move that depends on the carry flag being zero,
                       that is, the comparison result is above or equal }
-                    instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,hreg3,location.Register);
-                    instr.condition := C_AE;
-                    CurrentAsmData.CurrAsmList.concat(instr);
+                    lInstruction:=TAICPU.op_reg_reg(A_CMOVcc,lOpSize,lReg3,Location.Register);
+                    lInstruction.condition := C_AE;
+                    CurrentAsmData.CurrAsmList.concat(lInstruction);
                     cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
-                    emit_reg_reg(A_ADD,opsize,hreg1,location.Register);
+                    emit_reg_reg(A_ADD,lOpSize,lReg1,Location.Register);
                   end
                 else
                   { Convert the division to a multiplication }
@@ -757,31 +757,31 @@ interface
 
               end;
           end
-        else if (nodetype=modn) and (right.nodetype=ordconstn) and (Is_Signed(left.resultdef)) and IsAbsPowerOf2(TOrdConstNode(right).Value,power) then
+        else if (NodeType=modn) and (Right.NodeType=ordconstn) and (Is_Signed(Left.ResultDef)) and IsAbsPowerOf2(TOrdConstNode(Right).Value,lPower) then
           begin
-            hreg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-            if power=1 then
-              cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,cgsize,resultdef.Size*8-power,hreg1,hreg2)
+            lReg2:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+            if lPower=1 then
+              cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,lCGSize,ResultDef.Size*8-lPower,lReg1,lReg2)
             else
               begin
-                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SAR,cgsize,resultdef.Size*8-1,hreg1,hreg2);
-                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,cgsize,resultdef.Size*8-power,hreg2,hreg2);
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SAR,lCGSize,ResultDef.Size*8-1,lReg1,lReg2);
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,lCGSize,ResultDef.Size*8-lPower,lReg2,lReg2);
               end;
-            emit_reg_reg(A_ADD,opsize,hreg1,hreg2);
-            cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,cgsize,not((aint(1) shl power)-1),hreg2);
-            emit_reg_reg(A_SUB,opsize,hreg2,hreg1);
-            location.Register:=hreg1;
+            emit_reg_reg(A_ADD,lOpSize,lReg1,lReg2);
+            cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,lCGSize,not((aint(1) shl lPower)-1),lReg2);
+            emit_reg_reg(A_SUB,lOpSize,lReg2,lReg1);
+            Location.Register:=lReg1;
           end
         else
           begin
 DefaultDiv:
             {Bring denominator to a register.}
-            cg.GetCPURegister(CurrentAsmData.CurrAsmList,rega);
-            emit_reg_reg(A_MOV,opsize,hreg1,rega);
-            cg.GetCPURegister(CurrentAsmData.CurrAsmList,regd);
+            cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
+            emit_reg_reg(A_MOV,lOpSize,lReg1,lRegA);
+            cg.GetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
             {Sign extension depends on the left type.}
-            if Is_Signed(left.resultdef) then
-              case left.resultdef.Size of
+            if Is_Signed(Left.ResultDef) then
+              case Left.ResultDef.Size of
 {$ifdef x86_64}
                 8:
                   emit_none(A_CQO,S_NO);
@@ -792,33 +792,33 @@ DefaultDiv:
                   InternalError(2013102704);
               end
             else
-              emit_reg_reg(A_XOR,opsize,regd,regd);
+              emit_reg_reg(A_XOR,lOpSize,lRegD,lRegD);
 
             { Division depends on the result type }
-            if Is_Signed(resultdef) then
-              op:=A_IDIV
+            if Is_Signed(ResultDef) then
+              lOp:=A_IDIV
             else
-              op:=A_DIV;
+              lOp:=A_DIV;
 
-            if right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-              emit_ref(op,opsize,right.Location.Reference)
-            else if right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
-              emit_reg(op,opsize,right.Location.Register)
+            if Right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+              emit_ref(lOp,lOpSize,Right.Location.Reference)
+            else if Right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER] then
+              emit_reg(lOp,lOpSize,Right.Location.Register)
             else
               begin
-                hreg1:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,right.Location.Size);
-                hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,right.resultdef,right.Location,hreg1);
-                emit_reg(op,opsize,hreg1);
+                lReg1:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Right.Location.Size);
+                hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,Right.ResultDef,Right.Location,lReg1);
+                emit_reg(lOp,lOpSize,lReg1);
               end;
 
             { Copy the result into a new register. Release R/EAX & R/EDX.}
-            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,regd);
-            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,rega);
-            location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,cgsize);
-            if nodetype=divn then
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,cgsize,cgsize,rega,location.Register)
+            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegD);
+            cg.UngetCPURegister(CurrentAsmData.CurrAsmList,lRegA);
+            Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lCGSize);
+            if NodeType=divn then
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lCGSize,lCGSize,lRegA,Location.Register)
             else
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,cgsize,cgsize,regd,location.Register);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lCGSize,lCGSize,lRegD,Location.Register);
           end;
       end;
 

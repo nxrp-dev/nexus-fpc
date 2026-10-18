@@ -113,7 +113,7 @@ implementation
            else
              ParaNr:=ParaNrResult;
            { Generate result variable accessing function result }
-           vs:=CParaVarSym.create('$'+name_result,ParaNr,vs_var,pd.ReturnDef,[vo_is_funcret,vo_is_hidden_para]);
+           vs:=CParaVarSym.Create('$'+name_result,ParaNr,vs_var,pd.ReturnDef,[vo_is_funcret,vo_is_hidden_para]);
            pd.ParaST.InsertSym(vs);
            { Store this symbol as funcretsym for procedures }
            if pd.typ=procdef then
@@ -156,7 +156,7 @@ implementation
               must be accessible from nested routines }
 
               begin
-                vs:=CParaVarSym.create('$'+name_parentfp,ParaNr,vs_value
+                vs:=CParaVarSym.Create('$'+name_parentfp,ParaNr,vs_value
                       ,ParentFPVoidPointerType,[vo_is_parentfp,vo_is_hidden_para]);
               end
 
@@ -191,10 +191,10 @@ implementation
                 not Assigned(pd.ParaST.find(name_self)) then
               begin
                 { insert Objective-C self and selector parameters }
-                vs:=CParaVarSym.create('$'+name_cmd,ParaNrObjCCmd,vs_value,ObjC_SelType,[vo_is_msgsel,vo_is_hidden_para]);
+                vs:=CParaVarSym.Create('$'+name_cmd,ParaNrObjCCmd,vs_value,ObjC_SelType,[vo_is_msgsel,vo_is_hidden_para]);
                 pd.ParaST.InsertSym(vs);
                 { make accessible to code }
-                sl:=TPropAccessList.create;
+                sl:=TPropAccessList.Create;
                 sl.AddSym(sl_load,vs);
                 aliasvs:=CAbsoluteVarSym.Create_Ref('_CMD',ObjC_SelType,sl);
                 include(aliasvs.VarOptions,vo_is_msgsel);
@@ -206,7 +206,7 @@ implementation
                 else
                   hdef:=TProcDef(pd).struct;
 
-                vs:=CParaVarSym.create('$'+name_self,ParaNrObjCSelf,vs_value,hdef,[vo_is_self,vo_is_hidden_para]);
+                vs:=CParaVarSym.Create('$'+name_self,ParaNrObjCSelf,vs_value,hdef,[vo_is_self,vo_is_hidden_para]);
                 pd.ParaST.InsertSym(vs);
               end;
           end
@@ -216,7 +216,7 @@ implementation
             if not Assigned(pd.ParaST.find(name_self)) then
               begin
                 { Generate self variable }
-                vs:=CParaVarSym.create('$'+name_self,ParaNrSelf,vs_value,VoidPointerType,[vo_is_self,vo_is_hidden_para]);
+                vs:=CParaVarSym.Create('$'+name_self,ParaNrSelf,vs_value,VoidPointerType,[vo_is_self,vo_is_hidden_para]);
                 pd.ParaST.InsertSym(vs);
               end;
           end
@@ -233,14 +233,14 @@ implementation
                 hdef:=CPointerDef.getreusable(get_block_literal_type_for_proc(pd));
                 { mark as vo_is_parentfp so that proc2procvar comparisons will
                   succeed when assigning arbitrary routines to the block }
-                vs:=CParaVarSym.create('$'+name_block_literal,ParaNrBlockSelfPara,vs_value,
+                vs:=CParaVarSym.Create('$'+name_block_literal,ParaNrBlockSelfPara,vs_value,
                   hdef,[vo_is_hidden_para,vo_is_parentfp]
                 );
                 pd.ParaST.InsertSym(vs);
                 if pd.typ=procdef then
                   begin
                     { make accessible to code }
-                    sl:=TPropAccessList.create;
+                    sl:=TPropAccessList.Create;
                     sl.AddSym(sl_load,vs);
                     aliasvs:=CAbsoluteVarSym.Create_Ref('FPC_BLOCK_SELF',hdef,sl);
                     include(aliasvs.VarOptions,vo_is_parentfp);
@@ -272,7 +272,7 @@ implementation
                        )) and
                    not Assigned(pd.ParaST.find(name_vmt)) then
                  begin
-                   vs:=CParaVarSym.create('$'+name_vmt,ParaNrVMT,vs_value,CClassRefDef.create(TProcDef(pd).struct),[vo_is_vmt,vo_is_hidden_para]);
+                   vs:=CParaVarSym.Create('$'+name_vmt,ParaNrVMT,vs_value,CClassRefDef.Create(TProcDef(pd).struct),[vo_is_vmt,vo_is_hidden_para]);
                    pd.ParaST.InsertSym(vs);
                  end;
 
@@ -290,7 +290,7 @@ implementation
                 vsp:=vs_value;
                 if (po_staticmethod in pd.ProcOptions) or
                    (po_classmethod in pd.ProcOptions) then
-                  hdef:=CClassRefDef.create(selfdef)
+                  hdef:=CClassRefDef.Create(selfdef)
                 else
                   begin
                     if Is_Object(selfdef) or (selfdef.typ<>objectdef) then
@@ -300,7 +300,7 @@ implementation
                 vs:=TParaVarSym(pd.ParaST.find(name_self));
                 if not Assigned(vs) or (vs.typ<>paravarsym) or (vs.vardef<>hdef) then
                   begin
-                    vs:=CParaVarSym.create('$'+name_self,ParaNrSelf,vsp,hdef,[vo_is_self,vo_is_hidden_para]);
+                    vs:=CParaVarSym.Create('$'+name_self,ParaNrSelf,vsp,hdef,[vo_is_self,vo_is_hidden_para]);
                     pd.ParaST.InsertSym(vs);
                   end;
 
@@ -334,7 +334,7 @@ implementation
            if (df_generic in pd.DefOptions) or
                not ParaManager.Ret_In_Param(pd.ReturnDef,pd) then
             begin
-              vs:=CLocalVarSym.create('$result',vs_value,pd.ReturnDef,[vo_is_funcret]);
+              vs:=CLocalVarSym.Create('$result',vs_value,pd.ReturnDef,[vo_is_funcret]);
               pd.LocalST.InsertSym(vs,false);
               pd.FuncRetSym:=vs;
             end;
@@ -355,7 +355,7 @@ implementation
                  hs:=pd.ProcSym.name;
                if (hs='') then
                  hs:='$_result';
-               sl:=TPropAccessList.create;
+               sl:=TPropAccessList.Create;
                sl.AddSym(sl_load,pd.FuncRetSym);
                aliasvs:=CAbsoluteVarSym.Create_Ref(hs,pd.ReturnDef,sl);
                include(aliasvs.VarOptions,vo_is_funcret);
@@ -365,7 +365,7 @@ implementation
            { insert result also if support is on }
            if (m_result in CurrentSettings.ModeSwitches) then
             begin
-              sl:=TPropAccessList.create;
+              sl:=TPropAccessList.Create;
               sl.AddSym(sl_load,pd.FuncRetSym);
               aliasvs:=CAbsoluteVarSym.Create_Ref('RESULT',pd.ReturnDef,sl);
               include(aliasvs.VarOptions,vo_is_funcret);
@@ -379,7 +379,7 @@ implementation
           begin
             { vo_is_funcret is necessary so the local only gets freed after we loaded its
               value into the return register }
-            vs:=CLocalVarSym.create('$safecallresult',vs_value,Search_System_Type('HRESULT').typedef,[vo_is_funcret]);
+            vs:=CLocalVarSym.Create('$safecallresult',vs_value,Search_System_Type('HRESULT').TypeDef,[vo_is_funcret]);
             { do not put this variable in a register. The register which will be bound
               to this symbol will not be allocated automatically. Which means it will
               be re-used which breaks the code. Besides this it is questionable if it is
@@ -436,7 +436,7 @@ implementation
                if not Assigned(owner.find(n)) then
                  begin
 
-                     hvs:=CParaVarSym.create('$'+n,ParaNr+1,vs_const,SizeSIntType,[vo_is_high_para,vo_is_hidden_para]);
+                     hvs:=CParaVarSym.Create('$'+n,ParaNr+1,vs_const,SizeSIntType,[vo_is_high_para,vo_is_hidden_para]);
                    hvs.SymOptions:=[];
                    owner.InsertSym(hvs);
                    { don't place to register if it will be accessed from implicit finally block }
@@ -468,7 +468,7 @@ implementation
                   n:=name_typinfo+name;
                   if not Assigned(owner.find(n)) then
                     begin
-                      hvs:=CParaVarSym.create('$'+n,ParaNr+1,vs_const,VoidPointerType,
+                      hvs:=CParaVarSym.Create('$'+n,ParaNr+1,vs_const,VoidPointerType,
                                               [vo_is_typinfo_para,vo_is_hidden_para]);
                       owner.InsertSym(hvs);
                     end;
@@ -692,14 +692,14 @@ implementation
                 end;
               if (fwpd.InterfaceDef or Assigned(fwpd.struct)) and
                  (
-                   ((currsym.typ=TypeSym) and (df_genconstraint in currtype.typedef.DefOptions)) or
+                   ((currsym.typ=TypeSym) and (df_genconstraint in currtype.TypeDef.DefOptions)) or
                    (currsym.typ=constsym)
                  ) then
                 begin
                   if currsym.typ=constsym then
                     fileinfo:=currsym.fileinfo
                   else
-                    fileinfo:=TStoredDef(currtype.typedef).GenConstraintData.fileinfo;
+                    fileinfo:=TStoredDef(currtype.TypeDef).GenConstraintData.fileinfo;
                   messagepos(fileinfo,parser_e_generic_constraints_not_allowed_here);
                   result:=false;
                 end;
@@ -752,8 +752,8 @@ implementation
                    (currsym.typ=constsym) or
                    ((currsym.typ=TypeSym) and
                      (
-                       (currtype.typedef.typ<>undefineddef) or
-                       (df_genconstraint in currtype.typedef.DefOptions)
+                       (currtype.TypeDef.typ<>undefineddef) or
+                       (df_genconstraint in currtype.TypeDef.DefOptions)
                      )
                    )
                  )then
@@ -1239,19 +1239,19 @@ implementation
         old_symtablestack:=SymTableStack;
         SymTableStack:=old_symtablestack.GetCopyUntil(CurrentModule.LocalSymTable);
 
-        nestedvarsst:=TRecordSymTable.create('$'+CurrentModule.RealModuleName^+'$$_fpc_nestedvars$'+pd.UniqueIDStr,
+        nestedvarsst:=TRecordSymTable.Create('$'+CurrentModule.RealModuleName^+'$$_fpc_nestedvars$'+pd.UniqueIDStr,
           CurrentSettings.Alignment.LocalAlignMax,CurrentSettings.Alignment.LocalAlignMin);
-        nestedvarsdef:=CRecordDef.create(nestedvarsst.name^,nestedvarsst);
+        nestedvarsdef:=CRecordDef.Create(nestedvarsst.name^,nestedvarsst);
         SymTableStack.free;
         SymTableStack:=old_symtablestack.GetCopyUntil(pd.LocalST);
         pnestedvarsdef:=CPointerDef.getreusable(nestedvarsdef);
         if not(po_assembler in pd.ProcOptions) then
           begin
-            nestedvars:=CLocalVarSym.create('$nestedvars',vs_var,nestedvarsdef,[]);
+            nestedvars:=CLocalVarSym.Create('$nestedvars',vs_var,nestedvarsdef,[]);
             include(nestedvars.SymOptions,sp_internal);
             pd.LocalST.InsertSym(nestedvars);
             pd.ParentFPStruct:=nestedvars;
-            pd.ParentFPInitBlock:=CBlockNode.create(nil);
+            pd.ParentFPInitBlock:=CBlockNode.Create(nil);
           end;
         SymTableStack.free;
         pd.ParentFPStructPtrType:=pnestedvarsdef;

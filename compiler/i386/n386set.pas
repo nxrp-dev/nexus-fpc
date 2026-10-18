@@ -27,11 +27,11 @@ interface
 
     uses
       GlobType,
-      node,nset,pass_1,nx86set;
+      node,nset,Pass_1,nx86set;
 
     type
       TI386CaseNode = class(TX86CaseNode)
-         procedure optimizevalues(var max_linear_list:int64;var max_dist:qword);override;
+         procedure OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);override;
       end;
 
 
@@ -44,18 +44,18 @@ implementation
                             TI386CASENODE
 *****************************************************************************}
 
-    procedure TI386CaseNode.optimizevalues(var max_linear_list:int64;var max_dist:qword);
+    procedure TI386CaseNode.OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);
       begin
         { a jump table crashes the pipeline! }
         if CurrentSettings.OptimizeCPUType=cpu_386 then
-          inc(max_linear_list,3)
+          inc(AMaxLinearList,3)
         else if CurrentSettings.OptimizeCPUType=cpu_Pentium then
-          inc(max_linear_list,6)
+          inc(AMaxLinearList,6)
         else if CurrentSettings.OptimizeCPUType=cpu_Pentium4 then
-          inc(max_linear_list,14)
+          inc(AMaxLinearList,14)
         else
         { default, also fine for cpu_Pentium2, cpu_Pentium3, cpu_PentiumM }
-          inc(max_linear_list,9);
+          inc(AMaxLinearList,9);
       end;
 
 

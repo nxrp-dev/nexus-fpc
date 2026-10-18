@@ -43,61 +43,61 @@ interface
 
        TAddNode = class(TBinOpNode)
        private
-          resultrealdefderef: TDeref;
-          function pass_typecheck_internal:TNode;
-          function do_currency_corrections: TNode;
+          FResultRealDefDeref: TDeref;
+          function PassTypeCheckInternal:TNode;
+          function DoCurrencyCorrections: TNode;
        public
-          resultrealdef : TDef;
-          addnodeflags : TAddNodeFlags;
-          constructor create(tt : TNodeType;l,r : TNode);override;
-          constructor Create_Internal(tt:TNodeType;l,r:TNode);
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          ResultRealDef : TDef;
+          AddNodeFlags : TAddNodeFlags;
+          constructor Create(ANodeType : TNodeType;ALeft,ARight : TNode);override;
+          constructor Create_Internal(ANodeType:TNodeType;ALeft,ARight:TNode);
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          function simplify(forinline: boolean) : TNode;override;
-          function dogetcopy : TNode;override;
-          function docompare(p: TNode): boolean; override;
-          procedure printnodedata(var t:text);override;
+          procedure DerefImpl;override;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Simplify(AForInline: Boolean) : TNode;override;
+          function DoGetCopy : TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          procedure PrintNodeData(var AText:Text);override;
          protected
           { override the following if you want to implement }
           { parts explicitely in the code generator (JM)    }
-          function first_addstring: TNode; virtual;
-          function first_addset: TNode; virtual;
-          function first_adddynarray : TNode; virtual;
+          function First_AddString: TNode; virtual;
+          function First_AddSet: TNode; virtual;
+          function First_AddDynArray : TNode; virtual;
           { only implements "muln" nodes, the rest always has to be done in }
           { the code generator for performance reasons (JM)                 }
-          function first_add64bitint: TNode; virtual;
-          function first_addpointer: TNode; virtual;
-          function first_cmppointer: TNode; virtual;
+          function First_Add64BitInt: TNode; virtual;
+          function First_AddPointer: TNode; virtual;
+          function First_CmpPointer: TNode; virtual;
 
           { override and return false if you can handle 32x32->64 }
           { bit multiplies directly in your code generator. If    }
           { this function is overridden to return false, you can  }
           { get multiplies with left/right both s32bit or u32bit, }
           { and resultdef of the muln s64bit or u64bit           }
-          function use_generic_mul32to64: boolean; virtual;
+          function Use_Generic_Mul32To64: Boolean; virtual;
 
           { override and return false if code generator can handle }
           { full 64 bit multiplies.                                }
-          function use_generic_mul64bit: boolean; virtual;
+          function Use_Generic_Mul64Bit: Boolean; virtual;
 
 {$ifdef cpuneedsmulhelper}
           { override to customize to decide if the code generator }
           { can handle a given multiply node directly, or it needs helpers }
-          function use_mul_helper: boolean; virtual;
+          function Use_Mul_Helper: Boolean; virtual;
 {$endif cpuneedsmulhelper}
 
           { shall be overridden if the target cpu supports
             an fma instruction
           }
-          function use_fma : boolean; virtual;
+          function Use_FMA : Boolean; virtual;
        private
           { checks whether a muln can be calculated as a 32bit }
           { * 32bit -> 64 bit                                  }
-          function try_make_mul32to64: boolean;
+          function TryMakeMul32To64: Boolean;
 
           { Match against the ranges, i.e.:
             var a:1..10;
@@ -106,10 +106,10 @@ interface
                 ...
             always evaluates to true. (DM)
           }
-          function cmp_of_disjunct_ranges(var res : boolean) : boolean;
+          function CompareDisjointRanges(var AComparisonResult : Boolean) : Boolean;
 
           { tries to replace the current node by a fma node }
-          function try_fma(ld,rd : TDef) : TNode;
+          function TryFMA(ALeftDef,ARightDef : TDef) : TNode;
        end;
        TAddNodeClass = class of TAddNode;
 
@@ -129,14 +129,14 @@ implementation
       tokens,
       symconst,symdef,SymSym,symcpu,SymTable,defutil,defcmp,
       cgbase,
-      htypechk,pass_1,
+      htypechk,Pass_1,
       nld,nbas,nmat,ncnv,ncon,nset,nopt,ncal,ninl,nmem,nutils,
       CPUInfo,
       PPU;
 
 const
-    BestRealLayoutCheck = 1 div Ord(SizeOf(BestRealRec) = SizeOf(BestReal));
-    swap_relation: array [ltn..unequaln] of TNodeType=(gtn, gten, ltn, lten, EqualN, unequaln);
+    cBestRealLayoutCheck = 1 div Ord(SizeOf(BestRealRec) = SizeOf(BestReal));
+    cSwapRelation: array [ltn..unequaln] of TNodeType=(gtn, gten, ltn, lten, EqualN, unequaln);
 
 {*****************************************************************************
                                 TADDNODE
@@ -144,238 +144,238 @@ const
 
 {$maxfpuregisters 0}
 
-    function getbestreal(t1,t2 : TDef) : TDef;
+    function GetBestReal(ADef1,ADef2 : TDef) : TDef;
       const
-        floatweight : array[TFloatType] of byte =
+        cFloatWeight : array[TFloatType] of Byte =
           (2,3,4,5,0,1);
       begin
-        if t1.typ=floatdef then
+        if ADef1.typ=floatdef then
           begin
-            result:=t1;
-            if t2.typ=floatdef then
+            Result:=ADef1;
+            if ADef2.typ=floatdef then
               begin
                 { when a comp or currency is used, use always the
                   best float type to calculate the result }
-                if (TFloatDef(t1).FloatType in [s64comp,s64currency]) or
-                  (TFloatDef(t2).FloatType in [s64comp,s64currency]) or
+                if (TFloatDef(ADef1).FloatType in [s64comp,s64currency]) or
+                  (TFloatDef(ADef2).FloatType in [s64comp,s64currency]) or
                   (cs_excessprecision in CurrentSettings.LocalSwitches) then
-                  result:=PBestRealType^
+                  Result:=PBestRealType^
                 else
-                  if floatweight[TFloatDef(t2).FloatType]>floatweight[TFloatDef(t1).FloatType] then
-                    result:=t2;
+                  if cFloatWeight[TFloatDef(ADef2).FloatType]>cFloatWeight[TFloatDef(ADef1).FloatType] then
+                    Result:=ADef2;
               end;
           end
-        else if t2.typ=floatdef then
-          result:=t2
+        else if ADef2.typ=floatdef then
+          Result:=ADef2
         else InternalError(200508061);
       end;
 
 
-    constructor TAddNode.create(tt : TNodeType;l,r : TNode);
+    constructor TAddNode.Create(ANodeType : TNodeType;ALeft,ARight : TNode);
       begin
-         inherited create(tt,l,r);
-         addnodeflags:=[];
+         inherited Create(ANodeType,ALeft,ARight);
+         AddNodeFlags:=[];
       end;
 
-    constructor TAddNode.Create_Internal(tt:TNodeType;l,r:TNode);
+    constructor TAddNode.Create_Internal(ANodeType:TNodeType;ALeft,ARight:TNode);
       begin
-        create(tt,l,r);
-        include(flags,nf_internal);
-      end;
-
-
-    constructor TAddNode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
-      begin
-        inherited ppuload(t, ppufile);
-        ppufile.GetSet(TPPUSet1(addnodeflags));
-        ppufile.GetDeref(resultrealdefderef);
+        Create(ANodeType,ALeft,ARight);
+        include(Flags,nf_internal);
       end;
 
 
-    procedure TAddNode.ppuwrite(ppufile: TCompilerPPUFile);
+    constructor TAddNode.PPULoad(ANodeType: TNodeType; APPUFile: TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutSet(TPPUSet1(addnodeflags));
-        ppufile.PutDeref(resultrealdefderef);
+        inherited PPULoad(ANodeType, APPUFile);
+        APPUFile.GetSet(TPPUSet1(AddNodeFlags));
+        APPUFile.GetDeref(FResultRealDefDeref);
+      end;
+
+
+    procedure TAddNode.PPUWrite(APPUFile: TCompilerPPUFile);
+      begin
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutSet(TPPUSet1(AddNodeFlags));
+        APPUFile.PutDeref(FResultRealDefDeref);
       end;
 
 
     procedure TAddNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        resultrealdefderef.build(resultrealdef);
+        FResultRealDefDeref.Build(ResultRealDef);
       end;
 
 
-    procedure TAddNode.derefimpl;
+    procedure TAddNode.DerefImpl;
       begin
-        inherited derefimpl;
-        resultrealdef:=TDef(resultrealdefderef.resolve);
+        inherited DerefImpl;
+        ResultRealDef:=TDef(FResultRealDefDeref.resolve);
       end;
 
 
-    function TAddNode.cmp_of_disjunct_ranges(var res : boolean) : boolean;
+    function TAddNode.CompareDisjointRanges(var AComparisonResult : Boolean) : Boolean;
       var
-        hp          : TNode;
-        realdef     : TDef;
-        v           : TConstExprInt;
+        lNode          : TNode;
+        lRealDef     : TDef;
+        lValue           : TConstExprInt;
       begin
-        result:=false;
+        Result:=false;
         { check for comparison with known result because the ranges of the operands don't overlap }
-        if (is_constintnode(right) and (left.resultdef.typ=orddef) and
+        if (Is_ConstIntNode(Right) and (Left.ResultDef.typ=orddef) and
             { don't ignore type checks }
-            Is_Subequal(right.resultdef,left.resultdef)) or
-           (is_constintnode(left) and (right.resultdef.typ=orddef) and
+            Is_Subequal(Right.ResultDef,Left.ResultDef)) or
+           (Is_ConstIntNode(Left) and (Right.ResultDef.typ=orddef) and
             { don't ignore type checks }
-            Is_Subequal(left.resultdef,right.resultdef)) then
+            Is_Subequal(Left.ResultDef,Right.ResultDef)) then
            begin
-             if is_constintnode(right) then
+             if Is_ConstIntNode(Right) then
                begin
-                 hp:=left;
-                 v:=TOrdConstNode(right).Value;
+                 lNode:=Left;
+                 lValue:=TOrdConstNode(Right).Value;
                end
              else
                begin
-                 hp:=right;
-                 v:=TOrdConstNode(left).Value;
+                 lNode:=Right;
+                 lValue:=TOrdConstNode(Left).Value;
                end;
 
-             realdef:=hp.resultdef;
+             lRealDef:=lNode.ResultDef;
              { stop with finding the real def when we either encounter
                 a) an explicit type conversion (then the value has to be
                    re-interpreted)
                 b) an "absolute" type conversion (also requires
                    re-interpretation)
              }
-             while (hp.nodetype=typeconvn) and
-                   ([nf_internal,nf_explicit,nf_absolute] * hp.flags = []) do
+             while (lNode.NodeType=typeconvn) and
+                   ([nf_internal,nf_explicit,nf_absolute] * lNode.Flags = []) do
                begin
-                 hp:=TTypeConvNode(hp).left;
-                 realdef:=hp.resultdef;
+                 lNode:=TTypeConvNode(lNode).Left;
+                 lRealDef:=lNode.ResultDef;
                end;
              { could become an errordef in case of errors }
-             if realdef.typ<>orddef then
+             if lRealDef.typ<>orddef then
                exit;
-             if is_constintnode(left) then
-               with TOrdDef(realdef) do
-                 case nodetype of
+             if Is_ConstIntNode(Left) then
+               with TOrdDef(lRealDef) do
+                 case NodeType of
                   ltn:
-                    if v<low then
+                    if lValue<low then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end
-                    else if v>=high then
+                    else if lValue>=high then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   lten:
-                    if v<=low then
+                    if lValue<=low then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end
-                    else if v>high then
+                    else if lValue>high then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   gtn:
-                    if v<=low then
+                    if lValue<=low then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end
-                    else if v>high then
+                    else if lValue>high then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   gten :
-                    if v<low then
+                    if lValue<low then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end
-                    else if v>=high then
+                    else if lValue>=high then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   EqualN:
-                    if (v<low) or (v>high) then
+                    if (lValue<low) or (lValue>high) then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   unequaln:
-                    if (v<low) or (v>high) then
+                    if (lValue<low) or (lValue>high) then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   else
                     ;
                  end
              else
-               with TOrdDef(realdef) do
-                 case nodetype of
+               with TOrdDef(lRealDef) do
+                 case NodeType of
                   ltn:
-                    if high<v then
+                    if high<lValue then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end
-                    else if low>=v then
+                    else if low>=lValue then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   lten:
-                    if high<=v then
+                    if high<=lValue then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end
-                    else if low>v then
+                    else if low>lValue then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   gtn:
-                    if high<=v then
+                    if high<=lValue then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end
-                    else if low>v then
+                    else if low>lValue then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   gten:
-                    if high<v then
+                    if high<lValue then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end
-                    else if low>=v then
+                    else if low>=lValue then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   EqualN:
-                    if (v<low) or (v>high) then
+                    if (lValue<low) or (lValue>high) then
                       begin
-                        result:=true;
-                        res:=false;
+                        Result:=true;
+                        AComparisonResult:=false;
                       end;
                   unequaln:
-                    if (v<low) or (v>high) then
+                    if (lValue<low) or (lValue>high) then
                       begin
-                        result:=true;
-                        res:=true;
+                        Result:=true;
+                        AComparisonResult:=true;
                       end;
                   else
                     ;
@@ -384,149 +384,149 @@ const
       end;
 
 
-    function TAddNode.simplify(forinline : boolean) : TNode;
+    function TAddNode.Simplify(AForInline : Boolean) : TNode;
 
-      function is_range_test(nodel, noder: TAddNode; out value: TNode; var cl,cr: TConstExprInt): boolean;
+      function IsRangeTest(ALeftNode, ARightNode: TAddNode; out AValue: TNode; var ALeftConstant,ARightConstant: TConstExprInt): Boolean;
         const
-          is_upper_test: array[ltn..gten] of boolean = (true,true,false,false);
-          inclusive_adjust: array[boolean,boolean,ltn..gten] of integer = (((-1,0,1,0),
+          cIsUpperTest: array[ltn..gten] of Boolean = (true,true,false,false);
+          cInclusiveAdjust: array[Boolean,Boolean,ltn..gten] of Integer = (((-1,0,1,0),
                                                                             (1,0,-1,0)),
                                                                            ((0,-1,0,1),
                                                                             (0,1,0,-1)));
         var
-          swapl, swapr, inverted_range: Boolean;
-          valuer: TNode;
-          t: TConstExprInt;
+          lSwapLeft, lSwapRight, lInvertedRange: Boolean;
+          lRightValueNode: TNode;
+          lTempValue: TConstExprInt;
         begin
-          result:=false;
-          swapl:=false;
-          swapr:=false;
+          Result:=false;
+          lSwapLeft:=false;
+          lSwapRight:=false;
 
-          if nodel.left.nodetype=ordconstn then
+          if ALeftNode.Left.NodeType=ordconstn then
             begin
-              swapl:=true;
-              cl:=TOrdConstNode(nodel.left).Value;
-              value:=nodel.right;
+              lSwapLeft:=true;
+              ALeftConstant:=TOrdConstNode(ALeftNode.Left).Value;
+              AValue:=ALeftNode.Right;
             end
-          else if nodel.right.nodetype=ordconstn then
+          else if ALeftNode.Right.NodeType=ordconstn then
             begin
-              cl:=TOrdConstNode(nodel.right).Value;
-              value:=nodel.left;
+              ALeftConstant:=TOrdConstNode(ALeftNode.Right).Value;
+              AValue:=ALeftNode.Left;
             end
           else
             exit;
 
-          if noder.left.nodetype=ordconstn then
+          if ARightNode.Left.NodeType=ordconstn then
             begin
-              swapl:=true;
-              cr:=TOrdConstNode(noder.left).Value;
-              valuer:=noder.right;
+              lSwapLeft:=true;
+              ARightConstant:=TOrdConstNode(ARightNode.Left).Value;
+              lRightValueNode:=ARightNode.Right;
             end
-          else if noder.right.nodetype=ordconstn then
+          else if ARightNode.Right.NodeType=ordconstn then
             begin
-              cr:=TOrdConstNode(noder.right).Value;
-              valuer:=noder.left;
+              ARightConstant:=TOrdConstNode(ARightNode.Right).Value;
+              lRightValueNode:=ARightNode.Left;
             end
           else
             exit;
 
-          if not value.isequal(valuer) then
+          if not AValue.IsEqual(lRightValueNode) then
             exit;
 
           { This is based on De Morgan's theorem, namely that
             "A and B" = "not ((not A) or (not B))" }
-          inverted_range:=(nodetype=orn);
-          if inverted_range then
+          lInvertedRange:=(NodeType=orn);
+          if lInvertedRange then
             begin
-              swapl:=not swapl;
-              swapr:=not swapr;
+              lSwapLeft:=not lSwapLeft;
+              lSwapRight:=not lSwapRight;
             end;
 
           { this could be simplified too, but probably never happens }
-          if (is_upper_test[nodel.nodetype] xor swapl)=(is_upper_test[noder.nodetype] xor swapr) then
+          if (cIsUpperTest[ALeftNode.NodeType] xor lSwapLeft)=(cIsUpperTest[ARightNode.NodeType] xor lSwapRight) then
             exit;
 
-          cl:=cl+inclusive_adjust[inverted_range,swapl,nodel.nodetype];
-          cr:=cr+inclusive_adjust[inverted_range,swapr,noder.nodetype];
+          ALeftConstant:=ALeftConstant+cInclusiveAdjust[lInvertedRange,lSwapLeft,ALeftNode.NodeType];
+          ARightConstant:=ARightConstant+cInclusiveAdjust[lInvertedRange,lSwapRight,ARightNode.NodeType];
 
-          if is_upper_test[nodel.nodetype] xor swapl then
+          if cIsUpperTest[ALeftNode.NodeType] xor lSwapLeft then
             begin
-              t:=cl;
-              cl:=cr;
-              cr:=t;
+              lTempValue:=ALeftConstant;
+              ALeftConstant:=ARightConstant;
+              ARightConstant:=lTempValue;
             end;
 
-          if cl>cr then
+          if ALeftConstant>ARightConstant then
             exit;
 
-          result:=true;
+          Result:=true;
         end;
 
 
-      function TryHandleLengthZero(L,R : TNode; op : TNodeType; var resn : TNode) : boolean;
+      function TryHandleLengthZero(ALeft,ARight : TNode; ANodeType : TNodeType; var AResultNode : TNode) : Boolean;
         var
-          swapn : TNode;
+          lSwapNode : TNode;
         begin
-          result:=false;
+          Result:=false;
           { Attempt to handle Length(S) = 0, <> 0, > 0, < 0, >= 0, <= 0. }
-          if not (op in [EqualN,unequaln,ltn,lten,gtn,gten]) then
+          if not (ANodeType in [EqualN,unequaln,ltn,lten,gtn,gten]) then
             exit;
-          if not is_inlinefunction(L,in_length_x) then
-            if is_inlinefunction(R,in_length_x) then
+          if not Is_InlineFunction(ALeft,in_length_x) then
+            if Is_InlineFunction(ARight,in_length_x) then
               begin
-                op:=swap_relation[op];
-                swapn:=L;
-                L:=R;
-                R:=swapn;
+                ANodeType:=cSwapRelation[ANodeType];
+                lSwapNode:=ALeft;
+                ALeft:=ARight;
+                ARight:=lSwapNode;
               end
             else
               exit;
-          if not is_constintvalue(R,0) or Is_ShortString(TInlineNode(L).left.resultdef) then
+          if not Is_ConstIntValue(ARight,0) or Is_ShortString(TInlineNode(ALeft).Left.ResultDef) then
             exit;
 
           { Length = 0, <> 0, > 0, <= 0 are reduced to Length = 0. }
-          if op in [EqualN,unequaln,gtn,lten] then
+          if ANodeType in [EqualN,unequaln,gtn,lten] then
             begin
               { “pointer(L.left) = nil”. Steal L.left instead of getcopy, zero a bit later. }
-              resn:=CAddNode.Create_Internal(EqualN,CTypeConvNode.Create_Internal(TInlineNode(L).left,VoidPointerType),
-                 CPointerConstNode.create(0,VoidPointerType));
+              AResultNode:=CAddNode.Create_Internal(EqualN,CTypeConvNode.Create_Internal(TInlineNode(ALeft).Left,VoidPointerType),
+                 CPointerConstNode.Create(0,VoidPointerType));
 
               { COM widestrings have 32-bit lengths, and can explicitly have 0 while being non-nil. }
-              if Is_WideString(TInlineNode(L).left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+              if Is_WideString(TInlineNode(ALeft).Left.ResultDef) and (tf_winlikewidestring in TargetInfo.Flags) then
                 begin
                   { Expand to “(pointer(L.left) = nil) or (PUint32(L.left)[-1] = 0)”. }
-                  resn:=CAddNode.Create_Internal(orn,
-                      resn,
+                  AResultNode:=CAddNode.Create_Internal(orn,
+                      AResultNode,
                       CAddNode.Create_Internal(EqualN,
                         CTypeConvNode.Create_Internal(
-                          CDerefNode.create(
-                            CAddNode.Create_Internal(subn,CTypeConvNode.Create_Internal(TInlineNode(L).left.GetCopy,VoidPointerType),
-                              COrdConstNode.create(sizeof(uint32),PtrUIntType,false))
+                          CDerefNode.Create(
+                            CAddNode.Create_Internal(subn,CTypeConvNode.Create_Internal(TInlineNode(ALeft).Left.GetCopy,VoidPointerType),
+                              COrdConstNode.Create(sizeof(uint32),PtrUIntType,false))
                           ),U32IntType
                         ),
-                        COrdConstNode.create(0,U32IntType,false))
+                        COrdConstNode.Create(0,U32IntType,false))
                     );
-                  include(TAddNode(resn).addnodeflags,anf_short_bool);
+                  include(TAddNode(AResultNode).AddNodeFlags,anf_short_bool);
                 end;
-              TInlineNode(L).left:=nil; { Was stolen inside resn, and no longer of interest. }
+              TInlineNode(ALeft).Left:=nil; { Was stolen inside resn, and no longer of interest. }
 
               { resn now checks for Length = 0. For Length <> 0, invert. }
-              if op in [unequaln,gtn] then
-                resn:=CNotNode.create(resn);
+              if ANodeType in [unequaln,gtn] then
+                AResultNode:=CNotNode.Create(AResultNode);
               exit(true);
             end;
 
           { Warn on Length < 0 and Length >= 0. }
-          if not (tnf_pass1_done in L.transientflags) then { ...Only once. }
-            if op=gten then
+          if not (tnf_pass1_done in ALeft.TransientFlags) then { ...Only once. }
+            if ANodeType=gten then
               Message(type_w_comparison_always_true)
             else
               Message(type_w_comparison_always_false);
 
           { Length < 0 is always false, Length >= 0 is always true. }
-          if not might_have_sideeffects(TInlineNode(L).left) then { Could somehow remove the check but keep the F() even in Length(F()) >= 0... }
+          if not Might_Have_SideEffects(TInlineNode(ALeft).Left) then { Could somehow remove the check but keep the F() even in Length(F()) >= 0... }
             begin
-              resn:=COrdConstNode.create(ord(op=gten),resultdef,true);
+              AResultNode:=COrdConstNode.Create(ord(ANodeType=gten),ResultDef,true);
               exit(true);
             end;
         end;
@@ -534,162 +534,162 @@ const
 
       function GetCopyAndTypeCheck: TNode;
         begin
-          result:=GetCopy;
-          result.resultdef:=nil;
-          result:=CTypeConvNode.Create_Internal(result,resultdef);
-          DoTypeCheckPass(result);
+          Result:=GetCopy;
+          Result.ResultDef:=nil;
+          Result:=CTypeConvNode.Create_Internal(Result,ResultDef);
+          DoTypeCheckPass(Result);
         end;
 
 
-      function IsAndOrAndNot(n1,n2,n3,n4 : TNode): Boolean;
+      function IsAndOrAndNot(ANode1,ANode2,ANode3,ANode4 : TNode): Boolean;
         begin
-          result:=(n4.nodetype=notn) and
-            TNotNode(n4).left.isequal(n2);
+          Result:=(ANode4.NodeType=notn) and
+            TNotNode(ANode4).Left.IsEqual(ANode2);
         end;
 
 
-      function TransformAndOrAndNot(n1,n2,n3,n4 : TNode): TNode;
+      function TransformAndOrAndNot(ANode1,ANode2,ANode3,ANode4 : TNode): TNode;
         begin
-          result:=CAddNode.Create_Internal(xorn,n3.GetCopy,
-            CAddNode.Create_Internal(andn,CAddNode.Create_Internal(xorn,n3.GetCopy,n1.GetCopy),n2.GetCopy));
+          Result:=CAddNode.Create_Internal(xorn,ANode3.GetCopy,
+            CAddNode.Create_Internal(andn,CAddNode.Create_Internal(xorn,ANode3.GetCopy,ANode1.GetCopy),ANode2.GetCopy));
         end;
 
 
       function SwapRightWithLeftRight : TNode;
         var
-          hp : TNode;
+          lNode : TNode;
         begin
-          hp:=right;
-          right:=TAddNode(left).right;
-          TAddNode(left).right:=hp;
-          left:=left.simplify(forinline);
-          if resultdef.typ<>pointerdef then
+          lNode:=Right;
+          Right:=TAddNode(Left).Right;
+          TAddNode(Left).Right:=lNode;
+          Left:=Left.Simplify(AForInline);
+          if ResultDef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              left:=CTypeConvNode.Create_Internal(left,resultdef);
-              DoTypeCheckPass(left);
+              Left:=CTypeConvNode.Create_Internal(Left,ResultDef);
+              DoTypeCheckPass(Left);
             end;
-          result:=GetCopyAndTypeCheck;
+          Result:=GetCopyAndTypeCheck;
         end;
 
 
       function SwapRightWithLeftLeft : TNode;
         var
-          hp,hp2 : TNode;
+          lNode,lNode2 : TNode;
         begin
           { keep the order of val+const else pointer and string operations might cause an error }
-          hp:=TAddNode(left).left;
-          TAddNode(left).left:=TAddNode(left).right;
-          TAddNode(left).right:=right;
-          left.resultdef:=nil;
-          DoTypeCheckPass(left);
-          hp2:=left.simplify(forinline);
-          if Assigned(hp2) then
-            left:=hp2;
-          if resultdef.typ<>pointerdef then
+          lNode:=TAddNode(Left).Left;
+          TAddNode(Left).Left:=TAddNode(Left).Right;
+          TAddNode(Left).Right:=Right;
+          Left.ResultDef:=nil;
+          DoTypeCheckPass(Left);
+          lNode2:=Left.Simplify(AForInline);
+          if Assigned(lNode2) then
+            Left:=lNode2;
+          if ResultDef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              left:=CTypeConvNode.Create_Internal(left,resultdef);
-              DoTypeCheckPass(left);
+              Left:=CTypeConvNode.Create_Internal(Left,ResultDef);
+              DoTypeCheckPass(Left);
             end
-          else if TPointerDef(resultdef).PointedDef.Size>1 then
+          else if TPointerDef(ResultDef).PointedDef.Size>1 then
           { the constants were already multiplied by the pointer element size }
-            left:=CModDivNode.create(divn,left,COrdConstNode.create(TPointerDef(resultdef).PointedDef.Size,left.resultdef,false));
-          right:=left;
-          left:=hp;
-          result:=GetCopyAndTypeCheck;
+            Left:=CModDivNode.Create(divn,Left,COrdConstNode.Create(TPointerDef(ResultDef).PointedDef.Size,Left.ResultDef,false));
+          Right:=Left;
+          Left:=lNode;
+          Result:=GetCopyAndTypeCheck;
         end;
 
 
       function SwapLeftWithRightRight : TNode;
         var
-          hp,hp2 : TNode;
+          lNode,lNode2 : TNode;
         begin
           { keep the order of val+const else string operations might cause an error }
-          hp:=TAddNode(right).right;
+          lNode:=TAddNode(Right).Right;
 
-          TAddNode(right).right:=TAddNode(right).left;
-          TAddNode(right).left:=left;
+          TAddNode(Right).Right:=TAddNode(Right).Left;
+          TAddNode(Right).Left:=Left;
 
-          right.resultdef:=nil;
-          DoTypeCheckPass(right);
-          hp2:=right.simplify(forinline);
-          if Assigned(hp2) then
-            right:=hp2;
-          if resultdef.typ<>pointerdef then
+          Right.ResultDef:=nil;
+          DoTypeCheckPass(Right);
+          lNode2:=Right.Simplify(AForInline);
+          if Assigned(lNode2) then
+            Right:=lNode2;
+          if ResultDef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              right:=CTypeConvNode.Create_Internal(right,resultdef);
-              DoTypeCheckPass(right);
+              Right:=CTypeConvNode.Create_Internal(Right,ResultDef);
+              DoTypeCheckPass(Right);
             end;
-          left:=right;
-          right:=hp;
-          result:=GetCopyAndTypeCheck;
+          Left:=Right;
+          Right:=lNode;
+          Result:=GetCopyAndTypeCheck;
         end;
 
 
       function SwapLeftWithRightLeft : TNode;
         var
-          hp: TNode;
+          lNode: TNode;
         begin
-          hp:=left;
-          left:=TAddNode(right).left;
-          TAddNode(right).left:=hp;
-          right:=right.simplify(false);
-          result:=GetCopyAndTypeCheck;
+          lNode:=Left;
+          Left:=TAddNode(Right).Left;
+          TAddNode(Right).Left:=lNode;
+          Right:=Right.Simplify(false);
+          Result:=GetCopyAndTypeCheck;
         end;
 
 
-      function TryVariableShiftPair(lin, rin: TNode; bitsize: asizeint): boolean;
+      function TryVariableShiftPair(ALeftInput, ARightInput: TNode; ABitSize: ASizeInt): Boolean;
         begin
-          Result:=(rin.nodetype=subn) and
-            is_constintnode(TAddNode(rin).left) and
-            (TOrdConstNode(TAddNode(rin).left).Value=bitsize) and
-            not might_have_sideeffects(lin) and
-            TAddNode(rin).right.isequal(lin);
+          Result:=(ARightInput.NodeType=subn) and
+            Is_ConstIntNode(TAddNode(ARightInput).Left) and
+            (TOrdConstNode(TAddNode(ARightInput).Left).Value=ABitSize) and
+            not Might_Have_SideEffects(ALeftInput) and
+            TAddNode(ARightInput).Right.IsEqual(ALeftInput);
         end;
 
 
-      function CheckRotateOptimization(standard_op, reverse_op: TInlineNumber): TNode;
+      function CheckRotateOptimization(AStandardOp, AReverseOp: TInlineNumber): TNode;
         var
-          bitsize: asizeint;
+          lBitSize: ASizeInt;
         begin
           Result:=nil;
-          if Is_Integer(TShlShrNode(left).left.resultdef) and
+          if Is_Integer(TShlShrNode(Left).Left.ResultDef) and
             { Avoid using custom integers due to the risk of unusual sizes and
               undesired effects in, say, bitpacked records. [Kit] }
-            (TOrdDef(TShlShrNode(left).left.resultdef).OrdType<>customint) and
-            not might_have_sideeffects(TShlShrNode(left).left) and
-            TShlShrNode(left).left.isequal(TShlShrNode(right).left) then
+            (TOrdDef(TShlShrNode(Left).Left.ResultDef).OrdType<>customint) and
+            not Might_Have_SideEffects(TShlShrNode(Left).Left) and
+            TShlShrNode(Left).Left.IsEqual(TShlShrNode(Right).Left) then
             begin
-              bitsize:=TShlShrNode(left).left.resultdef.Size*8;
+              lBitSize:=TShlShrNode(Left).Left.ResultDef.Size*8;
 
               { Check for constants first }
               if (
-                  is_constintnode(TShlShrNode(left).right) and
-                  (TOrdConstNode(TShlShrNode(left).right).Value>0) and
-                  is_constintnode(TShlShrNode(right).right) and
-                  (TOrdConstNode(TShlShrNode(right).right).Value>0) and
-                  (TOrdConstNode(TShlShrNode(right).right).Value=bitsize-TOrdConstNode(TShlShrNode(left).right).Value)
+                  Is_ConstIntNode(TShlShrNode(Left).Right) and
+                  (TOrdConstNode(TShlShrNode(Left).Right).Value>0) and
+                  Is_ConstIntNode(TShlShrNode(Right).Right) and
+                  (TOrdConstNode(TShlShrNode(Right).Right).Value>0) and
+                  (TOrdConstNode(TShlShrNode(Right).Right).Value=lBitSize-TOrdConstNode(TShlShrNode(Left).Right).Value)
                 ) or
                   { Try (X op1 Y) or (X op2 (S-Y)) for variable rotation}
-                  TryVariableShiftPair(TShlShrNode(left).right, TShlShrNode(right).right, bitsize) then
+                  TryVariableShiftPair(TShlShrNode(Left).Right, TShlShrNode(Right).Right, lBitSize) then
                 begin
-                  result:=CInlineNode.create(standard_op,false,
-                    CCallParaNode.create(TShlShrNode(left).PruneKeepRight(),
-                    CCallParaNode.create(TShlShrNode(left).PruneKeepLeft(),nil)));
+                  Result:=CInlineNode.Create(AStandardOp,false,
+                    CCallParaNode.Create(TShlShrNode(Left).PruneKeepRight(),
+                    CCallParaNode.Create(TShlShrNode(Left).PruneKeepLeft(),nil)));
                   Exit;
                 end;
 
               { Try (X op1 (S-Y)) or (X op2 Y) for variable rotation }
-              if TryVariableShiftPair(TShlShrNode(right).right, TShlShrNode(left).right, bitsize) then
+              if TryVariableShiftPair(TShlShrNode(Right).Right, TShlShrNode(Left).Right, lBitSize) then
                 begin
-                  result:=CInlineNode.create(reverse_op,false,
-                    CCallParaNode.create(TShlShrNode(right).PruneKeepRight(),
-                    CCallParaNode.create(TShlShrNode(right).PruneKeepLeft(),nil)));
+                  Result:=CInlineNode.Create(AReverseOp,false,
+                    CCallParaNode.Create(TShlShrNode(Right).PruneKeepRight(),
+                    CCallParaNode.Create(TShlShrNode(Right).PruneKeepLeft(),nil)));
                   Exit;
                 end;
             end;
@@ -697,49 +697,49 @@ const
 
 
       var
-        hp: TAddNode;
-        t,vl,lefttarget,righttarget,value1conv,value2conv: TNode;
-        lt,rt,nt : TNodeType;
-        hdef,
-        rd,ld   , inttype: TDef;
-        rv,lv,v : TConstExprInt;
-        rvd,lvd : BestReal;
-        ws1,ws2 : TCompilerWideString;
-        concatstrings : boolean;
-        c1,c2   : array[0..1] of char;
-        s1,s2,stmp   : pchar;
-        l1,l2   : LongInt;
-        resultset : TConstSet;
-        res,
-        b       : boolean;
-        cr, cl  : TConstExprInt;
-        v2p, c2p, c1p, v1p: PNode;
-        p1,p2: TConstPtrUInt;
+        lAddNode: TAddNode;
+        lResultNode,lLeftValueNode,lLeftTarget,lRightTarget,lValue1Conversion,lValue2Conversion: TNode;
+        lLeftNodeType,lRightNodeType,lNewNodeType : TNodeType;
+        lDef,
+        lRightDef,lLeftDef   , lIntType: TDef;
+        lRightValue,lLeftValue,lValue : TConstExprInt;
+        lRightRealValue,lLeftRealValue : BestReal;
+        lWideString1,lWideString2 : TCompilerWideString;
+        lConcatStrings : Boolean;
+        lChar1,lChar2   : array[0..1] of char;
+        lString1,lString2,lTempString   : PChar;
+        lLength1,lLength2   : LongInt;
+        lResultSet : TConstSet;
+        lComparisonResult,
+        lValueInRange       : Boolean;
+        lRightConstant, lLeftConstant  : TConstExprInt;
+        lValue2Pointer, lConst2Pointer, lConst1Pointer, lValue1Pointer: PNode;
+        lPointer1,lPointer2: TConstPtrUInt;
       begin
-        result:=do_currency_corrections;
-        if Assigned(result) then
+        Result:=DoCurrencyCorrections;
+        if Assigned(Result) then
           Exit;
 
-        l1:=0;
-        l2:=0;
-        s1:=nil;
-        s2:=nil;
+        lLength1:=0;
+        lLength2:=0;
+        lString1:=nil;
+        lString2:=nil;
 
         { load easier access variables }
-        rd:=right.resultdef;
-        ld:=left.resultdef;
-        rt:=right.nodetype;
-        lt:=left.nodetype;
+        lRightDef:=Right.ResultDef;
+        lLeftDef:=Left.ResultDef;
+        lRightNodeType:=Right.NodeType;
+        lLeftNodeType:=Left.NodeType;
 
-        if (nodetype = slashn) and
-           (((rt = ordconstn) and
-             (TOrdConstNode(right).Value = 0)) or
-            ((rt = realconstn) and
-             (TRealConstNode(right).value_real = 0.0))) then
+        if (NodeType = slashn) and
+           (((lRightNodeType = ordconstn) and
+             (TOrdConstNode(Right).Value = 0)) or
+            ((lRightNodeType = realconstn) and
+             (TRealConstNode(Right).ValueReal = 0.0))) then
           begin
             if Floating_Point_Range_Check_Error then
                begin
-                 result:=CRealConstNode.create(1,PBestRealType^);
+                 Result:=CRealConstNode.Create(1,PBestRealType^);
                  Message(parser_e_division_by_zero);
                  exit;
                end;
@@ -747,249 +747,249 @@ const
 
         { both are int constants }
         if  (
-             is_constintnode(left) and
-             is_constintnode(right)
+             Is_ConstIntNode(Left) and
+             Is_ConstIntNode(Right)
             ) or
             (
-             is_constboolnode(left) and
-             is_constboolnode(right) and
-             (nodetype in [slashn,ltn,lten,gtn,gten,EqualN,unequaln,andn,xorn,orn])
+             Is_ConstBoolNode(Left) and
+             Is_ConstBoolNode(Right) and
+             (NodeType in [slashn,ltn,lten,gtn,gten,EqualN,unequaln,andn,xorn,orn])
             ) or
             (
-             is_constenumnode(left) and
-             is_constenumnode(right) and
-             (allowenumop(nodetype) or (nf_internal in flags))
+             Is_ConstEnumNode(Left) and
+             Is_ConstEnumNode(Right) and
+             (allowenumop(NodeType) or (nf_internal in Flags))
             ) or
             (
-             (lt in [pointerconstn,niln]) and
-             is_constintnode(right) and
-             (nodetype in [addn,subn])
+             (lLeftNodeType in [pointerconstn,niln]) and
+             Is_ConstIntNode(Right) and
+             (NodeType in [addn,subn])
             ) or
             (
-             (rt in [pointerconstn,niln]) and
-             is_constintnode(left) and
-             (nodetype=addn)
+             (lRightNodeType in [pointerconstn,niln]) and
+             Is_ConstIntNode(Left) and
+             (NodeType=addn)
             ) or
             (
-             (lt in [pointerconstn,niln]) and
-             (rt in [pointerconstn,niln]) and
-             (nodetype in [ltn,lten,gtn,gten,EqualN,unequaln,subn])
+             (lLeftNodeType in [pointerconstn,niln]) and
+             (lRightNodeType in [pointerconstn,niln]) and
+             (NodeType in [ltn,lten,gtn,gten,EqualN,unequaln,subn])
             ) or
             (
-             (lt = ordconstn) and (ld.typ = orddef) and Is_Currency(ld) and
-             (rt = ordconstn) and (rd.typ = orddef) and Is_Currency(rd)
+             (lLeftNodeType = ordconstn) and (lLeftDef.typ = orddef) and Is_Currency(lLeftDef) and
+             (lRightNodeType = ordconstn) and (lRightDef.typ = orddef) and Is_Currency(lRightDef)
             ) then
           begin
-             t:=nil;
+             lResultNode:=nil;
 
              { load values }
-             lv:=get_int_value(left);
-             rv:=get_int_value(right);
+             lLeftValue:=Get_Int_Value(Left);
+             lRightValue:=Get_Int_Value(Right);
 
              { Fix the currency scaling if, out of left and right, the
                nf_is_currency flag is set, but not for both }
-             if (nf_is_currency in left.flags) and
-               not (nf_is_currency in right.flags) then
-               rv:=rv*10000
-             else if (nf_is_currency in right.flags) and
-               not (nf_is_currency in left.flags) then
-               lv:=lv*10000;
+             if (nf_is_currency in Left.Flags) and
+               not (nf_is_currency in Right.Flags) then
+               lRightValue:=lRightValue*10000
+             else if (nf_is_currency in Right.Flags) and
+               not (nf_is_currency in Left.Flags) then
+               lLeftValue:=lLeftValue*10000;
 
              { type checking already took care of multiplying      }
              { integer constants with pointeddef.size if necessary }
-             case nodetype of
+             case NodeType of
                addn :
                  begin
-                   v:=lv+rv;
-                   if v.overflow then
+                   lValue:=lLeftValue+lRightValue;
+                   if lValue.overflow then
                      begin
                        Message(parser_e_arithmetic_operation_overflow);
                        { Recover }
-                       t:=genintconstnode(0)
+                       lResultNode:=GenIntConstNode(0)
                      end
-                   else if is_constpointernode(left) or is_constpointernode(right) then
-                     t:=CPointerConstNode.create(qword(v),resultdef)
+                   else if Is_ConstPointerNode(Left) or Is_ConstPointerNode(Right) then
+                     lResultNode:=CPointerConstNode.Create(QWord(lValue),ResultDef)
                    else
                      begin
-                       if Is_Integer(ld) then
-                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
+                       if Is_Integer(lLeftDef) then
+                         lResultNode:=Create_Simplified_Ord_Const(lValue,ResultDef,AForInline,cs_check_overflow in LocalSwitches)
                        else
-                         t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
+                         lResultNode:=COrdConstNode.Create(lValue,ResultDef,(lLeftDef.typ<>enumdef));
                      end;
 
-                   if Is_Currency(resultdef) then
-                     Include(t.flags,nf_is_currency);
+                   if Is_Currency(ResultDef) then
+                     Include(lResultNode.Flags,nf_is_currency);
                  end;
                subn :
                  begin
-                   v:=lv-rv;
-                   if v.overflow then
+                   lValue:=lLeftValue-lRightValue;
+                   if lValue.overflow then
                      begin
                        Message(parser_e_arithmetic_operation_overflow);
                        { Recover }
-                       t:=genintconstnode(0)
+                       lResultNode:=GenIntConstNode(0)
                      end
-                   else if (lt=pointerconstn) then
+                   else if (lLeftNodeType=pointerconstn) then
                      { pointer-pointer results in an integer }
-                     if (rt=pointerconstn) then
+                     if (lRightNodeType=pointerconstn) then
                        begin
                          if (cs_typed_addresses in CurrentSettings.LocalSwitches) and
-                            (TPointerDef(rd).PointedDef.Size>1) and
-                            not(anf_has_pointerdiv in addnodeflags) then
+                            (TPointerDef(lRightDef).PointedDef.Size>1) and
+                            not(anf_has_pointerdiv in AddNodeFlags) then
                            InternalError(2008030101);
-                         t:=CPointerConstNode.create(qword(v),resultdef)
+                         lResultNode:=CPointerConstNode.Create(QWord(lValue),ResultDef)
                        end
                      else
-                       t:=CPointerConstNode.create(qword(v),resultdef)
+                       lResultNode:=CPointerConstNode.Create(QWord(lValue),ResultDef)
                    else
                      begin
-                       if Is_Integer(ld) then
-                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
+                       if Is_Integer(lLeftDef) then
+                         lResultNode:=Create_Simplified_Ord_Const(lValue,ResultDef,AForInline,cs_check_overflow in LocalSwitches)
                        else
-                         t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
+                         lResultNode:=COrdConstNode.Create(lValue,ResultDef,(lLeftDef.typ<>enumdef));
                      end;
 
-                   if Is_Currency(resultdef) then
-                     Include(t.flags,nf_is_currency);
+                   if Is_Currency(ResultDef) then
+                     Include(lResultNode.Flags,nf_is_currency);
                  end;
                muln :
                  begin
-                   v:=lv*rv;
-                   if v.overflow then
+                   lValue:=lLeftValue*lRightValue;
+                   if lValue.overflow then
                      begin
                        message(parser_e_arithmetic_operation_overflow);
                        { Recover }
-                       t:=genintconstnode(0)
+                       lResultNode:=GenIntConstNode(0)
                      end
                    else
                      begin
                        { If both are currency, we have to remove one of the
                          scalars}
-                       if Is_Currency(resultdef) then
+                       if Is_Currency(ResultDef) then
                          begin
-                           v:=v div 10000;
+                           lValue:=lValue div 10000;
 
-                           if not (nf_is_currency in flags) then
+                           if not (nf_is_currency in Flags) then
                              { We have to remove both scalars in this case }
-                             v:=v div 10000;
+                             lValue:=lValue div 10000;
                          end;
 
-                       t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches);
+                       lResultNode:=Create_Simplified_Ord_Const(lValue,ResultDef,AForInline,cs_check_overflow in LocalSwitches);
 
-                       if Is_Currency(resultdef) then
-                         Include(t.flags,nf_is_currency);
+                       if Is_Currency(ResultDef) then
+                         Include(lResultNode.Flags,nf_is_currency);
                      end;
                  end;
                xorn :
                  begin
-                   if Is_Integer(ld) then
-                     t:=create_simplified_ord_const(lv xor rv,resultdef,forinline,false)
+                   if Is_Integer(lLeftDef) then
+                     lResultNode:=Create_Simplified_Ord_Const(lLeftValue xor lRightValue,ResultDef,AForInline,false)
                    else
-                     t:=COrdConstNode.create(lv xor rv,resultdef,true);
+                     lResultNode:=COrdConstNode.Create(lLeftValue xor lRightValue,ResultDef,true);
 
-                   if Is_Currency(resultdef) then
-                     Include(t.flags,nf_is_currency);
+                   if Is_Currency(ResultDef) then
+                     Include(lResultNode.Flags,nf_is_currency);
                  end;
                orn :
                  begin
-                   if Is_Integer(ld) then
-                     t:=create_simplified_ord_const(lv or rv,resultdef,forinline,false)
+                   if Is_Integer(lLeftDef) then
+                     lResultNode:=Create_Simplified_Ord_Const(lLeftValue or lRightValue,ResultDef,AForInline,false)
                    else
-                     t:=COrdConstNode.create(lv or rv,resultdef,true);
+                     lResultNode:=COrdConstNode.Create(lLeftValue or lRightValue,ResultDef,true);
 
-                   if Is_Currency(resultdef) then
-                     Include(t.flags,nf_is_currency);
+                   if Is_Currency(ResultDef) then
+                     Include(lResultNode.Flags,nf_is_currency);
                  end;
                andn :
                  begin
-                   if Is_Integer(ld) then
-                     t:=create_simplified_ord_const(lv and rv,resultdef,forinline,false)
+                   if Is_Integer(lLeftDef) then
+                     lResultNode:=Create_Simplified_Ord_Const(lLeftValue and lRightValue,ResultDef,AForInline,false)
                    else
-                     t:=COrdConstNode.create(lv and rv,resultdef,true);
+                     lResultNode:=COrdConstNode.Create(lLeftValue and lRightValue,ResultDef,true);
 
-                   if Is_Currency(resultdef) then
-                     Include(t.flags,nf_is_currency);
+                   if Is_Currency(ResultDef) then
+                     Include(lResultNode.Flags,nf_is_currency);
                  end;
                ltn :
-                 t:=COrdConstNode.create(ord(lv<rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue<lRightValue),PasBool1Type,true);
                lten :
-                 t:=COrdConstNode.create(ord(lv<=rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue<=lRightValue),PasBool1Type,true);
                gtn :
-                 t:=COrdConstNode.create(ord(lv>rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue>lRightValue),PasBool1Type,true);
                gten :
-                 t:=COrdConstNode.create(ord(lv>=rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue>=lRightValue),PasBool1Type,true);
                EqualN :
-                 t:=COrdConstNode.create(ord(lv=rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue=lRightValue),PasBool1Type,true);
                unequaln :
-                 t:=COrdConstNode.create(ord(lv<>rv),PasBool1Type,true);
+                 lResultNode:=COrdConstNode.Create(ord(lLeftValue<>lRightValue),PasBool1Type,true);
                slashn :
                  begin
                    { int/int becomes a real }
-                   rvd:=rv;
-                   lvd:=lv;
+                   lRightRealValue:=lRightValue;
+                   lLeftRealValue:=lLeftValue;
 
                    { With currency, we may have to apply a scalar.  If both
                      are currency, the scalars cancel out and are not required }
-                   if (nf_is_currency in left.flags) and
-                     not (nf_is_currency in right.flags) then
-                     lvd:=lvd/BestReal(10000.0)
-                   else if (nf_is_currency in right.flags) and
-                     not (nf_is_currency in left.flags) then
-                     rvd:=rvd/BestReal(10000.0);
+                   if (nf_is_currency in Left.Flags) and
+                     not (nf_is_currency in Right.Flags) then
+                     lLeftRealValue:=lLeftRealValue/BestReal(10000.0)
+                   else if (nf_is_currency in Right.Flags) and
+                     not (nf_is_currency in Left.Flags) then
+                     lRightRealValue:=lRightRealValue/BestReal(10000.0);
 
-                   t:=CRealConstNode.create(lvd/rvd,resultrealdef);
+                   lResultNode:=CRealConstNode.Create(lLeftRealValue/lRightRealValue,ResultRealDef);
                  end;
                else
                  InternalError(2008022101);
              end;
-             result:=t;
+             Result:=lResultNode;
              exit;
           end
-        else if cmp_of_disjunct_ranges(res) then
+        else if CompareDisjointRanges(lComparisonResult) then
           begin
-            if res then
-              t:=COrdConstNode.create(1,PasBool1Type,true)
+            if lComparisonResult then
+              lResultNode:=COrdConstNode.Create(1,PasBool1Type,true)
             else
-              t:=COrdConstNode.create(0,PasBool1Type,true);
+              lResultNode:=COrdConstNode.Create(0,PasBool1Type,true);
             { don't do this optimization, if the variable expression might
               have a side effect }
-            if (is_constintnode(left) and might_have_sideeffects(right)) or
-              (is_constintnode(right) and might_have_sideeffects(left)) then
-              t.free // no nil needed
+            if (Is_ConstIntNode(Left) and Might_Have_SideEffects(Right)) or
+              (Is_ConstIntNode(Right) and Might_Have_SideEffects(Left)) then
+              lResultNode.free // no nil needed
             else
-              result:=t;
+              Result:=lResultNode;
             exit;
           end;
 
         { For operations that follow the commutative law, put integer constants on the right }
-        if (nodetype in [addn,orn,xorn,andn,muln]) and
-          is_constintnode(left) and (Is_Integer(right.resultdef) or Is_Pointer(right.resultdef)) then
+        if (NodeType in [addn,orn,xorn,andn,muln]) and
+          Is_ConstIntNode(Left) and (Is_Integer(Right.ResultDef) or Is_Pointer(Right.ResultDef)) then
           SwapLeftRight;
 
         { Add,Sub,Mul,Or,Xor,Andn with constant 0, 1 or -1?  }
-        if is_constintnode(right) and (Is_Integer(ld) or Is_Pointer(ld)) then
+        if Is_ConstIntNode(Right) and (Is_Integer(lLeftDef) or Is_Pointer(lLeftDef)) then
           begin
-            if (TOrdConstNode(right).Value = 0) and (nodetype in [addn,subn,orn,xorn,andn,muln]) then
+            if (TOrdConstNode(Right).Value = 0) and (NodeType in [addn,subn,orn,xorn,andn,muln]) then
               begin
-                case nodetype of
+                case NodeType of
                   addn,subn,orn,xorn:
-                    result := PruneKeepLeft();
+                    Result := PruneKeepLeft();
                   andn,muln:
                     begin
                       if (cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
-                         not might_have_sideeffects(left) then
-                        result:=COrdConstNode.create(0,resultdef,true);
+                         not Might_Have_SideEffects(Left) then
+                        Result:=COrdConstNode.Create(0,ResultDef,true);
                     end
                   else
                     ;
                 end;
               end
 
-            else if (TOrdConstNode(right).Value = 1) and (nodetype=muln) then
+            else if (TOrdConstNode(Right).Value = 1) and (NodeType=muln) then
               { insert type conversion in case it is a 32*32 to 64 bit multiplication optimization,
                 the type conversion does not hurt because it is normally removed later on
               }
-              result := CTypeConvNode.Create_Internal(PruneKeepLeft(),resultdef)
+              Result := CTypeConvNode.Create_Internal(PruneKeepLeft(),ResultDef)
 
             { try to fold
                           op                         op
@@ -998,14 +998,14 @@ const
                       /  \                       /  \
                   const2 val                   val const2
             }
-            else if (left.nodetype=nodetype) and
+            else if (Left.NodeType=NodeType) and
               { there might be a mul operation e.g. longint*longint => int64 in this case
                 we cannot do this optimization, see e.g. tests/tbs/tw36587.pas on arm }
-              (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
+              (Compare_Defs(ResultDef,lLeftDef,nothingn)=te_exact) then
               begin
-                if is_constintnode(TAddNode(left).left) then
+                if Is_ConstIntNode(TAddNode(Left).Left) then
                   begin
-                    case left.nodetype of
+                    case Left.NodeType of
                       xorn,
                       addn,
                       andn,
@@ -1016,9 +1016,9 @@ const
                         ;
                     end;
                   end
-                else if is_constintnode(TAddNode(left).right) then
+                else if Is_ConstIntNode(TAddNode(Left).Right) then
                   begin
-                    case left.nodetype of
+                    case Left.NodeType of
                       xorn,
                       addn,
                       andn,
@@ -1031,295 +1031,295 @@ const
                   end
               end;
 
-            if Assigned(result) then
+            if Assigned(Result) then
               exit;
 
             { multiplication by -1? Convert it into an unary minus if the other conversions before failed, don't do
               it before the folding above, see #40448 }
-            if (TOrdConstNode(right).Value = -1) and (nodetype=muln) then
-              result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(PruneKeepLeft()),ld);
+            if (TOrdConstNode(Right).Value = -1) and (NodeType=muln) then
+              Result := CTypeConvNode.Create_Internal(CUnaryMinusNode.Create(PruneKeepLeft()),lLeftDef);
 
-            if Assigned(result) then
+            if Assigned(Result) then
               exit;
           end;
 
         { Deal with anti-commutative subtraction }
-        if (nodetype = subn) then
+        if (NodeType = subn) then
           begin
             { transform -1-x into not(x) }
-            if Is_Signed(rd) and is_constintnode(left) and (TOrdConstNode(left).Value=-1)  then
+            if Is_Signed(lRightDef) and Is_ConstIntNode(Left) and (TOrdConstNode(Left).Value=-1)  then
               begin
-                result:=CNotNode.create(right.GetCopy);
+                Result:=CNotNode.Create(Right.GetCopy);
                 exit;
               end
 
             { change "0 - val" to "-val" }
-            else if is_constintnode(left) and (Is_Integer(right.resultdef) or Is_Pointer(right.resultdef)) then
+            else if Is_ConstIntNode(Left) and (Is_Integer(Right.ResultDef) or Is_Pointer(Right.ResultDef)) then
               begin
-                if (TOrdConstNode(left).Value = 0) then
-                  result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(right.GetCopy),right.resultdef);
+                if (TOrdConstNode(Left).Value = 0) then
+                  Result := CTypeConvNode.Create_Internal(CUnaryMinusNode.Create(Right.GetCopy),Right.ResultDef);
               end
 
             { change "nil - val" to "-val" }
-            else if (left.nodetype=niln) and Is_Pointer(right.resultdef) then
-              result := CTypeConvNode.Create_Internal(CUnaryMinusNode.create(CTypeConvNode.Create_Internal(right.GetCopy,resultdef)),resultdef)
+            else if (Left.NodeType=niln) and Is_Pointer(Right.ResultDef) then
+              Result := CTypeConvNode.Create_Internal(CUnaryMinusNode.Create(CTypeConvNode.Create_Internal(Right.GetCopy,ResultDef)),ResultDef)
 
             { convert n - n mod const into n div const*const }
-            else if (right.nodetype=modn) and is_constintnode(TModDivNode(right).right) and
-              (left.isequal(TModDivNode(right).left)) and not(might_have_sideeffects(left)) { and
+            else if (Right.NodeType=modn) and Is_ConstIntNode(TModDivNode(Right).Right) and
+              (Left.IsEqual(TModDivNode(Right).Left)) and not(Might_Have_SideEffects(Left)) { and
 	      not(cs_check_overflow in localswitches) } then
               begin
-                result:=CAddNode.create(muln,CModDivNode.create(divn,left,TModDivNode(right).right.GetCopy),TModDivNode(right).right);
-                left:=nil;
-                TModDivNode(right).right:=nil;
+                Result:=CAddNode.Create(muln,CModDivNode.Create(divn,Left,TModDivNode(Right).Right.GetCopy),TModDivNode(Right).Right);
+                Left:=nil;
+                TModDivNode(Right).Right:=nil;
                 exit;
               end
 
             { transform -x-1 into not(x) }
-            else if Is_Signed(ld) and is_constintnode(right) and (TOrdConstNode(right).Value=1) and (left.nodetype=unaryminusn) then
+            else if Is_Signed(lLeftDef) and Is_ConstIntNode(Right) and (TOrdConstNode(Right).Value=1) and (Left.NodeType=unaryminusn) then
               begin
-                result:=CNotNode.create(TUnaryMinusNode(left).left.GetCopy);
+                Result:=CNotNode.Create(TUnaryMinusNode(Left).Left.GetCopy);
                 exit;
               end;
           end;
 
       { both real constants ? }
-        if (lt=realconstn) and (rt=realconstn) then
+        if (lLeftNodeType=realconstn) and (lRightNodeType=realconstn) then
           begin
-             lvd:=TRealConstNode(left).value_real;
-             rvd:=TRealConstNode(right).value_real;
-             case nodetype of
+             lLeftRealValue:=TRealConstNode(Left).ValueReal;
+             lRightRealValue:=TRealConstNode(Right).ValueReal;
+             case NodeType of
                 addn :
                   begin
-                    t:=CRealConstNode.create(lvd+rvd,resultrealdef);
-                    if nf_is_currency in flags then
-                      include(t.flags,nf_is_currency);
+                    lResultNode:=CRealConstNode.Create(lLeftRealValue+lRightRealValue,ResultRealDef);
+                    if nf_is_currency in Flags then
+                      include(lResultNode.Flags,nf_is_currency);
                   end;
                 subn :
                   begin
-                    t:=CRealConstNode.create(lvd-rvd,resultrealdef);
-                    if nf_is_currency in flags then
-                      include(t.flags,nf_is_currency);
+                    lResultNode:=CRealConstNode.Create(lLeftRealValue-lRightRealValue,ResultRealDef);
+                    if nf_is_currency in Flags then
+                      include(lResultNode.Flags,nf_is_currency);
                   end;
                 muln :
                   begin
-                    if (nf_is_currency in flags) then
+                    if (nf_is_currency in Flags) then
                       begin
-                        if (nf_is_currency in left.flags) and
-                          (nf_is_currency in right.flags) then
+                        if (nf_is_currency in Left.Flags) and
+                          (nf_is_currency in Right.Flags) then
                           begin
                             { Need to remove one of the scalars }
-                            rvd:=rvd/BestReal(10000.0);
-                            if not (nf_is_currency in flags) then
+                            lRightRealValue:=lRightRealValue/BestReal(10000.0);
+                            if not (nf_is_currency in Flags) then
                               { Make that both }
-                              lvd:=lvd/BestReal(10000.0);
+                              lLeftRealValue:=lLeftRealValue/BestReal(10000.0);
                           end
-                        else if not (nf_is_currency in left.flags) and
-                          not (nf_is_currency in right.flags) then
+                        else if not (nf_is_currency in Left.Flags) and
+                          not (nf_is_currency in Right.Flags) then
                           begin
                             { We actually lack a scalar - try to scale
                               the smallest to minimise precision errors }
-                            if (Abs(rvd) > Abs(lvd)) then
-                              lvd:=lvd*BestReal(10000.0)
+                            if (Abs(lRightRealValue) > Abs(lLeftRealValue)) then
+                              lLeftRealValue:=lLeftRealValue*BestReal(10000.0)
                             else
-                              rvd:=rvd*BestReal(10000.0);
+                              lRightRealValue:=lRightRealValue*BestReal(10000.0);
                           end;
                       end
                     else
                       begin
                         { Clear any scalars }
-                        if (nf_is_currency in left.flags) then
-                          lvd:=lvd/BestReal(10000.0);
-                        if (nf_is_currency in right.flags) then
-                          rvd:=rvd/BestReal(10000.0);
+                        if (nf_is_currency in Left.Flags) then
+                          lLeftRealValue:=lLeftRealValue/BestReal(10000.0);
+                        if (nf_is_currency in Right.Flags) then
+                          lRightRealValue:=lRightRealValue/BestReal(10000.0);
                       end;
 
-                    t:=CRealConstNode.create(lvd*rvd,resultrealdef);
-                    if nf_is_currency in flags then
-                      include(t.flags,nf_is_currency);
+                    lResultNode:=CRealConstNode.Create(lLeftRealValue*lRightRealValue,ResultRealDef);
+                    if nf_is_currency in Flags then
+                      include(lResultNode.Flags,nf_is_currency);
                   end;
                 starstarn:
                   begin
-                    if lvd<0 then
+                    if lLeftRealValue<0 then
                      begin
                        Message(parser_e_invalid_float_operation);
-                       t:=CRealConstNode.create(0,resultrealdef);
+                       lResultNode:=CRealConstNode.Create(0,ResultRealDef);
                      end
-                    else if lvd=0 then
-                      t:=CRealConstNode.create(1.0,resultrealdef)
+                    else if lLeftRealValue=0 then
+                      lResultNode:=CRealConstNode.Create(1.0,ResultRealDef)
                     else
-                      t:=CRealConstNode.create(Exp(Ln(lvd)*rvd),resultrealdef);
+                      lResultNode:=CRealConstNode.Create(Exp(Ln(lLeftRealValue)*lRightRealValue),ResultRealDef);
                   end;
                 slashn :
                   begin
-                    if (nf_is_currency in flags) and
-                      (nf_is_currency in left.flags) and
-                      (nf_is_currency in right.flags) then
+                    if (nf_is_currency in Flags) and
+                      (nf_is_currency in Left.Flags) and
+                      (nf_is_currency in Right.Flags) then
                       begin
                         { Need to put one of the scalars back }
-                        t:=CRealConstNode.create((lvd/rvd)*BestReal(10000.0),resultrealdef);
-                        Include(t.flags,nf_is_currency);
+                        lResultNode:=CRealConstNode.Create((lLeftRealValue/lRightRealValue)*BestReal(10000.0),ResultRealDef);
+                        Include(lResultNode.Flags,nf_is_currency);
                       end
                     else
                       begin
-                        t:=CRealConstNode.create(lvd/rvd,resultrealdef);
+                        lResultNode:=CRealConstNode.Create(lLeftRealValue/lRightRealValue,ResultRealDef);
 
-                        if (nf_is_currency in left.flags) and
-                          not (nf_is_currency in right.flags) then
-                          include(t.flags,nf_is_currency);
+                        if (nf_is_currency in Left.Flags) and
+                          not (nf_is_currency in Right.Flags) then
+                          include(lResultNode.Flags,nf_is_currency);
                       end;
                   end;
                 ltn :
-                  t:=COrdConstNode.create(ord(lvd<rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue<lRightRealValue),PasBool1Type,true);
                 lten :
-                  t:=COrdConstNode.create(ord(lvd<=rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue<=lRightRealValue),PasBool1Type,true);
                 gtn :
-                  t:=COrdConstNode.create(ord(lvd>rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue>lRightRealValue),PasBool1Type,true);
                 gten :
-                  t:=COrdConstNode.create(ord(lvd>=rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue>=lRightRealValue),PasBool1Type,true);
                 EqualN :
-                  t:=COrdConstNode.create(ord(lvd=rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue=lRightRealValue),PasBool1Type,true);
                 unequaln :
-                  t:=COrdConstNode.create(ord(lvd<>rvd),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(ord(lLeftRealValue<>lRightRealValue),PasBool1Type,true);
                 else
                   InternalError(2008022102);
              end;
-             result:=t;
+             Result:=lResultNode;
              exit;
           end;
 
-        if Is_Real(resultdef) then
+        if Is_Real(ResultDef) then
           begin
-            if (nodetype=addn) then
+            if (NodeType=addn) then
               begin
                 { -left+right => right-left,
                   this operation is always valid }
-                if (left.nodetype=unaryminusn) then
+                if (Left.NodeType=unaryminusn) then
                   begin
-                    t := TUnaryMinusNode(left).PruneKeepLeft();
-                    result:=CAddNode.create(subn,PruneKeepRight(),t);
+                    lResultNode := TUnaryMinusNode(Left).PruneKeepLeft();
+                    Result:=CAddNode.Create(subn,PruneKeepRight(),lResultNode);
                     exit;
                   end;
 
                 { left+(-right) => left-right,
                   this operation is always valid }
-                if (right.nodetype=unaryminusn) then
+                if (Right.NodeType=unaryminusn) then
                   begin
-                    t := TUnaryMinusNode(right).PruneKeepLeft();
-                    result:=CAddNode.create(subn,PruneKeepLeft(),t);
+                    lResultNode := TUnaryMinusNode(Right).PruneKeepLeft();
+                    Result:=CAddNode.Create(subn,PruneKeepLeft(),lResultNode);
                     exit;
                   end;
               end;
 
             { left-(-right) => left+right,
               this operation is always valid }
-            if (nodetype=subn) and (right.nodetype=unaryminusn) then
+            if (NodeType=subn) and (Right.NodeType=unaryminusn) then
               begin
-                t := TUnaryMinusNode(right).PruneKeepLeft();
-                result:=CAddNode.create(addn,PruneKeepLeft(),t);
+                lResultNode := TUnaryMinusNode(Right).PruneKeepLeft();
+                Result:=CAddNode.Create(addn,PruneKeepLeft(),lResultNode);
                 exit;
               end;
 
             { (-left)*(-right) => left*right, and
               (-left)/(-right) => left/right,
               these operations are always valid }
-            if (nodetype in [muln,slashn]) and (left.nodetype=unaryminusn) and (right.nodetype=unaryminusn) then
+            if (NodeType in [muln,slashn]) and (Left.NodeType=unaryminusn) and (Right.NodeType=unaryminusn) then
               begin
-                t := TUnaryMinusNode(right).PruneKeepLeft();
-                result:=CAddNode.create(nodetype,TUnaryMinusNode(left).PruneKeepLeft(),t);
+                lResultNode := TUnaryMinusNode(Right).PruneKeepLeft();
+                Result:=CAddNode.Create(NodeType,TUnaryMinusNode(Left).PruneKeepLeft(),lResultNode);
                 exit;
               end;
 
             { optimize operations with real constants, but only if fast math is switched on as
               the operations could change e.g. the sign of 0 so they cannot be optimized always
             }
-            if Is_Real(resultdef) then
+            if Is_Real(ResultDef) then
               begin
-                if lt=realconstn then
+                if lLeftNodeType=realconstn then
                   begin
-                    if (TRealConstNode(left).value_real=0) and (nodetype in [addn,muln,subn,slashn]) then
+                    if (TRealConstNode(Left).ValueReal=0) and (NodeType in [addn,muln,subn,slashn]) then
                       begin
-                        case nodetype of
+                        case NodeType of
                           addn:
                             begin
                               { -0.0+(+0.0)=+0.0 so we cannot carry out this optimization if no fastmath is passed }
                               if not(cs_opt_fastmath in CurrentSettings.OptimizerSwitches) then
                                 begin
-                                  result:=PruneKeepRight();
+                                  Result:=PruneKeepRight();
                                   exit;
                                 end;
                             end;
                           slashn,
                           muln:
-                            if not(might_have_sideeffects(right,[mhs_exceptions])) then
+                            if not(Might_Have_SideEffects(Right,[mhs_exceptions])) then
                               begin
-                                result:=PruneKeepLeft;
+                                Result:=PruneKeepLeft;
                                 exit;
                               end;
                           subn:
                             begin
-                              t := PruneKeepRight();
-                              result:=CTypeConvNode.Create_Internal(CUnaryMinusNode.create(t),rd);
+                              lResultNode := PruneKeepRight();
+                              Result:=CTypeConvNode.Create_Internal(CUnaryMinusNode.Create(lResultNode),lRightDef);
                               exit;
                             end;
                           else
                             InternalError(2020060801);
                         end;
                       end
-                    else if (TRealConstNode(left).value_real=1) and (nodetype=muln) then
+                    else if (TRealConstNode(Left).ValueReal=1) and (NodeType=muln) then
                       begin
-                        result:=right.GetCopy;
+                        Result:=Right.GetCopy;
                         exit;
                       end
-                    else if (TRealConstNode(left).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(right,[mhs_exceptions])) and
-                      (node_complexity(right)<=1) then
+                    else if (TRealConstNode(Left).ValueReal=2) and (NodeType=muln) and not(Might_Have_SideEffects(Right,[mhs_exceptions])) and
+                      (Node_Complexity(Right)<=1) then
                       begin
-                        result:=CAddNode.Create_Internal(addn,right.GetCopy,right.GetCopy);
+                        Result:=CAddNode.Create_Internal(addn,Right.GetCopy,Right.GetCopy);
                         exit;
                       end;
                   end
-                else if rt=realconstn then
+                else if lRightNodeType=realconstn then
                   begin
-                    if (TRealConstNode(right).value_real=0) and (nodetype in [addn,muln,subn]) then
+                    if (TRealConstNode(Right).ValueReal=0) and (NodeType in [addn,muln,subn]) then
                       begin
-                        case nodetype of
+                        case NodeType of
                           subn,
                           addn:
                             begin
-                              result:=left.GetCopy;
+                              Result:=Left.GetCopy;
                               exit;
                             end;
                           muln:
-                            if not(might_have_sideeffects(left,[mhs_exceptions])) then
+                            if not(Might_Have_SideEffects(Left,[mhs_exceptions])) then
                               begin
-                                result:=right.GetCopy;
+                                Result:=Right.GetCopy;
                                 exit;
                               end;
                           else
                             InternalError(2020060802);
                         end;
                       end
-                    else if (TRealConstNode(right).value_real=1) and (nodetype in [muln,slashn]) then
+                    else if (TRealConstNode(Right).ValueReal=1) and (NodeType in [muln,slashn]) then
                       begin
-                        result:=left.GetCopy;
+                        Result:=Left.GetCopy;
                         exit;
                       end
-                    else if (TRealConstNode(right).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(left,[mhs_exceptions])) and
-                      (node_complexity(left)<=1) then
+                    else if (TRealConstNode(Right).ValueReal=2) and (NodeType=muln) and not(Might_Have_SideEffects(Left,[mhs_exceptions])) and
+                      (Node_Complexity(Left)<=1) then
                       begin
-                        result:=CAddNode.Create_Internal(addn,left.GetCopy,left.GetCopy);
+                        Result:=CAddNode.Create_Internal(addn,Left.GetCopy,Left.GetCopy);
                         exit;
                       end;
                   end
                 { optimize a/a and a-a }
-                else if ((nodetype in [subn,slashn]) and ([cs_opt_fastmath,cs_opt_level2]*CurrentSettings.OptimizerSwitches=[cs_opt_fastmath,cs_opt_level2])) and
-                  left.isequal(right) and not(might_have_sideeffects(left,[mhs_exceptions])) then
+                else if ((NodeType in [subn,slashn]) and ([cs_opt_fastmath,cs_opt_level2]*CurrentSettings.OptimizerSwitches=[cs_opt_fastmath,cs_opt_level2])) and
+                  Left.IsEqual(Right) and not(Might_Have_SideEffects(Left,[mhs_exceptions])) then
                   begin
-                    case nodetype of
+                    case NodeType of
                       subn:
-                        result:=CRealConstNode.create(0,ld);
+                        Result:=CRealConstNode.Create(0,lLeftDef);
                       slashn:
-                        result:=CRealConstNode.create(1,ld);
+                        Result:=CRealConstNode.Create(1,lLeftDef);
                       else
                         InternalError(2020060901);
                     end;
@@ -1333,39 +1333,39 @@ const
           do this after constant folding to avoid unnecessary precision loss if
           an slash expresion would be first converted into a multiplication and later
           folded }
-        if (nodetype=slashn) and
+        if (NodeType=slashn) and
           { do not mess with currency and comp types }
-          (not(Is_Currency(rd)) and
-           not((rd.typ=floatdef) and
-               (TFloatDef(rd).FloatType=s64comp)
+          (not(Is_Currency(lRightDef)) and
+           not((lRightDef.typ=floatdef) and
+               (TFloatDef(lRightDef).FloatType=s64comp)
               )
           ) and
-          (((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=ordconstn)) or
-           ((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and
-            (Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real<>0))
+          (((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lRightNodeType=ordconstn)) or
+           ((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lRightNodeType=realconstn) and
+            (Is_Number_Float(TRealConstNode(Right).ValueReal) and (TRealConstNode(Right).ValueReal<>0))
            ) or
-           ((rt=realconstn) and
-            (Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real<>0)) and
-            (BestRealRec(TRealConstNode(right).value_real).Mantissa(True)=BestRealHiddenBit)
+           ((lRightNodeType=realconstn) and
+            (Is_Number_Float(TRealConstNode(Right).ValueReal) and (TRealConstNode(Right).ValueReal<>0)) and
+            (BestRealRec(TRealConstNode(Right).ValueReal).Mantissa(True)=BestRealHiddenBit)
            )
           ) then
-          case rt of
+          case lRightNodeType of
             ordconstn:
               begin
                 { the normal code handles div/0 }
-                if (TOrdConstNode(right).Value<>0) then
+                if (TOrdConstNode(Right).Value<>0) then
                   begin
-                    nodetype:=muln;
-                    t:=CRealConstNode.create(1/TOrdConstNode(right).Value,resultdef);
-                    right.free;
-                    right:=t;
+                    NodeType:=muln;
+                    lResultNode:=CRealConstNode.Create(1/TOrdConstNode(Right).Value,ResultDef);
+                    Right.free;
+                    Right:=lResultNode;
                     exit;
                   end;
               end;
             realconstn:
               begin
-                nodetype:=muln;
-                TRealConstNode(right).value_real:=1.0/TRealConstNode(right).value_real;
+                NodeType:=muln;
+                TRealConstNode(Right).ValueReal:=1.0/TRealConstNode(Right).ValueReal;
                 exit;
               end;
             else
@@ -1377,218 +1377,218 @@ const
         { widechars are converted above to widestrings too }
         { this isn't ver y efficient, but I don't think    }
         { that it does matter that much (FK)               }
-        if (lt=stringconstn) and (rt=stringconstn) and
-          (TStringConstNode(left).cst_type in [cst_widestring,cst_unicodestring]) and
-          (TStringConstNode(right).cst_type in [cst_widestring,cst_unicodestring]) then
+        if (lLeftNodeType=stringconstn) and (lRightNodeType=stringconstn) and
+          (TStringConstNode(Left).ConstStringType in [cst_widestring,cst_unicodestring]) and
+          (TStringConstNode(Right).ConstStringType in [cst_widestring,cst_unicodestring]) then
           begin
-             InitWideString(ws1);
-             InitWideString(ws2);
-             CopyWideString(TStringConstNode(left).ValueWS,ws1);
-             CopyWideString(TStringConstNode(right).ValueWS,ws2);
-             case nodetype of
+             InitWideString(lWideString1);
+             InitWideString(lWideString2);
+             CopyWideString(TStringConstNode(Left).ValueWS,lWideString1);
+             CopyWideString(TStringConstNode(Right).ValueWS,lWideString2);
+             case NodeType of
                 addn :
                   begin
-                     ConcatWideStrings(ws1,ws2);
-                     t:=CStringConstNode.createunistr(ws1);
+                     ConcatWideStrings(lWideString1,lWideString2);
+                     lResultNode:=CStringConstNode.CreateUniStr(lWideString1);
                   end;
                 ltn :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)<0),PasBool1Type,true);
                 lten :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)<=0),PasBool1Type,true);
                 gtn :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)>0),PasBool1Type,true);
                 gten :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)>=0),PasBool1Type,true);
                 EqualN :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)=0),PasBool1Type,true);
                 unequaln :
-                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<>0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareWideStrings(lWideString1,lWideString2)<>0),PasBool1Type,true);
                 else
                   InternalError(2008022103);
              end;
-             DoneWideString(ws1);
-             DoneWideString(ws2);
-             result:=t;
+             DoneWideString(lWideString1);
+             DoneWideString(lWideString2);
+             Result:=lResultNode;
              exit;
           end;
 
         { concatenating strings ? }
-        concatstrings:=false;
+        lConcatStrings:=false;
 
-        if (lt=ordconstn) and (rt=ordconstn) and
-           Is_Char(ld) and Is_Char(rd) then
+        if (lLeftNodeType=ordconstn) and (lRightNodeType=ordconstn) and
+           Is_Char(lLeftDef) and Is_Char(lRightDef) then
           begin
-             c1[0]:=char(int64(TOrdConstNode(left).Value));
-             c1[1]:=#0;
-             l1:=1;
-             c2[0]:=char(int64(TOrdConstNode(right).Value));
-             c2[1]:=#0;
-             l2:=1;
-             s1:=@c1[0];
-             s2:=@c2[0];
-             concatstrings:=true;
+             lChar1[0]:=char(Int64(TOrdConstNode(Left).Value));
+             lChar1[1]:=#0;
+             lLength1:=1;
+             lChar2[0]:=char(Int64(TOrdConstNode(Right).Value));
+             lChar2[1]:=#0;
+             lLength2:=1;
+             lString1:=@lChar1[0];
+             lString2:=@lChar2[0];
+             lConcatStrings:=true;
           end
-        else if (lt=stringconstn) and (rt=ordconstn) and Is_Char(rd) then
+        else if (lLeftNodeType=stringconstn) and (lRightNodeType=ordconstn) and Is_Char(lRightDef) then
           begin
-             l1:=TStringConstNode(left).len;
-             s1:=TStringConstNode(left).asconstpchar;
-             c2[0]:=char(int64(TOrdConstNode(right).Value));
-             c2[1]:=#0;
-             s2:=@c2[0];
-             l2:=1;
-             concatstrings:=true;
+             lLength1:=TStringConstNode(Left).len;
+             lString1:=TStringConstNode(Left).AsConstPChar;
+             lChar2[0]:=char(Int64(TOrdConstNode(Right).Value));
+             lChar2[1]:=#0;
+             lString2:=@lChar2[0];
+             lLength2:=1;
+             lConcatStrings:=true;
           end
-        else if (lt=ordconstn) and (rt=stringconstn) and Is_Char(ld) then
+        else if (lLeftNodeType=ordconstn) and (lRightNodeType=stringconstn) and Is_Char(lLeftDef) then
           begin
-             c1[0]:=char(int64(TOrdConstNode(left).Value));
-             c1[1]:=#0;
-             l1:=1;
-             s1:=@c1[0];
-             s2:=TStringConstNode(right).asconstpchar;
-             l2:=TStringConstNode(right).len;
-             concatstrings:=true;
+             lChar1[0]:=char(Int64(TOrdConstNode(Left).Value));
+             lChar1[1]:=#0;
+             lLength1:=1;
+             lString1:=@lChar1[0];
+             lString2:=TStringConstNode(Right).AsConstPChar;
+             lLength2:=TStringConstNode(Right).len;
+             lConcatStrings:=true;
           end
-        else if (lt=stringconstn) and (rt=stringconstn) then
+        else if (lLeftNodeType=stringconstn) and (lRightNodeType=stringconstn) then
           begin
-             s1:=TStringConstNode(left).asconstpchar;
-             l1:=TStringConstNode(left).len;
-             s2:=TStringConstNode(right).asconstpchar;
-             l2:=TStringConstNode(right).len;
-             concatstrings:=true;
+             lString1:=TStringConstNode(Left).AsConstPChar;
+             lLength1:=TStringConstNode(Left).len;
+             lString2:=TStringConstNode(Right).AsConstPChar;
+             lLength2:=TStringConstNode(Right).len;
+             lConcatStrings:=true;
           end;
-        if concatstrings then
+        if lConcatStrings then
           begin
-             case nodetype of
+             case NodeType of
                 addn :
                   begin
-                    stmp:=ConcatAnsiStrings(s1,s2,l1,l2);
-                    t:=CStringConstNode.createpchar(stmp,l1+l2,nil);
-                    FreeMem(stmp);
-                    TypeCheckPass(t);
-                    if not Is_AnsiString(resultdef) or
-                       (TStringDef(resultdef).encoding<>Globals.CP_NONE) then
-                      TStringConstNode(t).changestringtype(resultdef)
+                    lTempString:=ConcatAnsiStrings(lString1,lString2,lLength1,lLength2);
+                    lResultNode:=CStringConstNode.CreatePChar(lTempString,lLength1+lLength2,nil);
+                    FreeMem(lTempString);
+                    TypeCheckPass(lResultNode);
+                    if not Is_AnsiString(ResultDef) or
+                       (TStringDef(ResultDef).encoding<>Globals.CP_NONE) then
+                      TStringConstNode(lResultNode).ChangeStringType(ResultDef)
                     else
-                      TStringConstNode(t).changestringtype(GetAnsiStringDef)
+                      TStringConstNode(lResultNode).ChangeStringType(GetAnsiStringDef)
                   end;
                 ltn :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)<0),PasBool1Type,true);
                 lten :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)<=0),PasBool1Type,true);
                 gtn :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)>0),PasBool1Type,true);
                 gten :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)>=0),PasBool1Type,true);
                 EqualN :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)=0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)=0),PasBool1Type,true);
                 unequaln :
-                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<>0),PasBool1Type,true);
+                  lResultNode:=COrdConstNode.Create(Byte(CompareAnsiStrings(lString1,lString2,lLength1,lLength2)<>0),PasBool1Type,true);
                 else
                   InternalError(2008022104);
              end;
-             result:=t;
+             Result:=lResultNode;
              exit;
           end;
 
         { set constant evaluation }
-        if (right.nodetype=setconstn) and
-           not Assigned(TSetConstNode(right).left) and
-           (left.nodetype=setconstn) and
-           not Assigned(TSetConstNode(left).left) then
+        if (Right.NodeType=setconstn) and
+           not Assigned(TSetConstNode(Right).Left) and
+           (Left.NodeType=setconstn) and
+           not Assigned(TSetConstNode(Left).Left) then
           begin
-             case nodetype of
+             case NodeType of
                addn :
                  begin
-                   resultset:=TSetConstNode(right).value_set^ + TSetConstNode(left).value_set^;
-                   t:=CSetConstNode.create(@resultset,resultdef);
+                   lResultSet:=TSetConstNode(Right).ValueSet^ + TSetConstNode(Left).ValueSet^;
+                   lResultNode:=CSetConstNode.Create(@lResultSet,ResultDef);
                  end;
                 muln :
                   begin
-                    resultset:=TSetConstNode(right).value_set^ * TSetConstNode(left).value_set^;
-                    t:=CSetConstNode.create(@resultset,resultdef);
+                    lResultSet:=TSetConstNode(Right).ValueSet^ * TSetConstNode(Left).ValueSet^;
+                    lResultNode:=CSetConstNode.Create(@lResultSet,ResultDef);
                   end;
                subn :
                   begin
-                    resultset:=TSetConstNode(left).value_set^ - TSetConstNode(right).value_set^;
-                            t:=CSetConstNode.create(@resultset,resultdef);
+                    lResultSet:=TSetConstNode(Left).ValueSet^ - TSetConstNode(Right).ValueSet^;
+                            lResultNode:=CSetConstNode.Create(@lResultSet,ResultDef);
                   end;
                symdifn :
                   begin
-                    resultset:=TSetConstNode(right).value_set^ >< TSetConstNode(left).value_set^;
-                        t:=CSetConstNode.create(@resultset,resultdef);
+                    lResultSet:=TSetConstNode(Right).ValueSet^ >< TSetConstNode(Left).ValueSet^;
+                        lResultNode:=CSetConstNode.Create(@lResultSet,ResultDef);
                   end;
                unequaln :
                   begin
-                    b:=TSetConstNode(right).value_set^ <> TSetConstNode(left).value_set^;
-                    t:=COrdConstNode.create(byte(b),PasBool1Type,true);
+                    lValueInRange:=TSetConstNode(Right).ValueSet^ <> TSetConstNode(Left).ValueSet^;
+                    lResultNode:=COrdConstNode.Create(Byte(lValueInRange),PasBool1Type,true);
                   end;
                EqualN :
                   begin
-                    b:=TSetConstNode(right).value_set^ = TSetConstNode(left).value_set^;
-                    t:=COrdConstNode.create(byte(b),PasBool1Type,true);
+                    lValueInRange:=TSetConstNode(Right).ValueSet^ = TSetConstNode(Left).ValueSet^;
+                    lResultNode:=COrdConstNode.Create(Byte(lValueInRange),PasBool1Type,true);
                   end;
                lten :
                   begin
-                    b:=TSetConstNode(left).value_set^ <= TSetConstNode(right).value_set^;
-                    t:=COrdConstNode.create(byte(b),PasBool1Type,true);
+                    lValueInRange:=TSetConstNode(Left).ValueSet^ <= TSetConstNode(Right).ValueSet^;
+                    lResultNode:=COrdConstNode.Create(Byte(lValueInRange),PasBool1Type,true);
                   end;
                gten :
                   begin
-                    b:=TSetConstNode(left).value_set^ >= TSetConstNode(right).value_set^;
-                    t:=COrdConstNode.create(byte(b),PasBool1Type,true);
+                    lValueInRange:=TSetConstNode(Left).ValueSet^ >= TSetConstNode(Right).ValueSet^;
+                    lResultNode:=COrdConstNode.Create(Byte(lValueInRange),PasBool1Type,true);
                   end;
                 else
                   InternalError(2008022105);
              end;
-             result:=t;
+             Result:=lResultNode;
              exit;
           end;
 
         { in case of expressions having no side effect, we can simplify boolean expressions
           containing constants }
-        if Is_Boolean(ld) and Is_Boolean(rd) then
+        if Is_Boolean(lLeftDef) and Is_Boolean(lRightDef) then
           begin
-            if is_constboolnode(left) then
+            if Is_ConstBoolNode(Left) then
               begin
-                if ((nodetype=andn) and (TOrdConstNode(left).Value<>0)) or
-                  ((nodetype=orn) and (TOrdConstNode(left).Value=0)) or
-                  ((nodetype=xorn) and (TOrdConstNode(left).Value=0)) then
+                if ((NodeType=andn) and (TOrdConstNode(Left).Value<>0)) or
+                  ((NodeType=orn) and (TOrdConstNode(Left).Value=0)) or
+                  ((NodeType=xorn) and (TOrdConstNode(Left).Value=0)) then
                   begin
                     Result := PruneKeepRight();
                     exit;
                   end
-                else if not(might_have_sideeffects(right)) and
-                  (((nodetype=orn) and (TOrdConstNode(left).Value<>0)) or
-                  ((nodetype=andn) and (TOrdConstNode(left).Value=0))) then
+                else if not(Might_Have_SideEffects(Right)) and
+                  (((NodeType=orn) and (TOrdConstNode(Left).Value<>0)) or
+                  ((NodeType=andn) and (TOrdConstNode(Left).Value=0))) then
                   begin
                     Result := PruneKeepLeft();
                     exit;
                   end
-                else if ((nodetype=xorn) and (TOrdConstNode(left).Value<>0)) then
+                else if ((NodeType=xorn) and (TOrdConstNode(Left).Value<>0)) then
                   begin
-                    Result := CNotNode.create(PruneKeepRight());
+                    Result := CNotNode.Create(PruneKeepRight());
                     exit;
                   end
               end
-            else if is_constboolnode(right) then
+            else if Is_ConstBoolNode(Right) then
               begin
-                if ((nodetype=andn) and (TOrdConstNode(right).Value<>0)) or
-                  ((nodetype=orn) and (TOrdConstNode(right).Value=0)) or
-                  ((nodetype=xorn) and (TOrdConstNode(right).Value=0)) then
+                if ((NodeType=andn) and (TOrdConstNode(Right).Value<>0)) or
+                  ((NodeType=orn) and (TOrdConstNode(Right).Value=0)) or
+                  ((NodeType=xorn) and (TOrdConstNode(Right).Value=0)) then
                   begin
-                    result := PruneKeepLeft();
+                    Result := PruneKeepLeft();
                     exit;
                   end
-                else if not(might_have_sideeffects(left)) and
-                  (((nodetype=orn) and (TOrdConstNode(right).Value<>0)) or
-                   ((nodetype=andn) and (TOrdConstNode(right).Value=0))) then
+                else if not(Might_Have_SideEffects(Left)) and
+                  (((NodeType=orn) and (TOrdConstNode(Right).Value<>0)) or
+                   ((NodeType=andn) and (TOrdConstNode(Right).Value=0))) then
                   begin
-                    result := PruneKeepRight();
+                    Result := PruneKeepRight();
                     exit;
                   end
-                else if ((nodetype=xorn) and (TOrdConstNode(right).Value<>0)) then
+                else if ((NodeType=xorn) and (TOrdConstNode(Right).Value<>0)) then
                   begin
-                    result := CNotNode.create(PruneKeepLeft());
+                    Result := CNotNode.Create(PruneKeepLeft());
                     exit;
                   end
               end;
@@ -1596,14 +1596,14 @@ const
 
         { optimize @<proc>=/<>@<proc>,
           such code might appear in generic specializations }
-        if (nodetype in [EqualN,unequaln]) and
-          (left.nodetype=typeconvn) and (Is_VoidPointer(left.resultdef)) and (TTypeConvNode(left).left.nodetype=typeconvn) and
-          (TTypeConvNode(TTypeConvNode(left).left).convtype=tc_proc_2_procvar) and
-          (TTypeConvNode(TTypeConvNode(left).left).left.nodetype=loadn) and
-          (TTypeConvNode(TTypeConvNode(left).left).left.resultdef.typ=procdef) and
-          left.isequal(right) then
+        if (NodeType in [EqualN,unequaln]) and
+          (Left.NodeType=typeconvn) and (Is_VoidPointer(Left.ResultDef)) and (TTypeConvNode(Left).Left.NodeType=typeconvn) and
+          (TTypeConvNode(TTypeConvNode(Left).Left).ConvType=tc_proc_2_procvar) and
+          (TTypeConvNode(TTypeConvNode(Left).Left).Left.NodeType=loadn) and
+          (TTypeConvNode(TTypeConvNode(Left).Left).Left.ResultDef.typ=procdef) and
+          Left.IsEqual(Right) then
           begin
-            result:=COrdConstNode.create(ord(nodetype=EqualN),resultdef,false);
+            Result:=COrdConstNode.Create(ord(NodeType=EqualN),ResultDef,false);
             exit;
           end;
 
@@ -1611,45 +1611,45 @@ const
            typeinfo(<type1>)=/<>typeinfo(<type2>)
           can be evaluated at compile time
         }
-        lefttarget:=actualtargetnode(@left)^;
-        righttarget:=actualtargetnode(@right)^;
-        if (nodetype in [EqualN,unequaln]) and (lefttarget.nodetype=inlinen) and (righttarget.nodetype=inlinen) and
-          (TInlineNode(lefttarget).inlinenumber=in_typeinfo_x) and (TInlineNode(righttarget).inlinenumber=in_typeinfo_x) and
-          not (TInlineNode(lefttarget).left.resultdef.typ in [undefineddef,errordef]) and
-          not (TInlineNode(righttarget).left.resultdef.typ in [undefineddef,errordef]) then
+        lLeftTarget:=ActualTargetNode(@Left)^;
+        lRightTarget:=ActualTargetNode(@Right)^;
+        if (NodeType in [EqualN,unequaln]) and (lLeftTarget.NodeType=inlinen) and (lRightTarget.NodeType=inlinen) and
+          (TInlineNode(lLeftTarget).InlineNumber=in_typeinfo_x) and (TInlineNode(lRightTarget).InlineNumber=in_typeinfo_x) and
+          not (TInlineNode(lLeftTarget).Left.ResultDef.typ in [undefineddef,errordef]) and
+          not (TInlineNode(lRightTarget).Left.ResultDef.typ in [undefineddef,errordef]) then
           begin
-            case nodetype of
+            case NodeType of
               EqualN:
-                result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef=TInlineNode(righttarget).left.resultdef),resultdef,false);
+                Result:=COrdConstNode.Create(ord(TInlineNode(lLeftTarget).Left.ResultDef=TInlineNode(lRightTarget).Left.ResultDef),ResultDef,false);
               unequaln:
-                result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef<>TInlineNode(righttarget).left.resultdef),resultdef,false);
+                Result:=COrdConstNode.Create(ord(TInlineNode(lLeftTarget).Left.ResultDef<>TInlineNode(lRightTarget).Left.ResultDef),ResultDef,false);
               else
                 InternalError(2020092901);
             end;
             exit;
           end;
 
-        if is_constpointernode(left) and is_constpointernode(right) then
+        if Is_ConstPointerNode(Left) and Is_ConstPointerNode(Right) then
           begin
-            p1:=0;
-            p2:=0;
-            if left.nodetype=pointerconstn then
-              p1:=TPointerConstNode(left).Value;
-            if right.nodetype=pointerconstn then
-              p2:=TPointerConstNode(right).Value;
-            case nodetype of
+            lPointer1:=0;
+            lPointer2:=0;
+            if Left.NodeType=pointerconstn then
+              lPointer1:=TPointerConstNode(Left).Value;
+            if Right.NodeType=pointerconstn then
+              lPointer2:=TPointerConstNode(Right).Value;
+            case NodeType of
               EqualN:
-                result:=COrdConstNode.create(ord(p1=p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1=lPointer2),Bool8Type,false);
               unequaln:
-                result:=COrdConstNode.create(ord(p1<>p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1<>lPointer2),Bool8Type,false);
               gtn:
-                result:=COrdConstNode.create(ord(p1>p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1>lPointer2),Bool8Type,false);
               ltn:
-                result:=COrdConstNode.create(ord(p1<p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1<lPointer2),Bool8Type,false);
               gten:
-                result:=COrdConstNode.create(ord(p1>=p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1>=lPointer2),Bool8Type,false);
               lten:
-                result:=COrdConstNode.create(ord(p1<=p2),Bool8Type,false);
+                Result:=COrdConstNode.Create(ord(lPointer1<=lPointer2),Bool8Type,false);
               else
                 InternalError(2020100101);
             end;
@@ -1659,29 +1659,29 @@ const
         { slow simplifications and/or more sophisticated transformations which might make debugging harder }
         if cs_opt_level2 in CurrentSettings.OptimizerSwitches then
           begin
-            if nodetype in [addn,muln,subn] then
+            if NodeType in [addn,muln,subn] then
               begin
                 { convert a+const1-const2 into a+const1+(-const2) so it is folded later on }
-                if (left.nodetype=addn) and
-                  (nodetype=subn) and
-                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
-                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
+                if (Left.NodeType=addn) and
+                  (NodeType=subn) and
+                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lRightNodeType=realconstn) and (TAddNode(Left).Right.NodeType=realconstn) and
+                  (Compare_Defs(ResultDef,lLeftDef,nothingn)=te_exact) then
                   begin
                     Result:=GetCopy;
-                    Result.nodetype:=addn;
-                    TAddNode(result).right:=CUnaryMinusNode.create(TAddNode(result).right);
+                    Result.NodeType:=addn;
+                    TAddNode(Result).Right:=CUnaryMinusNode.Create(TAddNode(Result).Right);
                     exit;
                   end;
 
                 { convert a-const1+const2 into a+(-const1)+const2 so it is folded later on }
-                if (left.nodetype=subn) and
-                  (nodetype=addn) and
-                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
-                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
+                if (Left.NodeType=subn) and
+                  (NodeType=addn) and
+                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lRightNodeType=realconstn) and (TAddNode(Left).Right.NodeType=realconstn) and
+                  (Compare_Defs(ResultDef,lLeftDef,nothingn)=te_exact) then
                   begin
                     Result:=GetCopy;
-                    TAddNode(Result).left.nodetype:=addn;
-                    TAddNode(TAddNode(Result).left).right:=CUnaryMinusNode.create(TAddNode(TAddNode(Result).left).right);
+                    TAddNode(Result).Left.NodeType:=addn;
+                    TAddNode(TAddNode(Result).Left).Right:=CUnaryMinusNode.Create(TAddNode(TAddNode(Result).Left).Right);
                     exit;
                   end;
 
@@ -1694,11 +1694,11 @@ const
 
                   while operating on strings or reals
                 }
-                if (left.nodetype=nodetype) and
-                  (((nodetype=addn) and ((rt=stringconstn) or is_constcharnode(right)) and ((TAddNode(left).right.nodetype=stringconstn) or is_constcharnode(TAddNode(left).right))) or
-                   ((nodetype in [addn,muln,subn]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn))
+                if (Left.NodeType=NodeType) and
+                  (((NodeType=addn) and ((lRightNodeType=stringconstn) or Is_ConstCharNode(Right)) and ((TAddNode(Left).Right.NodeType=stringconstn) or Is_ConstCharNode(TAddNode(Left).Right))) or
+                   ((NodeType in [addn,muln,subn]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lRightNodeType=realconstn) and (TAddNode(Left).Right.NodeType=realconstn))
                   ) and
-                  (Compare_Defs(resultdef,ld,nothingn)=te_exact) then
+                  (Compare_Defs(ResultDef,lLeftDef,nothingn)=te_exact) then
                   begin
                     { SwapRightWithLeftLeft moves the nodes around in way that we need to insert a minus
                       on left.right: a-b-c becomes b-c-a so we
@@ -1706,15 +1706,15 @@ const
                       1) insert a minus before b
                       2) make the current node an add node, see below
                     }
-                    if nodetype=subn then
+                    if NodeType=subn then
                       begin
-                        TAddNode(left).right:=CUnaryMinusNode.create(TAddNode(left).right);
-                        DoTypeCheckPass(TAddNode(left).right);
+                        TAddNode(Left).Right:=CUnaryMinusNode.Create(TAddNode(Left).Right);
+                        DoTypeCheckPass(TAddNode(Left).Right);
                       end;
                     Result:=SwapRightWithLeftLeft;
-                    if nodetype=subn then
+                    if NodeType=subn then
                       begin
-                        Result.nodetype:=addn;
+                        Result.NodeType:=addn;
                         DoTypeCheckPass(Result);
                       end;
                     exit;
@@ -1729,11 +1729,11 @@ const
 
                   while operating on strings or reals
                 }
-                if (right.nodetype=nodetype) and
-                  (((nodetype=addn) and ((lt=stringconstn) or is_constcharnode(left)) and ((TAddNode(right).left.nodetype=stringconstn) or is_constcharnode(TAddNode(right).left))) or
-                   ((nodetype in [addn,muln]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lt=realconstn) and (TAddNode(right).left.nodetype=realconstn))
+                if (Right.NodeType=NodeType) and
+                  (((NodeType=addn) and ((lLeftNodeType=stringconstn) or Is_ConstCharNode(Left)) and ((TAddNode(Right).Left.NodeType=stringconstn) or Is_ConstCharNode(TAddNode(Right).Left))) or
+                   ((NodeType in [addn,muln]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lLeftNodeType=realconstn) and (TAddNode(Right).Left.NodeType=realconstn))
                   ) and
-                  (Compare_Defs(resultdef,rd,nothingn)=te_exact) then
+                  (Compare_Defs(ResultDef,lRightDef,nothingn)=te_exact) then
                   begin
                     Result:=SwapLeftWithRightRight;
                     exit;
@@ -1744,19 +1744,19 @@ const
                   (s1+(s2+(s3+s4...))) into s1+s2+s3+s4 ...
                   so fpc_*_concat_multi can be used efficiently
                 }
-                hp:=self;
-                while (hp.right.nodetype=hp.nodetype) and (hp.resultdef.typ=stringdef) and
-                  (Compare_Defs(hp.resultdef,hp.right.resultdef,nothingn)=te_exact) and
-                  (Compare_Defs(hp.resultdef,hp.left.resultdef,nothingn)=te_exact) and
-                  (Compare_Defs(hp.resultdef,TAddNode(hp.right).left.resultdef,nothingn)=te_exact) and
-                  (Compare_Defs(hp.resultdef,TAddNode(hp.right).right.resultdef,nothingn)=te_exact) do
+                lAddNode:=Self;
+                while (lAddNode.Right.NodeType=lAddNode.NodeType) and (lAddNode.ResultDef.typ=stringdef) and
+                  (Compare_Defs(lAddNode.ResultDef,lAddNode.Right.ResultDef,nothingn)=te_exact) and
+                  (Compare_Defs(lAddNode.ResultDef,lAddNode.Left.ResultDef,nothingn)=te_exact) and
+                  (Compare_Defs(lAddNode.ResultDef,TAddNode(lAddNode.Right).Left.ResultDef,nothingn)=te_exact) and
+                  (Compare_Defs(lAddNode.ResultDef,TAddNode(lAddNode.Right).Right.ResultDef,nothingn)=te_exact) do
                   begin
-                    t:=hp.left;
-                    hp.left:=hp.right;
-                    hp.right:=TAddNode(hp.left).right;
-                    TAddNode(hp.left).right:=TAddNode(hp.left).left;
-                    TAddNode(hp.left).left:=t;
-                    hp:=TAddNode(hp.left);
+                    lResultNode:=lAddNode.Left;
+                    lAddNode.Left:=lAddNode.Right;
+                    lAddNode.Right:=TAddNode(lAddNode.Left).Right;
+                    TAddNode(lAddNode.Left).Right:=TAddNode(lAddNode.Left).Left;
+                    TAddNode(lAddNode.Left).Left:=lResultNode;
+                    lAddNode:=TAddNode(lAddNode.Left);
                   end;
               end;
 
@@ -1764,35 +1764,35 @@ const
               equal if some previous optimizations were done so don't check
               this simplification always
             }
-            if Is_Boolean(ld) and Is_Boolean(rd) then
+            if Is_Boolean(lLeftDef) and Is_Boolean(lRightDef) then
               begin
                 { transform unsigned comparisons of (v>=x) and (v<=y)
                   into (v-x)<=(y-x)
                 }
-                if (nodetype in [andn,orn]) and
-                   (left.nodetype in [ltn,lten,gtn,gten]) and
-                   (right.nodetype in [ltn,lten,gtn,gten]) and
-                   (not might_have_sideeffects(left)) and
-                   (not might_have_sideeffects(right)) and
-                   is_range_test(TAddNode(left),TAddNode(right),vl,cl,cr) and
+                if (NodeType in [andn,orn]) and
+                   (Left.NodeType in [ltn,lten,gtn,gten]) and
+                   (Right.NodeType in [ltn,lten,gtn,gten]) and
+                   (not Might_Have_SideEffects(Left)) and
+                   (not Might_Have_SideEffects(Right)) and
+                   IsRangeTest(TAddNode(Left),TAddNode(Right),lLeftValueNode,lLeftConstant,lRightConstant) and
                    { avoid optimization being applied to (<string. var > charconst1) and (<string. var < charconst2) }
-                   (vl.resultdef.typ in [orddef,enumdef]) then
+                   (lLeftValueNode.ResultDef.typ in [orddef,enumdef]) then
                   begin
-                    hdef:=Get_Unsigned_IntType(vl.resultdef);
-                    vl:=CTypeConvNode.Create_Internal(vl.GetCopy,hdef);
+                    lDef:=Get_Unsigned_IntType(lLeftValueNode.ResultDef);
+                    lLeftValueNode:=CTypeConvNode.Create_Internal(lLeftValueNode.GetCopy,lDef);
 
                     { If the condition is of the inverted form (v<x) or (v>y),
                       we have to invert the conditional result as well, since
                       the above nodes return True for if v is within the range
                       (we're merging "not ((v-x)<=(y-x))" into "(v-x)>(y-x)") }
-                    if (nodetype=orn) then
-                      nt:=gtn
+                    if (NodeType=orn) then
+                      lNewNodeType:=gtn
                     else
-                      nt:=lten;
+                      lNewNodeType:=lten;
 
-                    result:=CAddNode.Create_Internal(nt,
-                              CTypeConvNode.Create_Internal(CAddNode.Create_Internal(subn,vl,COrdConstNode.create(cl,hdef,false)),hdef),
-                              COrdConstNode.create(cr-cl,hdef,false));
+                    Result:=CAddNode.Create_Internal(lNewNodeType,
+                              CTypeConvNode.Create_Internal(CAddNode.Create_Internal(subn,lLeftValueNode,COrdConstNode.Create(lLeftConstant,lDef,false)),lDef),
+                              COrdConstNode.Create(lRightConstant-lLeftConstant,lDef,false));
 
                     exit;
                   end;
@@ -1802,67 +1802,67 @@ const
                     can be converted into
                   ((v1 xor const1) or (v2 xor const2))=0
                 }
-                if (nodetype=andn) and
-                   (left.nodetype=EqualN) and
-                   (right.nodetype=EqualN) and
-                   (not might_have_sideeffects(left)) and
-                   (not might_have_sideeffects(right,[mhs_exceptions])) and
-                   (is_constintnode(TAddNode(left).left) or is_constintnode(TAddNode(left).right) or
-                    is_constpointernode(TAddNode(left).left) or is_constpointernode(TAddNode(left).right) or
-                    is_constcharnode(TAddNode(left).left) or is_constcharnode(TAddNode(left).right)) and
-                   (is_constintnode(TAddNode(right).left) or is_constintnode(TAddNode(right).right) or
-                    is_constpointernode(TAddNode(right).left) or is_constpointernode(TAddNode(right).right) or
-                    is_constcharnode(TAddNode(right).left) or is_constcharnode(TAddNode(right).right)) then
+                if (NodeType=andn) and
+                   (Left.NodeType=EqualN) and
+                   (Right.NodeType=EqualN) and
+                   (not Might_Have_SideEffects(Left)) and
+                   (not Might_Have_SideEffects(Right,[mhs_exceptions])) and
+                   (Is_ConstIntNode(TAddNode(Left).Left) or Is_ConstIntNode(TAddNode(Left).Right) or
+                    Is_ConstPointerNode(TAddNode(Left).Left) or Is_ConstPointerNode(TAddNode(Left).Right) or
+                    Is_ConstCharNode(TAddNode(Left).Left) or Is_ConstCharNode(TAddNode(Left).Right)) and
+                   (Is_ConstIntNode(TAddNode(Right).Left) or Is_ConstIntNode(TAddNode(Right).Right) or
+                    Is_ConstPointerNode(TAddNode(Right).Left) or Is_ConstPointerNode(TAddNode(Right).Right) or
+                    Is_ConstCharNode(TAddNode(Right).Left) or Is_ConstCharNode(TAddNode(Right).Right)) then
                    begin
-                     if is_constnode(TAddNode(left).left) then
+                     if Is_ConstNode(TAddNode(Left).Left) then
                        begin
-                         v1p:=@TAddNode(left).right;
-                         c1p:=@TAddNode(left).left;
+                         lValue1Pointer:=@TAddNode(Left).Right;
+                         lConst1Pointer:=@TAddNode(Left).Left;
                        end
                      else
                        begin
-                         v1p:=@TAddNode(left).left;
-                         c1p:=@TAddNode(left).right;
+                         lValue1Pointer:=@TAddNode(Left).Left;
+                         lConst1Pointer:=@TAddNode(Left).Right;
                        end;
-                     if is_constnode(TAddNode(right).left) then
+                     if Is_ConstNode(TAddNode(Right).Left) then
                        begin
-                         v2p:=@TAddNode(right).right;
-                         c2p:=@TAddNode(right).left;
+                         lValue2Pointer:=@TAddNode(Right).Right;
+                         lConst2Pointer:=@TAddNode(Right).Left;
                        end
                      else
                        begin
-                         v2p:=@TAddNode(right).left;
-                         c2p:=@TAddNode(right).right;
+                         lValue2Pointer:=@TAddNode(Right).Left;
+                         lConst2Pointer:=@TAddNode(Right).Right;
                        end;
-                     if v1p^.resultdef.Size=v2p^.resultdef.Size then
+                     if lValue1Pointer^.ResultDef.Size=lValue2Pointer^.ResultDef.Size then
                        begin
-                         case v1p^.resultdef.Size of
+                         case lValue1Pointer^.ResultDef.Size of
                            1:
-                             inttype:=U8IntType;
+                             lIntType:=U8IntType;
                            2:
-                             inttype:=U16IntType;
+                             lIntType:=U16IntType;
                            4:
-                             inttype:=U32IntType;
+                             lIntType:=U32IntType;
                            8:
-                             inttype:=U64IntType;
+                             lIntType:=U64IntType;
                            else
                              InternalError(2020060101);
                          end;
 
                          { Assigned compares procvar values. Preserve that
                            meaning in the casts introduced by this rewrite. }
-                         value1conv:=CTypeConvNode.Create_Internal(v1p^.GetCopy,inttype);
-                         value1conv.flags:=value1conv.flags+(left.flags*[nf_load_procvar]);
-                         value2conv:=CTypeConvNode.Create_Internal(v2p^.GetCopy,inttype);
-                         value2conv.flags:=value2conv.flags+(right.flags*[nf_load_procvar]);
-                         result:=CAddNode.Create_Internal(EqualN,
+                         lValue1Conversion:=CTypeConvNode.Create_Internal(lValue1Pointer^.GetCopy,lIntType);
+                         lValue1Conversion.Flags:=lValue1Conversion.Flags+(Left.Flags*[nf_load_procvar]);
+                         lValue2Conversion:=CTypeConvNode.Create_Internal(lValue2Pointer^.GetCopy,lIntType);
+                         lValue2Conversion.Flags:=lValue2Conversion.Flags+(Right.Flags*[nf_load_procvar]);
+                         Result:=CAddNode.Create_Internal(EqualN,
                            CAddNode.Create_Internal(orn,
-                             CAddNode.Create_Internal(xorn,value1conv,
-                               CTypeConvNode.Create_Internal(c1p^.GetCopy,inttype)),
-                             CAddNode.Create_Internal(xorn,value2conv,
-                               CTypeConvNode.Create_Internal(c2p^.GetCopy,inttype))
+                             CAddNode.Create_Internal(xorn,lValue1Conversion,
+                               CTypeConvNode.Create_Internal(lConst1Pointer^.GetCopy,lIntType)),
+                             CAddNode.Create_Internal(xorn,lValue2Conversion,
+                               CTypeConvNode.Create_Internal(lConst2Pointer^.GetCopy,lIntType))
                            ),
-                           COrdConstNode.create(0,inttype,false));
+                           COrdConstNode.Create(0,lIntType,false));
                        end;
                    end;
                 { even when short circuit boolean evaluation is active, this
@@ -1870,12 +1870,12 @@ const
                   side effects, because this can change the result (e.g., in an
                   or-node that calls the same function twice and first returns
                   false and then true because of a global state change }
-                if left.isequal(right) and not might_have_sideeffects(left) then
+                if Left.IsEqual(Right) and not Might_Have_SideEffects(Left) then
                   begin
-                    case nodetype of
+                    case NodeType of
                       andn,orn:
                         begin
-                          result:=PruneKeepLeft();
+                          Result:=PruneKeepLeft();
                           exit;
                         end;
                       {
@@ -1890,20 +1890,20 @@ const
                     end;
                   end
                 { short to full boolean evaluation possible and useful? }
-                else if not(might_have_sideeffects(right,[mhs_exceptions])) and doshortbooleval(self) then
+                else if not(Might_Have_SideEffects(Right,[mhs_exceptions])) and DoShortBoolEval(Self) then
                   begin
-                    case nodetype of
+                    case NodeType of
                       andn,orn:
                         begin
                           { full boolean evaluation is only useful if the nodes are not too complex and if no jumps must be converted,
                             further, we need to know the expectloc }
-                          if (node_complexity(right)<=2) and
-                            not(left.expectloc in [LOC_JUMP,LOC_INVALID]) and not(right.expectloc in [LOC_JUMP,LOC_INVALID]) then
+                          if (Node_Complexity(Right)<=2) and
+                            not(Left.ExpectLoc in [LOC_JUMP,LOC_INVALID]) and not(Right.ExpectLoc in [LOC_JUMP,LOC_INVALID]) then
                             begin
                               { we need to copy the whole tree to force another pass_1 }
                               include(LocalSwitches,cs_full_boolean_eval);
-                              exclude(addnodeflags,anf_short_bool);
-                              result:=GetCopy;
+                              exclude(AddNodeFlags,anf_short_bool);
+                              Result:=GetCopy;
                               exit;
                             end;
                         end;
@@ -1913,15 +1913,15 @@ const
                   end
               end;
 
-            if Is_Integer(ld) and Is_Integer(rd) then
+            if Is_Integer(lLeftDef) and Is_Integer(lRightDef) then
               begin
                 if (cs_opt_level3 in CurrentSettings.OptimizerSwitches) and
-                   left.isequal(right) and not might_have_sideeffects(left) then
+                   Left.IsEqual(Right) and not Might_Have_SideEffects(Left) then
                   begin
-                    case nodetype of
+                    case NodeType of
                       andn,orn:
                         begin
-                          result:=PruneKeepLeft();
+                          Result:=PruneKeepLeft();
                           exit;
                         end;
                       xorn,
@@ -1930,21 +1930,21 @@ const
                       ltn,
                       gtn:
                         begin
-                          result:=COrdConstNode.create(0,resultdef,true);
+                          Result:=COrdConstNode.Create(0,ResultDef,true);
                           exit;
                         end;
                       EqualN,
                       lten,
                       gten:
                         begin
-                          result:=COrdConstNode.create(1,resultdef,true);
+                          Result:=COrdConstNode.Create(1,ResultDef,true);
                           exit;
                         end;
                       else
                         ;
                     end;
                   end
-                else if TryHandleLengthZero(left,right,nodetype,Result) then
+                else if TryHandleLengthZero(Left,Right,NodeType,Result) then
                   exit
                    ;
               end;
@@ -1955,22 +1955,22 @@ const
 
               tested by tests/tbs/tw40292.pas
             }
-            if (nodetype in [ltn,gten]) and
-              (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_length_x) and
-              ((Is_Dynamic_Array(TInlineNode(right).left.resultdef)) or
-               (Is_Open_Array(TInlineNode(right).left.resultdef))
+            if (NodeType in [ltn,gten]) and
+              (Right.NodeType=inlinen) and (TInlineNode(Right).InlineNumber=in_length_x) and
+              ((Is_Dynamic_Array(TInlineNode(Right).Left.ResultDef)) or
+               (Is_Open_Array(TInlineNode(Right).Left.ResultDef))
               ) then
               begin
-                case nodetype of
+                case NodeType of
                   ltn:
-                    result:=CAddNode.create(lten,left,CInlineNode.create(in_high_x,false,TInlineNode(right).left));
+                    Result:=CAddNode.Create(lten,Left,CInlineNode.Create(in_high_x,false,TInlineNode(Right).Left));
                   gten:
-                    result:=CAddNode.create(gtn,left,CInlineNode.create(in_high_x,false,TInlineNode(right).left));
+                    Result:=CAddNode.Create(gtn,Left,CInlineNode.Create(in_high_x,false,TInlineNode(Right).Left));
                   else
                     InternalError(2024041701);
                 end;
-                left:=nil;
-                TInlineNode(right).left:=nil;
+                Left:=nil;
+                TInlineNode(Right).Left:=nil;
                 exit;
               end;
 
@@ -1980,56 +1980,56 @@ const
 
               tested by tests/tbs/tw40292.pas
             }
-            if (nodetype in [lten,gtn]) and
-              (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_length_x) and
-              ((Is_Dynamic_Array(TInlineNode(left).left.resultdef)) or
-               (Is_Open_Array(TInlineNode(left).left.resultdef))
+            if (NodeType in [lten,gtn]) and
+              (Left.NodeType=inlinen) and (TInlineNode(Left).InlineNumber=in_length_x) and
+              ((Is_Dynamic_Array(TInlineNode(Left).Left.ResultDef)) or
+               (Is_Open_Array(TInlineNode(Left).Left.ResultDef))
               ) then
               begin
-                case nodetype of
+                case NodeType of
                   gtn:
-                    result:=CAddNode.create(gten,CInlineNode.create(in_high_x,false,TInlineNode(left).left),right);
+                    Result:=CAddNode.Create(gten,CInlineNode.Create(in_high_x,false,TInlineNode(Left).Left),Right);
                   lten:
-                    result:=CAddNode.create(ltn,CInlineNode.create(in_high_x,false,TInlineNode(left).left),right);
+                    Result:=CAddNode.Create(ltn,CInlineNode.Create(in_high_x,false,TInlineNode(Left).Left),Right);
                   else
                     InternalError(2024041701);
                 end;
-                right:=nil;
-                TInlineNode(left).left:=nil;
+                Right:=nil;
+                TInlineNode(Left).Left:=nil;
                 exit;
               end;
 
             { using sqr(x) for reals instead of x*x might reduces register pressure and/or
               memory accesses while sqr(<real>) has no drawback }
             if
-               (nodetype=muln) and
-               Is_Real(ld) and Is_Real(rd) and
-               left.isequal(right) and
-               not(might_have_sideeffects(left)) then
+               (NodeType=muln) and
+               Is_Real(lLeftDef) and Is_Real(lRightDef) and
+               Left.IsEqual(Right) and
+               not(Might_Have_SideEffects(Left)) then
               begin
-                result:=CInlineNode.create(in_sqr_real,false,PruneKeepLeft());
-                inserttypeconv(result,resultdef);
+                Result:=CInlineNode.Create(in_sqr_real,false,PruneKeepLeft());
+                InsertTypeConv(Result,ResultDef);
                 exit;
               end;
 {$ifdef cpurox}
             { optimize (i shl x) or (i shr (bitsizeof(i)-x)) into rol(x,i) (and different flavours with shl/shr swapped etc.) }
-            if (nodetype in [addn,orn]) { add also works here }
+            if (NodeType in [addn,orn]) { add also works here }
 {$ifndef cpu64bitalu}
-               and (ld.typ=orddef) and
-               not(TOrdDef(ld).OrdType in [s64bit,u64bit,scurrency])
+               and (lLeftDef.typ=orddef) and
+               not(TOrdDef(lLeftDef).OrdType in [s64bit,u64bit,scurrency])
 {$endif cpu64bitalu}
               then
               begin
-                if (left.nodetype=shln) and (right.nodetype=shrn) then
+                if (Left.NodeType=shln) and (Right.NodeType=shrn) then
                   begin
-                    result:=CheckRotateOptimization(in_rol_x_y,in_ror_x_y);
-                    if Assigned(result) then
+                    Result:=CheckRotateOptimization(in_rol_x_y,in_ror_x_y);
+                    if Assigned(Result) then
                       Exit;
                   end
-                else if (left.nodetype=shrn) and (right.nodetype=shln) then
+                else if (Left.NodeType=shrn) and (Right.NodeType=shln) then
                   begin
-                    result:=CheckRotateOptimization(in_ror_x_y,in_rol_x_y);
-                    if Assigned(result) then
+                    Result:=CheckRotateOptimization(in_ror_x_y,in_rol_x_y);
+                    if Assigned(Result) then
                       Exit;
                   end
               end;
@@ -2042,18 +2042,18 @@ const
 
                 c xor ((c xor a) and b)
             }
-            if (nodetype=orn) and
-             (ld.typ=orddef) and
-             (left.nodetype=andn) and
-             (right.nodetype=andn) and
-             (not(Is_Boolean(resultdef)) or not(might_have_sideeffects(self,[mhs_exceptions])) or not(doshortbooleval(self))) and
+            if (NodeType=orn) and
+             (lLeftDef.typ=orddef) and
+             (Left.NodeType=andn) and
+             (Right.NodeType=andn) and
+             (not(Is_Boolean(ResultDef)) or not(Might_Have_SideEffects(Self,[mhs_exceptions])) or not(DoShortBoolEval(Self))) and
              { this test is not needed but it speeds up the test and allows to bail out early }
-             ((TAddNode(left).left.nodetype=notn) or (TAddNode(left).right.nodetype=notn) or
-              (TAddNode(right).left.nodetype=notn) or (TAddNode(right).right.nodetype=notn)
+             ((TAddNode(Left).Left.NodeType=notn) or (TAddNode(Left).Right.NodeType=notn) or
+              (TAddNode(Right).Left.NodeType=notn) or (TAddNode(Right).Right.NodeType=notn)
              ) and
-             not(might_have_sideeffects(self)) then
+             not(Might_Have_SideEffects(Self)) then
              begin
-               if MatchAndTransformNodesCommutative(TAddNode(left).left,TAddNode(left).right,TAddNode(right).left,TAddNode(right).right,
+               if MatchAndTransformNodesCommutative(TAddNode(Left).Left,TAddNode(Left).Right,TAddNode(Right).Left,TAddNode(Right).Right,
                  @IsAndOrAndNot,@TransformAndOrAndNot,Result) then
                  exit;
              end;
@@ -2064,46 +2064,46 @@ const
 
               (a and one_bit_mask_const) <> = 0
             }
-            if (nodetype in [EqualN,unequaln]) then
+            if (NodeType in [EqualN,unequaln]) then
               begin
-                if (lt=andn) and (rt=ordconstn) then
+                if (lLeftNodeType=andn) and (lRightNodeType=ordconstn) then
                   begin
-                    t:=left;
-                    cr:=TOrdConstNode(right).Value;
+                    lResultNode:=Left;
+                    lRightConstant:=TOrdConstNode(Right).Value;
                   end
                 else
-                  if (rt=andn) and (lt=ordconstn) then
+                  if (lRightNodeType=andn) and (lLeftNodeType=ordconstn) then
                     begin
-                      t:=right;
-                      cr:=TOrdConstNode(left).Value;
+                      lResultNode:=Right;
+                      lRightConstant:=TOrdConstNode(Left).Value;
                     end
                   else
                     begin
-                      t:=nil;
-                      cr:=0;
+                      lResultNode:=nil;
+                      lRightConstant:=0;
                     end;
                 { using cr.uvalue is fine as we are interested only in the bit pattern }
-                if (t<>nil) and (PopCnt(cr.uvalue) = 1) then
+                if (lResultNode<>nil) and (PopCnt(lRightConstant.uvalue) = 1) then
                   begin
-                    if is_constintnode(TAddNode(t).left) then
-                      vl:=TAddNode(t).left
+                    if Is_ConstIntNode(TAddNode(lResultNode).Left) then
+                      lLeftValueNode:=TAddNode(lResultNode).Left
                     else
-                      if is_constintnode(TAddNode(t).right) then
-                        vl:=TAddNode(t).right
+                      if Is_ConstIntNode(TAddNode(lResultNode).Right) then
+                        lLeftValueNode:=TAddNode(lResultNode).Right
                       else
-                        vl:=nil;
-                    if (vl<>nil) and (TOrdConstNode(vl).Value=cr) then
+                        lLeftValueNode:=nil;
+                    if (lLeftValueNode<>nil) and (TOrdConstNode(lLeftValueNode).Value=lRightConstant) then
                       begin
-                        if nodetype=EqualN then
-                          nt:=unequaln
+                        if NodeType=EqualN then
+                          lNewNodeType:=unequaln
                         else
-                          nt:=EqualN;
-                        result:=CAddNode.create(nt,t,COrdConstNode.create(0,vl.resultdef,false));
-                        Include(transientflags,tnf_do_not_execute);
-                        if t=left then
-                          left:=nil
+                          lNewNodeType:=EqualN;
+                        Result:=CAddNode.Create(lNewNodeType,lResultNode,COrdConstNode.Create(0,lLeftValueNode.ResultDef,false));
+                        Include(TransientFlags,tnf_do_not_execute);
+                        if lResultNode=Left then
+                          Left:=nil
                         else
-                          right:=nil;
+                          Right:=nil;
                         exit;
                       end;
                   end;
@@ -2112,216 +2112,216 @@ const
       end;
 
 
-    function TAddNode.dogetcopy: TNode;
+    function TAddNode.DoGetCopy: TNode;
       var
-        n: TAddNode;
+        lAddNode: TAddNode;
       begin
-        n:=TAddNode(inherited dogetcopy);
-        n.addnodeflags:=addnodeflags;
-        n.resultrealdef:=resultrealdef;
-        result:=n;
+        lAddNode:=TAddNode(inherited DoGetCopy);
+        lAddNode.AddNodeFlags:=AddNodeFlags;
+        lAddNode.ResultRealDef:=ResultRealDef;
+        Result:=lAddNode;
       end;
 
 
-    function TAddNode.docompare(p: TNode): boolean;
+    function TAddNode.DoCompare(ANode: TNode): Boolean;
       begin
-        result:=
-          inherited docompare(p) and
-          Equal_Defs(TAddNode(p).resultrealdef,resultrealdef);
+        Result:=
+          inherited DoCompare(ANode) and
+          Equal_Defs(TAddNode(ANode).ResultRealDef,ResultRealDef);
       end;
 
 
-    procedure TAddNode.printnodedata(var t: text);
+    procedure TAddNode.PrintNodeData(var AText: Text);
       var
-        i: TAddNodeFlag;
-        first: Boolean;
+        lIndex: TAddNodeFlag;
+        lFirst: Boolean;
       begin
-        write(t,PrintNodeIndention,'addnodeflags = [');
-        first:=true;
-        for i:=low(TAddNodeFlag) to high(TAddNodeFlag) do
-          if i in addnodeflags then
+        write(AText,PrintNodeIndention,'addnodeflags = [');
+        lFirst:=true;
+        for lIndex:=low(TAddNodeFlag) to high(TAddNodeFlag) do
+          if lIndex in AddNodeFlags then
             begin
-              if not(first) then
-                write(t,',')
+              if not(lFirst) then
+                write(AText,',')
               else
-                first:=false;
-              write(t, i);
+                lFirst:=false;
+              write(AText, lIndex);
             end;
-        WriteLn(t,']');
-        inherited printnodedata(t);
+        WriteLn(AText,']');
+        inherited PrintNodeData(AText);
       end;
 
 
-    function TAddNode.pass_typecheck:TNode;
+    function TAddNode.Pass_TypeCheck:TNode;
       begin
         { This function is small to keep the stack small for recursive of
           large + operations }
-        TypeCheckPass(left);
-        TypeCheckPass(right);
-        result:=pass_typecheck_internal;
+        TypeCheckPass(Left);
+        TypeCheckPass(Right);
+        Result:=PassTypeCheckInternal;
       end;
 
 
-    function TAddNode.pass_typecheck_internal:TNode;
+    function TAddNode.PassTypeCheckInternal:TNode;
       var
-        hp          : TNode;
-        rd,ld,nd    : TDef;
-        hsym        : TFieldVarSym;
-        llow,lhigh,
-        rlow,rhigh  : TConstExprInt;
-        strtype     : TStringType;
-        res,
-        b           : boolean;
-        lt,rt       : TNodeType;
-        ot          : TNodeType;
+        lNode          : TNode;
+        lRightDef,lLeftDef,lNodeDef    : TDef;
+        lFieldSym        : TFieldVarSym;
+        lLeftLow,lLeftHigh,
+        lRightLow,lRightHigh  : TConstExprInt;
+        lStringType     : TStringType;
+        lComparisonResult,
+        lValueInRange           : Boolean;
+        lLeftNodeType,lRightNodeType       : TNodeType;
+        lOldNodeType          : TNodeType;
 
-        function maybe_cast_ordconst(var n: TNode; adef: TDef): boolean;
+        function MaybeCastOrdConst(var ANode: TNode; ADef: TDef): Boolean;
           begin
-            result:=(TOrdConstNode(n).Value>=TOrdDef(adef).low) and
-              (TOrdConstNode(n).Value<=TOrdDef(adef).high);
-            if result then
-              inserttypeconv(n,adef);
+            Result:=(TOrdConstNode(ANode).Value>=TOrdDef(ADef).low) and
+              (TOrdConstNode(ANode).Value<=TOrdDef(ADef).high);
+            if Result then
+              InsertTypeConv(ANode,ADef);
           end;
 
-        function maybe_convert_to_insert:TNode;
+        function MaybeConvertToInsert:TNode;
 
-          function element_count(arrconstr: TArrayConstructorNode):asizeint;
+          function ElementCount(AArrayConstructor: TArrayConstructorNode):ASizeInt;
             begin
-              result:=0;
-              while Assigned(arrconstr) do
+              Result:=0;
+              while Assigned(AArrayConstructor) do
                 begin
-                  if arrconstr.nodetype=arrayconstructorrangen then
+                  if AArrayConstructor.NodeType=arrayconstructorrangen then
                     InternalError(2018052501);
-                  inc(result);
-                  arrconstr:=TArrayConstructorNode(TArrayConstructorNode(arrconstr).right);
+                  inc(Result);
+                  AArrayConstructor:=TArrayConstructorNode(TArrayConstructorNode(AArrayConstructor).Right);
                 end;
             end;
 
           var
-            elem : TNode;
-            para : TCallParaNode;
-            isarrconstrl,
-            isarrconstrr : boolean;
-            index : asizeint;
+            lElement : TNode;
+            lPara : TCallParaNode;
+            lIsLeftArrayConstructor,
+            lIsRightArrayConstructor : Boolean;
+            lIndex : ASizeInt;
           begin
-            result:=nil;
+            Result:=nil;
 
-            isarrconstrl:=left.nodetype=arrayconstructorn;
-            isarrconstrr:=right.nodetype=arrayconstructorn;
+            lIsLeftArrayConstructor:=Left.NodeType=arrayconstructorn;
+            lIsRightArrayConstructor:=Right.NodeType=arrayconstructorn;
 
-            if not Assigned(aktassignmentnode) or
-                (aktassignmentnode.right<>self) or
+            if not Assigned(AktAssignmentNode) or
+                (AktAssignmentNode.Right<>Self) or
                 not(
-                  isarrconstrl or
-                  isarrconstrr
+                  lIsLeftArrayConstructor or
+                  lIsRightArrayConstructor
                 ) or
                 not(
-                  left.isequal(aktassignmentnode.left) or
-                  right.isequal(aktassignmentnode.left)
+                  Left.IsEqual(AktAssignmentNode.Left) or
+                  Right.IsEqual(AktAssignmentNode.Left)
                 ) or
-                not valid_for_var(aktassignmentnode.left,false) or
-                (isarrconstrl and (element_count(TArrayConstructorNode(left))>1)) or
-                (isarrconstrr and (element_count(TArrayConstructorNode(right))>1)) then
+                not valid_for_var(AktAssignmentNode.Left,false) or
+                (lIsLeftArrayConstructor and (ElementCount(TArrayConstructorNode(Left))>1)) or
+                (lIsRightArrayConstructor and (ElementCount(TArrayConstructorNode(Right))>1)) then
               exit;
 
-            if isarrconstrl then
+            if lIsLeftArrayConstructor then
               begin
-                index:=0;
-                elem:=TArrayConstructorNode(left).left;
-                TArrayConstructorNode(left).left:=nil;
+                lIndex:=0;
+                lElement:=TArrayConstructorNode(Left).Left;
+                TArrayConstructorNode(Left).Left:=nil;
               end
             else
               begin
-                index:=high(asizeint);
-                elem:=TArrayConstructorNode(right).left;
-                TArrayConstructorNode(right).left:=nil;
+                lIndex:=high(ASizeInt);
+                lElement:=TArrayConstructorNode(Right).Left;
+                TArrayConstructorNode(Right).Left:=nil;
               end;
 
             { we use the fact that insert() caps the index to avoid a copy }
-            para:=CCallParaNode.create(
-                    COrdConstNode.create(index,SizeSIntType,false),
-                    CCallParaNode.create(
-                      aktassignmentnode.left.GetCopy,
-                      CCallParaNode.create(
-                        elem,nil)));
+            lPara:=CCallParaNode.Create(
+                    COrdConstNode.Create(lIndex,SizeSIntType,false),
+                    CCallParaNode.Create(
+                      AktAssignmentNode.Left.GetCopy,
+                      CCallParaNode.Create(
+                        lElement,nil)));
 
-            result:=CInlineNode.create(in_insert_x_y_z,false,para);
-            include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+            Result:=CInlineNode.Create(in_insert_x_y_z,false,lPara);
+            include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
           end;
 
       begin
-         result:=nil;
-         rlow:=0;
-         llow:=0;
-         rhigh:=0;
-         lhigh:=0;
+         Result:=nil;
+         lRightLow:=0;
+         lLeftLow:=0;
+         lRightHigh:=0;
+         lLeftHigh:=0;
 
          { avoid any problems with type parameters later on }
-         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
+         if Is_TypeParam(Left.ResultDef) or Is_TypeParam(Right.ResultDef) then
            begin
-             resultdef:=CUndefinedType;
+             ResultDef:=CUndefinedType;
              exit;
            end;
 
          { both left and right need to be valid }
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
-         set_varstate(right,vs_read,[vsf_must_be_valid]);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         set_varstate(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
          { tp procvar support. Omit for converted assigned() nodes }
-         if not (nf_load_procvar in flags) then
+         if not (nf_load_procvar in Flags) then
            begin
-             maybe_call_procvar(left,true);
-             maybe_call_procvar(right,true);
+             Maybe_Call_ProcVar(Left,true);
+             Maybe_Call_ProcVar(Right,true);
            end
          else
-           if not (nodetype in [EqualN,unequaln]) then
+           if not (NodeType in [EqualN,unequaln]) then
              InternalError(2013091601);
 
          { allow operator overloading }
-         hp:=self;
+         lNode:=Self;
 
-         if Is_Array_Constructor(left.resultdef) or Is_Array_Constructor(right.resultdef) then
+         if Is_Array_Constructor(Left.ResultDef) or Is_Array_Constructor(Right.ResultDef) then
            begin
              { check whether there is a suitable operator for the array constructor
                (but only if the "+" array operator isn't used), if not fall back to sets }
              if (
-                   (nodetype<>addn) or
+                   (NodeType<>addn) or
                    not (m_array_operators in CurrentSettings.ModeSwitches) or
-                   (Is_Array_Constructor(left.resultdef) and not Is_Dynamic_Array(right.resultdef)) or
-                   (not Is_Dynamic_Array(left.resultdef) and Is_Array_Constructor(right.resultdef))
+                   (Is_Array_Constructor(Left.ResultDef) and not Is_Dynamic_Array(Right.ResultDef)) or
+                   (not Is_Dynamic_Array(Left.ResultDef) and Is_Array_Constructor(Right.ResultDef))
                  ) and
-                 not isbinaryoverloaded(hp,[ocf_check_only]) then
+                 not isbinaryoverloaded(lNode,[ocf_check_only]) then
                begin
-                 if Is_Array_Constructor(left.resultdef) then
+                 if Is_Array_Constructor(Left.ResultDef) then
                    begin
-                     arrayconstructor_to_set(left);
-                     TypeCheckPass(left);
+                     ArrayConstructor_To_Set(Left);
+                     TypeCheckPass(Left);
                    end;
-                 if Is_Array_Constructor(right.resultdef) then
+                 if Is_Array_Constructor(Right.ResultDef) then
                    begin
-                     arrayconstructor_to_set(right);
-                     TypeCheckPass(right);
+                     ArrayConstructor_To_Set(Right);
+                     TypeCheckPass(Right);
                    end;
                end;
            end;
 
-         if Is_Dynamic_Array(left.resultdef) and Is_Dynamic_Array(right.resultdef) and
-             (nodetype=addn) and
+         if Is_Dynamic_Array(Left.ResultDef) and Is_Dynamic_Array(Right.ResultDef) and
+             (NodeType=addn) and
              (m_array_operators in CurrentSettings.ModeSwitches) and
-             isbinaryoverloaded(hp,[ocf_check_non_overloadable,ocf_check_only]) then
-           message3(parser_w_operator_overloaded_hidden_3,left.resultdef.TypeName,arraytokeninfo[_PLUS].str,right.resultdef.TypeName);
+             isbinaryoverloaded(lNode,[ocf_check_non_overloadable,ocf_check_only]) then
+           message3(parser_w_operator_overloaded_hidden_3,Left.ResultDef.TypeName,arraytokeninfo[_PLUS].str,Right.ResultDef.TypeName);
 
-         if isbinaryoverloaded(hp,[]) then
+         if isbinaryoverloaded(lNode,[]) then
            begin
-              result:=hp;
+              Result:=lNode;
               exit;
            end;
          { Stop checking when an error was found in the operator checking }
          if CodeGenError then
            begin
-             result:=CErrorNode.create;
+             Result:=CErrorNode.Create;
              exit;
            end;
 
@@ -2330,20 +2330,20 @@ const
          if (m_delphi in CurrentSettings.ModeSwitches) and
             (blocktype in [bt_type,bt_const_type,bt_var_type]) then
           begin
-            if (left.resultdef.typ=enumdef) and
-               (right.resultdef.typ=orddef) then
+            if (Left.ResultDef.typ=enumdef) and
+               (Right.ResultDef.typ=orddef) then
              begin
                { insert explicit typecast to default signed int }
-               left:=CTypeConvNode.Create_Internal(left,SIntType);
-               TypeCheckPass(left);
+               Left:=CTypeConvNode.Create_Internal(Left,SIntType);
+               TypeCheckPass(Left);
              end
             else
-             if (left.resultdef.typ=orddef) and
-                (right.resultdef.typ=enumdef) then
+             if (Left.ResultDef.typ=orddef) and
+                (Right.ResultDef.typ=enumdef) then
               begin
                 { insert explicit typecast to default signed int }
-                right:=CTypeConvNode.Create_Internal(right,SIntType);
-                TypeCheckPass(right);
+                Right:=CTypeConvNode.Create_Internal(Right,SIntType);
+                TypeCheckPass(Right);
               end;
           end;
 
@@ -2354,151 +2354,151 @@ const
         { use extended as default real type only when the x87 fpu is used }
   {$if defined(i386)}
         if not(CurrentSettings.FPUType=fpu_x87) then
-          resultrealdef:=S64FloatType
+          ResultRealDef:=S64FloatType
         else
-          resultrealdef:=PBestRealType^;
+          ResultRealDef:=PBestRealType^;
   {$endif i386}
   {$ifdef x86_64}
         { x86-64 has no x87 only mode, so use always double as default }
-        resultrealdef:=S64FloatType;
+        ResultRealDef:=S64FloatType;
   {$endif x86_6}
 {$else not x86}
-        resultrealdef:=PBestRealType^;
+        ResultRealDef:=PBestRealType^;
 {$endif not x86}
 
-        if (right.resultdef.typ=floatdef) or (left.resultdef.typ=floatdef) then
+        if (Right.ResultDef.typ=floatdef) or (Left.ResultDef.typ=floatdef) then
          begin
            { when both floattypes are already equal then use that
              floattype for results }
-           if (right.resultdef.typ=floatdef) and
-              (left.resultdef.typ=floatdef) and
-              (TFloatDef(left.resultdef).FloatType=TFloatDef(right.resultdef).FloatType) and
-              not(TFloatDef(left.resultdef).FloatType in [s64comp,s64currency]) then
+           if (Right.ResultDef.typ=floatdef) and
+              (Left.ResultDef.typ=floatdef) and
+              (TFloatDef(Left.ResultDef).FloatType=TFloatDef(Right.ResultDef).FloatType) and
+              not(TFloatDef(Left.ResultDef).FloatType in [s64comp,s64currency]) then
              begin
                if cs_excessprecision in CurrentSettings.LocalSwitches then
                  begin
-                   resultrealdef:=PBestRealType^;
-                   inserttypeconv(right,resultrealdef);
-                   inserttypeconv(left,resultrealdef);
+                   ResultRealDef:=PBestRealType^;
+                   InsertTypeConv(Right,ResultRealDef);
+                   InsertTypeConv(Left,ResultRealDef);
                  end
                else
-                 resultrealdef:=left.resultdef
+                 ResultRealDef:=Left.ResultDef
              end
            { when there is a currency type then use currency, but
              only when currency is defined as float }
            else
-            if (Is_Currency(right.resultdef) or
-                Is_Currency(left.resultdef)) and
+            if (Is_Currency(Right.ResultDef) or
+                Is_Currency(Left.ResultDef)) and
                ((S64CurrencyType.typ = floatdef) or
-                (nodetype <> slashn)) then
+                (NodeType <> slashn)) then
              begin
-               resultrealdef:=S64CurrencyType;
-               if (nodetype = muln) then
+               ResultRealDef:=S64CurrencyType;
+               if (NodeType = muln) then
                  begin
                    { See if we can minimise any unnecessary scaling that might
                      cause precision problems }
-                   if (nf_is_currency in right.flags) then
+                   if (nf_is_currency in Right.Flags) then
                      begin
-                       if (nf_is_currency in left.flags) then
+                       if (nf_is_currency in Left.Flags) then
                          begin
-                           inserttypeconv(right,resultrealdef);
-                           inserttypeconv(left,resultrealdef);
+                           InsertTypeConv(Right,ResultRealDef);
+                           InsertTypeConv(Left,ResultRealDef);
                          end
                        else
                          begin
-                           inserttypeconv(right,resultrealdef);
-                           inserttypeconv_internal(left,resultrealdef)
+                           InsertTypeConv(Right,ResultRealDef);
+                           InsertTypeConv_Internal(Left,ResultRealDef)
                          end;
                      end
                    else
                      begin
-                       if (nf_is_currency in left.flags) then
+                       if (nf_is_currency in Left.Flags) then
                          begin
-                           inserttypeconv_internal(right,resultrealdef);
-                           inserttypeconv(left,resultrealdef);
+                           InsertTypeConv_Internal(Right,ResultRealDef);
+                           InsertTypeConv(Left,ResultRealDef);
                          end
                        else
                          begin
-                           inserttypeconv(right,resultrealdef);
-                           inserttypeconv(left,resultrealdef);
+                           InsertTypeConv(Right,ResultRealDef);
+                           InsertTypeConv(Left,ResultRealDef);
                          end;
                      end;
                  end
                else
                  begin
-                   inserttypeconv(right,resultrealdef);
-                   inserttypeconv(left,resultrealdef);
+                   InsertTypeConv(Right,ResultRealDef);
+                   InsertTypeConv(Left,ResultRealDef);
                  end;
              end
            else
             begin
-              resultrealdef:=getbestreal(left.resultdef,right.resultdef);
-              inserttypeconv(right,resultrealdef);
-              inserttypeconv(left,resultrealdef);
+              ResultRealDef:=GetBestReal(Left.ResultDef,Right.ResultDef);
+              InsertTypeConv(Right,ResultRealDef);
+              InsertTypeConv(Left,ResultRealDef);
             end;
          end;
 
         { If both operands are constant and there is a unicodestring
           or unicodestring then convert everything to unicodestring }
-        if is_constnode(right) and is_constnode(left) and
-           (Is_UnicodeString(right.resultdef) or
-            Is_UnicodeString(left.resultdef)) then
+        if Is_ConstNode(Right) and Is_ConstNode(Left) and
+           (Is_UnicodeString(Right.ResultDef) or
+            Is_UnicodeString(Left.ResultDef)) then
           begin
-            inserttypeconv(right,CUnicodeStringType);
-            inserttypeconv(left,CUnicodeStringType);
+            InsertTypeConv(Right,CUnicodeStringType);
+            InsertTypeConv(Left,CUnicodeStringType);
           end;
 
         { If both operands are constant and there is a widechar
           or widestring then convert everything to widestring. This
           allows constant folding like char+widechar }
-        if is_constnode(right) and is_constnode(left) and
-           (Is_WideString(right.resultdef) or
-            Is_WideString(left.resultdef) or
-            Is_WideChar(right.resultdef) or
-            Is_WideChar(left.resultdef)) then
+        if Is_ConstNode(Right) and Is_ConstNode(Left) and
+           (Is_WideString(Right.ResultDef) or
+            Is_WideString(Left.ResultDef) or
+            Is_WideChar(Right.ResultDef) or
+            Is_WideChar(Left.ResultDef)) then
           begin
-            inserttypeconv(right,CWideStringType);
-            inserttypeconv(left,CWideStringType);
+            InsertTypeConv(Right,CWideStringType);
+            InsertTypeConv(Left,CWideStringType);
           end;
 
         { load easier access variables }
-        rd:=right.resultdef;
-        ld:=left.resultdef;
-        rt:=right.nodetype;
-        lt:=left.nodetype;
+        lRightDef:=Right.ResultDef;
+        lLeftDef:=Left.ResultDef;
+        lRightNodeType:=Right.NodeType;
+        lLeftNodeType:=Left.NodeType;
 
          { 4 character constant strings are compatible with orddef }
          { in macpas mode (become cardinals)                       }
          if (m_mac in CurrentSettings.ModeSwitches) and
             { only allow for comparisons, additions etc are }
             { normally program errors                       }
-            (nodetype in [ltn,lten,gtn,gten,unequaln,EqualN]) and
-            (((lt=stringconstn) and
-              (TStringConstNode(left).len=4) and
-              (rd.typ=orddef)) or
-             ((rt=stringconstn) and
-              (TStringConstNode(right).len=4) and
-              (ld.typ=orddef))) then
+            (NodeType in [ltn,lten,gtn,gten,unequaln,EqualN]) and
+            (((lLeftNodeType=stringconstn) and
+              (TStringConstNode(Left).len=4) and
+              (lRightDef.typ=orddef)) or
+             ((lRightNodeType=stringconstn) and
+              (TStringConstNode(Right).len=4) and
+              (lLeftDef.typ=orddef))) then
            begin
-             if (rt=stringconstn) then
+             if (lRightNodeType=stringconstn) then
                begin
-                 inserttypeconv(right,U32IntType);
-                 rt:=right.nodetype;
-                 rd:=right.resultdef;
+                 InsertTypeConv(Right,U32IntType);
+                 lRightNodeType:=Right.NodeType;
+                 lRightDef:=Right.ResultDef;
                end
              else
                begin
-                 inserttypeconv(left,U32IntType);
-                 lt:=left.nodetype;
-                 ld:=left.resultdef;
+                 InsertTypeConv(Left,U32IntType);
+                 lLeftNodeType:=Left.NodeType;
+                 lLeftDef:=Left.ResultDef;
                end;
            end;
 
          { but an int/int gives real/real! }
-         if (nodetype=slashn) and not(Is_Vector(left.resultdef)) and not(Is_Vector(right.resultdef)) then
+         if (NodeType=slashn) and not(Is_Vector(Left.ResultDef)) and not(Is_Vector(Right.ResultDef)) then
           begin
-            if Is_Currency(left.resultdef) and
-               Is_Currency(right.resultdef) then
+            if Is_Currency(Left.ResultDef) and
+               Is_Currency(Right.ResultDef) then
               { In case of currency, converting to float means dividing by 10000 }
               { However, since this is already a division, both divisions by     }
               { 10000 are eliminated when we divide the results -> we can skip   }
@@ -2511,36 +2511,36 @@ const
                 end
               else
                 begin
-                  left.resultdef := S64IntType;
-                  right.resultdef := S64IntType;
+                  Left.ResultDef := S64IntType;
+                  Right.ResultDef := S64IntType;
                 end;
-            inserttypeconv(right,resultrealdef);
-            inserttypeconv(left,resultrealdef);
+            InsertTypeConv(Right,ResultRealDef);
+            InsertTypeConv(Left,ResultRealDef);
           end
 
          { if both are orddefs then check sub types }
-         else if (ld.typ=orddef) and (rd.typ=orddef) then
+         else if (lLeftDef.typ=orddef) and (lRightDef.typ=orddef) then
            begin
               { set for & and | operations in macpas mode: they only work on }
               { booleans, and always short circuit evaluation                }
-              if (anf_short_bool in addnodeflags) then
+              if (anf_short_bool in AddNodeFlags) then
                 begin
-                  if not Is_Boolean(ld) then
+                  if not Is_Boolean(lLeftDef) then
                     begin
-                      inserttypeconv(left,PasBool1Type);
-                      ld := left.resultdef;
+                      InsertTypeConv(Left,PasBool1Type);
+                      lLeftDef := Left.ResultDef;
                     end;
-                  if not Is_Boolean(rd) then
+                  if not Is_Boolean(lRightDef) then
                     begin
-                      inserttypeconv(right,PasBool1Type);
-                      rd := right.resultdef;
+                      InsertTypeConv(Right,PasBool1Type);
+                      lRightDef := Right.ResultDef;
                     end;
                 end;
 
              { 2 booleans? }
-             if (Is_Boolean(ld) and Is_Boolean(rd)) then
+             if (Is_Boolean(lLeftDef) and Is_Boolean(lRightDef)) then
               begin
-                case nodetype of
+                case NodeType of
                   xorn,
                   andn,
                   orn:
@@ -2548,47 +2548,47 @@ const
                       { in case of xor or 'and' with cbool: convert both to Pascal bool and then
                         perform the xor/and to prevent issues with "longbool(1) and/xor
                         longbool(2)" }
-                      if (Is_CBool(ld) or Is_CBool(rd)) and
-                         (nodetype in [xorn,andn]) then
+                      if (Is_CBool(lLeftDef) or Is_CBool(lRightDef)) and
+                         (NodeType in [xorn,andn]) then
                         begin
-                          resultdef:=nil;
-                          if Is_CBool(ld) then
+                          ResultDef:=nil;
+                          if Is_CBool(lLeftDef) then
                             begin
-                              left:=CTypeConvNode.create(left,PasBool8Type);
-                              TTypeConvNode(left).convtype:=tc_bool_2_bool;
-                              FirstPass(left);
-                              if not Is_CBool(rd) or
-                                 (ld.Size>=rd.Size) then
-                                resultdef:=ld;
+                              Left:=CTypeConvNode.Create(Left,PasBool8Type);
+                              TTypeConvNode(Left).ConvType:=tc_bool_2_bool;
+                              FirstPass(Left);
+                              if not Is_CBool(lRightDef) or
+                                 (lLeftDef.Size>=lRightDef.Size) then
+                                ResultDef:=lLeftDef;
                             end;
-                          if Is_CBool(rd) then
+                          if Is_CBool(lRightDef) then
                             begin
-                              right:=CTypeConvNode.Create(right,PasBool8Type);
-                              TTypeConvNode(right).convtype:=tc_bool_2_bool;
-                              FirstPass(right);
-                              if not Assigned(resultdef) then
-                                resultdef:=rd;
+                              Right:=CTypeConvNode.Create(Right,PasBool8Type);
+                              TTypeConvNode(Right).ConvType:=tc_bool_2_bool;
+                              FirstPass(Right);
+                              if not Assigned(ResultDef) then
+                                ResultDef:=lRightDef;
                             end;
-                          result:=CTypeConvNode.create_explicit(CAddNode.create(nodetype,left,right),resultdef);
-                          TTypeConvNode(result).convtype:=tc_bool_2_bool;
-                          left:=nil;
-                          right:=nil;
+                          Result:=CTypeConvNode.Create_Explicit(CAddNode.Create(NodeType,Left,Right),ResultDef);
+                          TTypeConvNode(Result).ConvType:=tc_bool_2_bool;
+                          Left:=nil;
+                          Right:=nil;
                           exit;
                         end;
                       { Make sides equal to the largest boolean }
-                      if (TOrdDef(left.resultdef).Size>TOrdDef(right.resultdef).Size) or
-                        (Is_CBool(left.resultdef) and not Is_CBool(right.resultdef)) then
+                      if (TOrdDef(Left.ResultDef).Size>TOrdDef(Right.ResultDef).Size) or
+                        (Is_CBool(Left.ResultDef) and not Is_CBool(Right.ResultDef)) then
                         begin
-                          right:=CTypeConvNode.Create_Internal(right,left.resultdef);
-                          TTypeConvNode(right).convtype:=tc_bool_2_bool;
-                          TypeCheckPass(right);
+                          Right:=CTypeConvNode.Create_Internal(Right,Left.ResultDef);
+                          TTypeConvNode(Right).ConvType:=tc_bool_2_bool;
+                          TypeCheckPass(Right);
                         end
-                      else if (TOrdDef(left.resultdef).Size<TOrdDef(right.resultdef).Size) or
-                        (not Is_CBool(left.resultdef) and Is_CBool(right.resultdef)) then
+                      else if (TOrdDef(Left.ResultDef).Size<TOrdDef(Right.ResultDef).Size) or
+                        (not Is_CBool(Left.ResultDef) and Is_CBool(Right.ResultDef)) then
                         begin
-                          left:=CTypeConvNode.Create_Internal(left,right.resultdef);
-                          TTypeConvNode(left).convtype:=tc_bool_2_bool;
-                          TypeCheckPass(left);
+                          Left:=CTypeConvNode.Create_Internal(Left,Right.ResultDef);
+                          TTypeConvNode(Left).ConvType:=tc_bool_2_bool;
+                          TypeCheckPass(Left);
                         end;
                     end;
                   ltn,
@@ -2599,124 +2599,124 @@ const
                       { convert both to pasbool to perform the comparison (so
                         that longbool(4) = longbool(2), since both represent
                         "true" }
-                      inserttypeconv(left,PasBool1Type);
-                      inserttypeconv(right,PasBool1Type);
+                      InsertTypeConv(Left,PasBool1Type);
+                      InsertTypeConv(Right,PasBool1Type);
                     end;
                   unequaln,
                   EqualN:
                     begin
                       { Remove any compares with constants }
-                      if (left.nodetype=ordconstn) then
+                      if (Left.NodeType=ordconstn) then
                         begin
-                          hp:=right;
-                          b:=(TOrdConstNode(left).Value<>0);
-                          ot:=nodetype;
-                          right:=nil;
-                          if (not(b) and (ot=EqualN)) or
-                             (b and (ot=unequaln)) then
+                          lNode:=Right;
+                          lValueInRange:=(TOrdConstNode(Left).Value<>0);
+                          lOldNodeType:=NodeType;
+                          Right:=nil;
+                          if (not(lValueInRange) and (lOldNodeType=EqualN)) or
+                             (lValueInRange and (lOldNodeType=unequaln)) then
                            begin
-                             hp:=CNotNode.create(hp);
+                             lNode:=CNotNode.Create(lNode);
                            end;
-                          result:=hp;
+                          Result:=lNode;
                           exit;
                         end;
-                      if (right.nodetype=ordconstn) then
+                      if (Right.NodeType=ordconstn) then
                         begin
-                          hp:=left;
-                          b:=(TOrdConstNode(right).Value<>0);
-                          ot:=nodetype;
-                          left:=nil;
-                          if (not(b) and (ot=EqualN)) or
-                             (b and (ot=unequaln)) then
+                          lNode:=Left;
+                          lValueInRange:=(TOrdConstNode(Right).Value<>0);
+                          lOldNodeType:=NodeType;
+                          Left:=nil;
+                          if (not(lValueInRange) and (lOldNodeType=EqualN)) or
+                             (lValueInRange and (lOldNodeType=unequaln)) then
                            begin
-                             hp:=CNotNode.create(hp);
+                             lNode:=CNotNode.Create(lNode);
                            end;
-                          result:=hp;
+                          Result:=lNode;
                           exit;
                         end;
                       { Delphi-compatibility: convert both to pasbool to
                         perform the equality comparison }
-                      inserttypeconv(left,PasBool1Type);
-                      inserttypeconv(right,PasBool1Type);
+                      InsertTypeConv(Left,PasBool1Type);
+                      InsertTypeConv(Right,PasBool1Type);
                     end;
                   else
                     begin
-                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-                      result:=CNothingNode.create;
+                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                      Result:=CNothingNode.Create;
                       exit;
                     end;
                 end;
               end
              { Both are chars? }
-             else if Is_Char(rd) and Is_Char(ld) then
+             else if Is_Char(lRightDef) and Is_Char(lLeftDef) then
                begin
-                 if nodetype=addn then
+                 if NodeType=addn then
                   begin
-                    resultdef:=CShortStringType;
-                    if not(is_constcharnode(left) and is_constcharnode(right)) then
+                    ResultDef:=CShortStringType;
+                    if not(Is_ConstCharNode(Left) and Is_ConstCharNode(Right)) then
                      begin
-                       inserttypeconv(left,CShortStringType);
+                       InsertTypeConv(Left,CShortStringType);
 {$ifdef addstringopt}
-                       hp := genaddsstringcharoptnode(self);
-                       result := hp;
+                       lNode := genaddsstringcharoptnode(Self);
+                       Result := lNode;
                        exit;
 {$endif addstringopt}
                      end
                   end
-                else if not(nodetype in [ltn,lten,gtn,gten,unequaln,EqualN]) then
+                else if not(NodeType in [ltn,lten,gtn,gten,unequaln,EqualN]) then
                   begin
-                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-                    result:=CNothingNode.create;
+                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                    Result:=CNothingNode.Create;
                     exit;
                   end;
                end
              { There is a widechar? }
-             else if Is_WideChar(rd) or Is_WideChar(ld) then
+             else if Is_WideChar(lRightDef) or Is_WideChar(lLeftDef) then
                begin
                  { widechar+widechar gives unicodestring }
-                 if nodetype=addn then
+                 if NodeType=addn then
                    begin
-                     inserttypeconv(left,CUnicodeStringType);
-                     if (TOrdDef(rd).OrdType<>uwidechar) then
-                       inserttypeconv(right,CWideCharType);
-                     resultdef:=CUnicodeStringType;
+                     InsertTypeConv(Left,CUnicodeStringType);
+                     if (TOrdDef(lRightDef).OrdType<>uwidechar) then
+                       InsertTypeConv(Right,CWideCharType);
+                     ResultDef:=CUnicodeStringType;
                    end
                  else
                    begin
-                     if (TOrdDef(ld).OrdType<>uwidechar) then
-                       inserttypeconv(left,CWideCharType);
-                     if (TOrdDef(rd).OrdType<>uwidechar) then
-                       inserttypeconv(right,CWideCharType);
+                     if (TOrdDef(lLeftDef).OrdType<>uwidechar) then
+                       InsertTypeConv(Left,CWideCharType);
+                     if (TOrdDef(lRightDef).OrdType<>uwidechar) then
+                       InsertTypeConv(Right,CWideCharType);
                    end;
                end
              { is there a currency type ? }
-             else if ((TOrdDef(rd).OrdType=scurrency) or (TOrdDef(ld).OrdType=scurrency)) then
+             else if ((TOrdDef(lRightDef).OrdType=scurrency) or (TOrdDef(lLeftDef).OrdType=scurrency)) then
                begin
-                 if (nodetype=muln) and
+                 if (NodeType=muln) and
                    { Is only one currency? }
                    (
-                     (TOrdDef(ld).OrdType=scurrency) xor (TOrdDef(rd).OrdType=scurrency)
+                     (TOrdDef(lLeftDef).OrdType=scurrency) xor (TOrdDef(lRightDef).OrdType=scurrency)
                    ) then
                    begin
                      { Don't actually set the nf_is_currency flag, as it doesn't
                        need scaling }
-                     if (TOrdDef(ld).OrdType<>scurrency) then
+                     if (TOrdDef(lLeftDef).OrdType<>scurrency) then
                        begin
-                         left:=CTypeConvNode.Create_Internal(left,S64CurrencyType);
-                         TypeCheckPass(left);
+                         Left:=CTypeConvNode.Create_Internal(Left,S64CurrencyType);
+                         TypeCheckPass(Left);
                        end
                      else
                        begin
-                         right:=CTypeConvNode.Create_Internal(right,S64CurrencyType);
-                         TypeCheckPass(right);
+                         Right:=CTypeConvNode.Create_Internal(Right,S64CurrencyType);
+                         TypeCheckPass(Right);
                        end;
                    end
                  else
                    begin
-                     if (TOrdDef(ld).OrdType<>scurrency) then
-                       inserttypeconv(left,S64CurrencyType);
-                     if (TOrdDef(rd).OrdType<>scurrency) then
-                       inserttypeconv(right,S64CurrencyType);
+                     if (TOrdDef(lLeftDef).OrdType<>scurrency) then
+                       InsertTypeConv(Left,S64CurrencyType);
+                     if (TOrdDef(lRightDef).OrdType<>scurrency) then
+                       InsertTypeConv(Right,S64CurrencyType);
                    end;
                end
              { leave some constant integer expressions alone in case the
@@ -2724,9 +2724,9 @@ const
                because the forced type conversions below can otherwise result
                in unexpected results (such as high(qword)<high(int64) returning
                true because high(qword) gets converted to int64) }
-             else if Is_Integer(ld) and Is_Integer(rd) and
-                     (lt=ordconstn) and (rt=ordconstn) and
-                     (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) then
+             else if Is_Integer(lLeftDef) and Is_Integer(lRightDef) and
+                     (lLeftNodeType=ordconstn) and (lRightNodeType=ordconstn) and
+                     (NodeType in [EqualN,unequaln,gtn,gten,ltn,lten]) then
                begin
                end
              { "and" does't care about the sign of integers }
@@ -2736,91 +2736,91 @@ const
              { occupy an entire register                                   }
              { don't do it if either type is 64 bit (except for "and"),    }
              { since in that case we can't safely find a "common" type     }
-             else if Is_Integer(ld) and Is_Integer(rd) and
-                     ((nodetype=andn) or
-                      ((nodetype in [orn,xorn,EqualN,unequaln,gtn,gten,ltn,lten]) and
-                        not Is_64BitInt(ld) and not Is_64BitInt(rd) and
-                       (Is_Signed(ld)=Is_Signed(rd)))) then
+             else if Is_Integer(lLeftDef) and Is_Integer(lRightDef) and
+                     ((NodeType=andn) or
+                      ((NodeType in [orn,xorn,EqualN,unequaln,gtn,gten,ltn,lten]) and
+                        not Is_64BitInt(lLeftDef) and not Is_64BitInt(lRightDef) and
+                       (Is_Signed(lLeftDef)=Is_Signed(lRightDef)))) then
                begin
                  { Delphi-compatible: prefer unsigned type for "and", when the
                    unsigned type is bigger than the signed one, and also bigger
                    than min(native_int, 32-bit) }
-                 if (Is_OversizedInt(rd) or Is_NativeInt(rd) or Is_32BitInt(rd)) and
-                    (rd.Size>=ld.Size) and
-                    not Is_Signed(rd) and Is_Signed(ld) then
-                      inserttypeconv_internal(left,rd)
-                 else if (Is_OversizedInt(ld) or Is_NativeInt(ld) or Is_32BitInt(ld)) and
-                    (ld.Size>=rd.Size) and
-                    not Is_Signed(ld) and Is_Signed(rd) then
-                      inserttypeconv_internal(right,ld)
+                 if (Is_OversizedInt(lRightDef) or Is_NativeInt(lRightDef) or Is_32BitInt(lRightDef)) and
+                    (lRightDef.Size>=lLeftDef.Size) and
+                    not Is_Signed(lRightDef) and Is_Signed(lLeftDef) then
+                      InsertTypeConv_Internal(Left,lRightDef)
+                 else if (Is_OversizedInt(lLeftDef) or Is_NativeInt(lLeftDef) or Is_32BitInt(lLeftDef)) and
+                    (lLeftDef.Size>=lRightDef.Size) and
+                    not Is_Signed(lLeftDef) and Is_Signed(lRightDef) then
+                      InsertTypeConv_Internal(Right,lLeftDef)
                  else
                    begin
                      { not to left right.resultdef, because that may
                        cause a range error if left and right's def don't
                        completely overlap }
-                     nd:=Get_Common_IntDef(TOrdDef(ld),TOrdDef(rd),true);
-                     inserttypeconv(left,nd);
-                     inserttypeconv(right,nd);
+                     lNodeDef:=Get_Common_IntDef(TOrdDef(lLeftDef),TOrdDef(lRightDef),true);
+                     InsertTypeConv(Left,lNodeDef);
+                     InsertTypeConv(Right,lNodeDef);
                    end;
                end
              { don't extend (sign-mismatched) comparisons if either side is a constant
                whose value is within range of opposite side }
-             else if Is_Integer(ld) and Is_Integer(rd) and
-                     (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) and
-                     (Is_Signed(ld)<>Is_Signed(rd)) and
+             else if Is_Integer(lLeftDef) and Is_Integer(lRightDef) and
+                     (NodeType in [EqualN,unequaln,gtn,gten,ltn,lten]) and
+                     (Is_Signed(lLeftDef)<>Is_Signed(lRightDef)) and
                      (
-                       ((lt=ordconstn) and maybe_cast_ordconst(left,rd)) or
-                       ((rt=ordconstn) and maybe_cast_ordconst(right,ld))
+                       ((lLeftNodeType=ordconstn) and MaybeCastOrdConst(Left,lRightDef)) or
+                       ((lRightNodeType=ordconstn) and MaybeCastOrdConst(Right,lLeftDef))
                      ) then
                begin
                  { done here }
                end
              { is there a signed 64 bit type ? }
-             else if ((TOrdDef(rd).OrdType=s64bit) or (TOrdDef(ld).OrdType=s64bit)) then
+             else if ((TOrdDef(lRightDef).OrdType=s64bit) or (TOrdDef(lLeftDef).OrdType=s64bit)) then
                begin
-                  if (TOrdDef(ld).OrdType<>s64bit) then
-                   inserttypeconv(left,S64IntType);
-                  if (TOrdDef(rd).OrdType<>s64bit) then
-                   inserttypeconv(right,S64IntType);
+                  if (TOrdDef(lLeftDef).OrdType<>s64bit) then
+                   InsertTypeConv(Left,S64IntType);
+                  if (TOrdDef(lRightDef).OrdType<>s64bit) then
+                   InsertTypeConv(Right,S64IntType);
                end
              { is there a unsigned 64 bit type ? }
-             else if ((TOrdDef(rd).OrdType=u64bit) or (TOrdDef(ld).OrdType=u64bit)) then
+             else if ((TOrdDef(lRightDef).OrdType=u64bit) or (TOrdDef(lLeftDef).OrdType=u64bit)) then
                begin
-                  if (TOrdDef(ld).OrdType<>u64bit) then
-                   inserttypeconv(left,U64IntType);
-                  if (TOrdDef(rd).OrdType<>u64bit) then
-                   inserttypeconv(right,U64IntType);
+                  if (TOrdDef(lLeftDef).OrdType<>u64bit) then
+                   InsertTypeConv(Left,U64IntType);
+                  if (TOrdDef(lRightDef).OrdType<>u64bit) then
+                   InsertTypeConv(Right,U64IntType);
                end
              { is there a larger int? }
-             else if Is_OversizedInt(rd) or Is_OversizedInt(ld) then
+             else if Is_OversizedInt(lRightDef) or Is_OversizedInt(lLeftDef) then
                begin
-                 nd:=Get_Common_IntDef(TOrdDef(ld),TOrdDef(rd),false);
-                 inserttypeconv(right,nd);
-                 inserttypeconv(left,nd);
+                 lNodeDef:=Get_Common_IntDef(TOrdDef(lLeftDef),TOrdDef(lRightDef),false);
+                 InsertTypeConv(Right,lNodeDef);
+                 InsertTypeConv(Left,lNodeDef);
                end
              { is there a native unsigned int? }
-             else if Is_NativeUInt(rd) or Is_NativeUInt(ld) then
+             else if Is_NativeUInt(lRightDef) or Is_NativeUInt(lLeftDef) then
                begin
                  { convert positive constants to uinttype }
-                 if (not Is_NativeUInt(ld)) and
-                    is_constintnode(left) and
-                    (TOrdConstNode(left).Value >= 0) then
-                   inserttypeconv(left,UIntType);
-                 if (not Is_NativeUInt(rd)) and
-                    is_constintnode(right) and
-                    (TOrdConstNode(right).Value >= 0) then
-                   inserttypeconv(right,UIntType);
+                 if (not Is_NativeUInt(lLeftDef)) and
+                    Is_ConstIntNode(Left) and
+                    (TOrdConstNode(Left).Value >= 0) then
+                   InsertTypeConv(Left,UIntType);
+                 if (not Is_NativeUInt(lRightDef)) and
+                    Is_ConstIntNode(Right) and
+                    (TOrdConstNode(Right).Value >= 0) then
+                   InsertTypeConv(Right,UIntType);
                  { when one of the operand is signed or the operation is subn then perform
                    the operation in a larger signed type, can't use rd/ld here because there
                    could be already typeconvs inserted.
                    This is compatible with the code below for other unsigned types (PFV) }
-                 if Is_Signed(left.resultdef) or
-                    Is_Signed(right.resultdef) or
-                    ((nodetype=subn)
+                 if Is_Signed(Left.ResultDef) or
+                    Is_Signed(Right.ResultDef) or
+                    ((NodeType=subn)
 
                     ) then
                    begin
-                     if nodetype<>subn then
+                     if NodeType<>subn then
                        CGMessage(type_h_mixed_signed_unsigned);
                      { mark as internal in case added for a subn, so }
                      { ttypeconvnode.simplify can remove the larger  }
@@ -2829,21 +2829,21 @@ const
                      { mustn't do it here because that would change  }
                      { overload choosing behaviour etc. The code in  }
                      { ncnv.pas is run after that is already decided }
-                     if (not Is_Signed(left.resultdef) and
-                         not Is_Signed(right.resultdef)) or
-                        (nodetype in [orn,xorn]) then
-                       include(flags,nf_internal);
+                     if (not Is_Signed(Left.ResultDef) and
+                         not Is_Signed(Right.ResultDef)) or
+                        (NodeType in [orn,xorn]) then
+                       include(Flags,nf_internal);
                      { get next larger signed int type }
-                     nd:=Get_Common_IntDef(TOrdDef(SIntType),TOrdDef(UIntType),false);
-                     inserttypeconv(left,nd);
-                     inserttypeconv(right,nd);
+                     lNodeDef:=Get_Common_IntDef(TOrdDef(SIntType),TOrdDef(UIntType),false);
+                     InsertTypeConv(Left,lNodeDef);
+                     InsertTypeConv(Right,lNodeDef);
                    end
                  else
                    begin
-                     if not Is_NativeUInt(left.resultdef) then
-                       inserttypeconv(left,UIntType);
-                     if not Is_NativeUInt(right.resultdef) then
-                       inserttypeconv(right,UIntType);
+                     if not Is_NativeUInt(Left.ResultDef) then
+                       InsertTypeConv(Left,UIntType);
+                     if not Is_NativeUInt(Right.ResultDef) then
+                       InsertTypeConv(Right,UIntType);
                    end;
                end
              { generic ord conversion is sinttype }
@@ -2853,45 +2853,45 @@ const
                    or in TP mode for 16-bit CPUs
                    we convert to signed int. Otherwise (both are unsigned) we keep
                    the result also unsigned. This is compatible with Delphi (PFV) }
-                 if Is_Signed(ld) or
-                    Is_Signed(rd) or
+                 if Is_Signed(lLeftDef) or
+                    Is_Signed(lRightDef) or
                     (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) or
 
-                    (nodetype=subn) then
+                    (NodeType=subn) then
                    begin
-                     inserttypeconv(right,SIntType);
-                     inserttypeconv(left,SIntType);
+                     InsertTypeConv(Right,SIntType);
+                     InsertTypeConv(Left,SIntType);
                    end
                  else
                    begin
-                     inserttypeconv(right,UIntType);
-                     inserttypeconv(left,UIntType);
+                     InsertTypeConv(Right,UIntType);
+                     InsertTypeConv(Left,UIntType);
                    end;
                end;
            end
 
          { if both are floatdefs, conversion is already done before constant folding }
-         else if (ld.typ=floatdef) then
+         else if (lLeftDef.typ=floatdef) then
            begin
-             if not(nodetype in [addn,subn,muln,slashn,EqualN,unequaln,ltn,lten,gtn,gten]) then
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+             if not(NodeType in [addn,subn,muln,slashn,EqualN,unequaln,ltn,lten,gtn,gten]) then
+               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
            end
 
          { left side a setdef, must be before string processing,
            else array constructor can be seen as array of char (PFV) }
-         else if (ld.typ=setdef) then
+         else if (lLeftDef.typ=setdef) then
           begin
-             if not(nodetype in [addn,subn,symdifn,muln,EqualN,unequaln,lten,gten]) then
+             if not(NodeType in [addn,subn,symdifn,muln,EqualN,unequaln,lten,gten]) then
               CGMessage(type_e_set_operation_unknown);
              { right must either be a set or a set element }
-             if (rd.typ<>setdef) and
-                (rt<>setelementn) then
+             if (lRightDef.typ<>setdef) and
+                (lRightNodeType<>setelementn) then
                CGMessage(type_e_mismatch)
              { Make operands the same setdef. If one's elementtype fits   }
              { entirely inside the other's, pick the one with the largest }
              { range.  Otherwise create a new setdef with a range which   }
              { can contain both.                                          }
-             else if not(Equal_Defs(ld,rd)) then
+             else if not(Equal_Defs(lLeftDef,lRightDef)) then
               begin
                 { note: ld cannot be an empty set with elementdef=nil in }
                 { case right is not a set, arrayconstructor_to_set takes }
@@ -2900,160 +2900,160 @@ const
                 { 1: rd is a set with an assigned elementdef, and ld is    }
                 {    either an empty set without elementdef or a set whose }
                 {    elementdef fits in rd's elementdef -> convert to rd   }
-                if ((rd.typ=setdef) and
-                    Assigned(TSetDef(rd).ElementDef) and
-                    (not Assigned(TSetDef(ld).ElementDef) or
-                     Is_In_Limit(ld,rd))) then
-                  inserttypeconv(left,rd)
+                if ((lRightDef.typ=setdef) and
+                    Assigned(TSetDef(lRightDef).ElementDef) and
+                    (not Assigned(TSetDef(lLeftDef).ElementDef) or
+                     Is_In_Limit(lLeftDef,lRightDef))) then
+                  InsertTypeConv(Left,lRightDef)
                 { 2: rd is either an empty set without elementdef or a set }
                 {    whose elementdef fits in ld's elementdef, or a set    }
                 {    element whose def fits in ld's elementdef -> convert  }
                 {    to ld. ld's elementdef can't be nil here, is caught   }
                 {    previous case and "note:" above                       }
-                else if ((rd.typ=setdef) and
-                         (not Assigned(TSetDef(rd).ElementDef) or
-                          Is_In_Limit(rd,ld))) or
-                        ((rd.typ<>setdef) and
-                         Is_In_Limit(rd,TSetDef(ld).ElementDef)) then
-                   if (rd.typ=setdef) then
-                    inserttypeconv(right,ld)
+                else if ((lRightDef.typ=setdef) and
+                         (not Assigned(TSetDef(lRightDef).ElementDef) or
+                          Is_In_Limit(lRightDef,lLeftDef))) or
+                        ((lRightDef.typ<>setdef) and
+                         Is_In_Limit(lRightDef,TSetDef(lLeftDef).ElementDef)) then
+                   if (lRightDef.typ=setdef) then
+                    InsertTypeConv(Right,lLeftDef)
                   else
-                    inserttypeconv(right,TSetDef(ld).ElementDef)
+                    InsertTypeConv(Right,TSetDef(lLeftDef).ElementDef)
                 { 3: otherwise create setdef which encompasses both, taking }
                 {    into account empty sets without elementdef             }
                 else
                   begin
-                    if Assigned(TSetDef(ld).ElementDef) then
+                    if Assigned(TSetDef(lLeftDef).ElementDef) then
                       begin
-                        llow:=TSetDef(ld).SetLow;
-                        lhigh:=TSetDef(ld).SetMax;
+                        lLeftLow:=TSetDef(lLeftDef).SetLow;
+                        lLeftHigh:=TSetDef(lLeftDef).SetMax;
                       end;
-                    if (rd.typ=setdef) then
-                      if Assigned(TSetDef(rd).ElementDef) then
+                    if (lRightDef.typ=setdef) then
+                      if Assigned(TSetDef(lRightDef).ElementDef) then
                         begin
-                          rlow:=TSetDef(rd).SetLow;
-                          rhigh:=TSetDef(rd).SetMax;
+                          lRightLow:=TSetDef(lRightDef).SetLow;
+                          lRightHigh:=TSetDef(lRightDef).SetMax;
                         end
                       else
                         begin
                           { ld's elementdef must have been valid }
-                          rlow:=llow;
-                          rhigh:=lhigh;
+                          lRightLow:=lLeftLow;
+                          lRightHigh:=lLeftHigh;
                         end
                     else
-                      GetRange(rd,rlow,rhigh);
-                    if not Assigned(TSetDef(ld).ElementDef) then
+                      GetRange(lRightDef,lRightLow,lRightHigh);
+                    if not Assigned(TSetDef(lLeftDef).ElementDef) then
                       begin
-                        llow:=rlow;
-                        lhigh:=rhigh;
+                        lLeftLow:=lRightLow;
+                        lLeftHigh:=lRightHigh;
                       end;
-                    nd:=CSetDef.create(TSetDef(ld).ElementDef,min(llow,rlow).svalue,max(lhigh,rhigh).svalue,true);
-                    inserttypeconv(left,nd);
-                    if (rd.typ=setdef) then
-                      inserttypeconv(right,nd)
+                    lNodeDef:=CSetDef.Create(TSetDef(lLeftDef).ElementDef,min(lLeftLow,lRightLow).svalue,max(lLeftHigh,lRightHigh).svalue,true);
+                    InsertTypeConv(Left,lNodeDef);
+                    if (lRightDef.typ=setdef) then
+                      InsertTypeConv(Right,lNodeDef)
                     else
-                       inserttypeconv(right,TSetDef(nd).ElementDef);
+                       InsertTypeConv(Right,TSetDef(lNodeDef).ElementDef);
                   end;
               end;
           end
          { pointer comparison and subtraction }
          else if (
-                  (rd.typ=pointerdef) and (ld.typ=pointerdef)
+                  (lRightDef.typ=pointerdef) and (lLeftDef.typ=pointerdef)
                  ) or
                  { compare/add pchar to variable (not stringconst) char arrays
                    by addresses like BP/Delphi }
                  (
-                  (nodetype in [EqualN,unequaln,subn,addn]) and
+                  (NodeType in [EqualN,unequaln,subn,addn]) and
                   (
-                   ((Is_PChar(ld) or (lt=niln)) and Is_CharArray(rd) and (rt<>stringconstn)) or
-                   ((Is_PChar(rd) or (rt=niln)) and Is_CharArray(ld) and (lt<>stringconstn))
+                   ((Is_PChar(lLeftDef) or (lLeftNodeType=niln)) and Is_CharArray(lRightDef) and (lRightNodeType<>stringconstn)) or
+                   ((Is_PChar(lRightDef) or (lRightNodeType=niln)) and Is_CharArray(lLeftDef) and (lLeftNodeType<>stringconstn))
                   )
                  ) then
           begin
             { convert char array to pointer }
-            if Is_CharArray(rd) then
+            if Is_CharArray(lRightDef) then
               begin
-                inserttypeconv(right,CharPointerType);
-                rd:=right.resultdef;
+                InsertTypeConv(Right,CharPointerType);
+                lRightDef:=Right.ResultDef;
               end
-            else if Is_CharArray(ld) then
+            else if Is_CharArray(lLeftDef) then
               begin
-                inserttypeconv(left,CharPointerType);
-                ld:=left.resultdef;
+                InsertTypeConv(Left,CharPointerType);
+                lLeftDef:=Left.ResultDef;
               end;
 
-            case nodetype of
+            case NodeType of
                EqualN,unequaln :
                  begin
-                    if Is_VoidPointer(right.resultdef) then
-                      inserttypeconv(right,left.resultdef)
-                    else if Is_VoidPointer(left.resultdef) then
-                      inserttypeconv(left,right.resultdef)
-                    else if not(Equal_Defs(ld,rd)) then
-                      IncompatibleTypes(ld,rd);
+                    if Is_VoidPointer(Right.ResultDef) then
+                      InsertTypeConv(Right,Left.ResultDef)
+                    else if Is_VoidPointer(Left.ResultDef) then
+                      InsertTypeConv(Left,Right.ResultDef)
+                    else if not(Equal_Defs(lLeftDef,lRightDef)) then
+                      IncompatibleTypes(lLeftDef,lRightDef);
                  end;
                ltn,lten,gtn,gten:
                  begin
                     if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
-                       (nf_internal in flags) then
+                       (nf_internal in Flags) then
                      begin
-                       if Is_VoidPointer(right.resultdef) then
-                        inserttypeconv(right,left.resultdef)
-                       else if Is_VoidPointer(left.resultdef) then
-                        inserttypeconv(left,right.resultdef)
+                       if Is_VoidPointer(Right.ResultDef) then
+                        InsertTypeConv(Right,Left.ResultDef)
+                       else if Is_VoidPointer(Left.ResultDef) then
+                        InsertTypeConv(Left,Right.ResultDef)
                        else if not (
                            { in Delphi two different pointer types can be compared
                              if either $POINTERMATH is currently enabled or if
                              both pointer defs were declared with $POINTERMATH
                              enabled }
                            (m_delphi in CurrentSettings.ModeSwitches) and
-                           (ld.typ=pointerdef) and
-                           (rd.typ=pointerdef) and
+                           (lLeftDef.typ=pointerdef) and
+                           (lRightDef.typ=pointerdef) and
                            (
                              (cs_pointermath in CurrentSettings.LocalSwitches) or
                              (
-                               TPointerDef(ld).HasPointerMath and
-                               TPointerDef(rd).HasPointerMath
+                               TPointerDef(lLeftDef).HasPointerMath and
+                               TPointerDef(lRightDef).HasPointerMath
                              )
                            )
-                         ) and not(Equal_Defs(ld,rd)) then
-                        IncompatibleTypes(ld,rd);
+                         ) and not(Equal_Defs(lLeftDef,lRightDef)) then
+                        IncompatibleTypes(lLeftDef,lRightDef);
                      end
                     else
-                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
                  end;
                subn:
                  begin
                     if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
-                       (nf_internal in flags) then
+                       (nf_internal in Flags) then
                       begin
-                        if Is_VoidPointer(right.resultdef) then
+                        if Is_VoidPointer(Right.ResultDef) then
                         begin
-                          if is_big_untyped_addrnode(right) then
-                            CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
-                          inserttypeconv(right,left.resultdef)
+                          if Is_Big_Untyped_AddrNode(Right) then
+                            CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(NodeType));
+                          InsertTypeConv(Right,Left.ResultDef)
                         end
-                        else if Is_VoidPointer(left.resultdef) then
-                          inserttypeconv(left,right.resultdef)
-                        else if not(Equal_Defs(ld,rd)) then
-                          IncompatibleTypes(ld,rd);
+                        else if Is_VoidPointer(Left.ResultDef) then
+                          InsertTypeConv(Left,Right.ResultDef)
+                        else if not(Equal_Defs(lLeftDef,lRightDef)) then
+                          IncompatibleTypes(lLeftDef,lRightDef);
                       end
                     else
-                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+                      CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
 
-                    if not(anf_has_pointerdiv in addnodeflags) and
-                      (TPointerDef(rd).PointedDef.Size>1) then
+                    if not(anf_has_pointerdiv in AddNodeFlags) and
+                      (TPointerDef(lRightDef).PointedDef.Size>1) then
                       begin
-                        hp:=GetCopy;
-                        include(TAddNode(hp).addnodeflags, anf_has_pointerdiv);
-                        result:=CModDivNode.create(divn,hp,
-                          COrdConstNode.create(TPointerDef(rd).PointedDef.Size,TPointerDef(rd).Pointer_Subtraction_Result_Type,false));
+                        lNode:=GetCopy;
+                        include(TAddNode(lNode).AddNodeFlags, anf_has_pointerdiv);
+                        Result:=CModDivNode.Create(divn,lNode,
+                          COrdConstNode.Create(TPointerDef(lRightDef).PointedDef.Size,TPointerDef(lRightDef).Pointer_Subtraction_Result_Type,false));
                       end;
-                    resultdef:=TPointerDef(rd).Pointer_Subtraction_Result_Type;
+                    ResultDef:=TPointerDef(lRightDef).Pointer_Subtraction_Result_Type;
                     exit;
                  end;
                else
-                 CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+                 CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
             end;
           end
 
@@ -3062,47 +3062,47 @@ const
            care of chararray+chararray and chararray+char.
            Note: Must be done after pointerdef+pointerdef has been checked, else
            pchar is converted to string }
-         else if (rd.typ=stringdef) or
-                 (ld.typ=stringdef) or
+         else if (lRightDef.typ=stringdef) or
+                 (lLeftDef.typ=stringdef) or
                  { stringconstn's can be arraydefs }
-                 (lt=stringconstn) or
-                 (rt=stringconstn) or
-                 ((Is_PChar(rd) or Is_CharArray(rd) or Is_Char(rd) or Is_Open_CharArray(rd) or
-                   Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_WideChar(rd) or Is_Open_WideCharArray(rd)) and
-                  (Is_PChar(ld) or Is_CharArray(ld) or Is_Char(ld) or Is_Open_CharArray(ld) or
-                   Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_WideChar(ld) or Is_Open_WideCharArray(ld))) then
+                 (lLeftNodeType=stringconstn) or
+                 (lRightNodeType=stringconstn) or
+                 ((Is_PChar(lRightDef) or Is_CharArray(lRightDef) or Is_Char(lRightDef) or Is_Open_CharArray(lRightDef) or
+                   Is_PWideChar(lRightDef) or Is_WideCharArray(lRightDef) or Is_WideChar(lRightDef) or Is_Open_WideCharArray(lRightDef)) and
+                  (Is_PChar(lLeftDef) or Is_CharArray(lLeftDef) or Is_Char(lLeftDef) or Is_Open_CharArray(lLeftDef) or
+                   Is_PWideChar(lLeftDef) or Is_WideCharArray(lLeftDef) or Is_WideChar(lLeftDef) or Is_Open_WideCharArray(lLeftDef))) then
           begin
-            if (nodetype in [addn,EqualN,unequaln,lten,gten,ltn,gtn]) then
+            if (NodeType in [addn,EqualN,unequaln,lten,gten,ltn,gtn]) then
               begin
                 { Is there a unicodestring? }
-                if Is_UnicodeString(rd) or Is_UnicodeString(ld) or
+                if Is_UnicodeString(lRightDef) or Is_UnicodeString(lLeftDef) or
                    ((m_default_unicodestring in CurrentSettings.ModeSwitches) and
                     (cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                     (
-                     Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_Open_WideCharArray(rd) or (lt = stringconstn) or
-                     Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_Open_WideCharArray(ld) or (rt = stringconstn)
+                     Is_PWideChar(lRightDef) or Is_WideCharArray(lRightDef) or Is_Open_WideCharArray(lRightDef) or (lLeftNodeType = stringconstn) or
+                     Is_PWideChar(lLeftDef) or Is_WideCharArray(lLeftDef) or Is_Open_WideCharArray(lLeftDef) or (lRightNodeType = stringconstn)
                     )
                    ) then
-                  strtype:=st_unicodestring
+                  lStringType:=st_unicodestring
                 else
                 { Is there a widestring? }
-                  if Is_WideString(rd) or Is_WideString(ld) or
-                     Is_PWideChar(rd) or Is_WideCharArray(rd) or Is_WideChar(rd) or Is_Open_WideCharArray(rd) or
-                     Is_PWideChar(ld) or Is_WideCharArray(ld) or Is_WideChar(ld) or Is_Open_WideCharArray(ld) then
-                    strtype:=st_widestring
+                  if Is_WideString(lRightDef) or Is_WideString(lLeftDef) or
+                     Is_PWideChar(lRightDef) or Is_WideCharArray(lRightDef) or Is_WideChar(lRightDef) or Is_Open_WideCharArray(lRightDef) or
+                     Is_PWideChar(lLeftDef) or Is_WideCharArray(lLeftDef) or Is_WideChar(lLeftDef) or Is_Open_WideCharArray(lLeftDef) then
+                    lStringType:=st_widestring
                 else
-                  if Is_AnsiString(rd) or Is_AnsiString(ld) or
+                  if Is_AnsiString(lRightDef) or Is_AnsiString(lLeftDef) or
                      ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                      //todo: Move some of this to longstring's then they are implemented?
                       (
-                       Is_PChar(rd) or (Is_CharArray(rd) and (rd.Size > 255)) or Is_Open_CharArray(rd) or (lt = stringconstn) or
-                       Is_PChar(ld) or (Is_CharArray(ld) and (ld.Size > 255)) or Is_Open_CharArray(ld) or (rt = stringconstn)
+                       Is_PChar(lRightDef) or (Is_CharArray(lRightDef) and (lRightDef.Size > 255)) or Is_Open_CharArray(lRightDef) or (lLeftNodeType = stringconstn) or
+                       Is_PChar(lLeftDef) or (Is_CharArray(lLeftDef) and (lLeftDef.Size > 255)) or Is_Open_CharArray(lLeftDef) or (lRightNodeType = stringconstn)
                       )
                      ) then
-                    strtype:=st_ansistring
+                    lStringType:=st_ansistring
                 else
-                  if Is_LongString(rd) or Is_LongString(ld) then
-                    strtype:=st_longstring
+                  if Is_LongString(lRightDef) or Is_LongString(lLeftDef) then
+                    lStringType:=st_longstring
                 else
                   begin
                     { TODO: todo: add a warning/hint here if one converting a too large array}
@@ -3110,24 +3110,24 @@ const
                       Note: Delphi halts with error if "array [0..xx] of char"
                            is assigned to ShortString and string length is less
                            then array size }
-                    strtype:= st_shortstring;
+                    lStringType:= st_shortstring;
                   end;
 
                 // Now convert nodes to common string type
-                case strtype of
+                case lStringType of
                   st_widestring :
                     begin
-                      if not(Is_WideString(rd)) then
-                        inserttypeconv(right,CWideStringType);
-                      if not(Is_WideString(ld)) then
-                        inserttypeconv(left,CWideStringType);
+                      if not(Is_WideString(lRightDef)) then
+                        InsertTypeConv(Right,CWideStringType);
+                      if not(Is_WideString(lLeftDef)) then
+                        InsertTypeConv(Left,CWideStringType);
                     end;
                   st_unicodestring :
                     begin
-                      if not(Is_UnicodeString(rd)) then
-                        inserttypeconv(right,CUnicodeStringType);
-                      if not(Is_UnicodeString(ld)) then
-                        inserttypeconv(left,CUnicodeStringType);
+                      if not(Is_UnicodeString(lRightDef)) then
+                        InsertTypeConv(Right,CUnicodeStringType);
+                      if not(Is_UnicodeString(lLeftDef)) then
+                        InsertTypeConv(Left,CUnicodeStringType);
                     end;
                   st_ansistring :
                     begin
@@ -3136,472 +3136,472 @@ const
                         CP_NONE, since then data loss can occur: the ansistring
                         helpers will convert them at run time to an encoding
                         that can represent both encodings) }
-                      if Is_AnsiString(ld) and
-                         (TStringDef(ld).encoding<>0) and
-                         (TStringDef(ld).encoding<>Globals.CP_NONE) and
-                         (not Is_AnsiString(rd) or
-                          (TStringDef(rd).encoding=0) or
-                          (TStringDef(rd).encoding=Globals.CP_NONE)) then
-                        inserttypeconv(right,ld)
-                      else if Is_AnsiString(rd) and
-                         (TStringDef(rd).encoding<>0) and
-                         (TStringDef(rd).encoding<>Globals.CP_NONE) and
-                         (not Is_AnsiString(ld) or
-                          (TStringDef(ld).encoding=0) or
-                          (TStringDef(ld).encoding=Globals.CP_NONE)) then
-                        inserttypeconv(left,rd)
+                      if Is_AnsiString(lLeftDef) and
+                         (TStringDef(lLeftDef).encoding<>0) and
+                         (TStringDef(lLeftDef).encoding<>Globals.CP_NONE) and
+                         (not Is_AnsiString(lRightDef) or
+                          (TStringDef(lRightDef).encoding=0) or
+                          (TStringDef(lRightDef).encoding=Globals.CP_NONE)) then
+                        InsertTypeConv(Right,lLeftDef)
+                      else if Is_AnsiString(lRightDef) and
+                         (TStringDef(lRightDef).encoding<>0) and
+                         (TStringDef(lRightDef).encoding<>Globals.CP_NONE) and
+                         (not Is_AnsiString(lLeftDef) or
+                          (TStringDef(lLeftDef).encoding=0) or
+                          (TStringDef(lLeftDef).encoding=Globals.CP_NONE)) then
+                        InsertTypeConv(Left,lRightDef)
                       else
                         begin
-                          if not Is_AnsiString(ld) then
-                            inserttypeconv(left,GetAnsiStringDef);
-                          if not Is_AnsiString(rd) then
-                            inserttypeconv(right,GetAnsiStringDef);
+                          if not Is_AnsiString(lLeftDef) then
+                            InsertTypeConv(Left,GetAnsiStringDef);
+                          if not Is_AnsiString(lRightDef) then
+                            InsertTypeConv(Right,GetAnsiStringDef);
                         end;
                     end;
                   st_longstring :
                     begin
-                      if not(Is_LongString(rd)) then
-                        inserttypeconv(right,CLongStringType);
-                      if not(Is_LongString(ld)) then
-                        inserttypeconv(left,CLongStringType);
+                      if not(Is_LongString(lRightDef)) then
+                        InsertTypeConv(Right,CLongStringType);
+                      if not(Is_LongString(lLeftDef)) then
+                        InsertTypeConv(Left,CLongStringType);
                      end;
                    st_shortstring :
                      begin
-                       if not(Is_ShortString(ld)) then
-                         inserttypeconv(left,CShortStringType);
+                       if not(Is_ShortString(lLeftDef)) then
+                         InsertTypeConv(Left,CShortStringType);
                        { don't convert char, that can be handled by the optimized node }
-                       if not(Is_ShortString(rd) or Is_Char(rd)) then
-                         inserttypeconv(right,CShortStringType);
+                       if not(Is_ShortString(lRightDef) or Is_Char(lRightDef)) then
+                         InsertTypeConv(Right,CShortStringType);
                      end;
                 end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { implicit pointer object type comparison }
-         else if Is_Implicit_Pointer_Object_Type(rd) or Is_Implicit_Pointer_Object_Type(ld) then
+         else if Is_Implicit_Pointer_Object_Type(lRightDef) or Is_Implicit_Pointer_Object_Type(lLeftDef) then
           begin
-            if (nodetype in [EqualN,unequaln]) then
+            if (NodeType in [EqualN,unequaln]) then
               begin
-                if Is_Implicit_Pointer_Object_Type(rd) and Is_Implicit_Pointer_Object_Type(ld) then
+                if Is_Implicit_Pointer_Object_Type(lRightDef) and Is_Implicit_Pointer_Object_Type(lLeftDef) then
                  begin
-                   if Def_Is_Related(TObjectDef(rd),TObjectDef(ld)) then
-                    inserttypeconv(right,left.resultdef)
+                   if Def_Is_Related(TObjectDef(lRightDef),TObjectDef(lLeftDef)) then
+                    InsertTypeConv(Right,Left.ResultDef)
                    else
-                    inserttypeconv(left,right.resultdef);
+                    InsertTypeConv(Left,Right.ResultDef);
                  end
-                else if Is_Implicit_Pointer_Object_Type(rd) then
-                  inserttypeconv(left,right.resultdef)
+                else if Is_Implicit_Pointer_Object_Type(lRightDef) then
+                  InsertTypeConv(Left,Right.ResultDef)
                 else
-                  inserttypeconv(right,left.resultdef);
+                  InsertTypeConv(Right,Left.ResultDef);
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
-         else if (rd.typ=classrefdef) and (ld.typ=classrefdef) then
+         else if (lRightDef.typ=classrefdef) and (lLeftDef.typ=classrefdef) then
           begin
-            if (nodetype in [EqualN,unequaln]) then
+            if (NodeType in [EqualN,unequaln]) then
               begin
-                if Def_Is_Related(TObjectDef(TClassRefDef(rd).PointedDef),
-                        TObjectDef(TClassRefDef(ld).PointedDef)) then
-                  inserttypeconv(right,left.resultdef)
+                if Def_Is_Related(TObjectDef(TClassRefDef(lRightDef).PointedDef),
+                        TObjectDef(TClassRefDef(lLeftDef).PointedDef)) then
+                  InsertTypeConv(Right,Left.ResultDef)
                 else
-                  inserttypeconv(left,right.resultdef);
+                  InsertTypeConv(Left,Right.ResultDef);
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { allow comparison with nil pointer }
-         else if Is_Implicit_Pointer_Object_Type(rd) or (rd.typ=classrefdef) then
+         else if Is_Implicit_Pointer_Object_Type(lRightDef) or (lRightDef.typ=classrefdef) then
           begin
-            if (nodetype in [EqualN,unequaln]) then
-              inserttypeconv(left,right.resultdef)
+            if (NodeType in [EqualN,unequaln]) then
+              InsertTypeConv(Left,Right.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
-         else if Is_Implicit_Pointer_Object_Type(ld) or (ld.typ=classrefdef) then
+         else if Is_Implicit_Pointer_Object_Type(lLeftDef) or (lLeftDef.typ=classrefdef) then
           begin
-            if (nodetype in [EqualN,unequaln]) then
-              inserttypeconv(right,left.resultdef)
+            if (NodeType in [EqualN,unequaln]) then
+              InsertTypeConv(Right,Left.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
        { support procvar=nil,procvar<>nil }
-         else if ((ld.typ=procvardef) and (rt=niln)) or
-                 ((rd.typ=procvardef) and (lt=niln)) then
+         else if ((lLeftDef.typ=procvardef) and (lRightNodeType=niln)) or
+                 ((lRightDef.typ=procvardef) and (lLeftNodeType=niln)) then
           begin
-            if not(nodetype in [EqualN,unequaln]) then
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+            if not(NodeType in [EqualN,unequaln]) then
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
             { find proc field in methodpointer record }
-            hsym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
-            if not Assigned(hsym) then
+            lFieldSym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
+            if not Assigned(lFieldSym) then
               InternalError(200412043);
             { For methodpointers compare only tmethodpointer.proc }
-            if (rd.typ=procvardef) and
-               (not TProcVarDef(rd).Is_AddressOnly) then
+            if (lRightDef.typ=procvardef) and
+               (not TProcVarDef(lRightDef).Is_AddressOnly) then
               begin
-                right:=CSubscriptNode.create(
-                           hsym,
-                           CTypeConvNode.Create_Internal(right,MethodPointerType));
-                TypeCheckPass(right);
+                Right:=CSubscriptNode.Create(
+                           lFieldSym,
+                           CTypeConvNode.Create_Internal(Right,MethodPointerType));
+                TypeCheckPass(Right);
                end;
-            if (ld.typ=procvardef) and
-               (not TProcVarDef(ld).Is_AddressOnly) then
+            if (lLeftDef.typ=procvardef) and
+               (not TProcVarDef(lLeftDef).Is_AddressOnly) then
               begin
-                left:=CSubscriptNode.create(
-                          hsym,
-                          CTypeConvNode.Create_Internal(left,MethodPointerType));
-                TypeCheckPass(left);
+                Left:=CSubscriptNode.Create(
+                          lFieldSym,
+                          CTypeConvNode.Create_Internal(Left,MethodPointerType));
+                TypeCheckPass(Left);
               end;
-            if lt=niln then
-              inserttypeconv_explicit(left,right.resultdef)
+            if lLeftNodeType=niln then
+              InsertTypeConv_Explicit(Left,Right.ResultDef)
             else
-              inserttypeconv_explicit(right,left.resultdef)
+              InsertTypeConv_Explicit(Right,Left.ResultDef)
           end
 
          { <dyn. array>+<dyn. array> ? }
-         else if (nodetype=addn) and (Is_Dynamic_Array(ld) or Is_Dynamic_Array(rd)) then
+         else if (NodeType=addn) and (Is_Dynamic_Array(lLeftDef) or Is_Dynamic_Array(lRightDef)) then
            begin
               { empty array to add? }
-              if (right.nodetype=arrayconstructorn) and (TArrayConstructorNode(right).left=nil) then
+              if (Right.NodeType=arrayconstructorn) and (TArrayConstructorNode(Right).Left=nil) then
                 begin
-                  result:=left;
-                  left:=nil;
+                  Result:=Left;
+                  Left:=nil;
                   exit;
                 end
-              else if (left.nodetype=arrayconstructorn) and (TArrayConstructorNode(left).left=nil) then
+              else if (Left.NodeType=arrayconstructorn) and (TArrayConstructorNode(Left).Left=nil) then
                 begin
-                  result:=right;
-                  right:=nil;
+                  Result:=Right;
+                  Right:=nil;
                   exit;
                 end
               else
                 begin
-                  result:=maybe_convert_to_insert;
-                  if Assigned(result) then
+                  Result:=MaybeConvertToInsert;
+                  if Assigned(Result) then
                     exit;
-                  if not(Is_Dynamic_Array(ld)) then
-                    inserttypeconv(left,rd);
-                  if not(Is_Dynamic_Array(rd)) then
-                    inserttypeconv(right,ld);
+                  if not(Is_Dynamic_Array(lLeftDef)) then
+                    InsertTypeConv(Left,lRightDef);
+                  if not(Is_Dynamic_Array(lRightDef)) then
+                    InsertTypeConv(Right,lLeftDef);
                 end;
            end
 
         { support dynamicarray=nil,dynamicarray<>nil }
-         else if (Is_Dynamic_Array(ld) and (rt=niln)) or
-                 (Is_Dynamic_Array(rd) and (lt=niln)) or
-                 (Is_Dynamic_Array(ld) and Is_Dynamic_Array(rd)) then
+         else if (Is_Dynamic_Array(lLeftDef) and (lRightNodeType=niln)) or
+                 (Is_Dynamic_Array(lRightDef) and (lLeftNodeType=niln)) or
+                 (Is_Dynamic_Array(lLeftDef) and Is_Dynamic_Array(lRightDef)) then
           begin
-            if not(nodetype in [EqualN,unequaln]) then
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-            if lt=niln then
-              inserttypeconv_explicit(left,right.resultdef)
+            if not(NodeType in [EqualN,unequaln]) then
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+            if lLeftNodeType=niln then
+              InsertTypeConv_Explicit(Left,Right.ResultDef)
             else
-              inserttypeconv_explicit(right,left.resultdef)
+              InsertTypeConv_Explicit(Right,Left.ResultDef)
           end
 
          { vector support, this must be before the zero based array
            check }
          else if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
-                 Fits_In_MM_Register(ld) and
-                 Fits_In_MM_Register(rd) and
-                 Equal_Defs(ld,rd) then
+                 Fits_In_MM_Register(lLeftDef) and
+                 Fits_In_MM_Register(lRightDef) and
+                 Equal_Defs(lLeftDef,lRightDef) then
             begin
-              if not(nodetype in [addn,subn,xorn,orn,andn,muln,slashn]) then
-                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              if not(NodeType in [addn,subn,xorn,orn,andn,muln,slashn]) then
+                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
               { both defs must be equal, so taking left or right as resultdef doesn't matter }
-              resultdef:=To_HWVectorDef(left.resultdef,false);
+              ResultDef:=To_HWVectorDef(Left.ResultDef,false);
             end
 
          { this is a little bit dangerous, also the left type }
          { pointer to should be checked! This broke the mmx support      }
-         else if (rd.typ=pointerdef) or
-                 (Is_Zero_Based_Array(rd) and (rt<>stringconstn)) then
+         else if (lRightDef.typ=pointerdef) or
+                 (Is_Zero_Based_Array(lRightDef) and (lRightNodeType<>stringconstn)) then
           begin
-            if Is_Zero_Based_Array(rd) then
+            if Is_Zero_Based_Array(lRightDef) then
               begin
-                resultdef:=CPointerDef.getreusable(TArrayDef(rd).ElementDef);
-                inserttypeconv(right,resultdef);
+                ResultDef:=CPointerDef.getreusable(TArrayDef(lRightDef).ElementDef);
+                InsertTypeConv(Right,ResultDef);
               end
             else
-              resultdef:=right.resultdef;
-            inserttypeconv(left,TPointerDef(right.resultdef).Pointer_Arithmetic_Int_Type);
-            if nodetype=addn then
+              ResultDef:=Right.ResultDef;
+            InsertTypeConv(Left,TPointerDef(Right.ResultDef).Pointer_Arithmetic_Int_Type);
+            if NodeType=addn then
               begin
-                if (rt=niln) then
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,'NIL');
-                if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags))  or
-                   (not (Is_PChar(rd) or Is_CharArray(rd) or Is_Open_CharArray(rd) or Is_WideChar(rd) or Is_WideCharArray(rd) or Is_Open_WideCharArray(rd)) and
+                if (lRightNodeType=niln) then
+                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,'NIL');
+                if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in Flags))  or
+                   (not (Is_PChar(lRightDef) or Is_CharArray(lRightDef) or Is_Open_CharArray(lRightDef) or Is_WideChar(lRightDef) or Is_WideCharArray(lRightDef) or Is_Open_WideCharArray(lRightDef)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
-                    not((rd.typ=pointerdef) and TPointerDef(rd).HasPointerMath)) then
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-                if (rd.typ=pointerdef) and
-                   (TPointerDef(rd).PointedDef.Size>1) then
+                    not((lRightDef.typ=pointerdef) and TPointerDef(lRightDef).HasPointerMath)) then
+                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                if (lRightDef.typ=pointerdef) and
+                   (TPointerDef(lRightDef).PointedDef.Size>1) then
                    begin
-                     left:=CAddNode.create(muln,left,
-                       COrdConstNode.create(TPointerDef(rd).PointedDef.Size,TPointerDef(right.resultdef).Pointer_Arithmetic_Int_Type,true));
-                     TypeCheckPass(left);
+                     Left:=CAddNode.Create(muln,Left,
+                       COrdConstNode.Create(TPointerDef(lRightDef).PointedDef.Size,TPointerDef(Right.ResultDef).Pointer_Arithmetic_Int_Type,true));
+                     TypeCheckPass(Left);
                    end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
-         else if (ld.typ=pointerdef) or
-                 (Is_Zero_Based_Array(ld) and (lt<>stringconstn)) then
+         else if (lLeftDef.typ=pointerdef) or
+                 (Is_Zero_Based_Array(lLeftDef) and (lLeftNodeType<>stringconstn)) then
            begin
-             if Is_Zero_Based_Array(ld) then
+             if Is_Zero_Based_Array(lLeftDef) then
                begin
-                  resultdef:=CPointerDef.getreusable(TArrayDef(ld).ElementDef);
-                  inserttypeconv(left,resultdef);
+                  ResultDef:=CPointerDef.getreusable(TArrayDef(lLeftDef).ElementDef);
+                  InsertTypeConv(Left,ResultDef);
                end
              else
-               resultdef:=left.resultdef;
+               ResultDef:=Left.ResultDef;
 
-             inserttypeconv(right,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type);
-             if nodetype in [addn,subn] then
+             InsertTypeConv(Right,TPointerDef(Left.ResultDef).Pointer_Arithmetic_Int_Type);
+             if NodeType in [addn,subn] then
                begin
-                 if (lt=niln) then
-                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),'NIL',rd.TypeName);
-                 if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags)) or
-                   (not (Is_PChar(ld) or Is_CharArray(ld) or Is_Open_CharArray(ld) or Is_WideChar(ld) or Is_WideCharArray(ld) or Is_Open_WideCharArray(ld)) and
+                 if (lLeftNodeType=niln) then
+                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),'NIL',lRightDef.TypeName);
+                 if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in Flags)) or
+                   (not (Is_PChar(lLeftDef) or Is_CharArray(lLeftDef) or Is_Open_CharArray(lLeftDef) or Is_WideChar(lLeftDef) or Is_WideCharArray(lLeftDef) or Is_Open_WideCharArray(lLeftDef)) and
                     not(cs_pointermath in CurrentSettings.LocalSwitches) and
-                    not((ld.typ=pointerdef) and TPointerDef(ld).HasPointerMath)) then
-                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
-                 if (ld.typ=pointerdef) then
+                    not((lLeftDef.typ=pointerdef) and TPointerDef(lLeftDef).HasPointerMath)) then
+                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
+                 if (lLeftDef.typ=pointerdef) then
                  begin
-                   if is_big_untyped_addrnode(left) then
-                     CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
-                   if (TPointerDef(ld).PointedDef.Size>1) then
+                   if Is_Big_Untyped_AddrNode(Left) then
+                     CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(NodeType));
+                   if (TPointerDef(lLeftDef).PointedDef.Size>1) then
                    begin
-                     right:=CAddNode.create(muln,right,
-                       COrdConstNode.create(TPointerDef(ld).PointedDef.Size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
-                     TypeCheckPass(right);
+                     Right:=CAddNode.Create(muln,Right,
+                       COrdConstNode.Create(TPointerDef(lLeftDef).PointedDef.Size,TPointerDef(Left.ResultDef).Pointer_Arithmetic_Int_Type,true));
+                     TypeCheckPass(Right);
                    end
                  end else
-                   if Is_Zero_Based_Array(ld) and
-                      (TArrayDef(ld).ElementDef.Size>1) then
+                   if Is_Zero_Based_Array(lLeftDef) and
+                      (TArrayDef(lLeftDef).ElementDef.Size>1) then
                      begin
-                       right:=CAddNode.create(muln,right,
-                         COrdConstNode.create(TArrayDef(ld).ElementDef.Size,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type,true));
-                       TypeCheckPass(right);
+                       Right:=CAddNode.Create(muln,Right,
+                         COrdConstNode.Create(TArrayDef(lLeftDef).ElementDef.Size,TPointerDef(Left.ResultDef).Pointer_Arithmetic_Int_Type,true));
+                       TypeCheckPass(Right);
                      end;
                end
              else
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
            end
 
-         else if (rd.typ=procvardef) and
-                 (ld.typ=procvardef) and
-                 Equal_Defs(rd,ld) then
+         else if (lRightDef.typ=procvardef) and
+                 (lLeftDef.typ=procvardef) and
+                 Equal_Defs(lRightDef,lLeftDef) then
           begin
-            if (nodetype in [EqualN,unequaln]) then
+            if (NodeType in [EqualN,unequaln]) then
               begin
-                if TProcVarDef(rd).Is_AddressOnly then
+                if TProcVarDef(lRightDef).Is_AddressOnly then
                   begin
-                    inserttypeconv_internal(right,VoidCodePointerType);
-                    inserttypeconv_internal(left,VoidCodePointerType);
+                    InsertTypeConv_Internal(Right,VoidCodePointerType);
+                    InsertTypeConv_Internal(Left,VoidCodePointerType);
                   end
                 else
                   begin
                     { find proc field in methodpointer record }
-                    hsym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
-                    if not Assigned(hsym) then
+                    lFieldSym:=TFieldVarSym(TRecordDef(MethodPointerType).SymTable.Find('proc'));
+                    if not Assigned(lFieldSym) then
                       InternalError(2004120405);
                     { Compare tmehodpointer(left).proc }
-                    right:=CSubscriptNode.create(
-                                 hsym,
-                                 CTypeConvNode.Create_Internal(right,MethodPointerType));
-                    TypeCheckPass(right);
-                    left:=CSubscriptNode.create(
-                                 hsym,
-                                 CTypeConvNode.Create_Internal(left,MethodPointerType));
-                     TypeCheckPass(left);
+                    Right:=CSubscriptNode.Create(
+                                 lFieldSym,
+                                 CTypeConvNode.Create_Internal(Right,MethodPointerType));
+                    TypeCheckPass(Right);
+                    Left:=CSubscriptNode.Create(
+                                 lFieldSym,
+                                 CTypeConvNode.Create_Internal(Left,MethodPointerType));
+                     TypeCheckPass(Left);
                   end;
               end
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { enums }
-         else if (ld.typ=enumdef) and (rd.typ=enumdef) then
+         else if (lLeftDef.typ=enumdef) and (lRightDef.typ=enumdef) then
           begin
-            if allowenumop(nodetype) or (nf_internal in flags) then
-              inserttypeconv(right,left.resultdef)
+            if allowenumop(NodeType) or (nf_internal in Flags) then
+              InsertTypeConv(Right,Left.ResultDef)
             else
-              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.TypeName,rd.TypeName);
+              CGMessage3(type_e_operator_not_supported_for_types,node2opstr(NodeType),lLeftDef.TypeName,lRightDef.TypeName);
           end
 
          { generic conversion, this is for error recovery }
          else
           begin
-            inserttypeconv(left,SIntType);
-            inserttypeconv(right,SIntType);
+            InsertTypeConv(Left,SIntType);
+            InsertTypeConv(Right,SIntType);
           end;
 
-         if cmp_of_disjunct_ranges(res) and not(nf_internal in flags) then
+         if CompareDisjointRanges(lComparisonResult) and not(nf_internal in Flags) then
            begin
-             if res then
+             if lComparisonResult then
                CGMessage(type_w_comparison_always_true)
              else
                CGMessage(type_w_comparison_always_false);
            end;
 
          { set resultdef if not already done }
-         if not Assigned(resultdef) then
+         if not Assigned(ResultDef) then
           begin
-             case nodetype of
+             case NodeType of
                 ltn,lten,gtn,gten,EqualN,unequaln :
-                  resultdef:=PasBool1Type;
+                  ResultDef:=PasBool1Type;
                 slashn :
-                  resultdef:=resultrealdef;
+                  ResultDef:=ResultRealDef;
                 addn:
                   begin
                     { for strings, return is always a 255 char string }
-                    if Is_ShortString(left.resultdef) then
-                      resultdef:=CShortStringType
+                    if Is_ShortString(Left.ResultDef) then
+                      ResultDef:=CShortStringType
                     else
                     { for ansistrings set resultdef to assignment left node
                       if it is an assignment and left node expects ansistring }
-                    if Is_AnsiString(left.resultdef) and
-                       Assigned(aktassignmentnode) and
-                       (aktassignmentnode.right=self) and
-                       Is_AnsiString(aktassignmentnode.left.resultdef) then
-                      resultdef:=aktassignmentnode.left.resultdef
+                    if Is_AnsiString(Left.ResultDef) and
+                       Assigned(AktAssignmentNode) and
+                       (AktAssignmentNode.Right=Self) and
+                       Is_AnsiString(AktAssignmentNode.Left.ResultDef) then
+                      ResultDef:=AktAssignmentNode.Left.ResultDef
                     else
-                      resultdef:=left.resultdef;
+                      ResultDef:=Left.ResultDef;
                   end;
                 else
-                  resultdef:=left.resultdef;
+                  ResultDef:=Left.ResultDef;
              end;
           end;
 
-         result:=do_currency_corrections;
+         Result:=DoCurrencyCorrections;
 
          if not(CodeGenError) and
-            not Assigned(result) then
+            not Assigned(Result) then
            begin
-             if not (nf_internal in flags) and
-               (nf_is_currency in left.flags) and
-               (nf_is_currency in right.flags) and
-               (nodetype in [addn,subn,muln]) then
-               Include(flags,nf_is_currency);
+             if not (nf_internal in Flags) and
+               (nf_is_currency in Left.Flags) and
+               (nf_is_currency in Right.Flags) and
+               (NodeType in [addn,subn,muln]) then
+               Include(Flags,nf_is_currency);
 
-             result:=simplify(false);
+             Result:=Simplify(false);
            end;
       end;
 
 
-    function TAddNode.do_currency_corrections: TNode;
+    function TAddNode.DoCurrencyCorrections: TNode;
       var
-        hp: TNode;
-        procname: string[31];
+        lNode: TNode;
+        lProcName: string[31];
       begin
-        result:=nil;
-        hp:=nil;
+        Result:=nil;
+        lNode:=nil;
         { when the result is currency we need some extra code to make sure
            the comparisons are scaled properly. this should not be done when
            a muln or slashn node is created internally }
-        if not(nf_internal in flags) and
+        if not(nf_internal in Flags) and
           { Can't go by the node's resultdef in the case of comparisons }
           (
-            Is_Currency(left.resultdef) or
-            Is_Currency(right.resultdef)
+            Is_Currency(Left.ResultDef) or
+            Is_Currency(Right.ResultDef)
           ) then
           begin
-            case nodetype of
+            case NodeType of
               slashn :
                 if (
-                    (nf_is_currency in flags) and
+                    (nf_is_currency in Flags) and
                     { Equivalence... both true or both false }
-                    not ((nf_is_currency in left.flags) xor (nf_is_currency in right.flags))
+                    not ((nf_is_currency in Left.Flags) xor (nf_is_currency in Right.Flags))
                   ) then
                   begin
                     { slashn will only work with floats }
-                    Exclude(flags,nf_is_currency);
-                    Include(flags,nf_internal); { Prevent recursion }
-                    hp:=CAddNode.Create_Internal(muln,GetCopy,CRealConstNode.create_currency_scalar(S64CurrencyType));
-                    include(hp.flags,nf_is_currency);
-                    result:=hp;
+                    Exclude(Flags,nf_is_currency);
+                    Include(Flags,nf_internal); { Prevent recursion }
+                    lNode:=CAddNode.Create_Internal(muln,GetCopy,CRealConstNode.Create_Currency_Scalar(S64CurrencyType));
+                    include(lNode.Flags,nf_is_currency);
+                    Result:=lNode;
                   end
-                else if not (nf_is_currency in flags) then
+                else if not (nf_is_currency in Flags) then
                   begin
                     if (
-                      not (nf_is_currency in left.flags) and
-                      (nf_is_currency in right.flags)
+                      not (nf_is_currency in Left.Flags) and
+                      (nf_is_currency in Right.Flags)
                     ) then
                       begin
                         { Put a multiplier on the left side }
-                        left:=CAddNode.Create_Internal(muln,left,CRealConstNode.create_currency_scalar(S64CurrencyType));
-                        include(left.flags,nf_is_currency);
-                        TypeCheckPass(left);
+                        Left:=CAddNode.Create_Internal(muln,Left,CRealConstNode.Create_Currency_Scalar(S64CurrencyType));
+                        include(Left.Flags,nf_is_currency);
+                        TypeCheckPass(Left);
                       end
                     else if (
-                        (nf_is_currency in left.flags) and
-                        not (nf_is_currency in right.flags)
+                        (nf_is_currency in Left.Flags) and
+                        not (nf_is_currency in Right.Flags)
                       ) then
                       { All the scalars are correct, so mark it so }
-                      Include(flags,nf_is_currency);
+                      Include(Flags,nf_is_currency);
                   end;
 
               muln :
-                if (nf_is_currency in flags) then
+                if (nf_is_currency in Flags) then
                   begin
-                    if (nf_is_currency in left.flags) and (nf_is_currency in right.flags) then
+                    if (nf_is_currency in Left.Flags) and (nf_is_currency in Right.Flags) then
                       begin
                         if S64CurrencyType.typ=floatdef then
                           begin
                             { Probably a Currency constant with a fractional component }
-                            if (right.nodetype=realconstn) and (nf_internal in right.flags) then
+                            if (Right.NodeType=realconstn) and (nf_internal in Right.Flags) then
                               begin
-                                left:=CAddNode.Create_Internal(slashn,left,CRealConstNode.create_currency_scalar(S64CurrencyType));
-                                DoTypeCheckPass(left);
+                                Left:=CAddNode.Create_Internal(slashn,Left,CRealConstNode.Create_Currency_Scalar(S64CurrencyType));
+                                DoTypeCheckPass(Left);
                               end
                             else
                               begin
-                                right:=CAddNode.Create_Internal(slashn,right,CRealConstNode.create_currency_scalar(S64CurrencyType));
-                                DoTypeCheckPass(right);
+                                Right:=CAddNode.Create_Internal(slashn,Right,CRealConstNode.Create_Currency_Scalar(S64CurrencyType));
+                                DoTypeCheckPass(Right);
                               end;
                           end
                         else
                           begin
                             { Probably a Currency constant with a fractional component }
-                            if (right.nodetype=realconstn) and (nf_internal in right.flags) then
+                            if (Right.NodeType=realconstn) and (nf_internal in Right.Flags) then
                               begin
-                                left:=CModDivNode.create(divn,left,COrdConstNode.create_currency_scalar(S64CurrencyType));
-                                Include(left.flags,nf_internal);
-                                DoTypeCheckPass(left);
+                                Left:=CModDivNode.Create(divn,Left,COrdConstNode.Create_Currency_Scalar(S64CurrencyType));
+                                Include(Left.Flags,nf_internal);
+                                DoTypeCheckPass(Left);
                               end
                             else
                               begin
-                                right:=CModDivNode.create(divn,right,COrdConstNode.create_currency_scalar(S64CurrencyType));
-                                Include(right.flags,nf_internal);
-                                DoTypeCheckPass(right);
+                                Right:=CModDivNode.Create(divn,Right,COrdConstNode.Create_Currency_Scalar(S64CurrencyType));
+                                Include(Right.Flags,nf_internal);
+                                DoTypeCheckPass(Right);
                               end;
                           end;
 
                         { We need to force a re-evaluation }
-                        result:=GetCopy;
+                        Result:=GetCopy;
                       end
-                    else if not (nf_is_currency in left.flags) and not (nf_is_currency in right.flags) then
+                    else if not (nf_is_currency in Left.Flags) and not (nf_is_currency in Right.Flags) then
                       begin
-                        result:=GetCopy;
+                        Result:=GetCopy;
                         { Prevent recursion }
-                        Include(result.flags,nf_internal);
+                        Include(Result.Flags,nf_internal);
 
                         if S64CurrencyType.typ=floatdef then
-                          hp:=CAddNode.Create_Internal(muln,result,CRealConstNode.create_currency_scalar(S64CurrencyType))
+                          lNode:=CAddNode.Create_Internal(muln,Result,CRealConstNode.Create_Currency_Scalar(S64CurrencyType))
                         else
-                          hp:=CAddNode.Create_Internal(muln,result,COrdConstNode.create_currency_scalar(S64CurrencyType));
+                          lNode:=CAddNode.Create_Internal(muln,Result,COrdConstNode.Create_Currency_Scalar(S64CurrencyType));
                         { Because the multiplication doubles up on the currency scalar, dividing
                           removes only one and hence the result is still scaled }
-                        Include(hp.flags,nf_is_currency);
-                        result:=hp;
+                        Include(lNode.Flags,nf_is_currency);
+                        Result:=lNode;
                       end;
                   end
                 else
@@ -3610,99 +3610,99 @@ const
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
                         { int64(...) causes a cast on currency, so it is the currency value multiplied by 10000 }
-                        if (left.nodetype=realconstn) and (Is_Currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(TRealConstNode(left).value_real) mod 10000)=0) then
+                        if (Left.NodeType=realconstn) and (Is_Currency(Left.ResultDef)) and (nf_is_currency in Left.Flags) and ((Trunc(TRealConstNode(Left).ValueReal) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value_real and value_currency contain valid values }
-                            TRealConstNode(left).value_real:=TRealConstNode(left).value_real/BestReal(10000.0);
-                            TRealConstNode(left).SetCurrencyValue(TRealConstNode(left).value_real);
-                            Exclude(left.flags,nf_is_currency);
-                            Include(flags,nf_is_currency);
+                            TRealConstNode(Left).ValueReal:=TRealConstNode(Left).ValueReal/BestReal(10000.0);
+                            TRealConstNode(Left).SetCurrencyValue(TRealConstNode(Left).ValueReal);
+                            Exclude(Left.Flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=realconstn) and (Is_Currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(TRealConstNode(right).value_real) mod 10000)=0) then
+                        else if (Right.NodeType=realconstn) and (Is_Currency(Right.ResultDef)) and (nf_is_currency in Right.Flags) and ((Trunc(TRealConstNode(Right).ValueReal) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value and value_currency contain valid values }
-                            TRealConstNode(right).value_real:=TRealConstNode(right).value_real/BestReal(10000.0);
-                            TRealConstNode(right).SetCurrencyValue(TRealConstNode(right).value_real);
-                            Exclude(right.flags,nf_is_currency);
-                            Include(flags,nf_is_currency);
+                            TRealConstNode(Right).ValueReal:=TRealConstNode(Right).ValueReal/BestReal(10000.0);
+                            TRealConstNode(Right).SetCurrencyValue(TRealConstNode(Right).ValueReal);
+                            Exclude(Right.Flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
-                        else if (nf_is_currency in left.flags) xor (nf_is_currency in right.flags) then
+                        else if (nf_is_currency in Left.Flags) xor (nf_is_currency in Right.Flags) then
                           begin
                             { If one is scaled and one isn't, then the result is scaled }
-                            Include(flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
                           end
-                        else if (nf_is_currency in left.flags) and (nf_is_currency in right.flags) then
+                        else if (nf_is_currency in Left.Flags) and (nf_is_currency in Right.Flags) then
                           begin
-                            Include(flags,nf_is_currency);
-                            right:=CAddNode.Create_Internal(slashn,right,CRealConstNode.create_currency_scalar(S64CurrencyType));
+                            Include(Flags,nf_is_currency);
+                            Right:=CAddNode.Create_Internal(slashn,Right,CRealConstNode.Create_Currency_Scalar(S64CurrencyType));
                             { Because the multiplication doubles up on the currency scalar, dividing
                               removes only one and hence the result is still scaled }
-                            DoTypeCheckPass(right);
+                            DoTypeCheckPass(Right);
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end;
                       end
                     else
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
-                        if (left.nodetype=ordconstn) and (Is_Currency(left.resultdef)) and (nf_is_currency in left.flags) and ((TOrdConstNode(left).Value mod 10000)=0) then
+                        if (Left.NodeType=ordconstn) and (Is_Currency(Left.ResultDef)) and (nf_is_currency in Left.Flags) and ((TOrdConstNode(Left).Value mod 10000)=0) then
                           begin
-                            TOrdConstNode(left).Value:=TOrdConstNode(left).Value div 10000;
-                            Exclude(left.flags,nf_is_currency);
-                            Include(flags,nf_is_currency);
+                            TOrdConstNode(Left).Value:=TOrdConstNode(Left).Value div 10000;
+                            Exclude(Left.Flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=ordconstn) and (Is_Currency(right.resultdef)) and (nf_is_currency in right.flags) and ((TOrdConstNode(right).Value mod 10000)=0) then
+                        else if (Right.NodeType=ordconstn) and (Is_Currency(Right.ResultDef)) and (nf_is_currency in Right.Flags) and ((TOrdConstNode(Right).Value mod 10000)=0) then
                           begin
-                            TOrdConstNode(right).Value:=TOrdConstNode(right).Value div 10000;
-                            Exclude(right.flags,nf_is_currency);
-                            Include(flags,nf_is_currency);
+                            TOrdConstNode(Right).Value:=TOrdConstNode(Right).Value div 10000;
+                            Exclude(Right.Flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
 
-                        else if (right.nodetype=muln) and Is_Currency(right.resultdef) and (nf_is_currency in right.flags) and
+                        else if (Right.NodeType=muln) and Is_Currency(Right.ResultDef) and (nf_is_currency in Right.Flags) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          Is_Currency(TAddNode(right).right.resultdef) and (TAddNode(right).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(right).right).Value=10000) and
-                          Is_Currency(TAddNode(right).left.resultdef) and not (nf_is_currency in TAddNode(right).left.flags) and (TAddNode(right).left.nodetype=typeconvn) then
+                          Is_Currency(TAddNode(Right).Right.ResultDef) and (TAddNode(Right).Right.NodeType=ordconstn) and (TOrdConstNode(TAddNode(Right).Right).Value=10000) and
+                          Is_Currency(TAddNode(Right).Left.ResultDef) and not (nf_is_currency in TAddNode(Right).Left.Flags) and (TAddNode(Right).Left.NodeType=typeconvn) then
                           begin
-                            hp:=TAddNode(right).left.GetCopy;
-                            right.free;
-                            right:=hp;
+                            lNode:=TAddNode(Right).Left.GetCopy;
+                            Right.free;
+                            Right:=lNode;
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
-                        else if (left.nodetype=muln) and Is_Currency(left.resultdef) and
+                        else if (Left.NodeType=muln) and Is_Currency(Left.ResultDef) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          Is_Currency(TAddNode(left).right.resultdef) and (TAddNode(left).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(left).right).Value=10000) and
-                          Is_Currency(TAddNode(left).left.resultdef) and not (nf_is_currency in TAddNode(left).left.flags) and (TAddNode(left).left.nodetype=typeconvn) then
+                          Is_Currency(TAddNode(Left).Right.ResultDef) and (TAddNode(Left).Right.NodeType=ordconstn) and (TOrdConstNode(TAddNode(Left).Right).Value=10000) and
+                          Is_Currency(TAddNode(Left).Left.ResultDef) and not (nf_is_currency in TAddNode(Left).Left.Flags) and (TAddNode(Left).Left.NodeType=typeconvn) then
                           begin
-                            hp:=TAddNode(left).left.GetCopy;
-                            left.free;
-                            left:=hp;
+                            lNode:=TAddNode(Left).Left.GetCopy;
+                            Left.free;
+                            Left:=lNode;
 
                             { We need to force a re-evaluation }
-                            hp:=GetCopy;
+                            lNode:=GetCopy;
                           end
-                        else if (nf_is_currency in left.flags) xor (nf_is_currency in right.flags) then
+                        else if (nf_is_currency in Left.Flags) xor (nf_is_currency in Right.Flags) then
                           begin
                             { If one is scaled and one isn't, then the result is scaled }
-                            Include(flags,nf_is_currency);
+                            Include(Flags,nf_is_currency);
                           end
-                        else if (nf_is_currency in left.flags) and (nf_is_currency in right.flags) then
+                        else if (nf_is_currency in Left.Flags) and (nf_is_currency in Right.Flags) then
                           begin
                             { The Int64-based Currency implementation (used e.g. on
                               Win64, where x87 extended types are not supported) can
@@ -3717,17 +3717,17 @@ const
                               generic muln+divn nodes that truncate to 64 bits
                               in between.
                             }
-                            procname := 'fpc_mul_currency';
+                            lProcName := 'fpc_mul_currency';
                             if cs_check_overflow in CurrentSettings.LocalSwitches then
-                              procname := procname + '_checkoverflow';
-                            hp:=CCallNode.createintern(procname,CCallParaNode.create(right,CCallParaNode.create(left,nil)));
-                            Include(hp.flags,nf_is_currency);
-                            left:=nil;
-                            right:=nil;
+                              lProcName := lProcName + '_checkoverflow';
+                            lNode:=CCallNode.CreateIntern(lProcName,CCallParaNode.Create(Right,CCallParaNode.Create(Left,nil)));
+                            Include(lNode.Flags,nf_is_currency);
+                            Left:=nil;
+                            Right:=nil;
                           end;
                       end;
 
-                    result:=hp;
+                    Result:=lNode;
                   end;
               addn,
               subn,
@@ -3740,32 +3740,32 @@ const
                 { Correct absence of nf_is_currency flag in addn and subn }
                 if not
                   (
-                    (nf_is_currency in left.flags) and
-                    (nf_is_currency in right.flags)
+                    (nf_is_currency in Left.Flags) and
+                    (nf_is_currency in Right.Flags)
                   ) then
                   begin
                     { Sort out problems with only one side being scaled }
-                    if not (nf_is_currency in right.flags) then
+                    if not (nf_is_currency in Right.Flags) then
                       begin
                         if S64CurrencyType.typ = floatdef then
-                          right:=CAddNode.Create_Internal(muln,right,CRealConstNode.create_currency_scalar(S64CurrencyType))
+                          Right:=CAddNode.Create_Internal(muln,Right,CRealConstNode.Create_Currency_Scalar(S64CurrencyType))
                         else
-                          right:=CAddNode.Create_Internal(muln,right,COrdConstNode.create_currency_scalar(S64CurrencyType));
-                        Include(right.flags,nf_is_currency);
-                        TypeCheckPass(right);
-                        FirstPass(right);
-                        Include(right.flags,nf_is_currency);
+                          Right:=CAddNode.Create_Internal(muln,Right,COrdConstNode.Create_Currency_Scalar(S64CurrencyType));
+                        Include(Right.Flags,nf_is_currency);
+                        TypeCheckPass(Right);
+                        FirstPass(Right);
+                        Include(Right.Flags,nf_is_currency);
                       end;
-                    if not (nf_is_currency in left.flags) then
+                    if not (nf_is_currency in Left.Flags) then
                       begin
                         if S64CurrencyType.typ = floatdef then
-                          left:=CAddNode.Create_Internal(muln,left,CRealConstNode.create_currency_scalar(S64CurrencyType))
+                          Left:=CAddNode.Create_Internal(muln,Left,CRealConstNode.Create_Currency_Scalar(S64CurrencyType))
                         else
-                          left:=CAddNode.Create_Internal(muln,left,COrdConstNode.create_currency_scalar(S64CurrencyType));
-                        Include(left.flags,nf_is_currency);
-                        TypeCheckPass(left);
-                        FirstPass(left);
-                        Include(left.flags,nf_is_currency);
+                          Left:=CAddNode.Create_Internal(muln,Left,COrdConstNode.Create_Currency_Scalar(S64CurrencyType));
+                        Include(Left.Flags,nf_is_currency);
+                        TypeCheckPass(Left);
+                        FirstPass(Left);
+                        Include(Left.Flags,nf_is_currency);
                       end;
                   end;
               else
@@ -3775,172 +3775,172 @@ const
       end;
 
 
-    function TAddNode.first_addstring: TNode;
+    function TAddNode.First_AddString: TNode;
       var
-        p: TNode;
-        newstatement : TStatementNode;
-        tempnode : TTempCreateNode;
-        cmpfuncname: string;
-        para: TCallParaNode;
+        lNode: TNode;
+        lNewStatement : TStatementNode;
+        lTempNode : TTempCreateNode;
+        lCompareFunctionName: string;
+        lPara: TCallParaNode;
       begin
-        result:=nil;
+        Result:=nil;
         { when we get here, we are sure that both the left and the right }
         { node are both strings of the same stringtype (JM)              }
-        case nodetype of
+        case NodeType of
           addn:
             begin
-              if (left.nodetype=stringconstn) and (TStringConstNode(left).len=0) then
+              if (Left.NodeType=stringconstn) and (TStringConstNode(Left).len=0) then
                 begin
-                  result:=right;
-                  left.free;
-                  left:=nil;
-                  right:=nil;
+                  Result:=Right;
+                  Left.free;
+                  Left:=nil;
+                  Right:=nil;
                   exit;
                 end;
-              if (right.nodetype=stringconstn) and (TStringConstNode(right).len=0) then
+              if (Right.NodeType=stringconstn) and (TStringConstNode(Right).len=0) then
                 begin
-                  result:=left;
-                  left:=nil;
-                  right.free;
-                  right:=nil;
+                  Result:=Left;
+                  Left:=nil;
+                  Right.free;
+                  Right:=nil;
                   exit;
                 end;
               { create the call to the concat routine both strings as arguments }
-              if Assigned(aktassignmentnode) and
-                  (aktassignmentnode.right=self) and
+              if Assigned(AktAssignmentNode) and
+                  (AktAssignmentNode.Right=Self) and
                   (
-                    (aktassignmentnode.left.resultdef=resultdef) or
+                    (AktAssignmentNode.Left.ResultDef=ResultDef) or
                     (
-                      Is_ShortString(aktassignmentnode.left.resultdef) and
-                      Is_ShortString(resultdef)
+                      Is_ShortString(AktAssignmentNode.Left.ResultDef) and
+                      Is_ShortString(ResultDef)
                     )
                   ) and
-                  valid_for_var(aktassignmentnode.left,false) then
+                  valid_for_var(AktAssignmentNode.Left,false) then
                 begin
-                  para:=CCallParaNode.create(
-                          right,
-                          CCallParaNode.create(
-                            left,
-                            CCallParaNode.create(aktassignmentnode.left.GetCopy,nil)
+                  lPara:=CCallParaNode.Create(
+                          Right,
+                          CCallParaNode.Create(
+                            Left,
+                            CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,nil)
                           )
                         );
-                  if Is_AnsiString(resultdef) then
-                    para:=CCallParaNode.create(
-                            COrdConstNode.create(
+                  if Is_AnsiString(ResultDef) then
+                    lPara:=CCallParaNode.Create(
+                            COrdConstNode.Create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
-                              TStringDef(resultdef).encoding,
+                              TStringDef(ResultDef).encoding,
                               U16IntType,
                               true
                             ),
-                            para
+                            lPara
                           );
-                  result:=CCallNode.createintern(
-                            'fpc_'+TStringDef(resultdef).StringTypName+'_concat',
-                            para
+                  Result:=CCallNode.CreateIntern(
+                            'fpc_'+TStringDef(ResultDef).StringTypName+'_concat',
+                            lPara
                           );
-                  include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
-                  FirstPass(result);
+                  include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
+                  FirstPass(Result);
                 end
               else
                 begin
-                  result:=internalstatements(newstatement);
-                  tempnode:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
-                  addstatement(newstatement,tempnode);
-                  para:=CCallParaNode.create(
-                          right,
-                          CCallParaNode.create(
-                            left,
-                            CCallParaNode.create(CTempRefNode.create(tempnode),nil)
+                  Result:=InternalStatements(lNewStatement);
+                  lTempNode:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,true);
+                  AddStatement(lNewStatement,lTempNode);
+                  lPara:=CCallParaNode.Create(
+                          Right,
+                          CCallParaNode.Create(
+                            Left,
+                            CCallParaNode.Create(CTempRefNode.Create(lTempNode),nil)
                           )
                         );
-                  if Is_AnsiString(resultdef) then
-                    para:=CCallParaNode.create(
-                            COrdConstNode.create(
+                  if Is_AnsiString(ResultDef) then
+                    lPara:=CCallParaNode.Create(
+                            COrdConstNode.Create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
-                              TStringDef(resultdef).encoding,
+                              TStringDef(ResultDef).encoding,
                               U16IntType,
                               true
                             ),
-                            para
+                            lPara
                           );
-                  addstatement(
-                    newstatement,
-                    CCallNode.createintern(
-                      'fpc_'+TStringDef(resultdef).StringTypName+'_concat',
-                      para
+                  AddStatement(
+                    lNewStatement,
+                    CCallNode.CreateIntern(
+                      'fpc_'+TStringDef(ResultDef).StringTypName+'_concat',
+                      lPara
                     )
                   );
-                  addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
-                  addstatement(newstatement,CTempRefNode.create(tempnode));
+                  AddStatement(lNewStatement,CTempDeleteNode.Create_Normal_Temp(lTempNode));
+                  AddStatement(lNewStatement,CTempRefNode.Create(lTempNode));
                 end;
               { we reused the arguments }
-              left := nil;
-              right := nil;
+              Left := nil;
+              Right := nil;
             end;
           ltn,lten,gtn,gten,EqualN,unequaln :
             begin
               { generate better code for comparison with empty string, we
                 only need to compare the length with 0 }
-              if (nodetype in [EqualN,unequaln,gtn,gten,ltn,lten]) and
-                 (((left.nodetype=stringconstn) and (TStringConstNode(left).len=0)) or
-                  ((right.nodetype=stringconstn) and (TStringConstNode(right).len=0))) then
+              if (NodeType in [EqualN,unequaln,gtn,gten,ltn,lten]) and
+                 (((Left.NodeType=stringconstn) and (TStringConstNode(Left).len=0)) or
+                  ((Right.NodeType=stringconstn) and (TStringConstNode(Right).len=0))) then
                 begin
                   { switch so that the constant is always on the right }
-                  if left.nodetype = stringconstn then
+                  if Left.NodeType = stringconstn then
                     begin
-                      p := left;
-                      left := right;
-                      right := p;
-                      nodetype:=swap_relation[nodetype];
+                      lNode := Left;
+                      Left := Right;
+                      Right := lNode;
+                      NodeType:=cSwapRelation[NodeType];
                     end;
-                  if Is_ShortString(left.resultdef) or
-                     (nodetype in [gtn,gten,ltn,lten]) then
+                  if Is_ShortString(Left.ResultDef) or
+                     (NodeType in [gtn,gten,ltn,lten]) then
                     { compare the length with 0 }
-                    result := CAddNode.create(nodetype,
-                      CInlineNode.create(in_length_x,false,left),
-                      COrdConstNode.create(0,S8IntType,false))
+                    Result := CAddNode.Create(NodeType,
+                      CInlineNode.Create(in_length_x,false,Left),
+                      COrdConstNode.Create(0,S8IntType,false))
                   else { nodetype in [equaln,unequaln] }
                     begin
-                      if Is_WideString(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+                      if Is_WideString(Left.ResultDef) and (tf_winlikewidestring in TargetInfo.Flags) then
                         begin
                           { windows like widestrings requires that we also check the length }
-                          result:=CInlineNode.create(in_length_x,false,left);
+                          Result:=CInlineNode.Create(in_length_x,false,Left);
                           { and compare its result with 0 }
-                          result:=CAddNode.create(EqualN,result,COrdConstNode.create(0,S8IntType,false));
-                          if nodetype=unequaln then
-                            result:=CNotNode.create(result);
+                          Result:=CAddNode.Create(EqualN,Result,COrdConstNode.Create(0,S8IntType,false));
+                          if NodeType=unequaln then
+                            Result:=CNotNode.Create(Result);
                         end
                       else
                         begin
                           { compare the pointer with nil (for ansistrings etc), }
                           { faster than getting the length (JM)                 }
-                          result:= CAddNode.create(nodetype,
-                            CTypeConvNode.Create_Internal(left,VoidPointerType),
-                            CPointerConstNode.create(0,VoidPointerType));
+                          Result:= CAddNode.Create(NodeType,
+                            CTypeConvNode.Create_Internal(Left,VoidPointerType),
+                            CPointerConstNode.Create(0,VoidPointerType));
                         end;
                     end;
                   { left is reused }
-                  left := nil;
+                  Left := nil;
                   { right isn't }
-                  right.free;
-                  right := nil;
+                  Right.free;
+                  Right := nil;
                   exit;
                 end;
               { no string constant -> call compare routine }
-              cmpfuncname := 'fpc_'+TStringDef(left.resultdef).StringTypName+'_compare';
+              lCompareFunctionName := 'fpc_'+TStringDef(Left.ResultDef).StringTypName+'_compare';
               { for equality checks use optimized version }
-              if nodetype in [EqualN,unequaln] then
-                cmpfuncname := cmpfuncname + '_equal';
+              if NodeType in [EqualN,unequaln] then
+                lCompareFunctionName := lCompareFunctionName + '_equal';
 
-              result := CCallNode.createintern(cmpfuncname,
-                CCallParaNode.create(right,CCallParaNode.create(left,nil)));
+              Result := CCallNode.CreateIntern(lCompareFunctionName,
+                CCallParaNode.Create(Right,CCallParaNode.Create(Left,nil)));
               { and compare its result with 0 according to the original operator }
-              result := CAddNode.create(nodetype,result,
-                COrdConstNode.create(0,S8IntType,false));
-              left := nil;
-              right := nil;
+              Result := CAddNode.Create(NodeType,Result,
+                COrdConstNode.Create(0,S8IntType,false));
+              Left := nil;
+              Right := nil;
             end;
           else
             InternalError(2019050520);
@@ -3948,460 +3948,460 @@ const
       end;
 
 
-    function TAddNode.first_addset : TNode;
+    function TAddNode.First_AddSet : TNode;
 
-      procedure call_varset_helper(const n : string);
+      procedure CallVarSetHelper(const ANode : string);
         var
-          newstatement : TStatementNode;
-          temp    : TTempCreateNode;
+          lNewStatement : TStatementNode;
+          lTemp    : TTempCreateNode;
         begin
           { directly load the result set into the assignee if possible }
-          if Assigned(aktassignmentnode) and
-              (aktassignmentnode.right=self) and
-              (aktassignmentnode.left.resultdef=resultdef) and
-              valid_for_var(aktassignmentnode.left,false) then
+          if Assigned(AktAssignmentNode) and
+              (AktAssignmentNode.Right=Self) and
+              (AktAssignmentNode.Left.ResultDef=ResultDef) and
+              valid_for_var(AktAssignmentNode.Left,false) then
             begin
-              result:=CCallNode.createintern(n,
-                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                CCallParaNode.create(right,
-                CCallParaNode.create(left,nil))))
+              Result:=CCallNode.CreateIntern(ANode,
+                CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,
+                CCallParaNode.Create(Right,
+                CCallParaNode.Create(Left,nil))))
               );
 
               { remove reused parts from original node }
-              left:=nil;
-              right:=nil;
+              Left:=nil;
+              Right:=nil;
 
-              include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
-              FirstPass(result);
+              include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
+              FirstPass(Result);
             end
           else
             begin
               { add two var sets }
-              result:=internalstatements(newstatement);
+              Result:=InternalStatements(lNewStatement);
 
               { create temp for result }
-              temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
-              addstatement(newstatement,temp);
+              lTemp:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,true);
+              AddStatement(lNewStatement,lTemp);
 
-              addstatement(newstatement,CCallNode.createintern(n,
-                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                CCallParaNode.create(CTempRefNode.create(temp),
-                CCallParaNode.create(right,
-                CCallParaNode.create(left,nil)))))
+              AddStatement(lNewStatement,CCallNode.CreateIntern(ANode,
+                CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                CCallParaNode.Create(CTempRefNode.Create(lTemp),
+                CCallParaNode.Create(Right,
+                CCallParaNode.Create(Left,nil)))))
               );
 
               { remove reused parts from original node }
-              left:=nil;
-              right:=nil;
+              Left:=nil;
+              Right:=nil;
               { the last statement should return the value as
                 location and type, this is done be referencing the
                 temp and converting it first from a persistent temp to
                 normal temp }
-              addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
-              addstatement(newstatement,CTempRefNode.create(temp));
+              AddStatement(lNewStatement,CTempDeleteNode.Create_Normal_Temp(lTemp));
+              AddStatement(lNewStatement,CTempRefNode.Create(lTemp));
             end;
         end;
 
       var
-        procname: string[31];
-        tempn: TNode;
-        newstatement : TStatementNode;
-        temp    : TTempCreateNode;
-        no_temp: Boolean;
+        lProcName: string[31];
+        lTempNode: TNode;
+        lNewStatement : TStatementNode;
+        lTemp    : TTempCreateNode;
+        lNoTemp: Boolean;
       begin
-        result:=nil;
+        Result:=nil;
 
-        case nodetype of
+        case NodeType of
           EqualN,unequaln,lten,gten:
             begin
-              case nodetype of
+              case NodeType of
                 EqualN,unequaln:
-                  procname := 'fpc_varset_comp_sets';
+                  lProcName := 'fpc_varset_comp_sets';
                 lten,gten:
                   begin
-                    procname := 'fpc_varset_contains_sets';
+                    lProcName := 'fpc_varset_contains_sets';
                     { (left >= right) = (right <= left) }
-                    if nodetype = gten then
+                    if NodeType = gten then
                       begin
-                        tempn := left;
-                        left := right;
-                        right := tempn;
+                        lTempNode := Left;
+                        Left := Right;
+                        Right := lTempNode;
                       end;
                     end;
                   else
                     InternalError(2013112911);
                 end;
-                result := CCallNode.createinternres(procname,
-                  CCallParaNode.create(COrdConstNode.create(left.resultdef.Size,SIntType,false),
-                  CCallParaNode.create(right,
-                  CCallParaNode.create(left,nil))),resultdef);
+                Result := CCallNode.CreateInternRes(lProcName,
+                  CCallParaNode.Create(COrdConstNode.Create(Left.ResultDef.Size,SIntType,false),
+                  CCallParaNode.Create(Right,
+                  CCallParaNode.Create(Left,nil))),ResultDef);
                 { left and right are reused as parameters }
-                left := nil;
-                right := nil;
+                Left := nil;
+                Right := nil;
                 { for an unequaln, we have to negate the result of comp_sets }
-                if nodetype = unequaln then
-                  result := CNotNode.create(result);
+                if NodeType = unequaln then
+                  Result := CNotNode.Create(Result);
             end;
           addn:
             begin
               { can we directly write into the result? }
-              no_temp:=Assigned(aktassignmentnode) and
-                (aktassignmentnode.right=self) and
-                (aktassignmentnode.left.resultdef=self.resultdef) and
-                valid_for_var(aktassignmentnode.left,false);
+              lNoTemp:=Assigned(AktAssignmentNode) and
+                (AktAssignmentNode.Right=Self) and
+                (AktAssignmentNode.Left.ResultDef=Self.ResultDef) and
+                valid_for_var(AktAssignmentNode.Left,false);
 
               { optimize first loading of a set }
-              if (right.nodetype=setelementn) and
-                  not(Assigned(TSetElementNode(right).right)) and
-                  is_emptyset(left) then
+              if (Right.NodeType=setelementn) and
+                  not(Assigned(TSetElementNode(Right).Right)) and
+                  Is_EmptySet(Left) then
                 begin
                   { adjust for set base }
-                  TSetElementNode(right).left:=CAddNode.create(subn,
-                    CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                    COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
+                  TSetElementNode(Right).Left:=CAddNode.Create(subn,
+                    CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                    COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
 
-                  if no_temp then
+                  if lNoTemp then
                     begin
-                      result:=CCallNode.createintern('fpc_varset_create_element',
-                        CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                        CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                        CCallParaNode.create(TSetElementNode(right).left,nil))));
-                      include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+                      Result:=CCallNode.CreateIntern('fpc_varset_create_element',
+                        CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,
+                        CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                        CCallParaNode.Create(TSetElementNode(Right).Left,nil))));
+                      include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
                     end
                   else
                     begin
-                      result:=internalstatements(newstatement);
+                      Result:=InternalStatements(lNewStatement);
 
                       { create temp for result }
-                      temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
-                      addstatement(newstatement,temp);
+                      lTemp:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,true);
+                      AddStatement(lNewStatement,lTemp);
 
-                      addstatement(newstatement,CCallNode.createintern('fpc_varset_create_element',
-                        CCallParaNode.create(CTempRefNode.create(temp),
-                        CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                        CCallParaNode.create(TSetElementNode(right).left,nil))))
+                      AddStatement(lNewStatement,CCallNode.CreateIntern('fpc_varset_create_element',
+                        CCallParaNode.Create(CTempRefNode.Create(lTemp),
+                        CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                        CCallParaNode.Create(TSetElementNode(Right).Left,nil))))
                       );
 
                       { the last statement should return the value as
                         location and type, this is done be referencing the
                         temp and converting it first from a persistent temp to
                         normal temp }
-                      addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
-                      addstatement(newstatement,CTempRefNode.create(temp));
+                      AddStatement(lNewStatement,CTempDeleteNode.Create_Normal_Temp(lTemp));
+                      AddStatement(lNewStatement,CTempRefNode.Create(lTemp));
                     end;
-                  TSetElementNode(right).left:=nil;
+                  TSetElementNode(Right).Left:=nil;
                 end
               else
                 begin
-                  if right.nodetype=setelementn then
+                  if Right.NodeType=setelementn then
                     begin
-                      if no_temp then
+                      if lNoTemp then
                         begin
                           { add a range or a single element? }
-                          if Assigned(TSetElementNode(right).right) then
+                          if Assigned(TSetElementNode(Right).Right) then
                             begin
                               { adjust for set base }
-                              TSetElementNode(right).left:=CAddNode.create(subn,
-                                CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                                COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
+                              TSetElementNode(Right).Left:=CAddNode.Create(subn,
+                                CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                                COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
 
                               { adjust for set base }
-                              TSetElementNode(right).right:=CAddNode.create(subn,
-                                CTypeConvNode.Create_Internal(TSetElementNode(right).right,SIntType),
-                                COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
+                              TSetElementNode(Right).Right:=CAddNode.Create(subn,
+                                CTypeConvNode.Create_Internal(TSetElementNode(Right).Right,SIntType),
+                                COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
 
-                              result:=CCallNode.createintern('fpc_varset_set_range',
-                                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                                CCallParaNode.create(TSetElementNode(right).right,
-                                CCallParaNode.create(TSetElementNode(right).left,
-                                CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                                CCallParaNode.create(left,nil))))));
+                              Result:=CCallNode.CreateIntern('fpc_varset_set_range',
+                                CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                                CCallParaNode.Create(TSetElementNode(Right).Right,
+                                CCallParaNode.Create(TSetElementNode(Right).Left,
+                                CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,
+                                CCallParaNode.Create(Left,nil))))));
                             end
                           else
                             begin
                               { s:=s+[element]; ? }
-                              if left.isequal(aktassignmentnode.left) then
-                                result:=CInlineNode.createintern(in_include_x_y,false,CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                                  CCallParaNode.create(CTypeConvNode.Create_Internal(TSetElementNode(right).left,TSetDef(resultdef).ElementDef),nil)))
+                              if Left.IsEqual(AktAssignmentNode.Left) then
+                                Result:=CInlineNode.CreateIntern(in_include_x_y,false,CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,
+                                  CCallParaNode.Create(CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,TSetDef(ResultDef).ElementDef),nil)))
                               else
                                 begin
                                   { adjust for set base }
-                                  TSetElementNode(right).left:=CAddNode.create(subn,
-                                    CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                                    COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
+                                  TSetElementNode(Right).Left:=CAddNode.Create(subn,
+                                    CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                                    COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
 
-                                  result:=CCallNode.createintern('fpc_varset_set',
-                                    CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                                    CCallParaNode.create(CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                                    CCallParaNode.create(aktassignmentnode.left.GetCopy,
-                                    CCallParaNode.create(left,nil)))));
+                                  Result:=CCallNode.CreateIntern('fpc_varset_set',
+                                    CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                                    CCallParaNode.Create(CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                                    CCallParaNode.Create(AktAssignmentNode.Left.GetCopy,
+                                    CCallParaNode.Create(Left,nil)))));
                                 end;
                             end;
 
-                          include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+                          include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
                         end
                       else
                         begin
                           { adjust for set base }
-                          TSetElementNode(right).left:=CAddNode.create(subn,
-                            CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                            COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
+                          TSetElementNode(Right).Left:=CAddNode.Create(subn,
+                            CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                            COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
 
-                          result:=internalstatements(newstatement);
+                          Result:=InternalStatements(lNewStatement);
 
                           { create temp for result }
-                          temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
-                          addstatement(newstatement,temp);
+                          lTemp:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,true);
+                          AddStatement(lNewStatement,lTemp);
 
                           { add a range or a single element? }
-                          if Assigned(TSetElementNode(right).right) then
+                          if Assigned(TSetElementNode(Right).Right) then
                             begin
                               { adjust for set base }
-                              TSetElementNode(right).right:=CAddNode.create(subn,
-                                CTypeConvNode.Create_Internal(TSetElementNode(right).right,SIntType),
-                                COrdConstNode.create(TSetDef(resultdef).SetBase,SIntType,false));
-                              addstatement(newstatement,CCallNode.createintern('fpc_varset_set_range',
-                                CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                                CCallParaNode.create(TSetElementNode(right).right,
-                                CCallParaNode.create(TSetElementNode(right).left,
-                                CCallParaNode.create(CTempRefNode.create(temp),
-                                CCallParaNode.create(left,nil))))))
+                              TSetElementNode(Right).Right:=CAddNode.Create(subn,
+                                CTypeConvNode.Create_Internal(TSetElementNode(Right).Right,SIntType),
+                                COrdConstNode.Create(TSetDef(ResultDef).SetBase,SIntType,false));
+                              AddStatement(lNewStatement,CCallNode.CreateIntern('fpc_varset_set_range',
+                                CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                                CCallParaNode.Create(TSetElementNode(Right).Right,
+                                CCallParaNode.Create(TSetElementNode(Right).Left,
+                                CCallParaNode.Create(CTempRefNode.Create(lTemp),
+                                CCallParaNode.Create(Left,nil))))))
                               );
                             end
                           else
-                            addstatement(newstatement,CCallNode.createintern('fpc_varset_set',
-                              CCallParaNode.create(COrdConstNode.create(resultdef.Size,SIntType,false),
-                              CCallParaNode.create(CTypeConvNode.Create_Internal(TSetElementNode(right).left,SIntType),
-                              CCallParaNode.create(CTempRefNode.create(temp),
-                              CCallParaNode.create(left,nil)))))
+                            AddStatement(lNewStatement,CCallNode.CreateIntern('fpc_varset_set',
+                              CCallParaNode.Create(COrdConstNode.Create(ResultDef.Size,SIntType,false),
+                              CCallParaNode.Create(CTypeConvNode.Create_Internal(TSetElementNode(Right).Left,SIntType),
+                              CCallParaNode.Create(CTempRefNode.Create(lTemp),
+                              CCallParaNode.Create(Left,nil)))))
                             );
                           { the last statement should return the value as
                             location and type, this is done be referencing the
                             temp and converting it first from a persistent temp to
                             normal temp }
-                          addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
-                          addstatement(newstatement,CTempRefNode.create(temp));
+                          AddStatement(lNewStatement,CTempDeleteNode.Create_Normal_Temp(lTemp));
+                          AddStatement(lNewStatement,CTempRefNode.Create(lTemp));
                         end;
                       { remove reused parts from original node }
-                      TSetElementNode(right).right:=nil;
-                      TSetElementNode(right).left:=nil;
-                      left:=nil;
+                      TSetElementNode(Right).Right:=nil;
+                      TSetElementNode(Right).Left:=nil;
+                      Left:=nil;
                     end
                   else
-                    call_varset_helper('fpc_varset_add_sets');
+                    CallVarSetHelper('fpc_varset_add_sets');
                 end
             end;
           subn:
-            call_varset_helper('fpc_varset_sub_sets');
+            CallVarSetHelper('fpc_varset_sub_sets');
           symdifn:
-            call_varset_helper('fpc_varset_symdif_sets');
+            CallVarSetHelper('fpc_varset_symdif_sets');
           muln:
-            call_varset_helper('fpc_varset_mul_sets');
+            CallVarSetHelper('fpc_varset_mul_sets');
           else
             InternalError(200609241);
         end;
       end;
 
 
-    function TAddNode.first_adddynarray : TNode;
+    function TAddNode.First_AddDynArray : TNode;
       var
-        newstatement : TStatementNode;
-        tempnode (*,tempnode2*) : TTempCreateNode;
-        para: TCallParaNode;
+        lNewStatement : TStatementNode;
+        lTempNode (*,tempnode2*) : TTempCreateNode;
+        lPara: TCallParaNode;
       begin
-        result:=nil;
+        Result:=nil;
         { when we get here, we are sure that both the left and the right }
         { node are both strings of the same stringtype (JM)              }
-        case nodetype of
+        case NodeType of
           addn:
             begin
-              if (left.nodetype=arrayconstructorn) and (TArrayConstructorNode(left).isempty) then
+              if (Left.NodeType=arrayconstructorn) and (TArrayConstructorNode(Left).isempty) then
                 begin
-                  result:=right;
-                  left.free;
-                  left:=nil;
-                  right:=nil;
+                  Result:=Right;
+                  Left.free;
+                  Left:=nil;
+                  Right:=nil;
                   exit;
                 end;
-              if (right.nodetype=arrayconstructorn) and (TArrayConstructorNode(right).isempty) then
+              if (Right.NodeType=arrayconstructorn) and (TArrayConstructorNode(Right).isempty) then
                 begin
-                  result:=left;
-                  left:=nil;
-                  right.free;
-                  right:=nil;
+                  Result:=Left;
+                  Left:=nil;
+                  Right.free;
+                  Right:=nil;
                   exit;
                 end;
               { create the call to the concat routine both strings as arguments }
-              if Assigned(aktassignmentnode) and
-                  (aktassignmentnode.right=self) and
-                  (aktassignmentnode.left.resultdef=resultdef) and
-                  valid_for_var(aktassignmentnode.left,false) then
+              if Assigned(AktAssignmentNode) and
+                  (AktAssignmentNode.Right=Self) and
+                  (AktAssignmentNode.Left.ResultDef=ResultDef) and
+                  valid_for_var(AktAssignmentNode.Left,false) then
                 begin
-                  para:=CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(right,VoidCodePointerType),
-                        CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(left,VoidCodePointerType),
-                        CCallParaNode.create(
-                          CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
-                        CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(aktassignmentnode.left.GetCopy,VoidCodePointerType),nil)
+                  lPara:=CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(Right,VoidCodePointerType),
+                        CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(Left,VoidCodePointerType),
+                        CCallParaNode.Create(
+                          CAddrNode.Create_Internal(CRTTINode.Create(TStoredDef(ResultDef),initrtti,rdt_normal)),
+                        CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(AktAssignmentNode.Left.GetCopy,VoidCodePointerType),nil)
                         )));
-                  result:=CCallNode.createintern(
+                  Result:=CCallNode.CreateIntern(
                             'fpc_dynarray_concat',
-                            para
+                            lPara
                           );
-                  include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
-                  FirstPass(result);
+                  include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
+                  FirstPass(Result);
                 end
               else
                 begin
-                  result:=internalstatements(newstatement);
-                  tempnode:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,true);
-                  addstatement(newstatement,tempnode);
-                  para:=CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(right,VoidCodePointerType),
-                        CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(left,VoidCodePointerType),
-                        CCallParaNode.create(
-                          CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
-                        CCallParaNode.create(
-                          CTypeConvNode.Create_Internal(CTempRefNode.create(tempnode),VoidCodePointerType),nil)
+                  Result:=InternalStatements(lNewStatement);
+                  lTempNode:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,true);
+                  AddStatement(lNewStatement,lTempNode);
+                  lPara:=CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(Right,VoidCodePointerType),
+                        CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(Left,VoidCodePointerType),
+                        CCallParaNode.Create(
+                          CAddrNode.Create_Internal(CRTTINode.Create(TStoredDef(ResultDef),initrtti,rdt_normal)),
+                        CCallParaNode.Create(
+                          CTypeConvNode.Create_Internal(CTempRefNode.Create(lTempNode),VoidCodePointerType),nil)
                         )));
-                  addstatement(
-                    newstatement,
-                    CCallNode.createintern(
+                  AddStatement(
+                    lNewStatement,
+                    CCallNode.CreateIntern(
                       'fpc_dynarray_concat',
-                      para
+                      lPara
                     )
                   );
-                  addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
-                  addstatement(newstatement,CTempRefNode.create(tempnode));
+                  AddStatement(lNewStatement,CTempDeleteNode.Create_Normal_Temp(lTempNode));
+                  AddStatement(lNewStatement,CTempRefNode.Create(lTempNode));
                 end;
               { we reused the arguments }
-              left := nil;
-              right := nil;
+              Left := nil;
+              Right := nil;
             end;
           unequaln,EqualN:
-            expectloc:=LOC_FLAGS;
+            ExpectLoc:=LOC_FLAGS;
           else
             InternalError(2018030301);
           end;
       end;
 
 
-    function TAddNode.use_generic_mul32to64: boolean;
+    function TAddNode.Use_Generic_Mul32To64: Boolean;
       begin
-        result := true;
+        Result := true;
       end;
 
 
-    function TAddNode.use_generic_mul64bit: boolean;
+    function TAddNode.Use_Generic_Mul64Bit: Boolean;
       begin
-        result := true;
+        Result := true;
       end;
 
 
-    function TAddNode.try_make_mul32to64: boolean;
+    function TAddNode.TryMakeMul32To64: Boolean;
 
-      function canbe32bitint(v: TConstExprInt; out canbesignedconst, canbeunsignedconst: boolean): boolean;
+      function CanBe32BitInt(AValue: TConstExprInt; out ACanBeSignedConst, ACanBeUnsignedConst: Boolean): Boolean;
         begin
-          result := ((v >= int64(low(LongInt))) and (v <= int64(high(LongInt)))) or
-                    ((v >= qword(low(cardinal))) and (v <= qword(high(cardinal))));
-          canbesignedconst:=v<=int64(high(LongInt));
-          canbeunsignedconst:=v>=0;
+          Result := ((AValue >= Int64(low(LongInt))) and (AValue <= Int64(high(LongInt)))) or
+                    ((AValue >= QWord(low(Cardinal))) and (AValue <= QWord(high(Cardinal))));
+          ACanBeSignedConst:=AValue<=Int64(high(LongInt));
+          ACanBeUnsignedConst:=AValue>=0;
         end;
 
-      function is_32bitordconst(n: TNode; out canbesignedconst, canbeunsignedconst: boolean): boolean;
+      function Is32BitOrdConst(ANode: TNode; out ACanBeSignedConst, ACanBeUnsignedConst: Boolean): Boolean;
         begin
-          canbesignedconst:=false;
-          canbeunsignedconst:=false;
-          result := (n.nodetype = ordconstn) and
-                    canbe32bitint(TOrdConstNode(n).Value, canbesignedconst, canbeunsignedconst);
+          ACanBeSignedConst:=false;
+          ACanBeUnsignedConst:=false;
+          Result := (ANode.NodeType = ordconstn) and
+                    CanBe32BitInt(TOrdConstNode(ANode).Value, ACanBeSignedConst, ACanBeUnsignedConst);
         end;
 
-      function is_32to64typeconv(n: TNode): boolean;
+      function Is32To64TypeConv(ANode: TNode): Boolean;
         begin
-          result := (n.nodetype = typeconvn) and
-                    Is_Integer(TTypeConvNode(n).left.resultdef) and
-                    not Is_64Bit(TTypeConvNode(n).left.resultdef);
+          Result := (ANode.NodeType = typeconvn) and
+                    Is_Integer(TTypeConvNode(ANode).Left.ResultDef) and
+                    not Is_64Bit(TTypeConvNode(ANode).Left.ResultDef);
         end;
 
       var
-        temp: TNode;
-        leftoriginallysigned,
-        canbesignedconst, canbeunsignedconst, swapped: boolean;
+        lTempNode: TNode;
+        lLeftOriginallySigned,
+        lCanBeSignedConst, lCanBeUnsignedConst, lSwapped: Boolean;
       begin
-        result := false;
-        swapped := false;
+        Result := false;
+        lSwapped := false;
         { make sure that if there is a constant, that it's on the right }
-        if left.nodetype = ordconstn then
+        if Left.NodeType = ordconstn then
           begin
-            swapleftright;
-            swapped := true;
+            SwapLeftRight;
+            lSwapped := true;
           end;
-        if is_32to64typeconv(left) then
+        if Is32To64TypeConv(Left) then
           begin
-            leftoriginallysigned:=Is_Signed(TTypeConvNode(left).left.resultdef);
-            if ((is_32bitordconst(right,canbesignedconst, canbeunsignedconst) and
-                 ((leftoriginallysigned and canbesignedconst) or
-                  (not leftoriginallysigned and canbeunsignedconst))) or
-                (is_32to64typeconv(right) and
-                  ((leftoriginallysigned =
-                    Is_Signed(TTypeConvNode(right).left.resultdef)) or
-                   (leftoriginallysigned and
-                    (TOrdDef(TTypeConvNode(right).left.resultdef).OrdType in [u8bit,u16bit]))))) then
+            lLeftOriginallySigned:=Is_Signed(TTypeConvNode(Left).Left.ResultDef);
+            if ((Is32BitOrdConst(Right,lCanBeSignedConst, lCanBeUnsignedConst) and
+                 ((lLeftOriginallySigned and lCanBeSignedConst) or
+                  (not lLeftOriginallySigned and lCanBeUnsignedConst))) or
+                (Is32To64TypeConv(Right) and
+                  ((lLeftOriginallySigned =
+                    Is_Signed(TTypeConvNode(Right).Left.ResultDef)) or
+                   (lLeftOriginallySigned and
+                    (TOrdDef(TTypeConvNode(Right).Left.ResultDef).OrdType in [u8bit,u16bit]))))) then
               begin
-                temp := TTypeConvNode(left).left;
-                TTypeConvNode(left).left := nil;
-                left.free;
-                left := temp;
-                if (right.nodetype = typeconvn) then
+                lTempNode := TTypeConvNode(Left).Left;
+                TTypeConvNode(Left).Left := nil;
+                Left.free;
+                Left := lTempNode;
+                if (Right.NodeType = typeconvn) then
                   begin
-                    temp := TTypeConvNode(right).left;
-                    TTypeConvNode(right).left := nil;
-                    right.free;
-                    right := temp;
+                    lTempNode := TTypeConvNode(Right).Left;
+                    TTypeConvNode(Right).Left := nil;
+                    Right.free;
+                    Right := lTempNode;
                   end;
-                if (Is_Signed(left.resultdef)) then
+                if (Is_Signed(Left.ResultDef)) then
                   begin
-                    inserttypeconv_internal(left,S32IntType);
-                    inserttypeconv_internal(right,S32IntType);
+                    InsertTypeConv_Internal(Left,S32IntType);
+                    InsertTypeConv_Internal(Right,S32IntType);
                   end
                 else
                   begin
-                    inserttypeconv_internal(left,U32IntType);
-                    inserttypeconv_internal(right,U32IntType);
+                    InsertTypeConv_Internal(Left,U32IntType);
+                    InsertTypeConv_Internal(Right,U32IntType);
                   end;
-                FirstPass(left);
-                FirstPass(right);
-                result := true;
+                FirstPass(Left);
+                FirstPass(Right);
+                Result := true;
               end;
           end;
         { pass_Typecheck caches left/right type and resultdef, so restore the
           original order }
-        if not result and swapped then
-          swapleftright;
+        if not Result and lSwapped then
+          SwapLeftRight;
       end;
 
 
-    function TAddNode.use_fma : boolean;
+    function TAddNode.Use_FMA : Boolean;
       begin
-        result:=false;
+        Result:=false;
       end;
 
 
-    function TAddNode.try_fma(ld,rd : TDef) : TNode;
+    function TAddNode.TryFMA(ALeftDef,ARightDef : TDef) : TNode;
       var
-        inlinennr : TInlineNumber;
+        lInlineNumber : TInlineNumber;
       begin
-        result:=nil;
+        Result:=nil;
         if (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and
-          use_fma and
-          (nodetype in [addn,subn]) and
-          (rd.typ=floatdef) and (ld.typ=floatdef) and
-          (Is_Single(rd) or Is_Double(rd)) and
-          Equal_Defs(rd,ld) and
+          Use_FMA and
+          (NodeType in [addn,subn]) and
+          (ARightDef.typ=floatdef) and (ALeftDef.typ=floatdef) and
+          (Is_Single(ARightDef) or Is_Double(ARightDef)) and
+          Equal_Defs(ARightDef,ALeftDef) and
           { transforming a*b+c into fma(a,b,c) makes only sense if c can be
             calculated easily. Consider a*b+c*d which results in
 
@@ -4419,289 +4419,292 @@ const
             The second sequence requires clock_cycles(fmul)+clock_cycles(fma) because the fma has to wait for the
             result of the fmul. Since typically clock_cycles(fma)>clock_cycles(fadd) applies, the first sequence is better.
           }
-          (((left.nodetype=muln) and (node_complexity(right)<3)) or
-           ((right.nodetype=muln) and (node_complexity(left)<3)) or
-           ((left.nodetype=inlinen) and
-            (TInlineNode(left).inlinenumber=in_sqr_real) and
-             (node_complexity(right)<3)) or
-           ((right.nodetype=inlinen) and
-            (TInlineNode(right).inlinenumber=in_sqr_real) and
-            (node_complexity(left)<3))
+          (((Left.NodeType=muln) and (Node_Complexity(Right)<3)) or
+           ((Right.NodeType=muln) and (Node_Complexity(Left)<3)) or
+           ((Left.NodeType=inlinen) and
+            (TInlineNode(Left).InlineNumber=in_sqr_real) and
+             (Node_Complexity(Right)<3)) or
+           ((Right.NodeType=inlinen) and
+            (TInlineNode(Right).InlineNumber=in_sqr_real) and
+            (Node_Complexity(Left)<3))
           ) then
           begin
-            case TFloatDef(ld).FloatType of
+            case TFloatDef(ALeftDef).FloatType of
               S32Real:
-               inlinennr:=in_fma_single;
+               lInlineNumber:=in_fma_single;
               S64Real:
-               inlinennr:=in_fma_double;
+               lInlineNumber:=in_fma_double;
               s80real:
-               inlinennr:=in_fma_extended;
+               lInlineNumber:=in_fma_extended;
               else
                 InternalError(2014042601);
             end;
-            if left.nodetype=muln then
+            if Left.NodeType=muln then
               begin
-                if nodetype=subn then
-                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(CUnaryMinusNode.create(right),
-                    CCallParaNode.create(TAddNode(left).right,
-                    CCallParaNode.create(TAddNode(left).left,nil
+                if NodeType=subn then
+                  Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(CUnaryMinusNode.Create(Right),
+                    CCallParaNode.Create(TAddNode(Left).Right,
+                    CCallParaNode.Create(TAddNode(Left).Left,nil
                     ))))
                 else
-                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(right,
-                    CCallParaNode.create(TAddNode(left).right,
-                    CCallParaNode.create(TAddNode(left).left,nil
+                  Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Right,
+                    CCallParaNode.Create(TAddNode(Left).Right,
+                    CCallParaNode.Create(TAddNode(Left).Left,nil
                     ))));
-                right:=nil;
-                TAddNode(left).right:=nil;
-                TAddNode(left).left:=nil;
+                Right:=nil;
+                TAddNode(Left).Right:=nil;
+                TAddNode(Left).Left:=nil;
               end
-            else if right.nodetype=muln then
+            else if Right.NodeType=muln then
               begin
-                if nodetype=subn then
-                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
-                    CCallParaNode.create(CUnaryMinusNode.create(TAddNode(right).right),
-                    CCallParaNode.create(TAddNode(right).left,nil
+                if NodeType=subn then
+                  Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Left,
+                    CCallParaNode.Create(CUnaryMinusNode.Create(TAddNode(Right).Right),
+                    CCallParaNode.Create(TAddNode(Right).Left,nil
                     ))))
                 else
-                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
-                    CCallParaNode.create(TAddNode(right).right,
-                    CCallParaNode.create(TAddNode(right).left,nil
+                  Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Left,
+                    CCallParaNode.Create(TAddNode(Right).Right,
+                    CCallParaNode.Create(TAddNode(Right).Left,nil
                     ))));
-                left:=nil;
-                TAddNode(right).right:=nil;
-                TAddNode(right).left:=nil;
+                Left:=nil;
+                TAddNode(Right).Right:=nil;
+                TAddNode(Right).Left:=nil;
               end
-            else if (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) then
+            else if (Left.NodeType=inlinen) and (TInlineNode(Left).InlineNumber=in_sqr_real) then
               begin
-                if node_complexity(TInlineNode(left).left)=0 then
+                if Node_Complexity(TInlineNode(Left).Left)=0 then
                   begin
-                    if nodetype=subn then
-                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(CUnaryMinusNode.create(right),
-                        CCallParaNode.create(TInlineNode(left).left.GetCopy,
-                        CCallParaNode.create(TInlineNode(left).left.GetCopy,nil
+                    if NodeType=subn then
+                      Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(CUnaryMinusNode.Create(Right),
+                        CCallParaNode.Create(TInlineNode(Left).Left.GetCopy,
+                        CCallParaNode.Create(TInlineNode(Left).Left.GetCopy,nil
                         ))))
                     else
-                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(right,
-                        CCallParaNode.create(TInlineNode(left).left.GetCopy,
-                        CCallParaNode.create(TInlineNode(left).left.GetCopy,nil
+                      Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Right,
+                        CCallParaNode.Create(TInlineNode(Left).Left.GetCopy,
+                        CCallParaNode.Create(TInlineNode(Left).Left.GetCopy,nil
                         ))));
-                    right:=nil;
+                    Right:=nil;
                   end;
               end
             { we get here only if right is a sqr node }
-            else if (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
+            else if (Right.NodeType=inlinen) and (TInlineNode(Right).InlineNumber=in_sqr_real) then
               begin
-                if node_complexity(TInlineNode(right).left)=0 then
+                if Node_Complexity(TInlineNode(Right).Left)=0 then
                   begin
-                    if nodetype=subn then
-                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
-                        CCallParaNode.create(CUnaryMinusNode.create(TInlineNode(right).left.GetCopy),
-                        CCallParaNode.create(TInlineNode(right).left.GetCopy,nil
+                    if NodeType=subn then
+                      Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Left,
+                        CCallParaNode.Create(CUnaryMinusNode.Create(TInlineNode(Right).Left.GetCopy),
+                        CCallParaNode.Create(TInlineNode(Right).Left.GetCopy,nil
                         ))))
                     else
-                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
-                        CCallParaNode.create(TInlineNode(right).left.GetCopy,
-                        CCallParaNode.create(TInlineNode(right).left.GetCopy,nil
+                      Result:=CInlineNode.Create(lInlineNumber,false,CCallParaNode.Create(Left,
+                        CCallParaNode.Create(TInlineNode(Right).Left.GetCopy,
+                        CCallParaNode.Create(TInlineNode(Right).Left.GetCopy,nil
                         ))));
-                    left:=nil;
+                    Left:=nil;
                   end;
               end;
           end;
       end;
 
 
-    function TAddNode.first_add64bitint: TNode;
+    function TAddNode.First_Add64BitInt: TNode;
       var
-        procname: string[31];
-        power: LongInt;
+        lProcName: string[31];
+        lPower: LongInt;
       begin
-        result := nil;
+        Result := nil;
         { create helper calls mul }
-        if nodetype <> muln then
+        if NodeType <> muln then
           exit;
 
         { make sure that if there is a constant, that it's on the right }
-        if left.nodetype = ordconstn then
-          swapleftright;
+        if Left.NodeType = ordconstn then
+          SwapLeftRight;
 
         { can we use a shift instead of a mul? }
         if not (cs_check_overflow in CurrentSettings.LocalSwitches) and
-           (right.nodetype = ordconstn) and
-           IsPowerOf2(TOrdConstNode(right).Value,power) then
+           (Right.NodeType = ordconstn) and
+           IsPowerOf2(TOrdConstNode(Right).Value,lPower) then
           begin
-            TOrdConstNode(right).Value := power;
-            result := CShlShrNode.create(shln,left,right);
+            TOrdConstNode(Right).Value := lPower;
+            Result := CShlShrNode.Create(shln,Left,Right);
             { left and right are reused }
-            left := nil;
-            right := nil;
+            Left := nil;
+            Right := nil;
             { return firstpassed new node }
             exit;
           end;
 
-        if try_make_mul32to64 then
+        if TryMakeMul32To64 then
           begin
             { this uses the same criteria for signedness as the 32 to 64-bit mul
               handling in the i386 code generator }
-            if Is_Signed(left.resultdef) and Is_Signed(right.resultdef) then
-              procname := 'fpc_mul_longint_to_int64'
+            if Is_Signed(Left.ResultDef) and Is_Signed(Right.ResultDef) then
+              lProcName := 'fpc_mul_longint_to_int64'
             else
-              procname := 'fpc_mul_dword_to_qword';
+              lProcName := 'fpc_mul_dword_to_qword';
 
-            right := CCallParaNode.create(right,CCallParaNode.create(left,nil));
-            result := CCallNode.createintern(procname,right);
-            left := nil;
-            right := nil;
+            Right := CCallParaNode.Create(Right,CCallParaNode.Create(Left,nil));
+            Result := CCallNode.CreateIntern(lProcName,Right);
+            Left := nil;
+            Right := nil;
           end
         else
           begin
             { can full 64-bit multiplication be handled inline? }
-            if not use_generic_mul64bit then
+            if not Use_Generic_Mul64Bit then
               begin
                 { generic handling replaces this node with call to fpc_mul_int64,
                   whose result is int64 }
-                if Is_Currency(resultdef) then
-                  resultdef:=S64IntType;
+                if Is_Currency(ResultDef) then
+                  ResultDef:=S64IntType;
                 exit;
               end;
 
             { when currency is used set the result of the
               parameters to s64bit, so they are not converted }
-            if Is_Currency(resultdef) then
+            if Is_Currency(ResultDef) then
               begin
-                left.resultdef:=S64IntType;
-                right.resultdef:=S64IntType;
+                Left.ResultDef:=S64IntType;
+                Right.ResultDef:=S64IntType;
               end;
 
             { otherwise, create the parameters for the helper }
-            right :=   CCallParaNode.create(right,CCallParaNode.create(left,nil));
-            left := nil;
+            Right :=   CCallParaNode.Create(Right,CCallParaNode.Create(Left,nil));
+            Left := nil;
             { only qword needs the unsigned code, the
               signed code is also used for currency }
-            if Is_Signed(resultdef) then
-              procname := 'fpc_mul_int64'
+            if Is_Signed(ResultDef) then
+              lProcName := 'fpc_mul_int64'
             else
-              procname := 'fpc_mul_qword';
+              lProcName := 'fpc_mul_qword';
             if cs_check_overflow in CurrentSettings.LocalSwitches then
-              procname := procname + '_checkoverflow';
+              lProcName := lProcName + '_checkoverflow';
 
-            result := CCallNode.createintern(procname,right);
-            right := nil;
+            Result := CCallNode.CreateIntern(lProcName,Right);
+            Right := nil;
           end;
       end;
 
 
-    function TAddNode.first_addpointer: TNode;
+    function TAddNode.First_AddPointer: TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_REGISTER;
+        Result:=nil;
+        ExpectLoc:=LOC_REGISTER;
       end;
 
 
-    function TAddNode.first_cmppointer: TNode;
+    function TAddNode.First_CmpPointer: TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_FLAGS;
+        Result:=nil;
+        ExpectLoc:=LOC_FLAGS;
       end;
 
 
 
 {$ifdef cpuneedsmulhelper}
-    function TAddNode.use_mul_helper: boolean;
+    function TAddNode.Use_Mul_Helper: Boolean;
       begin
-        result:=(nodetype=muln) and
-                not(TOrdDef(resultdef).OrdType in [u8bit,s8bit
+        Result:=(NodeType=muln) and
+                not(TOrdDef(ResultDef).OrdType in [u8bit,s8bit
                 ]);
       end;
 {$endif cpuneedsmulhelper}
 
 
-    function TAddNode.pass_1 : TNode;
+    function TAddNode.Pass_1 : TNode;
 
-      function isconstsetfewelements(p : TNode) : boolean;
+      function isconstsetfewelements(ANode : TNode) : Boolean;
         begin
-          result:=(p.nodetype=setconstn) and (TSetConstNode(p).elements<=4);
+          Result:=(ANode.NodeType=setconstn) and (TSetConstNode(ANode).elements<=4);
         end;
 
       var
-         rd,ld   : TDef;
-         i,i2    : LongInt;
-         lt,rt   : TNodeType;
+{$ifdef addstringopt}
+        lStringOptNode: TNode;
+{$endif addstringopt}
+         lRightDef,lLeftDef   : TDef;
+         lIndex,lIndex2    : LongInt;
+         lLeftNodeType,lRightNodeType   : TNodeType;
 {$ifdef cpuneedsmulhelper}
-         procname : string[32];
+         lProcName : string[32];
 {$endif cpuneedsmulhelper}
-        tempn,varsetnode: TNode;
-        mulnode : TAddNode;
-        constsetnode : TSetConstNode;
-        trycreateinnodes : Boolean;
+        lTempNode,lVarSetNode: TNode;
+        lMultiplyNode : TAddNode;
+        lConstSetNode : TSetConstNode;
+        lTryCreateInNodes : Boolean;
       begin
-         result:=nil;
+         Result:=nil;
          { Can we optimize multiple string additions into a single call?
            This need to be done on a complete tree to detect the multiple
            add nodes and is therefor done before the subtrees are processed }
-         if canbemultistringadd(self) then
+         if canbemultistringadd(Self) then
            begin
-             result:=genmultistringadd(self);
+             Result:=genmultistringadd(Self);
              exit;
            end;
 
          { Can we optimize multiple dyn. array additions into a single call?
            This need to be done on a complete tree to detect the multiple
            add nodes and is therefor done before the subtrees are processed }
-         if (m_array_operators in CurrentSettings.ModeSwitches) and canbemultidynarrayadd(self) then
+         if (m_array_operators in CurrentSettings.ModeSwitches) and canbemultidynarrayadd(Self) then
            begin
-             result:=genmultidynarrayadd(self);
+             Result:=genmultidynarrayadd(Self);
              exit;
            end;
 
          { typical set tests like (s*[const. set])<>/=[] can be converted into an or'ed chain of in tests
            for var sets if const. set contains only a few elements }
-         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and (nodetype in [unequaln,EqualN]) and (left.resultdef.typ=setdef) and not(Is_SmallSet(left.resultdef)) then
+         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and (NodeType in [unequaln,EqualN]) and (Left.ResultDef.typ=setdef) and not(Is_SmallSet(Left.ResultDef)) then
            begin
-             trycreateinnodes:=false;
-             mulnode:=nil;
-             if (is_emptyset(right) and (left.nodetype=muln) and
-                 (isconstsetfewelements(TAddNode(left).right) or isconstsetfewelements(TAddNode(left).left))) then
+             lTryCreateInNodes:=false;
+             lMultiplyNode:=nil;
+             if (Is_EmptySet(Right) and (Left.NodeType=muln) and
+                 (isconstsetfewelements(TAddNode(Left).Right) or isconstsetfewelements(TAddNode(Left).Left))) then
                begin
-                 trycreateinnodes:=true;
-                 mulnode:=TAddNode(left);
+                 lTryCreateInNodes:=true;
+                 lMultiplyNode:=TAddNode(Left);
                end
-             else if (is_emptyset(left) and (right.nodetype=muln) and
-               (isconstsetfewelements(TAddNode(right).right) or isconstsetfewelements(TAddNode(right).left))) then
+             else if (Is_EmptySet(Left) and (Right.NodeType=muln) and
+               (isconstsetfewelements(TAddNode(Right).Right) or isconstsetfewelements(TAddNode(Right).Left))) then
                begin
-                 trycreateinnodes:=true;
-                 mulnode:=TAddNode(right);
+                 lTryCreateInNodes:=true;
+                 lMultiplyNode:=TAddNode(Right);
                end;
 
-             if trycreateinnodes then
+             if lTryCreateInNodes then
                begin
-                 constsetnode:=nil;
-                 varsetnode:=nil;
-                 if isconstsetfewelements(mulnode.right) then
+                 lConstSetNode:=nil;
+                 lVarSetNode:=nil;
+                 if isconstsetfewelements(lMultiplyNode.Right) then
                    begin
-                     constsetnode:=TSetConstNode(mulnode.right);
-                     varsetnode:=mulnode.left;
+                     lConstSetNode:=TSetConstNode(lMultiplyNode.Right);
+                     lVarSetNode:=lMultiplyNode.Left;
                    end
                  else
                    begin
-                     constsetnode:=TSetConstNode(mulnode.left);
-                     varsetnode:=mulnode.right;
+                     lConstSetNode:=TSetConstNode(lMultiplyNode.Left);
+                     lVarSetNode:=lMultiplyNode.Right;
                    end;
                  { the node is copied so it might have no side effects, if the complexity is too, cse should fix it, so
                    do not check complexity }
-                 if not(might_have_sideeffects(varsetnode)) then
+                 if not(Might_Have_SideEffects(lVarSetNode)) then
                    begin
-                     result:=nil;
-                     for i:=low(TConstSet) to high(TConstSet) do
-                       if i in constsetnode.value_set^ then
+                     Result:=nil;
+                     for lIndex:=low(TConstSet) to high(TConstSet) do
+                       if lIndex in lConstSetNode.ValueSet^ then
                          begin
-                           tempn:=CInNode.create(COrdConstNode.create(i,TSetDef(constsetnode.resultdef).ElementDef,false),varsetnode.GetCopy);
-                           if Assigned(result) then
-                             result:=CAddNode.Create_Internal(orn,result,tempn)
+                           lTempNode:=CInNode.Create(COrdConstNode.Create(lIndex,TSetDef(lConstSetNode.ResultDef).ElementDef,false),lVarSetNode.GetCopy);
+                           if Assigned(Result) then
+                             Result:=CAddNode.Create_Internal(orn,Result,lTempNode)
                            else
-                             result:=tempn;
+                             Result:=lTempNode;
                          end;
-                     if nodetype=EqualN then
-                       result:=CNotNode.create(result);
+                     if NodeType=EqualN then
+                       Result:=CNotNode.Create(Result);
                      exit;
                    end;
                end;
@@ -4710,331 +4713,331 @@ const
         { get rid of adding empty sets generated by set constructors (s+([]+[..]))
 
           this needs to be done before firstpass, else the set additions get already converted into calls }
-        if (resultdef.typ=setdef) and (nodetype=addn) and (right.nodetype=addn) and (is_emptyset(TAddNode(right).left)) then
+        if (ResultDef.typ=setdef) and (NodeType=addn) and (Right.NodeType=addn) and (Is_EmptySet(TAddNode(Right).Left)) then
           begin
-            result:=CAddNode.create(addn,left,TAddNode(right).right);
-            left:=nil;
-            TAddNode(right).right:=nil;
+            Result:=CAddNode.Create(addn,Left,TAddNode(Right).Right);
+            Left:=nil;
+            TAddNode(Right).Right:=nil;
             exit;
           end;
 
          { first do the two subtrees }
-         FirstPass(left);
-         FirstPass(right);
+         FirstPass(Left);
+         FirstPass(Right);
 
          if CodeGenError then
            exit;
 
          { load easier access variables }
-         rd:=right.resultdef;
-         ld:=left.resultdef;
-         rt:=right.nodetype;
-         lt:=left.nodetype;
+         lRightDef:=Right.ResultDef;
+         lLeftDef:=Left.ResultDef;
+         lRightNodeType:=Right.NodeType;
+         lLeftNodeType:=Left.NodeType;
 
          { int/int gives real/real! }
-         if nodetype=slashn then
+         if NodeType=slashn then
            begin
-             expectloc:=LOC_FPUREGISTER;
+             ExpectLoc:=LOC_FPUREGISTER;
            end
 
          { if both are orddefs then check sub types }
-         else if (ld.typ=orddef) and (rd.typ=orddef) then
+         else if (lLeftDef.typ=orddef) and (lRightDef.typ=orddef) then
            begin
              { optimize multiplication by a power of 2 }
              if not(cs_check_overflow in CurrentSettings.LocalSwitches) and
-                (nodetype = muln) and
-                not Is_Currency(resultdef) and
-                (((left.nodetype = ordconstn) and
-                  IsPowerOf2(TOrdConstNode(left).Value,i)) or
-                 ((right.nodetype = ordconstn) and
-                  IsPowerOf2(TOrdConstNode(right).Value,i2))) then
+                (NodeType = muln) and
+                not Is_Currency(ResultDef) and
+                (((Left.NodeType = ordconstn) and
+                  IsPowerOf2(TOrdConstNode(Left).Value,lIndex)) or
+                 ((Right.NodeType = ordconstn) and
+                  IsPowerOf2(TOrdConstNode(Right).Value,lIndex2))) then
                begin
                  { it could be that we are converting a 32x32 -> 64 multiplication:
                    in this case, we have to restore the type conversion }
-                 inserttypeconv_internal(left,resultdef);
-                 inserttypeconv_internal(right,resultdef);
-                 if ((left.nodetype = ordconstn) and
-                     IsPowerOf2(TOrdConstNode(left).Value,i)) then
+                 InsertTypeConv_Internal(Left,ResultDef);
+                 InsertTypeConv_Internal(Right,ResultDef);
+                 if ((Left.NodeType = ordconstn) and
+                     IsPowerOf2(TOrdConstNode(Left).Value,lIndex)) then
                    begin
-                     TOrdConstNode(left).Value := i;
-                     result := CShlShrNode.create(shln,right,left);
+                     TOrdConstNode(Left).Value := lIndex;
+                     Result := CShlShrNode.Create(shln,Right,Left);
                    end
                  else
                    begin
-                     TOrdConstNode(right).Value := i2;
-                     result := CShlShrNode.create(shln,left,right);
+                     TOrdConstNode(Right).Value := lIndex2;
+                     Result := CShlShrNode.Create(shln,Left,Right);
                    end;
-                 result.resultdef := resultdef;
-                 left := nil;
-                 right := nil;
+                 Result.ResultDef := ResultDef;
+                 Left := nil;
+                 Right := nil;
                  exit;
                end;
 
            { 2 booleans ? }
-             if Is_Boolean(ld) and Is_Boolean(rd) then
+             if Is_Boolean(lLeftDef) and Is_Boolean(lRightDef) then
               begin
-                if doshortbooleval(self) then
-                  expectloc:=LOC_JUMP
+                if DoShortBoolEval(Self) then
+                  ExpectLoc:=LOC_JUMP
                 else
                  begin
-                   if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
-                     expectloc:=LOC_FLAGS
+                   if NodeType in [ltn,lten,gtn,gten,EqualN,unequaln] then
+                     ExpectLoc:=LOC_FLAGS
                    else
-                     expectloc:=LOC_REGISTER;
+                     ExpectLoc:=LOC_REGISTER;
                  end;
               end
              else
              { Both are chars? only convert to shortstrings for addn }
-              if Is_Char(ld) then
+              if Is_Char(lLeftDef) then
                begin
-                 if nodetype=addn then
+                 if NodeType=addn then
                   InternalError(200103291);
-                 expectloc:=LOC_FLAGS;
+                 ExpectLoc:=LOC_FLAGS;
                end
-             else if (nodetype=muln) and
-                Is_64BitInt(resultdef) and
-                not use_generic_mul32to64 and
-                try_make_mul32to64 then
+             else if (NodeType=muln) and
+                Is_64BitInt(ResultDef) and
+                not Use_Generic_Mul32To64 and
+                TryMakeMul32To64 then
                begin
                  { if the code generator can handle 32 to 64-bit muls,
                    we're done here }
-                 expectloc:=LOC_REGISTER;
+                 ExpectLoc:=LOC_REGISTER;
                end
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
               { is there a 64 bit type ? }
-             else if (TOrdDef(ld).OrdType in [s64bit,u64bit,scurrency]) then
+             else if (TOrdDef(lLeftDef).OrdType in [s64bit,u64bit,scurrency]) then
                begin
-                 result := first_add64bitint;
-                 if Assigned(result) then
+                 Result := First_Add64BitInt;
+                 if Assigned(Result) then
                    exit;
-                  if nodetype in [addn,subn,muln,andn,orn,xorn] then
-                    expectloc:=LOC_REGISTER
+                  if NodeType in [addn,subn,muln,andn,orn,xorn] then
+                    ExpectLoc:=LOC_REGISTER
                   else
-                    expectloc:=LOC_JUMP;
+                    ExpectLoc:=LOC_JUMP;
                end
 {$endif not(cpu64bitalu) and not(cpuhighleveltarget)}
              { generic 32bit conversion }
              else
                begin
 {$ifdef cpuneedsmulhelper}
-                 if use_mul_helper then
+                 if Use_Mul_Helper then
                    begin
-                     result := nil;
+                     Result := nil;
 
-                     case TOrdDef(resultdef).OrdType of
+                     case TOrdDef(ResultDef).OrdType of
                        s8bit:
-                         procname := 'fpc_mul_shortint';
+                         lProcName := 'fpc_mul_shortint';
                        u8bit:
-                         procname := 'fpc_mul_byte';
+                         lProcName := 'fpc_mul_byte';
                        s16bit:
-                         procname := 'fpc_mul_integer';
+                         lProcName := 'fpc_mul_integer';
                        u16bit:
-                         procname := 'fpc_mul_word';
+                         lProcName := 'fpc_mul_word';
                        s32bit:
-                         procname := 'fpc_mul_longint';
+                         lProcName := 'fpc_mul_longint';
                        u32bit:
-                         procname := 'fpc_mul_dword';
+                         lProcName := 'fpc_mul_dword';
                        else
                          InternalError(2011022301);
                      end;
                      if cs_check_overflow in CurrentSettings.LocalSwitches then
-                       procname:=procname+'_checkoverflow';
-                     result := CCallNode.createintern(procname,
-                       CCallParaNode.create(right,
-                       CCallParaNode.create(left,nil)));
-                     left := nil;
-                     right := nil;
-                     FirstPass(result);
+                       lProcName:=lProcName+'_checkoverflow';
+                     Result := CCallNode.CreateIntern(lProcName,
+                       CCallParaNode.Create(Right,
+                       CCallParaNode.Create(Left,nil)));
+                     Left := nil;
+                     Right := nil;
+                     FirstPass(Result);
                      exit;
                    end;
 {$endif cpuneedsmulhelper}
-                  if nodetype in [addn,subn,muln,andn,orn,xorn] then
-                    expectloc:=LOC_REGISTER
+                  if NodeType in [addn,subn,muln,andn,orn,xorn] then
+                    ExpectLoc:=LOC_REGISTER
 {$if not defined(cpuhighleveltarget)}
-                  else if TOrdDef(ld).Size>sizeof(aint) then
-                    expectloc:=LOC_JUMP
+                  else if TOrdDef(lLeftDef).Size>sizeof(aint) then
+                    ExpectLoc:=LOC_JUMP
 {$endif}
                   else
-                    expectloc:=LOC_FLAGS;
+                    ExpectLoc:=LOC_FLAGS;
               end;
            end
 
          { left side a setdef, must be before string processing,
            else array constructor can be seen as array of char (PFV) }
-         else if (ld.typ=setdef) then
+         else if (lLeftDef.typ=setdef) then
            begin
              { small sets are handled inline by the compiler.
                small set doesn't have support for adding ranges }
-             if Is_SmallSet(ld) and
+             if Is_SmallSet(lLeftDef) and
                 not(
-                    (right.nodetype=setelementn) and
-                    Assigned(TSetElementNode(right).right)
+                    (Right.NodeType=setelementn) and
+                    Assigned(TSetElementNode(Right).Right)
                    ) then
                begin
-                 if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
-                   expectloc:=LOC_FLAGS
+                 if NodeType in [ltn,lten,gtn,gten,EqualN,unequaln] then
+                   ExpectLoc:=LOC_FLAGS
                  else
-                   expectloc:=LOC_REGISTER;
+                   ExpectLoc:=LOC_REGISTER;
                end
              else
                begin
-                 result := first_addset;
-                 if Assigned(result) then
+                 Result := First_AddSet;
+                 if Assigned(Result) then
                    exit;
-                 expectloc:=LOC_CREFERENCE;
+                 ExpectLoc:=LOC_CREFERENCE;
                end;
            end
 
          { compare pchar by addresses like BP/Delphi }
-         else if Is_PChar(ld) then
+         else if Is_PChar(lLeftDef) then
            begin
-             if nodetype in [addn,subn,muln,andn,orn,xorn] then
-               result:=first_addpointer
+             if NodeType in [addn,subn,muln,andn,orn,xorn] then
+               Result:=First_AddPointer
              else
-               result:=first_cmppointer;
+               Result:=First_CmpPointer;
            end
 
          { is one of the operands a string }
-         else if (ld.typ=stringdef) then
+         else if (lLeftDef.typ=stringdef) then
             begin
-              if Is_WideString(ld) then
+              if Is_WideString(lLeftDef) then
                 begin
                    { this is only for add, the comparison is handled later }
-                   expectloc:=LOC_REGISTER;
+                   ExpectLoc:=LOC_REGISTER;
                 end
-              else if Is_UnicodeString(ld) then
+              else if Is_UnicodeString(lLeftDef) then
                 begin
                    { this is only for add, the comparison is handled later }
-                   expectloc:=LOC_REGISTER;
+                   ExpectLoc:=LOC_REGISTER;
                 end
-              else if Is_AnsiString(ld) then
+              else if Is_AnsiString(lLeftDef) then
                 begin
                    { this is only for add, the comparison is handled later }
-                   expectloc:=LOC_REGISTER;
+                   ExpectLoc:=LOC_REGISTER;
                 end
-              else if Is_LongString(ld) then
+              else if Is_LongString(lLeftDef) then
                 begin
                    { this is only for add, the comparison is handled later }
-                   expectloc:=LOC_REFERENCE;
+                   ExpectLoc:=LOC_REFERENCE;
                 end
               else
                 begin
 {$ifdef addstringopt}
                    { can create a call which isn't handled by callparatemp }
-                   if canbeaddsstringcharoptnode(self) then
+                   if canbeaddsstringcharoptnode(Self) then
                      begin
-                       hp := genaddsstringcharoptnode(self);
-                       pass_1 := hp;
+                       lStringOptNode := genaddsstringcharoptnode(Self);
+                       Pass_1 := lStringOptNode;
                        exit;
                      end
                    else
 {$endif addstringopt}
                      begin
                        { Fix right to be shortstring }
-                       if Is_Char(right.resultdef) then
+                       if Is_Char(Right.ResultDef) then
                         begin
-                          inserttypeconv(right,CShortStringType);
-                          FirstPass(right);
+                          InsertTypeConv(Right,CShortStringType);
+                          FirstPass(Right);
                         end;
                      end;
 {$ifdef addstringopt}
                    { can create a call which isn't handled by callparatemp }
-                   if canbeaddsstringcsstringoptnode(self) then
+                   if canbeaddsstringcsstringoptnode(Self) then
                      begin
-                       hp := genaddsstringcsstringoptnode(self);
-                       pass_1 := hp;
+                       lStringOptNode := genaddsstringcsstringoptnode(Self);
+                       Pass_1 := lStringOptNode;
                        exit;
                      end;
 {$endif addstringopt}
                 end;
              { otherwise, let addstring convert everything }
-              result := first_addstring;
+              Result := First_AddString;
               exit;
            end
 
          { is one a real float ? }
-         else if (rd.typ=floatdef) or (ld.typ=floatdef) then
+         else if (lRightDef.typ=floatdef) or (lLeftDef.typ=floatdef) then
             begin
-              if nodetype in [addn,subn,muln,andn,orn,xorn] then
-                expectloc:=LOC_FPUREGISTER
+              if NodeType in [addn,subn,muln,andn,orn,xorn] then
+                ExpectLoc:=LOC_FPUREGISTER
               else
-                expectloc:=LOC_FLAGS;
+                ExpectLoc:=LOC_FLAGS;
 
-              result:=try_fma(ld,rd);
-              if Assigned(result) then
+              Result:=TryFMA(lLeftDef,lRightDef);
+              if Assigned(Result) then
                 exit;
             end
 
          { pointer comparison and subtraction }
-         else if (ld.typ=pointerdef) then
+         else if (lLeftDef.typ=pointerdef) then
             begin
-              if nodetype in [addn,subn,muln,andn,orn,xorn] then
-                result:=first_addpointer
+              if NodeType in [addn,subn,muln,andn,orn,xorn] then
+                Result:=First_AddPointer
               else
-                result:=first_cmppointer;
+                Result:=First_CmpPointer;
            end
 
-         else if Is_Implicit_Pointer_Object_Type(ld) then
+         else if Is_Implicit_Pointer_Object_Type(lLeftDef) then
             begin
-              if ld.Size>sizeof(aint) then
-                expectloc:=LOC_JUMP
+              if lLeftDef.Size>sizeof(aint) then
+                ExpectLoc:=LOC_JUMP
               else
-                expectloc:=LOC_FLAGS;
+                ExpectLoc:=LOC_FLAGS;
             end
 
-         else if (ld.typ=classrefdef) then
+         else if (lLeftDef.typ=classrefdef) then
             begin
-              if ld.Size>sizeof(aint) then
-                expectloc:=LOC_JUMP
+              if lLeftDef.Size>sizeof(aint) then
+                ExpectLoc:=LOC_JUMP
               else
-                expectloc:=LOC_FLAGS;
+                ExpectLoc:=LOC_FLAGS;
             end
 
          { support procvar=nil,procvar<>nil }
-         else if ((ld.typ=procvardef) and (rt=niln)) or
-                 ((rd.typ=procvardef) and (lt=niln)) then
+         else if ((lLeftDef.typ=procvardef) and (lRightNodeType=niln)) or
+                 ((lRightDef.typ=procvardef) and (lLeftNodeType=niln)) then
             begin
-              if (ld.typ=procvardef) and (TProcVarDef(ld).Size>sizeof(aint)) or
-                 (rd.typ=procvardef) and (TProcVarDef(rd).Size>sizeof(aint)) then
-                expectloc:=LOC_JUMP
+              if (lLeftDef.typ=procvardef) and (TProcVarDef(lLeftDef).Size>sizeof(aint)) or
+                 (lRightDef.typ=procvardef) and (TProcVarDef(lRightDef).Size>sizeof(aint)) then
+                ExpectLoc:=LOC_JUMP
               else
-                expectloc:=LOC_FLAGS;
+                ExpectLoc:=LOC_FLAGS;
             end
 
 
-         else if (rd.typ=pointerdef) or (ld.typ=pointerdef) then
+         else if (lRightDef.typ=pointerdef) or (lLeftDef.typ=pointerdef) then
             begin
-              result:=first_addpointer;
+              Result:=First_AddPointer;
             end
 
-         else  if (rd.typ=procvardef) and
-                  (ld.typ=procvardef) and
-                  Equal_Defs(rd,ld) then
+         else  if (lRightDef.typ=procvardef) and
+                  (lLeftDef.typ=procvardef) and
+                  Equal_Defs(lRightDef,lLeftDef) then
            begin
-             if TProcVarDef(ld).Size>sizeof(aint) then
-               expectloc:=LOC_JUMP
+             if TProcVarDef(lLeftDef).Size>sizeof(aint) then
+               ExpectLoc:=LOC_JUMP
              else
-               expectloc:=LOC_FLAGS;
+               ExpectLoc:=LOC_FLAGS;
            end
 
-         else if (ld.typ=enumdef) then
+         else if (lLeftDef.typ=enumdef) then
            begin
-              if TEnumDef(ld).Size>sizeof(aint) then
-                expectloc:=LOC_JUMP
+              if TEnumDef(lLeftDef).Size>sizeof(aint) then
+                ExpectLoc:=LOC_JUMP
               else
-                expectloc:=LOC_FLAGS;
+                ExpectLoc:=LOC_FLAGS;
            end
 
 
-         else if Is_Dynamic_Array(ld) or Is_Dynamic_Array(rd) then
+         else if Is_Dynamic_Array(lLeftDef) or Is_Dynamic_Array(lRightDef) then
            begin
-             result:=first_adddynarray;
+             Result:=First_AddDynArray;
              exit;
            end
          { the general solution is to convert to 32 bit int }
          else
            begin
-             expectloc:=LOC_REGISTER;
+             ExpectLoc:=LOC_REGISTER;
            end;
       end;
 

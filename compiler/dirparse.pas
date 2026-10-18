@@ -135,7 +135,7 @@ implementation
           Found:=False;
           for Opt:=Low(TOptimizerSwitch) to High(TOptimizerSwitch) do
             begin
-              if OptimizerSwitchStr[Opt]=Tok then
+              if (OptimizerSwitchStr[Ord(Opt)]<>'') and (OptimizerSwitchStr[Ord(Opt)]=Tok) then
                 begin
                   Found:=True;
                   Break;

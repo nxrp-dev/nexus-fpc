@@ -137,7 +137,7 @@ Var
 
 begin
   DoPPU:=false;
-  inppu:=TPPUFile.create(PPUFn);
+  inppu:=TPPUFile.Create(PPUFn);
   if not inppu.openfile then
    begin
      inppu.free;

@@ -51,7 +51,7 @@ interface
          cnf_objc_id_call,       { the procedure is a member call via id -> any ObjC method of any ObjC type in scope is fair game }
          cnf_unit_specified,     { the unit in which the procedure has to be searched has been specified }
          cnf_call_never_returns, { information for the dfa that a subroutine never returns }
-         cnf_call_self_node_done,{ the call_self_node has been generated if necessary
+         cnf_call_self_node_done,{ the CallSelfNode has been generated if necessary
                                    (to prevent it from potentially happening again in a wrong context in case of constant propagation or so) }
          cnf_ignore_visibility,  { internally generated call that should ignore visibility checks }
          cnf_check_fpu_exceptions, { after the call fpu exceptions shall be checked }
@@ -65,153 +65,153 @@ interface
        TCallNode = class(TBinaryNode)
        private
           { number of parameters passed from the source, this does not include the hidden parameters }
-          paralength   : smallint;
-          function getoverrideprocnamedef: TProcDef; inline;
-          function  is_simple_para_load(p:TNode; may_be_in_reg: boolean):boolean;
-          procedure maybe_load_in_temp(var p:TNode);
-          function  gen_high_tree(var p:TNode;paradef:TDef):TNode;
-          function  gen_procvar_context_tree_self:TNode;
-          function  gen_procvar_context_tree_parentfp:TNode;
-          function  gen_self_tree:TNode;
-          function  use_caller_self(check_for_callee_self: boolean): boolean;
-          procedure maybe_gen_call_self_node;
-          function  gen_vmt_tree:TNode;
-          function gen_block_context:TNode;
-          procedure gen_hidden_parameters;
-          function  funcret_can_be_reused:boolean;
-          procedure maybe_create_funcret_node;
-          procedure bind_parasym;
-          procedure add_init_statement(n:TNode);
-          procedure add_done_statement(n:TNode);
-          procedure convert_carg_array_of_const;
-          function heuristics_favors_inlining:boolean;
-          procedure register_created_object_types;
-          function get_expect_loc: TCGLoc;
-          function  handle_compilerproc: TNode;
-          procedure set_para_callnode(n : TCallNode);
+          FParaLength   : SmallInt;
+          function GetOverrideProcNameDef: TProcDef; inline;
+          function  IsSimpleParaLoad(ANode:TNode; AMayBeInReg: Boolean):Boolean;
+          procedure MaybeLoadInTemp(var ANode:TNode);
+          function  GenHighTree(var ANode:TNode;AParaDef:TDef):TNode;
+          function  GenProcVarContextTreeSelf:TNode;
+          function  GenProcVarContextTreeParentFP:TNode;
+          function  GenSelfTree:TNode;
+          function  UseCallerSelf(ACheckForCalleeSelf: Boolean): Boolean;
+          procedure MaybeGenCallSelfNode;
+          function  GenVMTTree:TNode;
+          function GenBlockContext:TNode;
+          procedure GenHiddenParameters;
+          function  FuncRetCanBeReused:Boolean;
+          procedure MaybeCreateFuncRetNode;
+          procedure BindParaSym;
+          procedure AddInitStatement(ANode:TNode);
+          procedure AddDoneStatement(ANode:TNode);
+          procedure ConvertCArgArrayOfConst;
+          function HeuristicsFavorsInlining:Boolean;
+          procedure RegisterCreatedObjectTypes;
+          function GetExpectLoc: TCGLoc;
+          function  HandleCompilerProc: TNode;
+          procedure SetParaCallNode(ACallNode : TCallNode);
 
        protected
-          function safe_call_self_node: TNode;
-          procedure load_in_temp(var p:TNode);
-          procedure gen_vmt_entry_load; virtual;
-          procedure objc_convert_to_message_send;virtual;
+          function Safe_Call_Self_Node: TNode;
+          procedure Load_In_Temp(var ANode:TNode);
+          procedure Gen_VMT_Entry_Load; virtual;
+          procedure ObjC_Convert_To_Message_Send;virtual;
 
        public
           { inlining support }
-          inlinelevel             : PtrUInt;
-          inlinelocals            : TFPObjectList;
-          inlineinitstatement,
-          inlinecleanupstatement  : TStatementNode;
+          InlineLevel             : PtrUInt;
+          InlineLocals            : TFPObjectList;
+          InlineInitStatement,
+          InlineCleanupStatement  : TStatementNode;
           { checks whether we have to create a temp to store the value of a
             parameter passed to an inline routine to preserve correctness.
-            On exit, complexpara contains true if the parameter is a complex
+            On exit, AComplexPara contains true if the parameter is a complex
             expression and for which we can try to create a temp (even though
             it's not strictly necessary) for speed and code size reasons.
             Returns true if the temp creation has been handled, false otherwise
           }
-          function paraneedsinlinetemp(para: TCallParaNode; const pushconstaddr, complexpara: boolean): boolean; virtual;
-          function maybecreateinlineparatemp(para: TCallParaNode; out complexpara: boolean): boolean;
-          procedure createinlineparas;
-          procedure wrapcomplexinlinepara(para: TCallParaNode); virtual;
-          function  replaceparaload(var n: TNode; arg: pointer): TForEachNodeResult;
-          procedure createlocaltemps(p:TObject;arg:pointer);
-          function  optimize_funcret_assignment(inlineblock: TBlockNode): TNode;
-          procedure check_inlining;
-          function doinlining: boolean;
-          procedure order_parameters;
+          function ParaNeedsInlineTemp(APara: TCallParaNode; const APushConstAddr, AComplexPara: Boolean): Boolean; virtual;
+          function MaybeCreateInlineParaTemp(APara: TCallParaNode; out AComplexPara: Boolean): Boolean;
+          procedure CreateInlineParas;
+          procedure WrapComplexInlinePara(APara: TCallParaNode); virtual;
+          function  ReplaceParaLoad(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
+          procedure CreateLocalTemps(AObject:TObject;AArg:Pointer);
+          function  Optimize_FuncRet_Assignment(AInlineBlock: TBlockNode): TNode;
+          procedure Check_Inlining;
+          function DoInlining: Boolean;
+          procedure Order_Parameters;
        protected
-          pushedparasize : LongInt;
+          FPushedParaSize : LongInt;
 
           { Objective-C call target override; resolved during node processing. }
-          foverrideprocnamedef: TProcDef;
-          property overrideprocnamedef: TProcDef read getoverrideprocnamedef;
+          FOverrideProcNameDef: TProcDef;
+          property OverrideProcNameDef: TProcDef read GetOverrideProcNameDef;
        public
           { the symbol containing the definition of the procedure }
           { to call                                               }
-          symtableprocentry : TProcSym;
-          symtableprocentryderef : TDeref;
+          SymTableProcEntry : TProcSym;
+          SymTableProcEntryDeref : TDeref;
           { symtable where the entry was found, needed for with support }
-          symtableproc   : TSymTable;
+          SymTableProc   : TSymTable;
           { the definition of the procedure to call }
-          procdefinition : TAbstractProcDef;
-          procdefinitionderef : TDeref;
+          ProcDefinition : TAbstractProcDef;
+          ProcDefinitionDeref : TDeref;
           { tree that contains the pointer to the object for this method }
-          methodpointer  : TNode;
+          MethodPointer  : TNode;
           { tree representing the VMT entry to call (if any) }
-          vmt_entry      : TNode;
+          VMTEntry      : TNode;
           { tree that contains the self/vmt parameter when this node was created
             (so it's still valid when this node is processed in an inline
              context)
           }
-          call_self_node,
-          call_vmt_node: TNode;
+          CallSelfNode,
+          CallVMTNode: TNode;
           { initialize/finalization of temps }
-          callinitblock,
-          callcleanupblock : TBlockNode;
+          CallInitBlock,
+          CallCleanupBlock : TBlockNode;
 
           { function return node for initialized types or supplied return variable.
             When the result is passed in a parameter then it is set to nil }
-          funcretnode    : TNode;
+          FuncRetNode    : TNode;
           { varargs parasyms }
-          varargsparas : TVarArgsParaList;
+          VarArgsParas : TVarArgsParaList;
 
           { If an inline node is transmuted into a call node, this is the index of
             the original internal routine }
-          intrinsiccode : TInlineNumber;
+          IntrinsicCode : TInlineNumber;
 
           { separately specified resultdef for some compilerprocs (e.g.
             you can't have a function with an "array of char" resultdef
             the RTL) (JM)
           }
-          typedef: TDef;
-          callnodeflags : TCallNodeFlags;
+          TypeDef: TDef;
+          CallNodeFlags : TCallNodeFlags;
 
-          spezcontext : TSpecializationContext;
+          SpezContext : TSpecializationContext;
 
           { only the processor specific nodes need to override this }
           { constructor                                             }
-          constructor create(l:TNode; v : TProcSym;st : TSymTable; mp: TNode; callflags:TCallNodeFlags;sc:TSpecializationContext);virtual;
-          constructor create_procvar(l,r:TNode);
-          constructor createintern(const name: string; params: TNode);
-          constructor createfromintrinsic(const intrinsic: TInlineNumber; const name: string; params: TNode);
-          constructor createinternfromunit(const fromunit, procname: string; params: TNode);
-          constructor createinternres(const name: string; params: TNode; res:TDef);
-          constructor createinternresfromunit(const fromunit, procname: string; params: TNode; res:TDef);
-          constructor createinternreturn(const name: string; params: TNode; returnnode : TNode);
-          constructor createinternmethod(mp: TNode; const name: string; params: TNode);
-          constructor createinternmethodres(mp: TNode; const name: string; params: TNode; res:TDef);
+          constructor Create(ALeft:TNode; AProcSym : TProcSym;ASymTable : TSymTable; AMethodPointer: TNode; ACallFlags:TCallNodeFlags;ASpecializationContext:TSpecializationContext);virtual;
+          constructor Create_ProcVar(ALeft,ARight:TNode);
+          constructor CreateIntern(const AName: string; AParams: TNode);
+          constructor CreateFromIntrinsic(const AIntrinsic: TInlineNumber; const AName: string; AParams: TNode);
+          constructor CreateInternFromUnit(const AFromUnit, AProcName: string; AParams: TNode);
+          constructor CreateInternRes(const AName: string; AParams: TNode; AResultDef:TDef);
+          constructor CreateInternResFromUnit(const AFromUnit, AProcName: string; AParams: TNode; AResultDef:TDef);
+          constructor CreateInternReturn(const AName: string; AParams: TNode; AReturnNode : TNode);
+          constructor CreateInternMethod(AMethodPointer: TNode; const AName: string; AParams: TNode);
+          constructor CreateInternMethodRes(AMethodPointer: TNode; const AName: string; AParams: TNode; AResultDef:TDef);
           destructor Destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function  dogetcopy : TNode;override;
+          procedure DerefImpl;override;
+          function  DoGetCopy : TNode;override;
           { Goes through all symbols in a class and subclasses and calls
             verify abstract for each .
           }
-          procedure verifyabstractcalls;
+          procedure VerifyAbstractCalls;
           { called for each definition in a class and verifies if a method
             is abstract or not, if it is abstract, give out a warning
           }
-          procedure verifyabstract(sym:TObject;arg:pointer);
-          procedure insertintolist(l : TNodeList);override;
-          function  pass_1 : TNode;override;
-          function  pass_typecheck:TNode;override;
-          function  simplify(forinline : boolean) : TNode;override;
-          function  docompare(p: TNode): boolean; override;
-          procedure printnodedata(var t:text);override;
-          function  para_count:LongInt;
-          function  required_para_count:LongInt;
-          function  GetParaFromIndex(const Index: Integer): TCallParaNode;
+          procedure VerifyAbstract(AObject:TObject;AArg:Pointer);
+          procedure InsertIntoList(AList : TNodeList);override;
+          function  Pass_1 : TNode;override;
+          function  Pass_TypeCheck:TNode;override;
+          function  Simplify(AForInline : Boolean) : TNode;override;
+          function  DoCompare(ANode: TNode): Boolean; override;
+          procedure PrintNodeData(var AText:Text);override;
+          function  Para_Count:LongInt;
+          function  Required_Para_Count:LongInt;
+          function  GetParaFromIndex(const AIndex: Integer): TCallParaNode;
           { checks if there are any parameters which end up at the stack, i.e.
             which have LOC_REFERENCE and set pi_has_stackparameter if this applies }
-          procedure check_stack_parameters;
+          procedure Check_Stack_Parameters;
           { force the name of the to-be-called routine to a particular string,
             used for Objective-C message sending.  }
-          property parameters : TNode read left write left;
-          property pushed_parasize: LongInt read pushedparasize;
+          property Parameters : TNode read Left write Left;
+          property PushedParaSize: LongInt read FPushedParaSize;
        private
-          AbstractMethodsList : TFPHashList;
+          FAbstractMethodsList : TFPHashList;
        end;
        TCallNodeClass = class of TCallNode;
 
@@ -223,74 +223,74 @@ interface
 
        TCallParaNode = class(TTertiaryNode)
        private
-          fcontains_stack_tainting_call_cached,
-          ffollowed_by_stack_tainting_call_cached : boolean;
+          FContainsStackTaintingCallCached,
+          FFollowedByStackTaintingCallCached : Boolean;
           { the call node the para node belongs to }
-          _callnode : TCallNode;
-          function getcallnode : TCallNode;
-	  procedure setcallnode(calln : TCallNode);
+          FCallNode : TCallNode;
+          function GetCallNode : TCallNode;
+	  procedure SetCallNode(ACallNode : TCallNode);
        protected
-          procedure handlemanagedbyrefpara(orgparadef: TDef);virtual;
+          procedure HandleManagedByRefPara(AOriginalParaDef: TDef);virtual;
           { on some targets, value parameters that are passed by reference must
             be copied to a temp location by the caller (and then a reference to
             this temp location must be passed) }
-          procedure copy_value_by_ref_para;
+          procedure Copy_Value_By_Ref_Para;
        public
           { in case of copy-out parameters: initialization code, and the code to
             copy back the parameter value after the call (including any required
             finalization code) }
-          fparainit,
-          fparacopyback: TNode;
-          callparaflags : TCallParaFlags;
-          parasym       : TParaVarSym;
+          FParaInit,
+          FParaCopyBack: TNode;
+          CallParaFlags : TCallParaFlags;
+          ParaSym       : TParaVarSym;
           { The original order of the parameters prior to the "order_parameters"
             call, or -1 if not yet configured }
-          originalindex: Integer;
+          OriginalIndex: Integer;
           { only the processor specific nodes need to override this }
           { constructor                                             }
-          constructor create(expr,next : TNode);virtual;
+          constructor Create(AExpr,ANext : TNode);virtual;
           destructor Destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl; override;
-          procedure derefimpl; override;
-          function dogetcopy : TNode;override;
-          procedure insertintolist(l : TNodeList);override;
-          function pass_typecheck : TNode;override;
-          function pass_1 : TNode;override;
-          procedure get_paratype;
-          procedure firstcallparan;
-          procedure insert_typeconv;
-          procedure secondcallparan;virtual;abstract;
-          function docompare(p: TNode): boolean; override;
-          procedure printnodetree(var t:text);override;
+          procedure DerefImpl; override;
+          function DoGetCopy : TNode;override;
+          procedure InsertIntoList(AList : TNodeList);override;
+          function Pass_TypeCheck : TNode;override;
+          function Pass_1 : TNode;override;
+          procedure Get_ParaType;
+          procedure FirstCallParaN;
+          procedure Insert_TypeConv;
+          procedure SecondCallParaN;virtual;abstract;
+          function DoCompare(ANode: TNode): Boolean; override;
+          procedure PrintNodeTree(var AText:Text);override;
           { returns whether a parameter contains a type conversion from }
           { a refcounted into a non-refcounted type                     }
-          function can_be_inlined: boolean;
+          function Can_Be_Inlined: Boolean;
 
-          property callnode : TCallNode read getcallnode write setcallnode;
-          property paravalue : TNode read left write left;
-          property nextpara : TNode read right write right;
+          property CallNode : TCallNode read GetCallNode write SetCallNode;
+          property ParaValue : TNode read Left write Left;
+          property NextPara : TNode read Right write Right;
           { third is reused to store the parameter name (only while parsing
             vardispatch calls, never in real node tree) and copy of 'high'
             parameter tree when the parameter is an open array of managed type }
-          property parametername : TNode read third write third;
+          property ParameterName : TNode read Third write Third;
 
           { returns whether the evaluation of this parameter involves a
             stack tainting call }
-          function contains_stack_tainting_call: boolean;
-          { initialises the fcontains_stack_tainting_call_cached field with the
+          function Contains_Stack_Tainting_Call: Boolean;
+          { initialises the FContainsStackTaintingCallCached field with the
             result of contains_stack_tainting_call so that it can be quickly
-            accessed via the contains_stack_tainting_call_cached property }
-          procedure init_contains_stack_tainting_call_cache;
+            accessed via the ContainsStackTaintingCallCached property }
+          procedure Init_Contains_Stack_Tainting_Call_Cache;
           { returns result of contains_stack_tainting_call cached during last
             call to init_contains_stack_tainting_call_cache }
-          property contains_stack_tainting_call_cached: boolean read fcontains_stack_tainting_call_cached;
+          property ContainsStackTaintingCallCached: Boolean read FContainsStackTaintingCallCached;
           { returns whether this parameter is followed by at least one other
             parameter whose evaluation involves a stack tainting parameter
             (result is only valid after order_parameters has been called) }
-          property followed_by_stack_tainting_call_cached: boolean read ffollowed_by_stack_tainting_call_cached;
-          property paracopyback: TNode read fparacopyback;
+          property FollowedByStackTaintingCallCached: Boolean read FFollowedByStackTaintingCallCached;
+          property ParaCopyBack: TNode read FParaCopyBack;
        end;
        TCallParaNodeClass = class of TCallParaNode;
 
@@ -301,9 +301,9 @@ interface
        );
 
     { also returns the number of parameters }
-    function reverseparameters(var p: TCallParaNode) : sizeint;
-    function translate_disp_call(selfnode,parametersnode: TNode; calltype: TDispCallType; const methodname : AnsiString;
-      DispID : LongInt;resultdef : TDef) : TNode;
+    function ReverseParameters(var AParaNode: TCallParaNode) : SizeInt;
+    function Translate_Disp_Call(ASelfNode,AParametersNode: TNode; ACallType: TDispCallType; const AMethodName : AnsiString;
+      ADispID : LongInt;AResultDef : TDef) : TNode;
 
     var
       CCallNode : TCallNodeClass = TCallNode;
@@ -316,7 +316,7 @@ implementation
       Verbose,Globals,FModule,PPU,
       aasmbase,AAsmData,
       symconst,defutil,defcmp,
-      htypechk,pass_1,
+      htypechk,Pass_1,
       ncnv,nflw,nld,ninl,nadd,ncon,nmem,nset,nobjc,
       pgenutil,
       ngenutil,objcutil,aasmcnst,
@@ -325,8 +325,8 @@ implementation
 
     type
      TObjectInfoItem = class(TLinkedListItem)
-       objinfo : TObjectDef;
-       constructor create(def : TObjectDef);
+       FObjInfo : TObjectDef;
+       constructor Create(ADef : TObjectDef);
      end;
 
 
@@ -334,29 +334,29 @@ implementation
                              HELPERS
  ****************************************************************************}
 
-    function reverseparameters(var p: TCallParaNode) : sizeint;
+    function ReverseParameters(var AParaNode: TCallParaNode) : SizeInt;
       var
-        tmpp,
-        hp1, hp2: TCallParaNode;
+        lTempPara,
+        lPara1, lPara2: TCallParaNode;
       begin
-        result:=0;
-        hp1:=nil;
-        tmpp:=p;
-        while Assigned(tmpp) do
+        Result:=0;
+        lPara1:=nil;
+        lTempPara:=AParaNode;
+        while Assigned(lTempPara) do
           begin
              { pull out }
-             hp2:=tmpp;
-             tmpp:=TCallParaNode(tmpp.right);
+             lPara2:=lTempPara;
+             lTempPara:=TCallParaNode(lTempPara.Right);
              { pull in }
-             hp2.right:=hp1;
-             hp1:=hp2;
-             inc(result);
+             lPara2.Right:=lPara1;
+             lPara1:=lPara2;
+             inc(Result);
           end;
-        p:=hp1;
+        AParaNode:=lPara1;
       end;
 
-    function translate_disp_call(selfnode,parametersnode: TNode; calltype: TDispCallType; const methodname : AnsiString;
-      DispID : LongInt;resultdef : TDef) : TNode;
+    function Translate_Disp_Call(ASelfNode,AParametersNode: TNode; ACallType: TDispCallType; const AMethodName : AnsiString;
+      ADispID : LongInt;AResultDef : TDef) : TNode;
       const
         DISPATCH_METHOD = $1;
         DISPATCH_PROPERTYGET = $2;
@@ -364,286 +364,286 @@ implementation
         DISPATCH_PROPERTYPUTREF = $8;
         DISPATCH_CONSTRUCT = $4000;
 
-        calltypes: array[TDispCallType] of byte = (
+        calltypes: array[TDispCallType] of Byte = (
           DISPATCH_METHOD, DISPATCH_PROPERTYGET, DISPATCH_PROPERTYPUT
         );
       var
-        statements : TStatementNode;
-        result_data,
-        params : TTempCreateNode;
-        paramssize : cardinal;
-        resultvalue : TNode;
-        para : TCallParaNode;
-        namedparacount,
-        paracount : LongInt;
-        assignmenttype,
-        vardatadef,
-        pvardatadef : TDef;
-        useresult: boolean;
-        restype: byte;
-        selftemp: TTempCreateNode;
-        selfpara: TNode;
-        vardispatchparadef: TRecordDef;
-        vardispatchfield: TSym;
-        tcb: TTAITypedConstBuilder;
-        calldescsym: TStaticVarSym;
-        names : AnsiString;
-        variantdispatch : boolean;
+        lStatements : TStatementNode;
+        lResultData,
+        lParamsTemp : TTempCreateNode;
+        lParamsSize : Cardinal;
+        lResultValue : TNode;
+        lPara : TCallParaNode;
+        lNamedParaCount,
+        lParaCount : LongInt;
+        lAssignmentType,
+        lVarDataDef,
+        lVarDataPointerDef : TDef;
+        lUseResult: Boolean;
+        lResultType: Byte;
+        lSelfTemp: TTempCreateNode;
+        lSelfPara: TNode;
+        lVarDispatchParaDef: TRecordDef;
+        lVarDispatchField: TSym;
+        lTypedConstBuilder: TTAITypedConstBuilder;
+        lCallDescSym: TStaticVarSym;
+        lNames : AnsiString;
+        lVariantDispatch : Boolean;
 
-      function is_byref_para(out assign_type: TDef): boolean;
+      function IsByRefPara(out AAssignType: TDef): Boolean;
         begin
-          result:=(Assigned(para.parasym) and (para.parasym.VarSpez in [vs_var,vs_out,vs_constref])) or
-                  (variantdispatch and valid_for_var(para.left,false));
+          Result:=(Assigned(lPara.ParaSym) and (lPara.ParaSym.VarSpez in [vs_var,vs_out,vs_constref])) or
+                  (lVariantDispatch and valid_for_var(lPara.Left,false));
 
-          if result or (para.left.resultdef.typ in [variantdef]) then
-            assign_type:=VoidPointerType
+          if Result or (lPara.Left.ResultDef.typ in [variantdef]) then
+            AAssignType:=VoidPointerType
           else
-            case para.left.resultdef.Size of
+            case lPara.Left.ResultDef.Size of
               1..4:
-                assign_type:=U32IntType;
+                AAssignType:=U32IntType;
               8:
-                assign_type:=U64IntType;
+                AAssignType:=U64IntType;
               else
                 InternalError(2007042801);
             end;
         end;
 
-      function GetVarDef(sourcedef: TDef): LongInt;
+      function GetVarDef(ASourceDef: TDef): LongInt;
         begin
-          if Is_AnsiString(sourcedef) then
-            result:=VarStrArg
+          if Is_AnsiString(ASourceDef) then
+            Result:=VarStrArg
           else
-          if Is_UnicodeString(sourcedef) then
-            result:=VarUStrArg
+          if Is_UnicodeString(ASourceDef) then
+            Result:=VarUStrArg
           else
-          if Is_InterfaceCOM_Or_DispInterface(sourcedef) then
+          if Is_InterfaceCOM_Or_DispInterface(ASourceDef) then
             begin
               { distinct IDispatch and IUnknown interfaces }
-              if Def_Is_Related(TObjectDef(sourcedef),Interface_IDispatch) then
-                result:=VarDispatch
+              if Def_Is_Related(TObjectDef(ASourceDef),Interface_IDispatch) then
+                Result:=VarDispatch
               else
-                result:=VarUnknown;
+                Result:=VarUnknown;
             end
           else
-            result:=sourcedef.GetVarDef;
+            Result:=ASourceDef.GetVarDef;
         end;
 
       begin
-        variantdispatch:=selfnode.resultdef.typ=variantdef;
-        result:=internalstatements(statements);
-        result_data:=nil;
-        selftemp:=nil;
-        selfpara:=nil;
+        lVariantDispatch:=ASelfNode.ResultDef.typ=variantdef;
+        Result:=InternalStatements(lStatements);
+        lResultData:=nil;
+        lSelfTemp:=nil;
+        lSelfPara:=nil;
 
-        useresult := Assigned(resultdef) and not Is_Void(resultdef);
-        if useresult then
+        lUseResult := Assigned(AResultDef) and not Is_Void(AResultDef);
+        if lUseResult then
           begin
             { get temp for the result }
-            result_data:=CTempCreateNode.create(COleVariantType,COleVariantType.Size,tt_persistent,true);
-            addstatement(statements,result_data);
+            lResultData:=CTempCreateNode.Create(COleVariantType,COleVariantType.Size,tt_persistent,true);
+            AddStatement(lStatements,lResultData);
           end;
 
         { first, count and check parameters }
-        para:=TCallParaNode(parametersnode);
-        paracount:=0;
-        namedparacount:=0;
-        while Assigned(para) do
+        lPara:=TCallParaNode(AParametersNode);
+        lParaCount:=0;
+        lNamedParaCount:=0;
+        while Assigned(lPara) do
           begin
-            TypeCheckPass(para.left);
+            TypeCheckPass(lPara.Left);
 
             { skip hidden dispinterface parameters like $self, $result,
               but count skipped variantdispatch parameters. }
-            if (not variantdispatch) and (para.left.nodetype=nothingn) then
+            if (not lVariantDispatch) and (lPara.Left.NodeType=nothingn) then
               begin
-                para:=TCallParaNode(para.nextpara);
+                lPara:=TCallParaNode(lPara.NextPara);
                 continue;
               end;
-            inc(paracount);
-            if Assigned(para.parametername) then
-              inc(namedparacount);
+            inc(lParaCount);
+            if Assigned(lPara.ParameterName) then
+              inc(lNamedParaCount);
 
             { insert some extra casts }
-            if para.left.nodetype=stringconstn then
-              inserttypeconv_internal(para.left,CWideStringType)
+            if lPara.Left.NodeType=stringconstn then
+              InsertTypeConv_Internal(lPara.Left,CWideStringType)
 
             { force automatable boolean type }
-            else if Is_Boolean(para.left.resultdef) then
-              inserttypeconv_internal(para.left,Bool16Type)
+            else if Is_Boolean(lPara.Left.ResultDef) then
+              InsertTypeConv_Internal(lPara.Left,Bool16Type)
 
             { force automatable float type }
-            else if Is_Extended(para.left.resultdef) then
-              inserttypeconv_internal(para.left,S64FloatType)
+            else if Is_Extended(lPara.Left.ResultDef) then
+              InsertTypeConv_Internal(lPara.Left,S64FloatType)
 
-            else if Is_ShortString(para.left.resultdef) then
-              inserttypeconv_internal(para.left,CWideStringType)
+            else if Is_ShortString(lPara.Left.ResultDef) then
+              InsertTypeConv_Internal(lPara.Left,CWideStringType)
 
             { skip this check if we've already typecasted to automatable type }
-            else if (para.left.nodetype<>nothingn) and (not Is_Automatable(para.left.resultdef)) then
-              CGMessagePos1(para.left.fileinfo,type_e_not_automatable,para.left.resultdef.TypeName);
+            else if (lPara.Left.NodeType<>nothingn) and (not Is_Automatable(lPara.Left.ResultDef)) then
+              CGMessagePos1(lPara.Left.FileInfo,type_e_not_automatable,lPara.Left.ResultDef.TypeName);
 
-            para:=TCallParaNode(para.nextpara);
+            lPara:=TCallParaNode(lPara.NextPara);
           end;
 
         { create a temp to store parameter values }
-        vardispatchparadef:=CRecordDef.Create_Global_Internal('',VoidPointerType.Size,VoidPointerType.Size);
+        lVarDispatchParaDef:=CRecordDef.Create_Global_Internal('',VoidPointerType.Size,VoidPointerType.Size);
         { the size will be set once the vardistpatchparadef record has been completed }
-        params:=CTempCreateNode.create(vardispatchparadef,0,tt_persistent,false);
-        addstatement(statements,params);
+        lParamsTemp:=CTempCreateNode.Create(lVarDispatchParaDef,0,tt_persistent,false);
+        AddStatement(lStatements,lParamsTemp);
 
-        tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-        tcb.begin_anonymous_record('',1,sizeof(PInt),1);
+        lTypedConstBuilder:=CTAITypedConstBuilder.Create([tcalo_make_dead_strippable,tcalo_new_section]);
+        lTypedConstBuilder.begin_anonymous_record('',1,sizeof(PInt),1);
 
-        if not variantdispatch then  { generate a tdispdesc record }
+        if not lVariantDispatch then  { generate a tdispdesc record }
         begin
           { dispid  }
-          tcb.emit_ord_const(DispID,S32IntType);
+          lTypedConstBuilder.emit_ord_const(ADispID,S32IntType);
           { restype }
-          if useresult then
-            restype:=GetVarDef(resultdef)
+          if lUseResult then
+            lResultType:=GetVarDef(AResultDef)
           else
-            restype:=0;
-          tcb.emit_ord_const(restype,U8IntType);
+            lResultType:=0;
+          lTypedConstBuilder.emit_ord_const(lResultType,U8IntType);
         end;
 
-        tcb.emit_ord_const(calltypes[calltype],U8IntType);
-        tcb.emit_ord_const(paracount,U8IntType);
-        tcb.emit_ord_const(namedparacount,U8IntType);
+        lTypedConstBuilder.emit_ord_const(calltypes[ACallType],U8IntType);
+        lTypedConstBuilder.emit_ord_const(lParaCount,U8IntType);
+        lTypedConstBuilder.emit_ord_const(lNamedParaCount,U8IntType);
 
         { build up parameters and description }
-        para:=TCallParaNode(parametersnode);
-        paramssize:=0;
-        names := '';
-        while Assigned(para) do
+        lPara:=TCallParaNode(AParametersNode);
+        lParamsSize:=0;
+        lNames := '';
+        while Assigned(lPara) do
           begin
             { Skipped parameters are actually (varType=varError, vError=DISP_E_PARAMNOTFOUND).
               Generate only varType here, the value will be added by RTL. }
-            if para.left.nodetype=nothingn then
+            if lPara.Left.NodeType=nothingn then
             begin
-              if variantdispatch then
-                tcb.emit_ord_const(VarError,U8IntType);
-              para:=TCallParaNode(para.nextpara);
+              if lVariantDispatch then
+                lTypedConstBuilder.emit_ord_const(VarError,U8IntType);
+              lPara:=TCallParaNode(lPara.NextPara);
               continue;
             end;
 
-            if Assigned(para.parametername) then
+            if Assigned(lPara.ParameterName) then
               begin
-                if para.parametername.nodetype=stringconstn then
-                  names:=names+TStringConstNode(para.parametername).asconstpchar+#0
+                if lPara.ParameterName.NodeType=stringconstn then
+                  lNames:=lNames+TStringConstNode(lPara.ParameterName).AsConstPChar+#0
                 else
                   InternalError(200611041);
               end;
 
-            restype:=GetVarDef(para.left.resultdef);
-            if is_byref_para(assignmenttype) then
-              restype:=restype or $80;
+            lResultType:=GetVarDef(lPara.Left.ResultDef);
+            if IsByRefPara(lAssignmentType) then
+              lResultType:=lResultType or $80;
 
             { assign the argument/parameter to the temporary location }
             { for Variants, we always pass a pointer, RTL helpers must handle it
               depending on byref bit }
 
-            vardispatchfield:=vardispatchparadef.Add_Field_By_Def('',assignmenttype);
-            if assignmenttype=VoidPointerType then
-              addstatement(statements,CAssignmentNode.create(
-                CSubscriptNode.create(vardispatchfield,CTempRefNode.create(params)),
-                CTypeConvNode.Create_Internal(CAddrNode.Create_Internal(para.left),VoidPointerType)))
+            lVarDispatchField:=lVarDispatchParaDef.Add_Field_By_Def('',lAssignmentType);
+            if lAssignmentType=VoidPointerType then
+              AddStatement(lStatements,CAssignmentNode.Create(
+                CSubscriptNode.Create(lVarDispatchField,CTempRefNode.Create(lParamsTemp)),
+                CTypeConvNode.Create_Internal(CAddrNode.Create_Internal(lPara.Left),VoidPointerType)))
             else
-              addstatement(statements,CAssignmentNode.create(
-              CSubscriptNode.create(vardispatchfield,CTempRefNode.create(params)),
-                CTypeConvNode.Create_Internal(para.left,assignmenttype)));
+              AddStatement(lStatements,CAssignmentNode.Create(
+              CSubscriptNode.Create(lVarDispatchField,CTempRefNode.Create(lParamsTemp)),
+                CTypeConvNode.Create_Internal(lPara.Left,lAssignmentType)));
 
-            inc(paramssize,max(VoidPointerType.Size,assignmenttype.Size));
-            tcb.emit_ord_const(restype,U8IntType);
+            inc(lParamsSize,max(VoidPointerType.Size,lAssignmentType.Size));
+            lTypedConstBuilder.emit_ord_const(lResultType,U8IntType);
 
-            para.left:=nil;
-            para:=TCallParaNode(para.nextpara);
+            lPara.Left:=nil;
+            lPara:=TCallParaNode(lPara.NextPara);
           end;
 
         { finalize the parameter record }
-        TRecordSymTable(vardispatchparadef.SymTable).AddAlignmentPadding;
+        TRecordSymTable(lVarDispatchParaDef.SymTable).AddAlignmentPadding;
 
         { Set final size for parameter block }
-        params.Size:=paramssize;
+        lParamsTemp.Size:=lParamsSize;
 
         { old argument list skeleton isn't needed anymore }
-        parametersnode.free;
-        parametersnode := nil;
+        AParametersNode.free;
+        AParametersNode := nil;
 
-        pvardatadef:=TPointerDef(Search_System_Type('PVARDATA').typedef);
+        lVarDataPointerDef:=TPointerDef(Search_System_Type('PVARDATA').TypeDef);
 
-        if useresult then
-          resultvalue:=CAddrNode.create(CTempRefNode.create(result_data))
+        if lUseResult then
+          lResultValue:=CAddrNode.Create(CTempRefNode.Create(lResultData))
         else
-          resultvalue:=CPointerConstNode.create(0,VoidPointerType);
+          lResultValue:=CPointerConstNode.Create(0,VoidPointerType);
 
-        if variantdispatch then
+        if lVariantDispatch then
           begin
-            tcb.emit_pchar_const(pchar(methodname),length(methodname));
-            if names<>'' then
+            lTypedConstBuilder.emit_pchar_const(PChar(AMethodName),length(AMethodName));
+            if lNames<>'' then
               { length-1 because we added a null terminator to the string itself
                 already }
-              tcb.emit_pchar_const(pchar(names),length(names)-1);
+              lTypedConstBuilder.emit_pchar_const(PChar(lNames),length(lNames)-1);
           end;
 
         { may be referred from other units in case of inlining -> global
           -> must have unique name in entire progream }
-        calldescsym:=CStaticVarSym.create(
+        lCallDescSym:=CStaticVarSym.Create(
           InternalTypePrefixName[itp_vardisp_calldesc]+CurrentModule.ModuleName^+'$'+ToStr(CurrentModule.LocalSymTable.SymList.count),
-          vs_const,tcb.end_anonymous_record,[vo_is_public,vo_is_typed_const]);
-        calldescsym.VarState:=vs_initialised;
-        CurrentModule.LocalSymTable.InsertSym(calldescsym);
+          vs_const,lTypedConstBuilder.end_anonymous_record,[vo_is_public,vo_is_typed_const]);
+        lCallDescSym.VarState:=vs_initialised;
+        CurrentModule.LocalSymTable.InsertSym(lCallDescSym);
         CurrentAsmData.AsmLists[al_typedconsts].ConcatList(
-          tcb.get_final_asmlist(
-            CurrentAsmData.DefineAsmSymbol(calldescsym.MangledName,AB_GLOBAL,AT_DATA,calldescsym.vardef),
-            calldescsym.vardef,sec_rodata_norel,
-            lower(calldescsym.MangledName),sizeof(PInt)
+          lTypedConstBuilder.get_final_asmlist(
+            CurrentAsmData.DefineAsmSymbol(lCallDescSym.MangledName,AB_GLOBAL,AT_DATA,lCallDescSym.vardef),
+            lCallDescSym.vardef,sec_rodata_norel,
+            lower(lCallDescSym.MangledName),sizeof(PInt)
           )
         );
-        tcb.free;
-        tcb := nil;
+        lTypedConstBuilder.free;
+        lTypedConstBuilder := nil;
 
-        if variantdispatch then
+        if lVariantDispatch then
           begin
             { actual call }
-            vardatadef:=TRecordDef(Search_System_Type('TVARDATA').typedef);
+            lVarDataDef:=TRecordDef(Search_System_Type('TVARDATA').TypeDef);
 
             { the Variant should behave similar to hidden 'self' parameter of objects/records,
               see issues #26773 and #27044 }
-            if not valid_for_var(selfnode,false) then
+            if not valid_for_var(ASelfNode,false) then
               begin
-                selftemp:=CTempCreateNode.create(selfnode.resultdef,selfnode.resultdef.Size,tt_persistent,false);
-                addstatement(statements,selftemp);
-                addstatement(statements,CAssignmentNode.create(CTempRefNode.create(selftemp),selfnode));
-                selfpara:=CTempRefNode.create(selftemp);
+                lSelfTemp:=CTempCreateNode.Create(ASelfNode.ResultDef,ASelfNode.ResultDef.Size,tt_persistent,false);
+                AddStatement(lStatements,lSelfTemp);
+                AddStatement(lStatements,CAssignmentNode.Create(CTempRefNode.Create(lSelfTemp),ASelfNode));
+                lSelfPara:=CTempRefNode.Create(lSelfTemp);
               end
             else
-              selfpara:=selfnode;
+              lSelfPara:=ASelfNode;
 
-            addstatement(statements,CCallNode.createintern('fpc_dispinvoke_variant',
+            AddStatement(lStatements,CCallNode.CreateIntern('fpc_dispinvoke_variant',
               { parameters are passed always reverted, i.e. the last comes first }
-              CCallParaNode.create(CAddrNode.create(CTempRefNode.create(params)),
-              CCallParaNode.create(CAddrNode.create(CLoadNode.create(calldescsym,CurrentModule.LocalSymTable)),
-              CCallParaNode.create(CTypeConvNode.Create_Internal(selfpara,vardatadef),
-              CCallParaNode.create(CTypeConvNode.Create_Internal(resultvalue,pvardatadef),nil)))))
+              CCallParaNode.Create(CAddrNode.Create(CTempRefNode.Create(lParamsTemp)),
+              CCallParaNode.Create(CAddrNode.Create(CLoadNode.Create(lCallDescSym,CurrentModule.LocalSymTable)),
+              CCallParaNode.Create(CTypeConvNode.Create_Internal(lSelfPara,lVarDataDef),
+              CCallParaNode.Create(CTypeConvNode.Create_Internal(lResultValue,lVarDataPointerDef),nil)))))
             );
-            if Assigned(selftemp) then
-              addstatement(statements,CTempDeleteNode.create(selftemp));
+            if Assigned(lSelfTemp) then
+              AddStatement(lStatements,CTempDeleteNode.Create(lSelfTemp));
           end
         else
           begin
-            addstatement(statements,CCallNode.createintern('fpc_dispatch_by_id',
+            AddStatement(lStatements,CCallNode.CreateIntern('fpc_dispatch_by_id',
               { parameters are passed always reverted, i.e. the last comes first }
-              CCallParaNode.create(CAddrNode.create(CTempRefNode.create(params)),
-              CCallParaNode.create(CAddrNode.create(CLoadNode.create(calldescsym,CurrentModule.LocalSymTable)),
-              CCallParaNode.create(CTypeConvNode.Create_Internal(selfnode,VoidPointerType),
-              CCallParaNode.create(CTypeConvNode.Create_Internal(resultvalue,pvardatadef),nil)))))
+              CCallParaNode.Create(CAddrNode.Create(CTempRefNode.Create(lParamsTemp)),
+              CCallParaNode.Create(CAddrNode.Create(CLoadNode.Create(lCallDescSym,CurrentModule.LocalSymTable)),
+              CCallParaNode.Create(CTypeConvNode.Create_Internal(ASelfNode,VoidPointerType),
+              CCallParaNode.Create(CTypeConvNode.Create_Internal(lResultValue,lVarDataPointerDef),nil)))))
             );
           end;
-        addstatement(statements,CTempDeleteNode.create(params));
-        if useresult then
+        AddStatement(lStatements,CTempDeleteNode.Create(lParamsTemp));
+        if lUseResult then
           begin
             { clean up }
-            addstatement(statements,CTempDeleteNode.create_normal_temp(result_data));
-            addstatement(statements,CTempRefNode.create(result_data));
+            AddStatement(lStatements,CTempDeleteNode.Create_Normal_Temp(lResultData));
+            AddStatement(lStatements,CTempRefNode.Create(lResultData));
           end;
       end;
 
@@ -652,43 +652,43 @@ implementation
                               TOBJECTINFOITEM
  ****************************************************************************}
 
-    constructor TObjectInfoItem.create(def : TObjectDef);
+    constructor TObjectInfoItem.Create(ADef : TObjectDef);
       begin
-        inherited create;
-        objinfo := def;
+        inherited Create;
+        FObjInfo := ADef;
       end;
 
 
 {****************************************************************************
                              TCALLPARANODE
  ****************************************************************************}
-    function TCallParaNode.getcallnode : TCallNode;
+    function TCallParaNode.GetCallNode : TCallNode;
 
     begin
-      if Assigned(_callnode) and not (_callnode is TCallNode) then
+      if Assigned(FCallNode) and not (FCallNode is TCallNode) then
         InternalError(2026033001);
-      getcallnode:=_callnode;
+      GetCallNode:=FCallNode;
     end;
 
-    procedure TCallParaNode.setcallnode(calln : TCallNode);
+    procedure TCallParaNode.SetCallNode(ACallNode : TCallNode);
 
     begin
-      if Assigned(calln) and not (calln is TCallNode) then
+      if Assigned(ACallNode) and not (ACallNode is TCallNode) then
         InternalError(2026033002);
-      _callnode:=calln;
+      FCallNode:=ACallNode;
     end;
 
-    procedure TCallParaNode.handlemanagedbyrefpara(orgparadef: TDef);
+    procedure TCallParaNode.HandleManagedByRefPara(AOriginalParaDef: TDef);
       var
-        temp: TTempCreateNode;
-        npara: TCallParaNode;
-        paraaddrtype: TDef;
+        lTempNode: TTempCreateNode;
+        lNewPara: TCallParaNode;
+        lParaAddrType: TDef;
       begin
         { release memory for reference counted out parameters }
-        if (parasym.VarSpez=vs_out) and
-           Is_Managed_Type(orgparadef) and
-           (not Is_Open_Array(resultdef) or
-            Is_Managed_Type(TArrayDef(resultdef).ElementDef)) then
+        if (ParaSym.VarSpez=vs_out) and
+           Is_Managed_Type(AOriginalParaDef) and
+           (not Is_Open_Array(ResultDef) or
+            Is_Managed_Type(TArrayDef(ResultDef).ElementDef)) then
           begin
             { after converting a parameter to an open array, its resultdef is
               set back to its original resultdef so we can get the value of the
@@ -696,92 +696,92 @@ implementation
               type conversion to "open array". Since here we work on this
               converted parameter, set it back to the type to which it was
               converted in order to avoid type mismatches at the LLVM level }
-            if Is_Open_Array(parasym.vardef) and
-               Is_Dynamic_Array(orgparadef) then
+            if Is_Open_Array(ParaSym.vardef) and
+               Is_Dynamic_Array(AOriginalParaDef) then
               begin
-                left.resultdef:=resultdef;
-                orgparadef:=resultdef;
+                Left.ResultDef:=ResultDef;
+                AOriginalParaDef:=ResultDef;
               end;
-            paraaddrtype:=CPointerDef.getreusable(orgparadef);
+            lParaAddrType:=CPointerDef.getreusable(AOriginalParaDef);
             { create temp with address of the parameter }
-            temp:=CTempCreateNode.create(
-              paraaddrtype,paraaddrtype.Size,tt_persistent,true);
+            lTempNode:=CTempCreateNode.Create(
+              lParaAddrType,lParaAddrType.Size,tt_persistent,true);
             { put this code in the init/done statement of the call node, because
               we should finalize all out parameters before other parameters
               are evaluated (in case e.g. a managed out parameter is also
               passed by value, we must not pass the pointer to the now possibly
               freed data as the value parameter, but the finalized/nil value }
-            callnode.add_init_statement(temp);
-            callnode.add_init_statement(
-              CAssignmentNode.create(
-                CTempRefNode.create(temp),
-                CAddrNode.create(left)));
-            if not Is_Open_Array(resultdef) or
-               not Is_Managed_Type(TArrayDef(resultdef).ElementDef) then
+            CallNode.AddInitStatement(lTempNode);
+            CallNode.AddInitStatement(
+              CAssignmentNode.Create(
+                CTempRefNode.Create(lTempNode),
+                CAddrNode.Create(Left)));
+            if not Is_Open_Array(ResultDef) or
+               not Is_Managed_Type(TArrayDef(ResultDef).ElementDef) then
               { finalize the entire parameter }
-              callnode.add_init_statement(
-                CNodeUtils.finalize_data_node(
-                  CDerefNode.create(CTempRefNode.create(temp))))
+              CallNode.AddInitStatement(
+                CNodeUtils.Finalize_Data_Node(
+                  CDerefNode.Create(CTempRefNode.Create(lTempNode))))
             else
               begin
                 { passing a (part of, in case of slice) dynamic array as an
                   open array -> finalize the dynamic array contents, not the
                   dynamic array itself }
-                npara:=CCallParaNode.create(
+                lNewPara:=CCallParaNode.Create(
                          { array length = high + 1 }
-                         CAddNode.create(addn,third.GetCopy,genintconstnode(1)),
-                       CCallParaNode.create(CAddrNode.Create_Internal
-                          (CRTTINode.create(TStoredDef(TArrayDef(resultdef).ElementDef),initrtti,rdt_normal)),
-                       CCallParaNode.create(CAddrNode.Create_Internal(
-                          CDerefNode.create(CTempRefNode.create(temp))),nil)));
-                callnode.add_init_statement(
-                  CCallNode.createintern('fpc_finalize_array',npara));
+                         CAddNode.Create(addn,Third.GetCopy,GenIntConstNode(1)),
+                       CCallParaNode.Create(CAddrNode.Create_Internal
+                          (CRTTINode.Create(TStoredDef(TArrayDef(ResultDef).ElementDef),initrtti,rdt_normal)),
+                       CCallParaNode.Create(CAddrNode.Create_Internal(
+                          CDerefNode.Create(CTempRefNode.Create(lTempNode))),nil)));
+                CallNode.AddInitStatement(
+                  CCallNode.CreateIntern('fpc_finalize_array',lNewPara));
               end;
-            left:=CDerefNode.create(CTempRefNode.create(temp));
-            FirstPass(left);
-            callnode.add_done_statement(CTempDeleteNode.create(temp));
+            Left:=CDerefNode.Create(CTempRefNode.Create(lTempNode));
+            FirstPass(Left);
+            CallNode.AddDoneStatement(CTempDeleteNode.Create(lTempNode));
           end;
       end;
 
 
-    procedure TCallParaNode.copy_value_by_ref_para;
+    procedure TCallParaNode.Copy_Value_By_Ref_Para;
       var
-        initstat,
-        finistat: TStatementNode;
-        finiblock: TBlockNode;
-        paratemp: TTempCreateNode;
-        arraysize,
-        arraybegin: TNode;
-        lefttemp: TTempCreateNode;
-        vardatatype,
-        temparraydef: TDef;
+        lInitStatement,
+        lFiniStatement: TStatementNode;
+        lFiniBlock: TBlockNode;
+        lParaTemp: TTempCreateNode;
+        lArraySize,
+        lArrayBegin: TNode;
+        lLeftTemp: TTempCreateNode;
+        lVarDataType,
+        lTempArrayDef: TDef;
       begin
         { this routine is for targets where by-reference value parameters need
           to be copied by the caller. It's basically the node-level equivalent
           of thlcgobj.g_copyvalueparas }
 
-        if Assigned(fparainit) then
+        if Assigned(FParaInit) then
           exit;
 
         { in case of an array constructor, we don't need a copy since the array
           constructor itself is already constructed on the fly (and hence if
           it's modified by the caller, that's no problem) }
-        if not Is_Array_Constructor(left.resultdef) then
+        if not Is_Array_Constructor(Left.ResultDef) then
           begin
-            fparainit:=internalstatements(initstat);
-            finiblock:=internalstatements(finistat);
-            paratemp:=nil;
+            FParaInit:=InternalStatements(lInitStatement);
+            lFiniBlock:=InternalStatements(lFiniStatement);
+            lParaTemp:=nil;
 
             { making a copy of an open array, an array of const or a dynamic
               array requires dynamic memory allocation since we don't know the
               size at compile time }
-            if Is_Open_Array(left.resultdef) or
-               Is_Array_Of_Const(left.resultdef) or
-               (Is_Dynamic_Array(left.resultdef) and
-                Is_Open_Array(parasym.vardef)) then
+            if Is_Open_Array(Left.ResultDef) or
+               Is_Array_Of_Const(Left.ResultDef) or
+               (Is_Dynamic_Array(Left.ResultDef) and
+                Is_Open_Array(ParaSym.vardef)) then
               begin
-                 paratemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
-                 if Is_Dynamic_Array(left.resultdef) then
+                 lParaTemp:=CTempCreateNode.Create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
+                 if Is_Dynamic_Array(Left.ResultDef) then
                    begin
                       { note that in insert_typeconv, this dynamic array was
                         already converted into an open array (-> dereferenced)
@@ -789,68 +789,68 @@ implementation
                         dynamic array one -> get the address before treating it
                         as a dynamic array here }
                      { first restore the actual resultdef of left }
-                     temparraydef:=left.resultdef;
-                     left.resultdef:=resultdef;
+                     lTempArrayDef:=Left.ResultDef;
+                     Left.ResultDef:=ResultDef;
                      { get its address }
-                     lefttemp:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
-                     addstatement(initstat,lefttemp);
-                     addstatement(finistat,CTempDeleteNode.create(lefttemp));
-                     addstatement(initstat,
-                       CAssignmentNode.create(
-                         CTempRefNode.create(lefttemp),
-                         CAddrNode.Create_Internal(left)
+                     lLeftTemp:=CTempCreateNode.Create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
+                     AddStatement(lInitStatement,lLeftTemp);
+                     AddStatement(lFiniStatement,CTempDeleteNode.Create(lLeftTemp));
+                     AddStatement(lInitStatement,
+                       CAssignmentNode.Create(
+                         CTempRefNode.Create(lLeftTemp),
+                         CAddrNode.Create_Internal(Left)
                        )
                      );
                      { now treat that address (correctly) as the original
                        dynamic array to get its start and length }
-                     arraybegin:=CVecNode.create(
-                       CTypeConvNode.create_explicit(CTempRefNode.create(lefttemp),
-                         temparraydef),
-                       genintconstnode(0)
+                     lArrayBegin:=CVecNode.Create(
+                       CTypeConvNode.Create_Explicit(CTempRefNode.Create(lLeftTemp),
+                         lTempArrayDef),
+                       GenIntConstNode(0)
                      );
-                     arraysize:=CAddNode.create(muln,
-                       geninlinenode(in_length_x,false,
-                         CTypeConvNode.create_explicit(CTempRefNode.create(lefttemp),
-                           temparraydef)
+                     lArraySize:=CAddNode.Create(muln,
+                       GenInlineNode(in_length_x,false,
+                         CTypeConvNode.Create_Explicit(CTempRefNode.Create(lLeftTemp),
+                           lTempArrayDef)
                        ),
-                       genintconstnode(TArrayDef(temparraydef).ElementDef.Size)
+                       GenIntConstNode(TArrayDef(lTempArrayDef).ElementDef.Size)
                      );
                    end
                  else
                    begin
                      { no problem here that left is used multiple times, as
                        sizeof() will simply evaluate to the high parameter }
-                     arraybegin:=left.GetCopy;
-                     arraysize:=geninlinenode(in_sizeof_x,false,left);
+                     lArrayBegin:=Left.GetCopy;
+                     lArraySize:=GenInlineNode(in_sizeof_x,false,Left);
                    end;
-                 addstatement(initstat,paratemp);
+                 AddStatement(lInitStatement,lParaTemp);
                  { paratemp:=getmem(sizeof(para)) }
-                 addstatement(initstat,
-                   CAssignmentNode.create(
-                     CTempRefNode.create(paratemp),
-                     CCallNode.createintern('fpc_getmem',
-                       CCallParaNode.create(
-                         arraysize.GetCopy,nil
+                 AddStatement(lInitStatement,
+                   CAssignmentNode.Create(
+                     CTempRefNode.Create(lParaTemp),
+                     CCallNode.CreateIntern('fpc_getmem',
+                       CCallParaNode.Create(
+                         lArraySize.GetCopy,nil
                        )
                      )
                    )
                  );
                  { move(para,temp,sizeof(arr)) (no "left.getcopy" below because
                    we replace left afterwards) }
-                 addstatement(initstat,
+                 AddStatement(lInitStatement,
                    CIfNode.Create_Internal(
                      CAddNode.Create_Internal(
                        unequaln,
-                       arraysize.GetCopy,
-                       genintconstnode(0)
+                       lArraySize.GetCopy,
+                       GenIntConstNode(0)
                      ),
-                     CCallNode.createintern('MOVE',
-                       CCallParaNode.create(
-                         arraysize,
-                         CCallParaNode.create(
-                           CDerefNode.create(CTempRefNode.create(paratemp)),
-                           CCallParaNode.create(
-                             arraybegin,nil
+                     CCallNode.CreateIntern('MOVE',
+                       CCallParaNode.Create(
+                         lArraySize,
+                         CCallParaNode.Create(
+                           CDerefNode.Create(CTempRefNode.Create(lParaTemp)),
+                           CCallParaNode.Create(
+                             lArrayBegin,nil
                            )
                          )
                        )
@@ -865,49 +865,49 @@ implementation
                    e.g. in case of external declarations) (*) }
 
                  { free the memory again after the call: freemem(paratemp) }
-                 addstatement(finistat,
-                   CCallNode.createintern('fpc_freemem',
-                     CCallParaNode.create(
-                       CTempRefNode.create(paratemp),nil
+                 AddStatement(lFiniStatement,
+                   CCallNode.CreateIntern('fpc_freemem',
+                     CCallParaNode.Create(
+                       CTempRefNode.Create(lParaTemp),nil
                      )
                    )
                  );
                  { replace the original parameter with a dereference of the
                    temp typecasted to the same type as the original parameter
                    (don't free left, it has been reused above) }
-                 left:=CTypeConvNode.Create_Internal(
-                   CDerefNode.create(CTempRefNode.create(paratemp)),
-                   left.resultdef);
+                 Left:=CTypeConvNode.Create_Internal(
+                   CDerefNode.Create(CTempRefNode.Create(lParaTemp)),
+                   Left.ResultDef);
               end
-            else if Is_ShortString(parasym.vardef) then
+            else if Is_ShortString(ParaSym.vardef) then
               begin
                 { the shortstring parameter may have a different size than the
                   parameter type -> assign and truncate/extend }
-                paratemp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.Size,tt_persistent,false);
-                addstatement(initstat,paratemp);
+                lParaTemp:=CTempCreateNode.Create(ParaSym.vardef,ParaSym.vardef.Size,tt_persistent,false);
+                AddStatement(lInitStatement,lParaTemp);
                 { assign shortstring }
-                addstatement(initstat,
-                  CAssignmentNode.create(
-                    CTempRefNode.create(paratemp),left
+                AddStatement(lInitStatement,
+                  CAssignmentNode.Create(
+                    CTempRefNode.Create(lParaTemp),Left
                   )
                 );
                 { replace parameter with temp (don't free left, it has been
                   reused above) }
-                left:=CTempRefNode.create(paratemp);
+                Left:=CTempRefNode.Create(lParaTemp);
               end
-            else if parasym.vardef.typ=variantdef then
+            else if ParaSym.vardef.typ=variantdef then
               begin
-                vardatatype:=Search_System_Type('TVARDATA').typedef;
-                paratemp:=CTempCreateNode.create(vardatatype,vardatatype.Size,tt_persistent,false);
-                addstatement(initstat,paratemp);
-                addstatement(initstat,
-                  CCallNode.createintern('fpc_variant_copy_overwrite',
-                    CCallParaNode.create(
-                      CTypeConvNode.create_explicit(CTempRefNode.create(paratemp),
-                          vardatatype
+                lVarDataType:=Search_System_Type('TVARDATA').TypeDef;
+                lParaTemp:=CTempCreateNode.Create(lVarDataType,lVarDataType.Size,tt_persistent,false);
+                AddStatement(lInitStatement,lParaTemp);
+                AddStatement(lInitStatement,
+                  CCallNode.CreateIntern('fpc_variant_copy_overwrite',
+                    CCallParaNode.Create(
+                      CTypeConvNode.Create_Explicit(CTempRefNode.Create(lParaTemp),
+                          lVarDataType
                         ),
-                      CCallParaNode.create(CTypeConvNode.create_explicit(left,
-                        vardatatype),
+                      CCallParaNode.Create(CTypeConvNode.Create_Explicit(Left,
+                        lVarDataType),
                         nil
                       )
                     )
@@ -915,184 +915,184 @@ implementation
                 );
                 { replace parameter with temp (don't free left, it has been
                   reused above) }
-                left:=CTypeConvNode.create_explicit(CTempRefNode.create(paratemp),parasym.vardef);
+                Left:=CTypeConvNode.Create_Explicit(CTempRefNode.Create(lParaTemp),ParaSym.vardef);
               end
-            else if Is_Managed_Type(left.resultdef) then
+            else if Is_Managed_Type(Left.ResultDef) then
               begin
                 { don't increase/decrease the reference count here, will be done by
                   the callee (see (*) above) -> typecast to array of byte
                   for the assignment to the temp }
-                temparraydef:=CArrayDef.getreusable(U8IntType,left.resultdef.Size);
-                paratemp:=CTempCreateNode.create(temparraydef,temparraydef.Size,tt_persistent,false);
-                addstatement(initstat,paratemp);
-                addstatement(initstat,
-                  CAssignmentNode.create(
-                    CTempRefNode.create(paratemp),
-                    CTypeConvNode.Create_Internal(left,temparraydef)
+                lTempArrayDef:=CArrayDef.getreusable(U8IntType,Left.ResultDef.Size);
+                lParaTemp:=CTempCreateNode.Create(lTempArrayDef,lTempArrayDef.Size,tt_persistent,false);
+                AddStatement(lInitStatement,lParaTemp);
+                AddStatement(lInitStatement,
+                  CAssignmentNode.Create(
+                    CTempRefNode.Create(lParaTemp),
+                    CTypeConvNode.Create_Internal(Left,lTempArrayDef)
                   )
                 );
-                left:=CTypeConvNode.create_explicit(CTempRefNode.create(paratemp),left.resultdef);
+                Left:=CTypeConvNode.Create_Explicit(CTempRefNode.Create(lParaTemp),Left.ResultDef);
               end
             else
               begin
-                paratemp:=CTempCreateNode.create(left.resultdef,left.resultdef.Size,tt_persistent,false);
-                addstatement(initstat,paratemp);
-                addstatement(initstat,
-                  CAssignmentNode.create(CTempRefNode.create(paratemp),left)
+                lParaTemp:=CTempCreateNode.Create(Left.ResultDef,Left.ResultDef.Size,tt_persistent,false);
+                AddStatement(lInitStatement,lParaTemp);
+                AddStatement(lInitStatement,
+                  CAssignmentNode.Create(CTempRefNode.Create(lParaTemp),Left)
                 );
                 { replace parameter with temp (don't free left, it has been
                   reused above) }
-                left:=CTempRefNode.create(paratemp);
+                Left:=CTempRefNode.Create(lParaTemp);
               end;
             { add the finish statements to the call cleanup block }
-            addstatement(finistat,CTempDeleteNode.create(paratemp));
-            callnode.add_done_statement(finiblock);
+            AddStatement(lFiniStatement,CTempDeleteNode.Create(lParaTemp));
+            CallNode.AddDoneStatement(lFiniBlock);
 
-            FirstPass(fparainit);
-            FirstPass(left);
+            FirstPass(FParaInit);
+            FirstPass(Left);
           end;
       end;
 
 
-    constructor TCallParaNode.create(expr,next : TNode);
+    constructor TCallParaNode.Create(AExpr,ANext : TNode);
 
       begin
-         inherited create(callparan,expr,next,nil);
-         if not Assigned(expr) then
+         inherited Create(callparan,AExpr,ANext,nil);
+         if not Assigned(AExpr) then
            InternalError(200305091);
-         expr.fileinfo:=fileinfo;
-         callparaflags:=[];
-         originalindex:=-1;
-         if expr.nodetype = typeconvn then
-           TTypeConvNode(expr).warn_pointer_to_signed:=false;
+         AExpr.FileInfo:=FileInfo;
+         CallParaFlags:=[];
+         OriginalIndex:=-1;
+         if AExpr.NodeType = typeconvn then
+           TTypeConvNode(AExpr).WarnPointerToSigned:=false;
       end;
 
     destructor TCallParaNode.Destroy;
 
       begin
-         fparainit.free;
-         fparainit := nil;
-         fparacopyback.free;
-         fparacopyback := nil;
+         FParaInit.free;
+         FParaInit := nil;
+         FParaCopyBack.free;
+         FParaCopyBack := nil;
          inherited Destroy;
       end;
 
 
-    constructor TCallParaNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TCallParaNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        originalindex:=-1;
-        ppufile.GetSet(TPPUSet1(callparaflags));
-        fparainit:=ppuloadnode(ppufile);
-        fparacopyback:=ppuloadnode(ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
+        OriginalIndex:=-1;
+        APPUFile.GetSet(TPPUSet1(CallParaFlags));
+        FParaInit:=PPULoadNode(APPUFile);
+        FParaCopyBack:=PPULoadNode(APPUFile);
       end;
 
 
-    procedure TCallParaNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TCallParaNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutSet(TPPUSet1(callparaflags));
-        ppuwritenode(ppufile,fparainit);
-        ppuwritenode(ppufile,fparacopyback);
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutSet(TPPUSet1(CallParaFlags));
+        PPUWriteNode(APPUFile,FParaInit);
+        PPUWriteNode(APPUFile,FParaCopyBack);
       end;
 
 
     procedure TCallParaNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        if Assigned(fparainit) then
-          fparainit.BuildDerefImpl;
-        if Assigned(fparacopyback) then
-          fparacopyback.BuildDerefImpl;
+        if Assigned(FParaInit) then
+          FParaInit.BuildDerefImpl;
+        if Assigned(FParaCopyBack) then
+          FParaCopyBack.BuildDerefImpl;
       end;
 
 
-    procedure TCallParaNode.derefimpl;
+    procedure TCallParaNode.DerefImpl;
       begin
-        inherited derefimpl;
-        if Assigned(fparainit) then
-          fparainit.derefimpl;
-        if Assigned(fparacopyback) then
-          fparacopyback.derefimpl;
+        inherited DerefImpl;
+        if Assigned(FParaInit) then
+          FParaInit.DerefImpl;
+        if Assigned(FParaCopyBack) then
+          FParaCopyBack.DerefImpl;
       end;
 
 
-    function TCallParaNode.dogetcopy : TNode;
+    function TCallParaNode.DoGetCopy : TNode;
       var
-         n : TCallParaNode;
-         initcopy: TNode;
+         lCopy : TCallParaNode;
+         lInitCopy: TNode;
       begin
-         initcopy:=nil;
+         lInitCopy:=nil;
          { must be done before calling inherited getcopy, because can create
            tempcreatenodes for values used in left }
-         if Assigned(fparainit) then
-           initcopy:=fparainit.GetCopy;
-         n:=TCallParaNode(inherited dogetcopy);
-         n.callparaflags:=callparaflags;
-         n.originalindex:=originalindex;
-         n.parasym:=parasym;
-         n.fparainit:=initcopy;
-         if Assigned(fparacopyback) then
-           n.fparacopyback:=fparacopyback.GetCopy;
-         result:=n;
+         if Assigned(FParaInit) then
+           lInitCopy:=FParaInit.GetCopy;
+         lCopy:=TCallParaNode(inherited DoGetCopy);
+         lCopy.CallParaFlags:=CallParaFlags;
+         lCopy.OriginalIndex:=OriginalIndex;
+         lCopy.ParaSym:=ParaSym;
+         lCopy.FParaInit:=lInitCopy;
+         if Assigned(FParaCopyBack) then
+           lCopy.FParaCopyBack:=FParaCopyBack.GetCopy;
+         Result:=lCopy;
       end;
 
 
-    procedure TCallParaNode.insertintolist(l : TNodeList);
+    procedure TCallParaNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    function TCallParaNode.pass_typecheck : TNode;
+    function TCallParaNode.Pass_TypeCheck : TNode;
       begin
         { need to use get_paratype }
         InternalError(200709251);
-        result:=nil;
+        Result:=nil;
       end;
 
 
-    function TCallParaNode.pass_1 : TNode;
+    function TCallParaNode.Pass_1 : TNode;
       begin
         { need to use firstcallparan }
         InternalError(200709252);
-        result:=nil;
+        Result:=nil;
       end;
 
 
-    procedure TCallParaNode.get_paratype;
+    procedure TCallParaNode.Get_ParaType;
       begin
-         if Assigned(right) then
-          TCallParaNode(right).get_paratype;
-         if Assigned(fparainit) then
-          TypeCheckPass(fparainit);
-         TypeCheckPass(left);
-         if Assigned(third) then
-           TypeCheckPass(third);
-         if Assigned(fparacopyback) then
-           TypeCheckPass(fparacopyback);
+         if Assigned(Right) then
+          TCallParaNode(Right).Get_ParaType;
+         if Assigned(FParaInit) then
+          TypeCheckPass(FParaInit);
+         TypeCheckPass(Left);
+         if Assigned(Third) then
+           TypeCheckPass(Third);
+         if Assigned(FParaCopyBack) then
+           TypeCheckPass(FParaCopyBack);
          if CodeGenError then
-          resultdef:=GenErrorDef
+          ResultDef:=GenErrorDef
          else
-          resultdef:=left.resultdef;
+          ResultDef:=Left.ResultDef;
 
-         if Is_Currency(resultdef) then
+         if Is_Currency(ResultDef) then
            { Ensure actual parameters are scaled correctly }
-           Include(flags,nf_is_currency);
+           Include(Flags,nf_is_currency);
       end;
 
 
-    procedure TCallParaNode.firstcallparan;
+    procedure TCallParaNode.FirstCallParaN;
       begin
-        if Assigned(right) then
-          TCallParaNode(right).firstcallparan;
-        if not Assigned(left.resultdef) then
-          get_paratype;
+        if Assigned(Right) then
+          TCallParaNode(Right).FirstCallParaN;
+        if not Assigned(Left.ResultDef) then
+          Get_ParaType;
 
-        if Assigned(parasym) and
-           (parasym.VarSpez in [vs_var,vs_out,vs_constref]) and
+        if Assigned(ParaSym) and
+           (ParaSym.VarSpez in [vs_var,vs_out,vs_constref]) and
            { for record constructors }
-           (left.nodetype<>nothingn) then
-          handlemanagedbyrefpara(left.resultdef);
+           (Left.NodeType<>nothingn) then
+          HandleManagedByRefPara(Left.ResultDef);
 
         { for targets that have to copy "value parameters by reference" on the
           caller side
@@ -1101,46 +1101,46 @@ implementation
           fake parameters to inline nodes (in that case, we don't have a real
           call and hence no "caller side" either)
           }
-        if Assigned(callnode) and
+        if Assigned(CallNode) and
            (TargetInfo.system in systems_caller_copy_addr_value_para) and
-           ((Assigned(parasym) and
-             (parasym.VarSpez=vs_value)) or
-            (cpf_varargs_para in callparaflags)) and
-           (left.nodetype<>nothingn) and
-           not(vo_has_local_copy in parasym.VarOptions) and
-           ((not Is_Open_Array(parasym.vardef) and
-             not Is_Array_Of_Const(parasym.vardef)) or
-            not(callnode.procdefinition.ProcCallOption in CDecl_PoCalls)) and
-           ParaManager.Push_Addr_Param(vs_value,parasym.vardef,
-                      callnode.procdefinition.ProcCallOption) and
-           not(cnf_do_inline in callnode.callnodeflags) then
-          copy_value_by_ref_para;
+           ((Assigned(ParaSym) and
+             (ParaSym.VarSpez=vs_value)) or
+            (cpf_varargs_para in CallParaFlags)) and
+           (Left.NodeType<>nothingn) and
+           not(vo_has_local_copy in ParaSym.VarOptions) and
+           ((not Is_Open_Array(ParaSym.vardef) and
+             not Is_Array_Of_Const(ParaSym.vardef)) or
+            not(CallNode.ProcDefinition.ProcCallOption in CDecl_PoCalls)) and
+           ParaManager.Push_Addr_Param(vs_value,ParaSym.vardef,
+                      CallNode.ProcDefinition.ProcCallOption) and
+           not(cnf_do_inline in CallNode.CallNodeFlags) then
+          Copy_Value_By_Ref_Para;
 
-        if Assigned(fparainit) then
-          FirstPass(fparainit);
-        FirstPass(left);
-        if Assigned(fparacopyback) then
-          FirstPass(fparacopyback);
-        if Assigned(third) then
-          FirstPass(third);
-        expectloc:=left.expectloc;
+        if Assigned(FParaInit) then
+          FirstPass(FParaInit);
+        FirstPass(Left);
+        if Assigned(FParaCopyBack) then
+          FirstPass(FParaCopyBack);
+        if Assigned(Third) then
+          FirstPass(Third);
+        ExpectLoc:=Left.ExpectLoc;
       end;
 
 
-    procedure TCallParaNode.insert_typeconv;
+    procedure TCallParaNode.Insert_TypeConv;
       var
-        olddef  : TDef;
-        hp      : TNode;
-        block : TBlockNode;
-        statements : TStatementNode;
-        temp : TTempCreateNode;
-        owningprocdef: TProcDef;
+        lOldDef  : TDef;
+        lNode      : TNode;
+        lBlock : TBlockNode;
+        lStatements : TStatementNode;
+        lTempNode : TTempCreateNode;
+        lOwningProcDef: TProcDef;
       begin
          { Be sure to have the resultdef }
-         if not Assigned(left.resultdef) then
-           TypeCheckPass(left);
+         if not Assigned(Left.ResultDef) then
+           TypeCheckPass(Left);
 
-         if (left.nodetype<>nothingn) then
+         if (Left.NodeType<>nothingn) then
            begin
              { convert loads of the function result variable into procvars
                representing the current function in case the formal parameter is
@@ -1149,13 +1149,13 @@ implementation
                meanings, so we cannot statically pick either the function result
                or the function definition in pexpr) }
              if (m_mac in CurrentSettings.ModeSwitches) and
-                (parasym.vardef.typ=procvardef) and
-                is_ambiguous_funcret_load(left,owningprocdef) then
+                (ParaSym.vardef.typ=procvardef) and
+                is_ambiguous_funcret_load(Left,lOwningProcDef) then
                begin
-                 hp:=CLoadNode.create_procvar(owningprocdef.ProcSym,owningprocdef,owningprocdef.ProcSym.owner);
-                 TypeCheckPass(hp);
-                 left.free;
-                 left:=hp;
+                 lNode:=CLoadNode.Create_ProcVar(lOwningProcDef.ProcSym,lOwningProcDef,lOwningProcDef.ProcSym.owner);
+                 TypeCheckPass(lNode);
+                 Left.free;
+                 Left:=lNode;
                end;
 
              { Convert tp procvars, this is needs to be done
@@ -1167,50 +1167,50 @@ implementation
                and hence turning that into a call would result into endless
                recursion. For regular nested calls, the parentfp node can
                never be a procvar (it's a loadparentfpnode). }
-             if not(vo_is_parentfp in parasym.VarOptions) and
-                (left.resultdef.typ=procvardef) and
-                not(parasym.vardef.typ in [procvardef,formaldef]) then
+             if not(vo_is_parentfp in ParaSym.VarOptions) and
+                (Left.ResultDef.typ=procvardef) and
+                not(ParaSym.vardef.typ in [procvardef,formaldef]) then
                begin
-                 if maybe_call_procvar(left,true) then
-                   resultdef:=left.resultdef
+                 if Maybe_Call_ProcVar(Left,true) then
+                   ResultDef:=Left.ResultDef
                end;
 
              { Remove implicitly inserted typecast to pointer for
                @procvar in macpas }
              if (m_mac_procvar in CurrentSettings.ModeSwitches) and
-                (parasym.vardef.typ=procvardef) and
-                (left.nodetype=typeconvn) and
-                Is_VoidPointer(left.resultdef) and
-                (TTypeConvNode(left).left.nodetype=typeconvn) and
-                (TTypeConvNode(TTypeConvNode(left).left).convtype=tc_proc_2_procvar) then
+                (ParaSym.vardef.typ=procvardef) and
+                (Left.NodeType=typeconvn) and
+                Is_VoidPointer(Left.ResultDef) and
+                (TTypeConvNode(Left).Left.NodeType=typeconvn) and
+                (TTypeConvNode(TTypeConvNode(Left).Left).ConvType=tc_proc_2_procvar) then
                begin
-                 hp:=left;
-                 left:=TTypeConvNode(left).left;
-                 TTypeConvNode(hp).left:=nil;
-                 hp.free;
-                 hp := nil;
+                 lNode:=Left;
+                 Left:=TTypeConvNode(Left).Left;
+                 TTypeConvNode(lNode).Left:=nil;
+                 lNode.free;
+                 lNode := nil;
                end;
-             maybe_global_proc_to_nested(left,parasym.vardef);
+             Maybe_Global_Proc_To_Nested(Left,ParaSym.vardef);
 
              { Handle varargs and hidden paras directly, no typeconvs or }
              { pass_typechecking needed                                  }
-             if (cpf_varargs_para in callparaflags) then
+             if (cpf_varargs_para in CallParaFlags) then
                begin
                  { this should only happen vor C varargs                    }
                  { the necessary conversions have already been performed in }
                  { tarrayconstructornode.insert_typeconvs                   }
-                 set_varstate(left,vs_read,[vsf_must_be_valid]);
-                 insert_varargstypeconv(left,true);
-                 resultdef:=left.resultdef;
+                 set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                 Insert_VarArgsTypeConv(Left,true);
+                 ResultDef:=Left.ResultDef;
                  { also update parasym type to get the correct parameter location
                    for the new types }
-                 parasym.vardef:=left.resultdef;
+                 ParaSym.vardef:=Left.ResultDef;
                end
              else
-              if (vo_is_hidden_para in parasym.VarOptions) then
+              if (vo_is_hidden_para in ParaSym.VarOptions) then
                begin
-                 set_varstate(left,vs_read,[vsf_must_be_valid]);
-                 resultdef:=left.resultdef;
+                 set_varstate(Left,vs_read,[vsf_must_be_valid]);
+                 ResultDef:=Left.ResultDef;
                end
              else
                begin
@@ -1218,59 +1218,59 @@ implementation
                  { Do we need arrayconstructor -> set conversion, then insert
                    it here before the arrayconstructor node breaks the tree
                    with its conversions of enum->ord }
-                 if (left.nodetype=arrayconstructorn) and
-                    (parasym.vardef.typ=setdef) then
-                   inserttypeconv(left,parasym.vardef);
+                 if (Left.NodeType=arrayconstructorn) and
+                    (ParaSym.vardef.typ=setdef) then
+                   InsertTypeConv(Left,ParaSym.vardef);
 
                  { if an array constructor can be a set and it is passed to
                    a formaldef, a set must be passed, see also issue #37796 }
-                 if (left.nodetype=arrayconstructorn) and
-                    (parasym.vardef.typ=formaldef) and
-                    (arrayconstructor_can_be_set(left)) then
-                   left:=arrayconstructor_to_set(left,false);
+                 if (Left.NodeType=arrayconstructorn) and
+                    (ParaSym.vardef.typ=formaldef) and
+                    (ArrayConstructor_Can_Be_Set(Left)) then
+                   Left:=ArrayConstructor_To_Set(Left,false);
 
                  { set some settings needed for arrayconstructor }
-                 if Is_Array_Constructor(left.resultdef) then
+                 if Is_Array_Constructor(Left.ResultDef) then
                   begin
-                    if left.nodetype<>arrayconstructorn then
+                    if Left.NodeType<>arrayconstructorn then
                       InternalError(200504041);
-                    if Is_Array_Of_Const(parasym.vardef) then
+                    if Is_Array_Of_Const(ParaSym.vardef) then
                      begin
                        { force variant array }
-                       include(TArrayConstructorNode(left).arrayconstructornodeflags,acnf_forcevaria);
+                       include(TArrayConstructorNode(Left).ArrayConstructorNodeFlags,acnf_forcevaria);
                      end
                     else
                      begin
-                       include(TArrayConstructorNode(left).arrayconstructornodeflags,acnf_novariaallowed);
+                       include(TArrayConstructorNode(Left).ArrayConstructorNodeFlags,acnf_novariaallowed);
                        { now that the resulting type is know we can insert the required
                          typeconvs for the array constructor }
-                       if parasym.vardef.typ=arraydef then
-                         TArrayConstructorNode(left).force_type(TArrayDef(parasym.vardef).ElementDef);
+                       if ParaSym.vardef.typ=arraydef then
+                         TArrayConstructorNode(Left).Force_Type(TArrayDef(ParaSym.vardef).ElementDef);
                      end;
                   end;
 
                  { check if local proc/func is assigned to procvar }
-                 if left.resultdef.typ=procvardef then
-                   test_local_to_procvar(TProcVarDef(left.resultdef),parasym.vardef);
+                 if Left.ResultDef.typ=procvardef then
+                   test_local_to_procvar(TProcVarDef(Left.ResultDef),ParaSym.vardef);
 
                  { test conversions }
-                 if not(Is_ShortString(left.resultdef) and
-                        Is_ShortString(parasym.vardef)) and
-                    (parasym.vardef.typ<>formaldef) and
-                    not(parasym.UnivPara) then
+                 if not(Is_ShortString(Left.ResultDef) and
+                        Is_ShortString(ParaSym.vardef)) and
+                    (ParaSym.vardef.typ<>formaldef) and
+                    not(ParaSym.UnivPara) then
                    begin
                       { Process open parameters }
-                      if ParaManager.Keep_Para_Array_Range(parasym.VarSpez,parasym.vardef,callnode.procdefinition.ProcCallOption) then
+                      if ParaManager.Keep_Para_Array_Range(ParaSym.VarSpez,ParaSym.vardef,CallNode.ProcDefinition.ProcCallOption) then
                        begin
                          { insert type conv but hold the ranges of the array }
-                         olddef:=left.resultdef;
-                         inserttypeconv(left,parasym.vardef);
-                         left.resultdef:=olddef;
+                         lOldDef:=Left.ResultDef;
+                         InsertTypeConv(Left,ParaSym.vardef);
+                         Left.ResultDef:=lOldDef;
                        end
                       else
                        begin
-                         check_ranges(left.fileinfo,left,parasym.vardef);
-                         inserttypeconv(left,parasym.vardef);
+                         check_ranges(Left.FileInfo,Left,ParaSym.vardef);
+                         InsertTypeConv(Left,ParaSym.vardef);
                        end;
                       if CodeGenError then
                         exit;
@@ -1280,99 +1280,99 @@ implementation
                 { they are passed by value (if passed by reference, then the  }
                 { callee will truncate when copying in the string)            }
                 { This happens e.g. on x86_64 for small strings               }
-                 if Is_ShortString(left.resultdef) and
-                    Is_ShortString(parasym.vardef) and
-                    (parasym.VarSpez=vs_value) and
-                    not ParaManager.Push_Addr_Param(parasym.VarSpez,parasym.vardef,
-                          callnode.procdefinition.ProcCallOption) and
-                    ((Is_Open_String(left.resultdef) and
-                      (TStringDef(parasym.vardef).len < 255)) or
-                     (not Is_Open_String(left.resultdef) and
+                 if Is_ShortString(Left.ResultDef) and
+                    Is_ShortString(ParaSym.vardef) and
+                    (ParaSym.VarSpez=vs_value) and
+                    not ParaManager.Push_Addr_Param(ParaSym.VarSpez,ParaSym.vardef,
+                          CallNode.ProcDefinition.ProcCallOption) and
+                    ((Is_Open_String(Left.ResultDef) and
+                      (TStringDef(ParaSym.vardef).len < 255)) or
+                     (not Is_Open_String(Left.ResultDef) and
                       { when a stringconstn is typeconverted, then only its  }
                       { def is modified, not the contents (needed because in }
                       { Delphi/TP, if you pass a longer string to a const    }
                       { parameter, then the callee has to see this longer    }
                       { string)                                              }
-                      (((left.nodetype<>stringconstn) and
-                        (TStringDef(parasym.vardef).len<TStringDef(left.resultdef).len)) or
-                       ((left.nodetype=stringconstn) and
-                        (TStringDef(parasym.vardef).len<TStringConstNode(left).len))))) then
+                      (((Left.NodeType<>stringconstn) and
+                        (TStringDef(ParaSym.vardef).len<TStringDef(Left.ResultDef).len)) or
+                       ((Left.NodeType=stringconstn) and
+                        (TStringDef(ParaSym.vardef).len<TStringConstNode(Left).len))))) then
                    begin
-                     block:=internalstatements(statements);
+                     lBlock:=InternalStatements(lStatements);
                      { temp for the new string }
-                     temp:=CTempCreateNode.create(parasym.vardef,parasym.vardef.Size,
+                     lTempNode:=CTempCreateNode.Create(ParaSym.vardef,ParaSym.vardef.Size,
                        tt_persistent,true);
-                     addstatement(statements,temp);
+                     AddStatement(lStatements,lTempNode);
                      { assign parameter to temp }
-                     addstatement(statements,CAssignmentNode.create(CTempRefNode.create(temp),left));
-                     left:=nil;
+                     AddStatement(lStatements,CAssignmentNode.Create(CTempRefNode.Create(lTempNode),Left));
+                     Left:=nil;
                      { release temp after next use }
-                     addstatement(statements,CTempDeleteNode.create_normal_temp(temp));
-                     addstatement(statements,CTempRefNode.create(temp));
-                     TypeCheckPass(TNode(block));
-                     left:=block;
+                     AddStatement(lStatements,CTempDeleteNode.Create_Normal_Temp(lTempNode));
+                     AddStatement(lStatements,CTempRefNode.Create(lTempNode));
+                     TypeCheckPass(TNode(lBlock));
+                     Left:=lBlock;
                    end;
 
                  { check var strings }
                  if (cs_strict_var_strings in CurrentSettings.LocalSwitches) and
-                    Is_ShortString(left.resultdef) and
-                    Is_ShortString(parasym.vardef) and
-                    (parasym.VarSpez in [vs_out,vs_var,vs_constref]) and
-                    not(Is_Open_String(parasym.vardef)) and
-                    not(Equal_Defs(left.resultdef,parasym.vardef)) then
+                    Is_ShortString(Left.ResultDef) and
+                    Is_ShortString(ParaSym.vardef) and
+                    (ParaSym.VarSpez in [vs_out,vs_var,vs_constref]) and
+                    not(Is_Open_String(ParaSym.vardef)) and
+                    not(Equal_Defs(Left.ResultDef,ParaSym.vardef)) then
                    begin
-                     CGMessagePos(left.fileinfo,type_e_strict_var_string_violation);
+                     CGMessagePos(Left.FileInfo,type_e_strict_var_string_violation);
                    end;
 
                  { passing a value to an "univ" parameter implies an explicit
                    typecast to the parameter type. Must be done before the
                    valid_for_var() check, since the typecast can result in
                    an invalid lvalue in case of var/out parameters. }
-                 if (parasym.UnivPara) then
+                 if (ParaSym.UnivPara) then
                    begin
                      { load procvar if a procedure is passed }
                      if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                          (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                        (left.nodetype=calln) and
-                        (Is_Void(left.resultdef)) then
+                        (Left.NodeType=calln) and
+                        (Is_Void(Left.ResultDef)) then
                        begin
-                         load_procvar_from_calln(left);
+                         Load_ProcVar_From_CallN(Left);
                          { load_procvar_from_calln() creates a loadn for a
                            a procedure, which means that the type conversion
                            below will type convert the first instruction
                            bytes of the procedure -> convert to a procvar }
-                         left:=CTypeConvNode.create_proc_to_procvar(left);
-                         TypeCheckPass(left);
+                         Left:=CTypeConvNode.Create_Proc_To_ProcVar(Left);
+                         TypeCheckPass(Left);
                        end;
-                     inserttypeconv_explicit(left,parasym.vardef);
+                     InsertTypeConv_Explicit(Left,ParaSym.vardef);
                    end;
 
                  { Handle formal parameters separate }
-                 if (parasym.vardef.typ=formaldef) then
+                 if (ParaSym.vardef.typ=formaldef) then
                    begin
                      { load procvar if a procedure is passed }
                      if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                          (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                        (left.nodetype=calln) and
-                        (Is_Void(left.resultdef)) then
-                       load_procvar_from_calln(left);
+                        (Left.NodeType=calln) and
+                        (Is_Void(Left.ResultDef)) then
+                       Load_ProcVar_From_CallN(Left);
 
-                     case parasym.VarSpez of
+                     case ParaSym.VarSpez of
                        vs_var,
                        vs_out :
                          begin
-                           if not valid_for_formal_var(left,true) then
-                            CGMessagePos(left.fileinfo,parser_e_illegal_parameter_list);
+                           if not valid_for_formal_var(Left,true) then
+                            CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list);
                          end;
                        vs_constref:
                          begin
-                           if not valid_for_formal_constref(left,true) then
-                            CGMessagePos(left.fileinfo,parser_e_illegal_parameter_list);
+                           if not valid_for_formal_constref(Left,true) then
+                            CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list);
                          end;
                        vs_const :
                          begin
-                           if not valid_for_formal_const(left,true) then
-                            CGMessagePos(left.fileinfo,parser_e_illegal_parameter_list)
+                           if not valid_for_formal_const(Left,true) then
+                            CGMessagePos(Left.FileInfo,parser_e_illegal_parameter_list)
                          end;
                        else
                          ;
@@ -1381,193 +1381,193 @@ implementation
                  else
                    begin
                      { check if the argument is allowed }
-                     if (parasym.VarSpez in [vs_out,vs_var]) then
-                       valid_for_var(left,true);
+                     if (ParaSym.VarSpez in [vs_out,vs_var]) then
+                       valid_for_var(Left,true);
                    end;
 
-                 if parasym.VarSpez in [vs_var,vs_out,vs_constref] then
-                   set_unique(left);
+                 if ParaSym.VarSpez in [vs_var,vs_out,vs_constref] then
+                   set_unique(Left);
 
-                 if (parasym.VarSpez=vs_const) and (parasym.vardef.typ=formaldef) then
+                 if (ParaSym.VarSpez=vs_const) and (ParaSym.vardef.typ=formaldef) then
                    begin
                      { compilerprocs never capture the address of their
                        parameters }
-                     if (po_compilerproc in callnode.procdefinition.ProcOptions) or
+                     if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
                      { if we handled already the proc. body and it is not inlined,
                        we can propagate the information if the address of a parameter is taken or not }
-                     ((callnode.procdefinition.typ=procdef) and
-                      not(po_inline in TProcDef(callnode.procdefinition).ProcOptions) and
-                      (TProcDef(callnode.procdefinition).IsImplemented) and
-                      not(parasym.AddrTaken)) then
-                       make_not_regable(left,[ra_addr_regable])
+                     ((CallNode.ProcDefinition.typ=procdef) and
+                      not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
+                      (TProcDef(CallNode.ProcDefinition).IsImplemented) and
+                      not(ParaSym.AddrTaken)) then
+                       make_not_regable(Left,[ra_addr_regable])
                      else
-                       make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
+                       make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
                    end
                  else
-                  case parasym.VarSpez of
+                  case ParaSym.VarSpez of
                     vs_out :
                       begin
                         { first set written separately to avoid false }
                         { uninitialized warnings (tbs/tb0542)         }
-                        set_varstate(left,vs_written,[]);
-                        set_varstate(left,vs_readwritten,[]);
+                        set_varstate(Left,vs_written,[]);
+                        set_varstate(Left,vs_readwritten,[]);
                         { compilerprocs never capture the address of their
                           parameters }
-                        if (po_compilerproc in callnode.procdefinition.ProcOptions) or
+                        if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
                         { if we handled already the proc. body and it is not inlined,
                           we can propagate the information if the address of a parameter is taken or not }
-                        ((callnode.procdefinition.typ=procdef) and
-                         not(po_inline in TProcDef(callnode.procdefinition).ProcOptions) and
-                         (TProcDef(callnode.procdefinition).IsImplemented) and
-                         not(parasym.AddrTaken)) then
-                          make_not_regable(left,[ra_addr_regable])
+                        ((CallNode.ProcDefinition.typ=procdef) and
+                         not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
+                         (TProcDef(CallNode.ProcDefinition).IsImplemented) and
+                         not(ParaSym.AddrTaken)) then
+                          make_not_regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
+                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     vs_var:
                       begin
-                        set_varstate(left,vs_readwritten,[vsf_must_be_valid,vsf_use_hints]);
+                        set_varstate(Left,vs_readwritten,[vsf_must_be_valid,vsf_use_hints]);
                         { compilerprocs never capture the address of their
                           parameters }
-                        if (po_compilerproc in callnode.procdefinition.ProcOptions) or
+                        if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
                         { if we handled already the proc. body and it is not inlined,
                           we can propagate the information if the address of a parameter is taken or not }
-                        ((callnode.procdefinition.typ=procdef) and
-                         not(po_inline in TProcDef(callnode.procdefinition).ProcOptions) and
-                         (TProcDef(callnode.procdefinition).IsImplemented) and
-                         not(parasym.AddrTaken)) then
-                          make_not_regable(left,[ra_addr_regable])
+                        ((CallNode.ProcDefinition.typ=procdef) and
+                         not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
+                         (TProcDef(CallNode.ProcDefinition).IsImplemented) and
+                         not(ParaSym.AddrTaken)) then
+                          make_not_regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
+                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     vs_constref:
                       begin
                         { constref does not mean that the variable is actually written, this might only
                           happen if it's address is taken, this is handled below }
-                        set_varstate(left,vs_read,[vsf_must_be_valid,vsf_use_hints]);
+                        set_varstate(Left,vs_read,[vsf_must_be_valid,vsf_use_hints]);
                         { compilerprocs never capture the address of their
                           parameters }
-                        if (po_compilerproc in callnode.procdefinition.ProcOptions) or
+                        if (po_compilerproc in CallNode.ProcDefinition.ProcOptions) or
                         { if we handled already the proc. body and it is not inlined,
                           we can propagate the information if the address of a parameter is taken or not }
-                        ((callnode.procdefinition.typ=procdef) and
-                         not(po_inline in TProcDef(callnode.procdefinition).ProcOptions) and
-                         (TProcDef(callnode.procdefinition).IsImplemented) and
-                         not(parasym.AddrTaken)) then
-                          make_not_regable(left,[ra_addr_regable])
+                        ((CallNode.ProcDefinition.typ=procdef) and
+                         not(po_inline in TProcDef(CallNode.ProcDefinition).ProcOptions) and
+                         (TProcDef(CallNode.ProcDefinition).IsImplemented) and
+                         not(ParaSym.AddrTaken)) then
+                          make_not_regable(Left,[ra_addr_regable])
                         else
-                          make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
+                          make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
                       end;
                     else
-                      set_varstate(left,vs_read,[vsf_must_be_valid]);
+                      set_varstate(Left,vs_read,[vsf_must_be_valid]);
                   end;
                  { must only be done after typeconv PM }
-                 resultdef:=parasym.vardef;
+                 ResultDef:=ParaSym.vardef;
                end;
             end;
 
          { process next node }
-         if Assigned(right) then
-           TCallParaNode(right).insert_typeconv;
+         if Assigned(Right) then
+           TCallParaNode(Right).Insert_TypeConv;
       end;
 
 
-    function TCallParaNode.can_be_inlined: boolean;
+    function TCallParaNode.Can_Be_Inlined: Boolean;
       var
-        n: TNode;
+        lNode: TNode;
       begin
-        n:=left;
-        result:=false;
-        while Assigned(n) and
-              (n.nodetype=typeconvn) do
+        lNode:=Left;
+        Result:=false;
+        while Assigned(lNode) and
+              (lNode.NodeType=typeconvn) do
           begin
             { look for type conversion nodes which convert a }
             { refcounted type into a non-refcounted type     }
-            if not Is_Managed_Type(n.resultdef) and
-               Is_Managed_Type(TTypeConvNode(n).left.resultdef) then
+            if not Is_Managed_Type(lNode.ResultDef) and
+               Is_Managed_Type(TTypeConvNode(lNode).Left.ResultDef) then
               exit;
-            n:=TTypeConvNode(n).left;
+            lNode:=TTypeConvNode(lNode).Left;
           end;
         { also check for dereferencing constant pointers, like }
         { tsomerecord(nil^) passed to a const r: tsomerecord   }
         { parameter                                           }
-        if (n.nodetype=derefn) then
+        if (lNode.NodeType=derefn) then
           begin
             repeat
-              n:=TUnaryNode(n).left;
-            until (n.nodetype<>typeconvn);
-            if (n.nodetype in [niln,pointerconstn]) then
+              lNode:=TUnaryNode(lNode).Left;
+            until (lNode.NodeType<>typeconvn);
+            if (lNode.NodeType in [niln,pointerconstn]) then
               exit
           end;
-        result:=true;
+        Result:=true;
       end;
 
 
-    function check_contains_stack_tainting_call(var n: TNode; arg: pointer): TForEachNodeResult;
+    function CheckContainsStackTaintingCall(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       begin
-        if (n.nodetype=calln) and
-           TCallNode(n).procdefinition.Stack_Tainting_Parameter(callerside) then
-          result:=fen_norecurse_true
+        if (ANode.NodeType=calln) and
+           TCallNode(ANode).ProcDefinition.Stack_Tainting_Parameter(callerside) then
+          Result:=fen_norecurse_true
         else
-          result:=fen_false;
+          Result:=fen_false;
       end;
 
 
-    function TCallParaNode.contains_stack_tainting_call: boolean;
+    function TCallParaNode.Contains_Stack_Tainting_Call: Boolean;
       begin
-        result:=foreachnodestatic(pm_postprocess,left,@check_contains_stack_tainting_call,nil);
+        Result:=ForEachNodeStatic(pm_postprocess,Left,@CheckContainsStackTaintingCall,nil);
       end;
 
 
-    procedure TCallParaNode.init_contains_stack_tainting_call_cache;
+    procedure TCallParaNode.Init_Contains_Stack_Tainting_Call_Cache;
       begin
-        fcontains_stack_tainting_call_cached:=contains_stack_tainting_call;
+        FContainsStackTaintingCallCached:=Contains_Stack_Tainting_Call;
       end;
 
 
-    function TCallParaNode.docompare(p: TNode): boolean;
+    function TCallParaNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare :=
-          inherited docompare(p) and
-          fparainit.isequal(TCallParaNode(p).fparainit) and
-          fparacopyback.isequal(TCallParaNode(p).fparacopyback) and
-          (callparaflags = TCallParaNode(p).callparaflags)
+        DoCompare :=
+          inherited DoCompare(ANode) and
+          FParaInit.IsEqual(TCallParaNode(ANode).FParaInit) and
+          FParaCopyBack.IsEqual(TCallParaNode(ANode).FParaCopyBack) and
+          (CallParaFlags = TCallParaNode(ANode).CallParaFlags)
           ;
       end;
 
 
-    procedure TCallParaNode.printnodetree(var t:text);
+    procedure TCallParaNode.PrintNodeTree(var AText:Text);
       var
-        hp: TBinaryNode;
+        lBinaryNode: TBinaryNode;
       begin
-        hp:=self;
-        while Assigned(hp) do
+        lBinaryNode:=Self;
+        while Assigned(lBinaryNode) do
          begin
-           write(t,PrintNodeIndention,'(');
+           write(AText,PrintNodeIndention,'(');
            PrintNodeIndent;
-           hp.printnodeinfo(t);
-           WriteLn(t);
-           if Assigned(TCallParaNode(hp).fparainit) then
+           lBinaryNode.PrintNodeInfo(AText);
+           WriteLn(AText);
+           if Assigned(TCallParaNode(lBinaryNode).FParaInit) then
              begin
-               WriteLn(t,PrintNodeIndention,'(parainit =');
+               WriteLn(AText,PrintNodeIndention,'(parainit =');
                PrintNodeIndent;
-               printnode(t,TCallParaNode(hp).fparainit);
+               PrintNode(AText,TCallParaNode(lBinaryNode).FParaInit);
                PrintNodeUnindent;
-               WriteLn(t,PrintNodeIndention,')');
+               WriteLn(AText,PrintNodeIndention,')');
              end;
-           if Assigned(TCallParaNode(hp).fparacopyback) then
+           if Assigned(TCallParaNode(lBinaryNode).FParaCopyBack) then
              begin
-               WriteLn(t,PrintNodeIndention,'(fparacopyback =');
+               WriteLn(AText,PrintNodeIndention,'(fparacopyback =');
                PrintNodeIndent;
-               printnode(t,TCallParaNode(hp).fparacopyback);
+               PrintNode(AText,TCallParaNode(lBinaryNode).FParaCopyBack);
                PrintNodeUnindent;
-               WriteLn(t,PrintNodeIndention,')');
+               WriteLn(AText,PrintNodeIndention,')');
              end;
-           printnode(t,hp.left);
-           WriteLn(t);
+           PrintNode(AText,lBinaryNode.Left);
+           WriteLn(AText);
            PrintNodeUnindent;
-           WriteLn(t,PrintNodeIndention,')');
-           hp:=TBinaryNode(hp.right);
+           WriteLn(AText,PrintNodeIndention,')');
+           lBinaryNode:=TBinaryNode(lBinaryNode.Right);
          end;
       end;
 
@@ -1576,690 +1576,690 @@ implementation
                                  TCALLNODE
  ****************************************************************************}
 
-    constructor TCallNode.create(l:TNode;v : TProcSym;st : TSymTable; mp: TNode; callflags:TCallNodeFlags;sc:TSpecializationContext);
+    constructor TCallNode.Create(ALeft:TNode;AProcSym : TProcSym;ASymTable : TSymTable; AMethodPointer: TNode; ACallFlags:TCallNodeFlags;ASpecializationContext:TSpecializationContext);
       var
-        srsym: TSym;
-        srsymtable: TSymTable;
+        lFoundSym: TSym;
+        lFoundSymTable: TSymTable;
       begin
-         inherited create(calln,l,nil);
-         spezcontext:=sc;
-         symtableprocentry:=v;
-         symtableproc:=st;
-         callnodeflags:=callflags+[cnf_return_value_used];
-         methodpointer:=mp;
-         callinitblock:=nil;
-         callcleanupblock:=nil;
-         procdefinition:=nil;
-         funcretnode:=nil;
-         paralength:=-1;
-         varargsparas:=nil;
-         intrinsiccode:=Default(TInlineNumber);
+         inherited Create(calln,ALeft,nil);
+         SpezContext:=ASpecializationContext;
+         SymTableProcEntry:=AProcSym;
+         SymTableProc:=ASymTable;
+         CallNodeFlags:=ACallFlags+[cnf_return_value_used];
+         MethodPointer:=AMethodPointer;
+         CallInitBlock:=nil;
+         CallCleanupBlock:=nil;
+         ProcDefinition:=nil;
+         FuncRetNode:=nil;
+         FParaLength:=-1;
+         VarArgsParas:=nil;
+         IntrinsicCode:=Default(TInlineNumber);
          if Assigned(CurrentStructDef) and
-            Assigned(mp) and
+            Assigned(AMethodPointer) and
             Assigned(CurrentProcInfo) then
            begin
             { only needed when calling a destructor from an exception block in a
               constructor of a TP-style object }
             if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) and
-               (cnf_create_failed in callflags) then
+               (cnf_create_failed in ACallFlags) then
               if Is_Object(CurrentStructDef) then
-                call_vmt_node:=load_vmt_pointer_node
+                CallVMTNode:=Load_VMT_Pointer_Node
               else if Is_Class(CurrentStructDef) then
                 begin
-                  if not SearchSym(copy(InternalTypePrefixName[itp_vmt_afterconstruction_local],2,255),srsym,srsymtable) then
+                  if not SearchSym(copy(InternalTypePrefixName[itp_vmt_afterconstruction_local],2,255),lFoundSym,lFoundSymTable) then
                     InternalError(2016090801);
-                  call_vmt_node:=CLoadNode.create(srsym,srsymtable);
+                  CallVMTNode:=CLoadNode.Create(lFoundSym,lFoundSymTable);
                 end;
            end;
       end;
 
 
-    constructor TCallNode.create_procvar(l,r:TNode);
+    constructor TCallNode.Create_ProcVar(ALeft,ARight:TNode);
       begin
-         create(l,nil,nil,nil,[],nil);
-         right:=r;
+         Create(ALeft,nil,nil,nil,[],nil);
+         Right:=ARight;
       end;
 
 
-     constructor TCallNode.createintern(const name: string; params: TNode);
+     constructor TCallNode.CreateIntern(const AName: string; AParams: TNode);
        var
-         srsym: TSym;
+         lFoundSym: TSym;
        begin
-         srsym := TSym(SystemUnit.Find(name));
+         lFoundSym := TSym(SystemUnit.Find(AName));
          { in case we are looking for a non-external compilerproc of which we
            only have parsed the declaration until now (the symbol name will
            still be uppercased, because it needs to be matched when we
            encounter the implementation) }
-         if not Assigned(srsym) and
+         if not Assigned(lFoundSym) and
             (cs_compilesystem in CurrentSettings.ModuleSwitches) then
-           srsym := TSym(SystemUnit.Find(upper(name)));
-         if not Assigned(srsym) or
-            (srsym.typ<>ProcSym) then
-           Message1(cg_f_unknown_compilerproc,name);
-         create(params,TProcSym(srsym),srsym.owner,nil,[],nil);
+           lFoundSym := TSym(SystemUnit.Find(upper(AName)));
+         if not Assigned(lFoundSym) or
+            (lFoundSym.typ<>ProcSym) then
+           Message1(cg_f_unknown_compilerproc,AName);
+         Create(AParams,TProcSym(lFoundSym),lFoundSym.owner,nil,[],nil);
        end;
 
 
-     constructor TCallNode.createfromintrinsic(const intrinsic: TInlineNumber; const name: string; params: TNode);
+     constructor TCallNode.CreateFromIntrinsic(const AIntrinsic: TInlineNumber; const AName: string; AParams: TNode);
        begin
-         createintern(name, params);
-         intrinsiccode := intrinsic;
+         CreateIntern(AName, AParams);
+         IntrinsicCode := AIntrinsic;
        end;
 
 
-     constructor TCallNode.createinternfromunit(const fromunit, procname: string; params: TNode);
+     constructor TCallNode.CreateInternFromUnit(const AFromUnit, AProcName: string; AParams: TNode);
        var
-         srsym: TSym;
-         srsymtable: TSymTable;
+         lFoundSym: TSym;
+         lFoundSymTable: TSymTable;
        begin
-         srsym:=nil;
-         if not SearchSym_In_Named_Module(fromunit,procname,srsym,srsymtable) or
-            (srsym.typ<>ProcSym) then
-           Message1(cg_f_unknown_compilerproc,fromunit+'.'+procname);
-         create(params,TProcSym(srsym),srsymtable,nil,[],nil);
+         lFoundSym:=nil;
+         if not SearchSym_In_Named_Module(AFromUnit,AProcName,lFoundSym,lFoundSymTable) or
+            (lFoundSym.typ<>ProcSym) then
+           Message1(cg_f_unknown_compilerproc,AFromUnit+'.'+AProcName);
+         Create(AParams,TProcSym(lFoundSym),lFoundSymTable,nil,[],nil);
        end;
 
 
-    constructor TCallNode.createinternres(const name: string; params: TNode; res:TDef);
+    constructor TCallNode.CreateInternRes(const AName: string; AParams: TNode; AResultDef:TDef);
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        createintern(name,params);
-        typedef:=res;
-        include(callnodeflags,cnf_typedefset);
-        pd:=TProcDef(symtableprocentry.ProcdefList[0]);
+        CreateIntern(AName,AParams);
+        TypeDef:=AResultDef;
+        include(CallNodeFlags,cnf_typedefset);
+        lProcDef:=TProcDef(SymTableProcEntry.ProcdefList[0]);
         { both the normal and specified resultdef either have to be returned via a }
         { parameter or not, but no mixing (JM)                                      }
-        if ParaManager.Ret_In_Param(typedef,pd) xor
-          ParaManager.Ret_In_Param(pd.ReturnDef,pd) then
+        if ParaManager.Ret_In_Param(TypeDef,lProcDef) xor
+          ParaManager.Ret_In_Param(lProcDef.ReturnDef,lProcDef) then
           InternalError(2001082911);
       end;
 
 
-    constructor TCallNode.createinternresfromunit(const fromunit, procname: string; params: TNode; res:TDef);
+    constructor TCallNode.CreateInternResFromUnit(const AFromUnit, AProcName: string; AParams: TNode; AResultDef:TDef);
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        createinternfromunit(fromunit,procname,params);
-        typedef:=res;
-        include(callnodeflags,cnf_typedefset);
-        pd:=TProcDef(symtableprocentry.ProcdefList[0]);
+        CreateInternFromUnit(AFromUnit,AProcName,AParams);
+        TypeDef:=AResultDef;
+        include(CallNodeFlags,cnf_typedefset);
+        lProcDef:=TProcDef(SymTableProcEntry.ProcdefList[0]);
         { both the normal and specified resultdef either have to be returned via a }
         { parameter or not, but no mixing (JM)                                      }
-        if ParaManager.Ret_In_Param(typedef,pd) xor
-          ParaManager.Ret_In_Param(pd.ReturnDef,pd) then
+        if ParaManager.Ret_In_Param(TypeDef,lProcDef) xor
+          ParaManager.Ret_In_Param(lProcDef.ReturnDef,lProcDef) then
           InternalError(200108291);
       end;
 
 
-    constructor TCallNode.createinternreturn(const name: string; params: TNode; returnnode : TNode);
+    constructor TCallNode.CreateInternReturn(const AName: string; AParams: TNode; AReturnNode : TNode);
       begin
-        createintern(name,params);
-        funcretnode:=returnnode;
+        CreateIntern(AName,AParams);
+        FuncRetNode:=AReturnNode;
       end;
 
 
-    constructor TCallNode.createinternmethod(mp: TNode; const name: string; params: TNode);
+    constructor TCallNode.CreateInternMethod(AMethodPointer: TNode; const AName: string; AParams: TNode);
       var
-        ps: TSym;
-        recdef: TAbstractRecordDef;
+        lSym: TSym;
+        lRecordDef: TAbstractRecordDef;
       begin
-        TypeCheckPass(mp);
-        if mp.resultdef.typ=classrefdef then
-          recdef:=TAbstractRecordDef(TClassRefDef(mp.resultdef).PointedDef)
+        TypeCheckPass(AMethodPointer);
+        if AMethodPointer.ResultDef.typ=classrefdef then
+          lRecordDef:=TAbstractRecordDef(TClassRefDef(AMethodPointer.ResultDef).PointedDef)
         else
-          recdef:=TAbstractRecordDef(mp.resultdef);
-        ps:=Search_Struct_Member(recdef,name);
-        if not Assigned(ps) or
-           (ps.typ<>ProcSym) then
+          lRecordDef:=TAbstractRecordDef(AMethodPointer.ResultDef);
+        lSym:=Search_Struct_Member(lRecordDef,AName);
+        if not Assigned(lSym) or
+           (lSym.typ<>ProcSym) then
           InternalError(2011062806);
-        create(params,TProcSym(ps),ps.owner,mp,[],nil);
+        Create(AParams,TProcSym(lSym),lSym.owner,AMethodPointer,[],nil);
       end;
 
 
-    constructor TCallNode.createinternmethodres(mp: TNode; const name: string; params: TNode; res: TDef);
+    constructor TCallNode.CreateInternMethodRes(AMethodPointer: TNode; const AName: string; AParams: TNode; AResultDef: TDef);
       begin
-        createinternmethod(mp,name,params);
-        typedef:=res;
-        include(callnodeflags,cnf_typedefset)
+        CreateInternMethod(AMethodPointer,AName,AParams);
+        TypeDef:=AResultDef;
+        include(CallNodeFlags,cnf_typedefset)
       end;
 
 
     destructor TCallNode.Destroy;
       begin
-         methodpointer.free;
-         methodpointer := nil;
-         callinitblock.free;
-         callinitblock := nil;
-         callcleanupblock.free;
-         callcleanupblock := nil;
-         funcretnode.free;
-         funcretnode := nil;
-         if Assigned(varargsparas) then
+         MethodPointer.free;
+         MethodPointer := nil;
+         CallInitBlock.free;
+         CallInitBlock := nil;
+         CallCleanupBlock.free;
+         CallCleanupBlock := nil;
+         FuncRetNode.free;
+         FuncRetNode := nil;
+         if Assigned(VarArgsParas) then
          begin
-           varargsparas.free;
-           varargsparas := nil;
+           VarArgsParas.free;
+           VarArgsParas := nil;
          end;
-         call_self_node.free;
-         call_self_node := nil;
-         call_vmt_node.free;
-         call_vmt_node := nil;
-         vmt_entry.free;
-         vmt_entry := nil;
-         spezcontext.free;
-         spezcontext := nil;
+         CallSelfNode.free;
+         CallSelfNode := nil;
+         CallVMTNode.free;
+         CallVMTNode := nil;
+         VMTEntry.free;
+         VMTEntry := nil;
+         SpezContext.free;
+         SpezContext := nil;
          inherited Destroy;
       end;
 
 
-    constructor TCallNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TCallNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       var
-        para : TCallParaNode;
+        lPara : TCallParaNode;
       begin
-        callinitblock:=TBlockNode(ppuloadnode(ppufile));
-        methodpointer:=ppuloadnode(ppufile);
-        call_self_node:=ppuloadnode(ppufile);
-        call_vmt_node:=ppuloadnode(ppufile);
-        callcleanupblock:=TBlockNode(ppuloadnode(ppufile));
-        funcretnode:=ppuloadnode(ppufile);
-        inherited ppuload(t,ppufile);
+        CallInitBlock:=TBlockNode(PPULoadNode(APPUFile));
+        MethodPointer:=PPULoadNode(APPUFile);
+        CallSelfNode:=PPULoadNode(APPUFile);
+        CallVMTNode:=PPULoadNode(APPUFile);
+        CallCleanupBlock:=TBlockNode(PPULoadNode(APPUFile));
+        FuncRetNode:=PPULoadNode(APPUFile);
+        inherited PPULoad(ANodeType,APPUFile);
 
-        if Assigned(left) then
+        if Assigned(Left) then
           begin
             { update callnode reference in parameter nodes }
-            para:=TCallParaNode(left);
-            while Assigned(para) do
+            lPara:=TCallParaNode(Left);
+            while Assigned(lPara) do
               begin
-                para.callnode:=self;
-                para:=TCallParaNode(para.right);
+                lPara.CallNode:=Self;
+                lPara:=TCallParaNode(lPara.Right);
               end;
           end;
 
-        ppufile.GetDeref(symtableprocentryderef);
+        APPUFile.GetDeref(SymTableProcEntryDeref);
 { TODO: FIXME: No withsymtable support}
-        symtableproc:=nil;
-        ppufile.GetDeref(procdefinitionderef);
-        ppufile.GetSet(TPPUSet4(callnodeflags));
-        intrinsiccode:=TInlineNumber(ppufile.GetWord);
+        SymTableProc:=nil;
+        APPUFile.GetDeref(ProcDefinitionDeref);
+        APPUFile.GetSet(TPPUSet4(CallNodeFlags));
+        IntrinsicCode:=TInlineNumber(APPUFile.GetWord);
       end;
 
 
-    procedure TCallNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TCallNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        ppuwritenode(ppufile,callinitblock);
-        ppuwritenode(ppufile,methodpointer);
-        ppuwritenode(ppufile,call_self_node);
-        ppuwritenode(ppufile,call_vmt_node);
-        ppuwritenode(ppufile,callcleanupblock);
-        ppuwritenode(ppufile,funcretnode);
-        inherited ppuwrite(ppufile);
-        ppufile.PutDeref(symtableprocentryderef);
-        ppufile.PutDeref(procdefinitionderef);
-        ppufile.PutSet(TPPUSet4(callnodeflags));
-        ppufile.PutWord(word(intrinsiccode));
+        PPUWriteNode(APPUFile,CallInitBlock);
+        PPUWriteNode(APPUFile,MethodPointer);
+        PPUWriteNode(APPUFile,CallSelfNode);
+        PPUWriteNode(APPUFile,CallVMTNode);
+        PPUWriteNode(APPUFile,CallCleanupBlock);
+        PPUWriteNode(APPUFile,FuncRetNode);
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutDeref(SymTableProcEntryDeref);
+        APPUFile.PutDeref(ProcDefinitionDeref);
+        APPUFile.PutSet(TPPUSet4(CallNodeFlags));
+        APPUFile.PutWord(Word(IntrinsicCode));
       end;
 
 
     procedure TCallNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        symtableprocentryderef.build(symtableprocentry);
-        procdefinitionderef.build(procdefinition);
-        if Assigned(methodpointer) then
-          methodpointer.BuildDerefImpl;
-        if Assigned(call_self_node) then
-          call_self_node.BuildDerefImpl;
-        if Assigned(call_vmt_node) then
-          call_vmt_node.BuildDerefImpl;
-        if Assigned(callinitblock) then
-          callinitblock.BuildDerefImpl;
-        if Assigned(callcleanupblock) then
-          callcleanupblock.BuildDerefImpl;
-        if Assigned(funcretnode) then
-          funcretnode.BuildDerefImpl;
+        SymTableProcEntryDeref.Build(SymTableProcEntry);
+        ProcDefinitionDeref.Build(ProcDefinition);
+        if Assigned(MethodPointer) then
+          MethodPointer.BuildDerefImpl;
+        if Assigned(CallSelfNode) then
+          CallSelfNode.BuildDerefImpl;
+        if Assigned(CallVMTNode) then
+          CallVMTNode.BuildDerefImpl;
+        if Assigned(CallInitBlock) then
+          CallInitBlock.BuildDerefImpl;
+        if Assigned(CallCleanupBlock) then
+          CallCleanupBlock.BuildDerefImpl;
+        if Assigned(FuncRetNode) then
+          FuncRetNode.BuildDerefImpl;
       end;
 
 
-    procedure TCallNode.derefimpl;
+    procedure TCallNode.DerefImpl;
       var
-        pt : TCallParaNode;
-        i  : integer;
+        lPara : TCallParaNode;
+        lIndex  : Integer;
       begin
-        inherited derefimpl;
-        symtableprocentry:=TProcSym(symtableprocentryderef.resolve);
-        if Assigned(symtableprocentry) then
-          symtableproc:=symtableprocentry.owner;
-        procdefinition:=TAbstractProcDef(procdefinitionderef.resolve);
-        if Assigned(methodpointer) then
-          methodpointer.derefimpl;
-        if Assigned(call_self_node) then
-          call_self_node.derefimpl;
-        if Assigned(call_vmt_node) then
-          call_vmt_node.derefimpl;
-        if Assigned(callinitblock) then
-          callinitblock.derefimpl;
-        if Assigned(callcleanupblock) then
-          callcleanupblock.derefimpl;
-        if Assigned(funcretnode) then
-          funcretnode.derefimpl;
+        inherited DerefImpl;
+        SymTableProcEntry:=TProcSym(SymTableProcEntryDeref.resolve);
+        if Assigned(SymTableProcEntry) then
+          SymTableProc:=SymTableProcEntry.owner;
+        ProcDefinition:=TAbstractProcDef(ProcDefinitionDeref.resolve);
+        if Assigned(MethodPointer) then
+          MethodPointer.DerefImpl;
+        if Assigned(CallSelfNode) then
+          CallSelfNode.DerefImpl;
+        if Assigned(CallVMTNode) then
+          CallVMTNode.DerefImpl;
+        if Assigned(CallInitBlock) then
+          CallInitBlock.DerefImpl;
+        if Assigned(CallCleanupBlock) then
+          CallCleanupBlock.DerefImpl;
+        if Assigned(FuncRetNode) then
+          FuncRetNode.DerefImpl;
         { generic method has no procdefinition }
-        if Assigned(procdefinition) then
+        if Assigned(ProcDefinition) then
           begin
             { Connect parasyms }
-            pt:=TCallParaNode(left);
-            while Assigned(pt) and
-                  (cpf_varargs_para in pt.callparaflags) do
-              pt:=TCallParaNode(pt.right);
-            for i:=procdefinition.paras.count-1 downto 0 do
+            lPara:=TCallParaNode(Left);
+            while Assigned(lPara) and
+                  (cpf_varargs_para in lPara.CallParaFlags) do
+              lPara:=TCallParaNode(lPara.Right);
+            for lIndex:=ProcDefinition.paras.count-1 downto 0 do
               begin
-                if not Assigned(pt) then
+                if not Assigned(lPara) then
                   InternalError(200311077);
-                pt.parasym:=TParaVarSym(procdefinition.paras[i]);
-                pt:=TCallParaNode(pt.right);
+                lPara.ParaSym:=TParaVarSym(ProcDefinition.paras[lIndex]);
+                lPara:=TCallParaNode(lPara.Right);
               end;
-            if Assigned(pt) then
+            if Assigned(lPara) then
               InternalError(200311078);
           end;
       end;
 
 
-    function TCallNode.dogetcopy : TNode;
+    function TCallNode.DoGetCopy : TNode;
       var
-        n : TCallNode;
-        i : integer;
-        hp,hpn : TParaVarSym;
-        oldleft, oldright : TNode;
-        para: TCallParaNode;
+        lCopy : TCallNode;
+        lIndex : Integer;
+        lParaSym,lNewParaSym : TParaVarSym;
+        lOldLeft, lOldRight : TNode;
+        lPara: TCallParaNode;
       begin
         { Need to use a hack here to prevent the parameters from being copied.
           The parameters must be copied between callinitblock/callcleanupblock because
           they can reference methodpointer }
         { same goes for right (= self/context for procvars) }
-        oldleft:=left;
-        left:=nil;
-        oldright:=right;
-        right:=nil;
-        n:=TCallNode(inherited dogetcopy);
-        left:=oldleft;
-        right:=oldright;
-        n.symtableprocentry:=symtableprocentry;
-        n.symtableproc:=symtableproc;
-        n.procdefinition:=procdefinition;
-        n.typedef := typedef;
-        n.callnodeflags := callnodeflags;
-        n.inlinelevel := inlinelevel;
-        n.pushedparasize := pushedparasize;
-        n.intrinsiccode := intrinsiccode;
-        if Assigned(callinitblock) then
-          n.callinitblock:=TBlockNode(callinitblock.dogetcopy)
+        lOldLeft:=Left;
+        Left:=nil;
+        lOldRight:=Right;
+        Right:=nil;
+        lCopy:=TCallNode(inherited DoGetCopy);
+        Left:=lOldLeft;
+        Right:=lOldRight;
+        lCopy.SymTableProcEntry:=SymTableProcEntry;
+        lCopy.SymTableProc:=SymTableProc;
+        lCopy.ProcDefinition:=ProcDefinition;
+        lCopy.TypeDef := TypeDef;
+        lCopy.CallNodeFlags := CallNodeFlags;
+        lCopy.InlineLevel := InlineLevel;
+        lCopy.FPushedParaSize := FPushedParaSize;
+        lCopy.IntrinsicCode := IntrinsicCode;
+        if Assigned(CallInitBlock) then
+          lCopy.CallInitBlock:=TBlockNode(CallInitBlock.DoGetCopy)
         else
-          n.callinitblock:=nil;
+          lCopy.CallInitBlock:=nil;
         { callinitblock is copied, now references to the temp will also be copied
           correctly. We can now copy the parameters, funcret and methodpointer }
-        if Assigned(left) then
+        if Assigned(Left) then
           begin
-            n.left:=left.dogetcopy;
+            lCopy.Left:=Left.DoGetCopy;
             { update callnode reference in copied parameter nodes }
-            para:=TCallParaNode(n.left);
-            while Assigned(para) do
+            lPara:=TCallParaNode(lCopy.Left);
+            while Assigned(lPara) do
               begin
-                para.callnode:=n;
-                para:=TCallParaNode(para.right);
+                lPara.CallNode:=lCopy;
+                lPara:=TCallParaNode(lPara.Right);
               end;
           end
         else
-          n.left:=nil;
-        if Assigned(right) then
-          n.right:=right.dogetcopy
+          lCopy.Left:=nil;
+        if Assigned(Right) then
+          lCopy.Right:=Right.DoGetCopy
         else
-          n.right:=nil;
-        if Assigned(methodpointer) then
-          n.methodpointer:=methodpointer.dogetcopy
+          lCopy.Right:=nil;
+        if Assigned(MethodPointer) then
+          lCopy.MethodPointer:=MethodPointer.DoGetCopy
         else
-          n.methodpointer:=nil;
-        if Assigned(call_self_node) then
-          n.call_self_node:=call_self_node.dogetcopy
+          lCopy.MethodPointer:=nil;
+        if Assigned(CallSelfNode) then
+          lCopy.CallSelfNode:=CallSelfNode.DoGetCopy
         else
-          n.call_self_node:=nil;
-        if Assigned(call_vmt_node) then
-          n.call_vmt_node:=call_vmt_node.dogetcopy
+          lCopy.CallSelfNode:=nil;
+        if Assigned(CallVMTNode) then
+          lCopy.CallVMTNode:=CallVMTNode.DoGetCopy
         else
-          n.call_vmt_node:=nil;
-        if Assigned(vmt_entry) then
-          n.vmt_entry:=vmt_entry.dogetcopy
+          lCopy.CallVMTNode:=nil;
+        if Assigned(VMTEntry) then
+          lCopy.VMTEntry:=VMTEntry.DoGetCopy
         else
-          n.vmt_entry:=nil;
+          lCopy.VMTEntry:=nil;
         { must be copied before the funcretnode, because the callcleanup block
           may contain a ttempdeletenode that sets the tempinfo of the
           corresponding temp to ti_nextref_set_hookoncopy_nil, and this nextref
           itself may be the funcretnode }
-        if Assigned(callcleanupblock) then
-          n.callcleanupblock:=TBlockNode(callcleanupblock.dogetcopy)
+        if Assigned(CallCleanupBlock) then
+          lCopy.CallCleanupBlock:=TBlockNode(CallCleanupBlock.DoGetCopy)
         else
-          n.callcleanupblock:=nil;
-        if Assigned(funcretnode) then
-          n.funcretnode:=funcretnode.dogetcopy
+          lCopy.CallCleanupBlock:=nil;
+        if Assigned(FuncRetNode) then
+          lCopy.FuncRetNode:=FuncRetNode.DoGetCopy
         else
-          n.funcretnode:=nil;
-        if Assigned(varargsparas) then
+          lCopy.FuncRetNode:=nil;
+        if Assigned(VarArgsParas) then
          begin
-           n.varargsparas:=TVarArgsParaList.create(true);
-           n.varargsparas.capacity:=varargsparas.count;
-           for i:=0 to varargsparas.count-1 do
+           lCopy.VarArgsParas:=TVarArgsParaList.Create(true);
+           lCopy.VarArgsParas.capacity:=VarArgsParas.count;
+           for lIndex:=0 to VarArgsParas.count-1 do
              begin
-               hp:=TParaVarSym(varargsparas[i]);
-               hpn:=CParaVarSym.create(hp.realname,hp.ParaNr,hp.VarSpez,hp.vardef,[]);
-               n.varargsparas.add(hpn);
-               para:=TCallParaNode(n.left);
-               while Assigned(para) do
+               lParaSym:=TParaVarSym(VarArgsParas[lIndex]);
+               lNewParaSym:=CParaVarSym.Create(lParaSym.realname,lParaSym.ParaNr,lParaSym.VarSpez,lParaSym.vardef,[]);
+               lCopy.VarArgsParas.add(lNewParaSym);
+               lPara:=TCallParaNode(lCopy.Left);
+               while Assigned(lPara) do
                  begin
-                   if (para.parasym=hp) then
-                     para.parasym:=hpn;
-                   para:=TCallParaNode(para.right);
+                   if (lPara.ParaSym=lParaSym) then
+                     lPara.ParaSym:=lNewParaSym;
+                   lPara:=TCallParaNode(lPara.Right);
                  end;
              end;
          end
         else
-         n.varargsparas:=nil;
-        n.foverrideprocnamedef:=foverrideprocnamedef;
-        result:=n;
+         lCopy.VarArgsParas:=nil;
+        lCopy.FOverrideProcNameDef:=FOverrideProcNameDef;
+        Result:=lCopy;
       end;
 
 
-    function TCallNode.docompare(p: TNode): boolean;
+    function TCallNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare :=
-          inherited docompare(p) and
-          (symtableprocentry = TCallNode(p).symtableprocentry) and
-          (procdefinition = TCallNode(p).procdefinition) and
-          { this implicitly also compares the vmt_entry node, as it is
+        DoCompare :=
+          inherited DoCompare(ANode) and
+          (SymTableProcEntry = TCallNode(ANode).SymTableProcEntry) and
+          (ProcDefinition = TCallNode(ANode).ProcDefinition) and
+          { this implicitly also compares the VMTEntry node, as it is
             deterministically based on the methodpointer }
-          (methodpointer.isequal(TCallNode(p).methodpointer)) and
-          (((cnf_typedefset in callnodeflags) and (cnf_typedefset in TCallNode(p).callnodeflags) and
-            (Equal_Defs(typedef,TCallNode(p).typedef))) or
-           (not(cnf_typedefset in callnodeflags) and not(cnf_typedefset in TCallNode(p).callnodeflags)));
+          (MethodPointer.IsEqual(TCallNode(ANode).MethodPointer)) and
+          (((cnf_typedefset in CallNodeFlags) and (cnf_typedefset in TCallNode(ANode).CallNodeFlags) and
+            (Equal_Defs(TypeDef,TCallNode(ANode).TypeDef))) or
+           (not(cnf_typedefset in CallNodeFlags) and not(cnf_typedefset in TCallNode(ANode).CallNodeFlags)));
       end;
 
 
-    procedure TCallNode.printnodedata(var t:text);
+    procedure TCallNode.PrintNodeData(var AText:Text);
       begin
-        if Assigned(procdefinition) and
-           (procdefinition.typ=procdef) then
-          WriteLn(t,PrintNodeIndention,'proc = ',TProcDef(procdefinition).FullProcName(true))
+        if Assigned(ProcDefinition) and
+           (ProcDefinition.typ=procdef) then
+          WriteLn(AText,PrintNodeIndention,'proc = ',TProcDef(ProcDefinition).FullProcName(true))
         else
           begin
-            if Assigned(symtableprocentry) then
-              WriteLn(t,PrintNodeIndention,'proc = ',symtableprocentry.name)
+            if Assigned(SymTableProcEntry) then
+              WriteLn(AText,PrintNodeIndention,'proc = ',SymTableProcEntry.name)
             else
-              WriteLn(t,PrintNodeIndention,'proc = <nil>');
+              WriteLn(AText,PrintNodeIndention,'proc = <nil>');
           end;
 
-        if intrinsiccode <> Default(TInlineNumber) then
-          WriteLn(t,PrintNodeIndention,'intrinsiccode = ', intrinsiccode);
+        if IntrinsicCode <> Default(TInlineNumber) then
+          WriteLn(AText,PrintNodeIndention,'intrinsiccode = ', IntrinsicCode);
 
-        if Assigned(methodpointer) then
+        if Assigned(MethodPointer) then
           begin
-            WriteLn(t,PrintNodeIndention,'methodpointer =');
-            printnode(t,methodpointer);
+            WriteLn(AText,PrintNodeIndention,'methodpointer =');
+            PrintNode(AText,MethodPointer);
           end;
 
-        if Assigned(funcretnode) then
+        if Assigned(FuncRetNode) then
           begin
-            WriteLn(t,PrintNodeIndention,'funcretnode =');
-            printnode(t,funcretnode);
+            WriteLn(AText,PrintNodeIndention,'funcretnode =');
+            PrintNode(AText,FuncRetNode);
           end;
 
-        if Assigned(vmt_entry) then
+        if Assigned(VMTEntry) then
           begin
-            WriteLn(t,PrintNodeIndention,'vmt_entry =');
-            printnode(t,vmt_entry);
+            WriteLn(AText,PrintNodeIndention,'vmt_entry =');
+            PrintNode(AText,VMTEntry);
           end;
 
-        if Assigned(call_self_node) then
+        if Assigned(CallSelfNode) then
           begin
-            WriteLn(t,PrintNodeIndention,'call_self_node =');
-            printnode(t,call_self_node);
+            WriteLn(AText,PrintNodeIndention,'call_self_node =');
+            PrintNode(AText,CallSelfNode);
           end;
 
-        if Assigned(call_vmt_node) then
+        if Assigned(CallVMTNode) then
           begin
-            WriteLn(t,PrintNodeIndention,'call_vmt_node =');
-            printnode(t,call_vmt_node);
+            WriteLn(AText,PrintNodeIndention,'call_vmt_node =');
+            PrintNode(AText,CallVMTNode);
           end;
 
-        if Assigned(callinitblock) then
+        if Assigned(CallInitBlock) then
           begin
-            WriteLn(t,PrintNodeIndention,'callinitblock =');
-            printnode(t,callinitblock);
+            WriteLn(AText,PrintNodeIndention,'callinitblock =');
+            PrintNode(AText,CallInitBlock);
           end;
 
-        if Assigned(callcleanupblock) then
+        if Assigned(CallCleanupBlock) then
           begin
-            WriteLn(t,PrintNodeIndention,'callcleanupblock =');
-            printnode(t,callcleanupblock);
+            WriteLn(AText,PrintNodeIndention,'callcleanupblock =');
+            PrintNode(AText,CallCleanupBlock);
           end;
 
-        if Assigned(right) then
+        if Assigned(Right) then
           begin
-            WriteLn(t,PrintNodeIndention,'right =');
-            printnode(t,right);
+            WriteLn(AText,PrintNodeIndention,'right =');
+            PrintNode(AText,Right);
           end;
 
-        if Assigned(left) then
+        if Assigned(Left) then
           begin
-            WriteLn(t,PrintNodeIndention,'left =');
-            printnode(t,left);
+            WriteLn(AText,PrintNodeIndention,'left =');
+            PrintNode(AText,Left);
           end;
       end;
 
 
-    procedure TCallNode.insertintolist(l : TNodeList);
+    procedure TCallNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    procedure TCallNode.add_init_statement(n:TNode);
+    procedure TCallNode.AddInitStatement(ANode:TNode);
       var
-        lastinitstatement, before_firstpass : TStatementNode;
-        was_first_statement : boolean;
+        lLastInitStatement, lBeforeFirstPass : TStatementNode;
+        lWasFirstStatement : Boolean;
       begin
-        if not Assigned(n) then
+        if not Assigned(ANode) then
           exit;
-        if not Assigned(callinitblock) then
+        if not Assigned(CallInitBlock) then
           begin
-            callinitblock:=internalstatements(lastinitstatement);
-            lastinitstatement.left.free;
-            lastinitstatement.left:=n;
-            FirstPass(TNode(callinitblock));
+            CallInitBlock:=InternalStatements(lLastInitStatement);
+            lLastInitStatement.Left.free;
+            lLastInitStatement.Left:=ANode;
+            FirstPass(TNode(CallInitBlock));
             exit;
           end;
-        lastinitstatement:=laststatement(callinitblock);
-        was_first_statement:=(lastinitstatement=callinitblock.statements);
+        lLastInitStatement:=LastStatement(CallInitBlock);
+        lWasFirstStatement:=(lLastInitStatement=CallInitBlock.statements);
         { all these nodes must be immediately typechecked, because this routine }
         { can be called from pass_1 (i.e., after typecheck has already run) and }
         { moreover, the entire blocks themselves are also only typechecked in   }
         { pass_1, while the the typeinfo is already required after the          }
         { typecheck pass for simplify purposes (not yet perfect, because the    }
         { statementnodes themselves are not typechecked this way)               }
-        addstatement(lastinitstatement,n);
-        before_firstpass:=lastinitstatement;
-        FirstPass(TNode(lastinitstatement));
-        if was_first_statement and (lastinitstatement<>before_firstpass) then
-          callinitblock.statements:=lastinitstatement;
+        AddStatement(lLastInitStatement,ANode);
+        lBeforeFirstPass:=lLastInitStatement;
+        FirstPass(TNode(lLastInitStatement));
+        if lWasFirstStatement and (lLastInitStatement<>lBeforeFirstPass) then
+          CallInitBlock.statements:=lLastInitStatement;
         { Update expectloc for callinitblock }
-        callinitblock.expectloc:=lastinitstatement.expectloc;
+        CallInitBlock.ExpectLoc:=lLastInitStatement.ExpectLoc;
       end;
 
 
-    procedure TCallNode.add_done_statement(n:TNode);
+    procedure TCallNode.AddDoneStatement(ANode:TNode);
       var
-        lastdonestatement, beforelast, before_firstpass : TStatementNode;
-        was_first_statement : boolean;
+        lLastDoneStatement, lBeforeLast, lBeforeFirstPass : TStatementNode;
+        lWasFirstStatement : Boolean;
       begin
-        if not Assigned(n) then
+        if not Assigned(ANode) then
           exit;
-        if not Assigned(callcleanupblock) then
+        if not Assigned(CallCleanupBlock) then
           begin
-            callcleanupblock:=internalstatements(lastdonestatement);
-            lastdonestatement.left.free;
-            lastdonestatement.left:=n;
-            FirstPass(TNode(callcleanupblock));
+            CallCleanupBlock:=InternalStatements(lLastDoneStatement);
+            lLastDoneStatement.Left.free;
+            lLastDoneStatement.Left:=ANode;
+            FirstPass(TNode(CallCleanupBlock));
             exit;
           end;
-        lastdonestatement:=laststatement(callcleanupblock);
-        was_first_statement:=(lastdonestatement=callcleanupblock.statements);
-        beforelast:=nil;
-        if not was_first_statement then
+        lLastDoneStatement:=LastStatement(CallCleanupBlock);
+        lWasFirstStatement:=(lLastDoneStatement=CallCleanupBlock.statements);
+        lBeforeLast:=nil;
+        if not lWasFirstStatement then
           begin
-            beforelast:=TStatementNode(callcleanupblock.statements);
-            while Assigned(beforelast) and (beforelast.right<>lastdonestatement) do
-              beforelast:=TStatementNode(beforelast.next);
-            if not Assigned(beforelast) then
+            lBeforeLast:=TStatementNode(CallCleanupBlock.statements);
+            while Assigned(lBeforeLast) and (lBeforeLast.Right<>lLastDoneStatement) do
+              lBeforeLast:=TStatementNode(lBeforeLast.next);
+            if not Assigned(lBeforeLast) then
               InternalError(2026071701);
           end;
-        { see comments in add_init_statement }
-        addstatement(lastdonestatement,n);
-        before_firstpass:=lastdonestatement;
-        FirstPass(TNode(lastdonestatement));
-        if (lastdonestatement<>before_firstpass) then
+        { see comments in AddInitStatement }
+        AddStatement(lLastDoneStatement,ANode);
+        lBeforeFirstPass:=lLastDoneStatement;
+        FirstPass(TNode(lLastDoneStatement));
+        if (lLastDoneStatement<>lBeforeFirstPass) then
           begin
-            if was_first_statement then
-              callcleanupblock.statements:=lastdonestatement
-            else if Assigned(beforelast) then
-              beforelast.right:=lastdonestatement;
+            if lWasFirstStatement then
+              CallCleanupBlock.statements:=lLastDoneStatement
+            else if Assigned(lBeforeLast) then
+              lBeforeLast.Right:=lLastDoneStatement;
           end;
         { Update expectloc for callcleanupblock }
-        callcleanupblock.expectloc:=lastdonestatement.expectloc;
+        CallCleanupBlock.ExpectLoc:=lLastDoneStatement.ExpectLoc;
       end;
 
 
-    function TCallNode.para_count:LongInt;
+    function TCallNode.Para_Count:LongInt;
       var
-        ppn : TCallParaNode;
+        lPara : TCallParaNode;
       begin
-        result:=0;
-        ppn:=TCallParaNode(left);
-        while Assigned(ppn) do
+        Result:=0;
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            if not(Assigned(ppn.parasym) and
-                   (vo_is_hidden_para in ppn.parasym.VarOptions)) then
-              inc(result);
-            ppn:=TCallParaNode(ppn.right);
+            if not(Assigned(lPara.ParaSym) and
+                   (vo_is_hidden_para in lPara.ParaSym.VarOptions)) then
+              inc(Result);
+            lPara:=TCallParaNode(lPara.Right);
           end;
       end;
 
 
-    function TCallNode.required_para_count: LongInt;
+    function TCallNode.Required_Para_Count: LongInt;
       var
-        ppn : TCallParaNode;
+        lPara : TCallParaNode;
       begin
-        result:=0;
-        ppn:=TCallParaNode(left);
-        while Assigned(ppn) do
+        Result:=0;
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            if not(Assigned(ppn.parasym) and
-                   ((vo_is_hidden_para in ppn.parasym.VarOptions) or
-                    Assigned(ppn.parasym.DefaultConstSym))) then
-              inc(result);
-            ppn:=TCallParaNode(ppn.right);
+            if not(Assigned(lPara.ParaSym) and
+                   ((vo_is_hidden_para in lPara.ParaSym.VarOptions) or
+                    Assigned(lPara.ParaSym.DefaultConstSym))) then
+              inc(Result);
+            lPara:=TCallParaNode(lPara.Right);
           end;
       end;
 
 
-    function TCallNode.GetParaFromIndex(const Index: Integer): TCallParaNode;
+    function TCallNode.GetParaFromIndex(const AIndex: Integer): TCallParaNode;
       var
-        hp : TCallParaNode;
-        Count: Integer;
+        lPara : TCallParaNode;
+        lCount: Integer;
       begin
         Result := nil;
-        Count := 0;
+        lCount := 0;
 
-        hp := TCallParaNode(left);
+        lPara := TCallParaNode(Left);
         repeat
           { If the original indices have not yet been set, just go by the order
             they appear in the node tree }
-          if hp.originalindex = -1 then
+          if lPara.OriginalIndex = -1 then
             begin
-              if Count = Index then
+              if lCount = AIndex then
                 begin
-                  Result := hp;
+                  Result := lPara;
                   Exit;
                 end;
 
-              Inc(Count);
+              Inc(lCount);
             end
-          else if hp.originalindex = Index then
+          else if lPara.OriginalIndex = AIndex then
             begin
-              Result := hp;
+              Result := lPara;
               Exit;
             end;
 
-          hp := TCallParaNode(hp.right);
-        until not Assigned(hp);
+          lPara := TCallParaNode(lPara.Right);
+        until not Assigned(lPara);
       end;
 
 
-    function TCallNode.is_simple_para_load(p:TNode; may_be_in_reg: boolean):boolean;
+    function TCallNode.IsSimpleParaLoad(ANode:TNode; AMayBeInReg: Boolean):Boolean;
       var
-        hp : TNode;
+        lNode : TNode;
       begin
-        hp:=p;
-        while Assigned(hp) and
-              (hp.nodetype=typeconvn) and
-              (TTypeConvNode(hp).convtype=tc_equal) do
-          hp:=TUnaryNode(hp).left;
-        result:=(hp.nodetype in [typen,loadvmtaddrn,loadn,temprefn,arrayconstructorn,addrn]);
-        if result and
-           not(may_be_in_reg) then
-          case hp.nodetype of
+        lNode:=ANode;
+        while Assigned(lNode) and
+              (lNode.NodeType=typeconvn) and
+              (TTypeConvNode(lNode).ConvType=tc_equal) do
+          lNode:=TUnaryNode(lNode).Left;
+        Result:=(lNode.NodeType in [typen,loadvmtaddrn,loadn,temprefn,arrayconstructorn,addrn]);
+        if Result and
+           not(AMayBeInReg) then
+          case lNode.NodeType of
             loadn:
-              result:=(TAbstractVarSym(TLoadNode(hp).symtableentry).VarRegable in [vr_none,vr_addr]);
+              Result:=(TAbstractVarSym(TLoadNode(lNode).SymTableEntry).VarRegable in [vr_none,vr_addr]);
             temprefn:
-              result:=not(ti_may_be_in_reg in TTempRefNode(hp).tempflags);
+              Result:=not(ti_may_be_in_reg in TTempRefNode(lNode).TempFlags);
             else
               ;
           end;
       end;
 
 
-    function TCallNode.getoverrideprocnamedef: TProcDef; inline;
+    function TCallNode.GetOverrideProcNameDef: TProcDef; inline;
       begin
-        result:=foverrideprocnamedef;
+        Result:=FOverrideProcNameDef;
       end;
 
 
-    function look_for_call(var n: TNode; arg: pointer): TForEachNodeResult;
+    function LookForCall(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       begin
-        case n.nodetype of
+        case ANode.NodeType of
           calln,asn:
-            result := fen_norecurse_true;
+            Result := fen_norecurse_true;
           typen,loadvmtaddrn,loadn,temprefn,arrayconstructorn:
-            result := fen_norecurse_false;
+            Result := fen_norecurse_false;
         else
-          result := fen_false;
+          Result := fen_false;
         end;
       end;
 
-    procedure TCallNode.maybe_load_in_temp(var p:TNode);
+    procedure TCallNode.MaybeLoadInTemp(var ANode:TNode);
       begin
         { Load all complex loads into a temp to prevent
           double calls to a function. We can't simply check for a hp.nodetype=calln }
-        if Assigned(p) and
-           foreachnodestatic(p,@look_for_call,nil) then
-          load_in_temp(p);
+        if Assigned(ANode) and
+           ForEachNodeStatic(ANode,@LookForCall,nil) then
+          Load_In_Temp(ANode);
       end;
 
 
-    procedure TCallNode.load_in_temp(var p:TNode);
+    procedure TCallNode.Load_In_Temp(var ANode:TNode);
       var
-        actnode : PNode;
-        loadp,
-        refp  : TNode;
-        hdef : TDef;
-        ptemp : TTempCreateNode;
-        usederef : boolean;
+        lCurrentNode : PNode;
+        lLoadNode,
+        lRefNode  : TNode;
+        lDef : TDef;
+        lTempNode : TTempCreateNode;
+        lUseDeref : Boolean;
       begin
-        if Assigned(p) then
+        if Assigned(ANode) then
           begin
             { if the node is a deref node we load the pointer in a temp to allow
               code using this node to still be able to modify the original
@@ -2268,164 +2268,164 @@ implementation
               and thus e.g. a type helper for float called on that would modify
               the temporary memory on the stack instead of the returned pointer
               value }
-            actnode:=@p;
-            actnode:=actualtargetnode(actnode);
-            if actnode^.nodetype=derefn then
+            lCurrentNode:=@ANode;
+            lCurrentNode:=ActualTargetNode(lCurrentNode);
+            if lCurrentNode^.NodeType=derefn then
               begin
-                load_in_temp(TDerefNode(actnode^).left);
+                Load_In_Temp(TDerefNode(lCurrentNode^).Left);
                 exit;
               end;
 
             { temp create }
-            usederef:=(p.resultdef.typ in [arraydef,recorddef]) or
-                      Is_ShortString(p.resultdef) or
-                      Is_Object(p.resultdef);
+            lUseDeref:=(ANode.ResultDef.typ in [arraydef,recorddef]) or
+                      Is_ShortString(ANode.ResultDef) or
+                      Is_Object(ANode.ResultDef);
 
-            if usederef then
-              hdef:=CPointerDef.getreusable(p.resultdef)
+            if lUseDeref then
+              lDef:=CPointerDef.getreusable(ANode.ResultDef)
             else
-              hdef:=p.resultdef;
+              lDef:=ANode.ResultDef;
 
-            ptemp:=CTempCreateNode.create(hdef,hdef.Size,tt_persistent,true);
-            if usederef then
+            lTempNode:=CTempCreateNode.Create(lDef,lDef.Size,tt_persistent,true);
+            if lUseDeref then
               begin
-                loadp:=CAddrNode.Create_Internal(p);
-                refp:=CDerefNode.create(CTempRefNode.create(ptemp));
+                lLoadNode:=CAddrNode.Create_Internal(ANode);
+                lRefNode:=CDerefNode.Create(CTempRefNode.Create(lTempNode));
               end
             else
               begin
-                loadp:=p;
-                refp:=CTempRefNode.create(ptemp);
+                lLoadNode:=ANode;
+                lRefNode:=CTempRefNode.Create(lTempNode);
                 { ensure that an invokable isn't called again }
-                if Is_Invokable(hdef) then
-                  include(TTempRefNode(refp).flags,nf_load_procvar);
+                if Is_Invokable(lDef) then
+                  include(TTempRefNode(lRefNode).Flags,nf_load_procvar);
               end;
-            add_init_statement(ptemp);
-            add_init_statement(CAssignmentNode.create(
-                CTempRefNode.create(ptemp),
-                loadp));
-            add_done_statement(CTempDeleteNode.create(ptemp));
+            AddInitStatement(lTempNode);
+            AddInitStatement(CAssignmentNode.Create(
+                CTempRefNode.Create(lTempNode),
+                lLoadNode));
+            AddDoneStatement(CTempDeleteNode.Create(lTempNode));
             { new tree is only a temp reference }
-            p:=refp;
-            TypeCheckPass(p);
+            ANode:=lRefNode;
+            TypeCheckPass(ANode);
           end;
       end;
 
 
-    function TCallNode.gen_high_tree(var p:TNode;paradef:TDef):TNode;
+    function TCallNode.GenHighTree(var ANode:TNode;AParaDef:TDef):TNode;
       { When passing an array to an open array, or a string to an open string,
         some code is needed that generates the high bound of the array. This
         function returns a tree containing the nodes for it. }
       var
-        temp: TNode;
-        len : integer;
-        loadconst : boolean;
-        hightree,l,r : TNode;
-        defkind: TDefTyp;
+        lTempNode: TNode;
+        lLength : Integer;
+        lLoadConst : Boolean;
+        lHighTree,lLeftNode,lRightNode : TNode;
+        lDefKind: TDefTyp;
       begin
-        len:=-1;
-        loadconst:=true;
-        hightree:=nil;
+        lLength:=-1;
+        lLoadConst:=true;
+        lHighTree:=nil;
         { constant strings are internally stored as array of char, but if the
           parameter is a string also treat it like one  }
-        defkind:=p.resultdef.typ;
-        if (p.nodetype=stringconstn) and
-           (paradef.typ=stringdef) then
-          defkind:=stringdef;
-        case defkind of
+        lDefKind:=ANode.ResultDef.typ;
+        if (ANode.NodeType=stringconstn) and
+           (AParaDef.typ=stringdef) then
+          lDefKind:=stringdef;
+        case lDefKind of
           arraydef :
             begin
-              if (paradef.typ<>arraydef) then
+              if (AParaDef.typ<>arraydef) then
                 InternalError(200405241);
               { passing a string to an array of char }
-              if (p.nodetype=stringconstn) and
-                 Is_Char(TArrayDef(paradef).ElementDef) then
+              if (ANode.NodeType=stringconstn) and
+                 Is_Char(TArrayDef(AParaDef).ElementDef) then
                 begin
-                  len:=TStringConstNode(p).len;
-                  if len>0 then
-                   dec(len);
+                  lLength:=TStringConstNode(ANode).len;
+                  if lLength>0 then
+                   dec(lLength);
                 end
               else
               { handle special case of passing an single array to an array of array }
-              if Compare_Defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
-                len:=0
+              if Compare_Defs(TArrayDef(AParaDef).ElementDef,ANode.ResultDef,nothingn)>=te_equal then
+                lLength:=0
               else
                 begin
                   { handle via a normal inline in_high_x node }
-                  loadconst:=false;
+                  lLoadConst:=false;
                   { slice? }
-                  if (p.nodetype=inlinen) and (TInlineNode(p).inlinenumber=in_slice_x) then
-                    with TCallParaNode(TInlineNode(p).left) do
+                  if (ANode.NodeType=inlinen) and (TInlineNode(ANode).InlineNumber=in_slice_x) then
+                    with TCallParaNode(TInlineNode(ANode).Left) do
                       begin
                         {Array slice using slice builtin function.}
-                        l:=TCallParaNode(right).left;
-                        hightree:=CAddNode.create(subn,geninlinenode(in_ord_x,false,l),genintconstnode(1));
-                        TCallParaNode(right).left:=nil;
+                        lLeftNode:=TCallParaNode(Right).Left;
+                        lHighTree:=CAddNode.Create(subn,GenInlineNode(in_ord_x,false,lLeftNode),GenIntConstNode(1));
+                        TCallParaNode(Right).Left:=nil;
 
                         {Remove the inline node.}
-                        temp:=p;
-                        p:=left;
-                        TCallParaNode(TInlineNode(temp).left).left:=nil;
-                        temp.free;
-                        temp := nil;
+                        lTempNode:=ANode;
+                        ANode:=Left;
+                        TCallParaNode(TInlineNode(lTempNode).Left).Left:=nil;
+                        lTempNode.free;
+                        lTempNode := nil;
 
-                        TypeCheckPass(hightree);
+                        TypeCheckPass(lHighTree);
                       end
-                  else if (p.nodetype=vecn) and (TVecNode(p).right.nodetype=rangen) then
+                  else if (ANode.NodeType=vecn) and (TVecNode(ANode).Right.NodeType=rangen) then
                     begin
                       {Array slice using .. operator.}
-                      with TRangeNode(TVecNode(p).right) do
+                      with TRangeNode(TVecNode(ANode).Right) do
                         begin
-                          l:=geninlinenode(in_ord_x,false,left);  {Get lower bound.}
-                          r:=geninlinenode(in_ord_x,false,right); {Get upper bound.}
+                          lLeftNode:=GenInlineNode(in_ord_x,false,Left);  {Get lower bound.}
+                          lRightNode:=GenInlineNode(in_ord_x,false,Right); {Get upper bound.}
                         end;
                       {In the procedure the array range is 0..(upper_bound-lower_bound).}
-                      hightree:=CAddNode.create(subn,r,l);
+                      lHighTree:=CAddNode.Create(subn,lRightNode,lLeftNode);
 
                       {Replace the rangnode in the tree by its lower_bound, and
                        dispose the rangenode.}
-                      temp:=TVecNode(p).right;
-                      TVecNode(p).right:=l.GetCopy;
+                      lTempNode:=TVecNode(ANode).Right;
+                      TVecNode(ANode).Right:=lLeftNode.GetCopy;
 
                       {Typecheckpass can only be performed *after* the l.getcopy since it
                        can modify the tree, and l is in the hightree.}
-                      TypeCheckPass(hightree);
+                      TypeCheckPass(lHighTree);
 
-                      with TRangeNode(temp) do
+                      with TRangeNode(lTempNode) do
                         begin
-                          left:=nil;
-                          right:=nil;
+                          Left:=nil;
+                          Right:=nil;
                         end;
-                      temp.free;
-                      temp := nil;
+                      lTempNode.free;
+                      lTempNode := nil;
 
                       {Tree changed from p[l..h] to p[l], recalculate resultdef.}
-                      p.resultdef:=nil;
-                      TypeCheckPass(p);
+                      ANode.ResultDef:=nil;
+                      TypeCheckPass(ANode);
                     end
                   else
                     begin
-                      maybe_load_in_temp(p);
-                      hightree:=geninlinenode(in_ord_x,false,geninlinenode(in_high_x,false,p.GetCopy));
-                      TypeCheckPass(hightree);
+                      MaybeLoadInTemp(ANode);
+                      lHighTree:=GenInlineNode(in_ord_x,false,GenInlineNode(in_high_x,false,ANode.GetCopy));
+                      TypeCheckPass(lHighTree);
                       { only subtract low(array) if it's <> 0 }
-                      temp:=geninlinenode(in_ord_x,false,geninlinenode(in_low_x,false,p.GetCopy));
-                      TypeCheckPass(temp);
-                      if (temp.nodetype <> ordconstn) or
-                         (TOrdConstNode(temp).Value <> 0) then
+                      lTempNode:=GenInlineNode(in_ord_x,false,GenInlineNode(in_low_x,false,ANode.GetCopy));
+                      TypeCheckPass(lTempNode);
+                      if (lTempNode.NodeType <> ordconstn) or
+                         (TOrdConstNode(lTempNode).Value <> 0) then
                         begin
-                          hightree:=CAddNode.create(subn,hightree,temp);
-                          include(hightree.flags,nf_internal);
+                          lHighTree:=CAddNode.Create(subn,lHighTree,lTempNode);
+                          include(lHighTree.Flags,nf_internal);
                         end
                       else
-                        temp.free;
-                        temp := nil;
+                        lTempNode.free;
+                        lTempNode := nil;
                     end;
                 end;
             end;
           stringdef :
             begin
-              if Is_Open_String(paradef) then
+              if Is_Open_String(AParaDef) then
                begin
                  { a stringconstn is not a simple parameter and hence would be
                    loaded in a temp, but in that case the high() node
@@ -2433,191 +2433,191 @@ implementation
                      b) would give a generic result instead of one specific to
                         this constant string
                  }
-                 if p.nodetype<>stringconstn then
-                   maybe_load_in_temp(p);
+                 if ANode.NodeType<>stringconstn then
+                   MaybeLoadInTemp(ANode);
                  { handle via a normal inline in_high_x node }
-                 loadconst := false;
-                 hightree := geninlinenode(in_high_x,false,p.GetCopy);
+                 lLoadConst := false;
+                 lHighTree := GenInlineNode(in_high_x,false,ANode.GetCopy);
                end
               else
                { handle special case of passing an single string to an array of string }
-               if Compare_Defs(TArrayDef(paradef).ElementDef,p.resultdef,nothingn)>=te_equal then
-                len:=0
+               if Compare_Defs(TArrayDef(AParaDef).ElementDef,ANode.ResultDef,nothingn)>=te_equal then
+                lLength:=0
               else
                { passing a string to an array of char }
-               if (p.nodetype=stringconstn) and
-                  Is_Char(TArrayDef(paradef).ElementDef) then
+               if (ANode.NodeType=stringconstn) and
+                  Is_Char(TArrayDef(AParaDef).ElementDef) then
                  begin
-                   len:=TStringConstNode(p).len;
-                   if len>0 then
-                    dec(len);
+                   lLength:=TStringConstNode(ANode).len;
+                   if lLength>0 then
+                    dec(lLength);
                  end
               else
                 begin
-                  maybe_load_in_temp(p);
-                  hightree:=CAddNode.create(subn,geninlinenode(in_length_x,false,p.GetCopy),
-                                            COrdConstNode.create(1,SizeSIntType,false));
-                  loadconst:=false;
+                  MaybeLoadInTemp(ANode);
+                  lHighTree:=CAddNode.Create(subn,GenInlineNode(in_length_x,false,ANode.GetCopy),
+                                            COrdConstNode.Create(1,SizeSIntType,false));
+                  lLoadConst:=false;
                 end;
            end;
         else
-          len:=0;
+          lLength:=0;
         end;
-        if loadconst then
-          hightree:=COrdConstNode.create(len,SizeSIntType,true)
+        if lLoadConst then
+          lHighTree:=COrdConstNode.Create(lLength,SizeSIntType,true)
         else
           begin
-            if not Assigned(hightree) then
+            if not Assigned(lHighTree) then
               InternalError(200304071);
             { Need to use explicit, because it can also be a enum }
-            hightree:=CTypeConvNode.Create_Internal(hightree,SizeSIntType);
+            lHighTree:=CTypeConvNode.Create_Internal(lHighTree,SizeSIntType);
           end;
-        result:=hightree;
+        Result:=lHighTree;
       end;
 
 
-    function TCallNode.gen_procvar_context_tree_self:TNode;
+    function TCallNode.GenProcVarContextTreeSelf:TNode;
       begin
         { Load tmehodpointer(right).self }
-        result:=genloadfield(CTypeConvNode.Create_Internal(
-          right.GetCopy,MethodPointerType),
+        Result:=GenLoadField(CTypeConvNode.Create_Internal(
+          Right.GetCopy,MethodPointerType),
           'self');
       end;
 
 
-    function TCallNode.gen_procvar_context_tree_parentfp: TNode;
+    function TCallNode.GenProcVarContextTreeParentFP: TNode;
       begin
         { Load tnestedprocpointer(right).parentfp }
-        result:=genloadfield(CTypeConvNode.Create_Internal(
-          right.GetCopy,NestedProcPointerType),
+        Result:=GenLoadField(CTypeConvNode.Create_Internal(
+          Right.GetCopy,NestedProcPointerType),
           'parentfp');
       end;
 
 
-    function TCallNode.gen_self_tree:TNode;
+    function TCallNode.GenSelfTree:TNode;
       var
-        selftree : TNode;
-        selfdef  : TDef;
-        temp     : TTempCreateNode;
+        lSelfTree : TNode;
+        lSelfDef  : TDef;
+        lTempNode     : TTempCreateNode;
       begin
-        selftree:=nil;
+        lSelfTree:=nil;
 
         { When methodpointer was a callnode we must load it first into a
           temp to prevent processing the callnode twice }
-        if (methodpointer.nodetype=calln) then
+        if (MethodPointer.NodeType=calln) then
           InternalError(200405121);
 
         { Objective-C: objc_convert_to_message_send() already did all necessary
           transformation on the methodpointer }
-        if (procdefinition.typ=procdef) and
-           (po_objc in TProcDef(procdefinition).ProcOptions) then
-          selftree:=methodpointer.GetCopy
+        if (ProcDefinition.typ=procdef) and
+           (po_objc in TProcDef(ProcDefinition).ProcOptions) then
+          lSelfTree:=MethodPointer.GetCopy
         { inherited }
-        else if (cnf_inherited in callnodeflags) then
+        else if (cnf_inherited in CallNodeFlags) then
           begin
-            selftree:=safe_call_self_node.GetCopy;
+            lSelfTree:=Safe_Call_Self_Node.GetCopy;
            { we can call an inherited class static/method from a regular method
              -> self node must change from instance pointer to vmt pointer)
            }
-           if (procdefinition.ProcOptions*[po_classmethod,po_staticmethod] <> []) and
-              (selftree.resultdef.typ<>classrefdef) then
-             selftree:=CLoadVMTAddrNode.create(selftree);
+           if (ProcDefinition.ProcOptions*[po_classmethod,po_staticmethod] <> []) and
+              (lSelfTree.ResultDef.typ<>classrefdef) then
+             lSelfTree:=CLoadVMTAddrNode.Create(lSelfTree);
           end
         else
           { constructors }
-          if (procdefinition.ProcTypeOption=potype_constructor) then
+          if (ProcDefinition.ProcTypeOption=potype_constructor) then
             begin
-              if (methodpointer.resultdef.typ=classrefdef) or
-                 (cnf_new_call in callnodeflags) then
+              if (MethodPointer.ResultDef.typ=classrefdef) or
+                 (cnf_new_call in CallNodeFlags) then
                 begin
-                    if (cnf_new_call in callnodeflags) then
+                    if (cnf_new_call in CallNodeFlags) then
                       { old-style object: push 0 as self }
-                      selftree:=CPointerConstNode.create(0,VoidPointerType)
+                      lSelfTree:=CPointerConstNode.Create(0,VoidPointerType)
                     else
                       begin
                         { class-style: push classtype }
-                        selftree:=methodpointer.GetCopy;
-                        if selftree.nodetype=typen then
+                        lSelfTree:=MethodPointer.GetCopy;
+                        if lSelfTree.NodeType=typen then
                           begin
-                            selftree:=CLoadVMTAddrNode.create(selftree);
-                            TLoadVMTAddrNode(selftree).forcall:=true;
+                            lSelfTree:=CLoadVMTAddrNode.Create(lSelfTree);
+                            TLoadVMTAddrNode(lSelfTree).ForCall:=true;
                           end;
                       end;
                   end
               else
                 begin
-                  if methodpointer.nodetype=typen then
-                    if (methodpointer.resultdef.typ<>objectdef) then
+                  if MethodPointer.NodeType=typen then
+                    if (MethodPointer.ResultDef.typ<>objectdef) then
                       begin
                         { TSomeRecord.Constructor call. We need to allocate }
                         { self node as a temp node of the result type       }
-                        temp:=CTempCreateNode.create(methodpointer.resultdef,methodpointer.resultdef.Size,tt_persistent,false);
-                        add_init_statement(temp);
-                        add_done_statement(CTempDeleteNode.create_normal_temp(temp));
-                        selftree:=CTempRefNode.create(temp);
+                        lTempNode:=CTempCreateNode.Create(MethodPointer.ResultDef,MethodPointer.ResultDef.Size,tt_persistent,false);
+                        AddInitStatement(lTempNode);
+                        AddDoneStatement(CTempDeleteNode.Create_Normal_Temp(lTempNode));
+                        lSelfTree:=CTempRefNode.Create(lTempNode);
                       end
                     else
-                      selftree:=safe_call_self_node.GetCopy
+                      lSelfTree:=Safe_Call_Self_Node.GetCopy
                   else
-                    selftree:=methodpointer.GetCopy;
+                    lSelfTree:=MethodPointer.GetCopy;
                 end;
             end
         else
           { Calling a static/class method }
-          if (po_classmethod in procdefinition.ProcOptions) or
-             (po_staticmethod in procdefinition.ProcOptions) then
+          if (po_classmethod in ProcDefinition.ProcOptions) or
+             (po_staticmethod in ProcDefinition.ProcOptions) then
             begin
-              if (procdefinition.typ<>procdef) then
+              if (ProcDefinition.typ<>procdef) then
                 InternalError(200305062);
               { if the method belongs to a helper then we need to use the
                 extended type for references to Self }
-              if Is_ObjectPascal_Helper(TProcDef(procdefinition).struct) then
-                selfdef:=TObjectDef(TProcDef(procdefinition).struct).ExtendedDef
+              if Is_ObjectPascal_Helper(TProcDef(ProcDefinition).struct) then
+                lSelfDef:=TObjectDef(TProcDef(ProcDefinition).struct).ExtendedDef
               else
-                selfdef:=TProcDef(procdefinition).struct;
-              if (selfdef.typ in [recorddef,objectdef]) and
-                 (oo_has_vmt in TAbstractRecordDef(selfdef).ObjectOptions) then
+                lSelfDef:=TProcDef(ProcDefinition).struct;
+              if (lSelfDef.typ in [recorddef,objectdef]) and
+                 (oo_has_vmt in TAbstractRecordDef(lSelfDef).ObjectOptions) then
                 begin
                   { we only need the vmt, loading self is not required and there is no
                     need to check for typen, because that will always get the
                     loadvmtaddrnode added }
-                  selftree:=methodpointer.GetCopy;
-                  if (methodpointer.resultdef.typ<>classrefdef) or
-                     (methodpointer.nodetype = typen) then
-                    selftree:=CLoadVMTAddrNode.create(selftree);
+                  lSelfTree:=MethodPointer.GetCopy;
+                  if (MethodPointer.ResultDef.typ<>classrefdef) or
+                     (MethodPointer.NodeType = typen) then
+                    lSelfTree:=CLoadVMTAddrNode.Create(lSelfTree);
                 end
               else
-                selftree:=CPointerConstNode.create(0,VoidPointerType);
+                lSelfTree:=CPointerConstNode.Create(0,VoidPointerType);
             end
         else
           begin
-            if methodpointer.nodetype=typen then
-              selftree:=safe_call_self_node.GetCopy
+            if MethodPointer.NodeType=typen then
+              lSelfTree:=Safe_Call_Self_Node.GetCopy
             else
-              selftree:=methodpointer.GetCopy;
+              lSelfTree:=MethodPointer.GetCopy;
           end;
-        result:=selftree;
+        Result:=lSelfTree;
       end;
 
-    function TCallNode.use_caller_self(check_for_callee_self: boolean): boolean;
+    function TCallNode.UseCallerSelf(ACheckForCalleeSelf: Boolean): Boolean;
       var
-        i: LongInt;
-        ps: TParaVarSym;
+        lIndex: LongInt;
+        lParaSym: TParaVarSym;
       begin
-        result:=false;
+        Result:=false;
         { is there a self parameter? }
-        if check_for_callee_self then
+        if ACheckForCalleeSelf then
           begin
-            ps:=nil;
-            for i:=0 to procdefinition.paras.count-1 do
+            lParaSym:=nil;
+            for lIndex:=0 to ProcDefinition.paras.count-1 do
               begin
-                ps:=TParaVarSym(procdefinition.paras[i]);
-                if vo_is_self in ps.VarOptions then
+                lParaSym:=TParaVarSym(ProcDefinition.paras[lIndex]);
+                if vo_is_self in lParaSym.VarOptions then
                   break;
-                ps:=nil;
+                lParaSym:=nil;
               end;
 
-            if not Assigned(ps) then
+            if not Assigned(lParaSym) then
               exit;
           end;
 
@@ -2636,101 +2636,101 @@ implementation
           contain it (e.g. because a method was called via "method", in which
           case the parser already passed 'self' as the method pointer, or via
           "self.method") }
-        if (cnf_inherited in callnodeflags) or
-           ((procdefinition.ProcTypeOption=potype_constructor) and
-            not((methodpointer.resultdef.typ=classrefdef) or
-                (cnf_new_call in callnodeflags)) and
-               (methodpointer.nodetype=typen) and
-               (methodpointer.resultdef.typ=objectdef)) or
-           (Assigned(methodpointer) and
-            (procdefinition.ProcTypeOption<>potype_constructor) and
-            not(po_classmethod in procdefinition.ProcOptions) and
-            not(po_staticmethod in procdefinition.ProcOptions) and
-            (methodpointer.nodetype=typen)) then
-          result:=true;
+        if (cnf_inherited in CallNodeFlags) or
+           ((ProcDefinition.ProcTypeOption=potype_constructor) and
+            not((MethodPointer.ResultDef.typ=classrefdef) or
+                (cnf_new_call in CallNodeFlags)) and
+               (MethodPointer.NodeType=typen) and
+               (MethodPointer.ResultDef.typ=objectdef)) or
+           (Assigned(MethodPointer) and
+            (ProcDefinition.ProcTypeOption<>potype_constructor) and
+            not(po_classmethod in ProcDefinition.ProcOptions) and
+            not(po_staticmethod in ProcDefinition.ProcOptions) and
+            (MethodPointer.NodeType=typen)) then
+          Result:=true;
       end;
 
 
-    procedure TCallNode.maybe_gen_call_self_node;
+    procedure TCallNode.MaybeGenCallSelfNode;
       begin
-        if cnf_call_self_node_done in callnodeflags then
+        if cnf_call_self_node_done in CallNodeFlags then
           exit;
-        include(callnodeflags,cnf_call_self_node_done);
-        if use_caller_self(true) then
-          call_self_node:=load_self_node;
+        include(CallNodeFlags,cnf_call_self_node_done);
+        if UseCallerSelf(true) then
+          CallSelfNode:=Load_Self_Node;
       end;
 
 
-    procedure TCallNode.register_created_object_types;
+    procedure TCallNode.RegisterCreatedObjectTypes;
 
       var
-        crefdef,
-        systobjectdef : TDef;
+        lClassRefDef,
+        lSystemTObjectDef : TDef;
       begin
         { only makes sense for methods }
-        if not Assigned(methodpointer) then
+        if not Assigned(MethodPointer) then
           exit;
         { inherited calls don't create an instance of the inherited type, but of
           the current type }
-        if ([cnf_inherited,cnf_anon_inherited,cnf_ignore_devirt_wpo]*callnodeflags)<>[] then
+        if ([cnf_inherited,cnf_anon_inherited,cnf_ignore_devirt_wpo]*CallNodeFlags)<>[] then
           exit;
-        if (methodpointer.resultdef.typ=classrefdef) then
+        if (MethodPointer.ResultDef.typ=classrefdef) then
           begin
             { constructor call via classreference => instance can be created
               same with calling newinstance without a instance-self (don't
               consider self-based newinstance calls, because then everything
               will be assumed to be just a TObject since TObject.Create calls
               NewInstance) }
-            if procdefinition.WPO_May_Create_Instance(methodpointer) then
+            if ProcDefinition.WPO_May_Create_Instance(MethodPointer) then
               begin
                 { Only a typenode can be passed when it is called with <class of xx>.create }
-                if (methodpointer.nodetype=typen) then
+                if (MethodPointer.NodeType=typen) then
                   begin
-                    if wpoinfomanager.symbol_live_in_currentproc(methodpointer.resultdef) then
+                    if wpoinfomanager.symbol_live_in_currentproc(MethodPointer.ResultDef) then
                       { we know the exact class type being created }
-                      TClassRefDef(methodpointer.resultdef).PointedDef.RegisterCreatedObjectType
+                      TClassRefDef(MethodPointer.ResultDef).PointedDef.RegisterCreatedObjectType
                   end
                 else
                   begin
                     { the loadvmtaddrnode is already created in case of classtype.create }
-                    if (methodpointer.nodetype=loadvmtaddrn) and
-                       (TLoadVMTAddrNode(methodpointer).left.nodetype=typen) then
+                    if (MethodPointer.NodeType=loadvmtaddrn) and
+                       (TLoadVMTAddrNode(MethodPointer).Left.NodeType=typen) then
                       begin
-                        if wpoinfomanager.symbol_live_in_currentproc(methodpointer.resultdef) then
-                          TClassRefDef(methodpointer.resultdef).PointedDef.RegisterCreatedObjectType
+                        if wpoinfomanager.symbol_live_in_currentproc(MethodPointer.ResultDef) then
+                          TClassRefDef(MethodPointer.ResultDef).PointedDef.RegisterCreatedObjectType
                       end
                     else
                       begin
-                        if wpoinfomanager.symbol_live_in_currentproc(methodpointer.resultdef) then
+                        if wpoinfomanager.symbol_live_in_currentproc(MethodPointer.ResultDef) then
                           begin
                             { special case: if the classref comes from x.classtype (with classtype,
                               being tobject.classtype) then the created instance is x or a descendant
                               of x (rather than tobject or a descendant of tobject)
                             }
-                            systobjectdef:=Search_System_Type('TOBJECT').typedef;
-                            if (methodpointer.nodetype=calln) and
+                            lSystemTObjectDef:=Search_System_Type('TOBJECT').TypeDef;
+                            if (MethodPointer.NodeType=calln) and
                                { not a procvar call }
-                               not Assigned(right) and
+                               not Assigned(Right) and
                                { procdef is owned by system.tobject }
-                               (TProcDef(TCallNode(methodpointer).procdefinition).owner.DefOwner=systobjectdef) and
+                               (TProcDef(TCallNode(MethodPointer).ProcDefinition).owner.DefOwner=lSystemTObjectDef) and
                                { we're calling system.tobject.classtype }
-                               (TCallNode(methodpointer).symtableprocentry.name='CLASSTYPE') and
+                               (TCallNode(MethodPointer).SymTableProcEntry.name='CLASSTYPE') and
                                { could again be a classrefdef, but unlikely }
-                               (TCallNode(methodpointer).methodpointer.resultdef.typ=objectdef) and
+                               (TCallNode(MethodPointer).MethodPointer.ResultDef.typ=objectdef) and
                                { don't go through this trouble if it was already a tobject }
-                               (TCallNode(methodpointer).methodpointer.resultdef<>systobjectdef) then
+                               (TCallNode(MethodPointer).MethodPointer.ResultDef<>lSystemTObjectDef) then
                               begin
                                 { register this object type as classref, so all descendents will also
                                   be marked as instantiatable (only the pointeddef will actually be
                                   recorded, so it's no problem that the clasrefdef is only temporary)
                                 }
-                                crefdef:=CClassRefDef.create(TCallNode(methodpointer).methodpointer.resultdef);
+                                lClassRefDef:=CClassRefDef.Create(TCallNode(MethodPointer).MethodPointer.ResultDef);
                                 { and register it }
-                                crefdef.RegisterCreatedObjectType;
+                                lClassRefDef.RegisterCreatedObjectType;
                               end
                              else
                                { the created class can be any child class as well -> register classrefdef }
-                               methodpointer.resultdef.RegisterCreatedObjectType;
+                               MethodPointer.ResultDef.RegisterCreatedObjectType;
                           end;
                       end;
                   end;
@@ -2738,76 +2738,76 @@ implementation
           end
         else
         { Old style object }
-         if Is_Object(methodpointer.resultdef) then
+         if Is_Object(MethodPointer.ResultDef) then
           begin
             { constructor with extended syntax called from new }
-            if (cnf_new_call in callnodeflags) then
+            if (cnf_new_call in CallNodeFlags) then
               begin
-                if wpoinfomanager.symbol_live_in_currentproc(methodpointer.resultdef) then
-                  methodpointer.resultdef.RegisterCreatedObjectType;
+                if wpoinfomanager.symbol_live_in_currentproc(MethodPointer.ResultDef) then
+                  MethodPointer.ResultDef.RegisterCreatedObjectType;
               end
             else
             { normal object call like obj.proc }
-              if not(cnf_dispose_call in callnodeflags) and
-                 not(cnf_inherited in callnodeflags) and
-                 not(cnf_member_call in callnodeflags) then
+              if not(cnf_dispose_call in CallNodeFlags) and
+                 not(cnf_inherited in CallNodeFlags) and
+                 not(cnf_member_call in CallNodeFlags) then
                 begin
-                  if (procdefinition.ProcTypeOption=potype_constructor) then
+                  if (ProcDefinition.ProcTypeOption=potype_constructor) then
                     begin
-                      if (methodpointer.nodetype<>typen) and
-                         wpoinfomanager.symbol_live_in_currentproc(methodpointer.resultdef) then
-                        methodpointer.resultdef.RegisterCreatedObjectType;
+                      if (MethodPointer.NodeType<>typen) and
+                         wpoinfomanager.symbol_live_in_currentproc(MethodPointer.ResultDef) then
+                        MethodPointer.ResultDef.RegisterCreatedObjectType;
                     end
                 end;
           end;
        end;
 
 
-    function TCallNode.get_expect_loc: TCGLoc;
+    function TCallNode.GetExpectLoc: TCGLoc;
       var
-        realresdef: TStoredDef;
+        lRealResultDef: TStoredDef;
       begin
-        if not Assigned(typedef) then
-          realresdef:=TStoredDef(resultdef)
+        if not Assigned(TypeDef) then
+          lRealResultDef:=TStoredDef(ResultDef)
         else
-          realresdef:=TStoredDef(typedef);
-        if realresdef.Is_IntRegable then
-          result:=LOC_REGISTER
-        else if realresdef.typ=floatdef then
-          if Use_VectorFPU(realresdef) then
-            result:=LOC_MMREGISTER
+          lRealResultDef:=TStoredDef(TypeDef);
+        if lRealResultDef.Is_IntRegable then
+          Result:=LOC_REGISTER
+        else if lRealResultDef.typ=floatdef then
+          if Use_VectorFPU(lRealResultDef) then
+            Result:=LOC_MMREGISTER
           else
 {$ifdef x86}
-            result:=LOC_REFERENCE
+            Result:=LOC_REFERENCE
 {$else x86}
-            result:=LOC_FPUREGISTER
+            Result:=LOC_FPUREGISTER
 {$endif x86}
         else
-          result:=LOC_REFERENCE
+          Result:=LOC_REFERENCE
       end;
 
 
-    function TCallNode.handle_compilerproc: TNode;
+    function TCallNode.HandleCompilerProc: TNode;
       var
-        para: TCallParaNode;
-        minlennode, maxlennode, outnode, valnode, constnode: TNode;
-        minstrlen: Int64;
-        StringLiteral, name: string;
-        ValOutput: TConstExprInt;
-        ValCode: LongInt;
-        NewStatements: TStatementNode;
-        si : ShortInt;
-        b: Byte;
-        i: SmallInt;
-        w: Word;
-        li: LongInt;
-        dw: DWord;
-        i64: Int64;
-        qw: QWord;
-        paracount: Integer;
+        lPara: TCallParaNode;
+        lMinLengthNode, lMaxLengthNode, lOutNode, lValueNode, lConstNode: TNode;
+        lMinStringLength: Int64;
+        lStringLiteral, lName: string;
+        lParsedValue: TConstExprInt;
+        lValCode: LongInt;
+        lNewStatements: TStatementNode;
+        lShortIntValue : ShortInt;
+        lByteValue: Byte;
+        lSmallIntValue: SmallInt;
+        lWordValue: Word;
+        lLongIntValue: LongInt;
+        lDWordValue: DWord;
+        lInt64Value: Int64;
+        lQWordValue: QWord;
+        lParaCount: Integer;
       begin
-        result := nil;
-        case intrinsiccode of
+        Result := nil;
+        case IntrinsicCode of
           in_str_x_string:
             begin
               { rare optimization opportunity which takes some extra time,
@@ -2822,79 +2822,79 @@ implementation
 
               { Remember the parameters are in reverse order - the leftmost one
                 can usually be ignored }
-              paracount := 0;
-              para := TCallParaNode(Self.parameters);
-              while Assigned(para) do
+              lParaCount := 0;
+              lPara := TCallParaNode(Self.Parameters);
+              while Assigned(lPara) do
                 begin
-                  Inc(paracount);
-                  para := TCallParaNode(para.nextpara);
+                  Inc(lParaCount);
+                  lPara := TCallParaNode(lPara.NextPara);
                 end;
 
               { The 4-parameter versions contain a parameter that contains the
                 highest index of the destination object (the case for shortstrings) }
-              para := GetParaFromIndex(paracount - 3);
-              if Assigned(para) then
+              lPara := GetParaFromIndex(lParaCount - 3);
+              if Assigned(lPara) then
                 begin
                   { Output variable }
-                  outnode := para.left;
-                  para := GetParaFromIndex(paracount - 2);
+                  lOutNode := lPara.Left;
+                  lPara := GetParaFromIndex(lParaCount - 2);
 
-                  if Assigned(para) then
+                  if Assigned(lPara) then
                     begin
                       { Minimum length }
-                      minlennode := para.left;
-                      if Is_Integer(minlennode.resultdef) then
+                      lMinLengthNode := lPara.Left;
+                      if Is_Integer(lMinLengthNode.ResultDef) then
                         begin
-                          para := GetParaFromIndex(paracount - 1);
+                          lPara := GetParaFromIndex(lParaCount - 1);
 
-                          while (minlennode.nodetype = typeconvn) and (TTypeConvNode(minlennode).convtype in [tc_equal, tc_int_2_int]) do
+                          while (lMinLengthNode.NodeType = typeconvn) and (TTypeConvNode(lMinLengthNode).ConvType in [tc_equal, tc_int_2_int]) do
                             begin
-                              minlennode := TTypeConvNode(minlennode).left;
+                              lMinLengthNode := TTypeConvNode(lMinLengthNode).Left;
                             end;
 
-                          if Assigned(para) and is_constintnode(minlennode) then
+                          if Assigned(lPara) and Is_ConstIntNode(lMinLengthNode) then
                             begin
                               { Numeric value }
-                              valnode := para.left;
-                              if Is_Integer(valnode.resultdef) then
+                              lValueNode := lPara.Left;
+                              if Is_Integer(lValueNode.ResultDef) then
                                 begin
-                                  while (valnode.nodetype = typeconvn) and (TTypeConvNode(valnode).convtype in [tc_equal, tc_int_2_int]) do
+                                  while (lValueNode.NodeType = typeconvn) and (TTypeConvNode(lValueNode).ConvType in [tc_equal, tc_int_2_int]) do
                                     begin
-                                      valnode := TTypeConvNode(valnode).left;
+                                      lValueNode := TTypeConvNode(lValueNode).Left;
                                     end;
 
-                                  if is_constintnode(valnode) then
+                                  if Is_ConstIntNode(lValueNode) then
                                     begin
-                                      minstrlen := TOrdConstNode(minlennode).Value.svalue;
+                                      lMinStringLength := TOrdConstNode(lMinLengthNode).Value.svalue;
 
                                       { If we've gotten this far, we can convert the node into a direct assignment }
-                                      if TOrdConstNode(valnode).Value.signed then
-                                        Str(TOrdConstNode(valnode).Value.svalue:minstrlen, StringLiteral)
+                                      if TOrdConstNode(lValueNode).Value.signed then
+                                        Str(TOrdConstNode(lValueNode).Value.svalue:lMinStringLength, lStringLiteral)
                                       else
-                                        Str(TOrdConstNode(valnode).Value.uvalue:minstrlen, StringLiteral);
+                                        Str(TOrdConstNode(lValueNode).Value.uvalue:lMinStringLength, lStringLiteral);
 
-                                      para := GetParaFromIndex(paracount);
-                                      if Assigned(para) then
+                                      lPara := GetParaFromIndex(lParaCount);
+                                      if Assigned(lPara) then
                                         begin
                                           { Maximum supported length of destination object }
-                                          maxlennode := para.left;
-                                          while (minlennode.nodetype = typeconvn) and (TTypeConvNode(minlennode).convtype in [tc_equal, tc_int_2_int]) do
-                                            maxlennode := TTypeConvNode(maxlennode).left;
+                                          lMaxLengthNode := lPara.Left;
+                                          while (lMinLengthNode.NodeType = typeconvn) and (TTypeConvNode(lMinLengthNode).ConvType in [tc_equal, tc_int_2_int]) do
+                                            lMaxLengthNode := TTypeConvNode(lMaxLengthNode).Left;
 
-                                          if is_constintnode(maxlennode) then
-                                            SetLength(StringLiteral, TOrdConstNode(maxlennode).Value.svalue)
+                                          if Is_ConstIntNode(lMaxLengthNode) then
+                                            SetLength(lStringLiteral, TOrdConstNode(lMaxLengthNode).Value.svalue)
                                           else
                                             Exit;
                                         end;
 
-                                      if Length(StringLiteral) = 1 then
-                                        constnode := COrdConstNode.create(Ord(StringLiteral[1]), CCharType, False)
+                                      if Length(lStringLiteral) = 1 then
+                                        lConstNode := COrdConstNode.Create(Ord(lStringLiteral[1]), CCharType, False)
                                       else
-                                        constnode := CStringConstNode.createstr(StringLiteral);
+                                        lConstNode := CStringConstNode.CreateStr(lStringLiteral);
 
-                                      result := CAssignmentNode.create(
-                                        outnode.GetCopy,
-                                        constnode
+                                      Result := CAssignmentNode.Create(
+                                        lOutNode.GetCopy,
+                                        lConstNode
                                       );
                                     end;
                                 end;
@@ -2926,66 +2926,66 @@ implementation
                 * 1 = String input
                 * 2 = Data size
               }
-              para := GetParaFromIndex(0);
-              if Assigned(para) then
+              lPara := GetParaFromIndex(0);
+              if Assigned(lPara) then
                 begin
-                  outnode := para.left;
-                  para := GetParaFromIndex(1);
-                  if Assigned(para) then
+                  lOutNode := lPara.Left;
+                  lPara := GetParaFromIndex(1);
+                  if Assigned(lPara) then
                     begin
-                      valnode:=para.left;
-                      name:=TProcDef(procdefinition).FullProcName(true);
-                      if is_conststringnode(valnode) and
+                      lValueNode:=lPara.Left;
+                      lName:=TProcDef(ProcDefinition).FullProcName(true);
+                      if Is_ConstStringNode(lValueNode) and
                         { we can handle only the fpc_val_sint helpers so far }
-                        ((copy(name,1,13)='$fpc_val_sint') or (copy(name,1,13)='$fpc_val_uint')) then
+                        ((copy(lName,1,13)='$fpc_val_sint') or (copy(lName,1,13)='$fpc_val_uint')) then
                         begin
-                          ValOutput.signed := Is_Signed(ResultDef);
+                          lParsedValue.signed := Is_Signed(ResultDef);
 {$PUSH}
 {$R-}
-                          case LongInt(TOrdConstNode(GetParaFromIndex(2).paravalue).Value.svalue) of
+                          case LongInt(TOrdConstNode(GetParaFromIndex(2).ParaValue).Value.svalue) of
                             1:
-                              if ValOutput.signed then
+                              if lParsedValue.signed then
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, si, ValCode);
-                                  ValOutput.svalue:=si;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lShortIntValue, lValCode);
+                                  lParsedValue.svalue:=lShortIntValue;
                                 end
                               else
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, b, ValCode);
-                                  ValOutput.uvalue:=b;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lByteValue, lValCode);
+                                  lParsedValue.uvalue:=lByteValue;
                                 end;
                             2:
-                              if ValOutput.signed then
+                              if lParsedValue.signed then
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, i, ValCode);
-                                  ValOutput.svalue:=i;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lSmallIntValue, lValCode);
+                                  lParsedValue.svalue:=lSmallIntValue;
                                 end
                               else
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, w, ValCode);
-                                  ValOutput.uvalue:=w;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lWordValue, lValCode);
+                                  lParsedValue.uvalue:=lWordValue;
                                 end;
                             4:
-                              if ValOutput.signed then
+                              if lParsedValue.signed then
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, li, ValCode);
-                                  ValOutput.svalue:=li;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lLongIntValue, lValCode);
+                                  lParsedValue.svalue:=lLongIntValue;
                                 end
                               else
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, dw, ValCode);
-                                  ValOutput.uvalue:=dw;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lDWordValue, lValCode);
+                                  lParsedValue.uvalue:=lDWordValue;
                                 end;
                             8:
-                              if ValOutput.signed then
+                              if lParsedValue.signed then
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, i64, ValCode);
-                                  ValOutput.svalue:=i64;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lInt64Value, lValCode);
+                                  lParsedValue.svalue:=lInt64Value;
                                 end
                               else
                                 begin
-                                  Val(TStringConstNode(valnode).asrawbytestring, qw, ValCode);
-                                  ValOutput.uvalue:=qw;
+                                  Val(TStringConstNode(lValueNode).AsRawByteString, lQWordValue, lValCode);
+                                  lParsedValue.uvalue:=lQWordValue;
                                 end;
                             else
                               InternalError(2024011402);
@@ -2996,25 +2996,25 @@ implementation
                             assignment to the value output (function result),
                             so use a block node for that}
 
-                          Result := internalstatements(NewStatements);
+                          Result := InternalStatements(lNewStatements);
 
                           { Create a node for writing the Code output }
-                          addstatement(
-                            NewStatements,
+                          AddStatement(
+                            lNewStatements,
                             CAssignmentNode.Create_Internal(
-                              outnode.GetCopy(), { The original will get destroyed }
-                              COrdConstNode.Create(ValCode, outnode.ResultDef, False)
+                              lOutNode.GetCopy(), { The original will get destroyed }
+                              COrdConstNode.Create(lValCode, lOutNode.ResultDef, False)
                             )
                           );
 
                           { Now actually create the function result }
-                          case resultdef.typ of
+                          case ResultDef.typ of
                             orddef:
-                              valnode := COrdConstNode.Create(ValOutput, resultdef, False);
+                              lValueNode := COrdConstNode.Create(lParsedValue, ResultDef, False);
                             else
                               InternalError(2024011401);
                           end;
-                          addstatement(NewStatements, valnode);
+                          AddStatement(lNewStatements, lValueNode);
                           { Result will now undergo firstpass }
                         end;
                     end;
@@ -3026,59 +3026,59 @@ implementation
       end;
 
 
-    function TCallNode.safe_call_self_node: TNode;
+    function TCallNode.Safe_Call_Self_Node: TNode;
       begin
-        if not Assigned(call_self_node) then
+        if not Assigned(CallSelfNode) then
           begin
             CGMessage(parser_e_illegal_expression);
-            call_self_node:=CErrorNode.create;
+            CallSelfNode:=CErrorNode.Create;
           end;
-        result:=call_self_node;
+        Result:=CallSelfNode;
       end;
 
 
-    procedure TCallNode.gen_vmt_entry_load;
+    procedure TCallNode.Gen_VMT_Entry_Load;
       var
-        VMT_Def: TRecordDef;
+        lVMTDef: TRecordDef;
       begin
-        if not Assigned(right) and
-           not Assigned(overrideprocnamedef) and
-           (po_virtualmethod in procdefinition.ProcOptions) and
-           not Is_ObjectPascal_Helper(TProcDef(procdefinition).struct) and
-           Assigned(methodpointer) and
-           (methodpointer.nodetype<>typen) then
+        if not Assigned(Right) and
+           not Assigned(OverrideProcNameDef) and
+           (po_virtualmethod in ProcDefinition.ProcOptions) and
+           not Is_ObjectPascal_Helper(TProcDef(ProcDefinition).struct) and
+           Assigned(MethodPointer) and
+           (MethodPointer.NodeType<>typen) then
           begin
-            vmt_entry:=load_vmt_for_self_node(methodpointer.GetCopy);
+            VMTEntry:=Load_VMT_For_Self_Node(MethodPointer.GetCopy);
             { get the right entry in the VMT }
-            vmt_entry:=CDerefNode.create(vmt_entry);
-            TypeCheckPass(vmt_entry);
-            VMT_Def:=TRecordDef(vmt_entry.resultdef);
+            VMTEntry:=CDerefNode.Create(VMTEntry);
+            TypeCheckPass(VMTEntry);
+            lVMTDef:=TRecordDef(VMTEntry.ResultDef);
             { tobjectdef(tprocdef(procdefinition).struct) can be a parent of the
               methodpointer's resultdef, but the vmtmethodoffset of the method
               in that objectdef is obviously the same as in any child class }
-            vmt_entry:=CSubscriptNode.create(
-                TRecordSymTable(VMT_Def.SymTable).FindFieldByOffset(
-                  TObjectDef(TProcDef(procdefinition).struct).VMTMethodOffset(TProcDef(procdefinition).ExtNumber)
+            VMTEntry:=CSubscriptNode.Create(
+                TRecordSymTable(lVMTDef.SymTable).FindFieldByOffset(
+                  TObjectDef(TProcDef(ProcDefinition).struct).VMTMethodOffset(TProcDef(ProcDefinition).ExtNumber)
                 ),
-               vmt_entry
+               VMTEntry
               );
-            FirstPass(vmt_entry);
+            FirstPass(VMTEntry);
           end;
       end;
 
 
-    procedure TCallNode.objc_convert_to_message_send;
+    procedure TCallNode.ObjC_Convert_To_Message_Send;
       var
-        block,
-        selftree      : TNode;
-        statements    : TStatementNode;
-        field         : TFieldVarSym;
-        temp          : TTempCreateNode;
-        selfrestype,
-        objcsupertype : TDef;
-        srsym         : TSym;
-        srsymtable    : TSymTable;
-        msgsendname   : string;
+        lBlock,
+        lSelfTree      : TNode;
+        lStatements    : TStatementNode;
+        lFieldSym         : TFieldVarSym;
+        lTempNode          : TTempCreateNode;
+        lSelfResultType,
+        lObjCSuperType : TDef;
+        lFoundSym         : TSym;
+        lFoundSymTable    : TSymTable;
+        lMessageSendName   : string;
       begin
         if not(m_objectivec1 in CurrentSettings.ModeSwitches) then
           Message(parser_f_modeswitch_objc_required);
@@ -3097,174 +3097,174 @@ implementation
 
         { make sure we don't perform this transformation twice in case
           firstpass would be called multiple times }
-        include(callnodeflags,cnf_objc_processed);
+        include(CallNodeFlags,cnf_objc_processed);
 
         { make sure the methodpointer doesn't get translated into a call
           as well (endless loop) }
-        if methodpointer.nodetype=loadvmtaddrn then
-          TLoadVMTAddrNode(methodpointer).forcall:=true;
+        if MethodPointer.NodeType=loadvmtaddrn then
+          TLoadVMTAddrNode(MethodPointer).ForCall:=true;
 
         { A) set the appropriate objc_msgSend* variant to call }
 
         { The AArch64 abi does not require special handling for struct returns }
 {$ifndef aarch64}
         { record returned via implicit pointer }
-        if ParaManager.Ret_In_Param(resultdef,procdefinition) then
+        if ParaManager.Ret_In_Param(ResultDef,ProcDefinition) then
           begin
-            if not(cnf_inherited in callnodeflags) then
-              msgsendname:='OBJC_MSGSEND_STRET'
+            if not(cnf_inherited in CallNodeFlags) then
+              lMessageSendName:='OBJC_MSGSEND_STRET'
             else if (TargetInfo.system in systems_objc_nfabi) and
                     (not MacOSXVersionMin.IsValid or
                      (MacOSXVersionMin.RelationTo(10,6,0)>=0)) then
-              msgsendname:='OBJC_MSGSENDSUPER2_STRET'
+              lMessageSendName:='OBJC_MSGSENDSUPER2_STRET'
             else
-              msgsendname:='OBJC_MSGSENDSUPER_STRET'
+              lMessageSendName:='OBJC_MSGSENDSUPER_STRET'
           end
 {$ifdef i386}
         { special case for fpu results on i386 for non-inherited calls }
         { TODO: also for x86_64 "extended" results }
-        else if (resultdef.typ=floatdef) and
-                not(cnf_inherited in callnodeflags) then
-          msgsendname:='OBJC_MSGSEND_FPRET'
+        else if (ResultDef.typ=floatdef) and
+                not(cnf_inherited in CallNodeFlags) then
+          lMessageSendName:='OBJC_MSGSEND_FPRET'
 {$endif i386}
         { default }
         else
 {$endif aarch64}
-          if not(cnf_inherited in callnodeflags) then
-            msgsendname:='OBJC_MSGSEND'
+          if not(cnf_inherited in CallNodeFlags) then
+            lMessageSendName:='OBJC_MSGSEND'
         else if (TargetInfo.system in systems_objc_nfabi) and
                 (not MacOSXVersionMin.IsValid or
                  (MacOSXVersionMin.RelationTo(10,6,0)>=0)) then
-          msgsendname:='OBJC_MSGSENDSUPER2'
+          lMessageSendName:='OBJC_MSGSENDSUPER2'
         else
-          msgsendname:='OBJC_MSGSENDSUPER';
+          lMessageSendName:='OBJC_MSGSENDSUPER';
 
         { get the mangled name }
-        srsym:=nil;
-        if not SearchSym_In_Named_Module('OBJC',msgsendname,srsym,srsymtable) or
-           (srsym.typ<>ProcSym) or
-           (TProcSym(srsym).ProcdefList.count<>1) then
-          Message1(cg_f_unknown_compilerproc,'objc.'+msgsendname);
-        foverrideprocnamedef:=TProcDef(TProcSym(srsym).ProcdefList[0]);
+        lFoundSym:=nil;
+        if not SearchSym_In_Named_Module('OBJC',lMessageSendName,lFoundSym,lFoundSymTable) or
+           (lFoundSym.typ<>ProcSym) or
+           (TProcSym(lFoundSym).ProcdefList.count<>1) then
+          Message1(cg_f_unknown_compilerproc,'objc.'+lMessageSendName);
+        FOverrideProcNameDef:=TProcDef(TProcSym(lFoundSym).ProcdefList[0]);
 
         { B) Handle self }
         { 1) in case of sending a message to a superclass, self is a pointer to
              an objc_super record
         }
-        if (cnf_inherited in callnodeflags) then
+        if (cnf_inherited in CallNodeFlags) then
           begin
-             block:=internalstatements(statements);
-             objcsupertype:=Search_Named_Unit_GlobalType('OBJC','OBJC_SUPER',true).typedef;
-             if (objcsupertype.typ<>recorddef) then
+             lBlock:=InternalStatements(lStatements);
+             lObjCSuperType:=Search_Named_Unit_GlobalType('OBJC','OBJC_SUPER',true).TypeDef;
+             if (lObjCSuperType.typ<>recorddef) then
                InternalError(2009032901);
              { temp for the for the objc_super record }
-             temp:=CTempCreateNode.create(objcsupertype,objcsupertype.Size,tt_persistent,false);
-             addstatement(statements,temp);
+             lTempNode:=CTempCreateNode.Create(lObjCSuperType,lObjCSuperType.Size,tt_persistent,false);
+             AddStatement(lStatements,lTempNode);
              { initialize objc_super record }
-             selftree:=safe_call_self_node.GetCopy;
+             lSelfTree:=Safe_Call_Self_Node.GetCopy;
 
              { we can call an inherited class static/method from a regular method
                -> self node must change from instance pointer to vmt pointer)
              }
-             if (po_classmethod in procdefinition.ProcOptions) and
-                (selftree.resultdef.typ<>classrefdef) then
+             if (po_classmethod in ProcDefinition.ProcOptions) and
+                (lSelfTree.ResultDef.typ<>classrefdef) then
                begin
-                 selftree:=CLoadVMTAddrNode.create(selftree);
+                 lSelfTree:=CLoadVMTAddrNode.Create(lSelfTree);
                  { since we're in a class method of the current class, its
                    information has already been initialized (and that of all of
                    its parent classes too) }
-                 TLoadVMTAddrNode(selftree).forcall:=true;
-                 TypeCheckPass(selftree);
+                 TLoadVMTAddrNode(lSelfTree).ForCall:=true;
+                 TypeCheckPass(lSelfTree);
                end;
-             selfrestype:=selftree.resultdef;
-             field:=TFieldVarSym(TRecordDef(objcsupertype).SymTable.find('RECEIVER'));
-             if not Assigned(field) then
+             lSelfResultType:=lSelfTree.ResultDef;
+             lFieldSym:=TFieldVarSym(TRecordDef(lObjCSuperType).SymTable.find('RECEIVER'));
+             if not Assigned(lFieldSym) then
                InternalError(2009032902);
             { first the destination object/class instance }
-             addstatement(statements,
-               CAssignmentNode.create(
-                 CSubscriptNode.create(field,CTempRefNode.create(temp)),
-                 selftree
+             AddStatement(lStatements,
+               CAssignmentNode.Create(
+                 CSubscriptNode.Create(lFieldSym,CTempRefNode.Create(lTempNode)),
+                 lSelfTree
                )
              );
              { and secondly, the class type in which the selector must be looked
                up (the parent class in case of an instance method, the parent's
                metaclass in case of a class method) }
-             field:=TFieldVarSym(TRecordDef(objcsupertype).SymTable.find('_CLASS'));
-             if not Assigned(field) then
+             lFieldSym:=TFieldVarSym(TRecordDef(lObjCSuperType).SymTable.find('_CLASS'));
+             if not Assigned(lFieldSym) then
                InternalError(2009032903);
-             addstatement(statements,
-               CAssignmentNode.create(
-                 CSubscriptNode.create(field,CTempRefNode.create(temp)),
-                 objcsuperclassnode(selftree.resultdef)
+             AddStatement(lStatements,
+               CAssignmentNode.Create(
+                 CSubscriptNode.Create(lFieldSym,CTempRefNode.Create(lTempNode)),
+                 ObjCSuperClassNode(lSelfTree.ResultDef)
                )
              );
              { result of this block is the address of this temp }
-             addstatement(statements,CTypeConvNode.Create_Internal(
-               CAddrNode.Create_Internal(CTempRefNode.create(temp)),selfrestype)
+             AddStatement(lStatements,CTypeConvNode.Create_Internal(
+               CAddrNode.Create_Internal(CTempRefNode.Create(lTempNode)),lSelfResultType)
              );
              { replace the method pointer with the address of this temp }
-             methodpointer.free;
-             methodpointer:=block;
-             TypeCheckPass(block);
+             MethodPointer.free;
+             MethodPointer:=lBlock;
+             TypeCheckPass(lBlock);
           end
         else
         { 2) regular call (not inherited) }
           begin
             { a) If we're calling a class method, use a class ref.  }
-            if (po_classmethod in procdefinition.ProcOptions) and
-               ((methodpointer.nodetype=typen) or
-                (methodpointer.resultdef.typ<>classrefdef)) then
+            if (po_classmethod in ProcDefinition.ProcOptions) and
+               ((MethodPointer.NodeType=typen) or
+                (MethodPointer.ResultDef.typ<>classrefdef)) then
               begin
-                methodpointer:=CLoadVMTAddrNode.create(methodpointer);
+                MethodPointer:=CLoadVMTAddrNode.Create(MethodPointer);
                 { no need to obtain the class ref by calling class(), sending
                   this message will initialize it if necessary }
-                TLoadVMTAddrNode(methodpointer).forcall:=true;
-                FirstPass(methodpointer);
+                TLoadVMTAddrNode(MethodPointer).ForCall:=true;
+                FirstPass(MethodPointer);
               end;
           end;
       end;
 
 
-    function TCallNode.gen_vmt_tree:TNode;
+    function TCallNode.GenVMTTree:TNode;
       var
-        vmttree : TNode;
+        lVMTTree : TNode;
       begin
-        vmttree:=nil;
-        if not(procdefinition.ProcTypeOption in [potype_constructor,potype_destructor]) then
+        lVMTTree:=nil;
+        if not(ProcDefinition.ProcTypeOption in [potype_constructor,potype_destructor]) then
           InternalError(200305051);
 
         { When methodpointer was a callnode we must load it first into a
           temp to prevent the processing callnode twice }
-        if (methodpointer.nodetype=calln) then
+        if (MethodPointer.NodeType=calln) then
           InternalError(200405122);
 
         { Handle classes and legacy objects separate to make it
           more maintainable }
-        if (methodpointer.resultdef.typ=classrefdef) then
+        if (MethodPointer.ResultDef.typ=classrefdef) then
           begin
-            if not Is_Class(TClassRefDef(methodpointer.resultdef).PointedDef) then
+            if not Is_Class(TClassRefDef(MethodPointer.ResultDef).PointedDef) then
               InternalError(200501041);
 
             { constructor call via classreference => allocate memory }
-            if (procdefinition.ProcTypeOption=potype_constructor) then
+            if (ProcDefinition.ProcTypeOption=potype_constructor) then
               begin
-                vmttree:=CPointerConstNode.create(1,VoidPointerType);
+                lVMTTree:=CPointerConstNode.Create(1,VoidPointerType);
               end
             else  { <class of xx>.destroy is not valid }
               InternalError(2014020601);
           end
         else
         { Class style objects }
-         if Is_Class(methodpointer.resultdef) then
+         if Is_Class(MethodPointer.ResultDef) then
           begin
             { inherited call, no create/destroy }
-            if (cnf_inherited in callnodeflags) then
-              vmttree:=CPointerConstNode.create(0,VoidPointerType)
+            if (cnf_inherited in CallNodeFlags) then
+              lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
             else
               { do not create/destroy when called from member function
                 without specifying self explicit }
-              if (cnf_member_call in callnodeflags) then
+              if (cnf_member_call in CallNodeFlags) then
                 begin
                   { destructor (in the same class, since cnf_member_call):
                     if not called from a destructor then
@@ -3276,16 +3276,16 @@ implementation
                         don't call afterconstruction, vmt=0
                       else
                         call afterconstruction but not NewInstance, vmt=-1 }
-                  if (procdefinition.ProcTypeOption=potype_destructor) then
+                  if (ProcDefinition.ProcTypeOption=potype_destructor) then
                     if (CurrentProcInfo.procdef.ProcTypeOption<>potype_constructor) then
-                      vmttree:=CPointerConstNode.create(1,VoidPointerType)
+                      lVMTTree:=CPointerConstNode.Create(1,VoidPointerType)
                     else
-                      vmttree:=CPointerConstNode.create(0,VoidPointerType)
+                      lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
                   else if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) and
-                          (procdefinition.ProcTypeOption=potype_constructor) then
-                    vmttree:=CPointerConstNode.create(0,VoidPointerType)
+                          (ProcDefinition.ProcTypeOption=potype_constructor) then
+                    lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
                   else
-                    vmttree:=CPointerConstNode.create(TConstPtrUInt(-1),VoidPointerType);
+                    lVMTTree:=CPointerConstNode.Create(TConstPtrUInt(-1),VoidPointerType);
                 end
             else
             { normal call to method like cl1.proc }
@@ -3301,23 +3301,23 @@ implementation
                       don't call afterconstruction, vmt=0
                     else
                       call afterconstruction, vmt=1 }
-                if (procdefinition.ProcTypeOption=potype_destructor) then
-                  if (cnf_create_failed in callnodeflags) and
-                     Is_Class(methodpointer.resultdef) then
-                    vmttree:=call_vmt_node.GetCopy
-                  else if not(cnf_create_failed in callnodeflags) then
-                    vmttree:=CPointerConstNode.create(1,VoidPointerType)
+                if (ProcDefinition.ProcTypeOption=potype_destructor) then
+                  if (cnf_create_failed in CallNodeFlags) and
+                     Is_Class(MethodPointer.ResultDef) then
+                    lVMTTree:=CallVMTNode.GetCopy
+                  else if not(cnf_create_failed in CallNodeFlags) then
+                    lVMTTree:=CPointerConstNode.Create(1,VoidPointerType)
                   else
-                    vmttree:=CPointerConstNode.create(TConstPtrUInt(-1),VoidPointerType)
+                    lVMTTree:=CPointerConstNode.Create(TConstPtrUInt(-1),VoidPointerType)
                 else
                   begin
                     if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) and
-                       (procdefinition.ProcTypeOption=potype_constructor) and
-                       (methodpointer.nodetype=loadn) and
-                       (loadnf_is_self in TLoadNode(methodpointer).loadnodeflags) then
-                      vmttree:=CPointerConstNode.create(0,VoidPointerType)
+                       (ProcDefinition.ProcTypeOption=potype_constructor) and
+                       (MethodPointer.NodeType=loadn) and
+                       (loadnf_is_self in TLoadNode(MethodPointer).LoadNodeFlags) then
+                      lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
                     else
-                      vmttree:=CPointerConstNode.create(TConstPtrUInt(-1),VoidPointerType);
+                      lVMTTree:=CPointerConstNode.Create(TConstPtrUInt(-1),VoidPointerType);
                   end;
               end;
           end
@@ -3325,105 +3325,105 @@ implementation
         { Old style object }
           begin
             { constructor with extended syntax called from new }
-            if (cnf_new_call in callnodeflags) then
-                vmttree:=CLoadVMTAddrNode.create(CTypeNode.create(methodpointer.resultdef))
+            if (cnf_new_call in CallNodeFlags) then
+                lVMTTree:=CLoadVMTAddrNode.Create(CTypeNode.Create(MethodPointer.ResultDef))
             else
               { destructor with extended syntax called from dispose }
               { value -1 is what fpc_help_constructor() changes VMT to when it allocates memory }
-              if (cnf_dispose_call in callnodeflags) then
-                vmttree:=CPointerConstNode.create(TConstPtrUInt(-1),VoidPointerType)
+              if (cnf_dispose_call in CallNodeFlags) then
+                lVMTTree:=CPointerConstNode.Create(TConstPtrUInt(-1),VoidPointerType)
             else
               { destructor called from exception block in constructor }
-              if (cnf_create_failed in callnodeflags) then
-                vmttree:=CTypeConvNode.Create_Internal(call_vmt_node.GetCopy,VoidPointerType)
+              if (cnf_create_failed in CallNodeFlags) then
+                lVMTTree:=CTypeConvNode.Create_Internal(CallVMTNode.GetCopy,VoidPointerType)
             else
               { inherited call, no create/destroy }
-              if (cnf_inherited in callnodeflags) then
-                vmttree:=CPointerConstNode.create(0,VoidPointerType)
+              if (cnf_inherited in CallNodeFlags) then
+                lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
             else
               { do not create/destroy when called from member function
                 without specifying self explicit }
-              if (cnf_member_call in callnodeflags) then
+              if (cnf_member_call in CallNodeFlags) then
                 begin
                   { destructor: don't release instance, vmt=0
                     constructor: don't initialize instance, vmt=0 }
-                  vmttree:=CPointerConstNode.create(0,VoidPointerType)
+                  lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
                 end
             else
             { normal object call like obj.proc }
              begin
                { destructor: direct call, no dispose, vmt=0
                  constructor: initialize object, load vmt }
-               if (procdefinition.ProcTypeOption=potype_constructor) then
+               if (ProcDefinition.ProcTypeOption=potype_constructor) then
                  begin
                    { old styled inherited call? }
-                   if (methodpointer.nodetype=typen) then
-                     vmttree:=CPointerConstNode.create(0,VoidPointerType)
+                   if (MethodPointer.NodeType=typen) then
+                     lVMTTree:=CPointerConstNode.Create(0,VoidPointerType)
                    else
-                     vmttree:=CLoadVMTAddrNode.create(CTypeNode.create(methodpointer.resultdef))
+                     lVMTTree:=CLoadVMTAddrNode.Create(CTypeNode.Create(MethodPointer.ResultDef))
                  end
                else
-                 vmttree:=CPointerConstNode.create(0,VoidPointerType);
+                 lVMTTree:=CPointerConstNode.Create(0,VoidPointerType);
              end;
           end;
-        result:=vmttree;
+        Result:=lVMTTree;
       end;
 
 
-    function TCallNode.gen_block_context: TNode;
+    function TCallNode.GenBlockContext: TNode;
       begin
         { the self parameter of a block invocation is that address of the
           block literal (which is what right contains) }
-        result:=right.GetCopy;
+        Result:=Right.GetCopy;
       end;
 
 
-    function check_funcret_used_as_para(var n: TNode; arg: pointer): TForEachNodeResult;
+    function CheckFuncRetUsedAsPara(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        destsym : TSym absolute arg;
+        lDestSym : TSym absolute AArg;
       begin
-        result := fen_false;
-        if (n.nodetype=loadn) and
-           (TLoadNode(n).symtableentry = destsym) then
-          result := fen_norecurse_true;
+        Result := fen_false;
+        if (ANode.NodeType=loadn) and
+           (TLoadNode(ANode).SymTableEntry = lDestSym) then
+          Result := fen_norecurse_true;
       end;
 
 
-    function check_funcret_temp_used_as_para(var n: TNode; arg: pointer): TForEachNodeResult;
+    function CheckFuncRetTempUsedAsPara(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        tempinfo : PTempInfo absolute arg;
+        lTempInfo : PTempInfo absolute AArg;
       begin
-        result := fen_false;
-        if (n.nodetype=temprefn) and
-           (TTempRefNode(n).tempinfo = tempinfo) then
-          result := fen_norecurse_true;
+        Result := fen_false;
+        if (ANode.NodeType=temprefn) and
+           (TTempRefNode(ANode).TempInfo = lTempInfo) then
+          Result := fen_norecurse_true;
       end;
 
 
-    function TCallNode.funcret_can_be_reused:boolean;
+    function TCallNode.FuncRetCanBeReused:Boolean;
       var
-        realassignmenttarget: TNode;
-        alignment: LongInt;
+        lRealAssignmentTarget: TNode;
+        lAlignment: LongInt;
       begin
-        result:=false;
+        Result:=false;
 
         { we are processing an assignment node? }
-        if not(Assigned(aktassignmentnode) and
-               (aktassignmentnode.right=self) and
-               (aktassignmentnode.left.resultdef=resultdef)) then
+        if not(Assigned(AktAssignmentNode) and
+               (AktAssignmentNode.Right=Self) and
+               (AktAssignmentNode.Left.ResultDef=ResultDef)) then
           exit;
 
         { destination must be able to be passed as var parameter }
-        if not valid_for_var(aktassignmentnode.left,false) then
+        if not valid_for_var(AktAssignmentNode.Left,false) then
           exit;
 
         { destination must be a simple load so it doesn't need a temp when
           it is evaluated }
-        if not is_simple_para_load(aktassignmentnode.left,false) then
+        if not IsSimpleParaLoad(AktAssignmentNode.Left,false) then
           exit;
 
         { remove possible typecasts }
-        realassignmenttarget:=actualtargetnode(@aktassignmentnode.left)^;
+        lRealAssignmentTarget:=ActualTargetNode(@AktAssignmentNode.Left)^;
 
         { when the result is returned by value (instead of by writing it to the
           address passed in a hidden parameter), aktassignmentnode.left will
@@ -3432,11 +3432,11 @@ implementation
           parameters -- unless this is an inline function, in which case
           writes to the function result will directly change it and we do have
           to check for potential aliasing }
-        if not ParaManager.Ret_In_Param(resultdef,procdefinition) then
+        if not ParaManager.Ret_In_Param(ResultDef,ProcDefinition) then
            begin
-             if not(cnf_do_inline in callnodeflags) then
+             if not(cnf_do_inline in CallNodeFlags) then
                 begin
-                  result:=true;
+                  Result:=true;
                   exit;
                 end
              else
@@ -3445,7 +3445,7 @@ implementation
                    the destination is complex, this could lead to lengthy
                    code in case the function result is used often and it is
                    assigned e.g. to a threadvar }
-                 if node_complexity(aktassignmentnode.left)>1 then
+                 if Node_Complexity(AktAssignmentNode.Left)>1 then
                    exit;
                end;
            end;
@@ -3455,47 +3455,47 @@ implementation
           hidden parameters such as self have not yet been inserted at this
           point
         }
-        if Assigned(methodpointer) and
-           realassignmenttarget.isequal(actualtargetnode(@methodpointer)^) then
+        if Assigned(MethodPointer) and
+           lRealAssignmentTarget.IsEqual(ActualTargetNode(@MethodPointer)^) then
           exit;
 
         { when we substitute a function result inside an inlined function,
           we may take the address of this function result. Therefore the
           substituted function result may not be in a register, as we cannot
           take its address in that case                                      }
-        if (realassignmenttarget.nodetype=temprefn) and
-           not(ti_addr_taken in TTempRefNode(realassignmenttarget).tempflags) and
-           not(ti_may_be_in_reg in TTempRefNode(realassignmenttarget).tempflags) then
+        if (lRealAssignmentTarget.NodeType=temprefn) and
+           not(ti_addr_taken in TTempRefNode(lRealAssignmentTarget).TempFlags) and
+           not(ti_may_be_in_reg in TTempRefNode(lRealAssignmentTarget).TempFlags) then
           begin
-            result:=not foreachnodestatic(left,@check_funcret_temp_used_as_para,TTempRefNode(realassignmenttarget).tempinfo);
+            Result:=not ForEachNodeStatic(Left,@CheckFuncRetTempUsedAsPara,TTempRefNode(lRealAssignmentTarget).TempInfo);
             exit;
           end;
 
-        if (realassignmenttarget.nodetype=loadn) and
+        if (lRealAssignmentTarget.NodeType=loadn) and
            { nested procedures may access the current procedure's locals }
-           (procdefinition.ParaST.SymTableLevel=NormalFunctionLevel) and
+           (ProcDefinition.ParaST.SymTableLevel=NormalFunctionLevel) and
            { must be a local variable, a value para or a hidden function result }
            { parameter (which can be passed by address, but in that case it got }
            { through these same checks at the caller side and is thus safe )    }
            { other option: we're calling a compilerproc, because those don't
              rely on global state
            }
-           ((po_compilerproc in procdefinition.ProcOptions) or
+           ((po_compilerproc in ProcDefinition.ProcOptions) or
             (
              (
-              (TLoadNode(realassignmenttarget).symtableentry.typ=localvarsym) or
+              (TLoadNode(lRealAssignmentTarget).SymTableEntry.typ=localvarsym) or
               (
-               (TLoadNode(realassignmenttarget).symtableentry.typ=paravarsym) and
-               ((TParaVarSym(TLoadNode(realassignmenttarget).symtableentry).VarSpez = vs_value) or
-                (vo_is_funcret in TParaVarSym(TLoadNode(realassignmenttarget).symtableentry).VarOptions))
+               (TLoadNode(lRealAssignmentTarget).SymTableEntry.typ=paravarsym) and
+               ((TParaVarSym(TLoadNode(lRealAssignmentTarget).SymTableEntry).VarSpez = vs_value) or
+                (vo_is_funcret in TParaVarSym(TLoadNode(lRealAssignmentTarget).SymTableEntry).VarOptions))
               )
              ) and
              { the address may not have been taken of the variable/parameter, because }
              { otherwise it's possible that the called function can access it via a   }
              { global variable or other stored state                                  }
              (
-              not(TAbstractVarSym(TLoadNode(realassignmenttarget).symtableentry).AddrTaken) and
-              (TAbstractVarSym(TLoadNode(realassignmenttarget).symtableentry).VarRegable in [vr_none,vr_addr])
+              not(TAbstractVarSym(TLoadNode(lRealAssignmentTarget).SymTableEntry).AddrTaken) and
+              (TAbstractVarSym(TLoadNode(lRealAssignmentTarget).SymTableEntry).VarRegable in [vr_none,vr_addr])
              )
             )
            ) then
@@ -3503,33 +3503,33 @@ implementation
             { If the funcret is also used as a parameter we can't optimize because the funcret
               and the parameter will point to the same address. That means that a change of the result variable
               will result also in a change of the parameter value }
-            result:=not foreachnodestatic(left,@check_funcret_used_as_para,TLoadNode(realassignmenttarget).symtableentry);
+            Result:=not ForEachNodeStatic(Left,@CheckFuncRetUsedAsPara,TLoadNode(lRealAssignmentTarget).SymTableEntry);
             { ensure that it is aligned using the default alignment }
-            alignment:=TAbstractVarSym(TLoadNode(realassignmenttarget).symtableentry).vardef.Alignment;
-            if (Used_Align(alignment,TargetInfo.Alignment.LocalAlignMin,TargetInfo.Alignment.LocalAlignMax)<>
-                Used_Align(alignment,CurrentSettings.Alignment.LocalAlignMin,CurrentSettings.Alignment.LocalAlignMax)) then
-              result:=false;
+            lAlignment:=TAbstractVarSym(TLoadNode(lRealAssignmentTarget).SymTableEntry).vardef.Alignment;
+            if (Used_Align(lAlignment,TargetInfo.Alignment.LocalAlignMin,TargetInfo.Alignment.LocalAlignMax)<>
+                Used_Align(lAlignment,CurrentSettings.Alignment.LocalAlignMin,CurrentSettings.Alignment.LocalAlignMax)) then
+              Result:=false;
             exit;
           end;
       end;
 
 
-    procedure TCallNode.maybe_create_funcret_node;
+    procedure TCallNode.MaybeCreateFuncRetNode;
       var
-        temp : TTempCreateNode;
+        lTempNode : TTempCreateNode;
       begin
-        if procdefinition.ProcTypeOption=potype_constructor then
+        if ProcDefinition.ProcTypeOption=potype_constructor then
           exit;
         { For the function result we need to create a temp node for:
             - Inlined functions
             - Types requiring initialization/finalization
             - Types passed in parameters }
-        if not Is_Void(resultdef) and
-           not Assigned(funcretnode) and
+        if not Is_Void(ResultDef) and
+           not Assigned(FuncRetNode) and
             (
-             (cnf_do_inline in callnodeflags) or
-             Is_Managed_Type(resultdef) or
-             ParaManager.Ret_In_Param(resultdef,procdefinition)
+             (cnf_do_inline in CallNodeFlags) or
+             Is_Managed_Type(ResultDef) or
+             ParaManager.Ret_In_Param(ResultDef,ProcDefinition)
             ) then
           begin
             { Optimize calls like x:=f() where we can use x directly as
@@ -3545,63 +3545,63 @@ implementation
               of the refcount before being assigned. This is all done after the call so there
               is no issue with exceptions and possible use of the old value in the called
               function }
-            if funcret_can_be_reused then
+            if FuncRetCanBeReused then
               begin
-                funcretnode:=aktassignmentnode.left.GetCopy;
-                include(funcretnode.flags,nf_is_funcret);
+                FuncRetNode:=AktAssignmentNode.Left.GetCopy;
+                include(FuncRetNode.Flags,nf_is_funcret);
                 { notify the assignment node that the assignment can be removed }
-                include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
+                include(AktAssignmentNode.AssignmentNodeFlags,anf_assign_done_in_right);
               end
             else
               begin
-                temp:=CTempCreateNode.create(resultdef,resultdef.Size,tt_persistent,
-                  (cnf_do_inline in callnodeflags) and
-                  not(TAbstractVarSym(TProcDef(procdefinition).FuncRetSym).VarRegable in [vr_none,vr_addr]));
-                include(temp.flags,nf_is_funcret);
+                lTempNode:=CTempCreateNode.Create(ResultDef,ResultDef.Size,tt_persistent,
+                  (cnf_do_inline in CallNodeFlags) and
+                  not(TAbstractVarSym(TProcDef(ProcDefinition).FuncRetSym).VarRegable in [vr_none,vr_addr]));
+                include(lTempNode.Flags,nf_is_funcret);
                 { if a managed type is returned by reference, assigning something
                   to the result on the caller side will take care of decreasing
                   the reference count }
-                if ParaManager.Ret_In_Param(resultdef,procdefinition) then
-                  temp.includetempflag(ti_nofini);
-                add_init_statement(temp);
+                if ParaManager.Ret_In_Param(ResultDef,ProcDefinition) then
+                  lTempNode.IncludeTempFlag(ti_nofini);
+                AddInitStatement(lTempNode);
                 { When the function result is not used in an inlined function
                   we need to delete the temp. This can currently only be done by
                   a tempdeletenode and not after converting it to a normal temp }
-                if not(cnf_return_value_used in callnodeflags) and
-                   (cnf_do_inline in callnodeflags) then
-                  add_done_statement(CTempDeleteNode.create(temp))
+                if not(cnf_return_value_used in CallNodeFlags) and
+                   (cnf_do_inline in CallNodeFlags) then
+                  AddDoneStatement(CTempDeleteNode.Create(lTempNode))
                 else
-                  add_done_statement(CTempDeleteNode.create_normal_temp(temp));
-                funcretnode:=CTempRefNode.create(temp);
-                include(funcretnode.flags,nf_is_funcret);
+                  AddDoneStatement(CTempDeleteNode.Create_Normal_Temp(lTempNode));
+                FuncRetNode:=CTempRefNode.Create(lTempNode);
+                include(FuncRetNode.Flags,nf_is_funcret);
               end;
           end;
       end;
 
 
-    procedure TCallNode.gen_hidden_parameters;
+    procedure TCallNode.GenHiddenParameters;
       var
-        para : TCallParaNode;
+        lPara : TCallParaNode;
       begin
-        para:=TCallParaNode(left);
-        while Assigned(para) do
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
             { The processing of high() and typeinfo() is already
               done in the typecheckpass. We only need to process the
               nodes that still have a nothingn }
-            if (vo_is_hidden_para in para.parasym.VarOptions) and
-               (para.left.nodetype=nothingn) then
+            if (vo_is_hidden_para in lPara.ParaSym.VarOptions) and
+               (lPara.Left.NodeType=nothingn) then
               begin
                 { remove dummy nothingn }
-                para.left.free;
-                para.left:=nil;
+                lPara.Left.free;
+                lPara.Left:=nil;
                 { generate the corresponding nodes for the hidden parameter type }
-                if (vo_is_funcret in para.parasym.VarOptions) then
+                if (vo_is_funcret in lPara.ParaSym.VarOptions) then
                  begin
-                   if not Assigned(funcretnode) then
+                   if not Assigned(FuncRetNode) then
                      InternalError(200709083);
                    { if funcretnode is a temprefnode, we have to keep it intact
-                     if it may have been created in maybe_create_funcret_node(),
+                     if it may have been created in MaybeCreateFuncRetNode(),
                      because then it will also be destroyed by a
                      ctempdeletenode.create_normal_temp() in the cleanup code
                      for this call code. In that case we have to copy this
@@ -3609,89 +3609,89 @@ implementation
                      tempinfo^.hookoncopy. This is done by copying funcretnode
                      in tcallnode.getcopy(), but for that to work we can't reset
                      funcretnode to nil here. }
-                   if (funcretnode.nodetype<>temprefn) or
-                      (not(cnf_return_value_used in callnodeflags) and
-                       (cnf_do_inline in callnodeflags)) then
+                   if (FuncRetNode.NodeType<>temprefn) or
+                      (not(cnf_return_value_used in CallNodeFlags) and
+                       (cnf_do_inline in CallNodeFlags)) then
                      begin
-                       para.left:=funcretnode;
-                       funcretnode:=nil;
+                       lPara.Left:=FuncRetNode;
+                       FuncRetNode:=nil;
                      end
                    else
-                     para.left:=funcretnode.GetCopy;
+                     lPara.Left:=FuncRetNode.GetCopy;
                  end
                 else
-                 if vo_is_self in para.parasym.VarOptions then
+                 if vo_is_self in lPara.ParaSym.VarOptions then
                    begin
-                     if Assigned(right) then
-                       para.left:=gen_procvar_context_tree_self
+                     if Assigned(Right) then
+                       lPara.Left:=GenProcVarContextTreeSelf
                      else
-                       para.left:=gen_self_tree;
+                       lPara.Left:=GenSelfTree;
                      { make sure that e.g. the self pointer of an advanced
                        record does not become a regvar, because it's a vs_var
                        parameter }
-                     if ParaManager.Push_Addr_Param(para.parasym.VarSpez,para.parasym.vardef,
-                         procdefinition.ProcCallOption) then
-                       make_not_regable(para.left,[ra_addr_regable]);
+                     if ParaManager.Push_Addr_Param(lPara.ParaSym.VarSpez,lPara.ParaSym.vardef,
+                         ProcDefinition.ProcCallOption) then
+                       make_not_regable(lPara.Left,[ra_addr_regable]);
                    end
                 else
-                 if vo_is_vmt in para.parasym.VarOptions then
+                 if vo_is_vmt in lPara.ParaSym.VarOptions then
                    begin
-                     para.left:=gen_vmt_tree;
+                     lPara.Left:=GenVMTTree;
                    end
                 else
-                 if vo_is_range_check in para.parasym.VarOptions then
+                 if vo_is_range_check in lPara.ParaSym.VarOptions then
                    begin
-                     para.left:=COrdConstNode.create(Ord(cs_check_range in CurrentSettings.LocalSwitches),PasBool1Type,false);
+                     lPara.Left:=COrdConstNode.Create(Ord(cs_check_range in CurrentSettings.LocalSwitches),PasBool1Type,false);
                    end
                 else
-                 if vo_is_overflow_check in para.parasym.VarOptions then
+                 if vo_is_overflow_check in lPara.ParaSym.VarOptions then
                    begin
-                     para.left:=COrdConstNode.create(Ord(cs_check_overflow in CurrentSettings.LocalSwitches),PasBool1Type,false);
+                     lPara.Left:=COrdConstNode.Create(Ord(cs_check_overflow in CurrentSettings.LocalSwitches),PasBool1Type,false);
                    end
                 else
-                  if vo_is_msgsel in para.parasym.VarOptions then
+                  if vo_is_msgsel in lPara.ParaSym.VarOptions then
                     begin
-                      para.left:=CObjCSelectorNode.create(CStringConstNode.createstr(TProcDef(procdefinition).MessageInf.str^));
+                      lPara.Left:=CObjCSelectorNode.Create(CStringConstNode.CreateStr(TProcDef(ProcDefinition).MessageInf.str^));
                     end;
               end;
-            if not Assigned(para.left) then
+            if not Assigned(lPara.Left) then
               InternalError(200709084);
-            para:=TCallParaNode(para.right);
+            lPara:=TCallParaNode(lPara.Right);
           end;
       end;
 
 
-    procedure TCallNode.verifyabstract(sym:TObject;arg:pointer);
+    procedure TCallNode.VerifyAbstract(AObject:TObject;AArg:Pointer);
       var
-        pd : TProcDef;
-        i  : LongInt;
-        j  : integer;
-        hs : string;
+        lProcDef : TProcDef;
+        lIndex  : LongInt;
+        lMethodIndex  : Integer;
+        lAbstractMethods : string;
       begin
-        if (TSym(sym).typ<>ProcSym) then
+        if (TSym(AObject).typ<>ProcSym) then
           exit;
-        for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
+        for lIndex:=0 to TProcSym(AObject).ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(TProcSym(sym).ProcdefList[i]);
-            hs:=pd.ProcSym.name+pd.TypeName_Paras([]);
-            j:=AbstractMethodsList.FindIndexOf(hs);
-            if j<>-1 then
-              AbstractMethodsList[j]:=pd
+            lProcDef:=TProcDef(TProcSym(AObject).ProcdefList[lIndex]);
+            lAbstractMethods:=lProcDef.ProcSym.name+lProcDef.TypeName_Paras([]);
+            lMethodIndex:=FAbstractMethodsList.FindIndexOf(lAbstractMethods);
+            if lMethodIndex<>-1 then
+              FAbstractMethodsList[lMethodIndex]:=lProcDef
             else
-              AbstractMethodsList.Add(hs,pd);
+              FAbstractMethodsList.Add(lAbstractMethods,lProcDef);
           end;
       end;
 
 
-    procedure TCallNode.verifyabstractcalls;
+    procedure TCallNode.VerifyAbstractCalls;
       var
-        objectdf : TObjectDef;
-        parents : TLinkedList;
-        objectinfo : TObjectInfoItem;
-        pd : TProcDef;
-        i  : integer;
+        lObjectDef : TObjectDef;
+        lParents : TLinkedList;
+        lObjectInfo : TObjectInfoItem;
+        lProcDef : TProcDef;
+        lIndex  : Integer;
       begin
-        objectdf := nil;
+        lObjectDef := nil;
         { verify if trying to create an instance of a class which contains
           non-implemented abstract methods }
 
@@ -3699,144 +3699,144 @@ implementation
         { also, this checking can only be done if the constructor is directly
           called, indirect constructor calls cannot be checked.
         }
-        if Assigned(methodpointer) and
-           not((methodpointer.nodetype=loadn) and
-               (loadnf_is_self in TLoadNode(methodpointer).loadnodeflags)) then
+        if Assigned(MethodPointer) and
+           not((MethodPointer.NodeType=loadn) and
+               (loadnf_is_self in TLoadNode(MethodPointer).LoadNodeFlags)) then
           begin
-            if (methodpointer.resultdef.typ = objectdef) then
-              objectdf:=TObjectDef(methodpointer.resultdef)
+            if (MethodPointer.ResultDef.typ = objectdef) then
+              lObjectDef:=TObjectDef(MethodPointer.ResultDef)
             else
-              if (methodpointer.resultdef.typ = classrefdef) and
-                 (TClassRefDef(methodpointer.resultdef).PointedDef.typ = objectdef) and
-                 (methodpointer.nodetype in [typen,loadvmtaddrn]) then
-                objectdf:=TObjectDef(TClassRefDef(methodpointer.resultdef).PointedDef);
+              if (MethodPointer.ResultDef.typ = classrefdef) and
+                 (TClassRefDef(MethodPointer.ResultDef).PointedDef.typ = objectdef) and
+                 (MethodPointer.NodeType in [typen,loadvmtaddrn]) then
+                lObjectDef:=TObjectDef(TClassRefDef(MethodPointer.ResultDef).PointedDef);
           end;
-        if not Assigned(objectdf) then
+        if not Assigned(lObjectDef) then
           exit;
         { quick exit if nothing to check }
-        if objectdf.AbstractCnt = 0 then
+        if lObjectDef.AbstractCnt = 0 then
           exit;
 
-        parents := TLinkedList.create;
-        AbstractMethodsList := TFPHashList.create;
+        lParents := TLinkedList.Create;
+        FAbstractMethodsList := TFPHashList.Create;
 
         { insert all parents in this class : the first item in the
           list will be the base parent of the class .
         }
-        while Assigned(objectdf) do
+        while Assigned(lObjectDef) do
           begin
-            objectinfo:=TObjectInfoItem.create(objectdf);
-            parents.insert(objectinfo);
-            objectdf := objectdf.ChildOf;
+            lObjectInfo:=TObjectInfoItem.Create(lObjectDef);
+            lParents.insert(lObjectInfo);
+            lObjectDef := lObjectDef.ChildOf;
         end;
         { now all parents are in the correct order
           insert all abstract methods in the list, and remove
           those which are overridden by parent classes.
         }
-        objectinfo:=TObjectInfoItem(parents.first);
-        while Assigned(objectinfo) do
+        lObjectInfo:=TObjectInfoItem(lParents.first);
+        while Assigned(lObjectInfo) do
           begin
-             objectdf := objectinfo.objinfo;
-             if Assigned(objectdf.SymTable) then
-               objectdf.SymTable.SymList.ForEachCall(@verifyabstract,nil);
-             objectinfo:=TObjectInfoItem(objectinfo.next);
+             lObjectDef := lObjectInfo.FObjInfo;
+             if Assigned(lObjectDef.SymTable) then
+               lObjectDef.SymTable.SymList.ForEachCall(@VerifyAbstract,nil);
+             lObjectInfo:=TObjectInfoItem(lObjectInfo.next);
           end;
-        if Assigned(parents) then
-          parents.free;
-          parents := nil;
+        if Assigned(lParents) then
+          lParents.free;
+          lParents := nil;
         { Finally give out a warning for each abstract method still in the list }
-        for i:=0 to AbstractMethodsList.Count-1 do
+        for lIndex:=0 to FAbstractMethodsList.Count-1 do
           begin
-            pd:=TProcDef(AbstractMethodsList[i]);
-            if po_abstractmethod in pd.ProcOptions then
+            lProcDef:=TProcDef(FAbstractMethodsList[lIndex]);
+            if po_abstractmethod in lProcDef.ProcOptions then
               begin
-                Message2(type_w_instance_with_abstract,objectdf.TypeSymbolPrettyName,pd.CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
-                MessagePos1(pd.fileinfo,sym_h_abstract_method_list,pd.FullProcName(true));
+                Message2(type_w_instance_with_abstract,lObjectDef.TypeSymbolPrettyName,lProcDef.CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
+                MessagePos1(lProcDef.FileInfo,sym_h_abstract_method_list,lProcDef.FullProcName(true));
               end;
           end;
-        if Assigned(AbstractMethodsList) then
+        if Assigned(FAbstractMethodsList) then
           begin
-            AbstractMethodsList.Free;
-            AbstractMethodsList := nil;
+            FAbstractMethodsList.Free;
+            FAbstractMethodsList := nil;
           end;
       end;
 
 
-    procedure TCallNode.convert_carg_array_of_const;
+    procedure TCallNode.ConvertCArgArrayOfConst;
       var
-        hp : TArrayConstructorNode;
-        oldleft : TCallParaNode;
+        lArrayConstructor : TArrayConstructorNode;
+        lOldLeft : TCallParaNode;
       begin
-        oldleft:=TCallParaNode(left);
-        if oldleft.left.nodetype<>arrayconstructorn then
+        lOldLeft:=TCallParaNode(Left);
+        if lOldLeft.Left.NodeType<>arrayconstructorn then
           begin
-            CGMessage1(type_e_wrong_type_in_array_constructor,oldleft.left.resultdef.TypeName);
+            CGMessage1(type_e_wrong_type_in_array_constructor,lOldLeft.Left.ResultDef.TypeName);
             exit;
           end;
-        include(callnodeflags,cnf_uses_varargs);
+        include(CallNodeFlags,cnf_uses_varargs);
         { Get arrayconstructor node and insert typeconvs }
-        hp:=TArrayConstructorNode(oldleft.left);
+        lArrayConstructor:=TArrayConstructorNode(lOldLeft.Left);
         { Add c args parameters }
         { It could be an empty set }
-        if Assigned(hp) and
-           Assigned(hp.left) then
+        if Assigned(lArrayConstructor) and
+           Assigned(lArrayConstructor.Left) then
           begin
             { update owning callnode of all callparanodes }
-            while Assigned(hp) do
+            while Assigned(lArrayConstructor) do
               begin
-                left:=CCallParaNode.create(hp.left,left);
-                TCallParaNode(left).callnode:=self;
+                Left:=CCallParaNode.Create(lArrayConstructor.Left,Left);
+                TCallParaNode(Left).CallNode:=Self;
                 { set callparanode resultdef and flags }
-                left.resultdef:=hp.left.resultdef;
-                include(TCallParaNode(left).callparaflags,cpf_varargs_para);
-                hp.left:=nil;
-                hp:=TArrayConstructorNode(hp.right);
+                Left.ResultDef:=lArrayConstructor.Left.ResultDef;
+                include(TCallParaNode(Left).CallParaFlags,cpf_varargs_para);
+                lArrayConstructor.Left:=nil;
+                lArrayConstructor:=TArrayConstructorNode(lArrayConstructor.Right);
               end;
           end;
         { Remove value of old array of const parameter, but keep it
-          in the list because it is required for bind_parasym.
+          in the list because it is required for BindParaSym.
           Generate a nothing to keep callparanoed.left valid }
-        oldleft.left.free;
-        oldleft.left:=CNothingNode.create;
+        lOldLeft.Left.free;
+        lOldLeft.Left:=CNothingNode.Create;
       end;
 
 
-    procedure TCallNode.bind_parasym;
+    procedure TCallNode.BindParaSym;
       type
         PCallParaNode = ^TCallParaNode;
       var
-        i        : integer;
-        pt       : TCallParaNode;
-        oldppt   : PCallParaNode;
-        varargspara,
-        currpara : TParaVarSym;
-        hiddentree : TNode;
-        paradef  : TDef;
+        lIndex        : Integer;
+        lPara       : TCallParaNode;
+        lOldParaPointer   : PCallParaNode;
+        lVarArgsPara,
+        lCurrentParaSym : TParaVarSym;
+        lHiddenTree : TNode;
+        lParaDef  : TDef;
       begin
-        pt:=TCallParaNode(left);
-        oldppt:=PCallParaNode(@left);
+        lPara:=TCallParaNode(Left);
+        lOldParaPointer:=PCallParaNode(@Left);
 
         { flag all callparanodes that belong to the varargs }
-        i:=paralength;
-        while (i>procdefinition.MaxParaCount) do
+        lIndex:=FParaLength;
+        while (lIndex>ProcDefinition.MaxParaCount) do
           begin
-            include(pt.callparaflags,cpf_varargs_para);
-            oldppt:=PCallParaNode(@pt.right);
-            pt:=TCallParaNode(pt.right);
-            dec(i);
+            include(lPara.CallParaFlags,cpf_varargs_para);
+            lOldParaPointer:=PCallParaNode(@lPara.Right);
+            lPara:=TCallParaNode(lPara.Right);
+            dec(lIndex);
           end;
 
         { skip varargs that are inserted by array of const }
-        while Assigned(pt) and
-              (cpf_varargs_para in pt.callparaflags) do
-          pt:=TCallParaNode(pt.right);
+        while Assigned(lPara) and
+              (cpf_varargs_para in lPara.CallParaFlags) do
+          lPara:=TCallParaNode(lPara.Right);
 
         { process normal parameters and insert hidden parameter nodes, the content
           of the hidden parameters will be updated in pass1 }
-        for i:=procdefinition.paras.count-1 downto 0 do
+        for lIndex:=ProcDefinition.paras.count-1 downto 0 do
          begin
-           currpara:=TParaVarSym(procdefinition.paras[i]);
-           if vo_is_hidden_para in currpara.VarOptions then
+           lCurrentParaSym:=TParaVarSym(ProcDefinition.paras[lIndex]);
+           if vo_is_hidden_para in lCurrentParaSym.VarOptions then
             begin
                { Here we handle only the parameters that depend on
                  the types of the previous parameter. The typeconversion
@@ -3850,249 +3850,249 @@ implementation
                  structures is attached to the procedure's nodetree after
                  the resulttype pass.
                }
-               if vo_is_high_para in currpara.VarOptions then
+               if vo_is_high_para in lCurrentParaSym.VarOptions then
                 begin
-                  if not Assigned(pt) or (i=0) then
+                  if not Assigned(lPara) or (lIndex=0) then
                     InternalError(200304081);
                   { we need the information of the previous parameter }
-                  paradef:=TParaVarSym(procdefinition.paras[i-1]).vardef;
-                  hiddentree:=gen_high_tree(pt.left,paradef);
+                  lParaDef:=TParaVarSym(ProcDefinition.paras[lIndex-1]).vardef;
+                  lHiddenTree:=GenHighTree(lPara.Left,lParaDef);
                   { for open array of managed type, a copy of high parameter is
                     necessary to properly initialize before the call }
-                  if Is_Open_Array(paradef) and
-                    (TParaVarSym(procdefinition.paras[i-1]).VarSpez=vs_out) and
-                     Is_Managed_Type(TArrayDef(paradef).ElementDef) then
+                  if Is_Open_Array(lParaDef) and
+                    (TParaVarSym(ProcDefinition.paras[lIndex-1]).VarSpez=vs_out) and
+                     Is_Managed_Type(TArrayDef(lParaDef).ElementDef) then
                     begin
-                      TypeCheckPass(hiddentree);
+                      TypeCheckPass(lHiddenTree);
                       {this eliminates double call to fpc_dynarray_high, if any}
-                      maybe_load_in_temp(hiddentree);
-                      oldppt^.third:=hiddentree.GetCopy;
+                      MaybeLoadInTemp(lHiddenTree);
+                      lOldParaPointer^.Third:=lHiddenTree.GetCopy;
                     end;
                 end
               else
-                if vo_is_typinfo_para in currpara.VarOptions then
+                if vo_is_typinfo_para in lCurrentParaSym.VarOptions then
                   begin
-                    if not Assigned(pt) or (i=0) then
+                    if not Assigned(lPara) or (lIndex=0) then
                       InternalError(200304082);
-                    hiddentree:=CAddrNode.Create_Internal(
-                      CRTTINode.create(TStoredDef(pt.resultdef),fullrtti,rdt_normal)
+                    lHiddenTree:=CAddrNode.Create_Internal(
+                      CRTTINode.Create(TStoredDef(lPara.ResultDef),fullrtti,rdt_normal)
                     );
                   end
-              else if vo_is_parentfp in currpara.VarOptions then
+              else if vo_is_parentfp in lCurrentParaSym.VarOptions then
                 begin
-                  if Assigned(right) and (right.resultdef.typ=procvardef) and
-                     not TAbstractProcDef(right.resultdef).Is_AddressOnly then
-                    maybe_load_in_temp(right);
-                  if not Assigned(right) then
+                  if Assigned(Right) and (Right.ResultDef.typ=procvardef) and
+                     not TAbstractProcDef(Right.ResultDef).Is_AddressOnly then
+                    MaybeLoadInTemp(Right);
+                  if not Assigned(Right) then
                     begin
-                      if Assigned(procdefinition.owner.DefOwner) then
+                      if Assigned(ProcDefinition.owner.DefOwner) then
                         begin
-                          if ParaManager.Can_Opt_Unused_Para(currpara) then
+                          if ParaManager.Can_Opt_Unused_Para(lCurrentParaSym) then
                             { If parentfp is unused by the target proc, create a dummy
                               pointerconstnode which will be discarded later. }
-                            hiddentree:=CPointerConstNode.create(0,currpara.vardef)
+                            lHiddenTree:=CPointerConstNode.Create(0,lCurrentParaSym.vardef)
                           else
                             begin
-                              hiddentree:=CLoadParentFPNode.create(TProcDef(procdefinition.owner.DefOwner),lpf_forpara);
+                              lHiddenTree:=CLoadParentFPNode.Create(TProcDef(ProcDefinition.owner.DefOwner),lpf_forpara);
                               if Is_Nested_PD(CurrentProcInfo.procdef) then
-                                CurrentProcInfo.set_needs_parentfp(TProcDef(procdefinition.owner.DefOwner).ParaST.SymTableLevel);
+                                CurrentProcInfo.Set_Needs_ParentFP(TProcDef(ProcDefinition.owner.DefOwner).ParaST.SymTableLevel);
                            end;
                         end
                       { exceptfilters called from main level are not owned }
-                      else if procdefinition.ProcTypeOption=potype_exceptfilter then
-                        hiddentree:=CLoadParentFPNode.create(CurrentProcInfo.procdef,lpf_forpara)
+                      else if ProcDefinition.ProcTypeOption=potype_exceptfilter then
+                        lHiddenTree:=CLoadParentFPNode.Create(CurrentProcInfo.procdef,lpf_forpara)
                       else
                         InternalError(200309287);
                     end
-                  else if not(po_is_block in procdefinition.ProcOptions) then
-                    hiddentree:=gen_procvar_context_tree_parentfp
+                  else if not(po_is_block in ProcDefinition.ProcOptions) then
+                    lHiddenTree:=GenProcVarContextTreeParentFP
                   else
-                    hiddentree:=gen_block_context
+                    lHiddenTree:=GenBlockContext
                 end
               else
-                hiddentree:=CNothingNode.create;
+                lHiddenTree:=CNothingNode.Create;
                 
-              pt:=CCallParaNode.create(hiddentree,oldppt^);
+              lPara:=CCallParaNode.Create(lHiddenTree,lOldParaPointer^);
               { set correct callnode }
-              pt.callnode:=self;              
-              oldppt^:=pt;
+              lPara.CallNode:=Self;              
+              lOldParaPointer^:=lPara;
             end;
-           if not Assigned(pt) then
+           if not Assigned(lPara) then
              InternalError(200310052);
-           pt.parasym:=currpara;
-           oldppt:=PCallParaNode(@pt.right);
-           pt:=TCallParaNode(pt.right);
+           lPara.ParaSym:=lCurrentParaSym;
+           lOldParaPointer:=PCallParaNode(@lPara.Right);
+           lPara:=TCallParaNode(lPara.Right);
          end;
 
         { Create parasyms for varargs, first count the number of varargs paras,
           then insert the parameters with numbering in reverse order. The SortParas
           will set the correct order at the end}
-        pt:=TCallParaNode(left);
-        i:=0;
-        while Assigned(pt) do
+        lPara:=TCallParaNode(Left);
+        lIndex:=0;
+        while Assigned(lPara) do
           begin
-            if cpf_varargs_para in pt.callparaflags then
-              inc(i);
-            pt:=TCallParaNode(pt.right);
+            if cpf_varargs_para in lPara.CallParaFlags then
+              inc(lIndex);
+            lPara:=TCallParaNode(lPara.Right);
           end;
-        if (i>0) then
+        if (lIndex>0) then
           begin
-            include(CurrentProcInfo.flags,pi_calls_c_varargs);
-            varargsparas:=TVarArgsParaList.create;
-            pt:=TCallParaNode(left);
-            while Assigned(pt) do
+            include(CurrentProcInfo.Flags,pi_calls_c_varargs);
+            VarArgsParas:=TVarArgsParaList.Create;
+            lPara:=TCallParaNode(Left);
+            while Assigned(lPara) do
               begin
-                if cpf_varargs_para in pt.callparaflags then
+                if cpf_varargs_para in lPara.CallParaFlags then
                   begin
-                    varargspara:=CParaVarSym.create('va'+ToStr(i),i,vs_value,pt.resultdef,[]);
-                    dec(i);
+                    lVarArgsPara:=CParaVarSym.Create('va'+ToStr(lIndex),lIndex,vs_value,lPara.ResultDef,[]);
+                    dec(lIndex);
                     { varargspara is left-right, use insert
                       instead of concat }
-                    varargsparas.add(varargspara);
-                    pt.parasym:=varargspara;
+                    VarArgsParas.add(lVarArgsPara);
+                    lPara.ParaSym:=lVarArgsPara;
                   end;
-                pt:=TCallParaNode(pt.right);
+                lPara:=TCallParaNode(lPara.Right);
               end;
-            varargsparas.sortparas;
+            VarArgsParas.sortparas;
           end;
       end;
 
 
-    procedure TCallNode.set_para_callnode(n : TCallNode);
+    procedure TCallNode.SetParaCallNode(ACallNode : TCallNode);
       var
-        pt : TCallParaNode;
+        lPara : TCallParaNode;
       begin
-        pt:=TCallParaNode(left);
-        while Assigned(pt) do
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            pt.callnode:=n;
-            pt:=TCallParaNode(pt.right);
+            lPara.CallNode:=ACallNode;
+            lPara:=TCallParaNode(lPara.Right);
           end;
       end;
 
-    function TCallNode.pass_typecheck:TNode;
+    function TCallNode.Pass_TypeCheck:TNode;
 
-      function is_undefined_recursive(def:TDef):boolean;
+      function IsUndefinedRecursive(ADef:TDef):Boolean;
         begin
           { might become more refined in the future }
-          if def.typ=undefineddef then
-            result:=true
-          else if def.typ=arraydef then
-            result:=is_undefined_recursive(TArrayDef(def).ElementDef)
+          if ADef.typ=undefineddef then
+            Result:=true
+          else if ADef.typ=arraydef then
+            Result:=IsUndefinedRecursive(TArrayDef(ADef).ElementDef)
           else
-            result:=false;
+            Result:=false;
         end;
 
       var
-        candidates : TCallCandidates;
-        ccflags : TCallCandidatesFlags;
-        hpt: TNode;
-        pt : TCallParaNode;
-        lastpara : LongInt;
-        paraidx,
-        cand_cnt : integer;
-        i : LongInt;
-        ignoregenericparacall,
-        is_const : boolean;
-        statements : TStatementNode;
-        converted_result_data : TTempCreateNode;
-        calltype: TDispCallType;
+        lCandidates : TCallCandidates;
+        lCandidateFlags : TCallCandidatesFlags;
+        lTree: TNode;
+        lPara : TCallParaNode;
+        lLastPara : LongInt;
+        lParaIndex,
+        lCandidateCount : Integer;
+        lIndex : LongInt;
+        lIgnoreGenericParaCall,
+        lIsConst : Boolean;
+        lStatements : TStatementNode;
+        lConvertedResultData : TTempCreateNode;
+        lCallType: TDispCallType;
 
         
-      procedure maybe_reset_para_callnode;
+      procedure MaybeResetParaCallNode;
         begin
-          if Assigned(result) then
-            set_para_callnode(nil);
+          if Assigned(Result) then
+            SetParaCallNode(nil);
         end;
 
       begin
-        result:=nil;
+        Result:=nil;
 
         { determine length of parameter list }
-        paralength:=0;
-        pt:=TCallParaNode(left);
-        while Assigned(pt) do
+        FParaLength:=0;
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            inc(paralength);
-            pt:=TCallParaNode(pt.right);
+            inc(FParaLength);
+            lPara:=TCallParaNode(lPara.Right);
           end;
-        set_para_callnode(self);
+        SetParaCallNode(Self);
 
         { determine the type of the parameters }
-        if Assigned(left) then
+        if Assigned(Left) then
          begin
-           TCallParaNode(left).get_paratype;
+           TCallParaNode(Left).Get_ParaType;
            if CodeGenError then
              exit;
          end;
 
-        if Assigned(methodpointer) then
-          TypeCheckPass(methodpointer);
+        if Assigned(MethodPointer) then
+          TypeCheckPass(MethodPointer);
 
         { procedure variable ? }
-        if Assigned(right) then
+        if Assigned(Right) then
           begin
-             set_varstate(right,vs_read,[vsf_must_be_valid]);
-             TypeCheckPass(right);
+             set_varstate(Right,vs_read,[vsf_must_be_valid]);
+             TypeCheckPass(Right);
              if CodeGenError then
                exit;
 
-             if Is_Invokable(right.resultdef) then
+             if Is_Invokable(Right.ResultDef) then
                begin
-                 procdefinition:=Get_Invoke_ProcDef(TObjectDef(right.resultdef));
-                 if Assigned(methodpointer) then
+                 ProcDefinition:=Get_Invoke_ProcDef(TObjectDef(Right.ResultDef));
+                 if Assigned(MethodPointer) then
                    InternalError(2021041004);
-                 methodpointer:=right;
+                 MethodPointer:=Right;
                  { don't convert again when this is used as the self parameter }
-                 include(right.flags,nf_load_procvar);
-                 right:=nil;
+                 include(Right.Flags,nf_load_procvar);
+                 Right:=nil;
                end
              else
-               procdefinition:=TAbstractProcDef(right.resultdef);
+               ProcDefinition:=TAbstractProcDef(Right.ResultDef);
 
              { Compare parameters from right to left }
-             paraidx:=procdefinition.Paras.count-1;
+             lParaIndex:=ProcDefinition.Paras.count-1;
              { Skip default parameters }
-             if not(po_varargs in procdefinition.ProcOptions) then
+             if not(po_varargs in ProcDefinition.ProcOptions) then
                begin
                  { ignore hidden parameters }
-                 while (paraidx>=0) and (vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions) do
-                   dec(paraidx);
-                 for i:=1 to procdefinition.MaxParaCount-paralength do
+                 while (lParaIndex>=0) and (vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions) do
+                   dec(lParaIndex);
+                 for lIndex:=1 to ProcDefinition.MaxParaCount-FParaLength do
                    begin
-                     if paraidx<0 then
+                     if lParaIndex<0 then
                        InternalError(200402265);
-                     if not Assigned(TParaVarSym(procdefinition.paras[paraidx]).DefaultConstSym) then
+                     if not Assigned(TParaVarSym(ProcDefinition.paras[lParaIndex]).DefaultConstSym) then
                        begin
                          CGMessage1(parser_e_wrong_parameter_size,'<Procedure Variable>');
                          exit;
                        end;
-                     dec(paraidx);
+                     dec(lParaIndex);
                    end;
                end;
-             while (paraidx>=0) and (vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions) do
-               dec(paraidx);
-             pt:=TCallParaNode(left);
-             lastpara:=paralength;
-             while (paraidx>=0) and Assigned(pt) do
+             while (lParaIndex>=0) and (vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions) do
+               dec(lParaIndex);
+             lPara:=TCallParaNode(Left);
+             lLastPara:=FParaLength;
+             while (lParaIndex>=0) and Assigned(lPara) do
                begin
                  { only goto next para if we're out of the varargs }
-                 if not(po_varargs in procdefinition.ProcOptions) or
-                    (lastpara<=procdefinition.MaxParaCount) then
+                 if not(po_varargs in ProcDefinition.ProcOptions) or
+                    (lLastPara<=ProcDefinition.MaxParaCount) then
                   begin
                     repeat
-                      dec(paraidx);
-                    until (paraidx<0) or not(vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions);
+                      dec(lParaIndex);
+                    until (lParaIndex<0) or not(vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions);
                   end;
-                 pt:=TCallParaNode(pt.right);
-                 dec(lastpara);
+                 lPara:=TCallParaNode(lPara.Right);
+                 dec(lLastPara);
                end;
-             if Assigned(pt) or
-                ((paraidx>=0) and
-                 not Assigned(TParaVarSym(procdefinition.paras[paraidx]).DefaultConstSym)) then
+             if Assigned(lPara) or
+                ((lParaIndex>=0) and
+                 not Assigned(TParaVarSym(ProcDefinition.paras[lParaIndex]).DefaultConstSym)) then
                begin
-                  if Assigned(pt) then
-                    CurrentFilePos:=pt.fileinfo;
+                  if Assigned(lPara) then
+                    CurrentFilePos:=lPara.FileInfo;
                   CGMessage1(parser_e_wrong_parameter_size,'<Procedure Variable>');
                   exit;
                end;
@@ -4101,57 +4101,57 @@ implementation
         { not a procedure variable }
           begin
             { do we know the procedure to call ? }
-            if not(Assigned(procdefinition)) then
+            if not(Assigned(ProcDefinition)) then
               begin
                 { according to bug reports 32539 and 20551, real variant of sqr/abs should be used when they are called for variants to be
                   delphi compatible, this is in contrast to normal overloading behaviour, so fix this by a terrible hack to be compatible }
-                if Assigned(left) and Assigned(TCallParaNode(left).left) and
-                  (TCallParaNode(left).left.resultdef.typ=variantdef) and Assigned(symtableproc.name) and (symtableproc.name^='SYSTEM') then
+                if Assigned(Left) and Assigned(TCallParaNode(Left).Left) and
+                  (TCallParaNode(Left).Left.ResultDef.typ=variantdef) and Assigned(SymTableProc.name) and (SymTableProc.name^='SYSTEM') then
                   begin
-                    if symtableprocentry.Name='SQR' then
+                    if SymTableProcEntry.Name='SQR' then
                       begin
-                        result:=CInlineNode.createintern(in_sqr_real,false,TCallParaNode(left).left.GetCopy);
-                        set_para_callnode(nil);
+                        Result:=CInlineNode.CreateIntern(in_sqr_real,false,TCallParaNode(Left).Left.GetCopy);
+                        SetParaCallNode(nil);
                         exit;
                       end;
-                    if symtableprocentry.Name='ABS' then
+                    if SymTableProcEntry.Name='ABS' then
                       begin
-                        result:=CInlineNode.createintern(in_abs_real,false,TCallParaNode(left).left.GetCopy);
-                        set_para_callnode(nil);
+                        Result:=CInlineNode.CreateIntern(in_abs_real,false,TCallParaNode(Left).Left.GetCopy);
+                        SetParaCallNode(nil);
                         exit;
                       end;
                   end;
 
-                ccflags:=[];
+                lCandidateFlags:=[];
 
                 { ignore possible private for properties or in delphi mode for anon. inherited (FK) }
-                if (nf_isproperty in flags) or
-                  ((m_delphi in CurrentSettings.ModeSwitches) and (cnf_anon_inherited in callnodeflags)) or
-                  (cnf_ignore_visibility in callnodeflags)
+                if (nf_isproperty in Flags) or
+                  ((m_delphi in CurrentSettings.ModeSwitches) and (cnf_anon_inherited in CallNodeFlags)) or
+                  (cnf_ignore_visibility in CallNodeFlags)
                 then
-                  ccflags:=ccflags+[cc_ignorevisibility];
+                  lCandidateFlags:=lCandidateFlags+[cc_ignorevisibility];
 
-                if not(nf_isproperty in flags) then
-                  ccflags:=ccflags+[cc_allowdefaultparas];
+                if not(nf_isproperty in Flags) then
+                  lCandidateFlags:=lCandidateFlags+[cc_allowdefaultparas];
 
-                if cnf_objc_id_call in callnodeflags then
-                  ccflags:=ccflags+[cc_objcidcall];
+                if cnf_objc_id_call in CallNodeFlags then
+                  lCandidateFlags:=lCandidateFlags+[cc_objcidcall];
 
-                if cnf_unit_specified in callnodeflags then
-                  ccflags:=ccflags+[cc_explicitunit];
+                if cnf_unit_specified in CallNodeFlags then
+                  lCandidateFlags:=lCandidateFlags+[cc_explicitunit];
 
-                if callnodeflags*[cnf_anon_inherited,cnf_inherited]=[] then
-                  ccflags:=ccflags+[cc_searchhelpers];
+                if CallNodeFlags*[cnf_anon_inherited,cnf_inherited]=[] then
+                  lCandidateFlags:=lCandidateFlags+[cc_searchhelpers];
 
-                if cnf_anon_inherited in callnodeflags then
-                  ccflags:=ccflags+[cc_anoninherited];
+                if cnf_anon_inherited in CallNodeFlags then
+                  lCandidateFlags:=lCandidateFlags+[cc_anoninherited];
 
-                candidates.init(symtableprocentry,symtableproc,left,ccflags,spezcontext);
+                lCandidates.init(SymTableProcEntry,SymTableProc,Left,lCandidateFlags,SpezContext);
 
                 { no procedures found? then there is something wrong
                   with the parameter size or the procedures are
                   not accessible }
-                if candidates.count=0 then
+                if lCandidates.count=0 then
                  begin
                    { when it's an auto inherited call and there
                      is no procedure found, but the procedures
@@ -4161,86 +4161,86 @@ implementation
                      do this ugly hack in Delphi mode as it looks more
                      like a bug. It's also not documented }
                    if (m_delphi in CurrentSettings.ModeSwitches) and
-                      (cnf_anon_inherited in callnodeflags) and
-                      (symtableprocentry.owner.SymTableType=ObjectSymtable) and
-                      (po_overload in TProcDef(symtableprocentry.ProcdefList[0]).ProcOptions) and
-                      (symtableprocentry.ProcdefList.Count>=2) then
-                     result:=CNothingNode.create
+                      (cnf_anon_inherited in CallNodeFlags) and
+                      (SymTableProcEntry.owner.SymTableType=ObjectSymtable) and
+                      (po_overload in TProcDef(SymTableProcEntry.ProcdefList[0]).ProcOptions) and
+                      (SymTableProcEntry.ProcdefList.Count>=2) then
+                     Result:=CNothingNode.Create
                    else
                      begin
                        { in tp mode we can try to convert to procvar if
                          there are no parameters specified }
-                       if not(Assigned(left)) and
-                          ([cnf_inherited,cnf_no_convert_procvar]*callnodeflags=[]) and
+                       if not(Assigned(Left)) and
+                          ([cnf_inherited,cnf_no_convert_procvar]*CallNodeFlags=[]) and
                           ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                            (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                          (not Assigned(methodpointer) or
-                           (methodpointer.nodetype <> typen)) then
+                          (not Assigned(MethodPointer) or
+                           (MethodPointer.NodeType <> typen)) then
                          begin
-                           hpt:=CLoadNode.create(TProcSym(symtableprocentry),symtableproc);
-                           if Assigned(methodpointer) then
-                             TLoadNode(hpt).set_mp(methodpointer.GetCopy);
-                           TypeCheckPass(hpt);
-                           result:=hpt;
+                           lTree:=CLoadNode.Create(TProcSym(SymTableProcEntry),SymTableProc);
+                           if Assigned(MethodPointer) then
+                             TLoadNode(lTree).Set_MP(MethodPointer.GetCopy);
+                           TypeCheckPass(lTree);
+                           Result:=lTree;
                          end
                        else
                          begin
-                           CGMessagePos1(fileinfo,parser_e_wrong_parameter_size,symtableprocentry.realname);
-                           symtableprocentry.Write_Parameter_Lists(nil);
+                           CGMessagePos1(FileInfo,parser_e_wrong_parameter_size,SymTableProcEntry.realname);
+                           SymTableProcEntry.Write_Parameter_Lists(nil);
                          end;
                      end;
-                   candidates.done;
-                   maybe_reset_para_callnode;
+                   lCandidates.done;
+                   MaybeResetParaCallNode;
                    exit;
                  end;
 
                 { Retrieve information about the candidates }
-                candidates.get_information;
+                lCandidates.get_information;
 {$ifdef EXTDEBUG}
                 { Display info when multiple candidates are found }
-                if candidates.count>1 then
-                  candidates.dump_info(VDebug);
+                if lCandidates.count>1 then
+                  lCandidates.dump_info(VDebug);
 {$endif EXTDEBUG}
 
                 { Choose the best candidate and count the number of
                   candidates left }
-                cand_cnt:=candidates.choose_best(procdefinition,
-                  Assigned(left) and
-                  not Assigned(TCallParaNode(left).right) and
-                  (TCallParaNode(left).left.resultdef.typ=variantdef));
+                lCandidateCount:=lCandidates.choose_best(ProcDefinition,
+                  Assigned(Left) and
+                  not Assigned(TCallParaNode(Left).Right) and
+                  (TCallParaNode(Left).Left.ResultDef.typ=variantdef));
 
                 { All parameters are checked, check if there are any
                   procedures left }
-                if cand_cnt>0 then
+                if lCandidateCount>0 then
                  begin
                    { Multiple candidates left? }
-                   if cand_cnt>1 then
+                   if lCandidateCount>1 then
                     begin
                       { if we're inside a generic and call another function
                         with generic types as arguments we don't complain in
                         the generic, but only during the specialization }
-                      ignoregenericparacall:=false;
+                      lIgnoreGenericParaCall:=false;
                       if Assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.DefOptions) then
                         begin
-                          pt:=TCallParaNode(left);
-                          while Assigned(pt) do
+                          lPara:=TCallParaNode(Left);
+                          while Assigned(lPara) do
                            begin
-                             if is_undefined_recursive(pt.resultdef) then
+                             if IsUndefinedRecursive(lPara.ResultDef) then
                                begin
-                                 ignoregenericparacall:=true;
+                                 lIgnoreGenericParaCall:=true;
                                  break;
                                end;
-                             pt:=TCallParaNode(pt.right);
+                             lPara:=TCallParaNode(lPara.Right);
                            end;
                         end;
 
-                      if not ignoregenericparacall then
+                      if not lIgnoreGenericParaCall then
                         begin
                           CGMessage(type_e_cant_choose_overload_function);
 {$ifdef EXTDEBUG}
-                          candidates.dump_info(VHint);
+                          lCandidates.dump_info(VHint);
 {$else EXTDEBUG}
-                          candidates.list(false);
+                          lCandidates.list(false);
 {$endif EXTDEBUG}
                         end;
                       { we'll just use the first candidate to make the
@@ -4248,8 +4248,8 @@ implementation
                     end;
 
                    { assign procdefinition }
-                   if symtableproc=nil then
-                     symtableproc:=procdefinition.owner;
+                   if SymTableProc=nil then
+                     SymTableProc:=ProcDefinition.owner;
                  end
                 else
                  begin
@@ -4258,189 +4258,189 @@ implementation
                      is filled with the first (random) definition that is
                      found. We use this definition to display a nice error
                      message that the wrong type is passed }
-                   candidates.find_wrong_para;
-                   candidates.list(true);
+                   lCandidates.find_wrong_para;
+                   lCandidates.list(true);
 {$ifdef EXTDEBUG}
-                   candidates.dump_info(VHint);
+                   lCandidates.dump_info(VHint);
 {$endif EXTDEBUG}
 
                    { We can not proceed, release all procs and exit }
-                   candidates.done;
+                   lCandidates.done;
                    exit;
                  end;
 
                 { if the final procedure definition is not yet owned,
                   ensure that it is }
-                if (procdefinition.typ=procdef) and Assigned(TProcDef(procdefinition).ProcSym) then
+                if (ProcDefinition.typ=procdef) and Assigned(TProcDef(ProcDefinition).ProcSym) then
                   begin
                     { if the procdef does not yet have an owner (e.g. because it has just been
                       specialized) then insert it into the same owner as the procsym }
-                    if not Assigned(procdefinition.owner) and Assigned(TProcDef(procdefinition).ProcSym.owner) then
-                      TProcDef(procdefinition).ProcSym.owner.InsertDef(procdefinition);
-                    TProcDef(procdefinition).ProcSym.RegisterSym;
+                    if not Assigned(ProcDefinition.owner) and Assigned(TProcDef(ProcDefinition).ProcSym.owner) then
+                      TProcDef(ProcDefinition).ProcSym.owner.InsertDef(ProcDefinition);
+                    TProcDef(ProcDefinition).ProcSym.RegisterSym;
                   end;
-                procdefinition.RegisterDef;
+                ProcDefinition.RegisterDef;
 
-                if procdefinition.Is_Specialization and (procdefinition.typ=procdef) then
-                  maybe_add_pending_specialization(procdefinition,candidates.para_anon_syms);
+                if ProcDefinition.Is_Specialization and (ProcDefinition.typ=procdef) then
+                  maybe_add_pending_specialization(ProcDefinition,lCandidates.para_anon_syms);
 
-                candidates.done;
+                lCandidates.done;
               end; { end of procedure to call determination }
           end;
 
-         if procdefinition.typ = procdef then
+         if ProcDefinition.typ = procdef then
            begin
              { check for hints (deprecated etc) }
-             Check_Hints(TProcDef(procdefinition).ProcSym,TProcDef(procdefinition).SymOptions,TProcDef(procdefinition).DeprecatedMsg);
+             Check_Hints(TProcDef(ProcDefinition).ProcSym,TProcDef(ProcDefinition).SymOptions,TProcDef(ProcDefinition).DeprecatedMsg);
 
              { add reference to corresponding procsym; may not be the one
                originally found/passed to the constructor because of overloads }
-             AddSymRef(TProcDef(procdefinition).ProcSym,procdefinition);
+             AddSymRef(TProcDef(ProcDefinition).ProcSym,ProcDefinition);
 
              { ensure that the generic is considered as used as for an
                implicit specialization must only be called after the final
                overload was picked }
-             if Assigned(TProcDef(procdefinition).GenericDef) and
-                 Assigned(TProcDef(TProcDef(procdefinition).GenericDef).ProcSym) and
-                 (TProcDef(TProcDef(procdefinition).GenericDef).ProcSym.refs=0) then
-               AddSymRef(TProcDef(TProcDef(procdefinition).GenericDef).ProcSym);
+             if Assigned(TProcDef(ProcDefinition).GenericDef) and
+                 Assigned(TProcDef(TProcDef(ProcDefinition).GenericDef).ProcSym) and
+                 (TProcDef(TProcDef(ProcDefinition).GenericDef).ProcSym.refs=0) then
+               AddSymRef(TProcDef(TProcDef(ProcDefinition).GenericDef).ProcSym);
            end;
 
          { add needed default parameters }
-         if (paralength<procdefinition.MaxParaCount) then
+         if (FParaLength<ProcDefinition.MaxParaCount) then
           begin
-            paraidx:=0;
-            i:=0;
-            while (i<paralength) do
+            lParaIndex:=0;
+            lIndex:=0;
+            while (lIndex<FParaLength) do
              begin
-               if paraidx>=procdefinition.Paras.count then
+               if lParaIndex>=ProcDefinition.Paras.count then
                  InternalError(200306181);
-               if not(vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions) then
-                 inc(i);
-               inc(paraidx);
+               if not(vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions) then
+                 inc(lIndex);
+               inc(lParaIndex);
              end;
-            while (paraidx<procdefinition.paras.count) and (vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions) do
-              inc(paraidx);
-            while (paraidx<procdefinition.paras.count) do
+            while (lParaIndex<ProcDefinition.paras.count) and (vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions) do
+              inc(lParaIndex);
+            while (lParaIndex<ProcDefinition.paras.count) do
              begin
-               if not Assigned(TParaVarSym(procdefinition.paras[paraidx]).DefaultConstSym) then
+               if not Assigned(TParaVarSym(ProcDefinition.paras[lParaIndex]).DefaultConstSym) then
                 InternalError(200212142);
-               left:=CCallParaNode.create(genconstsymtree(
-                   TConstSym(TParaVarSym(procdefinition.paras[paraidx]).DefaultConstSym)),left);
+               Left:=CCallParaNode.Create(GenConstSymTree(
+                   TConstSym(TParaVarSym(ProcDefinition.paras[lParaIndex]).DefaultConstSym)),Left);
                { set correct callnode }
-               TCallParaNode(left).callnode:=self;
+               TCallParaNode(Left).CallNode:=Self;
                { Ignore vs_hidden parameters }
                repeat
-                 inc(paraidx);
-               until (paraidx>=procdefinition.paras.count) or
-                 not(vo_is_hidden_para in TParaVarSym(procdefinition.paras[paraidx]).VarOptions);
+                 inc(lParaIndex);
+               until (lParaIndex>=ProcDefinition.paras.count) or
+                 not(vo_is_hidden_para in TParaVarSym(ProcDefinition.paras[lParaIndex]).VarOptions);
              end;
           end;
 
          { recursive call? }
          if Assigned(CurrentProcInfo) and
-            (procdefinition=CurrentProcInfo.procdef) then
-           include(CurrentProcInfo.flags,pi_is_recursive);
+            (ProcDefinition=CurrentProcInfo.procdef) then
+           include(CurrentProcInfo.Flags,pi_is_recursive);
 
          { handle predefined procedures }
-         is_const:=(po_internconst in procdefinition.ProcOptions) and
+         lIsConst:=(po_internconst in ProcDefinition.ProcOptions) and
                    ((Block_Type in [bt_const,bt_type,bt_const_type,bt_var_type]) or
-                    (Assigned(left) and ((TCallParaNode(left).left.nodetype in [realconstn,ordconstn])
-                     and (not Assigned(TCallParaNode(left).right) or (TCallParaNode(TCallParaNode(left).right).left.nodetype in [realconstn,ordconstn])))));
-         if (procdefinition.ProcCallOption=pocall_internproc) or is_const then
+                    (Assigned(Left) and ((TCallParaNode(Left).Left.NodeType in [realconstn,ordconstn])
+                     and (not Assigned(TCallParaNode(Left).Right) or (TCallParaNode(TCallParaNode(Left).Right).Left.NodeType in [realconstn,ordconstn])))));
+         if (ProcDefinition.ProcCallOption=pocall_internproc) or lIsConst then
           begin
-            if Assigned(left) then
+            if Assigned(Left) then
              begin
                { convert types to those of the prototype, this is required by functions like ror, rol, sar
                  some use however a dummy type (Typedfile) so this would break them }
-               if not(TInlineNumber(TProcDef(procdefinition).ExtNumber) in
+               if not(TInlineNumber(TProcDef(ProcDefinition).ExtNumber) in
                     [in_Reset_TypedFile,in_Rewrite_TypedFile,in_reset_typedfile_name,in_rewrite_typedfile_name]) then
                  begin
                    { bind parasyms to the callparanodes and insert hidden parameters }
-                   bind_parasym;
+                   BindParaSym;
 
                    { insert type conversions for parameters }
-                   if Assigned(left) then
-                     TCallParaNode(left).insert_typeconv;
+                   if Assigned(Left) then
+                     TCallParaNode(Left).Insert_TypeConv;
                  end;
 
                { ptr and settextbuf need two args }
-               if Assigned(TCallParaNode(left).right) then
+               if Assigned(TCallParaNode(Left).Right) then
                 begin
-                  hpt:=geninlinenode(TInlineNumber(TProcDef(procdefinition).ExtNumber),is_const,left);
-                  set_para_callnode(nil);
-                  left:=nil;
+                  lTree:=GenInlineNode(TInlineNumber(TProcDef(ProcDefinition).ExtNumber),lIsConst,Left);
+                  SetParaCallNode(nil);
+                  Left:=nil;
                 end
                else
                 begin
-                  hpt:=geninlinenode(TInlineNumber(TProcDef(procdefinition).ExtNumber),is_const,TCallParaNode(left).left);
-                  set_para_callnode(nil);
-                  TCallParaNode(left).left:=nil;
+                  lTree:=GenInlineNode(TInlineNumber(TProcDef(ProcDefinition).ExtNumber),lIsConst,TCallParaNode(Left).Left);
+                  SetParaCallNode(nil);
+                  TCallParaNode(Left).Left:=nil;
                 end;
              end
             else
-             hpt:=geninlinenode(TInlineNumber(TProcDef(procdefinition).ExtNumber),is_const,nil);
-            result:=hpt;
-            maybe_reset_para_callnode;
+             lTree:=GenInlineNode(TInlineNumber(TProcDef(ProcDefinition).ExtNumber),lIsConst,nil);
+            Result:=lTree;
+            MaybeResetParaCallNode;
             exit;
           end;
 
          { in case this is an Objective-C message that returns a related object type by convention,
            override the default result type }
-         if po_objc_related_result_type in procdefinition.ProcOptions then
+         if po_objc_related_result_type in ProcDefinition.ProcOptions then
            begin
              { don't crash in case of syntax errors }
-             if Assigned(methodpointer) then
+             if Assigned(MethodPointer) then
                begin
-                 include(callnodeflags,cnf_typedefset);
-                 typedef:=methodpointer.resultdef;
-                 if typedef.typ=classrefdef then
-                   typedef:=TClassRefDef(typedef).PointedDef;
+                 include(CallNodeFlags,cnf_typedefset);
+                 TypeDef:=MethodPointer.ResultDef;
+                 if TypeDef.typ=classrefdef then
+                   TypeDef:=TClassRefDef(TypeDef).PointedDef;
                end;
            end;
 
         { ensure that the result type is set }
-        if not(cnf_typedefset in callnodeflags) then
+        if not(cnf_typedefset in CallNodeFlags) then
          begin
            { constructors return their current class type, not the type where the
              constructor is declared, this can be different because of inheritance }
-           if (procdefinition.ProcTypeOption=potype_constructor) and
-              Assigned(methodpointer) and
-              Assigned(methodpointer.resultdef) and
-              (methodpointer.resultdef.typ=classrefdef) then
-             resultdef:=TClassRefDef(methodpointer.resultdef).PointedDef
+           if (ProcDefinition.ProcTypeOption=potype_constructor) and
+              Assigned(MethodPointer) and
+              Assigned(MethodPointer.ResultDef) and
+              (MethodPointer.ResultDef.typ=classrefdef) then
+             ResultDef:=TClassRefDef(MethodPointer.ResultDef).PointedDef
            else
            { Member call to a (inherited) constructor from the class, the return
              value is always self, so we change it to voidtype to generate an
              error and to prevent users from generating non-working code
              when they expect to clone the current instance, see bug 3662 (PFV) }
-             if (procdefinition.ProcTypeOption=potype_constructor) and
-                Is_Class(TProcDef(procdefinition).struct) and
-                Assigned(methodpointer) and
-                (methodpointer.nodetype=loadn) and
-                (loadnf_is_self in TLoadNode(methodpointer).loadnodeflags) then
-               resultdef:=VoidType
+             if (ProcDefinition.ProcTypeOption=potype_constructor) and
+                Is_Class(TProcDef(ProcDefinition).struct) and
+                Assigned(MethodPointer) and
+                (MethodPointer.NodeType=loadn) and
+                (loadnf_is_self in TLoadNode(MethodPointer).LoadNodeFlags) then
+               ResultDef:=VoidType
              else
-               resultdef:=procdefinition.ReturnDef;
+               ResultDef:=ProcDefinition.ReturnDef;
           end
         else
-          resultdef:=typedef;
+          ResultDef:=TypeDef;
 
         { Check object/class for methods }
-        if Assigned(methodpointer) then
+        if Assigned(MethodPointer) then
          begin
            { direct call to inherited abstract method, then we
              can already give a error in the compiler instead
              of a runtime error }
-           if (cnf_inherited in callnodeflags) and
-              (po_abstractmethod in procdefinition.ProcOptions) then
+           if (cnf_inherited in CallNodeFlags) and
+              (po_abstractmethod in ProcDefinition.ProcOptions) then
              begin
                if (m_delphi in CurrentSettings.ModeSwitches) and
-                 (cnf_anon_inherited in callnodeflags) then
+                 (cnf_anon_inherited in CallNodeFlags) then
                  begin
                    CGMessage(cg_h_inherited_ignored);
-                   result:=CNothingNode.create;
-                   maybe_reset_para_callnode;
+                   Result:=CNothingNode.Create;
+                   MaybeResetParaCallNode;
                    exit;
                  end
                else
@@ -4450,198 +4450,198 @@ implementation
            { directly calling an interface/protocol/category/class helper
              method via its type is not possible (always must be called via
              the actual instance) }
-           if (methodpointer.nodetype=typen) and
+           if (MethodPointer.NodeType=typen) and
               ((
-                Is_Interface(methodpointer.resultdef) and not
-                Is_ObjectPascal_Helper(TDef(procdefinition.owner.DefOwner))
+                Is_Interface(MethodPointer.ResultDef) and not
+                Is_ObjectPascal_Helper(TDef(ProcDefinition.owner.DefOwner))
                ) or
-               Is_ObjC_Protocol_Or_Category(methodpointer.resultdef)) then
-             CGMessage1(type_e_class_type_expected,methodpointer.resultdef.TypeName);
+               Is_ObjC_Protocol_Or_Category(MethodPointer.ResultDef)) then
+             CGMessage1(type_e_class_type_expected,MethodPointer.ResultDef.TypeName);
 
            { if an inherited con- or destructor should be  }
            { called in a con- or destructor then a warning }
            { will be made                                  }
            { con- and destructors need a pointer to the vmt }
-           if (cnf_inherited in callnodeflags) and
-              (procdefinition.ProcTypeOption in [potype_constructor,potype_destructor]) and
-              Is_Object(methodpointer.resultdef) and
+           if (cnf_inherited in CallNodeFlags) and
+              (ProcDefinition.ProcTypeOption in [potype_constructor,potype_destructor]) and
+              Is_Object(MethodPointer.ResultDef) and
               not(CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) then
             CGMessage(cg_w_member_cd_call_from_method);
 
-           if methodpointer.nodetype<>typen then
+           if MethodPointer.NodeType<>typen then
             begin
-               hpt:=methodpointer;
+               lTree:=MethodPointer;
 
                { Remove all postfix operators }
-               while Assigned(hpt) and (hpt.nodetype in [subscriptn,vecn]) do
-                 hpt:=TUnaryNode(hpt).left;
+               while Assigned(lTree) and (lTree.NodeType in [subscriptn,vecn]) do
+                 lTree:=TUnaryNode(lTree).Left;
 
-               if ((hpt.nodetype=loadvmtaddrn) or
-                  ((hpt.nodetype=loadn) and Assigned(TLoadNode(hpt).resultdef) and (TLoadNode(hpt).resultdef.typ=classrefdef))) and
-                  not (procdefinition.ProcTypeOption=potype_constructor) and
-                  not (po_classmethod in procdefinition.ProcOptions) and
-                  not (po_staticmethod in procdefinition.ProcOptions) then
+               if ((lTree.NodeType=loadvmtaddrn) or
+                  ((lTree.NodeType=loadn) and Assigned(TLoadNode(lTree).ResultDef) and (TLoadNode(lTree).ResultDef.typ=classrefdef))) and
+                  not (ProcDefinition.ProcTypeOption=potype_constructor) and
+                  not (po_classmethod in ProcDefinition.ProcOptions) and
+                  not (po_staticmethod in ProcDefinition.ProcOptions) then
                  { error: we are calling instance method from the class method/static method }
                  CGMessage(parser_e_only_class_members);
 
-              if (procdefinition.ProcTypeOption=potype_constructor) and
-                 Assigned(symtableproc) and
-                 (symtableproc.SymTableType=withsymtable) and
-                 (TNode(TWithSymTable(symtableproc).WithRefNode).nodetype=temprefn) then
+              if (ProcDefinition.ProcTypeOption=potype_constructor) and
+                 Assigned(SymTableProc) and
+                 (SymTableProc.SymTableType=withsymtable) and
+                 (TNode(TWithSymTable(SymTableProc).WithRefNode).NodeType=temprefn) then
                 CGMessage(cg_e_cannot_call_cons_dest_inside_with);
 
               { skip (absolute and other simple) type conversions -- only now,
                 because the checks above have to take type conversions into
                 e.g. class reference types account }
-              hpt:=actualtargetnode(@hpt)^;
+              lTree:=ActualTargetNode(@lTree)^;
 
               { R.Init then R will be initialized by the constructor,
                 Also allow it for simple loads }
-              if (procdefinition.ProcTypeOption=potype_constructor) or
-                 ((hpt.nodetype=loadn) and
-                  (((methodpointer.resultdef.typ=objectdef) and
-                    not(oo_has_virtual in TObjectDef(methodpointer.resultdef).ObjectOptions)) or
-                   (methodpointer.resultdef.typ=recorddef)
+              if (ProcDefinition.ProcTypeOption=potype_constructor) or
+                 ((lTree.NodeType=loadn) and
+                  (((MethodPointer.ResultDef.typ=objectdef) and
+                    not(oo_has_virtual in TObjectDef(MethodPointer.ResultDef).ObjectOptions)) or
+                   (MethodPointer.ResultDef.typ=recorddef)
                   )
                  ) then
                 { a constructor will and a method may write something to }
                 { the fields                                             }
-                set_varstate(methodpointer,vs_readwritten,[])
+                set_varstate(MethodPointer,vs_readwritten,[])
               else
-                set_varstate(methodpointer,vs_read,[vsf_must_be_valid]);
+                set_varstate(MethodPointer,vs_read,[vsf_must_be_valid]);
             end;
 
            { if we are calling the constructor check for abstract
              methods. Ignore inherited and member calls, because the
              class is then already created }
-           if (procdefinition.ProcTypeOption=potype_constructor) and
-              not(cnf_inherited in callnodeflags) and
-              not(cnf_member_call in callnodeflags) then
-             verifyabstractcalls;
+           if (ProcDefinition.ProcTypeOption=potype_constructor) and
+              not(cnf_inherited in CallNodeFlags) and
+              not(cnf_member_call in CallNodeFlags) then
+             VerifyAbstractCalls;
          end
         else
          begin
            { When this is method the methodpointer must be available }
-           if (right=nil) and
-              (procdefinition.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
-              not procdefinition.No_Self_Node then
+           if (Right=nil) and
+              (ProcDefinition.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
+              not ProcDefinition.No_Self_Node then
              InternalError(200305061);
          end;
 
         { Set flag that the procedure uses varargs, also if they are not passed it is still
           needed for x86_64 to pass the number of SSE registers used }
-        if po_varargs in procdefinition.ProcOptions then
-          include(callnodeflags,cnf_uses_varargs);
+        if po_varargs in ProcDefinition.ProcOptions then
+          include(CallNodeFlags,cnf_uses_varargs);
 
         { set the appropriate node flag if the call never returns }
-        if po_noreturn in procdefinition.ProcOptions then
-          include(callnodeflags,cnf_call_never_returns);
+        if po_noreturn in ProcDefinition.ProcOptions then
+          include(CallNodeFlags,cnf_call_never_returns);
 
         { Change loading of array of const to varargs }
-        if Assigned(left) and
-           (procdefinition.paras.count>0) and
-           Is_Array_Of_Const(TParaVarSym(procdefinition.paras[procdefinition.paras.count-1]).vardef) and
-           (procdefinition.ProcCallOption in CDecl_PoCalls) then
-          convert_carg_array_of_const;
+        if Assigned(Left) and
+           (ProcDefinition.paras.count>0) and
+           Is_Array_Of_Const(TParaVarSym(ProcDefinition.paras[ProcDefinition.paras.count-1]).vardef) and
+           (ProcDefinition.ProcCallOption in CDecl_PoCalls) then
+          ConvertCArgArrayOfConst;
 
         { bind parasyms to the callparanodes and insert hidden parameters }
-        bind_parasym;
+        BindParaSym;
 
         { insert type conversions for parameters }
-        if Assigned(left) then
-          TCallParaNode(left).insert_typeconv;
+        if Assigned(Left) then
+          TCallParaNode(Left).Insert_TypeConv;
 
         { dispinterface methode invoke? }
-        if Assigned(methodpointer) and Is_DispInterface(methodpointer.resultdef) then
+        if Assigned(MethodPointer) and Is_DispInterface(MethodPointer.ResultDef) then
           begin
-            case procdefinition.ProcTypeOption of
-              potype_propgetter: calltype:=dct_propget;
-              potype_propsetter: calltype:=dct_propput;
+            case ProcDefinition.ProcTypeOption of
+              potype_propgetter: lCallType:=dct_propget;
+              potype_propsetter: lCallType:=dct_propput;
             else
-              calltype:=dct_method;
+              lCallType:=dct_method;
             end;
             { if the result is used, we've to insert a call to convert the type to be on the "safe side" }
-            if (cnf_return_value_used in callnodeflags) and not Is_Void(procdefinition.ReturnDef) then
+            if (cnf_return_value_used in CallNodeFlags) and not Is_Void(ProcDefinition.ReturnDef) then
               begin
-                result:=internalstatements(statements);
-                converted_result_data:=CTempCreateNode.create(procdefinition.ReturnDef,sizeof(procdefinition.ReturnDef),
+                Result:=InternalStatements(lStatements);
+                lConvertedResultData:=CTempCreateNode.Create(ProcDefinition.ReturnDef,sizeof(ProcDefinition.ReturnDef),
                   tt_persistent,true);
-                addstatement(statements,converted_result_data);
-                addstatement(statements,CAssignmentNode.create(CTempRefNode.create(converted_result_data),
+                AddStatement(lStatements,lConvertedResultData);
+                AddStatement(lStatements,CAssignmentNode.Create(CTempRefNode.Create(lConvertedResultData),
                   CTypeConvNode.Create_Internal(
-                    translate_disp_call(methodpointer,parameters,calltype,'',TProcDef(procdefinition).DispID,procdefinition.ReturnDef),
-                  procdefinition.ReturnDef)));
-                addstatement(statements,CTempDeleteNode.create_normal_temp(converted_result_data));
-                addstatement(statements,CTempRefNode.create(converted_result_data));
+                    Translate_Disp_Call(MethodPointer,Parameters,lCallType,'',TProcDef(ProcDefinition).DispID,ProcDefinition.ReturnDef),
+                  ProcDefinition.ReturnDef)));
+                AddStatement(lStatements,CTempDeleteNode.Create_Normal_Temp(lConvertedResultData));
+                AddStatement(lStatements,CTempRefNode.Create(lConvertedResultData));
               end
             else
-              result:=translate_disp_call(methodpointer,parameters,calltype,'',TProcDef(procdefinition).DispID,VoidType);
+              Result:=Translate_Disp_Call(MethodPointer,Parameters,lCallType,'',TProcDef(ProcDefinition).DispID,VoidType);
 
             { don't free reused nodes }
-            methodpointer:=nil;
-            maybe_reset_para_callnode;
-            parameters:=nil;
+            MethodPointer:=nil;
+            MaybeResetParaCallNode;
+            Parameters:=nil;
           end;
 
-        maybe_gen_call_self_node;
+        MaybeGenCallSelfNode;
 
-        if Assigned(call_self_node) then
-          TypeCheckPass(call_self_node);
-        if Assigned(call_vmt_node) then
-          TypeCheckPass(call_vmt_node);
+        if Assigned(CallSelfNode) then
+          TypeCheckPass(CallSelfNode);
+        if Assigned(CallVMTNode) then
+          TypeCheckPass(CallVMTNode);
 
-        if Is_Currency(resultdef) then
-          Include(flags,nf_is_currency);
+        if Is_Currency(ResultDef) then
+          Include(Flags,nf_is_currency);
 
         if Assigned(CurrentProcInfo) and
-            (procdefinition.typ=procdef) and
-            (procdefinition.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
-            (procdefinition.ParaST.SymTableLevel>NormalFunctionLevel) and
+            (ProcDefinition.typ=procdef) and
+            (ProcDefinition.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
+            (ProcDefinition.ParaST.SymTableLevel>NormalFunctionLevel) and
             (CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel) then
-          CurrentProcInfo.Add_Captured_Sym(TProcDef(procdefinition).ProcSym,procdefinition,fileinfo);
-        maybe_reset_para_callnode;
+          CurrentProcInfo.Add_Captured_Sym(TProcDef(ProcDefinition).ProcSym,ProcDefinition,FileInfo);
+        MaybeResetParaCallNode;
       end;
 
 
-    function TCallNode.simplify(forinline : boolean) : TNode;
+    function TCallNode.Simplify(AForInline : Boolean) : TNode;
       begin
         { See if there's any special handling we can do based on the intrinsic code }
-        if (intrinsiccode <> Default(TInlineNumber)) then
-          result := handle_compilerproc
+        if (IntrinsicCode <> Default(TInlineNumber)) then
+          Result := HandleCompilerProc
         else
-          result := nil;
+          Result := nil;
       end;
 
 
-    procedure TCallNode.order_parameters;
+    procedure TCallNode.Order_Parameters;
       var
-        hp,hpcurr,hpnext,hpfirst,hpprev : TCallParaNode;
-        currloc : TCGLoc;
-        indexcount: Integer;
+        lPara,lCurrentPara,lNextPara,lFirstPara,lPreviousPara : TCallParaNode;
+        lCurrentLoc : TCGLoc;
+        lIndexCount: Integer;
       begin
-        indexcount:=0;
-        hpfirst:=nil;
-        hpcurr:=TCallParaNode(left);
+        lIndexCount:=0;
+        lFirstPara:=nil;
+        lCurrentPara:=TCallParaNode(Left);
         { cache all info about parameters containing stack tainting calls,
           since we will need it a lot below and calculating it can be expensive }
-        while Assigned(hpcurr) do
+        while Assigned(lCurrentPara) do
           begin
             { Also remember the original parameter order for the sake of
               tcallnode.simplify }
-            if hpcurr.originalindex = -1 then
+            if lCurrentPara.OriginalIndex = -1 then
               begin
-                hpcurr.originalindex := indexcount;
-                Inc(indexcount);
+                lCurrentPara.OriginalIndex := lIndexCount;
+                Inc(lIndexCount);
               end;
-            hpcurr.init_contains_stack_tainting_call_cache;
-            hpcurr.ffollowed_by_stack_tainting_call_cached:=false;
-            hpcurr:=TCallParaNode(hpcurr.right);
+            lCurrentPara.Init_Contains_Stack_Tainting_Call_Cache;
+            lCurrentPara.FFollowedByStackTaintingCallCached:=false;
+            lCurrentPara:=TCallParaNode(lCurrentPara.Right);
           end;
-        hpcurr:=TCallParaNode(left);
-        while Assigned(hpcurr) do
+        lCurrentPara:=TCallParaNode(Left);
+        while Assigned(lCurrentPara) do
           begin
             { pull out }
-            hpnext:=TCallParaNode(hpcurr.right);
+            lNextPara:=TCallParaNode(lCurrentPara.Right);
             { pull in at the correct place.
               Used order:
                 1. vs_out for a reference-counted type
@@ -4666,26 +4666,26 @@ implementation
               evaluate the calls, because otherwise the already loaded
               register parameters will have to be saved so the intermediate
               call can be evaluated (JM) }
-            if not Assigned(hpcurr.parasym.ParaLoc[callerside].Location) then
+            if not Assigned(lCurrentPara.ParaSym.ParaLoc[callerside].Location) then
               InternalError(200412152);
-            currloc:=hpcurr.parasym.ParaLoc[callerside].Location^.Loc;
-            hpprev:=nil;
-            hp:=hpfirst;
+            lCurrentLoc:=lCurrentPara.ParaSym.ParaLoc[callerside].Location^.Loc;
+            lPreviousPara:=nil;
+            lPara:=lFirstPara;
             { on fixed_stack targets, always evaluate parameters containing
               a call with stack parameters before all other parameters,
               because they will prevent any other parameters from being put
               in their final place; if both the current and the next para
               contain a stack tainting call, don't do anything to prevent
               them from keeping on chasing each other's tail }
-            while Assigned(hp) do
+            while Assigned(lPara) do
               begin
                 if ParaManager.Use_Fixed_Stack and
-                   hpcurr.contains_stack_tainting_call_cached then
+                   lCurrentPara.ContainsStackTaintingCallCached then
                   break;
-                case currloc of
+                case lCurrentLoc of
                   LOC_REFERENCE :
                     begin
-                      case hp.parasym.ParaLoc[callerside].Location^.Loc of
+                      case lPara.ParaSym.ParaLoc[callerside].Location^.Loc of
                         LOC_REFERENCE :
                           begin
                             { Offset is calculated like:
@@ -4702,12 +4702,12 @@ implementation
                             { parameters to be in this order so they can use   }
                             { pushes in case of no fixed stack                 }
                             if (not ParaManager.Use_Fixed_Stack and
-                                (hpcurr.parasym.ParaLoc[callerside].Location^.Reference.Offset>
-                                 hp.parasym.ParaLoc[callerside].Location^.Reference.Offset)) or
+                                (lCurrentPara.ParaSym.ParaLoc[callerside].Location^.Reference.Offset>
+                                 lPara.ParaSym.ParaLoc[callerside].Location^.Reference.Offset)) or
                                (ParaManager.Use_Fixed_Stack and
-                                (node_complexity(hpcurr.left)<node_complexity(hp.left))) then
+                                (Node_Complexity(lCurrentPara.Left)<Node_Complexity(lPara.Left))) then
 {$else i386}
-                            if (node_complexity(hpcurr.left)<node_complexity(hp.left)) then
+                            if (Node_Complexity(lCurrentPara.Left)<Node_Complexity(lPara.Left)) then
 {$endif i386}
                               break;
                           end;
@@ -4723,25 +4723,25 @@ implementation
                   LOC_FPUREGISTER,
                   LOC_REGISTER :
                     begin
-                      if (hp.parasym.ParaLoc[callerside].Location^.Loc<>LOC_REFERENCE) and
-                         (node_complexity(hpcurr.left)>node_complexity(hp.left)) then
+                      if (lPara.ParaSym.ParaLoc[callerside].Location^.Loc<>LOC_REFERENCE) and
+                         (Node_Complexity(lCurrentPara.Left)>Node_Complexity(lPara.Left)) then
                         break;
                     end;
                   else
                     ;
                 end;
-                hpprev:=hp;
-                hp:=TCallParaNode(hp.right);
+                lPreviousPara:=lPara;
+                lPara:=TCallParaNode(lPara.Right);
               end;
-            hpcurr.right:=hp;
-            if Assigned(hpprev) then
-              hpprev.right:=hpcurr
+            lCurrentPara.Right:=lPara;
+            if Assigned(lPreviousPara) then
+              lPreviousPara.Right:=lCurrentPara
             else
-              hpfirst:=hpcurr;
+              lFirstPara:=lCurrentPara;
             { next }
-            hpcurr:=hpnext;
+            lCurrentPara:=lNextPara;
           end;
-        left:=hpfirst;
+        Left:=lFirstPara;
         { now mark each parameter that is followed by a stack-tainting call,
           to determine on use_fixed_stack targets which ones can immediately be
           put in their final destination. Unfortunately we can never put register
@@ -4749,55 +4749,55 @@ implementation
           rich architectures such as the PowerPC), because the code generator
           can still insert extra calls that only make use of register
           parameters (fpc_move() etc. }
-        hpcurr:=hpfirst;
-        while Assigned(hpcurr) do
+        lCurrentPara:=lFirstPara;
+        while Assigned(lCurrentPara) do
           begin
-            if hpcurr.contains_stack_tainting_call_cached then
+            if lCurrentPara.ContainsStackTaintingCallCached then
               begin
                 { all parameters before this one are followed by a stack
                   tainting call }
-                hp:=hpfirst;
-                while hp<>hpcurr do
+                lPara:=lFirstPara;
+                while lPara<>lCurrentPara do
                   begin
-                    hp.ffollowed_by_stack_tainting_call_cached:=true;
-                    hp:=TCallParaNode(hp.right);
+                    lPara.FFollowedByStackTaintingCallCached:=true;
+                    lPara:=TCallParaNode(lPara.Right);
                   end;
-                hpfirst:=hpcurr;
+                lFirstPara:=lCurrentPara;
               end;
-            hpcurr:=TCallParaNode(hpcurr.right);
+            lCurrentPara:=TCallParaNode(lCurrentPara.Right);
           end;
       end;
 
 
-    procedure TCallNode.check_stack_parameters;
+    procedure TCallNode.Check_Stack_Parameters;
       var
-        hp : TCallParaNode;
-       loc : PCGParaLocation;
+        lPara : TCallParaNode;
+       lParaLoc : PCGParaLocation;
       begin
-        hp:=TCallParaNode(left);
-        while Assigned(hp) do
+        lPara:=TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            if Assigned(hp.parasym) then
+            if Assigned(lPara.ParaSym) then
               begin
-                loc:=hp.parasym.ParaLoc[callerside].Location;
-                while Assigned(loc) do
+                lParaLoc:=lPara.ParaSym.ParaLoc[callerside].Location;
+                while Assigned(lParaLoc) do
                   begin
-                    if loc^.Loc=LOC_REFERENCE then
+                    if lParaLoc^.Loc=LOC_REFERENCE then
                       begin
-                        include(CurrentProcInfo.flags,pi_has_stackparameter);
+                        include(CurrentProcInfo.Flags,pi_has_stackparameter);
                         exit;
                        end;
-                      loc:=loc^.next;
+                      lParaLoc:=lParaLoc^.next;
                   end;
               end;
-            hp:=TCallParaNode(hp.right);
+            lPara:=TCallParaNode(lPara.Right);
           end;
       end;
 
 
-    function TCallNode.heuristics_favors_inlining:boolean;
+    function TCallNode.HeuristicsFavorsInlining:Boolean;
       var
-        limExcluding: cardinal;
+        lExcludingLimit: Cardinal;
       begin
         {  Prevent too deep inlining recursion and code bloat by inlining
 
@@ -4814,84 +4814,84 @@ implementation
               if the outer nodes are in a seldomly used code path
             - The code avoids to use functions from the math unit
         }
-        limExcluding:=round(exp((1.0/(inlinelevel/3.0+1))*ln(10000)));
-        result:=node_count(TProcDef(procdefinition).InliningInfo^.code,limExcluding)<limExcluding;
+        lExcludingLimit:=round(exp((1.0/(InlineLevel/3.0+1))*ln(10000)));
+        Result:=Node_Count(TProcDef(ProcDefinition).InliningInfo^.code,lExcludingLimit)<lExcludingLimit;
       end;
 
 
-    procedure TCallNode.check_inlining;
+    procedure TCallNode.Check_Inlining;
       var
-        st   : TSymTable;
-        para : TCallParaNode;
+        lSymTable   : TSymTable;
+        lPara : TCallParaNode;
       begin
         { Can we inline the procedure? }
-        if (po_inline in procdefinition.ProcOptions) and
-           (procdefinition.typ=procdef) and
-           TProcDef(procdefinition).HasInliningInfo and
-           heuristics_favors_inlining then
+        if (po_inline in ProcDefinition.ProcOptions) and
+           (ProcDefinition.typ=procdef) and
+           TProcDef(ProcDefinition).HasInliningInfo and
+           HeuristicsFavorsInlining then
           begin
-            include(callnodeflags,cnf_do_inline);
+            include(CallNodeFlags,cnf_do_inline);
             { Check if we can inline the procedure when it references proc/var that
               are not in the globally available }
-            st:=procdefinition.owner;
-            while (st.SymTableType in [ObjectSymtable,recordsymtable]) do
-              st:=st.DefOwner.owner;
-            if not(tf_supports_hidden_symbols in TargetInfo.flags) and
-               (pi_uses_static_symtable in TProcDef(procdefinition).InliningInfo^.flags) and
-               (st.SymTableType=GlobalSymTable) and
-               (not st.IsCurrentUnit) then
+            lSymTable:=ProcDefinition.owner;
+            while (lSymTable.SymTableType in [ObjectSymtable,recordsymtable]) do
+              lSymTable:=lSymTable.DefOwner.owner;
+            if not(tf_supports_hidden_symbols in TargetInfo.Flags) and
+               (pi_uses_static_symtable in TProcDef(ProcDefinition).InliningInfo^.Flags) and
+               (lSymTable.SymTableType=GlobalSymTable) and
+               (not lSymTable.IsCurrentUnit) then
               begin
-                Comment(VLineInfo+VDebug,'Not inlining "'+TProcDef(procdefinition).ProcSym.realname+'", references private symbols from other unit');
-                exclude(callnodeflags,cnf_do_inline);
+                Comment(VLineInfo+VDebug,'Not inlining "'+TProcDef(ProcDefinition).ProcSym.realname+'", references private symbols from other unit');
+                exclude(CallNodeFlags,cnf_do_inline);
               end;
-            para:=TCallParaNode(parameters);
-            while Assigned(para) do
+            lPara:=TCallParaNode(Parameters);
+            while Assigned(lPara) do
               begin
-                if not para.can_be_inlined then
+                if not lPara.Can_Be_Inlined then
                   begin
-                    Comment(VLineInfo+VDebug,'Not inlining "'+TProcDef(procdefinition).ProcSym.realname+
+                    Comment(VLineInfo+VDebug,'Not inlining "'+TProcDef(ProcDefinition).ProcSym.realname+
                       '", invocation parameter contains an unsafe/unsupported construct');
-                    exclude(callnodeflags,cnf_do_inline);
+                    exclude(CallNodeFlags,cnf_do_inline);
                     break;
                   end;
-                para:=TCallParaNode(para.nextpara);
+                lPara:=TCallParaNode(lPara.NextPara);
               end;
           end;
       end;
 
 
-    function TCallNode.doinlining: boolean;
+    function TCallNode.DoInlining: Boolean;
       begin
-        result:=not((po_inline in procdefinition.ProcOptions) and
-          (procdefinition.typ=procdef) and
-          ((pio_inline_not_possible in TProcDef(procdefinition).ImplProcOptions) or
-           not(cnf_do_inline in callnodeflags)))
+        Result:=not((po_inline in ProcDefinition.ProcOptions) and
+          (ProcDefinition.typ=procdef) and
+          ((pio_inline_not_possible in TProcDef(ProcDefinition).ImplProcOptions) or
+           not(cnf_do_inline in CallNodeFlags)))
       end;
 
 
-    function TCallNode.pass_1: TNode;
+    function TCallNode.Pass_1: TNode;
 
-      procedure mark_unregable_parameters;
+      procedure MarkUnregableParameters;
         var
-          hp : TCallParaNode;
+          lParameterNode : TCallParaNode;
         begin
-          hp:=TCallParaNode(left);
-          while Assigned(hp) do
+          lParameterNode:=TCallParaNode(Left);
+          while Assigned(lParameterNode) do
             begin
-              DoTypeCheckPass(hp.left);
+              DoTypeCheckPass(lParameterNode.Left);
               { When the address needs to be pushed then the register is
                 not regable. Exception is when the location is also a var
                 parameter and we can pass the address transparently (but
                 that is handled by make_not_regable if ra_addr_regable is
                 passed, and make_not_regable always needs to called for
                 the ra_addr_taken info for non-invisible parameters) }
-              if (not (cpf_varargs_para in hp.callparaflags)) and (
+              if (not (cpf_varargs_para in lParameterNode.CallParaFlags)) and (
                   not(
-                      (vo_is_hidden_para in hp.parasym.VarOptions) and
-                      (hp.left.resultdef.typ in [pointerdef,classrefdef])
+                      (vo_is_hidden_para in lParameterNode.ParaSym.VarOptions) and
+                      (lParameterNode.Left.ResultDef.typ in [pointerdef,classrefdef])
                      ) and
-                  ParaManager.Push_Addr_Param(hp.parasym.VarSpez,hp.parasym.vardef,
-                      self.procdefinition.ProcCallOption)
+                  ParaManager.Push_Addr_Param(lParameterNode.ParaSym.VarSpez,lParameterNode.ParaSym.vardef,
+                      Self.ProcDefinition.ProcCallOption)
                  ) then
                 { pushing the address of a variable to take the place of a temp
                   as the complex function result of a function does not make its
@@ -4899,35 +4899,35 @@ implementation
                   function result" is not something which can be stored
                   persistently by the callee (it becomes invalid when the callee
                   returns)                                                       }
-                if not(vo_is_funcret in hp.parasym.VarOptions) and
-                   ((po_inline in procdefinition.ProcOptions) or
-                     (not(po_compilerproc in procdefinition.ProcOptions) and
-                     (hp.parasym.VarSpez=vs_const))
+                if not(vo_is_funcret in lParameterNode.ParaSym.VarOptions) and
+                   ((po_inline in ProcDefinition.ProcOptions) or
+                     (not(po_compilerproc in ProcDefinition.ProcOptions) and
+                     (lParameterNode.ParaSym.VarSpez=vs_const))
                    ) then
-                  make_not_regable(hp.left,[ra_addr_regable,ra_addr_taken])
+                  make_not_regable(lParameterNode.Left,[ra_addr_regable,ra_addr_taken])
                 else
-                  make_not_regable(hp.left,[ra_addr_regable]);
-              hp:=TCallParaNode(hp.right);
+                  make_not_regable(lParameterNode.Left,[ra_addr_regable]);
+              lParameterNode:=TCallParaNode(lParameterNode.Right);
             end;
         end;
 
       var
-        para: TCallParaNode;
+        lPara: TCallParaNode;
       begin
-         result:=simplify(false);
+         Result:=Simplify(false);
 
-         if Assigned(result) then
+         if Assigned(Result) then
            begin                    
-             set_para_callnode(nil);
+             SetParaCallNode(nil);
              exit;
            end;
 
          { as pass_1 is never called on the methodpointer node, we must check
            here that it's not a helper type }
-         if Assigned(methodpointer) and
-             (methodpointer.nodetype=typen) and
-             Is_ObjectPascal_Helper(TTypeNode(methodpointer).typedef) and
-             not TTypeNode(methodpointer).helperallowed then
+         if Assigned(MethodPointer) and
+             (MethodPointer.NodeType=typen) and
+             Is_ObjectPascal_Helper(TTypeNode(MethodPointer).TypeDef) and
+             not TTypeNode(MethodPointer).HelperAllowed then
            begin
              CGMessage(parser_e_no_category_as_types);
              { we get an internal error when trying to insert the hidden
@@ -4937,45 +4937,45 @@ implementation
 
          { can we get rid of the call? }
          if (cs_opt_remove_empty_proc in CurrentSettings.OptimizerSwitches) and
-            not(cnf_return_value_used in callnodeflags) and
-           (procdefinition.typ=procdef) and
-           TProcDef(procdefinition).isempty and
+            not(cnf_return_value_used in CallNodeFlags) and
+           (ProcDefinition.typ=procdef) and
+           TProcDef(ProcDefinition).isempty and
            { allow only certain proc options }
-           ((TProcDef(procdefinition).ProcOptions-[po_none,po_classmethod,po_staticmethod,
+           ((TProcDef(ProcDefinition).ProcOptions-[po_none,po_classmethod,po_staticmethod,
              po_interrupt,po_iocheck,po_assembler,po_msgstr,po_msgint,po_exports,po_external,po_overload,
              po_nostackframe,po_has_mangledname,po_has_public_name,po_forward,po_global,
              po_inline,po_compilerproc,po_has_importdll,po_has_importname,po_kylixlocal,po_dispid,po_delphi_nested_cc,
              po_rtlproc])=[]) then
            begin
              { check parameters for side effects }
-             para:=TCallParaNode(left);
-             while Assigned(para) do
+             lPara:=TCallParaNode(Left);
+             while Assigned(lPara) do
                begin
-                 if (para.parasym.typ = paravarsym) and
-                    ((para.parasym.refs>0) or
+                 if (lPara.ParaSym.typ = paravarsym) and
+                    ((lPara.ParaSym.refs>0) or
                     { array of consts are converted later on so we need to skip them here
                       else no error detection is done }
-                     Is_Array_Of_Const(para.parasym.vardef) or
+                     Is_Array_Of_Const(lPara.ParaSym.vardef) or
                      not(cs_opt_dead_values in CurrentSettings.OptimizerSwitches) or
-                     might_have_sideeffects(para.left)) then
+                     Might_Have_SideEffects(lPara.Left)) then
                      break;
-                  para:=TCallParaNode(para.right);
+                  lPara:=TCallParaNode(lPara.Right);
                end;
              { finally, remove it if no parameter with side effect has been found }
-             if para=nil then
+             if lPara=nil then
                begin
-                 result:=CNothingNode.create;
-                 set_para_callnode(nil);
+                 Result:=CNothingNode.Create;
+                 SetParaCallNode(nil);
                  exit;
                end;
            end;
 
          { convert Objective-C calls into a message call }
-         if (procdefinition.typ=procdef) and
-            (po_objc in TProcDef(procdefinition).ProcOptions) then
+         if (ProcDefinition.typ=procdef) and
+            (po_objc in TProcDef(ProcDefinition).ProcOptions) then
            begin
-             if not(cnf_objc_processed in callnodeflags) then
-               objc_convert_to_message_send;
+             if not(cnf_objc_processed in CallNodeFlags) then
+               ObjC_Convert_To_Message_Send;
            end
          else
            begin
@@ -4985,129 +4985,129 @@ implementation
                WPO on them (+ they have no constructors) }
 
              { Check if the call can be inlined, sets the cnf_do_inline flag }
-             check_inlining;
+             Check_Inlining;
 
-             { must be called before maybe_load_in_temp(methodpointer), because
+             { must be called before MaybeLoadInTemp(methodpointer), because
                it converts the methodpointer into a temp in case it's a call
                (and we want to know the original call)
              }
-             register_created_object_types;
+             RegisterCreatedObjectTypes;
            end;
 
          { Maybe optimize the loading of the methodpointer using a temp. When the methodpointer
            is a calln this is even required to not execute the calln twice.
            This needs to be done after the resulttype pass, because in the resulttype we can still convert the
            calln to a loadn (PFV) }
-         if Assigned(methodpointer) then
-           maybe_load_in_temp(methodpointer);
-         if Assigned(right) and (right.resultdef.typ=procvardef) and
-            not TAbstractProcDef(right.resultdef).Is_AddressOnly then
-           maybe_load_in_temp(right);
+         if Assigned(MethodPointer) then
+           MaybeLoadInTemp(MethodPointer);
+         if Assigned(Right) and (Right.ResultDef.typ=procvardef) and
+            not TAbstractProcDef(Right.ResultDef).Is_AddressOnly then
+           MaybeLoadInTemp(Right);
 
          { the return value might be stored on the current stack by allocating a temp. }
-         if not(ParaManager.Ret_In_Param(procdefinition.ReturnDef,procdefinition)) then
-           inc(CurrentProcInfo.estimatedtempsize,procdefinition.ReturnDef.Size);
+         if not(ParaManager.Ret_In_Param(ProcDefinition.ReturnDef,ProcDefinition)) then
+           inc(CurrentProcInfo.EstimatedTempSize,ProcDefinition.ReturnDef.Size);
 
          { Create destination (temp or assignment-variable reuse) for function result if it not yet set }
-         maybe_create_funcret_node;
+         MaybeCreateFuncRetNode;
 
          { Insert the self,vmt,function result in the parameters }
-         gen_hidden_parameters;
+         GenHiddenParameters;
 
          { Remove useless nodes from init/final blocks }
          { (simplify depends on typecheck info)        }
-         if Assigned(callinitblock) then
+         if Assigned(CallInitBlock) then
            begin
-             TypeCheckPass(TNode(callinitblock));
-             doinlinesimplify(TNode(callinitblock));
+             TypeCheckPass(TNode(CallInitBlock));
+             DoInlineSimplify(TNode(CallInitBlock));
            end;
-         if Assigned(callcleanupblock) then
+         if Assigned(CallCleanupBlock) then
            begin
-             TypeCheckPass(TNode(callcleanupblock));
-             doinlinesimplify(TNode(callcleanupblock));
+             TypeCheckPass(TNode(CallCleanupBlock));
+             DoInlineSimplify(TNode(CallCleanupBlock));
            end;
 
 
          if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) and
-            (procdefinition.typ=procdef) and
-            (TProcDef(procdefinition).ProcTypeOption=potype_constructor) and
-            ([cnf_member_call,cnf_inherited] * callnodeflags <> []) then
+            (ProcDefinition.typ=procdef) and
+            (TProcDef(ProcDefinition).ProcTypeOption=potype_constructor) and
+            ([cnf_member_call,cnf_inherited] * CallNodeFlags <> []) then
            CurrentProcInfo.ConstructorCallingConstructor:=true;
 
-         mark_unregable_parameters;
+         MarkUnregableParameters;
 
          { calculate the parameter info for the procdef }
-         procdefinition.Init_ParaLoc_Info(callerside);
+         ProcDefinition.Init_ParaLoc_Info(callerside);
 
          { calculate the parameter size needed for this call include varargs if they are available }
-         if Assigned(varargsparas) then
-           pushedparasize:=ParaManager.Create_VarArgs_ParaLoc_Info(procdefinition,callerside,varargsparas)
+         if Assigned(VarArgsParas) then
+           FPushedParaSize:=ParaManager.Create_VarArgs_ParaLoc_Info(ProcDefinition,callerside,VarArgsParas)
          else
-           pushedparasize:=procdefinition.CallerArgAreaSize;
+           FPushedParaSize:=ProcDefinition.CallerArgAreaSize;
 
          { record maximum parameter size used in this proc }
-         CurrentProcInfo.allocate_push_parasize(pushedparasize);
+         CurrentProcInfo.Allocate_Push_ParaSize(FPushedParaSize);
 
          { check for stacked parameters }
-         if Assigned(left) and
+         if Assigned(Left) and
             (CurrentSettings.OptimizerSwitches*[cs_opt_stackframe,cs_opt_level1]<>[]) then
-           check_stack_parameters;
+           Check_Stack_Parameters;
 
-         if Assigned(callinitblock) then
-           FirstPass(TNode(callinitblock));
+         if Assigned(CallInitBlock) then
+           FirstPass(TNode(CallInitBlock));
 
          { function result node (tempref or simple load) }
-         if Assigned(funcretnode) then
-           FirstPass(funcretnode);
+         if Assigned(FuncRetNode) then
+           FirstPass(FuncRetNode);
 
          { parameters }
-         if Assigned(left) then
-           TCallParaNode(left).firstcallparan;
+         if Assigned(Left) then
+           TCallParaNode(Left).FirstCallParaN;
 
          { procedure variable ? }
-         if Assigned(right) then
-           FirstPass(right);
+         if Assigned(Right) then
+           FirstPass(Right);
 
-         if Assigned(methodpointer) and
-            (methodpointer.nodetype<>typen) then
-           FirstPass(methodpointer);
+         if Assigned(MethodPointer) and
+            (MethodPointer.NodeType<>typen) then
+           FirstPass(MethodPointer);
 
-         if Assigned(callcleanupblock) then
-           FirstPass(TNode(callcleanupblock));
+         if Assigned(CallCleanupBlock) then
+           FirstPass(TNode(CallCleanupBlock));
 
          if not (Block_Type in [bt_const,bt_type,bt_const_type,bt_var_type]) then
-           include(CurrentProcInfo.flags,pi_do_call);
+           include(CurrentProcInfo.Flags,pi_do_call);
 
          { order parameters }
-         order_parameters;
+         Order_Parameters;
 
          { get a register for the return value }
-         if (not Is_Void(resultdef)) then
+         if (not Is_Void(ResultDef)) then
            begin
-              if ParaManager.Ret_In_Param(resultdef,procdefinition) then
+              if ParaManager.Ret_In_Param(ResultDef,ProcDefinition) then
                begin
-                 expectloc:=LOC_REFERENCE;
+                 ExpectLoc:=LOC_REFERENCE;
                end
              else
              { ansi/widestrings must be registered, so we can dispose them }
-              if Is_AnsiString(resultdef) or
-                 Is_WideString(resultdef) or
-                 Is_UnicodeString(resultdef) then
+              if Is_AnsiString(ResultDef) or
+                 Is_WideString(ResultDef) or
+                 Is_UnicodeString(ResultDef) then
                begin
-                 expectloc:=LOC_REFERENCE;
+                 ExpectLoc:=LOC_REFERENCE;
                end
              else
              { we have only to handle the result if it is used }
-              if (cnf_return_value_used in callnodeflags) then
-                expectloc:=get_expect_loc
+              if (cnf_return_value_used in CallNodeFlags) then
+                ExpectLoc:=GetExpectLoc
              else
-               expectloc:=LOC_VOID;
+               ExpectLoc:=LOC_VOID;
            end
          else
-           expectloc:=LOC_VOID;
+           ExpectLoc:=LOC_VOID;
 
          { create tree for VMT entry if required }
-         gen_vmt_entry_load;
+         Gen_VMT_Entry_Load;
       end;
 
 
@@ -5116,50 +5116,50 @@ implementation
                        INLINING SUPPORT
 **************************************************************************}
 
-    function TCallNode.replaceparaload(var n: TNode; arg: pointer): TForEachNodeResult;
+    function TCallNode.ReplaceParaLoad(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        paras: TCallParaNode;
-        temp: TNode;
-        indexnr : integer;
+        lParas: TCallParaNode;
+        lTempNode: TNode;
+        lIndex : Integer;
       begin
-        result := fen_false;
-        n.fileinfo := PFilePosInfo(arg)^;
-        if (n.nodetype = loadn) then
+        Result := fen_false;
+        ANode.FileInfo := PFilePosInfo(AArg)^;
+        if (ANode.NodeType = loadn) then
           begin
-            case TLoadNode(n).symtableentry.typ of
+            case TLoadNode(ANode).SymTableEntry.typ of
               paravarsym :
                 begin
-                  paras := TCallParaNode(left);
-                  while Assigned(paras) and
-                        (paras.parasym <> TLoadNode(n).symtableentry) do
-                    paras := TCallParaNode(paras.right);
-                  if Assigned(paras) then
+                  lParas := TCallParaNode(Left);
+                  while Assigned(lParas) and
+                        (lParas.ParaSym <> TLoadNode(ANode).SymTableEntry) do
+                    lParas := TCallParaNode(lParas.Right);
+                  if Assigned(lParas) then
                     begin
-                      temp:=paras.left.GetCopy;
+                      lTempNode:=lParas.Left.GetCopy;
                       { inherit modification information, this is needed by the dfa/cse }
-                      temp.flags:=temp.flags+(n.flags*[nf_modify,nf_write,nf_address_taken]);
-                      n.free;
-                      n:=temp;
-                      TypeCheckPass(n);
-                      result := fen_true;
+                      lTempNode.Flags:=lTempNode.Flags+(ANode.Flags*[nf_modify,nf_write,nf_address_taken]);
+                      ANode.free;
+                      ANode:=lTempNode;
+                      TypeCheckPass(ANode);
+                      Result := fen_true;
                     end;
                 end;
               localvarsym :
                 begin
                   { local? }
-                  if (TLoadNode(n).symtableentry.owner <> TProcDef(procdefinition).LocalST) then
+                  if (TLoadNode(ANode).SymTableEntry.owner <> TProcDef(ProcDefinition).LocalST) then
                     exit;
-                  indexnr:=TLoadNode(n).symtableentry.owner.SymList.IndexOf(TLoadNode(n).symtableentry);
-                  if (indexnr >= inlinelocals.count) or
-                     not Assigned(inlinelocals[indexnr]) then
+                  lIndex:=TLoadNode(ANode).SymTableEntry.owner.SymList.IndexOf(TLoadNode(ANode).SymTableEntry);
+                  if (lIndex >= InlineLocals.count) or
+                     not Assigned(InlineLocals[lIndex]) then
                     InternalError(20040720);
-                  temp := TNode(inlinelocals[indexnr]).GetCopy;
+                  lTempNode := TNode(InlineLocals[lIndex]).GetCopy;
                   { inherit modification information, this is needed by the dfa/cse }
-                  temp.flags:=temp.flags+(n.flags*[nf_modify,nf_write,nf_address_taken]);
-                  n.free;
-                  n:=temp;
-                  TypeCheckPass(n);
-                  result := fen_true;
+                  lTempNode.Flags:=lTempNode.Flags+(ANode.Flags*[nf_modify,nf_write,nf_address_taken]);
+                  ANode.free;
+                  ANode:=lTempNode;
+                  TypeCheckPass(ANode);
+                  Result := fen_true;
                 end;
               else
                 ;
@@ -5168,90 +5168,90 @@ implementation
       end;
 
 
-    procedure TCallNode.createlocaltemps(p:TObject;arg:pointer);
+    procedure TCallNode.CreateLocalTemps(AObject:TObject;AArg:Pointer);
       var
-        tempnode: TTempCreateNode;
-        indexnr : integer;
+        lTempNode: TTempCreateNode;
+        lIndex : Integer;
       begin
-        if (TSym(p).typ <> localvarsym) then
+        if (TSym(AObject).typ <> localvarsym) then
           exit;
-        indexnr:=TSym(p).Owner.SymList.IndexOf(p);
-        if (indexnr >= inlinelocals.count) then
-          inlinelocals.count:=indexnr+10;
-        if (vo_is_funcret in TAbstractVarSym(p).VarOptions) then
+        lIndex:=TSym(AObject).Owner.SymList.IndexOf(AObject);
+        if (lIndex >= InlineLocals.count) then
+          InlineLocals.count:=lIndex+10;
+        if (vo_is_funcret in TAbstractVarSym(AObject).VarOptions) then
           begin
-            if not Assigned(funcretnode) then
+            if not Assigned(FuncRetNode) then
               InternalError(200709081);
-            inlinelocals[indexnr] := funcretnode.GetCopy
+            InlineLocals[lIndex] := FuncRetNode.GetCopy
           end
         else
           begin
-            tempnode :=CTempCreateNode.create(TAbstractVarSym(p).vardef,
-              TAbstractVarSym(p).vardef.Size,tt_persistent,TAbstractVarSym(p).Is_RegVar(false));
-            addstatement(inlineinitstatement,tempnode);
+            lTempNode :=CTempCreateNode.Create(TAbstractVarSym(AObject).vardef,
+              TAbstractVarSym(AObject).vardef.Size,tt_persistent,TAbstractVarSym(AObject).Is_RegVar(false));
+            AddStatement(InlineInitStatement,lTempNode);
 
             if LocalVarTrashing <> -1 then
-              CNodeUtils.maybe_trash_variable(inlineinitstatement,TAbstractNormalVarSym(p),CTempRefNode.create(tempnode));
+              CNodeUtils.Maybe_Trash_Variable(InlineInitStatement,TAbstractNormalVarSym(AObject),CTempRefNode.Create(lTempNode));
 
-            addstatement(inlinecleanupstatement,CTempDeleteNode.create(tempnode));
+            AddStatement(InlineCleanupStatement,CTempDeleteNode.Create(lTempNode));
             { inherit addr_taken flag }
-            if (TAbstractVarSym(p).AddrTaken) then
-              tempnode.includetempflag(ti_addr_taken);
-            inlinelocals[indexnr] := CTempRefNode.create(tempnode);
+            if (TAbstractVarSym(AObject).AddrTaken) then
+              lTempNode.IncludeTempFlag(ti_addr_taken);
+            InlineLocals[lIndex] := CTempRefNode.Create(lTempNode);
           end;
       end;
 
 
-    function nonlocalvars(var n: TNode; arg: pointer): TForEachNodeResult;
+    function NonLocalVars(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       begin
-        result := fen_false;
+        Result := fen_false;
         { this is just to play it safe, there are more safe situations }
-        if (n.nodetype = derefn) or
-           ((n.nodetype = loadn) and
+        if (ANode.NodeType = derefn) or
+           ((ANode.NodeType = loadn) and
             { can be nil in case of internally generated labels like $raiseaddr }
-            Assigned(TLoadNode(n).SymTable) and
+            Assigned(TLoadNode(ANode).SymTable) and
             { globals and fields of (possibly global) objects could always be changed in the callee }
-            ((TLoadNode(n).SymTable.SymTableType in [GlobalSymTable,ObjectSymtable]) or
+            ((TLoadNode(ANode).SymTable.SymTableType in [GlobalSymTable,ObjectSymtable]) or
             { statics can only be modified by functions in the same unit }
-             ((TLoadNode(n).SymTable.SymTableType = staticsymtable) and
-              (TLoadNode(n).SymTable = TSymTable(arg))) or
+             ((TLoadNode(ANode).SymTable.SymTableType = staticsymtable) and
+              (TLoadNode(ANode).SymTable = TSymTable(AArg))) or
              { if the addr of the symbol is taken somewhere, it can be also non-local }
-             ((TLoadNode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
-	      (TAbstractVarSym(TLoadNode(n).symtableentry).AddrTaken))
+             ((TLoadNode(ANode).SymTableEntry.typ in [localvarsym,paravarsym,staticvarsym]) and
+	      (TAbstractVarSym(TLoadNode(ANode).SymTableEntry).AddrTaken))
             )
            ) or
-           ((n.nodetype = subscriptn) and
-            (TSubscriptNode(n).vs.owner.SymTableType = ObjectSymtable)) then
-          result := fen_norecurse_true;
+           ((ANode.NodeType = subscriptn) and
+            (TSubscriptNode(ANode).FieldSym.owner.SymTableType = ObjectSymtable)) then
+          Result := fen_norecurse_true;
       end;
 
 
-    function TCallNode.paraneedsinlinetemp(para: TCallParaNode; const pushconstaddr, complexpara: boolean): boolean;
+    function TCallNode.ParaNeedsInlineTemp(APara: TCallParaNode; const APushConstAddr, AComplexPara: Boolean): Boolean;
       begin
         { if it's an assignable call-by-reference parameter, we cannot pass a
           temp since then the modified valua will be lost }
-        if para.parasym.VarSpez in [vs_var,vs_out] then
+        if APara.ParaSym.VarSpez in [vs_var,vs_out] then
           exit(false);
 
         { We cannot create a formaldef temp and assign something to it }
-        if para.parasym.vardef.typ=formaldef then
+        if APara.ParaSym.vardef.typ=formaldef then
           exit(false);
 
         { We don't need temps for parameters that are already temps, except if
           the passed temp could be put in a regvar while the parameter inside
           the routine cannot be (e.g., because its address is taken in the
           routine), or if the temp is a const and the parameter gets modified }
-        if (para.left.nodetype=temprefn) and
-           (not(ti_may_be_in_reg in TTempRefNode(para.left).tempflags) or
-            not(TParaVarSym(para.parasym).VarRegable in [vr_none,vr_addr])) and
-           (not(ti_const in TTempRefNode(para.left).tempflags) or
-            (TParaVarSym(para.parasym).VarState in [vs_initialised,vs_declared,vs_read])) then
+        if (APara.Left.NodeType=temprefn) and
+           (not(ti_may_be_in_reg in TTempRefNode(APara.Left).TempFlags) or
+            not(TParaVarSym(APara.ParaSym).VarRegable in [vr_none,vr_addr])) and
+           (not(ti_const in TTempRefNode(APara.Left).TempFlags) or
+            (TParaVarSym(APara.ParaSym).VarState in [vs_initialised,vs_declared,vs_read])) then
           exit(false);
 
         { We need a temp if the passed value will not be in memory, while
           the parameter inside the routine must be in memory }
-        if (TParaVarSym(para.parasym).VarRegable in [vr_none,vr_addr]) and
-           not(para.left.expectloc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+        if (TParaVarSym(APara.ParaSym).VarRegable in [vr_none,vr_addr]) and
+           not(APara.Left.ExpectLoc in [LOC_REFERENCE,LOC_CREFERENCE]) then
           exit(true);
 
         { We try to handle complex expressions later by taking their address
@@ -5259,11 +5259,11 @@ implementation
           the value is used; that doesn't work if we cannot take the address
           of the expression though, in which case we store the result of the
           expression in a temp }
-        if (complexpara and not(para.left.expectloc in [LOC_REFERENCE,LOC_CREFERENCE]) or
-           (complexpara and
-            (not valid_for_addr(para.left,false) or
-             (para.left.nodetype=calln) or
-             is_constnode(para.left)))) then
+        if (AComplexPara and not(APara.Left.ExpectLoc in [LOC_REFERENCE,LOC_CREFERENCE]) or
+           (AComplexPara and
+            (not valid_for_addr(APara.Left,false) or
+             (APara.Left.NodeType=calln) or
+             Is_ConstNode(APara.Left)))) then
           exit(true);
 
         { Normally, we do not need to create a temp for value parameters that
@@ -5282,17 +5282,17 @@ implementation
           (although this is technically undefined behaviour, since with
            "const" the programmer tells the compiler this argument will not
            change). }
-        if (((para.parasym.VarSpez=vs_value) and
-             (para.parasym.VarState in [vs_initialised,vs_declared,vs_read])) or
-            ((para.parasym.VarSpez=vs_const) and
-             not pushconstaddr)) and
-           foreachnodestatic(para.left,@nonlocalvars,pointer(symtableproc)) then
+        if (((APara.ParaSym.VarSpez=vs_value) and
+             (APara.ParaSym.VarState in [vs_initialised,vs_declared,vs_read])) or
+            ((APara.ParaSym.VarSpez=vs_const) and
+             not APushConstAddr)) and
+           ForEachNodeStatic(APara.Left,@NonLocalVars,Pointer(SymTableProc)) then
           exit(true);
 
         { Value parameters of which we know they are modified by definition
           have to be copied to a temp }
-        if (para.parasym.VarSpez=vs_value) and
-           not(para.parasym.VarState in [vs_initialised,vs_declared,vs_read]) then
+        if (APara.ParaSym.VarSpez=vs_value) and
+           not(APara.ParaSym.VarState in [vs_initialised,vs_declared,vs_read]) then
           exit(true);
 
         { the compiler expects that it can take the address of parameters passed by reference in
@@ -5309,41 +5309,41 @@ implementation
 
           is still folded. (FK)
           }
-        if (para.parasym.VarSpez=vs_const) and
+        if (APara.ParaSym.VarSpez=vs_const) and
            { const para's can get vs_readwritten if their address is taken ->
              in case they are not passed by reference, to keep the same
              behaviour as without inlining we have to make a copy in case the
              originally passed parameter value gets changed inside the callee
            }
-           (not pushconstaddr and
-            (para.parasym.VarState=vs_readwritten)
+           (not APushConstAddr and
+            (APara.ParaSym.VarState=vs_readwritten)
            ) or
            { call-by-reference const's may need to be passed by reference to
              function called in the inlined code }
-           (pushconstaddr and
-            not valid_for_addr(para.left,false)) then
+           (APushConstAddr and
+            not valid_for_addr(APara.Left,false)) then
           exit(true);
 
         { insert value parameters directly if they are complex instead
           of inserting a reference to the temp.
           - this keeps the node tree simpler
           - alignment is propagated }
-        if (para.parasym.VarSpez=vs_value) and
-          complexpara then
+        if (APara.ParaSym.VarSpez=vs_value) and
+          AComplexPara then
           exit(true);
 
-        result:=false;
+        Result:=false;
       end;
 
 
-    function TCallNode.maybecreateinlineparatemp(para: TCallParaNode; out complexpara: boolean): boolean;
+    function TCallNode.MaybeCreateInlineParaTemp(APara: TCallParaNode; out AComplexPara: Boolean): Boolean;
       var
-        tempnode: TTempCreateNode;
-        realtarget: TNode;
-        paracomplexity: LongInt;
-        pushconstaddr: boolean;
+        lTempNode: TTempCreateNode;
+        lRealTarget: TNode;
+        lParaComplexity: LongInt;
+        lPushConstAddr: Boolean;
       begin
-        result:=false;
+        Result:=false;
         { determine how a parameter is passed to the inlined body
           There are three options:
             - insert the node tree of the callparanode directly
@@ -5359,176 +5359,176 @@ implementation
         }
 
         { pre-compute some values }
-        paracomplexity:=node_complexity(para.left);
-        if para.parasym.VarSpez=vs_const then
-          pushconstaddr:=ParaManager.Push_Addr_Param(vs_const,para.parasym.vardef,procdefinition.ProcCallOption)
+        lParaComplexity:=Node_Complexity(APara.Left);
+        if APara.ParaSym.VarSpez=vs_const then
+          lPushConstAddr:=ParaManager.Push_Addr_Param(vs_const,APara.ParaSym.vardef,ProcDefinition.ProcCallOption)
         else
-          pushconstaddr:=false;
-        realtarget:=actualtargetnode(@para.left)^;
+          lPushConstAddr:=false;
+        lRealTarget:=ActualTargetNode(@APara.Left)^;
 
         { if the parameter is "complex", try to take the address of the
           parameter expression, store it in a temp and replace occurrences of
           the parameter with dereferencings of this temp
         }
-        complexpara:=
+        AComplexPara:=
           { don't create a temp. for function results }
-          not(nf_is_funcret in realtarget.flags) and
+          not(nf_is_funcret in lRealTarget.Flags) and
           { this makes only sense if the parameter is reasonably complex,
             otherwise inserting directly is a better solution }
           (
-           (paracomplexity>2) or
+           (lParaComplexity>2) or
            { don't create a temp. for the often seen case that p^ is passed to a var parameter }
-           ((paracomplexity>1) and
-            not((realtarget.nodetype=derefn) and (para.parasym.VarSpez in [vs_var,vs_out,vs_constref])) and
-            not((realtarget.nodetype=loadn) and TLoadNode(realtarget).is_addr_param_load) and
-            not(realtarget.nodetype=realconstn)
+           ((lParaComplexity>1) and
+            not((lRealTarget.NodeType=derefn) and (APara.ParaSym.VarSpez in [vs_var,vs_out,vs_constref])) and
+            not((lRealTarget.NodeType=loadn) and TLoadNode(lRealTarget).Is_Addr_Param_Load) and
+            not(lRealTarget.NodeType=realconstn)
            )
           );
 
         { check if we have to create a temp, assign the parameter's
           contents to that temp and then substitute the parameter
           with the temp everywhere in the function                  }
-        if paraneedsinlinetemp(para,pushconstaddr,complexpara) then
+        if ParaNeedsInlineTemp(APara,lPushConstAddr,AComplexPara) then
           begin
-            tempnode:=CTempCreateNode.create(para.parasym.vardef,para.parasym.vardef.Size,
-              tt_persistent,TParaVarSym(para.parasym).Is_RegVar(false));
-            addstatement(inlineinitstatement,tempnode);
+            lTempNode:=CTempCreateNode.Create(APara.ParaSym.vardef,APara.ParaSym.vardef.Size,
+              tt_persistent,TParaVarSym(APara.ParaSym).Is_RegVar(false));
+            AddStatement(InlineInitStatement,lTempNode);
 
-            addstatement(inlinecleanupstatement,CTempDeleteNode.create(tempnode));
+            AddStatement(InlineCleanupStatement,CTempDeleteNode.Create(lTempNode));
 
-            addstatement(inlineinitstatement,CAssignmentNode.create(CTempRefNode.create(tempnode),
-              para.left));
+            AddStatement(InlineInitStatement,CAssignmentNode.Create(CTempRefNode.Create(lTempNode),
+              APara.Left));
 
-            para.left := CTempRefNode.create(tempnode);
+            APara.Left := CTempRefNode.Create(lTempNode);
             { inherit addr_taken flag }
-            if (TAbstractVarSym(para.parasym).AddrTaken) then
-              tempnode.includetempflag(ti_addr_taken);
+            if (TAbstractVarSym(APara.ParaSym).AddrTaken) then
+              lTempNode.IncludeTempFlag(ti_addr_taken);
 
             { inherit const }
-            if TAbstractVarSym(para.parasym).VarSpez=vs_const then
+            if TAbstractVarSym(APara.ParaSym).VarSpez=vs_const then
               begin
-                tempnode.includetempflag(ti_const);
+                lTempNode.IncludeTempFlag(ti_const);
 
                 { apply less strict rules for the temp. to be a register than
                   ttempcreatenode does
 
                   this way, dyn. array, ansistrings etc. can be put into registers as well }
-                if TParaVarSym(para.parasym).Is_RegVar(false) then
-                  tempnode.includetempflag(ti_may_be_in_reg);
+                if TParaVarSym(APara.ParaSym).Is_RegVar(false) then
+                  lTempNode.IncludeTempFlag(ti_may_be_in_reg);
               end;
 
-            result:=true;
+            Result:=true;
           end
         { for formaldefs, we do not need a temp., but it must be inherited if they are not regable }
-        else if (para.parasym.vardef.typ=formaldef) and not(TParaVarSym(para.parasym).Is_RegVar(false)) then
-          make_not_regable(para.left,[ra_addr_regable]);
+        else if (APara.ParaSym.vardef.typ=formaldef) and not(TParaVarSym(APara.ParaSym).Is_RegVar(false)) then
+          make_not_regable(APara.Left,[ra_addr_regable]);
       end;
 
 
-    procedure TCallNode.createinlineparas;
+    procedure TCallNode.CreateInlineParas;
       var
-        para: TCallParaNode;
-        n: TNode;
-        complexpara: boolean;
+        lPara: TCallParaNode;
+        lNode: TNode;
+        lComplexPara: Boolean;
       begin
         { parameters }
-        para := TCallParaNode(left);
-        while Assigned(para) do
+        lPara := TCallParaNode(Left);
+        while Assigned(lPara) do
           begin
-            if (para.parasym.typ = paravarsym) and
-               ((para.parasym.refs>0) or
+            if (lPara.ParaSym.typ = paravarsym) and
+               ((lPara.ParaSym.refs>0) or
                 not(cs_opt_dead_values in CurrentSettings.OptimizerSwitches) or
-                might_have_sideeffects(para.left)) then
+                Might_Have_SideEffects(lPara.Left)) then
               begin
                 { must take copy of para.left, because if it contains a       }
                 { temprefn pointing to a copied temp (e.g. methodpointer),    }
                 { then this parameter must be changed to point to the copy of }
                 { that temp (JM)                                              }
-                n := para.left.GetCopy;
-                para.left.free;
-                para.left := n;
+                lNode := lPara.Left.GetCopy;
+                lPara.Left.free;
+                lPara.Left := lNode;
 
-                FirstPass(para.left);
+                FirstPass(lPara.Left);
 
-                if not maybecreateinlineparatemp(para,complexpara) and
-                   complexpara then
-                  wrapcomplexinlinepara(para);
+                if not MaybeCreateInlineParaTemp(lPara,lComplexPara) and
+                   lComplexPara then
+                  WrapComplexInlinePara(lPara);
               end;
-            para := TCallParaNode(para.right);
+            lPara := TCallParaNode(lPara.Right);
           end;
         { local variables }
-        if not Assigned(TProcDef(procdefinition).LocalST) or
-           (TProcDef(procdefinition).LocalST.SymList.count = 0) then
+        if not Assigned(TProcDef(ProcDefinition).LocalST) or
+           (TProcDef(ProcDefinition).LocalST.SymList.count = 0) then
           exit;
-        inlinelocals.count:=TProcDef(procdefinition).LocalST.SymList.count;
-        TProcDef(procdefinition).LocalST.SymList.ForEachCall(@createlocaltemps,nil);
+        InlineLocals.count:=TProcDef(ProcDefinition).LocalST.SymList.count;
+        TProcDef(ProcDefinition).LocalST.SymList.ForEachCall(@CreateLocalTemps,nil);
       end;
 
 
-    procedure TCallNode.wrapcomplexinlinepara(para: TCallParaNode);
+    procedure TCallNode.WrapComplexInlinePara(APara: TCallParaNode);
       var
-        ptrtype: TDef;
-        tempnode: TTempCreateNode;
-        paraaddr: TAddrNode;
-        isfuncretnode : boolean;
+        lPointerType: TDef;
+        lTempNode: TTempCreateNode;
+        lParaAddr: TAddrNode;
+        lIsFuncRetNode : Boolean;
       begin
-        ptrtype:=CPointerDef.getreusable(para.left.resultdef);
-        tempnode:=CTempCreateNode.create(ptrtype,ptrtype.Size,tt_persistent,true);
-        addstatement(inlineinitstatement,tempnode);
-        isfuncretnode:=nf_is_funcret in para.left.flags;
-        if isfuncretnode then
-          addstatement(inlinecleanupstatement,CTempDeleteNode.create_normal_temp(tempnode))
+        lPointerType:=CPointerDef.getreusable(APara.Left.ResultDef);
+        lTempNode:=CTempCreateNode.Create(lPointerType,lPointerType.Size,tt_persistent,true);
+        AddStatement(InlineInitStatement,lTempNode);
+        lIsFuncRetNode:=nf_is_funcret in APara.Left.Flags;
+        if lIsFuncRetNode then
+          AddStatement(InlineCleanupStatement,CTempDeleteNode.Create_Normal_Temp(lTempNode))
         else
-          addstatement(inlinecleanupstatement,CTempDeleteNode.create(tempnode));
+          AddStatement(InlineCleanupStatement,CTempDeleteNode.Create(lTempNode));
         { inherit addr_taken flag }
-        if (TAbstractVarSym(para.parasym).AddrTaken) then
-          tempnode.includetempflag(ti_addr_taken);
+        if (TAbstractVarSym(APara.ParaSym).AddrTaken) then
+          lTempNode.IncludeTempFlag(ti_addr_taken);
         { inherit read only }
-        if TAbstractVarSym(para.parasym).VarSpez=vs_const then
-          tempnode.includetempflag(ti_const);
-        paraaddr:=CAddrNode.Create_Internal(para.left);
-        include(paraaddr.addrnodeflags,anf_typedaddr);
-        addstatement(inlineinitstatement,CAssignmentNode.create(CTempRefNode.create(tempnode),
-          paraaddr));
-        para.left:=CDerefNode.create(CTempRefNode.create(tempnode));
-        if isfuncretnode then
-          Include(para.left.flags,nf_is_funcret);
+        if TAbstractVarSym(APara.ParaSym).VarSpez=vs_const then
+          lTempNode.IncludeTempFlag(ti_const);
+        lParaAddr:=CAddrNode.Create_Internal(APara.Left);
+        include(lParaAddr.AddrNodeFlags,anf_typedaddr);
+        AddStatement(InlineInitStatement,CAssignmentNode.Create(CTempRefNode.Create(lTempNode),
+          lParaAddr));
+        APara.Left:=CDerefNode.Create(CTempRefNode.Create(lTempNode));
+        if lIsFuncRetNode then
+          Include(APara.Left.Flags,nf_is_funcret);
       end;
 
 
-    function UsesTmp(var n: TNode; arg: pointer): TForEachNodeResult;
+    function UsesTmp(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       begin
         Result:=fen_false;
-        if (n.nodetype=temprefn) and (TTempRefNode(n).tempinfo=arg) then
+        if (ANode.NodeType=temprefn) and (TTempRefNode(ANode).TempInfo=AArg) then
           Result:=fen_norecurse_true;
       end;
 
 
-    function TCallNode.optimize_funcret_assignment(inlineblock: TBlockNode): TNode;
+    function TCallNode.Optimize_FuncRet_Assignment(AInlineBlock: TBlockNode): TNode;
       var
-        hp  : TStatementNode;
-        hp2 : TNode;
-        resassign : TAssignmentNode;
+        lStatement  : TStatementNode;
+        lNode2 : TNode;
+        lResultAssignment : TAssignmentNode;
       begin
-        result:=nil;
-        if not Assigned(funcretnode) or
-           not(cnf_return_value_used in callnodeflags) then
+        Result:=nil;
+        if not Assigned(FuncRetNode) or
+           not(cnf_return_value_used in CallNodeFlags) then
           exit;
 
         { block already optimized? }
-        if not(inlineblock.nodetype=blockn) then
+        if not(AInlineBlock.NodeType=blockn) then
           exit;
 
         { tempcreatenode for the function result }
-        hp:=TStatementNode(inlineblock.left);
-        if not(Assigned(hp)) or
-           (hp.left.nodetype <> tempcreaten) or
-           not(nf_is_funcret in hp.left.flags) then
+        lStatement:=TStatementNode(AInlineBlock.Left);
+        if not(Assigned(lStatement)) or
+           (lStatement.Left.NodeType <> tempcreaten) or
+           not(nf_is_funcret in lStatement.Left.Flags) then
           exit;
 
-        hp:=TStatementNode(hp.right);
-        if not(Assigned(hp)) or
-           (hp.left.nodetype<>assignn)
+        lStatement:=TStatementNode(lStatement.Right);
+        if not(Assigned(lStatement)) or
+           (lStatement.Left.NodeType<>assignn)
           { FK: check commented, original comment was:
 
               constant assignment? right must be a constant (mainly to avoid trying
@@ -5545,41 +5545,41 @@ implementation
           exit;
 
         { left must be function result }
-        resassign:=TAssignmentNode(hp.left);
-        hp2:=resassign.left;
+        lResultAssignment:=TAssignmentNode(lStatement.Left);
+        lNode2:=lResultAssignment.Left;
         { can have extra type conversion due to absolute mapping
           of <fucntionname> on function result var }
-        if (hp2.nodetype=typeconvn) and (TTypeConvNode(hp2).convtype=tc_equal) then
-          hp2:=TTypeConvNode(hp2).left;
-        if (hp2.nodetype<>temprefn) or
+        if (lNode2.NodeType=typeconvn) and (TTypeConvNode(lNode2).ConvType=tc_equal) then
+          lNode2:=TTypeConvNode(lNode2).Left;
+        if (lNode2.NodeType<>temprefn) or
           { check if right references the temp. being removed, i.e. using an uninitialized result }
-          foreachnodestatic(resassign.right,@UsesTmp,TTempRefNode(hp2).tempinfo) or
-          not(nf_is_funcret in hp2.flags) then
+          ForEachNodeStatic(lResultAssignment.Right,@UsesTmp,TTempRefNode(lNode2).TempInfo) or
+          not(nf_is_funcret in lNode2.Flags) then
           exit;
 
         { tempdelete to normal of the function result }
-        hp:=TStatementNode(hp.right);
-        if not(Assigned(hp)) or
-           (hp.left.nodetype <> tempdeleten) then
+        lStatement:=TStatementNode(lStatement.Right);
+        if not(Assigned(lStatement)) or
+           (lStatement.Left.NodeType <> tempdeleten) then
           exit;
 
         { the function result once more }
-        hp:=TStatementNode(hp.right);
-        if not(Assigned(hp)) or
-           (hp.left.nodetype<>temprefn) or
-           not(nf_is_funcret in hp.left.flags) then
+        lStatement:=TStatementNode(lStatement.Right);
+        if not(Assigned(lStatement)) or
+           (lStatement.Left.NodeType<>temprefn) or
+           not(nf_is_funcret in lStatement.Left.Flags) then
           exit;
 
         { should be the end }
-        if Assigned(hp.right) then
+        if Assigned(lStatement.Right) then
           exit;
 
         { we made it! }
-        result:=CTypeConvNode.Create_Internal(TAssignmentNode(resassign).right.GetCopy,hp2.resultdef);
-        node_reset_flags(result,[],[tnf_pass1_done]);
-        FirstPass(result);
-        if Assigned(result) then
-          set_para_callnode(nil);
+        Result:=CTypeConvNode.Create_Internal(TAssignmentNode(lResultAssignment).Right.GetCopy,lNode2.ResultDef);
+        Node_Reset_Flags(Result,[],[tnf_pass1_done]);
+        FirstPass(Result);
+        if Assigned(Result) then
+          SetParaCallNode(nil);
       end;
 
 end.

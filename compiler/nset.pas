@@ -36,108 +36,108 @@ interface
        PCaseLabel = ^TCaseLabel;
        TCaseLabel = record
           { unique blockid }
-          blockid : LongInt;
+          BlockID : LongInt;
           { left and right tree node }
-          less,
-          greater : PCaseLabel;
+          Less,
+          Greater : PCaseLabel;
 
-          labellabel : TAsmLabel;
+          LabelLabel : TAsmLabel;
 
           { range type }
-          case label_type : TLabelType of
+          case LabelType : TLabelType of
             ltOrdinal:
             (
-              _low,
-              _high       : TConstExprInt;
+              LowValue,
+              HighValue       : TConstExprInt;
             );
             ltConstString:
             (
-              _low_str,
-              _high_str   : TStringConstNode;
+              LowString,
+              HighString   : TStringConstNode;
             );
        end;
 
        PCaseBlock = ^TCaseBlock;
        TCaseBlock = record
           { label (only used in pass_generate_code) }
-          blocklabel : TAsmLabel;
+          BlockLabel : TAsmLabel;
 
           { shortcut - set to true if blocklabel isn't actually unique to the
             case block due to one of the following conditions:
             - if the node contains a jump, then the label is set to that jump's destination,
             - if the node is empty, the label is set to the end label. }
-          shortcut: Boolean;
+          Shortcut: Boolean;
 
-          statementlabel : TLabelNode;
+          StatementLabel : TLabelNode;
           { instructions }
-          statement  : TNode;
+          Statement  : TNode;
        end;
 
        TSetElementNode = class(TBinaryNode)
-          constructor create(l,r : TNode);virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create(ALeft,ARight : TNode);virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TSetElementNodeClass = class of TSetElementNode;
 
        TInNode = class(TBinOpNode)
-          constructor create(l,r : TNode);virtual;reintroduce;
-          function pass_typecheck:TNode;override;
-          function simplify(forinline : boolean):TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create(ALeft,ARight : TNode);virtual;reintroduce;
+          function Pass_TypeCheck:TNode;override;
+          function Simplify(AForInline : Boolean):TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TInNodeClass = class of TInNode;
 
        TRangeNode = class(TBinaryNode)
-          constructor create(l,r : TNode);virtual;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
+          constructor Create(ALeft,ARight : TNode);virtual;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
        end;
        TRangeNodeClass = class of TRangeNode;
 
        TCaseNode = class(TUnaryNode)
         strict private
           { Number of labels }
-          flabelcnt: cardinal;
+          FLabelCnt: Cardinal;
           { Number of individual values checked, counting each value in a range
            individually (e.g. 0..2 counts as 3). }
-          flabelcoverage: qword;
-          fcountsuptodate: boolean;
+          FLabelCoverage: QWord;
+          FCountsUpToDate: Boolean;
 
-          function getlabelcnt: cardinal;
-          function getlabelcoverage: qword;
-          procedure updatecoverage;
-          procedure checkordinalcoverage;
+          function GetLabelCnt: Cardinal;
+          function GetLabelCoverage: QWord;
+          procedure UpdateCoverage;
+          procedure CheckOrdinalCoverage;
         public
-          blocks    : TFPList;
-          elseblock : TNode;
+          Blocks    : TFPList;
+          ElseBlock : TNode;
 
-          constructor create(l:TNode);virtual;
+          constructor Create(ALeft:TNode);virtual;
           destructor Destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function dogetcopy : TNode;override;
-          procedure printnodetree(var t:text);override;
-          procedure insertintolist(l : TNodeList);override;
-          function pass_typecheck:TNode;override;
-          function pass_1 : TNode;override;
-          function simplify(forinline:boolean):TNode;override;
-          function docompare(p: TNode): boolean; override;
-          procedure addlabel(blockid:LongInt;const l,h : TConstExprInt); overload;
-          procedure addlabel(blockid:LongInt;l,h : TStringConstNode); overload;
-          procedure addblock(blockid:LongInt;instr:TNode);
-          procedure addelseblock(instr:TNode);
+          procedure DerefImpl;override;
+          function DoGetCopy : TNode;override;
+          procedure PrintNodeTree(var AText:text);override;
+          procedure InsertIntoList(AList : TNodeList);override;
+          function Pass_TypeCheck:TNode;override;
+          function Pass_1 : TNode;override;
+          function Simplify(AForInline:Boolean):TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          procedure AddLabel(ABlockID:LongInt;const ALowValue,AHighValue : TConstExprInt); overload;
+          procedure AddLabel(ABlockID:LongInt;ALowString,AHighString : TStringConstNode); overload;
+          procedure AddBlock(ABlockID:LongInt;AStatement:TNode);
+          procedure AddElseBlock(AStatement:TNode);
 
-          property labelcnt: cardinal read getlabelcnt;
+          property LabelCnt: Cardinal read GetLabelCnt;
           { returns one less than the covered case range, so that it
             does not overflow for a fully covered qword range }
-          property labelcoverage: qword read getlabelcoverage;
+          property LabelCoverage: QWord read GetLabelCoverage;
          protected
-          flabels    : PCaseLabel;
+          FLabels    : PCaseLabel;
          public
-          property labels: PCaseLabel read flabels;
+          property Labels: PCaseLabel read FLabels;
        end;
        TCaseNodeClass = class of TCaseNode;
 
@@ -148,9 +148,9 @@ interface
        CCaseNode : TCaseNodeClass = TCaseNode;
 
     { searches the highest label }
-    function case_get_max(root : PCaseLabel) : TConstExprInt;
+    function Case_Get_Max(ARoot : PCaseLabel) : TConstExprInt;
     { searches the lowest label }
-    function case_get_min(root : PCaseLabel) : TConstExprInt;
+    function Case_Get_Min(ARoot : PCaseLabel) : TConstExprInt;
 
 
 implementation
@@ -158,7 +158,7 @@ implementation
     uses
       Verbose,CUtils,
       symconst,symdef,SymSym,SymTable,defutil,defcmp,
-      htypechk,pass_1,
+      htypechk,Pass_1,
       nadd,nbas,ncal,ncnv,nld,nutils,
       cgbase;
 
@@ -167,38 +167,38 @@ implementation
                            TSETELEMENTNODE
 *****************************************************************************}
 
-    constructor TSetElementNode.create(l,r : TNode);
+    constructor TSetElementNode.Create(ALeft,ARight : TNode);
 
       begin
-         inherited create(setelementn,l,r);
+         inherited Create(setelementn,ALeft,ARight);
       end;
 
 
-    function TSetElementNode.pass_typecheck:TNode;
+    function TSetElementNode.Pass_TypeCheck:TNode;
       begin
-         result:=nil;
-         TypeCheckPass(left);
-         if Assigned(right) then
-          TypeCheckPass(right);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         Result:=nil;
+         TypeCheckPass(Left);
+         if Assigned(Right) then
+          TypeCheckPass(Right);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
-         resultdef:=left.resultdef;
+         ResultDef:=Left.ResultDef;
       end;
 
 
-    function TSetElementNode.pass_1 : TNode;
+    function TSetElementNode.Pass_1 : TNode;
 
       begin
-         result:=nil;
-         FirstPass(left);
-         if Assigned(right) then
-          FirstPass(right);
+         Result:=nil;
+         FirstPass(Left);
+         if Assigned(Right) then
+          FirstPass(Right);
          if CodeGenError then
           exit;
 
-         expectloc:=left.expectloc;
+         ExpectLoc:=Left.ExpectLoc;
       end;
 
 
@@ -206,197 +206,197 @@ implementation
                               TINNODE
 *****************************************************************************}
 
-    constructor TInNode.create(l,r : TNode);
+    constructor TInNode.Create(ALeft,ARight : TNode);
       begin
-         inherited create(inn,l,r);
+         inherited Create(inn,ALeft,ARight);
       end;
 
 
-    function TInNode.pass_typecheck:TNode;
+    function TInNode.Pass_TypeCheck:TNode;
 
       var
-        t : TNode;
+        lNode : TNode;
 
-        function createsetconst(psd : TSetDef) : PConstSet;
+        function CreateSetConst(ASetDef : TSetDef) : PConstSet;
         var
-          pcs : PConstSet;
-          i : LongInt;
+          lConstSet : PConstSet;
+          lIndex : LongInt;
         begin
-          new(pcs);
-          case psd.ElementDef.typ of
+          new(lConstSet);
+          case ASetDef.ElementDef.typ of
             enumdef :
               begin
-                for i := 0 to TEnumDef(psd.ElementDef).SymTable.SymList.Count - 1 do
+                for lIndex := 0 to TEnumDef(ASetDef.ElementDef).SymTable.SymList.Count - 1 do
                   begin
-                    include(pcs^,TEnumSym(TEnumDef(psd.ElementDef).SymTable.SymList[i]).Value);
+                    include(lConstSet^,TEnumSym(TEnumDef(ASetDef.ElementDef).SymTable.SymList[lIndex]).Value);
                   end;
               end;
             orddef :
               begin
-                for i:=int64(TOrdDef(psd.ElementDef).low) to int64(TOrdDef(psd.ElementDef).high) do
-                  include(pcs^,i);
+                for lIndex:=Int64(TOrdDef(ASetDef.ElementDef).low) to Int64(TOrdDef(ASetDef.ElementDef).high) do
+                  include(lConstSet^,lIndex);
               end;
             else
               InternalError(2019050516);
           end;
-          createsetconst:=pcs;
+          CreateSetConst:=lConstSet;
         end;
 
       begin
-         result:=nil;
+         Result:=nil;
 
-         resultdef:=PasBool1Type;
-         TypeCheckPass(right);
-         set_varstate(right,vs_read,[vsf_must_be_valid]);
+         ResultDef:=PasBool1Type;
+         TypeCheckPass(Right);
+         set_varstate(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
          { Convert array constructor first to set }
-         if Is_Array_Constructor(right.resultdef) then
+         if Is_Array_Constructor(Right.ResultDef) then
           begin
-            arrayconstructor_to_set(right);
+            ArrayConstructor_To_Set(Right);
             if CodeGenError then
              exit;
           end;
 
-         TypeCheckPass(left);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         TypeCheckPass(Left);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
-         if not Assigned(left.resultdef) then
+         if not Assigned(Left.ResultDef) then
            InternalError(20021126);
 
          { avoid any problems with type parameters later on }
-         if Is_TypeParam(left.resultdef) or Is_TypeParam(right.resultdef) then
+         if Is_TypeParam(Left.ResultDef) or Is_TypeParam(Right.ResultDef) then
            begin
-             resultdef:=CUndefinedType;
+             ResultDef:=CUndefinedType;
              exit;
            end;
 
-         t:=self;
-         if isbinaryoverloaded(t,[]) then
+         lNode:=self;
+         if isbinaryoverloaded(lNode,[]) then
            begin
-             result:=t;
+             Result:=lNode;
              exit;
            end;
 
-         if right.resultdef.typ<>setdef then
+         if Right.ResultDef.typ<>setdef then
            CGMessage(sym_e_set_expected);
 
          if CodeGenError then
            exit;
 
-         if not Is_Ordinal(left.resultdef) or (left.resultdef.Size > U32IntType.Size) then
+         if not Is_Ordinal(Left.ResultDef) or (Left.ResultDef.Size > U32IntType.Size) then
            begin
              CGMessage(type_h_in_range_check);
-             if Is_Signed(left.resultdef) then
-               inserttypeconv(left,S32IntType)
+             if Is_Signed(Left.ResultDef) then
+               InsertTypeConv(Left,S32IntType)
              else
-               inserttypeconv(left,U32IntType);
+               InsertTypeConv(Left,U32IntType);
            end
-         else if Assigned(TSetDef(right.resultdef).ElementDef) and
-                 not(Is_Integer(TSetDef(right.resultdef).ElementDef) and
-                     Is_Integer(left.resultdef)) then
+         else if Assigned(TSetDef(Right.ResultDef).ElementDef) and
+                 not(Is_Integer(TSetDef(Right.ResultDef).ElementDef) and
+                     Is_Integer(Left.ResultDef)) then
             { Type conversion to check things like 'char in set_of_byte'. }
             { Can't use is_subequal because that will fail for            }
             { 'widechar in set_of_char'                                   }
             { Can't use the type conversion for integers because then     }
             { "longint in set_of_byte" will give a range check error      }
             { instead of false                                            }
-            inserttypeconv(left,TSetDef(right.resultdef).ElementDef);
+            InsertTypeConv(Left,TSetDef(Right.ResultDef).ElementDef);
 
          { empty set then return false }
-         if not Assigned(TSetDef(right.resultdef).ElementDef) or
-            ((right.nodetype = setconstn) and
-             (TNormalSet(TSetConstNode(right).value_set^) = [])) then
+         if not Assigned(TSetDef(Right.ResultDef).ElementDef) or
+            ((Right.NodeType = setconstn) and
+             (TNormalSet(TSetConstNode(Right).ValueSet^) = [])) then
           begin
-            t:=COrdConstNode.create(0,PasBool1Type,false);
-            TypeCheckPass(t);
-            result:=t;
+            lNode:=COrdConstNode.Create(0,PasBool1Type,false);
+            TypeCheckPass(lNode);
+            Result:=lNode;
             exit;
           end;
 
-         result:=simplify(false);
+         Result:=Simplify(false);
       end;
 
 
-    function TInNode.simplify(forinline : boolean):TNode;
+    function TInNode.Simplify(AForInline : Boolean):TNode;
       var
-        t : TNode;
+        lNode : TNode;
       begin
-         result:=nil;
+         Result:=nil;
 
          { constant evaluation }
-         if (left.nodetype=ordconstn) then
+         if (Left.NodeType=ordconstn) then
            begin
-             if (right.nodetype=setconstn) then
+             if (Right.NodeType=setconstn) then
                begin
                  { tordconstnode.value is int64 -> signed -> the expression }
                  { below will be converted to longint on 32 bit systems due }
                  { to the rule above -> will give range check error if      }
                  { value > high(longint) if we don't take the signedness    }
                  { into account                                             }
-                 if TOrdConstNode(left).Value.signed then
-                   t:=COrdConstNode.create(byte(TOrdConstNode(left).Value.svalue in TSetConstNode(right).value_set^),
+                 if TOrdConstNode(Left).Value.signed then
+                   lNode:=COrdConstNode.Create(Byte(TOrdConstNode(Left).Value.svalue in TSetConstNode(Right).ValueSet^),
                      PasBool1Type,true)
                  else
-                   t:=COrdConstNode.create(byte(TOrdConstNode(left).Value.uvalue in TSetConstNode(right).value_set^),
+                   lNode:=COrdConstNode.Create(Byte(TOrdConstNode(Left).Value.uvalue in TSetConstNode(Right).ValueSet^),
                      PasBool1Type,true);
-                 TypeCheckPass(t);
-                 result:=t;
+                 TypeCheckPass(lNode);
+                 Result:=lNode;
                  exit;
                end
              else
                begin
-                 if (TOrdConstNode(left).Value<int64(TSetDef(right.resultdef).SetBase)) or
-                    (TOrdConstNode(left).Value>int64(TSetDef(right.resultdef).SetMax)) then
+                 if (TOrdConstNode(Left).Value<Int64(TSetDef(Right.ResultDef).SetBase)) or
+                    (TOrdConstNode(Left).Value>Int64(TSetDef(Right.ResultDef).SetMax)) then
                    begin
-                     t:=COrdConstNode.create(0, PasBool1Type, true);
-                     TypeCheckPass(t);
-                     result:=t;
+                     lNode:=COrdConstNode.Create(0, PasBool1Type, true);
+                     TypeCheckPass(lNode);
+                     Result:=lNode;
                      exit;
                    end;
                end;
            end
          { a in [a] => true, if a has no side effects }
-         else if (right.nodetype=addn) and
-           (TAddNode(right).left.nodetype=setconstn) and
-           (TSetConstNode(TAddNode(right).left).elements=0) and
-           (TAddNode(right).right.nodetype=setelementn) and
-           (TSetElementNode(TAddNode(right).right).right=nil) and
-           ((TSetElementNode(TAddNode(right).right).left.isequal(left)) or
+         else if (Right.NodeType=addn) and
+           (TAddNode(Right).Left.NodeType=setconstn) and
+           (TSetConstNode(TAddNode(Right).Left).elements=0) and
+           (TAddNode(Right).Right.NodeType=setelementn) and
+           (TSetElementNode(TAddNode(Right).Right).Right=nil) and
+           ((TSetElementNode(TAddNode(Right).Right).Left.IsEqual(Left)) or
             (
-              (TSetElementNode(TAddNode(right).right).left.nodetype=typeconvn) and
-              (TTypeConvNode(TSetElementNode(TAddNode(right).right).left).left.isequal(left))
+              (TSetElementNode(TAddNode(Right).Right).Left.NodeType=typeconvn) and
+              (TTypeConvNode(TSetElementNode(TAddNode(Right).Right).Left).Left.IsEqual(Left))
             )
            ) and
-           not(might_have_sideeffects(left,[mhs_exceptions])) then
+           not(Might_Have_SideEffects(Left,[mhs_exceptions])) then
            begin
-             t:=COrdConstNode.create(1, PasBool1Type, true);
-             TypeCheckPass(t);
-             result:=t;
+             lNode:=COrdConstNode.Create(1, PasBool1Type, true);
+             TypeCheckPass(lNode);
+             Result:=lNode;
              exit;
            end
          { ... in [] is always false }
-         else if is_emptyset(right) and
-           not(might_have_sideeffects(left,[mhs_exceptions])) then
+         else if Is_EmptySet(Right) and
+           not(Might_Have_SideEffects(Left,[mhs_exceptions])) then
            begin
-             t:=COrdConstNode.create(1, PasBool1Type, false);
-             TypeCheckPass(t);
-             result:=t;
+             lNode:=COrdConstNode.Create(1, PasBool1Type, false);
+             TypeCheckPass(lNode);
+             Result:=lNode;
              exit;
            end;
       end;
 
 
-    function TInNode.pass_1 : TNode;
+    function TInNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         expectloc:=LOC_REGISTER;
+         Result:=nil;
+         ExpectLoc:=LOC_REGISTER;
 
-         FirstPass(right);
-         FirstPass(left);
+         FirstPass(Right);
+         FirstPass(Left);
          if CodeGenError then
            exit;
       end;
@@ -406,57 +406,57 @@ implementation
                               TRANGENODE
 *****************************************************************************}
 
-    constructor TRangeNode.create(l,r : TNode);
+    constructor TRangeNode.Create(ALeft,ARight : TNode);
       var
-        value: string;
+        lValue: string;
       begin
          { if right is char and left is string then
            right should be treated as one-symbol string }
-         if is_conststringnode(l) and is_constcharnode(r) then
+         if Is_ConstStringNode(ALeft) and Is_ConstCharNode(ARight) then
            begin
-             value := char(TOrdConstNode(r).Value.uvalue) + ''#0;
-             r.free;
-             r := CStringConstNode.createstr(value);
-             DoTypeCheckPass(r);
+             lValue := char(TOrdConstNode(ARight).Value.uvalue) + ''#0;
+             ARight.free;
+             ARight := CStringConstNode.CreateStr(lValue);
+             DoTypeCheckPass(ARight);
            end;
-         inherited create(rangen,l,r);
+         inherited Create(rangen,ALeft,ARight);
       end;
 
 
-    function TRangeNode.pass_typecheck : TNode;
+    function TRangeNode.Pass_TypeCheck : TNode;
       begin
-         result:=nil;
-         TypeCheckPass(left);
-         TypeCheckPass(right);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
-         set_varstate(right,vs_read,[vsf_must_be_valid]);
+         Result:=nil;
+         TypeCheckPass(Left);
+         TypeCheckPass(Right);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
+         set_varstate(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
          { both types must be compatible }
-         if not (nf_generic_para in left.flags) and not (nf_generic_para in right.flags) and
-           (Compare_Defs(left.resultdef,right.resultdef,left.nodetype)=te_incompatible) then
-           IncompatibleTypes(left.resultdef,right.resultdef);
+         if not (nf_generic_para in Left.Flags) and not (nf_generic_para in Right.Flags) and
+           (Compare_Defs(Left.ResultDef,Right.ResultDef,Left.NodeType)=te_incompatible) then
+           IncompatibleTypes(Left.ResultDef,Right.ResultDef);
          { check if only when its a constant set and
            ignore range nodes which are generic parameter derived }
-         if not (nf_generic_para in flags) and (left.nodetype=ordconstn) and (right.nodetype=ordconstn) then
+         if not (nf_generic_para in Flags) and (Left.NodeType=ordconstn) and (Right.NodeType=ordconstn) then
           begin
             { upper limit must be greater or equal than lower limit }
-            if (TOrdConstNode(left).Value>TOrdConstNode(right).Value) and
-               ((TOrdConstNode(left).Value<0) or (TOrdConstNode(right).Value>=0)) then
+            if (TOrdConstNode(Left).Value>TOrdConstNode(Right).Value) and
+               ((TOrdConstNode(Left).Value<0) or (TOrdConstNode(Right).Value>=0)) then
               CGMessage(parser_e_upper_lower_than_lower);
           end;
-        resultdef:=left.resultdef;
+        ResultDef:=Left.ResultDef;
       end;
 
 
-    function TRangeNode.pass_1 : TNode;
+    function TRangeNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
-         FirstPass(right);
+         Result:=nil;
+         FirstPass(Left);
+         FirstPass(Right);
          if CodeGenError then
            exit;
-        expectloc:=left.expectloc;
+        ExpectLoc:=Left.ExpectLoc;
       end;
 
 
@@ -466,139 +466,139 @@ implementation
 
     { labels is the number of case-labels, while cases includes each individual
       value in a range (e.g. "0..2" counts as 3) }
-    procedure case_count_labels(root : PCaseLabel; out labels, cases: LongInt);
+    procedure CountCaseLabels(ARoot : PCaseLabel; out ALabelCount, ACaseCount: LongInt);
 
-      procedure count(p : PCaseLabel);
+      procedure Count(ALabel : PCaseLabel);
         begin
-           inc(labels);
-           inc(cases, (p^._high.svalue - p^._low.svalue) + 1);
-           if Assigned(p^.less) then
-             count(p^.less);
-           if Assigned(p^.greater) then
-             count(p^.greater);
+           inc(ALabelCount);
+           inc(ACaseCount, (ALabel^.HighValue.svalue - ALabel^.LowValue.svalue) + 1);
+           if Assigned(ALabel^.Less) then
+             Count(ALabel^.Less);
+           if Assigned(ALabel^.Greater) then
+             Count(ALabel^.Greater);
         end;
 
       begin
-        labels:=0;
-        cases:=0;
-        count(root);
+        ALabelCount:=0;
+        ACaseCount:=0;
+        Count(ARoot);
       end;
 
 
-    function case_get_max(root : PCaseLabel) : TConstExprInt;
+    function Case_Get_Max(ARoot : PCaseLabel) : TConstExprInt;
       var
-         hp : PCaseLabel;
+         lCaseLabel : PCaseLabel;
       begin
-         hp:=root;
-         while Assigned(hp^.greater) do
-           hp:=hp^.greater;
-         case_get_max:=hp^._high;
+         lCaseLabel:=ARoot;
+         while Assigned(lCaseLabel^.Greater) do
+           lCaseLabel:=lCaseLabel^.Greater;
+         Case_Get_Max:=lCaseLabel^.HighValue;
       end;
 
 
-    function case_get_min(root : PCaseLabel) : TConstExprInt;
+    function Case_Get_Min(ARoot : PCaseLabel) : TConstExprInt;
       var
-         hp : PCaseLabel;
+         lCaseLabel : PCaseLabel;
       begin
-         hp:=root;
-         while Assigned(hp^.less) do
-           hp:=hp^.less;
-         case_get_min:=hp^._low;
+         lCaseLabel:=ARoot;
+         while Assigned(lCaseLabel^.Less) do
+           lCaseLabel:=lCaseLabel^.Less;
+         Case_Get_Min:=lCaseLabel^.LowValue;
       end;
 
-    procedure deletecaselabels(p : PCaseLabel);
+    procedure DeleteCaseLabels(ALabel : PCaseLabel);
 
       begin
-         if Assigned(p^.greater) then
-           deletecaselabels(p^.greater);
-         if Assigned(p^.less) then
-           deletecaselabels(p^.less);
-         if (p^.label_type = ltConstString) then
+         if Assigned(ALabel^.Greater) then
+           DeleteCaseLabels(ALabel^.Greater);
+         if Assigned(ALabel^.Less) then
+           DeleteCaseLabels(ALabel^.Less);
+         if (ALabel^.LabelType = ltConstString) then
            begin
-             FreeAndNil(p^._low_str);
-             FreeAndNil(p^._high_str);
+             FreeAndNil(ALabel^.LowString);
+             FreeAndNil(ALabel^.HighString);
            end;
-         dispose(p);
+         dispose(ALabel);
       end;
 
-    function copycaselabel(p : PCaseLabel) : PCaseLabel;
+    function CopyCaseLabel(ALabel : PCaseLabel) : PCaseLabel;
 
       var
-         n : PCaseLabel;
+         lCopy : PCaseLabel;
 
       begin
-         new(n);
-         n^:=p^;
-         if (p^.label_type = ltConstString) then
+         new(lCopy);
+         lCopy^:=ALabel^;
+         if (ALabel^.LabelType = ltConstString) then
            begin
-             n^._low_str := TStringConstNode(p^._low_str.GetCopy);
-             n^._high_str := TStringConstNode(p^._high_str.GetCopy);
+             lCopy^.LowString := TStringConstNode(ALabel^.LowString.GetCopy);
+             lCopy^.HighString := TStringConstNode(ALabel^.HighString.GetCopy);
            end;
-         if Assigned(p^.greater) then
-           n^.greater:=copycaselabel(p^.greater);
-         if Assigned(p^.less) then
-           n^.less:=copycaselabel(p^.less);
-         copycaselabel:=n;
+         if Assigned(ALabel^.Greater) then
+           lCopy^.Greater:=CopyCaseLabel(ALabel^.Greater);
+         if Assigned(ALabel^.Less) then
+           lCopy^.Less:=CopyCaseLabel(ALabel^.Less);
+         CopyCaseLabel:=lCopy;
       end;
 
 
-    procedure ppuwritecaselabel(ppufile:TCompilerPPUFile;p : PCaseLabel);
+    procedure PPUWriteCaseLabel(APPUFile:TCompilerPPUFile;ALabel : PCaseLabel);
       var
-        b : byte;
+        lTag : Byte;
       begin
-        ppufile.PutBoolean(p^.label_type = ltConstString);
-        if (p^.label_type = ltConstString) then
+        APPUFile.PutBoolean(ALabel^.LabelType = ltConstString);
+        if (ALabel^.LabelType = ltConstString) then
           begin
-            p^._low_str.ppuwrite(ppufile);
-            p^._high_str.ppuwrite(ppufile);
+            ALabel^.LowString.PPUWrite(APPUFile);
+            ALabel^.HighString.PPUWrite(APPUFile);
           end
         else
           begin
-            ppufile.PutExprInt(p^._low);
-            ppufile.PutExprInt(p^._high);
+            APPUFile.PutExprInt(ALabel^.LowValue);
+            APPUFile.PutExprInt(ALabel^.HighValue);
           end;
 
-        ppufile.PutLongInt(p^.blockid);
-        b:=ord(Assigned(p^.greater)) or (ord(Assigned(p^.less)) shl 1);
-        ppufile.PutByte(b);
-        if Assigned(p^.greater) then
-          ppuwritecaselabel(ppufile,p^.greater);
-        if Assigned(p^.less) then
-          ppuwritecaselabel(ppufile,p^.less);
+        APPUFile.PutLongInt(ALabel^.BlockID);
+        lTag:=ord(Assigned(ALabel^.Greater)) or (ord(Assigned(ALabel^.Less)) shl 1);
+        APPUFile.PutByte(lTag);
+        if Assigned(ALabel^.Greater) then
+          PPUWriteCaseLabel(APPUFile,ALabel^.Greater);
+        if Assigned(ALabel^.Less) then
+          PPUWriteCaseLabel(APPUFile,ALabel^.Less);
       end;
 
 
-    function ppuloadcaselabel(ppufile:TCompilerPPUFile):PCaseLabel;
+    function PPULoadCaseLabel(APPUFile:TCompilerPPUFile):PCaseLabel;
       var
-        b : byte;
-        p : PCaseLabel;
+        lTag : Byte;
+        lLabel : PCaseLabel;
       begin
-        new(p);
-        if ppufile.GetBoolean then
+        new(lLabel);
+        if APPUFile.GetBoolean then
           begin
-            p^.label_type := ltConstString;
-            p^._low_str := CStringConstNode.ppuload(stringconstn,ppufile);
-            p^._high_str := CStringConstNode.ppuload(stringconstn,ppufile);
+            lLabel^.LabelType := ltConstString;
+            lLabel^.LowString := CStringConstNode.PPULoad(stringconstn,APPUFile);
+            lLabel^.HighString := CStringConstNode.PPULoad(stringconstn,APPUFile);
           end
         else
           begin
-            p^.label_type := ltOrdinal;
+            lLabel^.LabelType := ltOrdinal;
 
-            p^._low:=ppufile.GetExprInt;
-            p^._high:=ppufile.GetExprInt;
+            lLabel^.LowValue:=APPUFile.GetExprInt;
+            lLabel^.HighValue:=APPUFile.GetExprInt;
           end;
 
-        p^.blockid:=ppufile.GetLongInt;
-        b:=ppufile.GetByte;
-        if (b and 1)=1 then
-         p^.greater:=ppuloadcaselabel(ppufile)
+        lLabel^.BlockID:=APPUFile.GetLongInt;
+        lTag:=APPUFile.GetByte;
+        if (lTag and 1)=1 then
+         lLabel^.Greater:=PPULoadCaseLabel(APPUFile)
         else
-         p^.greater:=nil;
-        if (b and 2)=2 then
-         p^.less:=ppuloadcaselabel(ppufile)
+         lLabel^.Greater:=nil;
+        if (lTag and 2)=2 then
+         lLabel^.Less:=PPULoadCaseLabel(APPUFile)
         else
-         p^.less:=nil;
-        ppuloadcaselabel:=p;
+         lLabel^.Less:=nil;
+        PPULoadCaseLabel:=lLabel;
       end;
 
 
@@ -606,776 +606,776 @@ implementation
                               TCASENODE
 *****************************************************************************}
 
-    constructor TCaseNode.create(l:TNode);
+    constructor TCaseNode.Create(ALeft:TNode);
       begin
-         inherited create(casen,l);
-         flabels:=nil;
-         blocks:=TFPList.create;
-         elseblock:=nil;
+         inherited Create(casen,ALeft);
+         FLabels:=nil;
+         Blocks:=TFPList.Create;
+         ElseBlock:=nil;
       end;
 
 
     destructor TCaseNode.Destroy;
       var
-        i : LongInt;
-        hp : PCaseBlock;
+        lIndex : LongInt;
+        lCaseBlock : PCaseBlock;
       begin
-         elseblock.free;
-         elseblock := nil;
-         deletecaselabels(flabels);
-         for i:=0 to blocks.count-1 do
+         ElseBlock.free;
+         ElseBlock := nil;
+         DeleteCaseLabels(FLabels);
+         for lIndex:=0 to Blocks.Count-1 do
            begin
-             FreeAndNil(PCaseBlock(blocks[i])^.statement);
-             hp:=PCaseBlock(blocks[i]);
-             dispose(hp);
+             FreeAndNil(PCaseBlock(Blocks[lIndex])^.Statement);
+             lCaseBlock:=PCaseBlock(Blocks[lIndex]);
+             dispose(lCaseBlock);
            end;
-         blocks.free;
-         blocks := nil;
+         Blocks.free;
+         Blocks := nil;
          inherited Destroy;
       end;
 
 
-    constructor TCaseNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TCaseNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       var
-        cnt,i : LongInt;
+        lCount,lIndex : LongInt;
       begin
-        inherited ppuload(t,ppufile);
-        elseblock:=ppuloadnode(ppufile);
-        cnt:=ppufile.GetLongInt();
-        blocks:=TFPList.create;
-        for i:=0 to cnt-1 do
-          addblock(i,ppuloadnode(ppufile));
-        flabels:=ppuloadcaselabel(ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
+        ElseBlock:=PPULoadNode(APPUFile);
+        lCount:=APPUFile.GetLongInt();
+        Blocks:=TFPList.Create;
+        for lIndex:=0 to lCount-1 do
+          AddBlock(lIndex,PPULoadNode(APPUFile));
+        FLabels:=PPULoadCaseLabel(APPUFile);
         { we don't save/restore the label counts, but recalculate them if needed }
-        fcountsuptodate:=false;
+        FCountsUpToDate:=false;
       end;
 
 
-    procedure TCaseNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TCaseNode.PPUWrite(APPUFile:TCompilerPPUFile);
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        inherited ppuwrite(ppufile);
-        ppuwritenode(ppufile,elseblock);
-        ppufile.PutLongInt(blocks.count);
-        for i:=0 to blocks.count-1 do
-          ppuwritenode(ppufile,PCaseBlock(blocks[i])^.statement);
-        ppuwritecaselabel(ppufile,flabels);
+        inherited PPUWrite(APPUFile);
+        PPUWriteNode(APPUFile,ElseBlock);
+        APPUFile.PutLongInt(Blocks.Count);
+        for lIndex:=0 to Blocks.Count-1 do
+          PPUWriteNode(APPUFile,PCaseBlock(Blocks[lIndex])^.Statement);
+        PPUWriteCaseLabel(APPUFile,FLabels);
         { we don't save/restore the label counts, but recalculate them if needed }
       end;
 
 
     procedure TCaseNode.BuildDerefImpl;
       var
-        i : integer;
+        lIndex : Integer;
       begin
         inherited BuildDerefImpl;
-        if Assigned(elseblock) then
-          elseblock.BuildDerefImpl;
-        for i:=0 to blocks.count-1 do
-          PCaseBlock(blocks[i])^.statement.BuildDerefImpl;
+        if Assigned(ElseBlock) then
+          ElseBlock.BuildDerefImpl;
+        for lIndex:=0 to Blocks.Count-1 do
+          PCaseBlock(Blocks[lIndex])^.Statement.BuildDerefImpl;
       end;
 
 
-    procedure TCaseNode.derefimpl;
+    procedure TCaseNode.DerefImpl;
       var
-        i : integer;
+        lIndex : Integer;
       begin
-        inherited derefimpl;
-        if Assigned(elseblock) then
-          elseblock.derefimpl;
-        for i:=0 to blocks.count-1 do
-          PCaseBlock(blocks[i])^.statement.derefimpl;
+        inherited DerefImpl;
+        if Assigned(ElseBlock) then
+          ElseBlock.DerefImpl;
+        for lIndex:=0 to Blocks.Count-1 do
+          PCaseBlock(Blocks[lIndex])^.Statement.DerefImpl;
       end;
 
 
-    function TCaseNode.pass_typecheck : TNode;
+    function TCaseNode.Pass_TypeCheck : TNode;
       var
-        i : integer;
+        lIndex : Integer;
       begin
-        result:=nil;
+        Result:=nil;
 
-        DoTypeCheckPass(left);
+        DoTypeCheckPass(Left);
 
-        for i:=0 to blocks.count-1 do
-          TypeCheckPass(PCaseBlock(blocks[i])^.statement);
+        for lIndex:=0 to Blocks.Count-1 do
+          TypeCheckPass(PCaseBlock(Blocks[lIndex])^.Statement);
 
-        if Assigned(elseblock) then
-          TypeCheckPass(elseblock);
+        if Assigned(ElseBlock) then
+          TypeCheckPass(ElseBlock);
 
-        resultdef:=VoidType;
-        result:=simplify(false);
+        ResultDef:=VoidType;
+        Result:=Simplify(false);
       end;
 
 
     type
       TLinkedListCaseLabelItem = class(TLinkedListItem)
-        casenode: PCaseLabel;
-        constructor create(c: PCaseLabel);
+        FCaseLabel: PCaseLabel;
+        constructor Create(ACaseLabel: PCaseLabel);
       end;
 
-    constructor TLinkedListCaseLabelItem.create(c: PCaseLabel);
+    constructor TLinkedListCaseLabelItem.Create(ACaseLabel: PCaseLabel);
       begin
-        inherited create;
-        casenode:=c;
+        inherited Create;
+        FCaseLabel:=ACaseLabel;
       end;
 
 
-    function TCaseNode.pass_1 : TNode;
+    function TCaseNode.Pass_1 : TNode;
       var
-         i: integer;
-         node_thenblock, node_elseblock, if_node,temp_cleanup : TNode;
-         tempcaseexpr : TTempCreateNode;
-         if_block, init_block: TBlockNode;
-         stmt: TStatementNode;
+         lIndex: Integer;
+         lThenBlockNode, lElseBlockNode, lIfNode,lTempCleanup : TNode;
+         lCaseExprTemp : TTempCreateNode;
+         lIfBlock, lInitBlock: TBlockNode;
+         lStatement: TStatementNode;
 
-      procedure add_label_to_blockid_list(list: TFPObjectList; lab: PCaseLabel);
+      procedure AddLabelToBlockIDList(AList: TFPObjectList; ALabel: PCaseLabel);
         begin
-          if not Assigned(lab) then
+          if not Assigned(ALabel) then
             exit;
-          if not Assigned(list[lab^.blockid]) then
-            list[lab^.blockid]:=TFPObjectList.create(true);
-          TFPObjectList(list[lab^.blockid]).add(TLinkedListCaseLabelItem.create(lab));
-          add_label_to_blockid_list(list,lab^.less);
-          add_label_to_blockid_list(list,lab^.greater);
+          if not Assigned(AList[ALabel^.BlockID]) then
+            AList[ALabel^.BlockID]:=TFPObjectList.Create(true);
+          TFPObjectList(AList[ALabel^.BlockID]).add(TLinkedListCaseLabelItem.Create(ALabel));
+          AddLabelToBlockIDList(AList,ALabel^.Less);
+          AddLabelToBlockIDList(AList,ALabel^.Greater);
         end;
 
-      function order_labels_by_blockid: TFPObjectList;
+      function OrderLabelsByBlockID: TFPObjectList;
         begin
-          result:=TFPObjectList.create(true);
-          result.count:=blocks.count;
-          add_label_to_blockid_list(result,flabels);
+          Result:=TFPObjectList.Create(true);
+          Result.Count:=Blocks.Count;
+          AddLabelToBlockIDList(Result,FLabels);
         end;
 
-      function makeifblock(elseblock : TNode): TNode;
+      function MakeIfBlock(AElseBlock : TNode): TNode;
         var
-          i, j: LongInt;
-          check: TAddNode;
-          newcheck: ^TAddNode;
-          blocklist, lablist: TFPObjectList;
-          labitem: PCaseLabel;
+          lIndex, lLabelIndex: LongInt;
+          lCheck: TAddNode;
+          lNewCheck: ^TAddNode;
+          lBlockList, lLabelList: TFPObjectList;
+          lLabelItem: PCaseLabel;
         begin
-          result:=elseblock;
-          blocklist:=order_labels_by_blockid;
+          Result:=AElseBlock;
+          lBlockList:=OrderLabelsByBlockID;
           { in reverse order so that the case options at the start of the case
             statement are evaluated first, as they presumably are the most
             common }
-          for i:=blocklist.count-1 downto 0 do
+          for lIndex:=lBlockList.Count-1 downto 0 do
             begin
-              lablist:=TFPObjectList(blocklist[i]);
-              check:=nil;
-              for j:=0 to lablist.count-1 do
+              lLabelList:=TFPObjectList(lBlockList[lIndex]);
+              lCheck:=nil;
+              for lLabelIndex:=0 to lLabelList.Count-1 do
                 begin
-                  if Assigned(check) then
+                  if Assigned(lCheck) then
                     begin
-                      check:=CAddNode.create(orn,check,nil);
-                      newcheck:=@check.right
+                      lCheck:=CAddNode.Create(orn,lCheck,nil);
+                      lNewCheck:=@lCheck.Right
                     end
                   else
-                    newcheck:=@check;
-                  labitem:=TLinkedListCaseLabelItem(lablist[j]).casenode;
-                  newcheck^:=CAddNode.create(EqualN,left.GetCopy,labitem^._low_str.GetCopy);
-                  if (labitem^._low_str.fullcompare(labitem^._high_str)<>0) then
+                    lNewCheck:=@lCheck;
+                  lLabelItem:=TLinkedListCaseLabelItem(lLabelList[lLabelIndex]).FCaseLabel;
+                  lNewCheck^:=CAddNode.Create(EqualN,Left.GetCopy,lLabelItem^.LowString.GetCopy);
+                  if (lLabelItem^.LowString.FullCompare(lLabelItem^.HighString)<>0) then
                     begin
-                      newcheck^.nodetype:=gten;
-                      newcheck^:=CAddNode.create(
-                        andn,newcheck^,CAddNode.create(
-                          lten,left.GetCopy,labitem^._high_str.GetCopy));
+                      lNewCheck^.NodeType:=gten;
+                      lNewCheck^:=CAddNode.Create(
+                        andn,lNewCheck^,CAddNode.Create(
+                          lten,Left.GetCopy,lLabelItem^.HighString.GetCopy));
                     end;
                 end;
-              result:=CIfNode.create(check,
-                PCaseBlock(blocks[i])^.statement,result);
-              PCaseBlock(blocks[i])^.statement:=nil;
+              Result:=CIfNode.Create(lCheck,
+                PCaseBlock(Blocks[lIndex])^.Statement,Result);
+              PCaseBlock(Blocks[lIndex])^.Statement:=nil;
             end;
           { will free its elements too because of create(true) }
-          blocklist.free;
-          blocklist := nil;
-          TypeCheckPass(result);
+          lBlockList.free;
+          lBlockList := nil;
+          TypeCheckPass(Result);
         end;
 
       begin
-         result:=nil;
-         init_block:=nil;
-         temp_cleanup:=nil;
-         expectloc:=LOC_VOID;
+         Result:=nil;
+         lInitBlock:=nil;
+         lTempCleanup:=nil;
+         ExpectLoc:=LOC_VOID;
 
          { only do in pass_1, so that simplify can run first and
              1) possibly simplify the case node without triggering a warning
              2) possibly give a compile-time error if not all cases are handled
                 in ISO/Extended Pascal mode }
-         if Is_Ordinal(left.resultdef) then
-           checkordinalcoverage;
+         if Is_Ordinal(Left.ResultDef) then
+           CheckOrdinalCoverage;
 
          { ideally this would be in simplify, but then checkordinalcoverage can
            false positives about case statements not handling all cases }
-         if Assigned(elseblock) and
-            has_no_code(elseblock) then
+         if Assigned(ElseBlock) and
+            Has_No_Code(ElseBlock) then
            begin
-             elseblock.free;
-             elseblock:=nil;
+             ElseBlock.free;
+             ElseBlock:=nil;
            end;
 
          { evaluates the case expression }
-         FirstPass(left);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         FirstPass(Left);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
            exit;
 
          { Load caseexpr into temp var if complex. }
          { No need to do this for ordinal, because }
          { in that case caseexpr is generated once }
-         if (flabels^.label_type = ltConstString) and (not valid_for_addr(left, false)) and
-           (blocks.count > 0) then
+         if (FLabels^.LabelType = ltConstString) and (not valid_for_addr(Left, false)) and
+           (Blocks.Count > 0) then
            begin
-             init_block := internalstatements(stmt);
-             tempcaseexpr :=
-               CTempCreateNode.create(
-                 left.resultdef, left.resultdef.Size, tt_persistent, true);
-             temp_cleanup := CTempDeleteNode.create(tempcaseexpr);
-             TypeCheckPass(TNode(tempcaseexpr));
+             lInitBlock := InternalStatements(lStatement);
+             lCaseExprTemp :=
+               CTempCreateNode.Create(
+                 Left.ResultDef, Left.ResultDef.Size, tt_persistent, true);
+             lTempCleanup := CTempDeleteNode.Create(lCaseExprTemp);
+             TypeCheckPass(TNode(lCaseExprTemp));
 
-             addstatement(stmt, tempcaseexpr);
-             addstatement(
-               stmt, CAssignmentNode.create(
-                 CTempRefNode.create(tempcaseexpr), left));
+             AddStatement(lStatement, lCaseExprTemp);
+             AddStatement(
+               lStatement, CAssignmentNode.Create(
+                 CTempRefNode.Create(lCaseExprTemp), Left));
 
-             left := CTempRefNode.create(tempcaseexpr);
-             TypeCheckPass(left);
+             Left := CTempRefNode.Create(lCaseExprTemp);
+             TypeCheckPass(Left);
            end;
 
          { first case }
-         for i:=0 to blocks.count-1 do
-           FirstPass(PCaseBlock(blocks[i])^.statement);
+         for lIndex:=0 to Blocks.Count-1 do
+           FirstPass(PCaseBlock(Blocks[lIndex])^.Statement);
 
          { may be handle else tree }
-         if Assigned(elseblock) then
+         if Assigned(ElseBlock) then
            begin
-             FirstPass(elseblock);
+             FirstPass(ElseBlock);
 
              { kill case? }
-             if blocks.count=0 then
+             if Blocks.Count=0 then
                begin
-                 result:=elseblock;
-                 elseblock:=nil;
+                 Result:=ElseBlock;
+                 ElseBlock:=nil;
                  exit;
                end;
            end
          else
-           if blocks.count=0 then
+           if Blocks.Count=0 then
              begin
-               result:=CNothingNode.create;
+               Result:=CNothingNode.Create;
                exit;
              end;
 
-         if (flabels^.label_type = ltConstString) then
+         if (FLabels^.LabelType = ltConstString) then
            begin
-             if_node:=makeifblock(elseblock);
+             lIfNode:=MakeIfBlock(ElseBlock);
 
-             if Assigned(init_block) then
-               FirstPass(TNode(init_block));
+             if Assigned(lInitBlock) then
+               FirstPass(TNode(lInitBlock));
 
-             if_block:=internalstatements(stmt);
+             lIfBlock:=InternalStatements(lStatement);
 
-             if Assigned(init_block) then
-               addstatement(stmt, init_block);
-             addstatement(stmt,if_node);
-             if Assigned(temp_cleanup) then
-               addstatement(stmt,temp_cleanup);
-             result:=if_block;
-             elseblock:= nil;
+             if Assigned(lInitBlock) then
+               AddStatement(lStatement, lInitBlock);
+             AddStatement(lStatement,lIfNode);
+             if Assigned(lTempCleanup) then
+               AddStatement(lStatement,lTempCleanup);
+             Result:=lIfBlock;
+             ElseBlock:= nil;
              exit;
            end;
 
-         if Is_Boolean(left.resultdef) then
+         if Is_Boolean(Left.ResultDef) then
            begin
-             case blocks.count of
+             case Blocks.Count of
                2:
                  begin
-                   if boolean(qword(flabels^._low))=false then
+                   if Boolean(QWord(FLabels^.LowValue))=false then
                      begin
-                       node_thenblock:=PCaseBlock(blocks[flabels^.greater^.blockid])^.statement;
-                       node_elseblock:=PCaseBlock(blocks[flabels^.blockid])^.statement;
-                       PCaseBlock(blocks[flabels^.greater^.blockid])^.statement:=nil;
+                       lThenBlockNode:=PCaseBlock(Blocks[FLabels^.Greater^.BlockID])^.Statement;
+                       lElseBlockNode:=PCaseBlock(Blocks[FLabels^.BlockID])^.Statement;
+                       PCaseBlock(Blocks[FLabels^.Greater^.BlockID])^.Statement:=nil;
                      end
                    else
                      begin
-                       node_thenblock:=PCaseBlock(blocks[flabels^.blockid])^.statement;
-                       node_elseblock:=PCaseBlock(blocks[flabels^.less^.blockid])^.statement;
-                       PCaseBlock(blocks[flabels^.less^.blockid])^.statement:=nil;
+                       lThenBlockNode:=PCaseBlock(Blocks[FLabels^.BlockID])^.Statement;
+                       lElseBlockNode:=PCaseBlock(Blocks[FLabels^.Less^.BlockID])^.Statement;
+                       PCaseBlock(Blocks[FLabels^.Less^.BlockID])^.Statement:=nil;
                      end;
-                   PCaseBlock(blocks[flabels^.blockid])^.statement:=nil;
+                   PCaseBlock(Blocks[FLabels^.BlockID])^.Statement:=nil;
                  end;
                1:
                  begin
-                   if flabels^._low=flabels^._high then
+                   if FLabels^.LowValue=FLabels^.HighValue then
                      begin
-                       if boolean(qword(flabels^._low))=false then
+                       if Boolean(QWord(FLabels^.LowValue))=false then
                          begin
-                           node_thenblock:=elseblock;
-                           node_elseblock:=PCaseBlock(blocks[flabels^.blockid])^.statement;
+                           lThenBlockNode:=ElseBlock;
+                           lElseBlockNode:=PCaseBlock(Blocks[FLabels^.BlockID])^.Statement;
                          end
                        else
                          begin
-                           node_thenblock:=PCaseBlock(blocks[flabels^.blockid])^.statement;
-                           node_elseblock:=elseblock;
+                           lThenBlockNode:=PCaseBlock(Blocks[FLabels^.BlockID])^.Statement;
+                           lElseBlockNode:=ElseBlock;
                          end;
-                       PCaseBlock(blocks[flabels^.blockid])^.statement:=nil;
-                       elseblock:=nil;
+                       PCaseBlock(Blocks[FLabels^.BlockID])^.Statement:=nil;
+                       ElseBlock:=nil;
                      end
                    else
                      begin
-                       result:=PCaseBlock(blocks[flabels^.blockid])^.statement;
-                       PCaseBlock(blocks[flabels^.blockid])^.statement:=nil;
-                       elseblock:=nil;
+                       Result:=PCaseBlock(Blocks[FLabels^.BlockID])^.Statement;
+                       PCaseBlock(Blocks[FLabels^.BlockID])^.Statement:=nil;
+                       ElseBlock:=nil;
                        exit;
                      end;
                  end;
              else
                InternalError(200805031);
            end;
-           result:=CIfNode.create(left,node_thenblock,node_elseblock);
-           left:=nil;
+           Result:=CIfNode.Create(Left,lThenBlockNode,lElseBlockNode);
+           Left:=nil;
            exit;
          end;
        { convert single case branch into if-statement }
-       if (flabels^.greater=nil) and (flabels^.less=nil) then
-         if flabels^.label_type=ltOrdinal then
+       if (FLabels^.Greater=nil) and (FLabels^.Less=nil) then
+         if FLabels^.LabelType=ltOrdinal then
            begin
-             if flabels^._low=flabels^._high then
+             if FLabels^.LowValue=FLabels^.HighValue then
                begin
-                 result:=CIfNode.Create_Internal(
-                   CAddNode.Create_Internal(EqualN,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
-                   PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock);
+                 Result:=CIfNode.Create_Internal(
+                   CAddNode.Create_Internal(EqualN,Left.GetCopy,COrdConstNode.Create(FLabels^.LowValue,Left.ResultDef,false)),
+                   PCaseBlock(Blocks[FLabels^.BlockID])^.Statement,ElseBlock);
                end
-             else if not(might_have_sideeffects(left,[mhs_exceptions])) and (node_complexity(left)<=1) then
+             else if not(Might_Have_SideEffects(Left,[mhs_exceptions])) and (Node_Complexity(Left)<=1) then
                begin
-                 result:=CIfNode.Create_Internal(
+                 Result:=CIfNode.Create_Internal(
                    CAddNode.Create_Internal(andn,
-                     CAddNode.Create_Internal(gten,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
-                     CAddNode.Create_Internal(lten,left.GetCopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
+                     CAddNode.Create_Internal(gten,Left.GetCopy,COrdConstNode.Create(FLabels^.LowValue,Left.ResultDef,false)),
+                     CAddNode.Create_Internal(lten,Left.GetCopy,COrdConstNode.Create(FLabels^.HighValue,Left.ResultDef,false))
                    ),
-                   PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock);
+                   PCaseBlock(Blocks[FLabels^.BlockID])^.Statement,ElseBlock);
                end
              else
                begin
-                 init_block:=internalstatements(stmt);
-                 tempcaseexpr:=CTempCreateNode.create(
-                   left.resultdef,left.resultdef.Size,tt_persistent,true);
-                 temp_cleanup:=CTempDeleteNode.create(tempcaseexpr);
-                 TypeCheckPass(TNode(tempcaseexpr));
+                 lInitBlock:=InternalStatements(lStatement);
+                 lCaseExprTemp:=CTempCreateNode.Create(
+                   Left.ResultDef,Left.ResultDef.Size,tt_persistent,true);
+                 lTempCleanup:=CTempDeleteNode.Create(lCaseExprTemp);
+                 TypeCheckPass(TNode(lCaseExprTemp));
 
-                 addstatement(stmt,tempcaseexpr);
-                 addstatement(stmt,CAssignmentNode.create(
-                   CTempRefNode.create(tempcaseexpr),left.GetCopy));
+                 AddStatement(lStatement,lCaseExprTemp);
+                 AddStatement(lStatement,CAssignmentNode.Create(
+                   CTempRefNode.Create(lCaseExprTemp),Left.GetCopy));
 
-                 left:=CTempRefNode.create(tempcaseexpr);
-                 TypeCheckPass(left);
+                 Left:=CTempRefNode.Create(lCaseExprTemp);
+                 TypeCheckPass(Left);
 
-                 addstatement(stmt,CIfNode.Create_Internal(
+                 AddStatement(lStatement,CIfNode.Create_Internal(
                    CAddNode.Create_Internal(andn,
-                     CAddNode.Create_Internal(gten,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
-                     CAddNode.Create_Internal(lten,left.GetCopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
+                     CAddNode.Create_Internal(gten,Left.GetCopy,COrdConstNode.Create(FLabels^.LowValue,Left.ResultDef,false)),
+                     CAddNode.Create_Internal(lten,Left.GetCopy,COrdConstNode.Create(FLabels^.HighValue,Left.ResultDef,false))
                    ),
-                   PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock));
-                 addstatement(stmt,temp_cleanup);
-                 result:=init_block;
+                   PCaseBlock(Blocks[FLabels^.BlockID])^.Statement,ElseBlock));
+                 AddStatement(lStatement,lTempCleanup);
+                 Result:=lInitBlock;
                end;
-             elseblock:=nil;
-             PCaseBlock(blocks[flabels^.blockid])^.statement:=nil;
+             ElseBlock:=nil;
+             PCaseBlock(Blocks[FLabels^.BlockID])^.Statement:=nil;
              exit;
            end;
         end;
 
 
-    function TCaseNode.simplify(forinline:boolean):TNode;
+    function TCaseNode.Simplify(AForInline:Boolean):TNode;
       var
-        tmp: PCaseLabel;
+        lTempLabel: PCaseLabel;
       begin
-        result:=nil;
-        if left.nodetype=ordconstn then
+        Result:=nil;
+        if Left.NodeType=ordconstn then
           begin
-            tmp:=flabels;
+            lTempLabel:=FLabels;
             { check all case labels until we find one that fits }
-            while Assigned(tmp) do
+            while Assigned(lTempLabel) do
               begin
-                if (tmp^._low<=TOrdConstNode(left).Value) and
-                    (tmp^._high>=TOrdConstNode(left).Value) then
+                if (lTempLabel^.LowValue<=TOrdConstNode(Left).Value) and
+                    (lTempLabel^.HighValue>=TOrdConstNode(Left).Value) then
                   begin
-                    if tmp^.blockid>=blocks.count then
+                    if lTempLabel^.BlockID>=Blocks.Count then
                       InternalError(2014022101);
-                    result:=PCaseBlock(blocks[tmp^.blockid])^.statement;
-                    if not Assigned(result) then
+                    Result:=PCaseBlock(Blocks[lTempLabel^.BlockID])^.Statement;
+                    if not Assigned(Result) then
                       InternalError(2014022102);
-                    result:=result.GetCopy;
+                    Result:=Result.GetCopy;
                     exit;
                   end;
 
-                if tmp^._high<TOrdConstNode(left).Value then
-                  tmp:=tmp^.greater
+                if lTempLabel^.HighValue<TOrdConstNode(Left).Value then
+                  lTempLabel:=lTempLabel^.Greater
                 else
-                  tmp:=tmp^.less;
+                  lTempLabel:=lTempLabel^.Less;
               end;
             { no label did match; use the else block if available }
-            if Assigned(elseblock) then
-              result:=elseblock.GetCopy
+            if Assigned(ElseBlock) then
+              Result:=ElseBlock.GetCopy
             else
               begin
                 if ([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[] then
-                  CGMessage1(cg_e_case_missing_value,ToStr(TOrdConstNode(left).Value))
+                  CGMessage1(cg_e_case_missing_value,ToStr(TOrdConstNode(Left).Value))
                 else
                   CGMessage(cg_w_case_incomplete);
                 { no else block, so there is no code to execute at all }
-                result:=CNothingNode.create;
+                Result:=CNothingNode.Create;
               end;
           end;
       end;
 
 
-    function TCaseNode.dogetcopy : TNode;
+    function TCaseNode.DoGetCopy : TNode;
       var
-         n : TCaseNode;
-         i : LongInt;
+         lCopy : TCaseNode;
+         lIndex : LongInt;
       begin
-         n:=TCaseNode(inherited dogetcopy);
-         if Assigned(elseblock) then
-           n.elseblock:=elseblock.dogetcopy
+         lCopy:=TCaseNode(inherited DoGetCopy);
+         if Assigned(ElseBlock) then
+           lCopy.ElseBlock:=ElseBlock.DoGetCopy
          else
-           n.elseblock:=nil;
-         if Assigned(flabels) then
-           n.flabels:=copycaselabel(flabels)
+           lCopy.ElseBlock:=nil;
+         if Assigned(FLabels) then
+           lCopy.FLabels:=CopyCaseLabel(FLabels)
          else
-           n.flabels:=nil;
-         if Assigned(blocks) then
+           lCopy.FLabels:=nil;
+         if Assigned(Blocks) then
            begin
-             n.blocks:=TFPList.create;
-             for i:=0 to blocks.count-1 do
+             lCopy.Blocks:=TFPList.Create;
+             for lIndex:=0 to Blocks.Count-1 do
                begin
-                 if not Assigned(blocks[i]) then
+                 if not Assigned(Blocks[lIndex]) then
                    InternalError(200411302);
-                 n.addblock(i,PCaseBlock(blocks[i])^.statement.dogetcopy);
+                 lCopy.AddBlock(lIndex,PCaseBlock(Blocks[lIndex])^.Statement.DoGetCopy);
                end;
            end
          else
-           n.blocks:=nil;
-         n.fcountsuptodate:=fcountsuptodate;
-         n.flabelcnt:=flabelcnt;
-         n.flabelcoverage:=flabelcoverage;
-         dogetcopy:=n;
+           lCopy.Blocks:=nil;
+         lCopy.FCountsUpToDate:=FCountsUpToDate;
+         lCopy.FLabelCnt:=FLabelCnt;
+         lCopy.FLabelCoverage:=FLabelCoverage;
+         DoGetCopy:=lCopy;
       end;
 
 
-    procedure TCaseNode.printnodetree(var t: text);
+    procedure TCaseNode.PrintNodeTree(var AText: text);
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        write(t,PrintNodeIndention,'(');
+        write(AText,PrintNodeIndention,'(');
         PrintNodeIndent;
-        printnodeinfo(t);
-        WriteLn(t);
-        printnode(t,left);
-        i:=0;
-        for i:=0 to blocks.count-1 do
+        PrintNodeInfo(AText);
+        WriteLn(AText);
+        PrintNode(AText,Left);
+        lIndex:=0;
+        for lIndex:=0 to Blocks.Count-1 do
           begin
-            WriteLn(t,PrintNodeIndention,'(caseblock blockid: ',i);
+            WriteLn(AText,PrintNodeIndention,'(caseblock blockid: ',lIndex);
             PrintNodeIndent;
-            printnode(t,PCaseBlock(blocks[i])^.statement);
+            PrintNode(AText,PCaseBlock(Blocks[lIndex])^.Statement);
             PrintNodeUnindent;
-            WriteLn(t,PrintNodeIndention,')');
+            WriteLn(AText,PrintNodeIndention,')');
           end;
-        if Assigned(elseblock) then
+        if Assigned(ElseBlock) then
           begin
-            WriteLn(t,PrintNodeIndention,'(else: ',i);
+            WriteLn(AText,PrintNodeIndention,'(else: ',lIndex);
             PrintNodeIndent;
-            printnode(t,elseblock);
+            PrintNode(AText,ElseBlock);
             PrintNodeUnindent;
-            WriteLn(t,PrintNodeIndention,')');
+            WriteLn(AText,PrintNodeIndention,')');
           end;
         PrintNodeUnindent;
-        WriteLn(t,PrintNodeIndention,')');
+        WriteLn(AText,PrintNodeIndention,')');
       end;
 
 
-    procedure TCaseNode.insertintolist(l : TNodeList);
+    procedure TCaseNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    function caselabelsequal(n1,n2: PCaseLabel): boolean;
+    function CaseLabelsEqual(ALabel1,ALabel2: PCaseLabel): Boolean;
       begin
-        result :=
-          (not Assigned(n1) and not Assigned(n2)) or
-          (Assigned(n1) and Assigned(n2) and
-           (n1^._low = n2^._low) and
-           (n1^._high = n2^._high) and
+        Result :=
+          (not Assigned(ALabel1) and not Assigned(ALabel2)) or
+          (Assigned(ALabel1) and Assigned(ALabel2) and
+           (ALabel1^.LowValue = ALabel2^.LowValue) and
+           (ALabel1^.HighValue = ALabel2^.HighValue) and
            { the rest of the fields don't matter for equality (JM) }
-           caselabelsequal(n1^.less,n2^.less) and
-           caselabelsequal(n1^.greater,n2^.greater))
+           CaseLabelsEqual(ALabel1^.Less,ALabel2^.Less) and
+           CaseLabelsEqual(ALabel1^.Greater,ALabel2^.Greater))
       end;
 
 
-    function caseblocksequal(b1,b2:TFPList): boolean;
+    function CaseBlocksEqual(ABlocks1,ABlocks2:TFPList): Boolean;
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        result:=false;
-        if b1.count<>b2.count then
+        Result:=false;
+        if ABlocks1.Count<>ABlocks2.Count then
           exit;
-        for i:=0 to b1.count-1 do
+        for lIndex:=0 to ABlocks1.Count-1 do
           begin
-            if not PCaseBlock(b1[i])^.statement.isequal(PCaseBlock(b2[i])^.statement) then
+            if not PCaseBlock(ABlocks1[lIndex])^.Statement.IsEqual(PCaseBlock(ABlocks2[lIndex])^.Statement) then
               exit;
           end;
-        result:=true;
+        Result:=true;
       end;
 
 
-    function TCaseNode.docompare(p: TNode): boolean;
+    function TCaseNode.DoCompare(ANode: TNode): Boolean;
       begin
-        result :=
-          inherited docompare(p) and
-          caselabelsequal(flabels,TCaseNode(p).flabels) and
-          caseblocksequal(blocks,TCaseNode(p).blocks) and
-          elseblock.isequal(TCaseNode(p).elseblock);
+        Result :=
+          inherited DoCompare(ANode) and
+          CaseLabelsEqual(FLabels,TCaseNode(ANode).FLabels) and
+          CaseBlocksEqual(Blocks,TCaseNode(ANode).Blocks) and
+          ElseBlock.IsEqual(TCaseNode(ANode).ElseBlock);
       end;
 
 
-    procedure TCaseNode.addblock(blockid:LongInt;instr:TNode);
+    procedure TCaseNode.AddBlock(ABlockID:LongInt;AStatement:TNode);
       var
-        hcaseblock : PCaseBlock;
+        lCaseBlock : PCaseBlock;
       begin
-        new(hcaseblock);
-        fillchar(hcaseblock^,sizeof(hcaseblock^),0);
-        hcaseblock^.statement:=instr;
-        if blockid>=blocks.count then
-          blocks.count:=blockid+1;
-        blocks[blockid]:=hcaseblock;
+        new(lCaseBlock);
+        fillchar(lCaseBlock^,sizeof(lCaseBlock^),0);
+        lCaseBlock^.Statement:=AStatement;
+        if ABlockID>=Blocks.Count then
+          Blocks.Count:=ABlockID+1;
+        Blocks[ABlockID]:=lCaseBlock;
       end;
 
 
-    procedure TCaseNode.addelseblock(instr:TNode);
+    procedure TCaseNode.AddElseBlock(AStatement:TNode);
       begin
-        elseblock:=instr;
+        ElseBlock:=AStatement;
       end;
 
 
-    function TCaseNode.getlabelcnt: cardinal;
+    function TCaseNode.GetLabelCnt: Cardinal;
       begin
-        if not fcountsuptodate then
-          updatecoverage;
-        result:=flabelcnt;
+        if not FCountsUpToDate then
+          UpdateCoverage;
+        Result:=FLabelCnt;
       end;
 
 
-    function TCaseNode.getlabelcoverage: qword;
+    function TCaseNode.GetLabelCoverage: QWord;
       begin
-        if not fcountsuptodate then
-          updatecoverage;
-        result:=flabelcoverage;
+        if not FCountsUpToDate then
+          UpdateCoverage;
+        Result:=FLabelCoverage;
       end;
 
 
-    procedure TCaseNode.updatecoverage;
+    procedure TCaseNode.UpdateCoverage;
 
       var
-        isord, first: boolean;
+        lIsOrdinal, lFirst: Boolean;
 
-      procedure count(p : PCaseLabel);
+      procedure Count(ALabel : PCaseLabel);
         begin
-           inc(flabelcnt);
-           if isord then
+           inc(FLabelCnt);
+           if lIsOrdinal then
              begin
-               flabelcoverage:=flabelcoverage + (p^._high - p^._low);
+               FLabelCoverage:=FLabelCoverage + (ALabel^.HighValue - ALabel^.LowValue);
                { ensure we don't overflow in case it covers the
                  full range of qword }
-               if not first then
-                 inc(flabelcoverage);
-               first:=false;
+               if not lFirst then
+                 inc(FLabelCoverage);
+               lFirst:=false;
              end;
-           if Assigned(p^.less) then
-             count(p^.less);
-           if Assigned(p^.greater) then
-             count(p^.greater);
+           if Assigned(ALabel^.Less) then
+             Count(ALabel^.Less);
+           if Assigned(ALabel^.Greater) then
+             Count(ALabel^.Greater);
         end;
 
       begin
-        isord:=Is_Ordinal(left.resultdef);
-        flabelcnt:=0;
-        flabelcoverage:=0;
-        first:=true;
-        count(flabels);
-        fcountsuptodate:=true;
+        lIsOrdinal:=Is_Ordinal(Left.ResultDef);
+        FLabelCnt:=0;
+        FLabelCoverage:=0;
+        lFirst:=true;
+        Count(FLabels);
+        FCountsUpToDate:=true;
       end;
 
 
-    procedure TCaseNode.checkordinalcoverage;
+    procedure TCaseNode.CheckOrdinalCoverage;
 
-      function orddefspansfullrange(def: TOrdDef): boolean;
+      function OrdDefSpansFullRange(ADef: TOrdDef): Boolean;
         var
-          PackedBitSize: cardinal;
-          dummy: LongInt;
-          val: qword;
+          lPackedBitSize: Cardinal;
+          lDummy: LongInt;
+          lValue: QWord;
         begin
-          result:=false;
-          PackedBitSize:=def.PackedBitSize;
-          if ((PackedBitSize mod 8) <> 0) or
-             not IsPowerOf2(PackedBitSize div 8,dummy) then
+          Result:=false;
+          lPackedBitSize:=ADef.PackedBitSize;
+          if ((lPackedBitSize mod 8) <> 0) or
+             not IsPowerOf2(lPackedBitSize div 8,lDummy) then
             exit;
-          dec(PackedBitSize);
-          if Is_Signed(def) then
+          dec(lPackedBitSize);
+          if Is_Signed(ADef) then
             begin
 {$push}{$q-}
-              if def.low<>(-(int64(1) shl PackedBitSize)) then
+              if ADef.low<>(-(Int64(1) shl lPackedBitSize)) then
                 exit;
-              if def.high<>((int64(1) shl PackedBitSize)-1) then
+              if ADef.high<>((Int64(1) shl lPackedBitSize)-1) then
                 exit;
 {$pop}
             end
           else
             begin
-              if def.low<>0 then
+              if ADef.low<>0 then
                 exit;
-              val:=qword(1) shl PackedBitSize;
-              val:=(val-1)+val;
-              if def.high<>val then
+              lValue:=QWord(1) shl lPackedBitSize;
+              lValue:=(lValue-1)+lValue;
+              if ADef.high<>lValue then
                 exit;
             end;
-          result:=true;
+          Result:=true;
         end;
 
       var
-        lv, hv, typcount: TConstExprInt;
+        lLowValue, lHighValue, lTypeCount: TConstExprInt;
       begin
         { Check label type coverage for enumerations and small types }
-        GetRange(left.resultdef,lv,hv);
+        GetRange(Left.ResultDef,lLowValue,lHighValue);
         { low/high value of c-style booleans are not suitable for calculating their "type count" }
-        if Is_CBool(left.resultdef) then
-          typcount:=1
+        if Is_CBool(Left.ResultDef) then
+          lTypeCount:=1
         else
-          typcount:=hv-lv;
-        if not Assigned(elseblock) then
+          lTypeCount:=lHighValue-lLowValue;
+        if not Assigned(ElseBlock) then
           begin
             { unless cs_check_all_case_coverage is set, only check for enums, booleans and
               subrange types different from the default ones }
             if (cs_check_all_case_coverage in CurrentSettings.LocalSwitches) or
-               (Is_Enum(left.resultdef) or
-                Is_Boolean(left.resultdef) or
-                not orddefspansfullrange(TOrdDef(left.resultdef))) and
-               (labelcoverage<typcount) then
+               (Is_Enum(Left.ResultDef) or
+                Is_Boolean(Left.ResultDef) or
+                not OrdDefSpansFullRange(TOrdDef(Left.ResultDef))) and
+               (LabelCoverage<lTypeCount) then
               begin
                 { labels for some values of the operand are missing, and no else block is present }
                 CGMessage(cg_w_case_incomplete);
                 { in Standard/Extended Pascal, this is a dynamic violation error if it actually happens }
                 if ([m_extpas,m_iso]*CurrentSettings.ModeSwitches)<>[] then
                   begin
-                    elseblock:=CCallNode.createintern('fpc_rangeerror',nil);
-                    TypeCheckPass(elseblock);
+                    ElseBlock:=CCallNode.CreateIntern('fpc_rangeerror',nil);
+                    TypeCheckPass(ElseBlock);
                   end;
               end
           end
-        else if labelcoverage=typcount then
+        else if LabelCoverage=lTypeCount then
           begin
             { labels for all values of the operand are present, but an extra else block is present }
-            MessagePos(elseblock.fileinfo, cg_w_unreachable_code);
+            MessagePos(ElseBlock.FileInfo, cg_w_unreachable_code);
           end;
       end;
 
 
-    procedure TCaseNode.addlabel(blockid:LongInt;const l,h : TConstExprInt);
+    procedure TCaseNode.AddLabel(ABlockID:LongInt;const ALowValue,AHighValue : TConstExprInt);
       var
-        hcaselabel : PCaseLabel;
+        lCaseLabel : PCaseLabel;
 
-        function insertlabel(var p : PCaseLabel):PCaseLabel;
+        function InsertLabel(var ALabel : PCaseLabel):PCaseLabel;
           begin
-             if p=nil then
+             if ALabel=nil then
                begin
-                 p:=hcaselabel;
-                 result:=p;
+                 ALabel:=lCaseLabel;
+                 Result:=ALabel;
                end
              else
-              if (p^._low>hcaselabel^._low) and
-                 (p^._low>hcaselabel^._high) then
+              if (ALabel^.LowValue>lCaseLabel^.LowValue) and
+                 (ALabel^.LowValue>lCaseLabel^.HighValue) then
                 begin
-                  if (hcaselabel^.blockid = p^.blockid) and
-                     (p^._low = hcaselabel^._high + 1) then
+                  if (lCaseLabel^.BlockID = ALabel^.BlockID) and
+                     (ALabel^.LowValue = lCaseLabel^.HighValue + 1) then
                     begin
-                      p^._low := hcaselabel^._low;
-                      dispose(hcaselabel);
-                      result:=p;
+                      ALabel^.LowValue := lCaseLabel^.LowValue;
+                      dispose(lCaseLabel);
+                      Result:=ALabel;
                     end
                   else
-                    result:=insertlabel(p^.less)
+                    Result:=InsertLabel(ALabel^.Less)
                 end
              else
-               if (p^._high<hcaselabel^._low) and
-                  (p^._high<hcaselabel^._high) then
+               if (ALabel^.HighValue<lCaseLabel^.LowValue) and
+                  (ALabel^.HighValue<lCaseLabel^.HighValue) then
                  begin
-                    if (hcaselabel^.blockid = p^.blockid) and
-                       (p^._high+1 = hcaselabel^._low) then
+                    if (lCaseLabel^.BlockID = ALabel^.BlockID) and
+                       (ALabel^.HighValue+1 = lCaseLabel^.LowValue) then
                       begin
-                        p^._high := hcaselabel^._high;
-                        dispose(hcaselabel);
-                        result:=p;
+                        ALabel^.HighValue := lCaseLabel^.HighValue;
+                        dispose(lCaseLabel);
+                        Result:=ALabel;
                       end
                     else
-                      result:=insertlabel(p^.greater);
+                      Result:=InsertLabel(ALabel^.Greater);
                  end
              else
                begin
-                 dispose(hcaselabel);
+                 dispose(lCaseLabel);
                  Message(parser_e_double_caselabel);
-                 result:=nil;
+                 Result:=nil;
                end
           end;
 
       begin
-        new(hcaselabel);
-        fillchar(hcaselabel^,sizeof(TCaseLabel),0);
-        hcaselabel^.blockid:=blockid;
-        hcaselabel^.label_type:=ltOrdinal;
-        hcaselabel^._low:=l;
-        hcaselabel^._high:=h;
-        insertlabel(flabels);
-        fcountsuptodate:=false;
+        new(lCaseLabel);
+        fillchar(lCaseLabel^,sizeof(TCaseLabel),0);
+        lCaseLabel^.BlockID:=ABlockID;
+        lCaseLabel^.LabelType:=ltOrdinal;
+        lCaseLabel^.LowValue:=ALowValue;
+        lCaseLabel^.HighValue:=AHighValue;
+        InsertLabel(FLabels);
+        FCountsUpToDate:=false;
       end;
 
-    procedure TCaseNode.addlabel(blockid: LongInt; l, h: TStringConstNode);
+    procedure TCaseNode.AddLabel(ABlockID: LongInt; ALowString, AHighString: TStringConstNode);
 
       var
-        hcaselabel : PCaseLabel;
+        lCaseLabel : PCaseLabel;
 
-      function insertlabel(var p : PCaseLabel) : PCaseLabel;
+      function InsertLabel(var ALabel : PCaseLabel) : PCaseLabel;
         begin
-          if not Assigned(p) then
+          if not Assigned(ALabel) then
             begin
-              p := hcaselabel;
-              result := p;
+              ALabel := lCaseLabel;
+              Result := ALabel;
             end
           else
-            if (p^._low_str.fullcompare(hcaselabel^._high_str) > 0) then
-              result := insertlabel(p^.less)
+            if (ALabel^.LowString.FullCompare(lCaseLabel^.HighString) > 0) then
+              Result := InsertLabel(ALabel^.Less)
           else
-            if (p^._high_str.fullcompare(hcaselabel^._low_str) < 0) then
-              result := insertlabel(p^.greater)
+            if (ALabel^.HighString.FullCompare(lCaseLabel^.LowString) < 0) then
+              Result := InsertLabel(ALabel^.Greater)
           else
             begin
-              FreeAndNil(hcaselabel^._low_str);
-              FreeAndNil(hcaselabel^._high_str);
-              dispose(hcaselabel);
+              FreeAndNil(lCaseLabel^.LowString);
+              FreeAndNil(lCaseLabel^.HighString);
+              dispose(lCaseLabel);
               Message(parser_e_double_caselabel);
-              result:=nil;
+              Result:=nil;
             end;
         end;
 
       begin
-        new(hcaselabel);
-        fillchar(hcaselabel^, sizeof(TCaseLabel), 0);
-        hcaselabel^.blockid := blockid;
-        hcaselabel^.label_type := ltConstString;
+        new(lCaseLabel);
+        fillchar(lCaseLabel^, sizeof(TCaseLabel), 0);
+        lCaseLabel^.BlockID := ABlockID;
+        lCaseLabel^.LabelType := ltConstString;
 
-        hcaselabel^._low_str := TStringConstNode(l.GetCopy);
-        hcaselabel^._high_str := TStringConstNode(h.GetCopy);
+        lCaseLabel^.LowString := TStringConstNode(ALowString.GetCopy);
+        lCaseLabel^.HighString := TStringConstNode(AHighString.GetCopy);
 
-        insertlabel(flabels);
+        InsertLabel(FLabels);
       end;
 
 end.

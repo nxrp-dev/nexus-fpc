@@ -32,8 +32,8 @@ interface
     type
        TX8664CallNode = class(TX86CallNode)
        protected
-         procedure extra_call_code;override;
-         procedure set_result_location(realresdef: TStoredDef);override;
+         procedure Extra_Call_Code;override;
+         procedure Set_Result_Location(ARealResultDef: TStoredDef);override;
        end;
 
 
@@ -47,33 +47,33 @@ implementation
       aasmtai,AAsmData,aasmcpu,
       cpupi;
 
-    procedure TX8664CallNode.extra_call_code;
+    procedure TX8664CallNode.Extra_Call_Code;
       var
-        mmregs : aint;
+        lMMRegCount : AInt;
       begin
         { x86_64 requires %al to contain the no. SSE regs passed }
-        if (cnf_uses_varargs in callnodeflags) and not x86_64_use_ms_abi(procdefinition.ProcCallOption) then
+        if (cnf_uses_varargs in CallNodeFlags) and not X86_64_Use_MS_ABI(ProcDefinition.ProcCallOption) then
           begin
-            if Assigned(varargsparas) then
-              mmregs:=varargsparas.MMRegsUsed
+            if Assigned(VarArgsParas) then
+              lMMRegCount:=VarArgsParas.MMRegsUsed
             else
-              mmregs:=0;
-            CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_MOV,S_Q,mmregs,NR_RAX))
+              lMMRegCount:=0;
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_MOV,S_Q,lMMRegCount,NR_RAX))
           end;
       end;
 
 
-    procedure TX8664CallNode.set_result_location(realresdef: TStoredDef);
+    procedure TX8664CallNode.Set_Result_Location(ARealResultDef: TStoredDef);
       begin
         { avoid useless "movq %xmm0,%rax" and "movq %rax,%xmm0" instructions
           (which moreover for some reason are not supported by the Darwin
            x86-64 assembler) }
-        if Assigned(retloc.Location) and
-           not Assigned(retloc.Location^.next) and
-           (retloc.Location^.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+        if Assigned(FResultParaLoc.Location) and
+           not Assigned(FResultParaLoc.Location^.next) and
+           (FResultParaLoc.Location^.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
           begin
-            Location_Reset(location,LOC_MMREGISTER,retloc.Location^.Size);
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,retloc.Location^.Size);
+            Location_Reset(Location,LOC_MMREGISTER,FResultParaLoc.Location^.Size);
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,FResultParaLoc.Location^.Size);
           end
         else
           inherited

@@ -204,21 +204,21 @@ function GetOper(const ATyp: string): string;
 function GetOperand(const ATyp: string; AIndex: LongInt): string;
   begin
     case ATyp of
-      'r8':    exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'rs8':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'r16':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'rs16':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'r32':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'rs32':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'r64':   exit(format(',paraarray[%d].Location.Register64.RegLo,paraarray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
-      'rs64':  exit(format(',paraarray[%d].Location.Register64.RegLo,paraarray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
-      'reg':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'sreg':  exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'f32':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'f64':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'mm':    exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'xmm':   exit(format(',paraarray[%d].Location.Register', [AIndex]));
-      'i32':   exit(format(',GetConstInt(paraarray[%d])',[AIndex]));
+      'r8':    exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'rs8':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'r16':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'rs16':  exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'r32':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'rs32':  exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'r64':   exit(format(',lParaArray[%d].Location.Register64.RegLo,lParaArray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
+      'rs64':  exit(format(',lParaArray[%d].Location.Register64.RegLo,lParaArray[%d].Location.Register64.RegHi', [AIndex,AIndex]));
+      'reg':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'sreg':  exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'f32':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'f64':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'mm':    exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'xmm':   exit(format(',lParaArray[%d].Location.Register', [AIndex]));
+      'i32':   exit(format(',GetConstInt(lParaArray[%d])',[AIndex]));
 
       'implicit_xmm0',
       'edi_ptr': exit('');
@@ -227,7 +227,7 @@ function GetOperand(const ATyp: string; AIndex: LongInt): string;
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128': exit(format(',paraarray[%d].Location.Reference', [AIndex]));
+      'ptr128': exit(format(',lParaArray[%d].Location.Reference', [AIndex]));
     else
       exit(ATyp);
     end;
@@ -237,29 +237,29 @@ function GetOperandLoc(const ATyp: string): string;
   begin
     result:='';
     case ATyp of
-      'r8':   exit(',location.Register');
-      'rs8':  exit(',location.Register');
-      'r16':  exit(',location.Register');
-      'rs16': exit(',location.Register');
-      'r32':  exit(',location.Register');
-      'rs32': exit(',location.Register');
-      'r64':  exit(',location.Register64.RegLo,location.Register64.RegHi');
-      'rs64': exit(',location.Register64.RegLo,location.Register64.RegHi');
-      'reg':  exit(',location.Register');
-      'sreg': exit(',location.Register');
-      'f32':  exit(',location.Register');
-      'f64':  exit(',location.Register');
-      'mm':   exit(',location.Register');
+      'r8':   exit(',Location.Register');
+      'rs8':  exit(',Location.Register');
+      'r16':  exit(',Location.Register');
+      'rs16': exit(',Location.Register');
+      'r32':  exit(',Location.Register');
+      'rs32': exit(',Location.Register');
+      'r64':  exit(',Location.Register64.RegLo,Location.Register64.RegHi');
+      'rs64': exit(',Location.Register64.RegLo,Location.Register64.RegHi');
+      'reg':  exit(',Location.Register');
+      'sreg': exit(',Location.Register');
+      'f32':  exit(',Location.Register');
+      'f64':  exit(',Location.Register');
+      'mm':   exit(',Location.Register');
       'implicit_xmm0',
-      'xmm':  exit(',location.Register');
+      'xmm':  exit(',Location.Register');
 
-      'edi_ptr': exit(',location.Register');
+      'edi_ptr': exit(',Location.Register');
 
       'ptr8',
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128': exit(',location.Register');
+      'ptr128': exit(',Location.Register');
     end;
   end;
 
@@ -267,36 +267,36 @@ function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): 
   begin
     result:='';
     case ATyp of
-      'r8':    exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs8':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r16':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs16':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r32':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs32':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r64':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs64':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'reg':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'sreg':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, paraarray[%d].resultdef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f32':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f64':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'mm':    exit(format('location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'xmm':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r8':    exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs8':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r16':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs16':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r32':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs32':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r64':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs64':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'reg':   exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'sreg':  exit(format('hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, lParaArray[%d].ResultDef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f32':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f64':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'mm':    exit(format('LocationForceMMXReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'xmm':   exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
 
       'implicit_xmm0':
-        exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].Location, %s);'+LineEnding+
+        exit(format('Location_Force_MMReg(CurrentAsmData.CurrAsmList, lParaArray[%d].Location, %s);'+LineEnding+
                     '    hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
-                    '    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,X86_M128Type,paraarray[%d].Location,NR_XMM0,nil);',
+                    '    hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,lParaArray[%d].ResultDef,X86_M128Type,lParaArray[%d].Location,NR_XMM0,nil);',
                       [AIndex+1, BoolToStr(aconst,'true','false'), AIndex+1, AIndex+1]));
       'edi_ptr':
         exit(format('hlcg.GetCPURegister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
-                    '    hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,VoidPointerType,paraarray[%d].Location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
+                    '    hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,lParaArray[%d].ResultDef,VoidPointerType,lParaArray[%d].Location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
                       [AIndex+1, AIndex+1]));
 
       'ptr8',
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128':exit(format('location_make_ref(paraarray[%d].Location);', [AIndex+1]));
+      'ptr128':exit(format('LocationMakeRef(lParaArray[%d].Location);', [AIndex+1]));
     end;
   end;
 
@@ -372,20 +372,20 @@ function GetLocAllocation(const ATyp: string): string;
   begin
     result:='';
     case ATyp of
-      'r8':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
-      'rs8': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
-      'r16':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
-      'rs16': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
-      'r32':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
-      'rs32': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
-      'r64':  exit('location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
-      'rs64': exit('location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
-      'reg':  exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
-      'sreg': exit('location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
-      'f32':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
-      'f64':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
-      'mm':   exit('location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);');
-      'xmm':  exit('location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'r8':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
+      'rs8': exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_8);');
+      'r16':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
+      'rs16': exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_16);');
+      'r32':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs32': exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'r64':  exit('Location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); Location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs64': exit('Location.Register64.RegLo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32); Location.Register64.RegHi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_32);');
+      'reg':  exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'sreg': exit('Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'f32':  exit('Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'f64':  exit('Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'mm':   exit('Location.Register:=TCGX86(cg).GetMMXRegister(CurrentAsmData.CurrAsmList);');
+      'xmm':  exit('Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList, OS_M128);');
     end;
   end;
 
@@ -596,9 +596,9 @@ procedure ParseList(const APrefix, AFilename: string);
             ftypechk.Add('  begin');
             ftypechk.Add('    CheckParameters('+IntToStr(GetParams())+');');
             if hasOutput then
-              ftypechk.Add('    resultdef:='+GetTypeDef(outputType)+';')
+              ftypechk.Add('    ResultDef:='+GetTypeDef(outputType)+';')
             else
-              ftypechk.Add('    resultdef:=VoidType;');
+              ftypechk.Add('    ResultDef:=VoidType;');
             ftypechk.Add('  end;');
 
             if target<>'' then
@@ -618,10 +618,10 @@ procedure ParseList(const APrefix, AFilename: string);
             ffirst.Add(': //'+operline);
             ffirst.Add('  begin');
             if hasOutput then
-              ffirst.Add('    expectloc:='+GetLoc(outputType,false)+';')
+              ffirst.Add('    ExpectLoc:='+GetLoc(outputType,false)+';')
             else
-              ffirst.Add('    expectloc:=LOC_VOID;');
-            ffirst.Add('    result:=nil;');
+              ffirst.Add('    ExpectLoc:=LOC_VOID;');
+            ffirst.Add('    Result:=nil;');
             ffirst.Add('  end;');
 
             if target<>'' then
@@ -632,7 +632,7 @@ procedure ParseList(const APrefix, AFilename: string);
         i:=fsecond.IndexOf(': //'+operline);
         if (i>=0) and (target='') then
           begin
-            fsecond.Insert(i+3,'      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin op:=A_'+instrPart+' end;');
+            fsecond.Insert(i+3,'      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin lOp:=A_'+instrPart+' end;');
             fsecond.Insert(i,',in_'+APrefix+'_'+instrPart+postfix+_alias);
           end
         else
@@ -643,8 +643,8 @@ procedure ParseList(const APrefix, AFilename: string);
             fsecond.Add('in_'+APrefix+'_'+instrPart+postfix+_alias);
             fsecond.Add(': //'+operline);
             fsecond.Add('  begin');
-            fsecond.Add('    case inlinenumber of');
-            fsecond.Add('      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin op:=A_'+instrPart+'; end;');
+            fsecond.Add('    case InlineNumber of');
+            fsecond.Add('      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin lOp:=A_'+instrPart+'; end;');
             fsecond.Add('      else');
             fsecond.Add('        InternalError(2020010201);');
             fsecond.Add('    end;');
@@ -654,7 +654,7 @@ procedure ParseList(const APrefix, AFilename: string);
             fsecond.Add('    GetParameters('+IntToStr(i)+');');
             fsecond.Add('');
 
-            fsecond.Add('    for i := 1 to '+IntToStr(i)+' do SecondPass(paraarray[i]);');
+            fsecond.Add('    for lIndex := 1 to '+IntToStr(i)+' do SecondPass(lParaArray[lIndex]);');
             fsecond.Add('');
 
             // Force inputs
@@ -688,12 +688,12 @@ procedure ParseList(const APrefix, AFilename: string);
                 case opers[i].direction of
                   operOut:
                     begin
-                      fsecond.add('    Location_Reset(location,'+GetLoc(opers[i].typ)+');');
+                      fsecond.add('    Location_Reset(Location,'+GetLoc(opers[i].typ)+');');
                       fsecond.Add('    '+GetLocAllocation(opers[i].typ));
                     end;
                   operVar:
                     begin
-                      fsecond.Add('    location:=paraarray['+IntToStr(cnt+1)+'].Location;');
+                      fsecond.Add('    Location:=lParaArray['+IntToStr(cnt+1)+'].Location;');
                       inc(cnt);
                     end;
                   operIn:
@@ -716,9 +716,9 @@ procedure ParseList(const APrefix, AFilename: string);
               end;
 
             if operline='TAICPU.op' then
-              operline:='TAICPU.op_none(op,S_NO'
+              operline:='TAICPU.op_none(lOp,S_NO'
             else
-              operline:=operline+'(op,S_NO';
+              operline:=operline+'(lOp,S_NO';
 
             //for i := 0 to opercnt-1 do
             for i := opercnt-1 downto 0 do

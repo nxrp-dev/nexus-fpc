@@ -28,9 +28,9 @@ uses node, nopt;
 
 type
   TCGAddSStringCharOptNode = class(TAddSStringCharOptNode)
-     function pass_typecheck: TNode; override;
-     function pass_1: TNode; override;
-     procedure pass_generate_code; override;
+     function Pass_TypeCheck: TNode; override;
+     function Pass_1: TNode; override;
+     procedure Pass_Generate_Code; override;
   end;
 
 
@@ -38,7 +38,7 @@ implementation
 
 uses
   GlobType,Globals,
-  pass_1,defutil,
+  Pass_1,defutil,
   symdef,
   aasmbase,AAsmData,
   ncnv, ncon, pass_2,
@@ -50,9 +50,9 @@ uses
                              TCGADDOPTNODE
 *****************************************************************************}
 
-function TCGAddSStringCharOptNode.pass_typecheck: TNode;
+function TCGAddSStringCharOptNode.Pass_TypeCheck: TNode;
 begin
-  pass_typecheck := nil;
+  Pass_TypeCheck := nil;
   TypeCheckPass(left);
   TypeCheckPass(right);
   if CodeGenError then
@@ -60,14 +60,14 @@ begin
   { update the curmaxlen field (before converting to a string!) }
   updatecurmaxlen;
   if not Is_ShortString(left.resultdef) then
-    inserttypeconv(left,CShortStringType);
+    InsertTypeConv(left,CShortStringType);
   resultdef:=left.resultdef;
 end;
 
 
-function TCGAddSStringCharOptNode.pass_1: TNode;
+function TCGAddSStringCharOptNode.Pass_1: TNode;
 begin
-  pass_1 := nil;
+  Pass_1 := nil;
   FirstPass(left);
   FirstPass(right);
   if CodeGenError then
@@ -76,7 +76,7 @@ begin
 end;
 
 
-procedure TCGAddSStringCharOptNode.pass_generate_code;
+procedure TCGAddSStringCharOptNode.Pass_Generate_Code;
 var
   l: TAsmLabel;
   href,href2 :  TReference;
@@ -88,12 +88,12 @@ begin
   { first, we have to more or less replicate some code from }
   { ti386addnode.pass_generate_code                                     }
   SecondPass(left);
-  if not(tg.istemp(left.Location.Reference) and
-         (tg.sizeoftemp(CurrentAsmData.CurrAsmList,left.Location.Reference) = 256)) then
+  if not(TG.IsTemp(left.Location.Reference) and
+         (TG.SizeOfTemp(CurrentAsmData.CurrAsmList,left.Location.Reference) = 256)) then
     begin
-       tg.GetHLTemp(CurrentAsmData.CurrAsmList,CShortStringType,256,tt_normal,href);
+       TG.GetHLTemp(CurrentAsmData.CurrAsmList,CShortStringType,256,tt_normal,href);
        hlcg.G_CopyShortString(CurrentAsmData.CurrAsmList,left.Location.Reference,href,TStringDef(CShortStringType));
-       location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+       Location_FreeTemp(CurrentAsmData.CurrAsmList,left.Location);
        { return temp reference }
        Location_Reset_Ref(left.Location,LOC_REFERENCE,Def_CGSize(resultdef),1,[]);
        left.Location.Reference:=href;
@@ -106,7 +106,7 @@ begin
   { may need registers from the reference                           }
 
   { is it a constant char? }
-  if not is_constcharnode(right) then
+  if not Is_ConstCharNode(right) then
     { no, make sure it is in a register }
     if right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
       begin
@@ -114,7 +114,7 @@ begin
         hreg := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_8);
         cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_8,OS_8,right.Location.Reference,hreg);
         { I don't think a temp char exists, but it won't hurt (JM) }
-        tg.ungetiftemp(CurrentAsmData.CurrAsmList,right.Location.Reference);
+        TG.UnGetIfTemp(CurrentAsmData.CurrAsmList,right.Location.Reference);
       end
     else hreg := right.Location.Register;
 
@@ -123,7 +123,7 @@ begin
   cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_8,OS_INT,left.Location.Reference,lengthreg);
 
   { do we have to check the length ? }
-  if tg.istemp(left.Location.Reference) then
+  if TG.IsTemp(left.Location.Reference) then
     checklength := curmaxlen = 255
   else
     checklength := curmaxlen >= TStringDef(left.resultdef).len;
@@ -131,7 +131,7 @@ begin
     begin
       { is it already maximal? }
       CurrentAsmData.getjumplabel(l);
-      if tg.istemp(left.Location.Reference) then
+      if TG.IsTemp(left.Location.Reference) then
         len:=255
       else
         len:=TStringDef(left.resultdef).len;

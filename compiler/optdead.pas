@@ -42,7 +42,7 @@ unit optdead;
 
         procedure documentformat(writer: TWPOSectionWriterIntf);
        public
-        constructor create; override;
+        constructor Create; override;
         destructor Destroy; override;
 
         class function  getwpotype: TWPOType; override;
@@ -97,10 +97,10 @@ unit optdead;
 
   { twpodeadcodeinfo }
 
-  constructor TWPODeadCodeInfo.create;
+  constructor TWPODeadCodeInfo.Create;
     begin
-      inherited create;
-      fsymbols:=TFPHashList.create;
+      inherited Create;
+      fsymbols:=TFPHashList.Create;
     end;
 
 

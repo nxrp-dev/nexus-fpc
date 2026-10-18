@@ -53,71 +53,71 @@ implementation
         all intern procedures for the system unit
       }
       begin
-        SystemUnit.InsertSym(CSysSym.create('Concat',in_concat_x));
-        SystemUnit.InsertSym(CSysSym.create('Write',in_write_x));
-        SystemUnit.InsertSym(CSysSym.create('WriteLn',in_writeln_x));
-        SystemUnit.InsertSym(CSysSym.create('WriteStr',in_writestr_x));
-        SystemUnit.InsertSym(CSysSym.create('Assigned',in_assigned_x));
-        SystemUnit.InsertSym(CSysSym.create('Read',in_read_x));
-        SystemUnit.InsertSym(CSysSym.create('ReadLn',in_readln_x));
-        SystemUnit.InsertSym(CSysSym.create('ReadStr',in_readstr_x));
-        SystemUnit.InsertSym(CSysSym.create('Ofs',in_ofs_x));
-        SystemUnit.InsertSym(CSysSym.create('SizeOf',in_sizeof_x));
-        SystemUnit.InsertSym(CSysSym.create('BitSizeOf',in_bitsizeof_x));
-        SystemUnit.InsertSym(CSysSym.create('TypeOf',in_typeof_x));
-        SystemUnit.InsertSym(CSysSym.create('Low',in_low_x));
-        SystemUnit.InsertSym(CSysSym.create('High',in_high_x));
-        SystemUnit.InsertSym(CSysSym.create('Slice',in_slice_x));
-        SystemUnit.InsertSym(CSysSym.create('Seg',in_seg_x));
-        SystemUnit.InsertSym(CSysSym.create('Ord',in_ord_x));
-        SystemUnit.InsertSym(CSysSym.create('Chr',in_chr_byte));
-        SystemUnit.InsertSym(CSysSym.create('Pred',in_pred_x));
-        SystemUnit.InsertSym(CSysSym.create('Succ',in_succ_x));
-        SystemUnit.InsertSym(CSysSym.create('Exclude',in_exclude_x_y));
-        SystemUnit.InsertSym(CSysSym.create('Include',in_include_x_y));
-        SystemUnit.InsertSym(CSysSym.create('Pack',in_pack_x_y_z));
-        SystemUnit.InsertSym(CSysSym.create('Unpack',in_unpack_x_y_z));
-        SystemUnit.InsertSym(CSysSym.create('Break',in_break));
-        SystemUnit.InsertSym(CSysSym.create('Exit',in_exit));
-        SystemUnit.InsertSym(CSysSym.create('Continue',in_continue));
-        SystemUnit.InsertSym(CSysSym.create('Leave',in_leave)); {macpas only}
-        SystemUnit.InsertSym(CSysSym.create('Cycle',in_cycle)); {macpas only}
-        SystemUnit.InsertSym(CSysSym.create('Dec',in_dec_x));
-        SystemUnit.InsertSym(CSysSym.create('Inc',in_inc_x));
-        SystemUnit.InsertSym(CSysSym.create('Str',in_str_x_string));
-        SystemUnit.InsertSym(CSysSym.create('Assert',in_assert_x_y));
-        SystemUnit.InsertSym(CSysSym.create('Val',in_val_x));
-        SystemUnit.InsertSym(CSysSym.create('Addr',in_addr_x));
+        SystemUnit.InsertSym(CSysSym.Create('Concat',in_concat_x));
+        SystemUnit.InsertSym(CSysSym.Create('Write',in_write_x));
+        SystemUnit.InsertSym(CSysSym.Create('WriteLn',in_writeln_x));
+        SystemUnit.InsertSym(CSysSym.Create('WriteStr',in_writestr_x));
+        SystemUnit.InsertSym(CSysSym.Create('Assigned',in_assigned_x));
+        SystemUnit.InsertSym(CSysSym.Create('Read',in_read_x));
+        SystemUnit.InsertSym(CSysSym.Create('ReadLn',in_readln_x));
+        SystemUnit.InsertSym(CSysSym.Create('ReadStr',in_readstr_x));
+        SystemUnit.InsertSym(CSysSym.Create('Ofs',in_ofs_x));
+        SystemUnit.InsertSym(CSysSym.Create('SizeOf',in_sizeof_x));
+        SystemUnit.InsertSym(CSysSym.Create('BitSizeOf',in_bitsizeof_x));
+        SystemUnit.InsertSym(CSysSym.Create('TypeOf',in_typeof_x));
+        SystemUnit.InsertSym(CSysSym.Create('Low',in_low_x));
+        SystemUnit.InsertSym(CSysSym.Create('High',in_high_x));
+        SystemUnit.InsertSym(CSysSym.Create('Slice',in_slice_x));
+        SystemUnit.InsertSym(CSysSym.Create('Seg',in_seg_x));
+        SystemUnit.InsertSym(CSysSym.Create('Ord',in_ord_x));
+        SystemUnit.InsertSym(CSysSym.Create('Chr',in_chr_byte));
+        SystemUnit.InsertSym(CSysSym.Create('Pred',in_pred_x));
+        SystemUnit.InsertSym(CSysSym.Create('Succ',in_succ_x));
+        SystemUnit.InsertSym(CSysSym.Create('Exclude',in_exclude_x_y));
+        SystemUnit.InsertSym(CSysSym.Create('Include',in_include_x_y));
+        SystemUnit.InsertSym(CSysSym.Create('Pack',in_pack_x_y_z));
+        SystemUnit.InsertSym(CSysSym.Create('Unpack',in_unpack_x_y_z));
+        SystemUnit.InsertSym(CSysSym.Create('Break',in_break));
+        SystemUnit.InsertSym(CSysSym.Create('Exit',in_exit));
+        SystemUnit.InsertSym(CSysSym.Create('Continue',in_continue));
+        SystemUnit.InsertSym(CSysSym.Create('Leave',in_leave)); {macpas only}
+        SystemUnit.InsertSym(CSysSym.Create('Cycle',in_cycle)); {macpas only}
+        SystemUnit.InsertSym(CSysSym.Create('Dec',in_dec_x));
+        SystemUnit.InsertSym(CSysSym.Create('Inc',in_inc_x));
+        SystemUnit.InsertSym(CSysSym.Create('Str',in_str_x_string));
+        SystemUnit.InsertSym(CSysSym.Create('Assert',in_assert_x_y));
+        SystemUnit.InsertSym(CSysSym.Create('Val',in_val_x));
+        SystemUnit.InsertSym(CSysSym.Create('Addr',in_addr_x));
 
-        SystemUnit.InsertSym(CSysSym.create('TypeInfo',in_typeinfo_x));
-        SystemUnit.InsertSym(CSysSym.create('SetLength',in_setlength_x));
-        SystemUnit.InsertSym(CSysSym.create('Copy',in_copy_x));
-        SystemUnit.InsertSym(CSysSym.create('Initialize',in_initialize_x));
-        SystemUnit.InsertSym(CSysSym.create('Finalize',in_finalize_x));
-        SystemUnit.InsertSym(CSysSym.create('Length',in_length_x));
-        SystemUnit.InsertSym(CSysSym.create('New',in_new_x));
-        SystemUnit.InsertSym(CSysSym.create('Dispose',in_dispose_x));
+        SystemUnit.InsertSym(CSysSym.Create('TypeInfo',in_typeinfo_x));
+        SystemUnit.InsertSym(CSysSym.Create('SetLength',in_setlength_x));
+        SystemUnit.InsertSym(CSysSym.Create('Copy',in_copy_x));
+        SystemUnit.InsertSym(CSysSym.Create('Initialize',in_initialize_x));
+        SystemUnit.InsertSym(CSysSym.Create('Finalize',in_finalize_x));
+        SystemUnit.InsertSym(CSysSym.Create('Length',in_length_x));
+        SystemUnit.InsertSym(CSysSym.Create('New',in_new_x));
+        SystemUnit.InsertSym(CSysSym.Create('Dispose',in_dispose_x));
 {$ifdef SUPPORT_GET_FRAME}
-        SystemUnit.InsertSym(CSysSym.create('Get_Frame',in_get_frame));
+        SystemUnit.InsertSym(CSysSym.Create('Get_Frame',in_get_frame));
 {$endif SUPPORT_GET_FRAME}
-        SystemUnit.InsertSym(CSysSym.create('Unaligned',in_unaligned_x));
-        SystemUnit.InsertSym(CSysSym.create('Aligned',in_aligned_x));
-        SystemUnit.InsertSym(CSysSym.create('Volatile',in_volatile_x));
-        SystemUnit.InsertSym(CSysSym.create('ObjCSelector',in_objc_selector_x)); { objc only }
-        SystemUnit.InsertSym(CSysSym.create('ObjCEncode',in_objc_encode_x)); { objc only }
-        SystemUnit.InsertSym(CSysSym.create('Default',in_default_x));
-        SystemUnit.InsertSym(CSysSym.create('SetString',in_setstring_x_y_z));
-        SystemUnit.InsertSym(CSysSym.create('Insert',in_insert_x_y_z));
-        SystemUnit.InsertSym(CSysSym.create('Delete',in_delete_x_y_z));
-        SystemUnit.InsertSym(CSysSym.create('GetTypeKind',in_gettypekind_x));
-        SystemUnit.InsertSym(CSysSym.create('IsManagedType',in_ismanagedtype_x));
-        SystemUnit.InsertSym(CSysSym.create('IsConstValue',in_isconstvalue_x));
-        SystemUnit.InsertSym(CSysSym.create('NameOf',in_nameof_x));
-        SystemUnit.InsertSym(CSysSym.create('fpc_eh_return_data_regno', in_const_eh_return_data_regno));
-        SystemUnit.InsertSym(CSysSym.create('AtomicIncrement',in_atomic_inc));
-        SystemUnit.InsertSym(CSysSym.create('AtomicDecrement',in_atomic_dec));
-        SystemUnit.InsertSym(CSysSym.create('AtomicExchange',in_atomic_xchg));
-        SystemUnit.InsertSym(CSysSym.create('AtomicCmpExchange',in_atomic_cmp_xchg));
+        SystemUnit.InsertSym(CSysSym.Create('Unaligned',in_unaligned_x));
+        SystemUnit.InsertSym(CSysSym.Create('Aligned',in_aligned_x));
+        SystemUnit.InsertSym(CSysSym.Create('Volatile',in_volatile_x));
+        SystemUnit.InsertSym(CSysSym.Create('ObjCSelector',in_objc_selector_x)); { objc only }
+        SystemUnit.InsertSym(CSysSym.Create('ObjCEncode',in_objc_encode_x)); { objc only }
+        SystemUnit.InsertSym(CSysSym.Create('Default',in_default_x));
+        SystemUnit.InsertSym(CSysSym.Create('SetString',in_setstring_x_y_z));
+        SystemUnit.InsertSym(CSysSym.Create('Insert',in_insert_x_y_z));
+        SystemUnit.InsertSym(CSysSym.Create('Delete',in_delete_x_y_z));
+        SystemUnit.InsertSym(CSysSym.Create('GetTypeKind',in_gettypekind_x));
+        SystemUnit.InsertSym(CSysSym.Create('IsManagedType',in_ismanagedtype_x));
+        SystemUnit.InsertSym(CSysSym.Create('IsConstValue',in_isconstvalue_x));
+        SystemUnit.InsertSym(CSysSym.Create('NameOf',in_nameof_x));
+        SystemUnit.InsertSym(CSysSym.Create('fpc_eh_return_data_regno', in_const_eh_return_data_regno));
+        SystemUnit.InsertSym(CSysSym.Create('AtomicIncrement',in_atomic_inc));
+        SystemUnit.InsertSym(CSysSym.Create('AtomicDecrement',in_atomic_dec));
+        SystemUnit.InsertSym(CSysSym.Create('AtomicExchange',in_atomic_xchg));
+        SystemUnit.InsertSym(CSysSym.Create('AtomicCmpExchange',in_atomic_cmp_xchg));
         SystemUnit.InsertSym(CConstSym.Create_Ord('False',constord,0,PasBool1Type));
         SystemUnit.InsertSym(CConstSym.Create_Ord('True',constord,1,PasBool1Type));
       end;
@@ -209,7 +209,7 @@ implementation
 
         function AddType(const s:string;def:TDef):TTypeSym;
         begin
-          result:=CTypeSym.create(s,def);
+          result:=CTypeSym.Create(s,def);
           SystemUnit.InsertSym(result);
         end;
 
@@ -221,10 +221,10 @@ implementation
 
         procedure create_fpu_types;
         begin
-          S32FloatType:=CFloatDef.create(S32Real,true);
-          S64FloatType:=CFloatDef.create(S64Real,true);
-          S80FloatType:=CFloatDef.create(s80real,true);
-          SC80FloatType:=CFloatDef.create(sc80real,true);
+          S32FloatType:=CFloatDef.Create(S32Real,true);
+          S64FloatType:=CFloatDef.Create(S64Real,true);
+          S80FloatType:=CFloatDef.Create(s80real,true);
+          SC80FloatType:=CFloatDef.Create(sc80real,true);
         end;
 
       var
@@ -232,45 +232,45 @@ implementation
 	pvmt_name : shortstring;
       begin
         SymTableStack.push(SystemUnit);
-        CUndefinedType:=CUndefinedDef.create(true);
-        CFormalType:=CFormalDef.create(false);
-        CTypedFormalType:=CFormalDef.create(true);
-        VoidType:=COrdDef.create(uvoid,0,0,true);
-        VoidPointerType:=CPointerDef.create(VoidType);
-        U8IntType:=COrdDef.create(u8bit,0,255,true);
-        S8IntType:=COrdDef.create(s8bit,int64(-128),127,true);
-        U16IntType:=COrdDef.create(u16bit,0,65535,true);
-        S16IntType:=COrdDef.create(s16bit,int64(-32768),32767,true);
-        S24IntType:=COrdDef.create(customint,-(int64(1) shl 23),1 shl 23 - 1,true);
-        U24IntType:=COrdDef.create(customint,0,1 shl 24 - 1,true);
-        U32IntType:=COrdDef.create(u32bit,0,high(LongWord),true);
-        S32IntType:=COrdDef.create(s32bit,int64(low(LongInt)),int64(high(LongInt)),true);
-        S40IntType:=COrdDef.create(customint,-(int64(1) shl 39),int64(1) shl 39 - 1,true);
-        U40IntType:=COrdDef.create(customint,0,int64(1) shl 40 - 1,true);
-        S48IntType:=COrdDef.create(customint,-(int64(1) shl 47),int64(1) shl 47 - 1,true);
-        U48IntType:=COrdDef.create(customint,0,int64(1) shl 48 - 1,true);
-        S56IntType:=COrdDef.create(customint,-(int64(1) shl 55),int64(1) shl 55 - 1,true);
-        U56IntType:=COrdDef.create(customint,0,int64(1) shl 56 - 1,true);
-        U64IntType:=COrdDef.create(u64bit,low(qword),high(qword),true);
-        S64IntType:=COrdDef.create(s64bit,low(int64),high(int64),true);
+        CUndefinedType:=CUndefinedDef.Create(true);
+        CFormalType:=CFormalDef.Create(false);
+        CTypedFormalType:=CFormalDef.Create(true);
+        VoidType:=COrdDef.Create(uvoid,0,0,true);
+        VoidPointerType:=CPointerDef.Create(VoidType);
+        U8IntType:=COrdDef.Create(u8bit,0,255,true);
+        S8IntType:=COrdDef.Create(s8bit,int64(-128),127,true);
+        U16IntType:=COrdDef.Create(u16bit,0,65535,true);
+        S16IntType:=COrdDef.Create(s16bit,int64(-32768),32767,true);
+        S24IntType:=COrdDef.Create(customint,-(int64(1) shl 23),1 shl 23 - 1,true);
+        U24IntType:=COrdDef.Create(customint,0,1 shl 24 - 1,true);
+        U32IntType:=COrdDef.Create(u32bit,0,high(LongWord),true);
+        S32IntType:=COrdDef.Create(s32bit,int64(low(LongInt)),int64(high(LongInt)),true);
+        S40IntType:=COrdDef.Create(customint,-(int64(1) shl 39),int64(1) shl 39 - 1,true);
+        U40IntType:=COrdDef.Create(customint,0,int64(1) shl 40 - 1,true);
+        S48IntType:=COrdDef.Create(customint,-(int64(1) shl 47),int64(1) shl 47 - 1,true);
+        U48IntType:=COrdDef.Create(customint,0,int64(1) shl 48 - 1,true);
+        S56IntType:=COrdDef.Create(customint,-(int64(1) shl 55),int64(1) shl 55 - 1,true);
+        U56IntType:=COrdDef.Create(customint,0,int64(1) shl 56 - 1,true);
+        U64IntType:=COrdDef.Create(u64bit,low(qword),high(qword),true);
+        S64IntType:=COrdDef.Create(s64bit,low(int64),high(int64),true);
         { upper/lower bound not yet properly set for 128 bit types, as we don't
           support them yet at the Pascal level (nor for tconstexprint); they're
           only used internally by the high level code generator for LLVM to
           implement overflow checking }
-        U128IntType:=COrdDef.create(u128bit,0,0,true);
-        S128IntType:=COrdDef.create(s128bit,0,0,true);
-        PasBool1Type:=COrdDef.create(pasbool1,0,1,true);
-        PasBool8Type:=COrdDef.create(pasbool8,0,1,true);
-        PasBool16Type:=COrdDef.create(pasbool16,0,1,true);
-        PasBool32Type:=COrdDef.create(pasbool32,0,1,true);
-        PasBool64Type:=COrdDef.create(pasbool64,0,1,true);
-        Bool8Type:=COrdDef.create(bool8bit,low(int64),high(int64),true);
-        Bool16Type:=COrdDef.create(bool16bit,low(int64),high(int64),true);
-        Bool32Type:=COrdDef.create(bool32bit,low(int64),high(int64),true);
-        Bool64Type:=COrdDef.create(bool64bit,low(int64),high(int64),true);
+        U128IntType:=COrdDef.Create(u128bit,0,0,true);
+        S128IntType:=COrdDef.Create(s128bit,0,0,true);
+        PasBool1Type:=COrdDef.Create(pasbool1,0,1,true);
+        PasBool8Type:=COrdDef.Create(pasbool8,0,1,true);
+        PasBool16Type:=COrdDef.Create(pasbool16,0,1,true);
+        PasBool32Type:=COrdDef.Create(pasbool32,0,1,true);
+        PasBool64Type:=COrdDef.Create(pasbool64,0,1,true);
+        Bool8Type:=COrdDef.Create(bool8bit,low(int64),high(int64),true);
+        Bool16Type:=COrdDef.Create(bool16bit,low(int64),high(int64),true);
+        Bool32Type:=COrdDef.Create(bool32bit,low(int64),high(int64),true);
+        Bool64Type:=COrdDef.Create(bool64bit,low(int64),high(int64),true);
 
-        CAnsiCharType:=COrdDef.create(uchar,0,255,true);
-        CWideCharType:=COrdDef.create(uwidechar,0,65535,true);
+        CAnsiCharType:=COrdDef.Create(uchar,0,255,true);
+        CWideCharType:=COrdDef.Create(uwidechar,0,65535,true);
         CShortStringType:=CStringDef.CreateShort(255,true);
         { should we give a length to the default long and ansi string definition ?? }
         CLongStringType:=CStringDef.CreateLong(-1,true);
@@ -286,21 +286,21 @@ implementation
  {$ifdef x86}
         create_fpu_types;
         if TargetInfo.system=system_x86_64_win64 then
-          S64CurrencyType:=COrdDef.create(scurrency,low(int64),high(int64),true)
+          S64CurrencyType:=COrdDef.Create(scurrency,low(int64),high(int64),true)
         else
-          S64CurrencyType:=CFloatDef.create(s64currency,true);
+          S64CurrencyType:=CFloatDef.Create(s64currency,true);
 {$endif x86}
 {$ifdef aarch64}
         create_fpu_types;
-        S64CurrencyType:=COrdDef.create(scurrency,low(int64),high(int64),true);
+        S64CurrencyType:=COrdDef.Create(scurrency,low(int64),high(int64),true);
 {$endif aarch64}
 
         set_default_int_types;
         { some other definitions }
-        CharPointerType:=CPointerDef.create(CAnsiCharType);
-        WideCharPointerType:=CPointerDef.create(CWideCharType);
+        CharPointerType:=CPointerDef.Create(CAnsiCharType);
+        WideCharPointerType:=CPointerDef.Create(CWideCharType);
 
-        ParentFPVoidPointerType:=CPointerDef.create(VoidType);
+        ParentFPVoidPointerType:=CPointerDef.Create(VoidType);
 
 {$ifdef x86}
         VoidNearPointerType:=TCPUPointerDefClass(CPointerDef).CreateX86(VoidType,x86pt_near);
@@ -333,8 +333,8 @@ implementation
         CFileType:=CFileDef.CreateUntyped;
         if f_variants in Features then
           begin
-            CVariantType:=CVariantDef.create(vt_normalvariant);
-            COleVariantType:=CVariantDef.create(vt_olevariant);
+            CVariantType:=CVariantDef.Create(vt_normalvariant);
+            COleVariantType:=CVariantDef.Create(vt_olevariant);
           end;
 
         AddType('Single',S32FloatType);
@@ -353,7 +353,7 @@ implementation
             AddType('CExtended',PBestRealType^);
 {$ifdef x86}
         if TargetInfo.system<>system_x86_64_win64 then
-          AddType('Comp',CFloatDef.create(s64comp,true));
+          AddType('Comp',CFloatDef.Create(s64comp,true));
 {$endif x86}
         AddType('Currency',S64CurrencyType);
         AddType('Pointer',VoidPointerType);
@@ -486,41 +486,41 @@ implementation
         AddType('$s64currency',S64CurrencyType);
           begin
             { Add a type for virtual method tables }
-            hrecst:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
-            VMTType:=CRecordDef.create('',hrecst);
-            PVMTType:=CPointerDef.create(VMTType);
+            hrecst:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
+            VMTType:=CRecordDef.Create('',hrecst);
+            PVMTType:=CPointerDef.Create(VMTType);
             { can't use addtype for pvmt because the rtti of the pointed
               type is not available. The rtti for pvmt will be written implicitly
               by thev tblarray below }
-            SystemUnit.InsertSym(CTypeSym.create('$'+pvmt_name,PVMTType));
-            AddField(hrecst,CFieldVarSym.create('$length',vs_value,SizeSIntType,[]));
-            AddField(hrecst,CFieldVarSym.create('$mlength',vs_value,SizeSIntType,[]));
-            AddField(hrecst,CFieldVarSym.create('$parent',vs_value,PVMTType,[]));
+            SystemUnit.InsertSym(CTypeSym.Create('$'+pvmt_name,PVMTType));
+            AddField(hrecst,CFieldVarSym.Create('$length',vs_value,SizeSIntType,[]));
+            AddField(hrecst,CFieldVarSym.Create('$mlength',vs_value,SizeSIntType,[]));
+            AddField(hrecst,CFieldVarSym.Create('$parent',vs_value,PVMTType,[]));
             { it seems vmttype is used both for TP objects and Delphi classes,
               so the next entry could either be the first virtual method (vm1)
               (object) or the class name (class). We can't easily create separate
               vtable formats for both, as gdb is hard coded to search for
               __vtbl_ptr_type in all cases (JM) }
-            AddField(hrecst,CFieldVarSym.create('$vm1_or_classname',vs_value,CPointerDef.create(CShortStringType),[]));
-            VMTArrayType:=CArrayDef.create(0,0,S32IntType);
+            AddField(hrecst,CFieldVarSym.Create('$vm1_or_classname',vs_value,CPointerDef.Create(CShortStringType),[]));
+            VMTArrayType:=CArrayDef.Create(0,0,S32IntType);
             TArrayDef(VMTArrayType).ElementDef:=VoidPointerType;
-            AddField(hrecst,CFieldVarSym.create('$__pfn',vs_value,VMTArrayType,[]));
+            AddField(hrecst,CFieldVarSym.Create('$__pfn',vs_value,VMTArrayType,[]));
             AddType('$__vtbl_ptr_type',VMTType);
-            VMTArrayType:=CArrayDef.create(0,1,S32IntType);
+            VMTArrayType:=CArrayDef.Create(0,1,S32IntType);
             TArrayDef(VMTArrayType).ElementDef:=PVMTType;
             AddType('$vtblarray',VMTArrayType);
           end;
         { Add a type for methodpointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.Alignment.RecordAlignMin);
-        AddField(hrecst,CFieldVarSym.create('$proc',vs_value,VoidCodePointerType,[]));
-        AddField(hrecst,CFieldVarSym.create('$self',vs_value,VoidPointerType,[]));
-        MethodPointerType:=CRecordDef.create('',hrecst);
+        hrecst:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
+        AddField(hrecst,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
+        AddField(hrecst,CFieldVarSym.Create('$self',vs_value,VoidPointerType,[]));
+        MethodPointerType:=CRecordDef.Create('',hrecst);
         AddType('$methodpointer',MethodPointerType);
         { Add a type for nested proc pointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.Alignment.RecordAlignMin);
-        AddField(hrecst,CFieldVarSym.create('$proc',vs_value,VoidCodePointerType,[]));
-        AddField(hrecst,CFieldVarSym.create('$parentfp',vs_value,ParentFPVoidPointerType,[]));
-        NestedProcPointerType:=CRecordDef.create('',hrecst);
+        hrecst:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
+        AddField(hrecst,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
+        AddField(hrecst,CFieldVarSym.Create('$parentfp',vs_value,ParentFPVoidPointerType,[]));
+        NestedProcPointerType:=CRecordDef.Create('',hrecst);
         AddType('$nestedprocpointer',NestedProcPointerType);
         SymTableStack.pop(SystemUnit);
       end;
@@ -536,7 +536,7 @@ implementation
           srsym : TTypeSym;
         begin
           srsym:=Search_System_Type(s);
-          def:=srsym.typedef;
+          def:=srsym.TypeDef;
         end;
 
       var
@@ -638,78 +638,78 @@ implementation
         will be used for loading the nodes from a ppu
       }
       begin
-        nodeclass[addn]:=CAddNode;
-        nodeclass[muln]:=CAddNode;
-        nodeclass[subn]:=CAddNode;
-        nodeclass[divn]:=CModDivNode;
-        nodeclass[symdifn]:=CAddNode;
-        nodeclass[modn]:=CModDivNode;
-        nodeclass[assignn]:=CAssignmentNode;
-        nodeclass[loadn]:=CLoadNode;
-        nodeclass[rangen]:=CRangeNode;
-        nodeclass[ltn]:=CAddNode;
-        nodeclass[lten]:=CAddNode;
-        nodeclass[gtn]:=CAddNode;
-        nodeclass[gten]:=CAddNode;
-        nodeclass[EqualN]:=CAddNode;
-        nodeclass[unequaln]:=CAddNode;
-        nodeclass[inn]:=CInNode;
-        nodeclass[orn]:=CAddNode;
-        nodeclass[xorn]:=CAddNode;
-        nodeclass[shrn]:=CShlShrNode;
-        nodeclass[shln]:=CShlShrNode;
-        nodeclass[slashn]:=CAddNode;
-        nodeclass[andn]:=CAddNode;
-        nodeclass[subscriptn]:=CSubscriptNode;
-        nodeclass[derefn]:=CDerefNode;
-        nodeclass[addrn]:=CAddrNode;
-        nodeclass[ordconstn]:=COrdConstNode;
-        nodeclass[typeconvn]:=CTypeConvNode;
-        nodeclass[calln]:=CCallNode;
-        nodeclass[callparan]:=CCallParaNode;
-        nodeclass[realconstn]:=CRealConstNode;
-        nodeclass[unaryminusn]:=CUnaryMinusNode;
-        nodeclass[unaryplusn]:=CUnaryPlusNode;
-        nodeclass[asmn]:=CAsmNode;
-        nodeclass[vecn]:=CVecNode;
-        nodeclass[pointerconstn]:=CPointerConstNode;
-        nodeclass[stringconstn]:=CStringConstNode;
-        nodeclass[notn]:=CNotNode;
-        nodeclass[inlinen]:=CInlineNode;
-        nodeclass[niln]:=CNilNode;
-        nodeclass[errorn]:=CErrorNode;
-        nodeclass[typen]:=CTypeNode;
-        nodeclass[setelementn]:=CSetElementNode;
-        nodeclass[setconstn]:=CSetConstNode;
-        nodeclass[blockn]:=CBlockNode;
-        nodeclass[statementn]:=CStatementNode;
-        nodeclass[ifn]:=CIfNode;
-        nodeclass[breakn]:=CBreakNode;
-        nodeclass[continuen]:=CContinueNode;
-        nodeclass[whilerepeatn]:=CWhileRepeatNode;
-        nodeclass[forn]:=CForNode;
-        nodeclass[exitn]:=CExitNode;
-        nodeclass[casen]:=CCaseNode;
-        nodeclass[labeln]:=CLabelNode;
-        nodeclass[goton]:=CGotoNode;
-        nodeclass[tryexceptn]:=CTryExceptNode;
-        nodeclass[raisen]:=CRaiseNode;
-        nodeclass[tryfinallyn]:=CTryFinallyNode;
-        nodeclass[onn]:=COnNode;
-        nodeclass[isn]:=CIsNode;
-        nodeclass[asn]:=CAsNode;
-        nodeclass[starstarn]:=CAddNode;
-        nodeclass[arrayconstructorn]:=CArrayConstructorNode;
-        nodeclass[arrayconstructorrangen]:=CArrayConstructorRangeNode;
-        nodeclass[tempcreaten]:=CTempCreateNode;
-        nodeclass[temprefn]:=CTempRefNode;
-        nodeclass[tempdeleten]:=CTempDeleteNode;
-        nodeclass[addoptn]:=CAddNode;
-        nodeclass[nothingn]:=CNothingNode;
-        nodeclass[loadvmtaddrn]:=CLoadVMTAddrNode;
-        nodeclass[guidconstn]:=CGUIDConstNode;
-        nodeclass[rttin]:=CRTTINode;
-        nodeclass[loadparentfpn]:=CLoadParentFPNode;
+        NodeClass[addn]:=CAddNode;
+        NodeClass[muln]:=CAddNode;
+        NodeClass[subn]:=CAddNode;
+        NodeClass[divn]:=CModDivNode;
+        NodeClass[symdifn]:=CAddNode;
+        NodeClass[modn]:=CModDivNode;
+        NodeClass[assignn]:=CAssignmentNode;
+        NodeClass[loadn]:=CLoadNode;
+        NodeClass[rangen]:=CRangeNode;
+        NodeClass[ltn]:=CAddNode;
+        NodeClass[lten]:=CAddNode;
+        NodeClass[gtn]:=CAddNode;
+        NodeClass[gten]:=CAddNode;
+        NodeClass[EqualN]:=CAddNode;
+        NodeClass[unequaln]:=CAddNode;
+        NodeClass[inn]:=CInNode;
+        NodeClass[orn]:=CAddNode;
+        NodeClass[xorn]:=CAddNode;
+        NodeClass[shrn]:=CShlShrNode;
+        NodeClass[shln]:=CShlShrNode;
+        NodeClass[slashn]:=CAddNode;
+        NodeClass[andn]:=CAddNode;
+        NodeClass[subscriptn]:=CSubscriptNode;
+        NodeClass[derefn]:=CDerefNode;
+        NodeClass[addrn]:=CAddrNode;
+        NodeClass[ordconstn]:=COrdConstNode;
+        NodeClass[typeconvn]:=CTypeConvNode;
+        NodeClass[calln]:=CCallNode;
+        NodeClass[callparan]:=CCallParaNode;
+        NodeClass[realconstn]:=CRealConstNode;
+        NodeClass[unaryminusn]:=CUnaryMinusNode;
+        NodeClass[unaryplusn]:=CUnaryPlusNode;
+        NodeClass[asmn]:=CAsmNode;
+        NodeClass[vecn]:=CVecNode;
+        NodeClass[pointerconstn]:=CPointerConstNode;
+        NodeClass[stringconstn]:=CStringConstNode;
+        NodeClass[notn]:=CNotNode;
+        NodeClass[inlinen]:=CInlineNode;
+        NodeClass[niln]:=CNilNode;
+        NodeClass[errorn]:=CErrorNode;
+        NodeClass[typen]:=CTypeNode;
+        NodeClass[setelementn]:=CSetElementNode;
+        NodeClass[setconstn]:=CSetConstNode;
+        NodeClass[blockn]:=CBlockNode;
+        NodeClass[statementn]:=CStatementNode;
+        NodeClass[ifn]:=CIfNode;
+        NodeClass[breakn]:=CBreakNode;
+        NodeClass[continuen]:=CContinueNode;
+        NodeClass[whilerepeatn]:=CWhileRepeatNode;
+        NodeClass[forn]:=CForNode;
+        NodeClass[exitn]:=CExitNode;
+        NodeClass[casen]:=CCaseNode;
+        NodeClass[labeln]:=CLabelNode;
+        NodeClass[goton]:=CGotoNode;
+        NodeClass[tryexceptn]:=CTryExceptNode;
+        NodeClass[raisen]:=CRaiseNode;
+        NodeClass[tryfinallyn]:=CTryFinallyNode;
+        NodeClass[onn]:=COnNode;
+        NodeClass[isn]:=CIsNode;
+        NodeClass[asn]:=CAsNode;
+        NodeClass[starstarn]:=CAddNode;
+        NodeClass[arrayconstructorn]:=CArrayConstructorNode;
+        NodeClass[arrayconstructorrangen]:=CArrayConstructorRangeNode;
+        NodeClass[tempcreaten]:=CTempCreateNode;
+        NodeClass[temprefn]:=CTempRefNode;
+        NodeClass[tempdeleten]:=CTempDeleteNode;
+        NodeClass[addoptn]:=CAddNode;
+        NodeClass[nothingn]:=CNothingNode;
+        NodeClass[loadvmtaddrn]:=CLoadVMTAddrNode;
+        NodeClass[guidconstn]:=CGUIDConstNode;
+        NodeClass[rttin]:=CRTTINode;
+        NodeClass[loadparentfpn]:=CLoadParentFPNode;
       end;
 
 

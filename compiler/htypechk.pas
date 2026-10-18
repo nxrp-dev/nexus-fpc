@@ -736,7 +736,7 @@ implementation
 
         { if we are dealing with inline function then get the function }
         if t.nodetype=inlinen then
-          inlinenumber:=TInlineNode(t).inlinenumber
+          inlinenumber:=TInlineNode(t).InlineNumber
         else
           inlinenumber:=in_none;
 
@@ -771,7 +771,7 @@ implementation
             if not (ocf_check_only in ocf) then
               begin
                 CGMessage(parser_e_operator_not_overloaded);
-                t:=CNothingNode.create;
+                t:=CNothingNode.Create;
               end;
             exit;
           end;
@@ -782,8 +782,8 @@ implementation
           ppn:=TCallParaNode(TInlineNode(t).left.GetCopy)
         else
           begin
-            ppn:=CCallParaNode.create(TUnaryNode(t).left.GetCopy,nil);
-            ppn.get_paratype;
+            ppn:=CCallParaNode.Create(TUnaryNode(t).left.GetCopy,nil);
+            ppn.Get_ParaType;
           end;
         candidates.init_operator(optoken,ppn);
 
@@ -796,7 +796,7 @@ implementation
             if not (ocf_check_only in ocf) then
               begin
                 CGMessage2(parser_e_operator_not_overloaded_2,ld.TypeName,arraytokeninfo[optoken].str);
-                t:=CNothingNode.create;
+                t:=CNothingNode.Create;
               end;
             exit;
           end;
@@ -818,7 +818,7 @@ implementation
             if not (ocf_check_only in ocf) then
               begin
                 CGMessage2(parser_e_operator_not_overloaded_2,ld.TypeName,arraytokeninfo[optoken].str);
-                t:=CNothingNode.create;
+                t:=CNothingNode.Create;
               end;
             exit;
           end;
@@ -849,11 +849,11 @@ implementation
 
         { the nil as symtable signs firstcalln that this is
           an overloaded operator }
-        t:=CCallNode.create(ppn,TProcSym(operpd.ProcSym),nil,nil,[],nil);
+        t:=CCallNode.Create(ppn,TProcSym(operpd.ProcSym),nil,nil,[],nil);
 
         { we already know the procdef to use, so it can
           skip the overload choosing in callnode.pass_typecheck }
-        TCallNode(t).procdefinition:=operpd;
+        TCallNode(t).ProcDefinition:=operpd;
       end;
 
 
@@ -871,8 +871,8 @@ implementation
             candidates : TCallCandidates;
           begin
             { generate parameter nodes }
-            ppn:=CCallParaNode.create(TBinaryNode(t).right.GetCopy,CCallParaNode.create(TBinaryNode(t).left.GetCopy,nil));
-            ppn.get_paratype;
+            ppn:=CCallParaNode.Create(TBinaryNode(t).right.GetCopy,CCallParaNode.Create(TBinaryNode(t).left.GetCopy,nil));
+            ppn.Get_ParaType;
             candidates.init_operator(optoken,ppn);
 
             { for commutative operators we can swap arguments and try again }
@@ -880,7 +880,7 @@ implementation
                not(optoken in non_commutative_op_tokens) then
               begin
                 candidates.done;
-                reverseparameters(ppn);
+                ReverseParameters(ppn);
                 { reverse compare operators }
                 case optoken of
                   _LT:
@@ -973,7 +973,7 @@ implementation
             if not (ocf_check_only in ocf) then
               begin
                 CGMessage(parser_e_operator_not_overloaded);
-                t:=CNothingNode.create;
+                t:=CNothingNode.Create;
               end;
             exit;
           end;
@@ -995,7 +995,7 @@ implementation
             ppn.free;
             ppn := nil;
             if not (ocf_check_only in ocf) then
-              t:=CNothingNode.create;
+              t:=CNothingNode.Create;
             exit;
           end;
 
@@ -1011,16 +1011,16 @@ implementation
 
         { the nil as symtable signs firstcalln that this is
           an overloaded operator }
-        ht:=CCallNode.create(ppn,TProcSym(operpd.ProcSym),nil,nil,[],nil);
+        ht:=CCallNode.Create(ppn,TProcSym(operpd.ProcSym),nil,nil,[],nil);
 
         { we already know the procdef to use, so it can
           skip the overload choosing in callnode.pass_typecheck }
-        TCallNode(ht).procdefinition:=operpd;
+        TCallNode(ht).ProcDefinition:=operpd;
 
         { if we found "=" operator for "<>" expression then use it
           together with "not" }
         if (t.nodetype=unequaln) and (optoken=_EQ) then
-          ht:=CNotNode.create(ht);
+          ht:=CNotNode.Create(ht);
         t:=ht;
       end;
 
@@ -1058,7 +1058,7 @@ implementation
             typeconvn :
                begin
                  { implicit dereference -> stop }
-                 if (TTypeConvNode(p).convtype=tc_pointer_2_array) then
+                 if (TTypeConvNode(p).ConvType=tc_pointer_2_array) then
                    break;
                  if (TTypeConvNode(p).resultdef.typ=recorddef) then
                    records_only:=false;
@@ -1066,18 +1066,18 @@ implementation
                end;
             loadn :
               begin
-                if (TLoadNode(p).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) then
+                if (TLoadNode(p).SymTableEntry.typ in [staticvarsym,localvarsym,paravarsym]) then
                   begin
                     if (ra_addr_taken in how) then
-                      TAbstractVarSym(TLoadNode(p).symtableentry).AddrTaken:=true;
+                      TAbstractVarSym(TLoadNode(p).SymTableEntry).AddrTaken:=true;
                     if (ra_different_scope in how) then
                       begin
-                        TAbstractVarSym(TLoadNode(p).symtableentry).DifferentScope:=true;
+                        TAbstractVarSym(TLoadNode(p).SymTableEntry).DifferentScope:=true;
                         { Hidden bounds can be loaded only during code generation.
                           Reserve their frame location before allocating the parent. }
-                        if TLoadNode(p).symtableentry.typ=paravarsym then
+                        if TLoadNode(p).SymTableEntry.typ=paravarsym then
                           begin
-                            lHighSym:=Get_High_Value_Sym(TParaVarSym(TLoadNode(p).symtableentry));
+                            lHighSym:=Get_High_Value_Sym(TParaVarSym(TLoadNode(p).SymTableEntry));
                             if Assigned(lHighSym) then
                               begin
                                 lHighSym.DifferentScope:=true;
@@ -1085,25 +1085,25 @@ implementation
                               end;
                           end;
                       end;
-                    if (TAbstractVarSym(TLoadNode(p).symtableentry).VarRegable <> vr_none) and
+                    if (TAbstractVarSym(TLoadNode(p).SymTableEntry).VarRegable <> vr_none) and
                        ((not records_only) or
-                        (TAbstractVarSym(TLoadNode(p).symtableentry).vardef.typ = recorddef)) then
-                      if (TLoadNode(p).symtableentry.typ = paravarsym) and
+                        (TAbstractVarSym(TLoadNode(p).SymTableEntry).vardef.typ = recorddef)) then
+                      if (TLoadNode(p).SymTableEntry.typ = paravarsym) and
                          (ra_addr_regable in how) then
-                        TAbstractVarSym(TLoadNode(p).symtableentry).VarRegable:=vr_addr
+                        TAbstractVarSym(TLoadNode(p).SymTableEntry).VarRegable:=vr_addr
                       else
-                        TAbstractVarSym(TLoadNode(p).symtableentry).VarRegable:=vr_none;
+                        TAbstractVarSym(TLoadNode(p).SymTableEntry).VarRegable:=vr_none;
                   end;
                 break;
               end;
             temprefn :
               begin
                 if (ra_addr_taken in how) then
-                  TTempRefNode(p).includetempflag(ti_addr_taken);
-                if (ti_may_be_in_reg in TTempRefNode(p).tempflags) and
+                  TTempRefNode(p).IncludeTempFlag(ti_addr_taken);
+                if (ti_may_be_in_reg in TTempRefNode(p).TempFlags) and
                    ((not records_only) or
-                    (TTempRefNode(p).tempinfo^.typedef.typ = recorddef)) then
-                  TTempRefNode(p).excludetempflag(ti_may_be_in_reg);
+                    (TTempRefNode(p).TempInfo^.TypeDef.typ = recorddef)) then
+                  TTempRefNode(p).ExcludeTempFlag(ti_may_be_in_reg);
                 break;
               end;
             else
@@ -1132,7 +1132,7 @@ implementation
            Is_VoidPointer(p.resultdef) then
           p:=TUnaryNode(p).left;
         result:=(p.nodetype=typeconvn) and
-                (TTypeConvNode(p).convtype=tc_proc_2_procvar);
+                (TTypeConvNode(p).ConvType=tc_proc_2_procvar);
         if result then
           realprocdef:=TProcDef(TTypeConvNode(p).left.resultdef);
       end;
@@ -1148,10 +1148,10 @@ implementation
               (p.resultdef=TTypeConvNode(p).left.resultdef) then
           p:=TTypeConvNode(p).left;
         if (p.nodetype=loadn) and
-           (TLoadNode(p).symtableentry.typ in [absolutevarsym,localvarsym,paravarsym]) and
-           ([vo_is_funcret,vo_is_result] * TAbstractVarSym(TLoadNode(p).symtableentry).VarOptions = [vo_is_funcret]) then
+           (TLoadNode(p).SymTableEntry.typ in [absolutevarsym,localvarsym,paravarsym]) and
+           ([vo_is_funcret,vo_is_result] * TAbstractVarSym(TLoadNode(p).SymTableEntry).VarOptions = [vo_is_funcret]) then
          begin
-           owningprocdef:=TProcDef(TLoadNode(p).symtableentry.owner.DefOwner);
+           owningprocdef:=TProcDef(TLoadNode(p).SymTableEntry.owner.DefOwner);
            result:=true;
          end;
       end;
@@ -1219,14 +1219,14 @@ implementation
              derefn:
                begin
                  if (TDerefNode(p).left.nodetype=temprefn) and
-                    Assigned(TTempRefNode(TDerefNode(p).left).tempinfo^.withnode) then
-                   p:=TTempRefNode(TDerefNode(p).left).tempinfo^.withnode
+                    Assigned(TTempRefNode(TDerefNode(p).left).TempInfo^.withnode) then
+                   p:=TTempRefNode(TDerefNode(p).left).TempInfo^.withnode
                  else
                    break;
                end;
              typeconvn :
                begin
-                 case TTypeConvNode(p).convtype of
+                 case TTypeConvNode(p).ConvType of
                    tc_cchar_2_pchar,
                    tc_cstring_2_pchar,
                    tc_array_2_pointer :
@@ -1271,9 +1271,9 @@ implementation
                  { the methodpointer/framepointer is read }
                  if Assigned(TUnaryNode(p).left) then
                    set_varstate(TUnaryNode(p).left,vs_read,[vsf_must_be_valid]);
-                 if (TLoadNode(p).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) then
+                 if (TLoadNode(p).SymTableEntry.typ in [localvarsym,paravarsym,staticvarsym]) then
                    begin
-                     hsym:=TAbstractVarSym(TLoadNode(p).symtableentry);
+                     hsym:=TAbstractVarSym(TLoadNode(p).SymTableEntry);
                      { this check requires proper data flow analysis... }
 (*                     if (hsym.varspez=vs_final) and
                         (hsym.varstate in [vs_written,vs_readwritten]) and
@@ -1290,7 +1290,7 @@ implementation
                              (hsym.owner=CurrentProcInfo.procdef.ParaST)) then
                            begin
                              if vsf_use_hints in varstateflags then
-                               include(TLoadNode(p).loadnodeflags,loadnf_only_uninitialized_hint);
+                               include(TLoadNode(p).LoadNodeFlags,loadnf_only_uninitialized_hint);
                              if not(cs_opt_nodedfa in CurrentSettings.OptimizerSwitches) then
                                begin
                                  if (vo_is_funcret in hsym.VarOptions) then
@@ -1368,7 +1368,7 @@ implementation
            case p.nodetype of
              vecn:
                begin
-                 include(TVecNode(p).vecnodeflags,vnf_callunique);
+                 include(TVecNode(p).VecNodeFlags,vnf_callunique);
                  break;
                end;
              typeconvn,
@@ -1403,7 +1403,7 @@ implementation
             { allow p^:= constructions with p is const parameter }
             if (Valid_Const in opts) or
               ((hp.nodetype=loadn) and
-               (loadnf_isinternal_ignoreconst in TLoadNode(hp).loadnodeflags)) then
+               (loadnf_isinternal_ignoreconst in TLoadNode(hp).LoadNodeFlags)) then
               result:=true
             { final (class) fields can only be initialised in the (class) constructors of
               class in which they have been declared (not in descendent constructors) }
@@ -1433,7 +1433,7 @@ implementation
                 if not report_errors and
                    not result then
                   for i:=0 to typeconvs.Count-1 do
-                    TTypeConvNode(typeconvs[i]).assignment_side:=false;
+                    TTypeConvNode(typeconvs[i]).AssignmentSide:=false;
                 typeconvs.free;
                 typeconvs := nil;
               end;
@@ -1524,7 +1524,7 @@ implementation
            case hp.nodetype of
              temprefn :
                begin
-                 valid_for_assign := not(ti_readonly in TTempRefNode(hp).tempflags);
+                 valid_for_assign := not(ti_readonly in TTempRefNode(hp).TempFlags);
                  mayberesettypeconvs;
                  exit;
                end;
@@ -1548,14 +1548,14 @@ implementation
                  todef:=hp.resultdef;
                  { typeconversions on the assignment side must keep
                    left.location the same }
-                 TTypeConvNode(hp).assignment_side:=true;
+                 TTypeConvNode(hp).AssignmentSide:=true;
                  if not Assigned(typeconvs) then
-                   typeconvs:=TFPObjectList.create(false);
+                   typeconvs:=TFPObjectList.Create(false);
                  typeconvs.add(hp);
                  if not((nf_absolute in TTypeConvNode(hp).flags) or
-                        TTypeConvNode(hp).target_specific_general_typeconv or
+                        TTypeConvNode(hp).Target_Specific_General_TypeConv or
                         ((nf_explicit in hp.flags) and
-                         TTypeConvNode(hp).target_specific_explicit_typeconv) or
+                         TTypeConvNode(hp).Target_Specific_Explicit_TypeConv) or
                         (fromdef.typ=formaldef) or
                         Is_Void(fromdef) or
                         Is_Open_Array(fromdef) or
@@ -1577,7 +1577,7 @@ implementation
 
                  { don't allow assignments to typeconvs that need special code }
                  if not(gotsubscript or gotvec) and
-                    not(TTypeConvNode(hp).assign_allowed) then
+                    not(TTypeConvNode(hp).Assign_Allowed) then
                    begin
                      if report_errors then
                        CGMessagePos(hp.fileinfo,errmsg);
@@ -1589,7 +1589,7 @@ implementation
                      begin
                        { pointer -> array conversion is done then we need to see it
                          as a deref, because a ^ is then not required anymore }
-                       if TTypeConvNode(hp).convtype=tc_pointer_2_array then
+                       if TTypeConvNode(hp).ConvType=tc_pointer_2_array then
                          begin
                            valid_for_assign:=true;
                            mayberesettypeconvs;
@@ -1661,7 +1661,7 @@ implementation
                  if not gotsubscript and
                     not(valid_packed in opts) and
                     Is_Packed_Record_Or_Object(TSubscriptNode(hp).left.resultdef) and
-                    ((TSubscriptNode(hp).vs.FieldOffset mod 8 <> 0) or
+                    ((TSubscriptNode(hp).FieldSym.FieldOffset mod 8 <> 0) or
                      (Is_Ordinal(TSubscriptNode(hp).resultdef) and
                       not IsPowerOf2(TSubscriptNode(hp).resultdef.PackedBitSize div 8,temp)))  then
                    begin
@@ -1674,8 +1674,8 @@ implementation
                      exit;
                    end;
                  { check for final fields }
-                 if (TSubscriptNode(hp).vs.VarSpez=vs_final) and
-                    not constaccessok(TSubscriptNode(hp).vs) then
+                 if (TSubscriptNode(hp).FieldSym.VarSpez=vs_final) and
+                    not constaccessok(TSubscriptNode(hp).FieldSym) then
                    begin
                      mayberesettypeconvs;
                      exit;
@@ -1693,10 +1693,10 @@ implementation
                  gotsubscript:=true;
                  { loop counter? }
                  if not(Valid_Const in opts) and
-                    (vo_is_loop_counter in TSubscriptNode(hp).vs.VarOptions) then
+                    (vo_is_loop_counter in TSubscriptNode(hp).FieldSym.VarOptions) then
                    begin
                      if report_errors then
-                       CGMessage1(parser_e_illegal_assignment_to_count_var,TSubscriptNode(hp).vs.realname);
+                       CGMessage1(parser_e_illegal_assignment_to_count_var,TSubscriptNode(hp).FieldSym.realname);
                      mayberesettypeconvs;
                      exit;
                    end;
@@ -1829,13 +1829,13 @@ implementation
              inlinen :
                begin
                  { recurse so volatile(non-lvalue):=... gives a proper error instead of IE 200203272 }
-                 if TInlineNode(hp).inlinenumber in [in_unaligned_x,in_aligned_x,in_volatile_x] then
+                 if TInlineNode(hp).InlineNumber in [in_unaligned_x,in_aligned_x,in_volatile_x] then
                    begin
                      hp:=TCallParaNode(TInlineNode(hp).left).left;
                      continue;
                    end;
                  if ((valid_const in opts) and
-                     (TInlineNode(hp).inlinenumber in [in_typeof_x])) then
+                     (TInlineNode(hp).InlineNumber in [in_typeof_x])) then
                    result:=true
                  else
                    if report_errors then
@@ -1856,7 +1856,7 @@ implementation
                end;
              loadn :
                begin
-                 case TLoadNode(hp).symtableentry.typ of
+                 case TLoadNode(hp).SymTableEntry.typ of
                    absolutevarsym,
                    staticvarsym,
                    localvarsym,
@@ -1864,17 +1864,17 @@ implementation
                      begin
                        { loop counter? }
                        if not(Valid_Const in opts) and
-                          (vo_is_loop_counter in TAbstractVarSym(TLoadNode(hp).symtableentry).VarOptions) then
+                          (vo_is_loop_counter in TAbstractVarSym(TLoadNode(hp).SymTableEntry).VarOptions) then
                          begin
                            if report_errors then
-                             CGMessage1(parser_e_illegal_assignment_to_count_var,TLoadNode(hp).symtableentry.realname);
+                             CGMessage1(parser_e_illegal_assignment_to_count_var,TLoadNode(hp).SymTableEntry.realname);
                            mayberesettypeconvs;
                            exit;
                          end;
                        { read-only variable? }
-                       if (TAbstractVarSym(TLoadNode(hp).symtableentry).VarSpez in [vs_const,vs_constref,vs_final]) then
+                       if (TAbstractVarSym(TLoadNode(hp).SymTableEntry).VarSpez in [vs_const,vs_constref,vs_final]) then
                         begin
-                          result:=constaccessok(TAbstractVarSym(TLoadNode(hp).symtableentry));
+                          result:=constaccessok(TAbstractVarSym(TLoadNode(hp).SymTableEntry));
                           mayberesettypeconvs;
                           exit;
                         end;
@@ -1904,7 +1904,7 @@ implementation
                      end;
                    constsym:
                      begin
-                       if (TConstSym(TLoadNode(hp).symtableentry).ConstTyp in [constresourcestring,constwresourcestring]) and
+                       if (TConstSym(TLoadNode(hp).SymTableEntry).ConstTyp in [constresourcestring,constwresourcestring]) and
                          (valid_addr in opts) then
                          result:=true
                        else
@@ -1987,7 +1987,7 @@ implementation
             begin
               { all types can be passed to a formaldef,
                 but it is not the prefered way }
-              if not is_constnode(fromnode) then
+              if not Is_ConstNode(fromnode) then
                 eq:=te_convert_l6
               else
                 eq:=te_incompatible;
@@ -2080,7 +2080,7 @@ implementation
               if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                   (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                  (p.left.nodetype=calln) then
-                tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(p.left).procdefinition),TProcVarDef(def_to),false);
+                tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(p.left).ProcDefinition),TProcVarDef(def_to),false);
               if (tmpeq=te_incompatible) and
                  (m_nested_procvars in CurrentSettings.ModeSwitches) and
                  is_proc2procvar_load(p.left,realprocdef) then
@@ -2100,7 +2100,7 @@ implementation
                   (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                  (p.left.nodetype=calln) and
                  Is_Invokable(def_to) then
-                tmpeq:=Proc_To_FuncRef_Conv(TProcDef(TCallNode(p.left).procdefinition),TObjectDef(def_to));
+                tmpeq:=Proc_To_FuncRef_Conv(TProcDef(TCallNode(p.left).ProcDefinition),TObjectDef(def_to));
               if tmpeq<>te_incompatible then
                 eq:=tmpeq;
             end;
@@ -2122,7 +2122,7 @@ implementation
                             (eq<>te_incompatible) do
                         begin
                           if (acn.left.nodetype=calln) then
-                            tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(acn.left).procdefinition),TProcVarDef(TArrayDef(def_to).ElementDef),false)
+                            tmpeq:=Proc_To_ProcVar_Equal(TProcDef(TCallNode(acn.left).ProcDefinition),TProcVarDef(TArrayDef(def_to).ElementDef),false)
                           else
                             tmpeq:=Compare_Defs(acn.left.resultdef,TArrayDef(def_to).ElementDef,acn.left.nodetype);
                           if tmpeq<eq then
@@ -2859,7 +2859,7 @@ implementation
         pt       : TCallParaNode;
         eq,
         mineq    : TEqualType;
-        convtype : TConvertType;
+        ConvType : TConvertType;
         pdtemp,
         pdoper   : TProcDef;
         releasecurrpt, check_valid_var : boolean;
@@ -2930,12 +2930,12 @@ implementation
                   is compatible with the expected type. }
                 (
                  (count=1) or
-                 (Compare_Defs_Ext(TProcVarDef(currpt.left.resultdef).ReturnDef,def_to,nothingn,convtype,pdoper,[])>te_incompatible)
+                 (Compare_Defs_Ext(TProcVarDef(currpt.left.resultdef).ReturnDef,def_to,nothingn,ConvType,pdoper,[])>te_incompatible)
                 ) then
                begin
                  releasecurrpt:=true;
                  currpt:=TCallParaNode(pt.GetCopy);
-                 if maybe_call_procvar(currpt.left,true) then
+                 if Maybe_Call_ProcVar(currpt.left,true) then
                    begin
                      currpt.resultdef:=currpt.left.resultdef;
                      def_from:=currpt.left.resultdef;
@@ -2955,12 +2955,12 @@ implementation
                 (currpt.left.resultdef.typ=procdef) then
                begin
                  if def_to.typ=procvardef then
-                   pdtemp:=TProcSym(TLoadNode(currpt.left).symtableentry).Find_ProcDef_ByProcVarDef(TProcVarDef(def_to))
+                   pdtemp:=TProcSym(TLoadNode(currpt.left).SymTableEntry).Find_ProcDef_ByProcVarDef(TProcVarDef(def_to))
                  else
-                   pdtemp:=TProcSym(TLoadNode(currpt.left).symtableentry).Find_ProcDef_ByFuncRefDef(TObjectDef(def_to));
+                   pdtemp:=TProcSym(TLoadNode(currpt.left).SymTableEntry).Find_ProcDef_ByFuncRefDef(TObjectDef(def_to));
                  if Assigned(pdtemp) then
                    begin
-                     TLoadNode(currpt.left).setprocdef(pdtemp,def_to.typ<>procvardef);
+                     TLoadNode(currpt.left).SetProcDef(pdtemp,def_to.typ<>procvardef);
                      currpt.resultdef:=currpt.left.resultdef;
                      def_from:=currpt.left.resultdef;
                    end;
@@ -2974,21 +2974,21 @@ implementation
                    Is_FuncRef(def_to)
                 ) and
                 (currpt.left.nodetype=typeconvn) and
-                (TTypeConvNode(currpt.left).convtype=tc_proc_2_procvar) and
-                (TTypeConvNode(currpt.left).totypedef=VoidType) and
+                (TTypeConvNode(currpt.left).ConvType=tc_proc_2_procvar) and
+                (TTypeConvNode(currpt.left).ToTypeDef=VoidType) and
                 not (nf_explicit in currpt.left.flags) and
                 (TTypeConvNode(currpt.left).left.nodetype=loadn) and
                 (TTypeConvNode(currpt.left).left.resultdef.typ=procdef) then
                begin
                  if def_to.typ=procvardef then
-                   pdtemp:=TProcSym(TLoadNode(TTypeConvNode(currpt.left).left).symtableentry).Find_ProcDef_ByProcVarDef(TProcVarDef(def_to))
+                   pdtemp:=TProcSym(TLoadNode(TTypeConvNode(currpt.left).left).SymTableEntry).Find_ProcDef_ByProcVarDef(TProcVarDef(def_to))
                  else
-                   pdtemp:=TProcSym(TLoadNode(TTypeConvNode(currpt.left).left).symtableentry).Find_ProcDef_ByFuncRefDef(TObjectDef(def_to));
+                   pdtemp:=TProcSym(TLoadNode(TTypeConvNode(currpt.left).left).SymTableEntry).Find_ProcDef_ByFuncRefDef(TObjectDef(def_to));
                  if Assigned(pdtemp) then
                    begin
-                     TLoadNode(TTypeConvNode(currpt.left).left).setprocdef(pdtemp,def_to.typ<>procvardef);
-                     TTypeConvNode(currpt.left).totypedef:=CProcVarDef.GetReusableProcAddr(pdtemp,pc_normal);
-                     TTypeConvNode(currpt.left).resultdef:=TTypeConvNode(currpt.left).totypedef;
+                     TLoadNode(TTypeConvNode(currpt.left).left).SetProcDef(pdtemp,def_to.typ<>procvardef);
+                     TTypeConvNode(currpt.left).ToTypeDef:=CProcVarDef.GetReusableProcAddr(pdtemp,pc_normal);
+                     TTypeConvNode(currpt.left).resultdef:=TTypeConvNode(currpt.left).ToTypeDef;
                      def_from:=TTypeConvNode(currpt.left).resultdef;
                    end;
                end;
@@ -3067,8 +3067,8 @@ implementation
                else if Assigned(def_to) and (def_to.typ=setdef) and Is_Array_Constructor(currpt.left.resultdef) then
                  begin
                    n:=currpt.left.GetCopy;
-                   arrayconstructor_to_set(n);
-                   eq:=Compare_Defs_Ext(n.resultdef,def_to,n.nodetype,convtype,pdoper,cdoptions);
+                   ArrayConstructor_To_Set(n);
+                   eq:=Compare_Defs_Ext(n.resultdef,def_to,n.nodetype,ConvType,pdoper,cdoptions);
                    check_valid_var:=false;
                    n.free;
                    n := nil;
@@ -3088,7 +3088,7 @@ implementation
                     if TArrayConstructorNode(n).left.nodetype=arrayconstructorrangen then
                       eq:=te_incompatible
                     else
-                      eq:=Compare_Defs_Ext(TArrayConstructorNode(n).left.resultdef,TArrayDef(def_to).ElementDef,TArrayConstructorNode(n).left.nodetype,convtype,pdoper,cdoptions);
+                      eq:=Compare_Defs_Ext(TArrayConstructorNode(n).left.resultdef,TArrayDef(def_to).ElementDef,TArrayConstructorNode(n).left.nodetype,ConvType,pdoper,cdoptions);
                     if eq<mineq then
                       mineq:=eq;
                     if eq=te_incompatible then
@@ -3111,7 +3111,7 @@ implementation
                       check_valid_var:=false;
                     end
                  else
-                   eq:=Compare_Defs_Ext(def_from,def_to,currpt.left.nodetype,convtype,pdoper,cdoptions);
+                   eq:=Compare_Defs_Ext(def_from,def_to,currpt.left.nodetype,ConvType,pdoper,cdoptions);
 
                  { when the types are not equal we need to check
                    some special case for parameter passing }
@@ -3805,7 +3805,7 @@ implementation
           Assigned(source.resultdef) and
           (source.resultdef.typ in [enumdef,orddef,floatdef]) and
           not Is_Boolean(source.resultdef) and
-          not is_constrealnode(source) and
+          not Is_ConstRealNode(source) and
           { constants are handled via regular range checking }
           (source.nodetype<>ordconstn) then
          begin

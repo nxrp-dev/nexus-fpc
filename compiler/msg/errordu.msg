@@ -4444,7 +4444,6 @@ F*2Xp<x>_Suche nach der Compilerbinary zuerst im Verzeichnis <x>
 **2XS_Versuche Units statisch zu linken (default)    (definiert FPC_LINK_STATIC)
 **2Xt_Linke mit statischen Bibliotheken              (-static wird an den Linker übergeben)
 **2Xv_Erzeuge eine Tabelle mit den virtuellen Entry-Aufrufen
-**2XV_Benutze VLink als externen linker              (Voreinstellung für Amiga, Atari, Sinclair QL)
 **2XX_Versuche Units smart zu linken                 (definiert FPC_LINK_SMART)
 **1*_
 **1?_Zeigt diese Hilfe an

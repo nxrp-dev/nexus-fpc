@@ -33,13 +33,13 @@ interface
     type
        TI386AddrNode = class(TI86AddrNode)
          protected
-          procedure set_absvarsym_resultdef; override;
+          procedure Set_AbsVarSym_ResultDef; override;
          public
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TI386VecNode = class(TX86VecNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
 implementation
@@ -56,18 +56,18 @@ implementation
                              TI386ADDRNODE
 *****************************************************************************}
 
-    procedure TI386AddrNode.set_absvarsym_resultdef;
+    procedure TI386AddrNode.Set_AbsVarSym_ResultDef;
       begin
-        if not(anf_typedaddr in addrnodeflags) then
-          resultdef:=VoidNearFSPointerType
+        if not(anf_typedaddr in AddrNodeFlags) then
+          ResultDef:=VoidNearFSPointerType
         else
-          resultdef:=TCPUPointerDefClass(CPointerDef).CreateX86(left.resultdef,x86pt_near_fs);
+          ResultDef:=TCPUPointerDefClass(CPointerDef).CreateX86(Left.ResultDef,x86pt_near_fs);
       end;
 
 
-    procedure TI386AddrNode.pass_generate_code;
+    procedure TI386AddrNode.Pass_Generate_Code;
       begin
-        inherited pass_generate_code;
+        inherited Pass_Generate_Code;
         { for use of other segments, not used }
         {if left.location.reference.segment<>NR_NO then
           location.segment:=left.location.reference.segment;}
@@ -78,11 +78,11 @@ implementation
                              TI386VECNODE
 *****************************************************************************}
 
-    procedure TI386VecNode.pass_generate_code;
+    procedure TI386VecNode.Pass_Generate_Code;
       begin
-        inherited pass_generate_code;
-        if vnf_memseg in vecnodeflags then
-          location.Reference.Segment:=NR_FS;
+        inherited Pass_Generate_Code;
+        if vnf_memseg in VecNodeFlags then
+          Location.Reference.Segment:=NR_FS;
       end;
 
 

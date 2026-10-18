@@ -32,8 +32,8 @@ interface
     type
       TI86AddrNode = class(TCGAddrNode)
        protected
-        procedure set_absvarsym_resultdef; virtual; abstract;
-        function typecheck_non_proc(realsource: TNode; out res: TNode): boolean; override;
+        procedure Set_AbsVarSym_ResultDef; virtual; abstract;
+        function TypeCheck_Non_Proc(ARealSource: TNode; out AResultNode: TNode): Boolean; override;
       end;
 
 implementation
@@ -49,20 +49,20 @@ implementation
                            TI86ADDRNODE
 *****************************************************************************}
 
-  function TI86AddrNode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
+  function TI86AddrNode.TypeCheck_Non_Proc(ARealSource: TNode; out AResultNode: TNode): Boolean;
     begin
-      res:=nil;
+      AResultNode:=nil;
       { if we are getting the address of an absolute sym, check whether it's
         a near or a far pointer }
-      if (realsource.nodetype=loadn) and
-         ((TLoadNode(realsource).symtableentry.typ=absolutevarsym) and
-         TCPUAbsoluteVarSym(TLoadNode(realsource).symtableentry).AbsSeg) then
+      if (ARealSource.NodeType=loadn) and
+         ((TLoadNode(ARealSource).SymTableEntry.typ=absolutevarsym) and
+         TCPUAbsoluteVarSym(TLoadNode(ARealSource).SymTableEntry).AbsSeg) then
         begin
-          set_absvarsym_resultdef;
-          result:=true;
+          Set_AbsVarSym_ResultDef;
+          Result:=true;
         end
       else
-        result:=inherited;
+        Result:=inherited;
     end;
 
 

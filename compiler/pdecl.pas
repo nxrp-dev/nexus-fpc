@@ -62,7 +62,7 @@ implementation
        { symtable }
        symconst,SymBase,symcpu,symcreat,defutil,defcmp,SymTable,symutil,
        { pass 1 }
-       ninl,ncon,nobj,ngenutil,nld,nmem,ncal,pass_1,
+       ninl,ncon,nobj,ngenutil,nld,nmem,ncal,Pass_1,
        { parser }
        Scanner,
        pbase,pexpr,ptype,ptconst,pdecsub,pdecvar,pdecobj,pgenutil,pparautl,
@@ -74,7 +74,7 @@ implementation
     function is_system_custom_attribute_descendant(def:TDef):boolean;
     begin
       if not Assigned(Class_TCustomAttribute) then
-        Class_TCustomAttribute:=TObjectDef(Search_System_Type('TCUSTOMATTRIBUTE').typedef);
+        Class_TCustomAttribute:=TObjectDef(Search_System_Type('TCUSTOMATTRIBUTE').TypeDef);
       Result:=Def_Is_Related(def,Class_TCustomAttribute);
     end;
 
@@ -118,7 +118,7 @@ implementation
                    GetMem(sp,TStringConstNode(p).len+1);
                    sp[TStringConstNode(p).len]:=#0;
                    if TStringConstNode(p).len>0 then
-                     move(TStringConstNode(p).valueas[0],sp^,TStringConstNode(p).len+1);
+                     move(TStringConstNode(p).ValueAS[0],sp^,TStringConstNode(p).len+1);
                    { if a non-default ansistring code page has been specified,
                      keep it }
                    if Is_AnsiString(p.resultdef) and
@@ -131,14 +131,14 @@ implementation
            realconstn :
              begin
                 new(pd);
-                pd^:=TRealConstNode(p).value_real;
+                pd^:=TRealConstNode(p).ValueReal;
                 hp:=CConstSym.Create_Ptr(orgname,constreal,pd,p.resultdef);
              end;
            setconstn :
              begin
                new(ps);
-               if Assigned(TSetConstNode(p).value_set) then
-                 ps^:=TSetConstNode(p).value_set^
+               if Assigned(TSetConstNode(p).ValueSet) then
+                 ps^:=TSetConstNode(p).ValueSet^
                else
                  ps^:=[];
                hp:=CConstSym.Create_Ptr(orgname,constset,ps,p.resultdef);
@@ -175,7 +175,7 @@ implementation
                  values (mostly 0, except for (Bit)SizeOf()) }
                if not parse_generic then
                  Message(parser_e_cannot_evaluate_expression_at_compile_time);
-               case TInlineNode(p).inlinenumber of
+               case TInlineNode(p).InlineNumber of
                  in_sizeof_x:
                    begin
                      hp:=CConstSym.Create_Ord(orgname,constord,1,p.resultdef);
@@ -302,13 +302,13 @@ implementation
                        { note: we keep hdef so that we might at least read the
                                constant data correctly for error recovery }
                        check_allowed_for_var_or_const(hdef,false);
-                       sym:=CFieldVarSym.create(orgname,VarSpez,hdef,[]);
+                       sym:=CFieldVarSym.Create(orgname,VarSpez,hdef,[]);
                        SymTableStack.top.InsertSym(sym);
                        sym:=Make_Field_Static(SymTableStack.top,TFieldVarSym(sym));
                      end
                    else
                      begin
-                       sym:=CStaticVarSym.create(orgname,VarSpez,hdef,[]);
+                       sym:=CStaticVarSym.Create(orgname,VarSpez,hdef,[]);
                        sym.visibility:=SymTableStack.top.CurrentVisibility;
                        SymTableStack.top.InsertSym(sym);
                      end;
@@ -380,14 +380,14 @@ implementation
            else
              begin
                 if CurrentScanner.token=_ID then
-                  labelsym:=CLabelSym.create(CurrentScanner.orgpattern)
+                  labelsym:=CLabelSym.Create(CurrentScanner.orgpattern)
                 else
                   begin
                     { strip leading 0's in iso mode }
                     if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
                       while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
                         delete(CurrentScanner.pattern,1,1);
-                    labelsym:=CLabelSym.create(CurrentScanner.pattern);
+                    labelsym:=CLabelSym.Create(CurrentScanner.pattern);
                   end;
 
                 SymTableStack.top.InsertSym(labelsym);
@@ -395,14 +395,14 @@ implementation
                   begin
                     if SymTableStack.top.SymTableType=LocalSymTable then
                       begin
-                        labelsym.JumpBuf:=CLocalVarSym.create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
+                        labelsym.JumpBuf:=CLocalVarSym.Create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
                         SymTableStack.top.InsertSym(labelsym.JumpBuf);
                       end
                     else
                       begin
-                        labelsym.JumpBuf:=CStaticVarSym.create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
+                        labelsym.JumpBuf:=CStaticVarSym.Create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
                         SymTableStack.top.InsertSym(labelsym.JumpBuf);
-                        CNodeUtils.insertbssdata(TStaticVarSym(labelsym.JumpBuf));
+                        CNodeUtils.InsertBSSData(TStaticVarSym(labelsym.JumpBuf));
                       end;
                     include(labelsym.JumpBuf.SymOptions,sp_internal);
                     { the buffer will be setup later, but avoid a hint }
@@ -465,7 +465,7 @@ implementation
           if p.nodetype=typen then
             begin
               TypeSym:=TTypeSym(TTypeNode(p).TypeSym);
-              od:=TObjectDef(TTypeNode(p).typedef);
+              od:=TObjectDef(TTypeNode(p).TypeDef);
 
               { Check if the attribute class is related to TCustomAttribute }
               if not is_system_custom_attribute_descendant(od) then
@@ -482,12 +482,12 @@ implementation
               if constrsym.typ<>ProcSym then
                 InternalError(2018102301);
 
-              pcalln:=CCallNode.create(paran,TProcSym(constrsym),od.SymTable,CLoadVMTAddrNode.create(p),[cnf_no_convert_procvar],nil);
+              pcalln:=CCallNode.Create(paran,TProcSym(constrsym),od.SymTable,CLoadVMTAddrNode.Create(p),[cnf_no_convert_procvar],nil);
               p:=nil;
               ecnt:=ErrorCount;
               TypeCheckPass(pcalln);
 
-              if (pcalln.nodetype=calln) and Assigned(TCallNode(pcalln).procdefinition) and not CodeGenError then
+              if (pcalln.nodetype=calln) and Assigned(TCallNode(pcalln).ProcDefinition) and not CodeGenError then
                 begin
                   { TODO: once extended RTTI for methods is supported, reject a
                           constructor if it doesn't have extended RTTI enabled }
@@ -507,7 +507,7 @@ implementation
                       pcount:=0;
                       while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.VarOptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).ParaSym.VarOptions) then
                             inc(pcount);
                           ptmp:=TCallParaNode(ptmp).right;
                         end;
@@ -516,9 +516,9 @@ implementation
                       pcount:=0;
                       while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.VarOptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).ParaSym.VarOptions) then
                             begin
-                              if not is_constnode(TCallParaNode(ptmp).left) then
+                              if not Is_ConstNode(TCallParaNode(ptmp).left) then
                                 begin
                                   parasok:=false;
                                   messagepos(TCallParaNode(ptmp).left.fileinfo,type_e_constant_expr_expected);
@@ -535,8 +535,8 @@ implementation
                       { Add attribute to attribute list which will be added
                         to the property which is defined next. }
                       if not Assigned(rtti_attrs_def) then
-                        rtti_attrs_def:=TRTTIAttributeList.create;
-                      rtti_attrs_def.AddAttribute(TypeSym,TCallNode(pcalln).procdefinition,pcalln,paras);
+                        rtti_attrs_def:=TRTTIAttributeList.Create;
+                      rtti_attrs_def.AddAttribute(TypeSym,TCallNode(pcalln).ProcDefinition,pcalln,paras);
                     end
                   else
                     begin
@@ -584,9 +584,9 @@ implementation
             (CurrentScanner.token=_OBJCCLASS) or
             (CurrentScanner.token=_OBJCPROTOCOL) or
             (CurrentScanner.token=_OBJCCATEGORY)) and
-           (Assigned(TTypeSym(sym).typedef)) and
-           Is_Implicit_Pointer_Object_Type(TTypeSym(sym).typedef) and
-           (oo_is_forward in TObjectDef(TTypeSym(sym).typedef).ObjectOptions) then
+           (Assigned(TTypeSym(sym).TypeDef)) and
+           Is_Implicit_Pointer_Object_Type(TTypeSym(sym).TypeDef) and
+           (oo_is_forward in TObjectDef(TTypeSym(sym).TypeDef).ObjectOptions) then
          begin
            wasforward:=true;
            ObjectType:=odt_none;
@@ -619,12 +619,12 @@ implementation
                of a specialization }
              gendef:=determine_generic_def(gentypename);
            { we can ignore the result, the definition is modified }
-           object_dec(ObjectType,genorgtypename,newtype,gendef,generictypelist,TObjectDef(TTypeSym(sym).typedef),ht_none);
+           object_dec(ObjectType,genorgtypename,newtype,gendef,generictypelist,TObjectDef(TTypeSym(sym).TypeDef),ht_none);
            if wasforward and
-             (TObjectDef(TTypeSym(sym).typedef).ObjectType<>ObjectType) then
-             Message1(type_e_forward_interface_type_does_not_match,TObjectDef(TTypeSym(sym).typedef).GetTypeName);
+             (TObjectDef(TTypeSym(sym).TypeDef).ObjectType<>ObjectType) then
+             Message1(type_e_forward_interface_type_does_not_match,TObjectDef(TTypeSym(sym).TypeDef).GetTypeName);
            newtype:=TTypeSym(sym);
-           result:=newtype.typedef;
+           result:=newtype.TypeDef;
          end
         else
           begin
@@ -786,7 +786,7 @@ implementation
            { Start recording a generic template }
            if Assigned(generictypelist) then
              begin
-               localgenerictokenbuf:=TDynamicArray.create(256);
+               localgenerictokenbuf:=TDynamicArray.Create(256);
                CurrentScanner.startrecordtokens(localgenerictokenbuf);
              end;
 
@@ -802,7 +802,7 @@ implementation
                  { this should not be a symbol that was created by a generic
                    that was declared earlier }
                  not (
-                   (TTypeSym(sym).typedef.typ=undefineddef) and
+                   (TTypeSym(sym).TypeDef.typ=undefineddef) and
                    (sp_generic_dummy in sym.SymOptions)
                  ) then
                begin
@@ -819,7 +819,7 @@ implementation
                     begin
                        TStoredSym(generictypelist[i]).RegisterSym;
                        if TStoredSym(generictypelist[i]).typ=TypeSym then
-                         TStoredDef(TTypeSym(generictypelist[i]).typedef).RegisterDef;
+                         TStoredDef(TTypeSym(generictypelist[i]).TypeDef).RegisterDef;
                     end;
                 end;
 
@@ -838,14 +838,14 @@ implementation
                   sym:=TSym(SymTableStack.top.Find(TypeName));
                   if not Assigned(sym) then
                     begin
-                      sym:=CTypeSym.create(orgtypename,CUndefinedDef.create(true));
+                      sym:=CTypeSym.Create(orgtypename,CUndefinedDef.Create(true));
                       Include(sym.SymOptions,sp_generic_dummy);
-                      TTypeSym(sym).typedef.TypeSym:=sym;
+                      TTypeSym(sym).TypeDef.TypeSym:=sym;
                       sym.visibility:=SymTableStack.top.CurrentVisibility;
                       { add as dummy symbol before adding it to the symtable stack }
                       add_generic_dummysym(sym,TypeName);
                       SymTableStack.top.InsertSym(sym);
-                      TTypeSym(sym).typedef.owner:=sym.owner;
+                      TTypeSym(sym).TypeDef.owner:=sym.owner;
                     end
                   else
                     { this is not allowed in non-Delphi modes }
@@ -862,13 +862,13 @@ implementation
               else
                 begin
                   if Assigned(sym) and (sym.typ=TypeSym) and
-                      (TTypeSym(sym).typedef.typ=undefineddef) and
+                      (TTypeSym(sym).TypeDef.typ=undefineddef) and
                       (sp_generic_dummy in sym.SymOptions) then
                     begin
                       { this is a symbol that was added by an earlier generic
                         declaration, reuse it }
                       newtype:=TTypeSym(sym);
-                      newtype.typedef:=hdef;
+                      newtype.TypeDef:=hdef;
                       { use the correct casing }
                       newtype.RealName:=genorgtypename;
                       sym:=nil;
@@ -881,7 +881,7 @@ implementation
               { insert a new type if we don't reuse an existing symbol }
               if not Assigned(newtype) then
                 begin
-                  newtype:=CTypeSym.create(genorgtypename,hdef);
+                  newtype:=CTypeSym.Create(genorgtypename,hdef);
                   newtype.visibility:=SymTableStack.top.CurrentVisibility;
                   SymTableStack.top.InsertSym(newtype);
                 end;
@@ -922,7 +922,7 @@ implementation
                             begin
                               p:=comp_expr([ef_accept_equal]);
                               consume(_RKLAMMER);
-                              if not is_constintnode(p) then
+                              if not Is_ConstIntNode(p) then
                                 begin
                                   Message(parser_e_illegal_expression);
                                   { error recovery }
@@ -962,14 +962,14 @@ implementation
                 parsing method implementations }
               if isgeneric and Assigned(sym) and
                   not (m_delphi in CurrentSettings.ModeSwitches) and
-                  (TTypeSym(sym).typedef.typ=undefineddef) then
+                  (TTypeSym(sym).TypeDef.typ=undefineddef) then
                 begin
                   { don't free the undefineddef as the defids rely on the count
                     of the defs in the def list of the module}
-                  TTypeSym(sym).typedef:=hdef;
+                  TTypeSym(sym).TypeDef:=hdef;
                   setdummysym:=true;
                 end;
-              newtype.typedef:=hdef;
+              newtype.TypeDef:=hdef;
               { ensure that the type is registered when no specialization is
                 currently done }
               if (CurrentScanner.replay_stack_depth=0) and
@@ -1110,7 +1110,7 @@ implementation
                     if not istyperenaming and
                        not(oo_is_forward in TObjectDef(hdef).ObjectOptions) then
                       if not (oo_inherits_not_specialized in TObjectDef(hdef).ObjectOptions) then
-                        build_vmt(TObjectDef(hdef))
+                        Build_VMT(TObjectDef(hdef))
                       else
                       { update the procdevs to add hidden self param }
                       insert_struct_hidden_paras(TObjectDef(hdef));
@@ -1159,7 +1159,7 @@ implementation
            if isgeneric and (not(hdef.typ in [objectdef,recorddef,arraydef,procvardef])
                or Is_ObjectPascal_Helper(hdef)) then
              begin
-               newtype.typedef:=GenErrorDef;
+               newtype.TypeDef:=GenErrorDef;
                message(parser_e_cant_create_generics_of_this_type);
              end;
 
@@ -1175,8 +1175,8 @@ implementation
                for i:=0 to generictypelist.count-1 do
                  begin
                    if (TStoredSym(generictypelist[i]).typ=TypeSym) and
-                       not TTypeSym(generictypelist[i]).typedef.IsRegistered then
-                     FreeAndNil(TTypeSym(generictypelist[i]).typedef);
+                       not TTypeSym(generictypelist[i]).TypeDef.IsRegistered then
+                     FreeAndNil(TTypeSym(generictypelist[i]).TypeDef);
                    if not TStoredSym(generictypelist[i]).IsRegistered then
                      TStoredSym(generictypelist[i]).free; // no nil needed
                  end;
@@ -1308,7 +1308,7 @@ implementation
                    case p.nodetype of
                       ordconstn:
                         begin
-                           if is_constcharnode(p) then
+                           if Is_ConstCharNode(p) then
                              begin
                                 if not Is_SystemUnit_Unicode then
                                   begin
@@ -1333,19 +1333,19 @@ implementation
                           begin
                              if not Is_SystemUnit_Unicode  then
                                begin
-                               if cst_type in [cst_widestring,cst_unicodestring] then
-                                 changestringtype(GetAnsiStringDef);
+                               if ConstStringType in [cst_widestring,cst_unicodestring] then
+                                 ChangeStringType(GetAnsiStringDef);
                                GetMem(sp,len+1);
                                sp[len]:=#0;
                                if len>0 then
-                                 move(valueas[0],sp^,len);
+                                 move(ValueAS[0],sp^,len);
                                sym:=CConstSym.Create_String(orgname,constresourcestring,sp,len,nil);
                                end
                              else
                                begin
                                // For unicode rtl, resourcestrings are unicodestrings
-                               if cst_type in [cst_conststring,cst_longstring, cst_shortstring,cst_ansistring] then
-                                 changestringtype(CUnicodeStringType);
+                               if ConstStringType in [cst_conststring,cst_longstring, cst_shortstring,cst_ansistring] then
+                                 ChangeStringType(CUnicodeStringType);
                                InitWideString(pw);
                                CopyWideString(ValueWS,pw);
                                sym:=CConstSym.Create_WString(orgname,constwresourcestring,pw);

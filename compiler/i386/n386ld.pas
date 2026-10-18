@@ -28,11 +28,11 @@ interface
     uses
       GlobType,
       SymSym,
-      node,ncgld,nx86ld,pass_1;
+      node,ncgld,nx86ld,Pass_1;
 
     type
       TI386LoadNode = class(TX86LoadNode)
-         procedure generate_absaddr_access(vs: TAbsoluteVarSym); override;
+         procedure Generate_AbsAddr_Access(AVarSym: TAbsoluteVarSym); override;
       end;
 
 
@@ -48,10 +48,10 @@ implementation
                             TI386LOADNODE
 *****************************************************************************}
 
-    procedure TI386LoadNode.generate_absaddr_access(vs: TAbsoluteVarSym);
+    procedure TI386LoadNode.Generate_AbsAddr_Access(AVarSym: TAbsoluteVarSym);
       begin
-        if TCPUAbsoluteVarSym(symtableentry).AbsSeg then
-          location.Reference.Segment:=NR_FS;
+        if TCPUAbsoluteVarSym(SymTableEntry).AbsSeg then
+          Location.Reference.Segment:=NR_FS;
         inherited;
       end;
 

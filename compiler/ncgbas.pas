@@ -33,43 +33,43 @@ interface
 
     type
        TCGNothingNode = class(TNothingNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGAsmNode = class(TAsmNode)
          protected
-          procedure ResolveRef(const filepos: TFilePosInfo; var op:TOper); virtual;
+          procedure ResolveRef(const AFilePos: TFilePosInfo; var AOperand:TOper); virtual;
          public
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGStatementNode = class(TStatementNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGBlockNode = class(TBlockNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGTempCreateNode = class(TTempCreateNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGTempRefNode = class(TTempRefNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
           { Changes the location of this temp to ref. Useful when assigning }
           { another temp to this one. The current location will be freed.   }
           { Can only be called in pass 2 (since earlier, the temp location  }
           { isn't known yet)                                                }
-          procedure changelocation(const ref: TReference);
+          procedure ChangeLocation(const AReference: TReference);
        end;
 
        TCGTempDeleteNode = class(TTempDeleteNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGFinalizeTempsNode = class(TFinalizeTempsNode)
-          procedure pass_generate_code; override;
+          procedure Pass_Generate_Code; override;
        end;
 
   implementation
@@ -93,9 +93,9 @@ interface
                                  TNOTHING
 *****************************************************************************}
 
-    procedure TCGNothingNode.pass_generate_code;
+    procedure TCGNothingNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
          { avoid an abstract rte }
       end;
@@ -105,22 +105,22 @@ interface
                                TSTATEMENTNODE
 *****************************************************************************}
 
-    procedure TCGStatementNode.pass_generate_code;
+    procedure TCGStatementNode.Pass_Generate_Code;
       var
-         hp : TStatementNode;
+         lStatement : TStatementNode;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
-         hp:=self;
-         while Assigned(hp) do
+         lStatement:=self;
+         while Assigned(lStatement) do
           begin
-            if Assigned(hp.left) then
+            if Assigned(lStatement.Left) then
              begin
-               SecondPass(hp.left);
+               SecondPass(lStatement.Left);
                { Compiler inserted blocks can return values }
-               Location_Copy(hp.Location,hp.left.Location);
+               Location_Copy(lStatement.Location,lStatement.Left.Location);
              end;
-            hp:=TStatementNode(hp.right);
+            lStatement:=TStatementNode(lStatement.Right);
           end;
       end;
 
@@ -130,93 +130,93 @@ interface
 *****************************************************************************}
 
 
-    procedure TCGAsmNode.ResolveRef(const filepos: TFilePosInfo; var op:TOper);
+    procedure TCGAsmNode.ResolveRef(const AFilePos: TFilePosInfo; var AOperand:TOper);
       var
-        sym : TAbstractNormalVarSym;
+        lSymbol : TAbstractNormalVarSym;
 {$ifdef x86}
-        segment : TRegister;
-        scale : byte;
+        lSegment : TRegister;
+        lScale : Byte;
 {$endif x86}
-        forceref,
-        getoffset : boolean;
-        indexreg : TRegister;
-        sofs : LongInt;
+        lForceRef,
+        lGetOffset : Boolean;
+        lIndexReg : TRegister;
+        lSymbolOffset : LongInt;
       begin
-        if (op.typ=top_local) then
+        if (AOperand.typ=top_local) then
           begin
-            sofs:=op.localoper^.localsymofs;
-            indexreg:=op.localoper^.localindexreg;
+            lSymbolOffset:=AOperand.localoper^.localsymofs;
+            lIndexReg:=AOperand.localoper^.localindexreg;
 {$ifdef x86}
-            segment:=op.localoper^.localsegment;
-            scale:=op.localoper^.localscale;
+            lSegment:=AOperand.localoper^.localsegment;
+            lScale:=AOperand.localoper^.localscale;
 {$endif x86}
-            getoffset:=op.localoper^.localgetoffset;
-            forceref:=op.localoper^.localforceref;
-            sym:=TAbstractNormalVarSym(pointer(op.localoper^.localsym));
-            dispose(op.localoper);
-            case sym.LocAlloc.Loc of
+            lGetOffset:=AOperand.localoper^.localgetoffset;
+            lForceRef:=AOperand.localoper^.localforceref;
+            lSymbol:=TAbstractNormalVarSym(Pointer(AOperand.localoper^.localsym));
+            dispose(AOperand.localoper);
+            case lSymbol.LocAlloc.Loc of
               LOC_REFERENCE :
                 begin
-                  if getoffset then
+                  if lGetOffset then
                     begin
-                      if (indexreg=NR_NO)
+                      if (lIndexReg=NR_NO)
 {$ifdef x86}
-                         and (segment=NR_NO)
+                         and (lSegment=NR_NO)
 {$endif x86}
                          then
                         begin
-                          op.typ:=top_const;
-                          op.Val:=sym.LocAlloc.Reference.Offset+sofs;
+                          AOperand.typ:=top_const;
+                          AOperand.Val:=lSymbol.LocAlloc.Reference.Offset+lSymbolOffset;
                         end
                       else
                         begin
-                          op.typ:=top_ref;
-                          new(op.Ref);
-                          Reference_Reset_Base(op.Ref^,indexreg,sym.LocAlloc.Reference.Offset+sofs,
-                            sym.LocAlloc.Reference.TempPos,NewAlignment(sym.LocAlloc.Reference.Alignment,sofs),[]);
+                          AOperand.typ:=top_ref;
+                          new(AOperand.Ref);
+                          Reference_Reset_Base(AOperand.Ref^,lIndexReg,lSymbol.LocAlloc.Reference.Offset+lSymbolOffset,
+                            lSymbol.LocAlloc.Reference.TempPos,NewAlignment(lSymbol.LocAlloc.Reference.Alignment,lSymbolOffset),[]);
 {$ifdef x86}
-                          op.Ref^.Segment:=segment;
+                          AOperand.Ref^.Segment:=lSegment;
 {$endif x86}
                         end;
                     end
                   else
                     begin
-                      op.typ:=top_ref;
-                      new(op.Ref);
-                      Reference_Reset_Base(op.Ref^,sym.LocAlloc.Reference.Base,sym.LocAlloc.Reference.Offset+sofs,
-                        sym.LocAlloc.Reference.TempPos,NewAlignment(sym.LocAlloc.Reference.Alignment,sofs),[]);
-                      op.Ref^.Index:=indexreg;
+                      AOperand.typ:=top_ref;
+                      new(AOperand.Ref);
+                      Reference_Reset_Base(AOperand.Ref^,lSymbol.LocAlloc.Reference.Base,lSymbol.LocAlloc.Reference.Offset+lSymbolOffset,
+                        lSymbol.LocAlloc.Reference.TempPos,NewAlignment(lSymbol.LocAlloc.Reference.Alignment,lSymbolOffset),[]);
+                      AOperand.Ref^.Index:=lIndexReg;
 {$ifdef x86}
-                      op.Ref^.Segment:=segment;
-                      op.Ref^.ScaleFactor:=scale;
+                      AOperand.Ref^.Segment:=lSegment;
+                      AOperand.Ref^.ScaleFactor:=lScale;
 {$endif x86}
                     end;
                 end;
               LOC_REGISTER :
                 begin
-                  if getoffset then
-                    MessagePos(filepos,asmr_e_invalid_reference_syntax);
+                  if lGetOffset then
+                    MessagePos(AFilePos,asmr_e_invalid_reference_syntax);
                   { Subscribed access }
-                  if forceref or
-                     (sofs<>0)
+                  if lForceRef or
+                     (lSymbolOffset<>0)
                      then
                     begin
-                      op.typ:=top_ref;
-                      new(op.Ref);
+                      AOperand.typ:=top_ref;
+                      new(AOperand.Ref);
                       { no idea about the actual alignment }
-                      Reference_Reset_Base(op.Ref^,sym.LocAlloc.Register,sofs,CTempPosInvalid,1,[]);
-                      op.Ref^.Index:=indexreg;
+                      Reference_Reset_Base(AOperand.Ref^,lSymbol.LocAlloc.Register,lSymbolOffset,CTempPosInvalid,1,[]);
+                      AOperand.Ref^.Index:=lIndexReg;
 {$ifdef x86}
-                      op.Ref^.ScaleFactor:=scale;
+                      AOperand.Ref^.ScaleFactor:=lScale;
 {$endif x86}
                     end
                   else
                     begin
-                      op.typ:=top_reg;
-                      op.reg:=sym.LocAlloc.Register;
+                      AOperand.typ:=top_reg;
+                      AOperand.reg:=lSymbol.LocAlloc.Register;
 {$ifdef x86}
-                      if reg2opsize(op.reg)<>TCGSize2Opsize[sym.LocAlloc.Size] then
-                        op.reg:=NewReg(GetRegType(op.reg),GetSupReg(op.reg),cgsize2subreg(GetRegType(op.reg),sym.LocAlloc.Size));
+                      if reg2opsize(AOperand.reg)<>TCGSize2Opsize[lSymbol.LocAlloc.Size] then
+                        AOperand.reg:=NewReg(GetRegType(AOperand.reg),GetSupReg(AOperand.reg),cgsize2subreg(GetRegType(AOperand.reg),lSymbol.LocAlloc.Size));
 {$endif x86}
                     end;
                 end;
@@ -224,15 +224,15 @@ interface
               LOC_MMXREGISTER,
               LOC_MMREGISTER :
                 begin
-                  op.typ:=top_reg;
-                  op.reg:=NR_NO;
-                  if getoffset then
-                    MessagePos(filepos,asmr_e_invalid_reference_syntax);
+                  AOperand.typ:=top_reg;
+                  AOperand.reg:=NR_NO;
+                  if lGetOffset then
+                    MessagePos(AFilePos,asmr_e_invalid_reference_syntax);
                   { Using an MM/FPU register in a reference is not possible }
-                  if forceref or (sofs<>0) then
-                    MessagePos1(filepos,asmr_e_invalid_ref_register,std_regname(sym.LocAlloc.Register))
+                  if lForceRef or (lSymbolOffset<>0) then
+                    MessagePos1(AFilePos,asmr_e_invalid_ref_register,std_regname(lSymbol.LocAlloc.Register))
                   else
-                    op.reg:=sym.LocAlloc.Register;
+                    AOperand.reg:=lSymbol.LocAlloc.Register;
                 end;
               LOC_INVALID :
                 begin
@@ -240,13 +240,13 @@ interface
                     funcret loc is set to LOC_INVALID in case the
                     result is returned via a complex location
                     (more than one register, ...) }
-                  if (vo_is_funcret in TAbstractVarSym(sym).VarOptions) then
-                    MessagePos(filepos,asmr_e_complex_function_result_location)
+                  if (vo_is_funcret in TAbstractVarSym(lSymbol).VarOptions) then
+                    MessagePos(AFilePos,asmr_e_complex_function_result_location)
                   else
                     InternalError(2012082101);
                   { recover }
-                  op.typ:=top_reg;
-                  op.reg:=NR_FUNCTION_RETURN_REG;
+                  AOperand.typ:=top_reg;
+                  AOperand.reg:=NR_FUNCTION_RETURN_REG;
                 end;
               else
                 InternalError(201001031);
@@ -255,58 +255,58 @@ interface
       end;
 
 
-    procedure TCGAsmNode.pass_generate_code;
+    procedure TCGAsmNode.Pass_Generate_Code;
 
-      procedure ReLabel(var p:TAsmSymbol);
+      procedure ReLabel(var AAsmSymbol:TAsmSymbol);
         begin
           { Only relabel local tasmlabels }
-          if (p.bind = AB_LOCAL) and
-             (p is TAsmLabel) then
+          if (AAsmSymbol.bind = AB_LOCAL) and
+             (AAsmSymbol is TAsmLabel) then
            begin
-             if not Assigned(p.altsymbol) then
-               CurrentAsmData.GenerateAltSymbol(p);
-             p:=p.altsymbol;
-             p.increfs;
+             if not Assigned(AAsmSymbol.altsymbol) then
+               CurrentAsmData.GenerateAltSymbol(AAsmSymbol);
+             AAsmSymbol:=AAsmSymbol.altsymbol;
+             AAsmSymbol.increfs;
            end;
         end;
 
       var
-        hp,hp2 : TAI;
-        i : LongInt;
-        vs : TAbstractNormalVarSym;
+        lAsmItem,lCopiedAsmItem : TAI;
+        lIndex : LongInt;
+        lVarSym : TAbstractNormalVarSym;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
-         if (asmnf_get_asm_position in asmnodeflags) then
+         if (asmnf_get_asm_position in AsmNodeFlags) then
            begin
              { Add a marker, to be sure the list is not empty }
-             CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_Position));
-             currenttai:=TAI(CurrentAsmData.CurrAsmList.last);
+             CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_Position));
+             CurrentTAI:=TAI(CurrentAsmData.CurrAsmList.last);
              exit;
            end;
          { Switch to the CPU instruction set, specified by the $ASMCPU directive }
-         CurrentAsmData.CurrAsmList.Concat(TAIDirective.create(asd_cpu,CPUTypeStr[CurrentSettings.AsmCPUType]));
+         CurrentAsmData.CurrAsmList.Concat(TAIDirective.Create(asd_cpu,CPUTypeStr[CurrentSettings.AsmCPUType]));
 
          { Allocate registers used in the assembler block }
          { asmnf_has_registerlist means that registers are specified and already allocated }
-         if not (asmnf_has_registerlist in asmnodeflags) then
+         if not (asmnf_has_registerlist in AsmNodeFlags) then
            cg.AllocAllCPURegisters(CurrentAsmData.CurrAsmList);
 
          if (po_inline in CurrentProcInfo.procdef.ProcOptions) then
            begin
-             hp:=TAI(p_asm.first);
-             while Assigned(hp) do
+             lAsmItem:=TAI(AssemblyList.first);
+             while Assigned(lAsmItem) do
               begin
-                hp2:=TAI(hp.GetCopy);
-                case hp2.typ of
+                lCopiedAsmItem:=TAI(lAsmItem.GetCopy);
+                case lCopiedAsmItem.typ of
                   ait_label :
-                     ReLabel(TAsmSymbol(TAILabel(hp2).labsym));
+                     ReLabel(TAsmSymbol(TAILabel(lCopiedAsmItem).LabSym));
                   ait_const :
                      begin
-                       if Assigned(TAIConst(hp2).sym) then
-                         ReLabel(TAIConst(hp2).sym);
-                       if Assigned(TAIConst(hp2).endsym) then
-                         ReLabel(TAIConst(hp2).endsym);
+                       if Assigned(TAIConst(lCopiedAsmItem).sym) then
+                         ReLabel(TAIConst(lCopiedAsmItem).sym);
+                       if Assigned(TAIConst(lCopiedAsmItem).endsym) then
+                         ReLabel(TAIConst(lCopiedAsmItem).endsym);
                      end;
                   ait_instruction :
                      begin
@@ -314,14 +314,14 @@ interface
                          require another less optimized instruction }
 {$ifdef i386}
 {$ifndef NOAG386BIN}
-                       TAICPU(hp2).ResetPass1;
+                       TAICPU(lCopiedAsmItem).ResetPass1;
 {$endif}
 {$endif}
                        { fixup the references }
-                       for i:=1 to TAICPU(hp2).ops do
+                       for lIndex:=1 to TAICPU(lCopiedAsmItem).ops do
                         begin
-                          ResolveRef(TAICPU(hp2).fileinfo,TAICPU(hp2).oper[i-1]^);
-                          with TAICPU(hp2).oper[i-1]^ do
+                          ResolveRef(TAICPU(lCopiedAsmItem).FileInfo,TAICPU(lCopiedAsmItem).oper[lIndex-1]^);
+                          with TAICPU(lCopiedAsmItem).oper[lIndex-1]^ do
                            begin
                              case typ of
                                top_ref :
@@ -332,7 +332,7 @@ interface
                                      ReLabel(ref^.RelSymbol);
 {$ifdef x86}
                                    if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
-                                     TAICPU(hp2).segprefix:=ref^.Segment;
+                                     TAICPU(lCopiedAsmItem).segprefix:=ref^.Segment;
 {$endif x86}
                                  end;
                                else
@@ -343,44 +343,44 @@ interface
 {$if defined(x86)}
                         { can only be checked now that all local operands }
                         { have been resolved                              }
-                        TAICPU(hp2).CheckIfValid;
+                        TAICPU(lCopiedAsmItem).CheckIfValid;
 {$endif x86}
                      end;
                   else
                     ;
                 end;
-                CurrentAsmData.CurrAsmList.concat(hp2);
-                hp:=TAI(hp.next);
+                CurrentAsmData.CurrAsmList.concat(lCopiedAsmItem);
+                lAsmItem:=TAI(lAsmItem.next);
               end;
              { restore used symbols }
              CurrentAsmData.ResetAltSymbols;
            end
          else
            begin
-             hp:=TAI(p_asm.first);
-             while Assigned(hp) do
+             lAsmItem:=TAI(AssemblyList.first);
+             while Assigned(lAsmItem) do
               begin
-                case hp.typ of
+                case lAsmItem.typ of
                   ait_instruction :
                      begin
                        { remove cached insentry, because the new code can
                          require another less optimized instruction }
 {$ifdef i386}
 {$ifndef NOAG386BIN}
-                       TAICPU(hp).ResetPass1;
+                       TAICPU(lAsmItem).ResetPass1;
 {$endif}
 {$endif}
                        { fixup the references }
-                       for i:=1 to TAICPU(hp).ops do
+                       for lIndex:=1 to TAICPU(lAsmItem).ops do
                          begin
-                           ResolveRef(TAICPU(hp).fileinfo,TAICPU(hp).oper[i-1]^);
+                           ResolveRef(TAICPU(lAsmItem).FileInfo,TAICPU(lAsmItem).oper[lIndex-1]^);
 {$ifdef x86}
-                           with TAICPU(hp).oper[i-1]^ do
+                           with TAICPU(lAsmItem).oper[lIndex-1]^ do
                              begin
                                case typ of
                                  top_ref :
                                    if (ref^.Segment<>NR_NO) and (ref^.Segment<>get_default_segment_of_ref(ref^)) then
-                                     TAICPU(hp).segprefix:=ref^.Segment;
+                                     TAICPU(lAsmItem).segprefix:=ref^.Segment;
                                  else
                                    ;
                                end;
@@ -390,22 +390,22 @@ interface
 {$if defined(x86)}
                       { can only be checked now that all local operands }
                       { have been resolved                              }
-                      TAICPU(hp).CheckIfValid;
+                      TAICPU(lAsmItem).CheckIfValid;
 {$endif x86}
                      end;
                   ait_const:
-                    with TAIConst(hp) do begin
+                    with TAIConst(lAsmItem) do begin
                       { Handle references to locals from TP-style INLINE(). }
                       if Assigned(sym) and (sym.bind=AB_NONE) then
                         begin
-                          vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.ParaST.Find(sym.Name));
-                          if not Assigned(vs) then
-                            vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.LocalST.Find(sym.Name));
-                          if not Assigned(vs) then
+                          lVarSym:=TAbstractNormalVarSym(CurrentProcInfo.procdef.ParaST.Find(sym.Name));
+                          if not Assigned(lVarSym) then
+                            lVarSym:=TAbstractNormalVarSym(CurrentProcInfo.procdef.LocalST.Find(sym.Name));
+                          if not Assigned(lVarSym) then
                             InternalError(2021081401);
-                          if vs.LocAlloc.Loc<>LOC_REFERENCE then
+                          if lVarSym.LocAlloc.Loc<>LOC_REFERENCE then
                             InternalError(2021081402);
-                          value:=vs.LocAlloc.Reference.Offset+symofs;
+                          value:=lVarSym.LocAlloc.Reference.Offset+symofs;
                           sym:=nil;
                           symofs:=0;
                         end;
@@ -413,18 +413,18 @@ interface
                   else
                     ;
                 end;
-                hp:=TAI(hp.next);
+                lAsmItem:=TAI(lAsmItem.next);
               end;
              { insert the list }
-             CurrentAsmData.CurrAsmList.ConcatList(p_asm);
+             CurrentAsmData.CurrAsmList.ConcatList(AssemblyList);
            end;
 
          { Release register used in the assembler block }
-         if not (asmnf_has_registerlist in asmnodeflags) then
+         if not (asmnf_has_registerlist in AsmNodeFlags) then
            cg.DeallocAllCPURegisters(CurrentAsmData.CurrAsmList);
 
          { Switch back to the CPU instruction set of the target CPU }
-         CurrentAsmData.CurrAsmList.Concat(TAIDirective.create(asd_cpu,CPUTypeStr[CurrentSettings.CPUType]));
+         CurrentAsmData.CurrAsmList.Concat(TAIDirective.Create(asd_cpu,CPUTypeStr[CurrentSettings.CPUType]));
        end;
 
 
@@ -432,51 +432,51 @@ interface
                              TBLOCKNODE
 *****************************************************************************}
 
-    procedure TCGBlockNode.pass_generate_code;
+    procedure TCGBlockNode.Pass_Generate_Code;
       var
-        hp : TStatementNode;
-        oldexitlabel : TAsmLabel;
-        oldflowcontrol : TFlowControl;
+        lStatement : TStatementNode;
+        lOldExitLabel : TAsmLabel;
+        lOldFlowControl : TFlowControl;
       begin
-        Location_Reset(location,LOC_VOID,OS_NO);
-        oldflowcontrol:=[];
-        oldexitlabel:=nil;
+        Location_Reset(Location,LOC_VOID,OS_NO);
+        lOldFlowControl:=[];
+        lOldExitLabel:=nil;
 
         { replace exitlabel? }
-        if nf_block_with_exit in flags then
+        if nf_block_with_exit in Flags then
           begin
-            oldexitlabel:=CurrentProcInfo.CurrExitLabel;
+            lOldExitLabel:=CurrentProcInfo.CurrExitLabel;
             CurrentAsmData.getjumplabel(CurrentProcInfo.CurrExitLabel);
-            oldflowcontrol:=flowcontrol;
+            lOldFlowControl:=flowcontrol;
             { the nested block will not span an exit statement of the parent }
             exclude(flowcontrol,fc_exit);
             include(flowcontrol,fc_no_direct_exit);
           end;
 
         { do second pass on left node }
-        if Assigned(left) then
+        if Assigned(Left) then
          begin
-           hp:=TStatementNode(left);
-           while Assigned(hp) do
+           lStatement:=TStatementNode(Left);
+           while Assigned(lStatement) do
             begin
-              if Assigned(hp.left) then
+              if Assigned(lStatement.Left) then
                begin
-                 SecondPass(hp.left);
-                 Location_Copy(hp.Location,hp.left.Location);
+                 SecondPass(lStatement.Left);
+                 Location_Copy(lStatement.Location,lStatement.Left.Location);
                end;
-              Location_Copy(location,hp.Location);
-              hp:=TStatementNode(hp.right);
+              Location_Copy(Location,lStatement.Location);
+              lStatement:=TStatementNode(lStatement.Right);
             end;
          end;
 
         { write exitlabel }
-        if nf_block_with_exit in flags then
+        if nf_block_with_exit in Flags then
           begin
             cg.A_Label(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
-            CurrentProcInfo.CurrExitLabel:=oldexitlabel;
+            CurrentProcInfo.CurrExitLabel:=lOldExitLabel;
             { the exit statements inside this block are not exit statements }
             { out of the parent                                             }
-            flowcontrol:=oldflowcontrol+(flowcontrol - [fc_exit,fc_no_direct_exit]);
+            flowcontrol:=lOldFlowControl+(flowcontrol - [fc_exit,fc_no_direct_exit]);
           end;
       end;
 
@@ -485,40 +485,40 @@ interface
                           TTEMPCREATENODE
 *****************************************************************************}
 
-    procedure TCGTempCreateNode.pass_generate_code;
+    procedure TCGTempCreateNode.Pass_Generate_Code;
       begin
-        Location_Reset(location,LOC_VOID,OS_NO);
+        Location_Reset(Location,LOC_VOID,OS_NO);
 
         { if we're secondpassing the same tcgtempcreatenode twice, we have a bug }
-        if (ti_valid in tempflags) then
+        if (ti_valid in TempFlags) then
           InternalError(200108222);
 
         { in case of ti_reference, the location will be initialised using the
           location of the tempinitnode once the first temprefnode is processed }
-        if not(ti_reference in tempflags) then
+        if not(ti_reference in TempFlags) then
           begin
             { get a (persistent) temp }
-            if Is_Managed_Type(tempinfo^.typedef) and
-              not(ti_const in tempflags) then
+            if Is_Managed_Type(TempInfo^.TypeDef) and
+              not(ti_const in TempFlags) then
               begin
-                Location_Reset_Ref(tempinfo^.Location,LOC_REFERENCE,Def_CGSize(tempinfo^.typedef),0,[]);
-                tg.gethltempmanaged(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.temptype,tempinfo^.Location.Reference);
-                if not(ti_nofini in tempflags) then
-                  hlcg.G_Finalize(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.Location.Reference);
+                Location_Reset_Ref(TempInfo^.Location,LOC_REFERENCE,Def_CGSize(TempInfo^.TypeDef),0,[]);
+                TG.GetHLTempManaged(CurrentAsmData.CurrAsmList,TempInfo^.TypeDef,TempInfo^.TempType,TempInfo^.Location.Reference);
+                if not(ti_nofini in TempFlags) then
+                  hlcg.G_Finalize(CurrentAsmData.CurrAsmList,TempInfo^.TypeDef,TempInfo^.Location.Reference);
               end
-            else if (ti_may_be_in_reg in tempflags) then
+            else if (ti_may_be_in_reg in TempFlags) then
               begin
-                location_allocate_register(CurrentAsmData.CurrAsmList,tempinfo^.Location,tempinfo^.typedef,tempinfo^.temptype = tt_persistent);
+                Location_Allocate_Register(CurrentAsmData.CurrAsmList,TempInfo^.Location,TempInfo^.TypeDef,TempInfo^.TempType = tt_persistent);
               end
             else
               begin
-                Location_Reset_Ref(tempinfo^.Location,LOC_REFERENCE,Def_CGSize(tempinfo^.typedef),0,[]);
-                tg.GetHLTemp(CurrentAsmData.CurrAsmList,tempinfo^.typedef,size,tempinfo^.temptype,tempinfo^.Location.Reference);
+                Location_Reset_Ref(TempInfo^.Location,LOC_REFERENCE,Def_CGSize(TempInfo^.TypeDef),0,[]);
+                TG.GetHLTemp(CurrentAsmData.CurrAsmList,TempInfo^.TypeDef,Size,TempInfo^.TempType,TempInfo^.Location.Reference);
               end;
           end;
-        includetempflag(ti_valid);
-        if Assigned(tempinfo^.tempinitcode) then
-          includetempflag(ti_executeinitialisation);
+        IncludeTempFlag(ti_valid);
+        if Assigned(TempInfo^.TempInitCode) then
+          IncludeTempFlag(ti_executeinitialisation);
       end;
 
 
@@ -526,16 +526,16 @@ interface
                              TTEMPREFNODE
 *****************************************************************************}
 
-    procedure TCGTempRefNode.pass_generate_code;
+    procedure TCGTempRefNode.Pass_Generate_Code;
       begin
-        if ti_executeinitialisation in tempflags then
+        if ti_executeinitialisation in TempFlags then
           begin
             { avoid recursion }
-            excludetempflag(ti_executeinitialisation);
-            SecondPass(tempinfo^.tempinitcode);
-            if (ti_reference in tempflags) then
+            ExcludeTempFlag(ti_executeinitialisation);
+            SecondPass(TempInfo^.TempInitCode);
+            if (ti_reference in TempFlags) then
               begin
-                case tempinfo^.tempinitcode.Location.Loc of
+                case TempInfo^.TempInitCode.Location.Loc of
                   LOC_CREGISTER,
                   LOC_CFPUREGISTER,
                   LOC_CMMREGISTER,
@@ -545,7 +545,7 @@ interface
                         for reading, it's not in case of writing (because the
                         register could change due to SSA -> storing to the saved
                         register afterwards would be wrong). }
-                      if not(ti_readonly in tempflags) then
+                      if not(ti_readonly in TempFlags) then
                         InternalError(2011031407);
                     end;
                   { in case reference contains CREGISTERS, that doesn't matter:
@@ -554,17 +554,17 @@ interface
                   else
                     ;
                 end;
-                hlcg.G_Reference_Loc(CurrentAsmData.CurrAsmList,tempinfo^.typedef,tempinfo^.tempinitcode.Location,tempinfo^.Location);
+                hlcg.G_Reference_Loc(CurrentAsmData.CurrAsmList,TempInfo^.TypeDef,TempInfo^.TempInitCode.Location,TempInfo^.Location);
               end;
           end;
         { check if the temp is valid }
-        if not(ti_valid in tempflags) then
+        if not(ti_valid in TempFlags) then
           InternalError(200108231);
-        location:=tempinfo^.Location;
+        Location:=TempInfo^.Location;
         { Allow CPU-specific adjustment of temp references (e.g., for exceptfilters) }
-        if location.Loc=LOC_REFERENCE then
-          cg.Adjust_ExceptFilter_Ref(location.Reference,false);
-        case tempinfo^.Location.Loc of
+        if Location.Loc=LOC_REFERENCE then
+          cg.Adjust_ExceptFilter_Ref(Location.Reference,false);
+        case TempInfo^.Location.Loc of
           LOC_REFERENCE:
             begin
               { ti_valid should be excluded if it's a normal temp }
@@ -572,27 +572,27 @@ interface
           LOC_REGISTER,
           LOC_FPUREGISTER,
           LOC_MMREGISTER :
-            excludetempflag(ti_valid);
+            ExcludeTempFlag(ti_valid);
           else
             ;
         end;
       end;
 
 
-    procedure TCGTempRefNode.changelocation(const ref: TReference);
+    procedure TCGTempRefNode.ChangeLocation(const AReference: TReference);
       begin
         { check if the temp is valid }
-        if not(ti_valid in tempflags) then
+        if not(ti_valid in TempFlags) then
           InternalError(200306081);
-        if (tempinfo^.Location.Loc<>LOC_REFERENCE) then
+        if (TempInfo^.Location.Loc<>LOC_REFERENCE) then
           InternalError(2004020203);
-        if (tempinfo^.temptype = tt_persistent) then
-          tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tt_normal);
-        tg.ungettemp(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference);
-        tempinfo^.Location.Reference := ref;
-        tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tempinfo^.temptype);
+        if (TempInfo^.TempType = tt_persistent) then
+          TG.ChangeTempType(CurrentAsmData.CurrAsmList,TempInfo^.Location.Reference,tt_normal);
+        TG.UnGetTemp(CurrentAsmData.CurrAsmList,TempInfo^.Location.Reference);
+        TempInfo^.Location.Reference := AReference;
+        TG.ChangeTempType(CurrentAsmData.CurrAsmList,TempInfo^.Location.Reference,TempInfo^.TempType);
         { adapt location }
-        location.Reference := ref;
+        Location.Reference := AReference;
       end;
 
 
@@ -600,104 +600,104 @@ interface
                            TTEMPDELETENODE
 *****************************************************************************}
 
-    procedure TCGTempDeleteNode.pass_generate_code;
+    procedure TCGTempDeleteNode.Pass_Generate_Code;
       begin
-        if ti_reference in tempflags then
+        if ti_reference in TempFlags then
           begin
             { release_to_normal means that the temp will be freed the next
               time it's used. However, reference temps reference some other
               location that is not managed by this temp and hence cannot be
               freed }
-            if release_to_normal then
+            if FReleaseToNormal then
               InternalError(2011052205);
             { so we only mark this temp location as "no longer valid" when
               it's deleted (ttempdeletenodes are also used during getcopy, so
               we really do need one) }
-            excludetempflag(ti_valid);
+            ExcludeTempFlag(ti_valid);
             exit;
           end;
 
-        Location_Reset(location,LOC_VOID,OS_NO);
+        Location_Reset(Location,LOC_VOID,OS_NO);
 
-        if ti_cleanup_only in tempflags then
+        if ti_cleanup_only in TempFlags then
           exit;
 
         { see comments at ti_const declaration: if we initialised this temp with
           the value of another temp, that other temp was not freed because the
           ti_const flag was set }
-        if (ti_const in tempflags) and
-           Assigned(tempinfo^.tempinitcode) then
+        if (ti_const in TempFlags) and
+           Assigned(TempInfo^.TempInitCode) then
           begin
-            if tempinfo^.tempinitcode.nodetype<>assignn then
+            if TempInfo^.TempInitCode.NodeType<>assignn then
               InternalError(2016081201);
-            if TBinaryNode(tempinfo^.tempinitcode).right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-              tg.ungetiftemp(CurrentAsmData.CurrAsmList,TBinaryNode(tempinfo^.tempinitcode).right.Location.Reference);
+            if TBinaryNode(TempInfo^.TempInitCode).Right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+              TG.UnGetIfTemp(CurrentAsmData.CurrAsmList,TBinaryNode(TempInfo^.TempInitCode).Right.Location.Reference);
           end;
 
 
-        case tempinfo^.Location.Loc of
+        case TempInfo^.Location.Loc of
           LOC_REFERENCE:
             begin
-              if release_to_normal then
-                tg.ChangeTempType(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference,tt_normal)
+              if FReleaseToNormal then
+                TG.ChangeTempType(CurrentAsmData.CurrAsmList,TempInfo^.Location.Reference,tt_normal)
               else
                 begin
-                  tg.UnGetTemp(CurrentAsmData.CurrAsmList,tempinfo^.Location.Reference);
-                  excludetempflag(ti_valid);
+                  TG.UnGetTemp(CurrentAsmData.CurrAsmList,TempInfo^.Location.Reference);
+                  ExcludeTempFlag(ti_valid);
                 end;
             end;
           LOC_CREGISTER,
           LOC_REGISTER:
             begin
               if (not(cs_opt_regvar in CurrentSettings.OptimizerSwitches) or
-                 (pi_has_label in CurrentProcInfo.flags)) and not(ti_no_final_regsync in tempflags) then
+                 (pi_has_label in CurrentProcInfo.Flags)) and not(ti_no_final_regsync in TempFlags) then
                 begin
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
 {$if defined(cpu32bitalu) and not defined(cpuhighleveltarget)}
-                  if tempinfo^.Location.Size in [OS_64,OS_S64] then
+                  if TempInfo^.Location.Size in [OS_64,OS_S64] then
                     begin
-                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register64.RegHi);
-                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register64.RegLo);
+                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,TempInfo^.Location.Register64.RegHi);
+                      cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,TempInfo^.Location.Register64.RegLo);
                     end
                   else
 {$endif}
-                    cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
+                    cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,TempInfo^.Location.Register);
                 end;
-              if release_to_normal then
-                tempinfo^.Location.Loc := LOC_REGISTER
+              if FReleaseToNormal then
+                TempInfo^.Location.Loc := LOC_REGISTER
               else
-                excludetempflag(ti_valid);
+                ExcludeTempFlag(ti_valid);
             end;
           LOC_CFPUREGISTER,
           LOC_FPUREGISTER:
             begin
               if (not(cs_opt_regvar in CurrentSettings.OptimizerSwitches) or
-                 (pi_has_label in CurrentProcInfo.flags)) and not(ti_no_final_regsync in tempflags) then
+                 (pi_has_label in CurrentProcInfo.Flags)) and not(ti_no_final_regsync in TempFlags) then
                 begin
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
-                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
+                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,TempInfo^.Location.Register);
                 end;
-              if release_to_normal then
-                tempinfo^.Location.Loc := LOC_FPUREGISTER
+              if FReleaseToNormal then
+                TempInfo^.Location.Loc := LOC_FPUREGISTER
               else
-                excludetempflag(ti_valid);
+                ExcludeTempFlag(ti_valid);
             end;
           LOC_CMMREGISTER,
           LOC_MMREGISTER:
             begin
               if (not(cs_opt_regvar in CurrentSettings.OptimizerSwitches) or
-                 (pi_has_label in CurrentProcInfo.flags)) and not(ti_no_final_regsync in tempflags) then
+                 (pi_has_label in CurrentProcInfo.Flags)) and not(ti_no_final_regsync in TempFlags) then
                 begin
                   { make sure the register allocator doesn't reuse the }
                   { register e.g. in the middle of a loop              }
-                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,tempinfo^.Location.Register);
+                  cg.A_Reg_Sync(CurrentAsmData.CurrAsmList,TempInfo^.Location.Register);
                 end;
-              if release_to_normal then
-                tempinfo^.Location.Loc := LOC_MMREGISTER
+              if FReleaseToNormal then
+                TempInfo^.Location.Loc := LOC_MMREGISTER
               else
-                excludetempflag(ti_valid);
+                ExcludeTempFlag(ti_valid);
             end;
           else
             InternalError(200507161);
@@ -709,10 +709,10 @@ interface
                          TCGFINALIZETEMPSNODE
 *****************************************************************************}
 
-    procedure TCGFinalizeTempsNode.pass_generate_code;
+    procedure TCGFinalizeTempsNode.Pass_Generate_Code;
       begin
         hlcg.Gen_Finalize_Code(CurrentAsmData.CurrAsmList);
-        location.Loc:=LOC_VOID;
+        Location.Loc:=LOC_VOID;
       end;
 
 

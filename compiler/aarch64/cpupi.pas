@@ -33,19 +33,19 @@ interface
   type
     TCPUProcInfo=class(TCGProcInfo)
     private
-      scopes: TAsmList;
-      scopecount: LongInt;
-      unwindflags: byte;
+      FScopes: TAsmList;
+      FScopeCount: LongInt;
+      FUnwindFlags: byte;
     public
       { Total stack frame size including saved registers (for SEH on AArch64-Win64).
         This is the offset from FP to SP after the prolog completes. }
-      total_stackframe_size: LongInt;
-      constructor create(aparent: TProcInfo); override;
+      TotalStackFrameSize: LongInt;
+      constructor Create(AParent: TProcInfo); override;
       destructor Destroy; override;
-      procedure set_first_temp_offset; override;
-      procedure add_finally_scope(startlabel,endlabel,handler:TAsmSymbol;implicit:Boolean);
-      procedure add_except_scope(trylabel,exceptlabel,endlabel,filter:TAsmSymbol);
-      procedure dump_scopes(list:TAsmList);
+      procedure Set_First_Temp_Offset; override;
+      procedure Add_Finally_Scope(AStartLabel,AEndLabel,AHandler:TAsmSymbol;AImplicit:Boolean);
+      procedure Add_Except_Scope(ATryLabel,AExceptLabel,AEndLabel,AFilter:TAsmSymbol);
+      procedure Dump_Scopes(AList:TAsmList);
     end;
 
 implementation
@@ -59,11 +59,11 @@ implementation
     aasmtai;
 
   const
-    SCOPE_FINALLY=0;
-    SCOPE_CATCHALL=1;
-    SCOPE_IMPLICIT=2;
+    cScopeFinally=0;
+    cScopeCatchAll=1;
+    cScopeImplicit=2;
 
-  constructor TCPUProcInfo.create(aparent: TProcInfo);
+  constructor TCPUProcInfo.Create(AParent: TProcInfo);
     begin
       inherited;
       { use the stack pointer as framepointer, because
@@ -75,73 +75,73 @@ implementation
             the frame pointer are negative, and we can directly encode much
             bigger positive offsets in the instructions
       }
-      framepointer:=NR_STACK_POINTER_REG;
+      FramePointer:=NR_STACK_POINTER_REG;
     end;
 
   destructor TCPUProcInfo.Destroy;
     begin
-      scopes.free;
+      FScopes.free;
       inherited Destroy;
     end;
 
-  procedure TCPUProcInfo.set_first_temp_offset;
+  procedure TCPUProcInfo.Set_First_Temp_Offset;
     begin
      { leave room for allocated parameters }
-     tg.setfirsttemp(align(maxpushedparasize,16));
+     TG.SetFirstTemp(align(MaxPushedParaSize,16));
     end;
 
-  procedure TCPUProcInfo.add_finally_scope(startlabel,endlabel,handler:TAsmSymbol;implicit:Boolean);
+  procedure TCPUProcInfo.Add_Finally_Scope(AStartLabel,AEndLabel,AHandler:TAsmSymbol;AImplicit:Boolean);
     begin
-      unwindflags:=unwindflags or 2;
-      if implicit then  { also needs catch functionality }
-        unwindflags:=unwindflags or 1;
-      inc(scopecount);
-      if scopes=nil then
-        scopes:=TAsmList.Create;
+      FUnwindFlags:=FUnwindFlags or 2;
+      if AImplicit then  { also needs catch functionality }
+        FUnwindFlags:=FUnwindFlags or 1;
+      inc(FScopeCount);
+      if FScopes=nil then
+        FScopes:=TAsmList.Create;
 
-      if implicit then
-        scopes.concat(TAIConst.create_32bit(SCOPE_IMPLICIT))
+      if AImplicit then
+        FScopes.concat(TAIConst.create_32bit(cScopeImplicit))
       else
-        scopes.concat(TAIConst.create_32bit(SCOPE_FINALLY));
-      scopes.concat(TAIConst.create_rva_sym(startlabel));
-      scopes.concat(TAIConst.create_rva_sym(endlabel));
-      scopes.concat(TAIConst.create_rva_sym(handler));
+        FScopes.concat(TAIConst.create_32bit(cScopeFinally));
+      FScopes.concat(TAIConst.create_rva_sym(AStartLabel));
+      FScopes.concat(TAIConst.create_rva_sym(AEndLabel));
+      FScopes.concat(TAIConst.create_rva_sym(AHandler));
     end;
 
-  procedure TCPUProcInfo.add_except_scope(trylabel,exceptlabel,endlabel,filter:TAsmSymbol);
+  procedure TCPUProcInfo.Add_Except_Scope(ATryLabel,AExceptLabel,AEndLabel,AFilter:TAsmSymbol);
     begin
-      unwindflags:=unwindflags or 3;
-      inc(scopecount);
-      if scopes=nil then
-        scopes:=TAsmList.Create;
+      FUnwindFlags:=FUnwindFlags or 3;
+      inc(FScopeCount);
+      if FScopes=nil then
+        FScopes:=TAsmList.Create;
 
-      if Assigned(filter) then
-        scopes.concat(TAIConst.create_rva_sym(filter))
+      if Assigned(AFilter) then
+        FScopes.concat(TAIConst.create_rva_sym(AFilter))
       else
-        scopes.concat(TAIConst.create_32bit(SCOPE_CATCHALL));
-      scopes.concat(TAIConst.create_rva_sym(trylabel));
-      scopes.concat(TAIConst.create_rva_sym(exceptlabel));
-      scopes.concat(TAIConst.create_rva_sym(endlabel));
+        FScopes.concat(TAIConst.create_32bit(cScopeCatchAll));
+      FScopes.concat(TAIConst.create_rva_sym(ATryLabel));
+      FScopes.concat(TAIConst.create_rva_sym(AExceptLabel));
+      FScopes.concat(TAIConst.create_rva_sym(AEndLabel));
     end;
 
-  procedure TCPUProcInfo.dump_scopes(list: TAsmList);
+  procedure TCPUProcInfo.Dump_Scopes(AList: TAsmList);
     var
-      hdir: TAISEHDirective;
+      lHandlerDirective: TAISEHDirective;
     begin
-      if (scopecount=0) then
+      if (FScopeCount=0) then
         exit;
-      hdir:=CAISEHDirective.create_name(ash_handler,'__FPC_specific_handler');
+      lHandlerDirective:=CAISEHDirective.create_name(ash_handler,'__FPC_specific_handler');
       if not SystemUnit.IsCurrentUnit then
         CurrentModule.Add_Extern_AsmSym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
-      hdir.data.flags:=unwindflags;
-      list.concat(hdir);
-      list.concat(CAISEHDirective.create(ash_handlerdata));
-      inc(list.section_count);
-      list.concat(TAIConst.create_32bit(scopecount));
-      list.ConcatList(scopes);
+      lHandlerDirective.data.Flags:=FUnwindFlags;
+      AList.concat(lHandlerDirective);
+      AList.concat(CAISEHDirective.Create(ash_handlerdata));
+      inc(AList.section_count);
+      AList.concat(TAIConst.create_32bit(FScopeCount));
+      AList.ConcatList(FScopes);
       { return to text, required for GAS compatibility }
       { This creates a tai_align which is redundant here (although harmless) }
-      new_section(list,sec_code,lower(procdef.MangledName),0);
+      new_section(AList,sec_code,lower(ProcDef.MangledName),0);
     end;
 
 

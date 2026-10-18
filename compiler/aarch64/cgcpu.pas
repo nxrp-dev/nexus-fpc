@@ -529,7 +529,7 @@ implementation
       begin
         inherited Init_Register_Allocators;
 
-        rg[R_INTREGISTER]:=TRGIntCPU.create(R_INTREGISTER,R_SUBWHOLE,
+        rg[R_INTREGISTER]:=TRGIntCPU.Create(R_INTREGISTER,R_SUBWHOLE,
             [RS_X0,RS_X1,RS_X2,RS_X3,RS_X4,RS_X5,RS_X6,RS_X7,RS_X8,
              RS_X9,RS_X10,RS_X11,RS_X12,RS_X13,RS_X14,RS_X15,RS_X16,RS_X17,
              RS_X19,RS_X20,RS_X21,RS_X22,RS_X23,RS_X24,RS_X25,RS_X26,RS_X27,RS_X28
@@ -538,7 +538,7 @@ implementation
              ,RS_X29 }],
             first_int_imreg,[]);
 
-        rg[R_MMREGISTER]:=TRGCPU.create(R_MMREGISTER,R_SUBMMD,
+        rg[R_MMREGISTER]:=TRGCPU.Create(R_MMREGISTER,R_SUBMMD,
             [RS_Q0,RS_Q1,RS_Q2,RS_Q3,RS_Q4,RS_Q5,RS_Q6,RS_Q7,
              RS_Q8,RS_Q9,RS_Q10,RS_Q11,RS_Q12,RS_Q13,RS_Q14,RS_Q15,
              RS_Q16,RS_Q17,RS_Q18,RS_Q19,RS_Q20,RS_Q21,RS_Q22,RS_Q23,
@@ -1900,7 +1900,7 @@ implementation
       var
         hitem: TLinkedListItem;
         seh_proc: TAISEHDirective;
-        templist: TAsmList;
+        TempList: TAsmList;
         genloadframeforexcept,
         suppress_endprologue: boolean;
         ref: TReference;
@@ -1944,14 +1944,14 @@ implementation
                     A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,NR_SP,NR_FP);
                     CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_FP);
                     if TargetInfo.system=system_aarch64_win64 then
-                      list.concat(CAISEHDirective.create(ash_setfp));
+                      list.concat(CAISEHDirective.Create(ash_setfp));
                   end
                 else
                   begin
                     { do this after the prologue is done for aarch64-win64 as
                       there is no SEH directive for setting FP to a register }
                     if TargetInfo.system<>system_aarch64_win64 then
-                      gen_load_frame_for_exceptfilter(list)
+                      Gen_Load_Frame_For_ExceptFilter(list)
                     else
                       genloadframeforexcept:=true;
                     { On AArch64-Win64, the exceptfilter handler's own temps
@@ -1960,12 +1960,12 @@ implementation
                       and also for the handler's outgoing call parameters. }
                     if TargetInfo.system=system_aarch64_win64 then
                       begin
-                        localsize:=CurrentProcInfo.calc_stackframe_size;
-                        if Align(CurrentProcInfo.maxpushedparasize,16)>localsize then
-                          localsize:=Align(CurrentProcInfo.maxpushedparasize,16);
+                        localsize:=CurrentProcInfo.Calc_StackFrame_Size;
+                        if Align(CurrentProcInfo.MaxPushedParaSize,16)>localsize then
+                          localsize:=Align(CurrentProcInfo.MaxPushedParaSize,16);
                       end
                     else
-                      localsize:=CurrentProcInfo.maxpushedparasize;
+                      localsize:=CurrentProcInfo.MaxPushedParaSize;
                   end;
               end;
 
@@ -1983,7 +1983,7 @@ implementation
             if localsize<>0 then
               begin
                 localsize:=align(localsize,16);
-                CurrentProcInfo.final_localsize:=localsize;
+                CurrentProcInfo.FinalLocalSize:=localsize;
                 G_StackPointer_Alloc(list,localsize);
                 inc(totalstackframesize,localsize);
               end;
@@ -1991,7 +1991,7 @@ implementation
             { Store total stack frame size for use by exceptfilter temp access.
               This is the offset from FP to SP after prolog completes, including
               saved registers and local variables. }
-            TCPUProcInfo(CurrentProcInfo).total_stackframe_size:=totalstackframesize;
+            TCPUProcInfo(CurrentProcInfo).TotalStackFrameSize:=totalstackframesize;
             { By default, we use the frame pointer to access parameters passed via
               the stack and the stack pointer to address local variables and temps
               because
@@ -2018,7 +2018,7 @@ implementation
               less efficiently from nested routines, but those accesses are indirect
               anyway and at least this way they can be accessed at all
             }
-            if CurrentProcInfo.has_nestedprocs or
+            if CurrentProcInfo.Has_NestedProcs or
                (
                  (TargetInfo.system=system_aarch64_win64) and
                  (CurrentProcInfo.flags*[pi_has_implicit_finally,pi_needs_implicit_finally,pi_uses_exceptions]<>[])
@@ -2032,7 +2032,7 @@ implementation
         if not (pi_has_unwind_info in CurrentProcInfo.flags) then
           begin
             if genloadframeforexcept then
-              gen_load_frame_for_exceptfilter(list);
+              Gen_Load_Frame_For_ExceptFilter(list);
             exit;
           end;
 
@@ -2044,20 +2044,20 @@ implementation
           list.insert(seh_proc);
         { the directive creates another section }
         inc(list.section_count);
-        templist:=TAsmList.Create;
+        TempList:=TAsmList.Create;
 
         if not suppress_endprologue then
           begin
-            templist.concat(CAISEHDirective.create(ash_endprologue));
+            TempList.concat(CAISEHDirective.Create(ash_endprologue));
           end;
-        if Assigned(CurrentProcInfo.endprologue_ai) then
-          CurrentProcInfo.aktproccode.InsertListAfter(CurrentProcInfo.endprologue_ai,templist)
+        if Assigned(CurrentProcInfo.EndPrologueAI) then
+          CurrentProcInfo.AktProcCode.InsertListAfter(CurrentProcInfo.EndPrologueAI,TempList)
         else
-          list.ConcatList(templist);
-        templist.free;
+          list.ConcatList(TempList);
+        TempList.free;
 
         if genloadframeforexcept then
-          gen_load_frame_for_exceptfilter(list);
+          Gen_Load_Frame_For_ExceptFilter(list);
       end;
 
 
@@ -2188,8 +2188,8 @@ implementation
             { restore registers (and stack pointer) }
             if regsstored then
               begin
-                if CurrentProcInfo.final_localsize<>0 then
-                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,NR_SP,CurrentProcInfo.final_localsize,NR_SP,NR_IP0,false,true);
+                if CurrentProcInfo.FinalLocalSize<>0 then
+                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,NR_SP,CurrentProcInfo.FinalLocalSize,NR_SP,NR_IP0,false,true);
                 load_regs(list,R_MMREGISTER,RS_D8,RS_D15,R_SUBMMD);
                 load_regs(list,R_INTREGISTER,RS_X19,RS_X28,R_SUBWHOLE);
                 { on Windows also restore SP even if the add should be enough
@@ -2199,23 +2199,23 @@ implementation
                    (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
                   A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
               end
-            else if CurrentProcInfo.final_localsize<>0 then
+            else if CurrentProcInfo.FinalLocalSize<>0 then
               begin
                 { restore stack pointer }
                 { Note: for Windows we need to restore the stack using an ADD
                         and to set FP back to SP }
                 if TargetInfo.system=system_aarch64_win64 then
                   begin
-                    handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.framepointer,CurrentProcInfo.final_localsize,
-                      CurrentProcInfo.framepointer,NR_IP0,false,true);
+                    handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.FramePointer,CurrentProcInfo.FinalLocalSize,
+                      CurrentProcInfo.FramePointer,NR_IP0,false,true);
                     { Skip mov sp,fp for exceptfilters where FP points to parent's frame }
                     if not (pi_no_framepointer_needed in CurrentProcInfo.flags) and
                        (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
                       A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
                   end
                 else if pi_no_framepointer_needed in CurrentProcInfo.flags then
-                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.framepointer,CurrentProcInfo.final_localsize,
-                    CurrentProcInfo.framepointer,NR_IP0,false,true)
+                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.FramePointer,CurrentProcInfo.FinalLocalSize,
+                    CurrentProcInfo.FramePointer,NR_IP0,false,true)
                 else if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
                   { Skip for exceptfilters where FP points to parent's frame }
                   A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
@@ -2234,8 +2234,8 @@ implementation
         list.concat(TAICPU.op_none(A_RET));
         if (pi_has_unwind_info in CurrentProcInfo.flags) then
           begin
-            TCPUProcInfo(CurrentProcInfo).dump_scopes(list);
-            list.concat(CAISEHDirective.create(ash_endproc));
+            TCPUProcInfo(CurrentProcInfo).Dump_Scopes(list);
+            list.concat(CAISEHDirective.Create(ash_endproc));
           end;
       end;
 
@@ -2387,12 +2387,12 @@ implementation
         sure ref is valid }
       procedure preparecopy(list: TAsmList; scaledop, unscaledop: TAsmOp; var ref: TReference; opsize: TCgSize; postfix: TOpPostfix; out op: TAsmOp; var basereplaced: boolean);
         var
-          simplify: boolean;
+          Simplify: boolean;
         begin
           if ref.AddressMode=AM_POSTINDEXED then
             ref.Offset:=TCgSize2Size[opsize];
-          getmemop(scaledop,scaledop,ref,ref,opsize,postfix,op,simplify);
-          if simplify then
+          getmemop(scaledop,scaledop,ref,ref,opsize,postfix,op,Simplify);
+          if Simplify then
             begin
               makesimpleforcopy(list,scaledop,opsize,postfix,false,ref,basereplaced);
               op:=scaledop;
@@ -2767,15 +2767,15 @@ implementation
           begin
             { Finalization context: current_procinfo is the parent,
               finalize_procinfo is the exceptfilter we're generating finalization for }
-            if not Assigned(CurrentProcInfo.finalize_procinfo) then
+            if not Assigned(CurrentProcInfo.FinalizeProcInfo) then
               exit;
-            if CurrentProcInfo.finalize_procinfo.procdef.ProcTypeOption<>potype_exceptfilter then
+            if CurrentProcInfo.FinalizeProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
               exit;
-            if ref.Base<>CurrentProcInfo.framepointer then
+            if ref.Base<>CurrentProcInfo.FramePointer then
               exit;
-            if CurrentProcInfo.framepointer=NR_FRAME_POINTER_REG then
+            if CurrentProcInfo.FramePointer=NR_FRAME_POINTER_REG then
               exit;
-            stackframe_size:=TCPUProcInfo(CurrentProcInfo).total_stackframe_size;
+            stackframe_size:=TCPUProcInfo(CurrentProcInfo).TotalStackFrameSize;
           end
         else
           begin
@@ -2789,9 +2789,9 @@ implementation
               exit;
             if ref.Base<>NR_STACK_POINTER_REG then
               exit;
-            if ref.Offset>=TCGProcInfo(CurrentProcInfo.parent).exceptfilter_parent_tempend then
+            if ref.Offset>=TCGProcInfo(CurrentProcInfo.parent).ExceptFilterParentTempEnd then
               exit;
-            stackframe_size:=TCPUProcInfo(CurrentProcInfo.parent).total_stackframe_size;
+            stackframe_size:=TCPUProcInfo(CurrentProcInfo.parent).TotalStackFrameSize;
           end;
 
         ref.Base:=NR_FRAME_POINTER_REG;

@@ -37,48 +37,48 @@ interface
 
     type
        TCGWhileRepeatNode = class(TWhileRepeatNode)
-          usedregvars: TUsedRegVars;
+          UsedRegVars: TUsedRegVars;
 
-          procedure pass_generate_code;override;
-          procedure sync_regvars(checkusedregvars: boolean);
+          procedure Pass_Generate_Code;override;
+          procedure Sync_RegVars(ACheckUsedRegVars: boolean);
        end;
 
        TCGIfNode = class(TIfNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGForNode = class(TForNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGExitNode = class(TExitNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGBreakNode = class(TBreakNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGContinueNode = class(TContinueNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGGotoNode = class(TGotoNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGLabelNode = class(TLabelNode)
        protected
-          asmlabel : TAsmLabel;
+          FAsmLabel : TAsmLabel;
        public
-          function getasmlabel : TAsmLabel; virtual;
-          procedure pass_generate_code;override;
+          function GetAsmLabel : TAsmLabel; virtual;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGRaiseNode = class(TRaiseNode)
-         function pass_1: TNode;override;
+         function Pass_1: TNode;override;
 {$ifndef SkipABIEH}
-         procedure pass_generate_code;override;
+         procedure Pass_Generate_Code;override;
 {$endif SkipABIEH}
        end;
 
@@ -87,22 +87,22 @@ interface
           type
             TFrameType = (ft_try,ft_except);
 
-          procedure emit_jump_out_of_try_except_frame(list: TAsmList; frametype: TFrameType; const exceptiontate: TCGExceptionStateHandler.TExceptionState; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel, outerlabel: TAsmLabel); virtual;
+          procedure Emit_Jump_Out_Of_Try_Except_Frame(AList: TAsmList; AFrameType: TFrameType; const AExceptionState: TCGExceptionStateHandler.TExceptionState; var AExceptTemps: TCGExceptionStateHandler.TExceptionTemps; AFrameLabel, AOuterLabel: TAsmLabel); virtual;
         public
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGTryFinallyNode = class(TTryFinallyNode)
         protected
-          procedure emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
-          function get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
+          procedure Emit_Jump_Out_Of_Try_Finally_Frame(AList: TAsmList; const AReason: byte; const AFinallyCodeLabel: TAsmLabel; var AExceptTemps: TCGExceptionStateHandler.TExceptionTemps; AFrameLabel: TAsmLabel);
+          function Get_Jump_Out_Of_Try_Finally_Frame_Label(const AFinallyExceptionState: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
         public
-          procedure handle_safecall_exception;
-          procedure pass_generate_code;override;
+          procedure Handle_SafeCall_Exception;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGOnNode = class(TOnNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
 
@@ -125,95 +125,95 @@ implementation
                          Second_While_RepeatN
 *****************************************************************************}
 
-    procedure TCGWhileRepeatNode.sync_regvars(checkusedregvars: boolean);
+    procedure TCGWhileRepeatNode.Sync_RegVars(ACheckUsedRegVars: boolean);
       begin
          if (cs_opt_regvar in CurrentSettings.OptimizerSwitches) and
-            not(pi_has_label in CurrentProcInfo.flags) then
+            not(pi_has_label in CurrentProcInfo.Flags) then
            begin
-             if checkusedregvars then
+             if ACheckUsedRegVars then
                begin
-                 usedregvars.intregvars.init;
-                 usedregvars.addrregvars.init;
-                 usedregvars.fpuregvars.init;
-                 usedregvars.mmregvars.init;
+                 UsedRegVars.IntRegVars.init;
+                 UsedRegVars.AddrRegVars.init;
+                 UsedRegVars.FPURegVars.init;
+                 UsedRegVars.MMRegVars.init;
 
                  { we have to synchronise both the regvars used in the loop }
                  { and the ones in the while/until condition                }
-                 get_used_regvars(self,usedregvars);
-                 gen_sync_regvars(CurrentAsmData.CurrAsmList,usedregvars);
+                 Get_Used_RegVars(self,UsedRegVars);
+                 Gen_Sync_RegVars(CurrentAsmData.CurrAsmList,UsedRegVars);
                end
              else
                begin
-                 gen_sync_regvars(CurrentAsmData.CurrAsmList,usedregvars);
-                 usedregvars.intregvars.done;
-                 usedregvars.addrregvars.done;
-                 usedregvars.fpuregvars.done;
-                 usedregvars.mmregvars.done;
+                 Gen_Sync_RegVars(CurrentAsmData.CurrAsmList,UsedRegVars);
+                 UsedRegVars.IntRegVars.done;
+                 UsedRegVars.AddrRegVars.done;
+                 UsedRegVars.FPURegVars.done;
+                 UsedRegVars.MMRegVars.done;
                end;
            end;
       end;
 
 
-    procedure TCGWhileRepeatNode.pass_generate_code;
+    procedure TCGWhileRepeatNode.Pass_Generate_Code;
       var
-         lcont,lbreak,lloop,
-         oldclabel,oldblabel : TAsmLabel;
-         TrueLabel,FalseLabel : TAsmLabel;
-         oldflowcontrol : TFlowControl;
+         lContinueLabel,lBreakLabel,lLoopLabel,
+         lOldContinueLabel,lOldBreakLabel : TAsmLabel;
+         lTrueLabel,lFalseLabel : TAsmLabel;
+         lOldFlowControl : TFlowControl;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
-         CurrentAsmData.getjumplabel(lloop);
-         CurrentAsmData.getjumplabel(lcont);
-         CurrentAsmData.getjumplabel(lbreak);
+         CurrentAsmData.getjumplabel(lLoopLabel);
+         CurrentAsmData.getjumplabel(lContinueLabel);
+         CurrentAsmData.getjumplabel(lBreakLabel);
          { arrange continue and breaklabels: }
-         oldflowcontrol:=flowcontrol;
-         oldclabel:=CurrentProcInfo.CurrContinueLabel;
-         oldblabel:=CurrentProcInfo.CurrBreakLabel;
+         lOldFlowControl:=flowcontrol;
+         lOldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
+         lOldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
          include(flowcontrol,fc_inflowcontrol);
          exclude(flowcontrol,fc_unwind_loop);
 
-         sync_regvars(true);
+         Sync_RegVars(true);
          { handling code at the end as it is much more efficient, and makes
            while equal to repeat loop, only the end true/false is swapped (PFV) }
-         if lnf_testatbegin in loopflags then
-           hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lcont);
+         if lnf_testatbegin in LoopFlags then
+           hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lContinueLabel);
 
          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
             { align loop target, as an unconditional jump is done before,
               use jump align which assume that the instructions inserted as alignment are never executed }
             CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
 
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,lloop);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lLoopLabel);
 
-         CurrentProcInfo.CurrContinueLabel:=lcont;
-         CurrentProcInfo.CurrBreakLabel:=lbreak;
+         CurrentProcInfo.CurrContinueLabel:=lContinueLabel;
+         CurrentProcInfo.CurrBreakLabel:=lBreakLabel;
 
-         if Assigned(right) then
-           SecondPass(right);
+         if Assigned(Right) then
+           SecondPass(Right);
 
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,lcont);
-         if lnf_checknegate in loopflags then
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lContinueLabel);
+         if lnf_checknegate in LoopFlags then
           begin
-             TrueLabel:=lbreak;
-             FalseLabel:=lloop;
+             lTrueLabel:=lBreakLabel;
+             lFalseLabel:=lLoopLabel;
           end
          else
           begin
-             TrueLabel:=lloop;
-             FalseLabel:=lbreak;
+             lTrueLabel:=lLoopLabel;
+             lFalseLabel:=lBreakLabel;
           end;
-         SecondPass(left);
+         SecondPass(Left);
 
-         hlcg.MakeToJumpBoolLabels(CurrentAsmData.CurrAsmList,left,TrueLabel,FalseLabel);
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,lbreak);
+         hlcg.MakeToJumpBoolLabels(CurrentAsmData.CurrAsmList,Left,lTrueLabel,lFalseLabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lBreakLabel);
 
-         sync_regvars(false);
+         Sync_RegVars(false);
 
-         CurrentProcInfo.CurrContinueLabel:=oldclabel;
-         CurrentProcInfo.CurrBreakLabel:=oldblabel;
+         CurrentProcInfo.CurrContinueLabel:=lOldContinueLabel;
+         CurrentProcInfo.CurrBreakLabel:=lOldBreakLabel;
          { a break/continue in a while/repeat block can't be seen outside }
-         flowcontrol:=oldflowcontrol+(flowcontrol-[fc_break,fc_continue,fc_inflowcontrol]);
+         flowcontrol:=lOldFlowControl+(flowcontrol-[fc_break,fc_continue,fc_inflowcontrol]);
       end;
 
 
@@ -221,11 +221,11 @@ implementation
                                tcgIFNODE
 *****************************************************************************}
 
-    procedure TCGIfNode.pass_generate_code;
+    procedure TCGIfNode.Pass_Generate_Code;
 
       var
-         hl : TAsmLabel;
-         oldflowcontrol: TFlowControl;
+         lLabel : TAsmLabel;
+         lOldFlowControl: TFlowControl;
 (*
          org_regvar_loaded_other,
          then_regvar_loaded_other,
@@ -239,12 +239,12 @@ implementation
 *)
 
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
-         hl:=nil;
+         Location_Reset(Location,LOC_VOID,OS_NO);
+         lLabel:=nil;
 
-         oldflowcontrol := flowcontrol;
+         lOldFlowControl := flowcontrol;
          include(flowcontrol,fc_inflowcontrol);
-         SecondPass(left);
+         SecondPass(Left);
 
 (*
          { save regvars loaded in the beginning so that we can restore them }
@@ -255,7 +255,7 @@ implementation
              current_asmdata.CurrAsmList := TAsmList.create;
            end;
 *)
-         hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,left);
+         hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,Left);
 
 (*
          if cs_opt_regvar in current_settings.optimizerswitches then
@@ -264,10 +264,10 @@ implementation
              org_regvar_loaded_other := rg.regvar_loaded_other;
            end;
 *)
-         if Assigned(right) then
+         if Assigned(Right) then
            begin
-              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.TrueLabel);
-              SecondPass(right);
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.TrueLabel);
+              SecondPass(Right);
            end;
 
          { save current asmlist (previous instructions + then-block) and }
@@ -286,9 +286,9 @@ implementation
 
          if Assigned(t1) then
            begin
-              if Assigned(right) then
+              if Assigned(Right) then
                 begin
-                   CurrentAsmData.getjumplabel(hl);
+                   CurrentAsmData.getjumplabel(lLabel);
                    { do go back to if line !! }
 (*
                    if not(cs_opt_regvar in current_settings.optimizerswitches) then
@@ -299,11 +299,11 @@ implementation
                      current_filepos:=then_list.getlasttaifilepos^
 *)
                    ;
-                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,hl);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lLabel);
                    if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
                      CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
                 end;
-              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.FalseLabel);
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.FalseLabel);
               SecondPass(t1);
 (*
               { save current asmlist (previous instructions + else-block) }
@@ -316,8 +316,8 @@ implementation
                   current_asmdata.CurrAsmList := TAsmList.create;
                 end;
 *)
-              if Assigned(right) then
-                hlcg.A_Label(CurrentAsmData.CurrAsmList,hl);
+              if Assigned(Right) then
+                hlcg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
            end
          else
            begin
@@ -332,13 +332,13 @@ implementation
 *)
               if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
                 CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.CoalesceAlign,CurrentSettings.Alignment.CoalesceAlignSkipMax));
-              hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.FalseLabel);
+              hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.FalseLabel);
            end;
-         if not(Assigned(right)) then
+         if not(Assigned(Right)) then
            begin
              if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
                CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.CoalesceAlign,CurrentSettings.Alignment.CoalesceAlignSkipMax));
-             hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.TrueLabel);
+             hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.TrueLabel);
            end;
 
 (*
@@ -378,7 +378,7 @@ implementation
            end;
 *)
 
-         flowcontrol := oldflowcontrol + (flowcontrol - [fc_inflowcontrol]);
+         flowcontrol := lOldFlowControl + (flowcontrol - [fc_inflowcontrol]);
       end;
 
 
@@ -386,7 +386,7 @@ implementation
                               SecondFor
 *****************************************************************************}
 
-    procedure TCGForNode.pass_generate_code;
+    procedure TCGForNode.Pass_Generate_Code;
       begin
         { for nodes are converted in pass_1 in a while loop }
         InternalError(2015082501);
@@ -397,15 +397,15 @@ implementation
                               SecondExitN
 *****************************************************************************}
 
-    procedure TCGExitNode.pass_generate_code;
+    procedure TCGExitNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
          if fc_no_direct_exit in flowcontrol then
            include(flowcontrol,fc_gotolabel);
          include(flowcontrol,fc_exit);
-         if Assigned(left) then
-           SecondPass(left);
+         if Assigned(Left) then
+           SecondPass(Left);
 
          if (fc_unwind_exit in flowcontrol) then
            hlcg.G_Local_Unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel)
@@ -420,9 +420,9 @@ implementation
                               SecondBreakN
 *****************************************************************************}
 
-    procedure TCGBreakNode.pass_generate_code;
+    procedure TCGBreakNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_break);
          if CurrentProcInfo.CurrBreakLabel<>nil then
@@ -443,9 +443,9 @@ implementation
                               SecondContinueN
 *****************************************************************************}
 
-    procedure TCGContinueNode.pass_generate_code;
+    procedure TCGContinueNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_continue);
          if CurrentProcInfo.CurrContinueLabel<>nil then
@@ -466,13 +466,13 @@ implementation
                              SecondGoto
 *****************************************************************************}
 
-    procedure TCGGotoNode.pass_generate_code;
+    procedure TCGGotoNode.Pass_Generate_Code;
 
        begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_gotolabel);
-         hlcg.A_Jmp_Always_Pascal_Goto(CurrentAsmData.CurrAsmList,TCGLabelNode(labelnode).getasmlabel);
+         hlcg.A_Jmp_Always_Pascal_Goto(CurrentAsmData.CurrAsmList,TCGLabelNode(LabelNode).GetAsmLabel);
          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
            CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.Alignment.JumpAlign,CurrentSettings.Alignment.JumpAlignSkipMax));
        end;
@@ -482,32 +482,32 @@ implementation
                              SecondLabel
 *****************************************************************************}
 
-    function TCGLabelNode.getasmlabel : TAsmLabel;
+    function TCGLabelNode.GetAsmLabel : TAsmLabel;
       begin
-        if not(Assigned(asmlabel)) then
+        if not(Assigned(FAsmLabel)) then
           { labsym is not set in inlined procedures, but since assembler }
           { routines can't be inlined, that shouldn't matter             }
-          if Assigned(labsym) and
-             labsym.nonlocal then
-            CurrentAsmData.getglobaljumplabel(asmlabel)
+          if Assigned(LabSym) and
+             LabSym.nonlocal then
+            CurrentAsmData.getglobaljumplabel(FAsmLabel)
           else
-            CurrentAsmData.getjumplabel(asmlabel);
-        result:=asmlabel
+            CurrentAsmData.getjumplabel(FAsmLabel);
+        Result:=FAsmLabel
       end;
 
 
-    procedure TCGLabelNode.pass_generate_code;
+    procedure TCGLabelNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
-         if not (nf_internal in flags) then
+         Location_Reset(Location,LOC_VOID,OS_NO);
+         if not (nf_internal in Flags) then
            include(flowcontrol,fc_gotolabel);
-         hlcg.A_Label_Pascal_Goto_Target(CurrentAsmData.CurrAsmList,getasmlabel);
+         hlcg.A_Label_Pascal_Goto_Target(CurrentAsmData.CurrAsmList,GetAsmLabel);
 
          { Write also extra label if this label was referenced from
            assembler block }
-         if Assigned(labsym) and
-            Assigned(labsym.AsmBlockLabel) then
-           hlcg.A_Label(CurrentAsmData.CurrAsmList,labsym.AsmBlockLabel);
+         if Assigned(LabSym) and
+            Assigned(LabSym.AsmBlockLabel) then
+           hlcg.A_Label(CurrentAsmData.CurrAsmList,LabSym.AsmBlockLabel);
       end;
 
 
@@ -516,127 +516,127 @@ implementation
 *****************************************************************************}
 
     var
-       endexceptlabel : TAsmLabel;
+       EndExceptLabel : TAsmLabel;
 
      { jump out of an try/except block }
-     procedure TCGTryExceptNode.emit_jump_out_of_try_except_frame(list: TAsmList; frametype: TFrameType; const exceptiontate: TCGExceptionStateHandler.TExceptionState; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel, outerlabel: TAsmLabel);
+     procedure TCGTryExceptNode.Emit_Jump_Out_Of_Try_Except_Frame(AList: TAsmList; AFrameType: TFrameType; const AExceptionState: TCGExceptionStateHandler.TExceptionState; var AExceptTemps: TCGExceptionStateHandler.TExceptionTemps; AFrameLabel, AOuterLabel: TAsmLabel);
        begin
-          hlcg.A_Label(list,framelabel);
+          hlcg.A_Label(AList,AFrameLabel);
           { we must also destroy the address frame which guards
             the exception object }
-          cexceptionstatehandler.popaddrstack(list);
-          hlcg.G_Exception_Reason_Discard(list,ExceptionReasonType,excepttemps.reasonbuf);
-          if frametype=ft_except then
+          CExceptionStateHandler.PopAddrStack(AList);
+          hlcg.G_Exception_Reason_Discard(AList,ExceptionReasonType,AExceptTemps.ReasonBuf);
+          if AFrameType=ft_except then
             begin
-              cexceptionstatehandler.cleanupobjectstack(list);
-              cexceptionstatehandler.end_catch(list);
+              CExceptionStateHandler.CleanupObjectStack(AList);
+              CExceptionStateHandler.End_Catch(AList);
             end;
-          hlcg.A_Jmp_Always(list,outerlabel);
+          hlcg.A_Jmp_Always(AList,AOuterLabel);
        end;
 
 
-    procedure TCGTryExceptNode.pass_generate_code;
+    procedure TCGTryExceptNode.Pass_Generate_Code;
 
       var
-         oldendexceptlabel,
-         lastonlabel,
-         exitexceptlabel,
-         continueexceptlabel,
-         breakexceptlabel,
-         exittrylabel,
-         continuetrylabel,
-         breaktrylabel,
-         oldCurrExitLabel,
-         oldContinueLabel,
-         oldBreakLabel : TAsmLabel;
-         destroytemps,
-         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
-         trystate,doobjectdestroyandreraisestate: TCGExceptionStateHandler.TExceptionState;
-         afteronflowcontrol: TFlowControl;
+         lOldEndExceptLabel,
+         lLastOnLabel,
+         lExitExceptLabel,
+         lContinueExceptLabel,
+         lBreakExceptLabel,
+         lExitTryLabel,
+         lContinueTryLabel,
+         lBreakTryLabel,
+         lOldCurrExitLabel,
+         lOldContinueLabel,
+         lOldBreakLabel : TAsmLabel;
+         lDestroyTemps,
+         lExceptTemps : TCGExceptionStateHandler.TExceptionTemps;
+         lTryState,lObjectDestroyAndReRaiseState: TCGExceptionStateHandler.TExceptionState;
+         lAfterOnFlowControl: TFlowControl;
       label
          errorexit;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
-         continuetrylabel:=nil;
-         breaktrylabel:=nil;
-         continueexceptlabel:=nil;
-         breakexceptlabel:=nil;
-         doobjectdestroyandreraisestate:=Default(TCGExceptionStateHandler.TExceptionState);
+         Location_Reset(Location,LOC_VOID,OS_NO);
+         lContinueTryLabel:=nil;
+         lBreakTryLabel:=nil;
+         lContinueExceptLabel:=nil;
+         lBreakExceptLabel:=nil;
+         lObjectDestroyAndReRaiseState:=Default(TCGExceptionStateHandler.TExceptionState);
 
          { this can be called recursively }
-         oldBreakLabel:=nil;
-         oldContinueLabel:=nil;
-         oldendexceptlabel:=endexceptlabel;
+         lOldBreakLabel:=nil;
+         lOldContinueLabel:=nil;
+         lOldEndExceptLabel:=EndExceptLabel;
 
          { save the old labels for control flow statements }
-         oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
+         lOldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
          if Assigned(CurrentProcInfo.CurrBreakLabel) then
            begin
-              oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
-              oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
+              lOldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
+              lOldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
            end;
 
          { get new labels for the control flow statements }
-         CurrentAsmData.getjumplabel(exittrylabel);
-         CurrentAsmData.getjumplabel(exitexceptlabel);
+         CurrentAsmData.getjumplabel(lExitTryLabel);
+         CurrentAsmData.getjumplabel(lExitExceptLabel);
          if Assigned(CurrentProcInfo.CurrBreakLabel) then
            begin
-              CurrentAsmData.getjumplabel(breaktrylabel);
-              CurrentAsmData.getjumplabel(continuetrylabel);
-              CurrentAsmData.getjumplabel(breakexceptlabel);
-              CurrentAsmData.getjumplabel(continueexceptlabel);
+              CurrentAsmData.getjumplabel(lBreakTryLabel);
+              CurrentAsmData.getjumplabel(lContinueTryLabel);
+              CurrentAsmData.getjumplabel(lBreakExceptLabel);
+              CurrentAsmData.getjumplabel(lContinueExceptLabel);
            end;
 
-         CurrentAsmData.getjumplabel(endexceptlabel);
-         CurrentAsmData.getjumplabel(lastonlabel);
+         CurrentAsmData.getjumplabel(EndExceptLabel);
+         CurrentAsmData.getjumplabel(lLastOnLabel);
 
-         cexceptionstatehandler.get_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         cexceptionstatehandler.new_exception(CurrentAsmData.CurrAsmList,excepttemps,tek_except,trystate);
+         CExceptionStateHandler.Get_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         CExceptionStateHandler.New_Exception(CurrentAsmData.CurrAsmList,lExceptTemps,tek_except,lTryState);
 
          { try block }
          { set control flow labels for the try block }
-         CurrentProcInfo.CurrExitLabel:=exittrylabel;
-         if Assigned(oldBreakLabel) then
+         CurrentProcInfo.CurrExitLabel:=lExitTryLabel;
+         if Assigned(lOldBreakLabel) then
           begin
-            CurrentProcInfo.CurrContinueLabel:=continuetrylabel;
-            CurrentProcInfo.CurrBreakLabel:=breaktrylabel;
+            CurrentProcInfo.CurrContinueLabel:=lContinueTryLabel;
+            CurrentProcInfo.CurrBreakLabel:=lBreakTryLabel;
           end;
 
-         SecondPass(left);
+         SecondPass(Left);
          if CodeGenError then
            goto errorexit;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoStart));
 
-         cexceptionstatehandler.end_try_block(CurrentAsmData.CurrAsmList,tek_except,excepttemps,trystate,endexceptlabel);
+         CExceptionStateHandler.End_Try_Block(CurrentAsmData.CurrAsmList,tek_except,lExceptTemps,lTryState,EndExceptLabel);
 
-         cexceptionstatehandler.emit_except_label(CurrentAsmData.CurrAsmList,tek_except,trystate,excepttemps);
-         cexceptionstatehandler.free_exception(CurrentAsmData.CurrAsmList, excepttemps, trystate, 0, endexceptlabel, false);
+         CExceptionStateHandler.Emit_Except_Label(CurrentAsmData.CurrAsmList,tek_except,lTryState,lExceptTemps);
+         CExceptionStateHandler.Free_Exception(CurrentAsmData.CurrAsmList, lExceptTemps, lTryState, 0, EndExceptLabel, false);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
          { set control flow labels for the except block }
          { and the on statements                        }
-         CurrentProcInfo.CurrExitLabel:=exitexceptlabel;
-         if Assigned(oldBreakLabel) then
+         CurrentProcInfo.CurrExitLabel:=lExitExceptLabel;
+         if Assigned(lOldBreakLabel) then
           begin
-            CurrentProcInfo.CurrContinueLabel:=continueexceptlabel;
-            CurrentProcInfo.CurrBreakLabel:=breakexceptlabel;
+            CurrentProcInfo.CurrContinueLabel:=lContinueExceptLabel;
+            CurrentProcInfo.CurrBreakLabel:=lBreakExceptLabel;
           end;
 
-         flowcontrol:=[fc_inflowcontrol]+trystate.oldflowcontrol*[fc_catching_exceptions];
+         flowcontrol:=[fc_inflowcontrol]+lTryState.OldFlowControl*[fc_catching_exceptions];
          { on statements }
-         if Assigned(right) then
-           SecondPass(right);
+         if Assigned(Right) then
+           SecondPass(Right);
 
-         afteronflowcontrol:=flowcontrol;
+         lAfterOnFlowControl:=flowcontrol;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoStart));
 
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,lastonlabel);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lLastOnLabel);
          { default handling except handling }
          if Assigned(t1) then
            begin
@@ -648,206 +648,206 @@ implementation
               { guarded by an exception frame, but it can be omitted }
               { if there's no user code in 'except' block            }
 
-              cexceptionstatehandler.catch_all_start(CurrentAsmData.CurrAsmList);
-              if not (has_no_code(t1)) then
+              CExceptionStateHandler.Catch_All_Start(CurrentAsmData.CurrAsmList);
+              if not (Has_No_Code(t1)) then
                begin
                  { if there is an outer frame that catches exceptions, remember this for the "except"
                    part of this try/except }
-                 flowcontrol:=trystate.oldflowcontrol*[fc_inflowcontrol,fc_catching_exceptions];
-                 cexceptionstatehandler.get_exception_temps(CurrentAsmData.CurrAsmList,destroytemps);
-                 cexceptionstatehandler.new_exception(CurrentAsmData.CurrAsmList,destroytemps,tek_except,doobjectdestroyandreraisestate);
-                 cexceptionstatehandler.catch_all_add(CurrentAsmData.CurrAsmList);
+                 flowcontrol:=lTryState.OldFlowControl*[fc_inflowcontrol,fc_catching_exceptions];
+                 CExceptionStateHandler.Get_Exception_Temps(CurrentAsmData.CurrAsmList,lDestroyTemps);
+                 CExceptionStateHandler.New_Exception(CurrentAsmData.CurrAsmList,lDestroyTemps,tek_except,lObjectDestroyAndReRaiseState);
+                 CExceptionStateHandler.Catch_All_Add(CurrentAsmData.CurrAsmList);
                  { the flowcontrol from the default except-block must be merged
                    with the flowcontrol flags potentially set by the
                    on-statements handled above (secondpass(right)), as they are
                    at the same program level }
                  flowcontrol:=
                    flowcontrol+
-                   afteronflowcontrol;
+                   lAfterOnFlowControl;
 
                  { except block needs line info }
-                 CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+                 CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
                  SecondPass(t1);
 
-                 cexceptionstatehandler.handle_nested_exception(CurrentAsmData.CurrAsmList,destroytemps,doobjectdestroyandreraisestate);
+                 CExceptionStateHandler.Handle_Nested_Exception(CurrentAsmData.CurrAsmList,lDestroyTemps,lObjectDestroyAndReRaiseState);
 
-                 cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,destroytemps);
-                 cexceptionstatehandler.catch_all_end(CurrentAsmData.CurrAsmList);
-                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+                 CExceptionStateHandler.UnGet_Exception_Temps(CurrentAsmData.CurrAsmList,lDestroyTemps);
+                 CExceptionStateHandler.Catch_All_End(CurrentAsmData.CurrAsmList);
+                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
                end
              else
                begin
-                 doobjectdestroyandreraisestate.newflowcontrol:=afteronflowcontrol;
-                 cexceptionstatehandler.cleanupobjectstack(CurrentAsmData.CurrAsmList);
-                 cexceptionstatehandler.catch_all_end(CurrentAsmData.CurrAsmList);
-                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+                 lObjectDestroyAndReRaiseState.NewFlowControl:=lAfterOnFlowControl;
+                 CExceptionStateHandler.CleanupObjectStack(CurrentAsmData.CurrAsmList);
+                 CExceptionStateHandler.Catch_All_End(CurrentAsmData.CurrAsmList);
+                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
                end;
            end
          else
            begin
-             cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,trystate,tek_except);
-             doobjectdestroyandreraisestate.newflowcontrol:=afteronflowcontrol;
+             CExceptionStateHandler.Handle_ReRaise(CurrentAsmData.CurrAsmList,lExceptTemps,lTryState,tek_except);
+             lObjectDestroyAndReRaiseState.NewFlowControl:=lAfterOnFlowControl;
            end;
 
-         if fc_exit in doobjectdestroyandreraisestate.newflowcontrol then
-           emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_except,doobjectdestroyandreraisestate,excepttemps,exitexceptlabel,oldCurrExitLabel);
+         if fc_exit in lObjectDestroyAndReRaiseState.NewFlowControl then
+           Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_except,lObjectDestroyAndReRaiseState,lExceptTemps,lExitExceptLabel,lOldCurrExitLabel);
 
-         if fc_break in doobjectdestroyandreraisestate.newflowcontrol then
-           emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_except,doobjectdestroyandreraisestate,excepttemps,breakexceptlabel,oldBreakLabel);
+         if fc_break in lObjectDestroyAndReRaiseState.NewFlowControl then
+           Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_except,lObjectDestroyAndReRaiseState,lExceptTemps,lBreakExceptLabel,lOldBreakLabel);
 
-         if fc_continue in doobjectdestroyandreraisestate.newflowcontrol then
-           emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_except,doobjectdestroyandreraisestate,excepttemps,continueexceptlabel,oldContinueLabel);
+         if fc_continue in lObjectDestroyAndReRaiseState.NewFlowControl then
+           Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_except,lObjectDestroyAndReRaiseState,lExceptTemps,lContinueExceptLabel,lOldContinueLabel);
 
-         if fc_exit in trystate.newflowcontrol then
-           emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_try,trystate,excepttemps,exittrylabel,oldCurrExitLabel);
+         if fc_exit in lTryState.NewFlowControl then
+           Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_try,lTryState,lExceptTemps,lExitTryLabel,lOldCurrExitLabel);
 
-         if fc_break in trystate.newflowcontrol then
-          emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_try,trystate,excepttemps,breaktrylabel,oldBreakLabel);
+         if fc_break in lTryState.NewFlowControl then
+          Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_try,lTryState,lExceptTemps,lBreakTryLabel,lOldBreakLabel);
 
-         if fc_continue in trystate.newflowcontrol then
-           emit_jump_out_of_try_except_frame(CurrentAsmData.CurrAsmList,ft_try,trystate,excepttemps,continuetrylabel,oldContinueLabel);
+         if fc_continue in lTryState.NewFlowControl then
+           Emit_Jump_Out_Of_Try_Except_Frame(CurrentAsmData.CurrAsmList,ft_try,lTryState,lExceptTemps,lContinueTryLabel,lOldContinueLabel);
 
-         cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,endexceptlabel);
+         CExceptionStateHandler.UnGet_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,EndExceptLabel);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
        errorexit:
          { restore all saved labels }
-         endexceptlabel:=oldendexceptlabel;
+         EndExceptLabel:=lOldEndExceptLabel;
 
          { restore the control flow labels }
-         CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-         if Assigned(oldBreakLabel) then
+         CurrentProcInfo.CurrExitLabel:=lOldCurrExitLabel;
+         if Assigned(lOldBreakLabel) then
           begin
-            CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
-            CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
+            CurrentProcInfo.CurrContinueLabel:=lOldContinueLabel;
+            CurrentProcInfo.CurrBreakLabel:=lOldBreakLabel;
           end;
 
          { return all used control flow statements }
-         flowcontrol:=trystate.oldflowcontrol+(doobjectdestroyandreraisestate.newflowcontrol +
-           trystate.newflowcontrol - [fc_inflowcontrol,fc_catching_exceptions]);
+         flowcontrol:=lTryState.OldFlowControl+(lObjectDestroyAndReRaiseState.NewFlowControl +
+           lTryState.NewFlowControl - [fc_inflowcontrol,fc_catching_exceptions]);
       end;
 
 
-    procedure TCGOnNode.pass_generate_code;
+    procedure TCGOnNode.Pass_Generate_Code;
       var
-         nextonlabel,
-         exitonlabel,
-         continueonlabel,
-         breakonlabel,
-         oldCurrExitLabel,
-         oldContinueLabel,
-         oldBreakLabel : TAsmLabel;
-         doobjectdestroyandreraisestate: TCGExceptionStateHandler.TExceptionState;
-         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
-         exceptvarsym : TLocalVarSym;
-         exceptlocdef: TDef;
-         exceptlocreg: TRegister;
+         lNextOnLabel,
+         lExitOnLabel,
+         lContinueOnLabel,
+         lBreakOnLabel,
+         lOldCurrExitLabel,
+         lOldContinueLabel,
+         lOldBreakLabel : TAsmLabel;
+         lObjectDestroyAndReRaiseState: TCGExceptionStateHandler.TExceptionState;
+         lExceptTemps : TCGExceptionStateHandler.TExceptionTemps;
+         lExceptVarSym : TLocalVarSym;
+         lExceptLocDef: TDef;
+         lExceptLocReg: TRegister;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
-         oldCurrExitLabel:=nil;
-         continueonlabel:=nil;
-         breakonlabel:=nil;
-         exitonlabel:=nil;
+         Location_Reset(Location,LOC_VOID,OS_NO);
+         lOldCurrExitLabel:=nil;
+         lContinueOnLabel:=nil;
+         lBreakOnLabel:=nil;
+         lExitOnLabel:=nil;
 
-         CurrentAsmData.getjumplabel(nextonlabel);
+         CurrentAsmData.getjumplabel(lNextOnLabel);
 
-         cexceptionstatehandler.begin_catch(CurrentAsmData.CurrAsmList,excepttype,nextonlabel,exceptlocdef,exceptlocreg);
+         CExceptionStateHandler.Begin_Catch(CurrentAsmData.CurrAsmList,ExceptType,lNextOnLabel,lExceptLocDef,lExceptLocReg);
 
          { Retrieve exception variable }
-         if Assigned(excepTSymtable) then
-           exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
+         if Assigned(ExceptSymTable) then
+           lExceptVarSym:=TLocalVarSym(ExceptSymTable.SymList[0])
          else
            InternalError(2011020401);
 
-         if Assigned(exceptvarsym) then
+         if Assigned(lExceptVarSym) then
            begin
-             Location_Reset_Ref(exceptvarsym.LocAlloc, LOC_REFERENCE, Def_CGSize(VoidPointerType), VoidPointerType.Alignment, []);
-             tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.Size, VoidPointerType.Alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.LocAlloc.Reference);
-             hlcg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList, exceptlocdef, exceptvarsym.vardef, exceptlocreg, exceptvarsym.LocAlloc.Reference);
+             Location_Reset_Ref(lExceptVarSym.LocAlloc, LOC_REFERENCE, Def_CGSize(VoidPointerType), VoidPointerType.Alignment, []);
+             TG.GetLocal(CurrentAsmData.CurrAsmList, lExceptVarSym.vardef.Size, VoidPointerType.Alignment, 0, lExceptVarSym.vardef, lExceptVarSym, lExceptVarSym.LocAlloc.Reference);
+             hlcg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList, lExceptLocDef, lExceptVarSym.vardef, lExceptLocReg, lExceptVarSym.LocAlloc.Reference);
            end;
          { in the case that another exception is risen
            we've to destroy the old one, so create a new
            exception frame for the catch-handler }
-         cexceptionstatehandler.get_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         cexceptionstatehandler.new_exception(CurrentAsmData.CurrAsmList,excepttemps,tek_except,doobjectdestroyandreraisestate);
+         CExceptionStateHandler.Get_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         CExceptionStateHandler.New_Exception(CurrentAsmData.CurrAsmList,lExceptTemps,tek_except,lObjectDestroyAndReRaiseState);
 
-         oldBreakLabel:=nil;
-         oldContinueLabel:=nil;
-         if Assigned(right) then
+         lOldBreakLabel:=nil;
+         lOldContinueLabel:=nil;
+         if Assigned(Right) then
            begin
-              oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
-              CurrentAsmData.getjumplabel(exitonlabel);
-              CurrentProcInfo.CurrExitLabel:=exitonlabel;
+              lOldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
+              CurrentAsmData.getjumplabel(lExitOnLabel);
+              CurrentProcInfo.CurrExitLabel:=lExitOnLabel;
               if Assigned(CurrentProcInfo.CurrBreakLabel) then
                begin
-                 oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
-                 oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
-                 CurrentAsmData.getjumplabel(breakonlabel);
-                 CurrentAsmData.getjumplabel(continueonlabel);
-                 CurrentProcInfo.CurrContinueLabel:=continueonlabel;
-                 CurrentProcInfo.CurrBreakLabel:=breakonlabel;
+                 lOldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
+                 lOldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
+                 CurrentAsmData.getjumplabel(lBreakOnLabel);
+                 CurrentAsmData.getjumplabel(lContinueOnLabel);
+                 CurrentProcInfo.CurrContinueLabel:=lContinueOnLabel;
+                 CurrentProcInfo.CurrBreakLabel:=lBreakOnLabel;
                end;
 
-              SecondPass(right);
+              SecondPass(Right);
            end;
 
-         cexceptionstatehandler.handle_nested_exception(CurrentAsmData.CurrAsmList,excepttemps,doobjectdestroyandreraisestate);
+         CExceptionStateHandler.Handle_Nested_Exception(CurrentAsmData.CurrAsmList,lExceptTemps,lObjectDestroyAndReRaiseState);
 
          { clear some stuff }
-         if Assigned(exceptvarsym) then
+         if Assigned(lExceptVarSym) then
            begin
-             tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.Reference);
-             exceptvarsym.LocAlloc.Loc:=LOC_INVALID;
+             TG.UnGetLocal(CurrentAsmData.CurrAsmList,lExceptVarSym.LocAlloc.Reference);
+             lExceptVarSym.LocAlloc.Loc:=LOC_INVALID;
            end;
-         cexceptionstatehandler.end_catch(CurrentAsmData.CurrAsmList);
-         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+         CExceptionStateHandler.End_Catch(CurrentAsmData.CurrAsmList);
+         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
 
-         if Assigned(right) then
+         if Assigned(Right) then
            begin
               { special handling for control flow instructions }
-              if fc_exit in doobjectdestroyandreraisestate.newflowcontrol then
+              if fc_exit in lObjectDestroyAndReRaiseState.NewFlowControl then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.A_Label(CurrentAsmData.CurrAsmList,exitonlabel);
-                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,lExitOnLabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldCurrExitLabel);
                 end;
 
-              if fc_break in doobjectdestroyandreraisestate.newflowcontrol then
+              if fc_break in lObjectDestroyAndReRaiseState.NewFlowControl then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.A_Label(CurrentAsmData.CurrAsmList,breakonlabel);
-                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldBreakLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,lBreakOnLabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldBreakLabel);
                 end;
 
-              if fc_continue in doobjectdestroyandreraisestate.newflowcontrol then
+              if fc_continue in lObjectDestroyAndReRaiseState.NewFlowControl then
                 begin
                    { the address and object pop does secondtryexcept }
-                   hlcg.A_Label(CurrentAsmData.CurrAsmList,continueonlabel);
-                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldContinueLabel);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,lContinueOnLabel);
+                   hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldContinueLabel);
                 end;
 
-              CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-              if Assigned(oldBreakLabel) then
+              CurrentProcInfo.CurrExitLabel:=lOldCurrExitLabel;
+              if Assigned(lOldBreakLabel) then
                begin
-                 CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
-                 CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
+                 CurrentProcInfo.CurrContinueLabel:=lOldContinueLabel;
+                 CurrentProcInfo.CurrBreakLabel:=lOldBreakLabel;
                end;
            end;
 
-         cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,nextonlabel);
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+         CExceptionStateHandler.UnGet_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lNextOnLabel);
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
          { propagate exit/break/continue }
-         flowcontrol:=doobjectdestroyandreraisestate.oldflowcontrol+(doobjectdestroyandreraisestate.newflowcontrol-[fc_inflowcontrol,fc_catching_exceptions]);
+         flowcontrol:=lObjectDestroyAndReRaiseState.OldFlowControl+(lObjectDestroyAndReRaiseState.NewFlowControl-[fc_inflowcontrol,fc_catching_exceptions]);
 
          { next on node }
-         if Assigned(left) then
-           SecondPass(left);
+         if Assigned(Left) then
+           SecondPass(Left);
       end;
 
 {*****************************************************************************
@@ -855,302 +855,302 @@ implementation
 *****************************************************************************}
 
     { jump out of a finally block }
-    procedure TCGTryFinallyNode.emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
+    procedure TCGTryFinallyNode.Emit_Jump_Out_Of_Try_Finally_Frame(AList: TAsmList; const AReason: byte; const AFinallyCodeLabel: TAsmLabel; var AExceptTemps: TCGExceptionStateHandler.TExceptionTemps; AFrameLabel: TAsmLabel);
       begin
-         hlcg.A_Label(list,framelabel);
-         hlcg.G_Exception_Reason_Discard(list,ExceptionReasonType,excepttemps.reasonbuf);
-         hlcg.G_Exception_Reason_Save_Const(list,ExceptionReasonType,reason,excepttemps.reasonbuf);
-         hlcg.A_Jmp_Always(list,finallycodelabel);
+         hlcg.A_Label(AList,AFrameLabel);
+         hlcg.G_Exception_Reason_Discard(AList,ExceptionReasonType,AExceptTemps.ReasonBuf);
+         hlcg.G_Exception_Reason_Save_Const(AList,ExceptionReasonType,AReason,AExceptTemps.ReasonBuf);
+         hlcg.A_Jmp_Always(AList,AFinallyCodeLabel);
       end;
 
 
-    function TCGTryFinallyNode.get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
+    function TCGTryFinallyNode.Get_Jump_Out_Of_Try_Finally_Frame_Label(const AFinallyExceptionState: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
       begin
-        CurrentAsmData.getjumplabel(result);
+        CurrentAsmData.getjumplabel(Result);
       end;
 
 
-    procedure TCGTryFinallyNode.handle_safecall_exception;
+    procedure TCGTryFinallyNode.Handle_SafeCall_Exception;
       var
-        cgpara, resultpara: TCGPara;
-        selfsym: TParaVarSym;
-        pd: TProcDef;
-        safecallresult: TLocalVarSym;
+        lCGPara, lResultPara: TCGPara;
+        lSelfSym: TParaVarSym;
+        lProcDef: TProcDef;
+        lSafeCallResult: TLocalVarSym;
       begin
         { call fpc_safecallhandler, passing self for methods of classes,
           nil otherwise. }
-        pd:=Search_System_Proc('fpc_safecallhandler');
-        cgpara.init;
-        ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
-        if Is_Class(CurrentProcInfo.procdef.struct) then
+        lProcDef:=Search_System_Proc('fpc_safecallhandler');
+        lCGPara.init;
+        ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,1,lCGPara);
+        if Is_Class(CurrentProcInfo.ProcDef.struct) then
           begin
-            selfsym:=TParaVarSym(CurrentProcInfo.procdef.ParaST.Find('self'));
-            if (selfsym=nil) or (selfsym.typ<>paravarsym) then
+            lSelfSym:=TParaVarSym(CurrentProcInfo.ProcDef.ParaST.Find('self'));
+            if (lSelfSym=nil) or (lSelfSym.typ<>paravarsym) then
               InternalError(2011123101);
-            hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.LocAlloc,cgpara);
+            hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,lSelfSym.vardef,lSelfSym.LocAlloc,lCGPara);
           end
         else
-          hlcg.A_Load_Const_CGPara(CurrentAsmData.CurrAsmList,VoidPointerType,0,cgpara);
-        ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,cgpara);
-        resultpara:=hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
-        cgpara.done;
-        safecallresult:=TLocalVarSym(CurrentProcInfo.procdef.LocalST.Find('safecallresult'));
-        hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.LocAlloc,false);
-        resultpara.ResetIfTemp;
+          hlcg.A_Load_Const_CGPara(CurrentAsmData.CurrAsmList,VoidPointerType,0,lCGPara);
+        ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lCGPara);
+        lResultPara:=hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,lProcDef,[@lCGPara],nil);
+        lCGPara.done;
+        lSafeCallResult:=TLocalVarSym(CurrentProcInfo.ProcDef.LocalST.Find('safecallresult'));
+        hlcg.Gen_Load_CGPara_Loc(CurrentAsmData.CurrAsmList,lResultPara.def,lResultPara,lSafeCallResult.LocAlloc,false);
+        lResultPara.ResetIfTemp;
       end;
 
 
-    procedure TCGTryFinallyNode.pass_generate_code;
+    procedure TCGTryFinallyNode.Pass_Generate_Code;
       var
-         endfinallylabel,
-         exitfinallylabel,
-         continuefinallylabel,
-         breakfinallylabel,
-         oldCurrExitLabel,
-         oldContinueLabel,
-         oldBreakLabel,
-         finallyNoExceptionLabel: TAsmLabel;
-         finallyexceptionstate: TCGExceptionStateHandler.TExceptionState;
-         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
-         reasonreg : TRegister;
-         exceptframekind: TCGExceptionStateHandler.TExceptFrameKind;
-         tmplist: TAsmList;
+         lEndFinallyLabel,
+         lExitFinallyLabel,
+         lContinueFinallyLabel,
+         lBreakFinallyLabel,
+         lOldCurrExitLabel,
+         lOldContinueLabel,
+         lOldBreakLabel,
+         lFinallyNoExceptionLabel: TAsmLabel;
+         lFinallyExceptionState: TCGExceptionStateHandler.TExceptionState;
+         lExceptTemps : TCGExceptionStateHandler.TExceptionTemps;
+         lReasonReg : TRegister;
+         lExceptFrameKind: TCGExceptionStateHandler.TExceptFrameKind;
+         lTempList: TAsmList;
 
-        procedure handle_breakcontinueexit(const finallycode: TAsmLabel; doreraise: boolean);
+        procedure HandleBreakContinueExit(const AFinallyCode: TAsmLabel; ADoReRaise: boolean);
           begin
             { no exception happened, but maybe break/continue/exit }
-            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
-            if fc_exit in finallyexceptionstate.newflowcontrol then
-              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,2,reasonreg,oldCurrExitLabel);
-            if fc_break in finallyexceptionstate.newflowcontrol then
-              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,3,reasonreg,oldBreakLabel);
-            if fc_continue in finallyexceptionstate.newflowcontrol then
-              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,4,reasonreg,oldContinueLabel);
-            if doreraise then
-              cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,tek_normalfinally)
+            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,lReasonReg,lEndFinallyLabel);
+            if fc_exit in lFinallyExceptionState.NewFlowControl then
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,2,lReasonReg,lOldCurrExitLabel);
+            if fc_break in lFinallyExceptionState.NewFlowControl then
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,3,lReasonReg,lOldBreakLabel);
+            if fc_continue in lFinallyExceptionState.NewFlowControl then
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,4,lReasonReg,lOldContinueLabel);
+            if ADoReRaise then
+              CExceptionStateHandler.Handle_ReRaise(CurrentAsmData.CurrAsmList,lExceptTemps,lFinallyExceptionState,tek_normalfinally)
             else
               hlcg.G_Unreachable(CurrentAsmData.CurrAsmList);
             { redirect break/continue/exit to the label above, with the reasonbuf set appropriately }
-            if fc_exit in finallyexceptionstate.newflowcontrol then
-              emit_jump_out_of_try_finally_frame(CurrentAsmData.CurrAsmList,2,finallycode,excepttemps,exitfinallylabel);
-            if fc_break in finallyexceptionstate.newflowcontrol then
-              emit_jump_out_of_try_finally_frame(CurrentAsmData.CurrAsmList,3,finallycode,excepttemps,breakfinallylabel);
-            if fc_continue in finallyexceptionstate.newflowcontrol then
-              emit_jump_out_of_try_finally_frame(CurrentAsmData.CurrAsmList,4,finallycode,excepttemps,continuefinallylabel);
+            if fc_exit in lFinallyExceptionState.NewFlowControl then
+              Emit_Jump_Out_Of_Try_Finally_Frame(CurrentAsmData.CurrAsmList,2,AFinallyCode,lExceptTemps,lExitFinallyLabel);
+            if fc_break in lFinallyExceptionState.NewFlowControl then
+              Emit_Jump_Out_Of_Try_Finally_Frame(CurrentAsmData.CurrAsmList,3,AFinallyCode,lExceptTemps,lBreakFinallyLabel);
+            if fc_continue in lFinallyExceptionState.NewFlowControl then
+              Emit_Jump_Out_Of_Try_Finally_Frame(CurrentAsmData.CurrAsmList,4,AFinallyCode,lExceptTemps,lContinueFinallyLabel);
           end;
 
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
-         oldBreakLabel:=nil;
-         oldContinueLabel:=nil;
-         continuefinallylabel:=nil;
-         breakfinallylabel:=nil;
+         Location_Reset(Location,LOC_VOID,OS_NO);
+         lOldBreakLabel:=nil;
+         lOldContinueLabel:=nil;
+         lContinueFinallyLabel:=nil;
+         lBreakFinallyLabel:=nil;
 
-         if not implicitframe then
-           exceptframekind:=tek_normalfinally
+         if not ImplicitFrame then
+           lExceptFrameKind:=tek_normalfinally
          else
-           exceptframekind:=tek_implicitfinally;
+           lExceptFrameKind:=tek_implicitfinally;
 
-         CurrentAsmData.getjumplabel(endfinallylabel);
+         CurrentAsmData.getjumplabel(lEndFinallyLabel);
 
          { call setjmp, and jump to finally label on non-zero result }
-         cexceptionstatehandler.get_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         cexceptionstatehandler.new_exception(CurrentAsmData.CurrAsmList,excepttemps,exceptframekind,finallyexceptionstate);
+         CExceptionStateHandler.Get_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         CExceptionStateHandler.New_Exception(CurrentAsmData.CurrAsmList,lExceptTemps,lExceptFrameKind,lFinallyExceptionState);
 
          { the finally block must catch break, continue and exit }
          { statements                                            }
-         oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
-         exitfinallylabel:=get_jump_out_of_try_finally_frame_label(finallyexceptionstate);
-         CurrentProcInfo.CurrExitLabel:=exitfinallylabel;
+         lOldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
+         lExitFinallyLabel:=Get_Jump_Out_Of_Try_Finally_Frame_Label(lFinallyExceptionState);
+         CurrentProcInfo.CurrExitLabel:=lExitFinallyLabel;
          if Assigned(CurrentProcInfo.CurrBreakLabel) then
           begin
-            oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
-            oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
-            breakfinallylabel:=get_jump_out_of_try_finally_frame_label(finallyexceptionstate);
-            continuefinallylabel:=get_jump_out_of_try_finally_frame_label(finallyexceptionstate);
-            CurrentProcInfo.CurrContinueLabel:=continuefinallylabel;
-            CurrentProcInfo.CurrBreakLabel:=breakfinallylabel;
+            lOldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
+            lOldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
+            lBreakFinallyLabel:=Get_Jump_Out_Of_Try_Finally_Frame_Label(lFinallyExceptionState);
+            lContinueFinallyLabel:=Get_Jump_Out_Of_Try_Finally_Frame_Label(lFinallyExceptionState);
+            CurrentProcInfo.CurrContinueLabel:=lContinueFinallyLabel;
+            CurrentProcInfo.CurrBreakLabel:=lBreakFinallyLabel;
           end;
 
          { try code }
-         if Assigned(left) then
+         if Assigned(Left) then
            begin
-              SecondPass(left);
+              SecondPass(Left);
               if CodeGenError then
                 exit;
            end;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoStart));
 
-         cexceptionstatehandler.end_try_block(CurrentAsmData.CurrAsmList,exceptframekind,excepttemps,finallyexceptionstate,finallyexceptionstate.finallycodelabel);
+         CExceptionStateHandler.End_Try_Block(CurrentAsmData.CurrAsmList,lExceptFrameKind,lExceptTemps,lFinallyExceptionState,lFinallyExceptionState.FinallyCodeLabel);
          if Assigned(third) then
            begin
-             tmplist:=TAsmList.create;
+             lTempList:=TAsmList.Create;
              { emit the except label already (to a temporary list) to ensure that any calls in the
                finally block refer to the outer exception frame rather than to the exception frame
                that emits this same finally code in case an exception does happen }
-             cexceptionstatehandler.emit_except_label(tmplist,exceptframekind,finallyexceptionstate,excepttemps);
+             CExceptionStateHandler.Emit_Except_Label(lTempList,lExceptFrameKind,lFinallyExceptionState,lExceptTemps);
 
-             flowcontrol:=finallyexceptionstate.oldflowcontrol*[fc_inflowcontrol,fc_catching_exceptions];
-             CurrentAsmData.getjumplabel(finallyNoExceptionLabel);
-             hlcg.A_Label(CurrentAsmData.CurrAsmList,finallyNoExceptionLabel);
-             if not implicitframe then
-               CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+             flowcontrol:=lFinallyExceptionState.OldFlowControl*[fc_inflowcontrol,fc_catching_exceptions];
+             CurrentAsmData.getjumplabel(lFinallyNoExceptionLabel);
+             hlcg.A_Label(CurrentAsmData.CurrAsmList,lFinallyNoExceptionLabel);
+             if not ImplicitFrame then
+               CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
              SecondPass(third);
              if CodeGenError then
                exit;
-             if not implicitframe then
-               CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
-             reasonreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
-             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
-             handle_breakcontinueexit(finallyNoExceptionLabel,false);
+             if not ImplicitFrame then
+               CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoStart));
+             lReasonReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,lExceptTemps.ReasonBuf,lReasonReg);
+             HandleBreakContinueExit(lFinallyNoExceptionLabel,false);
 
-             CurrentAsmData.CurrAsmList.ConcatList(tmplist);
-             tmplist.free;
-             tmplist := nil;
+             CurrentAsmData.CurrAsmList.ConcatList(lTempList);
+             lTempList.free;
+             lTempList := nil;
            end
          else
-           cexceptionstatehandler.emit_except_label(CurrentAsmData.CurrAsmList,exceptframekind,finallyexceptionstate,excepttemps);
+           CExceptionStateHandler.Emit_Except_Label(CurrentAsmData.CurrAsmList,lExceptFrameKind,lFinallyExceptionState,lExceptTemps);
 
          { just free the frame information }
-         cexceptionstatehandler.free_exception(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,1,finallyexceptionstate.exceptionlabel,true);
+         CExceptionStateHandler.Free_Exception(CurrentAsmData.CurrAsmList,lExceptTemps,lFinallyExceptionState,1,lFinallyExceptionState.ExceptionLabel,true);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
          { finally code (don't unconditionally set fc_inflowcontrol, since the
            finally code is unconditionally executed; we do have to filter out
            flags regarding break/contrinue/etc. because we have to give an
            error in case one of those is used in the finally-code }
-         flowcontrol:=finallyexceptionstate.oldflowcontrol*[fc_inflowcontrol,fc_catching_exceptions];
-         SecondPass(right);
+         flowcontrol:=lFinallyExceptionState.OldFlowControl*[fc_inflowcontrol,fc_catching_exceptions];
+         SecondPass(Right);
          { goto is allowed if it stays inside the finally block,
            this is checked using the exception block number }
-         if (flowcontrol-[fc_gotolabel])<>(finallyexceptionstate.oldflowcontrol*[fc_inflowcontrol,fc_catching_exceptions]) then
+         if (flowcontrol-[fc_gotolabel])<>(lFinallyExceptionState.OldFlowControl*[fc_inflowcontrol,fc_catching_exceptions]) then
            CGMessage(cg_e_control_flow_outside_finally);
          if CodeGenError then
            exit;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoStart));
 
          { same level as before try, but this part is only executed if an exception occurred
            -> always fc_in_flowcontrol }
-         flowcontrol:=finallyexceptionstate.oldflowcontrol*[fc_catching_exceptions];
+         flowcontrol:=lFinallyExceptionState.OldFlowControl*[fc_catching_exceptions];
          include(flowcontrol,fc_inflowcontrol);
          if not Assigned(third) then
            begin
              { the value should now be in the exception handler }
-             reasonreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
-             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
-             if implicitframe then
+             lReasonReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.G_Exception_Reason_Load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,lExceptTemps.ReasonBuf,lReasonReg);
+             if ImplicitFrame then
                begin
-                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
+                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,lReasonReg,lEndFinallyLabel);
                  { finally code only needed to be executed on exception (-> in
                    if-branch -> fc_inflowcontrol) }
-                 if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
+                 if CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper then
                    begin
-                     handle_safecall_exception;
+                     Handle_SafeCall_Exception;
                      { we have to jump immediately as we have to return the value of FPC_SAFECALL }
-                     hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
+                     hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldCurrExitLabel);
                    end
                  else
-                   cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,exceptframekind);
+                   CExceptionStateHandler.Handle_ReRaise(CurrentAsmData.CurrAsmList,lExceptTemps,lFinallyExceptionState,lExceptFrameKind);
                  { we have to load 0 into the execepttemp, else the program thinks an exception happened }
-                 emit_jump_out_of_try_finally_frame(CurrentAsmData.CurrAsmList,0,finallyexceptionstate.exceptionlabel,excepttemps,exitfinallylabel);
+                 Emit_Jump_Out_Of_Try_Finally_Frame(CurrentAsmData.CurrAsmList,0,lFinallyExceptionState.ExceptionLabel,lExceptTemps,lExitFinallyLabel);
                end
              else
                begin
-                 handle_breakcontinueexit(finallyexceptionstate.exceptionlabel,true);
+                 HandleBreakContinueExit(lFinallyExceptionState.ExceptionLabel,true);
                end;
            end
          else
            begin
-             if implicitframe then
+             if ImplicitFrame then
                begin
-                 if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
-                   handle_safecall_exception
+                 if CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper then
+                   Handle_SafeCall_Exception
                  else
-                   cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,exceptframekind);
+                   CExceptionStateHandler.Handle_ReRaise(CurrentAsmData.CurrAsmList,lExceptTemps,lFinallyExceptionState,lExceptFrameKind);
                end
              else
                begin
-                 cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,exceptframekind);
+                 CExceptionStateHandler.Handle_ReRaise(CurrentAsmData.CurrAsmList,lExceptTemps,lFinallyExceptionState,lExceptFrameKind);
                end;
 
            end;
-         cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,endfinallylabel);
+         CExceptionStateHandler.UnGet_Exception_Temps(CurrentAsmData.CurrAsmList,lExceptTemps);
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,lEndFinallyLabel);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.Create(mark_NoLineInfoEnd));
 
-         CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
+         CurrentProcInfo.CurrExitLabel:=lOldCurrExitLabel;
          if Assigned(CurrentProcInfo.CurrBreakLabel) then
           begin
-            CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
-            CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
+            CurrentProcInfo.CurrContinueLabel:=lOldContinueLabel;
+            CurrentProcInfo.CurrBreakLabel:=lOldBreakLabel;
           end;
-         flowcontrol:=finallyexceptionstate.oldflowcontrol+(finallyexceptionstate.newflowcontrol-[fc_inflowcontrol,fc_catching_exceptions]);
+         flowcontrol:=lFinallyExceptionState.OldFlowControl+(lFinallyExceptionState.NewFlowControl-[fc_inflowcontrol,fc_catching_exceptions]);
       end;
 
 
-    function TCGRaiseNode.pass_1: TNode;
+    function TCGRaiseNode.Pass_1: TNode;
       begin
-        if not(tf_use_psabieh in TargetInfo.flags) or Assigned(left) then
-          result:=inherited
+        if not(tf_use_psabieh in TargetInfo.Flags) or Assigned(Left) then
+          Result:=inherited
         else
           begin
             expectloc:=LOC_VOID;
-            result:=nil;
+            Result:=nil;
           end;
       end;
 
 {$ifndef SkipABIEH}
     { has to be factored out as well }
-    procedure TCGRaiseNode.pass_generate_code;
+    procedure TCGRaiseNode.Pass_Generate_Code;
       var
-        CurrentLandingPad, CurrentAction, ReRaiseLandingPad: TPSABIEHAction;
-        psabiehprocinfo: TPSABIEHProcInfo;
+        lCurrentLandingPad, lCurrentAction, lReRaiseLandingPad: TPSABIEHAction;
+        lPSABIEHProcInfo: TPSABIEHProcInfo;
       begin
-        if not(tf_use_psabieh in TargetInfo.flags) then
+        if not(tf_use_psabieh in TargetInfo.Flags) then
           InternalError(2019021701);
 
-        Location_Reset(location,LOC_VOID,OS_NO);
-        CurrentLandingPad:=nil;
-        CurrentAction:=nil;
-        ReRaiseLandingPad:=nil;
-        psabiehprocinfo:=CurrentProcInfo as TPSABIEHProcInfo;
+        Location_Reset(Location,LOC_VOID,OS_NO);
+        lCurrentLandingPad:=nil;
+        lCurrentAction:=nil;
+        lReRaiseLandingPad:=nil;
+        lPSABIEHProcInfo:=CurrentProcInfo as TPSABIEHProcInfo;
         { a reraise must raise the exception to the parent exception frame }
         if fc_catching_exceptions in flowcontrol then
           begin
-            psabiehprocinfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);
-            CurrentLandingPad:=psabiehprocinfo.CurrentLandingPad;
-            if psabiehprocinfo.PopLandingPad(CurrentLandingPad) then
+            lPSABIEHProcInfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);
+            lCurrentLandingPad:=lPSABIEHProcInfo.CurrentLandingPad;
+            if lPSABIEHProcInfo.PopLandingPad(lCurrentLandingPad) then
               exclude(flowcontrol,fc_catching_exceptions);
-            CurrentAction:=psabiehprocinfo.CurrentAction;
-            psabiehprocinfo.FinalizeAndPopAction(CurrentAction);
+            lCurrentAction:=lPSABIEHProcInfo.CurrentAction;
+            lPSABIEHProcInfo.FinalizeAndPopAction(lCurrentAction);
 
             if not(fc_catching_exceptions in flowcontrol) then
               begin
-                ReRaiseLandingPad:=psabiehprocinfo.NoAction;
-                psabiehprocinfo.PushAction(ReRaiseLandingPad);
-                psabiehprocinfo.PushLandingPad(ReRaiseLandingPad);
+                lReRaiseLandingPad:=lPSABIEHProcInfo.NoAction;
+                lPSABIEHProcInfo.PushAction(lReRaiseLandingPad);
+                lPSABIEHProcInfo.PushLandingPad(lReRaiseLandingPad);
               end;
           end;
         hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,'fpc_reraise',[],nil).ResetIfTemp;
-        if Assigned(CurrentLandingPad) then
+        if Assigned(lCurrentLandingPad) then
           begin
-            psabiehprocinfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);
+            lPSABIEHProcInfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);
             if not(fc_catching_exceptions in flowcontrol) then
               begin
-                psabiehprocinfo.PopLandingPad(psabiehprocinfo.CurrentLandingPad);
-                psabiehprocinfo.PopAction(ReRaiseLandingPad);
+                lPSABIEHProcInfo.PopLandingPad(lPSABIEHProcInfo.CurrentLandingPad);
+                lPSABIEHProcInfo.PopAction(lReRaiseLandingPad);
               end;
 
-            psabiehprocinfo.PushAction(CurrentAction);
-            psabiehprocinfo.PushLandingPad(CurrentLandingPad);
+            lPSABIEHProcInfo.PushAction(lCurrentAction);
+            lPSABIEHProcInfo.PushLandingPad(lCurrentLandingPad);
             include(flowcontrol,fc_catching_exceptions);
           end;
       end;
@@ -1170,6 +1170,6 @@ begin
    CTryExceptNode:=TCGTryExceptNode;
    CTryFinallyNode:=TCGTryFinallyNode;
    COnNode:=TCGOnNode;
-   cexceptionstatehandler:=TCGExceptionStateHandler;
+   CExceptionStateHandler:=TCGExceptionStateHandler;
 end.
 

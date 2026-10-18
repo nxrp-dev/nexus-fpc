@@ -47,7 +47,7 @@ unit optloadmodifystore;
 
     uses
       GlobType,Globals,Verbose,nutils,compinnr,
-      defutil,defcmp,htypechk,pass_1,ConstExp,
+      defutil,defcmp,htypechk,Pass_1,ConstExp,
       nadd,ncal,ncon,ncnv,ninl,nmat,
       symdef;
 
@@ -67,19 +67,19 @@ unit optloadmodifystore;
             }
             { replace i:=succ/pred(i) by inc/dec(i)? }
             if (right.nodetype=inlinen) and
-              ((TInlineNode(right).inlinenumber=in_succ_x) or (TInlineNode(right).inlinenumber=in_pred_x)) and
-              (TInlineNode(right).left.isequal(left)) and
+              ((TInlineNode(right).InlineNumber=in_succ_x) or (TInlineNode(right).InlineNumber=in_pred_x)) and
+              (TInlineNode(right).left.IsEqual(left)) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TInlineNode(right).left,false) and
-              not(might_have_sideeffects(TInlineNode(right).left)) then
+              not(Might_Have_SideEffects(TInlineNode(right).left)) then
               begin
-                if TInlineNode(right).inlinenumber=in_succ_x then
+                if TInlineNode(right).InlineNumber=in_succ_x then
                   newinlinenodetype:=in_inc_x
                 else
                   newinlinenodetype:=in_dec_x;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
                   TInlineNode(right).left,nil));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
@@ -93,13 +93,13 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [addn,subn,andn,orn,xorn]) and
-              (TAddNode(right).left.isequal(left)) and
+              (TAddNode(right).left.IsEqual(left)) and
               Is_Integer(TAddNode(right).left.resultdef) and
               Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TAddNode(right).left,false) and
-              not(might_have_sideeffects(TAddNode(right).left)) then
+              not(Might_Have_SideEffects(TAddNode(right).left)) then
               begin
                 case right.nodetype of
                   addn:
@@ -116,13 +116,13 @@ unit optloadmodifystore;
                     InternalError(2017032901);
                 end;
                 if right.nodetype in [addn,subn] then
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(right).left,CCallParaNode.create(TAddNode(right).right,nil)))
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(right).left,CCallParaNode.Create(TAddNode(right).right,nil)))
                 else
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(right).right,CCallParaNode.create(TAddNode(right).left,nil)));
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(right).right,CCallParaNode.Create(TAddNode(right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -141,21 +141,21 @@ unit optloadmodifystore;
                    right side 'i': ttypeconvnode(taddnode(ttypeconvnode(right).left).left).left
                    right side 'k': taddnode(ttypeconvnode(right).left).right }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [addn,subn,andn,orn,xorn]) and
                Is_Integer(TTypeConvNode(right).left.resultdef) and
                (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TAddNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
-               (TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
+               (TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
-               TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.isequal(left) and
+               TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.IsEqual(left) and
                Is_Integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
                Is_Integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
                Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
                   addn:
@@ -171,15 +171,15 @@ unit optloadmodifystore;
                   else
                     InternalError(2017032903);
                 end;
-                inserttypeconv_internal(TAddNode(TTypeConvNode(right).left).right,left.resultdef);
+                InsertTypeConv_Internal(TAddNode(TTypeConvNode(right).left).right,left.resultdef);
                 if TTypeConvNode(right).left.nodetype in [addn,subn] then
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,CCallParaNode.create(TAddNode(TTypeConvNode(right).left).right,nil)))
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,CCallParaNode.Create(TAddNode(TTypeConvNode(right).left).right,nil)))
                 else
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(TTypeConvNode(right).left).right,CCallParaNode.create(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,nil)));
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(TTypeConvNode(right).left).right,CCallParaNode.Create(TTypeConvNode(TAddNode(TTypeConvNode(right).left).left).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -192,13 +192,13 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [addn,andn,orn,xorn]) and
-              (TAddNode(right).right.isequal(left)) and
+              (TAddNode(right).right.IsEqual(left)) and
               Is_Integer(TAddNode(right).left.resultdef) and
               Is_Integer(TAddNode(right).right.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TAddNode(right).right,false) and
-              not(might_have_sideeffects(TAddNode(right).right)) then
+              not(Might_Have_SideEffects(TAddNode(right).right)) then
               begin
                 case right.nodetype of
                   addn:
@@ -213,13 +213,13 @@ unit optloadmodifystore;
                     InternalError(2017032902);
                 end;
                 if right.nodetype=addn then
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(right).right,CCallParaNode.create(TAddNode(right).left,nil)))
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(right).right,CCallParaNode.Create(TAddNode(right).left,nil)))
                 else
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(right).left,CCallParaNode.create(TAddNode(right).right,nil)));
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(right).left,CCallParaNode.Create(TAddNode(right).right,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -237,21 +237,21 @@ unit optloadmodifystore;
                    right side 'i': ttypeconvnode(taddnode(ttypeconvnode(right).left).right).left
                    right side 'k': taddnode(ttypeconvnode(right).left).left }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [addn,andn,orn,xorn]) and
                Is_Integer(TTypeConvNode(right).left.resultdef) and
                (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TAddNode(TTypeConvNode(right).left).right.nodetype=typeconvn) and
-               (TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).convtype=tc_int_2_int) and
+               (TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
-               TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.isequal(left) and
+               TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.IsEqual(left) and
                Is_Integer(TAddNode(TTypeConvNode(right).left).left.resultdef) and
                Is_Integer(TAddNode(TTypeConvNode(right).left).right.resultdef) and
                Is_Integer(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
                   addn:
@@ -265,15 +265,15 @@ unit optloadmodifystore;
                   else
                     InternalError(2017051101);
                 end;
-                inserttypeconv_internal(TAddNode(TTypeConvNode(right).left).left,left.resultdef);
+                InsertTypeConv_Internal(TAddNode(TTypeConvNode(right).left).left,left.resultdef);
                 if TTypeConvNode(right).left.nodetype=addn then
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,CCallParaNode.create(TAddNode(TTypeConvNode(right).left).left,nil)))
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,CCallParaNode.Create(TAddNode(TTypeConvNode(right).left).left,nil)))
                 else
-                  result:=CInlineNode.createintern(
-                    newinlinenodetype,false,CCallParaNode.create(
-                    TAddNode(TTypeConvNode(right).left).left,CCallParaNode.create(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,nil)));
+                  result:=CInlineNode.CreateIntern(
+                    newinlinenodetype,false,CCallParaNode.Create(
+                    TAddNode(TTypeConvNode(right).left).left,CCallParaNode.Create(TTypeConvNode(TAddNode(TTypeConvNode(right).left).right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -286,18 +286,18 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [notn,unaryminusn]) and
-              (TUnaryNode(right).left.isequal(left)) and
+              (TUnaryNode(right).left.IsEqual(left)) and
               Is_Integer(TUnaryNode(right).left.resultdef) and
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TUnaryNode(right).left,false) and
-              not(might_have_sideeffects(TUnaryNode(right).left)) then
+              not(Might_Have_SideEffects(TUnaryNode(right).left)) then
               begin
                 if right.nodetype=notn then
                   newinlinenodetype:=in_not_assign_x
                 else
                   newinlinenodetype:=in_neg_assign_x;
-                result:=CInlineNode.createintern(
+                result:=CInlineNode.CreateIntern(
                   newinlinenodetype,false,TUnaryNode(right).left);
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
@@ -314,25 +314,25 @@ unit optloadmodifystore;
                    inner typeconv: tunarynode(ttypeconvnode(right).left).left
                    right side 'i': ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [notn,unaryminusn]) and
                Is_Integer(TTypeConvNode(right).left.resultdef) and
                (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TUnaryNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
-               (TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
+               (TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
-               TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.isequal(left) and
+               TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.IsEqual(left) and
                Is_Integer(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left)) then
               begin
                 if TTypeConvNode(right).left.nodetype=notn then
                   newinlinenodetype:=in_not_assign_x
                 else
                   newinlinenodetype:=in_neg_assign_x;
-                result:=CInlineNode.createintern(
+                result:=CInlineNode.CreateIntern(
                   newinlinenodetype,false,TTypeConvNode(TUnaryNode(TTypeConvNode(right).left).left).left);
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
@@ -352,7 +352,7 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [shln,shrn]) and
-              (TShlShrNode(right).left.isequal(left)) and
+              (TShlShrNode(right).left.IsEqual(left)) and
               Is_Integer(TShlShrNode(right).left.resultdef) and
               Is_Integer(TShlShrNode(right).right.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
@@ -361,7 +361,7 @@ unit optloadmodifystore;
               ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
               valid_for_var(TShlShrNode(right).left,false) and
-              not(might_have_sideeffects(TShlShrNode(right).left)) then
+              not(Might_Have_SideEffects(TShlShrNode(right).left)) then
               begin
                 case right.nodetype of
                   shln:
@@ -371,9 +371,9 @@ unit optloadmodifystore;
                   else
                     InternalError(2017051201);
                 end;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
-                  TShlShrNode(right).right,CCallParaNode.create(TShlShrNode(right).left,nil)));
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
+                  TShlShrNode(right).right,CCallParaNode.Create(TShlShrNode(right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -391,7 +391,7 @@ unit optloadmodifystore;
                    right side 'i': ttypeconvnode(tshlshrnode(ttypeconvnode(right).left).left).left
                    right side 'k': tshlshrnode(ttypeconvnode(right).left).right }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype in [shln,shrn]) and
                Is_Integer(TTypeConvNode(right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
@@ -399,16 +399,16 @@ unit optloadmodifystore;
 {$endif}
                (right.resultdef.Size<=TTypeConvNode(right).left.resultdef.Size) and
                (TShlShrNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
-               (TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
+               (TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
-               TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.isequal(left) and
+               TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.IsEqual(left) and
                Is_Integer(TShlShrNode(TTypeConvNode(right).left).left.resultdef) and
                Is_Integer(TShlShrNode(TTypeConvNode(right).left).right.resultdef) and
                Is_Integer(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left)) then
               begin
                 case TTypeConvNode(right).left.nodetype of
                   shln:
@@ -418,10 +418,10 @@ unit optloadmodifystore;
                   else
                     InternalError(2017051202);
                 end;
-                inserttypeconv_internal(TShlShrNode(TTypeConvNode(right).left).right,left.resultdef);
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
-                  TShlShrNode(TTypeConvNode(right).left).right,CCallParaNode.create(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,nil)));
+                InsertTypeConv_Internal(TShlShrNode(TTypeConvNode(right).left).right,left.resultdef);
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
+                  TShlShrNode(TTypeConvNode(right).left).right,CCallParaNode.Create(TTypeConvNode(TShlShrNode(TTypeConvNode(right).left).left).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -437,7 +437,7 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype=inlinen) and
-               (TInlineNode(right).inlinenumber in [
+               (TInlineNode(right).InlineNumber in [
 {$ifdef enable_sar_assign_x_y}
                    in_sar_x{$ifdef enable_rox_assign_x_y},{$endif}
 {$endif enable_sar_assign_x_y}
@@ -445,7 +445,7 @@ unit optloadmodifystore;
                    in_rol_x,in_ror_x
 {$endif enable_rox_assign_x_y}
                  ]) and
-               (TInlineNode(right).left.isequal(left)) and
+               (TInlineNode(right).left.IsEqual(left)) and
                Is_Integer(TInlineNode(right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
                not(Is_64BitInt(TInlineNode(right).left.resultdef)) and
@@ -453,9 +453,9 @@ unit optloadmodifystore;
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TInlineNode(right).left,false) and
-               not(might_have_sideeffects(TInlineNode(right).left)) then
+               not(Might_Have_SideEffects(TInlineNode(right).left)) then
               begin
-                case TInlineNode(right).inlinenumber of
+                case TInlineNode(right).InlineNumber of
                   in_sar_x:
                     newinlinenodetype:=in_sar_assign_x_y;
                   in_rol_x:
@@ -465,9 +465,9 @@ unit optloadmodifystore;
                   else
                     InternalError(2017071701);
                 end;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
-                  COrdConstNode.create(1,U8IntType,false),CCallParaNode.create(TInlineNode(right).left,nil)));
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
+                  COrdConstNode.Create(1,U8IntType,false),CCallParaNode.Create(TInlineNode(right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -484,9 +484,9 @@ unit optloadmodifystore;
                    inner typeconv: tinlinenode(ttypeconvnode(right).left).left
                    right side 'i': ttypeconvnode(tinlinenode(ttypeconvnode(right).left).left).left }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype=inlinen) and
-               (TInlineNode(TTypeConvNode(right).left).inlinenumber in [
+               (TInlineNode(TTypeConvNode(right).left).InlineNumber in [
 {$ifdef enable_sar_assign_x_y}
                    in_sar_x{$ifdef enable_rox_assign_x_y},{$endif}
 {$endif enable_sar_assign_x_y}
@@ -497,16 +497,16 @@ unit optloadmodifystore;
                Is_Integer(TTypeConvNode(right).left.resultdef) and
                (right.resultdef.Size=TTypeConvNode(right).left.resultdef.Size) and
                (TInlineNode(TTypeConvNode(right).left).left.nodetype=typeconvn) and
-               (TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).convtype=tc_int_2_int) and
+               (TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
-               TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.isequal(left) and
+               TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.IsEqual(left) and
                Is_Integer(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left)) then
               begin
-                case TInlineNode(TTypeConvNode(right).left).inlinenumber of
+                case TInlineNode(TTypeConvNode(right).left).InlineNumber of
                   in_sar_x:
                     newinlinenodetype:=in_sar_assign_x_y;
                   in_rol_x:
@@ -516,9 +516,9 @@ unit optloadmodifystore;
                   else
                     InternalError(2017071801);
                 end;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
-                  COrdConstNode.create(1,U8IntType,false),CCallParaNode.create(
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
+                  COrdConstNode.Create(1,U8IntType,false),CCallParaNode.Create(
                   TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
@@ -532,7 +532,7 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype=inlinen) and
-               (TInlineNode(right).inlinenumber in [
+               (TInlineNode(right).InlineNumber in [
 {$ifdef enable_sar_assign_x_y}
                    in_sar_x_y{$ifdef enable_rox_assign_x_y},{$endif}
 {$endif enable_sar_assign_x_y}
@@ -541,7 +541,7 @@ unit optloadmodifystore;
 {$endif enable_rox_assign_x_y}
                  ]) and
                (TInlineNode(right).left.nodetype=callparan) and
-               TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.isequal(left) and
+               TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.IsEqual(left) and
                Is_Integer(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef) and
 {$if not defined(cpu64bitalu) and not defined(cpucg64shiftsupport)}
                not(Is_64BitInt(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left.resultdef)) and
@@ -549,9 +549,9 @@ unit optloadmodifystore;
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left,false) and
-               not(might_have_sideeffects(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left)) then
+               not(Might_Have_SideEffects(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left)) then
               begin
-                case TInlineNode(right).inlinenumber of
+                case TInlineNode(right).InlineNumber of
                   in_sar_x_y:
                     newinlinenodetype:=in_sar_assign_x_y;
                   in_rol_x_y:
@@ -561,10 +561,10 @@ unit optloadmodifystore;
                   else
                     InternalError(2017071702);
                 end;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
                   TCallParaNode(TInlineNode(right).left).left,
-                  CCallParaNode.create(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left,nil)));
+                  CCallParaNode.Create(TCallParaNode(TCallParaNode(TInlineNode(right).left).right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -583,9 +583,9 @@ unit optloadmodifystore;
                    right side 'i': ttypeconvnode(tcallparanode(tcallparanode(tinlinenode(ttypeconvnode(right).left).left).right).left).left
                    right side 'k': tcallparanode(tinlinenode(ttypeconvnode(right).left).left).left }
             if (right.nodetype=typeconvn) and
-               (TTypeConvNode(right).convtype=tc_int_2_int) and
+               (TTypeConvNode(right).ConvType=tc_int_2_int) and
                (TTypeConvNode(right).left.nodetype=inlinen) and
-               (TInlineNode(TTypeConvNode(right).left).inlinenumber in [
+               (TInlineNode(TTypeConvNode(right).left).InlineNumber in [
 {$ifdef enable_sar_assign_x_y}
                    in_sar_x_y{$ifdef enable_rox_assign_x_y},{$endif}
 {$endif enable_sar_assign_x_y}
@@ -597,16 +597,16 @@ unit optloadmodifystore;
                (right.resultdef.Size=TTypeConvNode(right).left.resultdef.Size) and
                (TInlineNode(TTypeConvNode(right).left).left.nodetype=callparan) and
                (TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left.nodetype=typeconvn) and
-               (TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).convtype=tc_int_2_int) and
+               (TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).ConvType=tc_int_2_int) and
                Are_Equal_Ints(right.resultdef,TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
-               TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.isequal(left) and
+               TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.IsEqual(left) and
                Is_Integer(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left.resultdef) and
                ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.LocalSwitches*[cs_check_overflow,cs_check_range])=[]) and
                valid_for_var(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,false) and
-               not(might_have_sideeffects(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left)) then
+               not(Might_Have_SideEffects(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left)) then
               begin
-                case TInlineNode(TTypeConvNode(right).left).inlinenumber of
+                case TInlineNode(TTypeConvNode(right).left).InlineNumber of
                   in_sar_x_y:
                     newinlinenodetype:=in_sar_assign_x_y;
                   in_rol_x_y:
@@ -616,10 +616,10 @@ unit optloadmodifystore;
                   else
                     InternalError(2017072002);
                 end;
-                result:=CInlineNode.createintern(
-                  newinlinenodetype,false,CCallParaNode.create(
+                result:=CInlineNode.CreateIntern(
+                  newinlinenodetype,false,CCallParaNode.Create(
                   TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).left,
-                  CCallParaNode.create(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,nil)));
+                  CCallParaNode.Create(TTypeConvNode(TCallParaNode(TCallParaNode(TInlineNode(TTypeConvNode(right).left).left).right).left).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -654,7 +654,7 @@ unit optloadmodifystore;
     procedure do_optloadmodifystore(var rootnode : TNode);
       begin
 
-        foreachnodestatic(pm_postprocess,rootnode,@try_opt_node,nil);
+        ForEachNodeStatic(pm_postprocess,rootnode,@try_opt_node,nil);
 
       end;
 

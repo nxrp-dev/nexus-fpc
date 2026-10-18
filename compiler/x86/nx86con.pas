@@ -31,8 +31,8 @@ interface
 
     type
        TX86RealConstNode = class(TCGRealConstNode)
-          function pass_1 : TNode;override;
-          procedure pass_generate_code;override;
+          function Pass_1 : TNode;override;
+          procedure Pass_Generate_Code;override;
        end;
 
 implementation
@@ -49,82 +49,82 @@ implementation
                            TX86REALCONSTNODE
 *****************************************************************************}
 
-    function TX86RealConstNode.pass_1 : TNode;
+    function TX86RealConstNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         if Is_Number_Float(value_real) and not(Use_VectorFPU(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (Get_Real_Sign(value_real)=1)) or
-           ((value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches))) then
+         Result:=nil;
+         if Is_Number_Float(ValueReal) and not(Use_VectorFPU(ResultDef)) and ((ValueReal=1.0) or (ValueReal=-1.0) or ((ValueReal=0.0) and (Get_Real_Sign(ValueReal)=1)) or
+           ((ValueReal=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches))) then
            expectloc:=LOC_FPUREGISTER
-         else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) and Use_VectorFPU(resultdef) then
+         else if (ValueReal=0.0) and (Get_Real_Sign(ValueReal)=1) and Use_VectorFPU(ResultDef) then
            expectloc:=LOC_MMREGISTER
          else
            expectloc:=LOC_CREFERENCE;
       end;
 
 
-    procedure TX86RealConstNode.pass_generate_code;
+    procedure TX86RealConstNode.Pass_Generate_Code;
       begin
-         if Is_Number_Float(value_real) then
+         if Is_Number_Float(ValueReal) then
            begin
-             if (value_real=1.0) and not(Use_VectorFPU(resultdef)) then
+             if (ValueReal=1.0) and not(Use_VectorFPU(ResultDef)) then
                begin
                   emit_none(A_FLD1,S_NO);
-                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-                  location.Register:=NR_ST;
+                  Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+                  Location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(Use_VectorFPU(resultdef)) then
+             else if (ValueReal=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(Use_VectorFPU(ResultDef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_reg_reg(A_FADD,S_NO,NR_ST,NR_ST);
-                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-                  location.Register:=NR_ST;
+                  Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+                  Location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=-1.0) and not(Use_VectorFPU(resultdef)) then
+             else if (ValueReal=-1.0) and not(Use_VectorFPU(ResultDef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_none(A_FCHS,S_NO);
-                  Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-                  location.Register:=NR_ST;
+                  Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+                  Location.Register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) then
+             else if (ValueReal=0.0) and (Get_Real_Sign(ValueReal)=1) then
                begin
-                 if Use_VectorFPU(resultdef) then
+                 if Use_VectorFPU(ResultDef) then
                    begin
-                     Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-                     location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(resultdef));
+                     Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+                     Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Def_CGSize(ResultDef));
                      if UseAVX then
                        begin
-                         if Is_Single(resultdef) then
-                           emit_reg_reg_reg(A_VXORPS,S_NO,location.Register,location.Register,location.Register)
+                         if Is_Single(ResultDef) then
+                           emit_reg_reg_reg(A_VXORPS,S_NO,Location.Register,Location.Register,Location.Register)
                          else
-                           emit_reg_reg_reg(A_VXORPD,S_NO,location.Register,location.Register,location.Register);
+                           emit_reg_reg_reg(A_VXORPD,S_NO,Location.Register,Location.Register,Location.Register);
                        end
                      else
                        begin
-                         if Is_Single(resultdef) then
-                           emit_reg_reg(A_XORPS,S_NO,location.Register,location.Register)
+                         if Is_Single(ResultDef) then
+                           emit_reg_reg(A_XORPS,S_NO,Location.Register,Location.Register)
                          else
-                           emit_reg_reg(A_XORPD,S_NO,location.Register,location.Register);
+                           emit_reg_reg(A_XORPD,S_NO,Location.Register,Location.Register);
                        end
                    end
                  else
                    begin
                       emit_none(A_FLDZ,S_NO);
-                      if (Get_Real_Sign(value_real) < 0) then
+                      if (Get_Real_Sign(ValueReal) < 0) then
                         emit_none(A_FCHS,S_NO);
-                      Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-                      location.Register:=NR_ST;
+                      Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+                      Location.Register:=NR_ST;
                       TCGX86(cg).inc_fpu_stack;
                    end;
                end
             else
-              inherited pass_generate_code;
+              inherited Pass_Generate_Code;
            end
          else
-           inherited pass_generate_code;
+           inherited Pass_Generate_Code;
       end;
 
 

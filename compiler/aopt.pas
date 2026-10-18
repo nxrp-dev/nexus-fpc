@@ -41,7 +41,7 @@ Unit aopt;
         TmpUsedRegs: TAllUsedRegs;
 
         { _AsmL is the PAasmOutput list that has to be optimized }
-        Constructor create(_AsmL: TAsmList); virtual; reintroduce;
+        Constructor Create(_AsmL: TAsmList); virtual; reintroduce;
 
         { call the necessary optimizer procedures }
         Procedure Optimize;virtual;
@@ -54,7 +54,7 @@ Unit aopt;
           Also fixes some RegDeallocs like "# %eax released; push (%eax)"  }
         Procedure BuildLabelTableAndFixRegAlloc;
       protected
-        procedure pass_1;
+        procedure Pass_1;
         procedure clear;
       End;
       TAsmOptimizerClass = class of TAsmOptimizer;
@@ -86,9 +86,9 @@ Unit aopt;
       cgbase,
       aoptcpu;
 
-    Constructor TAsmOptimizer.create(_AsmL: TAsmList);
+    Constructor TAsmOptimizer.Create(_AsmL: TAsmList);
       Begin
-        inherited create(_asml,nil,nil,nil);
+        inherited Create(_asml,nil,nil,nil);
         { setup labeltable, always necessary }
         New(LabelInfo);
         CreateUsedRegs(TmpUsedRegs);
@@ -113,14 +113,14 @@ Unit aopt;
                    (TAIMarker(P).Kind <> mark_AsmBlockStart)) Do
               Begin
                 If (p.typ = ait_label) and
-                   (TAILabel(p).labsym.labeltype=alt_jump) and
-                   (TAILabel(p).labsym.Is_Used) Then
+                   (TAILabel(p).LabSym.labeltype=alt_jump) and
+                   (TAILabel(p).LabSym.Is_Used) Then
                   Begin
                     LabelFound := True;
-                    If (TAILabel(p).labsym.labelnr < LowLabel) Then
-                      LowLabel := TAILabel(p).labsym.labelnr;
-                    If (TAILabel(p).labsym.labelnr > HighLabel) Then
-                      HighLabel := TAILabel(p).labsym.labelnr
+                    If (TAILabel(p).LabSym.labelnr < LowLabel) Then
+                      LowLabel := TAILabel(p).LabSym.labelnr;
+                    If (TAILabel(p).LabSym.labelnr > HighLabel) Then
+                      HighLabel := TAILabel(p).LabSym.labelnr
                   End;
                 GetNextInstruction(p, p)
               End;
@@ -149,10 +149,10 @@ Unit aopt;
               Case p.typ Of
                 ait_Label:
                   begin
-                    If TAILabel(p).labsym.Is_Used and
-                       (TAILabel(p).labsym.labeltype=alt_jump) then
+                    If TAILabel(p).LabSym.Is_Used and
+                       (TAILabel(p).LabSym.labeltype=alt_jump) then
                       begin
-                        LabelIdx:=TAILabel(p).labsym.labelnr-LowLabel;
+                        LabelIdx:=TAILabel(p).LabSym.labelnr-LowLabel;
                         if LabelIdx>int64(LabelDif) then
                           InternalError(200604202);
                         LabelTable[LabelIdx].PaiObj := p;
@@ -257,7 +257,7 @@ Unit aopt;
       end;
 
 
-    procedure TAsmOptimizer.pass_1;
+    procedure TAsmOptimizer.Pass_1;
       begin
         findlohilabels;
         BuildLabelTableAndFixRegAlloc;
@@ -269,7 +269,7 @@ Unit aopt;
         HP: TAI;
       Begin
         BlockStart := TAI(AsmL.First);
-        pass_1;
+        Pass_1;
         While Assigned(BlockStart) Do
           Begin
             if (cs_opt_peephole in CurrentSettings.OptimizerSwitches) then
@@ -298,7 +298,7 @@ Unit aopt;
                    (TAIMarker(HP).Kind <> mark_AsmBlockStart)) Then
                { There is no assembler block anymore after the current one, so }
                { optimize the next block of "normal" instructions              }
-                 pass_1
+                 Pass_1
                { Otherwise, skip the next assembler block }
                else
                  blockStart := hp;
@@ -318,7 +318,7 @@ Unit aopt;
 
     constructor TAsmScheduler.Create(_AsmL: TAsmList);
       begin
-        inherited create(_asml,nil,nil,nil);
+        inherited Create(_asml,nil,nil,nil);
       end;
 
 

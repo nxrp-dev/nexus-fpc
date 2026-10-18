@@ -79,7 +79,7 @@ type
     hastype,          { if the operand has typecasted variable }
     hasvar : boolean; { if the operand is loaded with a variable }
     size   : TCgSize;
-    constructor create;virtual;
+    constructor Create;virtual;
     destructor  Destroy;override;
     Procedure SetSize(_size:LongInt;force:boolean);virtual;
     Procedure SetCorrectSize(opcode:TAsmOp);virtual;
@@ -102,7 +102,7 @@ type
     ops       : byte;
     labeled   : boolean;
     filepos  : TFilePosInfo;
-    constructor create(optype : TCOperand);virtual;
+    constructor Create(optype : TCOperand);virtual;
     destructor  Destroy;override;
     { converts the instruction to an instruction how it's used by the assembler writer
       and concatenate it to the passed list. The newly created item is returned if the
@@ -139,7 +139,7 @@ type
 
   TExprParse = class
     public
-     Constructor create;
+     Constructor Create;
      Destructor Destroy;override;
      Function Evaluate(Expr:  String): TCGInt;
      Function Priority(_Operator: Char): aint;
@@ -205,7 +205,7 @@ uses
                               TExprParse
 *************************************************************************}
 
-Constructor TExprParse.create;
+Constructor TExprParse.Create;
 Begin
 end;
 
@@ -488,7 +488,7 @@ Function CalculateExpression(const expression: string): TCGInt;
 var
   expr: TExprParse;
 Begin
-  expr:=TExprParse.create;
+  expr:=TExprParse.Create;
   CalculateExpression:=expr.Evaluate(expression);
   expr.Free;
   expr := nil;
@@ -1008,7 +1008,7 @@ Begin
       end;
     TypeSym :
       begin
-        if TTypeSym(sym).typedef.typ in [recorddef,objectdef] then
+        if TTypeSym(sym).TypeDef.typ in [recorddef,objectdef] then
          begin
            setconst(0);
            SetupVar:=TRUE;
@@ -1186,7 +1186,7 @@ end;
                                  TInstruction
 ****************************************************************************}
 
-constructor TInstruction.create(optype : TCOperand);
+constructor TInstruction.Create(optype : TCOperand);
   var
     i : LongInt;
   Begin
@@ -1197,7 +1197,7 @@ constructor TInstruction.create(optype : TCOperand);
     }
     filepos:=CurrentFilePos;
     for i:=1 to max_operands do
-      Operands[i]:=optype.create;
+      Operands[i]:=optype.Create;
     Labeled:=false;
   end;
 
@@ -1409,7 +1409,7 @@ begin
   if Assigned(srsym) and
      (srsym.typ=TypeSym) then
     begin
-      size:=TTypeSym(srsym).typedef.Size;
+      size:=TTypeSym(srsym).TypeDef.Size;
       result:=true;
     end;
 end;
@@ -1429,7 +1429,7 @@ Begin
      case srsym.typ of
        TypeSym :
          begin
-           if TTypeSym(srsym).typedef.typ in [recorddef,objectdef] then
+           if TTypeSym(srsym).TypeDef.typ in [recorddef,objectdef] then
             begin
               SearchRecordType:=true;
               exit;
@@ -1561,7 +1561,7 @@ Begin
          paravarsym :
            st:=TAbstractVarSym(sym).vardef.GetSymTable(gs_record);
          TypeSym :
-           st:=TTypeSym(sym).typedef.GetSymTable(gs_record);
+           st:=TTypeSym(sym).TypeDef.GetSymTable(gs_record);
          else
            ;
        end
@@ -1659,7 +1659,7 @@ Begin
        asmsearchsym(s,sym,srsymtable);
        if Assigned(sym) and (sym.typ=TypeSym) then
          begin
-           size:=TTypeSym(sym).typedef.Size;
+           size:=TTypeSym(sym).TypeDef.Size;
            s:='';
            hastypecast:=true;
          end;

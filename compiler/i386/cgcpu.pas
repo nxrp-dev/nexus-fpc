@@ -83,20 +83,20 @@ unit cgcpu;
       begin
         inherited Init_Register_Allocators;
 
-        if Assigned(CurrentProcInfo) and (CurrentProcInfo.framepointer<>NR_EBP) then
+        if Assigned(CurrentProcInfo) and (CurrentProcInfo.FramePointer<>NR_EBP) then
           begin
             { Sometimes, whole program optimization will forego a frame pointer on leaf functions }
             if (cs_useebp in CurrentSettings.OptimizerSwitches) then
-              rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI,RS_EBP],first_int_imreg,[])
+              rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI,RS_EBP],first_int_imreg,[])
             else
-              rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI],first_int_imreg,[]);
+              rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI],first_int_imreg,[]);
           end
         else
-          rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI],first_int_imreg,[RS_EBP]);
+          rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_EAX,RS_EDX,RS_ECX,RS_EBX,RS_ESI,RS_EDI],first_int_imreg,[RS_EBP]);
 
-        rg[R_MMXREGISTER]:=TRGCPU.create(R_MMXREGISTER,R_SUBNONE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7],first_mm_imreg,[]);
-        rg[R_MMREGISTER]:=TRGCPU.create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7],first_mm_imreg,[]);
-        rgfpu:=TRGX86FPU.create;
+        rg[R_MMXREGISTER]:=TRGCPU.Create(R_MMXREGISTER,R_SUBNONE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7],first_mm_imreg,[]);
+        rg[R_MMREGISTER]:=TRGCPU.Create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7],first_mm_imreg,[]);
+        rgfpu:=TRGX86FPU.Create;
       end;
 
 
@@ -326,11 +326,11 @@ unit cgcpu;
           }
           not(po_noreturn in CurrentProcInfo.procdef.ProcOptions) then
           begin
-            if (CurrentProcInfo.framepointer=NR_STACK_POINTER_REG) or
+            if (CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG) or
                (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
               begin
-                if CurrentProcInfo.final_localsize<>0 then
-                  increase_sp(CurrentProcInfo.final_localsize);
+                if CurrentProcInfo.FinalLocalSize<>0 then
+                  increase_sp(CurrentProcInfo.FinalLocalSize);
                 if (not ParaManager.Use_Fixed_Stack) then
                   internal_restore_regs(list,true);
                 if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
@@ -343,7 +343,7 @@ unit cgcpu;
                   internal_restore_regs(list,not (pi_has_stack_allocs in CurrentProcInfo.flags));
                 generate_leave(list);
               end;
-            list.concat(TAIRegAlloc.dealloc(CurrentProcInfo.framepointer,nil));
+            list.concat(TAIRegAlloc.dealloc(CurrentProcInfo.FramePointer,nil));
           end;
 
         if pi_uses_ymm in CurrentProcInfo.flags then
@@ -387,7 +387,7 @@ unit cgcpu;
             list.concat(TAICPU.Op_reg(A_POP,S_W,NR_GS));
             { this restores the flags }
 
-            if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+            if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
               list.concat(TAIRegAlloc.dealloc(NR_STACK_POINTER_REG,nil));
 
             list.concat(TAICPU.Op_none(A_IRET,S_NO));
@@ -400,7 +400,7 @@ unit cgcpu;
            { but not on win32 }
            { and not for safecall with hidden exceptions, because the result }
            { which contains the exception is passed in EAX }
-           if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+           if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
              list.concat(TAIRegAlloc.dealloc(NR_STACK_POINTER_REG,nil));
 
            if ((TargetInfo.system <> system_i386_win32) or
@@ -417,7 +417,7 @@ unit cgcpu;
         { ... also routines with parasize=0 }
         else if (parasize=0) then
          begin
-           if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+           if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
              list.concat(TAIRegAlloc.dealloc(NR_STACK_POINTER_REG,nil));
 
            list.concat(TAICPU.Op_none(A_RET,S_NO))
@@ -428,7 +428,7 @@ unit cgcpu;
            if (parasize>65535) then
              CGMessage(cg_e_parasize_too_big);
 
-           if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+           if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
              list.concat(TAIRegAlloc.dealloc(NR_STACK_POINTER_REG,nil));
 
            list.concat(TAICPU.Op_const(A_RET,S_W,parasize));
@@ -1206,8 +1206,8 @@ unit cgcpu;
 
     procedure create_codegen;
       begin
-        cg := TCG386.create;
-        cg64 := TCG64F386.create;
+        cg := TCG386.Create;
+        cg64 := TCG64F386.Create;
       end;
 
 end.

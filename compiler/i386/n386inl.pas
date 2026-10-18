@@ -31,8 +31,8 @@ interface
     type
        TI386InlineNode = class(TX86InlineNode)
        public
-         function first_sar: TNode; override;
-         procedure second_rox_sar; override;
+         function First_SAR: TNode; override;
+         procedure Second_ROX_SAR; override;
        end;
 
 implementation
@@ -47,77 +47,77 @@ implementation
     ninl,ncon,ncal;
 
 
-  function TI386InlineNode.first_sar: TNode;
+  function TI386InlineNode.First_SAR: TNode;
     begin
-      if Is_64BitInt(resultdef) and (
-        (inlinenumber=in_sar_x) or (
-          (inlinenumber=in_sar_x_y) and
-          (TCallParaNode(left).left.nodetype=ordconstn)
+      if Is_64BitInt(ResultDef) and (
+        (InlineNumber=in_sar_x) or (
+          (InlineNumber=in_sar_x_y) and
+          (TCallParaNode(Left).Left.NodeType=ordconstn)
       )) then
         begin
-          result:=nil;
-          expectloc:=LOC_REGISTER;
+          Result:=nil;
+          ExpectLoc:=LOC_REGISTER;
         end
       else
-        result:=inherited first_sar;
+        Result:=inherited First_SAR;
     end;
 
 
-  procedure TI386InlineNode.second_rox_sar;
+  procedure TI386InlineNode.Second_ROX_SAR;
     var
-      op1: TNode;
-      hreg64hi,hreg64lo: TRegister;
-      v: aint;
+      lOperand1: TNode;
+      lReg64Hi,lReg64Lo: TRegister;
+      lValue: AInt;
     begin
-      if Is_64BitInt(resultdef) and (
-        (inlinenumber=in_sar_x) or (
-          (inlinenumber=in_sar_x_y) and
-          (TCallParaNode(left).left.nodetype=ordconstn)
+      if Is_64BitInt(ResultDef) and (
+        (InlineNumber=in_sar_x) or (
+          (InlineNumber=in_sar_x_y) and
+          (TCallParaNode(Left).Left.NodeType=ordconstn)
       )) then
         begin
           { x sar constant }
-          if (left.nodetype=callparan) and
-             Assigned(TCallParaNode(left).right) then
+          if (Left.NodeType=callparan) and
+             Assigned(TCallParaNode(Left).Right) then
             begin
-              op1:=TCallParaNode(TCallParaNode(left).right).left;
-              SecondPass(TCallParaNode(left).left);
-              v:=TOrdConstNode(TCallParaNode(left).left).Value.svalue and 63;
+              lOperand1:=TCallParaNode(TCallParaNode(Left).Right).Left;
+              SecondPass(TCallParaNode(Left).Left);
+              lValue:=TOrdConstNode(TCallParaNode(Left).Left).Value.svalue and 63;
             end
           else
             begin
-              op1:=left;
-              v:=1;
+              lOperand1:=Left;
+              lValue:=1;
             end;
-          SecondPass(op1);
+          SecondPass(lOperand1);
 
-          Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+          Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
 
           { load left operator in a register }
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,op1.Location,op1.resultdef,resultdef,false);
-          hreg64hi:=op1.Location.Register64.RegHi;
-          hreg64lo:=op1.Location.Register64.RegLo;
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,lOperand1.Location,lOperand1.ResultDef,ResultDef,false);
+          lReg64Hi:=lOperand1.Location.Register64.RegHi;
+          lReg64Lo:=lOperand1.Location.Register64.RegLo;
 
-          if (v=63) then
+          if (lValue=63) then
             begin
-              emit_const_reg(A_SAR,S_L,31,hreg64hi);
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
+              emit_const_reg(A_SAR,S_L,31,lReg64Hi);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,lReg64Hi,lReg64Lo);
             end
-          else if (v>31) then
+          else if (lValue>31) then
             begin
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,hreg64hi,hreg64lo);
-              emit_const_reg(A_SAR,S_L,31,hreg64hi);
-              emit_const_reg(A_SAR,S_L,v and 31,hreg64lo);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,OS_32,lReg64Hi,lReg64Lo);
+              emit_const_reg(A_SAR,S_L,31,lReg64Hi);
+              emit_const_reg(A_SAR,S_L,lValue and 31,lReg64Lo);
             end
           else
             begin
-              emit_const_reg_reg(A_SHRD,S_L,v and 31,hreg64hi,hreg64lo);
-              emit_const_reg(A_SAR,S_L,v and 31,hreg64hi);
+              emit_const_reg_reg(A_SHRD,S_L,lValue and 31,lReg64Hi,lReg64Lo);
+              emit_const_reg(A_SAR,S_L,lValue and 31,lReg64Hi);
             end;
-          location.Register64.RegHi:=hreg64hi;
-          location.Register64.RegLo:=hreg64lo;
+          Location.Register64.RegHi:=lReg64Hi;
+          Location.Register64.RegLo:=lReg64Lo;
         end
       else
-        inherited second_rox_sar;
+        inherited Second_ROX_SAR;
     end;
 
 begin

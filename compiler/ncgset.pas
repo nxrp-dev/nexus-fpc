@@ -31,27 +31,27 @@ interface
 
     type
        TCGSetElementNode = class(TSetElementNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
 
        Tsetpart=record
-         range : boolean;      {Part is a range.}
-         start,stop : byte;    {Start/stop when range; Stop=element when an element.}
+         Range : Boolean;      {Part is a range.}
+         Start,Stop : Byte;    {Start/stop when range; Stop=element when an element.}
        end;
-       Tsetparts=array[1..8] of Tsetpart;
+       Tsetparts=array[1..8] of TSetPart;
 
        { tcginnode }
 
        TCGInNode = class(TInNode)
-         procedure in_smallset(opdef: TDef; SetBase: aint); virtual;
+         procedure In_SmallSet(AOpDef: TDef; ASetBase: aint); virtual;
 
-         function pass_1: TNode;override;
-         procedure pass_generate_code;override;
+         function Pass_1: TNode;override;
+         procedure Pass_Generate_Code;override;
        protected
-         function checkgenjumps(out setparts: Tsetparts; out numparts: byte; out use_small: boolean): boolean; virtual;
-         function analizeset(const Aset:TConstSet;out setparts: Tsetparts; out numparts: byte;is_small:boolean):boolean;virtual;
-         procedure in_reg_const(uopdef: TDef; opsize: TCgSize);virtual;
+         function CheckGenJumps(out ASetParts: TSetParts; out APartCount: Byte; out AUseSmall: Boolean): Boolean; virtual;
+         function AnalizeSet(const ASet:TConstSet;out ASetParts: TSetParts; out APartCount: Byte;AIsSmall:Boolean):Boolean;virtual;
+         procedure In_Reg_Const(AUnsignedOpDef: TDef; AOpSize: TCgSize);virtual;
        end;
 
        TCGCaseNode = class(TCaseNode)
@@ -60,32 +60,32 @@ interface
             80x86 version, this version does not emit jump tables,
             because of portability problems.
           }
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
 
         protected
-          with_sign : boolean;
-          opsize : TDef;
-          jmp_gt,jmp_lt,jmp_le : TOpCmp;
+          FWithSign : Boolean;
+          FOpSize : TDef;
+          FJumpGreater,FJumpLess,FJumpLessEqual : TOpCmp;
           { register with case expression }
-          hregister,hregister2 : TRegister;
-          endlabel,elselabel : TAsmLabel;
+          FRegister,FRegister2 : TRegister;
+          FEndLabel,FElseLabel : TAsmLabel;
 
           { true, if we can omit the range check of the jump table }
-          jumptable_no_range : boolean;
+          FJumpTableNoRange : Boolean;
           { has the implementation jumptable support }
-          min_label : TConstExprInt;
+          FMinLabel : TConstExprInt;
 
-          function GetBranchLabel(Block: TNode; out _Label: TAsmLabel): Boolean;
+          function GetBranchLabel(ABlock: TNode; out ALabel: TAsmLabel): Boolean;
 
-          function  blocklabel(id:LongInt):TAsmLabel;
-          procedure optimizevalues(var max_linear_list:int64;var max_dist:qword);virtual;
-          function  has_jumptable : boolean;virtual;
-          procedure genjumptable(hp : PCaseLabel;min_,max_ : int64); virtual;
-          procedure genlinearlist(hp : PCaseLabel); virtual;
-          procedure genlinearcmplist(hp : PCaseLabel); virtual;
+          function  BlockLabel(ABlockID:LongInt):TAsmLabel;
+          procedure OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);virtual;
+          function  Has_JumpTable : Boolean;virtual;
+          procedure GenJumpTable(ARootLabel : PCaseLabel;AMin,AMax : Int64); virtual;
+          procedure GenLinearList(ARootLabel : PCaseLabel); virtual;
+          procedure GenLinearCmpList(ARootLabel : PCaseLabel); virtual;
 
-         procedure genjmptreeentry(p : PCaseLabel;parentvalue : TConstExprInt); virtual;
-         procedure genjmptree(root : PCaseLabel); virtual;
+         procedure GenJmpTreeEntry(ALabel : PCaseLabel;AParentValue : TConstExprInt); virtual;
+         procedure GenJmpTree(ARoot : PCaseLabel); virtual;
        end;
 
 
@@ -104,66 +104,66 @@ implementation
                           TCGSETELEMENTNODE
 *****************************************************************************}
 
-    procedure TCGSetElementNode.pass_generate_code;
+    procedure TCGSetElementNode.Pass_Generate_Code;
       begin
         { load the set element's value }
-        SecondPass(left);
+        SecondPass(Left);
 
         { also a second value ? }
-        if Assigned(right) then
+        if Assigned(Right) then
           InternalError(2015111106);
 
         { we don't modify the left side, we only check the location type; our
           parent node (an add-node) will use the resulting location to perform
           the set operation without creating an intermediate set }
-        Location_Copy(location,left.Location);
+        Location_Copy(Location,Left.Location);
       end;
 
 
 {*****************************************************************************
 *****************************************************************************}
 
-  function TCGInNode.analizeset(const Aset:TConstSet; out setparts:tsetparts; out numparts: byte; is_small:boolean):boolean;
+  function TCGInNode.AnalizeSet(const ASet:TConstSet; out ASetParts:TSetParts; out APartCount: Byte; AIsSmall:Boolean):Boolean;
     var
-      compares,maxcompares:word;
-      i:byte;
+      lCompareCount,lMaxCompareCount:Word;
+      lIndex:Byte;
     begin
-      analizeset:=false;
-      fillchar(setparts,sizeof(setparts),0);
-      numparts:=0;
-      compares:=0;
+      AnalizeSet:=false;
+      fillchar(ASetParts,sizeof(ASetParts),0);
+      APartCount:=0;
+      lCompareCount:=0;
       { Lots of comparisons take a lot of time, so do not allow
         too much comparisons. 8 comparisons are, however, still
         smaller than emitting the set }
       if cs_opt_size in CurrentSettings.OptimizerSwitches then
-        maxcompares:=8
+        lMaxCompareCount:=8
       else
-        maxcompares:=5;
+        lMaxCompareCount:=5;
       { when smallset is possible allow only 3 compares the smallset
         code is for littlesize also smaller when more compares are used }
-      if is_small then
-        maxcompares:=3;
-      for i:=0 to 255 do
-        if i in Aset then
+      if AIsSmall then
+        lMaxCompareCount:=3;
+      for lIndex:=0 to 255 do
+        if lIndex in ASet then
           begin
-            if (numparts=0) or (i<>setparts[numparts].stop+1) then
+            if (APartCount=0) or (lIndex<>ASetParts[APartCount].Stop+1) then
               begin
                 {Set element is a separate element.}
-                inc(compares);
-                if compares>maxcompares then
+                inc(lCompareCount);
+                if lCompareCount>lMaxCompareCount then
                   exit;
-                inc(numparts);
-                setparts[numparts].range:=false;
-                setparts[numparts].stop:=i;
+                inc(APartCount);
+                ASetParts[APartCount].Range:=false;
+                ASetParts[APartCount].Stop:=lIndex;
               end
             else
               {Set element is part of a range.}
-              if not setparts[numparts].range then
+              if not ASetParts[APartCount].Range then
                 begin
                   {Transform an element into a range.}
-                  setparts[numparts].range:=true;
-                  setparts[numparts].start:=setparts[numparts].stop;
-                  setparts[numparts].stop:=i;
+                  ASetParts[APartCount].Range:=true;
+                  ASetParts[APartCount].Start:=ASetParts[APartCount].Stop;
+                  ASetParts[APartCount].Stop:=lIndex;
                   { there's only one compare per range anymore. Only a }
                   { sub is added, but that's much faster than a        }
                   { cmp/jcc combo so neglect its effect                }
@@ -174,16 +174,16 @@ implementation
               else
                 begin
                   {Extend a range.}
-                  setparts[numparts].stop:=i;
+                  ASetParts[APartCount].Stop:=lIndex;
                 end;
           end;
-      analizeset:=true;
+      AnalizeSet:=true;
     end;
 
 
-    procedure TCGInNode.in_reg_const(uopdef: TDef; opsize: TCgSize);
+    procedure TCGInNode.In_Reg_Const(AUnsignedOpDef: TDef; AOpSize: TCgSize);
       var
-        hr: TRegister;
+        lReg: TRegister;
       begin
         { emit bit test operation -- warning: do not use
           location_force_reg() to force a set into a register, except
@@ -196,223 +196,223 @@ implementation
          a_bit_test_reg_loc_reg() properly takes into account the
          size of the set to adjust the register index to test }
         hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList,
-          uopdef, right.resultdef, uopdef,
-          left.Location.Register, right.Location, location.Register);
+          AUnsignedOpDef, Right.ResultDef, AUnsignedOpDef,
+          Left.Location.Register, Right.Location, Location.Register);
 
         { this may have resulted in an undefined value if left.location.register
           was >= size of right.location, but we'll mask the value to zero below
           in that case -> okay }
-        hlcg.G_Undefined_Ok(CurrentAsmData.CurrAsmList,uopdef,location.Register);
+        hlcg.G_Undefined_Ok(CurrentAsmData.CurrAsmList,AUnsignedOpDef,Location.Register);
 
         { now zero the result if left > nr_of_bits_in_right_register }
-        hr := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, uopdef);
+        lReg := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, AUnsignedOpDef);
         { if left > tcgsize2size[opsize]*8 then hr := 0 else hr := $ffffffff }
         { (left.location.size = location.size at this point) }
-        hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList, OP_SUB, uopdef,
-          TCgSize2Size[opsize]*8, left.Location.Register, hr);
-        hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList, OP_SAR, uopdef, (TCgSize2Size
-          [opsize]*8)-1, hr);
+        hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList, OP_SUB, AUnsignedOpDef,
+          TCgSize2Size[AOpSize]*8, Left.Location.Register, lReg);
+        hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList, OP_SAR, AUnsignedOpDef, (TCgSize2Size
+          [AOpSize]*8)-1, lReg);
 
 
           { if left > tcgsize2size[opsize]*8-1, then result := 0 else result := result of bit test }
-        hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList, OP_AND, uopdef, hr,
-          location.Register);
+        hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList, OP_AND, AUnsignedOpDef, lReg,
+          Location.Register);
       end;
 
 
-    procedure TCGInNode.in_smallset(opdef: TDef; SetBase: aint);
+    procedure TCGInNode.In_SmallSet(AOpDef: TDef; ASetBase: aint);
       begin
         { location is always LOC_REGISTER }
-        Location_Reset(location, LOC_REGISTER, Def_CGSize(resultdef));
+        Location_Reset(Location, LOC_REGISTER, Def_CGSize(ResultDef));
         { allocate a register for the result }
-        location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, resultdef);
+        Location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, ResultDef);
         {****************************  SMALL SET **********************}
-        if left.Location.Loc=LOC_CONSTANT then
+        if Left.Location.Loc=LOC_CONSTANT then
           begin
             hlcg.A_Bit_Test_Const_Loc_Reg(CurrentAsmData.CurrAsmList,
-             right.resultdef, resultdef,
-              left.Location.Value-SetBase, right.Location,
-              location.Register);
+             Right.ResultDef, ResultDef,
+              Left.Location.Value-ASetBase, Right.Location,
+              Location.Register);
           end
         else
           begin
-            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, left.Location,
-             left.resultdef, opdef, true);
-            register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList, opdef, left.Location,
-             SetBase);
-            hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList, opdef,
-              right.resultdef, resultdef, left.Location.Register, right.Location,
-               location.Register);
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList, Left.Location,
+             Left.ResultDef, AOpDef, true);
+            Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList, AOpDef, Left.Location,
+             ASetBase);
+            hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList, AOpDef,
+              Right.ResultDef, ResultDef, Left.Location.Register, Right.Location,
+               Location.Register);
           end;
       end;
 
 
-    function TCGInNode.checkgenjumps(out setparts: Tsetparts; out numparts: byte;out use_small: boolean): boolean;
+    function TCGInNode.CheckGenJumps(out ASetParts: TSetParts; out APartCount: Byte;out AUseSmall: Boolean): Boolean;
       begin
          { check if we can use smallset operation using btl which is limited
            to 32 bits, the left side may also not contain higher values !! }
-         use_small:=Is_SmallSet(right.resultdef) and
-                    not Is_Signed(left.resultdef) and
-                    ((left.resultdef.typ=orddef) and (TOrdDef(left.resultdef).high<32) or
-                     (left.resultdef.typ=enumdef) and (TEnumDef(left.resultdef).max<32));
+         AUseSmall:=Is_SmallSet(Right.ResultDef) and
+                    not Is_Signed(Left.ResultDef) and
+                    ((Left.ResultDef.typ=orddef) and (TOrdDef(Left.ResultDef).high<32) or
+                     (Left.ResultDef.typ=enumdef) and (TEnumDef(Left.ResultDef).max<32));
 
          { Can we generate jumps? Possible for all types of sets }
-         checkgenjumps:=(right.nodetype=setconstn) and
-                   analizeset(TSetConstNode(right).value_set^,setparts,numparts,use_small);
+         CheckGenJumps:=(Right.NodeType=setconstn) and
+                   AnalizeSet(TSetConstNode(Right).ValueSet^,ASetParts,APartCount,AUseSmall);
       end;
 
 
-    function TCGInNode.pass_1: TNode;
+    function TCGInNode.Pass_1: TNode;
       var
-        setparts: Tsetparts;
-        numparts: byte;
-        use_small: boolean;
+        lSetParts: TSetParts;
+        lPartCount: Byte;
+        lUseSmall: Boolean;
       begin
-        result := inherited pass_1;
-        if not(Assigned(result)) and
-          checkgenjumps(setparts,numparts,use_small) then
-          expectloc := LOC_JUMP;
+        Result := inherited Pass_1;
+        if not(Assigned(Result)) and
+          CheckGenJumps(lSetParts,lPartCount,lUseSmall) then
+          ExpectLoc := LOC_JUMP;
       end;
 
-    procedure TCGInNode.pass_generate_code;
+    procedure TCGInNode.Pass_Generate_Code;
        var
-         adjustment,
-         SetBase    : aint;
-         l, l2      : TAsmLabel;
-         hr,
-         pleftreg   : TRegister;
-         setparts   : Tsetparts;
-         opsize     : TCgSize;
-         opdef      : TDef;
-         uopsize    : TCgSize;
-         uopdef     : TDef;
-         orgopsize  : TCgSize;
-         genjumps,
-         use_small  : boolean;
-         i,numparts : byte;
-         needslabel : Boolean;
+         lAdjustment,
+         lSetBase    : aint;
+         lLabel, lLabel2      : TAsmLabel;
+         lReg,
+         lLeftReg   : TRegister;
+         lSetParts   : TSetParts;
+         lOpSize     : TCgSize;
+         lOpDef      : TDef;
+         lUnsignedOpSize    : TCgSize;
+         lUnsignedOpDef     : TDef;
+         lOriginalOpSize  : TCgSize;
+         lGenerateJumps,
+         lUseSmall  : Boolean;
+         lIndex,lPartCount : Byte;
+         lNeedsLabel : Boolean;
        begin
-         l2:=nil;
+         lLabel2:=nil;
 
          { We check first if we can generate jumps, this can be done
            because the resultdef is already set in firstpass }
 
-         genjumps := checkgenjumps(setparts,numparts,use_small);
+         lGenerateJumps := CheckGenJumps(lSetParts,lPartCount,lUseSmall);
 
-         orgopsize := Def_CGSize(left.resultdef);
+         lOriginalOpSize := Def_CGSize(Left.ResultDef);
 
 
            begin
-             uopsize := OS_32;
-             uopdef := U32IntType;
-             if Is_Signed(left.resultdef) then
+             lUnsignedOpSize := OS_32;
+             lUnsignedOpDef := U32IntType;
+             if Is_Signed(Left.ResultDef) then
                begin
-                 opsize := OS_S32;
-                 opdef := S32IntType;
+                 lOpSize := OS_S32;
+                 lOpDef := S32IntType;
                end
              else
                begin
-                 opsize := uopsize;
-                 opdef := uopdef;
+                 lOpSize := lUnsignedOpSize;
+                 lOpDef := lUnsignedOpDef;
                end;
            end;
-         needslabel := false;
+         lNeedsLabel := false;
 
-         if not genjumps then
+         if not lGenerateJumps then
            { calculate both operators }
            { the complex one first }
            { not in case of genjumps, because then we don't secondpass      }
            { right at all (so we have to make sure that "right" really is   }
            { "right" and not "swapped left" in that case)                   }
-           firstcomplex(self);
+           FirstComplex(self);
 
-         SecondPass(left);
-         if (left.expectloc=LOC_JUMP)<>
-            (left.Location.Loc=LOC_JUMP) then
+         SecondPass(Left);
+         if (Left.ExpectLoc=LOC_JUMP)<>
+            (Left.Location.Loc=LOC_JUMP) then
            InternalError(2007070101);
 
          { Only process the right if we are not generating jumps }
-         if not genjumps then
-           SecondPass(right);
+         if not lGenerateJumps then
+           SecondPass(Right);
          if CodeGenError then
            exit;
 
          { of course not commutative }
-         if nf_swapped in flags then
-          swapleftright;
+         if nf_swapped in Flags then
+          SwapLeftRight;
 
-         SetBase:=TSetDef(right.resultdef).SetBase;
-         if genjumps then
+         lSetBase:=TSetDef(Right.ResultDef).SetBase;
+         if lGenerateJumps then
            begin
              { location is always LOC_JUMP }
-             CurrentAsmData.getjumplabel(l);
-             CurrentAsmData.getjumplabel(l2);
-             Location_Reset_Jump(location,l,l2);
+             CurrentAsmData.getjumplabel(lLabel);
+             CurrentAsmData.getjumplabel(lLabel2);
+             Location_Reset_Jump(Location,lLabel,lLabel2);
 
              { If register is used, use only lower 8 bits }
-             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,false);
-             pleftreg := left.Location.Register;
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,lOpDef,false);
+             lLeftReg := Left.Location.Register;
 
              { how much have we already subtracted from the x in the  }
              { "x in [y..z]" expression                               }
-             adjustment := 0;
-             hr:=NR_NO;
+             lAdjustment := 0;
+             lReg:=NR_NO;
 
-             for i:=1 to numparts do
-              if setparts[i].range then
+             for lIndex:=1 to lPartCount do
+              if lSetParts[lIndex].Range then
                { use fact that a <= x <= b <=> aword(x-a) <= aword(b-a) }
                begin
                  { is the range different from all legal values? }
-                 if (setparts[i].stop-setparts[i].start <> 255) or not (orgopsize = OS_8) then
+                 if (lSetParts[lIndex].Stop-lSetParts[lIndex].Start <> 255) or not (lOriginalOpSize = OS_8) then
                    begin
                      { yes, is the lower bound <> 0? }
-                     if (setparts[i].start <> 0) then
+                     if (lSetParts[lIndex].Start <> 0) then
                        { we're going to subtract from the left register,    }
                        { so in case of a LOC_CREGISTER first move the value }
                        { to edi (not done before because now we can do the  }
                        { move and subtract in one instruction with LEA)     }
-                       if (left.Location.Loc = LOC_CREGISTER) and
-                          (hr<>pleftreg) then
+                       if (Left.Location.Loc = LOC_CREGISTER) and
+                          (lReg<>lLeftReg) then
                          begin
                            { don't change this back to a_op_const_reg/a_load_reg_reg, since pleftreg must not be modified }
-                           hr:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,opdef);
-                           hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,opdef,setparts[i].start,pleftreg,hr);
-                           pleftreg:=hr;
+                           lReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,lOpDef);
+                           hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,lOpDef,lSetParts[lIndex].Start,lLeftReg,lReg);
+                           lLeftReg:=lReg;
                          end
                        else
                          begin
                            { otherwise, the value is already in a register   }
                            { that can be modified                            }
-                           hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SUB,opdef,
-                              setparts[i].start-adjustment,pleftreg)
+                           hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SUB,lOpDef,
+                              lSetParts[lIndex].Start-lAdjustment,lLeftReg)
                          end;
                      { new total value subtracted from x:            }
                      { adjustment + (setparts[i].start - adjustment) }
-                     adjustment := setparts[i].start;
+                     lAdjustment := lSetParts[lIndex].Start;
 
                      { check if result < b-a+1 (not "result <= b-a", since }
                      { we need a carry in case the element is in the range }
                      { (this will never overflow since we check at the     }
                      { beginning whether stop-start <> 255)                }
-                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, uopdef, OC_B,
-                       setparts[i].stop-setparts[i].start+1,pleftreg,location.TrueLabel);
+                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, lUnsignedOpDef, OC_B,
+                       lSetParts[lIndex].Stop-lSetParts[lIndex].Start+1,lLeftReg,Location.TrueLabel);
                    end
                  else
                    { if setparts[i].start = 0 and setparts[i].stop = 255,  }
                    { it's always true since "in" is only allowed for bytes }
                    begin
-                     hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,location.TrueLabel);
+                     hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,Location.TrueLabel);
                    end;
                end
               else
                begin
                  { Emit code to check if left is an element }
-                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opdef, OC_EQ,
-                       setparts[i].stop-adjustment,pleftreg,location.TrueLabel);
+                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, lOpDef, OC_EQ,
+                       lSetParts[lIndex].Stop-lAdjustment,lLeftReg,Location.TrueLabel);
                end;
               { To compensate for not doing a second pass }
-              right.Location.Reference.Symbol:=nil;
-              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,location.FalseLabel);
+              Right.Location.Reference.Symbol:=nil;
+              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,Location.FalseLabel);
            end
          else
          {*****************************************************************}
@@ -421,24 +421,24 @@ implementation
            begin
              { We will now generated code to check the set itself, no jmps,
                handle smallsets separate, because it allows faster checks }
-             if use_small then
+             if lUseSmall then
                begin
-                 in_smallset(opdef, SetBase);
+                 In_SmallSet(lOpDef, lSetBase);
                end
              else
                {************************** NOT SMALL SET ********************}
                begin
                  { location is always LOC_REGISTER }
-                 Location_Reset(location, LOC_REGISTER, uopsize{def_cgsize(resultdef)});
+                 Location_Reset(Location, LOC_REGISTER, lUnsignedOpSize{def_cgsize(resultdef)});
                  { allocate a register for the result }
-                 location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, uopdef);
+                 Location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList, lUnsignedOpDef);
 
-                 if (right.Location.Loc=LOC_CONSTANT) and
-                      (opsize < OS_S8) and { = if unsigned }
-                      (((left.resultdef.typ=orddef) and
-                        (TOrdDef(left.resultdef).low >= int64(TSetDef(right.resultdef).SetBase))) or
-                       ((left.resultdef.typ=enumdef) and
-                        (TEnumDef(left.resultdef).min >= aint(TSetDef(right.resultdef).SetBase)))) then
+                 if (Right.Location.Loc=LOC_CONSTANT) and
+                      (lOpSize < OS_S8) and { = if unsigned }
+                      (((Left.ResultDef.typ=orddef) and
+                        (TOrdDef(Left.ResultDef).low >= Int64(TSetDef(Right.ResultDef).SetBase))) or
+                       ((Left.ResultDef.typ=enumdef) and
+                        (TEnumDef(Left.ResultDef).min >= aint(TSetDef(Right.ResultDef).SetBase)))) then
                    begin
                      { can it actually occur currently? CEC }
                      { yes: "if bytevar in [1,3,5,7,9,11,13,15]" (JM) }
@@ -447,67 +447,67 @@ implementation
                      { assumption (other cases will be caught by range checking) (JM)  }
 
                      { load left in register }
-                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,uopdef,true);
-                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,uopdef,left.Location,SetBase);
-                     in_reg_const(uopdef, opsize);
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,lUnsignedOpDef,true);
+                     Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList,lUnsignedOpDef,Left.Location,lSetBase);
+                     In_Reg_Const(lUnsignedOpDef, lOpSize);
                    end { of right.location.loc=LOC_CONSTANT }
                  { do search in a normal set which could have >32 elements
                    but also used if the left side contains higher values > 32 }
-                 else if (left.Location.Loc=LOC_CONSTANT) then
+                 else if (Left.Location.Loc=LOC_CONSTANT) then
                    begin
-                     if (left.Location.Value < SetBase) or (((left.Location.Value-SetBase) shr 3) >= right.resultdef.Size) then
+                     if (Left.Location.Value < lSetBase) or (((Left.Location.Value-lSetBase) shr 3) >= Right.ResultDef.Size) then
                        {should be caught earlier }
                        InternalError(2007020402);
 
-                     hlcg.A_Bit_Test_Const_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,uopdef,left.Location.Value-SetBase,
-                       right.Location,location.Register);
+                     hlcg.A_Bit_Test_Const_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,lUnsignedOpDef,Left.Location.Value-lSetBase,
+                       Right.Location,Location.Register);
                    end
                  else
                    begin
-                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,true);
-                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.Location,SetBase);
-                     pleftreg := left.Location.Register;
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,lOpDef,true);
+                     Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList,lOpDef,Left.Location,lSetBase);
+                     lLeftReg := Left.Location.Register;
 
-                     if (opsize >= OS_S8) or { = if signed }
-                        ((left.resultdef.typ=orddef) and
-                         ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).SetBase)) or
-                          (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).SetMax)))) or
-                        ((left.resultdef.typ=enumdef) and
-                         ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).SetBase)) or
-                          (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).SetMax)))) then
+                     if (lOpSize >= OS_S8) or { = if signed }
+                        ((Left.ResultDef.typ=orddef) and
+                         ((TOrdDef(Left.ResultDef).low < Int64(TSetDef(Right.ResultDef).SetBase)) or
+                          (TOrdDef(Left.ResultDef).high > Int64(TSetDef(Right.ResultDef).SetMax)))) or
+                        ((Left.ResultDef.typ=enumdef) and
+                         ((TEnumDef(Left.ResultDef).min < aint(TSetDef(Right.ResultDef).SetBase)) or
+                          (TEnumDef(Left.ResultDef).max > aint(TSetDef(Right.ResultDef).SetMax)))) then
                        begin
-                         CurrentAsmData.getjumplabel(l);
-                         CurrentAsmData.getjumplabel(l2);
-                         needslabel := True;
+                         CurrentAsmData.getjumplabel(lLabel);
+                         CurrentAsmData.getjumplabel(lLabel2);
+                         lNeedsLabel := True;
 
-                         hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opdef, OC_BE, TSetDef(right.resultdef).SetMax-TSetDef(right.resultdef).SetBase, pleftreg, l);
+                         hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, lOpDef, OC_BE, TSetDef(Right.ResultDef).SetMax-TSetDef(Right.ResultDef).SetBase, lLeftReg, lLabel);
 
-                         hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList, uopdef, 0, location.Register);
-                         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList, l2);
+                         hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList, lUnsignedOpDef, 0, Location.Register);
+                         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList, lLabel2);
 
-                         hlcg.A_Label(CurrentAsmData.CurrAsmList, l);
+                         hlcg.A_Label(CurrentAsmData.CurrAsmList, lLabel);
                        end;
 
-                     hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList,opdef,right.resultdef,uopdef,
-                       pleftreg,right.Location,location.Register);
+                     hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList,lOpDef,Right.ResultDef,lUnsignedOpDef,
+                       lLeftReg,Right.Location,Location.Register);
 
-                     if needslabel then
+                     if lNeedsLabel then
                        begin
-                         hlcg.A_Label(CurrentAsmData.CurrAsmList, l2);
+                         hlcg.A_Label(CurrentAsmData.CurrAsmList, lLabel2);
                        end
                    end;
 {$ifndef cpuhighleveltarget}
-                 location.Size := Def_CGSize(resultdef);
-                 location.Register := cg.MakeRegSize(CurrentAsmData.CurrAsmList, location.Register, location.Size);
+                 Location.Size := Def_CGSize(ResultDef);
+                 Location.Register := cg.MakeRegSize(CurrentAsmData.CurrAsmList, Location.Register, Location.Size);
 {$else not cpuhighleveltarget}
-                 hr:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
-                 hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,uopdef,resultdef,location.Register,hr);
-                 location.Register:=hr;
-                 location.Size := Def_CGSize(resultdef);
+                 lReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ResultDef);
+                 hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lUnsignedOpDef,ResultDef,Location.Register,lReg);
+                 Location.Register:=lReg;
+                 Location.Size := Def_CGSize(ResultDef);
 {$endif not cpuhighleveltarget}
                end;
            end;
-         location_freetemp(CurrentAsmData.CurrAsmList, right.Location);
+         Location_FreeTemp(CurrentAsmData.CurrAsmList, Right.Location);
        end;
 
 {*****************************************************************************
@@ -516,16 +516,16 @@ implementation
 
 
     { Analyse the nodes following the else label - if empty, change to end label }
-    function TCGCaseNode.GetBranchLabel(Block: TNode; out _Label: TAsmLabel): Boolean;
+    function TCGCaseNode.GetBranchLabel(ABlock: TNode; out ALabel: TAsmLabel): Boolean;
       var
-        LabelSym: TLabelSym;
+        lLabelSym: TLabelSym;
       begin
         Result := True;
 
-        if not Assigned(Block) then
+        if not Assigned(ABlock) then
           begin
             { Block doesn't exist / is empty }
-            _Label := endlabel;
+            ALabel := FEndLabel;
             Exit;
           end;
 
@@ -533,26 +533,26 @@ implementation
         if not (cs_opt_level2 in CurrentSettings.OptimizerSwitches) then
           begin
             Result := False;
-            CurrentAsmData.getjumplabel(_Label);
+            CurrentAsmData.getjumplabel(ALabel);
             Exit;
           end;
 
-        while Assigned(Block) do
+        while Assigned(ABlock) do
           begin
-            case Block.nodetype of
+            case ABlock.NodeType of
               nothingn:
                 begin
-                  _Label := endlabel;
+                  ALabel := FEndLabel;
                   Exit;
                 end;
               goton:
                 begin
-                  LabelSym := TCGGotoNode(Block).labelsym;
-                  if not Assigned(LabelSym) then
+                  lLabelSym := TCGGotoNode(ABlock).LabelSym;
+                  if not Assigned(lLabelSym) then
                     InternalError(2018121131);
 
-                  _Label := TCGLabelNode(TCGGotoNode(Block).labelnode).getasmlabel;
-                  if Assigned(_Label) then
+                  ALabel := TCGLabelNode(TCGGotoNode(ABlock).LabelNode).GetAsmLabel;
+                  if Assigned(ALabel) then
                     { Keep tabs on the fact that an actual 'goto' was used }
                     Include(flowcontrol,fc_gotolabel)
                   else
@@ -561,7 +561,7 @@ implementation
                 end;
               blockn:
                 begin
-                  Block := TBlockNode(Block).Left;
+                  ABlock := TBlockNode(ABlock).Left;
                   Continue;
                 end;
               statementn:
@@ -570,10 +570,10 @@ implementation
                     that can't be simplified, so fall through, set Result to
                     False and make a new label }
 
-                  if Assigned(TStatementNode(Block).right) then
+                  if Assigned(TStatementNode(ABlock).Right) then
                     Break;
 
-                  Block := TStatementNode(Block).Left;
+                  ABlock := TStatementNode(ABlock).Left;
                   Continue;
                 end;
               else
@@ -585,109 +585,109 @@ implementation
 
         { Create unique label }
         Result := False;
-        CurrentAsmData.getjumplabel(_Label);
+        CurrentAsmData.getjumplabel(ALabel);
       end;
 
 
-    function TCGCaseNode.blocklabel(id:LongInt):TAsmLabel;
+    function TCGCaseNode.BlockLabel(ABlockID:LongInt):TAsmLabel;
       begin
-        if not Assigned(blocks[id]) then
+        if not Assigned(Blocks[ABlockID]) then
           InternalError(200411301);
-        result:=PCaseBlock(blocks[id])^.blocklabel;
+        Result:=PCaseBlock(Blocks[ABlockID])^.BlockLabel;
       end;
 
 
-    procedure TCGCaseNode.optimizevalues(var max_linear_list:int64;var max_dist:qword);
+    procedure TCGCaseNode.OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);
       begin
         { no changes by default }
       end;
 
 
-    function TCGCaseNode.has_jumptable : boolean;
+    function TCGCaseNode.Has_JumpTable : Boolean;
       begin
         { No jumptable support in the default implementation }
-        has_jumptable:=false;
+        Has_JumpTable:=false;
       end;
 
 
-    procedure TCGCaseNode.genjumptable(hp : PCaseLabel;min_,max_ : int64);
+    procedure TCGCaseNode.GenJumpTable(ARootLabel : PCaseLabel;AMin,AMax : Int64);
       begin
         InternalError(200209161);
       end;
 
 
-    procedure TCGCaseNode.genlinearlist(hp : PCaseLabel);
+    procedure TCGCaseNode.GenLinearList(ARootLabel : PCaseLabel);
 
       var
-         first : boolean;
-         last : TConstExprInt;
-         scratch_reg: TRegister;
-         newsize: TCgSize;
-         newdef: TDef;
+         lFirst : Boolean;
+         lLastValue : TConstExprInt;
+         lScratchReg: TRegister;
+         lNewSize: TCgSize;
+         lNewDef: TDef;
 
-      procedure gensub(value:TCGInt);
+      procedure GenSub(AValue:TCGInt);
         begin
           { here, since the sub and cmp are separate we need
             to move the result before subtract to help
             the register allocator
           }
-          hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList, opsize, opsize, hregister, scratch_reg);
-          hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList, OP_SUB, opsize, value, hregister);
+          hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList, FOpSize, FOpSize, FRegister, lScratchReg);
+          hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList, OP_SUB, FOpSize, AValue, FRegister);
         end;
 
 
-      procedure genitem(t : PCaseLabel);
+      procedure GenItem(ALabel : PCaseLabel);
 
         begin
-           if Assigned(t^.less) then
-             genitem(t^.less);
+           if Assigned(ALabel^.Less) then
+             GenItem(ALabel^.Less);
            { do we need to test the first value? }
-           if first and (t^._low>Get_Min_Value(left.resultdef)) then
-             hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,jmp_lt,TCGInt(t^._low.svalue),hregister,elselabel);
-           if t^._low=t^._high then
+           if lFirst and (ALabel^.LowValue>Get_Min_Value(Left.ResultDef)) then
+             hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,FJumpLess,TCGInt(ALabel^.LowValue.svalue),FRegister,FElseLabel);
+           if ALabel^.LowValue=ALabel^.HighValue then
              begin
-               if t^._low-last=0 then
-                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,OC_EQ,0,hregister,blocklabel(t^.blockid))
+               if ALabel^.LowValue-lLastValue=0 then
+                 hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,OC_EQ,0,FRegister,BlockLabel(ALabel^.BlockID))
                else
                  begin
-                   gensub(TCGInt(t^._low.svalue-last.svalue));
-                   hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,
-                                            OC_EQ,TCGInt(t^._low.svalue-last.svalue),scratch_reg,blocklabel(t^.blockid));
+                   GenSub(TCGInt(ALabel^.LowValue.svalue-lLastValue.svalue));
+                   hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,
+                                            OC_EQ,TCGInt(ALabel^.LowValue.svalue-lLastValue.svalue),lScratchReg,BlockLabel(ALabel^.BlockID));
                  end;
-               last:=t^._low;
+               lLastValue:=ALabel^.LowValue;
              end
            else
              begin
                 { it begins with the smallest label, if the value }
                 { is even smaller then jump immediately to the    }
                 { ELSE-label                                }
-                if first then
+                if lFirst then
                   begin
                      { have we to adjust the first value ? }
-                     if (t^._low>Get_Min_Value(left.resultdef)) or (Get_Min_Value(left.resultdef)<>0) then
-                       gensub(TCGInt(t^._low.svalue));
+                     if (ALabel^.LowValue>Get_Min_Value(Left.ResultDef)) or (Get_Min_Value(Left.ResultDef)<>0) then
+                       GenSub(TCGInt(ALabel^.LowValue.svalue));
                   end
                 else
                   begin
                     { if there is no unused label between the last and the }
                     { present label then the lower limit can be checked    }
                     { immediately. else check the range in between:       }
-                    gensub(TCGInt(t^._low.svalue-last.svalue));
-                    hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize,jmp_lt,TCGInt(t^._low.svalue-last.svalue),scratch_reg,elselabel);
+                    GenSub(TCGInt(ALabel^.LowValue.svalue-lLastValue.svalue));
+                    hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize,FJumpLess,TCGInt(ALabel^.LowValue.svalue-lLastValue.svalue),lScratchReg,FElseLabel);
                   end;
-                gensub(TCGInt(t^._high.svalue-t^._low.svalue));
-                hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,jmp_le,TCGInt(t^._high.svalue-t^._low.svalue),scratch_reg,blocklabel(t^.blockid));
-                last:=t^._high;
+                GenSub(TCGInt(ALabel^.HighValue.svalue-ALabel^.LowValue.svalue));
+                hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,FJumpLessEqual,TCGInt(ALabel^.HighValue.svalue-ALabel^.LowValue.svalue),lScratchReg,BlockLabel(ALabel^.BlockID));
+                lLastValue:=ALabel^.HighValue;
              end;
-           first:=false;
-           if Assigned(t^.greater) then
-             genitem(t^.greater);
+           lFirst:=false;
+           if Assigned(ALabel^.Greater) then
+             GenItem(ALabel^.Greater);
         end;
 
       begin
          { do we need to generate cmps? }
-         if (with_sign and (min_label<0)) then
-           genlinearcmplist(hp)
+         if (FWithSign and (FMinLabel<0)) then
+           GenLinearCmpList(ARootLabel)
          else
            begin
               { sign/zero extend the value to a full register before starting to
@@ -698,311 +698,311 @@ implementation
                 make newsize always signed, since we only do this if the size in
                 bytes of the register is larger than the original opsize, so
                 the value can always be represented by a larger signed type }
-              newsize:=TCgSize2Signed[reg_cgsize(hregister)];
-              if TCgSize2Size[newsize]>opsize.Size then
+              lNewSize:=TCgSize2Signed[reg_cgsize(FRegister)];
+              if TCgSize2Size[lNewSize]>FOpSize.Size then
                 begin
-                  newdef:=CGSize_OrdDef(newsize);
-                  scratch_reg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,newdef);
-                  hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opsize,newdef,hregister,scratch_reg);
-                  hregister:=scratch_reg;
-                  opsize:=newdef;
+                  lNewDef:=CGSize_OrdDef(lNewSize);
+                  lScratchReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,lNewDef);
+                  hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,FOpSize,lNewDef,FRegister,lScratchReg);
+                  FRegister:=lScratchReg;
+                  FOpSize:=lNewDef;
                 end;
-              if (labelcnt>1) or not(cs_opt_level1 in CurrentSettings.OptimizerSwitches) then
+              if (LabelCnt>1) or not(cs_opt_level1 in CurrentSettings.OptimizerSwitches) then
                 begin
-                  last:=0;
-                  first:=true;
-                  scratch_reg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+                  lLastValue:=0;
+                  lFirst:=true;
+                  lScratchReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,FOpSize);
                   cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                  genitem(hp);
+                  GenItem(ARootLabel);
                 end
               else
                 begin
                   { If only one label exists, we can greatly simplify the checks to a simple comparison }
                   cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                  if hp^._low=hp^._high then
-                    hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, OC_EQ, TCGInt(hp^._low.svalue), hregister, blocklabel(hp^.blockid))
+                  if ARootLabel^.LowValue=ARootLabel^.HighValue then
+                    hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, OC_EQ, TCGInt(ARootLabel^.LowValue.svalue), FRegister, BlockLabel(ARootLabel^.BlockID))
                   else
                     begin
-                      scratch_reg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-                      gensub(TCGInt(hp^._low.svalue));
-                      hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, OC_BE, TCGInt(hp^._high.svalue-hp^._low.svalue), hregister, blocklabel(hp^.blockid))
+                      lScratchReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,FOpSize);
+                      GenSub(TCGInt(ARootLabel^.LowValue.svalue));
+                      hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, OC_BE, TCGInt(ARootLabel^.HighValue.svalue-ARootLabel^.LowValue.svalue), FRegister, BlockLabel(ARootLabel^.BlockID))
                     end;
                 end;
               cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,elselabel);
+              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,FElseLabel);
            end;
       end;
 
 
-    procedure TCGCaseNode.genlinearcmplist(hp : PCaseLabel);
+    procedure TCGCaseNode.GenLinearCmpList(ARootLabel : PCaseLabel);
 
       var
-         last : TConstExprInt;
-         lastwasrange: boolean;
+         lLastValue : TConstExprInt;
+         lLastWasRange: Boolean;
 
-      procedure genitem(t : PCaseLabel);
+      procedure GenItem(ALabel : PCaseLabel);
 
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
         var
-           l1 : TAsmLabel;
+           lLabel : TAsmLabel;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
 
         begin
-           if Assigned(t^.less) then
-             genitem(t^.less);
-           if t^._low=t^._high then
+           if Assigned(ALabel^.Less) then
+             GenItem(ALabel^.Less);
+           if ALabel^.LowValue=ALabel^.HighValue then
              begin
 {$ifndef cpuhighleveltarget}
 {$if defined(cpu32bitalu)}
-                if Def_CGSize(opsize) in [OS_S64,OS_64] then
+                if Def_CGSize(FOpSize) in [OS_S64,OS_64] then
                   begin
-                     CurrentAsmData.getjumplabel(l1);
-                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_NE, aint(hi(int64(t^._low.svalue))),hregister2,l1);
-                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_EQ, aint(lo(int64(t^._low.svalue))),hregister, blocklabel(t^.blockid));
-                     cg.A_Label(CurrentAsmData.CurrAsmList,l1);
+                     CurrentAsmData.getjumplabel(lLabel);
+                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_NE, aint(hi(Int64(ALabel^.LowValue.svalue))),FRegister2,lLabel);
+                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_EQ, aint(lo(Int64(ALabel^.LowValue.svalue))),FRegister, BlockLabel(ALabel^.BlockID));
+                     cg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
                   end
                 else
 {$endif}
 {$endif cpuhighleveltarget}
                   begin
-                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, OC_EQ, TCGInt(t^._low.svalue),hregister, blocklabel(t^.blockid));
+                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, OC_EQ, TCGInt(ALabel^.LowValue.svalue),FRegister, BlockLabel(ALabel^.BlockID));
                   end;
                 { Reset last here, because we've only checked for one value and need to compare
                   for the next range both the lower and upper bound }
-                lastwasrange := false;
+                lLastWasRange := false;
              end
            else
              begin
                 { it begins with the smallest label, if the value }
                 { is even smaller then jump immediately to the    }
                 { ELSE-label                                }
-                if not lastwasrange or (t^._low-last>1) then
+                if not lLastWasRange or (ALabel^.LowValue-lLastValue>1) then
                   begin
 {$ifndef cpuhighleveltarget}
 {$if defined(cpu32bitalu)}
-                     if Def_CGSize(opsize) in [OS_64,OS_S64] then
+                     if Def_CGSize(FOpSize) in [OS_64,OS_S64] then
                        begin
-                          CurrentAsmData.getjumplabel(l1);
-                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, jmp_lt, aint(hi(int64(t^._low.svalue))),
-                               hregister2, elselabel);
-                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, jmp_gt, aint(hi(int64(t^._low.svalue))),
-                               hregister2, l1);
+                          CurrentAsmData.getjumplabel(lLabel);
+                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, FJumpLess, aint(hi(Int64(ALabel^.LowValue.svalue))),
+                               FRegister2, FElseLabel);
+                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, FJumpGreater, aint(hi(Int64(ALabel^.LowValue.svalue))),
+                               FRegister2, lLabel);
                           { the comparison of the low dword must be always unsigned! }
-                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_B, aint(lo(int64(t^._low.svalue))), hregister, elselabel);
-                          cg.A_Label(CurrentAsmData.CurrAsmList,l1);
+                          cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_B, aint(lo(Int64(ALabel^.LowValue.svalue))), FRegister, FElseLabel);
+                          cg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
                        end
                      else
 {$endif}
 {$endif cpuhighleveltarget}
                        begin
-                        hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, jmp_lt, TCGInt(t^._low.svalue), hregister,
-                           elselabel);
+                        hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, FJumpLess, TCGInt(ALabel^.LowValue.svalue), FRegister,
+                           FElseLabel);
                        end;
                   end;
 {$ifndef cpuhighleveltarget}
 {$if defined(cpu32bitalu)}
-                if Def_CGSize(opsize) in [OS_S64,OS_64] then
+                if Def_CGSize(FOpSize) in [OS_S64,OS_64] then
                   begin
-                     CurrentAsmData.getjumplabel(l1);
-                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, jmp_lt, aint(hi(int64(t^._high.svalue))), hregister2,
-                           blocklabel(t^.blockid));
-                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, jmp_gt, aint(hi(int64(t^._high.svalue))), hregister2,
-                           l1);
-                    cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_BE, aint(lo(int64(t^._high.svalue))), hregister, blocklabel(t^.blockid));
-                    cg.A_Label(CurrentAsmData.CurrAsmList,l1);
+                     CurrentAsmData.getjumplabel(lLabel);
+                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, FJumpLess, aint(hi(Int64(ALabel^.HighValue.svalue))), FRegister2,
+                           BlockLabel(ALabel^.BlockID));
+                     cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, FJumpGreater, aint(hi(Int64(ALabel^.HighValue.svalue))), FRegister2,
+                           lLabel);
+                    cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, OS_32, OC_BE, aint(lo(Int64(ALabel^.HighValue.svalue))), FRegister, BlockLabel(ALabel^.BlockID));
+                    cg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
                   end
                 else
 {$endif}
 {$endif cpuhighleveltarget}
                   begin
-                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, jmp_le, TCGInt(t^._high.svalue), hregister, blocklabel(t^.blockid));
+                     hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, FJumpLessEqual, TCGInt(ALabel^.HighValue.svalue), FRegister, BlockLabel(ALabel^.BlockID));
                   end;
 
-                last:=t^._high;
-                lastwasrange := true;
+                lLastValue:=ALabel^.HighValue;
+                lLastWasRange := true;
              end;
-           if Assigned(t^.greater) then
-             genitem(t^.greater);
+           if Assigned(ALabel^.Greater) then
+             GenItem(ALabel^.Greater);
         end;
 
       begin
-         last:=0;
-         lastwasrange:=false;
+         lLastValue:=0;
+         lLastWasRange:=false;
          cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-         genitem(hp);
+         GenItem(ARootLabel);
          cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,elselabel);
+         hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,FElseLabel);
       end;
 
 
-      procedure TCGCaseNode.genjmptreeentry(p : PCaseLabel;parentvalue : TConstExprInt);
+      procedure TCGCaseNode.GenJmpTreeEntry(ALabel : PCaseLabel;AParentValue : TConstExprInt);
         var
-          lesslabel,greaterlabel : TAsmLabel;
+          lLessLabel,lGreaterLabel : TAsmLabel;
         begin
           CurrentAsmData.CurrAsmList.concat(CAIAlign.Create(CurrentSettings.Alignment.JumpAlign));
-          cg.A_Label(CurrentAsmData.CurrAsmList,p^.labellabel);
+          cg.A_Label(CurrentAsmData.CurrAsmList,ALabel^.LabelLabel);
 
           { calculate labels for left and right }
-          if p^.less=nil then
-            lesslabel:=elselabel
+          if ALabel^.Less=nil then
+            lLessLabel:=FElseLabel
           else
-            lesslabel:=p^.less^.labellabel;
-          if p^.greater=nil then
-            greaterlabel:=elselabel
+            lLessLabel:=ALabel^.Less^.LabelLabel;
+          if ALabel^.Greater=nil then
+            lGreaterLabel:=FElseLabel
           else
-            greaterlabel:=p^.greater^.labellabel;
+            lGreaterLabel:=ALabel^.Greater^.LabelLabel;
 
           { calculate labels for left and right }
           { no range label: }
-          if p^._low=p^._high then
+          if ALabel^.LowValue=ALabel^.HighValue then
             begin
-              if greaterlabel=lesslabel then
-                hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opsize, OC_NE,p^._low,hregister, lesslabel)
+              if lGreaterLabel=lLessLabel then
+                hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, FOpSize, OC_NE,ALabel^.LowValue,FRegister, lLessLabel)
               else
                 begin
-                  hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize, jmp_lt,p^._low,hregister, lesslabel);
-                  hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize, jmp_gt,p^._low,hregister, greaterlabel);
+                  hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize, FJumpLess,ALabel^.LowValue,FRegister, lLessLabel);
+                  hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize, FJumpGreater,ALabel^.LowValue,FRegister, lGreaterLabel);
                 end;
-              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,blocklabel(p^.blockid));
+              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,BlockLabel(ALabel^.BlockID));
             end
           else
             begin
-              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,jmp_lt,p^._low, hregister, lesslabel);
-              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opsize,jmp_gt,p^._high,hregister, greaterlabel);
-              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,blocklabel(p^.blockid));
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,FJumpLess,ALabel^.LowValue, FRegister, lLessLabel);
+              hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,FOpSize,FJumpGreater,ALabel^.HighValue,FRegister, lGreaterLabel);
+              hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,BlockLabel(ALabel^.BlockID));
             end;
-           if Assigned(p^.less) then
-             genjmptreeentry(p^.less,p^._low);
-           if Assigned(p^.greater) then
-             genjmptreeentry(p^.greater,p^._high);
+           if Assigned(ALabel^.Less) then
+             GenJmpTreeEntry(ALabel^.Less,ALabel^.LowValue);
+           if Assigned(ALabel^.Greater) then
+             GenJmpTreeEntry(ALabel^.Greater,ALabel^.HighValue);
         end;
 
 
-    procedure TCGCaseNode.genjmptree(root : PCaseLabel);
+    procedure TCGCaseNode.GenJmpTree(ARoot : PCaseLabel);
       type
         TLabelArrayEntry = record
-          caselabel : PCaseLabel;
-          asmlabel : TAsmLabel;
+          CaseLabel : PCaseLabel;
+          AsmLabel : TAsmLabel;
         end;
         TLabelArray = array of TLabelArrayEntry;
       var
-        labelarray : TLabelArray;
+        lLabelArray : TLabelArray;
 
       var
-        nextarrayentry : int64;
-        i : LongInt;
+        lNextArrayEntry : Int64;
+        lIndex : LongInt;
 
-      procedure addarrayentry(entry : PCaseLabel);
+      procedure AddArrayEntry(AEntry : PCaseLabel);
         begin
-          if Assigned(entry^.less) then
-            addarrayentry(entry^.less);
-          with labelarray[nextarrayentry] do
+          if Assigned(AEntry^.Less) then
+            AddArrayEntry(AEntry^.Less);
+          with lLabelArray[lNextArrayEntry] do
             begin
-              caselabel:=entry;
-              CurrentAsmData.getjumplabel(asmlabel);
+              CaseLabel:=AEntry;
+              CurrentAsmData.getjumplabel(AsmLabel);
             end;
-          inc(nextarrayentry);
-          if Assigned(entry^.greater) then
-            addarrayentry(entry^.greater);
+          inc(lNextArrayEntry);
+          if Assigned(AEntry^.Greater) then
+            AddArrayEntry(AEntry^.Greater);
         end;
 
       { rebuild the label tree balanced }
-      procedure rebuild(first,last : int64;var p : PCaseLabel);
+      procedure Rebuild(AFirst,ALast : Int64;var ALabel : PCaseLabel);
         var
-          current : int64;
+          lCurrent : Int64;
         begin
-          current:=(first+last) div 2;
+          lCurrent:=(AFirst+ALast) div 2;
 
-          p:=labelarray[current].caselabel;
-          if first<current then
-            rebuild(first,current-1,p^.less)
+          ALabel:=lLabelArray[lCurrent].CaseLabel;
+          if AFirst<lCurrent then
+            Rebuild(AFirst,lCurrent-1,ALabel^.Less)
           else
-            p^.less:=nil;
+            ALabel^.Less:=nil;
 
-          if last>current then
-            rebuild(current+1,last,p^.greater)
+          if ALast>lCurrent then
+            Rebuild(lCurrent+1,ALast,ALabel^.Greater)
           else
-            p^.greater:=nil;
+            ALabel^.Greater:=nil;
         end;
 
       begin
-        labelarray:=nil;
-        SetLength(labelarray,labelcnt);
-        nextarrayentry:=0;
-        addarrayentry(root);
-        rebuild(0,high(labelarray),root);
-        for i:=0 to high(labelarray) do
-          CurrentAsmData.getjumplabel(labelarray[i].caselabel^.labellabel);
-        genjmptreeentry(root,root^._high+10);
+        lLabelArray:=nil;
+        SetLength(lLabelArray,LabelCnt);
+        lNextArrayEntry:=0;
+        AddArrayEntry(ARoot);
+        Rebuild(0,high(lLabelArray),ARoot);
+        for lIndex:=0 to high(lLabelArray) do
+          CurrentAsmData.getjumplabel(lLabelArray[lIndex].CaseLabel^.LabelLabel);
+        GenJmpTreeEntry(ARoot,ARoot^.HighValue+10);
       end;
 
-    procedure TCGCaseNode.pass_generate_code;
+    procedure TCGCaseNode.Pass_Generate_Code;
       var
-         oldflowcontrol: TFlowControl;
-         i : LongInt;
-         dist : ASizeUInt;
-         distv,
-         lv,hv,
-         max_label: TConstExprInt;
-         max_linear_list : int64;
-         max_dist : qword;
-         ShortcutElse: Boolean;
+         lOldFlowControl: TFlowControl;
+         lIndex : LongInt;
+         lDistance : ASizeUInt;
+         lValueDistance,
+         lLowValue,lHighValue,
+         lMaxLabel: TConstExprInt;
+         lMaxLinearList : Int64;
+         lMaxDistance : QWord;
+         lShortcutElse: Boolean;
       begin
-         Location_Reset(location,LOC_VOID,OS_NO);
+         Location_Reset(Location,LOC_VOID,OS_NO);
 
-         oldflowcontrol := flowcontrol;
+         lOldFlowControl := flowcontrol;
          include(flowcontrol,fc_inflowcontrol);
          { Allocate labels }
 
-         CurrentAsmData.getjumplabel(endlabel);
+         CurrentAsmData.getjumplabel(FEndLabel);
 
          { Do some optimisation to deal with empty else blocks }
-         ShortcutElse := GetBranchLabel(elseblock, elselabel);
+         lShortcutElse := GetBranchLabel(ElseBlock, FElseLabel);
 
-         for i:=0 to blocks.count-1 do
-           with PCaseBlock(blocks[i])^ do
-             shortcut := GetBranchLabel(statement, blocklabel);
+         for lIndex:=0 to Blocks.Count-1 do
+           with PCaseBlock(Blocks[lIndex])^ do
+             Shortcut := GetBranchLabel(Statement, BlockLabel);
 
-         with_sign:=Is_Signed(left.resultdef);
-         if with_sign then
+         FWithSign:=Is_Signed(Left.ResultDef);
+         if FWithSign then
            begin
-              jmp_gt:=OC_GT;
-              jmp_lt:=OC_LT;
-              jmp_le:=OC_LTE;
+              FJumpGreater:=OC_GT;
+              FJumpLess:=OC_LT;
+              FJumpLessEqual:=OC_LTE;
            end
          else
             begin
-              jmp_gt:=OC_A;
-              jmp_lt:=OC_B;
-              jmp_le:=OC_BE;
+              FJumpGreater:=OC_A;
+              FJumpLess:=OC_B;
+              FJumpLessEqual:=OC_BE;
            end;
 
-         SecondPass(left);
-         if (left.expectloc=LOC_JUMP)<>
-            (left.Location.Loc=LOC_JUMP) then
+         SecondPass(Left);
+         if (Left.ExpectLoc=LOC_JUMP)<>
+            (Left.Location.Loc=LOC_JUMP) then
            InternalError(2006050501);
          { determines the size of the operand }
-         opsize:=left.resultdef;
+         FOpSize:=Left.ResultDef;
          { copy the case expression to a register }
-         hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opsize,false);
+         hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,FOpSize,false);
 {$if not defined(cpu64bitalu)}
-         if Def_CGSize(opsize) in [OS_S64,OS_64] then
+         if Def_CGSize(FOpSize) in [OS_S64,OS_64] then
            begin
-             hregister:=left.Location.Register64.RegLo;
-             hregister2:=left.Location.Register64.RegHi;
+             FRegister:=Left.Location.Register64.RegLo;
+             FRegister2:=Left.Location.Register64.RegHi;
            end
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
-           hregister:=left.Location.Register;
+           FRegister:=Left.Location.Register;
 
          { we need the min_label always to choose between }
          { cmps and subs/decs                             }
-         min_label:=case_get_min(labels);
+         FMinLabel:=Case_Get_Min(Labels);
 
          { Generate the jumps }
 {$if not defined(cpu64bitalu)}
-         if Def_CGSize(opsize) in [OS_64,OS_S64] then
-           genlinearcmplist(labels)
+         if Def_CGSize(FOpSize) in [OS_64,OS_S64] then
+           GenLinearCmpList(Labels)
          else
 {$endif not cpu64bitalu and not cpuhighleveltarget}
            begin
@@ -1016,115 +1016,115 @@ implementation
                    { ximated as it is not known if rel8,  }
                    { rel16 or rel32 jumps are used   }
 
-                   max_label := case_get_max(labels);
+                   lMaxLabel := Case_Get_Max(Labels);
 
                    { can we omit the range check of the jump table ? }
-                   GetRange(left.resultdef,lv,hv);
-                   jumptable_no_range:=(lv=min_label) and (hv=max_label);
+                   GetRange(Left.ResultDef,lLowValue,lHighValue);
+                   FJumpTableNoRange:=(lLowValue=FMinLabel) and (lHighValue=lMaxLabel);
 
-                   distv:=max_label-min_label;
-                   if distv>=0 then
-                     dist:=min(distv.uvalue,high(dist))
+                   lValueDistance:=lMaxLabel-FMinLabel;
+                   if lValueDistance>=0 then
+                     lDistance:=min(lValueDistance.uvalue,high(lDistance))
                    else
-                     dist:=min(ASizeUInt(-distv.svalue),high(dist));
+                     lDistance:=min(ASizeUInt(-lValueDistance.svalue),high(lDistance));
 
                    { optimize for size ? }
                    if cs_opt_size in CurrentSettings.OptimizerSwitches  then
                      begin
-                       if has_jumptable and
-                          (min_label>=int64(low(aint))) and
-                          (max_label<=high(aint)) and
-                          not((labelcnt<=2) or
-                              (distv.svalue<0) or
-                              (dist>3*labelcnt)) then
+                       if Has_JumpTable and
+                          (FMinLabel>=Int64(low(aint))) and
+                          (lMaxLabel<=high(aint)) and
+                          not((LabelCnt<=2) or
+                              (lValueDistance.svalue<0) or
+                              (lDistance>3*LabelCnt)) then
                          begin
                            { if the labels less or more a continuum then }
-                           genjumptable(labels,min_label.svalue,max_label.svalue);
+                           GenJumpTable(Labels,FMinLabel.svalue,lMaxLabel.svalue);
                          end
                        else
                          begin
                            { a linear list is always smaller than a jump tree }
-                           genlinearlist(labels);
+                           GenLinearList(Labels);
                          end;
                      end
                    else
                      begin
-                        max_dist:=4*labelcoverage;
+                        lMaxDistance:=4*LabelCoverage;
 
                         { Don't allow jump tables to get too large }
-                        if max_dist>4*labelcnt then
-                          max_dist:=min(max_dist,2048);
+                        if lMaxDistance>4*LabelCnt then
+                          lMaxDistance:=min(lMaxDistance,2048);
 
-                        if jumptable_no_range then
-                          max_linear_list:=4
+                        if FJumpTableNoRange then
+                          lMaxLinearList:=4
                         else
-                          max_linear_list:=2;
+                          lMaxLinearList:=2;
 
                         { allow processor specific values }
-                        optimizevalues(max_linear_list,max_dist);
+                        OptimizeValues(lMaxLinearList,lMaxDistance);
 
-                        if (labelcnt<=max_linear_list) then
-                          genlinearlist(labels)
+                        if (LabelCnt<=lMaxLinearList) then
+                          GenLinearList(Labels)
                         else
                           begin
-                            if (has_jumptable) and
-                               (dist<max_dist) and
-                               (min_label>=int64(low(aint))) and
-                               (max_label<=high(aint)) then
-                              genjumptable(labels,min_label.svalue,max_label.svalue)
+                            if (Has_JumpTable) and
+                               (lDistance<lMaxDistance) and
+                               (FMinLabel>=Int64(low(aint))) and
+                               (lMaxLabel<=high(aint)) then
+                              GenJumpTable(Labels,FMinLabel.svalue,lMaxLabel.svalue)
                             { value has been determined on an i7-4770 using a random case with random values
                               if more values are known, this can be handled depending on the target CPU
 
                               Testing on a Core 2 Duo E6850 as well as on a Raspi3 showed also, that 64 is
                               a good value }
-                            else if labelcnt>=64 then
-                              genjmptree(labels)
+                            else if LabelCnt>=64 then
+                              GenJmpTree(Labels)
                             else
-                              genlinearlist(labels);
+                              GenLinearList(Labels);
                           end;
                      end;
                 end
               else
                 { it's always not bad }
-                genlinearlist(labels);
+                GenLinearList(Labels);
            end;
 
          { generate the instruction blocks }
-         for i:=0 to blocks.count-1 do with PCaseBlock(blocks[i])^ do
+         for lIndex:=0 to Blocks.Count-1 do with PCaseBlock(Blocks[lIndex])^ do
            begin
              { If the labels are not equal, then the block label has been shortcut to point elsewhere,
                so there's no need to implement it }
-             if not shortcut then
+             if not Shortcut then
                begin
-                 CurrentAsmData.CurrAsmList.concat(CAIAlign.create(CurrentSettings.Alignment.JumpAlign));
-                 cg.A_Label(CurrentAsmData.CurrAsmList,blocklabel);
-                 SecondPass(statement);
+                 CurrentAsmData.CurrAsmList.concat(CAIAlign.Create(CurrentSettings.Alignment.JumpAlign));
+                 cg.A_Label(CurrentAsmData.CurrAsmList,BlockLabel);
+                 SecondPass(Statement);
                  { don't come back to case line }
                  CurrentFilePos:=CurrentAsmData.CurrAsmList.getlasttaifilepos^;
-                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endlabel);
+                 hlcg.A_Jmp_Always(CurrentAsmData.CurrAsmList,FEndLabel);
                end;
            end;
 
          { ...and the else block }
-         if not ShortcutElse then
+         if not lShortcutElse then
            begin
-             CurrentAsmData.CurrAsmList.concat(CAIAlign.create(CurrentSettings.Alignment.JumpAlign));
-             hlcg.A_Label(CurrentAsmData.CurrAsmList,elselabel);
+             CurrentAsmData.CurrAsmList.concat(CAIAlign.Create(CurrentSettings.Alignment.JumpAlign));
+             hlcg.A_Label(CurrentAsmData.CurrAsmList,FElseLabel);
            end;
 
-         if Assigned(elseblock) then
+         if Assigned(ElseBlock) then
            begin
 
-             SecondPass(elseblock);
+             SecondPass(ElseBlock);
            end;
 
-         CurrentAsmData.CurrAsmList.concat(CAIAlign.create(CurrentSettings.Alignment.JumpAlign));
-         hlcg.A_Label(CurrentAsmData.CurrAsmList,endlabel);
+         CurrentAsmData.CurrAsmList.concat(CAIAlign.Create(CurrentSettings.Alignment.JumpAlign));
+         hlcg.A_Label(CurrentAsmData.CurrAsmList,FEndLabel);
 
          { Reset labels }
-         for i:=0 to blocks.count-1 do
-           PCaseBlock(blocks[i])^.blocklabel:=nil;
-         flowcontrol := oldflowcontrol + (flowcontrol - [fc_inflowcontrol]);
+         for lIndex:=0 to Blocks.Count-1 do
+           PCaseBlock(Blocks[lIndex])^.BlockLabel:=nil;
+         flowcontrol := lOldFlowControl + (flowcontrol - [fc_inflowcontrol]);
       end;
 
 

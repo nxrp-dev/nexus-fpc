@@ -152,7 +152,7 @@ unit agcpugas;
     constructor TAArch64Assembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
-        InstrWriter := TAArch64InstrWriter.create(self);
+        InstrWriter := TAArch64InstrWriter.Create(self);
       end;
 
     function TAArch64Assembler.MakeCmdLine: TCmdStr;
@@ -171,7 +171,7 @@ unit agcpugas;
     constructor TAArch64AppleAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
-        InstrWriter := TAArch64InstrWriter.create(self);
+        InstrWriter := TAArch64InstrWriter.Create(self);
       end;
 
 
@@ -233,7 +233,7 @@ unit agcpugas;
           hp : TAI;
           seh : TAISEHDirective absolute hp;
         begin
-          result:=TDynamicArray.create(0);
+          result:=TDynamicArray.Create(0);
           hp:=TAI(list.last);
           while Assigned(hp) do
             begin
@@ -437,7 +437,7 @@ unit agcpugas;
                         instrcount:=0;
                         handlerflags:=0;
                         handlername:='';
-                        sehlist:=TAsmList.create;
+                        sehlist:=TAsmList.Create;
                         inprologue:=true;
                       end;
                     ash_endproc:
@@ -471,7 +471,7 @@ unit agcpugas;
                                     anyway }
                             xdatasym:=CurrentAsmData.DefineAsmSymbol('xdata_'+LastSym.sym.name,AB_LOCAL,AT_DATA,nil);
 
-                            tmplist:=TAsmList.create;
+                            tmplist:=TAsmList.Create;
                             pdatasection:=new_section(tmplist,sec_pdata,lastsec.name^,0);
                             tmplist.concat(TAIConst.Create_rva_sym(LastSym.sym));
                             tmplist.concat(TAIConst.Create_rva_sym(xdatasym));
@@ -535,7 +535,7 @@ unit agcpugas;
                             { exception record headers }
                             tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
                             if cs_asm_source in InitSettings.GlobalSwitches then
-                              tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
+                              tmplist.concat(TAIComment.Create(StrPNew(HexStr(unwindrec,8))));
 
                             if unwinddata.Size div 4>31 then
                               begin
@@ -546,7 +546,7 @@ unit agcpugas;
                                 unwindrec:=(unwinddata.Size div 4) shl 16;
                                 tmplist.concat(TAIConst.create_32bit(LongInt(unwindrec)));
                                 if cs_asm_source in InitSettings.GlobalSwitches then
-                                  tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
+                                  tmplist.concat(TAIComment.Create(StrPNew(HexStr(unwindrec,8))));
                               end;
 
                             { unwind codes }
@@ -556,7 +556,7 @@ unit agcpugas;
                                 unwinddata.read(unwindrec,sizeof(LongWord));
                                 tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
                                 if cs_asm_source in InitSettings.GlobalSwitches then
-                                  tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
+                                  tmplist.concat(TAIComment.Create(StrPNew(HexStr(unwindrec,8))));
                               end;
 
                             if handlerflags<>0 then

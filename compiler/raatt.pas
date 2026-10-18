@@ -135,7 +135,7 @@ unit raatt;
       var
         i : TAsmOp;
       Begin
-        iasmops:=TFPHashList.create;
+        iasmops:=TFPHashList.Create;
         for i:=firstop to lastop do
           iasmops.Add(upper(gas_op2str[i]),Pointer(PtrInt(i)));
       end;
@@ -1015,7 +1015,7 @@ unit raatt;
 
        { we might need to know which parameters are passed in registers }
        if not parse_generic then
-         CurrentProcInfo.generate_parameter_info;
+         CurrentProcInfo.Generate_Parameter_Info;
 
        lasTSec:=sec_code;
        { start tokenizer }
@@ -1261,7 +1261,7 @@ unit raatt;
                Consume(AS_COMMA);
                BuildConstSymbolExpression(true,false,false, symofs,symval,symtyp);
 
-               curList.concat(TAISymbolPair.create(spk_set,symname,symval));
+               curList.concat(TAISymbolPair.Create(spk_set,symname,symval));
              end;
 
            AS_WEAK:
@@ -1272,7 +1272,7 @@ unit raatt;
                  depending on whether it's external or net, generate
                  asd_weak_reference or asd_weak_definition -- this is different
                  on some targets) }
-               curList.concat(TAIDirective.create(asd_weak_definition,symname));
+               curList.concat(TAIDirective.Create(asd_weak_definition,symname));
              end;
 
            AS_SECTION:
@@ -1572,7 +1572,7 @@ unit raatt;
                            paravarsym :
                              l:=TAbstractVarSym(sym).GetSize;
                            TypeSym :
-                             l:=TTypeSym(sym).typedef.Size;
+                             l:=TTypeSym(sym).TypeDef.Size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1657,7 +1657,7 @@ unit raatt;
                              end;
                            TypeSym :
                              begin
-                               if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
+                               if not(TTypeSym(sym).TypeDef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
                              end;
                            else

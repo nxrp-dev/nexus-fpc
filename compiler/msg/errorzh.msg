@@ -3812,7 +3812,6 @@ F*2Xp<x>_首先在目录 <x> 中搜索编译器二进制文件
 **2XS_尝试静态链接单元(默认，定义 FPC_LINK_STATIC)
 **2Xt_与静态库链接(-static 传递给链接器)
 **2Xv_生成虚拟入口调用表
-**2XV_使用 VLink 作为外部链接器(在 Amiga, Atari, Sinclair QL 上默认)
 **2XX_尝试智能链接单元(定义 FPC_LINK_SMART)
 **1*_
 **1?_显示此帮助

@@ -49,7 +49,7 @@ implementation
 
   uses
     Verbose,GlobType,CUtils,ConstExp,
-    pass_1,pparautl,FModule,
+    Pass_1,pparautl,FModule,
     AAsmData,
     nbas,ncon,nmem,nutils,
     SymBase,symconst,SymTable,SymSym,symcreat,objcutil,defutil,
@@ -59,13 +59,13 @@ implementation
   function get_block_literal_type_for_proc(pd: TAbstractProcDef): TRecordDef;
     begin
       if pd.typ=procvardef then
-        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_BASE',true).typedef)
+        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_BASE',true).TypeDef)
       else if pd.Is_AddressOnly then
-        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_STATIC',true).typedef)
+        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_STATIC',true).TypeDef)
       { todo: nested functions and Objective-C methods }
       else if not Is_Nested_PD(pd) and
               not Is_ObjCClass(TDef(pd.owner.DefOwner)) then
-        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).typedef)
+        result:=TRecordDef(Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).TypeDef)
       else
         InternalError(2014071304);
     end;
@@ -172,15 +172,15 @@ implementation
           exit;
         end;
       { find the type of the descriptor structure }
-      descriptordef:=Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_DESCRIPTOR_SIMPLE',true).typedef;
+      descriptordef:=Search_Named_Unit_GlobalType('BLOCKRTL','FPC_BLOCK_DESCRIPTOR_SIMPLE',true).TypeDef;
       { create new static variable }
-      descriptor:=CStaticVarSym.create(name,vs_value,descriptordef,[]);
+      descriptor:=CStaticVarSym.Create(name,vs_value,descriptordef,[]);
       SymTableStack.top.InsertSym(descriptor);
       include(descriptor.SymOptions,sp_internal);
       { create typed constant for the descriptor }
       Str_Parse_TypedConst(CurrentAsmData.AsmLists[al_const],
         '(reserved: 0; Block_size: '+ToStr(block_literal_size)+
-        '; signature: '''+objcencodemethod(invokepd)+''');',descriptor);
+        '; signature: '''+ObjCEncodeMethod(invokepd)+''');',descriptor);
       result:=descriptor;
     end;
 
@@ -227,7 +227,7 @@ implementation
         begin
           { alias for the type to invoke the procvar, used in the symcreat
             handling of tsk_block_invoke_procvar }
-          result.LocalST.InsertSym(CTypeSym.create('__FPC_BLOCK_INVOKE_PV_TYPE',orgpv));
+          result.LocalST.InsertSym(CTypeSym.Create('__FPC_BLOCK_INVOKE_PV_TYPE',orgpv));
           result.SyntheticKind:=tsk_block_invoke_procvar;
         end;
     end;
@@ -250,7 +250,7 @@ implementation
           exit;
         end;
       { create new block literal symbol }
-      result:=CStaticVarSym.create(
+      result:=CStaticVarSym.Create(
         '$'+literalname,
         vs_value,
         blockliteraldef,[]);
@@ -274,37 +274,37 @@ implementation
       statement: TStatementNode;
       literaltemp: TTempCreateNode;
     begin
-      result:=internalstatements(statement);
+      result:=InternalStatements(statement);
       { create new block literal structure }
-      literaltemp:=CTempCreateNode.create(blockliteraldef,blockliteraldef.Size,tt_persistent,false);
-      addstatement(statement,literaltemp);
+      literaltemp:=CTempCreateNode.Create(blockliteraldef,blockliteraldef.Size,tt_persistent,false);
+      AddStatement(statement,literaltemp);
       { temp.base.isa:=@blockisasym }
-      addstatement(statement,CAssignmentNode.create(
-        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'ISA'),
-        CAddrNode.create(CLoadNode.create(blockisasym,blockisasym.owner))));
+      AddStatement(statement,CAssignmentNode.Create(
+        GenLoadField(GenLoadField(CTempRefNode.Create(literaltemp),'BASE'),'ISA'),
+        CAddrNode.Create(CLoadNode.Create(blockisasym,blockisasym.owner))));
       { temp.base.flags:=blockflags }
-      addstatement(statement,CAssignmentNode.create(
-        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'FLAGS'),
-        genintconstnode(blockflags)));
+      AddStatement(statement,CAssignmentNode.Create(
+        GenLoadField(GenLoadField(CTempRefNode.Create(literaltemp),'BASE'),'FLAGS'),
+        GenIntConstNode(blockflags)));
       { temp.base.reserved:=0 }
-      addstatement(statement,CAssignmentNode.create(
-        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'RESERVED'),
-        genintconstnode(0)));
+      AddStatement(statement,CAssignmentNode.Create(
+        GenLoadField(GenLoadField(CTempRefNode.Create(literaltemp),'BASE'),'RESERVED'),
+        GenIntConstNode(0)));
       { temp.base.invoke:=tmethod(@invokepd) }
-      addstatement(statement,CAssignmentNode.create(
-        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'INVOKE'),
-        CTypeConvNode.create_proc_to_procvar(
-          CLoadNode.create_procvar(invokepd.ProcSym,invokepd,invokepd.owner))));
+      AddStatement(statement,CAssignmentNode.Create(
+        GenLoadField(GenLoadField(CTempRefNode.Create(literaltemp),'BASE'),'INVOKE'),
+        CTypeConvNode.Create_Proc_To_ProcVar(
+          CLoadNode.Create_ProcVar(invokepd.ProcSym,invokepd,invokepd.owner))));
       { temp.base.descriptor:=@descriptor }
-      addstatement(statement,CAssignmentNode.create(
-        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'DESCRIPTOR'),
-        CAddrNode.create(CLoadNode.create(descriptor,descriptor.owner))));
+      AddStatement(statement,CAssignmentNode.Create(
+        GenLoadField(GenLoadField(CTempRefNode.Create(literaltemp),'BASE'),'DESCRIPTOR'),
+        CAddrNode.Create(CLoadNode.Create(descriptor,descriptor.owner))));
       { temp.pv:=tmethod(@orgpd) }
-      addstatement(statement,CAssignmentNode.create(
-        CTypeConvNode.create_explicit(genloadfield(CTempRefNode.create(literaltemp),'PV'),orgpv),
+      AddStatement(statement,CAssignmentNode.Create(
+        CTypeConvNode.Create_Explicit(GenLoadField(CTempRefNode.Create(literaltemp),'PV'),orgpv),
           procvarnode.GetCopy));
       { and return the address of the temp }
-      addstatement(statement,CAddrNode.create(CTempRefNode.create(literaltemp)));
+      AddStatement(statement,CAddrNode.Create(CTempRefNode.Create(literaltemp)));
       { typecheck this now, because the current source may be written in TP/
         Delphi/MacPas mode and the above node tree has been constructed for
         ObjFPC mode, which has been set by replace_scanner (in Delphi, the
@@ -347,7 +347,7 @@ implementation
       { def representing the original function }
       orgpd:=TProcDef(procloadnode.resultdef);
       { def representing the corresponding procvar type }
-      procvarnode:=CTypeConvNode.create_proc_to_procvar(procloadnode.GetCopy);
+      procvarnode:=CTypeConvNode.Create_Proc_To_ProcVar(procloadnode.GetCopy);
       TypeCheckPass(procvarnode);
       orgpv:=TProcVarDef(procvarnode.resultdef);
       { get blockdef for this kind of procdef }
@@ -365,7 +365,7 @@ implementation
         begin
           blockliteralsym:=get_global_proc_literal_sym(blockliteraldef,blockisasym,blockflags,invokepd,descriptor);
           { result: address of the block literal }
-          result:=CAddrNode.create(CLoadNode.create(blockliteralsym,blockliteralsym.owner));
+          result:=CAddrNode.Create(CLoadNode.Create(blockliteralsym,blockliteralsym.owner));
         end
       else
         begin

@@ -74,27 +74,27 @@ unit cgcpu;
         ms_abi:=use_ms_abi;
         if ms_abi then
           begin
-            if (cs_userbp in CurrentSettings.OptimizerSwitches) and Assigned(CurrentProcInfo) and (CurrentProcInfo.framepointer=NR_STACK_POINTER_REG) then
+            if (cs_userbp in CurrentSettings.OptimizerSwitches) and Assigned(CurrentProcInfo) and (CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG) then
               begin
-                rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_R8,RS_R9,RS_R10,
+                rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_R8,RS_R9,RS_R10,
                   RS_R11,RS_RBX,RS_RSI,RS_RDI,RS_R12,RS_R13,RS_R14,RS_R15,RS_RBP],first_int_imreg,[]);
               end
             else
-              rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_R8,RS_R9,RS_R10,
+              rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_R8,RS_R9,RS_R10,
                 RS_R11,RS_RBX,RS_RSI,RS_RDI,RS_R12,RS_R13,RS_R14,RS_R15],first_int_imreg,[])
           end
         else
-          rg[R_INTREGISTER]:=TRGCPU.create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_RSI,RS_RDI,RS_R8,
+          rg[R_INTREGISTER]:=TRGCPU.Create(R_INTREGISTER,R_SUBWHOLE,[RS_RAX,RS_RDX,RS_RCX,RS_RSI,RS_RDI,RS_R8,
             RS_R9,RS_R10,RS_R11,RS_RBX,RS_R12,RS_R13,RS_R14,RS_R15],first_int_imreg,[]);
 
         if FPUX86_HAS_32MMREGS in fpu_capabilities[CurrentSettings.FPUType] then
-          rg[R_MMREGISTER]:=TRGCPU.create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7,
+          rg[R_MMREGISTER]:=TRGCPU.Create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7,
             RS_XMM8,RS_XMM9,RS_XMM10,RS_XMM11,RS_XMM12,RS_XMM13,RS_XMM14,RS_XMM15,RS_XMM16,RS_XMM17,RS_XMM18,RS_XMM19,RS_XMM20,
             RS_XMM21,RS_XMM22,RS_XMM23,RS_XMM24,RS_XMM25,RS_XMM26,RS_XMM27,RS_XMM28,RS_XMM29,RS_XMM30,RS_XMM31],first_mm_imreg,[])
         else
-          rg[R_MMREGISTER]:=TRGCPU.create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7,
+          rg[R_MMREGISTER]:=TRGCPU.Create(R_MMREGISTER,R_SUBWHOLE,[RS_XMM0,RS_XMM1,RS_XMM2,RS_XMM3,RS_XMM4,RS_XMM5,RS_XMM6,RS_XMM7,
             RS_XMM8,RS_XMM9,RS_XMM10,RS_XMM11,RS_XMM12,RS_XMM13,RS_XMM14,RS_XMM15],first_mm_imreg,[]);
-        rgfpu:=TRGX86FPU.create;
+        rgfpu:=TRGX86FPU.Create;
       end;
 
 
@@ -124,7 +124,7 @@ unit cgcpu;
 
     function TCGX8664.use_push: boolean;
       begin
-        result:=(CurrentProcInfo.framepointer=NR_STACK_POINTER_REG) or
+        result:=(CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG) or
           (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter);
       end;
 
@@ -154,7 +154,7 @@ unit cgcpu;
         regsize: LongInt;
         r: integer;
         href: TReference;
-        templist: TAsmList;
+        TempList: TAsmList;
         frame_offset: LongInt;
         suppress_endprologue: boolean;
         stackmisalignment: LongInt;
@@ -186,7 +186,7 @@ unit cgcpu;
                 inc(stackmisalignment,sizeof(aint));
                 hreg:=NewReg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE);
                 push_one_reg(hreg);
-                if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+                if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(PInt)*2+localsize))
                 else
                   begin
@@ -213,14 +213,14 @@ unit cgcpu;
           begin
             { return address }
             stackmisalignment := sizeof(PInt);
-            if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
+            if CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG then
               begin
                 push_regs;
                 CGMessage(cg_d_stackframe_omited);
               end
             else
               begin
-                list.concat(TAIRegAlloc.alloc(CurrentProcInfo.framepointer,nil));
+                list.concat(TAIRegAlloc.alloc(CurrentProcInfo.FramePointer,nil));
                 { push <frame_pointer> }
                 inc(stackmisalignment,sizeof(PInt));
                 push_one_reg(NR_FRAME_POINTER_REG);
@@ -232,12 +232,12 @@ unit cgcpu;
                 else
                   begin
                     push_regs;
-                    gen_load_frame_for_exceptfilter(list);
+                    Gen_Load_Frame_For_ExceptFilter(list);
                     { Need only as much stack space as necessary to do the calls.
                       Exception filters don't have own local vars, and temps are 'mapped'
                       to the parent procedure.
                       maxpushedparasize is already aligned at least on x86_64. }
-                    localsize:=CurrentProcInfo.maxpushedparasize;
+                    localsize:=CurrentProcInfo.MaxPushedParaSize;
                   end;
                 CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_FRAME_POINTER_REG);
                 {
@@ -253,7 +253,7 @@ unit cgcpu;
             if use_push and (xmmsize<>0) then
               begin
                 localsize:=align(localsize,TargetInfo.stackalign)+xmmsize;
-                Reference_Reset_Base(CurrentProcInfo.save_regs_ref,NR_STACK_POINTER_REG,
+                Reference_Reset_Base(CurrentProcInfo.SaveRegsRef,NR_STACK_POINTER_REG,
                   localsize-xmmsize,CTempPosInvalid,TCgSize2Size[OS_VECTOR],[]);
               end;
 
@@ -267,9 +267,9 @@ unit cgcpu;
                 if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
                 G_StackPointer_Alloc(list,localsize);
-                if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
+                if CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(PInt));
-                CurrentProcInfo.final_localsize:=localsize;
+                CurrentProcInfo.FinalLocalSize:=localsize;
                 if (TargetInfo.system=system_x86_64_win64) then
                   begin
                     if localsize<>0 then
@@ -277,7 +277,7 @@ unit cgcpu;
                     include(CurrentProcInfo.flags,pi_has_unwind_info);
                     if use_push and (xmmsize<>0) then
                       begin
-                        href:=CurrentProcInfo.save_regs_ref;
+                        href:=CurrentProcInfo.SaveRegsRef;
                         for r:=low(regs_to_save_mm) to high(regs_to_save_mm) do
                           if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                             begin
@@ -299,25 +299,25 @@ unit cgcpu;
           list.insert(seh_proc);
         { the directive creates another section }
         inc(list.section_count);
-        templist:=TAsmList.Create;
+        TempList:=TAsmList.Create;
 
         { We need to record positive offsets from RSP; if registers are saved
           at negative offsets from RBP we need to account for it. }
         if (not use_push) then
-          frame_offset:=CurrentProcInfo.final_localsize
+          frame_offset:=CurrentProcInfo.FinalLocalSize
         else
           frame_offset:=0;
 
         { There's no need to describe position of register saves precisely;
           since registers are not modified before they are saved, and saves do not
           change RSP, 'logically' all saves can happen at the end of prologue. }
-        href:=CurrentProcInfo.save_regs_ref;
+        href:=CurrentProcInfo.SaveRegsRef;
         if (not use_push) then
           begin
             for r:=low(regs_to_save_int) to high(regs_to_save_int) do
               if regs_to_save_int[r] in rg[R_INTREGISTER].UsedInProc then
                 begin
-                  templist.concat(CAISEHDirective.create_reg_offset(ash_savereg,
+                  TempList.concat(CAISEHDirective.create_reg_offset(ash_savereg,
                     NewReg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE),
                     href.Offset+frame_offset));
                  inc(href.Offset,sizeof(aint));
@@ -332,7 +332,7 @@ unit cgcpu;
               begin
                 if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                   begin
-                    templist.concat(CAISEHDirective.create_reg_offset(ash_savexmm,
+                    TempList.concat(CAISEHDirective.create_reg_offset(ash_savexmm,
                       NewReg(R_MMREGISTER,regs_to_save_mm[r],R_SUBMMWHOLE),
                       href.Offset+frame_offset));
                     inc(href.Offset,TCgSize2Size[OS_VECTOR]);
@@ -340,12 +340,12 @@ unit cgcpu;
               end;
           end;
         if not suppress_endprologue then
-          templist.concat(CAISEHDirective.create(ash_endprologue));
-        if Assigned(CurrentProcInfo.endprologue_ai) then
-          CurrentProcInfo.aktproccode.InsertListAfter(CurrentProcInfo.endprologue_ai,templist)
+          TempList.concat(CAISEHDirective.Create(ash_endprologue));
+        if Assigned(CurrentProcInfo.EndPrologueAI) then
+          CurrentProcInfo.AktProcCode.InsertListAfter(CurrentProcInfo.EndPrologueAI,TempList)
         else
-          list.ConcatList(templist);
-        templist.free;
+          list.ConcatList(TempList);
+        TempList.free;
       end;
 
 
@@ -390,7 +390,7 @@ unit cgcpu;
                   begin
                     if (saved_xmm_reg_size<>0) then
                       begin
-                        href:=CurrentProcInfo.save_regs_ref;
+                        href:=CurrentProcInfo.SaveRegsRef;
                         for r:=low(regs_to_save_mm) to high(regs_to_save_mm) do
                           if regs_to_save_mm[r] in rg[R_MMREGISTER].UsedInProc then
                             begin
@@ -402,8 +402,8 @@ unit cgcpu;
                             end;
                       end;
 
-                    if (CurrentProcInfo.final_localsize<>0) then
-                      increase_sp(CurrentProcInfo.final_localsize);
+                    if (CurrentProcInfo.FinalLocalSize<>0) then
+                      increase_sp(CurrentProcInfo.FinalLocalSize);
                     internal_restore_regs(list,true);
 
                     if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
@@ -416,28 +416,28 @@ unit cgcpu;
                       'add $constant,%rsp' and 'lea offset(FPREG),%rsp' as belonging to
                       the function epilog.
                       Neither 'leave' nor even 'mov %FPREG,%rsp' are allowed. }
-                    Reference_Reset_Base(href,CurrentProcInfo.framepointer,0,CTempPosInvalid,sizeof(PInt),[]);
+                    Reference_Reset_Base(href,CurrentProcInfo.FramePointer,0,CTempPosInvalid,sizeof(PInt),[]);
                     list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],href,NR_STACK_POINTER_REG));
-                    list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[OS_ADDR],CurrentProcInfo.framepointer));
+                    list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[OS_ADDR],CurrentProcInfo.FramePointer));
                   end
                 else
                   generate_leave(list);
-                list.concat(TAIRegAlloc.dealloc(CurrentProcInfo.framepointer,nil));
+                list.concat(TAIRegAlloc.dealloc(CurrentProcInfo.FramePointer,nil));
               end;
 
             if pi_uses_ymm in CurrentProcInfo.flags then
               list.Concat(TAICPU.op_none(A_VZEROUPPER));
           end;
 
-        if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+        if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
           list.concat(TAIRegAlloc.dealloc(NR_STACK_POINTER_REG,nil));
 
         list.concat(TAICPU.Op_none(A_RET,S_NO));
 
         if (pi_has_unwind_info in CurrentProcInfo.flags) then
           begin
-            TCPUProcInfo(CurrentProcInfo).dump_scopes(list);
-            list.concat(CAISEHDirective.create(ash_endproc));
+            TCPUProcInfo(CurrentProcInfo).Dump_Scopes(list);
+            list.concat(CAISEHDirective.Create(ash_endproc));
           end;
       end;
 
@@ -547,7 +547,7 @@ unit cgcpu;
     function TCGX8664.Use_MS_ABI: boolean;
       begin
         if Assigned(CurrentProcInfo) then
-          use_ms_abi:=x86_64_use_ms_abi(CurrentProcInfo.procdef.ProcCallOption)
+          use_ms_abi:=X86_64_Use_MS_ABI(CurrentProcInfo.procdef.ProcCallOption)
         else
           use_ms_abi:=TargetInfo.system=system_x86_64_win64;
       end;
@@ -555,8 +555,8 @@ unit cgcpu;
 
     procedure create_codegen;
       begin
-        cg:=TCGX8664.create;
-        cg128:=TCG128.create;
+        cg:=TCGX8664.Create;
+        cg128:=TCG128.Create;
       end;
 
 end.

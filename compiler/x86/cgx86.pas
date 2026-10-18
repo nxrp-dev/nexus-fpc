@@ -216,7 +216,7 @@ unit cgx86;
       begin
 {$ifdef x86_64}
         { The stack pointer and base pointer will be aligned to 16-byte boundaries if the machine code is well-behaved }
-        if (ref.Base = NR_STACK_POINTER_REG) or (ref.Base = CurrentProcInfo.framepointer) then
+        if (ref.Base = NR_STACK_POINTER_REG) or (ref.Base = CurrentProcInfo.FramePointer) then
           begin
             if (ref.Index = NR_NO) and ((ref.Offset mod TargetInfo.stackalign) = 0) then
               Result := TargetInfo.stackalign
@@ -813,7 +813,7 @@ unit cgx86;
           exit;
 
         if CurrentAsmData.asmlists[al_imports]=nil then
-          CurrentAsmData.asmlists[al_imports]:=TAsmList.create;
+          CurrentAsmData.asmlists[al_imports]:=TAsmList.Create;
 
         new_section(CurrentAsmData.asmlists[al_imports],sec_stub,'',0);
         result := CurrentAsmData.DefineAsmSymbol(stubname,AB_LOCAL,AT_FUNCTION,VoidCodePointerType);
@@ -821,7 +821,7 @@ unit cgx86;
         { register as a weak symbol if necessary }
         if weak then
           CurrentAsmData.weakrefasmsymbol(s,AT_FUNCTION);
-        CurrentAsmData.asmlists[al_imports].concat(TAIDirective.create(asd_indirect_symbol,s));
+        CurrentAsmData.asmlists[al_imports].concat(TAIDirective.Create(asd_indirect_symbol,s));
         CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
         CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
         CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
@@ -1032,7 +1032,7 @@ unit cgx86;
             instr:=TAICPU.op_reg_reg(op,s,reg1,reg2);
             { Notify the register allocator that we have written a move instruction so
               it can try to eliminate it. }
-            if (reg1<>CurrentProcInfo.framepointer) and (reg1<>NR_STACK_POINTER_REG) then
+            if (reg1<>CurrentProcInfo.FramePointer) and (reg1<>NR_STACK_POINTER_REG) then
               Add_Move_Instruction(instr);
             list.concat(instr);
           end;
@@ -1242,10 +1242,10 @@ unit cgx86;
             (tosize<fromsize) then
            begin
              { can't round down to lower precision in x87 :/ }
-             tg.gettemp(list,TCgSize2Size[tosize],TCgSize2Size[tosize],tt_normal,href);
+             TG.GetTemp(list,TCgSize2Size[tosize],TCgSize2Size[tosize],tt_normal,href);
              A_LoadFPU_Reg_Ref(list,fromsize,tosize,NR_ST,href);
              A_LoadFPU_Ref_Reg(list,tosize,tosize,href,NR_ST);
-             tg.ungettemp(list,href);
+             TG.UnGetTemp(list,href);
            end;
        end;
 
@@ -2910,7 +2910,7 @@ unit cgx86;
         copy_avx512,
         copy_avx:
           begin
-            hlist:=TAsmList.create;
+            hlist:=TAsmList.Create;
             if cm=copy_avx512 then
               while len>=64 do
                 begin
@@ -3223,7 +3223,7 @@ unit cgx86;
                 inc(regsize,sizeof(aint));
                 hreg:=NewReg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE);
                 list.concat(TAICPU.Op_reg(A_PUSH,tcgsize2opsize[OS_ADDR],hreg));
-                if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
+                if CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(PInt)*2+localsize))
                 else
                   begin
@@ -3264,7 +3264,7 @@ unit cgx86;
           begin
             { return address }
             inc(stackmisalignment,sizeof(PInt));
-            if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
+            if CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG then
               begin
 {$ifdef i386}
                 if (not ParaManager.Use_Fixed_Stack) then
@@ -3274,7 +3274,7 @@ unit cgx86;
               end
             else
               begin
-                list.concat(TAIRegAlloc.alloc(CurrentProcInfo.framepointer,nil));
+                list.concat(TAIRegAlloc.alloc(CurrentProcInfo.FramePointer,nil));
 
                 { push <frame_pointer> }
                 inc(stackmisalignment,sizeof(PInt));
@@ -3288,12 +3288,12 @@ unit cgx86;
                 else
                   begin
                     push_regs;
-                    gen_load_frame_for_exceptfilter(list);
+                    Gen_Load_Frame_For_ExceptFilter(list);
                     { Need only as much stack space as necessary to do the calls.
                       Exception filters don't have own local vars, and temps are 'mapped'
                       to the parent procedure.
                       maxpushedparasize is already aligned at least on x86_64. }
-                    localsize:=CurrentProcInfo.maxpushedparasize;
+                    localsize:=CurrentProcInfo.MaxPushedParaSize;
                   end;
                 CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_FRAME_POINTER_REG);
               end;
@@ -3308,9 +3308,9 @@ unit cgx86;
                 if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
                 G_StackPointer_Alloc(list,localsize);
-                if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
+                if CurrentProcInfo.FramePointer=NR_STACK_POINTER_REG then
                   CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(PInt));
-                CurrentProcInfo.final_localsize:=localsize;
+                CurrentProcInfo.FinalLocalSize:=localsize;
               end
 
               ;
@@ -3319,13 +3319,13 @@ unit cgx86;
 
 {$ifdef i386}
             if (not ParaManager.Use_Fixed_Stack) and
-               (CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG) and
+               (CurrentProcInfo.FramePointer<>NR_STACK_POINTER_REG) and
                (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
               begin
                 regsize:=0;
                 push_regs;
-                Reference_Reset_Base(CurrentProcInfo.save_regs_ref,
-                  CurrentProcInfo.framepointer,
+                Reference_Reset_Base(CurrentProcInfo.SaveRegsRef,
+                  CurrentProcInfo.FramePointer,
                   -(localsize+regsize),CTempPosInvalid,sizeof(aint),[]);
               end;
 {$endif i386}
@@ -3359,7 +3359,7 @@ unit cgx86;
         usedregs: TCPURegisterSet;
         regs_to_save_int: TCPURegisterArray;
       begin
-        href:=CurrentProcInfo.save_regs_ref;
+        href:=CurrentProcInfo.SaveRegsRef;
         usedregs:=rg[R_INTREGISTER].UsedInProc-ParaManager.Get_Volatile_Registers_Int(CurrentProcInfo.procdef.ProcCallOption);
         regs_to_save_int:=ParaManager.Get_Saved_Registers_Int(CurrentProcInfo.procdef.ProcCallOption);
         for r:=high(regs_to_save_int) downto low(regs_to_save_int) do

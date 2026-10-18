@@ -56,7 +56,7 @@ unit optconstprop;
 
     uses
       GlobType,CDynSet,Globals,
-      pass_1,ProcInfo,compinnr,
+      Pass_1,ProcInfo,compinnr,
       SymSym, symconst,
       nutils, nbas, ncnv, nld, nflw, ncal, ninl,
       optbase, optutils;
@@ -65,7 +65,7 @@ unit optconstprop;
       begin
         result:=fen_false;
 
-        if n.isequal(TNode(arg)) and
+        if n.IsEqual(TNode(arg)) and
            ((n.flags*[nf_write,nf_modify])<>[]) then
           begin
             result:=fen_norecurse_true;
@@ -114,15 +114,15 @@ unit optconstprop;
             tree_modified:=tree_modified or tree_modified2;
 
             { but we have to check if left writes to the currently searched variable ... }
-            written:=foreachnodestatic(pm_postprocess, TAssignmentNode(n).left, @check_written, TAssignmentNode(arg).left);
+            written:=ForEachNodeStatic(pm_postprocess, TAssignmentNode(n).left, @check_written, TAssignmentNode(arg).left);
             { ... if this is the case, we have to stop searching }
             result:=result and not(written);
           end
-        else if n.isequal(TAssignmentNode(arg).left) and ((n.flags*[nf_write,nf_modify])=[]) then
+        else if n.IsEqual(TAssignmentNode(arg).left) and ((n.flags*[nf_write,nf_modify])=[]) then
           begin
             n.Free;
             n:=TAssignmentNode(arg).right.GetCopy;
-            inserttypeconv_internal(n, TAssignmentNode(arg).left.resultdef);
+            InsertTypeConv_Internal(n, TAssignmentNode(arg).left.resultdef);
 
             tree_modified:=true;
           end
@@ -142,9 +142,9 @@ unit optconstprop;
                   begin
                     CalcDefSum(TForNode(n).t2);
                     { the constant can propagate if is is not the counter variable ... }
-                    if not(TAssignmentNode(arg).left.isequal(actualtargetnode(@TForNode(n).left)^)) and
+                    if not(TAssignmentNode(arg).left.IsEqual(ActualTargetNode(@TForNode(n).left)^)) and
                     { if it is a temprefn or its address is not taken in case of loadn }
-                      ((TAssignmentNode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).AddrTaken)) and
+                      ((TAssignmentNode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).SymTableEntry).AddrTaken)) and
                       { and no definition in the loop? }
                       not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TAssignmentNode(arg).left.optinfo^.Index)) then
                       begin
@@ -221,9 +221,9 @@ unit optconstprop;
         else if n.nodetype=inlinen then
           begin
             { constant inc'ed/dec'ed? }
-            if (TInlineNode(n).inlinenumber=in_dec_x) or (TInlineNode(n).inlinenumber=in_inc_x) then
+            if (TInlineNode(n).InlineNumber=in_dec_x) or (TInlineNode(n).InlineNumber=in_inc_x) then
               begin
-                if TNode(TAssignmentNode(arg).left).isequal(TCallParaNode(TInlineNode(n).left).left) and
+                if TNode(TAssignmentNode(arg).left).IsEqual(TCallParaNode(TInlineNode(n).left).left) and
                   { Internal Inc/Dec flags are created through a tree transformation from
                     a previous ConstProp pass.  Setting it prevents an infinite loop where
                     Inc/Dec nodes are converted into an Add/Sub tree, and then converted
@@ -237,7 +237,7 @@ unit optconstprop;
                     { if the node just being searched is inc'ed/dec'ed then replace the inc/dec
                       by add/sub and force a second replacement pass }
                     oldnode:=n;
-                    n:=TInlineNode(n).getaddsub_for_incdec;
+                    n:=TInlineNode(n).GetAddSub_For_IncDec;
                     Include(n.flags, nf_internal);
                     oldnode.free;
                     oldnode := nil;
@@ -251,7 +251,7 @@ unit optconstprop;
                 result:=false;
                 exit;
               end
-            else if might_have_sideeffects(n) then
+            else if Might_Have_SideEffects(n) then
               exit(false);
 
             result:=replaceBasicAssign(TUnaryNode(n).left, arg, tree_modified);
@@ -261,13 +261,13 @@ unit optconstprop;
             { only propagate simply variables which are regable, this means that their address is not
               taken }
             if (TAssignmentNode(arg).left.nodetype=loadn) and
-              (TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).VarRegable in [vr_fpureg,vr_mmreg,vr_intreg]) then
+              (TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).SymTableEntry).VarRegable in [vr_fpureg,vr_mmreg,vr_intreg]) then
               begin
-                result:=replaceBasicAssign(TNode(TCallNode(n).callinitblock), arg, tree_modified);
+                result:=replaceBasicAssign(TNode(TCallNode(n).CallInitBlock), arg, tree_modified);
                 result:=result and replaceBasicAssign(TCallNode(n).left, arg, tree_modified2);
-                result:=result and replaceBasicAssign(TCallNode(n).vmt_entry, arg, tree_modified3);
+                result:=result and replaceBasicAssign(TCallNode(n).VMTEntry, arg, tree_modified3);
                 result:=result and replaceBasicAssign(TCallNode(n).right, arg, tree_modified4);
-                result:=result and replaceBasicAssign(TNode(TCallNode(n).callcleanupblock), arg, tree_modified5);
+                result:=result and replaceBasicAssign(TNode(TCallNode(n).CallCleanupBlock), arg, tree_modified5);
                 tree_modified:=tree_modified or tree_modified2 or tree_modified3 or tree_modified4 or tree_modified5;
 
                 { If the parameters were simplified, we may be able to simplify
@@ -336,32 +336,32 @@ unit optconstprop;
 
                     if ((((l.nodetype=loadn) and
                          { its address cannot have escaped the current routine }
-                         not(TAbstractVarSym(TLoadNode(l).symtableentry).AddrTaken)) and
+                         not(TAbstractVarSym(TLoadNode(l).SymTableEntry).AddrTaken)) and
                          ((
-                           (TLoadNode(l).symtableentry.typ=localvarsym) and
+                           (TLoadNode(l).SymTableEntry.typ=localvarsym) and
                            (TLoadNode(l).SymTable=CurrentProcInfo.procdef.LocalST)
                           ) or
-                          ((TLoadNode(l).symtableentry.typ=paravarsym) and
+                          ((TLoadNode(l).SymTableEntry.typ=paravarsym) and
                            (TLoadNode(l).SymTable=CurrentProcInfo.procdef.ParaST)
                           ) or
-                          ((TLoadNode(l).symtableentry.typ=staticvarsym) and
+                          ((TLoadNode(l).SymTableEntry.typ=staticvarsym) and
                            (TLoadNode(l).SymTable.SymTableType=staticsymtable)
                           )
                          )) or
                         (l.nodetype = temprefn)) and
-                       (is_constintnode(a.right) or
-                        is_constrealnode(a.right) or
-                        is_constboolnode(a.right) or
-                        is_constcharnode(a.right) or
-                        is_constwidecharnode(a.right) or
-                        is_constwidestringnode(a.right) or
-                        is_constenumnode(a.right) or
-                        is_conststringnode(a.right) or
-                        is_constpointernode(a.right)) then
+                       (Is_ConstIntNode(a.right) or
+                        Is_ConstRealNode(a.right) or
+                        Is_ConstBoolNode(a.right) or
+                        Is_ConstCharNode(a.right) or
+                        Is_ConstWideCharNode(a.right) or
+                        Is_ConstWideStringNode(a.right) or
+                        Is_ConstEnumNode(a.right) or
+                        Is_ConstStringNode(a.right) or
+                        Is_ConstPointerNode(a.right)) then
                       begin
 {$ifdef DEBUG_CONSTPROP}
                         WriteLn('******************************* propagating ***********************************');
-                        printnode(Output,a);
+                        PrintNode(Output,a);
                         WriteLn('*******************************************************************************');
 {$endif DEBUG_CONSTPROP}
                         st2:=TStatementNode(TStatementNode(st).right);
@@ -411,15 +411,15 @@ unit optconstprop;
           iteration_changed:=false;
 {$ifdef DEBUG_CONSTPROP}
           WriteLn('************************ before constant propagation ***************************');
-          printnode(Output,rootnode);
+          PrintNode(Output,rootnode);
 {$endif DEBUG_CONSTPROP}
-          foreachnodestatic(pm_postandagain, rootnode, @propagate, @iteration_changed);
+          ForEachNodeStatic(pm_postandagain, rootnode, @propagate, @iteration_changed);
           changed:=changed or iteration_changed;
           if iteration_changed then
-            doinlinesimplify(rootnode);
+            DoInlineSimplify(rootnode);
 {$ifdef DEBUG_CONSTPROP}
           WriteLn('************************ after constant propagation ***************************');
-          printnode(Output,rootnode);
+          PrintNode(Output,rootnode);
           WriteLn('*******************************************************************************');
 {$endif DEBUG_CONSTPROP}
         until not(cs_opt_level3 in CurrentSettings.OptimizerSwitches) or not(iteration_changed);

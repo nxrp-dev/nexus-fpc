@@ -1014,7 +1014,7 @@ implementation
                                   if [po_external,po_has_importdll]*PD.ProcOptions=[po_external,po_has_importdll] then
                                     { if we use an external procedure of another unit we
                                       need to import it ourselves from the correct library }
-                                    import_external_proc(PD)
+                                    Import_External_Proc(PD)
                                   else
                                     ImportProcSymbol(PD,PkgEntry^.Package);
                                 end;

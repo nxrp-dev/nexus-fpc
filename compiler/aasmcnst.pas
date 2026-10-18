@@ -45,7 +45,7 @@ type
      { the def of this element }
      fdef: TDef;
     public
-     constructor create(_adetyp: TTypedConstKind; _def: TDef);
+     constructor Create(_adetyp: TTypedConstKind; _def: TDef);
      property adetyp: TTypedConstKind read fadetyp;
      property def: TDef read fdef write setdef;
    end;
@@ -57,7 +57,7 @@ type
     protected
      fval: TAI;
     public
-     constructor create(_def: TDef; _val: TAI);
+     constructor Create(_def: TDef; _val: TAI);
      destructor Destroy; override;
      property val: TAI read fval write setval;
    end;
@@ -74,7 +74,7 @@ type
        fvaluespos: LongInt;
        function getcurrent: TAIAbstractTypedConst;
       public
-       constructor create(data: TAIAggregateTypedConst);
+       constructor Create(data: TAIAggregateTypedConst);
        function movenext: boolean;
        procedure reset;
        property current: TAIAbstractTypedConst read getcurrent;
@@ -88,7 +88,7 @@ type
      procedure convert_to_string;
      procedure add_to_string(strtai: TAIString; othertai: TAI);
     public
-     constructor create(_adetyp: TTypedConstKind; _fdef: TDef);
+     constructor Create(_adetyp: TTypedConstKind; _fdef: TDef);
      function getenumerator: TADEEnumerator;
      procedure addvalue(val: TAIAbstractTypedConst); virtual;
      function valuecount: LongInt;
@@ -184,7 +184,7 @@ type
      property curindex: LongInt read fcurindex write fcurindex;
      property nextindex: LongInt read fnextindex write fnextindex;
     public
-     constructor create(_def: TDef; _typ: TTypedConstKind); virtual;
+     constructor Create(_def: TDef; _typ: TTypedConstKind); virtual;
      { calculated padding bytes for alignment if needed, and add the def of the
        next field in case we are constructing an anonymous record }
      function prepare_next_field(nextfielddef: TDef): asizeint; virtual;
@@ -203,7 +203,7 @@ type
      to be replaced later with a real data element }
    TTypedConstPlaceholder = class abstract
      def: TDef;
-     constructor create(d: TDef);
+     constructor Create(d: TDef);
      { same usage as ttai_typedconstbuilder.emit_tai }
      procedure replace(ai: TAI; d: TDef); virtual; abstract;
    end;
@@ -301,7 +301,7 @@ type
      { easy access to the top level aggregate information instance }
      property curagginfo: TAggregateInformation read getcurragginfo;
     public
-     constructor create(const options: TTCAsmListOptions); virtual;
+     constructor Create(const options: TTCAsmListOptions); virtual;
      destructor Destroy; override;
 
     public
@@ -504,7 +504,7 @@ type
    TLowLevelTypedConstPlaceholder = class(TTypedConstPlaceholder)
      list: TAsmList;
      insertpos: TAI;
-     constructor create(l: TAsmList; pos: TAI; d: TDef);
+     constructor Create(l: TAsmList; pos: TAI; d: TDef);
      procedure replace(ai: TAI; d: TDef); override;
    end;
 
@@ -559,7 +559,7 @@ implementation
       end;
 
 
-    constructor TAggregateInformation.create(_def: TDef; _typ: TTypedConstKind);
+    constructor TAggregateInformation.Create(_def: TDef; _typ: TTypedConstKind);
       begin
         fdef:=_def;
         ftyp:=_typ;
@@ -619,7 +619,7 @@ implementation
                              ttypedconstplaceholder
  ****************************************************************************}
 
-    constructor TTypedConstPlaceholder.create(d: TDef);
+    constructor TTypedConstPlaceholder.Create(d: TDef);
       begin
         def:=d;
       end;
@@ -636,9 +636,9 @@ implementation
        fdef:=def;
      end;
 
-   constructor TAIAbstractTypedConst.create(_adetyp: TTypedConstKind; _def: TDef);
+   constructor TAIAbstractTypedConst.Create(_adetyp: TTypedConstKind; _def: TDef);
      begin
-       inherited create;
+       inherited Create;
        typ:=ait_typedconst;
        fadetyp:=_adetyp;
        fdef:=_def;
@@ -655,9 +655,9 @@ implementation
       end;
 
 
-   constructor TAISimpleTypedConst.create(_def: TDef; _val: TAI);
+   constructor TAISimpleTypedConst.Create(_def: TDef; _val: TAI);
      begin
-       inherited create(tck_simple,_def);
+       inherited Create(tck_simple,_def);
        fval:=_val;
      end;
 
@@ -674,7 +674,7 @@ implementation
               tai_aggregatetypedconst.tadeenumerator
  ****************************************************************************}
 
-   constructor TAIAggregateTypedConst.TADEEnumerator.create(data: TAIAggregateTypedConst);
+   constructor TAIAggregateTypedConst.TADEEnumerator.Create(data: TAIAggregateTypedConst);
      begin
        fvalues:=data.fvalues;
        fvaluespos:=-1;
@@ -726,7 +726,7 @@ implementation
        { the "nil" def will be replaced with an array def of the appropriate
          size once we're finished adding data, so we don't create intermediate
          arraydefs all the time }
-       fvalues.add(TAISimpleTypedConst.create(nil,newstr));
+       fvalues.add(TAISimpleTypedConst.Create(nil,newstr));
      end;
 
    procedure TAIAggregateTypedConst.add_to_string(strtai: TAIString; othertai: TAI);
@@ -757,17 +757,17 @@ implementation
      end;
 
 
-   constructor TAIAggregateTypedConst.create(_adetyp: TTypedConstKind; _fdef: TDef);
+   constructor TAIAggregateTypedConst.Create(_adetyp: TTypedConstKind; _fdef: TDef);
      begin
        inherited;
        fisstring:=false;
-       fvalues:=TFPObjectList.create(true);
+       fvalues:=TFPObjectList.Create(true);
      end;
 
 
    function TAIAggregateTypedConst.getenumerator: TADEEnumerator;
      begin
-       result:=TADEEnumerator.create(self);
+       result:=TADEEnumerator.Create(self);
      end;
 
 
@@ -990,7 +990,7 @@ implementation
        prelist: TAsmList;
      begin
        finalize_asmlist_prepare(options, alignment);
-       prelist:=TAsmList.create;
+       prelist:=TAsmList.Create;
        { only now add items based on the symbolname, because it may be
          modified by the "section" specifier in case of a typed constant }
 
@@ -1069,7 +1069,7 @@ implementation
              indsecname:=secname
            else
              indsecname:=lower(symind.name);
-           indtcb:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
+           indtcb:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
            indtcb.emit_tai(TAIConst.create_sym_offset(sym,0),ptrdef);
            CurrentAsmData.asmlists[al_indirectglobals].ConcatList(indtcb.get_final_asmlist(
              symind,
@@ -1260,10 +1260,10 @@ implementation
      end;
 
 
-   constructor TTAITypedConstBuilder.create(const options: TTCAsmListOptions);
+   constructor TTAITypedConstBuilder.Create(const options: TTCAsmListOptions);
      begin
-       inherited create;
-       fasmlist:=TAsmList.create;
+       inherited Create;
+       fasmlist:=TAsmList.Create;
        foptions:=options;
        { queue is empty }
        fqueue_offset:=low(fqueue_offset);
@@ -1363,7 +1363,7 @@ implementation
        else if (secname<>'') and
                (finternal_data_section_info[foundsec].secname<>secname) then
          InternalError(2015032401);
-       tcb:=TTAITypedConstBuilderClass(classtype).create(options);
+       tcb:=TTAITypedConstBuilderClass(classtype).Create(options);
      end;
 
 
@@ -1484,13 +1484,13 @@ implementation
        if string_symofs=0 then
          begin
            { results in slightly more efficient code }
-           emit_tai(TAILabel.create(result.lab),charptrdef);
+           emit_tai(TAILabel.Create(result.lab),charptrdef);
            result.ofs:=0;
            { create new label of the same kind (including whether or not the
              name starts with target_asm.labelprefix in case it's AB_LOCAL,
              so we keep the difference depending on whether the original was
              allocated via getstatic/getlocal/getglobal datalabel) }
-           startlab:=TAsmLabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
+           startlab:=TAsmLabel.Create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
          end;
        { sanity check }
        if result.ofs<>string_symofs then
@@ -1522,7 +1522,7 @@ implementation
        if tck=tck_simple then
          exit;
        if not Assigned(faggregateinformation) then
-         faggregateinformation:=TFPObjectList.create
+         faggregateinformation:=TFPObjectList.Create
        { if we're starting an anonymous record, we can't align it yet because
          the alignment depends on the fields that will be added -> we'll do
          it at the end }
@@ -1547,7 +1547,7 @@ implementation
                (curagginfo.def.typ=recorddef) then
          { mark where we'll have to insert the padding bytes at the end }
          mark_anon_aggregate_alignment;
-       info:=CAggregateInformation.create(def,aggregate_kind(def));
+       info:=CAggregateInformation.Create(def,aggregate_kind(def));
        faggregateinformation.add(info);
      end;
 
@@ -1655,7 +1655,7 @@ implementation
        { search in the interface of all units for the type to reuse it }
        if SearchSym_Type(name,srsym,srsymtable) then
          begin
-           result:=TRecordDef(TTypeSym(srsym).typedef);
+           result:=TRecordDef(TTypeSym(srsym).TypeDef);
            exit;
          end
        else
@@ -1664,7 +1664,7 @@ implementation
            strtypesym:=Try_Search_Current_Module_Type(name);
            if Assigned(strtypesym) then
              begin
-               result:=TRecordDef(strtypesym.typedef);
+               result:=TRecordDef(strtypesym.TypeDef);
                exit;
              end;
          end;
@@ -1757,7 +1757,7 @@ implementation
                datatcb.emit_tai(TAILabel.Create(result.lab),WideCharPointerType);
                { allocate a separate label for the start of the data (see
                  emit_string_const_common() for explanation) }
-               startlab:=TAsmLabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
+               startlab:=TAsmLabel.Create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
              end
            else
              InternalError(2015031502);
@@ -1815,13 +1815,13 @@ implementation
        if dynarray_symofs=0 then
          begin
            { results in slightly more efficient code }
-           emit_tai(TAILabel.create(result.lab),arrdef);
+           emit_tai(TAILabel.Create(result.lab),arrdef);
            result.ofs:=0;
            { create new label of the same kind (including whether or not the
              name starts with target_asm.labelprefix in case it's AB_LOCAL,
              so we keep the difference depending on whether the original was
              allocated via getstatic/getlocal/getglobal datalabel) }
-           startlab:=TAsmLabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$dynarrlab',startlab.bind,startlab.typ);
+           startlab:=TAsmLabel.Create(CurrentAsmData.AsmSymbolDict,startlab.name+'$dynarrlab',startlab.bind,startlab.typ);
          end;
        { sanity check }
        if result.ofs<>dynarray_symofs then
@@ -1836,7 +1836,7 @@ implementation
        arrlengthloc.free;
        arrlengthloc := nil;
        if get_dynarray_symofs=0 then
-         emit_tai(TAISymbolEnd.create(llofs.lab),arrdef);
+         emit_tai(TAISymbolEnd.Create(llofs.lab),arrdef);
        result:=end_anonymous_record;
      end;
 
@@ -1938,7 +1938,7 @@ implementation
 
            { we start a new constbuilder as we don't know whether we're called
              from inside an internal constbuilder }
-           strtcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+           strtcb:=CTAITypedConstBuilder.Create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
 
            strtcb.maybe_begin_aggregate(datadef);
            { l+1: include length byte; true: add terminating #0 }
@@ -1987,9 +1987,9 @@ implementation
            TypeSym:=Try_Search_Current_Module_Type(optionalname);
            if Assigned(TypeSym) then
              begin
-               if TypeSym.typedef.typ<>recorddef then
+               if TypeSym.TypeDef.typ<>recorddef then
                  InternalError(2015071401);
-               result:=TRecordDef(TypeSym.typedef);
+               result:=TRecordDef(TypeSym.TypeDef);
                maybe_begin_aggregate(result);
                exit;
              end;
@@ -2149,7 +2149,7 @@ implementation
          InternalError(2015071601);
        syms:=TFPList.Create;
        syms.count:=length(fields);
-       parentdefs:=TFPList.create;
+       parentdefs:=TFPList.Create;
        parentdefs.Count:=length(fields);
        curdef:=def;
        for i:=low(fields) to high(fields) do
@@ -2218,7 +2218,7 @@ implementation
          constwresourcestring,
          constresourcestring:
            begin
-             resourcestrrec:=TRecordDef(Search_System_Type('TRESOURCESTRINGRECORD').typedef);
+             resourcestrrec:=TRecordDef(Search_System_Type('TRESOURCESTRINGRECORD').TypeDef);
              queue_subscriptn_multiple_by_name(resourcestrrec,['CURRENTVALUE']);
              queue_emit_asmsym(CurrentAsmData.RefAsmSymbol(
                Make_MangledName('RESSTR',cs.owner,cs.name),AT_DATA),resourcestrrec
@@ -2263,9 +2263,9 @@ implementation
                          tlowleveltypedconstplaceholder
    ****************************************************************************}
 
-   constructor TLowLevelTypedConstPlaceholder.create(l: TAsmList; pos: TAI; d: TDef);
+   constructor TLowLevelTypedConstPlaceholder.Create(l: TAsmList; pos: TAI; d: TDef);
      begin
-       inherited create(d);
+       inherited Create(d);
        list:=l;
        insertpos:=pos;
      end;
@@ -2299,7 +2299,7 @@ implementation
        check_add_placeholder(def);
        p:=TAIMarker.Create(mark_position);
        emit_tai(p,def);
-       result:=TLowLevelTypedConstPlaceholder.create(fasmlist,p,def);
+       result:=TLowLevelTypedConstPlaceholder.Create(fasmlist,p,def);
      end;
 
 

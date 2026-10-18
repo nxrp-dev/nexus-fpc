@@ -31,10 +31,10 @@ interface
     type
        TAArch64CaseNode = class(TCGCaseNode)
          protected
-           procedure optimizevalues(var max_linear_list: int64; var max_dist: qword);override;
-           function  has_jumptable: boolean;override;
-           procedure genjumptable(hp: PCaseLabel ;min_, max_: int64);override;
-           procedure genlinearlist(hp: PCaseLabel);override;
+           procedure OptimizeValues(var AMaxLinearList: Int64; var AMaxDistance: QWord);override;
+           function  Has_JumpTable: Boolean;override;
+           procedure GenJumpTable(ARootLabel: PCaseLabel ;AMin, AMax: Int64);override;
+           procedure GenLinearList(ARootLabel: PCaseLabel);override;
        end;
 
 
@@ -57,66 +57,66 @@ implementation
 *****************************************************************************}
 
 
-    procedure TAArch64CaseNode.optimizevalues(var max_linear_list: int64; var max_dist: qword);
+    procedure TAArch64CaseNode.OptimizeValues(var AMaxLinearList: Int64; var AMaxDistance: QWord);
       begin
-        max_linear_list:=10;
+        AMaxLinearList:=10;
       end;
 
 
-    function TAArch64CaseNode.has_jumptable: boolean;
+    function TAArch64CaseNode.Has_JumpTable: Boolean;
       begin
-        has_jumptable:=true;
+        Has_JumpTable:=true;
       end;
 
 
-    procedure TAArch64CaseNode.genlinearlist(hp : PCaseLabel);
+    procedure TAArch64CaseNode.GenLinearList(ARootLabel : PCaseLabel);
       var
-        first : boolean;
-        lastrange : boolean;
-        last : TConstExprInt;
-        cond_lt,cond_le : TResFlags;
-        opcgsize, unsigned_opcgsize: TCgSize;
+        lFirst : Boolean;
+        lLastRange : Boolean;
+        lLastValue : TConstExprInt;
+        lLessCondition,lLessEqualCondition : TResFlags;
+        lOpCGSize, lUnsignedOpCGSize: TCgSize;
 
-        procedure genitem(t : PCaseLabel);
+        procedure GenItem(ALabel : PCaseLabel);
           var
-           ovloc: TLocation;
+           lOverflowLoc: TLocation;
           begin
-            if Assigned(t^.less) then
-              genitem(t^.less);
+            if Assigned(ALabel^.Less) then
+              GenItem(ALabel^.Less);
             { need we to test the first value }
-            if first and (t^._low>Get_Min_Value(left.resultdef)) then
+            if lFirst and (ALabel^.LowValue>Get_Min_Value(Left.ResultDef)) then
               begin
-                cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opcgsize,jmp_lt,aint(t^._low.svalue),hregister,elselabel);
+                cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,lOpCGSize,FJumpLess,aint(ALabel^.LowValue.svalue),FRegister,FElseLabel);
               end;
-            if t^._low=t^._high then
+            if ALabel^.LowValue=ALabel^.HighValue then
               begin
-                 if t^._low-last=0 then
-                   cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, opcgsize, OC_EQ,0,hregister,blocklabel(t^.blockid))
+                 if ALabel^.LowValue-lLastValue=0 then
+                   cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList, lOpCGSize, OC_EQ,0,FRegister,BlockLabel(ALabel^.BlockID))
                  else
                    begin
                      { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                        then genlinearlist wouldn't be used }
-                     cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue-last.svalue), hregister, hregister,
-                       true,ovloc);
-                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_EQ,blocklabel(t^.blockid));
+                     cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, lUnsignedOpCGSize, aint(ALabel^.LowValue.svalue-lLastValue.svalue), FRegister, FRegister,
+                       true,lOverflowLoc);
+                     cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_EQ,BlockLabel(ALabel^.BlockID));
                    end;
-                 last:=t^._low;
-                 lastrange:=false;
+                 lLastValue:=ALabel^.LowValue;
+                 lLastRange:=false;
               end
             else
               begin
                  { it begins with the smallest label, if the value }
                  { is even smaller then jump immediately to the    }
                  { ELSE-label                                }
-                 if first then
+                 if lFirst then
                    begin
                       { have we to adjust the first value ? }
-                      if (t^._low>Get_Min_Value(left.resultdef)) or (Get_Min_Value(left.resultdef)<>0) then
+                      if (ALabel^.LowValue>Get_Min_Value(Left.ResultDef)) or (Get_Min_Value(Left.ResultDef)<>0) then
                         begin
                           { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                             then genlinearlist wouldn't be use }
-                          cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue), hregister, hregister,
-                            true,ovloc);
+                          cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, lUnsignedOpCGSize, aint(ALabel^.LowValue.svalue), FRegister, FRegister,
+                            true,lOverflowLoc);
                         end;
                    end
                  else
@@ -127,169 +127,169 @@ implementation
 
                      { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                        then genlinearlist wouldn't be use }
-                     cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue - last.svalue), hregister, hregister,
-                       true,ovloc);
+                     cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList, OP_SUB, lUnsignedOpCGSize, aint(ALabel^.LowValue.svalue - lLastValue.svalue), FRegister, FRegister,
+                       true,lOverflowLoc);
                      { no jump necessary here if the new range starts at }
                      { at the value following the previous one           }
-                     if (aint(t^._low.svalue - last.svalue) <> 1) or
-                        (not lastrange) then
-                       cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,cond_lt,elselabel);
+                     if (aint(ALabel^.LowValue.svalue - lLastValue.svalue) <> 1) or
+                        (not lLastRange) then
+                       cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,lLessCondition,FElseLabel);
                    end;
                  { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                    then genlinearlist wouldn't be use }
-                 cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,unsigned_opcgsize,aint(t^._high.svalue - t^._low.svalue), hregister, hregister,
-                   true,ovloc);
-                 cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,cond_le,blocklabel(t^.blockid));
+                 cg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,lUnsignedOpCGSize,aint(ALabel^.HighValue.svalue - ALabel^.LowValue.svalue), FRegister, FRegister,
+                   true,lOverflowLoc);
+                 cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,lLessEqualCondition,BlockLabel(ALabel^.BlockID));
 
-                 last:=t^._high;
-                 lastrange:=true;
+                 lLastValue:=ALabel^.HighValue;
+                 lLastRange:=true;
               end;
-            first:=false;
-            if Assigned(t^.greater) then
-              genitem(t^.greater);
+            lFirst:=false;
+            if Assigned(ALabel^.Greater) then
+              GenItem(ALabel^.Greater);
           end;
 
         begin
-           opcgsize:=Def_CGSize(opsize);
-           case opcgsize of
+           lOpCGSize:=Def_CGSize(FOpSize);
+           case lOpCGSize of
              OS_8,OS_16,OS_32,OS_S8,OS_S16,OS_S32:
-               unsigned_opcgsize:=OS_32;
+               lUnsignedOpCGSize:=OS_32;
              OS_64,OS_S64:
-               unsigned_opcgsize:=OS_64;
+               lUnsignedOpCGSize:=OS_64;
              else
                InternalError(2019090902);
            end;
-           if with_sign then
+           if FWithSign then
              begin
-                cond_lt:=F_LT;
-                cond_le:=F_LE;
+                lLessCondition:=F_LT;
+                lLessEqualCondition:=F_LE;
              end
            else
               begin
-                cond_lt:=F_CC;
-                cond_le:=F_LS;
+                lLessCondition:=F_CC;
+                lLessEqualCondition:=F_LS;
              end;
            { do we need to generate cmps? }
-           if (with_sign and (min_label<0)) then
-             genlinearcmplist(hp)
+           if (FWithSign and (FMinLabel<0)) then
+             GenLinearCmpList(ARootLabel)
            else
              begin
-                last:=0;
-                lastrange:=false;
-                first:=true;
+                lLastValue:=0;
+                lLastRange:=false;
+                lFirst:=true;
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                genitem(hp);
+                GenItem(ARootLabel);
                 cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,elselabel);
+                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,FElseLabel);
              end;
         end;
 
 
-    procedure TAArch64CaseNode.genjumptable(hp: PCaseLabel; min_, max_: int64);
+    procedure TAArch64CaseNode.GenJumpTable(ARootLabel: PCaseLabel; AMin, AMax: Int64);
       var
-        last: TConstExprInt;
-        tablelabel: TAsmLabel;
-        basereg,indexreg,jumpreg: TRegister;
-        href: TReference;
-        opcgsize: TCgSize;
-        sectype: TAsmSectiontype;
-        jtitemconsttype: TAIConstType;
+        lLastValue: TConstExprInt;
+        lTableLabel: TAsmLabel;
+        lBaseReg,lIndexReg,lJumpReg: TRegister;
+        lReference: TReference;
+        lOpCGSize: TCgSize;
+        lSectionType: TAsmSectiontype;
+        lTableItemConstType: TAIConstType;
 
-      procedure genitem(list:TAsmList;t : PCaseLabel);
+      procedure GenItem(AList:TAsmList;ALabel : PCaseLabel);
         var
-          i : int64;
+          lIndex : Int64;
         begin
-          if Assigned(t^.less) then
-            genitem(list,t^.less);
+          if Assigned(ALabel^.Less) then
+            GenItem(AList,ALabel^.Less);
           { fill possible hole }
-          i:=last.svalue+1;
-          while i<=t^._low.svalue-1 do
+          lIndex:=lLastValue.svalue+1;
+          while lIndex<=ALabel^.LowValue.svalue-1 do
             begin
               if TargetInfo.system=system_aarch64_win64 then
-                list.concat(TAIConst.Create_sym(elselabel))
+                AList.concat(TAIConst.Create_sym(FElseLabel))
               else
-                list.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
-              inc(i);
+                AList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,FElseLabel));
+              inc(lIndex);
             end;
-          i:=t^._low.svalue;
-          while i<=t^._high.svalue do
+          lIndex:=ALabel^.LowValue.svalue;
+          while lIndex<=ALabel^.HighValue.svalue do
             begin
               if TargetInfo.system=system_aarch64_win64 then
-                list.concat(TAIConst.Create_sym(blocklabel(t^.blockid)))
+                AList.concat(TAIConst.Create_sym(BlockLabel(ALabel^.BlockID)))
               else
-                list.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
-              inc(i);
+                AList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,BlockLabel(ALabel^.BlockID)));
+              inc(lIndex);
             end;
-          last:=t^._high;
-          if Assigned(t^.greater) then
-            genitem(list,t^.greater);
+          lLastValue:=ALabel^.HighValue;
+          if Assigned(ALabel^.Greater) then
+            GenItem(AList,ALabel^.Greater);
         end;
 
       begin
         if not(TargetInfo.system in systems_darwin) then
-          jtitemconsttype:=aitconst_32bit
+          lTableItemConstType:=aitconst_32bit
         else
           { see https://gmplib.org/list-archives/gmp-bugs/2012-December/002836.html }
-          jtitemconsttype:=aitconst_darwin_dwarf_delta32;
+          lTableItemConstType:=aitconst_darwin_dwarf_delta32;
 
-        last:=min_;
-        opcgsize:=Def_CGSize(opsize);
+        lLastValue:=AMin;
+        lOpCGSize:=Def_CGSize(FOpSize);
         { a <= x <= b <-> unsigned(x-a) <= (b-a) }
-        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SUB,opcgsize,aint(min_),hregister);
-        if not(jumptable_no_range) then
+        cg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SUB,lOpCGSize,aint(AMin),FRegister);
+        if not(FJumpTableNoRange) then
           begin
              { case expr greater than max_ => goto elselabel }
-             cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,opcgsize,OC_A,aint(max_)-aint(min_),hregister,elselabel);
-             min_:=0;
+             cg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,lOpCGSize,OC_A,aint(AMax)-aint(AMin),FRegister,FElseLabel);
+             AMin:=0;
           end;
         if TargetInfo.system=system_aarch64_win64 then
-          CurrentAsmData.getstaticdatalabel(tablelabel)
+          CurrentAsmData.getstaticdatalabel(lTableLabel)
         else
           { local label in order to avoid using GOT }
-          CurrentAsmData.getlabel(tablelabel,alt_data);
-        indexreg:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,hregister,OS_ADDR);
-        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opcgsize,OS_ADDR,hregister,indexreg);
+          CurrentAsmData.getlabel(lTableLabel,alt_data);
+        lIndexReg:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,FRegister,OS_ADDR);
+        cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,lOpCGSize,OS_ADDR,FRegister,lIndexReg);
         { load table address }
-        Reference_Reset_Symbol(href,tablelabel,0,4,[]);
-        basereg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-        cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,href,basereg);
+        Reference_Reset_Symbol(lReference,lTableLabel,0,4,[]);
+        lBaseReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+        cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,lReference,lBaseReg);
         { load the slot }
-        jumpreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+        lJumpReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
         if TargetInfo.system=system_aarch64_win64 then
-          Reference_Reset_Base(href,basereg,0,href.TempPos,sizeof(aint),[])
+          Reference_Reset_Base(lReference,lBaseReg,0,lReference.TempPos,sizeof(aint),[])
         else
-          Reference_Reset_Base(href,basereg,0,href.TempPos,4,[]);
-        href.Index:=indexreg;
-        href.ShiftMode:=SM_LSL;
+          Reference_Reset_Base(lReference,lBaseReg,0,lReference.TempPos,4,[]);
+        lReference.Index:=lIndexReg;
+        lReference.ShiftMode:=SM_LSL;
         if TargetInfo.system=system_aarch64_win64 then
           begin
             { Use a 64-bit absolute table under aarch64-win64 }
-            href.ShiftImm:=3;
-            cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,href,jumpreg);
+            lReference.ShiftImm:=3;
+            cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,lReference,lJumpReg);
           end
         else
           begin
             { load table slot, 32-bit sign extended }
-            href.ShiftImm:=2;
-            cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_S32,OS_ADDR,href,jumpreg);
+            lReference.ShiftImm:=2;
+            cg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,OS_S32,OS_ADDR,lReference,lJumpReg);
             { add table address }
-            cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_ADDR,basereg,jumpreg);
+            cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_ADDR,lBaseReg,lJumpReg);
           end;
         { and finally jump }
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_BR,jumpreg));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_BR,lJumpReg));
         { generate jump table }
         if TargetInfo.system=system_aarch64_win64 then
           begin
             { For windows, it has to be in a data section otherwise an access violation
               will occur, but also full 64-bit references to avoid problems with
               relative references }
-            sectype:=sec_rodata;
-            new_section(CurrentProcInfo.AktLocalData,sectype,lower(CurrentProcInfo.procdef.MangledName),sizeof(aint));
+            lSectionType:=sec_rodata;
+            new_section(CurrentProcInfo.AktLocalData,lSectionType,lower(CurrentProcInfo.procdef.MangledName),sizeof(aint));
           end
         else
           begin
             if not(TargetInfo.system in systems_darwin) then
-              sectype:=sec_rodata
+              lSectionType:=sec_rodata
             else
               begin
                 { on Mac OS X, dead code stripping ("smart linking") happens based on
@@ -303,9 +303,9 @@ implementation
                   jump tables must be added in the code section and since aktlocaldata
                   is inserted right after the routine, it will become part of the
                   same subsection that contains the routine's code }
-                sectype:=sec_code;
+                lSectionType:=sec_code;
               end;
-            new_section(CurrentProcInfo.AktLocalData,sectype,CurrentProcInfo.procdef.MangledName,4);
+            new_section(CurrentProcInfo.AktLocalData,lSectionType,CurrentProcInfo.procdef.MangledName,4);
           end;
         if TargetInfo.system in systems_darwin then
           begin
@@ -313,8 +313,8 @@ implementation
               and ".end_data_region" }
             CurrentProcInfo.AktLocalData.concat(TAIDirective.Create(asd_data_region,'jt32'));
           end;
-        CurrentProcInfo.AktLocalData.concat(TAILabel.Create(tablelabel));
-        genitem(CurrentProcInfo.AktLocalData,hp);
+        CurrentProcInfo.AktLocalData.concat(TAILabel.Create(lTableLabel));
+        GenItem(CurrentProcInfo.AktLocalData,ARootLabel);
         if TargetInfo.system in systems_darwin then
           CurrentProcInfo.AktLocalData.concat(TAIDirective.Create(asd_end_data_region,''));
       end;

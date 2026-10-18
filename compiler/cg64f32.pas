@@ -895,7 +895,7 @@ unit cg64f32;
         TG.GetTemp(List,8,8,tt_normal,TmpRef);
         A_Load64_Reg_Ref(List,IntReg,TmpRef);
         CG.A_LoadMM_Ref_Reg(List,MMSize,MMSize,TmpRef,MMReg,MMS_MoveScalar);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 
@@ -908,7 +908,7 @@ unit cg64f32;
         TG.GetTemp(List,8,8,tt_normal,TmpRef);
         CG.A_LoadMM_Reg_Ref(List,MMSize,MMSize,MMReg,TmpRef,MMS_MoveScalar);
         A_Load64_Ref_Reg(List,TmpRef,IntReg);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 

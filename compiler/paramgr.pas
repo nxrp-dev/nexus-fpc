@@ -433,7 +433,7 @@ implementation
                       HRef.Base:=ParaLoc^.Reference.Index;
                       HRef.Offset:=ParaLoc^.Reference.Offset;
                       HRef.TempPos:=CTempPosInvalid;
-                      TG.UngetIfTemp(List,HRef);
+                      TG.UnGetIfTemp(List,HRef);
                     end;
                 end;
               else

@@ -44,7 +44,7 @@ unit aoptbase;
       TAoptBase = class
         { processor independent methods }
 
-        constructor create; virtual;
+        constructor Create; virtual;
         destructor Destroy;override;
         { returns true if register Reg is used by instruction p1 }
         Function RegInInstruction(Reg: TRegister; p1: TAI): Boolean;virtual;
@@ -120,9 +120,9 @@ unit aoptbase;
     uses
       Verbose,Globals,aoptcpub;
 
-  constructor TAoptBase.create;
+  constructor TAoptBase.Create;
     begin
-      inherited create;
+      inherited Create;
     end;
 
 
@@ -179,7 +179,7 @@ unit aoptbase;
 
   function labelCanBeSkipped(p: TAILabel): boolean; {$ifdef USEINLINE}inline;{$endif}
   begin
-    labelCanBeSkipped := not(p.labsym.Is_Used) or (p.labsym.labeltype<>alt_jump);
+    labelCanBeSkipped := not(p.LabSym.Is_Used) or (p.LabSym.labeltype<>alt_jump);
   end;
 
 

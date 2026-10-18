@@ -169,8 +169,8 @@ implementation
            ) then
           begin
             CurrentAsmData.asmlists[al_dwarf_frame].Free;
-            CurrentAsmData.asmlists[al_dwarf_frame] := TAsmList.create;
-            CurrentAsmData.asmcfi.generate_code(CurrentAsmData.asmlists[al_dwarf_frame]);
+            CurrentAsmData.asmlists[al_dwarf_frame] := TAsmList.Create;
+            CurrentAsmData.asmcfi.Generate_Code(CurrentAsmData.asmlists[al_dwarf_frame]);
           end;
       end;
 
@@ -203,7 +203,7 @@ implementation
         { load unit }
         hp:=RegisterUnit(curr,s,'',isnew);
         if isnew then
-          UsedUnits.concat(TUsedUnit.create(hp,true,addasused,nil));
+          UsedUnits.concat(TUsedUnit.Create(hp,true,addasused,nil));
         hp.AddDependency(curr,curr.InInterface); { adddependency before loadppu for invalid cycle test }
         hp.LoadPPU(curr);
         TModule.Finish_Module(hp);
@@ -215,7 +215,7 @@ implementation
             Assigned(hp.GlobalMacroSymTable) then
           MacroSymTableStack.push(hp.GlobalMacroSymTable);
         { insert unitsym }
-        UnitSym:=CUnitSym.create(hp.ModuleName^,hp);
+        UnitSym:=CUnitSym.Create(hp.ModuleName^,hp);
         inc(UnitSym.refs);
         TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(UnitSym);
         if addasused then
@@ -327,7 +327,7 @@ implementation
       begin
         { The PPU's text-model flag cannot prove that System.Char was
           declared with the matching width. }
-        if Search_System_Type('CHAR').typedef.Size <>
+        if Search_System_Type('CHAR').TypeDef.Size <>
            1+Ord(CompilerWide_Unicode_Strings) then
           Comment(VFatal,'System.Char width does not match this compiler invocation''s default text model');
       end;
@@ -369,7 +369,7 @@ implementation
 
         { load_intern_types resets the scanner... }
         CurrentScanner.tempcloseinputfile;
-        state:=TGlobalState.create(false);
+        state:=TGlobalState.Create(false);
         load_intern_types;
         state.restore;
         FreeAndNil(state);
@@ -448,8 +448,8 @@ implementation
           begin
             profileunit:=RegisterUnit(curr,'nxprofilerruntime','',isnew);
             if isnew then
-              UsedUnits.concat(TUsedUnit.create(profileunit,false,true,nil));
-            profilesym:=CUnitSym.create('NXPROFILERRUNTIME',nil);
+              UsedUnits.concat(TUsedUnit.Create(profileunit,false,true,nil));
+            profilesym:=CUnitSym.Create('NXPROFILERRUNTIME',nil);
             inc(profilesym.refs);
             curr.AddUsedUnit(profileunit,true,profilesym);
           end;
@@ -577,7 +577,7 @@ implementation
                begin
                hp2:=RegisterUnit(curr,sorg,fn,isnew);
                if isnew then
-                 UsedUnits.concat(TUsedUnit.create(hp2,curr.InInterface,true,nil));
+                 UsedUnits.concat(TUsedUnit.Create(hp2,curr.InInterface,true,nil));
                end
              else
                Message1(sym_e_duplicate_id,s);
@@ -585,7 +585,7 @@ implementation
                can not use the modulename because that can be different
                when -Un is used }
              CurrentTokenPos:=filepos;
-             UnitSym:=CUnitSym.create(sorg,nil);
+             UnitSym:=CUnitSym.Create(sorg,nil);
              { the current module uses the unit hp2 }
              curr.AddUsedUnit(hp2,true,UnitSym);
            end
@@ -623,7 +623,7 @@ implementation
       begin
         Result:=true;
         CurrentScanner.tempcloseinputfile;
-        state:=TGlobalState.create(false);
+        state:=TGlobalState.Create(false);
 
         { reset verbosity (otherwise the used units would use curr's pmessage) }
         CurrentSettings.PMessage:=nil;
@@ -723,7 +723,7 @@ implementation
                sorg:=TPPUModule(pu.u).NSPrefix+'.'+pu.UnitSym.realname;
                { update unitsym now that we have access to the full name }
                pu.UnitSym.free;
-               pu.UnitSym:=CUnitSym.create(sorg,pu.u);
+               pu.UnitSym:=CUnitSym.Create(sorg,pu.u);
              end
            else
              begin
@@ -876,13 +876,13 @@ implementation
         if Assigned(CurrentProcInfo) then
          InternalError(200304275);
         {Generate a procsym for main}
-        ps:=CProcSym.create('$'+name);
+        ps:=CProcSym.Create('$'+name);
         { always register the symbol }
         ps.RegisterSym;
         { main are always used }
         inc(ps.refs);
         st.InsertSym(ps);
-        pd:=TProcDef(CNodeUtils.create_main_procdef(TargetInfo.cprefix+name,potype,ps));
+        pd:=TProcDef(CNodeUtils.Create_Main_ProcDef(TargetInfo.cprefix+name,potype,ps));
         { We don't need a local symtable, change it into the static symtable }
         if not (potype in [potype_mainstub,potype_pkgstub,potype_libmainstub]) then
           begin
@@ -896,7 +896,7 @@ implementation
           pd.ProcCallOption:=pocall_cdecl;
         handle_calling_convention(pd,hcc_default_actions_impl);
         { set procinfo and current_procinfo.procdef }
-        result:=TCGProcInfo(CProcInfo.create(nil));
+        result:=TCGProcInfo(CProcInfo.Create(nil));
         result.procdef:=pd;
         { main proc does always a call e.g. to init system unit }
         if potype<>potype_pkgstub then
@@ -929,7 +929,7 @@ implementation
             (tf_pic_uses_got in TargetInfo.flags) then
            begin
              { insert symbol for got access in assembler code}
-             gotvarsym:=CStaticVarSym.create('_GLOBAL_OFFSET_TABLE_',
+             gotvarsym:=CStaticVarSym.Create('_GLOBAL_OFFSET_TABLE_',
                           vs_value,VoidPointerType,[vo_is_external]);
              gotvarsym.Set_MangledName('_GLOBAL_OFFSET_TABLE_');
              curr.LocalSymTable.InsertSym(gotvarsym);
@@ -959,7 +959,7 @@ implementation
           else
             InternalError(200304253);
         end;
-        result.code:=CNothingNode.create;
+        result.code:=CNothingNode.Create;
       end;
 
 
@@ -1083,9 +1083,9 @@ type
             { Compile the unit }
             InitializationProcedure:=create_main_proc(Make_MangledName('',curr.LocalSymTable,'init$'),potype_unitinit,curr.LocalSymTable);
             InitializationProcedure.procdef.AliasNames.concat(Make_MangledName('INIT$',curr.LocalSymTable,''));
-            InitializationProcedure.parse_body;
+            InitializationProcedure.Parse_Body;
             { save file pos for debuginfo }
-            curr.MainFilePos:=InitializationProcedure.entrypos;
+            curr.MainFilePos:=InitializationProcedure.EntryPos;
 
             { parse finalization section }
             if CurrentScanner.token=_FINALIZATION then
@@ -1093,7 +1093,7 @@ type
                 { Compile the finalize }
                 FinalizationProcedure:=create_main_proc(Make_MangledName('',curr.LocalSymTable,'finalize$'),potype_unitfinalize,curr.LocalSymTable);
                 FinalizationProcedure.procdef.AliasNames.concat(Make_MangledName('FINALIZE$',curr.LocalSymTable,''));
-                FinalizationProcedure.parse_body;
+                FinalizationProcedure.Parse_Body;
               end
           end;
 
@@ -1145,7 +1145,7 @@ type
         { ... parse the declarations }
         Message1(parser_u_parsing_interface,curr.RealModuleName^);
 
-        read_interface_declarations;
+        Read_Interface_Declarations;
 
 
         { Export macros defined in the interface for macpas. The macros
@@ -1154,7 +1154,7 @@ type
 
         if (m_mac in CurrentSettings.ModeSwitches) then
           begin
-            curr.GlobalMacroSymTable:=TMacroSymTable.create(true);
+            curr.GlobalMacroSymTable:=TMacroSymTable.Create(true);
             curr.LocalMacroSymTable.SymList.ForEachCall(@copy_macro,curr);
           end;
 
@@ -1183,7 +1183,7 @@ type
         parse_only:=false;
 
         { create static symbol table }
-        curr.LocalSymTable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
+        curr.LocalSymTable:=TStaticSymTable.Create(curr.RealModuleName^,curr.ModuleID);
 
 
         { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
@@ -1301,11 +1301,11 @@ type
 
          { generate now the global symboltable,
            define first as local to overcome dependency conflicts }
-         curr.LocalSymTable:=TGlobalSymTable.create(curr.ModuleName^,curr.ModuleID);
+         curr.LocalSymTable:=TGlobalSymTable.Create(curr.ModuleName^,curr.ModuleID);
 
          { insert unitsym of this unit to prevent other units having
            the same name }
-         TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.create(curr.RealModuleName^,curr));
+         TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.Create(curr.RealModuleName^,curr));
 
          { load default system unit, it must be loaded before interface is parsed
            else we cannot use e.g. feature switches before the next real token }
@@ -1377,7 +1377,7 @@ type
          { create whole program optimisation information (may already be
            updated in the interface, e.g., in case of classrefdef typed
            constants }
-         curr.WPOInfo:=TUnitWPOInfo.create;
+         curr.WPOInfo:=TUnitWPOInfo.Create;
 
          { Can we continue compiling ? }
          result:=curr.state<>ms_compiling_waitintf;
@@ -1445,8 +1445,8 @@ type
          { Generate VMTs }
          if ErrorCount=0 then
            begin
-             write_vmts(module.GlobalSymTable,true);
-             write_vmts(module.LocalSymTable,false);
+             Write_VMTs(module.GlobalSymTable,true);
+             Write_VMTs(module.LocalSymTable,false);
            end;
 
          { add implementations for synthetic method declarations added by
@@ -1464,30 +1464,30 @@ type
          { Now the sole purpose of this is to change 'init' to 'init_implicit',
            is it needed at all? (Sergei) }
          { it's needed in case cnodeutils.force_init = true }
-         if (force_init_final or CNodeUtils.force_init) and
+         if (force_init_final or CNodeUtils.Force_Init) and
             (
               not Assigned(InitializationProcedure) or
-              has_no_code(InitializationProcedure.code)
+              Has_No_Code(InitializationProcedure.code)
             ) then
            begin
              { first release the not used init procinfo }
              if Assigned(InitializationProcedure) then
                begin
-                 release_proc_symbol(InitializationProcedure.procdef);
+                 Release_Proc_Symbol(InitializationProcedure.procdef);
                  release_main_proc(module,InitializationProcedure);
                end;
              InitializationProcedure:=gen_implicit_initfinal(module,mf_init,module.LocalSymTable);
            end;
-         if (force_init_final or CNodeUtils.force_final) and
+         if (force_init_final or CNodeUtils.Force_Final) and
             (
               not Assigned(FinalizationProcedure) or
-              has_no_code(FinalizationProcedure.code)
+              Has_No_Code(FinalizationProcedure.code)
             ) then
            begin
              { first release the not used finalize procinfo }
              if Assigned(FinalizationProcedure) then
                begin
-                 release_proc_symbol(FinalizationProcedure.procdef);
+                 Release_Proc_Symbol(FinalizationProcedure.procdef);
                  release_main_proc(module,FinalizationProcedure);
                end;
              FinalizationProcedure:=gen_implicit_initfinal(module,mf_finalize,module.LocalSymTable);
@@ -1499,31 +1499,31 @@ type
            a register that is also used in the finalize body (PFV) }
          if Assigned(InitializationProcedure) then
            begin
-             if (force_init_final or CNodeUtils.force_init) or
-                not(has_no_code(InitializationProcedure.code)) then
+             if (force_init_final or CNodeUtils.Force_Init) or
+                not(Has_No_Code(InitializationProcedure.code)) then
                begin
-                 InitializationProcedure.code:=CNodeUtils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
-                 InitializationProcedure.generate_code_tree;
+                 InitializationProcedure.code:=CNodeUtils.Wrap_Proc_Body(InitializationProcedure.procdef,InitializationProcedure.code);
+                 InitializationProcedure.Generate_Code_Tree;
                  include(module.ModuleFlags,mf_init);
                end
              else
-               release_proc_symbol(InitializationProcedure.procdef);
-             InitializationProcedure.resetprocdef;
+               Release_Proc_Symbol(InitializationProcedure.procdef);
+             InitializationProcedure.ResetProcDef;
              release_main_proc(module,InitializationProcedure);
            end;
          if Assigned(FinalizationProcedure) then
            begin
              if force_init_final or
-                CNodeUtils.force_init or
-                not(has_no_code(FinalizationProcedure.code)) then
+                CNodeUtils.Force_Init or
+                not(Has_No_Code(FinalizationProcedure.code)) then
                begin
-                 FinalizationProcedure.code:=CNodeUtils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
-                 FinalizationProcedure.generate_code_tree;
+                 FinalizationProcedure.code:=CNodeUtils.Wrap_Proc_Body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                 FinalizationProcedure.Generate_Code_Tree;
                  include(module.ModuleFlags,mf_finalize);
                end
              else
-               release_proc_symbol(FinalizationProcedure.procdef);
-             FinalizationProcedure.resetprocdef;
+               Release_Proc_Symbol(FinalizationProcedure.procdef);
+             FinalizationProcedure.ResetProcDef;
              release_main_proc(module,FinalizationProcedure);
            end;
 
@@ -1573,8 +1573,8 @@ type
          maybeloadvariantsunit(module);
 
          { generate rtti/init tables }
-         write_persistent_type_info(module.GlobalSymTable,true);
-         write_persistent_type_info(module.LocalSymTable,false);
+         Write_Persistent_Type_Info(module.GlobalSymTable,true);
+         Write_Persistent_Type_Info(module.LocalSymTable,false);
 
          { Tables }
          CNodeUtils.InsertThreadvars;
@@ -1851,7 +1851,7 @@ type
 
          { insert after the unit symbol tables the static symbol table }
          { of the program                                             }
-         curr.LocalSymTable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
+         curr.LocalSymTable:=TStaticSymTable.Create(curr.RealModuleName^,curr.ModuleID);
 
          { ensure that no packages are picked up from the options }
          PackageList.clear;
@@ -1952,7 +1952,7 @@ type
            end;
          if not Assigned(SystemUnit) then
            Comment(VFatal,'Package '+curr.RealModuleName^+' does not contain or require the System unit');
-         pkg:=TPCPPackage.create(curr.RealModuleName^);
+         pkg:=TPCPPackage.Create(curr.RealModuleName^);
          { All units are read, now give them a number }
          curr.UpdateMaps;
          connect_loaded_units(curr,nil);
@@ -1998,18 +1998,18 @@ type
 
          {Insert the name of the main program into the symbol table.}
          if curr.RealModuleName^<>'' then
-           TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.create(curr.RealModuleName^,curr));
+           TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.Create(curr.RealModuleName^,curr));
 
          Message1(parser_u_parsing_implementation,curr.MainSource);
 
          SymTableStack.push(curr.LocalSymTable);
 
          { create whole program optimisation information }
-         curr.WPOInfo:=TUnitWPOInfo.create;
+         curr.WPOInfo:=TUnitWPOInfo.Create;
 
          { should we force unit initialization? }
          force_init_final:=TStaticSymTable(curr.LocalSymTable).Needs_Init_Final;
-         if force_init_final or CNodeUtils.force_init then
+         if force_init_final or CNodeUtils.Force_Init then
            {InitializationProcedure:=gen_implicit_initfinal(mf_init,curr.localsymtable)};
 
          { Add symbol to the exports section for win32 so smartlinking a
@@ -2045,7 +2045,7 @@ type
              main_procinfo:=create_main_proc('_PkgEntryPoint',potype_pkgstub,curr.LocalSymTable);
              main_procinfo.procdef.AliasNames.concat('_DLLMainCRTStartup');
              main_procinfo.code:=Generate_Pkg_Stub(main_procinfo.procdef);
-             main_procinfo.generate_code;
+             main_procinfo.Generate_Code;
              SymTableStack.pop(curr.LocalSymTable);
            end;
 
@@ -2383,7 +2383,7 @@ type
         CNodeUtils.InsertThreadvars;
 
         { generate rtti/init tables }
-        write_persistent_type_info(curr.LocalSymTable,false);
+        Write_Persistent_Type_Info(curr.LocalSymTable,false);
 
         { if an Objective-C module, generate rtti and module info }
         MaybeGenerateObjectiveCImageInfo(nil,curr.LocalSymTable);
@@ -2476,7 +2476,7 @@ type
     function proc_program_declarations(curr : TModule; IsLibrary : boolean) : boolean;
 
       var
-        initpd    : TProcDef;
+        InitPD    : TProcDef;
         FinalizationProcedure,
         InitializationProcedure,
         main_procinfo : TCGProcInfo;
@@ -2505,7 +2505,7 @@ type
 
         {Insert the name of the main program into the symbol table.}
         if curr.RealModuleName^<>'' then
-          TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.create(curr.RealModuleName^,curr));
+          TAbstractUnitSymTable(curr.LocalSymTable).InsertUnit(CUnitSym.Create(curr.RealModuleName^,curr));
 
         Message1(parser_u_parsing_implementation,curr.MainSource);
 
@@ -2516,20 +2516,20 @@ type
         maybe_load_got(curr);
 
         { create whole program optimisation information }
-        curr.WPOInfo:=TUnitWPOInfo.create;
+        curr.WPOInfo:=TUnitWPOInfo.Create;
 
         { The program initialization needs an alias, so it can be called
           from the bootstrap code.}
         if IsLibrary then
          begin
-           initpd:=nil;
+           InitPD:=nil;
            { ToDo: other systems that use indirect entry info, but check back with Windows! }
            { we need to call FPC_LIBMAIN in sysinit which in turn will call PascalMain -> create dummy stub }
            if TargetInfo.system in systems_darwin then
              begin
                main_procinfo:=create_main_proc(Make_MangledName('sysinitcallthrough',curr.LocalSymTable,'stub'),potype_libmainstub,curr.LocalSymTable);
                Call_Through_New_Name(main_procinfo.procdef,TargetInfo.cprefix+'FPC_LIBMAIN');
-               initpd:=main_procinfo.procdef;
+               InitPD:=main_procinfo.procdef;
                main_procinfo.free;
                main_procinfo := nil;
              end;
@@ -2542,9 +2542,9 @@ type
              main_procinfo.procdef.AliasNames.concat(TargetInfo.Cprefix+'PASCALMAIN');
 
            if not(TargetInfo.system in systems_darwin) then
-             initpd:=main_procinfo.procdef;
+             InitPD:=main_procinfo.procdef;
 
-           CNodeUtils.RegisterModuleInitFunction(initpd);
+           CNodeUtils.RegisterModuleInitFunction(InitPD);
          end
         else if (TargetInfo.system in systems_darwin) then
           begin
@@ -2566,9 +2566,9 @@ type
             main_procinfo:=create_main_proc(MainAliasName,potype_proginit,curr.LocalSymTable);
             main_procinfo.procdef.AliasNames.concat('PASCALMAIN');
           end;
-        main_procinfo.parse_body;
+        main_procinfo.Parse_Body;
         { save file pos for debuginfo }
-        curr.MainFilePos:=main_procinfo.entrypos;
+        curr.MainFilePos:=main_procinfo.EntryPos;
 
         { finalize? }
         if CurrentScanner.token=_FINALIZATION then
@@ -2577,7 +2577,7 @@ type
              FinalizationProcedure:=create_main_proc(Make_MangledName('',curr.LocalSymTable,'finalize$'),potype_unitfinalize,curr.LocalSymTable);
              FinalizationProcedure.procdef.AliasNames.insert(Make_MangledName('FINALIZE$',curr.LocalSymTable,''));
              FinalizationProcedure.procdef.AliasNames.concat('PASCALFINALIZE');
-             FinalizationProcedure.parse_body;
+             FinalizationProcedure.Parse_Body;
           end;
 
         { Generate specializations of objectdefs methods }
@@ -2590,7 +2590,7 @@ type
 
         { Generate VMTs }
         if ErrorCount=0 then
-          write_vmts(curr.LocalSymTable,false);
+          Write_VMTs(curr.LocalSymTable,false);
 
         { add implementations for synthetic method declarations added by
           the compiler }
@@ -2598,7 +2598,7 @@ type
 
         { should we force unit initialization? }
         force_init_final:=TStaticSymTable(curr.LocalSymTable).Needs_Init_Final;
-        if force_init_final or CNodeUtils.force_init then
+        if force_init_final or CNodeUtils.Force_Init then
           InitializationProcedure:=gen_implicit_initfinal(curr,mf_init,curr.LocalSymTable);
 
         { Add symbol to the exports section for win32 so smartlinking a
@@ -2608,16 +2608,16 @@ type
            (mf_has_exports in curr.ModuleFlags) then
           CurrentAsmData.asmlists[al_procedures].concat(TAIConst.createname(Make_MangledName('EDATA',curr.LocalSymTable,''),0));
 
-        if (force_init_final or CNodeUtils.force_final) and
+        if (force_init_final or CNodeUtils.Force_Final) and
            (
              not Assigned(FinalizationProcedure)
-             or has_no_code(FinalizationProcedure.code)
+             or Has_No_Code(FinalizationProcedure.code)
            ) then
           begin
             { first release the not used finalize procinfo }
             if Assigned(FinalizationProcedure) then
               begin
-                release_proc_symbol(FinalizationProcedure.procdef);
+                Release_Proc_Symbol(FinalizationProcedure.procdef);
                 release_main_proc(curr,FinalizationProcedure);
               end;
             FinalizationProcedure:=gen_implicit_initfinal(curr,mf_finalize,curr.LocalSymTable);
@@ -2635,29 +2635,29 @@ type
           TStoredSymTable(curr.LocalSymTable).CheckLabels;
 
         { See remark in unit init/final }
-        main_procinfo.generate_code_tree;
-        main_procinfo.resetprocdef;
+        main_procinfo.Generate_Code_Tree;
+        main_procinfo.ResetProcDef;
         release_main_proc(curr,main_procinfo);
         if Assigned(InitializationProcedure) then
           begin
             { initialization can be implicit only }
             include(curr.ModuleFlags,mf_init);
-            InitializationProcedure.code:=CNodeUtils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
-            InitializationProcedure.generate_code;
-            InitializationProcedure.resetprocdef;
+            InitializationProcedure.code:=CNodeUtils.Wrap_Proc_Body(InitializationProcedure.procdef,InitializationProcedure.code);
+            InitializationProcedure.Generate_Code;
+            InitializationProcedure.ResetProcDef;
             release_main_proc(curr,InitializationProcedure);
           end;
         if Assigned(FinalizationProcedure) then
           begin
             if force_init_final or
-               CNodeUtils.force_init or
-               not(has_no_code(FinalizationProcedure.code)) then
+               CNodeUtils.Force_Init or
+               not(Has_No_Code(FinalizationProcedure.code)) then
               begin
-                FinalizationProcedure.code:=CNodeUtils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
-                FinalizationProcedure.generate_code_tree;
+                FinalizationProcedure.code:=CNodeUtils.Wrap_Proc_Body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                FinalizationProcedure.Generate_Code_Tree;
                 include(curr.ModuleFlags,mf_finalize);
               end;
-            FinalizationProcedure.resetprocdef;
+            FinalizationProcedure.ResetProcDef;
             release_main_proc(curr,FinalizationProcedure);
           end;
 
@@ -2829,7 +2829,7 @@ type
 
          { insert after the unit symbol tables the static symbol table
            of the program                                              }
-         curr.LocalSymTable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
+         curr.LocalSymTable:=TStaticSymTable.Create(curr.RealModuleName^,curr.ModuleID);
 
          { load system unit }
          load_ok:=loadsystemunit(curr);
@@ -2860,7 +2860,7 @@ type
                InternalError(2013011201);
              for i:=0 to high(sc) do
                begin
-                 ps:=CProgramParaSym.create(sc[i].name,sc[i].nr);
+                 ps:=CProgramParaSym.Create(sc[i].name,sc[i].nr);
                  curr.LocalSymTable.InsertSym(ps,true);
                end;
            end;

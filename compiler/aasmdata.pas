@@ -142,7 +142,7 @@ interface
     type
       TAsmList = class(TLinkedList)
          section_count : LongInt;
-         constructor create;
+         constructor Create;
          function  getlasttaifilepos : PFilePosInfo;
          { inserts another List at the begin and make this List empty }
          procedure InsertList(p : TLinkedList); override;
@@ -164,9 +164,9 @@ interface
 
       TAsmCFI=class
       public
-        constructor create;virtual;
+        constructor Create;virtual;
         destructor Destroy;override;
-        procedure generate_code(list:TAsmList);virtual;
+        procedure Generate_Code(list:TAsmList);virtual;
         procedure start_frame(list:TAsmList);virtual;
         procedure end_frame(list:TAsmList);virtual;
         procedure outmost_frame(list:TAsmList);virtual;
@@ -203,7 +203,7 @@ interface
         CurrAsmList   : TAsmList;
         WideInits     : TLinkedList;
         ResStrInits   : TLinkedList;
-        constructor create(n: PShortString);
+        constructor Create(n: PShortString);
         destructor  Destroy;override;
         { asmsymbol }
         function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmsymbind;_typ:TAsmsymtype; def: TDef) : TAsmSymbol; virtual;
@@ -279,7 +279,7 @@ implementation
                                  TAsmCFI
 *****************************************************************************}
 
-    constructor TAsmCFI.create;
+    constructor TAsmCFI.Create;
       begin
       end;
 
@@ -289,7 +289,7 @@ implementation
       end;
 
 
-    procedure TAsmCFI.generate_code(list:TAsmList);
+    procedure TAsmCFI.Generate_Code(list:TAsmList);
       begin
       end;
 
@@ -363,9 +363,9 @@ implementation
                                  TAsmList
 *****************************************************************************}
 
-    constructor TAsmList.create;
+    constructor TAsmList.Create;
       begin
-        inherited create;
+        inherited Create;
       end;
 
 
@@ -510,32 +510,32 @@ implementation
          begin
            wasdefined:=false;
            { Not found, insert it. }
-           hp:=symclass.create(AsmSymbolDict,namestr,_bind,_typ);
+           hp:=symclass.Create(AsmSymbolDict,namestr,_bind,_typ);
          end;
         result:=hp;
       end;
 
 
-    constructor TAsmData.create(n:PShortString);
+    constructor TAsmData.Create(n:PShortString);
       var
         alt : TAsmLabelType;
         hal : TAsmListType;
       begin
-        inherited create;
+        inherited Create;
         name:=n;
         { symbols }
-        FAsmSymbolDict:=TFPHashObjectList.create(true);
+        FAsmSymbolDict:=TFPHashObjectList.Create(true);
         FAltSymbolList:=TFPObjectList.Create(false);
         { labels }
         FNextAltNr:=1;
         for alt:=low(TAsmLabelType) to high(TAsmLabelType) do
           FNextLabelNr[alt]:=1;
         { AsmLists }
-        CurrAsmList:=TAsmList.create;
+        CurrAsmList:=TAsmList.Create;
         for hal:=low(TAsmListType) to high(TAsmListType) do
-          AsmLists[hal]:=TAsmList.create;
-        WideInits :=TAsmList.create;
-        ResStrInits:=TAsmList.create;
+          AsmLists[hal]:=TAsmList.Create;
+        WideInits :=TAsmList.Create;
+        ResStrInits:=TAsmList.Create;
         { CFI }
         FAsmCFI:=CAsmCFI.Create;
       end;
@@ -631,7 +631,7 @@ implementation
           end;
         result:=TAsmSymbol(FAsmSymbolDict.Find(namestr));
         if not Assigned(result) then
-          result:=symclass.create(AsmSymbolDict,namestr,bind,_typ)
+          result:=symclass.Create(AsmSymbolDict,namestr,bind,_typ)
         { one normal reference removes the "weak" character of a symbol }
         else if (result.bind=AB_WEAK_EXTERNAL) then
           result.bind:=bind;
@@ -648,7 +648,7 @@ implementation
       begin
         result:=TAsmSymbol(FAsmSymbolDict.Find(s));
         if not Assigned(result) then
-          result:=symclass.create(AsmSymbolDict,s,AB_WEAK_EXTERNAL,_typ);
+          result:=symclass.Create(AsmSymbolDict,s,AB_WEAK_EXTERNAL,_typ);
       end;
 
 
@@ -750,11 +750,11 @@ implementation
 
 initialization
 {$ifdef MEMDEBUG}
-  memasmsymbols:=TMemDebug.create('AsmSymbols');
+  memasmsymbols:=TMemDebug.Create('AsmSymbols');
   memasmsymbols.stop;
-  memasmcfi:=TMemDebug.create('AsmCFI');
+  memasmcfi:=TMemDebug.Create('AsmCFI');
   memasmcfi.stop;
-  memasmlists:=TMemDebug.create('AsmLists');
+  memasmlists:=TMemDebug.Create('AsmLists');
   memasmlists.stop;
 {$endif MEMDEBUG}
   if not(Assigned(CAsmCFI)) then

@@ -35,36 +35,36 @@ unit nx86add;
     type
       TX86AddNode = class(TCGAddNode)
       protected
-        function  getresflags(unsigned : boolean) : TResFlags;
-        function  getfpuresflags : TResFlags;
-        procedure left_must_be_reg(opdef: TDef; opsize:TCgSize;noswap:boolean);
-        procedure force_left_and_right_fpureg;
-        procedure prepare_x87_locations(out refnode: TNode);
-        procedure emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
-        procedure emit_generic_code(op:TAsmOp;opsize:TCgSize;unsigned,extra_not,mboverflow:boolean);
+        function  GetResFlags(AUnsigned : Boolean) : TResFlags;
+        function  GetFPUResFlags : TResFlags;
+        procedure Left_Must_Be_Reg(AOpDef: TDef; AOpSize:TCgSize;ANoSwap:Boolean);
+        procedure Force_Left_And_Right_FPUReg;
+        procedure Prepare_X87_Locations(out AReferenceNode: TNode);
+        procedure Emit_Op_Right_Left(AAsmOp:TAsmOp;AOpSize:TCgSize;AAllocFlags:Boolean);
+        procedure Emit_Generic_Code(AAsmOp:TAsmOp;AOpSize:TCgSize;AUnsigned,AExtraNot,AMultiplyOverflow:Boolean);
 
-        procedure second_cmpfloatvector;
+        procedure Second_CmpFloatVector;
 
-        procedure second_addfloatsse;
-        procedure second_addfloatavx;
+        procedure Second_AddFloatSSE;
+        procedure Second_AddFloatAVX;
       public
-        function pass_1 : TNode;override;
-        function simplify(forinline : boolean) : TNode; override;
-        function use_fma : boolean;override;
-        procedure second_addfloat;override;
+        function Pass_1 : TNode;override;
+        function Simplify(AForInline : Boolean) : TNode; override;
+        function Use_FMA : Boolean;override;
+        procedure Second_AddFloat;override;
 
-        procedure second_addsmallset;override;
-        procedure second_addsmallsetelement;override;
+        procedure Second_AddSmallSet;override;
+        procedure Second_AddSmallSetElement;override;
 
-        procedure second_add64bit;override;
-        procedure second_cmpfloat;override;
-        procedure second_cmpsmallset;override;
-        procedure second_cmp64bit;override;
+        procedure Second_Add64Bit;override;
+        procedure Second_CmpFloat;override;
+        procedure Second_CmpSmallSet;override;
+        procedure Second_Cmp64Bit;override;
 
-        procedure second_cmpordinal;override;
-        procedure second_addordinal;override;
-        procedure second_addboolean;override;
-        procedure second_opvector;override;
+        procedure Second_CmpOrdinal;override;
+        procedure Second_AddOrdinal;override;
+        procedure Second_AddBoolean;override;
+        procedure Second_OpVector;override;
       end;
 
 
@@ -80,7 +80,7 @@ unit nx86add;
       tgobj,ncgutil,nutils,
       ncon,nset,ninl,ncnv,ncal,nmat,
       defutil,defcmp,ConstExp,
-      pass_1,pass_2,htypechk;
+      Pass_1,pass_2,htypechk;
 
 { Range check must be disabled explicitly as the code serves
   on three different architecture sizes }
@@ -90,69 +90,69 @@ unit nx86add;
                                   Helpers
 *****************************************************************************}
 
-    procedure TX86AddNode.emit_generic_code(op:TAsmOp;opsize:TCgSize;unsigned,extra_not,mboverflow:boolean);
+    procedure TX86AddNode.Emit_Generic_Code(AAsmOp:TAsmOp;AOpSize:TCgSize;AUnsigned,AExtraNot,AMultiplyOverflow:Boolean);
       var
-        power : LongInt;
-        hl4   : TAsmLabel;
-        r     : TRegister;
-        href  : TReference;
-        overflowcheck: boolean;
-        comparison: boolean;
+        lPower : LongInt;
+        lOverflowLabel   : TAsmLabel;
+        lScratchReg     : TRegister;
+        lReference  : TReference;
+        lOverflowCheck: Boolean;
+        lComparison: Boolean;
       begin
-        overflowcheck:=needoverflowcheck;
-        comparison:=
-          (op=A_CMP) or (op=A_TEST) or (op=A_BT) or Is_Boolean(resultdef);
+        lOverflowCheck:=NeedOverflowCheck;
+        lComparison:=
+          (AAsmOp=A_CMP) or (AAsmOp=A_TEST) or (AAsmOp=A_BT) or Is_Boolean(ResultDef);
 
         { at this point, left.location.loc should be LOC_REGISTER }
-        if right.Location.Loc=LOC_REGISTER then
+        if Right.Location.Loc=LOC_REGISTER then
          begin
            { right.location is a LOC_REGISTER }
            { when swapped another result register }
-           if (nodetype=subn) and (nf_swapped in flags) then
+           if (NodeType=subn) and (nf_swapped in Flags) then
             begin
-              if extra_not then
-               emit_reg(A_NOT,TCGSize2Opsize[opsize],left.Location.Register);
-              emit_reg_reg(op,TCGSize2Opsize[opsize],left.Location.Register,right.Location.Register);
+              if AExtraNot then
+               emit_reg(A_NOT,TCGSize2Opsize[AOpSize],Left.Location.Register);
+              emit_reg_reg(AAsmOp,TCGSize2Opsize[AOpSize],Left.Location.Register,Right.Location.Register);
               { newly swapped also set swapped flag }
-              Location_Swap(left.Location,right.Location);
-              toggleflag(nf_swapped);
+              Location_Swap(Left.Location,Right.Location);
+              ToggleFlag(nf_swapped);
             end
            else
             begin
-              if extra_not then
-                emit_reg(A_NOT,TCGSize2Opsize[opsize],right.Location.Register);
-              if (op=A_ADD) or (op=A_OR) or (op=A_AND) or (op=A_XOR) or (op=A_IMUL) then
-                Location_Swap(left.Location,right.Location);
+              if AExtraNot then
+                emit_reg(A_NOT,TCGSize2Opsize[AOpSize],Right.Location.Register);
+              if (AAsmOp=A_ADD) or (AAsmOp=A_OR) or (AAsmOp=A_AND) or (AAsmOp=A_XOR) or (AAsmOp=A_IMUL) then
+                Location_Swap(Left.Location,Right.Location);
 
-              if comparison then
+              if lComparison then
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              emit_reg_reg(op,TCGSize2Opsize[opsize],right.Location.Register,left.Location.Register);
+              emit_reg_reg(AAsmOp,TCGSize2Opsize[AOpSize],Right.Location.Register,Left.Location.Register);
             end;
          end
         else
          begin
            { right.location is not a LOC_REGISTER }
-           if (nodetype=subn) and (nf_swapped in flags) then
+           if (NodeType=subn) and (nf_swapped in Flags) then
             begin
-              if extra_not then
-                cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,opsize,left.Location.Register,left.Location.Register);
-              r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-              hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,CGSize_OrdDef(opsize),right.Location,r);
+              if AExtraNot then
+                cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,AOpSize,Left.Location.Register,Left.Location.Register);
+              lScratchReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,AOpSize);
+              hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,CGSize_OrdDef(AOpSize),Right.Location,lScratchReg);
 
-              if comparison then
+              if lComparison then
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              emit_reg_reg(op,TCGSize2Opsize[opsize],left.Location.Register,r);
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,opsize,opsize,r,left.Location.Register);
+              emit_reg_reg(AAsmOp,TCGSize2Opsize[AOpSize],Left.Location.Register,lScratchReg);
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,AOpSize,AOpSize,lScratchReg,Left.Location.Register);
             end
            else
             begin
                { Optimizations when right.location is a constant value }
-               if (op=A_CMP) and
-                  (nodetype in [EqualN,unequaln]) and
-                  (right.Location.Loc=LOC_CONSTANT) and
-                  (right.Location.Value=0) then
+               if (AAsmOp=A_CMP) and
+                  (NodeType in [EqualN,unequaln]) and
+                  (Right.Location.Loc=LOC_CONSTANT) and
+                  (Right.Location.Value=0) then
                  begin
                    { 'test $-1,%reg' is transformable into 'test $-1,spilltemp' if %reg needs
                       spilling, while 'test %reg,%reg' still requires loading into register.
@@ -160,64 +160,64 @@ unit nx86add;
                       peephole optimizer (this optimization is currently available only for i386). }
                    cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 {$ifdef i386}
-                   emit_const_reg(A_TEST,TCGSize2Opsize[opsize],aint(-1),left.Location.Register)
+                   emit_const_reg(A_TEST,TCGSize2Opsize[AOpSize],aint(-1),Left.Location.Register)
 {$else i386}
-                   emit_reg_reg(A_TEST,TCGSize2Opsize[opsize],left.Location.Register,left.Location.Register);
+                   emit_reg_reg(A_TEST,TCGSize2Opsize[AOpSize],Left.Location.Register,Left.Location.Register);
 {$endif i386}
                  end
                else
-                 if (op=A_ADD) and
-                    (right.Location.Loc=LOC_CONSTANT) and
-                    (right.Location.Value=1) and
-                    not overflowcheck and
+                 if (AAsmOp=A_ADD) and
+                    (Right.Location.Loc=LOC_CONSTANT) and
+                    (Right.Location.Value=1) and
+                    not lOverflowCheck and
                     UseIncDec then
                   begin
-                    emit_reg(A_INC,TCGSize2Opsize[opsize],left.Location.Register);
+                    emit_reg(A_INC,TCGSize2Opsize[AOpSize],Left.Location.Register);
                   end
                else
-                 if (op=A_SUB) and
-                    (right.Location.Loc=LOC_CONSTANT) and
-                    (right.Location.Value=1) and
-                    not overflowcheck and
+                 if (AAsmOp=A_SUB) and
+                    (Right.Location.Loc=LOC_CONSTANT) and
+                    (Right.Location.Value=1) and
+                    not lOverflowCheck and
                     UseIncDec then
                   begin
-                    emit_reg(A_DEC,TCGSize2Opsize[opsize],left.Location.Register);
+                    emit_reg(A_DEC,TCGSize2Opsize[AOpSize],Left.Location.Register);
                   end
                else
-                 if (op=A_IMUL) and
-                    (right.Location.Loc=LOC_CONSTANT) and
-                    (IsPowerOf2(int64(right.Location.Value),power)) and
-                    overflowcheck then
+                 if (AAsmOp=A_IMUL) and
+                    (Right.Location.Loc=LOC_CONSTANT) and
+                    (IsPowerOf2(Int64(Right.Location.Value),lPower)) and
+                    lOverflowCheck then
                   begin
-                    emit_const_reg(A_SHL,TCGSize2Opsize[opsize],power,left.Location.Register);
+                    emit_const_reg(A_SHL,TCGSize2Opsize[AOpSize],lPower,Left.Location.Register);
                   end
-                else if (op=A_IMUL) and
-                    (right.Location.Loc=LOC_CONSTANT) and
-                    (right.Location.Value>1) and (IsPowerOf2(int64(right.Location.Value)-1,power)) and
-                    (power in [1..3]) and
-                    not overflowcheck then
+                else if (AAsmOp=A_IMUL) and
+                    (Right.Location.Loc=LOC_CONSTANT) and
+                    (Right.Location.Value>1) and (IsPowerOf2(Int64(Right.Location.Value)-1,lPower)) and
+                    (lPower in [1..3]) and
+                    not lOverflowCheck then
                   begin
-                    Reference_Reset_Base(href,left.Location.Register,0,CTempPosInvalid,0,[]);
-                    href.Index:=left.Location.Register;
-                    href.ScaleFactor:=int64(right.Location.Value)-1;
-                    left.Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[opsize],href,left.Location.Register));
+                    Reference_Reset_Base(lReference,Left.Location.Register,0,CTempPosInvalid,0,[]);
+                    lReference.Index:=Left.Location.Register;
+                    lReference.ScaleFactor:=Int64(Right.Location.Value)-1;
+                    Left.Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,AOpSize);
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[AOpSize],lReference,Left.Location.Register));
                   end
                else
                  begin
-                   if extra_not then
+                   if AExtraNot then
                      begin
-                        r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-                        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,CGSize_OrdDef(opsize),right.Location,r);
-                        emit_reg(A_NOT,TCGSize2Opsize[opsize],r);
+                        lScratchReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,AOpSize);
+                        hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,CGSize_OrdDef(AOpSize),Right.Location,lScratchReg);
+                        emit_reg(A_NOT,TCGSize2Opsize[AOpSize],lScratchReg);
 
-                        if comparison or (mboverflow and overflowcheck) then
+                        if lComparison or (AMultiplyOverflow and lOverflowCheck) then
                           cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                        emit_reg_reg(A_AND,TCGSize2Opsize[opsize],r,left.Location.Register);
+                        emit_reg_reg(A_AND,TCGSize2Opsize[AOpSize],lScratchReg,Left.Location.Register);
                      end
                    else
-                     emit_op_right_left(op,opsize,comparison or (mboverflow and overflowcheck));
+                     Emit_Op_Right_Left(AAsmOp,AOpSize,lComparison or (AMultiplyOverflow and lOverflowCheck));
                  end;
             end;
          end;
@@ -226,85 +226,85 @@ unit nx86add;
         { produce overflow code }
         { we must put it here directly, because sign of operation }
         { is in unsigned VAR!!                                   }
-        if mboverflow then
+        if AMultiplyOverflow then
          begin
-           if overflowcheck then
+           if lOverflowCheck then
             begin
-              CurrentAsmData.getjumplabel(hl4);
-              if unsigned then
-                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,hl4)
+              CurrentAsmData.getjumplabel(lOverflowLabel);
+              if AUnsigned then
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_AE,lOverflowLabel)
               else
-                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NO,hl4);
+                cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NO,lOverflowLabel);
 
-              if not comparison then
+              if not lComparison then
                 cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
               cg.A_Call_Name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
-              cg.A_Label(CurrentAsmData.CurrAsmList,hl4);
+              cg.A_Label(CurrentAsmData.CurrAsmList,lOverflowLabel);
             end;
          end;
       end;
 
 
-    procedure TX86AddNode.left_must_be_reg(opdef: TDef; opsize:TCgSize;noswap:boolean);
+    procedure TX86AddNode.Left_Must_Be_Reg(AOpDef: TDef; AOpSize:TCgSize;ANoSwap:Boolean);
       begin
         { left location is not a register? }
-        if (left.Location.Loc<>LOC_REGISTER) then
+        if (Left.Location.Loc<>LOC_REGISTER) then
          begin
            { if right is register then we can swap the locations }
-           if (not noswap) and
-              (right.Location.Loc=LOC_REGISTER) then
+           if (not ANoSwap) and
+              (Right.Location.Loc=LOC_REGISTER) then
             begin
-              Location_Swap(left.Location,right.Location);
-              toggleflag(nf_swapped);
+              Location_Swap(Left.Location,Right.Location);
+              ToggleFlag(nf_swapped);
             end
-           else if (not noswap) and
-              (right.Location.Loc=LOC_CREGISTER) then
+           else if (not ANoSwap) and
+              (Right.Location.Loc=LOC_CREGISTER) then
             begin
-              Location_Swap(left.Location,right.Location);
-              toggleflag(nf_swapped);
+              Location_Swap(Left.Location,Right.Location);
+              ToggleFlag(nf_swapped);
               { maybe we can reuse a constant register when the
                 operation is a comparison that doesn't change the
                 value of the register }
-              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,EqualN,unequaln]));
-              location:=left.Location;
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,AOpDef,(NodeType in [ltn,lten,gtn,gten,EqualN,unequaln]));
+              Location:=Left.Location;
             end
            else
             begin
               { maybe we can reuse a constant register when the
                 operation is a comparison that doesn't change the
                 value of the register }
-                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,EqualN,unequaln]));
+                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,AOpDef,(NodeType in [ltn,lten,gtn,gten,EqualN,unequaln]));
             end;
           end;
-        if (right.Location.Loc<>LOC_CONSTANT) and
-           (TCgSize2Unsigned[right.Location.Size]<>TCgSize2Unsigned[opsize]) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,opdef,true);
-        if (left.Location.Loc<>LOC_CONSTANT) and
-           (TCgSize2Unsigned[left.Location.Size]<>TCgSize2Unsigned[opsize]) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,false);
+        if (Right.Location.Loc<>LOC_CONSTANT) and
+           (TCgSize2Unsigned[Right.Location.Size]<>TCgSize2Unsigned[AOpSize]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,AOpDef,true);
+        if (Left.Location.Loc<>LOC_CONSTANT) and
+           (TCgSize2Unsigned[Left.Location.Size]<>TCgSize2Unsigned[AOpSize]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,AOpDef,false);
        end;
 
 
-    procedure TX86AddNode.force_left_and_right_fpureg;
+    procedure TX86AddNode.Force_Left_And_Right_FPUReg;
       begin
-        if (right.Location.Loc<>LOC_FPUREGISTER) then
+        if (Right.Location.Loc<>LOC_FPUREGISTER) then
           begin
-            hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,false);
-            if (left.Location.Loc<>LOC_FPUREGISTER) then
-              hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false)
+            hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,false);
+            if (Left.Location.Loc<>LOC_FPUREGISTER) then
+              hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,false)
             else
               { left was on the stack => swap }
-              toggleflag(nf_swapped);
+              ToggleFlag(nf_swapped);
           end
         { the nominator in st0 }
-        else if (left.Location.Loc<>LOC_FPUREGISTER) then
+        else if (Left.Location.Loc<>LOC_FPUREGISTER) then
           begin
-            hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false)
+            hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,false)
           end
         else
           begin
             { fpu operands are always in the wrong order on the stack }
-            toggleflag(nf_swapped);
+            ToggleFlag(nf_swapped);
           end;
       end;
 
@@ -312,107 +312,107 @@ unit nx86add;
     { Makes sides suitable for executing an x87 instruction:
       if either side is OS_F32/OS_F64-sized LOC_REFERENCE, it is returned in 'refnode'
       everything else is loaded to FPU stack. }
-    procedure TX86AddNode.prepare_x87_locations(out refnode: TNode);
+    procedure TX86AddNode.Prepare_X87_Locations(out AReferenceNode: TNode);
       begin
-        refnode:=nil;
+        AReferenceNode:=nil;
 
         { later on, no mm registers are allowed, so transfer everything to memory here
           below it is loaded into an fpu register if needed }
-        if left.Location.Loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
-          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
+        if Left.Location.Loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
+          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
 
-        if right.Location.Loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
-          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,right.Location,right.resultdef);
+        if Right.Location.Loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
+          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef);
 
-        case ord(left.Location.Loc=LOC_FPUREGISTER)+ord(right.Location.Loc=LOC_FPUREGISTER) of
+        case ord(Left.Location.Loc=LOC_FPUREGISTER)+ord(Right.Location.Loc=LOC_FPUREGISTER) of
           0:
             begin
-              hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,false);
-              if not(left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+              hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,false);
+              if not(Left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                 InternalError(2013090803);
-              if (left.Location.Size in [OS_F32,OS_F64]) then
+              if (Left.Location.Size in [OS_F32,OS_F64]) then
                 begin
-                  refnode:=left;
-                  toggleflag(nf_swapped);
+                  AReferenceNode:=Left;
+                  ToggleFlag(nf_swapped);
                 end
               else
-                hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false);
+                hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,false);
             end;
           1:
             begin   { if left is on the stack then swap. }
-              if (left.Location.Loc=LOC_FPUREGISTER) then
-                refnode:=right
+              if (Left.Location.Loc=LOC_FPUREGISTER) then
+                AReferenceNode:=Right
               else
-                refnode:=left;
-              if not(refnode.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+                AReferenceNode:=Left;
+              if not(AReferenceNode.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                 InternalError(2013090801);
-              if not (refnode.Location.Size in [OS_F32,OS_F64]) then
+              if not (AReferenceNode.Location.Size in [OS_F32,OS_F64]) then
                 begin
-                  hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,refnode.Location,refnode.resultdef,false);
-                  if (refnode=right) then
-                    toggleflag(nf_swapped);
-                  refnode:=nil;
+                  hlcg.Location_Force_FPUReg(CurrentAsmData.CurrAsmList,AReferenceNode.Location,AReferenceNode.ResultDef,false);
+                  if (AReferenceNode=Right) then
+                    ToggleFlag(nf_swapped);
+                  AReferenceNode:=nil;
                 end
               else
                 begin
-                  if (refnode=left) then
-                    toggleflag(nf_swapped);
+                  if (AReferenceNode=Left) then
+                    ToggleFlag(nf_swapped);
                 end;
             end;
           2: { fpu operands are always in the wrong order on the stack }
-            toggleflag(nf_swapped);
+            ToggleFlag(nf_swapped);
         else
           InternalError(2013090802);
         end;
       end;
 
 
-    procedure TX86AddNode.emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
+    procedure TX86AddNode.Emit_Op_Right_Left(AAsmOp:TAsmOp;AOpSize:TCgSize;AAllocFlags:Boolean);
 {$ifdef x86_64}
       var
-        tmpreg : TRegister;
+        lTempReg : TRegister;
 {$endif x86_64}
       begin
-        if (right.Location.Loc in [LOC_CSUBSETREG,LOC_SUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF]) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,right.resultdef,true);
+        if (Right.Location.Loc in [LOC_CSUBSETREG,LOC_SUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF]) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,Right.ResultDef,true);
         { left must be a register }
-        case right.Location.Loc of
+        case Right.Location.Loc of
           LOC_REGISTER,
           LOC_CREGISTER :
             begin
-              if AllocFlags then
+              if AAllocFlags then
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,TCGSize2Opsize[opsize],right.Location.Register,left.Location.Register));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(AAsmOp,TCGSize2Opsize[AOpSize],Right.Location.Register,Left.Location.Register));
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
-              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.Location.Reference);
-              if AllocFlags then
+              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,Right.Location.Reference);
+              if AAllocFlags then
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-              CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,TCGSize2Opsize[opsize],right.Location.Reference,left.Location.Register));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(AAsmOp,TCGSize2Opsize[AOpSize],Right.Location.Reference,Left.Location.Register));
             end;
           LOC_CONSTANT :
             begin
 {$ifdef x86_64}
               { x86_64 only supports signed 32 bits constants directly }
-              if (opsize in [OS_S64,OS_64]) and
-                 ((right.Location.Value<low(LongInt)) or (right.Location.Value>high(LongInt))) then
+              if (AOpSize in [OS_S64,OS_64]) and
+                 ((Right.Location.Value<low(LongInt)) or (Right.Location.Value>high(LongInt))) then
                 begin
-                  tmpreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-                  cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,opsize,right.Location.Value,tmpreg);
-                  if AllocFlags then
+                  lTempReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,AOpSize);
+                  cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,AOpSize,Right.Location.Value,lTempReg);
+                  if AAllocFlags then
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,TCGSize2Opsize[opsize],tmpreg,left.Location.Register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(AAsmOp,TCGSize2Opsize[AOpSize],lTempReg,Left.Location.Register));
                 end
               else
 {$endif x86_64}
                 begin
-                  if AllocFlags then
+                  if AAllocFlags then
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(op,TCGSize2Opsize[opsize],right.Location.Value,left.Location.Register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(AAsmOp,TCGSize2Opsize[AOpSize],Right.Location.Value,Left.Location.Register));
                 end;
             end;
           else
@@ -421,50 +421,50 @@ unit nx86add;
       end;
 
 
-    function TX86AddNode.getresflags(unsigned : boolean) : TResFlags;
+    function TX86AddNode.GetResFlags(AUnsigned : Boolean) : TResFlags;
       begin
-         case nodetype of
-           EqualN : getresflags:=F_E;
-           unequaln : getresflags:=F_NE;
+         case NodeType of
+           EqualN : GetResFlags:=F_E;
+           unequaln : GetResFlags:=F_NE;
           else
-           if not(unsigned) then
+           if not(AUnsigned) then
              begin
-                if nf_swapped in flags then
-                  case nodetype of
-                     ltn : getresflags:=F_G;
-                     lten : getresflags:=F_GE;
-                     gtn : getresflags:=F_L;
-                     gten : getresflags:=F_LE;
+                if nf_swapped in Flags then
+                  case NodeType of
+                     ltn : GetResFlags:=F_G;
+                     lten : GetResFlags:=F_GE;
+                     gtn : GetResFlags:=F_L;
+                     gten : GetResFlags:=F_LE;
                      else
                        InternalError(2013120105);
                   end
                 else
-                  case nodetype of
-                     ltn : getresflags:=F_L;
-                     lten : getresflags:=F_LE;
-                     gtn : getresflags:=F_G;
-                     gten : getresflags:=F_GE;
+                  case NodeType of
+                     ltn : GetResFlags:=F_L;
+                     lten : GetResFlags:=F_LE;
+                     gtn : GetResFlags:=F_G;
+                     gten : GetResFlags:=F_GE;
                      else
                        InternalError(2013120106);
                   end;
              end
            else
              begin
-                if nf_swapped in flags then
-                  case nodetype of
-                     ltn : getresflags:=F_A;
-                     lten : getresflags:=F_AE;
-                     gtn : getresflags:=F_B;
-                     gten : getresflags:=F_BE;
+                if nf_swapped in Flags then
+                  case NodeType of
+                     ltn : GetResFlags:=F_A;
+                     lten : GetResFlags:=F_AE;
+                     gtn : GetResFlags:=F_B;
+                     gten : GetResFlags:=F_BE;
                      else
                        InternalError(2013120107);
                   end
                 else
-                  case nodetype of
-                     ltn : getresflags:=F_B;
-                     lten : getresflags:=F_BE;
-                     gtn : getresflags:=F_A;
-                     gten : getresflags:=F_AE;
+                  case NodeType of
+                     ltn : GetResFlags:=F_B;
+                     lten : GetResFlags:=F_BE;
+                     gtn : GetResFlags:=F_A;
+                     gten : GetResFlags:=F_AE;
                      else
                        InternalError(2013120108);
                   end;
@@ -473,27 +473,27 @@ unit nx86add;
       end;
 
 
-    function TX86AddNode.getfpuresflags : TResFlags;
+    function TX86AddNode.GetFPUResFlags : TResFlags;
       begin
-        if (nodetype=EqualN) then
-          result:=F_FE
-        else if (nodetype=unequaln) then
-          result:=F_FNE
-        else if (nf_swapped in flags) then
-          case nodetype of
-            ltn : result:=F_FA;
-            lten : result:=F_FAE;
-            gtn : result:=F_FB;
-            gten : result:=F_FBE;
+        if (NodeType=EqualN) then
+          Result:=F_FE
+        else if (NodeType=unequaln) then
+          Result:=F_FNE
+        else if (nf_swapped in Flags) then
+          case NodeType of
+            ltn : Result:=F_FA;
+            lten : Result:=F_FAE;
+            gtn : Result:=F_FB;
+            gten : Result:=F_FBE;
           else
             InternalError(2014031402);
           end
         else
-          case nodetype of
-            ltn : result:=F_FB;
-            lten : result:=F_FBE;
-            gtn : result:=F_FA;
-            gten : result:=F_FAE;
+          case NodeType of
+            ltn : Result:=F_FB;
+            lten : Result:=F_FBE;
+            gtn : Result:=F_FA;
+            gten : Result:=F_FAE;
           else
             InternalError(2014031403);
           end;
@@ -504,119 +504,119 @@ unit nx86add;
 *****************************************************************************}
 
 
-    procedure TX86AddNode.second_addsmallset;
+    procedure TX86AddNode.Second_AddSmallSet;
       var
-        SetBase : aint;
-        opdef  : TDef;
-        opsize : TCgSize;
-        op     : TAsmOp;
-        extra_not,
-        noswap : boolean;
-        all_member_optimization:boolean;
+        lSetBase : aint;
+        lOpDef  : TDef;
+        lOpSize : TCgSize;
+        lAsmOp     : TAsmOp;
+        lExtraNot,
+        lNoSwap : Boolean;
+        lAllMemberOptimization:Boolean;
 
       begin
-        pass_left_right;
+        Pass_Left_Right;
 
-        noswap:=false;
-        extra_not:=false;
-        all_member_optimization:=false;
-        opdef:=resultdef;
-        opsize:=Int_CGSize(opdef.Size);
-        if (left.resultdef.typ=setdef) then
-          SetBase:=TSetDef(left.resultdef).SetBase
+        lNoSwap:=false;
+        lExtraNot:=false;
+        lAllMemberOptimization:=false;
+        lOpDef:=ResultDef;
+        lOpSize:=Int_CGSize(lOpDef.Size);
+        if (Left.ResultDef.typ=setdef) then
+          lSetBase:=TSetDef(Left.ResultDef).SetBase
         else
-          SetBase:=TSetDef(right.resultdef).SetBase;
-        case nodetype of
+          lSetBase:=TSetDef(Right.ResultDef).SetBase;
+        case NodeType of
           addn :
             begin
               { adding elements is not commutative }
-              if (nf_swapped in flags) and (left.nodetype=setelementn) then
-               swapleftright;
+              if (nf_swapped in Flags) and (Left.NodeType=setelementn) then
+               SwapLeftRight;
               { are we adding set elements ? }
-              if right.nodetype=setelementn then
+              if Right.NodeType=setelementn then
                begin
                  { no range support for smallsets! }
-                 if Assigned(TSetElementNode(right).right) then
+                 if Assigned(TSetElementNode(Right).Right) then
                    InternalError(43244);
                  { btsb isn't supported }
-                 if opsize=OS_8 then
+                 if lOpSize=OS_8 then
                    begin
-                     opsize:=OS_32;
-                     opdef:=U32IntType;
+                     lOpSize:=OS_32;
+                     lOpDef:=U32IntType;
                    end;
                  { bts requires both elements to be registers }
-                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,false);
-                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,opdef,true);
-                 register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,right.Location,SetBase);
-                 op:=A_BTS;
-                 noswap:=true;
+                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,lOpDef,false);
+                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,lOpDef,true);
+                 Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList,lOpDef,Right.Location,lSetBase);
+                 lAsmOp:=A_BTS;
+                 lNoSwap:=true;
                end
               else
-               op:=A_OR;
+               lAsmOp:=A_OR;
             end;
           symdifn :
-            op:=A_XOR;
+            lAsmOp:=A_XOR;
           muln :
-            op:=A_AND;
+            lAsmOp:=A_AND;
           subn :
             begin
-              op:=A_AND;
-              if (not(nf_swapped in flags) and (left.Location.Loc=LOC_CONSTANT) and (left.Location.Value=-1)) or
-                  ((nf_swapped in flags) and (right.Location.Loc=LOC_CONSTANT) and (right.Location.Value=-1)) then
-                all_member_optimization:=true;
+              lAsmOp:=A_AND;
+              if (not(nf_swapped in Flags) and (Left.Location.Loc=LOC_CONSTANT) and (Left.Location.Value=-1)) or
+                  ((nf_swapped in Flags) and (Right.Location.Loc=LOC_CONSTANT) and (Right.Location.Value=-1)) then
+                lAllMemberOptimization:=true;
 
-              if (not(nf_swapped in flags)) and
-                 (right.Location.Loc=LOC_CONSTANT) then
-                right.Location.Value := not(right.Location.Value)
-              else if (nf_swapped in flags) and
-                      (left.Location.Loc=LOC_CONSTANT) then
-                left.Location.Value := not(left.Location.Value)
+              if (not(nf_swapped in Flags)) and
+                 (Right.Location.Loc=LOC_CONSTANT) then
+                Right.Location.Value := not(Right.Location.Value)
+              else if (nf_swapped in Flags) and
+                      (Left.Location.Loc=LOC_CONSTANT) then
+                Left.Location.Value := not(Left.Location.Value)
               else
-                extra_not:=true;
+                lExtraNot:=true;
             end;
           xorn :
-            op:=A_XOR;
+            lAsmOp:=A_XOR;
           orn :
-            op:=A_OR;
+            lAsmOp:=A_OR;
           andn :
-            op:=A_AND;
+            lAsmOp:=A_AND;
           else
             InternalError(2003042215);
         end;
-        if all_member_optimization then
+        if lAllMemberOptimization then
           begin
             {A set expression [0..31]-x can be implemented with a simple NOT.}
-            if nf_swapped in flags then
+            if nf_swapped in Flags then
               begin
                 { newly swapped also set swapped flag }
-                Location_Swap(left.Location,right.Location);
-                toggleflag(nf_swapped);
+                Location_Swap(Left.Location,Right.Location);
+                ToggleFlag(nf_swapped);
               end;
-            hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,right.Location,right.resultdef,opdef,false);
-            emit_reg(A_NOT,TCGSize2Opsize[opsize],right.Location.Register);
-            location:=right.Location;
+            hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,Right.Location,Right.ResultDef,lOpDef,false);
+            emit_reg(A_NOT,TCGSize2Opsize[lOpSize],Right.Location.Register);
+            Location:=Right.Location;
           end
         else
           begin
             { can we use the BMI1 instruction andn? }
-            if (op=A_AND) and extra_not and (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.CPUType]) and
-              (resultdef.Size in [4{$ifdef x86_64},8{$endif x86_64}]) then
+            if (lAsmOp=A_AND) and lExtraNot and (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.CPUType]) and
+              (ResultDef.Size in [4{$ifdef x86_64},8{$endif x86_64}]) then
               begin
-                Location_Reset(location,LOC_REGISTER,left.Location.Size);
-                location.Register:=cg.GetIntRegister(CurrentAsmData.currAsmList,left.Location.Size);
-                if nf_swapped in flags then
+                Location_Reset(Location,LOC_REGISTER,Left.Location.Size);
+                Location.Register:=cg.GetIntRegister(CurrentAsmData.currAsmList,Left.Location.Size);
+                if nf_swapped in Flags then
                   begin
-                    Location_Swap(left.Location,right.Location);
-                    toggleflag(nf_swapped);
+                    Location_Swap(Left.Location,Right.Location);
+                    ToggleFlag(nf_swapped);
                   end;
-                hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,right.Location,right.resultdef,opdef,true);
-                if not(left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE]) then
-                  hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,left.Location,left.resultdef,opdef,true);
-                case left.Location.Loc of
+                hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,Right.Location,Right.ResultDef,lOpDef,true);
+                if not(Left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE]) then
+                  hlcg.Location_Force_Reg(CurrentAsmData.currAsmList,Left.Location,Left.ResultDef,lOpDef,true);
+                case Left.Location.Loc of
                   LOC_CREGISTER,LOC_REGISTER:
-                    emit_reg_reg_reg(A_ANDN,TCGSize2Opsize[opsize],left.Location.Register,right.Location.Register,location.Register);
+                    emit_reg_reg_reg(A_ANDN,TCGSize2Opsize[lOpSize],Left.Location.Register,Right.Location.Register,Location.Register);
                   LOC_CREFERENCE,LOC_REFERENCE:
-                    emit_ref_reg_reg(A_ANDN,TCGSize2Opsize[opsize],left.Location.Reference,right.Location.Register,location.Register);
+                    emit_ref_reg_reg(A_ANDN,TCGSize2Opsize[lOpSize],Left.Location.Reference,Right.Location.Register,Location.Register);
                   else
                     InternalError(2018040201);
                 end;
@@ -624,100 +624,100 @@ unit nx86add;
             else
               begin
                 { left must be a register }
-                left_must_be_reg(opdef,opsize,noswap);
-                emit_generic_code(op,opsize,true,extra_not,false);
-                location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
+                Left_Must_Be_Reg(lOpDef,lOpSize,lNoSwap);
+                Emit_Generic_Code(lAsmOp,lOpSize,true,lExtraNot,false);
+                Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
 
                 { left is always a register and contains the result }
-                location:=left.Location;
+                Location:=Left.Location;
               end;
           end;
 
         { fix the changed opsize we did above because of the missing btsb }
-        if opsize<>Int_CGSize(resultdef.Size) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,location,opdef,CGSize_OrdDef(Int_CGSize(resultdef.Size)),false);
+        if lOpSize<>Int_CGSize(ResultDef.Size) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Location,lOpDef,CGSize_OrdDef(Int_CGSize(ResultDef.Size)),false);
       end;
 
 
-    procedure TX86AddNode.second_addsmallsetelement;
+    procedure TX86AddNode.Second_AddSmallSetElement;
       var
-        SetBase, mask: aint;
+        lSetBase, lMask: aint;
       begin
-        if resultdef.Size=1 then
-          inherited second_addsmallsetelement
+        if ResultDef.Size=1 then
+          inherited Second_AddSmallSetElement
         else
           begin
-            if nodetype<>addn then
+            if NodeType<>addn then
               InternalError(2022090502);
             { no range support for smallsets }
-            if Assigned(TSetElementNode(right).right) then
+            if Assigned(TSetElementNode(Right).Right) then
               InternalError(2022090501);
-            pass_left_right;
+            Pass_Left_Right;
             { setelementn is a special case, it must be on right }
-            if (nf_swapped in flags) and
-               (left.nodetype=setelementn) then
-              swapleftright;
-            force_reg_left_right(false,false);
-            set_result_location_reg;
-            SetBase:=TSetDef(left.resultdef).SetBase;
-            if (right.Location.Loc = LOC_CONSTANT) then
+            if (nf_swapped in Flags) and
+               (Left.NodeType=setelementn) then
+              SwapLeftRight;
+            Force_Reg_Left_Right(false,false);
+            Set_Result_Location_Reg;
+            lSetBase:=TSetDef(Left.ResultDef).SetBase;
+            if (Right.Location.Loc = LOC_CONSTANT) then
               begin
-                mask:=aint(1 shl (right.Location.Value-SetBase));
-                hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
-                  mask,left.Location.Register,location.Register);
+                lMask:=aint(1 shl (Right.Location.Value-lSetBase));
+                hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,ResultDef,
+                  lMask,Left.Location.Register,Location.Register);
               end
             else
               begin
-                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,resultdef,true);
-                register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.Location,SetBase);
-                if left.Location.Loc <> LOC_CONSTANT then
-                  hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,
-                      left.Location.Register,location.Register)
+                hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,ResultDef,true);
+                Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList,ResultDef,Right.Location,lSetBase);
+                if Left.Location.Loc <> LOC_CONSTANT then
+                  hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,ResultDef,
+                      Left.Location.Register,Location.Register)
                 else
-                  hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,
-                      left.Location.Value,location.Register);
-                emit_reg_reg(A_BTS,TCGSize2Opsize[Def_CGSize(resultdef)],right.Location.Register,location.Register);
+                  hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,ResultDef,
+                      Left.Location.Value,Location.Register);
+                emit_reg_reg(A_BTS,TCGSize2Opsize[Def_CGSize(ResultDef)],Right.Location.Register,Location.Register);
               end;
           end;
       end;
 
 
 
-    procedure TX86AddNode.second_cmpsmallset;
+    procedure TX86AddNode.Second_CmpSmallSet;
       var
-        opdef  : TDef;
-        opsize : TCgSize;
-        op     : TAsmOp;
+        lOpDef  : TDef;
+        lOpSize : TCgSize;
+        lAsmOp     : TAsmOp;
       begin
-        pass_left_right;
-        opdef:=left.resultdef;
-        opsize:=Int_CGSize(opdef.Size);
-        case nodetype of
+        Pass_Left_Right;
+        lOpDef:=Left.ResultDef;
+        lOpSize:=Int_CGSize(lOpDef.Size);
+        case NodeType of
           EqualN,
           unequaln :
-            op:=A_CMP;
+            lAsmOp:=A_CMP;
           lten,gten:
             begin
-              if (not(nf_swapped in flags) and (nodetype = lten)) or
-                 ((nf_swapped in flags) and (nodetype = gten)) then
-                swapleftright;
-              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,opdef,false);
-              emit_op_right_left(A_AND,opsize,False);
-              op:=A_CMP;
+              if (not(nf_swapped in Flags) and (NodeType = lten)) or
+                 ((nf_swapped in Flags) and (NodeType = gten)) then
+                SwapLeftRight;
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,lOpDef,false);
+              Emit_Op_Right_Left(A_AND,lOpSize,False);
+              lAsmOp:=A_CMP;
               { warning: ugly hack, we need a JE so change the node to equaln }
-              nodetype:=EqualN;
+              NodeType:=EqualN;
             end;
           else
             InternalError(2003042204);
         end;
         { left must be a register }
-        left_must_be_reg(opdef,opsize,false);
-        emit_generic_code(op,opsize,true,false,false);
-        location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
-        location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+        Left_Must_Be_Reg(lOpDef,lOpSize,false);
+        Emit_Generic_Code(lAsmOp,lOpSize,true,false,false);
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
 
-        Location_Reset(location,LOC_FLAGS,OS_NO);
-        location.ResFlags:=getresflags(true);
+        Location_Reset(Location,LOC_FLAGS,OS_NO);
+        Location.ResFlags:=GetResFlags(true);
       end;
 
 
@@ -725,96 +725,96 @@ unit nx86add;
                                 AddFloat
 *****************************************************************************}
 
-    procedure TX86AddNode.second_addfloatsse;
+    procedure TX86AddNode.Second_AddFloatSSE;
       var
-        op : TOpCG;
-        sqr_sum : boolean;
-        tmp : TNode;
+        lCGOp : TOpCG;
+        lSquareSum : Boolean;
+        lTempNode : TNode;
       begin
-        sqr_sum:=false;
+        lSquareSum:=false;
         if (CurrentSettings.FPUType>=fpu_sse3) and
-           Use_VectorFPU(resultdef) and
-           (nodetype in [addn,subn]) and
-          (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
-          (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
+           Use_VectorFPU(ResultDef) and
+           (NodeType in [addn,subn]) and
+          (Left.NodeType=inlinen) and (TInlineNode(Left).InlineNumber=in_sqr_real) and
+          (Right.NodeType=inlinen) and (TInlineNode(Right).InlineNumber=in_sqr_real) then
           begin
-            sqr_sum:=true;
-            tmp:=TInlineNode(left).left;
-            TInlineNode(left).left:=nil;
-            left.free;
-            left:=tmp;
+            lSquareSum:=true;
+            lTempNode:=TInlineNode(Left).Left;
+            TInlineNode(Left).Left:=nil;
+            Left.free;
+            Left:=lTempNode;
 
-            tmp:=TInlineNode(right).left;
-            TInlineNode(right).left:=nil;
-            right.free;
-            right:=tmp;
+            lTempNode:=TInlineNode(Right).Left;
+            TInlineNode(Right).Left:=nil;
+            Right.free;
+            Right:=lTempNode;
           end;
 
-        pass_left_right;
+        Pass_Left_Right;
         { fpu operands are always in reversed order on the stack }
-        if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
-          toggleflag(nf_swapped);
+        if (Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          ToggleFlag(nf_swapped);
 
-        if (nf_swapped in flags) then
+        if (nf_swapped in Flags) then
           { can't use swapleftright if both are on the fpu stack, since then }
           { both are "R_ST" -> nothing would change -> manually switch       }
-          if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and
-             (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          if (Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and
+             (Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
             emit_none(A_FXCH,S_NO)
           else
-            swapleftright;
+            SwapLeftRight;
 
-        case nodetype of
+        case NodeType of
           addn :
-            op:=OP_ADD;
+            lCGOp:=OP_ADD;
           muln :
-            op:=OP_MUL;
+            lCGOp:=OP_MUL;
           subn :
-            op:=OP_SUB;
+            lCGOp:=OP_SUB;
           slashn :
-            op:=OP_DIV;
+            lCGOp:=OP_DIV;
           else
             InternalError(200312231);
         end;
 
-        Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+        Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
 
-        if sqr_sum then
+        if lSquareSum then
           begin
-            if nf_swapped in flags then
-              swapleftright;
+            if nf_swapped in Flags then
+              SwapLeftRight;
 
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,false);
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,true);
-            location:=left.Location;
-            if Is_Double(resultdef) then
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,false);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,true);
+            Location:=Left.Location;
+            if Is_Double(ResultDef) then
               begin
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.Location.Register,location.Register));
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPD,S_NO,location.Register,location.Register));
-                case nodetype of
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,Right.Location.Register,Location.Register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPD,S_NO,Location.Register,Location.Register));
+                case NodeType of
                   addn:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPD,S_NO,location.Register,location.Register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPD,S_NO,Location.Register,Location.Register));
                   subn:
-                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPD,S_NO,location.Register,location.Register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPD,S_NO,Location.Register,Location.Register));
                   else
                     InternalError(201108162);
                 end;
               end
             else
               begin
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_UNPCKLPS,S_NO,right.Location.Register,location.Register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_UNPCKLPS,S_NO,Right.Location.Register,Location.Register));
                 { ensure that bits 64..127 contain valid values }
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.Register,location.Register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,Location.Register,Location.Register));
                 { the data is now in bits 0..32 and 64..95 }
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPS,S_NO,location.Register,location.Register));
-                case nodetype of
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPS,S_NO,Location.Register,Location.Register));
+                case NodeType of
                   addn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPS,S_NO,location.Register,location.Register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPS,S_NO,Location.Register,Location.Register));
                     end;
                   subn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPS,S_NO,location.Register,location.Register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPS,S_NO,Location.Register,Location.Register));
                     end;
                   else
                     InternalError(201108163);
@@ -822,236 +822,236 @@ unit nx86add;
               end
           end
         { we can use only right as left operand if the operation is commutative }
-        else if (right.Location.Loc=LOC_MMREGISTER) and (op in [OP_ADD,OP_MUL]) then
+        else if (Right.Location.Loc=LOC_MMREGISTER) and (lCGOp in [OP_ADD,OP_MUL]) then
           begin
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-            cg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,right.Location.Size,location.Size,right.Location.Register,location.Register,MMS_MoveScalar);
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+            cg.A_LoadMM_Reg_Reg(CurrentAsmData.CurrAsmList,Right.Location.Size,Location.Size,Right.Location.Register,Location.Register,MMS_MoveScalar);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
-            if left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-            cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,op,location.Size,left.Location,location.Register,MMS_MoveScalar);
+            if Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+            cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,Left.Location,Location.Register,MMS_MoveScalar);
 
-            if left.Location.Loc=LOC_REFERENCE then
-              tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.Location.Reference);
+            if Left.Location.Loc=LOC_REFERENCE then
+              TG.UnGetIfTemp(CurrentAsmData.CurrAsmList,Left.Location.Reference);
           end
         else
           begin
-            if nf_swapped in flags then
-              swapleftright;
+            if nf_swapped in Flags then
+              SwapLeftRight;
 
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
-            if left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
+            if Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
 
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-            cg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,location.Size,left.Location,location.Register,MMS_MoveScalar);
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+            cg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,Location.Size,Left.Location,Location.Register,MMS_MoveScalar);
 
-            if left.Location.Loc=LOC_REFERENCE then
-              tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.Location.Reference);
+            if Left.Location.Loc=LOC_REFERENCE then
+              TG.UnGetIfTemp(CurrentAsmData.CurrAsmList,Left.Location.Reference);
 
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
-            if right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,right.Location,right.resultdef);
+            if Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef);
 
-            cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,op,location.Size,right.Location,location.Register,MMS_MoveScalar);
+            cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,Right.Location,Location.Register,MMS_MoveScalar);
 
-            if right.Location.Loc=LOC_REFERENCE then
-              tg.ungetiftemp(CurrentAsmData.CurrAsmList,right.Location.Reference);
+            if Right.Location.Loc=LOC_REFERENCE then
+              TG.UnGetIfTemp(CurrentAsmData.CurrAsmList,Right.Location.Reference);
           end;
       end;
 
 
-    procedure TX86AddNode.second_addfloatavx;
+    procedure TX86AddNode.Second_AddFloatAVX;
       var
-        op : TOpCG;
+        lCGOp : TOpCG;
       begin
-        pass_left_right;
+        Pass_Left_Right;
         { fpu operands are always in reversed order on the stack }
-        if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
-          toggleflag(nf_swapped);
+        if (Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          ToggleFlag(nf_swapped);
 
-        if (nf_swapped in flags) then
+        if (nf_swapped in Flags) then
           { can't use swapleftright if both are on the fpu stack, since then }
           { both are "R_ST" -> nothing would change -> manually switch       }
-          if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and
-             (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          if (Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and
+             (Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
             emit_none(A_FXCH,S_NO)
           else
-            swapleftright;
+            SwapLeftRight;
 
-        case nodetype of
+        case NodeType of
           addn :
-            op:=OP_ADD;
+            lCGOp:=OP_ADD;
           muln :
-            op:=OP_MUL;
+            lCGOp:=OP_MUL;
           subn :
-            op:=OP_SUB;
+            lCGOp:=OP_SUB;
           slashn :
-            op:=OP_DIV;
+            lCGOp:=OP_DIV;
           else
             InternalError(2003122303);
         end;
 
-        Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+        Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
 
         { left*2 ? }
-        if (nodetype=muln) and is_constrealnode(right) and Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real=2) then
+        if (NodeType=muln) and Is_ConstRealNode(Right) and Is_Number_Float(TRealConstNode(Right).ValueReal) and (TRealConstNode(Right).ValueReal=2) then
           begin
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-            cg.A_OpMM_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,location.Size,
-              left.Location.Register,
-              left.Location.Register,
-              location.Register,
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+            cg.A_OpMM_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,Location.Size,
+              Left.Location.Register,
+              Left.Location.Register,
+              Location.Register,
               MMS_MoveScalar);
           end
         { right*2 ? }
-        else if (nodetype=muln) and is_constrealnode(left) and Is_Number_Float(TRealConstNode(left).value_real) and (TRealConstNode(left).value_real=2) then
+        else if (NodeType=muln) and Is_ConstRealNode(Left) and Is_Number_Float(TRealConstNode(Left).ValueReal) and (TRealConstNode(Left).ValueReal=2) then
           begin
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,right.Location.Size);
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,true);
-            cg.A_OpMM_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,location.Size,
-              right.Location.Register,
-              right.Location.Register,
-              location.Register,
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Right.Location.Size);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,true);
+            cg.A_OpMM_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,Location.Size,
+              Right.Location.Register,
+              Right.Location.Register,
+              Location.Register,
               MMS_MoveScalar);
           end
         { we can use only right as left operand if the operation is commutative }
-        else if (right.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) and (op in [OP_ADD,OP_MUL]) then
+        else if (Right.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) and (lCGOp in [OP_ADD,OP_MUL]) then
           begin
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
-            if left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-            cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
-              left.Location,
-              right.Location.Register,
-              location.Register,
+            if Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+            cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,
+              Left.Location,
+              Right.Location.Register,
+              Location.Register,
               MMS_MoveScalar);
           end
         else
           begin
-            if (nf_swapped in flags) then
-              swapleftright;
+            if (nf_swapped in Flags) then
+              SwapLeftRight;
 
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
-            if right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,right.Location,right.resultdef);
-            cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
-              right.Location,
-              left.Location.Register,
-              location.Register,
+            if Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+              hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef);
+            cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,
+              Right.Location,
+              Left.Location.Register,
+              Location.Register,
               MMS_MoveScalar);
           end;
       end;
 
 
-    function TX86AddNode.pass_1: TNode;
+    function TX86AddNode.Pass_1: TNode;
       begin
         { only pass_1 might set the resultdef as it could be set to nil by some previous
           code transformation. As we need a valid left/right.resultdef later on, ensure
           a valid result def is set, see also issue #40727 }
-        if not(Assigned(left.resultdef)) then
-          TypeCheckPass(left);
-        if not(Assigned(right.resultdef)) then
-          TypeCheckPass(right);
+        if not(Assigned(Left.ResultDef)) then
+          TypeCheckPass(Left);
+        if not(Assigned(Right.ResultDef)) then
+          TypeCheckPass(Right);
 
         { on x86, we do not support fpu registers, so in case of operations using the x87, it
           is normally useful, not to put the operands into registers which would be mm register
 
           this should be called before pass_1 so we have a proper expectloc }
-        if ((left.resultdef.typ=floatdef) or (right.resultdef.typ=floatdef)) and
-          (not(Use_VectorFPU(left.resultdef)) and not(Use_VectorFPU(right.resultdef)) and
-           not(Use_VectorFPU(resultdef))) then
+        if ((Left.ResultDef.typ=floatdef) or (Right.ResultDef.typ=floatdef)) and
+          (not(Use_VectorFPU(Left.ResultDef)) and not(Use_VectorFPU(Right.ResultDef)) and
+           not(Use_VectorFPU(ResultDef))) then
           begin
-            make_not_regable(left,[ra_addr_regable]);
-            make_not_regable(right,[ra_addr_regable]);
+            make_not_regable(Left,[ra_addr_regable]);
+            make_not_regable(Right,[ra_addr_regable]);
           end;
-        Result:=inherited pass_1;
+        Result:=inherited Pass_1;
         { correct expectloc, it does not matter of Result is set as another pass_1 is run on it
           which will fix that one }
-        if Use_VectorFPU(resultdef) then
-          expectloc:=LOC_MMREGISTER;
+        if Use_VectorFPU(ResultDef) then
+          ExpectLoc:=LOC_MMREGISTER;
       end;
 
 
-    function TX86AddNode.simplify(forinline : boolean) : TNode;
+    function TX86AddNode.Simplify(AForInline : Boolean) : TNode;
       var
-        t, m, ThisNode, ConstNode: TNode;
-        lt,rt, ThisType: TNodeType;
-        ThisDef: TDef;
-        DoOptimisation: Boolean;
+        lResultNode, lMultiplyNode, lThisNode, lConstNode: TNode;
+        lLeftNodeType,lRightNodeType, lThisType: TNodeType;
+        lThisDef: TDef;
+        lDoOptimization: Boolean;
 
-        reciprocal, comparison, divisor: AWord;
-        shift, N: Byte;
+        lReciprocal, lComparison, lDivisor: AWord;
+        lShift, lIndex: Byte;
       begin
         { Load into local variables to reduce the number of pointer deallocations }
-        rt:=right.nodetype;
-        lt:=left.nodetype;
+        lRightNodeType:=Right.NodeType;
+        lLeftNodeType:=Left.NodeType;
 
-        DoOptimisation:=False;
+        lDoOptimization:=False;
 
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and
           { The presence of overflow checks tends to cause internal errors with the multiplication nodes }
           not (cs_check_overflow in CurrentSettings.LocalSwitches) and
-          (nodetype in [EqualN,unequaln]) then
+          (NodeType in [EqualN,unequaln]) then
           begin
-            if (lt=modn) and (rt=ordconstn) and (TOrdConstNode(right).Value.uvalue=0) then
+            if (lLeftNodeType=modn) and (lRightNodeType=ordconstn) and (TOrdConstNode(Right).Value.uvalue=0) then
               begin
-                t:=left;
-                m:=right;
+                lResultNode:=Left;
+                lMultiplyNode:=Right;
               end
-            else if (rt=modn) and (lt=ordconstn) and (TOrdConstNode(left).Value.uvalue=0) then
+            else if (lRightNodeType=modn) and (lLeftNodeType=ordconstn) and (TOrdConstNode(Left).Value.uvalue=0) then
               begin
-                t:=right;
-                m:=left;
+                lResultNode:=Right;
+                lMultiplyNode:=Left;
               end
             else
               begin
-                t:=nil;
-                m:=nil;
+                lResultNode:=nil;
+                lMultiplyNode:=nil;
               end;
 
-            if Assigned(t) and (TModDivNode(t).right.nodetype=ordconstn) and
+            if Assigned(lResultNode) and (TModDivNode(lResultNode).Right.NodeType=ordconstn) and
 {$ifndef cpu64bitalu}
               { Converting Int64 and QWord division doesn't work under i386 }
 {$ifndef cpu32bitalu}
-              (TModDivNode(t).resultdef.Size < 4) and
+              (TModDivNode(lResultNode).ResultDef.Size < 4) and
 {$else cpu32bitalu}
-              (TModDivNode(t).resultdef.Size < 8) and
+              (TModDivNode(lResultNode).ResultDef.Size < 8) and
 {$endif cpu32bitalu}
 {$endif cpu64bitalu}
-              (TOrdConstNode(TModDivNode(t).right).Value>=3) then
+              (TOrdConstNode(TModDivNode(lResultNode).Right).Value>=3) then
               begin
-                divisor:=TOrdConstNode(TModDivNode(t).right).Value.uvalue;
+                lDivisor:=TOrdConstNode(TModDivNode(lResultNode).Right).Value.uvalue;
 
                 { Exclude powers of 2, as there are more efficient ways to handle those }
-                if PopCnt(divisor)>1 then
+                if PopCnt(lDivisor)>1 then
                   begin
-                    if Is_Signed(TModDivNode(t).left.resultdef) then
+                    if Is_Signed(TModDivNode(lResultNode).Left.ResultDef) then
                       begin
                         { See pages 250-251 of Hacker's Delight, Second Edition
                           for an explanation and proof of the algorithm, but
@@ -1071,57 +1071,57 @@ unit nx86add;
                           }
                         while True do
                           begin
-                            ThisNode:=TModDivNode(t).left;
-                            case ThisNode.nodetype of
+                            lThisNode:=TModDivNode(lResultNode).Left;
+                            case lThisNode.NodeType of
                               typeconvn:
                                 begin
-                                  ThisDef:=TTypeConvNode(ThisNode).left.resultdef;
+                                  lThisDef:=TTypeConvNode(lThisNode).Left.ResultDef;
                                   { See if we can simplify things to a smaller ordinal to
                                     reduce code size and increase speed }
-                                  if Is_Signed(ThisDef) and
-                                    Is_Integer(ThisDef) and
+                                  if Is_Signed(lThisDef) and
+                                    Is_Integer(lThisDef) and
                                     { Byte-sized multiplications can cause problems }
-                                    (ThisDef.Size>=2) and
+                                    (lThisDef.Size>=2) and
                                     { Make sure the divisor is in range }
-                                    (divisor>=TOrdDef(ThisDef).low) and
-                                    (divisor<=TOrdDef(ThisDef).high) then
+                                    (lDivisor>=TOrdDef(lThisDef).low) and
+                                    (lDivisor<=TOrdDef(lThisDef).high) then
                                     begin
-                                      TOrdConstNode(TModDivNode(t).right).resultdef:=ThisDef;
-                                      TOrdConstNode(m).resultdef:=ThisDef;
-                                      TModDivNode(t).resultdef:=ThisDef;
+                                      TOrdConstNode(TModDivNode(lResultNode).Right).ResultDef:=lThisDef;
+                                      TOrdConstNode(lMultiplyNode).ResultDef:=lThisDef;
+                                      TModDivNode(lResultNode).ResultDef:=lThisDef;
 
                                       { Destroy the typeconv node }
-                                      TModDivNode(t).left:=TTypeConvNode(ThisNode).left;
-                                      TTypeConvNode(ThisNode).left:=nil;
-                                      ThisNode.Free;
+                                      TModDivNode(lResultNode).Left:=TTypeConvNode(lThisNode).Left;
+                                      TTypeConvNode(lThisNode).Left:=nil;
+                                      lThisNode.Free;
                                       Continue;
                                     end;
                                   end;
                               ordconstn:
                                 begin
                                   { Just simplify into a constant }
-                                  Result:=inherited simplify(forinline);
+                                  Result:=inherited Simplify(AForInline);
                                   Exit;
                                 end;
                               else
                                 ;
                             end;
 
-                            DoOptimisation:=True;
+                            lDoOptimization:=True;
                             Break;
                           end;
 
-                        if DoOptimisation then
+                        if lDoOptimization then
                           begin
-                            ThisDef:=TModDivNode(t).left.resultdef;
+                            lThisDef:=TModDivNode(lResultNode).Left.ResultDef;
 
-                            if nodetype = EqualN then
-                              ThisType:=lten
+                            if NodeType = EqualN then
+                              lThisType:=lten
                             else
-                              ThisType:=gtn;
+                              lThisType:=gtn;
 
-                            N:=ThisDef.Size*8;
-                            Calc_Mul_Inverse(N, TOrdConstNode(TModDivNode(t).right).Value.uvalue, reciprocal, shift);
+                            lIndex:=lThisDef.Size*8;
+                            Calc_Mul_Inverse(lIndex, TOrdConstNode(TModDivNode(lResultNode).Right).Value.uvalue, lReciprocal, lShift);
 
                             { Construct the following node tree for odd divisors:
                                 <lten> (for equaln) or <gtn> (for notequaln)
@@ -1147,51 +1147,51 @@ unit nx86add;
                                   <comparison constant shr (b - 1)>
                             }
 
-                            ThisNode:=CTypeConvNode.Create_Internal(TModDivNode(t).left, ThisDef);
-                            TTypeConvNode(ThisNode).convtype:=tc_int_2_int;
-                            ThisDef:=Get_Unsigned_IntType(ThisDef);
-                            ThisNode.resultdef:=ThisDef;
+                            lThisNode:=CTypeConvNode.Create_Internal(TModDivNode(lResultNode).Left, lThisDef);
+                            TTypeConvNode(lThisNode).ConvType:=tc_int_2_int;
+                            lThisDef:=Get_Unsigned_IntType(lThisDef);
+                            lThisNode.ResultDef:=lThisDef;
 
-                            TModDivNode(t).left:=nil;
+                            TModDivNode(lResultNode).Left:=nil;
 
-                            ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
-                            ConstNode.resultdef:=ThisDef;
+                            lConstNode:=COrdConstNode.Create(lReciprocal, lThisDef, False);
+                            lConstNode.ResultDef:=lThisDef;
 
-                            ThisNode:=CAddNode.Create_Internal(muln, ThisNode, ConstNode);
-                            ThisNode.resultdef:=ThisDef;
+                            lThisNode:=CAddNode.Create_Internal(muln, lThisNode, lConstNode);
+                            lThisNode.ResultDef:=lThisDef;
 
 {$push}
 {$warnings off}
-                            if shift>0 then
-                              comparison:=((aWord(1) shl ((N-1) and (SizeOf(aWord)*8-1))) div (divisor shr shift)) and -(1 shl shift)
+                            if lShift>0 then
+                              lComparison:=((AWord(1) shl ((lIndex-1) and (SizeOf(AWord)*8-1))) div (lDivisor shr lShift)) and -(1 shl lShift)
                             else
-                              comparison:=(aWord(1) shl ((N-1) and (SizeOf(aWord)*8-1))) div divisor;
+                              lComparison:=(AWord(1) shl ((lIndex-1) and (SizeOf(AWord)*8-1))) div lDivisor;
 {$pop}
-                            ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
-                            ConstNode.resultdef:=ThisDef;
+                            lConstNode:=COrdConstNode.Create(lComparison, lThisDef, False);
+                            lConstNode.ResultDef:=lThisDef;
 
-                            ThisNode:=CAddNode.Create_Internal(addn, ThisNode, ConstNode);
-                            ThisNode.resultdef:=ThisDef;
+                            lThisNode:=CAddNode.Create_Internal(addn, lThisNode, lConstNode);
+                            lThisNode.ResultDef:=lThisDef;
 
-                            if shift>0 then
+                            if lShift>0 then
                               begin
-                                ConstNode:=COrdConstNode.create(shift, U8IntType, False);
-                                ConstNode.resultdef:=U8IntType;
-                                ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
-                                  CCallParaNode.create(ConstNode,
-                                  CCallParaNode.create(ThisNode, nil)));
+                                lConstNode:=COrdConstNode.Create(lShift, U8IntType, False);
+                                lConstNode.ResultDef:=U8IntType;
+                                lThisNode:=CInlineNode.CreateIntern(in_ror_x_y,false,
+                                  CCallParaNode.Create(lConstNode,
+                                  CCallParaNode.Create(lThisNode, nil)));
 
-                                ThisNode.resultdef:=ThisDef;
+                                lThisNode.ResultDef:=lThisDef;
 
-                                ConstNode:=COrdConstNode.create(comparison shr (shift - 1), ThisDef, False);
+                                lConstNode:=COrdConstNode.Create(lComparison shr (lShift - 1), lThisDef, False);
                               end
                             else
-                              ConstNode:=COrdConstNode.create(comparison*2, ThisDef, False);
+                              lConstNode:=COrdConstNode.Create(lComparison*2, lThisDef, False);
 
-                            ConstNode.resultdef:=ThisDef;
+                            lConstNode.ResultDef:=lThisDef;
 
-                            Result:=CAddNode.Create_Internal(ThisType, ThisNode, ConstNode);
-                            Result.resultdef:=resultdef;
+                            Result:=CAddNode.Create_Internal(lThisType, lThisNode, lConstNode);
+                            Result.ResultDef:=ResultDef;
                             Exit;
                           end;
                       end
@@ -1206,49 +1206,49 @@ unit nx86add;
                           m = floor(2^N / d) = floor(2^(N-b) / k) }
                         while True do
                           begin
-                            ThisNode:=TModDivNode(t).left;
-                            case ThisNode.nodetype of
+                            lThisNode:=TModDivNode(lResultNode).Left;
+                            case lThisNode.NodeType of
                               typeconvn:
                                 begin
-                                  ThisDef:=TTypeConvNode(ThisNode).left.resultdef;
+                                  lThisDef:=TTypeConvNode(lThisNode).Left.ResultDef;
                                   { See if we can simplify things to a smaller ordinal to
                                     reduce code size and increase speed }
-                                  if not Is_Signed(ThisDef) and
-                                    Is_Integer(ThisDef) and
+                                  if not Is_Signed(lThisDef) and
+                                    Is_Integer(lThisDef) and
                                     { Byte-sized multiplications can cause problems }
-                                    (ThisDef.Size>=2) and
+                                    (lThisDef.Size>=2) and
                                     { Make sure the divisor is in range }
-                                    (divisor>=TOrdDef(ThisDef).low) and
-                                    (divisor<=TOrdDef(ThisDef).high) then
+                                    (lDivisor>=TOrdDef(lThisDef).low) and
+                                    (lDivisor<=TOrdDef(lThisDef).high) then
                                     begin
-                                      TOrdConstNode(TModDivNode(t).right).resultdef:=ThisDef;
-                                      TOrdConstNode(m).resultdef:=ThisDef;
-                                      TModDivNode(t).resultdef:=ThisDef;
+                                      TOrdConstNode(TModDivNode(lResultNode).Right).ResultDef:=lThisDef;
+                                      TOrdConstNode(lMultiplyNode).ResultDef:=lThisDef;
+                                      TModDivNode(lResultNode).ResultDef:=lThisDef;
 
                                       { Destroy the typeconv node }
-                                      TModDivNode(t).left:=TTypeConvNode(ThisNode).left;
-                                      TTypeConvNode(ThisNode).left:=nil;
-                                      ThisNode.Free;
+                                      TModDivNode(lResultNode).Left:=TTypeConvNode(lThisNode).Left;
+                                      TTypeConvNode(lThisNode).Left:=nil;
+                                      lThisNode.Free;
                                       Continue;
                                     end;
                                   end;
                               ordconstn:
                                 begin
                                   { Just simplify into a constant }
-                                  Result:=inherited simplify(forinline);
+                                  Result:=inherited Simplify(AForInline);
                                   Exit;
                                 end;
                               else
                                 ;
                             end;
 
-                            DoOptimisation:=True;
+                            lDoOptimization:=True;
                             Break;
                           end;
 
-                        if DoOptimisation then
+                        if lDoOptimization then
                           begin
-                            ThisDef:=TModDivNode(t).left.resultdef;
+                            lThisDef:=TModDivNode(lResultNode).Left.ResultDef;
 
                             { Construct the following node tree for odd divisors:
                                 <lten> (for equaln) or <gtn> (for notequaln)
@@ -1268,33 +1268,33 @@ unit nx86add;
                                   (2^N / divisor)
                             }
 
-                            if nodetype=EqualN then
-                              ThisType:=lten
+                            if NodeType=EqualN then
+                              lThisType:=lten
                             else
-                              ThisType:=gtn;
+                              lThisType:=gtn;
 
-                            N:=ThisDef.Size*8;
-                            Calc_Mul_Inverse(N, TOrdConstNode(TModDivNode(t).right).Value.uvalue, reciprocal, shift);
+                            lIndex:=lThisDef.Size*8;
+                            Calc_Mul_Inverse(lIndex, TOrdConstNode(TModDivNode(lResultNode).Right).Value.uvalue, lReciprocal, lShift);
 
-                            ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
-                            ConstNode.resultdef:=ThisDef;
+                            lConstNode:=COrdConstNode.Create(lReciprocal, lThisDef, False);
+                            lConstNode.ResultDef:=lThisDef;
 
-                            ThisNode:=CAddNode.Create_Internal(muln, TModDivNode(t).left, ConstNode);
-                            ThisNode.resultdef:=ThisDef;
+                            lThisNode:=CAddNode.Create_Internal(muln, TModDivNode(lResultNode).Left, lConstNode);
+                            lThisNode.ResultDef:=lThisDef;
 
-                            TModDivNode(t).left:=nil;
+                            TModDivNode(lResultNode).Left:=nil;
 
-                            if shift>0 then
+                            if lShift>0 then
                               begin
-                                ConstNode:=COrdConstNode.create(shift, U8IntType, False);
-                                ConstNode.resultdef:=U8IntType;
-                                ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
-                                  CCallParaNode.create(ConstNode,
-                                  CCallParaNode.create(ThisNode, nil)));
+                                lConstNode:=COrdConstNode.Create(lShift, U8IntType, False);
+                                lConstNode.ResultDef:=U8IntType;
+                                lThisNode:=CInlineNode.CreateIntern(in_ror_x_y,false,
+                                  CCallParaNode.Create(lConstNode,
+                                  CCallParaNode.Create(lThisNode, nil)));
 
-                                ThisNode.resultdef:=ThisDef;
+                                lThisNode.ResultDef:=lThisDef;
 
-                                comparison:=(aWord(1) shl ((N-shift) and (SizeOf(aWord)*8-1))) div (divisor shr shift);
+                                lComparison:=(AWord(1) shl ((lIndex-lShift) and (SizeOf(AWord)*8-1))) div (lDivisor shr lShift);
                               end
                             else
                               begin
@@ -1302,15 +1302,15 @@ unit nx86add;
 {$warnings off}
                                 { Because 2^N and divisor are relatively prime,
                                   floor(2^N / divisor) = floor((2^N - 1) / divisor) }
-                                comparison:=(aWord(not 0) shr (((SizeOf(aWord)*8)-N) and (SizeOf(aWord)*8-1))) div divisor;
+                                lComparison:=(AWord(not 0) shr (((SizeOf(AWord)*8)-lIndex) and (SizeOf(AWord)*8-1))) div lDivisor;
 {$pop}
                               end;
 
-                            ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
-                            ConstNode.resultdef:=ThisDef;
+                            lConstNode:=COrdConstNode.Create(lComparison, lThisDef, False);
+                            lConstNode.ResultDef:=lThisDef;
 
-                            Result:=CAddNode.Create_Internal(ThisType, ThisNode, ConstNode);
-                            Result.resultdef:=resultdef;
+                            Result:=CAddNode.Create_Internal(lThisType, lThisNode, lConstNode);
+                            Result.ResultDef:=ResultDef;
                             Exit;
                           end;
                       end;
@@ -1318,137 +1318,137 @@ unit nx86add;
               end;
           end;
 {$ifend defined(cpu64bitalu) or defined(cpu32bitalu)}
-        Result:=inherited simplify(forinline);
+        Result:=inherited Simplify(AForInline);
       end;
 
 
-    function TX86AddNode.use_fma : boolean;
+    function TX86AddNode.Use_FMA : Boolean;
       begin
 
         { test if the result stays in an xmm register, fiddeling with fpu registers and fma makes no sense }
-        Result:=Use_VectorFPU(resultdef) and
+        Result:=Use_VectorFPU(ResultDef) and
           ((fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
 
       end;
 
 
-    procedure TX86AddNode.second_cmpfloatvector;
+    procedure TX86AddNode.Second_CmpFloatVector;
       var
-        op : TAsmOp;
+        lAsmOp : TAsmOp;
       const
-        ops_single: array[boolean] of TAsmOp = (A_COMISS,A_VCOMISS);
-        ops_double: array[boolean] of TAsmOp = (A_COMISD,A_VCOMISD);
+        cSingleOps: array[Boolean] of TAsmOp = (A_COMISS,A_VCOMISS);
+        cDoubleOps: array[Boolean] of TAsmOp = (A_COMISD,A_VCOMISD);
       begin
-        if Is_Single(left.resultdef) then
-          op:=ops_single[UseAVX]
-        else if Is_Double(left.resultdef) then
-          op:=ops_double[UseAVX]
+        if Is_Single(Left.ResultDef) then
+          lAsmOp:=cSingleOps[UseAVX]
+        else if Is_Double(Left.ResultDef) then
+          lAsmOp:=cDoubleOps[UseAVX]
         else
           InternalError(200402222);
-        pass_left_right;
+        Pass_Left_Right;
 
         { fpu operands are always in reversed order on the stack }
-        if (left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
-          toggleflag(nf_swapped);
+        if (Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) and (Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
+          ToggleFlag(nf_swapped);
 
-        Location_Reset(location,LOC_FLAGS,OS_NO);
+        Location_Reset(Location,LOC_FLAGS,OS_NO);
 
         { Direct move fpu->mm register is not possible, so force any fpu operands to
           memory (not to mm registers because one of the memory locations can be used
           directly in compare instruction, yielding shorter code) }
-        if left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-        if right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,right.Location,right.resultdef);
+        if Left.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+        if Right.Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
+          hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef);
 
-        if (right.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+        if (Right.Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
           begin
-            case left.Location.Loc of
+            case Left.Location.Loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.Location.Reference);
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,left.Location.Reference,right.Location.Register));
+                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,Left.Location.Reference);
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(lAsmOp,S_NO,Left.Location.Reference,Right.Location.Register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,left.Location.Register,right.Location.Register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(lAsmOp,S_NO,Left.Location.Register,Right.Location.Register));
               else
                 InternalError(200402221);
             end;
-            toggleflag(nf_swapped);
+            ToggleFlag(nf_swapped);
           end
         else
           begin
-            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-            case right.Location.Loc of
+            hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+            case Right.Location.Loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.Location.Reference);
-                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,right.Location.Reference,left.Location.Register));
+                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,Right.Location.Reference);
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(lAsmOp,S_NO,Right.Location.Reference,Left.Location.Register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,right.Location.Register,left.Location.Register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(lAsmOp,S_NO,Right.Location.Register,Left.Location.Register));
               else
                 InternalError(200402223);
             end;
           end;
-        location.ResFlags:=getfpuresflags;
-        location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
-        location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
+        Location.ResFlags:=GetFPUResFlags;
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
+        Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
       end;
 
 
-    procedure TX86AddNode.second_opvector;
+    procedure TX86AddNode.Second_OpVector;
       var
-        op : TOpCG;
+        lCGOp : TOpCG;
       begin
-        pass_left_right;
-        if (nf_swapped in flags) then
-          swapleftright;
+        Pass_Left_Right;
+        if (nf_swapped in Flags) then
+          SwapLeftRight;
 
-        case nodetype of
+        case NodeType of
           addn :
-            op:=OP_ADD;
+            lCGOp:=OP_ADD;
           muln :
-            op:=OP_MUL;
+            lCGOp:=OP_MUL;
           subn :
-            op:=OP_SUB;
+            lCGOp:=OP_SUB;
           slashn :
-            op:=OP_DIV;
+            lCGOp:=OP_DIV;
           else
             InternalError(200610071);
         end;
 
-        if Fits_In_MM_Register(left.resultdef) then
+        if Fits_In_MM_Register(Left.ResultDef) then
           begin
-            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
+            Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
             { we can use only right as left operand if the operation is commutative }
-            if (right.Location.Loc=LOC_MMREGISTER) and (op in [OP_ADD,OP_MUL]) then
+            if (Right.Location.Loc=LOC_MMREGISTER) and (lCGOp in [OP_ADD,OP_MUL]) then
               begin
                 if UseAVX then
                   begin
-                    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,OS_VECTOR);
-                    cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,op,TFloat2TCgSize[TFloatDef(left.resultdef).FloatType],left.Location,right.Location.Register,location.Register,nil);
+                    Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,OS_VECTOR);
+                    cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,TFloat2TCgSize[TFloatDef(Left.ResultDef).FloatType],Left.Location,Right.Location.Register,Location.Register,nil);
                   end
                 else
                   begin
-                    location.Register:=right.Location.Register;
-                    cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,op,TFloat2TCgSize[TFloatDef(left.resultdef).FloatType],left.Location,location.Register,nil);
+                    Location.Register:=Right.Location.Register;
+                    cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,lCGOp,TFloat2TCgSize[TFloatDef(Left.ResultDef).FloatType],Left.Location,Location.Register,nil);
                   end;
               end
             else
               begin
-                location_force_mmreg(CurrentAsmData.CurrAsmList,left.Location,false);
+                Location_Force_MMReg(CurrentAsmData.CurrAsmList,Left.Location,false);
                 if UseAVX then
                   begin
-                    location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,OS_VECTOR);
-                    cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,op,
-                      TFloat2TCgSize[TFloatDef(TArrayDef(left.resultdef).ElementDef).FloatType],right.Location,left.Location.Register,location.Register,nil);
+                    Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,OS_VECTOR);
+                    cg.A_OpMM_Loc_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,
+                      TFloat2TCgSize[TFloatDef(TArrayDef(Left.ResultDef).ElementDef).FloatType],Right.Location,Left.Location.Register,Location.Register,nil);
                   end
                 else
                   begin
-                    location.Register:=left.Location.Register;
-                    cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,op,
-                      TFloat2TCgSize[TFloatDef(TArrayDef(left.resultdef).ElementDef).FloatType],right.Location,location.Register,nil);
+                    Location.Register:=Left.Location.Register;
+                    cg.A_OpMM_Loc_Reg(CurrentAsmData.CurrAsmList,lCGOp,
+                      TFloat2TCgSize[TFloatDef(TArrayDef(Left.ResultDef).ElementDef).FloatType],Right.Location,Location.Register,nil);
                   end;
               end;
           end
@@ -1460,97 +1460,97 @@ unit nx86add;
       end;
 
 
-    procedure TX86AddNode.second_addfloat;
+    procedure TX86AddNode.Second_AddFloat;
       const
-        ops_add:  array[boolean] of TAsmOp = (A_FADDP,A_FADD);
-        ops_mul:  array[boolean] of TAsmOp = (A_FMULP,A_FMUL);
-        ops_sub:  array[boolean] of TAsmOp = (A_FSUBP,A_FSUB);
-        ops_rsub: array[boolean] of TAsmOp = (A_FSUBRP,A_FSUBR);
-        ops_div:  array[boolean] of TAsmOp = (A_FDIVP,A_FDIV);
-        ops_rdiv: array[boolean] of TAsmOp = (A_FDIVRP,A_FDIVR);
+        cAddOps:  array[Boolean] of TAsmOp = (A_FADDP,A_FADD);
+        cMultiplyOps:  array[Boolean] of TAsmOp = (A_FMULP,A_FMUL);
+        cSubtractOps:  array[Boolean] of TAsmOp = (A_FSUBP,A_FSUB);
+        cReverseSubtractOps: array[Boolean] of TAsmOp = (A_FSUBRP,A_FSUBR);
+        cDivideOps:  array[Boolean] of TAsmOp = (A_FDIVP,A_FDIV);
+        cReverseDivideOps: array[Boolean] of TAsmOp = (A_FDIVRP,A_FDIVR);
       var
-        op : TAsmOp;
-        refnode, hp: TNode;
-        hasref : boolean;
+        lAsmOp : TAsmOp;
+        lReferenceNode, lNode: TNode;
+        lHasReference : Boolean;
       begin
-        if Use_VectorFPU(resultdef)
+        if Use_VectorFPU(ResultDef)
 {$ifndef x86_64}
           { Make sure currency typs etc. aren't passed through SSE/AVX }
-          and Use_VectorFPU(left.resultdef)
-          and Use_VectorFPU(right.resultdef)
+          and Use_VectorFPU(Left.ResultDef)
+          and Use_VectorFPU(Right.ResultDef)
 {$endif x86_64}
           then
           begin
             if UseAVX then
-              second_addfloatavx
+              Second_AddFloatAVX
             else
-              second_addfloatsse;
+              Second_AddFloatSSE;
             exit;
           end;
 
         { can the operation do the conversion? }
-        if (left.nodetype=typeconvn) and (Is_Double(TTypeConvNode(left).left.resultdef) or Is_Single(TTypeConvNode(left).left.resultdef)) then
+        if (Left.NodeType=typeconvn) and (Is_Double(TTypeConvNode(Left).Left.ResultDef) or Is_Single(TTypeConvNode(Left).Left.ResultDef)) then
           begin
-            hp:=left;
-            left:=TTypeConvNode(left).left;
-            TTypeConvNode(hp).left:=nil;
-            hp.Free;
+            lNode:=Left;
+            Left:=TTypeConvNode(Left).Left;
+            TTypeConvNode(lNode).Left:=nil;
+            lNode.Free;
           end;
-        if (right.nodetype=typeconvn) and (Is_Double(TTypeConvNode(right).left.resultdef) or Is_Single(TTypeConvNode(right).left.resultdef)) then
+        if (Right.NodeType=typeconvn) and (Is_Double(TTypeConvNode(Right).Left.ResultDef) or Is_Single(TTypeConvNode(Right).Left.ResultDef)) then
           begin
-            hp:=right;
-            right:=TTypeConvNode(right).left;
-            TTypeConvNode(hp).left:=nil;
-            hp.Free;
+            lNode:=Right;
+            Right:=TTypeConvNode(Right).Left;
+            TTypeConvNode(lNode).Left:=nil;
+            lNode.Free;
           end;
 
-        pass_left_right;
-        prepare_x87_locations(refnode);
-        hasref:=Assigned(refnode);
+        Pass_Left_Right;
+        Prepare_X87_Locations(lReferenceNode);
+        lHasReference:=Assigned(lReferenceNode);
 
-        case nodetype of
+        case NodeType of
           addn :
-            op:=ops_add[hasref];
+            lAsmOp:=cAddOps[lHasReference];
           muln :
-            op:=ops_mul[hasref];
+            lAsmOp:=cMultiplyOps[lHasReference];
           subn :
-            if (nf_swapped in flags) then
-              op:=ops_rsub[hasref]
+            if (nf_swapped in Flags) then
+              lAsmOp:=cReverseSubtractOps[lHasReference]
             else
-              op:=ops_sub[hasref];
+              lAsmOp:=cSubtractOps[lHasReference];
           slashn :
-            if (nf_swapped in flags) then
-              op:=ops_rdiv[hasref]
+            if (nf_swapped in Flags) then
+              lAsmOp:=cReverseDivideOps[lHasReference]
             else
-              op:=ops_div[hasref];
+              lAsmOp:=cDivideOps[lHasReference];
           else
             InternalError(2003042203);
         end;
 
-        if hasref then
-          emit_ref(op,tcgsize2opsize[refnode.Location.Size],refnode.Location.Reference)
+        if lHasReference then
+          emit_ref(lAsmOp,tcgsize2opsize[lReferenceNode.Location.Size],lReferenceNode.Location.Reference)
         else
           begin
-            emit_reg_reg(op,S_NO,NR_ST,NR_ST1);
+            emit_reg_reg(lAsmOp,S_NO,NR_ST,NR_ST1);
             TCGX86(cg).dec_fpu_stack;
           end;
 
-        Location_Reset(location,LOC_FPUREGISTER,Def_CGSize(resultdef));
-        location.Register:=NR_ST;
+        Location_Reset(Location,LOC_FPUREGISTER,Def_CGSize(ResultDef));
+        Location.Register:=NR_ST;
       end;
 
 
-    procedure TX86AddNode.second_cmpfloat;
+    procedure TX86AddNode.Second_CmpFloat;
 
       begin
-        if Use_VectorFPU(left.resultdef) or Use_VectorFPU(right.resultdef) then
+        if Use_VectorFPU(Left.ResultDef) or Use_VectorFPU(Right.ResultDef) then
           begin
-            second_cmpfloatvector;
+            Second_CmpFloatVector;
             exit;
           end;
 
-        pass_left_right;
-        force_left_and_right_fpureg;
+        Pass_Left_Right;
+        Force_Left_And_Right_FPUReg;
 
 {$ifndef x86_64}
         if CurrentSettings.CPUType<cpu_Pentium2 then
@@ -1580,8 +1580,8 @@ unit nx86add;
             TCGX86(cg).dec_fpu_stack;
           end;
 
-        Location_Reset(location,LOC_FLAGS,OS_NO);
-        location.ResFlags:=getfpuresflags;
+        Location_Reset(Location,LOC_FLAGS,OS_NO);
+        Location.ResFlags:=GetFPUResFlags;
       end;
 
 
@@ -1589,10 +1589,10 @@ unit nx86add;
                                   Add64bit
 *****************************************************************************}
 
-    procedure TX86AddNode.second_add64bit;
+    procedure TX86AddNode.Second_Add64Bit;
       begin
 {$ifdef cpu64bitalu}
-        second_addordinal;
+        Second_AddOrdinal;
 {$else cpu64bitalu}
         { must be implemented separate }
         InternalError(200402042);
@@ -1600,10 +1600,10 @@ unit nx86add;
       end;
 
 
-    procedure TX86AddNode.second_cmp64bit;
+    procedure TX86AddNode.Second_Cmp64Bit;
       begin
 {$ifdef cpu64bitalu}
-        second_cmpordinal;
+        Second_CmpOrdinal;
 {$else cpu64bitalu}
         { must be implemented separate }
         InternalError(200402043);
@@ -1615,95 +1615,95 @@ unit nx86add;
                                   AddOrdinal
 *****************************************************************************}
 
-    procedure TX86AddNode.second_addordinal;
+    procedure TX86AddNode.Second_AddOrdinal;
       var
-         opsize : TCgSize;
-         unsigned : boolean;
-         cgop : TOpCG;
-         checkoverflow : Boolean;
-         ovloc : TLocation;
-         tmpreg : TRegister;
-         indexnode : TNode;
+         lOpSize : TCgSize;
+         lUnsigned : Boolean;
+         lCGOp : TOpCG;
+         lCheckOverflow : Boolean;
+         lOverflowLoc : TLocation;
+         lTempReg : TRegister;
+         lIndexNode : TNode;
 
-         procedure MakeBZHI(use_tmpreg: Boolean);
+         procedure MakeBZHI(AUseTempReg: Boolean);
            begin
              { allocate registers }
              hlcg.Location_Force_Reg(
                CurrentAsmData.CurrAsmList,
-               indexnode.Location,
-               indexnode.resultdef,
-               resultdef,
+               lIndexNode.Location,
+               lIndexNode.ResultDef,
+               ResultDef,
                false
              );
 
-             set_result_location_reg;
-             if use_tmpreg then
-               emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.Location.Register, tmpreg, location.Register)
+             Set_Result_Location_Reg;
+             if AUseTempReg then
+               emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[lOpSize], lIndexNode.Location.Register, lTempReg, Location.Register)
              else
-               case left.Location.Loc of
+               case Left.Location.Loc of
                  LOC_REFERENCE,
                  LOC_CREFERENCE:
-                   emit_reg_ref_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.Location.Register, left.Location.Reference, location.Register);
+                   emit_reg_ref_reg(A_BZHI, TCGSize2OpSize[lOpSize], lIndexNode.Location.Register, Left.Location.Reference, Location.Register);
                  LOC_REGISTER,
                  LOC_CREGISTER:
-                   emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[opsize], indexnode.Location.Register, left.Location.Register, location.Register);
+                   emit_reg_reg_reg(A_BZHI, TCGSize2OpSize[lOpSize], lIndexNode.Location.Register, Left.Location.Register, Location.Register);
                  else
                    InternalError(2022102111);
                end;
            end;
 
       begin
-        indexnode := nil; { Needed to prevent a compiler warning }
+        lIndexNode := nil; { Needed to prevent a compiler warning }
 
         { determine if the comparison will be unsigned }
-        unsigned:=not(Is_Signed(left.resultdef)) or
-                    not(Is_Signed(right.resultdef));
+        lUnsigned:=not(Is_Signed(Left.ResultDef)) or
+                    not(Is_Signed(Right.ResultDef));
 
         { assume no overflow checking is require }
-        checkoverflow := false;
+        lCheckOverflow := false;
 
-        ovloc.Loc:=LOC_VOID;
+        lOverflowLoc.Loc:=LOC_VOID;
 
-        case nodetype of
+        case NodeType of
           addn:
             begin
-              cgop:=OP_ADD;
-              checkoverflow:=true;
+              lCGOp:=OP_ADD;
+              lCheckOverflow:=true;
             end;
           xorn :
             begin
-              cgop:=OP_XOR;
+              lCGOp:=OP_XOR;
             end;
           orn :
             begin
-              cgop:=OP_OR;
+              lCGOp:=OP_OR;
             end;
           andn:
             begin
-              cgop:=OP_AND;
+              lCGOp:=OP_AND;
             end;
           muln:
             begin
-              checkoverflow:=true;
-              if unsigned then
-                cgop:=OP_MUL
+              lCheckOverflow:=true;
+              if lUnsigned then
+                lCGOp:=OP_MUL
               else
-                cgop:=OP_IMUL;
+                lCGOp:=OP_IMUL;
             end;
           subn :
             begin
-              checkoverflow:=true;
-              cgop:=OP_SUB;
+              lCheckOverflow:=true;
+              lCGOp:=OP_SUB;
             end;
           else
             InternalError(2015022501);
         end;
 
-       checkoverflow:=
-         checkoverflow and
-         needoverflowcheck;
+       lCheckOverflow:=
+         lCheckOverflow and
+         NeedOverflowCheck;
 
-       opsize:=Def_CGSize(left.resultdef);
+       lOpSize:=Def_CGSize(Left.ResultDef);
 
 
        if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) then
@@ -1712,9 +1712,9 @@ unit nx86add;
            if (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.CPUType]) then
              begin
                { Can we turn "x and (not y)" into an ANDN instruction instead? }
-               if (nodetype = andn) and
-                 (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) and
-                 ((left.nodetype = notn) or (right.nodetype = notn)) and
+               if (NodeType = andn) and
+                 (lOpSize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) and
+                 ((Left.NodeType = notn) or (Right.NodeType = notn)) and
                  (
                    { With "const and (not variable)", ANDN will produce larger
                      code once everything is moved into registers (as a side-note,
@@ -1722,8 +1722,8 @@ unit nx86add;
                      have been simplified earlier to remove the NOT operation). }
                    not (cs_opt_size in CurrentSettings.OptimizerSwitches) or
                    (
-                     (left.Location.Loc <> LOC_CONSTANT) and
-                     (right.Location.Loc <> LOC_CONSTANT)
+                     (Left.Location.Loc <> LOC_CONSTANT) and
+                     (Right.Location.Loc <> LOC_CONSTANT)
                    )
                  ) then
                  begin
@@ -1731,45 +1731,45 @@ unit nx86add;
                      since we're dealing with ordinals, there won't be any Boolean
                      shortcutting, so we can safely swap the parameters }
 
-                   if (right.nodetype <> notn) then
-                     swapleftright;
+                   if (Right.NodeType <> notn) then
+                     SwapLeftRight;
 
-                   SecondPass(left);
+                   SecondPass(Left);
 
                    { Skip the not node completely }
-                   Include(right.transientflags, tnf_do_not_execute);
-                   SecondPass(TNotNode(right).left);
+                   Include(Right.TransientFlags, tnf_do_not_execute);
+                   SecondPass(TNotNode(Right).Left);
 
                    { allocate registers }
                    hlcg.Location_Force_Reg(
                      CurrentAsmData.CurrAsmList,
-                     TNotNode(right).left.Location,
-                     TNotNode(right).left.resultdef,
-                     TNotNode(right).left.resultdef,
+                     TNotNode(Right).Left.Location,
+                     TNotNode(Right).Left.ResultDef,
+                     TNotNode(Right).Left.ResultDef,
                      false
                    );
 
-                   if left.Location.Loc = LOC_CONSTANT then
+                   if Left.Location.Loc = LOC_CONSTANT then
                      { With "const and (not variable)", we can probably still make a
                        saving when it comes to pipeline stalls (left.location.loc
                        will become LOC_CREGISTER). }
                      hlcg.Location_Force_Reg(
                        CurrentAsmData.CurrAsmList,
-                       left.Location,
-                       left.resultdef,
-                       left.resultdef,
+                       Left.Location,
+                       Left.ResultDef,
+                       Left.ResultDef,
                        true
                      );
 
-                   set_result_location_reg;
+                   Set_Result_Location_Reg;
 
-                   case left.Location.Loc of
+                   case Left.Location.Loc of
                      LOC_REFERENCE,
                      LOC_CREFERENCE:
-                       emit_ref_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.Location.Reference, TNotNode(right).left.Location.Register, location.Register);
+                       emit_ref_reg_reg(A_ANDN, TCGSize2OpSize[lOpSize], Left.Location.Reference, TNotNode(Right).Left.Location.Register, Location.Register);
                      LOC_REGISTER,
                      LOC_CREGISTER:
-                       emit_reg_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.Location.Register, TNotNode(right).left.Location.Register, location.Register);
+                       emit_reg_reg_reg(A_ANDN, TCGSize2OpSize[lOpSize], Left.Location.Register, TNotNode(Right).Left.Location.Register, Location.Register);
                      else
                        InternalError(2022102110);
                    end;
@@ -1781,61 +1781,61 @@ unit nx86add;
 
            { BMI2 optimisations }
            if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
-             (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) then
+             (lOpSize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) then
              begin
-               case nodetype of
+               case NodeType of
                  andn:
                    { Can we turn "x and ((1 shl y) - 1)" into a BZHI instruction instead? }
                    if (
                      (
-                       (right.nodetype = subn) and
-                       (TAddNode(right).right.nodetype = ordconstn) and
-                       (TOrdConstNode(TAddNode(right).right).Value = 1) and
-                       (TAddNode(right).left.nodetype = shln) and
-                       (TShlShrNode(TAddNode(right).left).left.nodetype = ordconstn) and
-                       (TOrdConstNode(TShlShrNode(TAddNode(right).left).left).Value = 1)
+                       (Right.NodeType = subn) and
+                       (TAddNode(Right).Right.NodeType = ordconstn) and
+                       (TOrdConstNode(TAddNode(Right).Right).Value = 1) and
+                       (TAddNode(Right).Left.NodeType = shln) and
+                       (TShlShrNode(TAddNode(Right).Left).Left.NodeType = ordconstn) and
+                       (TOrdConstNode(TShlShrNode(TAddNode(Right).Left).Left).Value = 1)
                      ) or
                      (
-                       (left.nodetype = subn) and
-                       (TAddNode(left).right.nodetype = ordconstn) and
-                       (TOrdConstNode(TAddNode(left).right).Value = 1) and
-                       (TAddNode(left).left.nodetype = shln) and
-                       (TShlShrNode(TAddNode(left).left).left.nodetype = ordconstn) and
-                       (TOrdConstNode(TShlShrNode(TAddNode(left).left).left).Value = 1)
+                       (Left.NodeType = subn) and
+                       (TAddNode(Left).Right.NodeType = ordconstn) and
+                       (TOrdConstNode(TAddNode(Left).Right).Value = 1) and
+                       (TAddNode(Left).Left.NodeType = shln) and
+                       (TShlShrNode(TAddNode(Left).Left).Left.NodeType = ordconstn) and
+                       (TOrdConstNode(TShlShrNode(TAddNode(Left).Left).Left).Value = 1)
                      )
                    ) then
                      begin
 
                        { Put the subtract node on the right }
-                       if (right.nodetype <> subn) then
-                         swapleftright;
+                       if (Right.NodeType <> subn) then
+                         SwapLeftRight;
 
-                       SecondPass(left);
+                       SecondPass(Left);
 
                        { Skip the subtract and shift nodes completely }
-                       Include(right.transientflags, tnf_do_not_execute);
-                       Include(TAddNode(right).left.transientflags, tnf_do_not_execute);
+                       Include(Right.TransientFlags, tnf_do_not_execute);
+                       Include(TAddNode(Right).Left.TransientFlags, tnf_do_not_execute);
 
                        { Helps avoid all the awkward typecasts }
-                       indexnode := TShlShrNode(TAddNode(right).left).right;
+                       lIndexNode := TShlShrNode(TAddNode(Right).Left).Right;
 {$ifdef x86_64}
                        { The code generator sometimes extends the shift result to 64-bit unnecessarily }
-                       if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
-                         (Def_CGSize(TTypeConvNode(indexnode).resultdef) in [OS_64, OS_S64]) then
+                       if (lIndexNode.NodeType = typeconvn) and (lOpSize in [OS_32, OS_S32]) and
+                         (Def_CGSize(TTypeConvNode(lIndexNode).ResultDef) in [OS_64, OS_S64]) then
                          begin
                            { Convert to the 32-bit type }
-                           indexnode.resultdef := resultdef;
-                           node_reset_flags(indexnode,[],[tnf_pass1_done]);
+                           lIndexNode.ResultDef := ResultDef;
+                           Node_Reset_Flags(lIndexNode,[],[tnf_pass1_done]);
 
                            { We should't be getting any new errors }
-                           if DoFirstPass(indexnode) then
+                           if DoFirstPass(lIndexNode) then
                              InternalError(2022110201);
 
                            { Keep things internally consistent in case indexnode changed }
-                           TShlShrNode(TAddNode(right).left).right := indexnode;
+                           TShlShrNode(TAddNode(Right).Left).Right := lIndexNode;
                          end;
 {$endif x86_64}
-                       SecondPass(indexnode);
+                       SecondPass(lIndexNode);
 
                        MakeBZHI(False);
                        Exit;
@@ -1843,39 +1843,39 @@ unit nx86add;
 
                  subn:
                    { Turns an isolated "(1 shl y) - 1" into "mov $-1,%reg1; bzhi %idxreg,%reg1,%reg2" pair}
-                   if (right.nodetype = ordconstn) and
-                     (TOrdConstNode(right).Value = 1) and
-                     (left.nodetype = shln) and
-                     (TShlShrNode(left).left.nodetype = ordconstn) and
-                     (TOrdConstNode(TShlShrNode(left).left).Value = 1) then
+                   if (Right.NodeType = ordconstn) and
+                     (TOrdConstNode(Right).Value = 1) and
+                     (Left.NodeType = shln) and
+                     (TShlShrNode(Left).Left.NodeType = ordconstn) and
+                     (TOrdConstNode(TShlShrNode(Left).Left).Value = 1) then
                      begin
                        { Skip the shift node completely }
-                       Include(left.transientflags, tnf_do_not_execute);
+                       Include(Left.TransientFlags, tnf_do_not_execute);
 
                        { Helps avoid all the awkward typecasts }
-                       indexnode := TShlShrNode(left).right;
+                       lIndexNode := TShlShrNode(Left).Right;
 
 {$ifdef x86_64}
                        { The code generator sometimes extends the shift result to 64-bit unnecessarily }
-                       if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
-                         (Def_CGSize(TTypeConvNode(indexnode).resultdef) in [OS_64, OS_S64]) then
+                       if (lIndexNode.NodeType = typeconvn) and (lOpSize in [OS_32, OS_S32]) and
+                         (Def_CGSize(TTypeConvNode(lIndexNode).ResultDef) in [OS_64, OS_S64]) then
                          begin
                            { Convert to the 32-bit type }
-                           indexnode.resultdef := resultdef;
-                           node_reset_flags(indexnode,[],[tnf_pass1_done]);
+                           lIndexNode.ResultDef := ResultDef;
+                           Node_Reset_Flags(lIndexNode,[],[tnf_pass1_done]);
 
                            { We should't be getting any new errors }
-                           if DoFirstPass(indexnode) then
+                           if DoFirstPass(lIndexNode) then
                              InternalError(2022110202);
 
                            { Keep things internally consistent in case indexnode changed }
-                           TShlShrNode(left).right := indexnode;
+                           TShlShrNode(Left).Right := lIndexNode;
                          end;
 {$endif x86_64}
-                       SecondPass(indexnode);
+                       SecondPass(lIndexNode);
 
-                       tmpreg := cg.GetIntRegister(CurrentAsmData.CurrAsmList, opsize);
-                       cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList, opsize, -1, tmpreg);
+                       lTempReg := cg.GetIntRegister(CurrentAsmData.CurrAsmList, lOpSize);
+                       cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList, lOpSize, -1, lTempReg);
 
                        MakeBZHI(True);
                        Exit;
@@ -1887,187 +1887,187 @@ unit nx86add;
          end;
 
 
-       pass_left_right;
+       Pass_Left_Right;
 
        { do we have to allocate a register? If yes, then three opcode instructions are better, however for sub three op code instructions
          make no sense if right is a reference }
-       if ((left.Location.Loc<>LOC_REGISTER) and (right.Location.Loc<>LOC_REGISTER) and
-           ((nodetype<>subn) or not(right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE])) and
+       if ((Left.Location.Loc<>LOC_REGISTER) and (Right.Location.Loc<>LOC_REGISTER) and
+           ((NodeType<>subn) or not(Right.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE])) and
            { 3 op mul makes only sense if a constant is involved }
-           ((nodetype<>muln) or (left.Location.Loc=LOC_CONSTANT) or (right.Location.Loc=LOC_CONSTANT)
+           ((NodeType<>muln) or (Left.Location.Loc=LOC_CONSTANT) or (Right.Location.Loc=LOC_CONSTANT)
 
-            or ((CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and (not(needoverflowcheck))
+            or ((CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and (not(NeedOverflowCheck))
                )
 
            ) and
-           (not(nodetype in [orn,andn,xorn]))) or
-         ((nodetype=addn) and (left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT]) and (right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT])) then
+           (not(NodeType in [orn,andn,xorn]))) or
+         ((NodeType=addn) and (Left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT]) and (Right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT])) then
          begin
            { allocate registers }
-           force_reg_left_right(nodetype<>subn,true);
-           set_result_location_reg;
-           if nodetype<>subn then
+           Force_Reg_Left_Right(NodeType<>subn,true);
+           Set_Result_Location_Reg;
+           if NodeType<>subn then
             begin
-              if checkoverflow then
+              if lCheckOverflow then
                 cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              if (right.Location.Loc<>LOC_CONSTANT) then
-                hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                   left.Location.Register,right.Location.Register,
-                   location.Register,checkoverflow,ovloc)
+              if (Right.Location.Loc<>LOC_CONSTANT) then
+                hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                   Left.Location.Register,Right.Location.Register,
+                   Location.Register,lCheckOverflow,lOverflowLoc)
               else
-                hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                   right.Location.Value,left.Location.Register,
-                   location.Register,checkoverflow,ovloc);
+                hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                   Right.Location.Value,Left.Location.Register,
+                   Location.Register,lCheckOverflow,lOverflowLoc);
             end
           else  { subtract is a special case since its not commutative }
             begin
-              if (nf_swapped in flags) then
-                swapleftright;
-              if left.Location.Loc<>LOC_CONSTANT then
+              if (nf_swapped in Flags) then
+                SwapLeftRight;
+              if Left.Location.Loc<>LOC_CONSTANT then
                 begin
-                  if checkoverflow then
+                  if lCheckOverflow then
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  if right.Location.Loc<>LOC_CONSTANT then
-                    hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                        right.Location.Register,left.Location.Register,
-                        location.Register,checkoverflow,ovloc)
+                  if Right.Location.Loc<>LOC_CONSTANT then
+                    hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                        Right.Location.Register,Left.Location.Register,
+                        Location.Register,lCheckOverflow,lOverflowLoc)
                   else
-                    hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                      right.Location.Value,left.Location.Register,
-                      location.Register,checkoverflow,ovloc);
+                    hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                      Right.Location.Value,Left.Location.Register,
+                      Location.Register,lCheckOverflow,lOverflowLoc);
                 end
               else
                 begin
-                  tmpreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
-                  hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,
-                    left.Location.Value,tmpreg);
+                  lTempReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ResultDef);
+                  hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,ResultDef,
+                    Left.Location.Value,lTempReg);
 
-                  if checkoverflow then
+                  if lCheckOverflow then
                     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                    right.Location.Register,tmpreg,location.Register,checkoverflow,ovloc);
+                  hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                    Right.Location.Register,lTempReg,Location.Register,lCheckOverflow,lOverflowLoc);
                 end;
             end
          end
        else
          begin
            { at least one location should be a register, if yes, try to re-use it, so we can try two operand opcodes }
-           if left.Location.Loc<>LOC_REGISTER then
+           if Left.Location.Loc<>LOC_REGISTER then
               begin
-                if right.Location.Loc<>LOC_REGISTER then
-                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false)
+                if Right.Location.Loc<>LOC_REGISTER then
+                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,false)
                 else
                   begin
-                    Location_Swap(left.Location,right.Location);
-                    toggleflag(nf_swapped);
+                    Location_Swap(Left.Location,Right.Location);
+                    ToggleFlag(nf_swapped);
                   end;
               end;
 
            { at this point, left.location.loc should be LOC_REGISTER }
-           if right.Location.Loc=LOC_REGISTER then
+           if Right.Location.Loc=LOC_REGISTER then
              begin
-               if checkoverflow then
+               if lCheckOverflow then
                  cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
                { when swapped another result register }
-               if (nodetype=subn) and (nf_swapped in flags) then
+               if (NodeType=subn) and (nf_swapped in Flags) then
                  begin
-                   cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,opsize,
-                     left.Location.Register,right.Location.Register);
-                   Location_Swap(left.Location,right.Location);
-                   toggleflag(nf_swapped);
+                   cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,lOpSize,
+                     Left.Location.Register,Right.Location.Register);
+                   Location_Swap(Left.Location,Right.Location);
+                   ToggleFlag(nf_swapped);
                  end
                else
-                 cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,opsize,
-                    right.Location.Register,left.Location.Register);
+                 cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,lOpSize,
+                    Right.Location.Register,Left.Location.Register);
              end
            else
              begin
                { right.location<>LOC_REGISTER }
-               if right.Location.Loc in [LOC_CSUBSETREF,LOC_CSUBSETREG,LOC_SUBSETREF,LOC_SUBSETREG] then
-                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,left.resultdef,true);
+               if Right.Location.Loc in [LOC_CSUBSETREF,LOC_CSUBSETREG,LOC_SUBSETREF,LOC_SUBSETREG] then
+                 hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,Left.ResultDef,true);
 
-               if (nodetype=subn) and (nf_swapped in flags) then
+               if (NodeType=subn) and (nf_swapped in Flags) then
                  begin
-                   tmpreg:=left.Location.Register;
-                   left.Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
-                   cg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,opsize,right.Location,left.Location.Register);
+                   lTempReg:=Left.Location.Register;
+                   Left.Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lOpSize);
+                   cg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,lOpSize,Right.Location,Left.Location.Register);
 
-                   if checkoverflow then
+                   if lCheckOverflow then
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                   cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,opsize,tmpreg,left.Location.Register);
+                   cg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,lOpSize,lTempReg,Left.Location.Register);
                  end
                else
                  begin
-                   if checkoverflow then
+                   if lCheckOverflow then
                      cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                   cg.A_Op_Loc_Reg(CurrentAsmData.CurrAsmList,cgop,opsize,right.Location,left.Location.Register);
+                   cg.A_Op_Loc_Reg(CurrentAsmData.CurrAsmList,lCGOp,lOpSize,Right.Location,Left.Location.Register);
                  end;
-               location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
+               Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
              end;
 
-           Location_Copy(location,left.Location);
+           Location_Copy(Location,Left.Location);
          end;
 
        { emit overflow check if required }
-       if checkoverflow then
-         cg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
+       if lCheckOverflow then
+         cg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,ResultDef,lOverflowLoc);
      end;
 
 
-    procedure TX86AddNode.second_addboolean;
+    procedure TX86AddNode.Second_AddBoolean;
       begin
-        if (nodetype in [orn,andn]) and
+        if (NodeType in [orn,andn]) and
            (not(cs_full_boolean_eval in CurrentSettings.LocalSwitches) or
-          (anf_short_bool in addnodeflags)) then
-          inherited second_addboolean
-        else if Is_64Bit(left.resultdef) then
+          (anf_short_bool in AddNodeFlags)) then
+          inherited Second_AddBoolean
+        else if Is_64Bit(Left.ResultDef) then
           inherited
         else
-          second_addordinal;
+          Second_AddOrdinal;
       end;
 
 
-    procedure TX86AddNode.second_cmpordinal;
+    procedure TX86AddNode.Second_CmpOrdinal;
       var
-         opdef  : TDef;
-         opsize : TCgSize;
-         unsigned : boolean;
+         lOpDef  : TDef;
+         lOpSize : TCgSize;
+         lUnsigned : Boolean;
       begin
-         unsigned:=not(Is_Signed(left.resultdef)) or
-                   not(Is_Signed(right.resultdef));
-         opdef:=left.resultdef;
-         opsize:=Def_CGSize(opdef);
+         lUnsigned:=not(Is_Signed(Left.ResultDef)) or
+                   not(Is_Signed(Right.ResultDef));
+         lOpDef:=Left.ResultDef;
+         lOpSize:=Def_CGSize(lOpDef);
 
-         pass_left_right;
+         Pass_Left_Right;
 
-         if (right.Location.Loc=LOC_CONSTANT) and
-            (left.Location.Loc in [LOC_REFERENCE, LOC_CREFERENCE])
+         if (Right.Location.Loc=LOC_CONSTANT) and
+            (Left.Location.Loc in [LOC_REFERENCE, LOC_CREFERENCE])
 {$ifdef x86_64}
-              and ((not (opsize in [OS_64,OS_S64])) or (
-              (right.Location.Value>=low(LongInt)) and (right.Location.Value<=high(LongInt))
+              and ((not (lOpSize in [OS_64,OS_S64])) or (
+              (Right.Location.Value>=low(LongInt)) and (Right.Location.Value<=high(LongInt))
             ))
 {$endif x86_64}
          then
            begin
              cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-             emit_const_ref(A_CMP, TCGSize2Opsize[opsize], right.Location.Value, left.Location.Reference);
-             location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+             emit_const_ref(A_CMP, TCGSize2Opsize[lOpSize], Right.Location.Value, Left.Location.Reference);
+             Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
            end
          else
            begin
-             left_must_be_reg(opdef,opsize,false);
-             emit_generic_code(A_CMP,opsize,unsigned,false,false);
-             location_freetemp(CurrentAsmData.CurrAsmList,right.Location);
-             location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
+             Left_Must_Be_Reg(lOpDef,lOpSize,false);
+             Emit_Generic_Code(A_CMP,lOpSize,lUnsigned,false,false);
+             Location_FreeTemp(CurrentAsmData.CurrAsmList,Right.Location);
+             Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
            end;
-         Location_Reset(location,LOC_FLAGS,OS_NO);
-         location.ResFlags:=getresflags(unsigned);
+         Location_Reset(Location,LOC_FLAGS,OS_NO);
+         Location.ResFlags:=GetResFlags(lUnsigned);
       end;
 
 begin

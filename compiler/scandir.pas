@@ -1331,7 +1331,7 @@ unit scandir;
         begin
           result:=[];
           sym:=Search_System_Type('TVISIBILITYCLASSES');
-          if CurrentScanner.readpreprocset(TSetDef(sym.typedef),value,'RTTI') then
+          if CurrentScanner.readpreprocset(TSetDef(sym.TypeDef),value,'RTTI') then
             begin
               result:=PRTTIVisibilities(@value)^;
               // if the set was empty we need to read the next id

@@ -117,7 +117,7 @@ interface
        PNodeTypeSet = ^TNodeTypeSet;
 
       const
-        nodetype2str : array[TNodeType] of string[24] = (
+        NodeType2Str : array[TNodeType] of string[24] = (
           '<emptynode>',
           'addn',
           'muln',
@@ -197,7 +197,7 @@ interface
           'finalizetempsn');
 
       { a set containing all const nodes }
-      nodetype_const = [niln,
+      cNodeTypeConst = [niln,
                         ordconstn,
                         pointerconstn,
                         stringconstn,
@@ -276,8 +276,8 @@ interface
     const
        { contains the flags which must be equal for the equality }
        { of nodes                                                }
-       flagsequal : TNodeFlags = [];
-       transientflagsequal : TTransientNodeFlags = [tnf_error];
+       FlagsEqual : TNodeFlags = [];
+       TransientFlagsEqual : TTransientNodeFlags = [tnf_error];
 
     type
       TNodeList = class
@@ -287,88 +287,88 @@ interface
       { basic class for the intermediated representation fpc uses }
       TNode = class
       private
-         fppuidx : LongInt;
-         function getppuidx:LongInt;
+         FPPUIdx : LongInt;
+         function GetPPUIdx:LongInt;
       public
          { type of this node }
-         nodetype : TNodeType;
+         NodeType : TNodeType;
          { type of the current code block, general/const/type }
-         blocktype : TBlockType;
+         BlockType : TBlockType;
          { expected location of the result of this node (pass1) }
-         expectloc : TCGLoc;
+         ExpectLoc : TCGLoc;
          { the location of the result of this node (pass2) }
-         location : TLocation;
+         Location : TLocation;
          { next node in control flow on the same block level, i.e.
            for loop nodes, this is the next node after the end of the loop,
            same for if and case, if this field is nil, the next node is the procedure exit,
            for the last node in a loop this is set to the loop header
            this field is set only for control flow nodes }
-         successor : TNode;
+         Successor : TNode;
          { there are some properties about the node stored }
-         flags  : TNodeFlags;
-         transientflags : TTransientNodeFlags;
-         resultdef     : TDef;
-         resultdefderef : TDeref;
-         fileinfo      : TFilePosInfo;
+         Flags  : TNodeFlags;
+         TransientFlags : TTransientNodeFlags;
+         ResultDef     : TDef;
+         ResultDefDeref : TDeref;
+         FileInfo      : TFilePosInfo;
          LocalSwitches : TLocalSwitches;
-         verbosity     : LongInt;
-         optinfo : POptInfo;
-         constructor create(t:TNodeType);
+         Verbosity     : LongInt;
+         OptInfo : POptInfo;
+         constructor Create(ANodeType:TNodeType);
          { this constructor is only for creating copies of class }
          { the fields are copied by getcopy                      }
-         constructor createforcopy;
-         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);virtual;
+         constructor CreateForCopy;
+         constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);virtual;
          destructor Destroy;override;
-         procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
+         procedure PPUWrite(APPUFile:TCompilerPPUFile);virtual;
          procedure BuildDerefImpl;virtual;
-         procedure derefimpl;virtual;
-         procedure resolveppuidx;virtual;
+         procedure DerefImpl;virtual;
+         procedure ResolvePPUIdx;virtual;
 
          { toggles the flag }
-         procedure toggleflag(f : TNodeFlag);
+         procedure ToggleFlag(AFlag : TNodeFlag);
 
          { the 1.1 code generator may override pass_1 }
          { and it need not to implement det_* then    }
          { 1.1: pass_1 returns a value<>0 if the node has been transformed }
          { 2.0: runs pass_typecheck and det_temp                           }
-         function pass_1 : TNode;virtual;abstract;
+         function Pass_1 : TNode;virtual;abstract;
          { dermines the resultdef of the node }
-         function pass_typecheck : TNode;virtual;abstract;
+         function Pass_TypeCheck : TNode;virtual;abstract;
 
          { tries to simplify the node, returns a value <>nil if a simplified
            node has been created }
-         function simplify(forinline : boolean) : TNode;virtual;
+         function Simplify(AForInline : Boolean) : TNode;virtual;
          { For a t1:=t2 tree, mark the part of the tree t1 that gets
            written to (normally the loadnode) as write access. }
-         procedure mark_write;virtual;
+         procedure Mark_Write;virtual;
          { dermines the number of necessary temp. locations to evaluate
            the node }
-         procedure det_temp;virtual;abstract;
+         procedure Det_Temp;virtual;abstract;
 
-         procedure pass_generate_code;virtual;abstract;
+         procedure Pass_Generate_Code;virtual;abstract;
 
          { comparing of nodes }
-         function isequal(p : TNode) : boolean;
+         function IsEqual(ANode : TNode) : Boolean;
          { to implement comparison, override this method }
-         function docompare(p : TNode) : boolean;virtual;
+         function DoCompare(ANode : TNode) : Boolean;virtual;
          { wrapper for getcopy }
          function GetCopy : TNode;
 
          { does the real copying of a node }
-         function dogetcopy : TNode;virtual;
+         function DoGetCopy : TNode;virtual;
 
-         procedure insertintolist(l : TNodeList);virtual;
+         procedure InsertIntoList(AList : TNodeList);virtual;
          { writes a node for debugging purpose, shouldn't be called }
          { direct, because there is no test for nil, use printnode  }
          { to write a complete tree }
-         procedure printnodeinfo(var t:text);virtual;
-         procedure printnodedata(var t:text);virtual;
-         procedure printnodetree(var t:text);virtual;
-         function ischild(p : TNode) : boolean;virtual;
+         procedure PrintNodeInfo(var AText:Text);virtual;
+         procedure PrintNodeData(var AText:Text);virtual;
+         procedure PrintNodeTree(var AText:Text);virtual;
+         function IsChild(ANode : TNode) : Boolean;virtual;
 
          { ensures that the optimizer info record is allocated }
-         function allocoptinfo : POptInfo;inline;
-         property ppuidx:LongInt read getppuidx;
+         function AllocOptInfo : POptInfo;inline;
+         property PPUIdx:LongInt read GetPPUIdx;
       end;
 
       TNodeClass = class of TNode;
@@ -380,18 +380,18 @@ interface
       { true- and current_procinfo.CurrFalseLabel                                     }
       //punarynode = ^tunarynode;
       TUnaryNode = class(TNode)
-         left : TNode;
-         constructor create(t:TNodeType;l : TNode);
-         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+         Left : TNode;
+         constructor Create(ANodeType:TNodeType;ALeft : TNode);
+         constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
          destructor Destroy;override;
-         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+         procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
          procedure BuildDerefImpl;override;
-         procedure derefimpl;override;
-         function ischild(p : TNode) : boolean;override;
-         function docompare(p : TNode) : boolean;override;
-         function dogetcopy : TNode;override;
-         procedure insertintolist(l : TNodeList);override;
-         procedure printnodedata(var t:text);override;
+         procedure DerefImpl;override;
+         function IsChild(ANode : TNode) : Boolean;override;
+         function DoCompare(ANode : TNode) : Boolean;override;
+         function DoGetCopy : TNode;override;
+         procedure InsertIntoList(AList : TNodeList);override;
+         procedure PrintNodeData(var AText:Text);override;
          { Marks the current node for deletion and sets 'left' to nil.
            Returns what 'left' was previously set to }
          function PruneKeepLeft: TNode; {$ifdef USEINLINE}inline;{$endif USEINLINE}
@@ -399,20 +399,20 @@ interface
 
       //pbinarynode = ^tbinarynode;
       TBinaryNode = class(TUnaryNode)
-         right : TNode;
-         constructor create(t:TNodeType;l,r : TNode);
-         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+         Right : TNode;
+         constructor Create(ANodeType:TNodeType;ALeft,ARight : TNode);
+         constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
          destructor Destroy;override;
-         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+         procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
          procedure BuildDerefImpl;override;
-         procedure derefimpl;override;
-         function ischild(p : TNode) : boolean;override;
-         function docompare(p : TNode) : boolean;override;
-         procedure swapleftright;
-         function dogetcopy : TNode;override;
-         procedure insertintolist(l : TNodeList);override;
-         procedure printnodedata(var t:text);override;
-         procedure printnodelist(var t:text);
+         procedure DerefImpl;override;
+         function IsChild(ANode : TNode) : Boolean;override;
+         function DoCompare(ANode : TNode) : Boolean;override;
+         procedure SwapLeftRight;
+         function DoGetCopy : TNode;override;
+         procedure InsertIntoList(AList : TNodeList);override;
+         procedure PrintNodeData(var AText:Text);override;
+         procedure PrintNodeList(var AText:Text);
          { Marks the current node for deletion and sets 'right' to nil.
            Returns what 'right' was previously set to }
          function PruneKeepRight: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
@@ -420,53 +420,53 @@ interface
 
       //ptertiarynode = ^ttertiarynode;
       TTertiaryNode = class(TBinaryNode)
-         third : TNode;
-         constructor create(_t:TNodeType;l,r,t : TNode);
-         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+         Third : TNode;
+         constructor Create(ANodeType:TNodeType;ALeft,ARight,AThird : TNode);
+         constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
          destructor Destroy;override;
-         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+         procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
          procedure BuildDerefImpl;override;
-         procedure derefimpl;override;
-         function ischild(p : TNode) : boolean;override;
-         function docompare(p : TNode) : boolean;override;
-         function dogetcopy : TNode;override;
-         procedure insertintolist(l : TNodeList);override;
-         procedure printnodedata(var t:text);override;
+         procedure DerefImpl;override;
+         function IsChild(ANode : TNode) : Boolean;override;
+         function DoCompare(ANode : TNode) : Boolean;override;
+         function DoGetCopy : TNode;override;
+         procedure InsertIntoList(AList : TNodeList);override;
+         procedure PrintNodeData(var AText:Text);override;
          { Marks the current node for deletion and sets 'third' to nil.
            Returns what 'third' was previously set to }
          function PruneKeepThird: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       end;
 
       TBinOpNode = class(TBinaryNode)
-         constructor create(t:TNodeType;l,r : TNode);virtual;
-         function docompare(p : TNode) : boolean;override;
+         constructor Create(ANodeType:TNodeType;ALeft,ARight : TNode);virtual;
+         function DoCompare(ANode : TNode) : Boolean;override;
       end;
 
     var
       { array with all class types for tnodes }
-      nodeclass : TNodeClassArray;
+      NodeClass : TNodeClassArray;
 
-    function nodeppuidxget(i:LongInt):TNode;
-    function ppuloadnode(ppufile:TCompilerPPUFile):TNode;
-    procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
-    function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
-    procedure ppuwritenodetree(ppufile:TCompilerPPUFile;n:TNode);
+    function NodePPUIdxGet(AIndex:LongInt):TNode;
+    function PPULoadNode(APPUFile:TCompilerPPUFile):TNode;
+    procedure PPUWriteNode(APPUFile:TCompilerPPUFile;ANode:TNode);
+    function PPULoadNodeTree(APPUFile:TCompilerPPUFile):TNode;
+    procedure PPUWriteNodeTree(APPUFile:TCompilerPPUFile;ANode:TNode);
 
-    procedure printfileinfo(var t:text;pos:TFilePosInfo);
-    procedure dprintfileinfo(pos:TFilePosInfo);
-    procedure printnode(var t:text;n:TNode);
-    procedure dprintnode(n:TNode);
-    function is_constnode(p : TNode) : boolean;
-    function is_constintnode(p : TNode) : boolean;
-    function is_constcharnode(p : TNode) : boolean;
-    function is_constrealnode(p : TNode) : boolean;
-    function is_constboolnode(p : TNode) : boolean;
-    function is_constenumnode(p : TNode) : boolean;
-    function is_constwidecharnode(p : TNode) : boolean;
-    function is_constpointernode(p : TNode) : boolean;
-    function is_conststringnode(p : TNode) : boolean;
-    function is_constwidestringnode(p : TNode) : boolean;
-    function is_conststring_or_constcharnode(p : TNode) : boolean;
+    procedure PrintFileInfo(var AText:Text;APos:TFilePosInfo);
+    procedure DPrintFileInfo(APos:TFilePosInfo);
+    procedure PrintNode(var AText:Text;ANode:TNode);
+    procedure DPrintNode(ANode:TNode);
+    function Is_ConstNode(ANode : TNode) : Boolean;
+    function Is_ConstIntNode(ANode : TNode) : Boolean;
+    function Is_ConstCharNode(ANode : TNode) : Boolean;
+    function Is_ConstRealNode(ANode : TNode) : Boolean;
+    function Is_ConstBoolNode(ANode : TNode) : Boolean;
+    function Is_ConstEnumNode(ANode : TNode) : Boolean;
+    function Is_ConstWideCharNode(ANode : TNode) : Boolean;
+    function Is_ConstPointerNode(ANode : TNode) : Boolean;
+    function Is_ConstStringNode(ANode : TNode) : Boolean;
+    function Is_ConstWideStringNode(ANode : TNode) : Boolean;
+    function Is_ConstString_Or_ConstCharNode(ANode : TNode) : Boolean;
 
 
 implementation
@@ -480,7 +480,7 @@ implementation
        defutil;
 
     const
-      ppunodemarker = 255;
+      cPPUNodeMarker = 255;
 
 
 {****************************************************************************
@@ -488,235 +488,235 @@ implementation
  ****************************************************************************}
 
     var
-      nodeppulist : TFPObjectList;
-      nodeppuidx  : LongInt;
+      NodePPUList : TFPObjectList;
+      NodePPUIdx  : LongInt;
 
 
-    procedure nodeppuidxcreate;
+    procedure NodePPUIdxCreate;
       begin
-        nodeppulist:=TFPObjectList.Create(false);
-        nodeppuidx:=0;
+        NodePPUList:=TFPObjectList.Create(false);
+        NodePPUIdx:=0;
       end;
 
 
-    procedure nodeppuidxresolve;
+    procedure NodePPUIdxResolve;
       var
-        i : LongInt;
-        n : TNode;
+        lIndex : LongInt;
+        lNode : TNode;
       begin
-        for i:=0 to nodeppulist.count-1 do
+        for lIndex:=0 to NodePPUList.count-1 do
           begin
-            n:=TNode(nodeppulist[i]);
-            if Assigned(n) then
-              n.resolveppuidx;
+            lNode:=TNode(NodePPUList[lIndex]);
+            if Assigned(lNode) then
+              lNode.ResolvePPUIdx;
           end;
       end;
 
 
-    procedure nodeppuidxfree;
+    procedure NodePPUIdxFree;
       begin
-        nodeppulist.free;
-        nodeppulist:=nil;
-        nodeppuidx:=0;
+        NodePPUList.free;
+        NodePPUList:=nil;
+        NodePPUIdx:=0;
       end;
 
 
-    procedure nodeppuidxadd(n:TNode);
+    procedure NodePPUIdxAdd(ANode:TNode);
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        i:=n.ppuidx;
-        if i<=0 then
+        lIndex:=ANode.PPUIdx;
+        if lIndex<=0 then
           InternalError(200311072);
-        if i>=nodeppulist.capacity then
-          nodeppulist.capacity:=((i div 1024)+1)*1024;
-        if i>=nodeppulist.count then
-          nodeppulist.count:=i+1;
-        nodeppulist[i]:=n;
+        if lIndex>=NodePPUList.capacity then
+          NodePPUList.capacity:=((lIndex div 1024)+1)*1024;
+        if lIndex>=NodePPUList.count then
+          NodePPUList.count:=lIndex+1;
+        NodePPUList[lIndex]:=ANode;
       end;
 
 
-    function nodeppuidxget(i:LongInt):TNode;
+    function NodePPUIdxGet(AIndex:LongInt):TNode;
       begin
-        if i<=0 then
+        if AIndex<=0 then
           InternalError(200311073);
-        result:=TNode(nodeppulist[i]);
+        Result:=TNode(NodePPUList[AIndex]);
       end;
 
 
-    function ppuloadnode(ppufile:TCompilerPPUFile):TNode;
+    function PPULoadNode(APPUFile:TCompilerPPUFile):TNode;
       var
-        b : byte;
-        t : TNodeType;
-        hppuidx : LongInt;
+        lMarker : Byte;
+        lNodeType : TNodeType;
+        lPPUIdx : LongInt;
       begin
         { marker }
-        b:=ppufile.GetByte;
-        if b<>ppunodemarker then
+        lMarker:=APPUFile.GetByte;
+        if lMarker<>cPPUNodeMarker then
           InternalError(200208151);
         { load nodetype }
-        t:=TNodeType(ppufile.GetByte);
-        if t>high(TNodeType) then
+        lNodeType:=TNodeType(APPUFile.GetByte);
+        if lNodeType>high(TNodeType) then
           InternalError(200208152);
-        if t<>emptynode then
+        if lNodeType<>emptynode then
          begin
-           if not Assigned(nodeclass[t]) then
+           if not Assigned(NodeClass[lNodeType]) then
              InternalError(200208153);
-           hppuidx:=ppufile.GetLongInt;
+           lPPUIdx:=APPUFile.GetLongInt;
            //writeln('load: ',nodetype2str[t]);
            { generate node of the correct class }
-           result:=nodeclass[t].ppuload(t,ppufile);
-           result.fppuidx:=hppuidx;
-           nodeppuidxadd(result);
+           Result:=NodeClass[lNodeType].PPULoad(lNodeType,APPUFile);
+           Result.FPPUIdx:=lPPUIdx;
+           NodePPUIdxAdd(Result);
          end
         else
-         result:=nil;
+         Result:=nil;
       end;
 
 
-    procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
+    procedure PPUWriteNode(APPUFile:TCompilerPPUFile;ANode:TNode);
       begin
         { marker, read by ppuloadnode }
-        ppufile.PutByte(ppunodemarker);
+        APPUFile.PutByte(cPPUNodeMarker);
         { type, read by ppuloadnode }
-        if Assigned(n) then
+        if Assigned(ANode) then
          begin
-           ppufile.PutByte(byte(n.nodetype));
-           ppufile.PutLongInt(n.ppuidx);
+           APPUFile.PutByte(Byte(ANode.NodeType));
+           APPUFile.PutLongInt(ANode.PPUIdx);
            //writeln('write: ',nodetype2str[n.nodetype]);
-           n.ppuwrite(ppufile);
+           ANode.PPUWrite(APPUFile);
          end
         else
-         ppufile.PutByte(byte(emptynode));
+         APPUFile.PutByte(Byte(emptynode));
       end;
 
 
-    function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
+    function PPULoadNodeTree(APPUFile:TCompilerPPUFile):TNode;
       begin
-        if ppufile.ReadEntry<>IBNodeTree then
+        if APPUFile.ReadEntry<>IBNodeTree then
           Message(unit_f_ppu_read_error);
-        nodeppuidxcreate;
-        result:=ppuloadnode(ppufile);
-        nodeppuidxresolve;
-        nodeppuidxfree;
+        NodePPUIdxCreate;
+        Result:=PPULoadNode(APPUFile);
+        NodePPUIdxResolve;
+        NodePPUIdxFree;
       end;
 
 
-    procedure ppuwritenodetree(ppufile:TCompilerPPUFile;n:TNode);
+    procedure PPUWriteNodeTree(APPUFile:TCompilerPPUFile;ANode:TNode);
       begin
-        nodeppuidxcreate;
-        ppuwritenode(ppufile,n);
-        ppufile.WriteEntry(IBNodeTree);
-        nodeppuidxfree;
+        NodePPUIdxCreate;
+        PPUWriteNode(APPUFile,ANode);
+        APPUFile.WriteEntry(IBNodeTree);
+        NodePPUIdxFree;
       end;
 
 
-    procedure printnode(var t:text;n:TNode);
+    procedure PrintNode(var AText:Text;ANode:TNode);
       begin
-        if Assigned(n) then
-         n.printnodetree(t)
+        if Assigned(ANode) then
+         ANode.PrintNodeTree(AText)
         else
-         WriteLn(t,PrintNodeIndention,'nil');
+         WriteLn(AText,PrintNodeIndention,'nil');
       end;
 
 
-    procedure dprintnode(n:TNode);
+    procedure DPrintNode(ANode:TNode);
       begin
-        printnode(Output,n);
+        PrintNode(Output,ANode);
       end;
 
-    procedure printfileinfo(var t:text; pos:TFilePosInfo);
+    procedure PrintFileInfo(var AText:Text; APos:TFilePosInfo);
       var
-	infile : string;
-	module : TModule;
-	afile : TInputFile;
+	lFileName : string;
+	lModule : TModule;
+	lFile : TInputFile;
       begin
-        infile:='inconsistent';
-	module:=Get_Module(pos.moduleindex);
-	if Assigned(module) then
+        lFileName:='inconsistent';
+	lModule:=Get_Module(APos.moduleindex);
+	if Assigned(lModule) then
           begin
-            afile:=module.SourceFiles.Get_File(pos.fileindex);
-	    if Assigned(afile) then
-              infile:=afile.name;
+            lFile:=lModule.SourceFiles.Get_File(APos.fileindex);
+	    if Assigned(lFile) then
+              lFileName:=lFile.name;
 	  end;
-        write(t,'(',infile,':',pos.line,',',pos.column,')');
+        write(AText,'(',lFileName,':',APos.line,',',APos.column,')');
       end;
 
-    procedure dprintfileinfo(pos:TFilePosInfo);
+    procedure DPrintFileInfo(APos:TFilePosInfo);
       begin
-        printfileinfo(Output,pos);
-      end;
-
-
-    function is_constnode(p : TNode) : boolean;
-      begin
-        is_constnode:=(p.nodetype in nodetype_const);
+        PrintFileInfo(Output,APos);
       end;
 
 
-    function is_constintnode(p : TNode) : boolean;
+    function Is_ConstNode(ANode : TNode) : Boolean;
       begin
-         is_constintnode:=(p.nodetype=ordconstn) and Is_Integer(p.resultdef);
+        Is_ConstNode:=(ANode.NodeType in cNodeTypeConst);
       end;
 
 
-    function is_constcharnode(p : TNode) : boolean;
+    function Is_ConstIntNode(ANode : TNode) : Boolean;
       begin
-         is_constcharnode:=(p.nodetype=ordconstn) and Is_Char(p.resultdef);
+         Is_ConstIntNode:=(ANode.NodeType=ordconstn) and Is_Integer(ANode.ResultDef);
       end;
 
 
-    function is_constwidecharnode(p : TNode) : boolean;
+    function Is_ConstCharNode(ANode : TNode) : Boolean;
       begin
-         is_constwidecharnode:=(p.nodetype=ordconstn) and Is_WideChar(p.resultdef);
+         Is_ConstCharNode:=(ANode.NodeType=ordconstn) and Is_Char(ANode.ResultDef);
       end;
 
 
-    function is_constrealnode(p : TNode) : boolean;
+    function Is_ConstWideCharNode(ANode : TNode) : Boolean;
       begin
-         is_constrealnode:=(p.nodetype=realconstn);
+         Is_ConstWideCharNode:=(ANode.NodeType=ordconstn) and Is_WideChar(ANode.ResultDef);
       end;
 
 
-    function is_constboolnode(p : TNode) : boolean;
+    function Is_ConstRealNode(ANode : TNode) : Boolean;
       begin
-         is_constboolnode:=(p.nodetype=ordconstn) and Is_Boolean(p.resultdef);
+         Is_ConstRealNode:=(ANode.NodeType=realconstn);
       end;
 
 
-    function is_constenumnode(p : TNode) : boolean;
+    function Is_ConstBoolNode(ANode : TNode) : Boolean;
       begin
-         is_constenumnode:=(p.nodetype=ordconstn) and (p.resultdef.typ=enumdef);
+         Is_ConstBoolNode:=(ANode.NodeType=ordconstn) and Is_Boolean(ANode.ResultDef);
       end;
 
 
-    function is_constpointernode(p : TNode) : boolean;
+    function Is_ConstEnumNode(ANode : TNode) : Boolean;
       begin
-         is_constpointernode:=(p.nodetype in [pointerconstn,niln]);
+         Is_ConstEnumNode:=(ANode.NodeType=ordconstn) and (ANode.ResultDef.typ=enumdef);
       end;
 
-    function is_conststringnode(p : TNode) : boolean;
+
+    function Is_ConstPointerNode(ANode : TNode) : Boolean;
       begin
-         is_conststringnode :=
-           (p.nodetype = stringconstn) and
-           (Is_CharArray(p.resultdef) or
-            Is_ShortString(p.resultdef) or
-            Is_AnsiString(p.resultdef));
+         Is_ConstPointerNode:=(ANode.NodeType in [pointerconstn,niln]);
       end;
 
-    function is_constwidestringnode(p : TNode) : boolean;
+    function Is_ConstStringNode(ANode : TNode) : Boolean;
       begin
-         is_constwidestringnode :=
-           (p.nodetype = stringconstn) and
-           (Is_WideCharArray(p.resultdef) or
-            Is_Wide_Or_Unicode_String(p.resultdef));
+         Is_ConstStringNode :=
+           (ANode.NodeType = stringconstn) and
+           (Is_CharArray(ANode.ResultDef) or
+            Is_ShortString(ANode.ResultDef) or
+            Is_AnsiString(ANode.ResultDef));
       end;
 
-    function is_conststring_or_constcharnode(p : TNode) : boolean;
+    function Is_ConstWideStringNode(ANode : TNode) : Boolean;
       begin
-        is_conststring_or_constcharnode :=
-          is_conststringnode(p) or is_constcharnode(p) or
-          is_constwidestringnode(p) or is_constwidecharnode(p);
+         Is_ConstWideStringNode :=
+           (ANode.NodeType = stringconstn) and
+           (Is_WideCharArray(ANode.ResultDef) or
+            Is_Wide_Or_Unicode_String(ANode.ResultDef));
+      end;
+
+    function Is_ConstString_Or_ConstCharNode(ANode : TNode) : Boolean;
+      begin
+        Is_ConstString_Or_ConstCharNode :=
+          Is_ConstStringNode(ANode) or Is_ConstCharNode(ANode) or
+          Is_ConstWideStringNode(ANode) or Is_ConstWideCharNode(ANode);
       end;
 
 
@@ -724,343 +724,343 @@ implementation
                                  TNODE
  ****************************************************************************}
 
-    constructor TNode.create(t:TNodeType);
+    constructor TNode.Create(ANodeType:TNodeType);
 
       begin
-         inherited create;
-         nodetype:=t;
-         blocktype:=Block_Type;
+         inherited Create;
+         NodeType:=ANodeType;
+         BlockType:=Block_Type;
          { updated by firstpass }
-         expectloc:=LOC_INVALID;
+         ExpectLoc:=LOC_INVALID;
          { updated by secondpass }
-         location.Loc:=LOC_INVALID;
+         Location.Loc:=LOC_INVALID;
          { save local info }
-         fileinfo:=CurrentFilePos;
+         FileInfo:=CurrentFilePos;
          LocalSwitches:=CurrentSettings.LocalSwitches;
-         verbosity:=status.verbosity;
-         resultdef:=nil;
-         flags:=[];
+         Verbosity:=status.Verbosity;
+         ResultDef:=nil;
+         Flags:=[];
       end;
 
-    constructor TNode.createforcopy;
+    constructor TNode.CreateForCopy;
 
       begin
       end;
 
-    constructor TNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
 
       begin
-        nodetype:=t;
+        NodeType:=ANodeType;
         { tnode fields }
-        blocktype:=TBlockType(ppufile.GetByte);
-        ppufile.GetPosInfo(fileinfo);
-        ppufile.GetSet(TPPUSet5(LocalSwitches));
-        verbosity:=ppufile.GetLongInt;
-        ppufile.GetDeref(resultdefderef);
-        ppufile.GetSet(TPPUSet2(flags));
+        BlockType:=TBlockType(APPUFile.GetByte);
+        APPUFile.GetPosInfo(FileInfo);
+        APPUFile.GetSet(TPPUSet5(LocalSwitches));
+        Verbosity:=APPUFile.GetLongInt;
+        APPUFile.GetDeref(ResultDefDeref);
+        APPUFile.GetSet(TPPUSet2(Flags));
         { updated by firstpass }
-        expectloc:=LOC_INVALID;
+        ExpectLoc:=LOC_INVALID;
         { updated by secondpass }
-        location.Loc:=LOC_INVALID;
+        Location.Loc:=LOC_INVALID;
       end;
 
 
-    procedure TNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        ppufile.PutByte(byte(blocktype));
-        ppufile.PutPosInfo(fileinfo);
-        ppufile.PutSet(TPPUSet5(LocalSwitches));
-        ppufile.PutLongInt(verbosity);
-        ppufile.PutDeref(resultdefderef);
-        ppufile.PutSet(TPPUSet2(flags));
+        APPUFile.PutByte(Byte(BlockType));
+        APPUFile.PutPosInfo(FileInfo);
+        APPUFile.PutSet(TPPUSet5(LocalSwitches));
+        APPUFile.PutLongInt(Verbosity);
+        APPUFile.PutDeref(ResultDefDeref);
+        APPUFile.PutSet(TPPUSet2(Flags));
       end;
 
 
-    function TNode.getppuidx:LongInt;
+    function TNode.GetPPUIdx:LongInt;
       begin
-        if fppuidx=0 then
+        if FPPUIdx=0 then
           begin
-            inc(nodeppuidx);
-            fppuidx:=nodeppuidx;
+            inc(NodePPUIdx);
+            FPPUIdx:=NodePPUIdx;
           end;
-         result:=fppuidx;
+         Result:=FPPUIdx;
        end;
 
 
-    procedure TNode.resolveppuidx;
+    procedure TNode.ResolvePPUIdx;
       begin
       end;
 
 
     procedure TNode.BuildDerefImpl;
       begin
-        resultdefderef.build(resultdef);
+        ResultDefDeref.Build(ResultDef);
       end;
 
 
-    procedure TNode.derefimpl;
+    procedure TNode.DerefImpl;
       begin
-        resultdef:=TDef(resultdefderef.resolve);
+        ResultDef:=TDef(ResultDefDeref.resolve);
       end;
 
 
-    procedure TNode.toggleflag(f : TNodeFlag);
+    procedure TNode.ToggleFlag(AFlag : TNodeFlag);
       begin
-         if f in flags then
-           exclude(flags,f)
+         if AFlag in Flags then
+           exclude(Flags,AFlag)
          else
-           include(flags,f);
+           include(Flags,AFlag);
       end;
 
 
-    function TNode.simplify(forinline : boolean) : TNode;
+    function TNode.Simplify(AForInline : Boolean) : TNode;
       begin
-        result:=nil;
+        Result:=nil;
       end;
 
 
     destructor TNode.Destroy;
       begin
-         if Assigned(optinfo) then
-           dispose(optinfo);
+         if Assigned(OptInfo) then
+           dispose(OptInfo);
       end;
 
 
-    function TNode.ischild(p : TNode) : boolean;
+    function TNode.IsChild(ANode : TNode) : Boolean;
       begin
-         ischild:=false;
+         IsChild:=false;
       end;
 
 
-    procedure TNode.mark_write;
+    procedure TNode.Mark_Write;
       begin
 {$ifdef EXTDEBUG}
-        Comment(VWarning,'mark_write not implemented for '+nodetype2str[nodetype]);
+        Comment(VWarning,'mark_write not implemented for '+NodeType2Str[NodeType]);
 {$endif EXTDEBUG}
       end;
 
 
-    procedure TNode.printnodeinfo(var t:text);
+    procedure TNode.PrintNodeInfo(var AText:Text);
       var
-        i : TNodeFlag;
-        first : boolean;
+        lNodeFlag : TNodeFlag;
+        lFirst : Boolean;
       begin
-        write(t,nodetype2str[nodetype]);
-        if Assigned(resultdef) then
-          write(t,', resultdef = ',resultdef.TypeSymbolPrettyName,' = "',resultdef.GetTypeName,'" ')
+        write(AText,NodeType2Str[NodeType]);
+        if Assigned(ResultDef) then
+          write(AText,', resultdef = ',ResultDef.TypeSymbolPrettyName,' = "',ResultDef.GetTypeName,'" ')
         else
-          write(t,', resultdef = <nil> ');
-        printfileinfo(t,fileinfo);
-	write(t,', loc = ',TCGLoc2Str[location.Loc],
-                  ', expectloc = ',TCGLoc2Str[expectloc],
+          write(AText,', resultdef = <nil> ');
+        PrintFileInfo(AText,FileInfo);
+	write(AText,', loc = ',TCGLoc2Str[Location.Loc],
+                  ', expectloc = ',TCGLoc2Str[ExpectLoc],
                   ', flags = [');
-        first:=true;
-        for i:=low(TNodeFlag) to high(TNodeFlag) do
-          if i in flags then
+        lFirst:=true;
+        for lNodeFlag:=low(TNodeFlag) to high(TNodeFlag) do
+          if lNodeFlag in Flags then
             begin
-              if not(first) then
-                write(t,',')
+              if not(lFirst) then
+                write(AText,',')
               else
-                first:=false;
-              write(t, i);
+                lFirst:=false;
+              write(AText, lNodeFlag);
             end;
-        write(t,']');
-        if (tnf_pass1_done in transientflags) then
-          write(t,', cmplx = ',node_complexity(self));
-        if Assigned(optinfo) then
-          write(t,', optinfo = ',HexStr(optinfo));
+        write(AText,']');
+        if (tnf_pass1_done in TransientFlags) then
+          write(AText,', cmplx = ',Node_Complexity(self));
+        if Assigned(OptInfo) then
+          write(AText,', optinfo = ',HexStr(OptInfo));
       end;
 
 
-    procedure TNode.printnodedata(var t:text);
+    procedure TNode.PrintNodeData(var AText:Text);
       begin
       end;
 
 
-    procedure TNode.printnodetree(var t:text);
+    procedure TNode.PrintNodeTree(var AText:Text);
       begin
-         write(t,PrintNodeIndention,'(');
-         printnodeinfo(t);
-         WriteLn(t);
+         write(AText,PrintNodeIndention,'(');
+         PrintNodeInfo(AText);
+         WriteLn(AText);
          PrintNodeIndent;
-         printnodedata(t);
+         PrintNodeData(AText);
          PrintNodeUnindent;
-         WriteLn(t,PrintNodeIndention,')');
+         WriteLn(AText,PrintNodeIndention,')');
       end;
 
 
-    function TNode.isequal(p : TNode) : boolean;
+    function TNode.IsEqual(ANode : TNode) : Boolean;
       begin
-         isequal:=
-           (not Assigned(self) and not Assigned(p)) or
-           (Assigned(self) and Assigned(p) and
+         IsEqual:=
+           (not Assigned(self) and not Assigned(ANode)) or
+           (Assigned(self) and Assigned(ANode) and
             { optimized subclasses have the same nodetype as their        }
             { superclass (for compatibility), so also check the classtype (JM) }
-            (p.classtype=classtype) and
-            (p.nodetype=nodetype) and
-            (flags*flagsequal=p.flags*flagsequal) and
-            (transientflags*transientflagsequal=p.transientflags*transientflagsequal) and
-            docompare(p));
+            (ANode.classtype=classtype) and
+            (ANode.NodeType=NodeType) and
+            (Flags*FlagsEqual=ANode.Flags*FlagsEqual) and
+            (TransientFlags*TransientFlagsEqual=ANode.TransientFlags*TransientFlagsEqual) and
+            DoCompare(ANode));
       end;
 
 
 
-    function TNode.docompare(p : TNode) : boolean;
+    function TNode.DoCompare(ANode : TNode) : Boolean;
       begin
-         docompare:=true;
+         DoCompare:=true;
       end;
 
 
-    function cleanupcopiedto(var n : TNode;arg : pointer) : TForEachNodeResult;
+    function CleanupCopiedTo(var ANode : TNode;AArg : Pointer) : TForEachNodeResult;
       begin
-        result:=fen_true;
-        if n.nodetype=labeln then
-          TLabelNode(n).copiedto:=nil;
+        Result:=fen_true;
+        if ANode.NodeType=labeln then
+          TLabelNode(ANode).CopiedTo:=nil;
       end;
 
 
-    function setuplabelnode(var n : TNode;arg : pointer) : TForEachNodeResult;
+    function SetupLabelNode(var ANode : TNode;AArg : Pointer) : TForEachNodeResult;
       begin
-        result:=fen_true;
-        if (n.nodetype=goton) and Assigned(TGotoNode(n).labelnode) and
-          Assigned(TGotoNode(n).labelnode.copiedto) then
-          TGotoNode(n).labelnode:=TGotoNode(n).labelnode.copiedto;
+        Result:=fen_true;
+        if (ANode.NodeType=goton) and Assigned(TGotoNode(ANode).LabelNode) and
+          Assigned(TGotoNode(ANode).LabelNode.CopiedTo) then
+          TGotoNode(ANode).LabelNode:=TGotoNode(ANode).LabelNode.CopiedTo;
       end;
 
 
     function TNode.GetCopy : TNode;
       begin
-        result:=dogetcopy;
-        foreachnodestatic(pm_postprocess,result,@setuplabelnode,nil);
-        foreachnodestatic(pm_postprocess,self,@cleanupcopiedto,nil);
+        Result:=DoGetCopy;
+        ForEachNodeStatic(pm_postprocess,Result,@SetupLabelNode,nil);
+        ForEachNodeStatic(pm_postprocess,self,@CleanupCopiedTo,nil);
       end;
 
 
-    function TNode.dogetcopy : TNode;
+    function TNode.DoGetCopy : TNode;
       var
-         p : TNode;
+         lCopy : TNode;
       begin
          { this is quite tricky because we need a node of the current }
          { node type and not one of tnode!                            }
-         p:=TNodeClass(classtype).createforcopy;
-         p.nodetype:=nodetype;
-         p.expectloc:=expectloc;
-         p.Location:=location;
-         p.flags:=flags;
-         p.transientflags:=transientflags;
-         p.resultdef:=resultdef;
-         p.fileinfo:=fileinfo;
-         p.LocalSwitches:=LocalSwitches;
-         p.verbosity:=verbosity;
+         lCopy:=TNodeClass(classtype).CreateForCopy;
+         lCopy.NodeType:=NodeType;
+         lCopy.ExpectLoc:=ExpectLoc;
+         lCopy.Location:=Location;
+         lCopy.Flags:=Flags;
+         lCopy.TransientFlags:=TransientFlags;
+         lCopy.ResultDef:=ResultDef;
+         lCopy.FileInfo:=FileInfo;
+         lCopy.LocalSwitches:=LocalSwitches;
+         lCopy.Verbosity:=Verbosity;
 {         p.list:=list; }
-         result:=p;
+         Result:=lCopy;
       end;
 
 
-    procedure TNode.insertintolist(l : TNodeList);
+    procedure TNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
     { ensures that the optimizer info record is allocated }
-    function TNode.allocoptinfo : POptInfo;inline;
+    function TNode.AllocOptInfo : POptInfo;inline;
       begin
-        if not(Assigned(optinfo)) then
+        if not(Assigned(OptInfo)) then
           begin
-            new(optinfo);
-            fillchar(optinfo^,sizeof(optinfo^),0);
+            new(OptInfo);
+            fillchar(OptInfo^,sizeof(OptInfo^),0);
           end;
-        result:=optinfo;
+        Result:=OptInfo;
       end;
 
 {****************************************************************************
                                  TUNARYNODE
  ****************************************************************************}
 
-    constructor TUnaryNode.create(t:TNodeType;l : TNode);
+    constructor TUnaryNode.Create(ANodeType:TNodeType;ALeft : TNode);
       begin
-         inherited create(t);
+         inherited Create(ANodeType);
          { transfer generic paramater flag }
-         if Assigned(l) and (nf_generic_para in l.flags) then
-           include(flags,nf_generic_para);
-         left:=l;
+         if Assigned(ALeft) and (nf_generic_para in ALeft.Flags) then
+           include(Flags,nf_generic_para);
+         Left:=ALeft;
       end;
 
 
-    constructor TUnaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TUnaryNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        left:=ppuloadnode(ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
+        Left:=PPULoadNode(APPUFile);
       end;
 
 
     destructor TUnaryNode.Destroy;
       begin
-        left.free;
-        left := nil;
+        Left.free;
+        Left := nil;
         inherited Destroy;
       end;
 
 
-    procedure TUnaryNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TUnaryNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppuwritenode(ppufile,left);
+        inherited PPUWrite(APPUFile);
+        PPUWriteNode(APPUFile,Left);
       end;
 
 
     procedure TUnaryNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        if Assigned(left) then
-          left.BuildDerefImpl;
+        if Assigned(Left) then
+          Left.BuildDerefImpl;
       end;
 
 
-    procedure TUnaryNode.derefimpl;
+    procedure TUnaryNode.DerefImpl;
       begin
-        inherited derefimpl;
-        if Assigned(left) then
-          left.derefimpl;
+        inherited DerefImpl;
+        if Assigned(Left) then
+          Left.DerefImpl;
       end;
 
 
-    function TUnaryNode.docompare(p : TNode) : boolean;
+    function TUnaryNode.DoCompare(ANode : TNode) : Boolean;
       begin
-         docompare:=(inherited docompare(p) and
-           ((left=nil) or left.isequal(TUnaryNode(p).left))
+         DoCompare:=(inherited DoCompare(ANode) and
+           ((Left=nil) or Left.IsEqual(TUnaryNode(ANode).Left))
          );
       end;
 
 
-    function TUnaryNode.dogetcopy : TNode;
+    function TUnaryNode.DoGetCopy : TNode;
       var
-         p : TUnaryNode;
+         lCopy : TUnaryNode;
       begin
-         p:=TUnaryNode(inherited dogetcopy);
-         if Assigned(left) then
-           p.left:=left.dogetcopy
+         lCopy:=TUnaryNode(inherited DoGetCopy);
+         if Assigned(Left) then
+           lCopy.Left:=Left.DoGetCopy
          else
-           p.left:=nil;
-         result:=p;
+           lCopy.Left:=nil;
+         Result:=lCopy;
       end;
 
 
-    procedure TUnaryNode.insertintolist(l : TNodeList);
+    procedure TUnaryNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    procedure TUnaryNode.printnodedata(var t:text);
+    procedure TUnaryNode.PrintNodeData(var AText:Text);
       begin
-         inherited printnodedata(t);
-         printnode(t,left);
+         inherited PrintNodeData(AText);
+         PrintNode(AText,Left);
       end;
 
 
-    function TUnaryNode.ischild(p : TNode) : boolean;
+    function TUnaryNode.IsChild(ANode : TNode) : Boolean;
       begin
-         ischild:=p=left;
+         IsChild:=ANode=Left;
       end;
 
 
@@ -1068,9 +1068,9 @@ implementation
       Returns what 'left' was previously set to }
     function TUnaryNode.PruneKeepLeft: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result := left;
-        left := nil;
-        Include(transientflags, tnf_do_not_execute);
+        Result := Left;
+        Left := nil;
+        Include(TransientFlags, tnf_do_not_execute);
       end;
 
 
@@ -1078,123 +1078,123 @@ implementation
                             TBINARYNODE
  ****************************************************************************}
 
-    constructor TBinaryNode.create(t:TNodeType;l,r : TNode);
+    constructor TBinaryNode.Create(ANodeType:TNodeType;ALeft,ARight : TNode);
       begin
-         inherited create(t,l);
+         inherited Create(ANodeType,ALeft);
          { transfer generic paramater flag }
-         if Assigned(r) and (nf_generic_para in r.flags) then
-           include(flags,nf_generic_para);
-         right:=r;
+         if Assigned(ARight) and (nf_generic_para in ARight.Flags) then
+           include(Flags,nf_generic_para);
+         Right:=ARight;
       end;
 
 
-    constructor TBinaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TBinaryNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        right:=ppuloadnode(ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
+        Right:=PPULoadNode(APPUFile);
       end;
 
 
     destructor TBinaryNode.Destroy;
       begin
-        right.free;
-        right := nil;
+        Right.free;
+        Right := nil;
         inherited Destroy;
       end;
 
 
-    procedure TBinaryNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TBinaryNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppuwritenode(ppufile,right);
+        inherited PPUWrite(APPUFile);
+        PPUWriteNode(APPUFile,Right);
       end;
 
 
     procedure TBinaryNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        if Assigned(right) then
-          right.BuildDerefImpl;
+        if Assigned(Right) then
+          Right.BuildDerefImpl;
       end;
 
 
-    procedure TBinaryNode.derefimpl;
+    procedure TBinaryNode.DerefImpl;
       begin
-        inherited derefimpl;
-        if Assigned(right) then
-          right.derefimpl;
+        inherited DerefImpl;
+        if Assigned(Right) then
+          Right.DerefImpl;
       end;
 
 
-    function TBinaryNode.ischild(p : TNode) : boolean;
+    function TBinaryNode.IsChild(ANode : TNode) : Boolean;
       begin
-         ischild:=(p=right);
+         IsChild:=(ANode=Right);
       end;
 
 
-    function TBinaryNode.docompare(p : TNode) : boolean;
+    function TBinaryNode.DoCompare(ANode : TNode) : Boolean;
       begin
-         docompare:=(inherited docompare(p) and
-             ((right=nil) or right.isequal(TBinaryNode(p).right))
+         DoCompare:=(inherited DoCompare(ANode) and
+             ((Right=nil) or Right.IsEqual(TBinaryNode(ANode).Right))
          );
       end;
 
 
-    function TBinaryNode.dogetcopy : TNode;
+    function TBinaryNode.DoGetCopy : TNode;
       var
-         p : TBinaryNode;
+         lCopy : TBinaryNode;
       begin
-         p:=TBinaryNode(inherited dogetcopy);
-         if Assigned(right) then
-           p.right:=right.dogetcopy
+         lCopy:=TBinaryNode(inherited DoGetCopy);
+         if Assigned(Right) then
+           lCopy.Right:=Right.DoGetCopy
          else
-           p.right:=nil;
-         result:=p;
+           lCopy.Right:=nil;
+         Result:=lCopy;
       end;
 
 
-    procedure TBinaryNode.insertintolist(l : TNodeList);
+    procedure TBinaryNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    procedure TBinaryNode.swapleftright;
+    procedure TBinaryNode.SwapLeftRight;
       var
-         swapp : TNode;
+         lSwapNode : TNode;
       begin
-         swapp:=right;
-         right:=left;
-         left:=swapp;
-         if nf_swapped in flags then
-           exclude(flags,nf_swapped)
+         lSwapNode:=Right;
+         Right:=Left;
+         Left:=lSwapNode;
+         if nf_swapped in Flags then
+           exclude(Flags,nf_swapped)
          else
-           include(flags,nf_swapped);
+           include(Flags,nf_swapped);
       end;
 
 
-    procedure TBinaryNode.printnodedata(var t:text);
+    procedure TBinaryNode.PrintNodeData(var AText:Text);
       begin
-         inherited printnodedata(t);
-         printnode(t,right);
+         inherited PrintNodeData(AText);
+         PrintNode(AText,Right);
       end;
 
 
-    procedure TBinaryNode.printnodelist(var t:text);
+    procedure TBinaryNode.PrintNodeList(var AText:Text);
       var
-        hp : TBinaryNode;
+        lNode : TBinaryNode;
       begin
-        hp:=self;
-        while Assigned(hp) do
+        lNode:=self;
+        while Assigned(lNode) do
          begin
-           write(t,PrintNodeIndention,'(');
+           write(AText,PrintNodeIndention,'(');
            PrintNodeIndent;
-           hp.printnodeinfo(t);
-           WriteLn(t);
-           printnode(t,hp.left);
-           WriteLn(t);
+           lNode.PrintNodeInfo(AText);
+           WriteLn(AText);
+           PrintNode(AText,lNode.Left);
+           WriteLn(AText);
            PrintNodeUnindent;
-           WriteLn(t,PrintNodeIndention,')');
-           hp:=TBinaryNode(hp.right);
+           WriteLn(AText,PrintNodeIndention,')');
+           lNode:=TBinaryNode(lNode.Right);
          end;
       end;
 
@@ -1203,9 +1203,9 @@ implementation
       Returns what 'right' was previously set to }
     function TBinaryNode.PruneKeepRight: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result := right;
-        right := nil;
-        Include(transientflags, tnf_do_not_execute);
+        Result := Right;
+        Right := nil;
+        Include(TransientFlags, tnf_do_not_execute);
       end;
 
 
@@ -1213,90 +1213,90 @@ implementation
                                  TTERTIARYNODE
  ****************************************************************************}
 
-    constructor TTertiaryNode.create(_t:TNodeType;l,r,t : TNode);
+    constructor TTertiaryNode.Create(ANodeType:TNodeType;ALeft,ARight,AThird : TNode);
       begin
-         inherited create(_t,l,r);
+         inherited Create(ANodeType,ALeft,ARight);
          { transfer generic parameter flag }
-         if Assigned(t) and (nf_generic_para in t.flags) then
-           include(flags,nf_generic_para);
-         third:=t;
+         if Assigned(AThird) and (nf_generic_para in AThird.Flags) then
+           include(Flags,nf_generic_para);
+         Third:=AThird;
       end;
 
 
-    constructor TTertiaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TTertiaryNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        third:=ppuloadnode(ppufile);
+        inherited PPULoad(ANodeType,APPUFile);
+        Third:=PPULoadNode(APPUFile);
       end;
 
 
     destructor TTertiaryNode.Destroy;
       begin
-        third.free;
-        third := nil;
+        Third.free;
+        Third := nil;
         inherited Destroy;
       end;
 
 
-    procedure TTertiaryNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TTertiaryNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppuwritenode(ppufile,third);
+        inherited PPUWrite(APPUFile);
+        PPUWriteNode(APPUFile,Third);
       end;
 
 
     procedure TTertiaryNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        if Assigned(third) then
-          third.BuildDerefImpl;
+        if Assigned(Third) then
+          Third.BuildDerefImpl;
       end;
 
 
-    procedure TTertiaryNode.derefimpl;
+    procedure TTertiaryNode.DerefImpl;
       begin
-        inherited derefimpl;
-        if Assigned(third) then
-          third.derefimpl;
+        inherited DerefImpl;
+        if Assigned(Third) then
+          Third.DerefImpl;
       end;
 
 
-    function TTertiaryNode.docompare(p : TNode) : boolean;
+    function TTertiaryNode.DoCompare(ANode : TNode) : Boolean;
       begin
-         docompare:=(inherited docompare(p) and
-           ((third=nil) or third.isequal(TTertiaryNode(p).third))
+         DoCompare:=(inherited DoCompare(ANode) and
+           ((Third=nil) or Third.IsEqual(TTertiaryNode(ANode).Third))
          );
       end;
 
 
-    function TTertiaryNode.dogetcopy : TNode;
+    function TTertiaryNode.DoGetCopy : TNode;
       var
-         p : TTertiaryNode;
+         lCopy : TTertiaryNode;
       begin
-         p:=TTertiaryNode(inherited dogetcopy);
-         if Assigned(third) then
-           p.third:=third.dogetcopy
+         lCopy:=TTertiaryNode(inherited DoGetCopy);
+         if Assigned(Third) then
+           lCopy.Third:=Third.DoGetCopy
          else
-           p.third:=nil;
-         result:=p;
+           lCopy.Third:=nil;
+         Result:=lCopy;
       end;
 
 
-    procedure TTertiaryNode.insertintolist(l : TNodeList);
+    procedure TTertiaryNode.InsertIntoList(AList : TNodeList);
       begin
       end;
 
 
-    procedure TTertiaryNode.printnodedata(var t:text);
+    procedure TTertiaryNode.PrintNodeData(var AText:Text);
       begin
-         inherited printnodedata(t);
-         printnode(t,third);
+         inherited PrintNodeData(AText);
+         PrintNode(AText,Third);
       end;
 
 
-    function TTertiaryNode.ischild(p : TNode) : boolean;
+    function TTertiaryNode.IsChild(ANode : TNode) : Boolean;
       begin
-         ischild:=p=third;
+         IsChild:=ANode=Third;
       end;
 
 
@@ -1304,9 +1304,9 @@ implementation
       Returns what 'third' was previously set to }
     function TTertiaryNode.PruneKeepThird: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result := third;
-        third := nil;
-        Include(transientflags, tnf_do_not_execute);
+        Result := Third;
+        Third := nil;
+        Include(TransientFlags, tnf_do_not_execute);
       end;
 
 
@@ -1314,25 +1314,25 @@ implementation
                             TBINOPNODE
  ****************************************************************************}
 
-    constructor TBinOpNode.create(t:TNodeType;l,r : TNode);
+    constructor TBinOpNode.Create(ANodeType:TNodeType;ALeft,ARight : TNode);
       begin
-         inherited create(t,l,r);
+         inherited Create(ANodeType,ALeft,ARight);
       end;
 
 
-    function TBinOpNode.docompare(p : TNode) : boolean;
+    function TBinOpNode.DoCompare(ANode : TNode) : Boolean;
       begin
-         docompare:=(inherited docompare(p)) or
+         DoCompare:=(inherited DoCompare(ANode)) or
            { if that's in the flags, is p then always a tbinopnode (?) (JM) }
-           ((tnf_swapable in transientflags) and
-            left.isequal(TBinOpNode(p).right) and
-            right.isequal(TBinOpNode(p).left));
+           ((tnf_swapable in TransientFlags) and
+            Left.IsEqual(TBinOpNode(ANode).Right) and
+            Right.IsEqual(TBinOpNode(ANode).Left));
       end;
 
 
 var
-  printfileinfo_address : pointer;
-  printnode_address : pointer;
+  PrintFileInfo_Address : Pointer;
+  PrintNode_Address : Pointer;
 
 begin
 {$push}{$warnings off}
@@ -1343,7 +1343,7 @@ begin
   if ord(high(tnodeflags))>31 then
     internalerror(2014020701); *)
 {$pop}
-  printfileinfo_address:=@dprintfileinfo;
-  printnode_address:=@dprintnode;
+  PrintFileInfo_Address:=@DPrintFileInfo;
+  PrintNode_Address:=@DPrintNode;
 end.
 

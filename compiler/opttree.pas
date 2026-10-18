@@ -50,7 +50,7 @@ unit opttree;
       defutil,
       nbas,nld,ncal,
       nutils,
-      pass_1;
+      Pass_1;
 
     function searchstatements(var n : TNode;arg : pointer) : TForEachNodeResult;forward;
 
@@ -81,10 +81,10 @@ unit opttree;
           begin
             if Assigned(s.left) and
                (s.left.nodetype=tempdeleten) and
-               (TTempDeleteNode(s.left).tempinfo=ti) then
+               (TTempDeleteNode(s.left).TempInfo=ti) then
               begin
                 result:=TTempDeleteNode(s.left);
-                s.left:=CNothingNode.create;
+                s.left:=CNothingNode.Create;
                 exit;
               end;
             s:=TStatementNode(s.right);
@@ -104,7 +104,7 @@ unit opttree;
         if n.nodetype in [addn,orn] then
           begin
             { so far we cannot fiddle with short boolean evaluations containing blocks }
-            if doshortbooleval(n) and foreachnodestatic(n,@hasblock,nil) then
+            if DoShortBoolEval(n) and ForEachNodeStatic(n,@hasblock,nil) then
               begin
                 result:=fen_norecurse_false;
                 exit;
@@ -113,25 +113,25 @@ unit opttree;
         case n.nodetype of
           calln:
             begin
-              if Assigned(TCallNode(n).callinitblock) then
+              if Assigned(TCallNode(n).CallInitBlock) then
                 begin
                   { create a new statement node and insert it }
-                  hp:=CStatementNode.create(TCallNode(n).callinitblock,PNode(arg)^);
+                  hp:=CStatementNode.Create(TCallNode(n).CallInitBlock,PNode(arg)^);
                   PNode(arg)^:=hp;
                   { tree moved }
-                  TCallNode(n).callinitblock:=nil;
+                  TCallNode(n).CallInitBlock:=nil;
                   { process the newly generated block }
-                  foreachnodestatic(PNode(arg)^,@searchstatements,nil);
+                  ForEachNodeStatic(PNode(arg)^,@searchstatements,nil);
                 end;
-              if Assigned(TCallNode(n).callcleanupblock) then
+              if Assigned(TCallNode(n).CallCleanupBlock) then
                 begin
                   { create a new statement node and append it }
-                  hp:=CStatementNode.create(TCallNode(n).callcleanupblock,TStatementNode(PNode(arg)^).right);
+                  hp:=CStatementNode.Create(TCallNode(n).CallCleanupBlock,TStatementNode(PNode(arg)^).right);
                   TStatementNode(PNode(arg)^).right:=hp;
                   { tree moved }
-                  TCallNode(n).callcleanupblock:=nil;
+                  TCallNode(n).CallCleanupBlock:=nil;
                   { process the newly generated block }
-                  foreachnodestatic(TStatementNode(PNode(arg)^).right,@searchstatements,nil);
+                  ForEachNodeStatic(TStatementNode(PNode(arg)^).right,@searchstatements,nil);
                 end;
             end;
           blockn:
@@ -149,7 +149,7 @@ unit opttree;
                  Is_Void(TBlockNode(n).resultdef) then
                 begin
                   if Assigned(TBlockNode(n).left) then
-                    foreachnodestatic(TBlockNode(n).left,@searchstatements,normalize_success);
+                    ForEachNodeStatic(TBlockNode(n).left,@searchstatements,normalize_success);
                   { tell the outer foreachnodestatic not to descend again -
                     we've already walked the body with searchstatements }
                   result:=fen_norecurse_true;
@@ -185,23 +185,23 @@ unit opttree;
                               temp (otherwise the delete would run before the
                               use and trip IE 200108231); nil for other cases }
                             if res^.nodetype=temprefn then
-                              tempdelnode:=block_extract_tempdelete(TBlockNode(n),TTempRefNode(res^).tempinfo)
+                              tempdelnode:=block_extract_tempdelete(TBlockNode(n),TTempRefNode(res^).TempInfo)
                             else
                               tempdelnode:=nil;
                             { create a new statement node and insert it }
-                            hp:=CStatementNode.create(n,PNode(arg)^);
+                            hp:=CStatementNode.Create(n,PNode(arg)^);
                             PNode(arg)^:=hp;
                             { use the result node instead of the block node }
                             n:=res^;
                             { the old statement is not used anymore }
-                            res^:=CNothingNode.create;
+                            res^:=CNothingNode.Create;
                             { splice the lifted tempdelete after the original
                               statement so the temp outlives the extracted tempref }
                             if Assigned(tempdelnode) then
                               TStatementNode(hp.right).right:=
-                                CStatementNode.create(tempdelnode,TStatementNode(hp.right).right);
+                                CStatementNode.Create(tempdelnode,TStatementNode(hp.right).right);
                             { process the newly generated statement }
-                            foreachnodestatic(PNode(arg)^,@searchstatements,nil);
+                            ForEachNodeStatic(PNode(arg)^,@searchstatements,nil);
                           end
                         else if Assigned(res^.resultdef) and not(Is_Void(res^.resultdef)) then
                           begin
@@ -210,33 +210,33 @@ unit opttree;
                               The blockn's slot in the source expression is
                               replaced by a temprefn for the new temp; the
                               statement slot at pnode(arg)^ stays a statementn. }
-                            tempcreatenode:=CTempCreateNode.create(res^.resultdef,res^.resultdef.Size,tt_persistent,true);
+                            tempcreatenode:=CTempCreateNode.Create(res^.resultdef,res^.resultdef.Size,tt_persistent,true);
                             { pass_1 on tempcreate sets pi_needs_implicit_finally
                               for managed typedefs; must fire before
                               add_entry_exit_code reads that flag }
                             DoFirstPass(TNode(tempcreatenode));
 
                             { rewrite block's last expression: "temp := <expr>" }
-                            res^:=CAssignmentNode.Create_Internal(CTempRefNode.create(tempcreatenode),res^);
+                            res^:=CAssignmentNode.Create_Internal(CTempRefNode.Create(tempcreatenode),res^);
                             DoFirstPass(res^);
                             { replace blockn in source expression with a temprefn }
                             movedblock:=n;
-                            n:=CTempRefNode.create(tempcreatenode);
+                            n:=CTempRefNode.Create(tempcreatenode);
                             DoFirstPass(n);
 
                             { tempdelete after origstmt }
-                            hp:=CStatementNode.create(
-                                  CTempDeleteNode.create_normal_temp(tempcreatenode),
+                            hp:=CStatementNode.Create(
+                                  CTempDeleteNode.Create_Normal_Temp(tempcreatenode),
                                   TStatementNode(PNode(arg)^).right);
                             TStatementNode(PNode(arg)^).right:=hp;
                             { movedblock before origstmt }
-                            hp:=CStatementNode.create(movedblock,PNode(arg)^);
+                            hp:=CStatementNode.Create(movedblock,PNode(arg)^);
                             PNode(arg)^:=hp;
                             { tempcreate before movedblock }
-                            hp:=CStatementNode.create(tempcreatenode,PNode(arg)^);
+                            hp:=CStatementNode.Create(tempcreatenode,PNode(arg)^);
                             PNode(arg)^:=hp;
 
-                            foreachnodestatic(PNode(arg)^,@searchstatements,nil);
+                            ForEachNodeStatic(PNode(arg)^,@searchstatements,nil);
                           end;
                       end;
                     end;
@@ -254,7 +254,7 @@ unit opttree;
       begin
         if n.nodetype=statementn then
           begin
-            if not(foreachnodestatic(TStatementNode(n).left,@searchblock,@n)) then
+            if not(ForEachNodeStatic(TStatementNode(n).left,@searchblock,@n)) then
               begin
                 PBoolean(arg)^:=false;
                 result:=fen_norecurse_false;
@@ -262,7 +262,7 @@ unit opttree;
               end;
             { do not recurse automatically, but continue with the next statement }
             result:=fen_norecurse_false;
-            foreachnodestatic(TStatementNode(n).right,searchstatementsproc,arg);
+            ForEachNodeStatic(TStatementNode(n).right,searchstatementsproc,arg);
           end
         else
           result:=fen_false;
@@ -276,7 +276,7 @@ unit opttree;
         success:=true;
         searchstatementsproc:=@searchstatements;
         normalize_success:=@success;
-        foreachnodestatic(n,@searchstatements,@success);
+        ForEachNodeStatic(n,@searchstatements,@success);
         Result:=success;
       end;
 

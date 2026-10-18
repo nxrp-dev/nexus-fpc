@@ -32,11 +32,11 @@ interface
 
     type
       TX86DerefNode = class(TCGDerefNode)
-        procedure pass_generate_code;override;
+        procedure Pass_Generate_Code;override;
       end;
 
       TX86VecNode = class(TCGVecNode)
-        procedure update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);override;
+        procedure Update_Reference_Reg_Mul(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt);override;
       end;
 
 implementation
@@ -51,17 +51,17 @@ implementation
                            TX86DEREFNODE
 *****************************************************************************}
 
-     procedure TX86DerefNode.pass_generate_code;
+     procedure TX86DerefNode.Pass_Generate_Code;
        begin
-         inherited pass_generate_code;
-         case TCPUPointerDef(left.resultdef).X86PointerTyp of
+         inherited Pass_Generate_Code;
+         case TCPUPointerDef(Left.ResultDef).X86PointerTyp of
            x86pt_near: ;
-           x86pt_near_cs: location.Reference.Segment:=NR_CS;
-           x86pt_near_ds: location.Reference.Segment:=NR_DS;
-           x86pt_near_ss: location.Reference.Segment:=NR_SS;
-           x86pt_near_es: location.Reference.Segment:=NR_ES;
-           x86pt_near_fs: location.Reference.Segment:=NR_FS;
-           x86pt_near_gs: location.Reference.Segment:=NR_GS;
+           x86pt_near_cs: Location.Reference.Segment:=NR_CS;
+           x86pt_near_ds: Location.Reference.Segment:=NR_DS;
+           x86pt_near_ss: Location.Reference.Segment:=NR_SS;
+           x86pt_near_es: Location.Reference.Segment:=NR_ES;
+           x86pt_near_fs: Location.Reference.Segment:=NR_FS;
+           x86pt_near_gs: Location.Reference.Segment:=NR_GS;
 
            x86pt_far: InternalError(2013050401);
            x86pt_huge: InternalError(2013050402);
@@ -82,61 +82,61 @@ implementation
      { the live range of the LOC_CREGISTER will most likely overlap the   }
      { the live range of the target LOC_(C)REGISTER)                      }
      { The passed register may be a LOC_CREGISTER as well.                }
-     procedure TX86VecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
+     procedure TX86VecNode.Update_Reference_Reg_Mul(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt);
        var
-         l2 : integer;
-         hreg : TRegister;
-         saveseg: TRegister;
+         lShift : Integer;
+         lReg : TRegister;
+         lSavedSegment: TRegister;
        begin
          { Optimized for x86 to use the index register and scalefactor }
-         if location.Reference.Index=NR_NO then
+         if Location.Reference.Index=NR_NO then
           begin
             { no preparations needed }
           end
-         else if location.Reference.Base=NR_NO then
+         else if Location.Reference.Base=NR_NO then
           begin
-            if (location.Reference.ScaleFactor > 1) then
-              hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList)
+            if (Location.Reference.ScaleFactor > 1) then
+              lReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList)
             else
-              hreg:=NR_NO;
-            case location.Reference.ScaleFactor of
-             0,1 : hreg:=location.Reference.Index;
-             2 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,1,location.Reference.Index,hreg);
-             4 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,2,location.Reference.Index,hreg);
-             8 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,3,location.Reference.Index,hreg);
+              lReg:=NR_NO;
+            case Location.Reference.ScaleFactor of
+             0,1 : lReg:=Location.Reference.Index;
+             2 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,1,Location.Reference.Index,lReg);
+             4 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,2,Location.Reference.Index,lReg);
+             8 : cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,3,Location.Reference.Index,lReg);
              else
                InternalError(2008091401);
             end;
-            location.Reference.Base:=hreg;
+            Location.Reference.Base:=lReg;
           end
          else
           begin
-            hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-            cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,location.Reference,hreg);
+            lReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+            cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,Location.Reference,lReg);
             { reference_reset_base kills the segment, so make sure we preserve it }
-            saveseg:=location.Reference.Segment;
-            Reference_Reset_Base(location.Reference,hreg,0,location.Reference.TempPos,location.Reference.Alignment,location.Reference.Volatility);
-            location.Reference.Segment:=saveseg;
+            lSavedSegment:=Location.Reference.Segment;
+            Reference_Reset_Base(Location.Reference,lReg,0,Location.Reference.TempPos,Location.Reference.Alignment,Location.Reference.Volatility);
+            Location.Reference.Segment:=lSavedSegment;
           end;
          { insert the new index register and scalefactor or
            do the multiplication manual }
-         case l of
+         case AElementSize of
           1,2,4,8 :
             begin
-              location.Reference.ScaleFactor:=l;
-              hreg:=maybe_const_reg;
+              Location.Reference.ScaleFactor:=AElementSize;
+              lReg:=AIndexReg;
             end;
          else
            begin
-              hreg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-              if IsPowerOf2(l,l2) then
-                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,l2,maybe_const_reg,hreg)
+              lReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+              if IsPowerOf2(AElementSize,lShift) then
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,lShift,AIndexReg,lReg)
               else
-                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,OS_ADDR,l,maybe_const_reg,hreg);
+                cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,OS_ADDR,AElementSize,AIndexReg,lReg);
            end;
          end;
-         location.Reference.Index:=hreg;
-         location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,l);
+         Location.Reference.Index:=lReg;
+         Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,AElementSize);
        end;
 
 begin

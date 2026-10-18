@@ -33,8 +33,8 @@ interface
     type
        TI386CallNode = class(TX86CallNode)
        protected
-          procedure pop_parasize(pop_size:LongInt);override;
-          procedure extra_interrupt_code;override;
+          procedure Pop_ParaSize(APopSize:LongInt);override;
+          procedure Extra_Interrupt_Code;override;
        end;
 
 
@@ -58,17 +58,17 @@ implementation
 *****************************************************************************}
 
 
-    procedure TI386CallNode.extra_interrupt_code;
+    procedure TI386CallNode.Extra_Interrupt_Code;
       begin
         emit_none(A_PUSHF,S_L);
         emit_reg(A_PUSH,S_L,NR_CS);
       end;
 
 
-    procedure TI386CallNode.pop_parasize(pop_size:LongInt);
+    procedure TI386CallNode.Pop_ParaSize(APopSize:LongInt);
       var
-        hreg : TRegister;
-        href : TReference;
+        lReg : TRegister;
+        lReference : TReference;
       begin
         if ParaManager.Use_Fixed_Stack then
           begin
@@ -76,12 +76,12 @@ implementation
             { caller immediately a "subl $4,%esp". Possibly this is for   }
             { use_fixed_stack code to be able to transparently call       }
             { old-style code (JM)                                         }
-            dec(pop_size,pushedparasize);
-            if pop_size<0 then
+            dec(APopSize,FPushedParaSize);
+            if APopSize<0 then
               begin
-                Reference_Reset_Base(href,NR_STACK_POINTER_REG,pop_size,CTempPosInvalid,0,[]);
+                Reference_Reset_Base(lReference,NR_STACK_POINTER_REG,APopSize,CTempPosInvalid,0,[]);
                 { it is better to use lea here }
-                CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],lReference,NR_ESP));
               end;
             exit;
           end;
@@ -100,33 +100,33 @@ implementation
           so funcret is always in EAX for register calling }
         if ((TargetInfo.system = system_i386_win32) and
             not (TargetInfo.abi=abi_old_win32_gnu)) and
-            ParaManager.Ret_In_Param(procdefinition.ReturnDef,procdefinition) and
-            not ((procdefinition.ProcCallOption=pocall_register) or
-                 ((procdefinition.ProcCallOption=pocall_internproc) and
+            ParaManager.Ret_In_Param(ProcDefinition.ReturnDef,ProcDefinition) and
+            not ((ProcDefinition.ProcCallOption=pocall_register) or
+                 ((ProcDefinition.ProcCallOption=pocall_internproc) and
                   (pocall_default=pocall_register))) then
-          inc(pop_size,sizeof(aint));
+          inc(APopSize,sizeof(AInt));
 
         { better than an add on all processors }
-        if pop_size=4 then
+        if APopSize=4 then
           begin
-            hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
-            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
+            lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,lReg));
           end
         { the pentium has two pipes and pop reg is pairable }
         { but the registers must be different!        }
         else
-          if (pop_size=8) and
+          if (APopSize=8) and
              not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
              (CurrentSettings.OptimizeCPUType=cpu_Pentium) then
             begin
-               hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
-               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
-               hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
-               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
+               lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,lReg));
+               lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_INT);
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,lReg));
             end
         else
-          if pop_size<>0 then
-            CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_ADD,S_L,pop_size,NR_ESP));
+          if APopSize<>0 then
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_ADD,S_L,APopSize,NR_ESP));
       end;
 
 

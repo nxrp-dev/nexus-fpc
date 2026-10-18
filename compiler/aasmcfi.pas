@@ -95,7 +95,7 @@ unit aasmcfi;
     type
       TAICFIBase = class abstract(TAI)
         cfityp: TCFIKind;
-        constructor create(ctyp: TCFIKind);
+        constructor Create(ctyp: TCFIKind);
       end;
 
       TAICFIOpNone = class(TAICFIBase)
@@ -103,94 +103,94 @@ unit aasmcfi;
 
       TAICFIOpVal = class(TAICFIBase)
         val1: aint;
-        constructor create(ctyp: TCFIKind; const a: aint);
+        constructor Create(ctyp: TCFIKind; const a: aint);
       end;
 
       TAICFIOpString = class(TAICFIBase)
         s1: TSymStr;
-        constructor create(ctyp: TCFIKind; const str1: TSymStr);
+        constructor Create(ctyp: TCFIKind; const str1: TSymStr);
       end;
 
       TAICFIOpValString = class(TAICFIOpVal)
         s: TSymStr;
-        constructor create(ctyp: TCFIKind; const a: aint; const str: TSymStr);
+        constructor Create(ctyp: TCFIKind; const a: aint; const str: TSymStr);
       end;
 
       TAICFIOpStringString = class(TAICFIOpString)
         s2: TSymStr;
-        constructor create(ctyp: TCFIKind; const str1, str2: TSymStr);
+        constructor Create(ctyp: TCFIKind; const str1, str2: TSymStr);
       end;
 
       TAICFIOpReg = class(TAICFIBase)
         reg1: TRegister;
-        constructor create(ctyp: TCFIKind; r: TRegister);
+        constructor Create(ctyp: TCFIKind; r: TRegister);
       end;
 
       TAICFIOpRegVal = class(TAICFIOpReg)
         val: aint;
-        constructor create(ctyp: TCFIKind; r: TRegister; a: aint);
+        constructor Create(ctyp: TCFIKind; r: TRegister; a: aint);
       end;
 
       TAICFIOpRegReg = class(TAICFIOpReg)
         reg2: TRegister;
-        constructor create(ctyp: TCFIKind; r1, r2: TRegister);
+        constructor Create(ctyp: TCFIKind; r1, r2: TRegister);
       end;
 
 
   implementation
 
-    constructor TAICFIBase.create(ctyp: TCFIKind);
+    constructor TAICFIBase.Create(ctyp: TCFIKind);
       begin
         typ:=ait_cfi;
         cfityp:=ctyp;
       end;
 
 
-    constructor TAICFIOpVal.create(ctyp: TCFIKind; const a: aint);
+    constructor TAICFIOpVal.Create(ctyp: TCFIKind; const a: aint);
       begin
-        inherited create(ctyp);
+        inherited Create(ctyp);
         val1:=a;
       end;
 
 
-    constructor TAICFIOpString.create(ctyp: TCFIKind; const str1: TSymStr);
+    constructor TAICFIOpString.Create(ctyp: TCFIKind; const str1: TSymStr);
       begin
-        inherited create(ctyp);
+        inherited Create(ctyp);
         s1:=str1;
       end;
 
 
-    constructor TAICFIOpValString.create(ctyp: TCFIKind; const a: aint; const str: TSymStr);
+    constructor TAICFIOpValString.Create(ctyp: TCFIKind; const a: aint; const str: TSymStr);
       begin
-        inherited create(ctyp,a);
+        inherited Create(ctyp,a);
         s:=str;
       end;
 
 
-    constructor TAICFIOpStringString.create(ctyp: TCFIKind; const str1, str2: TSymStr);
+    constructor TAICFIOpStringString.Create(ctyp: TCFIKind; const str1, str2: TSymStr);
       begin
-        inherited create(ctyp,str1);
+        inherited Create(ctyp,str1);
         s2:=str2;
       end;
 
 
-    constructor TAICFIOpReg.create(ctyp: TCFIKind; r: TRegister);
+    constructor TAICFIOpReg.Create(ctyp: TCFIKind; r: TRegister);
       begin
-        inherited create(ctyp);
+        inherited Create(ctyp);
         reg1:=r;
       end;
 
 
-    constructor TAICFIOpRegVal.create(ctyp: TCFIKind; r: TRegister; a: aint);
+    constructor TAICFIOpRegVal.Create(ctyp: TCFIKind; r: TRegister; a: aint);
       begin
-        inherited create(ctyp,r);
+        inherited Create(ctyp,r);
         val:=a;
       end;
 
 
-    constructor TAICFIOpRegReg.create(ctyp: TCFIKind; r1, r2: TRegister);
+    constructor TAICFIOpRegReg.Create(ctyp: TCFIKind; r1, r2: TRegister);
       begin
-        inherited create(ctyp,r1);
+        inherited Create(ctyp,r1);
         reg2:=r2;
       end;
 

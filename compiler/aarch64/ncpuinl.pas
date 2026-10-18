@@ -30,32 +30,32 @@ interface
 
     type
       TAArch64InlineNode = class(TCGInlineNode)
-        function first_abs_real: TNode; override;
-        function first_sqr_real: TNode; override;
-        function first_sqrt_real: TNode; override;
-        function first_round_real: TNode; override;
-        function first_trunc_real: TNode; override;
-        function first_int_real: TNode; override;
-        function first_frac_real: TNode; override;
-        function first_fma : TNode; override;
-        function first_minmax : TNode; override;
-        procedure second_abs_real; override;
-        procedure second_sqr_real; override;
-        procedure second_sqrt_real; override;
-        procedure second_abs_long; override;
-        procedure second_round_real; override;
-        procedure second_trunc_real; override;
-        procedure second_int_real; override;
-        procedure second_frac_real; override;
-        procedure second_get_frame; override;
-        procedure second_fma; override;
-        procedure second_prefetch; override;
-        procedure second_minmax; override;
-        procedure pass_generate_code_cpu; override;
-        function pass_typecheck_cpu: TNode; override;
-        function first_cpu: TNode; override;
+        function First_Abs_Real: TNode; override;
+        function First_Sqr_Real: TNode; override;
+        function First_Sqrt_Real: TNode; override;
+        function First_Round_Real: TNode; override;
+        function First_Trunc_Real: TNode; override;
+        function First_Int_Real: TNode; override;
+        function First_Frac_Real: TNode; override;
+        function First_FMA : TNode; override;
+        function First_MinMax : TNode; override;
+        procedure Second_Abs_Real; override;
+        procedure Second_Sqr_Real; override;
+        procedure Second_Sqrt_Real; override;
+        procedure Second_Abs_Long; override;
+        procedure Second_Round_Real; override;
+        procedure Second_Trunc_Real; override;
+        procedure Second_Int_Real; override;
+        procedure Second_Frac_Real; override;
+        procedure Second_Get_Frame; override;
+        procedure Second_FMA; override;
+        procedure Second_Prefetch; override;
+        procedure Second_MinMax; override;
+        procedure Pass_Generate_Code_CPU; override;
+        function Pass_TypeCheck_CPU: TNode; override;
+        function First_CPU: TNode; override;
       private
-        procedure load_fpu_location;
+        procedure LoadFPULocation;
       end;
 
 
@@ -65,7 +65,7 @@ implementation
       GlobType,Verbose,Globals,
       compinnr,
       CPUInfo, defutil,symdef,aasmbase,AAsmData,aasmcpu,
-      cgbase,cgutils,pass_1,pass_2,
+      cgbase,cgutils,Pass_1,pass_2,
       ProcInfo,
       ncal,nutils,
       cpubase,ncgutil,cgobj,cgcpu,hlcgobj;
@@ -74,248 +74,248 @@ implementation
                               taarch64inlinenode
 *****************************************************************************}
 
-     function TAArch64InlineNode.pass_typecheck_cpu: TNode;
+     function TAArch64InlineNode.Pass_TypeCheck_CPU: TNode;
        begin
          Result:=nil;
-         case inlinenumber of
+         case InlineNumber of
            in_a64_yield:
-             resultdef:=VoidType;
+             ResultDef:=VoidType;
            else
-             result:=inherited;
+             Result:=inherited;
          end;
        end;
 
 
-    function TAArch64InlineNode.first_cpu : TNode;
+    function TAArch64InlineNode.First_CPU : TNode;
       begin
         Result:=nil;
-        case inlinenumber of
+        case InlineNumber of
           in_a64_yield:
             begin
-              expectloc:=LOC_VOID;
-              resultdef:=VoidType;
+              ExpectLoc:=LOC_VOID;
+              ResultDef:=VoidType;
             end;
           else
-            Result:=inherited first_cpu;
+            Result:=inherited First_CPU;
         end;
       end;
 
 
-     procedure TAArch64InlineNode.pass_generate_code_cpu;
+     procedure TAArch64InlineNode.Pass_Generate_Code_CPU;
        begin
-         case inlinenumber of
+         case InlineNumber of
            in_a64_yield:
              CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_YIELD));
            else
-             inherited pass_generate_code_cpu;
+             inherited Pass_Generate_Code_CPU;
          end;
        end;
 
 
-    procedure TAArch64InlineNode.load_fpu_location;
+    procedure TAArch64InlineNode.LoadFPULocation;
       begin
-        SecondPass(left);
-        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-        Location_Copy(location,left.Location);
-        location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-        location.Loc:=LOC_MMREGISTER;
+        SecondPass(Left);
+        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+        Location_Copy(Location,Left.Location);
+        Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+        Location.Loc:=LOC_MMREGISTER;
       end;
 
 
-    function TAArch64InlineNode.first_abs_real : TNode;
+    function TAArch64InlineNode.First_Abs_Real : TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_sqr_real : TNode;
+    function TAArch64InlineNode.First_Sqr_Real : TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_sqrt_real : TNode;
+    function TAArch64InlineNode.First_Sqrt_Real : TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_round_real: TNode;
+    function TAArch64InlineNode.First_Round_Real: TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_trunc_real: TNode;
+    function TAArch64InlineNode.First_Trunc_Real: TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_int_real : TNode;
+    function TAArch64InlineNode.First_Int_Real : TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_frac_real : TNode;
+    function TAArch64InlineNode.First_Frac_Real : TNode;
       begin
-        expectloc:=LOC_MMREGISTER;
-        result:=nil;
+        ExpectLoc:=LOC_MMREGISTER;
+        Result:=nil;
         if Needs_Check_For_FPU_Exceptions then
-          Include(CurrentProcInfo.flags,pi_do_call);
+          Include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    function TAArch64InlineNode.first_fma : TNode;
+    function TAArch64InlineNode.First_FMA : TNode;
       begin
-        if ((Is_Double(resultdef)) or (Is_Single(resultdef))) then
+        if ((Is_Double(ResultDef)) or (Is_Single(ResultDef))) then
           begin
-            expectloc:=LOC_MMREGISTER;
+            ExpectLoc:=LOC_MMREGISTER;
             Result:=nil;
           end
         else
-          Result:=inherited first_fma;
+          Result:=inherited First_FMA;
      end;
 
 
-    procedure TAArch64InlineNode.second_abs_real;
+    procedure TAArch64InlineNode.Second_Abs_Real;
       begin
-        load_fpu_location;
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FABS,location.Register,left.Location.Register));
+        LoadFPULocation;
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FABS,Location.Register,Left.Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_sqr_real;
+    procedure TAArch64InlineNode.Second_Sqr_Real;
       begin
-        load_fpu_location;
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_FMUL,location.Register,left.Location.Register,left.Location.Register));
+        LoadFPULocation;
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_FMUL,Location.Register,Left.Location.Register,Left.Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_sqrt_real;
+    procedure TAArch64InlineNode.Second_Sqrt_Real;
       begin
-        load_fpu_location;
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FSQRT,location.Register,left.Location.Register));
+        LoadFPULocation;
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FSQRT,Location.Register,Left.Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_abs_long;
+    procedure TAArch64InlineNode.Second_Abs_Long;
       var
-        opsize : TCgSize;
-        hl: TAsmLabel;
+        lOpSize : TCgSize;
+        lLabel: TAsmLabel;
       begin
-        SecondPass(left);
-        opsize:=Def_CGSize(left.resultdef);
-        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-        location:=left.Location;
-        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+        SecondPass(Left);
+        lOpSize:=Def_CGSize(Left.ResultDef);
+        hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+        Location:=Left.Location;
+        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lOpSize);
 
         if cs_check_overflow in CurrentSettings.LocalSwitches then
           begin
-            CurrentAsmData.getjumplabel(hl);
-            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,TOrdDef(resultdef).low.svalue,left.Location.Register,hl);
+            CurrentAsmData.getjumplabel(lLabel);
+            hlcg.A_Cmp_Const_Reg_Label(CurrentAsmData.CurrAsmList,ResultDef,OC_NE,TOrdDef(ResultDef).low.svalue,Left.Location.Register,lLabel);
             hlcg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,'fpc_overflow',[],nil).ResetIfTemp;
-            hlcg.A_Label(CurrentAsmData.CurrAsmList,hl);
+            hlcg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
           end;
 
-        CurrentAsmData.CurrAsmList.concat(setoppostfix(TAICPU.op_reg_reg(A_NEG,location.Register,left.Location.Register),PF_S));
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_CSEL,location.Register,location.Register,left.Location.Register,C_GE));
+        CurrentAsmData.CurrAsmList.concat(setoppostfix(TAICPU.op_reg_reg(A_NEG,Location.Register,Left.Location.Register),PF_S));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_CSEL,Location.Register,Location.Register,Left.Location.Register,C_GE));
       end;
 
 
-    procedure TAArch64InlineNode.second_round_real;
+    procedure TAArch64InlineNode.Second_Round_Real;
       var
-        hreg: TRegister;
+        lReg: TRegister;
       begin
-        SecondPass(left);
-        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
-        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
-        hreg:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
+        SecondPass(Left);
+        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+        Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
+        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
+        lReg:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
         { round as floating point using current rounding mode }
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTX,hreg,left.Location.Register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTX,lReg,Left.Location.Register));
         { convert to signed integer rounding towards zero (there's no "round to
           integer using current rounding mode") }
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCVTZS,location.Register,hreg));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCVTZS,Location.Register,lReg));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_trunc_real;
+    procedure TAArch64InlineNode.Second_Trunc_Real;
       begin
-        SecondPass(left);
-        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
-        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
+        SecondPass(Left);
+        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+        Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
+        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
         { convert to signed integer rounding towards zero }
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCVTZS,location.Register,left.Location.Register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCVTZS,Location.Register,Left.Location.Register));
       end;
 
 
-    procedure TAArch64InlineNode.second_int_real;
+    procedure TAArch64InlineNode.Second_Int_Real;
       var
-        hreg: TRegister;
+        lReg: TRegister;
       begin
-        SecondPass(left);
-        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-        Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-        location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTZ,location.Register,left.Location.Register));
+        SecondPass(Left);
+        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+        Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+        Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTZ,Location.Register,Left.Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_frac_real;
+    procedure TAArch64InlineNode.Second_Frac_Real;
       var
-        hreg: TRegister;
+        lReg: TRegister;
       begin
-        SecondPass(left);
-        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,true);
-        Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-        location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTZ,location.Register,left.Location.Register));
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_FSUB,location.Register,left.Location.Register,location.Register));
+        SecondPass(Left);
+        hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,true);
+        Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+        Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FRINTZ,Location.Register,Left.Location.Register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_FSUB,Location.Register,Left.Location.Register,Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_get_frame;
+    procedure TAArch64InlineNode.Second_Get_Frame;
       begin
-        Location_Reset(location,LOC_CREGISTER,OS_ADDR);
+        Location_Reset(Location,LOC_CREGISTER,OS_ADDR);
         { this routine is used to get the frame pointer for backtracing
           purposes. current_procinfo.framepointer is set to SP because that one
           is used to access temps. On most platforms these two frame pointers
           are the same, but not on AArch64. }
-        location.Register:=NR_FRAME_POINTER_REG;
+        Location.Register:=NR_FRAME_POINTER_REG;
       end;
 
 
-    procedure TAArch64InlineNode.second_fma;
+    procedure TAArch64InlineNode.Second_FMA;
       const
-        op : array[false..true,false..true] of TAsmOp =
+        Op : array[false..true,false..true] of TAsmOp =
           { positive product }
           (
            { positive third operand }
@@ -329,86 +329,86 @@ implementation
            );
 
       var
-        paraarray : array[1..3] of TNode;
-        i : integer;
-        negop3,
-        negproduct : boolean;
+        lParaArray : array[1..3] of TNode;
+        lIndex : Integer;
+        lNegOperand3,
+        lNegProduct : Boolean;
       begin
-        negop3:=false;
-        negproduct:=false;
-        paraarray[1]:=TCallParaNode(TCallParaNode(TCallParaNode(parameters).nextpara).nextpara).paravalue;
-        paraarray[2]:=TCallParaNode(TCallParaNode(parameters).nextpara).paravalue;
-        paraarray[3]:=TCallParaNode(parameters).paravalue;
+        lNegOperand3:=false;
+        lNegProduct:=false;
+        lParaArray[1]:=TCallParaNode(TCallParaNode(TCallParaNode(Parameters).NextPara).NextPara).ParaValue;
+        lParaArray[2]:=TCallParaNode(TCallParaNode(Parameters).NextPara).ParaValue;
+        lParaArray[3]:=TCallParaNode(Parameters).ParaValue;
 
         { check if a neg. node can be removed
           this is possible because changing the sign of
           a floating point number does not affect its absolute
           value in any way
         }
-        if paraarray[1].nodetype=unaryminusn then
+        if lParaArray[1].NodeType=unaryminusn then
           begin
-            paraarray[1]:=TUnaryNode(paraarray[1]).left;
+            lParaArray[1]:=TUnaryNode(lParaArray[1]).Left;
             { do not release the unused unary minus node, it is kept and release together with the other nodes,
               only no code is generated for it }
-            negproduct:=not(negproduct);
+            lNegProduct:=not(lNegProduct);
           end;
 
-        if paraarray[2].nodetype=unaryminusn then
+        if lParaArray[2].NodeType=unaryminusn then
           begin
-            paraarray[2]:=TUnaryNode(paraarray[2]).left;
+            lParaArray[2]:=TUnaryNode(lParaArray[2]).Left;
             { do not release the unused unary minus node, it is kept and release together with the other nodes,
               only no code is generated for it }
-            negproduct:=not(negproduct);
+            lNegProduct:=not(lNegProduct);
           end;
 
-        if paraarray[3].nodetype=unaryminusn then
+        if lParaArray[3].NodeType=unaryminusn then
           begin
-            paraarray[3]:=TUnaryNode(paraarray[3]).left;
+            lParaArray[3]:=TUnaryNode(lParaArray[3]).Left;
             { do not release the unused unary minus node, it is kept and release together with the other nodes,
               only no code is generated for it }
-            negop3:=true;
+            lNegOperand3:=true;
           end;
 
-         for i:=1 to 3 do
-          SecondPass(paraarray[i]);
+         for lIndex:=1 to 3 do
+          SecondPass(lParaArray[lIndex]);
 
         { no memory operand is allowed }
-        for i:=1 to 3 do
+        for lIndex:=1 to 3 do
           begin
-            if not(paraarray[i].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
-              hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,paraarray[i].Location,paraarray[i].resultdef,true);
+            if not(lParaArray[lIndex].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+              hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,lParaArray[lIndex].Location,lParaArray[lIndex].ResultDef,true);
           end;
 
-        Location_Reset(location,LOC_MMREGISTER,paraarray[1].Location.Size);
-        location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+        Location_Reset(Location,LOC_MMREGISTER,lParaArray[1].Location.Size);
+        Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
 
-        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_reg(op[negproduct,negop3],
-          location.Register,paraarray[1].Location.Register,paraarray[2].Location.Register,paraarray[3].Location.Register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_reg(Op[lNegProduct,lNegOperand3],
+          Location.Register,lParaArray[1].Location.Register,lParaArray[2].Location.Register,lParaArray[3].Location.Register));
         cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure TAArch64InlineNode.second_prefetch;
+    procedure TAArch64InlineNode.Second_Prefetch;
       var
-        ref : TReference;
-        r : TRegister;
-        checkpointer_used : boolean;
+        lReference : TReference;
+        lReg : TRegister;
+        lCheckPointerUsed : Boolean;
       begin
         { do not call Checkpointer for left node }
-        checkpointer_used:=(cs_checkpointer in CurrentSettings.LocalSwitches);
-        if checkpointer_used then
-          node_change_local_switch(left,cs_checkpointer,false);
-        SecondPass(left);
-        if checkpointer_used then
-          node_change_local_switch(left,cs_checkpointer,false);
-       case left.Location.Loc of
+        lCheckPointerUsed:=(cs_checkpointer in CurrentSettings.LocalSwitches);
+        if lCheckPointerUsed then
+          Node_Change_Local_Switch(Left,cs_checkpointer,false);
+        SecondPass(Left);
+        if lCheckPointerUsed then
+          Node_Change_Local_Switch(Left,cs_checkpointer,false);
+       case Left.Location.Loc of
          LOC_CREFERENCE,
          LOC_REFERENCE:
            begin
-             r:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_ADDR);
-             cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,left.Location.Reference,r);
-             Reference_Reset_Base(ref,r,0,location.Reference.TempPos,left.Location.Reference.Alignment,location.Reference.Volatility);
-             CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref(A_PRFM,0,ref));
+             lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_ADDR);
+             cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,Left.Location.Reference,lReg);
+             Reference_Reset_Base(lReference,lReg,0,Location.Reference.TempPos,Left.Location.Reference.Alignment,Location.Reference.Volatility);
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref(A_PRFM,0,lReference));
            end;
          else
            { nothing to prefetch };
@@ -416,104 +416,104 @@ implementation
       end;
 
 
-    function TAArch64InlineNode.first_minmax : TNode;
+    function TAArch64InlineNode.First_MinMax : TNode;
       begin
-        if Is_Single(resultdef) or Is_Double(resultdef) then
+        if Is_Single(ResultDef) or Is_Double(ResultDef) then
           begin
-            expectloc:=LOC_MMREGISTER;
+            ExpectLoc:=LOC_MMREGISTER;
             Result:=nil;
             if Needs_Check_For_FPU_Exceptions then
-              Include(CurrentProcInfo.flags,pi_do_call);
+              Include(CurrentProcInfo.Flags,pi_do_call);
           end
-        else if Is_32BitInt(resultdef) or Is_64BitInt(resultdef) then
+        else if Is_32BitInt(ResultDef) or Is_64BitInt(ResultDef) then
           begin
-            expectloc:=LOC_REGISTER;
+            ExpectLoc:=LOC_REGISTER;
             Result:=nil;
           end
         else
-          Result:=inherited first_minmax;
+          Result:=inherited First_MinMax;
       end;
 
 
-    procedure TAArch64InlineNode.second_minmax;
+    procedure TAArch64InlineNode.Second_MinMax;
       var
-        paraarray : array[1..2] of TNode;
-        i: Integer;
-        ai: TAICPU;
-        op: TAsmOp;
-        cond: TAsmCond;
+        lParaArray : array[1..2] of TNode;
+        lIndex: Integer;
+        lInstruction: TAICPU;
+        lOp: TAsmOp;
+        lCondition: TAsmCond;
       begin
-        paraarray[1]:=TCallParaNode(TCallParaNode(parameters).nextpara).paravalue;
-          paraarray[2]:=TCallParaNode(parameters).paravalue;
+        lParaArray[1]:=TCallParaNode(TCallParaNode(Parameters).NextPara).ParaValue;
+          lParaArray[2]:=TCallParaNode(Parameters).ParaValue;
 
-        for i:=low(paraarray) to high(paraarray) do
-           SecondPass(paraarray[i]);
+        for lIndex:=low(lParaArray) to high(lParaArray) do
+           SecondPass(lParaArray[lIndex]);
 
-        if Is_Single(resultdef) or Is_Double(resultdef) then
+        if Is_Single(ResultDef) or Is_Double(ResultDef) then
            begin
              { no memory operand is allowed }
-             for i:=low(paraarray) to high(paraarray) do
+             for lIndex:=low(lParaArray) to high(lParaArray) do
                begin
-                 if not(paraarray[i].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
-                   hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,paraarray[i].Location,
-                     paraarray[i].resultdef,true);
+                 if not(lParaArray[lIndex].Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+                   hlcg.Location_Force_MMRegScalar(CurrentAsmData.CurrAsmList,lParaArray[lIndex].Location,
+                     lParaArray[lIndex].ResultDef,true);
                end;
 
-             Location_Reset(location,LOC_MMREGISTER,paraarray[1].Location.Size);
-             location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+             Location_Reset(Location,LOC_MMREGISTER,lParaArray[1].Location.Size);
+             Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
 
              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCMP,
-               paraarray[1].Location.Register,paraarray[2].Location.Register));
+               lParaArray[1].Location.Register,lParaArray[2].Location.Register));
 
-             case inlinenumber of
+             case InlineNumber of
                in_min_single,
                in_min_double:
                 CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_FCSEL,
-                  location.Register,paraarray[1].Location.Register,paraarray[2].Location.Register,C_MI));
+                  Location.Register,lParaArray[1].Location.Register,lParaArray[2].Location.Register,C_MI));
                in_max_single,
                in_max_double:
                 CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_FCSEL,
-                  location.Register,paraarray[1].Location.Register,paraarray[2].Location.Register,C_GT));
+                  Location.Register,lParaArray[1].Location.Register,lParaArray[2].Location.Register,C_GT));
                else
                  InternalError(2021121802);
              end;
 
              cg.Maybe_Check_For_FPU_Exception(CurrentAsmData.CurrAsmList);
            end
-         else if Is_32BitInt(resultdef) or Is_64BitInt(resultdef) then
+         else if Is_32BitInt(ResultDef) or Is_64BitInt(ResultDef) then
            begin
              { no memory operand is allowed }
-             for i:=low(paraarray) to high(paraarray) do
+             for lIndex:=low(lParaArray) to high(lParaArray) do
                begin
-                 if not(paraarray[i].Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
-                   hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,paraarray[i].Location,
-                     paraarray[i].resultdef,paraarray[i].resultdef,true);
+                 if not(lParaArray[lIndex].Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+                   hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,lParaArray[lIndex].Location,
+                     lParaArray[lIndex].ResultDef,lParaArray[lIndex].ResultDef,true);
                end;
 
-             Location_Reset(location,LOC_REGISTER,paraarray[1].Location.Size);
-             location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
+             Location_Reset(Location,LOC_REGISTER,lParaArray[1].Location.Size);
+             Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
 
              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,
-               paraarray[1].Location.Register,paraarray[2].Location.Register));
+               lParaArray[1].Location.Register,lParaArray[2].Location.Register));
 
-             case inlinenumber of
+             case InlineNumber of
                in_min_longint,
                in_min_int64:
-                 cond := C_LT;
+                 lCondition := C_LT;
                in_min_dword,
                in_min_qword:
-                 cond := C_LO;
+                 lCondition := C_LO;
                in_max_longint,
                in_max_int64:
-                 cond := C_GT;
+                 lCondition := C_GT;
                in_max_dword,
                in_max_qword:
-                 cond := C_HI;
+                 lCondition := C_HI;
                else
                  InternalError(2021121901);
              end;
              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_CSEL,
-               location.Register,paraarray[1].Location.Register,paraarray[2].Location.Register,cond));
+               Location.Register,lParaArray[1].Location.Register,lParaArray[2].Location.Register,lCondition));
            end
          else
            InternalError(2021121801);

@@ -111,7 +111,7 @@ implementation
                     end;
                   TypeSym :
                     begin
-                      if not Is_ObjCClass(TTypeSym(srsym).typedef) then
+                      if not Is_ObjCClass(TTypeSym(srsym).TypeDef) then
                         Message(parser_e_illegal_symbol_exported)
                     end;
                   else
@@ -163,8 +163,8 @@ implementation
                      begin
                        pt:=comp_expr([ef_accept_equal]);
                        if pt.nodetype=stringconstn then
-                         hpname:=StrPas(pchar(@TStringConstNode(pt).valueas[0]))
-                       else if is_constcharnode(pt) then
+                         hpname:=StrPas(pchar(@TStringConstNode(pt).ValueAS[0]))
+                       else if Is_ConstCharNode(pt) then
                          hpname:=chr(TOrdConstNode(pt).Value.svalue and $ff)
                        else
                          message(type_e_string_expr_expected);
@@ -240,11 +240,11 @@ implementation
                       end;
                     TypeSym:
                       begin
-                        case TTypeSym(srsym).typedef.typ of
+                        case TTypeSym(srsym).TypeDef.typ of
                           objectdef:
-                            case TObjectDef(TTypeSym(srsym).typedef).ObjectType of
+                            case TObjectDef(TTypeSym(srsym).TypeDef).ObjectType of
                               odt_objcclass:
-                                exportobjcclass(TObjectDef(TTypeSym(srsym).typedef));
+                                ExportObjCClass(TObjectDef(TTypeSym(srsym).TypeDef));
                               else
                                 InternalError(2009092601);
                             end;

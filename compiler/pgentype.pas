@@ -55,7 +55,7 @@ type
     sym : TSym;
     SymTable : TSymTable;
     ForwardDef : TDef;
-    constructor create;
+    constructor Create;
     destructor Destroy;override;
     function GetCopy:TSpecializationContext;
   end;
@@ -63,10 +63,10 @@ type
 
 implementation
 
-constructor TSpecializationContext.create;
+constructor TSpecializationContext.Create;
 begin
-  paramlist:=TFPObjectList.create(false);
-  poslist:=TFPList.create;
+  paramlist:=TFPObjectList.Create(false);
+  poslist:=TFPList.Create;
 end;
 
 destructor TSpecializationContext.Destroy;
@@ -82,7 +82,7 @@ var
   posinfo : PFilePosInfo;
   i : LongInt;
 begin
-  result:=TSpecializationContext.create;
+  result:=TSpecializationContext.Create;
   result.paramlist.capacity:=paramlist.count;
   for i:=0 to paramlist.count-1 do
     begin

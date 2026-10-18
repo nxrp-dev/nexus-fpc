@@ -174,7 +174,7 @@ implementation
             p := StrPNew(secondprefix+'second '+secondnames[ht]+' (exit)');
             delete(secondprefix,length(secondprefix),1);
           end;
-        CurrentAsmData.CurrAsmList.concat(TAIComment.create(p));
+        CurrentAsmData.CurrAsmList.concat(TAIComment.Create(p));
       end;
 {$endif EXTDEBUG}
 
@@ -207,13 +207,13 @@ implementation
               cg.ExecutionWeight:=100;
 {$ifdef EXTDEBUG}
             if (p.expectloc=LOC_INVALID) then
-              Comment(VWarning,'ExpectLoc is not set before secondpass: '+nodetype2str[p.nodetype]);
+              Comment(VWarning,'ExpectLoc is not set before secondpass: '+NodeType2Str[p.nodetype]);
             if (p.Location.Loc<>LOC_INVALID) then
-              Comment(VWarning,'Location.Loc is already set before secondpass: '+nodetype2str[p.nodetype]);
+              Comment(VWarning,'Location.Loc is already set before secondpass: '+NodeType2Str[p.nodetype]);
             if (cs_asm_nodes in CurrentSettings.GlobalSwitches) then
               logsecond(p.nodetype,true);
 {$endif EXTDEBUG}
-            p.pass_generate_code;
+            p.Pass_Generate_Code;
 {$ifdef EXTDEBUG}
             if (cs_asm_nodes in CurrentSettings.GlobalSwitches) then
               logsecond(p.nodetype,false);
@@ -225,12 +225,12 @@ implementation
                       or ((p.Location.Loc=loc_fpuregister) and (p.expectloc=loc_cfpuregister))
                       or ((p.Location.Loc=loc_reference) and (p.expectloc=loc_creference))
                       or ((p.Location.Loc=loc_void) and (p.nodetype = calln)) then
-                     Comment(VNote,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+nodetype2str[p.nodetype])
+                     Comment(VNote,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+NodeType2Str[p.nodetype])
                    else
-                     Comment(VWarning,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+nodetype2str[p.nodetype]);
+                     Comment(VWarning,'Location ('+TCGLoc2Str[p.Location.Loc]+') not equal to expectloc ('+TCGLoc2Str[p.expectloc]+'): '+NodeType2Str[p.nodetype]);
                  end;
                if (p.Location.Loc=LOC_INVALID) then
-                 Comment(VWarning,'Location not set in secondpass: '+nodetype2str[p.nodetype]);
+                 Comment(VWarning,'Location not set in secondpass: '+NodeType2Str[p.nodetype]);
              end;
 {$endif EXTDEBUG}
             if CodeGenError then

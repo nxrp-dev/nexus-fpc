@@ -32,7 +32,7 @@ interface
     type
       TX86LoadNode = class(TCGLoadNode)
        protected
-         procedure generate_threadvar_access(gvs: TStaticVarSym); override;
+         procedure Generate_ThreadVar_Access(gvs: TStaticVarSym); override;
       end;
 
 implementation
@@ -50,7 +50,7 @@ implementation
                            TX86LOADNODE
 *****************************************************************************}
 
-    procedure TX86LoadNode.generate_threadvar_access(gvs: TStaticVarSym);
+    procedure TX86LoadNode.Generate_ThreadVar_Access(gvs: TStaticVarSym);
       var
         paraloc1 : TCGPara;
         pd: TProcDef;
@@ -67,7 +67,7 @@ implementation
                 pd:=Search_System_Proc('fpc_tls_add');
                 ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                 if not(vo_is_weak_external in gvs.VarOptions) then
-                  Reference_Reset_Symbol(href,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
+                  Reference_Reset_Symbol(href,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,Use_Indirect_Symbol(gvs)),0,sizeof(PInt),[])
                 else
                   Reference_Reset_Symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[]);
                 cg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,href,paraloc1);

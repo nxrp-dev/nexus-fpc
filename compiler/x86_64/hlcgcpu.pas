@@ -84,7 +84,7 @@ implementation
             InternalError(2000061301);
           { load vmt from first parameter }
           { win64 uses a different abi }
-          if x86_64_use_ms_abi(procdef.ProcCallOption) then
+          if X86_64_Use_MS_ABI(procdef.ProcCallOption) then
             Reference_Reset_Base(href,VoidPointerType,NR_RCX,0,CTempPosInvalid,sizeof(PInt),[])
           else
             Reference_Reset_Base(href,VoidPointerType,NR_RDI,0,CTempPosInvalid,sizeof(PInt),[]);
@@ -113,7 +113,7 @@ implementation
 
   procedure create_hlcodegen_cpu(hlcgobjhelpers: THLCGObjHelpersClass);
     begin
-      hlcg:=THLCGCPU.create(hlcgobjhelpers);
+      hlcg:=THLCGCPU.Create(hlcgobjhelpers);
       create_codegen;
     end;
 

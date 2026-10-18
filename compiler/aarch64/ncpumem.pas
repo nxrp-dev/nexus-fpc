@@ -33,14 +33,14 @@ interface
 
   type
     TAArch64LoadParentFPNode = class(TCGLoadParentFPNode)
-      procedure pass_generate_code; override;
+      procedure Pass_Generate_Code; override;
     end;
 
     TAArch64VecNode = class(TCGVecNode)
      protected
-      function valid_index_size(size: TCgSize): boolean; override;
+      function Valid_Index_Size(ASize: TCgSize): Boolean; override;
      public
-       procedure update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint); override;
+       procedure Update_Reference_Reg_Mul(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt); override;
     end;
 
 implementation
@@ -54,85 +54,85 @@ implementation
 
   { taarch64loadparentfpnode }
 
-  procedure TAArch64LoadParentFPNode.pass_generate_code;
+  procedure TAArch64LoadParentFPNode.Pass_Generate_Code;
     begin
-      inherited pass_generate_code;
+      inherited Pass_Generate_Code;
       { see the comments in tcgaarch64.g_proc_entry }
-      if (location.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
-         (location.Register=NR_STACK_POINTER_REG) then
-        if (kind=lpf_forpara) then
-          location.Register:=NR_FRAME_POINTER_REG
+      if (Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
+         (Location.Register=NR_STACK_POINTER_REG) then
+        if (Kind=lpf_forpara) then
+          Location.Register:=NR_FRAME_POINTER_REG
         else
           begin
             { load stack pointer in a different register, as many instructions
               cannot directly work with the stack pointer. The register
               allocator can merge them if possible }
-            location.Register:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_STACK_POINTER_REG,location.Register);
-            location.Loc:=LOC_REGISTER;
+            Location.Register:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+            cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_STACK_POINTER_REG,Location.Register);
+            Location.Loc:=LOC_REGISTER;
           end;
     end;
 
 
   { taarch64vecnode }
 
-  function TAArch64VecNode.valid_index_size(size: TCgSize): boolean;
+  function TAArch64VecNode.Valid_Index_Size(ASize: TCgSize): Boolean;
     begin
       { all sizes are ok if we handle the "reference reg mul", because
          a) we use a 64 bit register for 64 bit values, and a 32 bit one (that
             we can sign/zero-extend inside the reference) for smaller values
          b) for values < 32 bit, the entire 32 bit register always contains the
             sign/zero-extended version of the value }
-      result:=
-        not Is_Packed_Array(left.resultdef) and
-        (get_mul_size in [1,2,4,8,16]);
+      Result:=
+        not Is_Packed_Array(Left.ResultDef) and
+        (Get_Mul_Size in [1,2,4,8,16]);
     end;
 
 
-  procedure TAArch64VecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
+  procedure TAArch64VecNode.Update_Reference_Reg_Mul(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt);
     var
-      base: TRegister;
-      oldoffset: asizeint;
-      shift: byte;
+      lBaseReg: TRegister;
+      lOldOffset: ASizeInt;
+      lShift: Byte;
     begin
       { we can only scale the index by shl 0..4 }
-      if not(l in [1,2,4,8,16]) then
+      if not(AElementSize in [1,2,4,8,16]) then
         begin
           inherited;
           exit;
         end;
       { we need a base set and an index available }
-      if (location.Reference.Base=NR_NO) or
-         (location.Reference.Index<>NR_NO) then
+      if (Location.Reference.Base=NR_NO) or
+         (Location.Reference.Index<>NR_NO) then
         begin
           { don't integrate the offset yet, make_simple_ref() may be able to
             handle it more efficiently later (unless an offset is all we have
             -> optimization for someone that wants to add support for AArch64
             embedded targets) }
-          oldoffset:=location.Reference.Offset;
-          location.Reference.Offset:=0;
-          base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-          cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,location.Reference,base);
-          Reference_Reset_Base(location.Reference,base,oldoffset,location.Reference.TempPos,location.Reference.Alignment,location.Reference.Volatility);
+          lOldOffset:=Location.Reference.Offset;
+          Location.Reference.Offset:=0;
+          lBaseReg:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+          cg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,Location.Reference,lBaseReg);
+          Reference_Reset_Base(Location.Reference,lBaseReg,lOldOffset,Location.Reference.TempPos,Location.Reference.Alignment,Location.Reference.Volatility);
         end;
-      shift:=BsfDWord(l);
-      location.Reference.Index:=maybe_const_reg;
+      lShift:=BsfDWord(AElementSize);
+      Location.Reference.Index:=AIndexReg;
       { sign/zero-extend? }
-      if regsize.Size=8 then
-        if shift<>0 then
-          location.Reference.ShiftMode:=SM_LSL
+      if ARegSize.Size=8 then
+        if lShift<>0 then
+          Location.Reference.ShiftMode:=SM_LSL
         else
-          location.Reference.ShiftMode:=SM_NONE
-      else if Is_Signed(regsize) then
-        location.Reference.ShiftMode:=SM_SXTW
-      else if shift<>0 then
-        location.Reference.ShiftMode:=SM_UXTW
+          Location.Reference.ShiftMode:=SM_NONE
+      else if Is_Signed(ARegSize) then
+        Location.Reference.ShiftMode:=SM_SXTW
+      else if lShift<>0 then
+        Location.Reference.ShiftMode:=SM_UXTW
       else
         { the upper 32 bits are always already zero-extended -> just use 64 bit
           register }
-        location.Reference.Index:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,location.Reference.Index,OS_64);
-      location.Reference.ShiftImm:=shift;
-      location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,l);
+        Location.Reference.Index:=cg.MakeRegSize(CurrentAsmData.CurrAsmList,Location.Reference.Index,OS_64);
+      Location.Reference.ShiftImm:=lShift;
+      Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,AElementSize);
     end;
 
 

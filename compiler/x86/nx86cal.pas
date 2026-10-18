@@ -38,10 +38,10 @@ interface
 
        TX86CallNode = class(TCGCallNode)
         protected
-         procedure do_release_unused_return_value;override;
-         procedure set_result_location(realresdef: TStoredDef);override;
-         function can_call_ref(var ref: TReference):boolean;override;
-         function do_call_ref(ref: TReference): TCGPara;override;
+         procedure Do_Release_Unused_Return_Value;override;
+         procedure Set_Result_Location(ARealResultDef: TStoredDef);override;
+         function Can_Call_Ref(var AReference: TReference):Boolean;override;
+         function Do_Call_Ref(AReference: TReference): TCGPara;override;
        end;
 
 
@@ -57,9 +57,9 @@ implementation
                              TX86CALLNODE
 *****************************************************************************}
 
-    procedure TX86CallNode.do_release_unused_return_value;
+    procedure TX86CallNode.Do_Release_Unused_Return_Value;
       begin
-        case location.Loc of
+        case Location.Loc of
           LOC_FPUREGISTER :
              begin
                { release FPU stack }
@@ -67,44 +67,44 @@ implementation
                TCGX86(cg).dec_fpu_stack;
              end
           else
-            inherited do_release_unused_return_value;
+            inherited Do_Release_Unused_Return_Value;
         end;
       end;
 
 
-  procedure TX86CallNode.set_result_location(realresdef: TStoredDef);
+  procedure TX86CallNode.Set_Result_Location(ARealResultDef: TStoredDef);
     begin
-      if (retloc.Location^.Loc=LOC_FPUREGISTER) then
+      if (FResultParaLoc.Location^.Loc=LOC_FPUREGISTER) then
         begin
           TCGX86(cg).inc_fpu_stack;
-          Location_Reset(location,LOC_FPUREGISTER,retloc.Location^.Size);
-          location.Register:=retloc.Location^.Register;
+          Location_Reset(Location,LOC_FPUREGISTER,FResultParaLoc.Location^.Size);
+          Location.Register:=FResultParaLoc.Location^.Register;
         end
       else
-        inherited set_result_location(realresdef);
+        inherited Set_Result_Location(ARealResultDef);
     end;
 
 
-  function TX86CallNode.can_call_ref(var ref: TReference): boolean;
+  function TX86CallNode.Can_Call_Ref(var AReference: TReference): Boolean;
     const
 {$if defined(i386)}
-      save_all_regs=[pocall_far16,pocall_oldfpccall];
+      cSaveAllRegs=[pocall_far16,pocall_oldfpccall];
 {$else}
-      save_all_regs=[];
+      cSaveAllRegs=[];
 {$endif}
     begin
-      TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+      TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,AReference);
       { do not use a ref. for calling conventions which allocate all registers, the reg. allocator cannot handle this, see
         also issue #28639, I were not able to create a simple example though to cause the resulting endless spilling }
-      result:=((GetSupReg(ref.Base)<first_int_imreg) and (GetSupReg(ref.Index)<first_int_imreg)) or
-              not(procdefinition.ProcCallOption in save_all_regs);
+      Result:=((GetSupReg(AReference.Base)<first_int_imreg) and (GetSupReg(AReference.Index)<first_int_imreg)) or
+              not(ProcDefinition.ProcCallOption in cSaveAllRegs);
     end;
 
 
-  function TX86CallNode.do_call_ref(ref: TReference): TCGPara;
+  function TX86CallNode.Do_Call_Ref(AReference: TReference): TCGPara;
     begin
-      CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_CALL,S_NO,ref));
-      result:=hlcg.Get_Call_Result_CGPara(procdefinition,typedef)
+      CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_CALL,S_NO,AReference));
+      Result:=hlcg.Get_Call_Result_CGPara(ProcDefinition,TypeDef)
     end;
 
 end.

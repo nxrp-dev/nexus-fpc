@@ -42,13 +42,13 @@ unit psabiehpi;
 
     type
        TPSABIEHAction = class
-         landingpad : TAsmLabel;
-         actiontablelabel : TAsmLabel;
-         actionlist : TAsmList;
-         first : boolean;
-         constructor Create(pad : TAsmLabel);
+         LandingPad : TAsmLabel;
+         ActionTableLabel : TAsmLabel;
+         ActionList : TAsmList;
+         First : boolean;
+         constructor Create(APad : TAsmLabel);
          destructor Destroy; override;
-         function AddAction(p: TObjectDef): LongInt;
+         function AddAction(AObjectDef: TObjectDef): LongInt;
        end;
 
        { This object gives information on the current routine being
@@ -69,45 +69,45 @@ unit psabiehpi;
 
          { label to language specific data }
          LSDALabel : TAsmLabel;
-         callsite_table_data,
-         action_table_data,
-         gcc_except_table_data : TAsmList;
-         typefilterlistlabel,typefilterlistlabelref,
-         callsitetablestart,callsitetableend,
+         CallSiteTableData,
+         ActionTableData,
+         GCCExceptTableData : TAsmList;
+         TypeFilterListLabel,TypeFilterListLabelRef,
+         CallSiteTableStart,CallSiteTableEnd,
          { first label which must be inserted into the entry code }
-         entrycallsitestart,
-         callsitelaststart : TAsmLabel;
-         typefilterlist,
-         landingpadstack,
-         actionstack : TFPList;
+         EntryCallSiteStart,
+         CallSiteLastStart : TAsmLabel;
+         TypeFilterList,
+         LandingPadStack,
+         ActionStack : TFPList;
          CurrentCallSiteNumber : LongInt;
 
          destructor Destroy; override;
 
          { PSABIEH stuff }
-         procedure PushAction(action: TPSABIEHAction);
+         procedure PushAction(AAction: TPSABIEHAction);
          function CurrentAction: TPSABIEHAction;inline;
-         function PopAction(action: TPSABIEHAction): boolean;
-         function FinalizeAndPopAction(action: TPSABIEHAction): boolean;
+         function PopAction(AAction: TPSABIEHAction): boolean;
+         function FinalizeAndPopAction(AAction: TPSABIEHAction): boolean;
          { a landing pad is also an action, however, when the landing pad is popped from the stack
            the area covered by this landing pad ends, i.e. it is popped at the beginning of the finally/except clause,
            the action above is popped at the end of the finally/except clause, so if on clauses add new types, they
            are added to CurrentAction }
-         procedure PushLandingPad(action: TPSABIEHAction);
+         procedure PushLandingPad(AAction: TPSABIEHAction);
          function CurrentLandingPad: TPSABIEHAction;inline;
-         function PopLandingPad(action: TPSABIEHAction): boolean;
-         procedure CreateNewPSABIEHCallsite(list: TAsmList);
+         function PopLandingPad(AAction: TPSABIEHAction): boolean;
+         procedure CreateNewPSABIEHCallsite(AList: TAsmList);
          { adds a new type to the type filter list and returns its index
            be aware, that this method can also handle catch all filters so it
            is valid to pass nil }
-         function AddTypeFilter(p: TObjectDef): LongInt;
-         procedure set_eh_info; override;
-         procedure setup_eh; override;
-         procedure finish_eh; override;
-         procedure start_eh(list : TAsmList); override;
-         procedure end_eh(list : TAsmList); override;
+         function AddTypeFilter(AObjectDef: TObjectDef): LongInt;
+         procedure Set_EH_Info; override;
+         procedure Setup_EH; override;
+         procedure Finish_EH; override;
+         procedure Start_EH(AList : TAsmList); override;
+         procedure End_EH(AList : TAsmList); override;
 
-         function find_exception_handling(var n: TNode; para: pointer): TForEachNodeResult; virtual;
+         function Find_Exception_Handling(var ANode: TNode; AData: pointer): TForEachNodeResult; virtual;
        end;
 
 implementation
@@ -141,82 +141,82 @@ implementation
          Never instantiated. }
        TPSABIEHExceptionStateHandler = class(TCGExceptionStateHandler)
        protected
-         class procedure begin_catch_internal(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; add_catch: boolean; out exceptlocdef: TDef; out
-           exceptlocreg: TRegister);
-         class procedure catch_all_start_internal(list: TAsmList; add_catch: boolean);
+         class procedure Begin_Catch_Internal(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel; AAddCatch: boolean; out AExceptLocDef: TDef; out
+           AExceptLocReg: TRegister);
+         class procedure Catch_All_Start_Internal(AList: TAsmList; AAddCatch: boolean);
        public
-         class procedure get_exception_temps(list:TAsmList;var t:TExceptionTemps); override;
-         class procedure unget_exception_temps(list:TAsmList;const t:TExceptionTemps); override;
-         class procedure new_exception(list:TAsmList;const t:TExceptionTemps; const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState); override;
+         class procedure Get_Exception_Temps(AList:TAsmList;var ATemps:TExceptionTemps); override;
+         class procedure UnGet_Exception_Temps(AList:TAsmList;const ATemps:TExceptionTemps); override;
+         class procedure New_Exception(AList:TAsmList;const ATemps:TExceptionTemps; const AExceptFrameKind: TExceptFrameKind; out AExceptState: TExceptionState); override;
          { start of "except/finally" block }
-         class procedure emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptionstate: TExceptionState;var exceptiontemps:TExceptionTemps); override;
+         class procedure Emit_Except_Label(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; var AExceptionState: TExceptionState;var AExceptionTemps:TExceptionTemps); override;
          { end of a try-block, label comes after the end of try/except or
            try/finally }
-         class procedure end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps; var exceptionstate: TExceptionState; endlabel: TAsmLabel); override;
-         class procedure free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint; endexceptlabel: TAsmLabel; onlyfree:boolean); override;
-         class procedure handle_reraise(list:TAsmList;const t:TExceptionTemps;const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind); override;
+         class procedure End_Try_Block(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; const ATemps: TExceptionTemps; var AExceptionState: TExceptionState; AEndLabel: TAsmLabel); override;
+         class procedure Free_Exception(AList: TAsmList; const ATemps: TExceptionTemps; const AState: TExceptionState; AReason: aint; AEndExceptLabel: TAsmLabel; AOnlyFree:boolean); override;
+         class procedure Handle_ReRaise(AList:TAsmList;const ATemps:TExceptionTemps;const AEntryState: TExceptionState; const AExceptFrameKind: TExceptFrameKind); override;
          { start of an "on" (catch) block }
-         class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out exceptlocreg: TRegister); override;
+         class procedure Begin_Catch(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel; out AExceptLocDef: TDef; out AExceptLocReg: TRegister); override;
          { end of an "on" (catch) block }
-         class procedure end_catch(list: TAsmList); override;
+         class procedure End_Catch(AList: TAsmList); override;
          { called for a catch all exception }
-         class procedure catch_all_start(list: TAsmList); override;
-         class procedure catch_all_end(list: TAsmList); override;
-         class procedure catch_all_add(list: TAsmList); override;
-         class procedure cleanupobjectstack(list: TAsmList); override;
-         class procedure popaddrstack(list: TAsmList); override;
+         class procedure Catch_All_Start(AList: TAsmList); override;
+         class procedure Catch_All_End(AList: TAsmList); override;
+         class procedure Catch_All_Add(AList: TAsmList); override;
+         class procedure CleanupObjectStack(AList: TAsmList); override;
+         class procedure PopAddrStack(AList: TAsmList); override;
        end;
 
 
-    constructor TPSABIEHAction.Create(pad: TAsmLabel);
+    constructor TPSABIEHAction.Create(APad: TAsmLabel);
       begin
-        landingpad:=pad;
-        actionlist:=TAsmList.create;
-        CurrentAsmData.getlabel(actiontablelabel,alt_data);
-        actionlist.concat(TAILabel.create(actiontablelabel));
-        first:=true;
+        LandingPad:=APad;
+        ActionList:=TAsmList.Create;
+        CurrentAsmData.getlabel(ActionTableLabel,alt_data);
+        ActionList.concat(TAILabel.Create(ActionTableLabel));
+        First:=true;
       end;
 
 
     destructor TPSABIEHAction.Destroy;
       begin
-        if not(actionlist.Empty) then
+        if not(ActionList.Empty) then
           InternalError(2019020501);
-        actionlist.Free;
-        actionlist := nil;
+        ActionList.Free;
+        ActionList := nil;
         inherited Destroy;
       end;
 
 
-    function TPSABIEHAction.AddAction(p: TObjectDef) : LongInt;
+    function TPSABIEHAction.AddAction(AObjectDef: TObjectDef) : LongInt;
       var
-        index: LongInt;
+        lIndex: LongInt;
       begin
         { if not first entry, signal that another action follows }
-        if not(first) then
-          actionlist.concat(TAIConst.Create_sleb128bit(1));
-        first:=false;
+        if not(First) then
+          ActionList.concat(TAIConst.Create_sleb128bit(1));
+        First:=false;
 
         { catch all? }
-        if p=TObjectDef(-1) then
-          index:=(CurrentProcInfo as TPSABIEHProcInfo).AddTypeFilter(nil)
-        else if Assigned(p) then
-          index:=(CurrentProcInfo as TPSABIEHProcInfo).AddTypeFilter(p)
+        if AObjectDef=TObjectDef(-1) then
+          lIndex:=(CurrentProcInfo as TPSABIEHProcInfo).AddTypeFilter(nil)
+        else if Assigned(AObjectDef) then
+          lIndex:=(CurrentProcInfo as TPSABIEHProcInfo).AddTypeFilter(AObjectDef)
         else
-          index:=-1;
+          lIndex:=-1;
 {$ifdef debug_eh}
-        if p=TObjectDef(-1) then
-          actionlist.concat(TAIComment.Create(StrPNew('Catch all')))
-        else if Assigned(p) then
-          actionlist.concat(TAIComment.Create(StrPNew('Action for '+p.GetTypeName)))
+        if AObjectDef=TObjectDef(-1) then
+          ActionList.concat(TAIComment.Create(StrPNew('Catch all')))
+        else if Assigned(AObjectDef) then
+          ActionList.concat(TAIComment.Create(StrPNew('Action for '+AObjectDef.GetTypeName)))
         else
-          actionlist.concat(TAIComment.Create(StrPNew('Cleanup')));
+          ActionList.concat(TAIComment.Create(StrPNew('Cleanup')));
 {$endif debug_eh}
-        if Assigned(p) then
-          actionlist.concat(TAIConst.Create_sleb128bit(index+1))
+        if Assigned(AObjectDef) then
+          ActionList.concat(TAIConst.Create_sleb128bit(lIndex+1))
         else
-          actionlist.concat(TAIConst.Create_sleb128bit(0));
-        Result:=index;
+          ActionList.concat(TAIConst.Create_sleb128bit(0));
+        Result:=lIndex;
       end;
 
 {****************************************************************************
@@ -226,153 +226,153 @@ implementation
 
     destructor TPSABIEHProcInfo.Destroy;
       begin
-         gcc_except_table_data.free;
-         gcc_except_table_data := nil;
-         actionstack.free;
-         actionstack := nil;
-         landingpadstack.free;
-         landingpadstack := nil;
-         typefilterlist.free;
-         typefilterlist := nil;
-         callsite_table_data.Free;
-         callsite_table_data := nil;
-         action_table_data.Free;
-         action_table_data := nil;
+         GCCExceptTableData.free;
+         GCCExceptTableData := nil;
+         ActionStack.free;
+         ActionStack := nil;
+         LandingPadStack.free;
+         LandingPadStack := nil;
+         TypeFilterList.free;
+         TypeFilterList := nil;
+         CallSiteTableData.Free;
+         CallSiteTableData := nil;
+         ActionTableData.Free;
+         ActionTableData := nil;
          inherited;
       end;
 
 
-    procedure TPSABIEHProcInfo.PushAction(action: TPSABIEHAction);
+    procedure TPSABIEHProcInfo.PushAction(AAction: TPSABIEHAction);
       begin
-        actionstack.add(action);
+        ActionStack.add(AAction);
       end;
 
 
-    function TPSABIEHProcInfo.PopAction(action: TPSABIEHAction): boolean;
+    function TPSABIEHProcInfo.PopAction(AAction: TPSABIEHAction): boolean;
       begin
-        if CurrentAction<>action then
+        if CurrentAction<>AAction then
           InternalError(2019022501);
-        actionstack.count:=actionstack.count-1;
-        result:=actionstack.count=0;
+        ActionStack.count:=ActionStack.count-1;
+        Result:=ActionStack.count=0;
       end;
 
 
-    function TPSABIEHProcInfo.FinalizeAndPopAction(action: TPSABIEHAction): boolean;
+    function TPSABIEHProcInfo.FinalizeAndPopAction(AAction: TPSABIEHAction): boolean;
       var
-        curpos: TAsmLabel;
+        lCurrentPos: TAsmLabel;
       begin
-        include(flags,pi_has_except_table_data);
-        if CurrentAction<>action then
+        include(Flags,pi_has_except_table_data);
+        if CurrentAction<>AAction then
           InternalError(2019021006);
         { no further actions follow, finalize table
           we check for >1 as the outmost landing pad has no action, so
           we can ignore it }
-        if landingpadstack.count>1 then
+        if LandingPadStack.count>1 then
           begin
-            CurrentAsmData.getlabel(curpos,alt_data);
-            action.actionlist.concat(TAILabel.create(curpos));
-            action.actionlist.concat(TAIConst.Create_rel_sym(aitconst_sleb128bit,curpos,TPSABIEHAction(landingpadstack[landingpadstack.count-1]).actiontablelabel));
+            CurrentAsmData.getlabel(lCurrentPos,alt_data);
+            AAction.ActionList.concat(TAILabel.Create(lCurrentPos));
+            AAction.ActionList.concat(TAIConst.Create_rel_sym(aitconst_sleb128bit,lCurrentPos,TPSABIEHAction(LandingPadStack[LandingPadStack.count-1]).ActionTableLabel));
           end
         else
-          action.actionlist.concat(TAIConst.Create_sleb128bit(0));
-        action_table_data.ConcatList(action.actionlist);
-        actionstack.count:=actionstack.count-1;
-        result:=actionstack.count=0;
+          AAction.ActionList.concat(TAIConst.Create_sleb128bit(0));
+        ActionTableData.ConcatList(AAction.ActionList);
+        ActionStack.count:=ActionStack.count-1;
+        Result:=ActionStack.count=0;
       end;
 
 
-    procedure TPSABIEHProcInfo.PushLandingPad(action: TPSABIEHAction);
+    procedure TPSABIEHProcInfo.PushLandingPad(AAction: TPSABIEHAction);
       begin
-        landingpadstack.add(action);
+        LandingPadStack.add(AAction);
       end;
 
 
     function TPSABIEHProcInfo.CurrentLandingPad: TPSABIEHAction;
       begin
-        result:=TPSABIEHAction(landingpadstack.last);
+        Result:=TPSABIEHAction(LandingPadStack.last);
       end;
 
 
-    function TPSABIEHProcInfo.PopLandingPad(action: TPSABIEHAction): boolean;
+    function TPSABIEHProcInfo.PopLandingPad(AAction: TPSABIEHAction): boolean;
       begin
-        if CurrentLandingPad<>action then
+        if CurrentLandingPad<>AAction then
           InternalError(2019021007);
-        landingpadstack.count:=landingpadstack.count-1;
-        result:=landingpadstack.count=0;
+        LandingPadStack.count:=LandingPadStack.count-1;
+        Result:=LandingPadStack.count=0;
       end;
 
 
-    procedure TPSABIEHProcInfo.CreateNewPSABIEHCallsite(list : TAsmList);
+    procedure TPSABIEHProcInfo.CreateNewPSABIEHCallsite(AList : TAsmList);
       var
-        callsiteend : TAsmLabel;
+        lCallSiteEnd : TAsmLabel;
       begin
-        include(flags,pi_has_except_table_data);
+        include(Flags,pi_has_except_table_data);
         { first, finish last entry }
-        if Assigned(callsitelaststart) and Assigned(CurrentLandingPad) then
+        if Assigned(CallSiteLastStart) and Assigned(CurrentLandingPad) then
           begin
 {$ifdef debug_eh}
-            if Assigned(CurrentLandingPad.actiontablelabel) then
-              callsite_table_data.concat(TAIComment.Create(StrPNew('Call site '+ToStr(CurrentCallSiteNumber)+', action table index = '+ToStr(landingpadstack.count-1))))
+            if Assigned(CurrentLandingPad.ActionTableLabel) then
+              CallSiteTableData.concat(TAIComment.Create(StrPNew('Call site '+ToStr(CurrentCallSiteNumber)+', action table index = '+ToStr(LandingPadStack.count-1))))
             else
-              callsite_table_data.concat(TAIComment.Create(StrPNew('Call site '+ToStr(CurrentCallSiteNumber)+', no action')));
+              CallSiteTableData.concat(TAIComment.Create(StrPNew('Call site '+ToStr(CurrentCallSiteNumber)+', no action')));
 {$endif debug_eh}
-            callsite_table_data.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CurrentAsmData.AsmCFI.get_frame_start,callsitelaststart));
-            CurrentAsmData.getlabel(callsiteend,alt_eh_end);
-            list.concat(TAILabel.create(callsiteend));
-            callsite_table_data.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,callsitelaststart,callsiteend));
+            CallSiteTableData.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CurrentAsmData.AsmCFI.get_frame_start,CallSiteLastStart));
+            CurrentAsmData.getlabel(lCallSiteEnd,alt_eh_end);
+            AList.concat(TAILabel.Create(lCallSiteEnd));
+            CallSiteTableData.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CallSiteLastStart,lCallSiteEnd));
             { landing pad? }
-            if Assigned(CurrentLandingPad.landingpad) then
-              callsite_table_data.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CurrentAsmData.AsmCFI.get_frame_start,CurrentLandingPad.landingpad))
+            if Assigned(CurrentLandingPad.LandingPad) then
+              CallSiteTableData.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CurrentAsmData.AsmCFI.get_frame_start,CurrentLandingPad.LandingPad))
             else
-              callsite_table_data.concat(TAIConst.Create_uleb128bit(0));
+              CallSiteTableData.concat(TAIConst.Create_uleb128bit(0));
             { action number set? if yes, concat }
-            if Assigned(CurrentLandingPad.actiontablelabel) then
+            if Assigned(CurrentLandingPad.ActionTableLabel) then
               begin
-                callsite_table_data.concat(TAIConst.Create_rel_sym_offset(aitconst_uleb128bit,callsitetableend,CurrentLandingPad.actiontablelabel,1));
+                CallSiteTableData.concat(TAIConst.Create_rel_sym_offset(aitconst_uleb128bit,CallSiteTableEnd,CurrentLandingPad.ActionTableLabel,1));
 {$ifdef debug_eh}
-                list.concat(TAIComment.Create(StrPNew('New call site '+ToStr(CurrentCallSiteNumber)+', action table index = '+ToStr(landingpadstack.count-1))));
+                AList.concat(TAIComment.Create(StrPNew('New call site '+ToStr(CurrentCallSiteNumber)+', action table index = '+ToStr(LandingPadStack.count-1))));
 {$endif debug_eh}
               end
             else
               begin
-                callsite_table_data.concat(TAIConst.Create_uleb128bit(0));
+                CallSiteTableData.concat(TAIConst.Create_uleb128bit(0));
 {$ifdef debug_eh}
-                list.concat(TAIComment.Create(StrPNew('New call site '+ToStr(CurrentCallSiteNumber)+', no action')));
+                AList.concat(TAIComment.Create(StrPNew('New call site '+ToStr(CurrentCallSiteNumber)+', no action')));
 {$endif debug_eh}
               end;
-            CurrentAsmData.getlabel(callsitelaststart,alt_eh_begin);
-            list.concat(TAILabel.create(callsitelaststart));
+            CurrentAsmData.getlabel(CallSiteLastStart,alt_eh_begin);
+            AList.concat(TAILabel.Create(CallSiteLastStart));
           end
         else
           begin
-            CurrentAsmData.getlabel(entrycallsitestart,alt_eh_begin);
-            callsitelaststart:=entrycallsitestart
+            CurrentAsmData.getlabel(EntryCallSiteStart,alt_eh_begin);
+            CallSiteLastStart:=EntryCallSiteStart
           end;
 
         Inc(CurrentCallSiteNumber);
       end;
 
 
-    function TPSABIEHProcInfo.AddTypeFilter(p: TObjectDef) : LongInt;
+    function TPSABIEHProcInfo.AddTypeFilter(AObjectDef: TObjectDef) : LongInt;
       var
-        i: Integer;
+        lIndex: Integer;
       begin
-        for i:=0 to typefilterlist.count-1 do
+        for lIndex:=0 to TypeFilterList.count-1 do
           begin
-            if TObjectDef(typefilterlist[i])=p then
+            if TObjectDef(TypeFilterList[lIndex])=AObjectDef then
               begin
-                result:=i;
+                Result:=lIndex;
                 exit;
               end;
           end;
-        result:=typefilterlist.add(p);
+        Result:=TypeFilterList.add(AObjectDef);
       end;
 
 
-    procedure TPSABIEHProcInfo.set_eh_info;
+    procedure TPSABIEHProcInfo.Set_EH_Info;
       begin
-        inherited set_eh_info;
-        if (tf_use_psabieh in TargetInfo.flags) and not(pi_has_except_table_data in flags) then
+        inherited Set_EH_Info;
+        if (tf_use_psabieh in TargetInfo.Flags) and not(pi_has_except_table_data in Flags) then
           LSDALabel:=nil
         else
           CurrentAsmData.AsmCFI.get_cfa_list.concat(TDwarfItem.create_sym(DW_Set_LSDALabel,doe_32bit,LSDALabel));
@@ -381,46 +381,46 @@ implementation
 
     function TPSABIEHProcInfo.CurrentAction: TPSABIEHAction; inline;
       begin
-        result:=TPSABIEHAction(actionstack.last);
+        Result:=TPSABIEHAction(ActionStack.last);
       end;
 
 
-    function TPSABIEHProcInfo.find_exception_handling(var n: TNode; para: pointer): TForEachNodeResult;
+    function TPSABIEHProcInfo.Find_Exception_Handling(var ANode: TNode; AData: pointer): TForEachNodeResult;
       begin
-        if n.nodetype in [tryfinallyn,tryexceptn,raisen,onn] then
+        if ANode.nodetype in [tryfinallyn,tryexceptn,raisen,onn] then
           Result:=fen_norecurse_true
         else
           Result:=fen_false;
         end;
 
 
-    procedure TPSABIEHProcInfo.setup_eh;
+    procedure TPSABIEHProcInfo.Setup_EH;
       var
-        gcc_except_table: TAISection;
+        lGCCExceptTable: TAISection;
       begin
-        if tf_use_psabieh in TargetInfo.flags then
+        if tf_use_psabieh in TargetInfo.Flags then
           begin
-            CreateExceptionTable:=foreachnode(code,@find_exception_handling,nil);
+            CreateExceptionTable:=ForEachNode(Code,@Find_Exception_Handling,nil);
 
-            gcc_except_table_data:=TAsmList.Create;
-            callsite_table_data:=TAsmList.Create;
-            action_table_data:=TAsmList.Create;
-            actionstack:=TFPList.Create;
-            landingpadstack:=TFPList.Create;
-            typefilterlist:=TFPList.Create;
-            gcc_except_table:=new_section(gcc_except_table_data,sec_gcc_except_table,'',0);
-            gcc_except_table.secflags:=[SF_A];
-            gcc_except_table.secprogbits:=SPB_PROGBITS;
+            GCCExceptTableData:=TAsmList.Create;
+            CallSiteTableData:=TAsmList.Create;
+            ActionTableData:=TAsmList.Create;
+            ActionStack:=TFPList.Create;
+            LandingPadStack:=TFPList.Create;
+            TypeFilterList:=TFPList.Create;
+            lGCCExceptTable:=new_section(GCCExceptTableData,sec_gcc_except_table,'',0);
+            lGCCExceptTable.secflags:=[SF_A];
+            lGCCExceptTable.secprogbits:=SPB_PROGBITS;
 {$ifdef debug_eh}
-            gcc_except_table_data.concat(TAIComment.Create(StrPNew('gcc_except_table for '+procdef.FullProcName(true))));
+            GCCExceptTableData.concat(TAIComment.Create(StrPNew('gcc_except_table for '+ProcDef.FullProcName(true))));
  {$endif debug_eh}
             CurrentAsmData.getlabel(LSDALabel,alt_data);
 
-            CurrentAsmData.getlabel(callsitetablestart,alt_data);
-            CurrentAsmData.getlabel(callsitetableend,alt_data);
+            CurrentAsmData.getlabel(CallSiteTableStart,alt_data);
+            CurrentAsmData.getlabel(CallSiteTableEnd,alt_data);
 
-            callsite_table_data.concat(TAILabel.create(callsitetablestart));
-            cexceptionstatehandler:=TPSABIEHExceptionStateHandler;
+            CallSiteTableData.concat(TAILabel.Create(CallSiteTableStart));
+            CExceptionStateHandler:=TPSABIEHExceptionStateHandler;
 
             if CreateExceptionTable then
               begin
@@ -436,282 +436,282 @@ implementation
       end;
 
 
-    procedure TPSABIEHProcInfo.finish_eh;
+    procedure TPSABIEHProcInfo.Finish_EH;
       var
-        i: Integer;
+        lIndex: Integer;
       begin
-        if tf_use_psabieh in TargetInfo.flags then
+        if tf_use_psabieh in TargetInfo.Flags then
           begin
-            if pi_has_except_table_data in flags then
+            if pi_has_except_table_data in Flags then
               begin
-                gcc_except_table_data.concat(TAILabel.create(LSDALabel));
+                GCCExceptTableData.concat(TAILabel.Create(LSDALabel));
                 { landing pad base is relative to procedure start, so write an omit }
-                gcc_except_table_data.concat(TAIConst.create_8bit(DW_EH_PE_omit));
+                GCCExceptTableData.concat(TAIConst.create_8bit(DW_EH_PE_omit));
 
-                if typefilterlist.count>0 then
+                if TypeFilterList.count>0 then
                   begin
 {$if defined(CPU64BITADDR)}
-                    gcc_except_table_data.concat(TAIConst.create_8bit(DW_EH_PE_udata8));
+                    GCCExceptTableData.concat(TAIConst.create_8bit(DW_EH_PE_udata8));
 {$elseif defined(CPU32BITADDR)}
-                    gcc_except_table_data.concat(TAIConst.create_8bit(DW_EH_PE_udata4));
+                    GCCExceptTableData.concat(TAIConst.create_8bit(DW_EH_PE_udata4));
 {$endif}
-                    CurrentAsmData.getlabel(typefilterlistlabel,alt_data);
-                    CurrentAsmData.getlabel(typefilterlistlabelref,alt_data);
-                    gcc_except_table_data.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,typefilterlistlabel,typefilterlistlabelref));
-                    gcc_except_table_data.concat(TAILabel.create(typefilterlistlabel));
+                    CurrentAsmData.getlabel(TypeFilterListLabel,alt_data);
+                    CurrentAsmData.getlabel(TypeFilterListLabelRef,alt_data);
+                    GCCExceptTableData.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,TypeFilterListLabel,TypeFilterListLabelRef));
+                    GCCExceptTableData.concat(TAILabel.Create(TypeFilterListLabel));
                   end
                 else
                   { default types table encoding }
-                  gcc_except_table_data.concat(TAIConst.create_8bit(DW_EH_PE_omit));
+                  GCCExceptTableData.concat(TAIConst.create_8bit(DW_EH_PE_omit));
 
                 { call-site table encoded using uleb128 }
-                gcc_except_table_data.concat(TAIConst.create_8bit(DW_EH_PE_uleb128));
-                gcc_except_table_data.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,callsitetablestart,callsitetableend));
+                GCCExceptTableData.concat(TAIConst.create_8bit(DW_EH_PE_uleb128));
+                GCCExceptTableData.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,CallSiteTableStart,CallSiteTableEnd));
 
-                callsite_table_data.concat(TAILabel.create(callsitetableend));
+                CallSiteTableData.concat(TAILabel.Create(CallSiteTableEnd));
 {$ifdef debug_eh}
-                gcc_except_table_data.concat(TAIComment.Create(StrPNew('Call site table for '+procdef.FullProcName(true))));
+                GCCExceptTableData.concat(TAIComment.Create(StrPNew('Call site table for '+ProcDef.FullProcName(true))));
 {$endif debug_eh}
-                gcc_except_table_data.ConcatList(callsite_table_data);
+                GCCExceptTableData.ConcatList(CallSiteTableData);
                 { action table must follow immediately after callsite table }
 {$ifdef debug_eh}
-                if not(action_table_data.Empty) then
-                  gcc_except_table_data.concat(TAIComment.Create(StrPNew('Action table for '+procdef.FullProcName(true))));
+                if not(ActionTableData.Empty) then
+                  GCCExceptTableData.concat(TAIComment.Create(StrPNew('Action table for '+ProcDef.FullProcName(true))));
 {$endif debug_eh}
-                gcc_except_table_data.ConcatList(action_table_data);
-                if typefilterlist.count>0 then
+                GCCExceptTableData.ConcatList(ActionTableData);
+                if TypeFilterList.count>0 then
                   begin
 {$ifdef debug_eh}
-                    gcc_except_table_data.concat(TAIComment.Create(StrPNew('Type filter list for '+procdef.FullProcName(true))));
+                    GCCExceptTableData.concat(TAIComment.Create(StrPNew('Type filter list for '+ProcDef.FullProcName(true))));
 {$endif debug_eh}
-                    for i:=typefilterlist.count-1 downto 0 do
+                    for lIndex:=TypeFilterList.count-1 downto 0 do
                       begin
 {$ifdef debug_eh}
-                        gcc_except_table_data.concat(TAIComment.Create(StrPNew('Type filter '+ToStr(i))));
+                        GCCExceptTableData.concat(TAIComment.Create(StrPNew('Type filter '+ToStr(lIndex))));
 {$endif debug_eh}
-                        if Assigned(typefilterlist[i]) then
-                          gcc_except_table_data.concat(TAIConst.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(typefilterlist[i]).VMT_MangledName, AT_DATA)))
+                        if Assigned(TypeFilterList[lIndex]) then
+                          GCCExceptTableData.concat(TAIConst.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(TypeFilterList[lIndex]).VMT_MangledName, AT_DATA)))
                         else
-                          gcc_except_table_data.concat(TAIConst.Create_sym(nil));
+                          GCCExceptTableData.concat(TAIConst.Create_sym(nil));
                       end;
                     { the types are resolved by the negative offset, so the label must be written after all types }
-                    gcc_except_table_data.concat(TAILabel.create(typefilterlistlabelref));
+                    GCCExceptTableData.concat(TAILabel.Create(TypeFilterListLabelRef));
                   end;
 
-                new_section(gcc_except_table_data,sec_code,'',0);
-                aktproccode.ConcatList(gcc_except_table_data);
+                new_section(GCCExceptTableData,sec_code,'',0);
+                AktProcCode.ConcatList(GCCExceptTableData);
               end;
           end;
       end;
 
 
-    procedure TPSABIEHProcInfo.start_eh(list: TAsmList);
+    procedure TPSABIEHProcInfo.Start_EH(AList: TAsmList);
       begin
-        inherited start_eh(list);
+        inherited Start_EH(AList);
         if CreateExceptionTable then
-          list.insert(TAILabel.create(entrycallsitestart));
+          AList.insert(TAILabel.Create(EntryCallSiteStart));
       end;
 
 
-    procedure TPSABIEHProcInfo.end_eh(list: TAsmList);
+    procedure TPSABIEHProcInfo.End_EH(AList: TAsmList);
       begin
-       inherited end_eh(list);
+       inherited End_EH(AList);
        if CreateExceptionTable then
          begin
-           CreateNewPSABIEHCallsite(list);
+           CreateNewPSABIEHCallsite(AList);
            PopLandingPad(CurrentLandingPad);
            FinalizeAndPopAction(OutmostLandingPad);
          end;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.get_exception_temps(list: TAsmList; var t: TExceptionTemps);
+    class procedure TPSABIEHExceptionStateHandler.Get_Exception_Temps(AList: TAsmList; var ATemps: TExceptionTemps);
       begin
         if not Assigned(ExceptionReasonType) then
           ExceptionReasonType:=OSSIntType;
-        tg.GetHLTemp(list,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,t.reasonbuf);
+        TG.GetHLTemp(AList,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,ATemps.ReasonBuf);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.unget_exception_temps(list: TAsmList; const t: TExceptionTemps);
+    class procedure TPSABIEHExceptionStateHandler.UnGet_Exception_Temps(AList: TAsmList; const ATemps: TExceptionTemps);
       begin
-        tg.ungettemp(list,t.reasonbuf);
+        TG.UnGetTemp(AList,ATemps.ReasonBuf);
         (CurrentProcInfo as TPSABIEHProcInfo).FinalizeAndPopAction((CurrentProcInfo as TPSABIEHProcInfo).CurrentAction);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.new_exception(list: TAsmList; const t: TExceptionTemps;
-      const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState);
+    class procedure TPSABIEHExceptionStateHandler.New_Exception(AList: TAsmList; const ATemps: TExceptionTemps;
+      const AExceptFrameKind: TExceptFrameKind; out AExceptState: TExceptionState);
       var
-        reg: TRegister;
-        action: TPSABIEHAction;
+        lReg: TRegister;
+        lAction: TPSABIEHAction;
       begin
-        exceptstate.oldflowcontrol:=flowcontrol;
-        CurrentAsmData.getjumplabel(exceptstate.exceptionlabel);
-        if exceptframekind<>tek_except then
+        AExceptState.OldFlowControl:=flowcontrol;
+        CurrentAsmData.getjumplabel(AExceptState.ExceptionLabel);
+        if AExceptFrameKind<>tek_except then
           begin
-            CurrentAsmData.getjumplabel(exceptstate.finallycodelabel);
-            action:=TPSABIEHAction.Create(exceptstate.finallycodelabel);
+            CurrentAsmData.getjumplabel(AExceptState.FinallyCodeLabel);
+            lAction:=TPSABIEHAction.Create(AExceptState.FinallyCodeLabel);
           end
         else
           begin
-            exceptstate.finallycodelabel:=nil;
-            action:=TPSABIEHAction.Create(exceptstate.exceptionlabel);
+            AExceptState.FinallyCodeLabel:=nil;
+            lAction:=TPSABIEHAction.Create(AExceptState.ExceptionLabel);
           end;
-        (CurrentProcInfo as TPSABIEHProcInfo).CreateNewPSABIEHCallsite(list);
-        (CurrentProcInfo as TPSABIEHProcInfo).PushAction(action);
-        (CurrentProcInfo as TPSABIEHProcInfo).PushLandingPad(action);
-        if exceptframekind<>tek_except then
+        (CurrentProcInfo as TPSABIEHProcInfo).CreateNewPSABIEHCallsite(AList);
+        (CurrentProcInfo as TPSABIEHProcInfo).PushAction(lAction);
+        (CurrentProcInfo as TPSABIEHProcInfo).PushLandingPad(lAction);
+        if AExceptFrameKind<>tek_except then
           { no safecall? }
-          if use_cleanup(exceptframekind) then
+          if Use_Cleanup(AExceptFrameKind) then
             (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(nil)
           else
             { if safecall, catch all }
             (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(TObjectDef(-1));
 
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
-        if exceptframekind<>tek_except then
+        if AExceptFrameKind<>tek_except then
           begin
-            reg:=hlcg.GetIntRegister(list,OSSIntType);
-            hlcg.A_Load_Const_Reg(list,OSSIntType,1,reg);
-            hlcg.G_Exception_Reason_Save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
+            lReg:=hlcg.GetIntRegister(AList,OSSIntType);
+            hlcg.A_Load_Const_Reg(AList,OSSIntType,1,lReg);
+            hlcg.G_Exception_Reason_Save(AList,OSSIntType,OSSIntType,lReg,ATemps.ReasonBuf);
           end;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind;
-      var exceptionstate: TExceptionState;var exceptiontemps:TExceptionTemps);
+    class procedure TPSABIEHExceptionStateHandler.Emit_Except_Label(AList: TAsmList; AExceptFrameKind: TExceptFrameKind;
+      var AExceptionState: TExceptionState;var AExceptionTemps:TExceptionTemps);
       begin
-        hlcg.G_Unreachable(list);
-        hlcg.A_Label(list,exceptionstate.exceptionlabel);
-        if exceptframekind<>tek_except then
+        hlcg.G_Unreachable(AList);
+        hlcg.A_Label(AList,AExceptionState.ExceptionLabel);
+        if AExceptFrameKind<>tek_except then
           begin
-            if not Assigned(exceptionstate.finallycodelabel) then
+            if not Assigned(AExceptionState.FinallyCodeLabel) then
               InternalError(2019021002);
 
-            hlcg.A_Label(list,exceptionstate.finallycodelabel);
-            exceptionstate.finallycodelabel:=nil;
-            exceptiontemps.unwind_info:=cg.GetAddressRegister(list);
-            hlcg.A_Load_Reg_Reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,exceptiontemps.unwind_info);
+            hlcg.A_Label(AList,AExceptionState.FinallyCodeLabel);
+            AExceptionState.FinallyCodeLabel:=nil;
+            AExceptionTemps.UnwindInfo:=cg.GetAddressRegister(AList);
+            hlcg.A_Load_Reg_Reg(AList,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,AExceptionTemps.UnwindInfo);
           end;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps;
-      var exceptionstate: TExceptionState; endlabel: TAsmLabel);
+    class procedure TPSABIEHExceptionStateHandler.End_Try_Block(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; const ATemps: TExceptionTemps;
+      var AExceptionState: TExceptionState; AEndLabel: TAsmLabel);
       var
-        reg: TRegister;
+        lReg: TRegister;
       begin
-        if exceptframekind<>tek_except then
+        if AExceptFrameKind<>tek_except then
           begin
             { record that no exception happened in the reason buf, in case we are in a try block of a finally statement }
-            reg:=hlcg.GetIntRegister(list,OSSIntType);
-            hlcg.A_Load_Const_Reg(list,OSSIntType,0,reg);
-            hlcg.G_Exception_Reason_Save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
+            lReg:=hlcg.GetIntRegister(AList,OSSIntType);
+            hlcg.A_Load_Const_Reg(AList,OSSIntType,0,lReg);
+            hlcg.G_Exception_Reason_Save(AList,OSSIntType,OSSIntType,lReg,ATemps.ReasonBuf);
           end;
         inherited;
-        if exceptframekind=tek_except then
-          hlcg.A_Jmp_Always(list,endlabel);
-        (CurrentProcInfo as TPSABIEHProcInfo).CreateNewPSABIEHCallsite(list);
+        if AExceptFrameKind=tek_except then
+          hlcg.A_Jmp_Always(AList,AEndLabel);
+        (CurrentProcInfo as TPSABIEHProcInfo).CreateNewPSABIEHCallsite(AList);
         (CurrentProcInfo as TPSABIEHProcInfo).PopLandingPad((CurrentProcInfo as TPSABIEHProcInfo).CurrentLandingPad);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint;
-      endexceptlabel: TAsmLabel; onlyfree: boolean);
+    class procedure TPSABIEHExceptionStateHandler.Free_Exception(AList: TAsmList; const ATemps: TExceptionTemps; const AState: TExceptionState; AReason: aint;
+      AEndExceptLabel: TAsmLabel; AOnlyFree: boolean);
       begin
         { nothing to do }
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.handle_reraise(list: TAsmList; const t: TExceptionTemps; const entrystate: TExceptionState;
-      const exceptframekind: TExceptFrameKind);
+    class procedure TPSABIEHExceptionStateHandler.Handle_ReRaise(AList: TAsmList; const ATemps: TExceptionTemps; const AEntryState: TExceptionState;
+      const AExceptFrameKind: TExceptFrameKind);
       var
-        cgpara1: TCGPara;
-        pd: TProcDef;
-        ReRaiseLandingPad: TPSABIEHAction;
-        psabiehprocinfo: TPSABIEHProcInfo;
+        lCGPara1: TCGPara;
+        lProcDef: TProcDef;
+        lReRaiseLandingPad: TPSABIEHAction;
+        lPSABIEHProcInfo: TPSABIEHProcInfo;
       begin
         if not(fc_catching_exceptions in flowcontrol) and
-           use_cleanup(exceptframekind) then
+           Use_Cleanup(AExceptFrameKind) then
           begin
             { Resume might not be called outside of an landing pad else
               the unwind is immediately terminated, so create an empty landing pad }
-            psabiehprocinfo:=CurrentProcInfo as TPSABIEHProcInfo;
+            lPSABIEHProcInfo:=CurrentProcInfo as TPSABIEHProcInfo;
 
-            if psabiehprocinfo.landingpadstack.count>1 then
+            if lPSABIEHProcInfo.LandingPadStack.count>1 then
               begin
-                psabiehprocinfo.CreateNewPSABIEHCallsite(list);
+                lPSABIEHProcInfo.CreateNewPSABIEHCallsite(AList);
 
-                psabiehprocinfo.PushAction(psabiehprocinfo.NoAction);
-                psabiehprocinfo.PushLandingPad(psabiehprocinfo.NoAction);
+                lPSABIEHProcInfo.PushAction(lPSABIEHProcInfo.NoAction);
+                lPSABIEHProcInfo.PushLandingPad(lPSABIEHProcInfo.NoAction);
               end;
 
-            pd:=Search_System_Proc('_unwind_resume');
-            cgpara1.init;
-            ParaManager.GetCGTempParaLoc(list,pd,1,cgpara1);
-            hlcg.A_Load_Reg_CGPara(list,VoidPointerType,t.unwind_info,cgpara1);
-            ParaManager.FreeCGPara(list,cgpara1);
-            hlcg.G_Call_System_Proc(list,'_unwind_resume',[@cgpara1],nil).ResetIfTemp;
+            lProcDef:=Search_System_Proc('_unwind_resume');
+            lCGPara1.init;
+            ParaManager.GetCGTempParaLoc(AList,lProcDef,1,lCGPara1);
+            hlcg.A_Load_Reg_CGPara(AList,VoidPointerType,ATemps.UnwindInfo,lCGPara1);
+            ParaManager.FreeCGPara(AList,lCGPara1);
+            hlcg.G_Call_System_Proc(AList,'_unwind_resume',[@lCGPara1],nil).ResetIfTemp;
             { we do not have to clean up the stack, we never return }
-            cgpara1.done;
+            lCGPara1.done;
 
-            if psabiehprocinfo.landingpadstack.count>1 then
+            if lPSABIEHProcInfo.LandingPadStack.count>1 then
               begin
-                psabiehprocinfo.CreateNewPSABIEHCallsite(list);
-                psabiehprocinfo.PopLandingPad(psabiehprocinfo.NoAction);
-                psabiehprocinfo.PopAction(psabiehprocinfo.NoAction);
+                lPSABIEHProcInfo.CreateNewPSABIEHCallsite(AList);
+                lPSABIEHProcInfo.PopLandingPad(lPSABIEHProcInfo.NoAction);
+                lPSABIEHProcInfo.PopAction(lPSABIEHProcInfo.NoAction);
               end;
           end
         else
           begin
-            psabiehprocinfo:=CurrentProcInfo as TPSABIEHProcInfo;
+            lPSABIEHProcInfo:=CurrentProcInfo as TPSABIEHProcInfo;
             { empty landing pad needed to avoid immediate termination? }
-            if psabiehprocinfo.landingpadstack.Count=0 then
+            if lPSABIEHProcInfo.LandingPadStack.Count=0 then
               begin
-                psabiehprocinfo.CreateNewPSABIEHCallsite(list);
+                lPSABIEHProcInfo.CreateNewPSABIEHCallsite(AList);
 
-                ReRaiseLandingPad:=psabiehprocinfo.NoAction;
-                psabiehprocinfo.PushAction(ReRaiseLandingPad);
-                psabiehprocinfo.PushLandingPad(ReRaiseLandingPad);
+                lReRaiseLandingPad:=lPSABIEHProcInfo.NoAction;
+                lPSABIEHProcInfo.PushAction(lReRaiseLandingPad);
+                lPSABIEHProcInfo.PushLandingPad(lReRaiseLandingPad);
               end
             else
-              ReRaiseLandingPad:=nil;
-            hlcg.G_Call_System_Proc(list,'fpc_reraise',[],nil).ResetIfTemp;
-            if Assigned(ReRaiseLandingPad) then
+              lReRaiseLandingPad:=nil;
+            hlcg.G_Call_System_Proc(AList,'fpc_reraise',[],nil).ResetIfTemp;
+            if Assigned(lReRaiseLandingPad) then
               begin
-                psabiehprocinfo.CreateNewPSABIEHCallsite(list);
-                psabiehprocinfo.PopLandingPad(psabiehprocinfo.CurrentLandingPad);
-                psabiehprocinfo.PopAction(ReRaiseLandingPad);
+                lPSABIEHProcInfo.CreateNewPSABIEHCallsite(AList);
+                lPSABIEHProcInfo.PopLandingPad(lPSABIEHProcInfo.CurrentLandingPad);
+                lPSABIEHProcInfo.PopAction(lReRaiseLandingPad);
              end;
           end;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.begin_catch_internal(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel;
-      add_catch: boolean; out exceptlocdef: TDef; out exceptlocreg: TRegister);
+    class procedure TPSABIEHExceptionStateHandler.Begin_Catch_Internal(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel;
+      AAddCatch: boolean; out AExceptLocDef: TDef; out AExceptLocReg: TRegister);
       var
-        catchstartlab : TAsmLabel;
-        begincatchres,
-        paraloc1: TCGPara;
-        pd: TProcDef;
+        lCatchStartLabel : TAsmLabel;
+        lBeginCatchResult,
+        lParaLoc1: TCGPara;
+        lProcDef: TProcDef;
         {rttisym: TAsmSymbol;
         rttidef: tdef;
         indirect: boolean;
         otherunit: boolean; }
-        wrappedexception: TRegister;
-        exceptloc: TLocation;
+        lWrappedException: TRegister;
+        lExceptLoc: TLocation;
 {$if defined(i386) or defined(x86_64)}
-        typeindex : aint;
+        lTypeIndex : aint;
 {$endif}
       begin
-        paraloc1.init;
+        lParaLoc1.init;
 {
         rttidef:=nil;
         rttisym:=nil;
 }
-        wrappedexception:=hlcg.GetAddressRegister(list,VoidPointerType);
-        hlcg.A_Load_Reg_Reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,wrappedexception);
+        lWrappedException:=hlcg.GetAddressRegister(AList,VoidPointerType);
+        hlcg.A_Load_Reg_Reg(AList,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,lWrappedException);
 (*
         if add_catch then
           begin
@@ -728,90 +728,90 @@ implementation
           end;
 *)
         { check if the exception is handled by this node }
-        if Assigned(excepttype) then
+        if Assigned(AExceptType) then
           begin
 {$if defined(i386) or defined(x86_64)}
-            typeindex:=(CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(excepttype);
+            lTypeIndex:=(CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(AExceptType);
 {$endif}
-            CurrentAsmData.getjumplabel(catchstartlab);
+            CurrentAsmData.getjumplabel(lCatchStartLabel);
 {$if defined(i386)}
-            hlcg.A_Cmp_Const_Reg_Label (list,OSUIntType,OC_EQ,typeindex+1,NR_FUNCTION_RESULT64_HIGH_REG,catchstartlab);
+            hlcg.A_Cmp_Const_Reg_Label (AList,OSUIntType,OC_EQ,lTypeIndex+1,NR_FUNCTION_RESULT64_HIGH_REG,lCatchStartLabel);
 {$elseif defined(x86_64)}
-            hlcg.A_Cmp_Const_Reg_Label (list,S32IntType,OC_EQ,typeindex+1,NR_EDX,catchstartlab);
+            hlcg.A_Cmp_Const_Reg_Label (AList,S32IntType,OC_EQ,lTypeIndex+1,NR_EDX,lCatchStartLabel);
 {$else}
             { we need to find a way to fix this in a generic way }
             InternalError(2019021008);
 {$endif}
-            hlcg.A_Jmp_Always(list,nextonlabel);
-            hlcg.A_Label(list,catchstartlab);
+            hlcg.A_Jmp_Always(AList,ANextOnLabel);
+            hlcg.A_Label(AList,lCatchStartLabel);
           end
         else
           (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(TObjectDef(-1));
 
-        pd:=Search_System_Proc('fpc_psabi_begin_catch');
-        ParaManager.GetCGTempParaLoc(list, pd, 1, paraloc1);
-        hlcg.A_Load_Reg_CGPara(list,VoidPointerType,wrappedexception,paraloc1);
-        begincatchres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1],nil);
-        Location_Reset(exceptloc, LOC_REGISTER, Def_CGSize(begincatchres.def));
-        exceptloc.Register:=hlcg.GetAddressRegister(list, begincatchres.def);
-        hlcg.Gen_Load_CGPara_Loc(list, begincatchres.def, begincatchres, exceptloc, true);
+        lProcDef:=Search_System_Proc('fpc_psabi_begin_catch');
+        ParaManager.GetCGTempParaLoc(AList, lProcDef, 1, lParaLoc1);
+        hlcg.A_Load_Reg_CGPara(AList,VoidPointerType,lWrappedException,lParaLoc1);
+        lBeginCatchResult:=hlcg.G_Call_System_Proc(AList,lProcDef,[@lParaLoc1],nil);
+        Location_Reset(lExceptLoc, LOC_REGISTER, Def_CGSize(lBeginCatchResult.def));
+        lExceptLoc.Register:=hlcg.GetAddressRegister(AList, lBeginCatchResult.def);
+        hlcg.Gen_Load_CGPara_Loc(AList, lBeginCatchResult.def, lBeginCatchResult, lExceptLoc, true);
 
-        begincatchres.ResetIfTemp;
-        paraloc1.done;
+        lBeginCatchResult.ResetIfTemp;
+        lParaLoc1.done;
 
-        exceptlocdef:=begincatchres.def;
-        exceptlocreg:=exceptloc.Register;
+        AExceptLocDef:=lBeginCatchResult.def;
+        AExceptLocReg:=lExceptLoc.Register;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.catch_all_start_internal(list: TAsmList; add_catch: boolean);
+    class procedure TPSABIEHExceptionStateHandler.Catch_All_Start_Internal(AList: TAsmList; AAddCatch: boolean);
       var
-        exceptlocdef: TDef;
-        exceptlocreg: TRegister;
+        lExceptLocDef: TDef;
+        lExceptLocReg: TRegister;
       begin
-        begin_catch_internal(list,nil,nil,add_catch,exceptlocdef,exceptlocreg);
+        Begin_Catch_Internal(AList,nil,nil,AAddCatch,lExceptLocDef,lExceptLocReg);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out
-      exceptlocreg: TRegister);
+    class procedure TPSABIEHExceptionStateHandler.Begin_Catch(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel; out AExceptLocDef: TDef; out
+      AExceptLocReg: TRegister);
       begin
-        begin_catch_internal(list,excepttype,nextonlabel,true,exceptlocdef,exceptlocreg);
+        Begin_Catch_Internal(AList,AExceptType,ANextOnLabel,true,AExceptLocDef,AExceptLocReg);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.end_catch(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.End_Catch(AList: TAsmList);
       begin
-        hlcg.G_Call_System_Proc(list,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
+        hlcg.G_Call_System_Proc(AList,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
         inherited;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.catch_all_start(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.Catch_All_Start(AList: TAsmList);
       begin
-        catch_all_start_internal(list,true);
+        Catch_All_Start_Internal(AList,true);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.catch_all_add(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.Catch_All_Add(AList: TAsmList);
       begin
         (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(nil);
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.catch_all_end(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.Catch_All_End(AList: TAsmList);
       begin
-        hlcg.G_Call_System_Proc(list,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
+        hlcg.G_Call_System_Proc(AList,'fpc_psabi_end_catch',[],nil).ResetIfTemp;
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.cleanupobjectstack(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.CleanupObjectStack(AList: TAsmList);
       begin
         { there is nothing to do }
       end;
 
 
-    class procedure TPSABIEHExceptionStateHandler.popaddrstack(list: TAsmList);
+    class procedure TPSABIEHExceptionStateHandler.PopAddrStack(AList: TAsmList);
       begin
         { there is no addr stack, so do nothing }
       end;

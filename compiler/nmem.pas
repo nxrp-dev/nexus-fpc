@@ -36,12 +36,12 @@ interface
             after the first message has been sent -> crash if you pass an
             uninitialized type to e.g. class_getInstanceSize() or so. No need
             to save to/restore from ppu. }
-          forcall: boolean;
-          constructor create(l : TNode);virtual;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          function docompare(p: TNode): boolean; override;
-          function dogetcopy: TNode; override;
+          ForCall: Boolean;
+          constructor Create(ALeft : TNode);virtual;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          function DoGetCopy: TNode; override;
        end;
        TLoadVMTAddrNodeClass = class of TLoadVMTAddrNode;
 
@@ -53,18 +53,18 @@ interface
          lpf_forload
        );
        TLoadParentFPNode = class(TUnaryNode)
-          parentpd : TProcDef;
-          parentpdderef : TDeref;
-          kind: TLoadParentFPKind;
-          constructor create(pd: TProcDef; fpkind: TLoadParentFPKind);virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          ParentPD : TProcDef;
+          ParentPDDeref : TDeref;
+          Kind: TLoadParentFPKind;
+          constructor Create(AProcDef: TProcDef; AFPKind: TLoadParentFPKind);virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          function docompare(p: TNode): boolean; override;
-          function dogetcopy : TNode;override;
+          procedure DerefImpl;override;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          function DoGetCopy : TNode;override;
        end;
        TLoadParentFPNodeClass = class of TLoadParentFPNode;
 
@@ -76,27 +76,27 @@ interface
        TAddrNodeFlags = set of TAddrNodeFlag;
 
        TAddrNode = class(TUnaryNode)
-          getprocvardef : TProcVarDef;
-          getprocvardefderef : TDeref;
-          addrnodeflags : TAddrNodeFlags;
-          constructor create(l : TNode);virtual;
-          constructor Create_Internal(l : TNode); virtual;
-          constructor create_internal_nomark(l : TNode); virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure mark_write;override;
+          GetProcVarDef : TProcVarDef;
+          GetProcVarDefDeref : TDeref;
+          AddrNodeFlags : TAddrNodeFlags;
+          constructor Create(ALeft : TNode);virtual;
+          constructor Create_Internal(ALeft : TNode); virtual;
+          constructor Create_Internal_NoMark(ALeft : TNode); virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
+          procedure Mark_Write;override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          procedure printnodeinfo(var t: text); override;
-          function docompare(p: TNode): boolean; override;
-          function dogetcopy : TNode;override;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          function simplify(forinline : boolean) : TNode; override;
+          procedure DerefImpl;override;
+          procedure PrintNodeInfo(var AText: Text); override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          function DoGetCopy : TNode;override;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Simplify(AForInline : Boolean) : TNode; override;
          protected
-          mark_read_written: boolean;
-          procedure set_labelsym_resultdef; virtual;
-          function typecheck_non_proc(realsource: TNode; out res: TNode): boolean; virtual;
+          FMarkReadWritten: Boolean;
+          procedure Set_LabelSym_ResultDef; virtual;
+          function TypeCheck_Non_Proc(ARealSource: TNode; out AResultNode: TNode): Boolean; virtual;
        end;
        TAddrNodeClass = class of TAddrNode;
 
@@ -107,31 +107,31 @@ interface
        TDerefNodeFlags = set of TDerefNodeFlag;
 
        TDerefNode = class(TUnaryNode)
-          derefnodeflags : TDerefNodeFlags;
-          constructor create(l : TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function dogetcopy : TNode;override;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          procedure mark_write;override;
+          DerefNodeFlags : TDerefNodeFlags;
+          constructor Create(ALeft : TNode);virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
+          function DoGetCopy : TNode;override;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          procedure Mark_Write;override;
        end;
        TDerefNodeClass = class of TDerefNode;
 
        TSubscriptNode = class(TUnaryNode)
-          vs : TFieldVarSym;
-          vsderef : TDeref;
-          constructor create(varsym : TSym;l : TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          FieldSym : TFieldVarSym;
+          FieldSymDeref : TDeref;
+          constructor Create(AVarSym : TSym;ALeft : TNode);virtual;
+          constructor PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile:TCompilerPPUFile);override;
           procedure BuildDerefImpl;override;
-          procedure derefimpl;override;
-          function dogetcopy : TNode;override;
-          function pass_1 : TNode;override;
-          function docompare(p: TNode): boolean; override;
-          function pass_typecheck:TNode;override;
-          procedure mark_write;override;
-          procedure printnodedata(var T: Text); override;
+          procedure DerefImpl;override;
+          function DoGetCopy : TNode;override;
+          function Pass_1 : TNode;override;
+          function DoCompare(ANode: TNode): Boolean; override;
+          function Pass_TypeCheck:TNode;override;
+          procedure Mark_Write;override;
+          procedure PrintNodeData(var AText: Text); override;
        end;
        TSubscriptNodeClass = class of TSubscriptNode;
 
@@ -145,18 +145,18 @@ interface
 
        TVecNode = class(TBinaryNode)
        protected
-          function first_arraydef : TNode; virtual;
-          function gen_array_rangecheck: TNode; virtual;
+          function First_ArrayDef : TNode; virtual;
+          function Gen_Array_RangeCheck: TNode; virtual;
        public
-          vecnodeflags: TVecNodeFlags;
-          constructor  create(l,r : TNode);virtual;
-          constructor ppuload(t : TNodeType;ppufile : TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile : TCompilerPPUFile);override;
-          function pass_1 : TNode;override;
-          function pass_typecheck:TNode;override;
-          function simplify(forinline : boolean) : TNode; override;
-          function dogetcopy : TNode;override;
-          procedure mark_write;override;
+          VecNodeFlags: TVecNodeFlags;
+          constructor  Create(ALeft,ARight : TNode);virtual;
+          constructor PPULoad(ANodeType : TNodeType;APPUFile : TCompilerPPUFile);override;
+          procedure PPUWrite(APPUFile : TCompilerPPUFile);override;
+          function Pass_1 : TNode;override;
+          function Pass_TypeCheck:TNode;override;
+          function Simplify(AForInline : Boolean) : TNode; override;
+          function DoGetCopy : TNode;override;
+          procedure Mark_Write;override;
        end;
        TVecNodeClass = class of TVecNode;
 
@@ -168,7 +168,7 @@ interface
        CVecNode : TVecNodeClass= TVecNode;
        CLoadParentFPNode : TLoadParentFPNodeClass = TLoadParentFPNode;
 
-    function is_big_untyped_addrnode(p: TNode): boolean;
+    function Is_Big_Untyped_AddrNode(ANode: TNode): Boolean;
 
 implementation
 
@@ -179,58 +179,58 @@ implementation
       nadd,nbas,nflw,nutils,objcutil,
       wpobase,
 
-      htypechk,pass_1,ncal,nld,ncon,ncnv,cgbase,ProcInfo,WideStr
+      htypechk,Pass_1,ncal,nld,ncon,ncnv,cgbase,ProcInfo,WideStr
       ;
 
 {*****************************************************************************
                             TLOADVMTADDRNODE
 *****************************************************************************}
 
-    constructor TLoadVMTAddrNode.create(l : TNode);
+    constructor TLoadVMTAddrNode.Create(ALeft : TNode);
       begin
-         inherited create(loadvmtaddrn,l);
+         inherited Create(loadvmtaddrn,ALeft);
       end;
 
 
-    function TLoadVMTAddrNode.pass_typecheck:TNode;
+    function TLoadVMTAddrNode.Pass_TypeCheck:TNode;
       var
-        defaultresultdef : boolean;
+        lUseDefaultResultDef : Boolean;
       begin
-        result:=nil;
-        TypeCheckPass(left);
+        Result:=nil;
+        TypeCheckPass(Left);
         if CodeGenError then
          exit;
 
-        case left.resultdef.typ of
+        case Left.ResultDef.typ of
           classrefdef :
-            resultdef:=left.resultdef;
+            ResultDef:=Left.ResultDef;
           recorddef,
           objectdef:
             begin
-              if left.resultdef.typ=objectdef then
+              if Left.ResultDef.typ=objectdef then
                 begin
                   { access to the classtype while specializing? }
-                  if TStoredDef(left.resultdef).Is_Generic then
+                  if TStoredDef(Left.ResultDef).Is_Generic then
                     begin
-                      defaultresultdef:=true;
+                      lUseDefaultResultDef:=true;
                       if Assigned(CurrentStructDef) then
                         begin
                           if Assigned(CurrentStructDef.GenericDef) then
-                            if CurrentStructDef.GenericDef=left.resultdef then
+                            if CurrentStructDef.GenericDef=Left.ResultDef then
                               begin
-                                resultdef:=CClassRefDef.create(CurrentStructDef);
-                                defaultresultdef:=false;
+                                ResultDef:=CClassRefDef.Create(CurrentStructDef);
+                                lUseDefaultResultDef:=false;
                               end
                             else
                               CGMessage(parser_e_cant_create_generics_of_this_type);
                         end
                       else
                         message(parser_e_cant_create_generics_of_this_type);
-                      if defaultresultdef then
-                        resultdef:=CClassRefDef.create(left.resultdef);
+                      if lUseDefaultResultDef then
+                        ResultDef:=CClassRefDef.Create(Left.ResultDef);
                     end
                   else
-                    resultdef:=CClassRefDef.create(left.resultdef);
+                    ResultDef:=CClassRefDef.Create(Left.ResultDef);
                 end
               else
                 CGMessage(parser_e_pointer_to_class_expected);
@@ -241,73 +241,73 @@ implementation
       end;
 
 
-    function TLoadVMTAddrNode.docompare(p: TNode): boolean;
+    function TLoadVMTAddrNode.DoCompare(ANode: TNode): Boolean;
       begin
-        result:=inherited docompare(p);
-        if result then
-          result:=forcall=TLoadVMTAddrNode(p).forcall;
+        Result:=inherited DoCompare(ANode);
+        if Result then
+          Result:=ForCall=TLoadVMTAddrNode(ANode).ForCall;
       end;
 
 
-    function TLoadVMTAddrNode.dogetcopy: TNode;
+    function TLoadVMTAddrNode.DoGetCopy: TNode;
       begin
-        result:=inherited dogetcopy;
-        TLoadVMTAddrNode(result).forcall:=forcall;
+        Result:=inherited DoGetCopy;
+        TLoadVMTAddrNode(Result).ForCall:=ForCall;
       end;
 
 
-    function TLoadVMTAddrNode.pass_1 : TNode;
+    function TLoadVMTAddrNode.Pass_1 : TNode;
       var
-        vs: TSym;
+        lVarSym: TSym;
       begin
-         result:=nil;
-         expectloc:=LOC_REGISTER;
-         if left.nodetype<>typen then
+         Result:=nil;
+         ExpectLoc:=LOC_REGISTER;
+         if Left.NodeType<>typen then
            begin
-             if (Is_ObjC_Class_Or_Protocol(left.resultdef) or
-                 Is_ObjCClassRef(left.resultdef)) then
+             if (Is_ObjC_Class_Or_Protocol(Left.ResultDef) or
+                 Is_ObjCClassRef(Left.ResultDef)) then
                begin
                  { on non-fragile ABI platforms, the ISA pointer may be opaque
                    and we must call Object_getClass to obtain the real ISA
                    pointer }
                  if TargetInfo.system in systems_objc_nfabi then
                    begin
-                     result:=CCallNode.createinternfromunit('OBJC','OBJECT_GETCLASS',CCallParaNode.create(left,nil));
-                     inserttypeconv_explicit(result,resultdef);
+                     Result:=CCallNode.CreateInternFromUnit('OBJC','OBJECT_GETCLASS',CCallParaNode.Create(Left,nil));
+                     InsertTypeConv_Explicit(Result,ResultDef);
                    end
                  else
-                   result:=objcloadbasefield(left,'ISA');
+                   Result:=ObjCLoadBaseField(Left,'ISA');
                end
              else
-               result:=CTypeConvNode.Create_Internal(load_vmt_for_self_node(left),resultdef);
+               Result:=CTypeConvNode.Create_Internal(Load_VMT_For_Self_Node(Left),ResultDef);
              { reused }
-             left:=nil;
+             Left:=nil;
            end
-         else if not Is_ObjCClass(left.resultdef) and
-                 not Is_ObjCClassRef(left.resultdef) then
+         else if not Is_ObjCClass(Left.ResultDef) and
+                 not Is_ObjCClassRef(Left.ResultDef) then
            begin
-             if not(nf_ignore_for_wpo in flags) and
-                wpoinfomanager.symbol_live_in_currentproc(left.resultdef) then
+             if not(nf_ignore_for_wpo in Flags) and
+                wpoinfomanager.symbol_live_in_currentproc(Left.ResultDef) then
              begin
                { keep track of which classes might be instantiated via a classrefdef }
-               if (left.resultdef.typ=classrefdef) then
-                 TObjectDef(TClassRefDef(left.resultdef).PointedDef).Register_Maybe_Created_Object_Type
-               else if (left.resultdef.typ=objectdef) then
-                 TObjectDef(left.resultdef).Register_Maybe_Created_Object_Type
+               if (Left.ResultDef.typ=classrefdef) then
+                 TObjectDef(TClassRefDef(Left.ResultDef).PointedDef).Register_Maybe_Created_Object_Type
+               else if (Left.ResultDef.typ=objectdef) then
+                 TObjectDef(Left.ResultDef).Register_Maybe_Created_Object_Type
              end
            end
-         else if Is_ObjCClass(left.resultdef) and
-              not(forcall) then
+         else if Is_ObjCClass(Left.ResultDef) and
+              not(ForCall) then
            begin
              { call "class" method (= "classclass" in FPC), because otherwise
                we may use the class information before it has been
                initialized }
-             vs:=Search_Struct_Member(TObjectDef(left.resultdef),'CLASSCLASS');
-             if not Assigned(vs) or
-                (vs.typ<>ProcSym) then
+             lVarSym:=Search_Struct_Member(TObjectDef(Left.ResultDef),'CLASSCLASS');
+             if not Assigned(lVarSym) or
+                (lVarSym.typ<>ProcSym) then
                InternalError(2011080601);
              { can't reuse "self", because it will be freed when we return }
-             result:=CCallNode.create(nil,TProcSym(vs),vs.owner,self.GetCopy,[],nil);
+             Result:=CCallNode.Create(nil,TProcSym(lVarSym),lVarSym.owner,Self.GetCopy,[],nil);
            end;
       end;
 
@@ -316,290 +316,290 @@ implementation
                         TLOADPARENTFPNODE
 *****************************************************************************}
 
-    constructor TLoadParentFPNode.create(pd: TProcDef; fpkind: TLoadParentFPKind);
+    constructor TLoadParentFPNode.Create(AProcDef: TProcDef; AFPKind: TLoadParentFPKind);
       begin
-        inherited create(loadparentfpn,nil);
-        if not Assigned(pd) then
+        inherited Create(loadparentfpn,nil);
+        if not Assigned(AProcDef) then
           InternalError(200309288);
-        if (pd.ParaST.SymTableLevel>CurrentProcInfo.procdef.ParaST.SymTableLevel) then
+        if (AProcDef.ParaST.SymTableLevel>CurrentProcInfo.procdef.ParaST.SymTableLevel) then
           InternalError(200309284);
-        parentpd:=pd;
-        kind:=fpkind;
+        ParentPD:=AProcDef;
+        Kind:=AFPKind;
       end;
 
 
-    constructor TLoadParentFPNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TLoadParentFPNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        ppufile.GetDeref(parentpdderef);
-        kind:=TLoadParentFPKind(ppufile.GetByte);
+        inherited PPULoad(ANodeType,APPUFile);
+        APPUFile.GetDeref(ParentPDDeref);
+        Kind:=TLoadParentFPKind(APPUFile.GetByte);
       end;
 
 
-    procedure TLoadParentFPNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TLoadParentFPNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutDeref(parentpdderef);
-        ppufile.PutByte(byte(kind));
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutDeref(ParentPDDeref);
+        APPUFile.PutByte(Byte(Kind));
       end;
 
 
     procedure TLoadParentFPNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        parentpdderef.build(parentpd);
+        ParentPDDeref.Build(ParentPD);
       end;
 
 
-    procedure TLoadParentFPNode.derefimpl;
+    procedure TLoadParentFPNode.DerefImpl;
       begin
-        inherited derefimpl;
-        parentpd:=TProcDef(parentpdderef.resolve);
+        inherited DerefImpl;
+        ParentPD:=TProcDef(ParentPDDeref.resolve);
       end;
 
 
-    function TLoadParentFPNode.docompare(p: TNode): boolean;
+    function TLoadParentFPNode.DoCompare(ANode: TNode): Boolean;
       begin
-        result:=
-          inherited docompare(p) and
-          (TLoadParentFPNode(p).parentpd=parentpd) and
-          (TLoadParentFPNode(p).kind=kind);
+        Result:=
+          inherited DoCompare(ANode) and
+          (TLoadParentFPNode(ANode).ParentPD=ParentPD) and
+          (TLoadParentFPNode(ANode).Kind=Kind);
       end;
 
 
-    function TLoadParentFPNode.dogetcopy : TNode;
+    function TLoadParentFPNode.DoGetCopy : TNode;
       var
-         p : TLoadParentFPNode;
+         lCopy : TLoadParentFPNode;
       begin
-         p:=TLoadParentFPNode(inherited dogetcopy);
-         p.parentpd:=parentpd;
-         p.kind:=kind;
-         dogetcopy:=p;
+         lCopy:=TLoadParentFPNode(inherited DoGetCopy);
+         lCopy.ParentPD:=ParentPD;
+         lCopy.Kind:=Kind;
+         DoGetCopy:=lCopy;
       end;
 
 
-    function TLoadParentFPNode.pass_typecheck:TNode;
+    function TLoadParentFPNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        resultdef:=ParentFPVoidPointerType;
+        Result:=nil;
+        ResultDef:=ParentFPVoidPointerType;
       end;
 
 
-    function TLoadParentFPNode.pass_1 : TNode;
+    function TLoadParentFPNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        expectloc:=LOC_REGISTER;
+        Result:=nil;
+        ExpectLoc:=LOC_REGISTER;
       end;
 
 {*****************************************************************************
                              TADDRNODE
 *****************************************************************************}
 
-    constructor TAddrNode.create(l : TNode);
+    constructor TAddrNode.Create(ALeft : TNode);
 
       begin
-         inherited create(addrn,l);
-         getprocvardef:=nil;
-         addrnodeflags:=[];
-         mark_read_written := true;
+         inherited Create(addrn,ALeft);
+         GetProcVarDef:=nil;
+         AddrNodeFlags:=[];
+         FMarkReadWritten := true;
       end;
 
 
-    constructor TAddrNode.Create_Internal(l : TNode);
+    constructor TAddrNode.Create_Internal(ALeft : TNode);
       begin
-        self.create(l);
-        include(flags,nf_internal);
+        Self.Create(ALeft);
+        include(Flags,nf_internal);
       end;
 
 
-    constructor TAddrNode.create_internal_nomark(l : TNode);
+    constructor TAddrNode.Create_Internal_NoMark(ALeft : TNode);
       begin
-        self.Create_Internal(l);
-        mark_read_written := false;
+        Self.Create_Internal(ALeft);
+        FMarkReadWritten := false;
       end;
 
 
-    constructor TAddrNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TAddrNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        ppufile.GetDeref(getprocvardefderef);
-        ppufile.GetSet(TPPUSet1(addrnodeflags));
+        inherited PPULoad(ANodeType,APPUFile);
+        APPUFile.GetDeref(GetProcVarDefDeref);
+        APPUFile.GetSet(TPPUSet1(AddrNodeFlags));
       end;
 
 
-    procedure TAddrNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAddrNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutDeref(getprocvardefderef);
-        ppufile.PutSet(TPPUSet1(addrnodeflags));
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutDeref(GetProcVarDefDeref);
+        APPUFile.PutSet(TPPUSet1(AddrNodeFlags));
       end;
 
-    procedure TAddrNode.mark_write;
+    procedure TAddrNode.Mark_Write;
 
     begin
       {@procvar:=nil is legal in Delphi mode.}
-      left.mark_write;
+      Left.Mark_Write;
     end;
 
     procedure TAddrNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        getprocvardefderef.build(getprocvardef);
+        GetProcVarDefDeref.Build(GetProcVarDef);
       end;
 
 
-    procedure TAddrNode.derefimpl;
+    procedure TAddrNode.DerefImpl;
       begin
-        inherited derefimpl;
-        getprocvardef:=TProcVarDef(getprocvardefderef.resolve);
+        inherited DerefImpl;
+        GetProcVarDef:=TProcVarDef(GetProcVarDefDeref.resolve);
       end;
 
 
-    procedure TAddrNode.printnodeinfo(var t: text);
+    procedure TAddrNode.PrintNodeInfo(var AText: Text);
       var
-        first: Boolean;
-        i: TAddrNodeFlag;
+        lFirst: Boolean;
+        lFlag: TAddrNodeFlag;
       begin
-        inherited printnodeinfo(t);
-        write(t,', addrnodeflags = [');
-        first:=true;
-        for i:=low(TAddrNodeFlag) to high(TAddrNodeFlag) do
-          if i in addrnodeflags then
+        inherited PrintNodeInfo(AText);
+        write(AText,', addrnodeflags = [');
+        lFirst:=true;
+        for lFlag:=low(TAddrNodeFlag) to high(TAddrNodeFlag) do
+          if lFlag in AddrNodeFlags then
             begin
-              if not first then
-                write(t,',')
+              if not lFirst then
+                write(AText,',')
               else
-                first:=false;
-              write(t,i);
+                lFirst:=false;
+              write(AText,lFlag);
             end;
-        write(t,']');
+        write(AText,']');
       end;
 
 
-    function TAddrNode.docompare(p: TNode): boolean;
+    function TAddrNode.DoCompare(ANode: TNode): Boolean;
       begin
-        result:=
-          inherited docompare(p) and
-          (TAddrNode(p).getprocvardef=getprocvardef) and
-          (TAddrNode(p).addrnodeflags=addrnodeflags);
+        Result:=
+          inherited DoCompare(ANode) and
+          (TAddrNode(ANode).GetProcVarDef=GetProcVarDef) and
+          (TAddrNode(ANode).AddrNodeFlags=AddrNodeFlags);
       end;
 
 
-    function TAddrNode.dogetcopy : TNode;
+    function TAddrNode.DoGetCopy : TNode;
       var
-         p : TAddrNode;
+         lCopy : TAddrNode;
       begin
-         p:=TAddrNode(inherited dogetcopy);
-         p.getprocvardef:=getprocvardef;
-         p.addrnodeflags:=addrnodeflags;
-         dogetcopy:=p;
+         lCopy:=TAddrNode(inherited DoGetCopy);
+         lCopy.GetProcVarDef:=GetProcVarDef;
+         lCopy.AddrNodeFlags:=AddrNodeFlags;
+         DoGetCopy:=lCopy;
       end;
 
 
-    function TAddrNode.pass_typecheck:TNode;
+    function TAddrNode.Pass_TypeCheck:TNode;
 
-      procedure check_mark_read_written;
+      procedure CheckMarkReadWritten;
         begin
-          if mark_read_written then
+          if FMarkReadWritten then
             begin
               { This is actually only "read", but treat it nevertheless as
                 modified due to the possible use of pointers
                 To avoid false positives regarding "uninitialised"
                 warnings when using arrays, perform it in two steps         }
-              set_varstate(left,vs_written,[]);
+              set_varstate(Left,vs_written,[]);
               { vsf_must_be_valid so it doesn't get changed into
                 vsf_referred_not_inited                          }
-              set_varstate(left,vs_read,[vsf_must_be_valid]);
+              set_varstate(Left,vs_read,[vsf_must_be_valid]);
             end;
         end;
 
       var
-         hp : TNode;
-         hsym : TFieldVarSym;
-         isprocvar,need_conv_to_voidptr: boolean;
-         procpointertype: TDef;
+         lNode : TNode;
+         lSym : TFieldVarSym;
+         lIsProcVar,lNeedVoidPointerConv: Boolean;
+         lProcPointerType: TDef;
       begin
-        result:=nil;
-        TypeCheckPass(left);
+        Result:=nil;
+        TypeCheckPass(Left);
         if CodeGenError then
          exit;
 
-        make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
+        make_not_regable(Left,[ra_addr_regable,ra_addr_taken]);
 
         { don't allow constants, for internal use we also
           allow taking the address of strings and sets }
-        if is_constnode(left) and
+        if Is_ConstNode(Left) and
            not(
-               (nf_internal in flags) and
-               (left.nodetype in [stringconstn,setconstn])
+               (nf_internal in Flags) and
+               (Left.NodeType in [stringconstn,setconstn])
               ) then
          begin
-           CGMessagePos(left.fileinfo,type_e_no_addr_of_constant);
+           CGMessagePos(Left.FileInfo,type_e_no_addr_of_constant);
            exit;
          end;
 
         { Handle @proc special, also @procvar in tp-mode needs
           special handling }
-        if (left.resultdef.typ=procdef) or
+        if (Left.ResultDef.typ=procdef) or
            (
             { in case of nf_internal, follow the normal FPC semantics so that
               we can easily get the actual address of a procvar }
-            not(nf_internal in flags) and
-            (left.resultdef.typ=procvardef) and
+            not(nf_internal in Flags) and
+            (Left.ResultDef.typ=procvardef) and
             ((m_tp_procvar in CurrentSettings.ModeSwitches) or
              (m_mac_procvar in CurrentSettings.ModeSwitches))
            ) then
           begin
-            isprocvar:=(left.resultdef.typ=procvardef);
-            need_conv_to_voidptr:=
+            lIsProcVar:=(Left.ResultDef.typ=procvardef);
+            lNeedVoidPointerConv:=
               (m_tp_procvar in CurrentSettings.ModeSwitches) or
               (m_mac_procvar in CurrentSettings.ModeSwitches);
 
-            if not isprocvar then
+            if not lIsProcVar then
               begin
-                left:=CTypeConvNode.create_proc_to_procvar(left);
-                if need_conv_to_voidptr then
-                  include(TTypeConvNode(left).convnodeflags,tcnf_proc_2_procvar_2_voidpointer);
-                if anf_ofs in addrnodeflags then
-                  include(TTypeConvNode(left).convnodeflags,tcnf_proc_2_procvar_get_offset_only);
-                left.fileinfo:=fileinfo;
-                TypeCheckPass(left);
+                Left:=CTypeConvNode.Create_Proc_To_ProcVar(Left);
+                if lNeedVoidPointerConv then
+                  include(TTypeConvNode(Left).ConvNodeFlags,tcnf_proc_2_procvar_2_voidpointer);
+                if anf_ofs in AddrNodeFlags then
+                  include(TTypeConvNode(Left).ConvNodeFlags,tcnf_proc_2_procvar_get_offset_only);
+                Left.FileInfo:=FileInfo;
+                TypeCheckPass(Left);
               end;
 
             { In tp procvar mode the result is always a voidpointer. Insert
               a typeconversion to voidpointer. For methodpointers we need
               to load the proc field }
-            if need_conv_to_voidptr then
+            if lNeedVoidPointerConv then
               begin
-                if TAbstractProcDef(left.resultdef).Is_AddressOnly then
+                if TAbstractProcDef(Left.ResultDef).Is_AddressOnly then
                   begin
-                    if anf_ofs in addrnodeflags then
-                      result:=CTypeConvNode.Create_Internal(left,TAbstractProcDef(left.resultdef).Ofs_Address_Type)
+                    if anf_ofs in AddrNodeFlags then
+                      Result:=CTypeConvNode.Create_Internal(Left,TAbstractProcDef(Left.ResultDef).Ofs_Address_Type)
                     else
-                      result:=CTypeConvNode.Create_Internal(left,VoidCodePointerType);
-                    include(result.flags,nf_load_procvar);
-                    left:=nil;
+                      Result:=CTypeConvNode.Create_Internal(Left,VoidCodePointerType);
+                    include(Result.Flags,nf_load_procvar);
+                    Left:=nil;
                   end
                 else
                   begin
                     { For procvars and for nested routines we need to return
                       the proc field of the methodpointer }
-                    if isprocvar or
-                       Is_Nested_PD(TAbstractProcDef(left.resultdef)) then
+                    if lIsProcVar or
+                       Is_Nested_PD(TAbstractProcDef(Left.ResultDef)) then
                       begin
-                        if TAbstractProcDef(left.resultdef).Is_MethodPointer then
-                          procpointertype:=MethodPointerType
+                        if TAbstractProcDef(Left.ResultDef).Is_MethodPointer then
+                          lProcPointerType:=MethodPointerType
                         else
-                          procpointertype:=NestedProcPointerType;
+                          lProcPointerType:=NestedProcPointerType;
                         { find proc field in methodpointer record }
-                        hsym:=TFieldVarSym(TRecordDef(procpointertype).SymTable.Find('proc'));
-                        if not Assigned(hsym) then
+                        lSym:=TFieldVarSym(TRecordDef(lProcPointerType).SymTable.Find('proc'));
+                        if not Assigned(lSym) then
                           InternalError(200412041);
                         { Load tmehodpointer(left).proc }
-                        result:=CSubscriptNode.create(
-                                     hsym,
-                                     CTypeConvNode.Create_Internal(left,procpointertype));
-                        left:=nil;
+                        Result:=CSubscriptNode.Create(
+                                     lSym,
+                                     CTypeConvNode.Create_Internal(Left,lProcPointerType));
+                        Left:=nil;
                       end
                     else
                       CGMessage(type_e_variable_id_expected);
@@ -607,55 +607,55 @@ implementation
               end
             else
               begin
-                check_mark_read_written;
+                CheckMarkReadWritten;
                 { Return the typeconvn only }
-                result:=left;
-                left:=nil;
+                Result:=Left;
+                Left:=nil;
                 exit;
               end;
           end
         else
           begin
-            hp:=left;
-            while Assigned(hp) and (hp.nodetype in [typeconvn,derefn,subscriptn]) do
-              hp:=TUnaryNode(hp).left;
-            if not Assigned(hp) then
+            lNode:=Left;
+            while Assigned(lNode) and (lNode.NodeType in [typeconvn,derefn,subscriptn]) do
+              lNode:=TUnaryNode(lNode).Left;
+            if not Assigned(lNode) then
               InternalError(200412042);
-            if typecheck_non_proc(hp,result) then
+            if TypeCheck_Non_Proc(lNode,Result) then
               begin
-                if Assigned(result) then
+                if Assigned(Result) then
                   exit;
               end
             else
               CGMessage(type_e_variable_id_expected);
           end;
 
-        check_mark_read_written;
+        CheckMarkReadWritten;
 
-        if not(Assigned(result)) then
-          result:=simplify(false);
+        if not(Assigned(Result)) then
+          Result:=Simplify(false);
       end;
 
 
-    function TAddrNode.simplify(forinline : boolean) : TNode;
+    function TAddrNode.Simplify(AForInline : Boolean) : TNode;
 
-        function compatible_with_offsetof(res : TDef) : boolean;
+        function CompatibleWithOffsetOf(AResultDef : TDef) : Boolean;
           begin
-            result:=(res.typ in [recorddef,objectdef]) and not (Is_Implicit_Pointer_Object_Type(res))
-              or (res.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(res).ArrayOptions);
+            Result:=(AResultDef.typ in [recorddef,objectdef]) and not (Is_Implicit_Pointer_Object_Type(AResultDef))
+              or (AResultDef.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(AResultDef).ArrayOptions);
           end;
 
       var
-        hsym : TFieldVarSym;
-        hp : TNode;
-        FieldOffset : asizeint;
-        resdef : TDef;
-        index : int64;
+        lSym : TFieldVarSym;
+        lNode : TNode;
+        lFieldOffset : ASizeInt;
+        lResultDef : TDef;
+        lIndex : Int64;
 
       begin
-        result:=nil;
-        hp:=left;
-        FieldOffset:=0;
+        Result:=nil;
+        lNode:=Left;
+        lFieldOffset:=0;
 
         { Attempt to turn
           @PSomeType(nil)^.field
@@ -664,74 +664,74 @@ implementation
           into a compile-time constant, numerically equal to the offset of the target field in 'SomeType' (and usually cast to 'PtrUint' right away). }
 
         repeat
-          case hp.nodetype of
+          case lNode.NodeType of
             subscriptn:
               begin
                 { Here and below, 'hp<>left' detects non-first iteration,
                   as the first iteration handles deepest field whose type can be arbitrary: 'c' in @PType(nil)^.a.b.c. }
-                if (hp<>left) and not compatible_with_offsetof(TSubscriptNode(hp).resultdef) then
+                if (lNode<>Left) and not CompatibleWithOffsetOf(TSubscriptNode(lNode).ResultDef) then
                   exit;
 
-                hsym:=TSubscriptNode(hp).vs;
-                if TAbstractRecordSymTable(hsym.owner).Is_Packed then
+                lSym:=TSubscriptNode(lNode).FieldSym;
+                if TAbstractRecordSymTable(lSym.owner).Is_Packed then
                   begin
-                    if hsym.FieldOffset mod 8<>0 then
+                    if lSym.FieldOffset mod 8<>0 then
                       exit;
-                    inc(FieldOffset,hsym.FieldOffset div 8);
+                    inc(lFieldOffset,lSym.FieldOffset div 8);
                   end
                 else
-                  inc(FieldOffset,hsym.FieldOffset);
+                  inc(lFieldOffset,lSym.FieldOffset);
 
-                hp:=TSubscriptNode(hp).left;
+                lNode:=TSubscriptNode(lNode).Left;
               end;
 
             vecn:
               begin
-                if (TVecNode(hp).right.nodetype<>ordconstn) or
-                   (hp<>left) and not compatible_with_offsetof(TVecNode(hp).resultdef) then
+                if (TVecNode(lNode).Right.NodeType<>ordconstn) or
+                   (lNode<>Left) and not CompatibleWithOffsetOf(TVecNode(lNode).ResultDef) then
                   exit;
 
-                resdef:=TVecNode(hp).left.resultdef;
-                if not ((resdef.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(resdef).ArrayOptions)) then
+                lResultDef:=TVecNode(lNode).Left.ResultDef;
+                if not ((lResultDef.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(lResultDef).ArrayOptions)) then
                   exit;
 
-                index:=TOrdConstNode(TVecNode(hp).right).Value.svalue;
-                if not ((index>=TArrayDef(resdef).LowRange) and (index<=TArrayDef(resdef).HighRange)) then
+                lIndex:=TOrdConstNode(TVecNode(lNode).Right).Value.svalue;
+                if not ((lIndex>=TArrayDef(lResultDef).LowRange) and (lIndex<=TArrayDef(lResultDef).HighRange)) then
                   exit;
-                index:=index-TArrayDef(resdef).LowRange;
+                lIndex:=lIndex-TArrayDef(lResultDef).LowRange;
 
-                if ado_IsBitPacked in TArrayDef(resdef).ArrayOptions then
+                if ado_IsBitPacked in TArrayDef(lResultDef).ArrayOptions then
                   begin
-                    if index*TArrayDef(resdef).ElePackedBitSize mod 8<>0 then
+                    if lIndex*TArrayDef(lResultDef).ElePackedBitSize mod 8<>0 then
                       exit;
-                    inc(FieldOffset,index*TArrayDef(resdef).ElePackedBitSize div 8);
+                    inc(lFieldOffset,lIndex*TArrayDef(lResultDef).ElePackedBitSize div 8);
                   end
                 else
-                  inc(FieldOffset,index*TArrayDef(resdef).EleSize);
+                  inc(lFieldOffset,lIndex*TArrayDef(lResultDef).EleSize);
 
-                hp:=TVecNode(hp).left;
+                lNode:=TVecNode(lNode).Left;
               end;
 
             derefn:
               begin
                 { @PObjectType(nil)^.fields? }
-                if TDerefNode(hp).left.nodetype=niln then
-                  result:=CPointerConstNode.create(FieldOffset,resultdef);
+                if TDerefNode(lNode).Left.NodeType=niln then
+                  Result:=CPointerConstNode.Create(lFieldOffset,ResultDef);
                 exit;
               end;
 
             typeconvn:
               begin
                 { @ObjectType(nil^).fields? }
-                if (TTypeConvNode(hp).left.nodetype=derefn) and
-                   (TDerefNode(TTypeConvNode(hp).left).left.nodetype=niln) then
-                  result:=CPointerConstNode.create(FieldOffset,resultdef);
+                if (TTypeConvNode(lNode).Left.NodeType=derefn) and
+                   (TDerefNode(TTypeConvNode(lNode).Left).Left.NodeType=niln) then
+                  Result:=CPointerConstNode.Create(lFieldOffset,ResultDef);
                 exit;
               end;
 
             niln:
               { @ClassType(nil).fields. }
-              exit(CPointerConstNode.create(FieldOffset,resultdef));
+              exit(CPointerConstNode.Create(lFieldOffset,ResultDef));
 
             else
               exit;
@@ -740,76 +740,76 @@ implementation
       end;
 
 
-    procedure TAddrNode.set_labelsym_resultdef;
+    procedure TAddrNode.Set_LabelSym_ResultDef;
       begin
-        resultdef:=VoidCodePointerType;
+        ResultDef:=VoidCodePointerType;
       end;
 
 
-    function TAddrNode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
+    function TAddrNode.TypeCheck_Non_Proc(ARealSource: TNode; out AResultNode: TNode): Boolean;
       var
-         hp  : TNode;
-         hsym : TFieldVarSym;
-         offset: asizeint;
+         lNode  : TNode;
+         lSym : TFieldVarSym;
+         lOffset: ASizeInt;
       begin
-        result:=false;
-        res:=nil;
-        if (realsource.nodetype=loadn) and
-           (TLoadNode(realsource).symtableentry.typ=labelsym) then
+        Result:=false;
+        AResultNode:=nil;
+        if (ARealSource.NodeType=loadn) and
+           (TLoadNode(ARealSource).SymTableEntry.typ=labelsym) then
           begin
-            set_labelsym_resultdef;
-            result:=true;
+            Set_LabelSym_ResultDef;
+            Result:=true;
           end
-        else if (realsource.nodetype=loadn) and
-                (TLoadNode(realsource).symtableentry.typ=absolutevarsym) and
-                (TAbsoluteVarSym(TLoadNode(realsource).symtableentry).AbsTyp=toaddr) then
+        else if (ARealSource.NodeType=loadn) and
+                (TLoadNode(ARealSource).SymTableEntry.typ=absolutevarsym) and
+                (TAbsoluteVarSym(TLoadNode(ARealSource).SymTableEntry).AbsTyp=toaddr) then
           begin
-            offset:=TAbsoluteVarSym(TLoadNode(realsource).symtableentry).AddrOffset;
-            hp:=left;
-            while Assigned(hp)and(hp.nodetype=subscriptn) do
+            lOffset:=TAbsoluteVarSym(TLoadNode(ARealSource).SymTableEntry).AddrOffset;
+            lNode:=Left;
+            while Assigned(lNode)and(lNode.NodeType=subscriptn) do
               begin
-                hsym:=TSubscriptNode(hp).vs;
-                if TAbstractRecordSymTable(hsym.owner).Is_Packed then
+                lSym:=TSubscriptNode(lNode).FieldSym;
+                if TAbstractRecordSymTable(lSym.owner).Is_Packed then
                   begin
                     { can't calculate the address of a non-byte aligned field }
-                    if (hsym.FieldOffset mod 8)<>0 then
+                    if (lSym.FieldOffset mod 8)<>0 then
                       begin
-                        CGMessagePos(hp.fileinfo,parser_e_packed_element_no_var_addr);
+                        CGMessagePos(lNode.FileInfo,parser_e_packed_element_no_var_addr);
                         exit
                       end;
-                    inc(offset,hsym.FieldOffset div 8)
+                    inc(lOffset,lSym.FieldOffset div 8)
                   end
                 else
-                  inc(offset,hsym.FieldOffset);
-                hp:=TUnaryNode(hp).left;
+                  inc(lOffset,lSym.FieldOffset);
+                lNode:=TUnaryNode(lNode).Left;
               end;
-            if anf_typedaddr in addrnodeflags then
-              res:=CPointerConstNode.create(offset,CPointerDef.getreusable(left.resultdef))
+            if anf_typedaddr in AddrNodeFlags then
+              AResultNode:=CPointerConstNode.Create(lOffset,CPointerDef.getreusable(Left.ResultDef))
             else
-              res:=CPointerConstNode.create(offset,VoidPointerType);
-            result:=true;
+              AResultNode:=CPointerConstNode.Create(lOffset,VoidPointerType);
+            Result:=true;
           end
-        else if (nf_internal in flags) or
-           valid_for_addr(left,true) then
+        else if (nf_internal in Flags) or
+           valid_for_addr(Left,true) then
           begin
-            if not(anf_typedaddr in addrnodeflags) then
-              resultdef:=VoidPointerType
+            if not(anf_typedaddr in AddrNodeFlags) then
+              ResultDef:=VoidPointerType
             else
-              resultdef:=CPointerDef.getreusable(left.resultdef);
-            result:=true;
+              ResultDef:=CPointerDef.getreusable(Left.ResultDef);
+            Result:=true;
           end
       end;
 
 
-    function TAddrNode.pass_1 : TNode;
+    function TAddrNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
+         Result:=nil;
+         FirstPass(Left);
          if CodeGenError then
           exit;
 
          { is this right for object of methods ?? }
-         expectloc:=LOC_REGISTER;
+         ExpectLoc:=LOC_REGISTER;
       end;
 
 
@@ -817,72 +817,72 @@ implementation
                              TDEREFNODE
 *****************************************************************************}
 
-    constructor TDerefNode.create(l : TNode);
+    constructor TDerefNode.Create(ALeft : TNode);
       begin
-         inherited create(derefn,l);
+         inherited Create(derefn,ALeft);
       end;
 
 
-    constructor TDerefNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TDerefNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t, ppufile);
-        ppufile.GetSet(TPPUSet1(derefnodeflags));
+        inherited PPULoad(ANodeType, APPUFile);
+        APPUFile.GetSet(TPPUSet1(DerefNodeFlags));
       end;
 
 
-    procedure TDerefNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TDerefNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutSet(TPPUSet1(derefnodeflags));
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutSet(TPPUSet1(DerefNodeFlags));
       end;
 
 
-    function TDerefNode.dogetcopy : TNode;
+    function TDerefNode.DoGetCopy : TNode;
       var
-        n: TDerefNode;
+        lCopy: TDerefNode;
       begin
-        n := TDerefNode(inherited dogetcopy);
-        n.derefnodeflags := derefnodeflags;
-        Result := n;
+        lCopy := TDerefNode(inherited DoGetCopy);
+        lCopy.DerefNodeFlags := DerefNodeFlags;
+        Result := lCopy;
       end;
 
 
-    function TDerefNode.pass_typecheck:TNode;
+    function TDerefNode.Pass_TypeCheck:TNode;
       begin
-         result:=nil;
-         TypeCheckPass(left);
-         set_varstate(left,vs_read,[vsf_must_be_valid]);
+         Result:=nil;
+         TypeCheckPass(Left);
+         set_varstate(Left,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
          { tp procvar support }
-         maybe_call_procvar(left,true);
+         Maybe_Call_ProcVar(Left,true);
 
-         if left.resultdef.typ=pointerdef then
-           resultdef:=TPointerDef(left.resultdef).PointedDef
-         else if left.resultdef.typ=undefineddef then
-           resultdef:=CUndefinedDef.create(true)
+         if Left.ResultDef.typ=pointerdef then
+           ResultDef:=TPointerDef(Left.ResultDef).PointedDef
+         else if Left.ResultDef.typ=undefineddef then
+           ResultDef:=CUndefinedDef.Create(true)
          else
            CGMessage(parser_e_invalid_qualifier);
 
-         if Is_Currency(resultdef) then
-           Include(flags,nf_is_currency);
+         if Is_Currency(ResultDef) then
+           Include(Flags,nf_is_currency);
       end;
 
-    procedure TDerefNode.mark_write;
+    procedure TDerefNode.Mark_Write;
 
     begin
-      include(flags,nf_write);
+      include(Flags,nf_write);
     end;
 
-    function TDerefNode.pass_1 : TNode;
+    function TDerefNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
+         Result:=nil;
+         FirstPass(Left);
          if CodeGenError then
           exit;
 
-         expectloc:=LOC_REFERENCE;
+         ExpectLoc:=LOC_REFERENCE;
       end;
 
 
@@ -890,93 +890,93 @@ implementation
                             TSUBSCRIPTNODE
 *****************************************************************************}
 
-    constructor TSubscriptNode.create(varsym : TSym;l : TNode);
+    constructor TSubscriptNode.Create(AVarSym : TSym;ALeft : TNode);
 
       begin
-         inherited create(subscriptn,l);
+         inherited Create(subscriptn,ALeft);
          { vs should be changed to tsym! }
-         vs:=TFieldVarSym(varsym);
+         FieldSym:=TFieldVarSym(AVarSym);
       end;
 
-    constructor TSubscriptNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TSubscriptNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t,ppufile);
-        ppufile.GetDeref(vsderef);
+        inherited PPULoad(ANodeType,APPUFile);
+        APPUFile.GetDeref(FieldSymDeref);
       end;
 
 
-    procedure TSubscriptNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TSubscriptNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutDeref(vsderef);
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutDeref(FieldSymDeref);
       end;
 
 
     procedure TSubscriptNode.BuildDerefImpl;
       begin
         inherited BuildDerefImpl;
-        vsderef.build(vs);
+        FieldSymDeref.Build(FieldSym);
       end;
 
 
-    procedure TSubscriptNode.derefimpl;
+    procedure TSubscriptNode.DerefImpl;
       begin
-        inherited derefimpl;
-        vs:=TFieldVarSym(vsderef.resolve);
+        inherited DerefImpl;
+        FieldSym:=TFieldVarSym(FieldSymDeref.resolve);
       end;
 
 
-    function TSubscriptNode.dogetcopy : TNode;
+    function TSubscriptNode.DoGetCopy : TNode;
       var
-         p : TSubscriptNode;
+         lCopy : TSubscriptNode;
       begin
-         p:=TSubscriptNode(inherited dogetcopy);
-         p.vs:=vs;
-         dogetcopy:=p;
+         lCopy:=TSubscriptNode(inherited DoGetCopy);
+         lCopy.FieldSym:=FieldSym;
+         DoGetCopy:=lCopy;
       end;
 
 
-    function TSubscriptNode.pass_typecheck:TNode;
+    function TSubscriptNode.Pass_TypeCheck:TNode;
       begin
-        result:=nil;
-        TypeCheckPass(left);
+        Result:=nil;
+        TypeCheckPass(Left);
         { tp procvar support }
-        maybe_call_procvar(left,true);
-        resultdef:=vs.vardef;
+        Maybe_Call_ProcVar(Left,true);
+        ResultDef:=FieldSym.vardef;
 
         // don't put records from which we load float fields
         // in integer registers
-        if (left.resultdef.typ=recorddef) and
-           (resultdef.typ=floatdef) then
-          make_not_regable(left,[ra_addr_regable]);
+        if (Left.ResultDef.typ=recorddef) and
+           (ResultDef.typ=floatdef) then
+          make_not_regable(Left,[ra_addr_regable]);
 
-        if Is_Currency(resultdef) then
-          Include(flags,nf_is_currency);
+        if Is_Currency(ResultDef) then
+          Include(Flags,nf_is_currency);
       end;
 
-    procedure TSubscriptNode.mark_write;
+    procedure TSubscriptNode.Mark_Write;
       begin
-        include(flags,nf_write);
+        include(Flags,nf_write);
         { if an element of a record is written, then the whole record is changed/it is written to it,
           for data types being implicit pointers this does not apply as the object itself does not change }
-        if not(Is_Implicit_Pointer_Object_Type(left.resultdef)) then
-          left.mark_write;
+        if not(Is_Implicit_Pointer_Object_Type(Left.ResultDef)) then
+          Left.Mark_Write;
       end;
 
 
-    function TSubscriptNode.pass_1 : TNode;
+    function TSubscriptNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
+         Result:=nil;
+         FirstPass(Left);
          if CodeGenError then
           exit;
 
          { several object types must be dereferenced implicitly }
-         if Is_Implicit_Pointer_Object_Type(left.resultdef) then
-           expectloc:=LOC_REFERENCE
+         if Is_Implicit_Pointer_Object_Type(Left.ResultDef) then
+           ExpectLoc:=LOC_REFERENCE
          else
            begin
-             case left.expectloc of
+             case Left.ExpectLoc of
                { if a floating point value is casted into a record, it
                  can happen that we get here an fpu or mm register }
                LOC_CMMREGISTER,
@@ -987,32 +987,32 @@ implementation
                LOC_REGISTER,
                LOC_SUBSETREG:
                  // can happen for function results on win32 and darwin/x86
-                 if (left.resultdef.Size > sizeof(PInt)) then
-                   expectloc:=LOC_REFERENCE
+                 if (Left.ResultDef.Size > sizeof(PInt)) then
+                   ExpectLoc:=LOC_REFERENCE
                  else
-                   expectloc:=LOC_SUBSETREG;
+                   ExpectLoc:=LOC_SUBSETREG;
                LOC_CREGISTER,
                LOC_CSUBSETREG:
-                 expectloc:=LOC_CSUBSETREG;
+                 ExpectLoc:=LOC_CSUBSETREG;
                LOC_REFERENCE,
                LOC_CREFERENCE:
-                 expectloc:=left.expectloc;
+                 ExpectLoc:=Left.ExpectLoc;
                else InternalError(20060521);
               end;
            end;
       end;
 
-    function TSubscriptNode.docompare(p: TNode): boolean;
+    function TSubscriptNode.DoCompare(ANode: TNode): Boolean;
       begin
-        docompare :=
-          inherited docompare(p) and
-          (vs = TSubscriptNode(p).vs);
+        DoCompare :=
+          inherited DoCompare(ANode) and
+          (FieldSym = TSubscriptNode(ANode).FieldSym);
       end;
 
-      procedure TSubscriptNode.printnodedata(var T: Text);
+      procedure TSubscriptNode.PrintNodeData(var AText: Text);
       begin
-        inherited printnodedata(T);
-        WriteLn(t,PrintNodeIndention,'field = ',vs.name);
+        inherited PrintNodeData(AText);
+        WriteLn(AText,PrintNodeIndention,'field = ',FieldSym.name);
       end;
 
 
@@ -1020,77 +1020,77 @@ implementation
                                TVECNODE
 *****************************************************************************}
 
-    constructor TVecNode.create(l,r : TNode);
+    constructor TVecNode.Create(ALeft,ARight : TNode);
       begin
-         inherited create(vecn,l,r);
-         vecnodeflags:=[];
+         inherited Create(vecn,ALeft,ARight);
+         VecNodeFlags:=[];
       end;
 
 
-    constructor TVecNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TVecNode.PPULoad(ANodeType:TNodeType;APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(t, ppufile);
-        ppufile.GetSet(TPPUSet1(vecnodeflags));
+        inherited PPULoad(ANodeType, APPUFile);
+        APPUFile.GetSet(TPPUSet1(VecNodeFlags));
       end;
 
 
-    procedure TVecNode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TVecNode.PPUWrite(APPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutSet(TPPUSet1(vecnodeflags));
+        inherited PPUWrite(APPUFile);
+        APPUFile.PutSet(TPPUSet1(VecNodeFlags));
       end;
 
 
-    function TVecNode.pass_typecheck:TNode;
+    function TVecNode.Pass_TypeCheck:TNode;
       var
-         htype,ElementDef,elementptrdef : TDef;
-         newordtyp: TOrdType;
-         valid : boolean;
-         minvalue, maxvalue: TConstExprInt;
+         lType,lElementDef,lElementPointerDef : TDef;
+         lNewOrdType: TOrdType;
+         lValid : Boolean;
+         lMinValue, lMaxValue: TConstExprInt;
       begin
-         result:=nil;
-         TypeCheckPass(left);
-         TypeCheckPass(right);
+         Result:=nil;
+         TypeCheckPass(Left);
+         TypeCheckPass(Right);
 
          { implicitly convert stringconstant to stringdef,
            see tbs/tb0476.pas for a test }
-         if (left.nodetype=stringconstn) and
-            (TStringConstNode(left).cst_type=cst_conststring) then
+         if (Left.NodeType=stringconstn) and
+            (TStringConstNode(Left).ConstStringType=cst_conststring) then
            begin
-             if TStringConstNode(left).len>255 then
-               inserttypeconv(left,GetAnsiStringDef)
+             if TStringConstNode(Left).len>255 then
+               InsertTypeConv(Left,GetAnsiStringDef)
              else
-               inserttypeconv(left,CShortStringType);
+               InsertTypeConv(Left,CShortStringType);
            end;
 
          { In p[1] p is always valid, it is not possible to
            declared a shortstring or normal array that has
            undefined number of elements. Dynamic array and
            ansi/widestring needs to be valid }
-         valid:=Is_Dynamic_Array(left.resultdef) or
-                Is_AnsiString(left.resultdef) or
-                Is_Wide_Or_Unicode_String(left.resultdef) or
+         lValid:=Is_Dynamic_Array(Left.ResultDef) or
+                Is_AnsiString(Left.ResultDef) or
+                Is_Wide_Or_Unicode_String(Left.ResultDef) or
                 { implicit pointer dereference -> pointer is read }
-                (left.resultdef.typ = pointerdef);
-         if valid then
-           set_varstate(left,vs_read,[vsf_must_be_valid]);
+                (Left.ResultDef.typ = pointerdef);
+         if lValid then
+           set_varstate(Left,vs_read,[vsf_must_be_valid]);
 {
          A vecn is, just like a loadn, always part of an expression with its
          own read/write and must_be_valid semantics. Therefore we don't have
          to do anything else here, just like for loadn's
 }
-         set_varstate(right,vs_read,[vsf_must_be_valid]);
+         set_varstate(Right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
           exit;
 
          { maybe type conversion for the index value, but
            do not convert range nodes }
-         if (right.nodetype<>rangen) then
-           case left.resultdef.typ of
+         if (Right.NodeType<>rangen) then
+           case Left.ResultDef.typ of
              arraydef:
                begin
-                 htype:=TArrayDef(left.resultdef).RangeDef;
-                 if ado_isvariant in TArrayDef(left.resultdef).ArrayOptions then
+                 lType:=TArrayDef(Left.ResultDef).RangeDef;
+                 if ado_isvariant in TArrayDef(Left.ResultDef).ArrayOptions then
                    {Variant arrays are a special array, can have negative indexes and would therefore
                     need s32bit. However, they should not appear in a vecn, as they are handled in
                     handle_variantarray in pexpr.pas. Therefore, encountering a variant array is an
@@ -1104,28 +1104,28 @@ implementation
                    larger than the int type). Exception: if it's an ordinal
                    constant, because then this check should be performed at
                    compile time }
-                 else if Is_Open_Array(left.resultdef) or
-                    Is_Array_Constructor(left.resultdef) then
+                 else if Is_Open_Array(Left.ResultDef) or
+                    Is_Array_Constructor(Left.ResultDef) then
                    begin
-                     if Is_Signed(right.resultdef) and
-                        not is_constnode(right) then
-                       inserttypeconv(right,SizeSIntType)
+                     if Is_Signed(Right.ResultDef) and
+                        not Is_ConstNode(Right) then
+                       InsertTypeConv(Right,SizeSIntType)
                      else
-                       inserttypeconv(right,SizeUIntType)
+                       InsertTypeConv(Right,SizeUIntType)
                    end
-                 else if Is_Special_Array(left.resultdef) then
+                 else if Is_Special_Array(Left.ResultDef) then
                    {Arrays without a high bound (dynamic arrays, open arrays) are zero based,
                     convert indexes into these arrays to aword.}
-                   inserttypeconv(right,UIntType)
+                   InsertTypeConv(Right,UIntType)
                  { note: <> rather than </>, because indexing e.g. an array 0..0
                      must not result in truncating the indexing value from 2/4/8
                      bytes to 1 byte (with range checking off, the full index
                      value must be used) }
-                 else if (htype.typ=enumdef) and
-                         (right.resultdef.typ=enumdef) and
-                         (TEnumDef(htype).BaseDef=TEnumDef(right.resultdef).BaseDef) and
-                    ((TArrayDef(left.resultdef).LowRange<>TEnumDef(htype).min) or
-                     (TArrayDef(left.resultdef).HighRange<>TEnumDef(htype).max) or
+                 else if (lType.typ=enumdef) and
+                         (Right.ResultDef.typ=enumdef) and
+                         (TEnumDef(lType).BaseDef=TEnumDef(Right.ResultDef).BaseDef) and
+                    ((TArrayDef(Left.ResultDef).LowRange<>TEnumDef(lType).min) or
+                     (TArrayDef(Left.ResultDef).HighRange<>TEnumDef(lType).max) or
                    { while we could assume that the value might not be out of range,
                      memory corruption could have resulted in an illegal value,
                      so do not skip the type conversion in case of range checking
@@ -1133,31 +1133,31 @@ implementation
                      After all, range checking is a safety mean }
                      (cs_check_range in CurrentSettings.LocalSwitches)) then
                    {Convert array indexes to low_bound..high_bound.}
-                   inserttypeconv(right,CEnumDef.Create_Subrange(TEnumDef(right.resultdef),
-                                                      asizeint(TArrayDef(left.resultdef).LowRange),
-                                                      asizeint(TArrayDef(left.resultdef).HighRange)
+                   InsertTypeConv(Right,CEnumDef.Create_Subrange(TEnumDef(Right.ResultDef),
+                                                      ASizeInt(TArrayDef(Left.ResultDef).LowRange),
+                                                      ASizeInt(TArrayDef(Left.ResultDef).HighRange)
                                                      ))
-                 else if (htype.typ=orddef) and
+                 else if (lType.typ=orddef) and
                     { right can also be a variant or another type with
                       overloaded assignment }
-                    (right.resultdef.typ=orddef) and
+                    (Right.ResultDef.typ=orddef) and
                     { don't try to create boolean types with custom ranges }
-                    not Is_Boolean(right.resultdef) and
+                    not Is_Boolean(Right.ResultDef) and
                     { ordtype determines the size of the loaded value -> make
                       sure we don't truncate }
-                    ((TOrdDef(right.resultdef).OrdType<>TOrdDef(htype).OrdType) or
-                     (TArrayDef(left.resultdef).LowRange<>TOrdDef(htype).low) or
-                     (TArrayDef(left.resultdef).HighRange<>TOrdDef(htype).high)) then
+                    ((TOrdDef(Right.ResultDef).OrdType<>TOrdDef(lType).OrdType) or
+                     (TArrayDef(Left.ResultDef).LowRange<>TOrdDef(lType).low) or
+                     (TArrayDef(Left.ResultDef).HighRange<>TOrdDef(lType).high)) then
                     {Convert array indexes to low_bound..high_bound.}
                    begin
-                     if (right.resultdef.typ=orddef)
+                     if (Right.ResultDef.typ=orddef)
 {$ifndef cpu64bitaddr}
                         { do truncate 64 bit values on 32 bit cpus, since
                            a) the arrays cannot be > 32 bit anyway
                            b) their code generators can't directly handle 64 bit
                               loads
                         }
-                        and not Is_64Bit(right.resultdef)
+                        and not Is_64Bit(Right.ResultDef)
 {$endif not cpu64bitaddr}
                         then
                         begin
@@ -1167,75 +1167,75 @@ implementation
                             This matters only if we sign extend, if the type exceeds the sint range, we can fall back only
                             to the index type
                           }
-                          if Is_Integer(right.resultdef) and ((TOrdDef(right.resultdef).low<0) or (TConstExprInt(TArrayDef(left.resultdef).LowRange)<0)) then
+                          if Is_Integer(Right.ResultDef) and ((TOrdDef(Right.ResultDef).low<0) or (TConstExprInt(TArrayDef(Left.ResultDef).LowRange)<0)) then
                             begin
-                              minvalue:=min(TConstExprInt(TArrayDef(left.resultdef).LowRange),TOrdDef(right.resultdef).low);
-                              maxvalue:=max(TConstExprInt(TArrayDef(left.resultdef).HighRange),TOrdDef(right.resultdef).high);
-                              if maxvalue>TOrdDef(SIntType).high then
-                                newordtyp:=TOrdDef(right.resultdef).OrdType
+                              lMinValue:=min(TConstExprInt(TArrayDef(Left.ResultDef).LowRange),TOrdDef(Right.ResultDef).low);
+                              lMaxValue:=max(TConstExprInt(TArrayDef(Left.ResultDef).HighRange),TOrdDef(Right.ResultDef).high);
+                              if lMaxValue>TOrdDef(SIntType).high then
+                                lNewOrdType:=TOrdDef(Right.ResultDef).OrdType
                               else
-                                newordtyp:=Range_To_BaseType(minvalue,maxvalue);
+                                lNewOrdType:=Range_To_BaseType(lMinValue,lMaxValue);
                             end
                           else
-                            newordtyp:=TOrdDef(right.resultdef).OrdType;
+                            lNewOrdType:=TOrdDef(Right.ResultDef).OrdType;
                         end
                      else
-                       newordtyp:=TOrdDef(SizeSIntType).OrdType;
-                     inserttypeconv(right,COrdDef.create(newordtyp,
-                                                         int64(TArrayDef(left.resultdef).LowRange),
-                                                         int64(TArrayDef(left.resultdef).HighRange),
+                       lNewOrdType:=TOrdDef(SizeSIntType).OrdType;
+                     InsertTypeConv(Right,COrdDef.Create(lNewOrdType,
+                                                         Int64(TArrayDef(Left.ResultDef).LowRange),
+                                                         Int64(TArrayDef(Left.ResultDef).HighRange),
                                                          true
                                                         ));
                    end
                  else
                    begin
-                     inserttypeconv(right,htype);
+                     InsertTypeConv(Right,lType);
                      { insert type conversion so cse can pick it up }
-                     if (htype.Size<PtrSIntType.Size) and Is_Integer(htype) and not(cs_check_range in CurrentSettings.LocalSwitches) then
-                       inserttypeconv_internal(right,PtrSIntType);
+                     if (lType.Size<PtrSIntType.Size) and Is_Integer(lType) and not(cs_check_range in CurrentSettings.LocalSwitches) then
+                       InsertTypeConv_Internal(Right,PtrSIntType);
                    end;
                end;
              stringdef:
-               if Is_Open_String(left.resultdef) then
-                 inserttypeconv(right,U8IntType)
-               else if Is_ShortString(left.resultdef) then
+               if Is_Open_String(Left.ResultDef) then
+                 InsertTypeConv(Right,U8IntType)
+               else if Is_ShortString(Left.ResultDef) then
                  {Convert shortstring indexes to 0..length.}
-                 inserttypeconv(right,COrdDef.create(u8bit,0,int64(TStringDef(left.resultdef).len),true))
+                 InsertTypeConv(Right,COrdDef.Create(u8bit,0,Int64(TStringDef(Left.ResultDef).len),true))
                else
                  {Convert indexes into dynamically allocated strings to aword.}
-                 inserttypeconv(right,UIntType);
+                 InsertTypeConv(Right,UIntType);
              pointerdef:
-               inserttypeconv(right,TPointerDef(left.resultdef).Pointer_Arithmetic_Int_Type);
+               InsertTypeConv(Right,TPointerDef(Left.ResultDef).Pointer_Arithmetic_Int_Type);
              else
                {Others, (are there any?) indexes to aint.}
-               inserttypeconv(right,SIntType);
+               InsertTypeConv(Right,SIntType);
            end;
 
          { although we never put regular arrays or shortstrings in registers,
            it's possible that another type was typecasted to a small record
            that has a field of one of these types -> in that case the record
            can't be a regvar either }
-         if ((left.resultdef.typ=arraydef) and
-             not Is_Special_Array(left.resultdef) and
+         if ((Left.ResultDef.typ=arraydef) and
+             not Is_Special_Array(Left.ResultDef) and
              { arrays with elements equal to the alu size and with a constant index can be kept in register }
-             not(is_constnode(right) and (TArrayDef(left.resultdef).ElementDef.Size=ALUSIntType.Size))) or
-            ((left.resultdef.typ=stringdef) and
-             (TStringDef(left.resultdef).StringType in [st_shortstring,st_longstring])) then
-           make_not_regable(left,[ra_addr_regable]);
+             not(Is_ConstNode(Right) and (TArrayDef(Left.ResultDef).ElementDef.Size=ALUSIntType.Size))) or
+            ((Left.ResultDef.typ=stringdef) and
+             (TStringDef(Left.ResultDef).StringType in [st_shortstring,st_longstring])) then
+           make_not_regable(Left,[ra_addr_regable]);
 
-         case left.resultdef.typ of
+         case Left.ResultDef.typ of
            arraydef :
              begin
                { check type of the index value }
-               if (Compare_Defs(right.resultdef,TArrayDef(left.resultdef).RangeDef,right.nodetype)=te_incompatible) then
-                 IncompatibleTypes(right.resultdef,TArrayDef(left.resultdef).RangeDef);
-               if right.nodetype=rangen then
-                 resultdef:=left.resultdef
+               if (Compare_Defs(Right.ResultDef,TArrayDef(Left.ResultDef).RangeDef,Right.NodeType)=te_incompatible) then
+                 IncompatibleTypes(Right.ResultDef,TArrayDef(Left.ResultDef).RangeDef);
+               if Right.NodeType=rangen then
+                 ResultDef:=Left.ResultDef
                else
-                 resultdef:=TArrayDef(left.resultdef).ElementDef;
+                 ResultDef:=TArrayDef(Left.ResultDef).ElementDef;
 
-               result:=gen_array_rangecheck;
-               if Assigned(result) then
+               Result:=Gen_Array_RangeCheck;
+               if Assigned(Result) then
                  exit;
 
                { in case of a bitpacked array of enums that are size 2 (due to
@@ -1244,12 +1244,12 @@ implementation
                  will currently say it's two bytes) -> create a temp enumdef
                  with packenum=1 for the resultdef as subtype of the main
                  enumdef }
-               if Is_Enum(resultdef) and
-                  Is_Packed_Array(left.resultdef) and
-                  ((TArrayDef(left.resultdef).ElePackedBitSize div 8) <> resultdef.Size) then
+               if Is_Enum(ResultDef) and
+                  Is_Packed_Array(Left.ResultDef) and
+                  ((TArrayDef(Left.ResultDef).ElePackedBitSize div 8) <> ResultDef.Size) then
                  begin
-                   resultdef:=CEnumDef.Create_Subrange(TEnumDef(resultdef),TEnumDef(resultdef).min,TEnumDef(resultdef).max);
-                   TEnumDef(resultdef).CalcSaveSize(1);
+                   ResultDef:=CEnumDef.Create_Subrange(TEnumDef(ResultDef),TEnumDef(ResultDef).min,TEnumDef(ResultDef).max);
+                   TEnumDef(ResultDef).CalcSaveSize(1);
                  end
              end;
            pointerdef :
@@ -1257,122 +1257,122 @@ implementation
                { are we accessing a pointer[], then convert the pointer to
                  an array first, in FPC this is allowed for all pointers
                  (except voidpointer) in delphi/tp7 it's only allowed for pchars. }
-               if not Is_VoidPointer(left.resultdef) and
+               if not Is_VoidPointer(Left.ResultDef) and
                   (
                    (cs_pointermath in CurrentSettings.LocalSwitches) or
-                   TPointerDef(left.resultdef).HasPointerMath or
-                   Is_PChar(left.resultdef) or
-                   Is_PWideChar(left.resultdef)
+                   TPointerDef(Left.ResultDef).HasPointerMath or
+                   Is_PChar(Left.ResultDef) or
+                   Is_PWideChar(Left.ResultDef)
                   ) then
                 begin
                   { convert pointer to array }
-                  htype:=CArrayDef.Create_From_Pointer(TPointerDef(left.resultdef));
-                  inserttypeconv(left,htype);
-                  if right.nodetype=rangen then
-                    resultdef:=htype
+                  lType:=CArrayDef.Create_From_Pointer(TPointerDef(Left.ResultDef));
+                  InsertTypeConv(Left,lType);
+                  if Right.NodeType=rangen then
+                    ResultDef:=lType
                   else
-                    resultdef:=TArrayDef(htype).ElementDef;
+                    ResultDef:=TArrayDef(lType).ElementDef;
                 end
                else
                 CGMessage(type_e_array_required);
              end;
            stringdef :
              begin
-                case TStringDef(left.resultdef).StringType of
+                case TStringDef(Left.ResultDef).StringType of
                   st_unicodestring,
                   st_widestring :
                     begin
-                      ElementDef:=CWideCharType;
-                      elementptrdef:=WideCharPointerType;
+                      lElementDef:=CWideCharType;
+                      lElementPointerDef:=WideCharPointerType;
                     end;
                   st_ansistring,
                   st_longstring,
                   st_shortstring :
                     begin
-                      ElementDef:=CAnsiCharType;
-                      elementptrdef:=CharPointerType;
+                      lElementDef:=CAnsiCharType;
+                      lElementPointerDef:=CharPointerType;
                     end;
                 end;
-                if right.nodetype=rangen then
+                if Right.NodeType=rangen then
                   begin
-                    htype:=CArrayDef.Create_From_Pointer(TPointerDef(elementptrdef));
-                    resultdef:=htype;
+                    lType:=CArrayDef.Create_From_Pointer(TPointerDef(lElementPointerDef));
+                    ResultDef:=lType;
                   end
                 else
                  begin
                    { indexed access to 0 element is only allowed for shortstrings or if
                      zero based strings is turned on }
-                   if (right.nodetype=ordconstn) and
-                      (TOrdConstNode(right).Value.svalue=0) and
-                      not Is_ShortString(left.resultdef) and
+                   if (Right.NodeType=ordconstn) and
+                      (TOrdConstNode(Right).Value.svalue=0) and
+                      not Is_ShortString(Left.ResultDef) and
                       not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
                      CGMessage(cg_e_can_access_element_zero);
-                   resultdef:=ElementDef;
+                   ResultDef:=lElementDef;
                  end;
              end;
            variantdef :
-             resultdef:=CVariantType;
+             ResultDef:=CVariantType;
            else
              CGMessage(type_e_array_required);
         end;
 
-        if Is_Currency(resultdef) then
-          Include(flags,nf_is_currency);
+        if Is_Currency(ResultDef) then
+          Include(Flags,nf_is_currency);
       end;
 
 
-    procedure TVecNode.mark_write;
+    procedure TVecNode.Mark_Write;
       begin
-        include(flags,nf_write);
+        include(Flags,nf_write);
         { see comment in tsubscriptnode.mark_write }
-        if not(Is_Implicit_Array_Pointer(left.resultdef)) then
-          left.mark_write;
+        if not(Is_Implicit_Array_Pointer(Left.ResultDef)) then
+          Left.Mark_Write;
       end;
 
 
-    function TVecNode.pass_1 : TNode;
+    function TVecNode.Pass_1 : TNode;
       begin
-         result:=nil;
-         FirstPass(left);
-         FirstPass(right);
+         Result:=nil;
+         FirstPass(Left);
+         FirstPass(Right);
          if CodeGenError then
            exit;
 
-         if (vnf_callunique in vecnodeflags) and
-            (Is_AnsiString(left.resultdef) or
-             Is_UnicodeString(left.resultdef) or
-            (Is_WideString(left.resultdef) and not(tf_winlikewidestring in TargetInfo.flags))) then
+         if (vnf_callunique in VecNodeFlags) and
+            (Is_AnsiString(Left.ResultDef) or
+             Is_UnicodeString(Left.ResultDef) or
+            (Is_WideString(Left.ResultDef) and not(tf_winlikewidestring in TargetInfo.Flags))) then
            begin
-             left := CTypeConvNode.Create_Internal(CCallNode.createintern('fpc_'+TStringDef(left.resultdef).StringTypName+'_unique',
-               CCallParaNode.create(
-                 CTypeConvNode.Create_Internal(left,VoidPointerType),nil)),
-               left.resultdef);
-             FirstPass(left);
+             Left := CTypeConvNode.Create_Internal(CCallNode.CreateIntern('fpc_'+TStringDef(Left.ResultDef).StringTypName+'_unique',
+               CCallParaNode.Create(
+                 CTypeConvNode.Create_Internal(Left,VoidPointerType),nil)),
+               Left.ResultDef);
+             FirstPass(Left);
              { double resultdef passes somewhere else may cause this to be }
              { reset though :/                                             }
-             exclude(vecnodeflags,vnf_callunique);
+             exclude(VecNodeFlags,vnf_callunique);
            end
-         else if Is_WideString(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
-           exclude(vecnodeflags,vnf_callunique);
+         else if Is_WideString(Left.ResultDef) and (tf_winlikewidestring in TargetInfo.Flags) then
+           exclude(VecNodeFlags,vnf_callunique);
 
          { a range node as array index can only appear in function calls, and
            those convert the range node into something else in
            tcallnode.gen_high_tree }
-         if (right.nodetype=rangen) then
-           CGMessagePos(right.fileinfo,parser_e_illegal_expression)
-         else if left.resultdef.typ=arraydef then
-           result:=first_arraydef
+         if (Right.NodeType=rangen) then
+           CGMessagePos(Right.FileInfo,parser_e_illegal_expression)
+         else if Left.ResultDef.typ=arraydef then
+           Result:=First_ArrayDef
          else
            begin
-             if left.expectloc=LOC_CREFERENCE then
-               expectloc:=LOC_CREFERENCE
+             if Left.ExpectLoc=LOC_CREFERENCE then
+               ExpectLoc:=LOC_CREFERENCE
              else
-               expectloc:=LOC_REFERENCE
+               ExpectLoc:=LOC_REFERENCE
            end;
       end;
 
 
-    function TVecNode.simplify(forinline : boolean) : TNode;
+    function TVecNode.Simplify(AForInline : Boolean) : TNode;
       begin
         Result := nil;
         { If left is a string constant and right is an ordinal constant, then
@@ -1382,16 +1382,16 @@ implementation
         if
           { If the address of the result is taken, do not optimise, as the
             pointer of the original string constant is in use }
-          not (nf_address_taken in flags) and
-          (left.nodetype = stringconstn) and
-          (right.nodetype = ordconstn) and
+          not (nf_address_taken in Flags) and
+          (Left.NodeType = stringconstn) and
+          (Right.NodeType = ordconstn) and
           { Ensure the index is in range }
-          (TOrdConstNode(right).Value > 0) and
-          (TOrdConstNode(right).Value <= TStringConstNode(left).len) then
+          (TOrdConstNode(Right).Value > 0) and
+          (TOrdConstNode(Right).Value <= TStringConstNode(Left).len) then
           begin
 
             { The internal fields are zero-based }
-            case TStringConstNode(left).cst_type of
+            case TStringConstNode(Left).ConstStringType of
               cst_widestring, cst_unicodestring:
                 { value_str is of type PCompilerWideString }
 
@@ -1399,9 +1399,9 @@ implementation
                   in theory for a 64 bit target the string could be longer than 2^32,
                   it does not matter as a 32 bit host cannot handle such long strings anyways due to memory limitations
                 }
-                Result := COrdConstNode.create(
-                  TStringConstNode(left).ValueWS.data[PtrUInt(TOrdConstNode(right).Value.uvalue) - 1],
-                  resultdef,
+                Result := COrdConstNode.Create(
+                  TStringConstNode(Left).ValueWS.data[PtrUInt(TOrdConstNode(Right).Value.uvalue) - 1],
+                  ResultDef,
                   False
                 );
               else
@@ -1409,9 +1409,9 @@ implementation
                   in theory for a 64 bit target the string could be longer than 2^32,
                   it does not matter as a 32 bit host cannot handle such long strings anyways due to memory limitations
                 }
-                Result := COrdConstNode.create(
-                  Byte(TStringConstNode(left).valueas[PtrUInt(TOrdConstNode(right).Value.uvalue) - 1]),
-                  resultdef,
+                Result := COrdConstNode.Create(
+                  Byte(TStringConstNode(Left).ValueAS[PtrUInt(TOrdConstNode(Right).Value.uvalue) - 1]),
+                  ResultDef,
                   False
                 );
             end;
@@ -1419,42 +1419,42 @@ implementation
       end;
 
 
-    function TVecNode.dogetcopy: TNode;
+    function TVecNode.DoGetCopy: TNode;
       var
-        n: TVecNode;
+        lCopy: TVecNode;
       begin
-        n:=TVecNode(inherited dogetcopy);
-        n.vecnodeflags:=vecnodeflags;
-        result:=n;
+        lCopy:=TVecNode(inherited DoGetCopy);
+        lCopy.VecNodeFlags:=VecNodeFlags;
+        Result:=lCopy;
       end;
 
 
-    function TVecNode.first_arraydef: TNode;
+    function TVecNode.First_ArrayDef: TNode;
       begin
-        result:=nil;
-        if (not Is_Packed_Array(left.resultdef)) or
-           ((TArrayDef(left.resultdef).ElePackedBitSize mod 8) = 0) then
-          if left.expectloc=LOC_CREFERENCE then
-            expectloc:=LOC_CREFERENCE
+        Result:=nil;
+        if (not Is_Packed_Array(Left.ResultDef)) or
+           ((TArrayDef(Left.ResultDef).ElePackedBitSize mod 8) = 0) then
+          if Left.ExpectLoc=LOC_CREFERENCE then
+            ExpectLoc:=LOC_CREFERENCE
           else
-            expectloc:=LOC_REFERENCE
+            ExpectLoc:=LOC_REFERENCE
         else
-          if left.expectloc=LOC_CREFERENCE then
-            expectloc:=LOC_CSUBSETREF
+          if Left.ExpectLoc=LOC_CREFERENCE then
+            ExpectLoc:=LOC_CSUBSETREF
           else
-            expectloc:=LOC_SUBSETREF;
+            ExpectLoc:=LOC_SUBSETREF;
       end;
 
 
-    function TVecNode.gen_array_rangecheck: TNode;
+    function TVecNode.Gen_Array_RangeCheck: TNode;
     var
-      htype: TDef;
-      temp: TTempCreateNode;
-      stat: TStatementNode;
-      indextree: TNode;
-      hightree: TNode;
+      lType: TDef;
+      lTempNode: TTempCreateNode;
+      lStatement: TStatementNode;
+      lIndexTree: TNode;
+      lHighTree: TNode;
     begin
-      result:=nil;
+      Result:=nil;
 
       { Range checking an array of const/open array/dynamic array is
         more complicated than regular arrays, because the bounds must
@@ -1464,59 +1464,59 @@ implementation
         array parameter -> generate te check at the node tree level
         rather than in the code generator }
       if (cs_check_range in CurrentSettings.LocalSwitches) and
-         (Is_Open_Array(left.resultdef) or
-          Is_Array_Of_Const(left.resultdef)) and
-         (right.nodetype<>rangen) then
+         (Is_Open_Array(Left.ResultDef) or
+          Is_Array_Of_Const(Left.ResultDef)) and
+         (Right.NodeType<>rangen) then
         begin
           { expect to find the load node }
-          if get_open_const_array(left).nodetype<>loadn then
+          if Get_Open_Const_Array(Left).NodeType<>loadn then
             InternalError(2014040601);
           { cdecl functions don't have high() so we can not check the range }
           { (can't use current_procdef, since it may be a nested procedure) }
-          if not(TProcDef(TParaSymTable(TParaVarSym(TLoadNode(get_open_const_array(left)).symtableentry).owner).DefOwner).ProcCallOption in CDecl_PoCalls) then
+          if not(TProcDef(TParaSymTable(TParaVarSym(TLoadNode(Get_Open_Const_Array(Left)).SymTableEntry).owner).DefOwner).ProcCallOption in CDecl_PoCalls) then
             begin
-              temp:=nil;
-              result:=internalstatements(stat);
+              lTempNode:=nil;
+              Result:=InternalStatements(lStatement);
               { can't use node_complexity here, assumes that the code has
                 already been firstpassed }
-              if not is_const(right) then
+              if not Is_Const(Right) then
                 begin
-                  temp:=CTempCreateNode.create(right.resultdef,right.resultdef.Size,tt_persistent,true);
-                  addstatement(stat,temp);
+                  lTempNode:=CTempCreateNode.Create(Right.ResultDef,Right.ResultDef.Size,tt_persistent,true);
+                  AddStatement(lStatement,lTempNode);
                   { needed so we can typecheck its temprefnodes }
-                  TypeCheckPass(TNode(temp));
-                  addstatement(stat,CAssignmentNode.create(
-                    CTempRefNode.create(temp),right)
+                  TypeCheckPass(TNode(lTempNode));
+                  AddStatement(lStatement,CAssignmentNode.Create(
+                    CTempRefNode.Create(lTempNode),Right)
                   );
-                  right:=CTempRefNode.create(temp);
+                  Right:=CTempRefNode.Create(lTempNode);
                   { right.resultdef is used below }
-                  TypeCheckPass(right);
+                  TypeCheckPass(Right);
                 end;
               { range check will be made explicit here }
               exclude(LocalSwitches,cs_check_range);
-              hightree:=load_high_value_node(TParaVarSym(TLoadNode(
-                get_open_const_array(left)).symtableentry));
+              lHighTree:=Load_High_Value_Node(TParaVarSym(TLoadNode(
+                Get_Open_Const_Array(Left)).SymTableEntry));
               { make index unsigned so we only need one comparison;
                 lower bound is always zero for these arrays, but
                 hightree can be -1 in case the array was empty ->
                 add 1 before comparing (ignoring overflows) }
-              htype:=Get_Unsigned_IntType(right.resultdef);
-              inserttypeconv_explicit(hightree,htype);
-              hightree:=CAddNode.create(addn,hightree,genintconstnode(1));
-              hightree.LocalSwitches:=hightree.LocalSwitches-[cs_check_range,
+              lType:=Get_Unsigned_IntType(Right.ResultDef);
+              InsertTypeConv_Explicit(lHighTree,lType);
+              lHighTree:=CAddNode.Create(addn,lHighTree,GenIntConstNode(1));
+              lHighTree.LocalSwitches:=lHighTree.LocalSwitches-[cs_check_range,
                 cs_check_overflow];
-              indextree:=CTypeConvNode.create_explicit(right.GetCopy,htype);
+              lIndexTree:=CTypeConvNode.Create_Explicit(Right.GetCopy,lType);
               { range error if index >= hightree+1 }
-              addstatement(stat,
+              AddStatement(lStatement,
                 CIfNode.Create_Internal(
-                  CAddNode.Create_Internal(gten,indextree,hightree),
-                  CCallNode.createintern('fpc_rangeerror',nil),
+                  CAddNode.Create_Internal(gten,lIndexTree,lHighTree),
+                  CCallNode.CreateIntern('fpc_rangeerror',nil),
                   nil
                 )
               );
-              if Assigned(temp) then
-                addstatement(stat,CTempDeleteNode.create_normal_temp(temp));
-              addstatement(stat,self.GetCopy);
+              if Assigned(lTempNode) then
+                AddStatement(lStatement,CTempDeleteNode.Create_Normal_Temp(lTempNode));
+              AddStatement(lStatement,Self.GetCopy);
             end;
         end;
     end;
@@ -1524,11 +1524,11 @@ implementation
 
 
 
-    function is_big_untyped_addrnode(p: TNode): boolean;
+    function Is_Big_Untyped_AddrNode(ANode: TNode): Boolean;
       begin
-        is_big_untyped_addrnode:=(p.nodetype=addrn) and
-          not (anf_typedaddr in TAddrNode(p).addrnodeflags) and
-          (TAddrNode(p).left.resultdef.Size > 1);
+        Is_Big_Untyped_AddrNode:=(ANode.NodeType=addrn) and
+          not (anf_typedaddr in TAddrNode(ANode).AddrNodeFlags) and
+          (TAddrNode(ANode).Left.ResultDef.Size > 1);
       end;
 
 end.

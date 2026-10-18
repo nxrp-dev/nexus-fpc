@@ -741,7 +741,7 @@ implementation
                 CurrentSpecializeDef:=nil;
               end;
             { release procinfo tree }
-            TProcInfo(ProcInfo).destroy_tree;
+            TProcInfo(ProcInfo).Destroy_Tree;
             ProcInfo := nil;
           end;
         DoneDebugInfo(Self,CurrentDebugInfoReset);
@@ -879,7 +879,7 @@ implementation
                 CurrentSpecializeDef:=nil;
               end;
             { release procinfo tree }
-            TProcInfo(ProcInfo).destroy_tree;
+            TProcInfo(ProcInfo).Destroy_Tree;
           end;
         if Assigned(AsmData) then
           begin

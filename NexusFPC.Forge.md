@@ -513,6 +513,12 @@ unit CRC tracking and compiled-unit inspection tools remain available.
 The unused `fixlog`, `fixtab`, `fixmsg` and `dummyas` utilities are also removed.
 This cleanup does not change NXU compatibility revision 46.
 
+The orphaned compiler `macho` / `machoutils` units and metadata for unsupported
+ABIs, assembler modes and retired target switches are removed. `-XV` and
+`-OoFORCENOSTACKFRAME` now receive ordinary invalid-option diagnostics.
+Retained serialized switch and assembler-mode values are preserved; NXU
+compatibility remains at revision 46.
+
 The owner explicitly declined additional whole-program optimization passes on
 2026-10-11 after measurement. The WPO recipe and the Forge settings added for it
 have been removed. WPO is not a remaining make-parity requirement for our compiler

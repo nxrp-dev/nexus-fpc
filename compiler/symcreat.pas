@@ -244,7 +244,7 @@ implementation
       Flags:=[];
       if IsClassDef then
         Include(Flags,rpf_classmethod);
-      ResultProcDef:=read_proc(Flags,UseFWPD);
+      ResultProcDef:=Read_Proc(Flags,UseFWPD);
       parse_only:=OldParseOnly;
       { remove the temporary macro input file again }
       CurrentScanner.CloseInputFile;
@@ -1016,7 +1016,7 @@ implementation
     CurrentScanner.AllowGenericID:=AllowGenericID;
     CurrentScanner.SubstituteMacro('hidden_interface_method',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
     CurrentScanner.ReadToken(False);
-    Result:=read_proc([],Nil);
+    Result:=Read_Proc([],Nil);
     parse_only:=OldParseOnly;
     { remove the temporary macro input file again }
     CurrentScanner.CloseInputFile;
@@ -1612,7 +1612,7 @@ implementation
                       CLoadNode.Create(PD.FuncRetSym,PD.LocalST),
                       Attr.ConstructorCall.GetCopy
                     );
-          PI.generate_code;
+          PI.Generate_Code;
           Attr.ConstructorPD:=PD;
         end;
     end;

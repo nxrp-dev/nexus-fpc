@@ -47,24 +47,16 @@
 
    type
 
+       { Preserve assembler-mode values stored in generic token streams. }
        TAsmMode= (asmmode_none
             { standard assembler (cpu dependant) with full parsing }
             ,asmmode_standard
             ,asmmode_i386_att
             ,asmmode_i386_intel
-            ,asmmode_ppc_gas
-            ,asmmode_ppc_motorola
-            ,asmmode_arm_gas
-            ,asmmode_sparc_gas
-            ,asmmode_x86_64_gas
-            ,asmmode_m68k_mot
-            ,asmmode_x86_64_intel
+            ,asmmode_arm_gas = 6
+            ,asmmode_x86_64_gas = 8
+            ,asmmode_x86_64_intel = 10
             ,asmmode_x86_64_att
-            ,asmmode_avr_gas
-            ,asmmode_i8086_intel
-            ,asmmode_i8086_att
-            ,asmmode_arm_gas_unified
-            ,asmmode_xtensa_gas
        );
 
      (* IMPORTANT NOTE:
@@ -136,43 +128,18 @@
        );
 
        TABI = (abi_default
-            ,abi_powerpc_sysv,abi_powerpc_aix,abi_powerpc_darwin,abi_powerpc_elfv2
-            ,abi_eabi,abi_armeb,abi_eabihf
             ,abi_old_win32_gnu
             ,abi_aarch64_darwin
-            ,abi_riscv_ilp32
-            ,abi_riscv_ilp32f
-            ,abi_riscv_ilp32d
-            ,abi_riscv_ilp32e
-            ,abi_riscv_lp64
-            ,abi_riscv_lp64f
-            ,abi_riscv_lp64d
-            ,abi_riscv_lp64q
             { stack is aligned and all room for parameters is reserved on
               entry, but depending on the calling convention, the parameters
               may still be removed by the callee (and then the stack needs to
               be restored by the caller) }
             ,abi_i386_dynalignedstack
-            ,abi_xtensa_windowed
-            ,abi_xtensa_call0
-            ,abi_mips_o32
-            ,abi_mips_n32
-            ,abi_mips_o64
-            ,abi_mips_n64
-            ,abi_loongarch_lp64s
-            ,abi_loongarch_lp64f
-            ,abi_loongarch_lp64d
-            ,abi_loongarch_lp32s
-            ,abi_loongarch_lp32f
-            ,abi_loongarch_lp32d
        );
 
        TCGBackend = (
            { default FPC code generator }
              cg_fpc
        );
-
-     const
-       abi_powerpc_elfv1 = abi_powerpc_sysv;
 
 

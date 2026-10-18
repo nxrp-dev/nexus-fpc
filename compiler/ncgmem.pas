@@ -33,49 +33,49 @@ interface
 
     type
        TCGLoadVMTAddrNode = class(TLoadVMTAddrNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGLoadParentFPNode = class(TLoadParentFPNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGAddrNode = class(TAddrNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGDerefNode = class(TDerefNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGSubscriptNode = class(TSubscriptNode)
          protected
-          function handle_platform_subscript: boolean; virtual;
+          function Handle_Platform_Subscript: Boolean; virtual;
          public
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGVecNode = class(TVecNode)
-         function get_mul_size : asizeint;
+         function Get_Mul_Size : ASizeInt;
        private
-         procedure rangecheck_array;
-         procedure rangecheck_string;
+         procedure RangeCheckArray;
+         procedure RangeCheckString;
        protected
-         function get_address_type: TDef;virtual;
+         function Get_Address_Type: TDef;virtual;
          {# This routine is used to calculate the address of the reference.
-            On entry reg contains the index in the array,
-           and l contains the size of each element in the array.
+            On entry AIndexReg contains the index in the array,
+           and AElementSize contains the size of each element in the array.
            This routine should update location.reference correctly,
            so it points to the correct address.
          }
-         procedure update_reference_reg_mul(maybe_const_reg: TRegister;regsize: TDef; l: aint);virtual;
-         procedure update_reference_reg_packed(maybe_const_reg: TRegister; regsize: TDef; l: aint);virtual;
-         procedure update_reference_offset(var ref: TReference; index, mulsize: ASizeInt); virtual;
-         procedure second_wideansistring;virtual;
-         procedure second_dynamicarray;virtual;
-         function valid_index_size(size: TCgSize): boolean;virtual;
+         procedure Update_Reference_Reg_Mul(AIndexReg: TRegister;ARegSize: TDef; AElementSize: AInt);virtual;
+         procedure Update_Reference_Reg_Packed(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt);virtual;
+         procedure Update_Reference_Offset(var AReference: TReference; AIndex, AElementSize: ASizeInt); virtual;
+         procedure Second_WideAnsiString;virtual;
+         procedure Second_DynamicArray;virtual;
+         function Valid_Index_Size(ASize: TCgSize): Boolean;virtual;
        public
-         procedure pass_generate_code;override;
+         procedure Pass_Generate_Code;override;
        end;
 
 
@@ -96,53 +96,53 @@ implementation
                               TCGLOADVMTADDRNODE
 *****************************************************************************}
 
-    procedure TCGLoadVMTAddrNode.pass_generate_code;
+    procedure TCGLoadVMTAddrNode.Pass_Generate_Code;
       var
-        href    : TReference;
-        pool    : THashSet;
-        entry   : PHashSetItem;
-        vmtname : TSymStr;
-        otherunit,
-        indirect : boolean;
+        lReference    : TReference;
+        lPool    : THashSet;
+        lEntry   : PHashSetItem;
+        lVMTName : TSymStr;
+        lOtherUnit,
+        lIndirect : Boolean;
       begin
-         Location_Reset(location,LOC_REGISTER,Def_CGSize(VoidPointerType));
-         if (left.nodetype=typen) then
+         Location_Reset(Location,LOC_REGISTER,Def_CGSize(VoidPointerType));
+         if (Left.NodeType=typen) then
            begin
-             location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,VoidPointerType);
-             if not Is_ObjCClass(left.resultdef) then
+             Location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,VoidPointerType);
+             if not Is_ObjCClass(Left.ResultDef) then
                begin
                  { we are using a direct reference if any of the following is true:
                    - the target does not support packages
                    - the target does not use indirect references
                    - the class is located inside the same unit }
-                 otherunit:=FindUnitSymTable(left.resultdef.owner).ModuleID<>CurrentModule.ModuleID;
-                 indirect:=(tf_supports_packages in TargetInfo.flags) and
+                 lOtherUnit:=FindUnitSymTable(Left.ResultDef.owner).ModuleID<>CurrentModule.ModuleID;
+                 lIndirect:=(tf_supports_packages in TargetInfo.Flags) and
                            (TargetInfo.system in systems_indirect_var_imports) and
-                           otherunit;
-                 vmtname:=TObjectDef(TClassRefDef(resultdef).PointedDef).VMT_MangledName;
-                 Reference_Reset_Symbol(href,
-                   CurrentAsmData.RefAsmSymbol(vmtname,AT_DATA,indirect),0,
-                   resultdef.Alignment,[]);
-                 hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,href,location.Register);
-                 if otherunit then
-                   CurrentModule.Add_Extern_AsmSym(vmtname,AB_EXTERNAL,AT_DATA);
+                           lOtherUnit;
+                 lVMTName:=TObjectDef(TClassRefDef(ResultDef).PointedDef).VMT_MangledName;
+                 Reference_Reset_Symbol(lReference,
+                   CurrentAsmData.RefAsmSymbol(lVMTName,AT_DATA,lIndirect),0,
+                   ResultDef.Alignment,[]);
+                 hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,ResultDef,ResultDef,lReference,Location.Register);
+                 if lOtherUnit then
+                   CurrentModule.Add_Extern_AsmSym(lVMTName,AB_EXTERNAL,AT_DATA);
                end
              else
                begin
-                 pool:=CurrentAsmData.ConstPools[sp_objcclassnamerefs];
-                 entry:=pool.FindOrAdd(@TObjectDef(left.resultdef).ObjExtName^[1],length(TObjectDef(left.resultdef).ObjExtName^));
+                 lPool:=CurrentAsmData.ConstPools[sp_objcclassnamerefs];
+                 lEntry:=lPool.FindOrAdd(@TObjectDef(Left.ResultDef).ObjExtName^[1],length(TObjectDef(Left.ResultDef).ObjExtName^));
                  if (TargetInfo.system in systems_objc_nfabi) then
                    begin
                      { find/add necessary classref/classname pool entries }
-                     objcfinishclassrefnfpoolentry(entry,TObjectDef(left.resultdef));
+                     ObjCFinishClassRefNFPoolEntry(lEntry,TObjectDef(Left.ResultDef));
                    end
                  else
                    begin
                      { find/add necessary classref/classname pool entries }
-                     objcfinishstringrefpoolentry(entry,sp_objcclassnames,sec_objc_cls_refs,sec_objc_class_names);
+                     ObjCFinishStringRefPoolEntry(lEntry,sp_objcclassnames,sec_objc_cls_refs,sec_objc_class_names);
                    end;
-                 Reference_Reset_Symbol(href,TAsmLabel(entry^.Data),0,ObjC_IDType.Alignment,[]);
-                 hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,ObjC_IDType,ObjC_IDType,href,location.Register);
+                 Reference_Reset_Symbol(lReference,TAsmLabel(lEntry^.Data),0,ObjC_IDType.Alignment,[]);
+                 hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,ObjC_IDType,ObjC_IDType,lReference,Location.Register);
                end;
            end
          else
@@ -155,41 +155,41 @@ implementation
                         TCGLOADPARENTFPNODE
 *****************************************************************************}
 
-    procedure TCGLoadParentFPNode.pass_generate_code;
+    procedure TCGLoadParentFPNode.Pass_Generate_Code;
       var
-        currpi : TProcInfo;
-        hsym   : TParaVarSym;
-        href   : TReference;
+        lCurrentProcInfo : TProcInfo;
+        lSym   : TParaVarSym;
+        lReference   : TReference;
       begin
-        if (CurrentProcInfo.procdef.ParaST.SymTableLevel=parentpd.ParaST.SymTableLevel) then
+        if (CurrentProcInfo.procdef.ParaST.SymTableLevel=ParentPD.ParaST.SymTableLevel) then
           begin
-            Location_Reset(location,LOC_REGISTER,Def_CGSize(ParentFPVoidPointerType));
-            location.Register:=CurrentProcInfo.framepointer;
+            Location_Reset(Location,LOC_REGISTER,Def_CGSize(ParentFPVoidPointerType));
+            Location.Register:=CurrentProcInfo.FramePointer;
           end
         else
           begin
-            Location_Reset(location,LOC_REGISTER,Def_CGSize(ParentFPVoidPointerType));
-            currpi:=CurrentProcInfo;
+            Location_Reset(Location,LOC_REGISTER,Def_CGSize(ParentFPVoidPointerType));
+            lCurrentProcInfo:=CurrentProcInfo;
             { load framepointer of current proc }
-            hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
-            if (currpi.procdef.owner.SymTableLevel=parentpd.ParaST.SymTableLevel) and (hsym.LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
-              location.Register:=hsym.LocAlloc.Register
+            lSym:=TParaVarSym(lCurrentProcInfo.procdef.ParentFPSym);
+            if (lCurrentProcInfo.procdef.owner.SymTableLevel=ParentPD.ParaST.SymTableLevel) and (lSym.LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+              Location.Register:=lSym.LocAlloc.Register
             else
               begin
-                location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType);
-                hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,hsym.LocAlloc,location.Register);
+                Location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType);
+                hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,lSym.LocAlloc,Location.Register);
                 { walk parents }
-                while (currpi.procdef.owner.SymTableLevel>parentpd.ParaST.SymTableLevel) do
+                while (lCurrentProcInfo.procdef.owner.SymTableLevel>ParentPD.ParaST.SymTableLevel) do
                   begin
-                    currpi:=currpi.parent;
-                    if not Assigned(currpi) then
+                    lCurrentProcInfo:=lCurrentProcInfo.parent;
+                    if not Assigned(lCurrentProcInfo) then
                       InternalError(200311201);
-                    hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
-                    if hsym.LocAlloc.Loc<>LOC_REFERENCE then
+                    lSym:=TParaVarSym(lCurrentProcInfo.procdef.ParentFPSym);
+                    if lSym.LocAlloc.Loc<>LOC_REFERENCE then
                       InternalError(200309283);
 
-                    hlcg.Reference_Reset_Base(href,ParentFPVoidPointerType,location.Register,hsym.LocAlloc.Reference.Offset,CTempPosInvalid,ParentFPVoidPointerType.Alignment,[]);
-                    hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,href,location.Register);
+                    hlcg.Reference_Reset_Base(lReference,ParentFPVoidPointerType,Location.Register,lSym.LocAlloc.Reference.Offset,CTempPosInvalid,ParentFPVoidPointerType.Alignment,[]);
+                    hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,lReference,Location.Register);
                   end;
               end;
           end;
@@ -200,23 +200,23 @@ implementation
                              TCGADDRNODE
 *****************************************************************************}
 
-    procedure TCGAddrNode.pass_generate_code;
+    procedure TCGAddrNode.Pass_Generate_Code;
       begin
-         SecondPass(left);
+         SecondPass(Left);
 
-         Location_Reset(location,LOC_REGISTER,Int_CGSize(resultdef.Size));
-         location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,resultdef);
-         if not(left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+         Location_Reset(Location,LOC_REGISTER,Int_CGSize(ResultDef.Size));
+         Location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,ResultDef);
+         if not(Left.Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
            { on x86_64-win64, array of chars can be returned in registers, however,
              when passing these arrays to other functions, the compiler wants to take
              the address of the array so when the addrnode has been created internally,
              we have to force the data into memory, see also tw14388 (case in tb_arrays_objfpc_run_03.pas).pas
            }
-           if nf_internal in flags then
-             hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef)
+           if nf_internal in Flags then
+             hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef)
            else
              InternalError(2006111510);
-         hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.Location.Reference,location.Register);
+         hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,ResultDef,Left.Location.Reference,Location.Register);
       end;
 
 
@@ -224,102 +224,102 @@ implementation
                            TCGDEREFNODE
 *****************************************************************************}
 
-    procedure TCGDerefNode.pass_generate_code;
+    procedure TCGDerefNode.Pass_Generate_Code;
       var
-        paraloc1 : TCGPara;
-        pd : TProcDef;
-        sym : TSym;
-        st : TSymTable;
-        hp : PNode;
-        newoffset : TCGInt;
+        lParaLoc1 : TCGPara;
+        lProcDef : TProcDef;
+        lSym : TSym;
+        lSymTable : TSymTable;
+        lNodePointer : PNode;
+        lNewOffset : TCGInt;
       begin
-         sym:=nil;
+         lSym:=nil;
          { assume natural alignment, except for packed records }
-         if not(resultdef.typ in [recorddef,objectdef]) or
-            (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).UseFieldAlignment<>1) then
-           Location_Reset_Ref(location,LOC_REFERENCE,Def_CGSize(resultdef),resultdef.Alignment,[])
+         if not(ResultDef.typ in [recorddef,objectdef]) or
+            (TAbstractRecordSymTable(TAbstractRecordDef(ResultDef).SymTable).UseFieldAlignment<>1) then
+           Location_Reset_Ref(Location,LOC_REFERENCE,Def_CGSize(ResultDef),ResultDef.Alignment,[])
          else
-           Location_Reset_Ref(location,LOC_REFERENCE,Def_CGSize(resultdef),1,[]);
+           Location_Reset_Ref(Location,LOC_REFERENCE,Def_CGSize(ResultDef),1,[]);
 
          { can we fold an add/sub node into the offset of the deref node? }
-         newoffset:=0;
-         hp:=actualtargetnode(@left);
-         if (hp^.nodetype=subn) and is_constintnode(TAddNode(hp^).right) then
+         lNewOffset:=0;
+         lNodePointer:=ActualTargetNode(@Left);
+         if (lNodePointer^.NodeType=subn) and Is_ConstIntNode(TAddNode(lNodePointer^).Right) then
            begin
-             newoffset:=-TCGInt(TOrdConstNode(TAddNode(hp^).right).Value);
-             replacenode(hp^,TAddNode(hp^).left);
+             lNewOffset:=-TCGInt(TOrdConstNode(TAddNode(lNodePointer^).Right).Value);
+             ReplaceNode(lNodePointer^,TAddNode(lNodePointer^).Left);
            end
-         else if (hp^.nodetype=addn) and is_constintnode(TAddNode(hp^).right) then
+         else if (lNodePointer^.NodeType=addn) and Is_ConstIntNode(TAddNode(lNodePointer^).Right) then
            begin
-             newoffset:=TCGInt(TOrdConstNode(TAddNode(hp^).right).Value);
-             replacenode(hp^,TAddNode(hp^).left);
+             lNewOffset:=TCGInt(TOrdConstNode(TAddNode(lNodePointer^).Right).Value);
+             ReplaceNode(lNodePointer^,TAddNode(lNodePointer^).Left);
            end
-         else if (hp^.nodetype=addn) and is_constintnode(TAddNode(hp^).left) then
+         else if (lNodePointer^.NodeType=addn) and Is_ConstIntNode(TAddNode(lNodePointer^).Left) then
            begin
-             newoffset:=TCGInt(TOrdConstNode(TAddNode(hp^).left).Value);
-             replacenode(hp^,TAddNode(hp^).right);
+             lNewOffset:=TCGInt(TOrdConstNode(TAddNode(lNodePointer^).Left).Value);
+             ReplaceNode(lNodePointer^,TAddNode(lNodePointer^).Right);
            end;
 
-         SecondPass(left);
+         SecondPass(Left);
 
-         if not(left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE,LOC_CONSTANT]) then
-           hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-         case left.Location.Loc of
+         if not(Left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE,LOC_CONSTANT]) then
+           hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+         case Left.Location.Loc of
             LOC_CREGISTER,
             LOC_REGISTER:
               begin
-                hlcg.Maybe_Change_Load_Node_Reg(CurrentAsmData.CurrAsmList,left,true);
+                hlcg.Maybe_Change_Load_Node_Reg(CurrentAsmData.CurrAsmList,Left,true);
               {$ifdef cpu_uses_separate_address_registers}
-                if GetRegType(left.Location.Register)<>R_ADDRESSREGISTER then
+                if GetRegType(Left.Location.Register)<>R_ADDRESSREGISTER then
                   begin
-                    location.Reference.Base := cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-                    cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,left.Location.Register,
-                      location.Reference.Base);
+                    Location.Reference.Base := cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                    cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,Left.Location.Register,
+                      Location.Reference.Base);
                   end
                 else
               {$endif}
-                  location.Reference.Base := left.Location.Register;
+                  Location.Reference.Base := Left.Location.Register;
               end;
             LOC_CREFERENCE,
             LOC_REFERENCE:
               begin
-                 location.Reference.Base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-                 hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.Location,location.Reference.Base);
+                 Location.Reference.Base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                 hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,Left.Location,Location.Reference.Base);
               end;
             LOC_CONSTANT:
               begin
-                inc(newoffset,left.Location.Value);
+                inc(lNewOffset,Left.Location.Value);
               end;
             else
               InternalError(200507031);
          end;
 {$ifopt R+}
 {$ifdef cpu32bitaddr}
-         if (newoffset>high(ASizeUInt)) or (newoffset<low(asizeint)) then
+         if (lNewOffset>high(ASizeUInt)) or (lNewOffset<low(ASizeInt)) then
            message(parser_e_range_check_error)
          else
 {$endif}
 {$endif}
-           location.Reference.Offset:=asizeint(newoffset);
+           Location.Reference.Offset:=ASizeInt(lNewOffset);
          if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) and
             (cs_checkpointer in CurrentSettings.LocalSwitches) and
             not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
-            TPointerDef(left.resultdef).Compatible_With_PointerDef_Size(TPointerDef(VoidPointerType)) and
-            not(drnf_no_checkpointer in derefnodeflags) and
+            TPointerDef(Left.ResultDef).Compatible_With_PointerDef_Size(TPointerDef(VoidPointerType)) and
+            not(drnf_no_checkpointer in DerefNodeFlags) and
             { can be NR_NO in case of LOC_CONSTANT }
-            (location.Reference.Base<>NR_NO) then
+            (Location.Reference.Base<>NR_NO) then
           begin
-            if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',sym,st) or
-               (sym.typ<>ProcSym) then
+            if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',lSym,lSymTable) or
+               (lSym.typ<>ProcSym) then
               InternalError(2012010601);
-            pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
-            paraloc1.init;
-            ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-            hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,location.Reference,paraloc1);
-            ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
-            paraloc1.done;
+            lProcDef:=TProcDef(TProcSym(lSym).ProcdefList[0]);
+            lParaLoc1.init;
+            ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,1,lParaLoc1);
+            hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Location.Reference,lParaLoc1);
+            ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc1);
+            lParaLoc1.done;
             hlcg.AllocAllCPURegisters(CurrentAsmData.CurrAsmList);
-            hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,pd,'FPC_CHECKPOINTER',[@paraloc1],nil,false);
+            hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,lProcDef,'FPC_CHECKPOINTER',[@lParaLoc1],nil,false);
             hlcg.DeallocAllCPURegisters(CurrentAsmData.CurrAsmList);
             include(CurrentSettings.ModuleSwitches,cs_checkpointer_called);
           end;
@@ -330,52 +330,52 @@ implementation
                           TCGSUBSCRIPTNODE
 *****************************************************************************}
 
-    function TCGSubscriptNode.handle_platform_subscript: boolean;
+    function TCGSubscriptNode.Handle_Platform_Subscript: Boolean;
       begin
-        result:=false;
+        Result:=false;
       end;
 
-    procedure TCGSubscriptNode.pass_generate_code;
+    procedure TCGSubscriptNode.Pass_Generate_Code;
       var
-        asmsym: TAsmSymbol;
-        paraloc1 : TCGPara;
-        tmpref: TReference;
-        sref: TSubsetReference;
-        awordoffset,
-        offsetcorrection : aint;
-        pd : TProcDef;
-        sym : TSym;
-        st : TSymTable;
-        hreg : TRegister;
+        lAsmSym: TAsmSymbol;
+        lParaLoc1 : TCGPara;
+        lTempRef: TReference;
+        lSubsetRef: TSubsetReference;
+        lWordOffset,
+        lOffsetCorrection : AInt;
+        lProcDef : TProcDef;
+        lSym : TSym;
+        lSymTable : TSymTable;
+        lReg : TRegister;
       begin
-         sym:=nil;
-         SecondPass(left);
+         lSym:=nil;
+         SecondPass(Left);
          if CodeGenError then
            exit;
-         paraloc1.init;
+         lParaLoc1.init;
          { several object types must be dereferenced implicitly }
-         if Is_Implicit_Pointer_Object_Type(left.resultdef) then
+         if Is_Implicit_Pointer_Object_Type(Left.ResultDef) then
            begin
-             if not Is_Managed_Type(left.resultdef) then
+             if not Is_Managed_Type(Left.ResultDef) then
                begin
                  { take care of the alignment of the fields }
-                 if not(left.resultdef is TAbstractRecordDef) then
+                 if not(Left.ResultDef is TAbstractRecordDef) then
                    InternalError(2018021601);
-                 Location_Reset_Ref(location,LOC_REFERENCE,Def_CGSize(resultdef),NewAlignment(TAbstractRecordSymTable(TAbstractRecordDef(left.resultdef).SymTable).RecordAlignment,vs.FieldOffset),[]);
-                 case left.Location.Loc of
+                 Location_Reset_Ref(Location,LOC_REFERENCE,Def_CGSize(ResultDef),NewAlignment(TAbstractRecordSymTable(TAbstractRecordDef(Left.ResultDef).SymTable).RecordAlignment,FieldSym.FieldOffset),[]);
+                 case Left.Location.Loc of
                     LOC_CREGISTER,
                     LOC_REGISTER:
                       begin
                       {$ifdef cpu_uses_separate_address_registers}
-                        if GetRegType(left.Location.Register)<>R_ADDRESSREGISTER then
+                        if GetRegType(Left.Location.Register)<>R_ADDRESSREGISTER then
                           begin
-                            location.Reference.Base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
-                            hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,
-                              left.Location.Register,location.Reference.Base);
+                            Location.Reference.Base:=cg.GetAddressRegister(CurrentAsmData.CurrAsmList);
+                            hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,
+                              Left.Location.Register,Location.Reference.Base);
                           end
                         else
                       {$endif}
-                          hlcg.Reference_Reset_Base(location.Reference,left.resultdef,left.Location.Register,0,CTempPosInvalid,location.Reference.Alignment,location.Reference.Volatility);
+                          hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,Left.Location.Register,0,CTempPosInvalid,Location.Reference.Alignment,Location.Reference.Volatility);
                       end;
                     LOC_CREFERENCE,
                     LOC_REFERENCE,
@@ -385,14 +385,14 @@ implementation
                     LOC_SUBSETREF,
                     LOC_CSUBSETREF:
                       begin
-                         hlcg.Reference_Reset_Base(location.Reference,left.resultdef,
-                           hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,left.resultdef),0,CTempPosInvalid,location.Reference.Alignment,location.Reference.Volatility);
-                         hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.Location,location.Reference.Base);
+                         hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,
+                           hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Left.ResultDef),0,CTempPosInvalid,Location.Reference.Alignment,Location.Reference.Volatility);
+                         hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,Left.Location,Location.Reference.Base);
                       end;
                     LOC_CONSTANT:
                       begin
                         { can happen with @classtype(pointerconst).field }
-                        location.Reference.Offset:=left.Location.Value;
+                        Location.Reference.Offset:=Left.Location.Value;
                       end;
                     else
                       InternalError(2009092401);
@@ -402,15 +402,15 @@ implementation
                     (cs_checkpointer in CurrentSettings.LocalSwitches) and
                     not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
                   begin
-                    if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',sym,st) or
-                       (sym.typ<>ProcSym) then
+                    if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',lSym,lSymTable) or
+                       (lSym.typ<>ProcSym) then
                       InternalError(2012010602);
-                    pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
-                    ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-                    hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,location.Reference,paraloc1);
-                    ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
+                    lProcDef:=TProcDef(TProcSym(lSym).ProcdefList[0]);
+                    ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,1,lParaLoc1);
+                    hlcg.A_LoadAddr_Ref_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Location.Reference,lParaLoc1);
+                    ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc1);
                     hlcg.AllocAllCPURegisters(CurrentAsmData.CurrAsmList);
-                    hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,pd,'FPC_CHECKPOINTER',[@paraloc1],nil,false);
+                    hlcg.A_Call_Name(CurrentAsmData.CurrAsmList,lProcDef,'FPC_CHECKPOINTER',[@lParaLoc1],nil,false);
                     hlcg.DeallocAllCPURegisters(CurrentAsmData.CurrAsmList);
                     system.include(CurrentSettings.ModuleSwitches,cs_checkpointer_called);
                   end;
@@ -423,10 +423,10 @@ implementation
            end
          else
            begin
-             Location_Copy(location,left.Location);
+             Location_Copy(Location,Left.Location);
              { some abi's require that functions return (some) records in }
              { registers                                                  }
-             case location.Loc of
+             case Location.Loc of
                LOC_REFERENCE,
                LOC_CREFERENCE:
                  ;
@@ -447,102 +447,102 @@ implementation
                      -> force to memory
                    }
 
-                   if not TStoredDef(left.resultdef).Is_IntRegable or
-                      not TStoredDef(resultdef).Is_IntRegable or
+                   if not TStoredDef(Left.ResultDef).Is_IntRegable or
+                      not TStoredDef(ResultDef).Is_IntRegable or
                       { if the field spans multiple registers, we must force the record into
                         memory as well }
-                      ((left.Location.Size in [OSPair,OSSPair]) and
-                       (vs.FieldOffset div sizeof(aword)<>(vs.FieldOffset+vs.GetSize-1) div sizeof(aword))) or
-                      (location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER,
+                      ((Left.Location.Size in [OSPair,OSSPair]) and
+                       (FieldSym.FieldOffset div sizeof(aword)<>(FieldSym.FieldOffset+FieldSym.GetSize-1) div sizeof(aword))) or
+                      (Location.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER,
                         { actually, we should be able to "subscript" a constant, but this would require some code
                           which enables dumping and reading constants from a temporary memory buffer. This
                           must be done a CPU dependent way, so it is not easy and probably not worth the effort (FK)
                         }
                         LOC_CONSTANT]) then
-                     hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,location,left.resultdef)
+                     hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Location,Left.ResultDef)
                    else
                      begin
-                       if (location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
-                         if (TCgSize2Size[location.Size]<=TCgSize2Size[OS_INT]) then
+                       if (Location.Loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
+                         if (TCgSize2Size[Location.Size]<=TCgSize2Size[OS_INT]) then
                            begin
-                             hreg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
-                             cg.A_LoadMM_Reg_IntReg(CurrentAsmData.CurrAsmList,reg_cgsize(left.Location.Register),location.Size,
-                               left.Location.Register,hreg,MMS_MoveScalar);
-                             Location_Reset(left.Location,LOC_REGISTER,Int_CGSize(TCgSize2Size[left.Location.Size]));
-                             left.Location.Register:=hreg;
+                             lReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
+                             cg.A_LoadMM_Reg_IntReg(CurrentAsmData.CurrAsmList,reg_cgsize(Left.Location.Register),Location.Size,
+                               Left.Location.Register,lReg,MMS_MoveScalar);
+                             Location_Reset(Left.Location,LOC_REGISTER,Int_CGSize(TCgSize2Size[Left.Location.Size]));
+                             Left.Location.Register:=lReg;
                              { copy again, we changed left.location }
-                             Location_Copy(location,left.Location);
+                             Location_Copy(Location,Left.Location);
                            end
                          else
-                           hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,location,left.resultdef);
+                           hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Location,Left.ResultDef);
 
-                       if (left.Location.Loc = LOC_REGISTER) then
-                         location.Loc := LOC_SUBSETREG
+                       if (Left.Location.Loc = LOC_REGISTER) then
+                         Location.Loc := LOC_SUBSETREG
                        else
-                         location.Loc := LOC_CSUBSETREG;
-                       location.Size:=Def_CGSize(resultdef);
+                         Location.Loc := LOC_CSUBSETREG;
+                       Location.Size:=Def_CGSize(ResultDef);
 
-                       offsetcorrection:=0;
-                       if (left.Location.Size in [OSPair,OSSPair]) then
+                       lOffsetCorrection:=0;
+                       if (Left.Location.Size in [OSPair,OSSPair]) then
                          begin
-                           if not Is_Packed_Record_Or_Object(left.resultdef) then
-                             awordoffset:=sizeof(aword)
+                           if not Is_Packed_Record_Or_Object(Left.ResultDef) then
+                             lWordOffset:=sizeof(aword)
                            else
-                             awordoffset:=sizeof(aword)*8;
+                             lWordOffset:=sizeof(aword)*8;
 
-                           if (vs.FieldOffset>=awordoffset) xor (TargetInfo.endian=endian_big) then
-                             location.SReg.SubsetReg := left.Location.RegisterHi
+                           if (FieldSym.FieldOffset>=lWordOffset) xor (TargetInfo.endian=endian_big) then
+                             Location.SReg.SubsetReg := Left.Location.RegisterHi
                            else
-                             location.SReg.SubsetReg := left.Location.Register;
+                             Location.SReg.SubsetReg := Left.Location.Register;
 
-                           if vs.FieldOffset>=awordoffset then
-                             offsetcorrection := sizeof(aword)*8;
+                           if FieldSym.FieldOffset>=lWordOffset then
+                             lOffsetCorrection := sizeof(aword)*8;
 
-                           location.SReg.SubsetRegSize := OS_INT;
+                           Location.SReg.SubsetRegSize := OS_INT;
                          end
                        else
                          begin
-                           location.SReg.SubsetReg := left.Location.Register;
-                           location.SReg.SubsetRegSize := left.Location.Size;
+                           Location.SReg.SubsetReg := Left.Location.Register;
+                           Location.SReg.SubsetRegSize := Left.Location.Size;
                          end;
 
-                       if not Is_Packed_Record_Or_Object(left.resultdef) then
+                       if not Is_Packed_Record_Or_Object(Left.ResultDef) then
                          begin
                            if (TargetInfo.endian = ENDIAN_BIG) then
-                             location.SReg.StartBit := (TCgSize2Size[location.SReg.SubsetRegSize] - TCgSize2Size[location.Size] - vs.FieldOffset) * 8+offsetcorrection
+                             Location.SReg.StartBit := (TCgSize2Size[Location.SReg.SubsetRegSize] - TCgSize2Size[Location.Size] - FieldSym.FieldOffset) * 8+lOffsetCorrection
                            else
-                             location.SReg.StartBit := (vs.FieldOffset * 8)-offsetcorrection;
-                           location.SReg.BitLen := TCgSize2Size[location.Size] * 8;
+                             Location.SReg.StartBit := (FieldSym.FieldOffset * 8)-lOffsetCorrection;
+                           Location.SReg.BitLen := TCgSize2Size[Location.Size] * 8;
                          end
                        else
                          begin
-                           location.SReg.BitLen := resultdef.PackedBitSize;
+                           Location.SReg.BitLen := ResultDef.PackedBitSize;
                            if (TargetInfo.endian = ENDIAN_BIG) then
-                             location.SReg.StartBit := (TCgSize2Size[location.SReg.SubsetRegSize]*8 - location.SReg.BitLen) - vs.FieldOffset+offsetcorrection
+                             Location.SReg.StartBit := (TCgSize2Size[Location.SReg.SubsetRegSize]*8 - Location.SReg.BitLen) - FieldSym.FieldOffset+lOffsetCorrection
                            else
-                             location.SReg.StartBit := vs.FieldOffset-offsetcorrection;
+                             Location.SReg.StartBit := FieldSym.FieldOffset-lOffsetCorrection;
                          end;
                      end;
                  end;
                LOC_SUBSETREG,
                LOC_CSUBSETREG:
                  begin
-                   location.Size:=Def_CGSize(resultdef);
-                   if not Is_Packed_Record_Or_Object(left.resultdef) then
+                   Location.Size:=Def_CGSize(ResultDef);
+                   if not Is_Packed_Record_Or_Object(Left.ResultDef) then
                      begin
                        if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(location.SReg.StartBit, (left.resultdef.Size - TCgSize2Size[location.Size] - vs.FieldOffset) * 8)
+                         inc(Location.SReg.StartBit, (Left.ResultDef.Size - TCgSize2Size[Location.Size] - FieldSym.FieldOffset) * 8)
                        else
-                         inc(location.SReg.StartBit, vs.FieldOffset * 8);
-                       location.SReg.BitLen := TCgSize2Size[location.Size] * 8;
+                         inc(Location.SReg.StartBit, FieldSym.FieldOffset * 8);
+                       Location.SReg.BitLen := TCgSize2Size[Location.Size] * 8;
                      end
                    else
                      begin
-                       location.SReg.BitLen := resultdef.PackedBitSize;
+                       Location.SReg.BitLen := ResultDef.PackedBitSize;
                        if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(location.SReg.StartBit, left.Location.SReg.BitLen - location.SReg.BitLen - vs.FieldOffset)
+                         inc(Location.SReg.StartBit, Left.Location.SReg.BitLen - Location.SReg.BitLen - FieldSym.FieldOffset)
                        else
-                         inc(location.SReg.StartBit, vs.FieldOffset);
+                         inc(Location.SReg.StartBit, FieldSym.FieldOffset);
                      end;
                  end;
                else
@@ -550,63 +550,63 @@ implementation
              end;
            end;
 
-         if Is_ObjC_Class_Or_Protocol(left.resultdef) and
+         if Is_ObjC_Class_Or_Protocol(Left.ResultDef) and
             (TargetInfo.system in systems_objc_nfabi) then
            begin
-             if (location.Loc<>LOC_REFERENCE) or
-                (location.Reference.Index<>NR_NO) then
+             if (Location.Loc<>LOC_REFERENCE) or
+                (Location.Reference.Index<>NR_NO) then
                InternalError(2009092402);
              { the actual field offset is stored in memory (to solve the
                "fragile base class" problem: this way the layout of base
                classes can be changed without breaking programs compiled against
                earlier versions)
              }
-             asmsym:=CurrentAsmData.RefAsmSymbol(vs.MangledName,AT_DATA);
-             Reference_Reset_Symbol(tmpref,asmsym,0,VoidPointerType.Alignment,[]);
-             hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,left.resultdef,CPointerDef.getreusable(resultdef),location.Reference);
-             location.Reference.Index:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,PtrUIntType);
-             hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,PtrUIntType,PtrUIntType,tmpref,location.Reference.Index);
+             lAsmSym:=CurrentAsmData.RefAsmSymbol(FieldSym.MangledName,AT_DATA);
+             Reference_Reset_Symbol(lTempRef,lAsmSym,0,VoidPointerType.Alignment,[]);
+             hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,Left.ResultDef,CPointerDef.getreusable(ResultDef),Location.Reference);
+             Location.Reference.Index:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,PtrUIntType);
+             hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,PtrUIntType,PtrUIntType,lTempRef,Location.Reference.Index);
              { always packrecords C -> natural alignment }
-             location.Reference.Alignment:=vs.vardef.Alignment;
+             Location.Reference.Alignment:=FieldSym.vardef.Alignment;
            end
-         else if handle_platform_subscript then
+         else if Handle_Platform_Subscript then
            begin
              { done }
            end
-         else if (location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+         else if (Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
            begin
-             if not Is_Packed_Record_Or_Object(left.resultdef) then
+             if not Is_Packed_Record_Or_Object(Left.ResultDef) then
                begin
-                 inc(location.Reference.Offset,vs.FieldOffset);
-                 location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,vs.FieldOffset);
+                 inc(Location.Reference.Offset,FieldSym.FieldOffset);
+                 Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,FieldSym.FieldOffset);
                end
-             else if (vs.FieldOffset mod 8 = 0) and
-                     (resultdef.PackedBitSize mod 8 = 0) and
+             else if (FieldSym.FieldOffset mod 8 = 0) and
+                     (ResultDef.PackedBitSize mod 8 = 0) and
                      { is different in case of e.g. packenum 2 and an enum }
                      { which fits in 8 bits                                }
-                     (resultdef.Size*8 = resultdef.PackedBitSize) then
+                     (ResultDef.Size*8 = ResultDef.PackedBitSize) then
                begin
-                 inc(location.Reference.Offset,vs.FieldOffset div 8);
-                 location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,vs.FieldOffset div 8);
+                 inc(Location.Reference.Offset,FieldSym.FieldOffset div 8);
+                 Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,FieldSym.FieldOffset div 8);
                end
              else
                begin
-                 sref.Ref:=location.Reference;
-                 sref.Ref.Alignment:=1;
-                 sref.BitIndexReg:=NR_NO;
-                 inc(sref.Ref.Offset,vs.FieldOffset div 8);
-                 sref.StartBit:=vs.FieldOffset mod 8;
-                 sref.BitLen:=resultdef.PackedBitSize;
-                 if (left.Location.Loc=LOC_REFERENCE) then
-                   location.Loc:=LOC_SUBSETREF
+                 lSubsetRef.Ref:=Location.Reference;
+                 lSubsetRef.Ref.Alignment:=1;
+                 lSubsetRef.BitIndexReg:=NR_NO;
+                 inc(lSubsetRef.Ref.Offset,FieldSym.FieldOffset div 8);
+                 lSubsetRef.StartBit:=FieldSym.FieldOffset mod 8;
+                 lSubsetRef.BitLen:=ResultDef.PackedBitSize;
+                 if (Left.Location.Loc=LOC_REFERENCE) then
+                   Location.Loc:=LOC_SUBSETREF
                  else
-                   location.Loc:=LOC_CSUBSETREF;
-                 location.SRef:=sref;
+                   Location.Loc:=LOC_CSUBSETREF;
+                 Location.SRef:=lSubsetRef;
                end;
              { also update the size of the location }
-             location.Size:=Def_CGSize(resultdef);
+             Location.Size:=Def_CGSize(ResultDef);
            end;
-         paraloc1.done;
+         lParaLoc1.done;
       end;
 
 
@@ -614,26 +614,26 @@ implementation
                             TCGVECNODE
 *****************************************************************************}
 
-     function TCGVecNode.get_mul_size : asizeint;
+     function TCGVecNode.Get_Mul_Size : ASizeInt;
        begin
-         if vnf_memindex in vecnodeflags then
-          get_mul_size:=1
+         if vnf_memindex in VecNodeFlags then
+          Get_Mul_Size:=1
          else
           begin
-            if (left.resultdef.typ=arraydef) then
-             if not Is_Packed_Array(left.resultdef) then
-              get_mul_size:=TArrayDef(left.resultdef).EleSize
+            if (Left.ResultDef.typ=arraydef) then
+             if not Is_Packed_Array(Left.ResultDef) then
+              Get_Mul_Size:=TArrayDef(Left.ResultDef).EleSize
              else
-              get_mul_size:=TArrayDef(left.resultdef).ElePackedBitSize
+              Get_Mul_Size:=TArrayDef(Left.ResultDef).ElePackedBitSize
             else
-             get_mul_size:=resultdef.Size;
+             Get_Mul_Size:=ResultDef.Size;
           end
        end;
 
 
-     function TCGVecNode.get_address_type: TDef;
+     function TCGVecNode.Get_Address_Type: TDef;
        begin
-         result:=CPointerDef.getreusable(resultdef);
+         Result:=CPointerDef.getreusable(ResultDef);
        end;
 
 
@@ -645,81 +645,81 @@ implementation
      { the live range of the LOC_CREGISTER will most likely overlap the   }
      { the live range of the target LOC_(C)REGISTER)                      }
      { The passed register may be a LOC_CREGISTER as well.                }
-     procedure TCGVecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
+     procedure TCGVecNode.Update_Reference_Reg_Mul(AIndexReg: TRegister; ARegSize: TDef; AElementSize: AInt);
        var
-         hreg: TRegister;
+         lReg: TRegister;
        begin
-         hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,regsize,get_address_type,maybe_const_reg);
-         if l<>1 then
+         hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,ARegSize,Get_Address_Type,AIndexReg);
+         if AElementSize<>1 then
            begin
-             hreg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,get_address_type);
-             hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,get_address_type,l,maybe_const_reg,hreg);
-             maybe_const_reg:=hreg;
+             lReg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Get_Address_Type);
+             hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,Get_Address_Type,AElementSize,AIndexReg,lReg);
+             AIndexReg:=lReg;
            end;
-         if location.Reference.Base=NR_NO then
-           location.Reference.Base:=maybe_const_reg
-         else if location.Reference.Index=NR_NO then
-           location.Reference.Index:=maybe_const_reg
+         if Location.Reference.Base=NR_NO then
+           Location.Reference.Base:=AIndexReg
+         else if Location.Reference.Index=NR_NO then
+           Location.Reference.Index:=AIndexReg
          else
           begin
-            hreg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,get_address_type);
-            hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,resultdef,get_address_type,location.Reference,hreg);
-            Reference_Reset_Base(location.Reference,hreg,0,location.Reference.TempPos,location.Reference.Alignment,location.Reference.Volatility);
+            lReg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Get_Address_Type);
+            hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,ResultDef,Get_Address_Type,Location.Reference,lReg);
+            Reference_Reset_Base(Location.Reference,lReg,0,Location.Reference.TempPos,Location.Reference.Alignment,Location.Reference.Volatility);
             { insert new index register }
-            location.Reference.Index:=maybe_const_reg;
+            Location.Reference.Index:=AIndexReg;
           end;
           { update alignment }
-          if (location.Reference.Alignment=0) then
+          if (Location.Reference.Alignment=0) then
             InternalError(2009020704);
-          location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,l);
+          Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,AElementSize);
        end;
 
 
      { see remarks for tcgvecnode.update_reference_reg_mul above }
-     procedure TCGVecNode.update_reference_reg_packed(maybe_const_reg: TRegister; regsize: TDef; l:aint);
+     procedure TCGVecNode.Update_Reference_Reg_Packed(AIndexReg: TRegister; ARegSize: TDef; AElementSize:AInt);
        var
-         sref: TSubsetReference;
-         offsetreg, hreg: TRegister;
-         alignpower: aint;
-         temp : LongInt;
+         lSubsetRef: TSubsetReference;
+         lOffsetReg, lReg: TRegister;
+         lAlignPower: AInt;
+         lTemp : LongInt;
        begin
          { only orddefs are bitpacked. Even then we only need special code in }
          { case the bitpacked *byte size* is not a power of two, otherwise    }
          { everything can be handled using the the regular array code.        }
-         if ((l mod 8) = 0) and
-            (IsPowerOf2(l div 8,temp) or
-             not Is_Ordinal(resultdef)
+         if ((AElementSize mod 8) = 0) and
+            (IsPowerOf2(AElementSize div 8,lTemp) or
+             not Is_Ordinal(ResultDef)
 {$ifndef cpu64bitalu}
-             or Is_64BitInt(resultdef)
+             or Is_64BitInt(ResultDef)
 {$endif not cpu64bitalu}
              ) then
            begin
-             update_reference_reg_mul(maybe_const_reg,regsize,l div 8);
+             Update_Reference_Reg_Mul(AIndexReg,ARegSize,AElementSize div 8);
              exit;
            end;
-         if (l > 8*sizeof(aint)) then
+         if (AElementSize > 8*sizeof(AInt)) then
            InternalError(200608051);
-         hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,regsize,get_address_type,maybe_const_reg);
-         sref.Ref := location.Reference;
-         hreg := hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,get_address_type);
-         hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,get_address_type,TArrayDef(left.resultdef).LowRange,maybe_const_reg,hreg);
-         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,get_address_type,l,hreg);
+         hlcg.G_PtrTypeCast_Reg(CurrentAsmData.CurrAsmList,ARegSize,Get_Address_Type,AIndexReg);
+         lSubsetRef.Ref := Location.Reference;
+         lReg := hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Get_Address_Type);
+         hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SUB,Get_Address_Type,TArrayDef(Left.ResultDef).LowRange,AIndexReg,lReg);
+         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_IMUL,Get_Address_Type,AElementSize,lReg);
          { keep alignment for index }
-         sref.Ref.Alignment := left.resultdef.Alignment;
-         if not IsPowerOf2(PackedBitsLoadSize(l),temp) then
+         lSubsetRef.Ref.Alignment := Left.ResultDef.Alignment;
+         if not IsPowerOf2(PackedBitsLoadSize(AElementSize),lTemp) then
            InternalError(2006081201);
-         alignpower:=temp;
-         offsetreg := hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,get_address_type);
-         hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,get_address_type,3+alignpower,hreg,offsetreg);
-         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHL,get_address_type,alignpower,offsetreg);
-         if (sref.Ref.Base = NR_NO) then
-           sref.Ref.Base := offsetreg
-         else if (sref.Ref.Index = NR_NO) then
-           sref.Ref.Index := offsetreg
+         lAlignPower:=lTemp;
+         lOffsetReg := hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Get_Address_Type);
+         hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_SHR,Get_Address_Type,3+lAlignPower,lReg,lOffsetReg);
+         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_SHL,Get_Address_Type,lAlignPower,lOffsetReg);
+         if (lSubsetRef.Ref.Base = NR_NO) then
+           lSubsetRef.Ref.Base := lOffsetReg
+         else if (lSubsetRef.Ref.Index = NR_NO) then
+           lSubsetRef.Ref.Index := lOffsetReg
          else
            begin
-             hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,get_address_type,sref.Ref.Base,offsetreg);
-             sref.Ref.Base := offsetreg;
+             hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_ADD,Get_Address_Type,lSubsetRef.Ref.Base,lOffsetReg);
+             lSubsetRef.Ref.Base := lOffsetReg;
            end;
 
          { the if expression below is a constant evaluated at compile time, so disable the unreachable code
@@ -727,130 +727,130 @@ implementation
 {$push}
 {$warn 6018 off}
          { we can reuse hreg only if aluuinttype and get_address_type have the same size/type }
-         if ALUUIntType.Size<>get_address_type.Size then
+         if ALUUIntType.Size<>Get_Address_Type.Size then
            begin
-             sref.BitIndexReg := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ALUUIntType);
-             hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,get_address_type,ALUUIntType,hreg,sref.BitIndexReg);
+             lSubsetRef.BitIndexReg := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ALUUIntType);
+             hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,Get_Address_Type,ALUUIntType,lReg,lSubsetRef.BitIndexReg);
            end
          else
-           sref.BitIndexReg:=hreg;
+           lSubsetRef.BitIndexReg:=lReg;
 {$pop}
 
-         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,ALUUIntType,(1 shl (3+alignpower))-1,sref.BitIndexReg);
-         sref.StartBit := 0;
-         sref.BitLen := resultdef.PackedBitSize;
-         if (left.Location.Loc = LOC_REFERENCE) then
-           location.Loc := LOC_SUBSETREF
+         hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,ALUUIntType,(1 shl (3+lAlignPower))-1,lSubsetRef.BitIndexReg);
+         lSubsetRef.StartBit := 0;
+         lSubsetRef.BitLen := ResultDef.PackedBitSize;
+         if (Left.Location.Loc = LOC_REFERENCE) then
+           Location.Loc := LOC_SUBSETREF
          else
-           location.Loc := LOC_CSUBSETREF;
-         location.SRef := sref;
+           Location.Loc := LOC_CSUBSETREF;
+         Location.SRef := lSubsetRef;
        end;
 
 
-     procedure TCGVecNode.update_reference_offset(var ref: TReference; index, mulsize: ASizeInt);
+     procedure TCGVecNode.Update_Reference_Offset(var AReference: TReference; AIndex, AElementSize: ASizeInt);
        var
-         newoffset : TCGInt;
+         lNewOffset : TCGInt;
        begin
-         newoffset:=ref.Offset+index*mulsize;
+         lNewOffset:=AReference.Offset+AIndex*AElementSize;
 {$ifopt R+}
 {$ifdef cpu32bitaddr}
-         if (newoffset>high(ASizeUInt)) or (newoffset<low(asizeint)) then
+         if (lNewOffset>high(ASizeUInt)) or (lNewOffset<low(ASizeInt)) then
            message(parser_e_range_check_error)
 	 else
 {$endif}
 {$endif}
-          ref.Offset:=asizeint(newoffset);
+          AReference.Offset:=ASizeInt(lNewOffset);
        end;
 
-     procedure TCGVecNode.second_wideansistring;
+     procedure TCGVecNode.Second_WideAnsiString;
        begin
        end;
 
-     procedure TCGVecNode.second_dynamicarray;
+     procedure TCGVecNode.Second_DynamicArray;
        begin
        end;
 
 
-     function TCGVecNode.valid_index_size(size: TCgSize): boolean;
+     function TCGVecNode.Valid_Index_Size(ASize: TCgSize): Boolean;
        begin
-         result:=
-           TCgSize2Signed[size]=TCgSize2Signed[OS_ADDR];
+         Result:=
+           TCgSize2Signed[ASize]=TCgSize2Signed[OS_ADDR];
        end;
 
 
-     procedure TCGVecNode.rangecheck_array;
+     procedure TCGVecNode.RangeCheckArray;
        var
-         paraloc1,paraloc2 : TCGPara;
-         pd : TProcDef;
+         lParaLoc1,lParaLoc2 : TCGPara;
+         lProcDef : TProcDef;
        begin
          { omit range checking when this is an array access to a pointer which has been
            typecasted from an array }
-         if (ado_isconvertedpointer in TArrayDef(left.resultdef).ArrayOptions) then
+         if (ado_isconvertedpointer in TArrayDef(Left.ResultDef).ArrayOptions) then
            exit;
-         paraloc1.init;
-         paraloc2.init;
-         if Is_Dynamic_Array(left.resultdef) then
+         lParaLoc1.init;
+         lParaLoc2.init;
+         if Is_Dynamic_Array(Left.ResultDef) then
             begin
-               pd:=Search_System_Proc('fpc_dynarray_rangecheck');
-               ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-               ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,2,paraloc2);
-               if pd.Is_PushLeftRight then
+               lProcDef:=Search_System_Proc('fpc_dynarray_rangecheck');
+               ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,1,lParaLoc1);
+               ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,2,lParaLoc2);
+               if lProcDef.Is_PushLeftRight then
                  begin
-                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,left.Location,paraloc1);
-                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,right.resultdef,right.Location,paraloc2);
+                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.Location,lParaLoc1);
+                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Right.ResultDef,Right.Location,lParaLoc2);
                  end
                else
                  begin
-                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,right.resultdef,right.Location,paraloc2);
-                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,left.Location,paraloc1);
+                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Right.ResultDef,Right.Location,lParaLoc2);
+                   hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.Location,lParaLoc1);
                  end;
-               ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
-               ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc2);
-               hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@paraloc1,@paraloc2],nil).ResetIfTemp;
+               ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc1);
+               ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc2);
+               hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,lProcDef,[@lParaLoc1,@lParaLoc2],nil).ResetIfTemp;
             end;
          { for regular arrays, we don't have to do anything because the index has been
            type converted to the index type, which already inserted a range check if
            necessary }
-         paraloc1.done;
-         paraloc2.done;
+         lParaLoc1.done;
+         lParaLoc2.done;
        end;
 
-    procedure TCGVecNode.rangecheck_string;
+    procedure TCGVecNode.RangeCheckString;
       var
-        paraloc1,
-        paraloc2: TCGPara;
-        helpername: TIDString;
-        pd: TProcDef;
+        lParaLoc1,
+        lParaLoc2: TCGPara;
+        lHelperName: TIDString;
+        lProcDef: TProcDef;
       begin
-        paraloc1.init;
-        paraloc2.init;
-        case TStringDef(left.resultdef).StringType of
+        lParaLoc1.init;
+        lParaLoc2.init;
+        case TStringDef(Left.ResultDef).StringType of
           { it's the same for ansi- and wide strings }
           st_unicodestring,
           st_widestring,
           st_ansistring:
             begin
               if cs_zerobasedstrings in CurrentSettings.LocalSwitches then
-                helpername:='fpc_'+TStringDef(left.resultdef).StringTypName+'_zerobased_rangecheck'
+                lHelperName:='fpc_'+TStringDef(Left.ResultDef).StringTypName+'_zerobased_rangecheck'
               else
-                helpername:='fpc_'+TStringDef(left.resultdef).StringTypName+'_rangecheck';
-              pd:=Search_System_Proc(helpername);
-              ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-              ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,pd,2,paraloc2);
-              if pd.Is_PushLeftRight then
+                lHelperName:='fpc_'+TStringDef(Left.ResultDef).StringTypName+'_rangecheck';
+              lProcDef:=Search_System_Proc(lHelperName);
+              ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,1,lParaLoc1);
+              ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,lProcDef,2,lParaLoc2);
+              if lProcDef.Is_PushLeftRight then
                 begin
-                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,left.Location,paraloc1);
-                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,right.resultdef,right.Location,paraloc2);
+                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.Location,lParaLoc1);
+                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Right.ResultDef,Right.Location,lParaLoc2);
                 end
               else
                 begin
-                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,right.resultdef,right.Location,paraloc2);
-                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,left.resultdef,left.Location,paraloc1);
+                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Right.ResultDef,Right.Location,lParaLoc2);
+                  hlcg.A_Load_Loc_CGPara(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.Location,lParaLoc1);
                 end;
 
-              ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc1);
-              ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,paraloc2);
-              hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,pd,[@paraloc1,@paraloc2],nil).ResetIfTemp;
+              ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc1);
+              ParaManager.FreeCGPara(CurrentAsmData.CurrAsmList,lParaLoc2);
+              hlcg.G_Call_System_Proc(CurrentAsmData.CurrAsmList,lProcDef,[@lParaLoc1,@lParaLoc2],nil).ResetIfTemp;
             end;
 
           st_shortstring:
@@ -864,94 +864,94 @@ implementation
               {!!!!!!!!!!!!!!!!!}
             end;
         end;
-        paraloc1.done;
-        paraloc2.done;
+        lParaLoc1.done;
+        lParaLoc2.done;
       end;
 
-    procedure TCGVecNode.pass_generate_code;
+    procedure TCGVecNode.Pass_Generate_Code;
 
       var
-         offsetdec,
-         extraoffset : ASizeInt;
-         rightp      : PNode;
-         newsize  : TCgSize;
-         mulsize,
-         bytemulsize : ASizeInt;
-         alignpow : aint;
-         paraloc1,
-         paraloc2 : TCGPara;
-         subsetref : TSubsetReference;
-         temp : LongInt;
-         hreg : TRegister;
-         IndexDef : TDef;
+         lOffsetDecrement,
+         lExtraOffset : ASizeInt;
+         lRightNode      : PNode;
+         lNewSize  : TCgSize;
+         lElementSize,
+         lByteElementSize : ASizeInt;
+         lAlignPower : AInt;
+         lParaLoc1,
+         lParaLoc2 : TCGPara;
+         lSubsetRef : TSubsetReference;
+         lTemp : LongInt;
+         lReg : TRegister;
+         lIndexDef : TDef;
 
       begin
-         paraloc1.init;
-         paraloc2.init;
-         mulsize:=get_mul_size;
-         if not Is_Packed_Array(left.resultdef) then
-           bytemulsize:=mulsize
+         lParaLoc1.init;
+         lParaLoc2.init;
+         lElementSize:=Get_Mul_Size;
+         if not Is_Packed_Array(Left.ResultDef) then
+           lByteElementSize:=lElementSize
          else
-           bytemulsize:=mulsize div 8;
+           lByteElementSize:=lElementSize div 8;
 
-         newsize:=Def_CGSize(resultdef);
-         SecondPass(left);
-         if left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE] then
-           Location_Reset_Ref(location,left.Location.Loc,newsize,left.Location.Reference.Alignment,left.Location.Reference.Volatility)
+         lNewSize:=Def_CGSize(ResultDef);
+         SecondPass(Left);
+         if Left.Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE] then
+           Location_Reset_Ref(Location,Left.Location.Loc,lNewSize,Left.Location.Reference.Alignment,Left.Location.Reference.Volatility)
          else
-           Location_Reset_Ref(location,LOC_REFERENCE,newsize,resultdef.Alignment,[]);
+           Location_Reset_Ref(Location,LOC_REFERENCE,lNewSize,ResultDef.Alignment,[]);
 
          { an ansistring needs to be dereferenced }
-         if Is_AnsiString(left.resultdef) or
-            Is_Wide_Or_Unicode_String(left.resultdef) then
+         if Is_AnsiString(Left.ResultDef) or
+            Is_Wide_Or_Unicode_String(Left.ResultDef) then
            begin
-              if vnf_callunique in vecnodeflags then
+              if vnf_callunique in VecNodeFlags then
                 InternalError(200304236);
 
               {DM!!!!!}
-              case left.Location.Loc of
+              case Left.Location.Loc of
                 LOC_REGISTER,
                 LOC_CREGISTER :
                   begin
-                    hlcg.Reference_Reset_Base(location.Reference,left.resultdef,left.Location.Register,0,CTempPosInvalid,location.Reference.Alignment,[]);
+                    hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,Left.Location.Register,0,CTempPosInvalid,Location.Reference.Alignment,[]);
                   end;
                 LOC_CREFERENCE,
                 LOC_REFERENCE :
                   begin
-                    hlcg.Reference_Reset_Base(location.Reference,left.resultdef,hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,left.resultdef),0,CTempPosInvalid,location.Reference.Alignment,[]);
-                    hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.Location.Reference,location.Reference.Base);
+                    hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Left.ResultDef),0,CTempPosInvalid,Location.Reference.Alignment,[]);
+                    hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,Left.Location.Reference,Location.Reference.Base);
                   end;
                 LOC_CONSTANT:
                   begin
-                    hlcg.Reference_Reset_Base(location.Reference,left.resultdef,NR_NO,left.Location.Value,CTempPosInvalid,location.Reference.Alignment,[]);
+                    hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,NR_NO,Left.Location.Value,CTempPosInvalid,Location.Reference.Alignment,[]);
                   end;
                 else
                   InternalError(2002032218);
               end;
 
-              if Is_AnsiString(left.resultdef) then
-                offsetdec:=1
+              if Is_AnsiString(Left.ResultDef) then
+                lOffsetDecrement:=1
               else
-                offsetdec:=2;
-              location.Reference.Alignment:=offsetdec;
-              location.Reference.Volatility:=[];
+                lOffsetDecrement:=2;
+              Location.Reference.Alignment:=lOffsetDecrement;
+              Location.Reference.Volatility:=[];
 
               { in ansistrings/widestrings S[1] is p<w>char(S)[0] }
               if not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
-                update_reference_offset(location.Reference,-1,offsetdec);
+                Update_Reference_Offset(Location.Reference,-1,lOffsetDecrement);
            end
-         else if Is_Dynamic_Array(left.resultdef) then
+         else if Is_Dynamic_Array(Left.ResultDef) then
            begin
-              case left.Location.Loc of
+              case Left.Location.Loc of
                 LOC_REGISTER,
                 LOC_CREGISTER :
-                  hlcg.Reference_Reset_Base(location.Reference,left.resultdef,left.Location.Register,0,CTempPosInvalid,location.Reference.Alignment,[]);
+                  hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,Left.Location.Register,0,CTempPosInvalid,Location.Reference.Alignment,[]);
                 LOC_REFERENCE,
                 LOC_CREFERENCE :
                   begin
-                     hlcg.Reference_Reset_Base(location.Reference,left.resultdef,hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,left.resultdef),0,CTempPosInvalid,location.Reference.Alignment,[]);
-                     hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,
-                      left.Location.Reference,location.Reference.Base);
+                     hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,Left.ResultDef),0,CTempPosInvalid,Location.Reference.Alignment,[]);
+                     hlcg.A_Load_Ref_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,
+                      Left.Location.Reference,Location.Reference.Base);
                   end;
                 else
                   InternalError(2002032219);
@@ -960,131 +960,131 @@ implementation
                 we assume to be always aligned to a multiple of the
                 pointer size
               }
-              location.Reference.Alignment:=VoidPointerType.Size;
-              location.Reference.Volatility:=[];
+              Location.Reference.Alignment:=VoidPointerType.Size;
+              Location.Reference.Volatility:=[];
            end
          else
            begin
              { may happen in case of function results }
-             case left.Location.Loc of
+             case Left.Location.Loc of
                LOC_CREGISTER,
                LOC_REGISTER:
                  begin
-                   if not(is_constnode(right)) or (TArrayDef(left.resultdef).ElementDef.Size<>ALUSIntType.Size) then
+                   if not(Is_ConstNode(Right)) or (TArrayDef(Left.ResultDef).ElementDef.Size<>ALUSIntType.Size) then
                      begin
-                       hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-                       Location_Copy(location,left.Location);
+                       hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+                       Location_Copy(Location,Left.Location);
                      end
                    else
                      { we use location here only to get the right offset }
-                     Location_Reset_Ref(location,LOC_REFERENCE,OS_NO,1,[]);
+                     Location_Reset_Ref(Location,LOC_REFERENCE,OS_NO,1,[]);
                  end;
                LOC_CSUBSETREG,
                LOC_CMMREGISTER,
                LOC_SUBSETREG,
                LOC_MMREGISTER:
                  begin
-                   hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-                   Location_Copy(location,left.Location);
+                   hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+                   Location_Copy(Location,Left.Location);
                  end;
                LOC_CONSTANT:  { Usually 'nil' }
                  begin
-                   hlcg.Reference_Reset_Base(location.Reference,left.resultdef,NR_NO,left.Location.Value,CTempPosInvalid,location.Reference.Alignment,[]);
+                   hlcg.Reference_Reset_Base(Location.Reference,Left.ResultDef,NR_NO,Left.Location.Value,CTempPosInvalid,Location.Reference.Alignment,[]);
                  end;
                LOC_INVALID:
                  InternalError(2019061101);
                else
-                 Location_Copy(location,left.Location);
+                 Location_Copy(Location,Left.Location);
              end;
            end;
 
          { location must be memory }
-         if not(location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+         if not(Location.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
            InternalError(200411013);
 
          { offset can only differ from 0 if arraydef }
-         if (left.resultdef.typ=arraydef) and
-            not(Is_Dynamic_Array(left.resultdef)) and
-            (not(Is_Packed_Array(left.resultdef)) or
-             ((mulsize mod 8 = 0) and
-              IsPowerOf2(mulsize div 8,temp)) or
+         if (Left.ResultDef.typ=arraydef) and
+            not(Is_Dynamic_Array(Left.ResultDef)) and
+            (not(Is_Packed_Array(Left.ResultDef)) or
+             ((lElementSize mod 8 = 0) and
+              IsPowerOf2(lElementSize div 8,lTemp)) or
               { only orddefs are bitpacked }
-              not Is_Ordinal(resultdef)
+              not Is_Ordinal(ResultDef)
 {$ifndef cpu64bitalu}
-              or Is_64BitInt(resultdef)
+              or Is_64BitInt(ResultDef)
 {$endif not cpu64bitalu}
               ) then
-           update_reference_offset(location.Reference,-TArrayDef(left.resultdef).LowRange,bytemulsize);
+           Update_Reference_Offset(Location.Reference,-TArrayDef(Left.ResultDef).LowRange,lByteElementSize);
 
-         if right.nodetype=ordconstn then
+         if Right.NodeType=ordconstn then
            begin
               { offset can only differ from 0 if arraydef }
               if cs_check_range in CurrentSettings.LocalSwitches then
                 begin
-                  SecondPass(right);
-                  case left.resultdef.typ of
+                  SecondPass(Right);
+                  case Left.ResultDef.typ of
                     arraydef :
-                      rangecheck_array;
+                      RangeCheckArray;
                     stringdef :
-                      rangecheck_string;
+                      RangeCheckString;
                     else
                       ;
                   end;
                 end;
-              if not(Is_Packed_Array(left.resultdef)) or
-                 ((mulsize mod 8 = 0) and
-                  (IsPowerOf2(mulsize div 8,temp) or
+              if not(Is_Packed_Array(Left.ResultDef)) or
+                 ((lElementSize mod 8 = 0) and
+                  (IsPowerOf2(lElementSize div 8,lTemp) or
                    { only orddefs are bitpacked }
-                   not Is_Ordinal(resultdef))) then
+                   not Is_Ordinal(ResultDef))) then
                 begin
-                  extraoffset:=TOrdConstNode(right).Value.svalue;
-                  update_reference_offset(location.Reference,extraoffset,bytemulsize);
+                  lExtraOffset:=TOrdConstNode(Right).Value.svalue;
+                  Update_Reference_Offset(Location.Reference,lExtraOffset,lByteElementSize);
                   { adjust alignment after this change }
-                  location.Reference.Alignment:=NewAlignment(location.Reference.Alignment,extraoffset*bytemulsize);
+                  Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,lExtraOffset*lByteElementSize);
 
                   { actually an array in a register? }
-                  if (left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) and
-                    Is_Normal_Array(left.resultdef) then
+                  if (Left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) and
+                    Is_Normal_Array(Left.ResultDef) then
                     begin
 {$if defined(cpu64bitalu)}
-                      hreg:=left.Location.Register;
+                      lReg:=Left.Location.Register;
 {$else defined(cpu64bitalu)}
                       if TargetInfo.endian=endian_little then
                         begin
-                          if location.Reference.Offset>3 then
-                            hreg:=left.Location.Register64.RegHi
+                          if Location.Reference.Offset>3 then
+                            lReg:=Left.Location.Register64.RegHi
                           else
-                            hreg:=left.Location.Register64.RegLo;
+                            lReg:=Left.Location.Register64.RegLo;
                         end
                       else
                         begin
-                          if location.Reference.Offset>3 then
-                            hreg:=left.Location.Register64.RegLo
+                          if Location.Reference.Offset>3 then
+                            lReg:=Left.Location.Register64.RegLo
                           else
-                            hreg:=left.Location.Register64.RegHi;
+                            lReg:=Left.Location.Register64.RegHi;
                         end;
 {$endif defined(cpu64bitalu)}
 
-                      Location_Reset(location,left.Location.Loc,Def_CGSize(TArrayDef(left.resultdef).ElementDef));
-                      location.Register:=hreg;
+                      Location_Reset(Location,Left.Location.Loc,Def_CGSize(TArrayDef(Left.ResultDef).ElementDef));
+                      Location.Register:=lReg;
                     end;
                 end
               else
                 begin
-                  subsetref.Ref := location.Reference;
-                  subsetref.Ref.Alignment := left.resultdef.Alignment;
-                  if not IsPowerOf2(PackedBitsLoadSize(resultdef.PackedBitSize),temp) then
+                  lSubsetRef.Ref := Location.Reference;
+                  lSubsetRef.Ref.Alignment := Left.ResultDef.Alignment;
+                  if not IsPowerOf2(PackedBitsLoadSize(ResultDef.PackedBitSize),lTemp) then
                     InternalError(2006081212);
-                  alignpow:=temp;
-                  update_reference_offset(subsetref.Ref,(mulsize * (TOrdConstNode(right).Value.svalue-TArrayDef(left.resultdef).LowRange)) shr (3+alignpow),1 shl alignpow);
-                  subsetref.BitIndexReg := NR_NO;
-                  subsetref.StartBit := (mulsize * (TOrdConstNode(right).Value.svalue-TArrayDef(left.resultdef).LowRange)) and ((1 shl (3+alignpow))-1);
-                  subsetref.BitLen := resultdef.PackedBitSize;
-                  if (left.Location.Loc = LOC_REFERENCE) then
-                    location.Loc := LOC_SUBSETREF
+                  lAlignPower:=lTemp;
+                  Update_Reference_Offset(lSubsetRef.Ref,(lElementSize * (TOrdConstNode(Right).Value.svalue-TArrayDef(Left.ResultDef).LowRange)) shr (3+lAlignPower),1 shl lAlignPower);
+                  lSubsetRef.BitIndexReg := NR_NO;
+                  lSubsetRef.StartBit := (lElementSize * (TOrdConstNode(Right).Value.svalue-TArrayDef(Left.ResultDef).LowRange)) and ((1 shl (3+lAlignPower))-1);
+                  lSubsetRef.BitLen := ResultDef.PackedBitSize;
+                  if (Left.Location.Loc = LOC_REFERENCE) then
+                    Location.Loc := LOC_SUBSETREF
                   else
-                    location.Loc := LOC_CSUBSETREF;
-                  location.SRef := subsetref;
+                    Location.Loc := LOC_CSUBSETREF;
+                  Location.SRef := lSubsetRef;
                 end;
            end
          else
@@ -1095,72 +1095,72 @@ implementation
                  { need that fancy code (it would be }
                  { buggy)                            }
                  not(cs_check_range in CurrentSettings.LocalSwitches) and
-                 (left.resultdef.typ=arraydef) and
-                 not Is_Packed_Array(left.resultdef) then
+                 (Left.ResultDef.typ=arraydef) and
+                 not Is_Packed_Array(Left.ResultDef) then
                 begin
-                   extraoffset:=0;
-                   rightp:=actualtargetnode(@right);
-                   if rightp^.nodetype=addn then
+                   lExtraOffset:=0;
+                   lRightNode:=ActualTargetNode(@Right);
+                   if lRightNode^.NodeType=addn then
                      begin
-                        if TAddNode(rightp^).right.nodetype=ordconstn then
+                        if TAddNode(lRightNode^).Right.NodeType=ordconstn then
                           begin
-                            extraoffset:=TOrdConstNode(TAddNode(rightp^).right).Value.svalue;
-                            replacenode(rightp^,TAddNode(rightp^).left);
+                            lExtraOffset:=TOrdConstNode(TAddNode(lRightNode^).Right).Value.svalue;
+                            ReplaceNode(lRightNode^,TAddNode(lRightNode^).Left);
                           end
-                        else if TAddNode(rightp^).left.nodetype=ordconstn then
+                        else if TAddNode(lRightNode^).Left.NodeType=ordconstn then
                           begin
-                            extraoffset:=TOrdConstNode(TAddNode(rightp^).left).Value.svalue;
-                            replacenode(rightp^,TAddNode(rightp^).right);
+                            lExtraOffset:=TOrdConstNode(TAddNode(lRightNode^).Left).Value.svalue;
+                            ReplaceNode(lRightNode^,TAddNode(lRightNode^).Right);
                           end;
                      end
-                   else if rightp^.nodetype=subn then
+                   else if lRightNode^.NodeType=subn then
                      begin
-                        if TAddNode(rightp^).right.nodetype=ordconstn then
+                        if TAddNode(lRightNode^).Right.NodeType=ordconstn then
                           begin
-                            extraoffset:=-TOrdConstNode(TAddNode(rightp^).right).Value.svalue;
-                            replacenode(rightp^,TAddNode(rightp^).left);
+                            lExtraOffset:=-TOrdConstNode(TAddNode(lRightNode^).Right).Value.svalue;
+                            ReplaceNode(lRightNode^,TAddNode(lRightNode^).Left);
                           end;
                      end;
-                   update_reference_offset(location.Reference,extraoffset,mulsize);
+                   Update_Reference_Offset(Location.Reference,lExtraOffset,lElementSize);
                 end;
               { calculate from left to right }
-              if not(location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
+              if not(Location.Loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
                 InternalError(200304237);
-              SecondPass(right);
-              if (right.expectloc=LOC_JUMP)<>
-                 (right.Location.Loc=LOC_JUMP) then
+              SecondPass(Right);
+              if (Right.ExpectLoc=LOC_JUMP)<>
+                 (Right.Location.Loc=LOC_JUMP) then
                 InternalError(2006010801);
 
               { if mulsize = 1, we won't have to modify the index }
-              if not(right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
-                 not valid_index_size(right.Location.Size) then
+              if not(Right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
+                 not Valid_Index_Size(Right.Location.Size) then
                 begin
-                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,SizeUIntType,true);
-                  IndexDef:=SizeUIntType
+                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,SizeUIntType,true);
+                  lIndexDef:=SizeUIntType
                 end
               else
-                IndexDef:=right.resultdef;
+                lIndexDef:=Right.ResultDef;
 
             { produce possible range check code: }
               if cs_check_range in CurrentSettings.LocalSwitches then
                begin
-                 if left.resultdef.typ=arraydef then
-                   rangecheck_array
-                 else if (left.resultdef.typ=stringdef) then
-                   rangecheck_string;
+                 if Left.ResultDef.typ=arraydef then
+                   RangeCheckArray
+                 else if (Left.ResultDef.typ=stringdef) then
+                   RangeCheckString;
                end;
 
               { insert the register and the multiplication factor in the
                 reference }
-              if not Is_Packed_Array(left.resultdef) then
-                update_reference_reg_mul(right.Location.Register,IndexDef,mulsize)
+              if not Is_Packed_Array(Left.ResultDef) then
+                Update_Reference_Reg_Mul(Right.Location.Register,lIndexDef,lElementSize)
               else
-                update_reference_reg_packed(right.Location.Register,IndexDef,mulsize);
+                Update_Reference_Reg_Packed(Right.Location.Register,lIndexDef,lElementSize);
            end;
 
-        location.Size:=newsize;
-        paraloc1.done;
-        paraloc2.done;
+        Location.Size:=lNewSize;
+        lParaLoc1.done;
+        lParaLoc2.done;
       end;
 
 

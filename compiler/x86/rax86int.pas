@@ -82,7 +82,7 @@ Unit Rax86int;
          prevasmtoken : TAsmToken;
          ActOpsize : TOpSize;
          inexpression : boolean;
-         constructor create;override;
+         constructor Create;override;
          function is_asmopcode(const s: string):boolean;
          function is_asmoperator(const s: string):boolean;
          function is_asmdirective(const s: string):boolean;
@@ -173,12 +173,12 @@ Unit Rax86int;
         'and','or','xor','wrt','..gotpcrel','','{RN-SAE}'
       );
 
-    constructor TX86IntReader.create;
+    constructor TX86IntReader.Create;
       var
         i : TAsmOp;
       Begin
-        inherited create;
-        iasmops:=TFPHashList.create;
+        inherited Create;
+        iasmops:=TFPHashList.Create;
         for i:=firstop to lastop do
           iasmops.Add(upper(std_op2str[i]),Pointer(PtrInt(i)));
 
@@ -1459,7 +1459,7 @@ Unit Rax86int;
                            paravarsym :
                              l:=TAbstractVarSym(sym).GetSize;
                            TypeSym :
-                             l:=TTypeSym(sym).typedef.Size;
+                             l:=TTypeSym(sym).TypeDef.Size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1572,9 +1572,9 @@ Unit Rax86int;
                              end;
                            TypeSym :
                              begin
-                               if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
+                               if not(TTypeSym(sym).TypeDef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
-                               size:=TTypeSym(sym).typedef.Size;
+                               size:=TTypeSym(sym).TypeDef.Size;
                              end;
                            FieldVarSym :
                              begin
@@ -1628,7 +1628,7 @@ Unit Rax86int;
                    else if (actasmtoken<>AS_DOT) and
                            Assigned(sym) and
                            (sym.typ=TypeSym) and
-                           (TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
+                           (TTypeSym(sym).TypeDef.typ in [recorddef,objectdef]) then
                      begin
                        { just a record type (without being followed by dot)
                          evaluates to 0. Ugly, but TP7 compatible. }
@@ -1904,7 +1904,7 @@ Unit Rax86int;
                     end;
                    if GotOffset then
                     begin
-                      if oper.hasvar and (oper.opr.Ref.Base=CurrentProcInfo.framepointer) then
+                      if oper.hasvar and (oper.opr.Ref.Base=CurrentProcInfo.FramePointer) then
                        begin
                          if (oper.opr.typ=OPR_REFERENCE) then
                            oper.opr.Ref.Base:=NR_NO;
@@ -2180,7 +2180,7 @@ Unit Rax86int;
               begin
                 if (GotPlus and Negative) or GotStar then
                   Message(asmr_e_invalid_reference_syntax);
-                tmpoper:=Tx86Operand.create;
+                tmpoper:=Tx86Operand.Create;
                 BuildReference(tmpoper);
                 AddReferences(oper,tmpoper);
                 tmpoper.Free;
@@ -2203,7 +2203,7 @@ Unit Rax86int;
 
                 if actasmtoken=AS_LBRACKET then
                   begin
-                    tmpoper:=Tx86Operand.create;
+                    tmpoper:=Tx86Operand.Create;
                     BuildReference(tmpoper);
                     AddReferences(oper,tmpoper);
                     tmpoper.Free;
@@ -3095,7 +3095,7 @@ Unit Rax86int;
       curlist:=TAsmList.Create;
       { we might need to know which parameters are passed in registers }
       if not parse_generic then
-        CurrentProcInfo.generate_parameter_info;
+        CurrentProcInfo.Generate_Parameter_Info;
       { start tokenizer }
       gettoken;
       { main loop }

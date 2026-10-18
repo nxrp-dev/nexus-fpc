@@ -744,7 +744,7 @@ implementation
         dirlist := TFPHashObjectList.Create;
         { add current dir as first item (index=0) }
         TDirIndexItem.Create(dirlist,'.', 0);
-        asmline := TAsmList.create;
+        asmline := TAsmList.Create;
         loclist := TDynamicArray.Create(4096);
 
         AbbrevSearchTree:=AllocateNewAiSearchItem;
@@ -834,7 +834,7 @@ implementation
             TAIConst.create_32bit_unaligned(LongInt($FFFFFFFF)));
         CurrentAsmData.asmlists[al_dwarf_aranges].concat(
           TAIConst.create_rel_sym(offsetreltype,arangelenstart,arangeend));
-        CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.create(arangelenstart));
+        CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.Create(arangelenstart));
         CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAIConst.create_16bit_unaligned(2));
 
         if not(tf_dwarf_relative_addresses in TargetInfo.flags) then
@@ -856,7 +856,7 @@ implementation
           TAIConst.create_rel_sym(aitconst_ptr_unaligned,procentrysym,procendlabel));
         CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAIConst.Create_nil_codeptr_unaligned);
         CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAIConst.Create_nil_codeptr_unaligned);
-        CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.create(arangeend));
+        CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.Create(arangeend));
       end;
 
 
@@ -913,11 +913,11 @@ implementation
           DW_FORM_string:
             case value.VType of
               vtChar:
-                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.create(value.VChar));
+                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.Create(value.VChar));
               vtString:
-                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.create(value.VString^));
+                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.Create(value.VString^));
               vtAnsistring:
-                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.create(AnsiString(value.VAnsiString)));
+                CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.Create(AnsiString(value.VAnsiString)));
               else
                 InternalError(200601264);
             end;
@@ -1557,16 +1557,16 @@ implementation
         size : PInt;
         EleSize : PInt;
         elestrideattr : TDwarfAttribute;
-        labsym: TAsmLabel;
+        LabSym: TAsmLabel;
       begin
         if Is_Dynamic_Array(def) then
           begin
             { It's a pointer to the actual array }
-            CurrentAsmData.getaddrlabel(labsym);
+            CurrentAsmData.getaddrlabel(LabSym);
             append_entry(DW_TAG_pointer_type,false,[]);
-            append_labelentry_ref(DW_AT_type,labsym);
+            append_labelentry_ref(DW_AT_type,LabSym);
             finish_entry;
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(LabSym,0));
           end;
 
         if not Is_Packed_Array(def) then
@@ -1721,7 +1721,7 @@ implementation
           if arr.bind=AB_GLOBAL then
             CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(arr,0))
           else
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(arr,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(arr,0));
           append_entry(DW_TAG_array_type,true,[
             DW_AT_byte_size,DW_FORM_udata,def.Size,
             DW_AT_byte_stride,DW_FORM_udata,1
@@ -1853,7 +1853,7 @@ implementation
             if proc.bind=AB_GLOBAL then
               CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(proc,0))
             else
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(proc,0));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(proc,0));
             doappend;
           end
         else
@@ -1863,16 +1863,16 @@ implementation
 
     procedure TDebugInfoDwarf.beforeappenddef(list:TAsmList;def:TDef);
       var
-        labsym : TAsmSymbol;
+        LabSym : TAsmSymbol;
       begin
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIComment.Create(StrPNew('Definition '+def.TypeName)));
 
-        labsym:=def_dwarf_lab(def);
-        case labsym.bind of
+        LabSym:=def_dwarf_lab(def);
+        case LabSym.bind of
           AB_GLOBAL:
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(LabSym,0));
           AB_LOCAL:
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(LabSym,0));
           else
             InternalError(2013082001);
         end;
@@ -1926,44 +1926,44 @@ implementation
               a pointer to the actual struct) }
 
             { implicit pointer }
-            CurrentAsmData.getaddrlabel(TAsmLabel(pointer(labsym)));
+            CurrentAsmData.getaddrlabel(TAsmLabel(pointer(LabSym)));
             append_entry(DW_TAG_pointer_type,false,[]);
-            append_labelentry_ref(DW_AT_type,labsym);
+            append_labelentry_ref(DW_AT_type,LabSym);
             finish_entry;
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(LabSym,0));
           end;
 
         if Assigned(def.TypeSym) and
            not(df_generic in def.DefOptions) then
           begin
-            CurrentAsmData.getaddrlabel(TAsmLabel(pointer(labsym)));
+            CurrentAsmData.getaddrlabel(TAsmLabel(pointer(LabSym)));
             append_entry(DW_TAG_typedef,false,[
               DW_AT_name,DW_FORM_string,symname(def.TypeSym, false)+#0
             ]);
             { if def.typesym.Owner.symtabletype=globalsymtable then
               append_attribute(DW_AT_external,DW_FORM_flag,[true]); }
-            append_labelentry_ref(DW_AT_type,labsym);
+            append_labelentry_ref(DW_AT_type,LabSym);
             finish_entry;
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(LabSym,0));
           end
       end;
 
 
     procedure TDebugInfoDwarf.afterappenddef(list:TAsmList;def:TDef);
       var
-        labsym : TAsmSymbol;
+        LabSym : TAsmSymbol;
       begin
         { end of the symbol }
-        labsym:=def_dwarf_lab(def);
-        CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbolEnd.Create(labsym));
+        LabSym:=def_dwarf_lab(def);
+        CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbolEnd.Create(LabSym));
         { create a derived reference type for pass-by-reference parameters }
         { (gdb doesn't support DW_AT_variable_parameter yet)               }
-        labsym:=def_dwarf_ref_lab(def);
-        case labsym.bind of
+        LabSym:=def_dwarf_ref_lab(def);
+        case LabSym.bind of
           AB_GLOBAL:
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(LabSym,0));
           AB_LOCAL:
-            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(labsym,0));
+            CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(LabSym,0));
           else
             InternalError(2013082002);
         end;
@@ -2118,7 +2118,7 @@ implementation
           begin
             { mark end of procedure }
             CurrentAsmData.getlabel(procendlabel,alt_dbgtype);
-            CurrentAsmData.asmlists[al_procedures].insertbefore(TAILabel.create(procendlabel),def.ProcEndTAI);
+            CurrentAsmData.asmlists[al_procedures].insertbefore(TAILabel.Create(procendlabel),def.ProcEndTAI);
 
             procentry := def.MangledName;
 
@@ -2311,7 +2311,7 @@ implementation
 
     procedure TDebugInfoDwarf.appendsym_var_with_name_type_offset(list:TAsmList; sym:TAbstractNormalVarSym; const name: string; def: TDef; offset: PInt; const flags: TDwarfVarSymFlags);
       var
-        templist : TAsmList;
+        TempList : TAsmList;
         blocksize,size_of_int : LongInt;
         tag : TDwarfTag;
         has_high_reg : boolean;
@@ -2330,7 +2330,7 @@ implementation
         if (sym.owner.SymTableType=LocalSymTable) and (sym.refs=0) then
           exit;
 
-        templist:=TAsmList.create;
+        TempList:=TAsmList.Create;
 
         case sym.LocAlloc.Loc of
           LOC_REGISTER,
@@ -2354,34 +2354,34 @@ implementation
                   not(vo_has_local_copy in sym.VarOptions) and
                   not Is_Open_String(sym.vardef) and (dreg>=0) then
                 begin
-                  templist.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
-                  templist.concat(TAIConst.create_uleb128bit(dreg));
-                  templist.concat(TAIConst.create_sleb128bit(0));
+                  TempList.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
+                  TempList.concat(TAIConst.create_uleb128bit(dreg));
+                  TempList.concat(TAIConst.create_sleb128bit(0));
                   blocksize:=1+LengthULEB128(dreg)+LengthSLEB128(0);
                 end
               else
                 begin
                   if has_high_reg then
                     begin
-                      templist.concat(TAIComment.create(StrPNew('high:low reg pair variable')));
+                      TempList.concat(TAIComment.Create(StrPNew('high:low reg pair variable')));
                       size_of_int:=sizeof(aint);
-                      templist.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
-                      templist.concat(TAIConst.create_uleb128bit(dreg));
+                      TempList.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
+                      TempList.concat(TAIConst.create_uleb128bit(dreg));
                       blocksize:=1+LengthULEB128(dreg);
-                      templist.concat(TAIConst.create_8bit(ord(DW_OP_piece)));
-                      templist.concat(TAIConst.create_uleb128bit(size_of_int));
+                      TempList.concat(TAIConst.create_8bit(ord(DW_OP_piece)));
+                      TempList.concat(TAIConst.create_uleb128bit(size_of_int));
                       blocksize:=blocksize+1+LengthULEB128(size_of_int);
-                      templist.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
-                      templist.concat(TAIConst.create_uleb128bit(dreghigh));
+                      TempList.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
+                      TempList.concat(TAIConst.create_uleb128bit(dreghigh));
                       blocksize:=blocksize+1+LengthULEB128(dreghigh);
-                      templist.concat(TAIConst.create_8bit(ord(DW_OP_piece)));
-                      templist.concat(TAIConst.create_uleb128bit(size_of_int));
+                      TempList.concat(TAIConst.create_8bit(ord(DW_OP_piece)));
+                      TempList.concat(TAIConst.create_uleb128bit(size_of_int));
                       blocksize:=blocksize+1+LengthULEB128(size_of_int);
                     end
                   else if (dreg>=0) then
                     begin
-                      templist.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
-                      templist.concat(TAIConst.create_uleb128bit(dreg));
+                      TempList.concat(TAIConst.create_8bit(ord(DW_OP_regx)));
+                      TempList.concat(TAIConst.create_uleb128bit(dreg));
                       blocksize:=1+LengthULEB128(dreg);
                     end;
                  end;
@@ -2397,23 +2397,23 @@ implementation
                           begin
                             case sizeof(PUint) of
                               2:
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_const2u)));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_const2u)));
                               4:
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_const4u)));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_const4u)));
                               8:
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_const8u)));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_const8u)));
                               else
                                 InternalError(2019100501);
                             end;
 {$push}
 {$warn 6018 off}            { Unreachable code due to compile time evaluation }
-                            templist.concat(TAIConst.Create_type_name(aitconst_dtpoff,sym.MangledName,0));
+                            TempList.concat(TAIConst.Create_type_name(aitconst_dtpoff,sym.MangledName,0));
                             { so far, aitconst_dtpoff is solely 32 bit }
                             if (sizeof(PUint)=8) and (TargetInfo.endian=endian_little) then
-                              templist.concat(TAIConst.create_32bit(0));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_GNU_push_tls_address)));
+                              TempList.concat(TAIConst.create_32bit(0));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_GNU_push_tls_address)));
                             if (sizeof(PUint)=8) and (TargetInfo.endian=endian_big) then
-                              templist.concat(TAIConst.create_32bit(0));
+                              TempList.concat(TAIConst.create_32bit(0));
 {$pop}
 
                             blocksize:=2+sizeof(PUint);
@@ -2423,32 +2423,32 @@ implementation
                             { The existing debugger contract exposes the main
                               context. Resolve it through the image descriptor,
                               rather than describing the metadata as a value. }
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_addr)));
-                            templist.concat(TAIConst.Create_type_name(aitconst_ptr_unaligned,sym.MangledName,0));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_dup)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_plus_uconst)));
-                            templist.concat(TAIConst.create_uleb128bit(4*sizeof(PUint)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_swap)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_plus_uconst)));
-                            templist.concat(TAIConst.create_uleb128bit(sizeof(PUint)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_plus)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_addr)));
+                            TempList.concat(TAIConst.Create_type_name(aitconst_ptr_unaligned,sym.MangledName,0));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_dup)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_plus_uconst)));
+                            TempList.concat(TAIConst.create_uleb128bit(4*sizeof(PUint)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_swap)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_plus_uconst)));
+                            TempList.concat(TAIConst.create_uleb128bit(sizeof(PUint)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_plus)));
                             blocksize:=9+sizeof(PUint)+LengthULEB128(4*sizeof(PUint))+LengthULEB128(sizeof(PUint));
                             if offset<>0 then
                               begin
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_consts)));
-                                templist.concat(TAIConst.create_sleb128bit(offset));
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_plus)));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_consts)));
+                                TempList.concat(TAIConst.create_sleb128bit(offset));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_plus)));
                                 inc(blocksize,2+LengthSLEB128(offset));
                               end;
                           end;
                       end
                     else
                       begin
-                        templist.concat(TAIConst.create_8bit(ord(DW_OP_addr)));
-                        templist.concat(TAIConst.Create_type_name(aitconst_ptr_unaligned,sym.MangledName,offset));
+                        TempList.concat(TAIConst.create_8bit(ord(DW_OP_addr)));
+                        TempList.concat(TAIConst.Create_type_name(aitconst_ptr_unaligned,sym.MangledName,offset));
                         blocksize:=1+sizeof(PUint);
 
                       end;
@@ -2464,8 +2464,8 @@ implementation
                       begin
                         if is_fbreg(sym.LocAlloc.Reference.Base) then
                           begin
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_fbreg)));
-                            templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_fbreg)));
+                            TempList.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
                             blocksize:=1+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                           end
                         else
@@ -2473,15 +2473,15 @@ implementation
                             dreg:=dwarf_reg(sym.LocAlloc.Reference.Base);
                             if dreg<=31 then
                               begin
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_breg0)+dreg));
-                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_breg0)+dreg));
+                                TempList.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
                                 blocksize:=1+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                               end
                             else
                               begin
-                                templist.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
-                                templist.concat(TAIConst.create_uleb128bit(dreg));
-                                templist.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
+                                TempList.concat(TAIConst.create_8bit(ord(DW_OP_bregx)));
+                                TempList.concat(TAIConst.create_uleb128bit(dreg));
+                                TempList.concat(TAIConst.create_sleb128bit(sym.LocAlloc.Reference.Offset+offset));
                                 blocksize:=1+LengthULEB128(dreg)+LengthSLEB128(sym.LocAlloc.Reference.Offset+offset);
                               end;
                           end;
@@ -2496,7 +2496,7 @@ implementation
                             not(vo_has_local_copy in sym.VarOptions) and
                             not Is_Open_String(sym.vardef) then
                           begin
-                            templist.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
+                            TempList.concat(TAIConst.create_8bit(ord(DW_OP_deref)));
                             inc(blocksize);
                           end
 {$endif not gdb_supports_DW_AT_variable_parameter}
@@ -2578,7 +2578,7 @@ implementation
             DW_AT_location,DW_FORM_block1,blocksize
             ]);
         { append block data }
-        CurrentAsmData.asmlists[al_dwarf_info].ConcatList(templist);
+        CurrentAsmData.asmlists[al_dwarf_info].ConcatList(TempList);
         { Mark self as artificial for methods, because gdb uses the fact
           whether or not the first parameter of a method is artificial to
           distinguish regular from static methods (since there are no
@@ -2589,8 +2589,8 @@ implementation
         append_labelentry_ref(DW_AT_type,def_dwarf_lab(def));
 
 
-        templist.free;
-        templist := nil;
+        TempList.free;
+        TempList := nil;
 
         finish_entry;
       end;
@@ -2791,7 +2791,7 @@ implementation
             begin
               { write dummy for now }
               AddConstToAbbrev(ord(DW_FORM_string));
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.create(''));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAIString.Create(''));
               CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(0));
             end;
           constord:
@@ -2907,20 +2907,20 @@ implementation
       begin
         { just queue the def if needed, beforeappenddef will
           emit the typedef if necessary }
-        def_dwarf_lab(sym.typedef);
+        def_dwarf_lab(sym.TypeDef);
       end;
 
 
     procedure TDebugInfoDwarf.appendsym_absolute(list:TAsmList;sym:TAbsoluteVarSym);
       var
-        templist : TAsmList;
+        TempList : TAsmList;
         blocksize : LongInt;
         SymList : PPropAccessListItem;
         tosym: TAbstractVarSym;
         offset: PInt;
         flags: TDwarfVarSymFlags;
       begin
-        templist:=TAsmList.create;
+        TempList:=TAsmList.Create;
         case TAbsoluteVarSym(sym).AbsTyp of
           toaddr :
             begin
@@ -2932,14 +2932,14 @@ implementation
                     however I doubt that gdb supports this (FK) }
                  end;
                *)
-               templist.concat(TAIConst.create_8bit(3));
-               templist.concat(TAIConst.create_int_dataptr_unaligned(sym.AddrOffset));
+               TempList.concat(TAIConst.create_8bit(3));
+               TempList.concat(TAIConst.create_int_dataptr_unaligned(sym.AddrOffset));
                blocksize:=1+sizeof(PUint);
             end;
           toasm :
             begin
-              templist.concat(TAIConst.create_8bit(3));
-              templist.concat(TAIConst.create_type_name(aitconst_ptr_unaligned,sym.MangledName,0));
+              TempList.concat(TAIConst.create_8bit(3));
+              TempList.concat(TAIConst.create_type_name(aitconst_ptr_unaligned,sym.MangledName,0));
               blocksize:=1+sizeof(PUint);
             end;
           tovar:
@@ -2954,8 +2954,8 @@ implementation
                     include(flags,dvf_force_local_var);
                   appendsym_var_with_name_type_offset(list,TAbstractNormalVarSym(tosym),symname(sym, false),TAbstractVarSym(sym).vardef,offset,flags);
                 end;
-              templist.free;
-              templist := nil;
+              TempList.free;
+              TempList := nil;
               exit;
             end;
         end;
@@ -2971,11 +2971,11 @@ implementation
           DW_AT_location,DW_FORM_block1,blocksize
           ]);
         { append block data }
-        CurrentAsmData.asmlists[al_dwarf_info].ConcatList(templist);
+        CurrentAsmData.asmlists[al_dwarf_info].ConcatList(TempList);
         append_labelentry_ref(DW_AT_type,def_dwarf_lab(sym.vardef));
 
-        templist.free;
-        templist := nil;
+        TempList.free;
+        TempList := nil;
 
         finish_entry;
       end;
@@ -2989,7 +2989,7 @@ implementation
 
     procedure TDebugInfoDwarf.insertmoduleinfo;
       var
-        templist: TAsmList;
+        TempList: TAsmList;
         linelist: TAsmList;
         lbl   : TAsmLabel;
         n,m,found_dot_dir: Integer;
@@ -3027,25 +3027,25 @@ implementation
           end;
 
         { insert .Ldebug_abbrev0 label }
-        templist:=TAsmList.create;
-        new_section(templist,sec_debug_abbrev,'',0);
-        templist.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_abbrevsection0',AT_METADATA,0,VoidPointerType));
+        TempList:=TAsmList.Create;
+        new_section(TempList,sec_debug_abbrev,'',0);
+        TempList.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_abbrevsection0',AT_METADATA,0,VoidPointerType));
         { add any extra stuff which needs to be in the abbrev section, but before    }
         { the actual abbreviations, in between the symbol above and below, i.e. here }
-        templist.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_abbrev0',AT_METADATA,0,VoidPointerType));
-        CurrentAsmData.asmlists[al_start].InsertList(templist);
-        templist.free;
+        TempList.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_abbrev0',AT_METADATA,0,VoidPointerType));
+        CurrentAsmData.asmlists[al_start].InsertList(TempList);
+        TempList.free;
 
         { insert .Ldebug_line0 label }
-        templist:=TAsmList.create;
-        new_section(templist,sec_debug_line,'',0);
-        templist.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_linesection0',AT_METADATA,0,VoidPointerType));
+        TempList:=TAsmList.Create;
+        new_section(TempList,sec_debug_line,'',0);
+        TempList.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_linesection0',AT_METADATA,0,VoidPointerType));
         { add any extra stuff which needs to be in the line section, but before  }
         { the actual line info, in between the symbol above and below, i.e. here }
-        templist.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_line0',AT_METADATA,0,VoidPointerType));
-        CurrentAsmData.asmlists[al_start].InsertList(templist);
-        templist.free;
-        templist := nil;
+        TempList.concat(TAISymbol.createname(TargetAsm.labelprefix+'debug_line0',AT_METADATA,0,VoidPointerType));
+        CurrentAsmData.asmlists[al_start].InsertList(TempList);
+        TempList.free;
+        TempList := nil;
 
         { finalize line info if the unit doesn't contain any function/ }
         { procedure/init/final code                                    }
@@ -3062,7 +3062,7 @@ implementation
           linelist.concat(TAIConst.create_32bit_unaligned(LongInt($FFFFFFFF)));
         linelist.concat(TAIConst.create_rel_sym(offsetreltype,
           lbl,CurrentAsmData.DefineAsmSymbol(TargetAsm.labelprefix+'edebug_line0',AB_LOCAL,AT_METADATA,VoidPointerType)));
-        linelist.concat(TAILabel.create(lbl));
+        linelist.concat(TAILabel.Create(lbl));
 
         { version }
         linelist.concat(TAIConst.create_16bit_unaligned(dwarf_version));
@@ -3079,7 +3079,7 @@ implementation
         CurrentAsmData.getlabel(lbl,alt_dbgfile);
         linelist.concat(TAIConst.create_rel_sym(offsetreltype,
           lbl,CurrentAsmData.DefineAsmSymbol(TargetAsm.labelprefix+'ehdebug_line0',AB_LOCAL,AT_METADATA,VoidPointerType)));
-        linelist.concat(TAILabel.create(lbl));
+        linelist.concat(TAILabel.Create(lbl));
 
         { minimum_instruction_length }
         linelist.concat(TAIConst.create_8bit(1));
@@ -3151,7 +3151,7 @@ implementation
             { directory_entry count }
             linelist.concat(TAIConst.create_8bit(dirlist.Count - found_dot_dir + 1));
             { directory_entry 0 / DWARF-5 needs current dir FIRST }
-            linelist.concat(TAIString.create(BSToSlash(FixPath(GetCurrentDir,false))+#0));
+            linelist.concat(TAIString.Create(BSToSlash(FixPath(GetCurrentDir,false))+#0));
           end;
 
         { include_directories }
@@ -3163,7 +3163,7 @@ implementation
               Continue;
             { Write without trailing path delimiter and also don't prefix with ./ for current dir (already done while adding to dirlist }
 
-            linelist.concat(TAIString.create(ditem.Name+#0));
+            linelist.concat(TAIString.Create(ditem.Name+#0));
           end;
         if dwarf_version < 5 then
           linelist.concat(TAIConst.create_8bit(0));
@@ -3186,7 +3186,7 @@ implementation
             { file count }
             linelist.concat(TAIConst.create_8bit(flist.Count+1));
             { file name }
-            linelist.concat(TAIString.create(CurrentModule.SourceFiles.Get_File(1).name+#0));
+            linelist.concat(TAIString.Create(CurrentModule.SourceFiles.Get_File(1).name+#0));
             { directory index }
             linelist.concat(TAIConst.create_uleb128bit(0));
             { last modification }
@@ -3200,7 +3200,7 @@ implementation
           begin
             fitem := TFileIndexItem(flist[n]);
             { file name }
-            linelist.concat(TAIString.create(fitem.Name+#0));
+            linelist.concat(TAIString.Create(fitem.Name+#0));
             { directory index }
             linelist.concat(TAIConst.create_uleb128bit(fitem.DirIndex));
             { last modification }
@@ -3252,8 +3252,8 @@ implementation
 
         currabbrevnumber:=0;
 
-        defnumberlist:=TFPObjectList.create(false);
-        deftowritelist:=TFPObjectList.create(false);
+        defnumberlist:=TFPObjectList.Create(false);
+        deftowritelist:=TFPObjectList.Create(false);
 
         { not exported (FK)
             FILEREC
@@ -3261,7 +3261,7 @@ implementation
         }
         vardatatype:=Try_Search_System_Type('TVARDATA');
         if Assigned(vardatatype) then
-          vardatadef:=TRecordDef(vardatatype.typedef);
+          vardatadef:=TRecordDef(vardatatype.TypeDef);
 
         if TargetInfo.system in systems_windows then
           begin
@@ -3285,7 +3285,7 @@ implementation
               sec_debug_ranges,FWin64CUSectionKey+'$A',0);
             FWin64RangesStart:=CurrentAsmData.DefineAsmSymbol(
               TargetAsm.labelprefix+'debug_ranges0',AB_LOCAL,AT_METADATA,VoidPointerType);
-            CurrentAsmData.asmlists[al_dwarf_ranges].concat(TAISymbol.create(FWin64RangesStart,0));
+            CurrentAsmData.asmlists[al_dwarf_ranges].concat(TAISymbol.Create(FWin64RangesStart,0));
             { Base-address selection entry with an explicit zero base. }
             CurrentAsmData.asmlists[al_dwarf_ranges].concat(TAIConst.Create_int_codeptr_unaligned(-1));
             CurrentAsmData.asmlists[al_dwarf_ranges].concat(TAIConst.Create_nil_codeptr_unaligned);
@@ -3303,7 +3303,7 @@ implementation
             CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAIConst.create_rel_sym(offsetreltype,
               arangestartlabel,CurrentAsmData.DefineAsmSymbol(TargetAsm.labelprefix+'earanges0',AB_LOCAL,AT_METADATA,VoidPointerType)));
 
-            CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.create(arangestartlabel));
+            CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAILabel.Create(arangestartlabel));
 
             CurrentAsmData.asmlists[al_dwarf_aranges].concat(TAIConst.create_16bit_unaligned(2));
 
@@ -3336,7 +3336,7 @@ implementation
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_rel_sym(offsetreltype,
           lenstartlabel,CurrentAsmData.DefineAsmSymbol(TargetAsm.labelprefix+'edebug_info0',AB_LOCAL,AT_METADATA,VoidPointerType)));
 
-        CurrentAsmData.asmlists[al_dwarf_info].concat(TAILabel.create(lenstartlabel));
+        CurrentAsmData.asmlists[al_dwarf_info].concat(TAILabel.Create(lenstartlabel));
         { version }
         CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_16bit_unaligned(dwarf_version));
         insert_cu_header_after_version;
@@ -3503,8 +3503,8 @@ implementation
           else
             result:='self'
         else if (sym.typ=TypeSym) and
-                Is_ObjC_Class_Or_Protocol(TTypeSym(sym).typedef) then
-          result:=TObjectDef(TTypeSym(sym).typedef).ObjExtName^
+                Is_ObjC_Class_Or_Protocol(TTypeSym(sym).TypeDef) then
+          result:=TObjectDef(TTypeSym(sym).TypeDef).ObjExtName^
         else if (ds_dwarf_method_class_prefix in CurrentSettings.DebugSwitches) and
                 (sym.typ=ProcSym) and
                 (TProcSym(sym).owner.SymTableType in [objectsymtable,recordsymtable]) then
@@ -3651,7 +3651,7 @@ implementation
                   begin
                     { set address }
                     CurrentAsmData.getlabel(currlabel, alt_dbgline);
-                    list.insertbefore(TAILabel.create(currlabel), hp);
+                    list.insertbefore(TAILabel.Create(currlabel), hp);
 
                     asmline.concat(TAIComment.Create(StrPNew('['+ToStr(currfileinfo.line)+':'+ToStr(currfileinfo.column)+']')));
 
@@ -3726,7 +3726,7 @@ implementation
           begin
            { set address for end (see appendix 3 of dwarf 2 specs) }
             CurrentAsmData.getlabel(currlabel, alt_dbgline);
-            list.insertafter(TAILabel.create(currlabel), hpend);
+            list.insertafter(TAILabel.Create(currlabel), hpend);
             asmline.concat(TAIConst.create_8bit(DW_LNS_extended_op));
             asmline.concat(TAIConst.create_uleb128bit(1+sizeof(PInt)));
             asmline.concat(TAIConst.create_8bit(DW_LNE_set_address));
@@ -3826,7 +3826,7 @@ implementation
             if not(tf_dwarf_only_local_labels in TargetInfo.flags) then
               CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(def_dwarf_class_struct_lab(def),0))
             else
-              CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(def_dwarf_class_struct_lab(def),0));
+              CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(def_dwarf_class_struct_lab(def),0));
           end;
         if Assigned(objectname) then
           append_entry(DW_TAG_class_type,true,[
@@ -3957,7 +3957,7 @@ implementation
                 if lab.bind=AB_GLOBAL then
                   CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create_global(lab,0))
                 else
-                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(lab,0));
+                  CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(lab,0));
                 { Sets of e.g. [1..5] are actually stored as a set of [0..7],
                   so write the exact boundaries of the set here. Let's hope no
                   debugger ever rejects this because this "subrange" type can
@@ -4296,7 +4296,7 @@ implementation
           append_labelentry_ref(DW_AT_type,obj);
           finish_entry;
 
-          CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(obj,0));
+          CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(obj,0));
         end;
 
       procedure doparent(isinterface: boolean);
@@ -4461,7 +4461,7 @@ implementation
         fs := TFieldVarSym(vardatadef.SymTable.Find('VTYPE'));
         if (fs = nil) or (fs.typ <> FieldVarSym) then
           InternalError(200609271);
-        CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.create(lbl,0));
+        CurrentAsmData.asmlists[al_dwarf_info].concat(TAISymbol.Create(lbl,0));
         appendsym_fieldvar(list,fs);
 
         { variants }

@@ -53,7 +53,7 @@ interface
           shlink,
           shinfo,
           shentsize : LongInt;
-          constructor create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);override;
+          constructor Create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);override;
           constructor create_ext(aobjdata:TObjData;const Aname:string;Ashtype,Ashflags:LongInt;Aalign:LongInt;Aentsize:LongInt);
           constructor create_reloc(aobjdata:TObjData;const Aname:string;allocflag:boolean);
           procedure writeReloc_internal(aTarget:TObjSection;offset:aword;len:byte;reltype:TObjRelocationType);override;
@@ -63,7 +63,7 @@ interface
        public
          fstrsec: TObjSection;
          symidx: LongInt;
-         constructor create(aObjData:TObjData);reintroduce;
+         constructor Create(aObjData:TObjData);reintroduce;
          procedure writeSymbol(objsym:TObjSymbol;nameidx:LongWord=0);
          procedure writeInternalSymbol(avalue:aword;astridx:LongWord;ainfo:byte;ashndx:word);
        end;
@@ -72,7 +72,7 @@ interface
        public
          ident: TELFIdent;
          flags: LongWord;
-         constructor create(const n:string);override;
+         constructor Create(const n:string);override;
          function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
          procedure writereloc(data:aint;len:aword;p:TObjSymbol;reltype:TObjRelocationType);override;
        end;
@@ -96,7 +96,7 @@ interface
        end;
 
        TElfAssembler = class(TInternalAssembler)
-         constructor create(info: PAsmInfo; smart:boolean);override;
+         constructor Create(info: PAsmInfo; smart:boolean);override;
        end;
 
        PSectionRec=^TSectionRec;
@@ -157,7 +157,7 @@ interface
        public
          soname_strofs: LongWord;
          vernaux_count: LongWord;
-         constructor create(const n:string);override;
+         constructor Create(const n:string);override;
          destructor Destroy;override;
          property versiondefs:TFPHashObjectList read FVersionDefs;
        end;
@@ -283,9 +283,9 @@ implementation
                                TElfObjSection
 ****************************************************************************}
 
-    constructor TElfObjSection.create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);
+    constructor TElfObjSection.Create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);
       begin
-        inherited create(AList,Aname,Aalign,aoptions);
+        inherited Create(AList,Aname,Aalign,aoptions);
         index:=0;
         shstridx:=0;
         encodesechdrflags(aoptions,shtype,shflags);
@@ -299,7 +299,7 @@ implementation
         aoptions : TObjSectionOptions;
       begin
         decodesechdrflags(Ashtype,Ashflags,aoptions);
-        inherited create(aobjdata.ObjSectionList,Aname,Aalign,aoptions);
+        inherited Create(aobjdata.ObjSectionList,Aname,Aalign,aoptions);
         objdata:=aobjdata;
         index:=0;
         shstridx:=0;
@@ -351,9 +351,9 @@ implementation
                             TElfObjData
 ****************************************************************************}
 
-    constructor TElfObjData.create(const n:string);
+    constructor TElfObjData.Create(const n:string);
       begin
-        inherited create(n);
+        inherited Create(n);
         CObjSection:=TElfObjSection;
       end;
 
@@ -564,13 +564,13 @@ implementation
                             TElfDynamicObjData
 ****************************************************************************}
 
-    constructor TElfDynamicObjData.create(const n:string);
+    constructor TElfDynamicObjData.Create(const n:string);
       begin
         inherited Create(n);
-        FVersionDefs:=TFPHashObjectList.create(true);
+        FVersionDefs:=TFPHashObjectList.Create(true);
         { Default symversions with indices 0 and 1 }
-        TElfVersionDef.create(FVersionDefs,'*local*');
-        TElfVersionDef.create(FVersionDefs,'*global*');
+        TElfVersionDef.Create(FVersionDefs,'*local*');
+        TElfVersionDef.Create(FVersionDefs,'*global*');
       end;
 
 
@@ -589,7 +589,7 @@ implementation
     const
       symsectypes: array[boolean] of LongWord = (SHT_SYMTAB,SHT_DYNSYM);
 
-    constructor TElfSymtab.create(aObjData:TObjData);
+    constructor TElfSymtab.Create(aObjData:TObjData);
       begin
         create_ext(aObjData,'.symtab',SHT_SYMTAB,0,sizeof(PInt),sizeof(TELFSymbol));
         fstrsec:=TElfObjSection.create_ext(aObjData,'.strtab',SHT_STRTAB,0,1,0);
@@ -687,7 +687,7 @@ implementation
                             TElfObjectOutput
 ****************************************************************************}
 
-    constructor TElfObjectOutput.create(AWriter:TObjectWriter);
+    constructor TElfObjectOutput.Create(AWriter:TObjectWriter);
       begin
         inherited Create(AWriter);
         CObjData:=TElfObjData;
@@ -865,7 +865,7 @@ implementation
         with data do
          begin
            { default sections }
-           symtabsect:=TElfSymtab.create(data);
+           symtabsect:=TElfSymtab.Create(data);
            shstrtabsect:=TElfObjSection.create_ext(data,'.shstrtab',SHT_STRTAB,0,1,0);
            { "no executable stack" marker }
            { TODO: used by OpenBSD/NetBSD as well? }

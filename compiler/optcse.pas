@@ -52,7 +52,7 @@ unit optcse;
       CUtils,CClasses,
       nutils,compinnr,
       nbas,nld,ninl,ncal,nadd,nmem,ncnv,
-      pass_1,
+      Pass_1,
       ProcInfo,
       paramgr,
       cpubase,
@@ -71,7 +71,7 @@ unit optcse;
       begin
         if (n.nodetype in cseinvariant) or
           ((n.nodetype=inlinen) and
-           (TInlineNode(n).inlinenumber in [in_length_x,in_assigned_x,in_sqr_real,in_sqrt_real,in_sin_real,in_cos_real,in_abs_long,
+           (TInlineNode(n).InlineNumber in [in_length_x,in_assigned_x,in_sqr_real,in_sqrt_real,in_sin_real,in_cos_real,in_abs_long,
              in_abs_real,in_exp_real,in_ln_real,in_pi_real,in_popcnt_x,in_arctan_real,in_round_real,in_trunc_real,
              { cse on fma will still not work because it would require proper handling of call nodes
                with more than one parameter }
@@ -83,8 +83,8 @@ unit optcse;
           ) or
           ((n.nodetype=callparan) and not(Assigned(TCallParaNode(n).right))) or
           ((n.nodetype=loadn) and
-            not((TLoadNode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) and
-                (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions))
+            not((TLoadNode(n).SymTableEntry.typ in [staticvarsym,localvarsym,paravarsym]) and
+                (vo_volatile in TAbstractVarSym(TLoadNode(n).SymTableEntry).VarOptions))
           ) then
           result:=fen_true
         else
@@ -144,14 +144,14 @@ unit optcse;
           if (TBinaryNode(n).left.nodetype=t) and Is_Boolean(TBinaryNode(n).left.resultdef) then
             recurseintobooleanchain(t,TBinaryNode(n).left)
           else
-            foreachnodestatic(pm_postprocess,TBinaryNode(n).left,@collectnodes2,arg);
+            ForEachNodeStatic(pm_postprocess,TBinaryNode(n).left,@collectnodes2,arg);
 
           rightstart:=PLists(arg)^.nodelist.count;
           firstleftend:=min(rightstart,firstleftend);
 
-          if doshortbooleval(n) then
+          if DoShortBoolEval(n) then
             begin
-              foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
+              ForEachNodeStatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
 
               { short boolean evaluation might skip the right side of n in nested nodes }
               for i:=rightstart to PLists(arg)^.nodelist.count-1 do
@@ -170,7 +170,7 @@ unit optcse;
 
               { We can only collect the right nodes after excluding the left
                 side so newer entries don't reference them }
-              foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
+              ForEachNodeStatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
             end;
         end;
 
@@ -188,7 +188,7 @@ unit optcse;
         }
         if (((n.nodetype=callparan) and
              (TCallParaNode(n).left.resultdef.typ=formaldef) and
-             (TCallParaNode(n).parasym.VarSpez=vs_const)) or
+             (TCallParaNode(n).ParaSym.VarSpez=vs_const)) or
             ((n.nodetype=typeconvn) and
              (nf_absolute in n.flags))
            ) then
@@ -201,7 +201,7 @@ unit optcse;
           Assigned(n.resultdef) and
           ((
             { regable expressions }
-            (actualtargetnode(@n)^.flags*[nf_write,nf_modify,nf_address_taken]=[]) and
+            (ActualTargetNode(@n)^.flags*[nf_write,nf_modify,nf_address_taken]=[]) and
             (
               TStoredDef(n.resultdef).Is_IntRegable or
               TStoredDef(n.resultdef).Is_FPURegable or
@@ -246,13 +246,13 @@ unit optcse;
               load nodes are not considered if they load para or local symbols from the
               current stack frame, those are in registers anyways if possible
             }
-            (not(actualtargetnode(@n)^.nodetype=loadn) or
-             not(TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) or
+            (not(ActualTargetNode(@n)^.nodetype=loadn) or
+             not(TLoadNode(ActualTargetNode(@n)^).SymTableEntry.typ in [paravarsym,localvarsym,staticvarsym]) or
              { apply cse on non-regable variables }
-             ((TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
-               not(TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).Is_RegVar(true)) and
-               not(vo_volatile in TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).VarOptions)) or
-             (node_complexity(n)>1)
+             ((TLoadNode(ActualTargetNode(@n)^).SymTableEntry.typ in [paravarsym,localvarsym,staticvarsym]) and
+               not(TAbstractVarSym(TLoadNode(ActualTargetNode(@n)^).SymTableEntry).Is_RegVar(true)) and
+               not(vo_volatile in TAbstractVarSym(TLoadNode(ActualTargetNode(@n)^).SymTableEntry).VarOptions)) or
+             (Node_Complexity(n)>1)
             ) and
 
             {
@@ -260,7 +260,7 @@ unit optcse;
               This might be the case for the risc architectures if they need
               more than one instruction to load this particular value
             }
-            (not(is_constnode(n)) or (node_complexity(n)>1)))
+            (not(Is_ConstNode(n)) or (Node_Complexity(n)>1)))
 {$if not(defined(i386))}
             or
             { store reference of expression? }
@@ -271,7 +271,7 @@ unit optcse;
             }
             (((n.resultdef.typ in [arraydef,recorddef]) or Is_Object(n.resultdef)) and not(Is_Dynamic_Array(n.resultdef)) and
              (n.nodetype=loadn) and
-             (TLoadNode(n).symtableentry.typ=staticvarsym)
+             (TLoadNode(n).SymTableEntry.typ=staticvarsym)
             )
 {$endif not(defined(i386))}
           ) then
@@ -285,7 +285,7 @@ unit optcse;
 
             for i:=0 to PLists(arg)^.nodelist.count-2 do
               begin
-                if TNode(PLists(arg)^.nodelist[i]).isequal(n) and DynSetIn(PLists(arg)^.avail,i) then
+                if TNode(PLists(arg)^.nodelist[i]).IsEqual(n) and DynSetIn(PLists(arg)^.avail,i) then
                   begin
                     { use always the first occurrence }
                     if PLists(arg)^.equalto[i]<>pointer(-1) then
@@ -306,7 +306,7 @@ unit optcse;
           the expressions of the right side might not be available due to short boolean
           evaluation, so after handling the right side, mark those expressions
           as unavailable }
-        if doshortbooleval(n) and Is_Boolean(TAddNode(n).left.resultdef) then
+        if DoShortBoolEval(n) and Is_Boolean(TAddNode(n).left.resultdef) then
           begin
             SetLength(maybeskipped,0);
             firstleftend:=high(LongInt);
@@ -326,7 +326,7 @@ unit optcse;
       var
         csedomain : boolean;
         lists : TLists;
-        templist : TFPList;
+        TempList : TFPList;
         i : LongInt;
         def : TStoredDef;
         nodes : TBlockNode;
@@ -345,7 +345,7 @@ unit optcse;
           (n.nodetype<>setelementn) then
           begin
             csedomain:=true;
-            foreachnodestatic(pm_postprocess,n,@searchsubdomain,@csedomain);
+            ForEachNodeStatic(pm_postprocess,n,@searchsubdomain,@csedomain);
             if not(csedomain) then
               begin
                 { try to transform the tree to get better cse domains, consider:
@@ -382,7 +382,7 @@ unit optcse;
                   while (n.nodetype=TBinaryNode(n).left.nodetype) and
                     { if not both or none of the nodes is short/full boolean evaluated, we cannot do this optimization as it might change
                       semantics, there are border cases where this might not apply, but so far it is not worth the effort to check }
-                    (not(Is_Boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (doshortbooleval(n)=doshortbooleval(TBinaryNode(n).left))) and
+                    (not(Is_Boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (DoShortBoolEval(n)=DoShortBoolEval(TBinaryNode(n).left))) and
                         { the resulttypes of the operands we'll swap must be equal,
                           required in case of a 32x32->64 multiplication, then we
                           cannot swap out one of the 32 bit operands for a 64 bit one
@@ -391,11 +391,11 @@ unit optcse;
                         (TBinaryNode(n).left.resultdef=TBinaryNode(n).right.resultdef) do
                     begin
                       csedomain:=true;
-                      foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@searchsubdomain,@csedomain);
+                      ForEachNodeStatic(pm_postprocess,TBinaryNode(n).right,@searchsubdomain,@csedomain);
                       if csedomain then
                         begin
                           csedomain:=true;
-                          foreachnodestatic(pm_postprocess,TBinaryNode(TBinaryNode(n).left).right,@searchsubdomain,@csedomain);
+                          ForEachNodeStatic(pm_postprocess,TBinaryNode(TBinaryNode(n).left).right,@searchsubdomain,@csedomain);
                           if csedomain then
                             begin
                               {
@@ -411,10 +411,10 @@ unit optcse;
                                   if (n.nodetype in [orn,andn]) then
                                     begin
                                       if (TBinaryNode(n).left.nodetype in [orn,andn]) then
-                                        TAddNode(TBinaryNode(n).left).addnodeflags:=TAddNode(TBinaryNode(n).left).addnodeflags+
-                                          (TAddNode(n).addnodeflags*[anf_short_bool]);
+                                        TAddNode(TBinaryNode(n).left).AddNodeFlags:=TAddNode(TBinaryNode(n).left).AddNodeFlags+
+                                          (TAddNode(n).AddNodeFlags*[anf_short_bool]);
 
-                                      exclude(TAddNode(n).addnodeflags,anf_short_bool);
+                                      exclude(TAddNode(n).AddNodeFlags,anf_short_bool);
                                     end;
                                 end;
 
@@ -442,17 +442,17 @@ unit optcse;
                 result:=fen_norecurse_true;
 {$ifdef csedebug}
                 WriteLn('============ cse domain ==================');
-                printnode(Output,n);
-                WriteLn('Complexity: ',node_complexity(n));
+                PrintNode(Output,n);
+                WriteLn('Complexity: ',Node_Complexity(n));
 {$endif csedebug}
-                lists.nodelist:=TFPList.create;
-                lists.locationlist:=TFPList.create;
-                lists.equalto:=TFPList.create;
-                lists.refs:=TFPList.create;
-                foreachnodestatic(pm_postprocess,n,@collectnodes,@lists);
+                lists.nodelist:=TFPList.Create;
+                lists.locationlist:=TFPList.Create;
+                lists.equalto:=TFPList.Create;
+                lists.refs:=TFPList.Create;
+                ForEachNodeStatic(pm_postprocess,n,@collectnodes,@lists);
 
-                templist:=TFPList.create;
-                templist.count:=lists.nodelist.count;
+                TempList:=TFPList.Create;
+                TempList.count:=lists.nodelist.count;
 
                 { check all nodes if one is used more than once }
                 for i:=0 to lists.nodelist.count-1 do
@@ -462,8 +462,8 @@ unit optcse;
                       begin
                         if not(Assigned(statements)) then
                           begin
-                            nodes:=internalstatements(statements);
-                            addstatement(statements,internalstatements(creates));
+                            nodes:=InternalStatements(statements);
+                            AddStatement(statements,InternalStatements(creates));
                           end;
 
                         def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
@@ -472,46 +472,46 @@ unit optcse;
                         addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(Is_Dynamic_Array(def));
 
                         if addrstored then
-                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),VoidPointerType.Size,tt_persistent,
+                          TempList[i]:=CTempCreateNode.Create_Value(CPointerDef.getreusable(def),VoidPointerType.Size,tt_persistent,
                             true,CAddrNode.Create_Internal(TNode(lists.nodelist[i])))
                         else
-                          templist[i]:=CTempCreateNode.create_value(def,def.Size,tt_persistent,
+                          TempList[i]:=CTempCreateNode.Create_Value(def,def.Size,tt_persistent,
                             def.Is_IntRegable or def.Is_FPURegable or def.Is_Const_IntRegable,TNode(lists.nodelist[i]));
 
                         { the value described by the temp. is immutable and the temp. can be always in register
 
                           ttempcreatenode.create normally takes care of the register location but it does not
                           know about immutability so it cannot take care of managed types }
-                        TTempCreateNode(templist[i]).includetempflag(ti_const);
-                        TTempCreateNode(templist[i]).includetempflag(ti_may_be_in_reg);
+                        TTempCreateNode(TempList[i]).IncludeTempFlag(ti_const);
+                        TTempCreateNode(TempList[i]).IncludeTempFlag(ti_may_be_in_reg);
 
                         { make debugging easier and set temp. location to the original location }
-                        TNode(templist[i]).fileinfo:=TNode(lists.nodelist[i]).fileinfo;
+                        TNode(TempList[i]).fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        addstatement(creates,TNode(templist[i]));
+                        AddStatement(creates,TNode(TempList[i]));
 
                         { the delete node has no semantic use yet, it is just used to clean up memory }
-                        deletetemp:=CTempDeleteNode.create(TTempCreateNode(templist[i]));
-                        deletetemp.includetempflag(ti_cleanup_only);
-                        addstatement(TStatementNode(arg^),deletetemp);
+                        deletetemp:=CTempDeleteNode.Create(TTempCreateNode(TempList[i]));
+                        deletetemp.IncludeTempFlag(ti_cleanup_only);
+                        AddStatement(TStatementNode(arg^),deletetemp);
 
                         { make debugging easier and set temp. location to the original location }
                         creates.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        hp:=TTempCreateNode(templist[i]);
+                        hp:=TTempCreateNode(TempList[i]);
                         DoFirstPass(TNode(hp));
-                        templist[i]:=hp;
+                        TempList[i]:=hp;
 
                         if addrstored then
-                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.create(TTempCreateNode(templist[i])))
+                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.Create(TTempCreateNode(TempList[i])))
                         else
-                          PNode(lists.locationlist[i])^:=CTempRefNode.create(TTempCreateNode(templist[i]));
+                          PNode(lists.locationlist[i])^:=CTempRefNode.Create(TTempCreateNode(TempList[i]));
                         { make debugging easier and set temp. location to the original location }
                         PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
                         DoFirstPass(PNode(lists.locationlist[i])^);
 {$ifdef csedebug}
-                        printnode(Output,statements);
+                        PrintNode(Output,statements);
 {$endif csedebug}
                       end
                     { current node reference to another node? }
@@ -525,17 +525,17 @@ unit optcse;
 {$if defined(csedebug) or defined(csestats)}
                         WriteLn;
                         WriteLn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                        WriteLn('Complexity: ',node_complexity(TNode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
-                        printnode(Output,TNode(lists.nodelist[i]));
-                        printnode(Output,TNode(lists.nodelist[ptrint(lists.equalto[i])]));
+                        WriteLn('Complexity: ',Node_Complexity(TNode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
+                        PrintNode(Output,TNode(lists.nodelist[i]));
+                        PrintNode(Output,TNode(lists.nodelist[ptrint(lists.equalto[i])]));
                         WriteLn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
                         WriteLn;
 {$endif defined(csedebug) or defined(csestats)}
-                        templist[i]:=templist[ptrint(lists.equalto[i])];
+                        TempList[i]:=TempList[ptrint(lists.equalto[i])];
                         if addrstored then
-                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.create(TTempCreateNode(templist[ptrint(lists.equalto[i])])))
+                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.Create(TTempCreateNode(TempList[ptrint(lists.equalto[i])])))
                         else
-                          PNode(lists.locationlist[i])^:=CTempRefNode.create(TTempCreateNode(templist[ptrint(lists.equalto[i])]));
+                          PNode(lists.locationlist[i])^:=CTempRefNode.Create(TTempCreateNode(TempList[ptrint(lists.equalto[i])]));
 
                         { make debugging easier and set temp. location to the original location }
                         PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
@@ -555,8 +555,8 @@ unit optcse;
                 FreeAndNil(lists.locationlist);
                 FreeAndNil(lists.equalto);
                 FreeAndNil(lists.refs);
-                templist.free;
-                templist := nil;
+                TempList.free;
+                TempList := nil;
 
                 if Assigned(statements) then
                   begin
@@ -567,18 +567,18 @@ unit optcse;
                     }
                     if n.nodetype=callparan then
                       begin
-                        addstatement(statements,TCallParaNode(n).left);
+                        AddStatement(statements,TCallParaNode(n).left);
                         TCallParaNode(n).left:=nodes;
                         DoFirstPass(TCallParaNode(n).left);
                       end
                     else
                       begin
-                        addstatement(statements,n);
+                        AddStatement(statements,n);
                         n:=nodes;
                         DoFirstPass(n);
                       end;
 {$ifdef csedebug}
-                    printnode(Output,nodes);
+                    PrintNode(Output,nodes);
 {$endif csedebug}
                   end;
               end
@@ -597,22 +597,22 @@ unit optcse;
         WriteLn('====================================================================================');
         WriteLn('CSE optimization pass started');
         WriteLn('====================================================================================');
-        printnode(Output,rootnode);
+        PrintNode(Output,rootnode);
         WriteLn('====================================================================================');
         WriteLn;
 {$endif csedebug}
-        deleteblock:=internalstatements(deletes);
-        foreachnodestatic(pm_postprocess,rootnode,@searchcsedomain,@deletes);
-        rootblock:=internalstatements(statements);
-        addstatement(statements,rootnode);
-        addstatement(statements,deleteblock);
+        deleteblock:=InternalStatements(deletes);
+        ForEachNodeStatic(pm_postprocess,rootnode,@searchcsedomain,@deletes);
+        rootblock:=InternalStatements(statements);
+        AddStatement(statements,rootnode);
+        AddStatement(statements,deleteblock);
         rootnode:=rootblock;
         DoFirstPass(rootnode);
 {$ifdef csedebug}
         WriteLn('====================================================================================');
         WriteLn('CSE optimization result');
         WriteLn('====================================================================================');
-        printnode(Output,rootnode);
+        PrintNode(Output,rootnode);
         WriteLn('====================================================================================');
         WriteLn;
 {$endif csedebug}
@@ -633,11 +633,11 @@ unit optcse;
 
     function CSEOnReference(n : TNode) : Boolean;
       begin
-        Result:=(n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym)
-          and ((vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).VarOptions) or
+        Result:=(n.nodetype=loadn) and (TLoadNode(n).SymTableEntry.typ=staticvarsym)
+          and ((vo_is_thread_var in TStaticVarSym(TLoadNode(n).SymTableEntry).VarOptions) or
             (cs_create_pic in CurrentSettings.ModuleSwitches)
 {$if defined(aarch64)}
-            or (not(TAbstractVarSym(TLoadNode(n).symtableentry).Is_RegVar(false)))
+            or (not(TAbstractVarSym(TLoadNode(n).SymTableEntry).Is_RegVar(false)))
 {$endif defined(aarch64) or defined(sparc) or defined(sparc64)}
            );
       end;
@@ -663,7 +663,7 @@ unit optcse;
             i:=0;
             for i:=0 to High(consts^) do
               begin
-                if TNode(consts^[i].valuenode).isequal(n) then
+                if TNode(consts^[i].valuenode).IsEqual(n) then
                   begin
                     found:=true;
                     break;
@@ -674,7 +674,7 @@ unit optcse;
                 inc(consts^[i].weight);
 
                 { non-sectioned threadvars really hurt so do more aggressive cse on them }
-                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).VarOptions) then
+                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (TLoadNode(n).SymTableEntry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(TLoadNode(n).SymTableEntry).VarOptions) then
                   inc(consts^[i].weight);
               end
             else
@@ -683,7 +683,7 @@ unit optcse;
                 with consts^[high(consts^)] do
                   begin
                     valuenode:=n.GetCopy;
-                    valuenode.fileinfo:=CurrentProcInfo.entrypos;
+                    valuenode.fileinfo:=CurrentProcInfo.EntryPos;
                     weight:=1;
                   end;
               end;
@@ -696,16 +696,16 @@ unit optcse;
         hp: TNode;
       begin
         result:=fen_true;
-        if TNode(PConstEntry(arg)^.valuenode).isequal(n) then
+        if TNode(PConstEntry(arg)^.valuenode).IsEqual(n) then
           begin
             { shall we take the address? }
             if CSEOnReference(PConstEntry(arg)^.valuenode) then
               begin
-                hp:=CTypeConvNode.Create_Internal(CDerefNode.create(CTempRefNode.create(PConstEntry(arg)^.temp)),PConstEntry(arg)^.valuenode.resultdef);
+                hp:=CTypeConvNode.Create_Internal(CDerefNode.Create(CTempRefNode.Create(PConstEntry(arg)^.temp)),PConstEntry(arg)^.valuenode.resultdef);
                 TTypeConvNode(hp).left.fileinfo:=n.fileinfo;
               end
             else
-              hp:=CTempRefNode.create(PConstEntry(arg)^.temp);
+              hp:=CTempRefNode.Create(PConstEntry(arg)^.temp);
 
             hp.fileinfo:=n.fileinfo;
             n.Free;
@@ -767,11 +767,11 @@ unit optcse;
         WriteLn('====================================================================================');
         WriteLn('Const optimization pass started');
         WriteLn('====================================================================================');
-        printnode(Output,rootnode);
+        PrintNode(Output,rootnode);
         WriteLn('====================================================================================');
         WriteLn;
   {$endif csedebug}
-        foreachnodestatic(pm_postprocess,rootnode,@collectconsts,@constentries);
+        ForEachNodeStatic(pm_postprocess,rootnode,@collectconsts,@constentries);
         createblock:=nil;
         deleteblock:=nil;
         rootblock:=nil;
@@ -816,19 +816,19 @@ unit optcse;
                     if fpu_regs_assigned>=max_fpu_regs_assigned then
                       break;
                     old_current_filepos:=CurrentFilePos;
-                    CurrentFilePos:=CurrentProcInfo.entrypos;
+                    CurrentFilePos:=CurrentProcInfo.EntryPos;
                     if not(Assigned(createblock)) then
                       begin
-                        rootblock:=internalstatements(statements);
-                        createblock:=internalstatements(creates);
-                        deleteblock:=internalstatements(deletes);
+                        rootblock:=InternalStatements(statements);
+                        createblock:=InternalStatements(creates);
+                        deleteblock:=InternalStatements(deletes);
                       end;
-                     constentries[i].temp:=CTempCreateNode.create(constentries[i].valuenode.resultdef,
+                     constentries[i].temp:=CTempCreateNode.Create(constentries[i].valuenode.resultdef,
                        constentries[i].valuenode.resultdef.Size,tt_persistent,true);
-                     addstatement(creates,constentries[i].temp);
-                     addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),constentries[i].valuenode));
+                     AddStatement(creates,constentries[i].temp);
+                     AddStatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.Create(constentries[i].temp),constentries[i].valuenode));
                      CurrentFilePos:=old_current_filepos;
-                     foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
+                     ForEachNodeStatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(fpu_regs_assigned);
                   end
                 else if CSEOnReference(constentries[i].valuenode) and
@@ -840,29 +840,29 @@ unit optcse;
                     if int_regs_assigned>=max_int_regs_assigned then
                       break;
                     old_current_filepos:=CurrentFilePos;
-                    CurrentFilePos:=CurrentProcInfo.entrypos;
+                    CurrentFilePos:=CurrentProcInfo.EntryPos;
                     if not(Assigned(createblock)) then
                       begin
-                        rootblock:=internalstatements(statements);
-                        createblock:=internalstatements(creates);
-                        deleteblock:=internalstatements(deletes);
+                        rootblock:=InternalStatements(statements);
+                        createblock:=InternalStatements(creates);
+                        deleteblock:=InternalStatements(deletes);
                       end;
-                     constentries[i].temp:=CTempCreateNode.create(CPointerDef.getreusable(constentries[i].valuenode.resultdef),
+                     constentries[i].temp:=CTempCreateNode.Create(CPointerDef.getreusable(constentries[i].valuenode.resultdef),
                        VoidPointerType.Size,tt_persistent,true);
-                     addstatement(creates,constentries[i].temp);
-                     addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),
+                     AddStatement(creates,constentries[i].temp);
+                     AddStatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.Create(constentries[i].temp),
                        CAddrNode.Create_Internal(constentries[i].valuenode)));
                      CurrentFilePos:=old_current_filepos;
-                     foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
+                     ForEachNodeStatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(int_regs_assigned);
                   end;
               end;
           end;
         if Assigned(createblock) then
           begin
-            addstatement(statements,createblock);
-            addstatement(statements,rootnode);
-            addstatement(statements,deleteblock);
+            AddStatement(statements,createblock);
+            AddStatement(statements,rootnode);
+            AddStatement(statements,deleteblock);
             rootnode:=rootblock;
             DoFirstPass(rootnode);
           end;
@@ -870,7 +870,7 @@ unit optcse;
         WriteLn('====================================================================================');
         WriteLn('Const optimization result');
         WriteLn('====================================================================================');
-        printnode(Output,rootnode);
+        PrintNode(Output,rootnode);
         WriteLn('====================================================================================');
         WriteLn;
   {$endif csedebug}

@@ -53,13 +53,13 @@ interface
         op   : byte;
         ops  : byte;
         oper : array[0..maxdwarfops-1] of TDwarfOper;
-        constructor create(aop:byte);
+        constructor Create(aop:byte);
         constructor create_reg(aop:byte;enc1:TDwarfOperEnc;reg:TRegister);
         constructor create_const(aop:byte;enc1:TDwarfOperEnc;val:int64);
         constructor create_sym(aop: byte; enc1: TDwarfOperEnc; sym: TAsmSymbol);
         constructor create_reloffset(aop:byte;enc1:TDwarfOperEnc;beginlab,endlab:TAsmSymbol);
         constructor create_reg_const(aop:byte;enc1:TDwarfOperEnc;reg:TRegister;enc2:TDwarfOperEnc;val:LongInt);
-        procedure generate_code(list:TAsmList);
+        procedure Generate_Code(list:TAsmList);
       end;
 
       TDwarfAsmCFI=class(TAsmCFI)
@@ -71,7 +71,7 @@ interface
         );
       public
         datatype : TDataType;
-        constructor create;override;
+        constructor Create;override;
       end;
 
       TDwarfAsmCFILowLevel=class(TDwarfAsmCFI)
@@ -87,9 +87,9 @@ interface
         data_alignment_factor : shortint;
         property DwarfList:TLinkedList read FDwarfList;
       public
-        constructor create;override;
+        constructor Create;override;
         destructor Destroy;override;
-        procedure generate_code(list:TAsmList);override;
+        procedure Generate_Code(list:TAsmList);override;
 
         function get_frame_start: TAsmLabel;override;
         function get_cfa_list : TAsmList;override;
@@ -108,7 +108,7 @@ interface
 
       TDwarfAsmCFIHighLevel=class(TDwarfAsmCFILowLevel)
       public
-        procedure generate_code(list:TAsmList);override;
+        procedure Generate_Code(list:TAsmList);override;
 
         { operations }
         procedure start_frame(list:TAsmList);override;
@@ -133,9 +133,9 @@ implementation
                                 TDWARFITEM
 ****************************************************************************}
 
-    constructor TDwarfItem.create(aop:byte);
+    constructor TDwarfItem.Create(aop:byte);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=0;
       end;
@@ -143,7 +143,7 @@ implementation
 
     constructor TDwarfItem.create_reg(aop:byte;enc1:TDwarfOperEnc;reg:TRegister);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=1;
         oper[0].typ:=dop_reg;
@@ -154,7 +154,7 @@ implementation
 
     constructor TDwarfItem.create_const(aop:byte;enc1:TDwarfOperEnc;val:int64);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=1;
         oper[0].typ:=dop_const;
@@ -165,7 +165,7 @@ implementation
 
     constructor TDwarfItem.create_sym(aop:byte;enc1:TDwarfOperEnc;sym:TAsmSymbol);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=1;
         oper[0].typ:=dop_sym;
@@ -176,7 +176,7 @@ implementation
 
     constructor TDwarfItem.create_reloffset(aop:byte;enc1:TDwarfOperEnc;beginlab,endlab:TAsmSymbol);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=1;
         { relative offsets are passed }
@@ -189,7 +189,7 @@ implementation
 
     constructor TDwarfItem.create_reg_const(aop:byte;enc1:TDwarfOperEnc;reg:TRegister;enc2:TDwarfOperEnc;val:LongInt);
       begin
-        inherited create;
+        inherited Create;
         op:=aop;
         ops:=2;
         oper[0].typ:=dop_reg;
@@ -201,7 +201,7 @@ implementation
       end;
 
 
-    procedure TDwarfItem.generate_code(list:TAsmList);
+    procedure TDwarfItem.Generate_Code(list:TAsmList);
       const
         enc2ait_const : array[TDwarfOperEnc] of TAIConstType = (
           aitconst_uleb128bit,aitconst_sleb128bit,aitconst_ptr,
@@ -215,7 +215,7 @@ implementation
           begin
             case oper[i].typ of
               dop_const :
-                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],oper[i].Value));
+                list.concat(TAIConst.Create(enc2ait_const[oper[i].enc],oper[i].Value));
               dop_sym :
                 begin
                   if oper[i].enc<>doe_ptr then
@@ -225,7 +225,7 @@ implementation
               dop_reloffset :
                 list.concat(TAIConst.create_rel_sym(enc2ait_const[oper[i].enc],oper[i].beginsym,oper[i].endsym));
               dop_reg :
-                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].Register)));
+                list.concat(TAIConst.Create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].Register)));
             end;
           end;
       end;
@@ -235,7 +235,7 @@ implementation
                                  TDwarfAsmCFI
 ****************************************************************************}
 
-    constructor TDwarfAsmCFI.create;
+    constructor TDwarfAsmCFI.Create;
       begin
         inherited;
         if tf_use_psabieh in TargetInfo.flags then
@@ -252,9 +252,9 @@ implementation
                              TDwarfAsmCFILowLevel
 ****************************************************************************}
 
-    constructor TDwarfAsmCFILowLevel.create;
+    constructor TDwarfAsmCFILowLevel.Create;
       begin
-        inherited create;
+        inherited Create;
         FFrameStartLabel:=nil;
         FFrameEndLabel:=nil;
         FLastLocLabel:=nil;
@@ -302,7 +302,7 @@ implementation
       end;
 {$endif}
 
-    procedure TDwarfAsmCFILowLevel.generate_code(list:TAsmList);
+    procedure TDwarfAsmCFILowLevel.Generate_Code(list:TAsmList);
       var
         hp : TDwarfItem;
         CurrentLSDALabel,
@@ -350,11 +350,11 @@ implementation
 
         }
         CurrentAsmData.getlabel(cielabel,alt_dbgframe);
-        list.concat(TAILabel.create(cielabel));
+        list.concat(TAILabel.Create(cielabel));
         CurrentAsmData.getlabel(lenstartlabel,alt_dbgframe);
         CurrentAsmData.getlabel(lenendlabel,alt_dbgframe);
         list.concat(TAIConst.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
-        list.concat(TAILabel.create(lenstartlabel));
+        list.concat(TAILabel.Create(lenstartlabel));
         if datatype=dt_eh_frame then
           begin
             list.concat(TAIConst.create_32bit(0));
@@ -381,7 +381,7 @@ implementation
             CurrentAsmData.getlabel(augendlabel,alt_dbgframe);
             { size of augmentation data ('z') }
             list.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,augstartlabel,augendlabel));
-            list.concat(TAILabel.create(augstartlabel));
+            list.concat(TAILabel.Create(augstartlabel));
             { personality function ('P') }
             { encoding }
             list.concat(TAIConst.create_8bit({DW_EH_PE_indirect or DW_EH_PE_pcrel or} DW_EH_PE_sdata4));
@@ -393,7 +393,7 @@ implementation
 
             { FDE encoding ('R') }
             list.concat(TAIConst.create_8bit({DW_EH_PE_pcrel or }DW_EH_PE_sdata4));
-            list.concat(TAILabel.create(augendlabel));
+            list.concat(TAILabel.Create(augendlabel));
           end;
 
         { Generate standard code
@@ -403,7 +403,7 @@ implementation
         generate_initial_instructions(list);
 
         list.concat(CAIAlign.create_zeros(sizeof(PInt)));
-        list.concat(TAILabel.create(lenendlabel));
+        list.concat(TAILabel.Create(lenendlabel));
         lenstartlabel:=nil;
         lenendlabel:=nil;
 
@@ -427,12 +427,12 @@ implementation
                      PTRSIZE function size = oper[1]
                   }
                   list.concat(TAIConst.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
-                  list.concat(TAILabel.create(lenstartlabel));
+                  list.concat(TAILabel.Create(lenstartlabel));
                   if datatype=dt_eh_frame then
                     begin
                       { relative offset to the CIE }
                       CurrentAsmData.getlabel(fdeofslabel,alt_dbgframe);
-                      list.concat(TAILabel.create(fdeofslabel));
+                      list.concat(TAILabel.Create(fdeofslabel));
                       list.concat(TAIConst.create_rel_sym(aitconst_32bit,cielabel,fdeofslabel));
                     end
                   else
@@ -446,7 +446,7 @@ implementation
                     end;
 
                   CurrentAsmData.getlabel(curpos,alt_dbgframe);
-                  list.concat(TAILabel.create(curpos));
+                  list.concat(TAILabel.Create(curpos));
                   list.concat(TAIConst.Create_sym(hp.oper[0].beginsym));
                   list.concat(TAIConst.create_rel_sym(aitconst_ptr,hp.oper[0].beginsym,hp.oper[0].endsym));
 
@@ -467,14 +467,14 @@ implementation
               DW_CFA_End_Frame :
                 begin
                   list.concat(CAIAlign.create_zeros(sizeof(PInt)));
-                  list.concat(TAILabel.create(lenendlabel));
+                  list.concat(TAILabel.Create(lenendlabel));
                   lenstartlabel:=nil;
                   lenendlabel:=nil;
                 end;
               DW_Set_LSDALabel:
                 CurrentLSDALabel:=hp.oper[0].sym as TAsmLabel;
               else
-                hp.generate_code(list);
+                hp.Generate_Code(list);
             end;
             hp:=TDwarfItem(hp.next);
           end;
@@ -492,7 +492,7 @@ implementation
           exit;
         CurrentAsmData.getlabel(FFrameEndLabel,alt_dbgframe);
         FLastloclabel:=get_frame_start;
-        list.concat(TAILabel.create(get_frame_start));
+        list.concat(TAILabel.Create(get_frame_start));
         DwarfList.concat(TDwarfItem.create_reloffset(DW_CFA_start_frame,doe_32bit,get_frame_start,FFrameEndLabel));
       end;
 
@@ -526,8 +526,8 @@ implementation
           exit;
         if not Assigned(FFrameStartLabel) then
           InternalError(2004041213);
-        DwarfList.concat(TDwarfItem.create(DW_CFA_end_frame));
-        list.concat(TAILabel.create(FFrameEndLabel));
+        DwarfList.concat(TDwarfItem.Create(DW_CFA_end_frame));
+        list.concat(TAILabel.Create(FFrameEndLabel));
         FFrameStartLabel:=nil;
         FFrameEndLabel:=nil;
         FLastLocLabel:=nil;
@@ -552,7 +552,7 @@ implementation
           begin
             { if we encounter FLastloclabel without encountering code/data, see check below,
               we do not need insert an advance_loc entry }
-            if (hp.typ=ait_label) and (TAILabel(hp).labsym=FLastloclabel) then
+            if (hp.typ=ait_label) and (TAILabel(hp).LabSym=FLastloclabel) then
               exit;
             { stop if we find any tai which results in code or data }
             if not(hp.typ in ([ait_label]+SkipInstr)) then
@@ -573,7 +573,7 @@ implementation
             { stop if we find any tai which results in code or data }
             if not(hp.typ in ([ait_label,ait_instruction]+SkipInstr)) then
               break;
-            if (hp.typ=ait_label) and (TAILabel(hp).labsym=FLastloclabel) then
+            if (hp.typ=ait_label) and (TAILabel(hp).LabSym=FLastloclabel) then
               begin
                 dwarfloc:=DW_CFA_advance_loc1;
                 break;
@@ -584,7 +584,7 @@ implementation
           end;
 
         CurrentAsmData.getlabel(currloclabel,alt_dbgframe);
-        list.concat(TAILabel.create(currloclabel));
+        list.concat(TAILabel.Create(currloclabel));
         if dwarfloc=DW_CFA_advance_loc1 then
           DwarfList.concat(TDwarfItem.create_reloffset(DW_CFA_advance_loc1,doe_8bit,FLastloclabel,currloclabel))
         else
@@ -645,7 +645,7 @@ implementation
 ****************************************************************************}
 
 
-    procedure TDwarfAsmCFIHighLevel.generate_code(list: TAsmList);
+    procedure TDwarfAsmCFIHighLevel.Generate_Code(list: TAsmList);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -664,7 +664,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpNone.create(cfi_startproc));
+        list.concat(TAICFIOpNone.Create(cfi_startproc));
       end;
 
 
@@ -677,7 +677,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpNone.create(cfi_endproc));
+        list.concat(TAICFIOpNone.Create(cfi_endproc));
       end;
 
 
@@ -690,7 +690,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpReg.create(cfi_undefined,NR_RETURN_ADDRESS_REG));
+        list.concat(TAICFIOpReg.Create(cfi_undefined,NR_RETURN_ADDRESS_REG));
       end;
 
 
@@ -703,7 +703,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpRegVal.create(cfi_offset,reg,ofs));
+        list.concat(TAICFIOpRegVal.Create(cfi_offset,reg,ofs));
       end;
 
 
@@ -716,7 +716,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpReg.create(cfi_restore,reg));
+        list.concat(TAICFIOpReg.Create(cfi_restore,reg));
       end;
 
 
@@ -729,7 +729,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpRegVal.create(cfi_def_cfa,reg,ofs));
+        list.concat(TAICFIOpRegVal.Create(cfi_def_cfa,reg,ofs));
       end;
 
 
@@ -742,7 +742,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpReg.create(cfi_def_cfa_register,reg));
+        list.concat(TAICFIOpReg.Create(cfi_def_cfa_register,reg));
       end;
 
 
@@ -755,7 +755,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(TAICFIOpVal.create(cfi_def_cfa_offset,ofs));
+        list.concat(TAICFIOpVal.Create(cfi_def_cfa_offset,ofs));
       end;
 
 

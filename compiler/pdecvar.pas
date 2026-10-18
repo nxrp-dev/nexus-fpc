@@ -63,7 +63,7 @@ implementation
 {$endif i386}
        FModule,htypechk,procdefutil,
        { pass 1 }
-       node,pass_1,aasmbase,AAsmData,
+       node,Pass_1,aasmbase,AAsmData,
        ncon,nset,ncnv,nld,nutils,
        { codegen }
        ngenutil,
@@ -189,7 +189,7 @@ implementation
                                if (p.nodetype=ordconstn) then
                                  begin
                                    { type/range checking }
-                                   inserttypeconv(p,TArrayDef(def).RangeDef);
+                                   InsertTypeConv(p,TArrayDef(def).RangeDef);
                                    if (TOrdConstNode(p).Value<int64(low(LongInt))) or
                                       (TOrdConstNode(p).Value>int64(high(LongInt))) then
                                      message(parser_e_array_range_out_of_bounds)
@@ -266,7 +266,7 @@ implementation
                 handle_calling_convention(pd,hcc_default_actions_intf)
               else
                 handle_calling_convention(pd,hcc_default_actions_intf_struct);
-              sym:=CProcSym.create(prefix+lower(p.realname));
+              sym:=CProcSym.Create(prefix+lower(p.realname));
               SymTableStack.top.InsertSym(sym);
               pd.ProcSym:=sym;
               include(pd.ProcOptions,po_dispid);
@@ -300,7 +300,7 @@ implementation
               if try_to_consume(_DISPID) then
                 begin
                   pt:=comp_expr([ef_accept_equal]);
-                  if is_constintnode(pt) then
+                  if Is_ConstIntNode(pt) then
                     if (TOrdConstNode(pt).Value<int64(low(LongInt))) or (TOrdConstNode(pt).Value>int64(high(LongInt))) then
                       message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
                     else
@@ -328,7 +328,7 @@ implementation
                 begin
                   { add an extra parameter, a placeholder of the value to set }
                   inc(ParaNr);
-                  hparavs:=CParaVarSym.create('$value',10*ParaNr,vs_value,p.PropDef,[]);
+                  hparavs:=CParaVarSym.Create('$value',10*ParaNr,vs_value,p.PropDef,[]);
                   writepd.ParaST.InsertSym(hparavs);
 
                   writepd.ProcTypeOption:=potype_propsetter;
@@ -364,8 +364,8 @@ implementation
          { Generate temp procdefs to search for matching read/write
            procedures. the readprocdef will store all definitions }
          ParaNr:=0;
-         ReadProcDef:=CProcDef.create(NormalFunctionLevel,false);
-         WriteProcDef:=CProcDef.create(NormalFunctionLevel,false);
+         ReadProcDef:=CProcDef.Create(NormalFunctionLevel,false);
+         WriteProcDef:=CProcDef.Create(NormalFunctionLevel,false);
 
          ReadProcDef.struct:=astruct;
          WriteProcDef.struct:=astruct;
@@ -383,7 +383,7 @@ implementation
               exit;
            end;
          { Generate propertysym and insert in symtablestack }
-         p:=CPropertySym.create(CurrentScanner.orgpattern);
+         p:=CPropertySym.Create(CurrentScanner.orgpattern);
          p.visibility:=SymTableStack.top.CurrentVisibility;
          p.default:=LongInt($80000000);
          if is_classproperty then
@@ -398,9 +398,9 @@ implementation
                 not((m_delphi in CurrentSettings.ModeSwitches) and Is_InterfaceCOM_Or_DispInterface(astruct)) then
                 Message(parser_e_cant_publish_that_property);
               { create a list of the parameters }
-              p.ParaST:=TParaSymTable.create(nil,0);
+              p.ParaST:=TParaSymTable.Create(nil,0);
               SymTableStack.push(p.ParaST);
-              sc:=TFPObjectList.create(false);
+              sc:=TFPObjectList.Create(false);
               repeat
                 if try_to_consume(_VAR) then
                   VarSpez:=vs_var
@@ -415,7 +415,7 @@ implementation
                 sc.clear;
                 repeat
                   inc(ParaNr);
-                  hreadparavs:=CParaVarSym.create(CurrentScanner.orgpattern,10*ParaNr,VarSpez,GenErrorDef,[]);
+                  hreadparavs:=CParaVarSym.Create(CurrentScanner.orgpattern,10*ParaNr,VarSpez,GenErrorDef,[]);
                   p.ParaST.InsertSym(hreadparavs);
                   sc.add(hreadparavs);
                   consume(_ID);
@@ -473,7 +473,7 @@ implementation
                      values to objpas.integer (s32int on 32- and 64-bit targets,
                      s16int on 16- and 8-bit) to be compatible with delphi,
                      because the procedure matching requires equal parameters }
-                   if is_constnode(pt) and
+                   if Is_ConstNode(pt) and
                       Is_Ordinal(pt.resultdef)
                       and (not Is_64BitInt(pt.resultdef))
 
@@ -481,7 +481,7 @@ implementation
                      begin
                        if Is_Integer(pt.resultdef) then
 
-                         inserttypeconv_internal(pt,S32IntType);
+                         InsertTypeConv_Internal(pt,S32IntType);
 
                        p.Index:=TOrdConstNode(pt).Value.svalue;
                      end
@@ -576,7 +576,7 @@ implementation
                           of the of the property }
                         WriteProcDef.ReturnDef:=VoidType;
                         inc(ParaNr);
-                        hparavs:=CParaVarSym.create('$value',10*ParaNr,vs_value,p.PropDef,[]);
+                        hparavs:=CParaVarSym.Create('$value',10*ParaNr,vs_value,p.PropDef,[]);
                         WriteProcDef.ParaST.InsertSym(hparavs);
                         { Insert hidden parameters }
                         if not Assigned(astruct) then
@@ -658,14 +658,14 @@ implementation
                             ProcSym :
                               begin
                                  { Create a temporary procvardef to handle parameters }
-                                 storedprocdef:=CProcVarDef.create(NormalFunctionLevel,true);
+                                 storedprocdef:=CProcVarDef.Create(NormalFunctionLevel,true);
                                  include(storedprocdef.ProcOptions,po_methodpointer);
                                  { Return type must be boolean }
                                  storedprocdef.ReturnDef:=PasBool1Type;
                                  { Add index parameter if needed }
                                  if ppo_indexed in p.PropOptions then
                                    begin
-                                     hparavs:=CParaVarSym.create('$index',10,vs_value,p.IndexDef,[]);
+                                     hparavs:=CParaVarSym.Create('$index',10,vs_value,p.IndexDef,[]);
                                      storedprocdef.ParaST.InsertSym(hparavs);
                                    end;
 
@@ -718,20 +718,20 @@ implementation
                   if (p.PropDef.typ=setdef) and
                      (pt.nodetype=arrayconstructorn) then
                     begin
-                      arrayconstructor_to_set(pt);
+                      ArrayConstructor_To_Set(pt);
                       DoTypeCheckPass(pt);
                     end;
-                  inserttypeconv(pt,p.PropDef);
-                  if not(is_constnode(pt)) then
+                  InsertTypeConv(pt,p.PropDef);
+                  if not(Is_ConstNode(pt)) then
                     Message(parser_e_property_default_value_must_const);
                   { Set default value }
                   case pt.nodetype of
                     setconstn :
                       begin
                         if (SourceInfo.endian=TargetInfo.endian) then
-                          p.default:=PLongInt(TSetConstNode(pt).value_set)^
+                          p.default:=PLongInt(TSetConstNode(pt).ValueSet)^
                         else
-                          p.default:=LongInt(Reverse_LongWord(plongword(TSetConstNode(pt).value_set)^));
+                          p.default:=LongInt(Reverse_LongWord(plongword(TSetConstNode(pt).ValueSet)^));
                         include(p.PropOptions,ppo_default_is_set);
                       end;
                     ordconstn :
@@ -753,7 +753,7 @@ implementation
                       p.default:=0;
                     realconstn:
                       begin
-                        s:=Single(TRealConstNode(pt).value_real);
+                        s:=Single(TRealConstNode(pt).ValueReal);
                         p.default:=PLongInt(@s)^;
                         include(p.PropOptions,ppo_default_is_single);
                       end;
@@ -1114,7 +1114,7 @@ implementation
         var
           vs : TAbstractNormalVarSym;
           tcsym : TStaticVarSym;
-          templist : TAsmList;
+          TempList : TAsmList;
         begin
           vs:=TAbstractNormalVarSym(sc[0]);
           if sc.count>1 then
@@ -1125,11 +1125,11 @@ implementation
           case vs.typ of
             localvarsym :
               begin
-                tcsym:=CStaticVarSym.create('$default'+vs.realname,vs_const,vs.vardef,[]);
+                tcsym:=CStaticVarSym.Create('$default'+vs.realname,vs_const,vs.vardef,[]);
                 include(tcsym.SymOptions,sp_internal);
                 SymTableStack.top.InsertSym(tcsym);
-                templist:=TAsmList.create;
-                read_typed_const(templist,tcsym,false);
+                TempList:=TAsmList.Create;
+                read_typed_const(TempList,tcsym,false);
                 { in case of a generic routine, this initialisation value is not
                   used, and will be re-parsed during specialisations (and the
                   current version is not type-correct and hence breaks code
@@ -1137,10 +1137,10 @@ implementation
                 if not parse_generic then
                   begin
                     vs.DefaultConstSym:=tcsym;
-                    CurrentAsmData.asmlists[al_typedconsts].ConcatList(templist);
+                    CurrentAsmData.asmlists[al_typedconsts].ConcatList(TempList);
                   end;
-                templist.free;
-                templist := nil;
+                TempList.free;
+                TempList := nil;
               end;
             staticvarsym :
               begin
@@ -1170,20 +1170,20 @@ implementation
           pt:=expr(true);
           { check allowed absolute types }
           if (pt.nodetype=stringconstn) or
-            (is_constcharnode(pt)) then
+            (Is_ConstCharNode(pt)) then
             begin
-              abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
+              abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
               abssym.fileinfo:=vs.fileinfo;
               if pt.nodetype=stringconstn then
-                abssym.AsmName:=StringDup(TStringConstNode(pt).asrawbytestring)
+                abssym.AsmName:=StringDup(TStringConstNode(pt).AsRawByteString)
               else
                 abssym.AsmName:=StringDup(chr(TOrdConstNode(pt).Value.svalue));
               abssym.AbsTyp:=toasm;
             end
           { address }
-          else if is_constintnode(pt) then
+          else if Is_ConstIntNode(pt) then
             begin
-              abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
+              abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
               abssym.fileinfo:=vs.fileinfo;
               abssym.AbsTyp:=toaddr;
 {$ifndef cpu64bitaddr}
@@ -1224,7 +1224,7 @@ implementation
                         possible, but they're definitely all bad.
                       }
                       if (TUnaryNode(hp).left.nodetype=typeconvn) and
-                         (TTypeConvNode(TUnaryNode(hp).left).convtype in
+                         (TTypeConvNode(TUnaryNode(hp).left).ConvType in
                            [tc_pchar_2_string,tc_pointer_2_array,
                             tc_intf_2_string,tc_intf_2_guid,
                             tc_dynarray_2_variant,tc_interface_2_variant,
@@ -1245,16 +1245,16 @@ implementation
               if (hp.nodetype=loadn) then
                 begin
                   { we should check the result type of loadn }
-                  if not (TLoadNode(hp).symtableentry.typ in [FieldVarSym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
+                  if not (TLoadNode(hp).SymTableEntry.typ in [FieldVarSym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
                     Message(parser_e_absolute_only_to_var_or_const);
-                  if vs=TLoadNode(hp).symtableentry then
+                  if vs=TLoadNode(hp).SymTableEntry then
                     Message(parser_e_absolute_sym_cannot_reference_itself)
                   else
                     begin
-                      abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
+                      abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
                       abssym.fileinfo:=vs.fileinfo;
                       abssym.AbsTyp:=tovar;
-                      abssym.Ref:=node_to_propaccesslist(pt);
+                      abssym.Ref:=Node_To_PropAccessList(pt);
                       { if the sizes are different, can't be a regvar since you }
                       { can't be "absolute upper 8 bits of a register" (except  }
                       { if its a record field of the same size of a record      }
@@ -1309,7 +1309,7 @@ implementation
          if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
          { read vars }
-         sc:=TFPObjectList.create(false);
+         sc:=TFPObjectList.Create(false);
          first:=true;
          had_generic:=false;
          vs:=nil;
@@ -1328,11 +1328,11 @@ implementation
                                 (CurrentScanner.idtoken=_GENERIC);
                    case SymTableStack.top.SymTableType of
                      LocalSymTable :
-                       vs:=CLocalVarSym.create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
+                       vs:=CLocalVarSym.Create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
                      staticsymtable,
                      GlobalSymTable :
                        begin
-                         vs:=CStaticVarSym.create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
+                         vs:=CStaticVarSym.Create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
                          if vd_threadvar in options then
                            include(vs.VarOptions,vo_is_thread_var);
                        end;
@@ -1531,7 +1531,7 @@ implementation
                  if (vs.typ=staticvarsym) and
                     not(vo_is_typed_const in vs.VarOptions) and
                     not(vo_is_external in vs.VarOptions) then
-                   CNodeUtils.insertbssdata(TStaticVarSym(vs));
+                   CNodeUtils.InsertBSSData(TStaticVarSym(vs));
                  if vo_is_public in vs.VarOptions then
                    CurrentModule.Add_Public_AsmSym(vs.MangledName,AB_GLOBAL,AT_DATA);
                end;
@@ -1625,7 +1625,7 @@ implementation
          if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
          { read vars }
-         sc:=TFPObjectList.create(false);
+         sc:=TFPObjectList.Create(false);
          removeclassoption:=false;
          had_generic:=false;
          attr_element_count:=0;
@@ -1643,7 +1643,7 @@ implementation
                sorg:=CurrentScanner.orgpattern;
                if CurrentScanner.token=_ID then
                  begin
-                   vs:=CFieldVarSym.create(sorg,vs_value,GenErrorDef,[]);
+                   vs:=CFieldVarSym.Create(sorg,vs_value,GenErrorDef,[]);
 
                    { normally the visibility is set via addfield, but sometimes
                      we collect symbols so we can add them in a batch of
@@ -1812,7 +1812,7 @@ implementation
                      if vd_threadvar in options then
                        include(hstaticvs.VarOptions,vo_is_thread_var);
                      if not parse_generic then
-                       CNodeUtils.insertbssdata(hstaticvs);
+                       CNodeUtils.InsertBSSData(hstaticvs);
                      if vd_final in options then
                        hstaticvs.VarSpez:=vs_final;
                    end;
@@ -1872,7 +1872,7 @@ implementation
                     begin
                       consume(_ID);
                       consume(_COLON);
-                      fieldvs:=CFieldVarSym.create(sorg,vs_value,GenErrorDef,[]);
+                      fieldvs:=CFieldVarSym.Create(sorg,vs_value,GenErrorDef,[]);
                       variantdesc^^.VariantSelector:=fieldvs;
                       SymTableStack.top.InsertSym(fieldvs);
                     end;
@@ -1892,8 +1892,8 @@ implementation
                 Message(type_e_ordinal_expr_expected);
               consume(_OF);
 
-              UnionSymtable:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
-              UnionDef:=CRecordDef.create('',unionsymtable);
+              UnionSymtable:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
+              UnionDef:=CRecordDef.Create('',unionsymtable);
               uniondef.IsUnion:=true;
 
               startvarrecsize:=UnionSymtable.DataSize;
@@ -1910,10 +1910,10 @@ implementation
                   pt:=comp_expr([ef_accept_equal]);
                   if not(pt.nodetype=ordconstn) then
                     Message(parser_e_illegal_expression);
-                  inserttypeconv(pt,casetype);
+                  InsertTypeConv(pt,casetype);
                   { iso pascal does not support ranges in variant record definitions }
                   if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and try_to_consume(_POINTPOINT) then
-                    pt:=CRangeNode.create(pt,comp_expr([ef_accept_equal]))
+                    pt:=CRangeNode.Create(pt,comp_expr([ef_accept_equal]))
                   else
                     begin
                       with variantdesc^^.branches[high(variantdesc^^.branches)] do

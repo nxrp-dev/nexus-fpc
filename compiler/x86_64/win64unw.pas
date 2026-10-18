@@ -45,7 +45,7 @@ type
     FName: PShortString;
     procedure AddElement(objdata:TObjData;aCode,aInfo:Integer;aOffs:dword);
   public
-    constructor create;
+    constructor Create;
     destructor Destroy;override;
     procedure generate_prologue_data(objdata:TObjData);
     procedure start_frame(objdata:TObjData; const name: string);
@@ -86,7 +86,7 @@ const
 
 type
   TAISEHDirectiveX64=class(TAISEHDirective)
-    procedure generate_code(objdata:TObjData);override;
+    procedure Generate_Code(objdata:TObjData);override;
   end;
 
   TPrologueElement=class(TLinkedListItem)
@@ -134,9 +134,9 @@ end;
 
 { TWin64CFI }
 
-constructor TWin64CFI.create;
+constructor TWin64CFI.Create;
 begin
-  inherited create;
+  inherited Create;
   FElements:=TLinkedList.Create;
 end;
 
@@ -376,7 +376,7 @@ begin
     AddElement(objdata,UWOP_ALLOC_LARGE,1,ofs);
 end;
 
-procedure TAISEHDirectiveX64.generate_code(objdata:TObjData);
+procedure TAISEHDirectiveX64.Generate_Code(objdata:TObjData);
 begin
   case kind of
     ash_proc:

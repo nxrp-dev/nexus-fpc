@@ -114,7 +114,7 @@ implementation
                       InternalError(2010053116);
                   end;
                   cg.A_Load_Loc_CGPara(list,tmploc,cgpara);
-                  location_freetemp(list,tmploc);
+                  Location_FreeTemp(list,tmploc);
                 end
               else
                 InternalError(2010053003);
@@ -144,7 +144,7 @@ implementation
                   tmploc:=l;
                   Location_Force_Mem(list,tmploc,size);
                   cg.A_LoadFPU_Ref_CGPara(list,tmploc.Size,tmploc.Reference,cgpara);
-                  location_freetemp(list,tmploc);
+                  Location_FreeTemp(list,tmploc);
                 end;
               else
                 InternalError(2010053004);
@@ -444,7 +444,7 @@ implementation
 
   procedure create_hlcodegen_cpu(hlcgobjhelpers: THLCGObjHelpersClass);
     begin
-      hlcg:=THLCGCPU.create(hlcgobjhelpers);
+      hlcg:=THLCGCPU.Create(hlcgobjhelpers);
       create_codegen;
     end;
 

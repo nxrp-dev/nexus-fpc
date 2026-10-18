@@ -36,63 +36,63 @@ interface
       TCGProcInfo = class(TProcInfo)
       private type
         TTempInfoFlagsEntry = record
-          tempinfo : PTempInfo;
-          flags : TTempInfoFlags;
+          TempInfo : PTempInfo;
+          Flags : TTempInfoFlags;
         end;
         PTempInfoFlagsEntry = ^TTempInfoFlagsEntry;
       private
-        tempinfo_flags_map : TFPList;
-        tempflags_swapped : boolean;
-        procedure swap_tempflags;
-        function store_node_tempflags(var n: TNode; arg: pointer): TForEachNodeResult;
+        FTempInfoFlagsMap : TFPList;
+        FTempFlagsSwapped : boolean;
+        procedure SwapTempFlags;
+        function StoreNodeTempFlags(var ANode: TNode; AArg: pointer): TForEachNodeResult;
         procedure CreateInlineInfo;
         { returns the node which is the start of the user code, this is needed by the dfa }
         function GetUserCode: TNode;
-        procedure maybe_add_constructor_wrapper(var tocode: TNode; withexceptblock: boolean);
-        procedure add_entry_exit_code;
-        procedure setup_tempgen;
+        procedure MaybeAddConstructorWrapper(var ACode: TNode; AWithExceptBlock: boolean);
+        procedure AddEntryExitCode;
+        procedure SetupTempGen;
         procedure TransformNodeTree;
-        procedure Convert_Captured_Syms;
+        procedure ConvertCapturedSyms;
       protected
-        procedure generate_code_exceptfilters;
+        procedure Generate_Code_ExceptFilters;
       public
         { code for the subroutine as tree }
-        code : TNode;
+        Code : TNode;
         { positions in the tree for init/final }
-        entry_asmnode,
-        loadpara_asmnode,
-        exitlabel_asmnode,
-        stackcheck_asmnode,
-        init_asmnode    : TAsmNode;
-        temps_finalized : boolean;
-        dfabuilder : TDFABuilder;
+        EntryAsmNode,
+        LoadParaAsmNode,
+        ExitLabelAsmNode,
+        StackCheckAsmNode,
+        InitAsmNode    : TAsmNode;
+        TempsFinalized : boolean;
+        DFABuilder : TDFABuilder;
         { Last temp offset of the parent procedure at the time exceptfilter
           code generation begins. Temps below this boundary belong to the parent
           and must be adjusted to FP-relative in the handler. Temps at or above
           this boundary belong to the handler and stay SP-relative.
           Only used on AArch64-Win64. }
-        exceptfilter_parent_tempend : LongInt;
+        ExceptFilterParentTempEnd : LongInt;
 
         destructor  Destroy;override;
 
-        function calc_stackframe_size : LongInt;override;
+        function Calc_StackFrame_Size : LongInt;override;
 
-        procedure printproc(pass:string);
-        procedure generate_code;
-        procedure generate_code_tree;
-        procedure generate_exceptfilter(nestedpi: TCGProcInfo);
-        procedure generate_exit_label(list: TAsmList); virtual;
-        procedure resetprocdef;
-        procedure add_to_symtablestack;
-        procedure remove_from_symtablestack;
-        procedure parse_body;
+        procedure PrintProc(APass:string);
+        procedure Generate_Code;
+        procedure Generate_Code_Tree;
+        procedure Generate_ExceptFilter(ANestedProcInfo: TCGProcInfo);
+        procedure Generate_Exit_Label(AList: TAsmList); virtual;
+        procedure ResetProcDef;
+        procedure Add_To_SymTableStack;
+        procedure Remove_From_SymTableStack;
+        procedure Parse_Body;
 
-        procedure store_tempflags;
-        procedure apply_tempflags;
-        procedure reset_tempflags;
+        procedure Store_TempFlags;
+        procedure Apply_TempFlags;
+        procedure Reset_TempFlags;
 
-        function has_assembler_child : boolean;
-        procedure set_eh_info; override;
+        function Has_Assembler_Child : boolean;
+        procedure Set_EH_Info; override;
       end;
 
       TReadProcFlag = (
@@ -103,23 +103,23 @@ interface
       TReadProcFlags = set of TReadProcFlag;
 
 
-    procedure printnode_reset;
+    procedure PrintNode_Reset;
 
     { reads the declaration blocks }
-    procedure read_declarations(IsLibrary : boolean);
+    procedure Read_Declarations(AIsLibrary : boolean);
 
     { reads declarations in the interface part of a unit }
-    procedure read_interface_declarations;
+    procedure Read_Interface_Declarations;
 
     { reads any routine in the implementation, or a non-method routine
       declaration in the interface (depending on whether or not parse_only is
       true) }
-    function read_proc(flags:TReadProcFlags; usefwpd: TProcDef):TProcDef;
+    function Read_Proc(AFlags:TReadProcFlags; AForwardProcDef: TProcDef):TProcDef;
 
     { parses only the body of a non nested routine; needs a correctly setup pd }
-    procedure read_proc_body(pd:TProcDef);
+    procedure Read_Proc_Body(AProcDef:TProcDef);
 
-    procedure import_external_proc(pd:TProcDef);
+    procedure Import_External_Proc(AProcDef:TProcDef);
 
 
 implementation
@@ -137,7 +137,7 @@ implementation
        FModule,
        { pass 1 }
        ngenutil,nld,ncal,ncon,nflw,nadd,ncnv,nmem,
-       pass_1,
+       Pass_1,
        { pass 2 }
 {$ifndef NOPASS2}
        pass_2,
@@ -166,95 +166,95 @@ implementation
        {$endif}
        ;
 
-    function checknodeinlining(procdef: TProcDef): boolean;
+    function CheckNodeInlining(AProcDef: TProcDef): boolean;
 
-      procedure _no_inline(const reason: TMsgStr);
+      procedure NoInline(const AReason: TMsgStr);
         begin
-          include(procdef.ImplProcOptions,pio_inline_not_possible);
-          Message1(parser_n_not_supported_for_inline,reason);
+          include(AProcDef.ImplProcOptions,pio_inline_not_possible);
+          Message1(parser_n_not_supported_for_inline,AReason);
           Message(parser_h_inlining_disabled);
         end;
 
       var
-        i : integer;
-        currpara : TParaVarSym;
+        lIndex : integer;
+        lCurrentPara : TParaVarSym;
       begin
-        result := false;
+        Result := false;
         { this code will never be used (only specialisations can be inlined),
           and moreover contains references to defs that are not stored in the
           ppu file }
-        if df_generic in CurrentProcInfo.procdef.DefOptions then
+        if df_generic in CurrentProcInfo.ProcDef.DefOptions then
           exit;
-        if pi_has_assembler_block in CurrentProcInfo.flags then
+        if pi_has_assembler_block in CurrentProcInfo.Flags then
           begin
-            _no_inline('assembler');
+            NoInline('assembler');
             exit;
           end;
-        if (pi_has_global_goto in CurrentProcInfo.flags) or
-           (pi_has_interproclabel in CurrentProcInfo.flags) then
+        if (pi_has_global_goto in CurrentProcInfo.Flags) or
+           (pi_has_interproclabel in CurrentProcInfo.Flags) then
           begin
-            _no_inline('global goto');
+            NoInline('global goto');
             exit;
           end;
-        if pi_has_nested_exit in CurrentProcInfo.flags then
+        if pi_has_nested_exit in CurrentProcInfo.Flags then
           begin
-            _no_inline('nested exit');
+            NoInline('nested exit');
             exit;
           end;
-        if pi_calls_c_varargs in CurrentProcInfo.flags then
+        if pi_calls_c_varargs in CurrentProcInfo.Flags then
           begin
-            _no_inline('called C-style varargs functions');
+            NoInline('called C-style varargs functions');
             exit;
           end;
         { the compiler cannot handle inherited in inlined subroutines because
           it tries to search for self in the symtable, however, the symtable
           is not available }
-        if pi_has_inherited in CurrentProcInfo.flags then
+        if pi_has_inherited in CurrentProcInfo.Flags then
           begin
-            _no_inline('inherited');
+            NoInline('inherited');
             exit;
           end;
-        if pio_nested_access in procdef.ImplProcOptions then
+        if pio_nested_access in AProcDef.ImplProcOptions then
          begin
-           _no_inline('access to local from nested scope');
+           NoInline('access to local from nested scope');
            exit;
          end;
         { We can't support inlining for procedures that have nested
           procedures because the nested procedures use a fixed offset
           for accessing locals in the parent procedure (PFV) }
-        if CurrentProcInfo.has_nestedprocs then
+        if CurrentProcInfo.Has_NestedProcs then
           begin
-            _no_inline('nested procedures');
+            NoInline('nested procedures');
             exit;
           end;
 
-        if pi_uses_get_frame in CurrentProcInfo.flags then
+        if pi_uses_get_frame in CurrentProcInfo.Flags then
           begin
-            _no_inline('get_frame');
+            NoInline('get_frame');
             { for LLVM: it can inline things that FPC can't, but it mustn't
               inline this one }
-            include(CurrentProcInfo.procdef.ImplProcOptions,pio_inline_forbidden);
+            include(CurrentProcInfo.ProcDef.ImplProcOptions,pio_inline_forbidden);
             exit;
           end;
 
-        for i:=0 to procdef.paras.count-1 do
+        for lIndex:=0 to AProcDef.paras.count-1 do
           begin
-            currpara:=TParaVarSym(procdef.paras[i]);
-            case currpara.vardef.typ of
+            lCurrentPara:=TParaVarSym(AProcDef.paras[lIndex]);
+            case lCurrentPara.vardef.typ of
               arraydef :
                 begin
-                  if Is_Array_Of_Const(currpara.vardef) or
-                     Is_Variant_Array(currpara.vardef) then
+                  if Is_Array_Of_Const(lCurrentPara.vardef) or
+                     Is_Variant_Array(lCurrentPara.vardef) then
                     begin
-                      _no_inline('array of const');
+                      NoInline('array of const');
                       exit;
                     end;
                   { open arrays might need re-basing of the index, i.e. if you pass
                     an array[1..10] as open array, you have to add 1 to all index operations
                     if you directly inline it }
-                  if Is_Open_Array(currpara.vardef) then
+                  if Is_Open_Array(lCurrentPara.vardef) then
                     begin
-                      _no_inline('open array');
+                      NoInline('open array');
                       exit;
                     end;
                 end;
@@ -262,7 +262,7 @@ implementation
                 ;
             end;
         end;
-        result:=true;
+        Result:=true;
       end;
 
 
@@ -270,97 +270,97 @@ implementation
                       PROCEDURE/FUNCTION BODY PARSING
 ****************************************************************************}
 
-    procedure initializevars(p:TObject;arg:pointer);
+    procedure InitializeVars(AObject:TObject;AArg:pointer);
       var
-        b : TBlockNode;
+        lBlock : TBlockNode;
       begin
-        if not (TSym(p).typ in [localvarsym,staticvarsym]) then
+        if not (TSym(AObject).typ in [localvarsym,staticvarsym]) then
          exit;
-        with TAbstractNormalVarSym(p) do
+        with TAbstractNormalVarSym(AObject) do
          begin
            if Assigned(DefaultConstSym) then
             begin
-              b:=TBlockNode(arg);
-              b.left:=CStatementNode.create(
-                        CAssignmentNode.create(
-                            CLoadNode.create(TSym(p),TSym(p).owner),
-                            CLoadNode.create(DefaultConstSym,DefaultConstSym.owner)),
-                        b.left);
+              lBlock:=TBlockNode(AArg);
+              lBlock.left:=CStatementNode.Create(
+                        CAssignmentNode.Create(
+                            CLoadNode.Create(TSym(AObject),TSym(AObject).owner),
+                            CLoadNode.Create(DefaultConstSym,DefaultConstSym.owner)),
+                        lBlock.left);
             end
          end;
       end;
 
 
-    procedure check_finalize_paras(p:TObject;arg:pointer);
+    procedure CheckFinalizeParas(AObject:TObject;AArg:pointer);
       begin
-        if (TSym(p).typ=paravarsym) then
+        if (TSym(AObject).typ=paravarsym) then
           begin
-            if TParaVarSym(p).Needs_Finalization then
+            if TParaVarSym(AObject).Needs_Finalization then
               begin
-                include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-                include(CurrentProcInfo.flags,pi_do_call);
+                include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
+                include(CurrentProcInfo.Flags,pi_do_call);
               end;
           end;
       end;
 
 
-    procedure check_finalize_locals(p:TObject;arg:pointer);
+    procedure CheckFinalizeLocals(AObject:TObject;AArg:pointer);
       begin
         { include the result: it needs to be finalized in case an exception }
         { occurs                                                            }
-        if (TSym(p).typ=localvarsym) and
-           (TLocalVarSym(p).refs>0) and
-           Is_Managed_Type(TLocalVarSym(p).vardef) then
+        if (TSym(AObject).typ=localvarsym) and
+           (TLocalVarSym(AObject).refs>0) and
+           Is_Managed_Type(TLocalVarSym(AObject).vardef) then
           begin
-            include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-            include(CurrentProcInfo.flags,pi_do_call);
+            include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
+            include(CurrentProcInfo.Flags,pi_do_call);
           end;
       end;
 
-    procedure init_main_block_syms(block: TNode);
+    procedure InitMainBlockSyms(ABlock: TNode);
       var
-         oldfilepos: TFilePosInfo;
+         lOldFilePos: TFilePosInfo;
       begin
         { initialized variables }
-        if CurrentProcInfo.procdef.LocalST.SymTableType=LocalSymTable then
+        if CurrentProcInfo.ProcDef.LocalST.SymTableType=LocalSymTable then
          begin
            { initialization of local variables with their initial
              values: part of function entry }
-           oldfilepos:=CurrentFilePos;
-           CurrentFilePos:=CurrentProcInfo.entrypos;
-           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@initializevars,block);
-           CurrentFilePos:=oldfilepos;
+           lOldFilePos:=CurrentFilePos;
+           CurrentFilePos:=CurrentProcInfo.EntryPos;
+           CurrentProcInfo.ProcDef.LocalST.SymList.ForEachCall(@InitializeVars,ABlock);
+           CurrentFilePos:=lOldFilePos;
          end;
 
-        if Assigned(CurrentProcInfo.procdef.ParentFPStruct) then
+        if Assigned(CurrentProcInfo.ProcDef.ParentFPStruct) then
          begin
            { finish the parentfpstruct (add padding, ...) }
-           Finish_ParentFPStruct(CurrentProcInfo.procdef);
+           Finish_ParentFPStruct(CurrentProcInfo.ProcDef);
          end;
       end;
 
-    function block(IsLibrary : boolean) : TNode;
+    function Block(AIsLibrary : boolean) : TNode;
       begin
          { parse const,types and vars }
-         read_declarations(IsLibrary);
+         Read_Declarations(AIsLibrary);
 
          { do we have an assembler block without the po_assembler?
            we should allow this for Delphi compatibility (PFV) }
          if (CurrentScanner.token=_ASM) and (m_delphi in CurrentSettings.ModeSwitches) then
-           include(CurrentProcInfo.procdef.ProcOptions,po_assembler);
+           include(CurrentProcInfo.ProcDef.ProcOptions,po_assembler);
 
          { Handle assembler block different }
-         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
+         if (po_assembler in CurrentProcInfo.ProcDef.ProcOptions) then
           begin
-            block:=assembler_block;
+            Block:=assembler_block;
             exit;
           end;
 
          {Unit initialization?.}
          if (
-             Assigned(CurrentProcInfo.procdef.LocalST) and
-             (CurrentProcInfo.procdef.LocalST.SymTableLevel=MainProgramLevel) and
-             (CurrentModule.IsUnit or IsLibrary)
+             Assigned(CurrentProcInfo.ProcDef.LocalST) and
+             (CurrentProcInfo.ProcDef.LocalST.SymTableLevel=MainProgramLevel) and
+             (CurrentModule.IsUnit or AIsLibrary)
             ) then
            begin
              if (CurrentScanner.token=_END) then
@@ -368,10 +368,10 @@ implementation
                    consume(_END);
                    { We need at least a node, else the entry/exit code is not
                      generated and thus no PASCALMAIN symbol which we need (PFV) }
-                   if IsLibrary then
-                    block:=CNothingNode.create
+                   if AIsLibrary then
+                    Block:=CNothingNode.Create
                    else
-                    block:=nil;
+                    Block:=nil;
                 end
               else
                 begin
@@ -379,28 +379,28 @@ implementation
                      begin
                         { The library init code is already called and does not
                           need to be in the initfinal table (PFV) }
-                        block:=statement_block(_INITIALIZATION);
-                        init_main_block_syms(block);
+                        Block:=statement_block(_INITIALIZATION);
+                        InitMainBlockSyms(Block);
                      end
                    else if CurrentScanner.token=_FINALIZATION then
                      begin
                        { when a unit has only a finalization section, we can come to this
                          point when we try to read the nonh existing initialization section
                          so we've to check if we are really try to parse the finalization }
-                       if CurrentProcInfo.procdef.ProcTypeOption=potype_unitfinalize then
-                         block:=statement_block(_FINALIZATION)
+                       if CurrentProcInfo.ProcDef.ProcTypeOption=potype_unitfinalize then
+                         Block:=statement_block(_FINALIZATION)
                        else
-                         block:=nil;
+                         Block:=nil;
                      end
                    else
-                     block:=statement_block(_BEGIN);
+                     Block:=statement_block(_BEGIN);
                 end;
             end
          else
             begin
                { parse routine body }
-               block:=statement_block(_BEGIN);
-               init_main_block_syms(block);
+               Block:=statement_block(_BEGIN);
+               InitMainBlockSyms(Block);
             end;
       end;
 
@@ -409,7 +409,7 @@ implementation
                        PROCEDURE/FUNCTION COMPILING
 ****************************************************************************}
 
-    procedure printnode_reset;
+    procedure PrintNode_Reset;
       begin
         assign(PrintNodeFile,TreeLogFileName);
         {$push}{$I-}
@@ -424,35 +424,35 @@ implementation
       end;
 
 
-    procedure add_label_init(p:TObject;arg:pointer);
+    procedure AddLabelInit(AObject:TObject;AArg:pointer);
       begin
-        if TStoredSym(p).typ=labelsym then
+        if TStoredSym(AObject).typ=labelsym then
           begin
-            addstatement(TStatementNode(arg^),
-              CIfNode.create(CAddNode.create(EqualN,
-                CCallNode.createintern('fpc_setjmp',
-                  CCallParaNode.create(CLoadNode.create(TLabelSym(p).JumpBuf,TLabelSym(p).JumpBuf.owner),nil)),
-                COrdConstNode.create(1,Search_System_Proc('fpc_setjmp').ReturnDef,true))
-              ,CGotoNode.create(TLabelSym(p)),nil)
+            AddStatement(TStatementNode(AArg^),
+              CIfNode.Create(CAddNode.Create(EqualN,
+                CCallNode.CreateIntern('fpc_setjmp',
+                  CCallParaNode.Create(CLoadNode.Create(TLabelSym(AObject).JumpBuf,TLabelSym(AObject).JumpBuf.owner),nil)),
+                COrdConstNode.Create(1,Search_System_Proc('fpc_setjmp').ReturnDef,true))
+              ,CGotoNode.Create(TLabelSym(AObject)),nil)
             );
           end;
       end;
 
 
-    function generate_bodyentry_block:TNode;
+    function GenerateBodyEntryBlock:TNode;
       var
-        srsym        : TSym;
-        para         : TCallParaNode;
-        call         : TCallNode;
-        newstatement : TStatementNode;
-        def          : TAbstractRecordDef;
+        lSym        : TSym;
+        lPara         : TCallParaNode;
+        lCall         : TCallNode;
+        lNewStatement : TStatementNode;
+        lDef          : TAbstractRecordDef;
       begin
-        result:=internalstatements(newstatement);
+        Result:=InternalStatements(lNewStatement);
 
         if Assigned(CurrentStructDef) then
           begin
             { a constructor needs a help procedure }
-            if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) then
+            if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_constructor) then
               begin
                 if Is_Class(CurrentStructDef) or
                     (
@@ -461,30 +461,30 @@ implementation
                     ) then
                   begin
                     if Is_ObjectPascal_Helper(CurrentStructDef) then
-                      def:=TAbstractRecordDef(TObjectDef(CurrentStructDef).ExtendedDef)
+                      lDef:=TAbstractRecordDef(TObjectDef(CurrentStructDef).ExtendedDef)
                     else
-                      def:=CurrentStructDef;
-                    srsym:=Search_Struct_Member(def,'NEWINSTANCE');
-                    if Assigned(srsym) and
-                       (srsym.typ=ProcSym) then
+                      lDef:=CurrentStructDef;
+                    lSym:=Search_Struct_Member(lDef,'NEWINSTANCE');
+                    if Assigned(lSym) and
+                       (lSym.typ=ProcSym) then
                       begin
                         { if vmt=1 then newinstance }
-                        call:=
-                          CCallNode.create(nil,TProcSym(srsym),srsym.owner,
-                            CTypeConvNode.Create_Internal(load_self_pointer_node,CClassRefDef.create(CurrentStructDef)),
+                        lCall:=
+                          CCallNode.Create(nil,TProcSym(lSym),lSym.owner,
+                            CTypeConvNode.Create_Internal(Load_Self_Pointer_Node,CClassRefDef.Create(CurrentStructDef)),
                             [],nil);
-                        include(call.callnodeflags,cnf_ignore_devirt_wpo);
-                        addstatement(newstatement,CIfNode.create(
+                        include(lCall.CallNodeFlags,cnf_ignore_devirt_wpo);
+                        AddStatement(lNewStatement,CIfNode.Create(
                             CAddNode.Create_Internal(EqualN,
                                 CTypeConvNode.Create_Internal(
-                                    load_vmt_pointer_node,
+                                    Load_VMT_Pointer_Node,
                                     VoidPointerType),
-                                CPointerConstNode.create(1,VoidPointerType)),
-                            CAssignmentNode.create(
+                                CPointerConstNode.Create(1,VoidPointerType)),
+                            CAssignmentNode.Create(
                                 CTypeConvNode.Create_Internal(
-                                    load_self_pointer_node,
+                                    Load_Self_Pointer_Node,
                                     VoidPointerType),
-                                call),
+                                lCall),
                             nil));
                       end
                     else
@@ -498,22 +498,22 @@ implementation
                         this is required to allow setting the vmt to -1 to indicate
                         that memory was allocated }
                       { parameter 1 : self pointer }
-                      para:=CCallParaNode.create(
-                                COrdConstNode.create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
-                            CCallParaNode.create(
+                      lPara:=CCallParaNode.Create(
+                                COrdConstNode.Create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
+                            CCallParaNode.Create(
                                 CTypeConvNode.Create_Internal(
-                                    load_vmt_pointer_node,
+                                    Load_VMT_Pointer_Node,
                                     VoidPointerType),
-                            CCallParaNode.create(
+                            CCallParaNode.Create(
                                 CTypeConvNode.Create_Internal(
-                                    load_self_pointer_node,
+                                    Load_Self_Pointer_Node,
                                     VoidPointerType),
                             nil)));
-                      addstatement(newstatement,CAssignmentNode.create(
+                      AddStatement(lNewStatement,CAssignmentNode.Create(
                           CTypeConvNode.Create_Internal(
-                              load_self_pointer_node,
+                              Load_Self_Pointer_Node,
                               VoidPointerType),
-                          CCallNode.createintern('fpc_help_constructor',para)));
+                          CCallNode.CreateIntern('fpc_help_constructor',lPara)));
                     end
                 else
                   if not Is_Record(CurrentStructDef) and
@@ -526,30 +526,30 @@ implementation
                   calling fail instead of exit is useless because
                   there is nothing to dispose (PFV) }
                 if Is_Class_Or_Object(CurrentStructDef) then
-                  addstatement(newstatement,CIfNode.create(
-                    CAddNode.create(EqualN,
-                        load_self_pointer_node,
-                        CNilNode.create),
-                    CExitNode.create(nil),
+                  AddStatement(lNewStatement,CIfNode.Create(
+                    CAddNode.Create(EqualN,
+                        Load_Self_Pointer_Node,
+                        CNilNode.Create),
+                    CExitNode.Create(nil),
                     nil));
               end;
 
             { maybe call BeforeDestruction for classes }
-            if (CurrentProcInfo.procdef.ProcTypeOption=potype_destructor) and
+            if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_destructor) and
                Is_Class(CurrentStructDef) then
               begin
-                srsym:=Search_Struct_Member(CurrentStructDef,'BEFOREDESTRUCTION');
-                if Assigned(srsym) and
-                   (srsym.typ=ProcSym) then
+                lSym:=Search_Struct_Member(CurrentStructDef,'BEFOREDESTRUCTION');
+                if Assigned(lSym) and
+                   (lSym.typ=ProcSym) then
                   begin
                     { if vmt>0 then beforedestruction }
-                    addstatement(newstatement,CIfNode.create(
-                        CAddNode.create(gtn,
+                    AddStatement(lNewStatement,CIfNode.Create(
+                        CAddNode.Create(gtn,
                             CTypeConvNode.Create_Internal(
-                              load_vmt_pointer_node,PtrSIntType),
+                              Load_VMT_Pointer_Node,PtrSIntType),
                             CTypeConvNode.Create_Internal(
-                              CNilNode.create,PtrSIntType)),
-                        CCallNode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[],nil),
+                              CNilNode.Create,PtrSIntType)),
+                        CCallNode.Create(nil,TProcSym(lSym),lSym.owner,Load_Self_Node,[],nil),
                         nil));
                   end
                 else
@@ -557,20 +557,20 @@ implementation
               end;
           end;
         if m_non_local_goto in CurrentSettings.ModeSwitches then
-          TSymTable(CurrentProcInfo.procdef.LocalST).SymList.ForEachCall(@add_label_init,@newstatement);
+          TSymTable(CurrentProcInfo.ProcDef.LocalST).SymList.ForEachCall(@AddLabelInit,@lNewStatement);
 
-        Initialize_Capturer(CurrentProcInfo,newstatement);
+        Initialize_Capturer(CurrentProcInfo,lNewStatement);
       end;
 
 
-    function generate_bodyexit_block:TNode;
+    function GenerateBodyExitBlock:TNode;
       var
-        srsym : TSym;
-        para : TCallParaNode;
-        newstatement : TStatementNode;
-        oldlocalswitches: TLocalSwitches;
+        lSym : TSym;
+        lPara : TCallParaNode;
+        lNewStatement : TStatementNode;
+        lOldLocalSwitches: TLocalSwitches;
       begin
-        result:=internalstatements(newstatement);
+        Result:=InternalStatements(lNewStatement);
 
         if Assigned(CurrentStructDef) then
           begin
@@ -579,30 +579,30 @@ implementation
             { before. Further, in case of TThread the thread may    }
             { free the class instance right after AfterConstruction }
             { has been called, so it may no longer be valid (JM)    }
-            oldlocalswitches:=CurrentSettings.LocalSwitches;
-            CurrentSettings.LocalSwitches:=oldlocalswitches-[cs_check_object,cs_check_range];
+            lOldLocalSwitches:=CurrentSettings.LocalSwitches;
+            CurrentSettings.LocalSwitches:=lOldLocalSwitches-[cs_check_object,cs_check_range];
 
             { a destructor needs a help procedure }
-            if (CurrentProcInfo.procdef.ProcTypeOption=potype_destructor) then
+            if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_destructor) then
               begin
                 if Is_Class(CurrentStructDef) then
                   begin
-                    srsym:=Search_Struct_Member(CurrentStructDef,'FREEINSTANCE');
-                    if Assigned(srsym) and
-                       (srsym.typ=ProcSym) then
+                    lSym:=Search_Struct_Member(CurrentStructDef,'FREEINSTANCE');
+                    if Assigned(lSym) and
+                       (lSym.typ=ProcSym) then
                       begin
                         { if self<>0 and vmt<>0 then freeinstance }
-                        addstatement(newstatement,CIfNode.create(
-                            CAddNode.create(andn,
-                                CAddNode.create(unequaln,
-                                    load_self_pointer_node,
-                                    CNilNode.create),
-                                CAddNode.create(unequaln,
-                                    CTypeConvNode.create(
-                                        load_vmt_pointer_node,
+                        AddStatement(lNewStatement,CIfNode.Create(
+                            CAddNode.Create(andn,
+                                CAddNode.Create(unequaln,
+                                    Load_Self_Pointer_Node,
+                                    CNilNode.Create),
+                                CAddNode.Create(unequaln,
+                                    CTypeConvNode.Create(
+                                        Load_VMT_Pointer_Node,
                                         VoidPointerType),
-                                    CPointerConstNode.create(0,VoidPointerType))),
-                            CCallNode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[],nil),
+                                    CPointerConstNode.Create(0,VoidPointerType))),
+                            CCallNode.Create(nil,TProcSym(lSym),lSym.owner,Load_Self_Node,[],nil),
                             nil));
                       end
                     else
@@ -614,34 +614,34 @@ implementation
                       { finalize object data, but only if not in inherited call }
                       if Is_Managed_Type(CurrentStructDef) then
                         begin
-                          addstatement(newstatement,CIfNode.create(
-                            CAddNode.create(unequaln,
-                              CTypeConvNode.Create_Internal(load_vmt_pointer_node,VoidPointerType),
-                              CNilNode.create),
-                            CNodeUtils.finalize_data_node(load_self_node),
+                          AddStatement(lNewStatement,CIfNode.Create(
+                            CAddNode.Create(unequaln,
+                              CTypeConvNode.Create_Internal(Load_VMT_Pointer_Node,VoidPointerType),
+                              CNilNode.Create),
+                            CNodeUtils.Finalize_Data_Node(Load_Self_Node),
                             nil));
                         end;
                       { parameter 3 : vmt_offset }
                       { parameter 2 : pointer to vmt }
                       { parameter 1 : self pointer }
-                      para:=CCallParaNode.create(
-                                COrdConstNode.create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
-                            CCallParaNode.create(
+                      lPara:=CCallParaNode.Create(
+                                COrdConstNode.Create(TObjectDef(CurrentStructDef).VMT_Offset,S32IntType,false),
+                            CCallParaNode.Create(
                                 CTypeConvNode.Create_Internal(
-                                    load_vmt_pointer_node,
+                                    Load_VMT_Pointer_Node,
                                     VoidPointerType),
-                            CCallParaNode.create(
+                            CCallParaNode.Create(
                                 CTypeConvNode.Create_Internal(
-                                    load_self_pointer_node,
+                                    Load_Self_Pointer_Node,
                                     VoidPointerType),
                             nil)));
-                      addstatement(newstatement,
-                          CCallNode.createintern('fpc_help_destructor',para));
+                      AddStatement(lNewStatement,
+                          CCallNode.CreateIntern('fpc_help_destructor',lPara));
                     end
                 else
                   InternalError(200305105);
               end;
-            CurrentSettings.LocalSwitches:=oldlocalswitches;
+            CurrentSettings.LocalSwitches:=lOldLocalSwitches;
           end;
       end;
 
@@ -652,20 +652,20 @@ implementation
 
      destructor TCGProcInfo.Destroy;
        begin
-         TFPList.FreeAndNilDisposing(tempinfo_flags_map,TypeInfo(TTempInfoFlagsEntry));
-         code.free;
-         code := nil;
+         TFPList.FreeAndNilDisposing(FTempInfoFlagsMap,TypeInfo(TTempInfoFlagsEntry));
+         Code.free;
+         Code := nil;
          inherited Destroy;
        end;
 
 
-    function TCGProcInfo.calc_stackframe_size:LongInt;
+    function TCGProcInfo.Calc_StackFrame_Size:LongInt;
       begin
-        result:=Align(tg.direction*tg.lasttemp,CurrentSettings.Alignment.LocalAlignMin);
+        Result:=Align(TG.direction*TG.LastTemp,CurrentSettings.Alignment.LocalAlignMin);
       end;
 
 
-    procedure TCGProcInfo.printproc(pass:string);
+    procedure TCGProcInfo.PrintProc(APass:string);
       begin
         assign(PrintNodeFile,TreeLogFileName);
         {$push}{$I-}
@@ -680,183 +680,183 @@ implementation
          end;
         WriteLn(PrintNodeFile);
         WriteLn(PrintNodeFile,'*******************************************************************************');
-        WriteLn(PrintNodeFile, pass);
-        WriteLn(PrintNodeFile,procdef.FullProcName(false));
+        WriteLn(PrintNodeFile, APass);
+        WriteLn(PrintNodeFile,ProcDef.FullProcName(false));
         WriteLn(PrintNodeFile,'*******************************************************************************');
-        printnode(PrintNodeFile,code);
+        PrintNode(PrintNodeFile,Code);
         close(PrintNodeFile);
       end;
 
 
-    procedure TCGProcInfo.maybe_add_constructor_wrapper(var tocode: TNode; withexceptblock: boolean);
+    procedure TCGProcInfo.MaybeAddConstructorWrapper(var ACode: TNode; AWithExceptBlock: boolean);
       var
-        oldlocalswitches: TLocalSwitches;
-        srsym: TSym;
-        constructionblock,
-        exceptblock,
-        newblock: TBlockNode;
-        newstatement: TStatementNode;
-        pd: TProcDef;
-        constructionsuccessful: TLocalVarSym;
+        lOldLocalSwitches: TLocalSwitches;
+        lSym: TSym;
+        lConstructionBlock,
+        lExceptBlock,
+        lNewBlock: TBlockNode;
+        lNewStatement: TStatementNode;
+        lProcDef: TProcDef;
+        lConstructionSuccessful: TLocalVarSym;
       begin
-        if Assigned(procdef.struct) and
-           (procdef.ProcTypeOption=potype_constructor) then
+        if Assigned(ProcDef.struct) and
+           (ProcDef.ProcTypeOption=potype_constructor) then
           begin
             { Don't test self and the vmt here. See generate_bodyexit_block }
             { why (JM)                                                      }
-            oldlocalswitches:=CurrentSettings.LocalSwitches;
-            CurrentSettings.LocalSwitches:=oldlocalswitches-[cs_check_object,cs_check_range];
+            lOldLocalSwitches:=CurrentSettings.LocalSwitches;
+            CurrentSettings.LocalSwitches:=lOldLocalSwitches-[cs_check_object,cs_check_range];
 
             { call AfterConstruction for classes }
-            constructionsuccessful:=nil;
-            if Is_Class(procdef.struct) then
+            lConstructionSuccessful:=nil;
+            if Is_Class(ProcDef.struct) then
               begin
-                constructionsuccessful:=CLocalVarSym.create(InternalTypePrefixName[itp_vmt_afterconstruction_local],vs_value,PtrSIntType,[]);
-                procdef.LocalST.InsertSym(constructionsuccessful,false);
-                srsym:=Search_Struct_Member(procdef.struct,'AFTERCONSTRUCTION');
-                if not Assigned(srsym) or
-                   (srsym.typ<>ProcSym) then
+                lConstructionSuccessful:=CLocalVarSym.Create(InternalTypePrefixName[itp_vmt_afterconstruction_local],vs_value,PtrSIntType,[]);
+                ProcDef.LocalST.InsertSym(lConstructionSuccessful,false);
+                lSym:=Search_Struct_Member(ProcDef.struct,'AFTERCONSTRUCTION');
+                if not Assigned(lSym) or
+                   (lSym.typ<>ProcSym) then
                   InternalError(200305106);
 
-                CurrentFilePos:=entrypos;
-                constructionblock:=internalstatements(newstatement);
+                CurrentFilePos:=EntryPos;
+                lConstructionBlock:=InternalStatements(lNewStatement);
                 { initialise constructionsuccessful with -1, indicating that
                   the construction was not successful and hence
                   beforedestruction should not be called if a destructor is
                   called from the constructor }
-                addstatement(newstatement,CAssignmentNode.create(
-                  CLoadNode.create(constructionsuccessful,procdef.LocalST),
-                  genintconstnode(-1))
+                AddStatement(lNewStatement,CAssignmentNode.Create(
+                  CLoadNode.Create(lConstructionSuccessful,ProcDef.LocalST),
+                  GenIntConstNode(-1))
                 );
                 { first execute all constructor code. If no exception
                   occurred then we will execute afterconstruction,
                   otherwise we won't (the exception will jump over us) }
-                addstatement(newstatement,tocode);
-                CurrentFilePos:=exitpos;
+                AddStatement(lNewStatement,ACode);
+                CurrentFilePos:=ExitPos;
                 { if implicit finally node wasn't created, then exit label and
                   finalization code must be handled here and placed before
                   afterconstruction }
-                if not ((pi_needs_implicit_finally in flags) and
+                if not ((pi_needs_implicit_finally in Flags) and
                   (cs_implicit_exceptions in CurrentSettings.ModuleSwitches)) then
                   begin
-                    include(tocode.flags,nf_block_with_exit);
-                    if procdef.ProcTypeOption<>potype_exceptfilter then
-                      addstatement(newstatement,CFinalizeTempsNode.create);
-                    CNodeUtils.procdef_block_add_implicit_finalize_nodes(procdef,newstatement);
-                    temps_finalized:=true;
+                    include(ACode.Flags,nf_block_with_exit);
+                    if ProcDef.ProcTypeOption<>potype_exceptfilter then
+                      AddStatement(lNewStatement,CFinalizeTempsNode.Create);
+                    CNodeUtils.ProcDef_Block_Add_Implicit_Finalize_Nodes(ProcDef,lNewStatement);
+                    TempsFinalized:=true;
                   end;
 
                 { construction successful -> beforedestruction should be called
                   if an exception happens now }
-                addstatement(newstatement,CAssignmentNode.create(
-                  CLoadNode.create(constructionsuccessful,procdef.LocalST),
-                  genintconstnode(1))
+                AddStatement(lNewStatement,CAssignmentNode.Create(
+                  CLoadNode.Create(lConstructionSuccessful,ProcDef.LocalST),
+                  GenIntConstNode(1))
                 );
                 { Self can be nil when fail is called }
                 { if self<>nil and vmt<>nil then afterconstruction }
-                addstatement(newstatement,CIfNode.create(
-                  CAddNode.create(andn,
-                    CAddNode.create(unequaln,
-                      load_self_node,
-                      CNilNode.create),
-                    CAddNode.create(unequaln,
-                      load_vmt_pointer_node,
-                      CNilNode.create)),
-                    CCallNode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[],nil),
+                AddStatement(lNewStatement,CIfNode.Create(
+                  CAddNode.Create(andn,
+                    CAddNode.Create(unequaln,
+                      Load_Self_Node,
+                      CNilNode.Create),
+                    CAddNode.Create(unequaln,
+                      Load_VMT_Pointer_Node,
+                      CNilNode.Create)),
+                    CCallNode.Create(nil,TProcSym(lSym),lSym.owner,Load_Self_Node,[],nil),
                     nil));
-                tocode:=constructionblock;
+                ACode:=lConstructionBlock;
               end;
 
-            if withexceptblock and (procdef.struct.typ=objectdef) then
+            if AWithExceptBlock and (ProcDef.struct.typ=objectdef) then
               begin
                 { Generate the implicit "fail" code for a constructor (destroy
                   in case an exception happened) }
-                pd:=TObjectDef(procdef.struct).Find_Destructor;
+                lProcDef:=TObjectDef(ProcDef.struct).Find_Destructor;
                 { this will always be the case for classes, since tobject has
                   a destructor }
-                if Assigned(pd) or Is_Object(procdef.struct) then
+                if Assigned(lProcDef) or Is_Object(ProcDef.struct) then
                   begin
-                    CurrentFilePos:=exitpos;
-                    exceptblock:=internalstatements(newstatement);
+                    CurrentFilePos:=ExitPos;
+                    lExceptBlock:=InternalStatements(lNewStatement);
                     { first free the instance if non-nil }
-                    if Assigned(pd) then
+                    if Assigned(lProcDef) then
                       { if vmt<>0 then call destructor }
-                      addstatement(newstatement,
-                        CIfNode.create(
-                          CAddNode.create(unequaln,
-                            load_vmt_pointer_node,
-                            CNilNode.create),
+                      AddStatement(lNewStatement,
+                        CIfNode.Create(
+                          CAddNode.Create(unequaln,
+                            Load_VMT_Pointer_Node,
+                            CNilNode.Create),
                           { cnf_create_failed -> don't call BeforeDestruction }
-                          CCallNode.create(nil,TProcSym(pd.ProcSym),pd.ProcSym.owner,load_self_node,[cnf_create_failed],nil),
+                          CCallNode.Create(nil,TProcSym(lProcDef.ProcSym),lProcDef.ProcSym.owner,Load_Self_Node,[cnf_create_failed],nil),
                           nil))
                     else
                       { object without destructor, call 'fail' helper }
-                      addstatement(newstatement,
-                        CCallNode.createintern('fpc_help_fail',
-                          CCallParaNode.create(
-                            COrdConstNode.create(TObjectDef(procdef.struct).VMT_Offset,S32IntType,false),
-                          CCallParaNode.create(
+                      AddStatement(lNewStatement,
+                        CCallNode.CreateIntern('fpc_help_fail',
+                          CCallParaNode.Create(
+                            COrdConstNode.Create(TObjectDef(ProcDef.struct).VMT_Offset,S32IntType,false),
+                          CCallParaNode.Create(
                             CTypeConvNode.Create_Internal(
-                              load_vmt_pointer_node,
+                              Load_VMT_Pointer_Node,
                               VoidPointerType),
-                          CCallParaNode.create(
+                          CCallParaNode.Create(
                             CTypeConvNode.Create_Internal(
-                              load_self_pointer_node,
+                              Load_Self_Pointer_Node,
                               VoidPointerType),
                           nil))))
                       );
                     { then re-raise the exception }
-                    addstatement(newstatement,CRaiseNode.create(nil,nil,nil));
-                    CurrentFilePos:=entrypos;
-                    newblock:=internalstatements(newstatement);
+                    AddStatement(lNewStatement,CRaiseNode.Create(nil,nil,nil));
+                    CurrentFilePos:=EntryPos;
+                    lNewBlock:=InternalStatements(lNewStatement);
                     { try
                         tocode
                       except
                         exceptblock
                       end
                     }
-                    addstatement(newstatement,CTryExceptNode.create(
-                      tocode,
+                    AddStatement(lNewStatement,CTryExceptNode.Create(
+                      ACode,
                       nil,
-                      exceptblock));
-                    tocode:=newblock;
+                      lExceptBlock));
+                    ACode:=lNewBlock;
                   end;
               end;
-            CurrentSettings.LocalSwitches:=oldlocalswitches;
+            CurrentSettings.LocalSwitches:=lOldLocalSwitches;
           end;
       end;
 
 
-    procedure TCGProcInfo.add_entry_exit_code;
+    procedure TCGProcInfo.AddEntryExitCode;
       var
-        finalcode,
-        bodyentrycode,
-        bodyexitcode,
-        wrappedbody,
-        newblock     : TNode;
-        codestatement,
-        newstatement : TStatementNode;
-        oldfilepos   : TFilePosInfo;
-        is_constructor: boolean;
+        lFinalCode,
+        lBodyEntryCode,
+        lBodyExitCode,
+        lWrappedBody,
+        lNewBlock     : TNode;
+        lCodeStatement,
+        lNewStatement : TStatementNode;
+        lOldFilePos   : TFilePosInfo;
+        lIsConstructor: boolean;
       begin
-        is_constructor:=Assigned(procdef.struct) and
-          (procdef.ProcTypeOption=potype_constructor);
+        lIsConstructor:=Assigned(ProcDef.struct) and
+          (ProcDef.ProcTypeOption=potype_constructor);
 
-        oldfilepos:=CurrentFilePos;
+        lOldFilePos:=CurrentFilePos;
         { Generate code/locations used at start of proc }
-        CurrentFilePos:=entrypos;
-        entry_asmnode:=CAsmNode.create_get_position;
-        loadpara_asmnode:=CAsmNode.create_get_position;
-        stackcheck_asmnode:=CAsmNode.create_get_position;
-        init_asmnode:=CAsmNode.create_get_position;
-        bodyentrycode:=generate_bodyentry_block;
+        CurrentFilePos:=EntryPos;
+        EntryAsmNode:=CAsmNode.Create_Get_Position;
+        LoadParaAsmNode:=CAsmNode.Create_Get_Position;
+        StackCheckAsmNode:=CAsmNode.Create_Get_Position;
+        InitAsmNode:=CAsmNode.Create_Get_Position;
+        lBodyEntryCode:=GenerateBodyEntryBlock;
         { Generate code/locations used at end of proc }
-        CurrentFilePos:=exitpos;
-        exitlabel_asmnode:=CAsmNode.create_get_position;
-        temps_finalized:=false;
-        bodyexitcode:=generate_bodyexit_block;
+        CurrentFilePos:=ExitPos;
+        ExitLabelAsmNode:=CAsmNode.Create_Get_Position;
+        TempsFinalized:=false;
+        lBodyExitCode:=GenerateBodyExitBlock;
         { Check if bodyexitcode is not empty }
-        with TStatementNode(TBlockNode(bodyexitcode).statements) do
+        with TStatementNode(TBlockNode(lBodyExitCode).statements) do
           if (statement.nodetype<>nothingn) or Assigned(next) then
             { Indicate that the extra code is executed after the exit statement }
             include(flowcontrol,fc_no_direct_exit);
@@ -864,119 +864,119 @@ implementation
         { Generate procedure by combining init+body+final,
           depending on the implicit finally we need to add
           an try...finally...end wrapper }
-        CurrentFilePos:=entrypos;
-        newblock:=internalstatements(newstatement);
+        CurrentFilePos:=EntryPos;
+        lNewBlock:=InternalStatements(lNewStatement);
         { Note - this is not strippable since it wraps the entire procedure }
-        Exclude(TBlockNode(newblock).blocknodeflags, bnf_strippable);
+        Exclude(TBlockNode(lNewBlock).BlockNodeFlags, bnf_strippable);
         { initialization is common for all cases }
-        addstatement(newstatement,loadpara_asmnode);
-        addstatement(newstatement,stackcheck_asmnode);
-        addstatement(newstatement,entry_asmnode);
-        CNodeUtils.procdef_block_add_implicit_initialize_nodes(procdef,newstatement);
-        addstatement(newstatement,init_asmnode);
-        if Assigned(procdef.ParentFPInitBlock) then
+        AddStatement(lNewStatement,LoadParaAsmNode);
+        AddStatement(lNewStatement,StackCheckAsmNode);
+        AddStatement(lNewStatement,EntryAsmNode);
+        CNodeUtils.ProcDef_Block_Add_Implicit_Initialize_Nodes(ProcDef,lNewStatement);
+        AddStatement(lNewStatement,InitAsmNode);
+        if Assigned(ProcDef.ParentFPInitBlock) then
           begin
-            if Assigned(TBlockNode(procdef.ParentFPInitBlock).left) then
+            if Assigned(TBlockNode(ProcDef.ParentFPInitBlock).left) then
               begin
-                if CNodeUtils.check_insert_trashing(procdef) then
-                  CNodeUtils.maybe_trash_variable(newstatement,TAbstractNormalVarSym(procdef.ParentFPStruct),CLoadNode.create(procdef.ParentFPStruct,procdef.ParentFPStruct.owner));
+                if CNodeUtils.Check_Insert_Trashing(ProcDef) then
+                  CNodeUtils.Maybe_Trash_Variable(lNewStatement,TAbstractNormalVarSym(ProcDef.ParentFPStruct),CLoadNode.Create(ProcDef.ParentFPStruct,ProcDef.ParentFPStruct.owner));
                 { could be an asmn in case of a pure assembler procedure,
                   but those shouldn't access nested variables }
-                addstatement(newstatement,procdef.ParentFPInitBlock);
+                AddStatement(lNewStatement,ProcDef.ParentFPInitBlock);
               end
             else
-              procdef.ParentFPInitBlock.free;
-            procdef.ParentFPInitBlock:=nil;
+              ProcDef.ParentFPInitBlock.free;
+            ProcDef.ParentFPInitBlock:=nil;
           end;
-        addstatement(newstatement,bodyentrycode);
+        AddStatement(lNewStatement,lBodyEntryCode);
 
         if (cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
-           (pi_needs_implicit_finally in flags) and
+           (pi_needs_implicit_finally in Flags) and
            { but it's useless in init/final code of units }
-           not(procdef.ProcTypeOption in [potype_unitfinalize,potype_unitinit]) and
+           not(ProcDef.ProcTypeOption in [potype_unitfinalize,potype_unitinit]) and
            (f_exceptions in Features) then
           begin
             { Any result of managed type must be returned in parameter }
-            if Is_Managed_Type(procdef.ReturnDef) and
-               (not ParaManager.Ret_In_Param(procdef.ReturnDef,procdef)) and
-               (not Is_Class(procdef.ReturnDef)) then
+            if Is_Managed_Type(ProcDef.ReturnDef) and
+               (not ParaManager.Ret_In_Param(ProcDef.ReturnDef,ProcDef)) and
+               (not Is_Class(ProcDef.ReturnDef)) then
                InternalError(2013121301);
 
             { Generate special exception block only needed when
               implicit finally is used }
-            CurrentFilePos:=exitpos;
+            CurrentFilePos:=ExitPos;
             { Generate code that will be in the try...finally }
-            finalcode:=internalstatements(codestatement);
-            if procdef.ProcTypeOption<>potype_exceptfilter then
-              addstatement(codestatement,CFinalizeTempsNode.create);
-            CNodeUtils.procdef_block_add_implicit_finalize_nodes(procdef,codestatement);
-            temps_finalized:=true;
+            lFinalCode:=InternalStatements(lCodeStatement);
+            if ProcDef.ProcTypeOption<>potype_exceptfilter then
+              AddStatement(lCodeStatement,CFinalizeTempsNode.Create);
+            CNodeUtils.ProcDef_Block_Add_Implicit_Finalize_Nodes(ProcDef,lCodeStatement);
+            TempsFinalized:=true;
 
-            CurrentFilePos:=entrypos;
-            wrappedbody:=CTryFinallyNode.create_implicit(code,finalcode);
+            CurrentFilePos:=EntryPos;
+            lWrappedBody:=CTryFinallyNode.Create_Implicit(Code,lFinalCode);
             { afterconstruction must be called after finalizetemps, because it
                has to execute after the temps have been finalised in case of a
                refcounted class (afterconstruction decreases the refcount
                without freeing the instance if the count becomes nil, while
                the finalising of the temps can free the instance) }
-            maybe_add_constructor_wrapper(wrappedbody,true);
-            addstatement(newstatement,wrappedbody);
-            addstatement(newstatement,exitlabel_asmnode);
-            addstatement(newstatement,bodyexitcode);
+            MaybeAddConstructorWrapper(lWrappedBody,true);
+            AddStatement(lNewStatement,lWrappedBody);
+            AddStatement(lNewStatement,ExitLabelAsmNode);
+            AddStatement(lNewStatement,lBodyExitCode);
             { set flag the implicit finally has been generated }
-            include(flags,pi_has_implicit_finally);
+            include(Flags,pi_has_implicit_finally);
           end
         else
           begin
             { constructors need destroy-on-exception code even if they don't
               have managed variables/temps }
-            maybe_add_constructor_wrapper(code,
+            MaybeAddConstructorWrapper(Code,
               (cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and (f_exceptions in Features));
-            CurrentFilePos:=entrypos;
-            addstatement(newstatement,code);
-            CurrentFilePos:=exitpos;
-            if Assigned(nestedexitlabel) then
-              addstatement(newstatement,CLabelNode.create(CNothingNode.create,nestedexitlabel));
-            addstatement(newstatement,exitlabel_asmnode);
-            addstatement(newstatement,bodyexitcode);
-            if not is_constructor then
+            CurrentFilePos:=EntryPos;
+            AddStatement(lNewStatement,Code);
+            CurrentFilePos:=ExitPos;
+            if Assigned(NestedExitLabel) then
+              AddStatement(lNewStatement,CLabelNode.Create(CNothingNode.Create,NestedExitLabel));
+            AddStatement(lNewStatement,ExitLabelAsmNode);
+            AddStatement(lNewStatement,lBodyExitCode);
+            if not lIsConstructor then
               begin
-                if procdef.ProcTypeOption<>potype_exceptfilter then
-                  addstatement(newstatement,CFinalizeTempsNode.create);
-                CNodeUtils.procdef_block_add_implicit_finalize_nodes(procdef,newstatement);
-                temps_finalized:=true;
+                if ProcDef.ProcTypeOption<>potype_exceptfilter then
+                  AddStatement(lNewStatement,CFinalizeTempsNode.Create);
+                CNodeUtils.ProcDef_Block_Add_Implicit_Finalize_Nodes(ProcDef,lNewStatement);
+                TempsFinalized:=true;
               end;
           end;
-        if not temps_finalized then
+        if not TempsFinalized then
           begin
-            CurrentFilePos:=exitpos;
-            CNodeUtils.procdef_block_add_implicit_finalize_nodes(procdef,newstatement);
+            CurrentFilePos:=ExitPos;
+            CNodeUtils.ProcDef_Block_Add_Implicit_Finalize_Nodes(ProcDef,lNewStatement);
           end;
-        DoFirstPass(newblock);
-        code:=newblock;
-        CurrentFilePos:=oldfilepos;
+        DoFirstPass(lNewBlock);
+        Code:=lNewBlock;
+        CurrentFilePos:=lOldFilePos;
       end;
 
 
-    procedure clearrefs(p:TObject;arg:pointer);
+    procedure ClearRefs(AObject:TObject;AArg:pointer);
       begin
-         if (TSym(p).typ in [localvarsym,paravarsym,staticvarsym]) then
-           if TAbstractVarSym(p).refs>1 then
-             TAbstractVarSym(p).refs:=1;
+         if (TSym(AObject).typ in [localvarsym,paravarsym,staticvarsym]) then
+           if TAbstractVarSym(AObject).refs>1 then
+             TAbstractVarSym(AObject).refs:=1;
       end;
 
 
-    procedure Translate_Registers(p:TObject;list:pointer);
+    procedure TranslateRegisters(AObject:TObject;AList:pointer);
       begin
-         if (TSym(p).typ in [localvarsym,paravarsym,staticvarsym]) and
-            (TAbstractNormalVarSym(p).LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
+         if (TSym(AObject).typ in [localvarsym,paravarsym,staticvarsym]) and
+            (TAbstractNormalVarSym(AObject).LocAlloc.Loc in [LOC_REGISTER,LOC_CREGISTER,LOC_MMREGISTER,
               LOC_CMMREGISTER,LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
            begin
              if not(cs_no_regalloc in CurrentSettings.GlobalSwitches) then
                begin
-                 cg.Translate_Register(TAbstractNormalVarSym(p).LocAlloc.Register);
-                 if (TAbstractNormalVarSym(p).LocAlloc.RegisterHi<>NR_NO) then
-                   cg.Translate_Register(TAbstractNormalVarSym(p).LocAlloc.RegisterHi);
+                 cg.Translate_Register(TAbstractNormalVarSym(AObject).LocAlloc.Register);
+                 if (TAbstractNormalVarSym(AObject).LocAlloc.RegisterHi<>NR_NO) then
+                   cg.Translate_Register(TAbstractNormalVarSym(AObject).LocAlloc.RegisterHi);
                end;
            end;
       end;
@@ -990,9 +990,9 @@ implementation
       );
 {$endif}
 
-    procedure TCGProcInfo.setup_tempgen;
+    procedure TCGProcInfo.SetupTempGen;
       begin
-        tg:=tgobjclass.create;
+        TG:=TGObjClass.Create;
 
 {$if defined(i386) or defined(x86_64) or defined(aarch64)}
           begin
@@ -1019,26 +1019,26 @@ implementation
               - stack frame cannot be optimized if using Win64 SEH
                 (at least with the current state of our codegenerator).
             }
-            if ((po_assembler in procdef.ProcOptions) and
+            if ((po_assembler in ProcDef.ProcOptions) and
                (m_delphi in CurrentSettings.ModeSwitches) and
                { localst at main_program_level is a staticsymtable }
-                (procdef.LocalST.SymTableLevel<>MainProgramLevel) and
-                (TAbstractLocalSymTable(procdef.LocalST).Count_Locals = 0)) or
+                (ProcDef.LocalST.SymTableLevel<>MainProgramLevel) and
+                (TAbstractLocalSymTable(ProcDef.LocalST).Count_Locals = 0)) or
                ((cs_opt_stackframe in CurrentSettings.OptimizerSwitches) and
                 not(cs_generate_stackframes in CurrentSettings.LocalSwitches) and
-                not(po_assembler in procdef.ProcOptions) and
+                not(po_assembler in ProcDef.ProcOptions) and
 {$if defined(aarch64)}
                { on aarch64, it must be a leaf subroutine }
-                not(pi_do_call in flags) and
+                not(pi_do_call in Flags) and
 {$endif defined(aarch64)}
-                not ((pi_has_stackparameter in flags)
+                not ((pi_has_stackparameter in Flags)
 {$if defined(i386) or defined(x86_64)}
                { Outgoing parameter(s) on stack do not need stackframe on x86 targets
                  with fixed stack. On ARM it fails, see bug #25050 }
                   and (not ParaManager.Use_Fixed_Stack)
 {$endif defined(i386) or defined(x86_64)}
                   ) and
-                ((flags*([pi_has_assembler_block,pi_is_assembler,
+                ((Flags*([pi_has_assembler_block,pi_is_assembler,
                         pi_needs_stackframe]+
                         exception_flags[((TargetInfo.cpu=cpu_i386) and (not ParaManager.Use_Fixed_Stack))
 {$ifndef DISABLE_WIN64_SEH}
@@ -1054,69 +1054,69 @@ implementation
                   calling generate_parameter_info doesn't hurt but it costs time
                   (necessary to init para_stack_size)
                 }
-                generate_parameter_info;
+                Generate_Parameter_Info;
 
-                if not(procdef.Stack_Tainting_Parameter(calleeside)) and
-                   not(has_assembler_child)
+                if not(ProcDef.Stack_Tainting_Parameter(calleeside)) and
+                   not(Has_Assembler_Child)
                   { parasize must be really zero, this means also that no result may be returned
                     in a parameter }
-                  and not((CurrentProcInfo.procdef.ProcCallOption in ClearStack_PoCalls) and
-                  not(CurrentProcInfo.procdef.Generate_SafeCall_Wrapper) and
-                  ParaManager.Ret_In_Param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
+                  and not((CurrentProcInfo.ProcDef.ProcCallOption in ClearStack_PoCalls) and
+                  not(CurrentProcInfo.ProcDef.Generate_SafeCall_Wrapper) and
+                  ParaManager.Ret_In_Param(CurrentProcInfo.ProcDef.ReturnDef,CurrentProcInfo.ProcDef)) then
                   begin
                     { Only need to set the framepointer }
-                    framepointer:=NR_STACK_POINTER_REG;
-                    tg.direction:=1;
-                    Include(flags,pi_no_framepointer_needed)
+                    FramePointer:=NR_STACK_POINTER_REG;
+                    TG.direction:=1;
+                    Include(Flags,pi_no_framepointer_needed)
                   end
               end;
           end;
 {$endif}
         { set the start offset to the start of the temp area in the stack }
-        set_first_temp_offset;
+        Set_First_Temp_Offset;
       end;
 
 
     procedure TCGProcInfo.TransformNodeTree;
       var
-        i : integer;
-        UserCode : TNode;
-        updated,
-        RedoDFA : boolean;
+        lIndex : integer;
+        lUserCode : TNode;
+        lUpdated,
+        lRedoDFA : boolean;
       begin
        { inlining is a heuristics, so we do this very early }
-       do_optinline(code,updated);
+       do_optinline(Code,lUpdated);
 
        { do this before adding the entry code else the tail recursion recognition won't work,
          if this causes troubles, it must be if'ed
        }
        if (cs_opt_tailrecursion in CurrentSettings.OptimizerSwitches) and
-         (pi_is_recursive in flags) then
-         do_opttail(code,procdef);
+         (pi_is_recursive in Flags) then
+         do_opttail(Code,ProcDef);
 
        if cs_opt_constant_propagate in CurrentSettings.OptimizerSwitches then
          begin
-           do_optconstpropagate(code,RedoDFA);
+           do_optconstpropagate(Code,lRedoDFA);
            { RedoDFA value not used here }
-           RedoDFA:=false;
+           lRedoDFA:=false;
          end;
 
        if (cs_opt_nodedfa in CurrentSettings.OptimizerSwitches) and
          { creating dfa is not always possible }
-         ((flags*[pi_has_assembler_block,pi_uses_exceptions,pi_is_assembler])=[]) then
+         ((Flags*[pi_has_assembler_block,pi_uses_exceptions,pi_is_assembler])=[]) then
          begin
-           dfabuilder:=TDFABuilder.Create;
-           dfabuilder.createdfainfo(code);
-           include(flags,pi_dfaavailable);
-           RedoDFA:=false;
+           DFABuilder:=TDFABuilder.Create;
+           DFABuilder.createdfainfo(Code);
+           include(Flags,pi_dfaavailable);
+           lRedoDFA:=false;
 
            if cs_opt_constant_propagate in CurrentSettings.OptimizerSwitches then
              begin
-               do_optconstpropagate(code,RedoDFA);
-               if RedoDFA then
+               do_optconstpropagate(Code,lRedoDFA);
+               if lRedoDFA then
                  begin
-                   dfabuilder.redodfainfo(code);
-                   RedoDFA:=false; { Don't redo it again unless necessary }
+                   DFABuilder.redodfainfo(Code);
+                   lRedoDFA:=false; { Don't redo it again unless necessary }
                  end;
                { Don't re-run constant propagation as redoing DFA info didn't
                  actually change any nodes }
@@ -1125,144 +1125,144 @@ implementation
            if (cs_opt_loopstrength in CurrentSettings.OptimizerSwitches)
              { our induction variable strength reduction doesn't like
                for loops with more than one entry }
-             and not(pi_has_label in flags) then
+             and not(pi_has_label in Flags) then
              begin
-               RedoDFA:=OptimizeInductionVariables(code);
+               lRedoDFA:=OptimizeInductionVariables(Code);
              end;
 
-           if RedoDFA then
+           if lRedoDFA then
              begin
-               dfabuilder.redodfainfo(code);
-               RedoDFA:=false; { Don't redo it again unless necessary }
+               DFABuilder.redodfainfo(Code);
+               lRedoDFA:=false; { Don't redo it again unless necessary }
              end;
 
            if cs_opt_forloop in CurrentSettings.OptimizerSwitches then
-             RedoDFA:=OptimizeForLoop(code);
+             lRedoDFA:=OptimizeForLoop(Code);
 
-           RedoDFA:=ConvertForLoops(code) or RedoDFA;
+           lRedoDFA:=ConvertForLoops(Code) or lRedoDFA;
 
            if cs_opt_forloop in CurrentSettings.OptimizerSwitches then
-             RedoDFA:=optimize_record_writes(code) or RedoDFA;
+             lRedoDFA:=optimize_record_writes(Code) or lRedoDFA;
 
-           if RedoDFA then
-             dfabuilder.redodfainfo(code);
+           if lRedoDFA then
+             DFABuilder.redodfainfo(Code);
 
            { when life info is available, we can give more sophisticated warning about uninitialized
              variables ...
              ... but not for the finalization section of a unit, we would need global dfa to handle
              it properly }
-           if potype_unitfinalize<>procdef.ProcTypeOption then
+           if potype_unitfinalize<>ProcDef.ProcTypeOption then
              { iterate through life info of the first node }
-             for i:=0 to dfabuilder.nodemap.count-1 do
+             for lIndex:=0 to DFABuilder.nodemap.count-1 do
                begin
-                 UserCode:=GetUserCode();
-                 if DynSetIn(UserCode.optinfo^.life,i) then
+                 lUserCode:=GetUserCode();
+                 if DynSetIn(lUserCode.optinfo^.life,lIndex) then
                    begin
                      { do not warn for certain parameters: }
-                     if not((TNode(dfabuilder.nodemap[i]).nodetype=loadn) and (TLoadNode(dfabuilder.nodemap[i]).symtableentry.typ=paravarsym) and
+                     if not((TNode(DFABuilder.nodemap[lIndex]).nodetype=loadn) and (TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry.typ=paravarsym) and
                        { do not warn about parameters passed by var }
-                       (((TParaVarSym(TLoadNode(dfabuilder.nodemap[i]).symtableentry).VarSpez=vs_var) and
+                       (((TParaVarSym(TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry).VarSpez=vs_var) and
                        { function result is passed by var but it must be initialized }
-                       not(vo_is_funcret in TParaVarSym(TLoadNode(dfabuilder.nodemap[i]).symtableentry).VarOptions)) or
+                       not(vo_is_funcret in TParaVarSym(TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry).VarOptions)) or
                        { do not warn about initialized hidden parameters }
-                       ((TParaVarSym(TLoadNode(dfabuilder.nodemap[i]).symtableentry).VarOptions*[vo_is_high_para,vo_is_parentfp,vo_is_result,vo_is_self])<>[]))) then
-                       CheckAndWarn(UserCode,TNode(dfabuilder.nodemap[i]));
+                       ((TParaVarSym(TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry).VarOptions*[vo_is_high_para,vo_is_parentfp,vo_is_result,vo_is_self])<>[]))) then
+                       CheckAndWarn(lUserCode,TNode(DFABuilder.nodemap[lIndex]));
                    end
                  else
                    begin
-                     if (TNode(dfabuilder.nodemap[i]).nodetype=loadn) and
-                       (TLoadNode(dfabuilder.nodemap[i]).symtableentry.typ in [staticvarsym,localvarsym]) then
-                       TAbstractNormalVarSym(TLoadNode(dfabuilder.nodemap[i]).symtableentry).NoRegVarInitNeeded:=true
+                     if (TNode(DFABuilder.nodemap[lIndex]).nodetype=loadn) and
+                       (TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry.typ in [staticvarsym,localvarsym]) then
+                       TAbstractNormalVarSym(TLoadNode(DFABuilder.nodemap[lIndex]).SymTableEntry).NoRegVarInitNeeded:=true
                    end;
                end;
 
            if cs_opt_dead_store_eliminate in CurrentSettings.OptimizerSwitches then
              begin
-               if normalize(code) then
+               if normalize(Code) then
                  begin
-                   do_optdeadstoreelim(code,RedoDFA);
-                   if RedoDFA then
-                     dfabuilder.redodfainfo(code);
+                   do_optdeadstoreelim(Code,lRedoDFA);
+                   if lRedoDFA then
+                     DFABuilder.redodfainfo(Code);
                  end;
              end;
          end
        else
          begin
-           ConvertForLoops(code);
+           ConvertForLoops(Code);
            if cs_opt_forloop in CurrentSettings.OptimizerSwitches then
-             optimize_record_writes(code);
+             optimize_record_writes(Code);
          end;
 
        if (cs_opt_remove_empty_proc in CurrentSettings.OptimizerSwitches) and
-         (procdef.ProcTypeOption in [potype_operator,potype_procedure,potype_function]) and
-         (code.nodetype=blockn) and (TBlockNode(code).statements=nil) then
-         procdef.isempty:=true;
+         (ProcDef.ProcTypeOption in [potype_operator,potype_procedure,potype_function]) and
+         (Code.nodetype=blockn) and (TBlockNode(Code).statements=nil) then
+         ProcDef.isempty:=true;
 
        if cs_opt_nodecse in CurrentSettings.OptimizerSwitches then
-         do_optcse(code);
+         do_optcse(Code);
 
        if cs_opt_use_load_modify_store in CurrentSettings.OptimizerSwitches then
-         do_optloadmodifystore(code);
+         do_optloadmodifystore(Code);
 
        if (cs_opt_consts in CurrentSettings.OptimizerSwitches) and
           { non-local gotos can cause an fpc_setjmp call to be generated before
             this block, which means the loaded value won't be loaded when the
              longjmp is performed }
           not(m_non_local_goto in CurrentSettings.ModeSwitches) then
-         do_consttovar(code);
+         do_consttovar(Code);
       end;
 
 
-    function TCGProcInfo.has_assembler_child : boolean;
+    function TCGProcInfo.Has_Assembler_Child : boolean;
       var
-        hp : TProcInfo;
+        lProcInfo : TProcInfo;
       begin
-        result:=false;
-        hp:=get_first_nestedproc;
-        while Assigned(hp) do
+        Result:=false;
+        lProcInfo:=Get_First_NestedProc;
+        while Assigned(lProcInfo) do
           begin
-            if (hp.flags*[pi_has_assembler_block,pi_is_assembler])<>[] then
+            if (lProcInfo.Flags*[pi_has_assembler_block,pi_is_assembler])<>[] then
               begin
-                result:=true;
+                Result:=true;
                 exit;
               end;
-            hp:=TProcInfo(hp.next);
+            lProcInfo:=TProcInfo(lProcInfo.next);
           end;
       end;
 
 
-    procedure TCGProcInfo.set_eh_info;
+    procedure TCGProcInfo.Set_EH_Info;
       begin
         inherited;
-         if (tf_use_psabieh in TargetInfo.flags) and
-            ((pi_uses_exceptions in flags) or
+         if (tf_use_psabieh in TargetInfo.Flags) and
+            ((pi_uses_exceptions in Flags) or
              ((cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
-              (pi_needs_implicit_finally in flags))) or
-             (pi_has_except_table_data in flags) then
-           procdef.Personality:=Search_System_Proc('_FPC_PSABIEH_PERSONALITY_V0');
+              (pi_needs_implicit_finally in Flags))) or
+             (pi_has_except_table_data in Flags) then
+           ProcDef.Personality:=Search_System_Proc('_FPC_PSABIEH_PERSONALITY_V0');
       end;
 
 
-    function TCGProcInfo.store_node_tempflags(var n: TNode; arg: pointer): TForEachNodeResult;
+    function TCGProcInfo.StoreNodeTempFlags(var ANode: TNode; AArg: pointer): TForEachNodeResult;
       var
-        nodeset : THashSet absolute arg;
-        entry : PTempInfoFlagsEntry;
-        i : LongInt;
+        lNodeSet : THashSet absolute AArg;
+        lEntry : PTempInfoFlagsEntry;
+        lIndex : LongInt;
         {hashsetitem: PHashSetItem;}
       begin
-        result:=fen_true;
-        case n.nodetype of
+        Result:=fen_true;
+        case ANode.nodetype of
           tempcreaten:
             begin
               {$ifdef EXTDEBUG}
-              comment(VDebug,'keeping track of new temp node: '+HexStr(TTempBaseNode(n).tempinfo));
+              comment(VDebug,'keeping track of new temp node: '+HexStr(TTempBaseNode(ANode).TempInfo));
               {$endif EXTDEBUG}
-              nodeset.FindOrAdd(TTempBaseNode(n).tempinfo,sizeof(pointer));
+              lNodeSet.FindOrAdd(TTempBaseNode(ANode).TempInfo,sizeof(pointer));
             end;
           tempdeleten:
             begin
               {$ifdef EXTDEBUG}
-              comment(VDebug,'got temp delete node: '+HexStr(TTempBaseNode(n).tempinfo));
+              comment(VDebug,'got temp delete node: '+HexStr(TTempBaseNode(ANode).TempInfo));
               {$endif EXTDEBUG}
               { don't remove temp nodes so that outside code can know if some temp
                 was only created in here }
@@ -1279,17 +1279,17 @@ implementation
           temprefn:
             begin
               {$ifdef EXTDEBUG}
-              comment(VDebug,'found temp ref node: '+HexStr(TTempBaseNode(n).tempinfo));
+              comment(VDebug,'found temp ref node: '+HexStr(TTempBaseNode(ANode).TempInfo));
               {$endif EXTDEBUG}
-              if not Assigned(nodeset.find(TTempBaseNode(n).tempinfo,sizeof(pointer))) then
+              if not Assigned(lNodeSet.find(TTempBaseNode(ANode).TempInfo,sizeof(pointer))) then
                 begin
-                  for i:=0 to tempinfo_flags_map.count-1 do
+                  for lIndex:=0 to FTempInfoFlagsMap.count-1 do
                     begin
-                      entry:=PTempInfoFlagsEntry(tempinfo_flags_map[i]);
+                      lEntry:=PTempInfoFlagsEntry(FTempInfoFlagsMap[lIndex]);
                       {$ifdef EXTDEBUG}
-                      comment(VDebug,'comparing with tempinfo: '+HexStr(entry^.tempinfo));
+                      comment(VDebug,'comparing with tempinfo: '+HexStr(lEntry^.TempInfo));
                       {$endif EXTDEBUG}
-                      if entry^.tempinfo=TTempBaseNode(n).tempinfo then
+                      if lEntry^.TempInfo=TTempBaseNode(ANode).TempInfo then
                         begin
                           {$ifdef EXTDEBUG}
                           comment(VDebug,'temp node exists');
@@ -1300,10 +1300,10 @@ implementation
                   {$ifdef EXTDEBUG}
                   comment(VDebug,'storing node');
                   {$endif EXTDEBUG}
-                  new(entry);
-                  entry^.tempinfo:=TTempBaseNode(n).tempinfo;
-                  entry^.flags:=TTempInfoAccessor.gettempinfoflags(entry^.tempinfo);
-                  tempinfo_flags_map.add(entry);
+                  new(lEntry);
+                  lEntry^.TempInfo:=TTempBaseNode(ANode).TempInfo;
+                  lEntry^.Flags:=TTempInfoAccessor.GetTempInfoFlags(lEntry^.TempInfo);
+                  FTempInfoFlagsMap.add(lEntry);
                 end
               else
                 begin
@@ -1318,81 +1318,81 @@ implementation
       end;
 
 
-    procedure TCGProcInfo.store_tempflags;
+    procedure TCGProcInfo.Store_TempFlags;
       var
-        nodeset : THashSet;
+        lNodeSet : THashSet;
       begin
-        if Assigned(tempinfo_flags_map) then
+        if Assigned(FTempInfoFlagsMap) then
           InternalError(2020040601);
         {$ifdef EXTDEBUG}
-        comment(VDebug,'storing temp nodes of '+procdef.MangledName);
+        comment(VDebug,'storing temp nodes of '+ProcDef.MangledName);
         {$endif EXTDEBUG}
-        tempinfo_flags_map:=TFPList.create;
-        nodeset:=THashSet.Create(32,false,false);
-        foreachnode(code,@store_node_tempflags,nodeset);
-        nodeset.free;
-        nodeset := nil;
+        FTempInfoFlagsMap:=TFPList.Create;
+        lNodeSet:=THashSet.Create(32,false,false);
+        ForEachNode(Code,@StoreNodeTempFlags,lNodeSet);
+        lNodeSet.free;
+        lNodeSet := nil;
       end;
 
 
-    procedure TCGProcInfo.swap_tempflags;
+    procedure TCGProcInfo.SwapTempFlags;
       var
-        entry : PTempInfoFlagsEntry;
-        i : LongInt;
-        tempflags : TTempInfoFlags;
+        lEntry : PTempInfoFlagsEntry;
+        lIndex : LongInt;
+        lTempFlags : TTempInfoFlags;
       begin
-        if not Assigned(tempinfo_flags_map) then
+        if not Assigned(FTempInfoFlagsMap) then
           exit;
-        for i:=0 to tempinfo_flags_map.count-1 do
+        for lIndex:=0 to FTempInfoFlagsMap.count-1 do
           begin
-            entry:=PTempInfoFlagsEntry(tempinfo_flags_map[i]);
-            tempflags:=TTempInfoAccessor.gettempinfoflags(entry^.tempinfo);
-            TTempInfoAccessor.settempinfoflags(entry^.tempinfo,entry^.flags);
-            entry^.flags:=tempflags;
+            lEntry:=PTempInfoFlagsEntry(FTempInfoFlagsMap[lIndex]);
+            lTempFlags:=TTempInfoAccessor.GetTempInfoFlags(lEntry^.TempInfo);
+            TTempInfoAccessor.SetTempInfoFlags(lEntry^.TempInfo,lEntry^.Flags);
+            lEntry^.Flags:=lTempFlags;
           end;
       end;
 
 
-    procedure TCGProcInfo.apply_tempflags;
+    procedure TCGProcInfo.Apply_TempFlags;
       begin
-        if tempflags_swapped then
+        if FTempFlagsSwapped then
           InternalError(2020040602);
-        swap_tempflags;
-        tempflags_swapped:=true;
+        SwapTempFlags;
+        FTempFlagsSwapped:=true;
       end;
 
 
-    procedure TCGProcInfo.reset_tempflags;
+    procedure TCGProcInfo.Reset_TempFlags;
       begin
-        if not tempflags_swapped then
+        if not FTempFlagsSwapped then
           InternalError(2020040603);
-        swap_tempflags;
-        tempflags_swapped:=false;
+        SwapTempFlags;
+        FTempFlagsSwapped:=false;
       end;
 
 
 
-    procedure TCGProcInfo.generate_code_tree;
+    procedure TCGProcInfo.Generate_Code_Tree;
       var
-        hpi : TCGProcInfo;
+        lProcInfo : TCGProcInfo;
       begin
         { generate code for this procedure }
-        generate_code;
+        Generate_Code;
         { process nested procedures }
-        hpi:=TCGProcInfo(get_first_nestedproc);
-        while Assigned(hpi) do
+        lProcInfo:=TCGProcInfo(Get_First_NestedProc);
+        while Assigned(lProcInfo) do
           begin
-            if not (df_generic in hpi.procdef.DefOptions) then
-              hpi.generate_code_tree;
-            hpi:=TCGProcInfo(hpi.next);
+            if not (df_generic in lProcInfo.ProcDef.DefOptions) then
+              lProcInfo.Generate_Code_Tree;
+            lProcInfo:=TCGProcInfo(lProcInfo.next);
           end;
-        resetprocdef;
+        ResetProcDef;
       end;
 
 
-    procedure TCGProcInfo.generate_code_exceptfilters;
+    procedure TCGProcInfo.Generate_Code_ExceptFilters;
       var
-        hpi : TCGProcInfo;
+        lProcInfo : TCGProcInfo;
       begin
         { On AArch64-Win64, exceptfilter code generation is deferred (after the
           parent's prolog has been emitted). Record the parent's current lasttemp
@@ -1403,20 +1403,20 @@ implementation
           which would cause collisions with still-live parent data. }
         if TargetInfo.system=system_aarch64_win64 then
           begin
-            exceptfilter_parent_tempend:=tg.lasttemp;
-            tg.discard_freelist;
+            ExceptFilterParentTempEnd:=TG.LastTemp;
+            TG.Discard_FreeList;
           end;
-        hpi:=TCGProcInfo(get_first_nestedproc);
-        while Assigned(hpi) do
+        lProcInfo:=TCGProcInfo(Get_First_NestedProc);
+        while Assigned(lProcInfo) do
           begin
-            if (hpi.procdef.ProcTypeOption=potype_exceptfilter) and
-               Assigned(hpi.code) then
+            if (lProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) and
+               Assigned(lProcInfo.Code) then
               begin
-                hpi.apply_tempflags;
-                generate_exceptfilter(hpi);
-                hpi.reset_tempflags;
+                lProcInfo.Apply_TempFlags;
+                Generate_ExceptFilter(lProcInfo);
+                lProcInfo.Reset_TempFlags;
               end;
-            hpi:=TCGProcInfo(hpi.next);
+            lProcInfo:=TCGProcInfo(lProcInfo.next);
           end;
       end;
 
@@ -1437,124 +1437,124 @@ implementation
       procedure. generate_code() will create another cg, but not another tempgen because
       setup_tempgen() is not called for potype_exceptfilter procedures. }
 
-    procedure TCGProcInfo.generate_exceptfilter(nestedpi: TCGProcInfo);
+    procedure TCGProcInfo.Generate_ExceptFilter(ANestedProcInfo: TCGProcInfo);
       var
-        saved_cg: TCG;
-        saved_hlcg: THLCGObj;
+        lSavedCG: TCG;
+        lSavedHLCG: THLCGObj;
 {$ifdef cpu64bitalu}
-        saved_cg128 : TCG128;
+        lSavedCG128 : TCG128;
 {$else cpu64bitalu}
-        saved_cg64 : TCG64;
+        lSavedCG64 : TCG64;
 {$endif cpu64bitalu}
       begin
-        if nestedpi.procdef.ProcTypeOption<>potype_exceptfilter then
+        if ANestedProcInfo.ProcDef.ProcTypeOption<>potype_exceptfilter then
           InternalError(201201141);
         { flush code generated this far }
-        aktproccode.ConcatList(CurrentAsmData.CurrAsmList);
+        AktProcCode.ConcatList(CurrentAsmData.CurrAsmList);
         { save the codegen }
-        saved_cg:=cg;
-        saved_hlcg:=hlcg;
+        lSavedCG:=cg;
+        lSavedHLCG:=hlcg;
         cg:=nil;
         hlcg:=nil;
 {$ifdef cpu64bitalu}
-        saved_cg128:=cg128;
+        lSavedCG128:=cg128;
         cg128:=nil;
 {$else cpu64bitalu}
-        saved_cg64:=cg64;
+        lSavedCG64:=cg64;
         cg64:=nil;
 {$endif cpu64bitalu}
-        nestedpi.generate_code;
+        ANestedProcInfo.Generate_Code;
         { prevents generating code the second time when processing nested procedures }
-        nestedpi.resetprocdef;
-        cg:=saved_cg;
-        hlcg:=saved_hlcg;
+        ANestedProcInfo.ResetProcDef;
+        cg:=lSavedCG;
+        hlcg:=lSavedHLCG;
 {$ifdef cpu64bitalu}
-        cg128:=saved_cg128;
+        cg128:=lSavedCG128;
 {$else cpu64bitalu}
-        cg64:=saved_cg64;
+        cg64:=lSavedCG64;
 {$endif cpu64bitalu}
         Add_Reg_Instruction_Hook:=@cg.Add_Reg_Instruction;
       end;
 
 
-    procedure TCGProcInfo.generate_exit_label(list: TAsmList);
+    procedure TCGProcInfo.Generate_Exit_Label(AList: TAsmList);
       begin
-        hlcg.A_Label(list,CurrExitLabel);
+        hlcg.A_Label(AList,CurrExitLabel);
       end;
 
 
-    procedure TCGProcInfo.Convert_Captured_Syms;
+    procedure TCGProcInfo.ConvertCapturedSyms;
       var
-        hpi : TCGProcInfo;
-        old_current_procinfo : TProcInfo;
+        lProcInfo : TCGProcInfo;
+        lOldCurrentProcInfo : TProcInfo;
       begin
         { do the conversion only if there haven't been any errors so far }
         if ErrorCount<>0 then
           exit;
-        old_current_procinfo:=CurrentProcInfo;
+        lOldCurrentProcInfo:=CurrentProcInfo;
         CurrentProcInfo:=self;
         { process nested procedures }
-        hpi:=TCGProcInfo(get_first_nestedproc);
-        while Assigned(hpi) do
+        lProcInfo:=TCGProcInfo(Get_First_NestedProc);
+        while Assigned(lProcInfo) do
           begin
-            hpi.Convert_Captured_Syms;
-            hpi:=TCGProcInfo(hpi.next);
+            lProcInfo.ConvertCapturedSyms;
+            lProcInfo:=TCGProcInfo(lProcInfo.next);
           end;
         { convert the captured symbols for this routine }
-        if Assigned(code) then
-          procdefutil.Convert_Captured_Syms(procdef,code);
-        CurrentProcInfo:=old_current_procinfo;
+        if Assigned(Code) then
+          procdefutil.Convert_Captured_Syms(ProcDef,Code);
+        CurrentProcInfo:=lOldCurrentProcInfo;
       end;
 
 
      procedure TCGProcInfo.CreateInlineInfo;
        begin
-        new(procdef.InliningInfo);
-        procdef.InliningInfo^.code:=code.GetCopy;
-        procdef.InliningInfo^.flags:=flags;
+        new(ProcDef.InliningInfo);
+        ProcDef.InliningInfo^.Code:=Code.GetCopy;
+        ProcDef.InliningInfo^.Flags:=Flags;
         { The blocknode needs to set an exit label }
-        if procdef.InliningInfo^.code.nodetype=blockn then
-          include(procdef.InliningInfo^.code.flags,nf_block_with_exit);
-        procdef.HasInliningInfo:=true;
-        export_local_ref_syms;
-        export_local_ref_defs;
+        if ProcDef.InliningInfo^.Code.nodetype=blockn then
+          include(ProcDef.InliningInfo^.Code.Flags,nf_block_with_exit);
+        ProcDef.HasInliningInfo:=true;
+        Export_Local_Ref_Syms;
+        Export_Local_Ref_Defs;
        end;
 
-    procedure searchthreadvar(p: TObject; arg: pointer);
+    procedure SearchThreadVar(AObject: TObject; AArg: pointer);
       var
-        i : LongInt;
-        pd : TProcDef;
+        lIndex : LongInt;
+        lProcDef : TProcDef;
       begin
-        case TSym(p).typ of
+        case TSym(AObject).typ of
           staticvarsym :
             begin
                   { local (procedure or unit) variables only need finalization
                     if they are used
                   }
-              if (vo_is_thread_var in TStaticVarSym(p).VarOptions) and
-                 ((TStaticVarSym(p).refs>0) or
+              if (vo_is_thread_var in TStaticVarSym(AObject).VarOptions) and
+                 ((TStaticVarSym(AObject).refs>0) or
                   { global (unit) variables always need finalization, since
                     they may also be used in another unit
                   }
-                  (TStaticVarSym(p).owner.SymTableType=GlobalSymTable)) and
+                  (TStaticVarSym(AObject).owner.SymTableType=GlobalSymTable)) and
                   (
-                    (TStaticVarSym(p).VarSpez<>vs_const) or
-                    (vo_force_finalize in TStaticVarSym(p).VarOptions)
+                    (TStaticVarSym(AObject).VarSpez<>vs_const) or
+                    (vo_force_finalize in TStaticVarSym(AObject).VarOptions)
                   ) and
-                 not(vo_is_funcret in TStaticVarSym(p).VarOptions) and
-                 not(vo_is_external in TStaticVarSym(p).VarOptions) and
-                 Is_Managed_Type(TStaticVarSym(p).vardef) then
-                include(CurrentProcInfo.flags,pi_uses_threadvar);
+                 not(vo_is_funcret in TStaticVarSym(AObject).VarOptions) and
+                 not(vo_is_external in TStaticVarSym(AObject).VarOptions) and
+                 Is_Managed_Type(TStaticVarSym(AObject).vardef) then
+                include(CurrentProcInfo.Flags,pi_uses_threadvar);
             end;
           ProcSym :
             begin
-              for i:=0 to TProcSym(p).ProcdefList.Count-1 do
+              for lIndex:=0 to TProcSym(AObject).ProcdefList.Count-1 do
                 begin
-                  pd:=TProcDef(TProcSym(p).ProcdefList[i]);
-                  if Assigned(pd.LocalST) and
-                     (pd.ProcSym=TProcSym(p)) and
-                     (pd.LocalST.SymTableType<>staticsymtable) then
-                    pd.LocalST.SymList.ForEachCall(@searchthreadvar,arg);
+                  lProcDef:=TProcDef(TProcSym(AObject).ProcdefList[lIndex]);
+                  if Assigned(lProcDef.LocalST) and
+                     (lProcDef.ProcSym=TProcSym(AObject)) and
+                     (lProcDef.LocalST.SymTableType<>staticsymtable) then
+                    lProcDef.LocalST.SymList.ForEachCall(@SearchThreadVar,AArg);
                 end;
             end;
           else
@@ -1563,47 +1563,47 @@ implementation
       end;
 
 
-    function searchusercode(var n: TNode; arg: pointer): TForEachNodeResult;
+    function SearchUserCode(var ANode: TNode; AArg: pointer): TForEachNodeResult;
       begin
-        if nf_usercode_entry in n.flags then
+        if nf_usercode_entry in ANode.Flags then
           begin
-            PNode(arg)^:=n;
-            result:=fen_norecurse_true
+            PNode(AArg)^:=ANode;
+            Result:=fen_norecurse_true
           end
         else
-          result:=fen_false;
+          Result:=fen_false;
       end;
 
 
     function TCGProcInfo.GetUserCode : TNode;
       var
-        n : TNode;
+        lNode : TNode;
       begin
-        n:=nil;
-        foreachnodestatic(code,@searchusercode,@n);
-        if not(Assigned(n)) then
+        lNode:=nil;
+        ForEachNodeStatic(Code,@SearchUserCode,@lNode);
+        if not(Assigned(lNode)) then
           InternalError(2013111004);
-        result:=n;
+        Result:=lNode;
       end;
 
 
-    procedure TCGProcInfo.generate_code;
+    procedure TCGProcInfo.Generate_Code;
 
-       procedure check_for_threadvars_in_initfinal;
+       procedure CheckForThreadVarsInInitFinal;
          begin
-           if CurrentProcInfo.procdef.ProcTypeOption=potype_unitfinalize then
+           if CurrentProcInfo.ProcDef.ProcTypeOption=potype_unitfinalize then
              begin
                 { this is also used for initialization of variables in a
                   program which does not have a globalsymtable }
                 if Assigned(CurrentModule.GlobalSymTable) then
-                  TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@searchthreadvar,nil);
-                TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@searchthreadvar,nil);
+                  TSymTable(CurrentModule.GlobalSymTable).SymList.ForEachCall(@SearchThreadVar,nil);
+                TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@SearchThreadVar,nil);
              end;
          end;
 
-       function heuristics_favors_autoinlining(code: TNode): boolean;
+       function HeuristicsFavorsAutoInlining(ACode: TNode): boolean;
          var
-           complexityAvail : integer;
+           lComplexityAvailable : integer;
          begin
            { rough approximation if we should auto inline:
              - if the tree is simple enough
@@ -1614,32 +1614,32 @@ implementation
 
            { This is a shortcutted version of
              "result:=node_count(code)+node_complexity(code)<=25". }
-           complexityAvail:=25-node_complexity(code);
-           result:=(complexityAvail>0) and (node_count(code,complexityAvail+1)<=dword(complexityAvail));
+           lComplexityAvailable:=25-Node_Complexity(ACode);
+           Result:=(lComplexityAvailable>0) and (Node_Count(ACode,lComplexityAvailable+1)<=dword(lComplexityAvailable));
          end;
 
       var
-        old_current_procinfo : TProcInfo;
-        oldmaxfpuregisters : LongInt;
-        oldfilepos : TFilePosInfo;
-        old_current_structdef : TAbstractRecordDef;
-        oldswitches : TLocalSwitches;
-        templist : TAsmList;
-        headertai : TAI;
+        lOldCurrentProcInfo : TProcInfo;
+        lOldMaxFPURegisters : LongInt;
+        lOldFilePos : TFilePosInfo;
+        lOldCurrentStructDef : TAbstractRecordDef;
+        lOldSwitches : TLocalSwitches;
+        lTempList : TAsmList;
+        lHeaderTAI : TAI;
 
-      procedure delete_marker(anode: TAsmNode);
+      procedure DeleteMarker(ANode: TAsmNode);
         var
-          ai: TAI;
+          lInstruction: TAI;
         begin
-          if Assigned(anode) then
+          if Assigned(ANode) then
             begin
-              ai:=anode.currenttai;
-              if Assigned(ai) then
+              lInstruction:=ANode.CurrentTAI;
+              if Assigned(lInstruction) then
                 begin
-                  aktproccode.remove(ai);
-                  ai.free;
-                  ai := nil;
-                  anode.currenttai:=nil;
+                  AktProcCode.remove(lInstruction);
+                  lInstruction.free;
+                  lInstruction := nil;
+                  ANode.CurrentTAI:=nil;
                 end;
             end;
         end;
@@ -1648,7 +1648,7 @@ implementation
         { the initialization procedure can be empty, then we
           don't need to generate anything. When it was an empty
           procedure there would be at least a blocknode }
-        if not Assigned(code) then
+        if not Assigned(Code) then
           begin
             exit;
           end;
@@ -1658,100 +1658,100 @@ implementation
           exit;
 
         { No code can be generated for generic template }
-        if (df_generic in procdef.DefOptions) then
+        if (df_generic in ProcDef.DefOptions) then
           InternalError(200511152);
 
         { For regular procedures the RA and Tempgen shall not be available yet,
           but exception filters reuse Tempgen of parent }
-        if Assigned(tg)<>(procdef.ProcTypeOption=potype_exceptfilter) then
+        if Assigned(TG)<>(ProcDef.ProcTypeOption=potype_exceptfilter) then
           InternalError(200309201);
 
-        old_current_procinfo:=CurrentProcInfo;
-        oldfilepos:=CurrentFilePos;
-        old_current_structdef:=CurrentStructDef;
-        oldmaxfpuregisters:=CurrentSettings.MaxFPURegisters;
+        lOldCurrentProcInfo:=CurrentProcInfo;
+        lOldFilePos:=CurrentFilePos;
+        lOldCurrentStructDef:=CurrentStructDef;
+        lOldMaxFPURegisters:=CurrentSettings.MaxFPURegisters;
 
         CurrentProcInfo:=self;
-        CurrentFilePos:=entrypos;
-        CurrentStructDef:=procdef.struct;
+        CurrentFilePos:=EntryPos;
+        CurrentStructDef:=ProcDef.struct;
 
         { store start of user code, it must be a block node, it will be used later one to
           check variable lifeness }
-        include(code.flags,nf_usercode_entry);
+        include(Code.Flags,nf_usercode_entry);
 
         { add wrapping code if necessary (initialization of typed constants on
           some platforms, initing of local variables and out parameters with
           trashing values, ...) }
         { init/final code must be wrapped later (after code for main proc body
           has been generated) }
-        if not(CurrentProcInfo.procdef.ProcTypeOption in [potype_unitinit,potype_unitfinalize]) then
-          code:=CNodeUtils.wrap_proc_body(procdef,code);
+        if not(CurrentProcInfo.ProcDef.ProcTypeOption in [potype_unitinit,potype_unitfinalize]) then
+          Code:=CNodeUtils.Wrap_Proc_Body(ProcDef,Code);
 
         { automatic inlining? }
         if (cs_opt_autoinline in CurrentSettings.OptimizerSwitches) and
-           not(po_noinline in procdef.ProcOptions) and
+           not(po_noinline in ProcDef.ProcOptions) and
            { no inlining yet? }
-           not(procdef.HasInliningInfo) and not(has_nestedprocs) and
-            not(procdef.ProcTypeOption in [potype_proginit,potype_unitinit,potype_unitfinalize,potype_constructor,
+           not(ProcDef.HasInliningInfo) and not(Has_NestedProcs) and
+            not(ProcDef.ProcTypeOption in [potype_proginit,potype_unitinit,potype_unitfinalize,potype_constructor,
                                            potype_destructor,potype_class_constructor,potype_class_destructor]) and
-            ((procdef.ProcOptions*[po_exports,po_external,po_interrupt,po_virtualmethod,po_iocheck])=[]) and
-            (not(procdef.ProcCallOption in [pocall_safecall])) and
-            heuristics_favors_autoinlining(code) then
+            ((ProcDef.ProcOptions*[po_exports,po_external,po_interrupt,po_virtualmethod,po_iocheck])=[]) and
+            (not(ProcDef.ProcCallOption in [pocall_safecall])) and
+            HeuristicsFavorsAutoInlining(Code) then
           begin
             { Can we inline this procedure? }
-            if checknodeinlining(procdef) then
+            if CheckNodeInlining(ProcDef) then
               begin
-                Message1(cg_d_autoinlining,procdef.GetTypeName);
-                include(procdef.ProcOptions,po_inline);
+                Message1(cg_d_autoinlining,ProcDef.GetTypeName);
+                include(ProcDef.ProcOptions,po_inline);
                 CreateInlineInfo;
               end;
           end;
 
-        templist:=TAsmList.create;
+        lTempList:=TAsmList.Create;
 
         { add parast/localst to symtablestack }
-        add_to_symtablestack;
+        Add_To_SymTableStack;
 
         { clear register count }
-        procdef.LocalST.SymList.ForEachCall(@clearrefs,nil);
-        procdef.ParaST.SymList.ForEachCall(@clearrefs,nil);
+        ProcDef.LocalST.SymList.ForEachCall(@ClearRefs,nil);
+        ProcDef.ParaST.SymList.ForEachCall(@ClearRefs,nil);
 
         { there's always a call to FPC_INITIALIZEUNITS/FPC_DO_EXIT in the main program }
-        if (procdef.LocalST.SymTableLevel=MainProgramLevel) and
+        if (ProcDef.LocalST.SymTableLevel=MainProgramLevel) and
            (not CurrentModule.IsUnit) then
           begin
-            include(flags,pi_do_call);
+            include(Flags,pi_do_call);
             { the main program never returns due to the do_exit call }
-            if not(CurrentModule.IsLibrary) and (procdef.ProcTypeOption=potype_proginit) then
-              include(procdef.ProcOptions,po_noreturn);
+            if not(CurrentModule.IsLibrary) and (ProcDef.ProcTypeOption=potype_proginit) then
+              include(ProcDef.ProcOptions,po_noreturn);
           end;
 
         { set implicit_finally flag when there are locals/paras to be finalized }
-        if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
+        if not(po_assembler in CurrentProcInfo.ProcDef.ProcOptions) then
           begin
-            procdef.ParaST.SymList.ForEachCall(@check_finalize_paras,nil);
-            procdef.LocalST.SymList.ForEachCall(@check_finalize_locals,nil);
+            ProcDef.ParaST.SymList.ForEachCall(@CheckFinalizeParas,nil);
+            ProcDef.LocalST.SymList.ForEachCall(@CheckFinalizeLocals,nil);
           end;
 
 {$ifdef SUPPORT_SAFECALL}
         { set implicit_finally flag for if procedure is safecall }
-        if (tf_safecall_exceptions in TargetInfo.flags) and
-           (procdef.ProcCallOption=pocall_safecall) then
-          include(flags, pi_needs_implicit_finally);
+        if (tf_safecall_exceptions in TargetInfo.Flags) and
+           (ProcDef.ProcCallOption=pocall_safecall) then
+          include(Flags, pi_needs_implicit_finally);
 {$endif}
 
         { firstpass everything }
         flowcontrol:=[];
-        DoFirstPass(code);
+        DoFirstPass(Code);
 
 {$if defined(i386)}
-        if node_resources_fpu(code)>0 then
-          include(flags,pi_uses_fpu);
+        if Node_Resources_FPU(Code)>0 then
+          include(Flags,pi_uses_fpu);
 {$endif i386}
 
         { Print the node to tree.log }
         if ParaPrintNodeTree <> 0 then
-          printproc( 'after the firstpass');
+          PrintProc( 'after the firstpass');
 
         { A failed first pass can leave unresolved helper calls in the tree. }
         if ErrorCount=0 then
@@ -1759,10 +1759,10 @@ implementation
 
         { unit static/global symtables might contain threadvars which are not explicitly used but which might
           require a tls register, so check for such variables }
-        check_for_threadvars_in_initfinal;
+        CheckForThreadVarsInInitFinal;
 
         { add implicit entry and exit code }
-        add_entry_exit_code;
+        AddEntryExitCode;
 
         { only do secondpass if there are no errors }
         if (ErrorCount<>0) then
@@ -1772,147 +1772,147 @@ implementation
           begin
             Create_HLCodeGen(nil);
 
-            setup_eh;
+            Setup_EH;
 
-            if (procdef.ProcTypeOption<>potype_exceptfilter) then
-              setup_tempgen;
+            if (ProcDef.ProcTypeOption<>potype_exceptfilter) then
+              SetupTempGen;
 
             { Create register allocator, must come after framepointer is known }
             hlcg.Init_Register_Allocators;
 
-            generate_parameter_info;
+            Generate_Parameter_Info;
 
             { allocate got register if needed }
-            allocate_got_register(aktproccode);
+            Allocate_GOT_Register(AktProcCode);
 
             { allocate got register if needed }
-            allocate_tls_register(aktproccode);
+            Allocate_TLS_Register(AktProcCode);
 
             { Allocate space in temp/registers for parast and localst }
-            CurrentFilePos:=entrypos;
-            gen_alloc_symtable(aktproccode,procdef,procdef.ParaST);
-            gen_alloc_symtable(aktproccode,procdef,procdef.LocalST);
+            CurrentFilePos:=EntryPos;
+            Gen_Alloc_SymTable(AktProcCode,ProcDef,ProcDef.ParaST);
+            Gen_Alloc_SymTable(AktProcCode,ProcDef,ProcDef.LocalST);
 
             { Store temp offset for information about 'real' temps }
-            tempstart:=tg.lasttemp;
+            TempStart:=TG.LastTemp;
 
             { Generate code to load register parameters in temps and insert local
               copies for values parameters. This must be done before the code for the
               body is generated because the localloc is updated.
               Note: The generated code will be inserted after the code generation of
               the body is finished, because only then the position is known }
-            CurrentFilePos:=entrypos;
+            CurrentFilePos:=EntryPos;
 
-            hlcg.Gen_Load_Para_Value(templist);
+            hlcg.Gen_Load_Para_Value(lTempList);
 
             { caller paraloc info is also necessary in the stackframe_entry
               code of the ppc (and possibly other processors)               }
-            procdef.Init_ParaLoc_Info(callerside);
+            ProcDef.Init_ParaLoc_Info(callerside);
 
-            CalcExecutionWeights(code);
+            CalcExecutionWeights(Code);
 
             { Print the node to tree.log }
             if ParaPrintNodeTree <> 0 then
-              printproc( 'right before code generation');
+              PrintProc( 'right before code generation');
 
 
             { generate code for the node tree }
-            DoSecondPass(code);
-            aktproccode.ConcatList(CurrentAsmData.CurrAsmList);
+            DoSecondPass(Code);
+            AktProcCode.ConcatList(CurrentAsmData.CurrAsmList);
 
             { The position of the loadpara_asmnode is now known }
-            aktproccode.InsertListAfter(loadpara_asmnode.currenttai,templist);
+            AktProcCode.InsertListAfter(LoadParaAsmNode.CurrentTAI,lTempList);
 
-            oldswitches:=CurrentSettings.LocalSwitches;
+            lOldSwitches:=CurrentSettings.LocalSwitches;
 
             { first generate entry and initialize code with the correct
               position and switches }
-            CurrentFilePos:=entrypos;
-            CurrentSettings.LocalSwitches:=entryswitches;
+            CurrentFilePos:=EntryPos;
+            CurrentSettings.LocalSwitches:=EntrySwitches;
 
             cg.Set_RegAlloc_Live_Range_Direction(rad_backwards);
 
-            hlcg.Gen_Entry_Code(templist);
-            aktproccode.InsertListAfter(entry_asmnode.currenttai,templist);
-            hlcg.Gen_Initialize_Code(templist);
-            aktproccode.InsertListAfter(init_asmnode.currenttai,templist);
+            hlcg.Gen_Entry_Code(lTempList);
+            AktProcCode.InsertListAfter(EntryAsmNode.CurrentTAI,lTempList);
+            hlcg.Gen_Initialize_Code(lTempList);
+            AktProcCode.InsertListAfter(InitAsmNode.CurrentTAI,lTempList);
 
             { now generate finalize and exit code with the correct position
               and switches }
-            CurrentFilePos:=exitpos;
-            CurrentSettings.LocalSwitches:=exitswitches;
+            CurrentFilePos:=ExitPos;
+            CurrentSettings.LocalSwitches:=ExitSwitches;
 
             cg.Set_RegAlloc_Live_Range_Direction(rad_forward);
 
-            if Assigned(finalize_procinfo) then
+            if Assigned(FinalizeProcInfo) then
               begin
                 if TargetInfo.system in [system_aarch64_win64] then
-                  TCGProcInfo(finalize_procinfo).store_tempflags
+                  TCGProcInfo(FinalizeProcInfo).Store_TempFlags
                 else
-                  generate_exceptfilter(TCGProcInfo(finalize_procinfo));
+                  Generate_ExceptFilter(TCGProcInfo(FinalizeProcInfo));
               end
-            else if not temps_finalized then
+            else if not TempsFinalized then
               begin
-                hlcg.Gen_Finalize_Code(templist);
+                hlcg.Gen_Finalize_Code(lTempList);
                 { the finalcode must be concatenated if there was no position available,
                   using insertlistafter will result in an insert at the start
                   when currentai=nil }
-                aktproccode.ConcatList(templist);
+                AktProcCode.ConcatList(lTempList);
               end;
             { insert exit label at the correct position }
-            generate_exit_label(templist);
-            if Assigned(exitlabel_asmnode.currenttai) then
-              aktproccode.InsertListAfter(exitlabel_asmnode.currenttai,templist)
+            Generate_Exit_Label(lTempList);
+            if Assigned(ExitLabelAsmNode.CurrentTAI) then
+              AktProcCode.InsertListAfter(ExitLabelAsmNode.CurrentTAI,lTempList)
             else
-              aktproccode.ConcatList(templist);
+              AktProcCode.ConcatList(lTempList);
             { exit code }
-            hlcg.Gen_Exit_Code(templist);
-            aktproccode.ConcatList(templist);
+            hlcg.Gen_Exit_Code(lTempList);
+            AktProcCode.ConcatList(lTempList);
 
             { reset switches }
-            CurrentSettings.LocalSwitches:=oldswitches;
+            CurrentSettings.LocalSwitches:=lOldSwitches;
 
             { generate symbol and save end of header position }
-            CurrentFilePos:=entrypos;
-            hlcg.Gen_Proc_Symbol(templist);
-            headertai:=TAI(templist.last);
+            CurrentFilePos:=EntryPos;
+            hlcg.Gen_Proc_Symbol(lTempList);
+            lHeaderTAI:=TAI(lTempList.last);
             { insert symbol }
-            aktproccode.InsertList(templist);
+            AktProcCode.InsertList(lTempList);
 
             { Free space in temp/registers for parast and localst, must be
               done after gen_entry_code }
-            CurrentFilePos:=exitpos;
+            CurrentFilePos:=ExitPos;
 
             { make sure the got/pic register doesn't get freed in the }
             { middle of a loop                                        }
-            if (tf_pic_uses_got in TargetInfo.flags) and
-              (pi_needs_got in flags) and
+            if (tf_pic_uses_got in TargetInfo.Flags) and
+              (pi_needs_got in Flags) and
               (got<>NR_NO) then
-              cg.A_Reg_Sync(aktproccode,got);
+              cg.A_Reg_Sync(AktProcCode,got);
 
-            if (pi_needs_tls in flags) and
-              (tlsoffset<>NR_NO) then
-              cg.A_Reg_Sync(aktproccode,tlsoffset);
+            if (pi_needs_tls in Flags) and
+              (TLSOffset<>NR_NO) then
+              cg.A_Reg_Sync(AktProcCode,TLSOffset);
 
-            gen_free_symtable(aktproccode,procdef.LocalST);
-            gen_free_symtable(aktproccode,procdef.ParaST);
+            Gen_Free_SymTable(AktProcCode,ProcDef.LocalST);
+            Gen_Free_SymTable(AktProcCode,ProcDef.ParaST);
 
             { add code that will load the return value, this is not done
               for assembler routines when they didn't reference the result
               variable }
-            hlcg.Gen_Load_Return_Value(templist);
-            aktproccode.ConcatList(templist);
+            hlcg.Gen_Load_Return_Value(lTempList);
+            AktProcCode.ConcatList(lTempList);
 
             { Already reserve all registers for stack checking code and
               generate the call to the helper function }
-            if not(tf_no_generic_stackcheck in TargetInfo.flags) and
-               (cs_check_stack in entryswitches) and
-               not(po_assembler in procdef.ProcOptions) and
-               (procdef.ProcTypeOption<>potype_proginit) then
+            if not(tf_no_generic_stackcheck in TargetInfo.Flags) and
+               (cs_check_stack in EntrySwitches) and
+               not(po_assembler in ProcDef.ProcOptions) and
+               (ProcDef.ProcTypeOption<>potype_proginit) then
               begin
-                CurrentFilePos:=entrypos;
-                hlcg.Gen_Stack_Check_Call(templist);
-                aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist);
+                CurrentFilePos:=EntryPos;
+                hlcg.Gen_Stack_Check_Call(lTempList);
+                AktProcCode.InsertListAfter(StackCheckAsmNode.CurrentTAI,lTempList);
               end;
 
             { this code (got loading) comes before everything which has }
@@ -1929,14 +1929,14 @@ implementation
             {  d) inserted after the stackframe allocation, because     }
             {     this register may have to be spilled                  }
             cg.Set_RegAlloc_Live_Range_Direction(rad_backwards_reinit);
-            CurrentFilePos:=entrypos;
+            CurrentFilePos:=EntryPos;
             { load got if necessary }
-            cg.G_Maybe_Got_Init(templist);
-            aktproccode.InsertListAfter(headertai,templist);
+            cg.G_Maybe_Got_Init(lTempList);
+            AktProcCode.InsertListAfter(lHeaderTAI,lTempList);
 
             { init tls if needed }
-            cg.G_Maybe_TLS_Init(templist);
-            aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist);
+            cg.G_Maybe_TLS_Init(lTempList);
+            AktProcCode.InsertListAfter(StackCheckAsmNode.CurrentTAI,lTempList);
 
             { re-enable if more code at the end is ever generated here
             cg.set_regalloc_live_range_direction(rad_forward);
@@ -1947,119 +1947,119 @@ implementation
 {$ifndef i386}
             if (cs_opt_scheduler in CurrentSettings.OptimizerSwitches) and
               { do not optimize pure assembler procedures }
-              not(pi_is_assembler in flags) then
-              preregallocschedule(aktproccode);
+              not(pi_is_assembler in Flags) then
+              preregallocschedule(AktProcCode);
 {$endif i386}
 {$endif NoOpt}
 
             { The procedure body is finished, we can now
               allocate the registers }
-            cg.Do_Register_Allocation(aktproccode,headertai);
+            cg.Do_Register_Allocation(AktProcCode,lHeaderTAI);
 
             { translate imag. register to their real counter parts
               this is necessary for debuginfo and verbose assembler output
               when SSA will be implemented, this will be more complicated because we've to
               maintain location lists }
-            procdef.ParaST.SymList.ForEachCall(@Translate_Registers,templist);
-            procdef.LocalST.SymList.ForEachCall(@Translate_Registers,templist);
-            if (tf_pic_uses_got in TargetInfo.flags) and (pi_needs_got in flags) and
+            ProcDef.ParaST.SymList.ForEachCall(@TranslateRegisters,lTempList);
+            ProcDef.LocalST.SymList.ForEachCall(@TranslateRegisters,lTempList);
+            if (tf_pic_uses_got in TargetInfo.Flags) and (pi_needs_got in Flags) and
                not(cs_no_regalloc in CurrentSettings.GlobalSwitches) and
                (got<>NR_NO) then
               cg.Translate_Register(got);
 
             { Add save and restore of used registers }
-            CurrentFilePos:=entrypos;
-            gen_save_used_regs(templist);
+            CurrentFilePos:=EntryPos;
+            Gen_Save_Used_Regs(lTempList);
             { Remember the last instruction of register saving block
               (may be =nil for e.g. assembler procedures) }
-            endprologue_ai:=templist.last;
-            aktproccode.InsertListAfter(headertai,templist);
-            CurrentFilePos:=exitpos;
-            gen_restore_used_regs(aktproccode);
+            EndPrologueAI:=lTempList.last;
+            AktProcCode.InsertListAfter(lHeaderTAI,lTempList);
+            CurrentFilePos:=ExitPos;
+            Gen_Restore_Used_Regs(AktProcCode);
             { We know the size of the stack, now we can generate the
               parameter that is passed to the stack checking code }
-            if not(tf_no_generic_stackcheck in TargetInfo.flags) and
-               (cs_check_stack in entryswitches) and
-               not(po_assembler in procdef.ProcOptions) and
-               (procdef.ProcTypeOption<>potype_proginit) then
+            if not(tf_no_generic_stackcheck in TargetInfo.Flags) and
+               (cs_check_stack in EntrySwitches) and
+               not(po_assembler in ProcDef.ProcOptions) and
+               (ProcDef.ProcTypeOption<>potype_proginit) then
               begin
-                CurrentFilePos:=entrypos;
-                hlcg.Gen_Stack_Check_Size_Para(templist);
-                aktproccode.InsertListAfter(stackcheck_asmnode.currenttai,templist)
+                CurrentFilePos:=EntryPos;
+                hlcg.Gen_Stack_Check_Size_Para(lTempList);
+                AktProcCode.InsertListAfter(StackCheckAsmNode.CurrentTAI,lTempList)
               end;
 
-            CurrentProcInfo.set_eh_info;
+            CurrentProcInfo.Set_EH_Info;
 
             { Add entry code (stack allocation) after header }
-            CurrentFilePos:=entrypos;
-            gen_proc_entry_code(templist);
-            aktproccode.InsertListAfter(headertai,templist);
+            CurrentFilePos:=EntryPos;
+            Gen_Proc_Entry_Code(lTempList);
+            AktProcCode.InsertListAfter(lHeaderTAI,lTempList);
 {$ifdef SUPPORT_SAFECALL}
             { Set return value of safecall procedure if implicit try/finally blocks are disabled }
             if not (cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
-               (tf_safecall_exceptions in TargetInfo.flags) and
-               (procdef.ProcCallOption=pocall_safecall) then
-              cg.A_Load_Const_Reg(aktproccode,OS_ADDR,0,NR_FUNCTION_RETURN_REG);
+               (tf_safecall_exceptions in TargetInfo.Flags) and
+               (ProcDef.ProcCallOption=pocall_safecall) then
+              cg.A_Load_Const_Reg(AktProcCode,OS_ADDR,0,NR_FUNCTION_RETURN_REG);
 {$endif}
             { Add exit code at the end }
-            CurrentFilePos:=exitpos;
-            gen_proc_exit_code(templist);
-            aktproccode.ConcatList(templist);
+            CurrentFilePos:=ExitPos;
+            Gen_Proc_Exit_Code(lTempList);
+            AktProcCode.ConcatList(lTempList);
 
             { check if the implicit finally has been generated. The flag
               should already be set in pass1 }
             if (cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
-               not(procdef.ProcTypeOption in [potype_unitfinalize,potype_unitinit]) and
-               (pi_needs_implicit_finally in flags) and
-               not(pi_has_implicit_finally in flags) then
+               not(ProcDef.ProcTypeOption in [potype_unitfinalize,potype_unitinit]) and
+               (pi_needs_implicit_finally in Flags) and
+               not(pi_has_implicit_finally in Flags) then
              InternalError(200405231);
 
              { sanity check }
-             if not(Assigned(CurrentProcInfo.procdef.Personality)) and
-                (tf_use_psabieh in TargetInfo.flags) and
-                ((pi_uses_exceptions in flags) or
+             if not(Assigned(CurrentProcInfo.ProcDef.Personality)) and
+                (tf_use_psabieh in TargetInfo.Flags) and
+                ((pi_uses_exceptions in Flags) or
                  ((cs_implicit_exceptions in CurrentSettings.ModuleSwitches) and
-                  (pi_needs_implicit_finally in flags))) then
+                  (pi_needs_implicit_finally in Flags))) then
                InternalError(2019021005);
 
             { Position markers are only used to insert additional code after the secondpass
               and before this point. They are of no use in optimizer. Instead of checking and
               ignoring all over the optimizer, just remove them here. }
-            delete_marker(entry_asmnode);
-            delete_marker(loadpara_asmnode);
-            delete_marker(exitlabel_asmnode);
-            delete_marker(stackcheck_asmnode);
-            delete_marker(init_asmnode);
+            DeleteMarker(EntryAsmNode);
+            DeleteMarker(LoadParaAsmNode);
+            DeleteMarker(ExitLabelAsmNode);
+            DeleteMarker(StackCheckAsmNode);
+            DeleteMarker(InitAsmNode);
 
 {$ifndef NoOpt}
             if not(cs_no_regalloc in CurrentSettings.GlobalSwitches) then
               begin
                 if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and
                    { do not optimize pure assembler procedures }
-                   not(pi_is_assembler in flags)  then
-                  optimize(aktproccode);
+                   not(pi_is_assembler in Flags)  then
+                  optimize(AktProcCode);
 {$ifndef i386}
                 { schedule after assembler optimization, it could have brought up
                   new schedule possibilities }
                 if (cs_opt_scheduler in CurrentSettings.OptimizerSwitches) and
                   { do not optimize pure assembler procedures }
-                  not(pi_is_assembler in flags)  then
-                  preregallocschedule(aktproccode);
+                  not(pi_is_assembler in Flags)  then
+                  preregallocschedule(AktProcCode);
 {$endif i386}
               end;
 {$endif NoOpt}
 
             { Perform target-specific processing if necessary }
-            postprocess_code;
+            PostProcess_Code;
 
             { Add end symbol and debug info }
             { this must be done after the pcrelativedata is appended else the distance calculation of
               insertpcrelativedata will be wrong, further the pc indirect data is part of the procedure
               so it should be inserted before the end symbol (FK)
             }
-            CurrentFilePos:=exitpos;
-            hlcg.Gen_Proc_Symbol_End(templist);
-            aktproccode.ConcatList(templist);
+            CurrentFilePos:=ExitPos;
+            hlcg.Gen_Proc_Symbol_End(lTempList);
+            AktProcCode.ConcatList(lTempList);
 
             { insert line debuginfo }
             if (cs_debuginfo in CurrentSettings.ModuleSwitches) or
@@ -2073,121 +2073,121 @@ implementation
                  do it nevertheless to to assist debug info generation
                  (hide original symbols, add absolutevarsyms that redirect
                   to their new locations in the parentfpstruct) }
-              if Assigned(CurrentProcInfo.procdef.ParentFPStruct) then
-                Redirect_ParentFPStruct_Local_Syms(CurrentProcInfo.procdef);
-              CurrentDebugInfo.insertlineinfo(aktproccode);
+              if Assigned(CurrentProcInfo.ProcDef.ParentFPStruct) then
+                Redirect_ParentFPStruct_Local_Syms(CurrentProcInfo.ProcDef);
+              CurrentDebugInfo.insertlineinfo(AktProcCode);
              end;
 
-            finish_eh;
+            Finish_EH;
 
-            hlcg.Record_Generated_Code_For_ProcDef(CurrentProcInfo.procdef,aktproccode,AktLocalData);
+            hlcg.Record_Generated_Code_For_ProcDef(CurrentProcInfo.ProcDef,AktProcCode,AktLocalData);
 
             { now generate code for any exception filters (they need the tempgen) }
-            generate_code_exceptfilters;
+            Generate_Code_ExceptFilters;
 
             { only now we can remove the temps }
-            if (procdef.ProcTypeOption<>potype_exceptfilter) then
+            if (ProcDef.ProcTypeOption<>potype_exceptfilter) then
               begin
-                tg.resettempgen;
-                tg.free;
-                tg:=nil;
+                TG.ResetTempGen;
+                TG.free;
+                TG:=nil;
               end;
             { stop tempgen and ra }
             hlcg.Done_Register_Allocators;
             Destroy_HLCodeGen;
           end;
 
-        dfabuilder.free;
-        dfabuilder := nil;
+        DFABuilder.free;
+        DFABuilder := nil;
 
         { restore symtablestack }
-        remove_from_symtablestack;
+        Remove_From_SymTableStack;
 
         { restore }
-        templist.free;
-        templist := nil;
-        CurrentSettings.MaxFPURegisters:=oldmaxfpuregisters;
-        CurrentFilePos:=oldfilepos;
-        CurrentStructDef:=old_current_structdef;
-        CurrentProcInfo:=old_current_procinfo;
+        lTempList.free;
+        lTempList := nil;
+        CurrentSettings.MaxFPURegisters:=lOldMaxFPURegisters;
+        CurrentFilePos:=lOldFilePos;
+        CurrentStructDef:=lOldCurrentStructDef;
+        CurrentProcInfo:=lOldCurrentProcInfo;
       end;
 
 
-    procedure TCGProcInfo.add_to_symtablestack;
+    procedure TCGProcInfo.Add_To_SymTableStack;
       begin
         { insert symtables for the class, but only if it is no nested function }
-        if Assigned(procdef.struct) and
-           not(Assigned(parent) and
-               Assigned(parent.procdef) and
-               Assigned(parent.procdef.struct)) then
-          push_nested_hierarchy(procdef.struct);
+        if Assigned(ProcDef.struct) and
+           not(Assigned(Parent) and
+               Assigned(Parent.ProcDef) and
+               Assigned(Parent.ProcDef.struct)) then
+          push_nested_hierarchy(ProcDef.struct);
 
         { insert parasymtable in symtablestack when parsing
           a function }
-        if procdef.ParaST.SymTableLevel>=NormalFunctionLevel then
-          SymTableStack.push(procdef.ParaST);
+        if ProcDef.ParaST.SymTableLevel>=NormalFunctionLevel then
+          SymTableStack.push(ProcDef.ParaST);
 
         { insert localsymtable, except for the main procedure
           (in that case the localst is the unit's static symtable,
            which is already on the stack) }
-        if procdef.LocalST.SymTableLevel>=NormalFunctionLevel then
-          SymTableStack.push(procdef.LocalST);
+        if ProcDef.LocalST.SymTableLevel>=NormalFunctionLevel then
+          SymTableStack.push(ProcDef.LocalST);
       end;
 
 
-    procedure TCGProcInfo.remove_from_symtablestack;
+    procedure TCGProcInfo.Remove_From_SymTableStack;
       begin
         { remove localsymtable }
-        if procdef.LocalST.SymTableLevel>=NormalFunctionLevel then
-          SymTableStack.pop(procdef.LocalST);
+        if ProcDef.LocalST.SymTableLevel>=NormalFunctionLevel then
+          SymTableStack.pop(ProcDef.LocalST);
 
         { remove parasymtable }
-        if procdef.ParaST.SymTableLevel>=NormalFunctionLevel then
-          SymTableStack.pop(procdef.ParaST);
+        if ProcDef.ParaST.SymTableLevel>=NormalFunctionLevel then
+          SymTableStack.pop(ProcDef.ParaST);
 
         { remove symtables for the class, but only if it is no nested function }
-        if Assigned(procdef.struct) and
-           not(Assigned(parent) and
-               Assigned(parent.procdef) and
-               Assigned(parent.procdef.struct)) then
-          pop_nested_hierarchy(procdef.struct);
+        if Assigned(ProcDef.struct) and
+           not(Assigned(Parent) and
+               Assigned(Parent.ProcDef) and
+               Assigned(Parent.ProcDef.struct)) then
+          pop_nested_hierarchy(ProcDef.struct);
       end;
 
 
-    procedure TCGProcInfo.resetprocdef;
+    procedure TCGProcInfo.ResetProcDef;
       begin
          { remove code tree, if not inline procedure }
-         if Assigned(code) then
+         if Assigned(Code) then
           begin
             { the inline procedure has already got a copy of the tree
               stored in procdef.inlininginfo }
-            code.free;
-            code:=nil;
+            Code.free;
+            Code:=nil;
           end;
        end;
 
 
-    procedure TCGProcInfo.parse_body;
+    procedure TCGProcInfo.Parse_Body;
       var
-         old_current_procinfo : TProcInfo;
-         old_block_type : TBlockType;
-         st : TSymTable;
-         old_current_structdef: TAbstractRecordDef;
-         old_current_genericdef,
-         old_current_specializedef: TStoredDef;
-         ParentFPInitBlock: TNode;
-         old_parse_generic: boolean;
-         recordtokens : boolean;
+         lOldCurrentProcInfo : TProcInfo;
+         lOldBlockType : TBlockType;
+         lSymTable : TSymTable;
+         lOldCurrentStructDef: TAbstractRecordDef;
+         lOldCurrentGenericDef,
+         lOldCurrentSpecializeDef: TStoredDef;
+         lParentFPInitBlock: TNode;
+         lOldParseGeneric: boolean;
+         lRecordTokens : boolean;
       begin
-         old_current_procinfo:=CurrentProcInfo;
-         old_block_type:=Block_Type;
-         old_current_structdef:=CurrentStructDef;
-         old_current_genericdef:=CurrentGenericDef;
-         old_current_specializedef:=CurrentSpecializeDef;
-         old_parse_generic:=parse_generic;
+         lOldCurrentProcInfo:=CurrentProcInfo;
+         lOldBlockType:=Block_Type;
+         lOldCurrentStructDef:=CurrentStructDef;
+         lOldCurrentGenericDef:=CurrentGenericDef;
+         lOldCurrentSpecializeDef:=CurrentSpecializeDef;
+         lOldParseGeneric:=parse_generic;
 
          CurrentProcInfo:=self;
-         CurrentStructDef:=procdef.struct;
+         CurrentStructDef:=ProcDef.struct;
 
 
         { check if the definitions of certain types are available which might not be available in older rtls and
@@ -2201,9 +2201,9 @@ implementation
 
          { if the procdef is truly a generic (thus takes parameters itself) then
            /that/ is our genericdef, not the - potentially - generic struct }
-         if procdef.Is_Generic then
+         if ProcDef.Is_Generic then
            begin
-             CurrentGenericDef:=procdef;
+             CurrentGenericDef:=ProcDef;
              parse_generic:=true;
            end
          else if Assigned(CurrentStructDef) and (df_generic in CurrentStructDef.DefOptions) then
@@ -2215,79 +2215,79 @@ implementation
            CurrentSpecializeDef:=CurrentStructDef;
 
          { calculate the lexical level }
-         if procdef.ParaST.SymTableLevel>MaxNesting then
+         if ProcDef.ParaST.SymTableLevel>MaxNesting then
            Message(parser_e_too_much_lexlevel);
          Block_Type:=bt_body;
 
 
          { allocate the symbol for this procedure }
-         alloc_proc_symbol(procdef);
+         Alloc_Proc_Symbol(ProcDef);
 
          { add parast/localst to symtablestack }
-         add_to_symtablestack;
+         Add_To_SymTableStack;
 
          { save entry info }
-         entrypos:=CurrentFilePos;
-         entryswitches:=CurrentSettings.LocalSwitches;
+         EntryPos:=CurrentFilePos;
+         EntrySwitches:=CurrentSettings.LocalSwitches;
 
-         recordtokens:=procdef.Is_Generic or
+         lRecordTokens:=ProcDef.Is_Generic or
                        (
-                         Assigned(procdef.struct) and
-                         (df_generic in procdef.struct.DefOptions) and
-                         Assigned(procdef.owner) and
-                         (procdef.owner.DefOwner=procdef.struct)
+                         Assigned(ProcDef.struct) and
+                         (df_generic in ProcDef.struct.DefOptions) and
+                         Assigned(ProcDef.owner) and
+                         (ProcDef.owner.DefOwner=ProcDef.struct)
                        );
 
-         if recordtokens then
+         if lRecordTokens then
            begin
              { start token recorder for generic template }
-             procdef.InitGeneric;
-             CurrentScanner.startrecordtokens(procdef.GenericTokenBuf);
+             ProcDef.InitGeneric;
+             CurrentScanner.startrecordtokens(ProcDef.GenericTokenBuf);
            end;
 
          { parse the code ... }
-         code:=block(CurrentModule.IsLibrary);
+         Code:=Block(CurrentModule.IsLibrary);
 
          PostProcess_Capturer(self);
 
-         if recordtokens then
+         if lRecordTokens then
            begin
              { stop token recorder for generic template }
              CurrentScanner.stoprecordtokens;
 
              { Give an error for accesses in the static symtable that aren't visible
                outside the current unit }
-             st:=procdef.owner;
-             while (st.SymTableType in [ObjectSymtable,recordsymtable]) do
-               st:=st.DefOwner.owner;
-             if (pi_uses_static_symtable in flags) and
-                (st.SymTableType<>staticsymtable) then
+             lSymTable:=ProcDef.owner;
+             while (lSymTable.SymTableType in [ObjectSymtable,recordsymtable]) do
+               lSymTable:=lSymTable.DefOwner.owner;
+             if (pi_uses_static_symtable in Flags) and
+                (lSymTable.SymTableType<>staticsymtable) then
                Message(parser_e_global_generic_references_static);
            end;
 
          { save exit info }
-         exitswitches:=CurrentSettings.LocalSwitches;
-         exitpos:=last_endtoken_filepos;
+         ExitSwitches:=CurrentSettings.LocalSwitches;
+         ExitPos:=last_endtoken_filepos;
 
          { the procedure is now defined }
-         procdef.ForwardDef:=false;
-         procdef.IsImplemented:=true;
+         ProcDef.ForwardDef:=false;
+         ProcDef.IsImplemented:=true;
 
-         if Assigned(code) then
+         if Assigned(Code) then
            begin
              { get a better entry point }
-             entrypos:=code.fileinfo;
+             EntryPos:=Code.fileinfo;
 
              { Finish type checking pass }
-             DoTypeCheckPass(code);
+             DoTypeCheckPass(Code);
 
-             if Assigned(procdef.ParentFPInitBlock) then
+             if Assigned(ProcDef.ParentFPInitBlock) then
                begin
-                 if Assigned(TBlockNode(procdef.ParentFPInitBlock).left) then
+                 if Assigned(TBlockNode(ProcDef.ParentFPInitBlock).left) then
                    begin
-                     ParentFPInitBlock:=procdef.ParentFPInitBlock;
-                     DoTypeCheckPass(ParentFPInitBlock);
-                     procdef.ParentFPInitBlock:=ParentFPInitBlock;
+                     lParentFPInitBlock:=ProcDef.ParentFPInitBlock;
+                     DoTypeCheckPass(lParentFPInitBlock);
+                     ProcDef.ParentFPInitBlock:=lParentFPInitBlock;
                    end
                end;
 
@@ -2297,42 +2297,42 @@ implementation
            symtable is checked in pmodules.
            The check must be done after the typecheckpass }
          if (ErrorCount=0) and
-            (TStoredSymTable(procdef.LocalST).SymTableType<>staticsymtable) then
+            (TStoredSymTable(ProcDef.LocalST).SymTableType<>staticsymtable) then
            begin
              { check if forwards are resolved }
-             TStoredSymTable(procdef.LocalST).Check_Forwards;
+             TStoredSymTable(ProcDef.LocalST).Check_Forwards;
              { check if all labels are used }
-             TStoredSymTable(procdef.LocalST).CheckLabels;
+             TStoredSymTable(ProcDef.LocalST).CheckLabels;
              { check for unused symbols, but only if there is no asm block }
-             if not(pi_has_assembler_block in flags) then
+             if not(pi_has_assembler_block in Flags) then
                begin
-                 TStoredSymTable(procdef.LocalST).AllSymbolsUsed;
-                 TStoredSymTable(procdef.ParaST).AllSymbolsUsed;
+                 TStoredSymTable(ProcDef.LocalST).AllSymbolsUsed;
+                 TStoredSymTable(ProcDef.ParaST).AllSymbolsUsed;
                end;
            end;
 
-         if (po_inline in procdef.ProcOptions) and
+         if (po_inline in ProcDef.ProcOptions) and
            { Can we inline this procedure? }
-           checknodeinlining(procdef) then
+           CheckNodeInlining(ProcDef) then
            CreateInlineInfo;
 
          { Print the node to tree.log }
          if ParaPrintNodeTree <> 0 then
-           printproc( 'after parsing');
+           PrintProc( 'after parsing');
 
 
          { ... remove symbol tables }
-         remove_from_symtablestack;
+         Remove_From_SymTableStack;
 
 
-         CurrentStructDef:=old_current_structdef;
-         CurrentGenericDef:=old_current_genericdef;
-         CurrentSpecializeDef:=old_current_specializedef;
-         CurrentProcInfo:=old_current_procinfo;
-         parse_generic:=old_parse_generic;
+         CurrentStructDef:=lOldCurrentStructDef;
+         CurrentGenericDef:=lOldCurrentGenericDef;
+         CurrentSpecializeDef:=lOldCurrentSpecializeDef;
+         CurrentProcInfo:=lOldCurrentProcInfo;
+         parse_generic:=lOldParseGeneric;
 
          { Restore old state }
-         Block_Type:=old_block_type;
+         Block_Type:=lOldBlockType;
       end;
 
 
@@ -2341,161 +2341,161 @@ implementation
 ****************************************************************************}
 
 
-    procedure check_init_paras(p:TObject;arg:pointer);
+    procedure CheckInitParas(AObject:TObject;AArg:pointer);
       begin
-        if TSym(p).typ<>paravarsym then
+        if TSym(AObject).typ<>paravarsym then
          exit;
-        with TParaVarSym(p) do
+        with TParaVarSym(AObject) do
           if (Is_Managed_Type(vardef) and
              (VarSpez in [vs_value,vs_out])) or
              (Is_ShortString(vardef) and
              (VarSpez=vs_value)) then
-            include(CurrentProcInfo.flags,pi_do_call);
+            include(CurrentProcInfo.Flags,pi_do_call);
       end;
 
 
-    procedure read_proc_body(old_current_procinfo:TProcInfo;pd:TProcDef);
+    procedure Read_Proc_Body(AOldCurrentProcInfo:TProcInfo;AProcDef:TProcDef);
       {
         Parses the procedure directives, then parses the procedure body, then
         generates the code for it
       }
 
       var
-        oldfailtokenmode : TModeSwitches;
-        isnestedproc     : boolean;
+        lOldFailTokenMode : TModeSwitches;
+        lIsNestedProc     : boolean;
       begin
-        Message1(parser_d_procedure_start,pd.FullProcName(false));
-        oldfailtokenmode:=[];
+        Message1(parser_d_procedure_start,AProcDef.FullProcName(false));
+        lOldFailTokenMode:=[];
 
         { create a new procedure }
-        CurrentProcInfo:=CProcInfo.create(old_current_procinfo);
+        CurrentProcInfo:=CProcInfo.Create(AOldCurrentProcInfo);
         CurrentModule.ProcInfo:=CurrentProcInfo;
-        CurrentProcInfo.procdef:=pd;
-        isnestedproc:=(CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel);
+        CurrentProcInfo.ProcDef:=AProcDef;
+        lIsNestedProc:=(CurrentProcInfo.ProcDef.ParaST.SymTableLevel>NormalFunctionLevel);
         { an anonymous function is always considered as nested }
-        if po_anonymous in pd.ProcOptions then
+        if po_anonymous in AProcDef.ProcOptions then
           begin
-            CurrentProcInfo.force_nested;
-            isnestedproc:=true;
+            CurrentProcInfo.Force_Nested;
+            lIsNestedProc:=true;
           end;
 
         { Insert mangledname }
-        pd.AliasNames.insert(pd.MangledName);
+        AProcDef.AliasNames.insert(AProcDef.MangledName);
 
         { Insert result variables in the localst }
-        insert_funcret_local(pd);
+        insert_funcret_local(AProcDef);
 
         { check if there are para's which require initing -> set }
         { pi_do_call (if not yet set)                            }
-        if not(pi_do_call in CurrentProcInfo.flags) then
-          pd.ParaST.SymList.ForEachCall(@check_init_paras,nil);
+        if not(pi_do_call in CurrentProcInfo.Flags) then
+          AProcDef.ParaST.SymList.ForEachCall(@CheckInitParas,nil);
 
         { set _FAIL as keyword if constructor }
-        if (pd.ProcTypeOption=potype_constructor) then
+        if (AProcDef.ProcTypeOption=potype_constructor) then
          begin
-           oldfailtokenmode:=tokeninfo^[_FAIL].keyword;
+           lOldFailTokenMode:=tokeninfo^[_FAIL].keyword;
            tokeninfo^[_FAIL].keyword:=alllanguagemodes;
          end;
 
-        TCGProcInfo(CurrentProcInfo).parse_body;
+        TCGProcInfo(CurrentProcInfo).Parse_Body;
 
         { reset _FAIL as _SELF normal }
-        if (pd.ProcTypeOption=potype_constructor) then
-          tokeninfo^[_FAIL].keyword:=oldfailtokenmode;
+        if (AProcDef.ProcTypeOption=potype_constructor) then
+          tokeninfo^[_FAIL].keyword:=lOldFailTokenMode;
 
         { When it's a nested procedure then defer the code generation,
           when back at normal function level then generate the code
           for all deferred nested procedures and the current procedure }
-        if not isnestedproc then
+        if not lIsNestedProc then
           begin
-            if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
+            if not(df_generic in CurrentProcInfo.ProcDef.DefOptions) then
               begin
                 { also generate the bodies for all previously done
                   specializations so that we might inline them }
                 generate_specialization_procs;
                 { convert all load nodes that might have been captured by a
                   capture object }
-                TCGProcInfo(CurrentProcInfo).Convert_Captured_Syms;
-                TCGProcInfo(CurrentProcInfo).generate_code_tree;
+                TCGProcInfo(CurrentProcInfo).ConvertCapturedSyms;
+                TCGProcInfo(CurrentProcInfo).Generate_Code_Tree;
               end;
           end;
 
         { release procinfo }
         if TProcInfo(CurrentModule.ProcInfo)<>CurrentProcInfo then
           InternalError(200304274);
-        CurrentModule.ProcInfo:=CurrentProcInfo.parent;
+        CurrentModule.ProcInfo:=CurrentProcInfo.Parent;
 
         { For specialization we didn't record the last semicolon. Moving this parsing
           into the parse_body routine is not done because of having better file position
           information available }
-        if not CurrentProcInfo.procdef.Is_Specialization and
-            not (po_anonymous in CurrentProcInfo.procdef.ProcOptions) and
+        if not CurrentProcInfo.ProcDef.Is_Specialization and
+            not (po_anonymous in CurrentProcInfo.ProcDef.ProcOptions) and
             (
-              not Assigned(CurrentProcInfo.procdef.struct) or
-              not (df_specialization in CurrentProcInfo.procdef.struct.DefOptions)
+              not Assigned(CurrentProcInfo.ProcDef.struct) or
+              not (df_specialization in CurrentProcInfo.ProcDef.struct.DefOptions)
               or not (
-                Assigned(CurrentProcInfo.procdef.owner) and
-                (CurrentProcInfo.procdef.owner.DefOwner=CurrentProcInfo.procdef.struct)
+                Assigned(CurrentProcInfo.ProcDef.owner) and
+                (CurrentProcInfo.ProcDef.owner.DefOwner=CurrentProcInfo.ProcDef.struct)
               )
             ) then
           consume(_SEMICOLON);
 
-        if not isnestedproc then
+        if not lIsNestedProc then
           { current_procinfo is checked for nil later on }
           freeandnil(CurrentProcInfo);
       end;
 
 
-    procedure read_proc_body(pd:TProcDef);
+    procedure Read_Proc_Body(AProcDef:TProcDef);
       var
-        old_module_procinfo : tobject;
-        old_current_procinfo : TProcInfo;
+        lOldModuleProcInfo : tobject;
+        lOldCurrentProcInfo : TProcInfo;
       begin
-        old_current_procinfo:=CurrentProcInfo;
-        old_module_procinfo:=CurrentModule.ProcInfo;
+        lOldCurrentProcInfo:=CurrentProcInfo;
+        lOldModuleProcInfo:=CurrentModule.ProcInfo;
         CurrentProcInfo:=nil;
         CurrentModule.ProcInfo:=nil;
-        read_proc_body(nil,pd);
-        CurrentProcInfo:=old_current_procinfo;
-        CurrentModule.ProcInfo:=old_module_procinfo;
+        Read_Proc_Body(nil,AProcDef);
+        CurrentProcInfo:=lOldCurrentProcInfo;
+        CurrentModule.ProcInfo:=lOldModuleProcInfo;
       end;
 
 
-    function read_proc(flags:TReadProcFlags; usefwpd: TProcDef):TProcDef;
+    function Read_Proc(AFlags:TReadProcFlags; AForwardProcDef: TProcDef):TProcDef;
       {
         Parses the procedure directives, then parses the procedure body, then
         generates the code for it
       }
 
-        function convert_flags_to_ppf:TParseProcFlags;inline;
+        function ConvertFlagsToPPF:TParseProcFlags;inline;
           begin
-            result:=[];
-            if rpf_classmethod in flags then
-              include(result,ppf_classmethod);
-            if rpf_generic in flags then
-              include(result,ppf_generic);
-            if rpf_anonymous in flags then
-              include(result,ppf_anonymous);
+            Result:=[];
+            if rpf_classmethod in AFlags then
+              include(Result,ppf_classmethod);
+            if rpf_generic in AFlags then
+              include(Result,ppf_generic);
+            if rpf_anonymous in AFlags then
+              include(Result,ppf_anonymous);
           end;
 
       var
-        old_current_procinfo : TProcInfo;
-        old_current_structdef: TAbstractRecordDef;
-        old_current_genericdef,
-        old_current_specializedef: TStoredDef;
-        pdflags    : TPDFlags;
-        firstpd : TProcDef;
+        lOldCurrentProcInfo : TProcInfo;
+        lOldCurrentStructDef: TAbstractRecordDef;
+        lOldCurrentGenericDef,
+        lOldCurrentSpecializeDef: TStoredDef;
+        lProcDefFlags    : TPDFlags;
+        lFirstProcDef : TProcDef;
 {$ifdef genericdef_for_nested}
-        def : TProcDef;
-        srsym : TSym;
-        i : LongInt;
+        lDef : TProcDef;
+        lSym : TSym;
+        lIndex : LongInt;
 {$endif genericdef_for_nested}
       begin
          { save old state }
-         old_current_procinfo:=CurrentProcInfo;
-         old_current_structdef:=CurrentStructDef;
-         old_current_genericdef:=CurrentGenericDef;
-         old_current_specializedef:=CurrentSpecializeDef;
+         lOldCurrentProcInfo:=CurrentProcInfo;
+         lOldCurrentStructDef:=CurrentStructDef;
+         lOldCurrentGenericDef:=CurrentGenericDef;
+         lOldCurrentSpecializeDef:=CurrentSpecializeDef;
 
          { reset current_procinfo.procdef to nil to be sure that nothing is writing
            to another procdef }
@@ -2504,149 +2504,149 @@ implementation
          CurrentGenericDef:=nil;
          CurrentSpecializeDef:=nil;
 
-         if not Assigned(usefwpd) then
+         if not Assigned(AForwardProcDef) then
            { parse procedure declaration }
-           result:=parse_proc_dec(convert_flags_to_ppf,old_current_structdef)
+           Result:=parse_proc_dec(ConvertFlagsToPPF,lOldCurrentStructDef)
          else
-           result:=usefwpd;
+           Result:=AForwardProcDef;
 
          { set the default function options }
          if parse_only then
           begin
-            result.ForwardDef:=true;
+            Result.ForwardDef:=true;
             { set also the interface flag, for better error message when the
               implementation doesn't match this header }
-            result.InterfaceDef:=true;
-            include(result.ProcOptions,po_global);
-            pdflags:=[pd_interface];
+            Result.InterfaceDef:=true;
+            include(Result.ProcOptions,po_global);
+            lProcDefFlags:=[pd_interface];
           end
          else
           begin
-            pdflags:=[pd_body];
+            lProcDefFlags:=[pd_body];
             if (not CurrentModule.InInterface) then
-              include(pdflags,pd_implemen);
+              include(lProcDefFlags,pd_implemen);
             if (not CurrentModule.IsUnit) or
                create_smartlink_library then
-              include(result.ProcOptions,po_global);
-            result.ForwardDef:=false;
+              include(Result.ProcOptions,po_global);
+            Result.ForwardDef:=false;
           end;
 
-         if not Assigned(usefwpd) then
+         if not Assigned(AForwardProcDef) then
            begin
              { parse the directives that may follow }
-             parse_proc_directives(result,pdflags);
+             parse_proc_directives(Result,lProcDefFlags);
 
-             if not (rpf_anonymous in flags) then
+             if not (rpf_anonymous in AFlags) then
                { hint directives, these can be separated by semicolons here,
                  that needs to be handled here with a loop (PFV) }
-               while try_consume_hintdirective(result.SymOptions,result.DeprecatedMsg) do
+               while try_consume_hintdirective(Result.SymOptions,Result.DeprecatedMsg) do
                 Consume(_SEMICOLON);
 
              { Set calling convention }
              if parse_only then
-               handle_calling_convention(result,hcc_default_actions_intf)
+               handle_calling_convention(Result,hcc_default_actions_intf)
              else
-               handle_calling_convention(result,hcc_default_actions_impl)
+               handle_calling_convention(Result,hcc_default_actions_impl)
            end;
 
          { search for forward declarations }
-         if not proc_add_definition(result) then
+         if not proc_add_definition(Result) then
            begin
              { One may not implement a method of a type declared in a different unit }
-             if Assigned(result.struct) and
-                (result.struct.SymTable.ModuleID<>CurrentModule.ModuleID) and
-                not result.Is_Specialization then
+             if Assigned(Result.struct) and
+                (Result.struct.SymTable.ModuleID<>CurrentModule.ModuleID) and
+                not Result.Is_Specialization then
               begin
-                MessagePos1(result.fileinfo,parser_e_method_for_type_in_other_unit,result.struct.TypeSymbolPrettyName);
+                MessagePos1(Result.fileinfo,parser_e_method_for_type_in_other_unit,Result.struct.TypeSymbolPrettyName);
               end
              { A method must be forward defined (in the object declaration) }
-             else if Assigned(result.struct) and
-                (not Assigned(old_current_structdef)) then
+             else if Assigned(Result.struct) and
+                (not Assigned(lOldCurrentStructDef)) then
               begin
-                MessagePos1(result.fileinfo,parser_e_header_dont_match_any_member,result.FullProcName(false));
-                TProcSym(result.ProcSym).Write_Parameter_Lists(result);
+                MessagePos1(Result.fileinfo,parser_e_header_dont_match_any_member,Result.FullProcName(false));
+                TProcSym(Result.ProcSym).Write_Parameter_Lists(Result);
               end
              else
               begin
                 { Give a better error if there is a forward def in the interface and only
                   a single implementation }
-                firstpd:=TProcDef(TProcSym(result.ProcSym).ProcdefList[0]);
-                if (not result.ForwardDef) and
-                   (not result.InterfaceDef) and
-                   (TProcSym(result.ProcSym).ProcdefList.Count>1) and
-                   firstpd.ForwardDef and
-                   firstpd.InterfaceDef and
-                   not(TProcSym(result.ProcSym).ProcdefList.Count>2) and
+                lFirstProcDef:=TProcDef(TProcSym(Result.ProcSym).ProcdefList[0]);
+                if (not Result.ForwardDef) and
+                   (not Result.InterfaceDef) and
+                   (TProcSym(Result.ProcSym).ProcdefList.Count>1) and
+                   lFirstProcDef.ForwardDef and
+                   lFirstProcDef.InterfaceDef and
+                   not(TProcSym(Result.ProcSym).ProcdefList.Count>2) and
                    { don't give an error if it may be an overload }
                    not(m_fpc in CurrentSettings.ModeSwitches) and
-                   (not(po_overload in result.ProcOptions) or
-                    not(po_overload in firstpd.ProcOptions)) then
+                   (not(po_overload in Result.ProcOptions) or
+                    not(po_overload in lFirstProcDef.ProcOptions)) then
                  begin
-                   MessagePos1(result.fileinfo,parser_e_header_dont_match_forward,result.FullProcName(false));
-                   TProcSym(result.ProcSym).Write_Parameter_Lists(result);
+                   MessagePos1(Result.fileinfo,parser_e_header_dont_match_forward,Result.FullProcName(false));
+                   TProcSym(Result.ProcSym).Write_Parameter_Lists(Result);
                  end
                 else
                   begin
-                    if result.Is_Generic and not Assigned(result.struct) then
-                      TProcSym(result.ProcSym).owner.IncludeOption(sto_has_generic);
+                    if Result.Is_Generic and not Assigned(Result.struct) then
+                      TProcSym(Result.ProcSym).owner.IncludeOption(sto_has_generic);
                   end;
               end;
            end;
 
          { Set mangled name }
-         proc_set_mangledname(result);
+         proc_set_mangledname(Result);
 
          { inherit generic flags from parent routine }
-         if Assigned(old_current_procinfo) and
-             (old_current_procinfo.procdef.DefOptions*[df_specialization,df_generic]<>[]) then
+         if Assigned(lOldCurrentProcInfo) and
+             (lOldCurrentProcInfo.ProcDef.DefOptions*[df_specialization,df_generic]<>[]) then
            begin
-             if df_generic in old_current_procinfo.procdef.DefOptions then
-               include(result.DefOptions,df_generic);
-             if df_specialization in old_current_procinfo.procdef.DefOptions then
+             if df_generic in lOldCurrentProcInfo.ProcDef.DefOptions then
+               include(Result.DefOptions,df_generic);
+             if df_specialization in lOldCurrentProcInfo.ProcDef.DefOptions then
                begin
-                 include(result.DefOptions,df_specialization);
+                 include(Result.DefOptions,df_specialization);
                  { the procdefs encountered here are nested procdefs of which
                    their complete definition also resides inside the current token
                    stream, thus access to their genericdef is not required }
                  {$ifdef genericdef_for_nested}
                  { find the corresponding routine in the generic routine }
-                 if not Assigned(old_current_procinfo.procdef.GenericDef) then
+                 if not Assigned(lOldCurrentProcInfo.ProcDef.GenericDef) then
                    InternalError(2016121701);
-                 srsym:=TSym(TProcDef(old_current_procinfo.procdef.GenericDef).GetSymTable(gs_local).find(result.ProcSym.name));
-                 if not Assigned(srsym) or (srsym.typ<>ProcSym) then
+                 lSym:=TSym(TProcDef(lOldCurrentProcInfo.ProcDef.GenericDef).GetSymTable(gs_local).find(Result.ProcSym.name));
+                 if not Assigned(lSym) or (lSym.typ<>ProcSym) then
                    InternalError(2016121702);
                  { in practice the generic procdef should be at the same index
                    as the index of the current procdef, but as there *might* be
                    differences between the amount of defs generated for the
                    specialization and the generic search for the def using
                    parameter comparison }
-                 for i:=0 to TProcSym(srsym).procdeflist.count-1 do
+                 for lIndex:=0 to TProcSym(lSym).procdeflist.count-1 do
                    begin
-                     def:=TProcDef(TProcSym(srsym).procdeflist[i]);
-                     if (Compare_Paras(def.paras,result.paras,cp_none,[cpo_ignorehidden,cpo_openequalisexact,cpo_ignoreuniv])=te_exact) and
-                         (Compare_Defs(def.ReturnDef,result.ReturnDef,nothingn)=te_exact) then
+                     lDef:=TProcDef(TProcSym(lSym).procdeflist[lIndex]);
+                     if (Compare_Paras(lDef.paras,Result.paras,cp_none,[cpo_ignorehidden,cpo_openequalisexact,cpo_ignoreuniv])=te_exact) and
+                         (Compare_Defs(lDef.ReturnDef,Result.ReturnDef,nothingn)=te_exact) then
                        begin
-                         result.GenericDef:=def;
+                         Result.GenericDef:=lDef;
                          break;
                        end;
                    end;
-                 if not Assigned(result.GenericDef) then
+                 if not Assigned(Result.GenericDef) then
                    InternalError(2016121703);
                  {$endif}
                end;
            end;
 
          { compile procedure when a body is needed }
-         if (pd_body in pdflags) then
+         if (pd_body in lProcDefFlags) then
            begin
-             read_proc_body(old_current_procinfo,result);
+             Read_Proc_Body(lOldCurrentProcInfo,Result);
            end
          else
            begin
              { Handle imports }
-             if (po_external in result.ProcOptions) then
+             if (po_external in Result.ProcOptions) then
                begin
-                 import_external_proc(result);
+                 Import_External_Proc(Result);
 {$ifdef cpuhighleveltarget}
                  { it's hard to factor this out in a virtual method, because the
                    generic version (the one inside this ifdef) doesn't fit in
@@ -2655,17 +2655,17 @@ implementation
                    Maybe we need another class for this kind of code that could
                    either be symcreat- or hlcgobj-based
                  }
-                 if (not result.ForwardDef) and
-                    (result.HasForward) and
-                    (proc_get_importname(result)<>'') then
+                 if (not Result.ForwardDef) and
+                    (Result.HasForward) and
+                    (proc_get_importname(Result)<>'') then
                    begin
                      { we cannot handle the callee-side of variadic functions (and
                        even if we could, e.g. LLVM cannot call through to something
                        else in that case) }
-                     if Is_C_Variadic(result) then
-                       Message1(parser_e_callthrough_varargs,result.FullProcName(false));
-                     Call_Through_New_Name(result,proc_get_importname(result));
-                     include(result.ImplProcOptions,pio_thunk);
+                     if Is_C_Variadic(Result) then
+                       Message1(parser_e_callthrough_varargs,Result.FullProcName(false));
+                     Call_Through_New_Name(Result,proc_get_importname(Result));
+                     include(Result.ImplProcOptions,pio_thunk);
                    end
                  else
 {$endif cpuhighleveltarget}
@@ -2673,8 +2673,8 @@ implementation
                      Create_HLCodeGen(nil);
                      hlcg.Handle_External_Proc(
                        CurrentAsmData.asmlists[al_procedures],
-                       result,
-                       proc_get_importname(result));
+                       Result,
+                       proc_get_importname(Result));
                      Destroy_HLCodeGen;
                    end
                end;
@@ -2683,55 +2683,55 @@ implementation
          { always register public functions that are only declared in the
            implementation section as they might be called using an external
            declaration from another unit }
-         if (po_global in result.ProcOptions) and
-             not result.InterfaceDef and
-             ([df_generic,df_specialization]*result.DefOptions=[]) then
+         if (po_global in Result.ProcOptions) and
+             not Result.InterfaceDef and
+             ([df_generic,df_specialization]*Result.DefOptions=[]) then
            begin
-             result.RegisterDef;
-             result.ProcSym.RegisterSym;
+             Result.RegisterDef;
+             Result.ProcSym.RegisterSym;
            end;
 
          { make sure that references to forward-declared functions are not }
          { treated as references to external symbols, needed for darwin.   }
 
          { make sure we don't change the binding of real external symbols }
-         if (([po_external,po_weakexternal]*result.ProcOptions)=[]) and (pocall_internproc<>result.ProcCallOption) then
-           CurrentAsmData.DefineProcAsmSymbol(result,result.MangledName,result.NeedsGlobalAsmSym);
+         if (([po_external,po_weakexternal]*Result.ProcOptions)=[]) and (pocall_internproc<>Result.ProcCallOption) then
+           CurrentAsmData.DefineProcAsmSymbol(Result,Result.MangledName,Result.NeedsGlobalAsmSym);
 
-         CurrentStructDef:=old_current_structdef;
-         CurrentGenericDef:=old_current_genericdef;
-         CurrentSpecializeDef:=old_current_specializedef;
-         CurrentProcInfo:=old_current_procinfo;
+         CurrentStructDef:=lOldCurrentStructDef;
+         CurrentGenericDef:=lOldCurrentGenericDef;
+         CurrentSpecializeDef:=lOldCurrentSpecializeDef;
+         CurrentProcInfo:=lOldCurrentProcInfo;
       end;
 
 
-    procedure import_external_proc(pd:TProcDef);
+    procedure Import_External_Proc(AProcDef:TProcDef);
       var
-        name : string;
+        lName : string;
       begin
-        if not (po_external in pd.ProcOptions) then
+        if not (po_external in AProcDef.ProcOptions) then
           InternalError(2015121101);
 
         { Import DLL specified? }
-        if Assigned(pd.ImportDLL) then
+        if Assigned(AProcDef.ImportDLL) then
           begin
-            if Assigned (pd.ImportName) then
-              CurrentModule.AddExternalImport(pd.ImportDLL^,
-                pd.ImportName^,proc_get_importname(pd),
-                pd.ImportNr,false,false)
+            if Assigned (AProcDef.ImportName) then
+              CurrentModule.AddExternalImport(AProcDef.ImportDLL^,
+                AProcDef.ImportName^,proc_get_importname(AProcDef),
+                AProcDef.ImportNr,false,false)
             else
-              CurrentModule.AddExternalImport(pd.ImportDLL^,
-                proc_get_importname(pd),proc_get_importname(pd),
-                pd.ImportNr,false,true);
+              CurrentModule.AddExternalImport(AProcDef.ImportDLL^,
+                proc_get_importname(AProcDef),proc_get_importname(AProcDef),
+                AProcDef.ImportNr,false,true);
           end
         else
           begin
-            name:=proc_get_importname(pd);
+            lName:=proc_get_importname(AProcDef);
             { add import name to external list for DLL scanning }
-            if tf_has_dllscanner in TargetInfo.flags then
-              CurrentModule.DLLScannerInputList.Add(name,pd);
+            if tf_has_dllscanner in TargetInfo.Flags then
+              CurrentModule.DLLScannerInputList.Add(lName,AProcDef);
             { needed for units that use functions in packages this way }
-            CurrentModule.Add_Extern_AsmSym(name,AB_EXTERNAL,AT_FUNCTION);
+            CurrentModule.Add_Extern_AsmSym(lName,AB_EXTERNAL,AT_FUNCTION);
           end;
       end;
 
@@ -2740,66 +2740,66 @@ implementation
 ****************************************************************************}
 
     { search in symtablestack for not complete classes }
-    procedure check_forward_class(p:TObject;arg:pointer);
+    procedure CheckForwardClass(AObject:TObject;AArg:pointer);
       begin
-        if (TSym(p).typ=TypeSym) and
-           (TTypeSym(p).typedef.typ=objectdef) and
-           (oo_is_forward in TObjectDef(TTypeSym(p).typedef).ObjectOptions) then
-          MessagePos1(TSym(p).fileinfo,sym_e_forward_type_not_resolved,TSym(p).realname);
+        if (TSym(AObject).typ=TypeSym) and
+           (TTypeSym(AObject).TypeDef.typ=objectdef) and
+           (oo_is_forward in TObjectDef(TTypeSym(AObject).TypeDef).ObjectOptions) then
+          MessagePos1(TSym(AObject).fileinfo,sym_e_forward_type_not_resolved,TSym(AObject).realname);
       end;
 
 
-    procedure read_declarations(IsLibrary : boolean);
+    procedure Read_Declarations(AIsLibrary : boolean);
       var
-        hadgeneric : boolean;
+        lHadGeneric : boolean;
 
-        procedure handle_unexpected_had_generic;
+        procedure HandleUnexpectedHadGeneric;
           begin
-            if hadgeneric then
+            if lHadGeneric then
               begin
                 Message(parser_e_procedure_or_function_expected);
-                hadgeneric:=false;
+                lHadGeneric:=false;
               end;
           end;
 
       var
-        is_classdef:boolean;
-        flags : TReadProcFlags;
+        lIsClassDef:boolean;
+        lFlags : TReadProcFlags;
       begin
-        is_classdef:=false;
-        hadgeneric:=false;
+        lIsClassDef:=false;
+        lHadGeneric:=false;
         repeat
            if not Assigned(CurrentProcInfo) then
              InternalError(200304251);
            case CurrentScanner.token of
               _LABEL:
                 begin
-                  handle_unexpected_had_generic;
+                  HandleUnexpectedHadGeneric;
                   label_dec;
                 end;
               _CONST:
                 begin
-                  handle_unexpected_had_generic;
-                  const_dec(hadgeneric);
+                  HandleUnexpectedHadGeneric;
+                  const_dec(lHadGeneric);
                 end;
               _TYPE:
                 begin
-                  handle_unexpected_had_generic;
-                  type_dec(hadgeneric);
+                  HandleUnexpectedHadGeneric;
+                  type_dec(lHadGeneric);
                 end;
               _VAR:
                 begin
-                  handle_unexpected_had_generic;
-                  var_dec(hadgeneric);
+                  HandleUnexpectedHadGeneric;
+                  var_dec(lHadGeneric);
                 end;
               _THREADVAR:
                 begin
-                  handle_unexpected_had_generic;
-                  threadvar_dec(hadgeneric);
+                  HandleUnexpectedHadGeneric;
+                  threadvar_dec(lHadGeneric);
                 end;
               _CLASS:
                 begin
-                  is_classdef:=false;
+                  lIsClassDef:=false;
                   if try_to_consume(_CLASS) then
                    begin
                      { class modifier is only allowed for procedures, functions, }
@@ -2812,7 +2812,7 @@ implementation
                        Message(parser_e_no_static_method_in_interfaces)
                      else
                        { class methods are also allowed for Objective-C protocols }
-                       is_classdef:=true;
+                       lIsClassDef:=true;
                    end;
                 end;
               _CONSTRUCTOR,
@@ -2821,29 +2821,29 @@ implementation
               _PROCEDURE,
               _OPERATOR:
                 begin
-                  if hadgeneric and not (CurrentScanner.token in [_PROCEDURE,_FUNCTION]) then
+                  if lHadGeneric and not (CurrentScanner.token in [_PROCEDURE,_FUNCTION]) then
                     begin
                       Message(parser_e_procedure_or_function_expected);
-                      hadgeneric:=false;
+                      lHadGeneric:=false;
                     end;
-                  flags:=[];
-                  if is_classdef then
-                    include(flags,rpf_classmethod);
-                  if hadgeneric then
-                    include(flags,rpf_generic);
-                  read_proc(flags,nil);
-                  is_classdef:=false;
-                  hadgeneric:=false;
+                  lFlags:=[];
+                  if lIsClassDef then
+                    include(lFlags,rpf_classmethod);
+                  if lHadGeneric then
+                    include(lFlags,rpf_generic);
+                  Read_Proc(lFlags,nil);
+                  lIsClassDef:=false;
+                  lHadGeneric:=false;
                 end;
               _EXPORTS:
                 begin
-                   handle_unexpected_had_generic;
-                   if (CurrentProcInfo.procdef.LocalST.SymTableLevel>MainProgramLevel) then
+                   HandleUnexpectedHadGeneric;
+                   if (CurrentProcInfo.ProcDef.LocalST.SymTableLevel>MainProgramLevel) then
                      begin
                         Message(parser_e_syntax_error);
                         consume_all_until(_SEMICOLON);
                      end
-                   else if IsLibrary or
+                   else if AIsLibrary or
                      (TargetInfo.system in systems_unit_program_exports) then
                      read_exports
                    else
@@ -2854,7 +2854,7 @@ implementation
                 end;
               _PROPERTY:
                 begin
-                  handle_unexpected_had_generic;
+                  HandleUnexpectedHadGeneric;
                   if (m_fpc in CurrentSettings.ModeSwitches) then
                     property_dec
                   else
@@ -2865,32 +2865,32 @@ implementation
                   case CurrentScanner.idtoken of
                     _RESOURCESTRING:
                       begin
-                        handle_unexpected_had_generic;
+                        HandleUnexpectedHadGeneric;
                         { m_class is needed, because the resourcestring
                           loading is in the ObjPas unit }
 {                        if (m_class in current_settings.modeswitches) then}
-                          resourcestring_dec(hadgeneric)
+                          resourcestring_dec(lHadGeneric)
 {                        else
                           break;}
                       end;
                     _OPERATOR:
                       begin
-                        handle_unexpected_had_generic;
-                        if is_classdef then
+                        HandleUnexpectedHadGeneric;
+                        if lIsClassDef then
                           begin
-                            read_proc([rpf_classmethod],nil);
-                            is_classdef:=false;
+                            Read_Proc([rpf_classmethod],nil);
+                            lIsClassDef:=false;
                           end
                         else
                           break;
                       end;
                     _GENERIC:
                       begin
-                        handle_unexpected_had_generic;
+                        HandleUnexpectedHadGeneric;
                         if not (m_delphi in CurrentSettings.ModeSwitches) then
                           begin
                             consume(_ID);
-                            hadgeneric:=true;
+                            lHadGeneric:=true;
                           end
                         else
                           break;
@@ -2905,7 +2905,7 @@ implementation
          { add implementations for synthetic method declarations added by
            the compiler (not for unit/program init functions, their localst
            is the statistic -> would duplicate the work done in pmodules) }
-         if (CurrentProcInfo.procdef.LocalST.SymTableType=LocalSymTable) and
+         if (CurrentProcInfo.ProcDef.LocalST.SymTableType=LocalSymTable) and
            { we cannot call add_synthetic_method_implementations as it throws an internalerror if
              the token is a string/char. As this is a syntax error and compilation will abort anyways,
              skipping the call does not matter
@@ -2913,80 +2913,80 @@ implementation
            (CurrentScanner.token<>_CSTRING) and
            (CurrentScanner.token<>_CWCHAR) and
            (CurrentScanner.token<>_CWSTRING) then
-           Add_Synthetic_Method_Implementations(CurrentProcInfo.procdef.LocalST);
+           Add_Synthetic_Method_Implementations(CurrentProcInfo.ProcDef.LocalST);
 
          { check for incomplete class definitions, this is only required
            for fpc modes }
          if (m_fpc in CurrentSettings.ModeSwitches) then
-           CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@check_forward_class,nil);
+           CurrentProcInfo.ProcDef.LocalST.SymList.ForEachCall(@CheckForwardClass,nil);
       end;
 
 
-    procedure read_interface_declarations;
+    procedure Read_Interface_Declarations;
       var
-        hadgeneric : boolean;
+        lHadGeneric : boolean;
 
-        procedure handle_unexpected_had_generic;
+        procedure HandleUnexpectedHadGeneric;
           begin
-            if hadgeneric then
+            if lHadGeneric then
               begin
                 Message(parser_e_procedure_or_function_expected);
-                hadgeneric:=false;
+                lHadGeneric:=false;
               end;
           end;
 
       var
-        flags : TReadProcFlags;
+        lFlags : TReadProcFlags;
       begin
-         hadgeneric:=false;
+         lHadGeneric:=false;
          repeat
            case CurrentScanner.token of
              _CONST :
                begin
-                 handle_unexpected_had_generic;
-                 const_dec(hadgeneric);
+                 HandleUnexpectedHadGeneric;
+                 const_dec(lHadGeneric);
                end;
              _TYPE :
                begin
-                 handle_unexpected_had_generic;
-                 type_dec(hadgeneric);
+                 HandleUnexpectedHadGeneric;
+                 type_dec(lHadGeneric);
                end;
              _VAR :
                begin
-                 handle_unexpected_had_generic;
-                 var_dec(hadgeneric);
+                 HandleUnexpectedHadGeneric;
+                 var_dec(lHadGeneric);
                end;
              _THREADVAR :
                begin
-                 handle_unexpected_had_generic;
-                 threadvar_dec(hadgeneric);
+                 HandleUnexpectedHadGeneric;
+                 threadvar_dec(lHadGeneric);
                end;
              _FUNCTION,
              _PROCEDURE,
              _OPERATOR :
                begin
-                 if hadgeneric and not (CurrentScanner.token in [_FUNCTION, _PROCEDURE]) then
+                 if lHadGeneric and not (CurrentScanner.token in [_FUNCTION, _PROCEDURE]) then
                    begin
                      message(parser_e_procedure_or_function_expected);
-                     hadgeneric:=false;
+                     lHadGeneric:=false;
                    end;
-                 flags:=[];
-                 if hadgeneric then
-                   include(flags,rpf_generic);
-                 read_proc(flags,nil);
-                 hadgeneric:=false;
+                 lFlags:=[];
+                 if lHadGeneric then
+                   include(lFlags,rpf_generic);
+                 Read_Proc(lFlags,nil);
+                 lHadGeneric:=false;
                end;
              else
                begin
                  case CurrentScanner.idtoken of
                    _RESOURCESTRING :
                      begin
-                       handle_unexpected_had_generic;
-                       resourcestring_dec(hadgeneric);
+                       HandleUnexpectedHadGeneric;
+                       resourcestring_dec(lHadGeneric);
                      end;
                    _PROPERTY:
                      begin
-                       handle_unexpected_had_generic;
+                       HandleUnexpectedHadGeneric;
                        if (m_fpc in CurrentSettings.ModeSwitches) then
                          property_dec
                        else
@@ -2994,10 +2994,10 @@ implementation
                      end;
                    _GENERIC:
                      begin
-                       handle_unexpected_had_generic;
+                       HandleUnexpectedHadGeneric;
                        if not (m_delphi in CurrentSettings.ModeSwitches) then
                          begin
-                           hadgeneric:=true;
+                           lHadGeneric:=true;
                            consume(_ID);
                          end
                        else
@@ -3012,7 +3012,7 @@ implementation
          { check for incomplete class definitions, this is only required
            for fpc modes }
          if (m_fpc in CurrentSettings.ModeSwitches) then
-          SymTableStack.top.SymList.ForEachCall(@check_forward_class,nil);
+          SymTableStack.top.SymList.ForEachCall(@CheckForwardClass,nil);
       end;
 
 

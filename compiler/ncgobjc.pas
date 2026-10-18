@@ -31,11 +31,11 @@ uses
 
 type
   TCGObjCSelectorNode = class(TObjCSelectorNode)
-    procedure pass_generate_code; override;
+    procedure Pass_Generate_Code; override;
   end;
 
   TCGObjCProtocolNode = class(TObjCProtocolNode)
-    procedure pass_generate_code; override;
+    procedure Pass_Generate_Code; override;
   end;
 
 implementation
@@ -52,36 +52,36 @@ uses
                            TCGOBJCSELECTORNODE
 *****************************************************************************}
 
-procedure TCGObjCSelectorNode.pass_generate_code;
+procedure TCGObjCSelectorNode.Pass_Generate_Code;
   var
-    pool   : THashSet;
-    entry  : PHashSetItem;
-    name   : PShortString;
+    lPool   : THashSet;
+    lEntry  : PHashSetItem;
+    lName   : PShortString;
   begin
-    pool:=CurrentAsmData.ConstPools[sp_varnamerefs];
+    lPool:=CurrentAsmData.ConstPools[sp_varnamerefs];
 
-    case left.nodetype of
+    case Left.NodeType of
       loadn:
         begin
-          if (TLoadNode(left).symtableentry.typ<>ProcSym) then
+          if (TLoadNode(Left).SymTableEntry.typ<>ProcSym) then
             InternalError(2009051602);
-          if (TProcSym(TLoadNode(left).symtableentry).procdeflist.count<>1) then
+          if (TProcSym(TLoadNode(Left).SymTableEntry).procdeflist.count<>1) then
             InternalError(2009051701);
-          name:=TProcDef(TProcSym(TLoadNode(left).symtableentry).procdeflist[0]).MessageInf.str;
-          entry:=pool.FindOrAdd(@name^[1],length(name^))
+          lName:=TProcDef(TProcSym(TLoadNode(Left).SymTableEntry).procdeflist[0]).MessageInf.str;
+          lEntry:=lPool.FindOrAdd(@lName^[1],length(lName^))
         end;
       stringconstn:
         begin
-          entry:=pool.FindOrAdd(pointer(TStringConstNode(left).valueas),TStringConstNode(left).len);
+          lEntry:=lPool.FindOrAdd(Pointer(TStringConstNode(Left).ValueAS),TStringConstNode(Left).len);
         end;
       else
         InternalError(2009030701);
     end;
 
-    objcfinishstringrefpoolentry(entry,sp_objcvarnames,sec_objc_message_refs,sec_objc_meth_var_names);
+    ObjCFinishStringRefPoolEntry(lEntry,sp_objcvarnames,sec_objc_message_refs,sec_objc_meth_var_names);
 
-    Location_Reset_Ref(location,LOC_CREFERENCE,Def_CGSize(resultdef),sizeof(PInt),[]);
-    location.Reference.Symbol:=TAsmLabel(entry^.Data);
+    Location_Reset_Ref(Location,LOC_CREFERENCE,Def_CGSize(ResultDef),sizeof(PInt),[]);
+    Location.Reference.Symbol:=TAsmLabel(lEntry^.Data);
   end;
 
 
@@ -89,7 +89,7 @@ procedure TCGObjCSelectorNode.pass_generate_code;
                            TCGOBJCPROTOCOLNODE
 *****************************************************************************}
 
-procedure TCGObjCProtocolNode.pass_generate_code;
+procedure TCGObjCProtocolNode.Pass_Generate_Code;
   begin
     { first needs support for writing class definitions }
     InternalError(2009072601);

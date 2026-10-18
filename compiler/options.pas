@@ -488,7 +488,7 @@ const
      begin
       if opt in supported_optimizerswitches then
        begin
-        hs1:=OptimizerSwitchStr[opt];
+        hs1:=OptimizerSwitchStr[Ord(opt)];
         if hs1<>'' then
          begin
           if OrigString = '' then
@@ -510,8 +510,8 @@ const
   begin
     WriteLn(xmloutput,'    <optimizations>');
     for opt:=low(TOptimizerSwitch) to high(TOptimizerSwitch) do
-      if OptimizerSwitchStr[opt]<>'' then
-        WriteLn(xmloutput,'      <optimization name="',OptimizerSwitchStr[opt],'"/>');
+      if OptimizerSwitchStr[Ord(opt)]<>'' then
+        WriteLn(xmloutput,'      <optimization name="',OptimizerSwitchStr[Ord(opt)],'"/>');
     WriteLn(xmloutput,'    </optimizations>');
   end;
 
@@ -559,9 +559,9 @@ const
   begin
     SplitLine (OrigString, AsmModeListPlaceholder, HS3);
     for AsmMode:=low(TAsmMode) to high(TAsmMode) do
-    if Assigned(asmmodeinfos[AsmMode]) then
+    if Assigned(asmmodeinfos[Ord(AsmMode)]) then
      begin
-      hs1:=asmmodeinfos[AsmMode]^.idtxt;
+      hs1:=asmmodeinfos[Ord(AsmMode)]^.idtxt;
       if hs1<>'' then
        begin
         if OrigString = '' then
@@ -582,8 +582,8 @@ const
   begin
     WriteLn(xmloutput,'    <asmmodes>');
     for AsmMode:=low(TAsmMode) to high(TAsmMode) do
-      if Assigned(asmmodeinfos[AsmMode]) then
-        WriteLn(xmloutput,'        <asmmode name="',asmmodeinfos[AsmMode]^.idtxt,'"/>');
+      if Assigned(asmmodeinfos[Ord(AsmMode)]) then
+        WriteLn(xmloutput,'        <asmmode name="',asmmodeinfos[Ord(AsmMode)]^.idtxt,'"/>');
     WriteLn(xmloutput,'    </asmmodes>');
   end;
 
@@ -3609,17 +3609,6 @@ begin
          begin
            ForceStaticLinking;
          end;
-       'V' :
-         begin
-           if UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.GlobalSwitches,cs_link_vlink)
-           else
-             begin
-               include(InitSettings.GlobalSwitches,cs_link_vlink);
-               include(InitSettings.GlobalSwitches,cs_link_extern);
-             end;
-           LinkerSetExplicitly:=true;
-         end;
        'X' :
          begin
            Def_System_Macro('FPC_LINK_SMART');
@@ -3741,11 +3730,6 @@ procedure read_arguments(cmd:TCmdStr);
       if TargetInfo.system in systems_win64_abi then
         Def_System_Macro('FPC_ABI_WIN64');
 
-      { Define FPC_ABI_EABI in addition to FPC_ABI_EABIHF on EABI VFP hardfloat
-        systems since most code needs to behave the same on both}
-      if TargetInfo.abi = abi_eabihf then
-        Def_System_Macro('FPC_ABI_EABI');
-
       { using a case is pretty useless here (FK) }
       { some stuff for TP compatibility }
       {$ifdef i386}
@@ -3864,7 +3848,7 @@ var
   hs : string;
 {$endif defined(cpucapabilities) or defined(fpucapabilities)}
 begin
-  option:=coption.create;
+  option:=coption.Create;
   disable_configfile:=false;
 
   { Non-core target defines }

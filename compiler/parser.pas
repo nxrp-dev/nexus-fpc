@@ -165,7 +165,7 @@ implementation
 
          { codegen }
          if ParaPrintNodeTree<>0 then
-           printnode_reset;
+           PrintNode_Reset;
 
       end;
 
@@ -260,8 +260,8 @@ implementation
          Message1(parser_i_compiling,module.MainSource);
 
        { reset symtable }
-         SymTableStack:=TDefAwareSymTableStack.create;
-         MacroSymTableStack:=TSymTableStack.create;
+         SymTableStack:=TDefAwareSymTableStack.Create;
+         MacroSymTableStack:=TSymTableStack.Create;
          SystemUnit:=nil;
          CurrentSettings.DefProcCall:=InitSettings.DefProcCall;
          Current_ExceptBlock:=0;
@@ -287,7 +287,7 @@ implementation
          Set_Current_Scanner(sc);
 
          { init macros before anything in the file is parsed.}
-         module.LocalMacroSymTable:= TMacroSymTable.create(false);
+         module.LocalMacroSymTable:= TMacroSymTable.Create(false);
          MacroSymTableStack.push(InitialMacroSymTable);
          MacroSymTableStack.push(module.LocalMacroSymTable);
 

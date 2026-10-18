@@ -32,13 +32,15 @@ Type
 
 
 
+   { Keep this order aligned with the CPU tables below. These numeric slots
+     are also stored in generic token settings. }
    TCPUType =
       (cpu_none,
+       cpu_athlon64,
        cpu_x86_64,
        cpu_x86_64_v1,
-       cpu_athlon64,
-       cpu_x86_64_v2,
        cpu_core_i,
+       cpu_x86_64_v2,
        cpu_bobcat,
        cpu_core_avx,
        cpu_jaguar,

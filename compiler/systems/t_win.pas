@@ -399,7 +399,7 @@ implementation
          ImportLabels  : TFPList;
       begin
         if CurrentAsmData.asmlists[al_imports]=nil then
-          CurrentAsmData.asmlists[al_imports]:=TAsmList.create;
+          CurrentAsmData.asmlists[al_imports]:=TAsmList.Create;
 
         for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
@@ -472,7 +472,7 @@ implementation
                       CurrentAsmData.asmlists[al_imports].concat(TAISymbol.Createname_global(ImportSymbol.MangledName,AT_FUNCTION,0,VoidCodePointerType))
                     else
                       CurrentAsmData.asmlists[al_imports].concat(TAISymbol.Createname_global(ExtractFileName(ImportLibrary.Name)+'_index_'+ToStr(ImportSymbol.ordnr),AT_FUNCTION,0,VoidCodePointerType));
-                    CurrentAsmData.asmlists[al_imports].concat(TAIFunctionName.create(''));
+                    CurrentAsmData.asmlists[al_imports].concat(TAIFunctionName.Create(''));
                   {$if defined(AARCH64)}
                     { ToDo }
                     InternalError(2020033001);
@@ -570,7 +570,7 @@ implementation
     procedure TExportLibWin.preparelib(const s:string);
       begin
          if CurrentAsmData.asmlists[al_exports]=nil then
-           CurrentAsmData.asmlists[al_exports]:=TAsmList.create;
+           CurrentAsmData.asmlists[al_exports]:=TAsmList.Create;
          if EList_indexed=nil then
            EList_indexed:=TFPList.Create;
          if EList_nonindexed=nil then
@@ -687,7 +687,7 @@ implementation
                  hp:=TExportedItem(unitmodule.ExportList.first);
                  while Assigned(hp) do
                    begin
-                     hp2:=TExportedItem.create;
+                     hp2:=TExportedItem.Create;
                      hp2.name:=StringDup(hp.name^);
                      hp2.internalname:=hp.internalname;
                      hp2.Index:=hp.Index;
@@ -804,13 +804,13 @@ implementation
            CurrentAsmData.asmlists[al_exports].concat(TAIString.Create(st+TargetInfo.sharedlibext+#0));
 
          {  export address table }
-         address_table:=TAsmList.create;
+         address_table:=TAsmList.Create;
          address_table.concat(TAIAlign.Create_op(4,0));
          address_table.concat(TAILabel.Create(export_address_table));
-         name_table_pointers:=TAsmList.create;
+         name_table_pointers:=TAsmList.Create;
          name_table_pointers.concat(TAIAlign.Create_op(4,0));
          name_table_pointers.concat(TAILabel.Create(export_name_table_pointers));
-         ordinal_table:=TAsmList.create;
+         ordinal_table:=TAsmList.Create;
          ordinal_table.concat(TAIAlign.Create_op(4,0));
          ordinal_table.concat(TAILabel.Create(export_ordinal_table));
          name_table:=TAsmList.Create;

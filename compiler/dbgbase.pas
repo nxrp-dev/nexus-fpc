@@ -293,14 +293,14 @@ implementation
       var
         n       : integer;
         looplist,
-        templist: TFPObjectList;
+        TempList: TFPObjectList;
         def     : TDef;
       begin
-        templist := TFPObjectList.Create(False);
+        TempList := TFPObjectList.Create(False);
         looplist := deftowritelist;
         while looplist.count > 0 do
           begin
-            deftowritelist := templist;
+            deftowritelist := TempList;
             for n := 0 to looplist.count - 1 do
               begin
                 def := TDef(looplist[n]);
@@ -343,11 +343,11 @@ implementation
                 end;
               end;
             looplist.clear;
-            templist := looplist;
+            TempList := looplist;
             looplist := deftowritelist;
           end;
-        templist.free;
-        templist := nil;
+        TempList.free;
+        TempList := nil;
       end;
 
 
@@ -543,8 +543,8 @@ implementation
                (not sym.IsDbgWritten) and
                { avoid all generic symbols }
                not (sp_generic_dummy in sym.SymOptions) and
-               not ((sym.typ=TypeSym) and Assigned(TTypeSym(sym).typedef) and
-                    (df_generic in TTypeSym(sym).typedef.DefOptions)) then
+               not ((sym.typ=TypeSym) and Assigned(TTypeSym(sym).TypeDef) and
+                    (df_generic in TTypeSym(sym).TypeDef.DefOptions)) then
               appendsym(list,sym);
           end;
         case st.SymTableType of

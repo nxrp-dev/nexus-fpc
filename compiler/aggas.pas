@@ -99,7 +99,7 @@ interface
          file.
       }
       TCPUInstrWriter = class
-        constructor create(_owner: TGNUAssembler);
+        constructor Create(_owner: TGNUAssembler);
         procedure WriteInstruction(hp : TAI); virtual; abstract;
        protected
         owner: TGNUAssembler;
@@ -1245,25 +1245,25 @@ implementation
 
            ait_label :
              begin
-               if (TAILabel(hp).labsym.Is_Used) then
+               if (TAILabel(hp).LabSym.Is_Used) then
                 begin
-                  if TAILabel(hp).labsym.bind in [AB_GLOBAL,AB_PRIVATE_EXTERN] then
+                  if TAILabel(hp).LabSym.bind in [AB_GLOBAL,AB_PRIVATE_EXTERN] then
                    begin
-                     if (TAILabel(hp).labsym.bind=AB_PRIVATE_EXTERN) then
+                     if (TAILabel(hp).LabSym.bind=AB_PRIVATE_EXTERN) then
                        begin
                          writer.AsmWrite(#9'.private_extern ');
-                         writer.AsmWriteln(TAILabel(hp).labsym.name);
+                         writer.AsmWriteln(TAILabel(hp).LabSym.name);
                        end;
                      writer.AsmWrite('.globl'#9);
                      if replaceforbidden then
-                       writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAILabel(hp).labsym.name))
+                       writer.AsmWriteLn(ApplyAsmSymbolRestrictions(TAILabel(hp).LabSym.name))
                      else
-                       writer.AsmWriteLn(TAILabel(hp).labsym.name);
+                       writer.AsmWriteLn(TAILabel(hp).LabSym.name);
                    end;
                   if replaceforbidden then
-                    writer.AsmWrite(ApplyAsmSymbolRestrictions(TAILabel(hp).labsym.name))
+                    writer.AsmWrite(ApplyAsmSymbolRestrictions(TAILabel(hp).LabSym.name))
                   else
-                    writer.AsmWrite(TAILabel(hp).labsym.name);
+                    writer.AsmWrite(TAILabel(hp).LabSym.name);
                   writer.AsmWriteLn(':');
                 end;
              end;
@@ -1982,9 +1982,9 @@ implementation
 {                        Abstract Instruction Writer                         }
 {****************************************************************************}
 
-     constructor TCPUInstrWriter.create(_owner: TGNUAssembler);
+     constructor TCPUInstrWriter.Create(_owner: TGNUAssembler);
        begin
-         inherited create;
+         inherited Create;
          owner := _owner;
        end;
 

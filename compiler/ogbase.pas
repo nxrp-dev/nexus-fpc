@@ -190,7 +190,7 @@ interface
        { Darwin asm is using indirect symbols resolving }
        indsymbol  : TObjSymbol;
 
-       constructor create(AList:TFPHashObjectList;const AName:string);virtual;
+       constructor Create(AList:TFPHashObjectList;const AName:string);virtual;
        function  ToString:AnsiString;override;
        function  address:qword;
        procedure SetAddress(apass:byte;aobjsec:TObjSection;abind:TAsmsymbind;atyp:TAsmsymtype);
@@ -245,7 +245,7 @@ interface
        { Relocations (=references) to other sections }
        ObjRelocations : TFPObjectList;
        USed        : Boolean;
-       constructor create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);virtual;
+       constructor Create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);virtual;
        destructor  Destroy;override;
        function  ToString:AnsiString;override;
        function  write(const d;l:TObjSectionOfs):TObjSectionOfs;
@@ -325,7 +325,7 @@ interface
      public
        CurrPass  : byte;
        ExecStack : boolean;
-       constructor create(const n:string);virtual;
+       constructor Create(const n:string);virtual;
        destructor  Destroy;override;
        { Sections }
        function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;virtual;abstract;
@@ -397,7 +397,7 @@ interface
         property CObjData : TObjDataClass read FCObjData write FCObjData;
         procedure WriteSectionContent(Data:TObjData);
       public
-        constructor create(AWriter:TObjectWriter);virtual;
+        constructor Create(AWriter:TObjectWriter);virtual;
         destructor  Destroy;override;
         function  newObjData(const n:string):TObjData;
         function  startObjectfile(const fn:string):boolean;
@@ -417,7 +417,7 @@ interface
         property CObjData : TObjDataClass read FCObjData write FCObjData;
         procedure ReadSectionContent(Data:TObjData);
       public
-        constructor create;virtual;
+        constructor Create;virtual;
         function  ReadObjData(AReader:TObjectReader;out Data:TObjData):boolean;virtual;abstract;
         class function CanReadObjData(AReader:TObjectReader):boolean;virtual;
         procedure inputerror(const s : string);
@@ -428,7 +428,7 @@ interface
       private
         FImportSymbolList : TFPHashObjectList;
       public
-        constructor create(AList:TFPHashObjectList;const AName:string);
+        constructor Create(AList:TFPHashObjectList;const AName:string);
         destructor  Destroy;override;
         property ImportSymbolList:TFPHashObjectList read FImportSymbolList;
       end;
@@ -439,7 +439,7 @@ interface
         FIsVar  : boolean;
         FMangledName : string;
       public
-        constructor create(AList:TFPHashObjectList;const AName,AMangledName:string;AOrdNr:LongInt;AIsVar:boolean);
+        constructor Create(AList:TFPHashObjectList;const AName,AMangledName:string;AOrdNr:LongInt;AIsVar:boolean);
         property OrdNr: LongInt read FOrdNr;
         property MangledName: string read FMangledName;
         property IsVar: boolean read FIsVar;
@@ -497,9 +497,9 @@ implementation
                                  TObjSymbol
 *****************************************************************************}
 
-    constructor TObjSymbol.create(AList:TFPHashObjectList;const AName:string);
+    constructor TObjSymbol.Create(AList:TFPHashObjectList;const AName:string);
       begin
-        inherited create(AList,AName);
+        inherited Create(AList,AName);
         bind:=AB_EXTERNAL;
         typ:=AT_NONE;
         symidx:=-1;
@@ -668,7 +668,7 @@ implementation
                               TObjSection
 ****************************************************************************}
 
-    constructor TObjSection.create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);
+    constructor TObjSection.Create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);
       begin
         inherited Create(AList,Aname);
         { Data }
@@ -1017,9 +1017,9 @@ implementation
                                 TObjData
 ****************************************************************************}
 
-    constructor TObjData.create(const n:string);
+    constructor TObjData.Create(const n:string);
       begin
-        inherited create;
+        inherited Create;
         FName:=ExtractFileName(n);
         FObjSectionList:=TFPHashObjectList.Create(true);
         { symbols }
@@ -1247,7 +1247,7 @@ implementation
           result:=nil;
         if not Assigned(result) then
           begin
-            result:=CObjSection.create(FObjSectionList,aname,aalign,aoptions);
+            result:=CObjSection.Create(FObjSectionList,aname,aalign,aoptions);
             result.ObjData:=self;
           end;
         FCurrObjSec:=result;
@@ -1608,7 +1608,7 @@ implementation
                                 TObjOutput
 ****************************************************************************}
 
-    constructor TObjOutput.create(AWriter:TObjectWriter);
+    constructor TObjOutput.Create(AWriter:TObjectWriter);
       begin
         FWriter:=AWriter;
         CObjData:=TObjData;
@@ -1623,7 +1623,7 @@ implementation
 
     function TObjOutput.newObjData(const n:string):TObjData;
       begin
-        result:=CObjData.create(n);
+        result:=CObjData.Create(n);
         if (cs_use_lineinfo in CurrentSettings.GlobalSwitches) or
            (cs_debuginfo in CurrentSettings.ModuleSwitches) then
           result.CreateDebugSections;
@@ -1680,9 +1680,9 @@ implementation
           end;
       end;
 
-    constructor TImportLibrary.create(AList:TFPHashObjectList;const AName:string);
+    constructor TImportLibrary.Create(AList:TFPHashObjectList;const AName:string);
       begin
-        inherited create(AList,AName);
+        inherited Create(AList,AName);
         FImportSymbolList:=TFPHashObjectList.Create(true);
       end;
 
@@ -1699,7 +1699,7 @@ implementation
                                 TImportSymbol
 ****************************************************************************}
 
-    constructor TImportSymbol.create(AList:TFPHashObjectList;
+    constructor TImportSymbol.Create(AList:TFPHashObjectList;
             const AName,AMangledName:string;AOrdNr:LongInt;AIsVar:boolean);
       begin
         inherited Create(AList, AName);
@@ -1715,7 +1715,7 @@ implementation
       end;
 
 
-    constructor TObjInput.create;
+    constructor TObjInput.Create;
       begin
       end;
 
@@ -1761,9 +1761,9 @@ implementation
 
 {$ifdef MEMDEBUG}
 initialization
-  memobjsymbols:=TMemDebug.create('ObjSymbols');
+  memobjsymbols:=TMemDebug.Create('ObjSymbols');
   memobjsymbols.stop;
-  memobjsections:=TMemDebug.create('ObjSections');
+  memobjsections:=TMemDebug.Create('ObjSections');
   memobjsections.stop;
 
 finalization

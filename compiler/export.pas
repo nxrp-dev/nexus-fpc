@@ -51,7 +51,7 @@ type
       internalname : string;
       options : TExportOptions;
       is_var : boolean;
-      constructor create;
+      constructor Create;
       destructor Destroy;override;
    end;
 
@@ -113,7 +113,7 @@ procedure exportprocsym(sym: TSym; const s : string; index: LongInt; options: TE
   var
     hp : TExportedItem;
   begin
-    hp:=TExportedItem.create;
+    hp:=TExportedItem.Create;
     hp.name:=StringDup(s);
     hp.sym:=sym;
     hp.options:=options+[eo_name];
@@ -126,7 +126,7 @@ procedure exportvarsym(sym: TSym; const s : string; index: LongInt; options: TEx
   var
     hp : TExportedItem;
   begin
-    hp:=TExportedItem.create;
+    hp:=TExportedItem.Create;
     hp.name:=StringDup(s);
     hp.sym:=sym;
     hp.is_var:=true;

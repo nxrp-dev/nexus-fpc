@@ -76,7 +76,7 @@ Unit AoptObj;
       { TUsedRegs }
 
       TUsedRegs = class
-        Constructor create(aTyp : TRegisterType);
+        Constructor Create(aTyp : TRegisterType);
         Constructor create_regset(aTyp : TRegisterType;Const _RegSet: TRegSet);
 
         Destructor Destroy;override;
@@ -140,7 +140,7 @@ Unit AoptObj;
         { can this instruction be removed? }
         CanBeRemoved: Boolean;
 
-        Constructor create; reintroduce;
+        Constructor Create; reintroduce;
 
         { checks the whole sequence of which (so regs[which].StartMod and and  }
         { the next NrOfMods Tai objects) to see whether Reg is used somewhere, }
@@ -263,7 +263,7 @@ Unit AoptObj;
         { _BlockStart and _BlockEnd the start and the end of the block }
         { that has to be optimized and _LabelInfo a pointer to a       }
         { TLabelInfo record                                            }
-        Constructor create(_AsmL: TAsmList; _BlockStart, _BlockEnd: TAI;
+        Constructor Create(_AsmL: TAsmList; _BlockStart, _BlockEnd: TAI;
                            _LabelInfo: PLabelInfo); virtual; reintroduce;
         Destructor Destroy;override;
 
@@ -491,7 +491,7 @@ Unit AoptObj;
       { ******************************** TUsedRegs ****************************** }
       { ************************************************************************* }
 
-    Constructor TUsedRegs.create(aTyp : TRegisterType);
+    Constructor TUsedRegs.Create(aTyp : TRegisterType);
       Begin
         Typ:=aTyp;
         UsedRegs := [];
@@ -950,7 +950,7 @@ Unit AoptObj;
       { ***************************** TAoptObj ********************************** }
       { ************************************************************************* }
 
-      Constructor TAOptObj.create(_AsmL: TAsmList; _BlockStart, _BlockEnd: TAI;
+      Constructor TAOptObj.Create(_AsmL: TAsmList; _BlockStart, _BlockEnd: TAI;
                                   _LabelInfo: PLabelInfo);
       Begin
         AsmL := _AsmL;
@@ -1242,7 +1242,7 @@ Unit AoptObj;
         While Assigned(TempP) and
              (TempP.typ In SkipInstr + [ait_label,ait_align]) Do
           If (TempP.typ <> ait_Label) Or
-             (TAILabel(TempP).labsym <> L)
+             (TAILabel(TempP).LabSym <> L)
             Then
                begin
                  GetNextInstruction(TempP, TempP);
@@ -1372,7 +1372,7 @@ Unit AoptObj;
                 ((startpai.typ=ait_instruction) and (TAICPU(startpai).opcode=A_NOP)) or
 {$endif cpudelayslot}
                  ((StartPai.typ = ait_label) and
-                  Not(TAILabel(StartPai).labsym.Is_Used))) Do
+                  Not(TAILabel(StartPai).LabSym.Is_Used))) Do
             StartPai := TAI(StartPai.Next);
           If Assigned(StartPai) And
              (StartPai.typ = ait_regAlloc) Then
@@ -1399,7 +1399,7 @@ Unit AoptObj;
           While Assigned(StartPai) And
                 ((StartPai.typ in (SkipInstr - [ait_regAlloc])) Or
                  ((StartPai.typ = ait_label) and
-                  Not(TAILabel(StartPai).labsym.Is_Used))) Do
+                  Not(TAILabel(StartPai).LabSym.Is_Used))) Do
             StartPai := TAI(StartPai.Previous);
           If Assigned(StartPai) And
              (StartPai.typ = ait_regAlloc) Then
@@ -1426,7 +1426,7 @@ Unit AoptObj;
            While Assigned(StartPai) And
                  ((StartPai.typ in (SkipInstr - [ait_regAlloc])) Or
                   ((StartPai.typ = ait_label) and
-                   Not(TAILabel(StartPai).labsym.Is_Used))) Do
+                   Not(TAILabel(StartPai).LabSym.Is_Used))) Do
              StartPai := TAI(StartPai.Next);
            If Assigned(StartPai) And
               (StartPai.typ = ait_regAlloc) Then
@@ -1453,7 +1453,7 @@ Unit AoptObj;
            While Assigned(StartPai) And
                  ((StartPai.typ in (SkipInstr - [ait_tempalloc])) Or
                   ((StartPai.typ = ait_label) and
-                   Not(TAILabel(StartPai).labsym.Is_Used))) Do
+                   Not(TAILabel(StartPai).LabSym.Is_Used))) Do
              StartPai := TAI(StartPai.Next);
            If Assigned(StartPai) And
               (StartPai.typ = ait_tempalloc) Then
@@ -1493,7 +1493,7 @@ Unit AoptObj;
 
         start := p1;
         if (reg = NR_STACK_POINTER_REG) or
-          (reg = CurrentProcInfo.framepointer) or
+          (reg = CurrentProcInfo.FramePointer) or
            not(Assigned(p1)) then
           { this happens with registers which are loaded implicitly, outside the  }
           { current block (e.g. esi with self)                                    }
@@ -1663,7 +1663,7 @@ Unit AoptObj;
             if Assigned(next) and
               (TAI(next).typ = ait_label) then
               begin
-                l := TAILabel(next).labsym;
+                l := TAILabel(next).LabSym;
                 if not l.Is_Used then
                   begin
                     { Unsafe label }
@@ -1842,7 +1842,7 @@ Unit AoptObj;
                 begin
                   { Set tmp to the next valid entry }
                   tmp := TAI(hp1.Next);
-                  with TAILabel(hp1).labsym do
+                  with TAILabel(hp1).LabSym do
                     begin
                       if (labeltype <> alt_jump) then
                         begin
@@ -1860,7 +1860,7 @@ Unit AoptObj;
                         end;
                     end;
 
-                  DebugWrite('JUMP DEBUG: Removed label ' + ToStr(TAsmLabel(TAILabel(hp1).labsym).labelnr));
+                  DebugWrite('JUMP DEBUG: Removed label ' + ToStr(TAsmLabel(TAILabel(hp1).LabSym).labelnr));
 
                   { Remove label }
                   if (NextValid = hp1) then
@@ -1918,7 +1918,7 @@ Unit AoptObj;
                       ait_label:
                         begin
                           repeat
-                            with TAILabel(tmp).labsym do
+                            with TAILabel(tmp).LabSym do
                               begin
                                 { alt_addr is needed so alignment directives before
                                   jump tables e.g. for arm thumb are not removed }
@@ -1938,7 +1938,7 @@ Unit AoptObj;
                                   end;
                               end;
 
-                            DebugWrite('JUMP DEBUG: Removed label ' + TAILabel(tmp).labsym.name);
+                            DebugWrite('JUMP DEBUG: Removed label ' + TAILabel(tmp).LabSym.name);
 
                             { Remove label }
                             tmpNext := TAI(tmp.Next);
@@ -2026,7 +2026,7 @@ Unit AoptObj;
 {$ifdef EXTDEBUG}
                 { When not in debug mode, deleting a live label will cause an
                   access violation later on. [Kit] }
-                if TAILabel(hp).labsym.getrefs <> 0 then
+                if TAILabel(hp).LabSym.getrefs <> 0 then
                   InternalError(2019110802);
 {$endif EXTDEBUG}
                 asml.Remove(hp);
@@ -2053,7 +2053,7 @@ Unit AoptObj;
         LastLabel: TAsmLabel;
         hp2: TAI;
       begin
-        Result := TAILabel(lbltai).labsym;
+        Result := TAILabel(lbltai).LabSym;
         LastLabel := Result;
         hp2 := TAI(lbltai.next);
 
@@ -2061,9 +2061,9 @@ Unit AoptObj;
           begin
 
             if (hp2.typ = ait_label) and
-              (TAILabel(hp2).labsym.Is_Used) and
-              (TAILabel(hp2).labsym.labeltype = alt_jump) then
-              LastLabel := TAILabel(hp2).labsym;
+              (TAILabel(hp2).LabSym.Is_Used) and
+              (TAILabel(hp2).LabSym.labeltype = alt_jump) then
+              LastLabel := TAILabel(hp2).LabSym;
 
             hp2 := TAI(hp2.next);
           end;
@@ -2569,7 +2569,7 @@ Unit AoptObj;
           while Assigned(CurrentAlloc) and
                 ((CurrentAlloc.typ in (SkipInstr - [ait_regAlloc])) or
                  ((CurrentAlloc.typ = ait_label) and
-                  not(TAILabel(CurrentAlloc).labsym.Is_Used))) do
+                  not(TAILabel(CurrentAlloc).LabSym.Is_Used))) do
             CurrentAlloc := TAI(CurrentAlloc.Previous);
           if Assigned(CurrentAlloc) and
             (CurrentAlloc.typ = ait_regalloc) then
@@ -2683,7 +2683,7 @@ Unit AoptObj;
               }
 {$ifdef DEBUG_OPTALLOC}
               if p.Typ=ait_instruction then
-                InsertLLItem(TAI(p.Previous),p,TAIComment.create(StrPNew(GetAllocationString(UsedRegs))));
+                InsertLLItem(TAI(p.Previous),p,TAIComment.Create(StrPNew(GetAllocationString(UsedRegs))));
 {$endif DEBUG_OPTALLOC}
 
               { Handle jump optimizations first }

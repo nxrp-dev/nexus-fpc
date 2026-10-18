@@ -44,7 +44,7 @@ unit optcall;
       ProcInfo,
       nutils,
       FModule,
-      pass_1,
+      Pass_1,
       nbas,ncal,nld;
 
     { this procedure removes the user code flag because it prevents optimizations }
@@ -62,7 +62,7 @@ unit optcall;
     function setinlinelevel(var n:TNode; arg:pointer):TForEachNodeResult;
       begin
         if n.nodetype=calln then
-          TCallNode(n).inlinelevel:=PtrUInt(arg);
+          TCallNode(n).InlineLevel:=PtrUInt(arg);
         result:=fen_false;
       end;
 
@@ -75,7 +75,7 @@ unit optcall;
         result:=fen_false;
         if n.nodetype=loadn then
           begin
-            sym:=TLoadNode(n).symtableentry;
+            sym:=TLoadNode(n).SymTableEntry;
             if sym.typ=staticvarsym then
               begin
                 if FindUnitSymTable(TLoadNode(n).SymTable).ModuleID<>CurrentModule.ModuleID then
@@ -83,16 +83,16 @@ unit optcall;
               end
             else if (sym.typ=constsym) and (TConstSym(sym).ConstTyp in [constwresourcestring,constresourcestring]) then
               begin
-                if TLoadNode(n).symtableentry.owner.ModuleID<>CurrentModule.ModuleID then
+                if TLoadNode(n).SymTableEntry.owner.ModuleID<>CurrentModule.ModuleID then
                   CurrentModule.AddImportedSym(sym);
               end;
           end
         else if (n.nodetype=calln) then
           begin
-            if (Assigned(TCallNode(n).procdefinition)) and
-               (TCallNode(n).procdefinition.typ=procdef) and
-               (FindUnitSymTable(TCallNode(n).procdefinition.owner).ModuleID<>CurrentModule.ModuleID) then
-              CurrentModule.AddImportedSym(TProcDef(TCallNode(n).procdefinition).ProcSym);
+            if (Assigned(TCallNode(n).ProcDefinition)) and
+               (TCallNode(n).ProcDefinition.typ=procdef) and
+               (FindUnitSymTable(TCallNode(n).ProcDefinition.owner).ModuleID<>CurrentModule.ModuleID) then
+              CurrentModule.AddImportedSym(TProcDef(TCallNode(n).ProcDefinition).ProcSym);
           end;
       end;
 
@@ -103,9 +103,9 @@ unit optcall;
         if n.nodetype=calln then
           begin
             { re-init varargs paraloc that may have been invalidated by inlining }
-            if Assigned(TCallNode(n).varargsparas) then
-              ParaManager.Create_VarArgs_ParaLoc_Info(TCallNode(n).procdefinition,callerside,TCallNode(n).varargsparas);
-            TCallNode(n).order_parameters;
+            if Assigned(TCallNode(n).VarArgsParas) then
+              ParaManager.Create_VarArgs_ParaLoc_Info(TCallNode(n).ProcDefinition,callerside,TCallNode(n).VarArgsParas);
+            TCallNode(n).Order_Parameters;
           end;
       end;
 
@@ -120,74 +120,74 @@ unit optcall;
         callnode: TCallNode;
       begin
         result:=fen_false;
-        if not(_n.nodetype=calln) or not(po_inline in TCallNode(_n).procdefinition.ProcOptions) then
+        if not(_n.nodetype=calln) or not(po_inline in TCallNode(_n).ProcDefinition.ProcOptions) then
           exit;
         callnode:=TCallNode(_n);
 
-        if not(callnode.doinlining) then
+        if not(callnode.DoInlining) then
           begin
-            if not(po_compilerproc in callnode.procdefinition.ProcOptions) then
-              Message1(cg_n_no_inline,TProcDef(callnode.procdefinition).CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
+            if not(po_compilerproc in callnode.ProcDefinition.ProcOptions) then
+              Message1(cg_n_no_inline,TProcDef(callnode.ProcDefinition).CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
             exit;
           end;
 
-        if not(Assigned(TProcDef(callnode.procdefinition).InliningInfo) and
-          Assigned(TProcDef(callnode.procdefinition).InliningInfo^.code)) then
+        if not(Assigned(TProcDef(callnode.ProcDefinition).InliningInfo) and
+          Assigned(TProcDef(callnode.ProcDefinition).InliningInfo^.code)) then
           InternalError(200412021);
 
-        callnode.inlinelocals:=TFPObjectList.create(true);
+        callnode.InlineLocals:=TFPObjectList.Create(true);
 
         { inherit flags }
         CurrentProcInfo.flags:=CurrentProcInfo.flags+
-          ((callnode.procdefinition as TProcDef).InliningInfo^.flags*inherited_inlining_flags);
+          ((callnode.ProcDefinition as TProcDef).InliningInfo^.flags*Inherited_Inlining_Flags);
 
         { Create new code block for inlining }
-        inlineblock:=internalstatements(callnode.inlineinitstatement);
+        inlineblock:=InternalStatements(callnode.InlineInitStatement);
         { make sure that valid_for_assign() returns false for this block
           (otherwise assigning values to the block will result in assigning
            values to the inlined function's result) }
         include(inlineblock.flags,nf_no_lvalue);
-        inlinecleanupblock:=internalstatements(callnode.inlinecleanupstatement);
+        inlinecleanupblock:=InternalStatements(callnode.InlineCleanupStatement);
 
-        if Assigned(callnode.callinitblock) then
-          addstatement(callnode.inlineinitstatement,callnode.callinitblock.GetCopy);
+        if Assigned(callnode.CallInitBlock) then
+          AddStatement(callnode.InlineInitStatement,callnode.CallInitBlock.GetCopy);
 
         { replace complex parameters with temps }
-        callnode.createinlineparas;
+        callnode.CreateInlineParas;
 
         { create a copy of the body and replace parameter loads with the parameter values }
-        body:=TProcDef(callnode.procdefinition).InliningInfo^.code.GetCopy;
-        foreachnodestatic(pm_postprocess,body,@ removeusercodeflag,nil);
-        foreachnodestatic(pm_postprocess,body,@importglobalsyms,nil);
-        foreachnodestatic(pm_postprocess,body,@setinlinelevel,pointer(callnode.inlinelevel+1));
-        foreachnode(pm_preprocess,body,@callnode.replaceparaload,@callnode.fileinfo);
+        body:=TProcDef(callnode.ProcDefinition).InliningInfo^.code.GetCopy;
+        ForEachNodeStatic(pm_postprocess,body,@ removeusercodeflag,nil);
+        ForEachNodeStatic(pm_postprocess,body,@importglobalsyms,nil);
+        ForEachNodeStatic(pm_postprocess,body,@setinlinelevel,pointer(callnode.InlineLevel+1));
+        ForEachNode(pm_preprocess,body,@callnode.ReplaceParaLoad,@callnode.fileinfo);
 
         { Concat the body and finalization parts }
-        addstatement(callnode.inlineinitstatement,body);
-        addstatement(callnode.inlineinitstatement,inlinecleanupblock);
+        AddStatement(callnode.InlineInitStatement,body);
+        AddStatement(callnode.InlineInitStatement,inlinecleanupblock);
         inlinecleanupblock:=nil;
 
-        if Assigned(callnode.callcleanupblock) then
-          addstatement(callnode.inlineinitstatement,callnode.callcleanupblock.GetCopy);
+        if Assigned(callnode.CallCleanupBlock) then
+          AddStatement(callnode.InlineInitStatement,callnode.CallCleanupBlock.GetCopy);
 
         { the last statement of the new inline block must return the
           location and type of the function result.
           This is not needed when the result is not used, also the tempnode is then
           already destroyed  by a tempdelete in the callcleanupblock tree }
         if not Is_Void(callnode.resultdef) and
-           (cnf_return_value_used in callnode.callnodeflags) then
+           (cnf_return_value_used in callnode.CallNodeFlags) then
           begin
-            if Assigned(callnode.funcretnode) then
-              addstatement(callnode.inlineinitstatement,callnode.funcretnode.GetCopy)
+            if Assigned(callnode.FuncRetNode) then
+              AddStatement(callnode.InlineInitStatement,callnode.FuncRetNode.GetCopy)
             else
               begin
                 para:=TCallParaNode(callnode.left);
                 while Assigned(para) do
                   begin
-                    if (vo_is_hidden_para in para.parasym.VarOptions) and
-                       (vo_is_funcret in para.parasym.VarOptions) then
+                    if (vo_is_hidden_para in para.ParaSym.VarOptions) and
+                       (vo_is_funcret in para.ParaSym.VarOptions) then
                       begin
-                        addstatement(callnode.inlineinitstatement,para.left.GetCopy);
+                        AddStatement(callnode.InlineInitStatement,para.left.GetCopy);
                         break;
                       end;
                     para:=TCallParaNode(para.right);
@@ -196,23 +196,23 @@ unit optcall;
           end;
 
         TypeCheckPass(TNode(inlineblock));
-        doinlinesimplify(TNode(inlineblock));
+        DoInlineSimplify(TNode(inlineblock));
         FirstPass(TNode(inlineblock));
         _n:=inlineblock;
 
         { if the function result is used then verify that the blocknode
           returns the same result type as the original callnode }
-        if (cnf_return_value_used in callnode.callnodeflags) and
+        if (cnf_return_value_used in callnode.CallNodeFlags) and
            not(Equal_Defs(_n.resultdef,callnode.resultdef)) then
           InternalError(200709171);
 
         { free the temps for the locals }
-        callnode.inlinelocals.free;
-        callnode.inlinelocals:=nil;
-        callnode.inlineinitstatement:=nil;
-        callnode.inlinecleanupstatement:=nil;
+        callnode.InlineLocals.free;
+        callnode.InlineLocals:=nil;
+        callnode.InlineInitStatement:=nil;
+        callnode.InlineCleanupStatement:=nil;
 
-        n:=callnode.optimize_funcret_assignment(inlineblock);
+        n:=callnode.Optimize_FuncRet_Assignment(inlineblock);
         if Assigned(n) then
           begin
             inlineblock.free;
@@ -225,7 +225,7 @@ unit optcall;
           taddnode sees an operand that is no longer marked as scaled and
           taddnode.do_currency_corrections applies the 10000 scalar a second
           time }
-        if (cnf_return_value_used in callnode.callnodeflags) and
+        if (cnf_return_value_used in callnode.CallNodeFlags) and
            (nf_is_currency in callnode.flags) then
           include(_n.flags,nf_is_currency);
 
@@ -234,7 +234,7 @@ unit optcall;
 {$ifdef EXTDEBUG_INLINE}
         WriteLn;
         WriteLn('**************************************************************************************************************');
-        WriteLn('************************** Inlined ',TProcDef(callnode.procdefinition).MangledName,'**************************');
+        WriteLn('************************** Inlined ',TProcDef(callnode.ProcDefinition).MangledName,'**************************');
         WriteLn('**************************************************************************************************************');
 {$endif EXTDEBUG_INLINE}
       end;
@@ -245,23 +245,23 @@ unit optcall;
         changed:=false;
 {$ifdef EXTDEBUG_INLINE}
         WriteLn('************************ Tree before inlining ******************************');
-        printnode(rootnode);
+        PrintNode(rootnode);
         WriteLn('****************************************************************************');
 {$endif EXTDEBUG_INLINE}
-        foreachnodestatic(pm_postprocess, rootnode, @doinline, @changed);
+        ForEachNodeStatic(pm_postprocess, rootnode, @doinline, @changed);
         if changed then
           begin
-            doinlinesimplify(rootnode);
+            DoInlineSimplify(rootnode);
             { after inlining, call nodes in the tree may have parameters
               whose subtrees now contain additional calls (e.g. fpc_shortstr_sint
               from an inlined str() call). The parent call nodes need their
               parameter analysis redone to recalculate parameter ordering and
               stack tainting info, otherwise parameters may be evaluated in the
               wrong order corrupting already pushed stack parameters }
-            foreachnodestatic(pm_postprocess,rootnode,@redoalinaparams,nil);
+            ForEachNodeStatic(pm_postprocess,rootnode,@redoalinaparams,nil);
 {$ifdef EXTDEBUG_INLINE}
             WriteLn('************************ Tree after inlining ******************************');
-            printnode(rootnode);
+            PrintNode(rootnode);
             WriteLn('****************************************************************************');
 {$endif EXTDEBUG_INLINE}
           end;

@@ -37,13 +37,13 @@ unit opttail;
       symconst,SymSym,
       defcmp,defutil,
       nutils,nbas,nflw,ncal,nld,ncnv,nmem,
-      pass_1,
+      Pass_1,
       paramgr;
 
     procedure do_opttail(var n : TNode;p : TProcDef);
 
       var
-        labelnode : TLabelNode;
+        LabelNode : TLabelNode;
 
       function find_and_replace_tailcalls(var n : TNode) : boolean;
 
@@ -58,7 +58,7 @@ unit opttail;
             result:=false;
             while Assigned(n) do
               begin
-                if Assigned(n.fparacopyback) then
+                if Assigned(n.FParaCopyBack) then
                   begin
                     result:=true;
                     exit;
@@ -71,20 +71,20 @@ unit opttail;
           begin
             result:=
               (n.nodetype=calln) and
-              (TCallNode(n).procdefinition=p) and
-              (not Assigned(TCallNode(n).methodpointer)) and
+              (TCallNode(n).ProcDefinition=p) and
+              (not Assigned(TCallNode(n).MethodPointer)) and
               (not has_copyback_paras(TCallNode(n)));
             if result then
               usedcallnode:=TCallNode(n)
             else
               { obsolete type cast? }
-              result:=((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_equal) and is_optimizable_recursivecall(TTypeConvNode(n).left));
+              result:=((n.nodetype=typeconvn) and (TTypeConvNode(n).ConvType=tc_equal) and is_optimizable_recursivecall(TTypeConvNode(n).left));
           end;
 
         function is_resultassignment(n : TNode) : boolean;
           begin
-            result:=((n.nodetype=loadn) and (TLoadNode(n).symtableentry=p.FuncRetSym)) or
-              ((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_equal) and is_resultassignment(TTypeConvNode(n).left));
+            result:=((n.nodetype=loadn) and (TLoadNode(n).SymTableEntry=p.FuncRetSym)) or
+              ((n.nodetype=typeconvn) and (TTypeConvNode(n).ConvType=tc_equal) and is_resultassignment(TTypeConvNode(n).left));
           end;
 
         var
@@ -137,55 +137,55 @@ unit opttail;
                     { this is hairy to do because one parameter could be used to calculate another one, so
                       assign them first to temps and then add them }
 
-                    calcnodes:=internalstatements(calcstatements);
-                    copynodes:=internalstatements(copystatements);
+                    calcnodes:=InternalStatements(calcstatements);
+                    copynodes:=InternalStatements(copystatements);
                     paranode:=TCallParaNode(usedcallnode.left);
                     while Assigned(paranode) do
                       begin
-                        if Assigned(paranode.fparainit) then
+                        if Assigned(paranode.FParaInit) then
                           begin
-                            addstatement(calcstatements,paranode.fparainit);
-                            paranode.fparainit:=nil;
+                            AddStatement(calcstatements,paranode.FParaInit);
+                            paranode.FParaInit:=nil;
                           end;
-                        useaddr:=(paranode.parasym.VarSpez in [vs_var,vs_constref]) or
-                          ((paranode.parasym.VarSpez=vs_const) and
-                          ParaManager.Push_Addr_Param(paranode.parasym.VarSpez,paranode.parasym.vardef,p.ProcCallOption)) or
-                          ((paranode.parasym.VarSpez=vs_value) and
-                          Is_Open_Array(paranode.parasym.vardef));
+                        useaddr:=(paranode.ParaSym.VarSpez in [vs_var,vs_constref]) or
+                          ((paranode.ParaSym.VarSpez=vs_const) and
+                          ParaManager.Push_Addr_Param(paranode.ParaSym.VarSpez,paranode.ParaSym.vardef,p.ProcCallOption)) or
+                          ((paranode.ParaSym.VarSpez=vs_value) and
+                          Is_Open_Array(paranode.ParaSym.vardef));
                         if useaddr then
                           begin
-                            tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
-                            addstatement(calcstatements,tempnode);
-                            addstatement(calcstatements,
-                              CAssignmentNode.create(
-                                CTempRefNode.create(tempnode),
+                            tempnode:=CTempCreateNode.Create(VoidPointerType,VoidPointerType.Size,tt_persistent,true);
+                            AddStatement(calcstatements,tempnode);
+                            AddStatement(calcstatements,
+                              CAssignmentNode.Create(
+                                CTempRefNode.Create(tempnode),
                                 CAddrNode.Create_Internal(paranode.left)
                                 ));
                           end
                         else
                           begin
-                            tempnode:=CTempCreateNode.create(paranode.left.resultdef,paranode.left.resultdef.Size,tt_persistent,true);
-                            addstatement(calcstatements,tempnode);
-                            addstatement(calcstatements,
+                            tempnode:=CTempCreateNode.Create(paranode.left.resultdef,paranode.left.resultdef.Size,tt_persistent,true);
+                            AddStatement(calcstatements,tempnode);
+                            AddStatement(calcstatements,
                               CAssignmentNode.Create_Internal(
-                                CTempRefNode.create(tempnode),
+                                CTempRefNode.Create(tempnode),
                                 paranode.left
                                 ));
                           end;
 
                         { "cast" away const varspezs }
-                        loadnode:=CLoadNode.create(paranode.parasym,paranode.parasym.owner);
-                        include(TLoadNode(loadnode).loadnodeflags,loadnf_isinternal_ignoreconst);
+                        loadnode:=CLoadNode.Create(paranode.ParaSym,paranode.ParaSym.owner);
+                        include(TLoadNode(loadnode).LoadNodeFlags,loadnf_isinternal_ignoreconst);
 
                         { load the address of the symbol instead of symbol }
                         if useaddr then
-                          include(TLoadNode(loadnode).loadnodeflags,loadnf_load_addr);
-                        addstatement(copystatements,
+                          include(TLoadNode(loadnode).LoadNodeFlags,loadnf_load_addr);
+                        AddStatement(copystatements,
                           CAssignmentNode.Create_Internal(
                             loadnode,
-                            CTempRefNode.create(tempnode)
+                            CTempRefNode.Create(tempnode)
                             ));
-                        addstatement(copystatements,CTempDeleteNode.create_normal_temp(tempnode));
+                        AddStatement(copystatements,CTempDeleteNode.Create_Normal_Temp(tempnode));
 
                         { reused }
                         paranode.left:=nil;
@@ -193,27 +193,27 @@ unit opttail;
                       end;
 
                     oldnodetree:=n;
-                    n:=internalstatements(nodes);
+                    n:=InternalStatements(nodes);
 
-                    if Assigned(usedcallnode.callinitblock) then
+                    if Assigned(usedcallnode.CallInitBlock) then
                       begin
-                        addstatement(nodes,usedcallnode.callinitblock);
-                        usedcallnode.callinitblock:=nil;
+                        AddStatement(nodes,usedcallnode.CallInitBlock);
+                        usedcallnode.CallInitBlock:=nil;
                       end;
 
-                    addstatement(nodes,calcnodes);
-                    addstatement(nodes,copynodes);
+                    AddStatement(nodes,calcnodes);
+                    AddStatement(nodes,copynodes);
 
                     { create goto }
-                    addstatement(nodes,CGotoNode.create(labelnode.labsym));
+                    AddStatement(nodes,CGotoNode.Create(LabelNode.LabSym));
 
-                    if Assigned(usedcallnode.callcleanupblock) then
+                    if Assigned(usedcallnode.CallCleanupBlock) then
                       begin
                         { callcleanupblock should contain only temp. node clean up }
-                        checktreenodetypes(usedcallnode.callcleanupblock,
+                        CheckTreeNodeTypes(usedcallnode.CallCleanupBlock,
                           [tempdeleten,blockn,statementn,temprefn,nothingn]);
-                        addstatement(nodes,usedcallnode.callcleanupblock);
-                        usedcallnode.callcleanupblock:=nil;
+                        AddStatement(nodes,usedcallnode.CallCleanupBlock);
+                        usedcallnode.CallCleanupBlock:=nil;
                       end;
 
                     oldnodetree.free;
@@ -274,8 +274,8 @@ unit opttail;
               end;
 {$endif fix_opttail}
 
-        labelsym:=CLabelSym.create('$opttail');
-        labelnode:=CLabelNode.create(CNothingNode.create,labelsym);
+        labelsym:=CLabelSym.Create('$opttail');
+        LabelNode:=CLabelNode.Create(CNothingNode.Create,labelsym);
         if find_and_replace_tailcalls(n) then
           begin
 {$ifdef debug_opttail}
@@ -286,20 +286,20 @@ unit opttail;
         WriteLn('====================================================================================');
 {$endif debug_opttail}
             oldnodes:=n;
-            n:=internalstatements(s);
-            addstatement(s,labelnode);
-            addstatement(s,oldnodes);
+            n:=InternalStatements(s);
+            AddStatement(s,LabelNode);
+            AddStatement(s,oldnodes);
 {$ifdef debug_opttail}
         WriteLn('====================================================================================');
         write('Tail call replaced by: ');
-        printnode(Output,n);
+        PrintNode(Output,n);
         WriteLn('====================================================================================');
         WriteLn;
 {$endif debug_opttail}
           end
         else
-          labelnode.free;
-          labelnode := nil;
+          LabelNode.free;
+          LabelNode := nil;
       end;
 
 end.

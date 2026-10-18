@@ -132,7 +132,7 @@ uses
         if sym.typ=constsym then
           result:=TConstSym(sym).ConstDef
         else
-          result:=TTypeSym(sym).typedef;
+          result:=TTypeSym(sym).TypeDef;
       end;
 
     function compare_orddef_by_range(param1,param2:TOrdDef;value:TConstValue):boolean;
@@ -201,7 +201,7 @@ uses
           stringconstn:
             begin
               // unicode, convert to utf8
-              if TStringConstNode(node).cst_type in [cst_widestring,cst_unicodestring] then
+              if TStringConstNode(node).ConstStringType in [cst_widestring,cst_unicodestring] then
                 begin
                 l:=UnicodeToUtf8(nil,0,TStringConstNode(node).ValueWS.AsConstPUnicodeChar,TStringConstNode(node).ValueWS.len);
                 GetMem(sp,l);
@@ -212,27 +212,27 @@ uses
               else
                 begin
                 GetMem(sp,TStringConstNode(node).len+1);
-                move(TStringConstNode(node).asconstpchar^,sp^,TStringConstNode(node).len+1);
+                move(TStringConstNode(node).AsConstPChar^,sp^,TStringConstNode(node).len+1);
                 sym:=CConstSym.Create_String(undefinedname,conststring,sp,TStringConstNode(node).len,fromdef);
-                prettyname:=''''+TStringConstNode(node).asconstpchar+'''';
+                prettyname:=''''+TStringConstNode(node).AsConstPChar+'''';
                 end;
             end;
           realconstn:
             begin
               new(pd);
-              pd^:=TRealConstNode(node).value_real;
+              pd^:=TRealConstNode(node).ValueReal;
               sym:=CConstSym.Create_Ptr(undefinedname,constreal,pd,fromdef);
-              prettyname:=RealToStr(TRealConstNode(node).value_real);
+              prettyname:=RealToStr(TRealConstNode(node).ValueReal);
             end;
           setconstn:
             begin
               new(ps);
-              ps^:=TSetConstNode(node).value_set^;
+              ps^:=TSetConstNode(node).ValueSet^;
               sym:=CConstSym.Create_Ptr(undefinedname,constset,ps,fromdef);
               setdef:=TSetDef(TSetConstNode(node).resultdef);
               prettyname:='[';
               for i := setdef.SetBase to setdef.SetMax do
-                if i in TSetConstNode(node).value_set^ then
+                if i in TSetConstNode(node).ValueSet^ then
                   begin
                     if setdef.ElementDef.typ=enumdef then
                       enumsym:=TEnumDef(setdef.ElementDef).Int2EnumSym(i)
@@ -314,7 +314,7 @@ uses
         list:=TFPObjectList(CurrentModule.ForwardGenericDefs.find(TObjectDef(def).GenericDef.FullTypeName));
         if not Assigned(list) then
           begin
-            list:=TFPObjectList.create(true);
+            list:=TFPObjectList.Create(true);
             CurrentModule.ForwardGenericDefs.add(TObjectDef(def).GenericDef.FullTypeName,list);
           end;
         fwdcontext:=context.GetCopy;
@@ -335,7 +335,7 @@ uses
         formalobjdef : TObjectDef;
         intffound : boolean;
         filepos : TFilePosInfo;
-        is_const : boolean;
+        Is_Const : boolean;
       begin
         { check whether the given specialization parameters fit to the eventual
           constraints of the generic }
@@ -350,10 +350,10 @@ uses
           begin
             filepos:=PFilePosInfo(poslist[i])^;
             paradef:=TStoredDef(Get_Generic_Param_Def(TSym(paramlist[i])));
-            is_const:=TSym(paramlist[i]).typ=constsym;
+            Is_Const:=TSym(paramlist[i]).typ=constsym;
             genparadef:=GenericDef.Get_Generic_Param_Def(i);
             { validate const params }
-            if not GenericDef.Is_Generic_Param_Const(i) and is_const then
+            if not GenericDef.Is_Generic_Param_Const(i) and Is_Const then
               begin
                 MessagePos(filepos,type_e_mismatch);
                 exit(false);
@@ -361,7 +361,7 @@ uses
             else if GenericDef.Is_Generic_Param_Const(i) then
               begin
                 { param type mismatch (type <> const) }
-                 if GenericDef.Is_Generic_Param_Const(i)<>is_const then
+                 if GenericDef.Is_Generic_Param_Const(i)<>Is_Const then
                    begin
                     MessagePos(filepos,type_e_mismatch);
                     exit(false);
@@ -376,7 +376,7 @@ uses
             { test constraints for non-const params }
             if not GenericDef.Is_Generic_Param_Const(i) then
               begin
-                formaldef:=TStoredDef(TTypeSym(GenericDef.GenericParas[i]).typedef);
+                formaldef:=TStoredDef(TTypeSym(GenericDef.GenericParas[i]).TypeDef);
                 if formaldef.typ=undefineddef then
                   { the parameter is of unspecified type, so no need to check }
                   continue;
@@ -739,7 +739,7 @@ uses
           tmpparampos : TFilePosInfo;
           paramname: string;
         begin
-          context:=TSpecializationContext.create;
+          context:=TSpecializationContext.Create;
           fillchar(parsedpos,sizeof(parsedpos),0);
           poslist:=context.poslist;
           tmpparampos:=CurrentFilePos;
@@ -749,7 +749,7 @@ uses
           context.paramlist.capacity:=context.paramlist.count+genericparams.count;
           for i:=0 to genericparams.count-1 do
             begin
-              paramname:=generic_param_hash(TTypeSym(GenericDef.GenericParas[i]).typedef);
+              paramname:=generic_param_hash(TTypeSym(GenericDef.GenericParas[i]).TypeDef);
               paramtype:=TTypeSym(genericparams.find(paramname));
               if not Assigned(paramtype) then
                 InternalError(2021020902);
@@ -757,7 +757,7 @@ uses
               parampos^:=tmpparampos;
               poslist.add(parampos);
               context.paramlist.Add(paramtype);
-              make_prettystring(paramtype.typedef,i=0,'',context.prettyname,context.specializename);
+              make_prettystring(paramtype.TypeDef,i=0,'',context.prettyname,context.specializename);
             end;
           context.genname:=GenericDef.ProcSym.realname;
         end;
@@ -794,7 +794,7 @@ uses
                     same number of array elements of a particular type }
                   def:=CArrayDef.getreusable(TArrayDef(def).ElementDef,TArrayDef(def).HighRange-TArrayDef(def).LowRange+1);
                 end;
-              newtype:=CTypeSym.create(def.FullOwnerHierarchyName(false,true)+TypName[def.typ]+'$'+def.UniqueIDStr,def);
+              newtype:=CTypeSym.Create(def.FullOwnerHierarchyName(false,true)+TypName[def.typ]+'$'+def.UniqueIDStr,def);
               include(newtype.SymOptions,sp_generic_unnamed_type);
               newtype.owner:=def.owner;
               { ensure that there's no warning }
@@ -816,16 +816,16 @@ uses
             begin
               parasym:=TTypeSym(def.GenericParas[i]);
               { the generic param must have a named typesym }
-              if not Assigned(parasym.typedef.TypeSym) then
+              if not Assigned(parasym.TypeDef.TypeSym) then
                 InternalError(2021020907);
               { recurse into inline specialization }
-              if TStoredDef(parasym.typedef).Is_Specialization then
+              if TStoredDef(parasym.TypeDef).Is_Specialization then
                 begin
-                  result:=find_param_in_specialization(owner,genericparam,TStoredDef(parasym.typedef));
+                  result:=find_param_in_specialization(owner,genericparam,TStoredDef(parasym.TypeDef));
                   if result then
                     exit;
                 end
-              else if (genericparam=parasym.typedef.TypeSym) and owner.Is_Generic_Param(parasym.typedef) then
+              else if (genericparam=parasym.TypeDef.TypeSym) and owner.Is_Generic_Param(parasym.TypeDef) then
                 exit(true);
             end;
         end;
@@ -909,7 +909,7 @@ uses
               if (target_param.typ=constsym) or (caller_param.typ=constsym) then
                 exit;
 
-              key:=generic_param_hash(target_param.typedef);
+              key:=generic_param_hash(target_param.TypeDef);
 
               { the generic param is already used }
               index:=genericparams.findindexof(key);
@@ -1016,7 +1016,7 @@ uses
             if TSym(target_proc.GenericDef.GenericParas[i]).typ=constsym then
               exit;
 
-          newparams:=TFPHashList.create;
+          newparams:=TFPHashList.Create;
           valid_params:=0;
 
           for i:=0 to target_proc.paras.count-1 do
@@ -1039,7 +1039,7 @@ uses
                   { find the generic param name in the generic def parameters }
                   j:=target_proc.GenericDef.GenericParas.findindexof(paravar.vardef.TypeSym.name);
 
-                  handle_generic_param(TTypeSym(target_proc.GenericParas[j]).typedef,caller_proc_para.vardef);
+                  handle_generic_param(TTypeSym(target_proc.GenericParas[j]).TypeDef,caller_proc_para.vardef);
                 end;
 
               inc(valid_params);
@@ -1126,7 +1126,7 @@ uses
               exit;
 
           { build list of visible target function parameters }
-          paras:=TFPList.create;
+          paras:=TFPList.Create;
           for i:=0 to GenericDef.paras.count-1 do
             begin
               paravar:=TParaVarSym(GenericDef.paras[i]);
@@ -1162,10 +1162,10 @@ uses
               exit;
             end;
 
-          genericparams:=TFPHashList.create;
+          genericparams:=TFPHashList.Create;
           for i:=0 to callerparams.count-1 do
             begin
-              caller_def:=TTypeSym(callerparams[i]).typedef;
+              caller_def:=TTypeSym(callerparams[i]).TypeDef;
 
               { caller parameter exceeded the possible parameters }
               if i=paras.count then
@@ -1276,11 +1276,11 @@ uses
           paradef : TDef;
           sym : TSym;
         begin
-          result:=TFPList.create;
+          result:=TFPList.Create;
           pt:=TCallParaNode(para);
           while Assigned(pt) do
             begin
-              paradef:=pt.paravalue.resultdef;
+              paradef:=pt.ParaValue.resultdef;
               { unnamed parameter types can not be specialized }
               if not Assigned(paradef.TypeSym) then
                 begin
@@ -1292,7 +1292,7 @@ uses
                 end
               else
                 result.insert(0,paradef.TypeSym);
-              pt:=TCallParaNode(pt.nextpara);
+              pt:=TCallParaNode(pt.NextPara);
             end;
         end;
 
@@ -1365,7 +1365,7 @@ uses
             for k:=0 to callerparams.count-1 do
               begin
                 if (TSym(callerparams[k]).typ=TypeSym) and (sp_generic_unnamed_type in TTypeSym(callerparams[k]).SymOptions) then
-                  TTypeSym(callerparams[k]).typedef.TypeSym:=nil;
+                  TTypeSym(callerparams[k]).TypeDef.TypeSym:=nil;
               end;
           end;
 
@@ -1449,7 +1449,7 @@ uses
               end;
           end;
 
-        context:=TSpecializationContext.create;
+        context:=TSpecializationContext.Create;
 
         { Parse type parameters }
         err:=not parse_generic_specialization_types_internal(context.paramlist,context.poslist,context.prettyname,context.specializename,parsedtype,parsedpos);
@@ -1552,7 +1552,7 @@ uses
             { we found the function result alias of a generic function; go up the
               symbol stack *before* this alias was inserted, so that we can
               (hopefully) find the correct generic symbol }
-            tmpstack:=TFPObjectList.create(false);
+            tmpstack:=TFPObjectList.Create(false);
             while Assigned(SymTableStack.top) do
               begin
                 tmpstack.Add(SymTableStack.top);
@@ -1582,7 +1582,7 @@ uses
 
         { we've found the correct def }
         if context.sym.typ=TypeSym then
-          result:=TStoredDef(TTypeSym(context.sym).typedef)
+          result:=TStoredDef(TTypeSym(context.sym).TypeDef)
         else
           begin
             if TProcSym(context.sym).procdeflist.count=0 then
@@ -1625,7 +1625,7 @@ uses
             case sym.typ of
               TypeSym:
                 begin
-                  gendef:=TTypeSym(sym).typedef
+                  gendef:=TTypeSym(sym).TypeDef
                 end;
               ProcSym:
                 begin
@@ -1675,11 +1675,11 @@ uses
                             if TSym(generictypelist[i]).typ=constsym then
                               paramdef1:=TConstSym(generictypelist[i]).ConstDef
                             else
-                              paramdef1:=TTypeSym(generictypelist[i]).typedef;
+                              paramdef1:=TTypeSym(generictypelist[i]).TypeDef;
                             if TSym(TStoredDef(def).GenericParas[i]).typ=constsym then
                               paramdef2:=TConstSym(TStoredDef(def).GenericParas[i]).ConstDef
                             else
-                              paramdef2:=TTypeSym(TStoredDef(def).GenericParas[i]).typedef;
+                              paramdef2:=TTypeSym(TStoredDef(def).GenericParas[i]).TypeDef;
                             if not Equal_Defs(paramdef1,paramdef2) then
                               begin
                                 allequal:=false;
@@ -1790,7 +1790,7 @@ uses
         else
           prettyname:=GenericDef.TypeSym.prettyname;
         prettyname:=prettyname+'<'+context.prettyname+'>';
-        generictypelist:=TFPHashObjectList.create(false);
+        generictypelist:=TFPHashObjectList.Create(false);
 
         { build the list containing the types for the generic params }
         if not Assigned(GenericDef.GenericParas) then
@@ -1900,7 +1900,7 @@ uses
               begin
                 psym:=TSym(context.paramlist[i]);
                 if psym.typ=TypeSym then
-                  hdef:=TTypeSym(psym).typedef
+                  hdef:=TTypeSym(psym).TypeDef
                 else
                   hdef:=nil;
                 while Assigned(hdef) do
@@ -1979,7 +1979,7 @@ uses
                 { just do a few sanity checks }
                 if not Assigned(srsym) or not (srsym.typ=TypeSym) then
                   InternalError(2020070306);
-                if TTypeSym(srsym).typedef<>context.ForwardDef then
+                if TTypeSym(srsym).TypeDef<>context.ForwardDef then
                   InternalError(2020070307);
               end
             else if Assigned(srsym) then
@@ -2007,7 +2007,7 @@ uses
               added to the correct symtable; this symtable does not contain
               any other symbols, so that the type resolution can not be
               influenced by symbols in the current unit }
-            tempst:=TSpecializeSymTable.create(CurrentModule.ModuleName^,CurrentModule.ModuleID);
+            tempst:=TSpecializeSymTable.Create(CurrentModule.ModuleName^,CurrentModule.ModuleID);
             SymTableStack.push(tempst);
 
             { Reparse the original type definition }
@@ -2043,9 +2043,9 @@ uses
                   if Assigned(psym) then
                     srsym:=psym
                   else
-                    srsym:=CProcSym.create(finalspecializename)
+                    srsym:=CProcSym.Create(finalspecializename)
                 else
-                  srsym:=CTypeSym.create(finalspecializename,GenErrorDef);
+                  srsym:=CTypeSym.Create(finalspecializename,GenErrorDef);
                 { insert the symbol only if we don't know already that we have
                   a procsym to add it to and we aren't dealing with a forwarddef }
                 if not Assigned(psym) and not Assigned(context.ForwardDef) then
@@ -2118,7 +2118,7 @@ uses
                           TTypeSym(srsym).FPrettyName:=prettyname;
 
                         read_named_type(result,srsym,GenericDef,generictypelist,false,hadtypetoken);
-                        TTypeSym(srsym).typedef:=result;
+                        TTypeSym(srsym).TypeDef:=result;
                         result.TypeSym:=srsym;
                       end;
 
@@ -2152,7 +2152,7 @@ uses
                       if oo_is_forward in TObjectDef(result).ObjectOptions then
                         add_forward_generic_def(result,context)
                       else if not (oo_inherits_not_specialized in TObjectDef(result).ObjectOptions) then
-                        build_vmt(TObjectDef(result))
+                        Build_VMT(TObjectDef(result))
                       else
                         { update the procdevs to add hidden self param }
                         insert_struct_hidden_paras(TObjectDef(result));
@@ -2313,32 +2313,32 @@ uses
         defname : TIDString;
         allowconst,
         allowconstructor,
-        is_const,
+        Is_Const,
         doconsume : boolean;
         constraintdata : TGenericConstraintData;
         old_block_type : TBlockType;
         fileinfo : TFilePosInfo;
       begin
-        result:=TFPHashObjectList.create(false);
+        result:=TFPHashObjectList.Create(false);
         firstidx:=0;
         const_list_index:=0;
         old_block_type:=Block_Type;
         Block_Type:=bt_type;
         allowconst:=true;
-        is_const:=false;
+        Is_Const:=false;
         repeat
           if allowconst and try_to_consume(_CONST) then
             begin
               allowconst:=false;
-              is_const:=true;
+              Is_Const:=true;
               const_list_index:=result.count;
             end;
           if CurrentScanner.token=_ID then
             begin
-              if is_const then
+              if Is_Const then
                 generictype:=CConstSym.Create_Undefined(CurrentScanner.orgpattern,CUndefinedType)
               else
-                generictype:=CTypeSym.create(CurrentScanner.orgpattern,CUndefinedType);
+                generictype:=CTypeSym.Create(CurrentScanner.orgpattern,CUndefinedType);
               { type parameters need to be added as strict private }
               generictype.visibility:=vis_strictprivate;
               include(generictype.SymOptions,sp_generic_para);
@@ -2347,7 +2347,7 @@ uses
           consume(_ID);
           fileinfo:=CurrentTokenPos;
           { const restriction }
-          if is_const and try_to_consume(_COLON) then
+          if Is_Const and try_to_consume(_COLON) then
             begin
               def:=nil;
               { parse the type and assign the const type to generictype  }
@@ -2379,7 +2379,7 @@ uses
                     Message1(type_e_generic_const_type_not_allowed,def.FullTypeName);
                 end;
               { after type restriction const list terminates }
-              is_const:=false;
+              Is_Const:=false;
             end
           { type restriction }
           else if try_to_consume(_COLON) then
@@ -2387,7 +2387,7 @@ uses
               if not allowconstraints then
                 Message(parser_e_generic_constraints_not_allowed_here);
               { construct a name which can be used for a type specification }
-              constraintdata:=TGenericConstraintData.create;
+              constraintdata:=TGenericConstraintData.Create;
               constraintdata.fileinfo:=fileinfo;
               defname:='';
               str(CurrentModule.DefList.count,defname);
@@ -2423,8 +2423,8 @@ uses
                         Message(parser_e_illegal_expression)
                       else
                         begin
-                          srsymtable:=TRecordSymTable.create(defname,0,1);
-                          BaseDef:=CRecordDef.create(defname,srsymtable);
+                          srsymtable:=TRecordSymTable.Create(defname,0,1);
+                          BaseDef:=CRecordDef.Create(defname,srsymtable);
                           include(constraintdata.flags,gcf_record);
                           allowconstructor:=false;
                         end;
@@ -2483,7 +2483,7 @@ uses
                     if (BaseDef.typ<>objectdef) or
                         not (TObjectDef(BaseDef).ObjectType in [odt_class]) then
                       InternalError(2012101101);
-                  BaseDef:=CObjectDef.create(TObjectDef(BaseDef).ObjectType,defname,TObjectDef(BaseDef),false);
+                  BaseDef:=CObjectDef.Create(TObjectDef(BaseDef).ObjectType,defname,TObjectDef(BaseDef),false);
                   for i:=0 to constraintdata.Interfaces.count-1 do
                     TObjectDef(BaseDef).Register_Implemented_Interface(TObjectDef(constraintdata.Interfaces[i]),false);
                 end
@@ -2493,14 +2493,14 @@ uses
                     if BaseDef.typ<>errordef then
                       InternalError(2013021601);
                     def:=TDef(constraintdata.Interfaces[0]);
-                    BaseDef:=CObjectDef.create(TObjectDef(def).ObjectType,defname,TObjectDef(def),false);
+                    BaseDef:=CObjectDef.Create(TObjectDef(def).ObjectType,defname,TObjectDef(def),false);
                     constraintdata.Interfaces.delete(0);
                   end;
 
               if BaseDef.typ<>errordef then
                 with TStoredDef(BaseDef) do
                   begin
-                    GenConstraintData:=TGenericConstraintData.create;
+                    GenConstraintData:=TGenericConstraintData.Create;
                     GenConstraintData.flags:=constraintdata.flags;
                     GenConstraintData.Interfaces.assign(constraintdata.Interfaces);
                     GenConstraintData.fileinfo:=constraintdata.fileinfo;
@@ -2510,10 +2510,10 @@ uses
                 { the constraint was rejected: recover as an unconstrained
                   parameter; keeping the shared errordef would corrupt its
                   typesym below and IE in check_generic_constraints later }
-                BaseDef:=CUndefinedDef.create(false);
+                BaseDef:=CUndefinedDef.Create(false);
 
               for i:=firstidx to result.count-1 do
-                TTypeSym(result[i]).typedef:=BaseDef;
+                TTypeSym(result[i]).TypeDef:=BaseDef;
               { we need a typesym in case we do a Delphi-mode inline
                 specialization with this parameter; so just use the first sym }
               if not Assigned(BaseDef.TypeSym) then
@@ -2531,8 +2531,8 @@ uses
                   for i:=firstidx to result.count-1 do
                     if TSym(result[i]).typ<>constsym then
                       begin
-                        TTypeSym(result[i]).typedef:=CUndefinedDef.create(false);
-                        TTypeSym(result[i]).typedef.TypeSym:=TTypeSym(result[i]);
+                        TTypeSym(result[i]).TypeDef:=CUndefinedDef.Create(false);
+                        TTypeSym(result[i]).TypeDef.TypeSym:=TTypeSym(result[i]);
                       end;
                   { a semicolon terminates a type parameter group }
                   firstidx:=result.count;
@@ -2540,20 +2540,20 @@ uses
             end;
           if CurrentScanner.token=_SEMICOLON then
             begin
-              is_const:=false;
+              Is_Const:=false;
               allowconst:=true;
             end;
         until not (try_to_consume(_COMMA) or try_to_consume(_SEMICOLON));
         { if the constant parameter is not terminated then the type restriction was
           not specified and we need to give an error }
-        if is_const then
+        if Is_Const then
           consume(_COLON);
         { two different typeless parameters are considered as incompatible }
         for i:=firstidx to result.count-1 do
           if TSym(result[i]).typ<>constsym then
             begin
-              TTypeSym(result[i]).typedef:=CUndefinedDef.create(false);
-              TTypeSym(result[i]).typedef.TypeSym:=TTypeSym(result[i]);
+              TTypeSym(result[i]).TypeDef:=CUndefinedDef.Create(false);
+              TTypeSym(result[i]).TypeDef.TypeSym:=TTypeSym(result[i]);
             end;
         Block_Type:=old_block_type;
       end;
@@ -2617,7 +2617,7 @@ uses
                       fwdok:=false
                     else if (generictype.typ=TypeSym) then
                       begin
-                        if Compare_Defs_Ext(TTypeSym(generictype).typedef,TTypeSym(fwdparam).typedef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact then
+                        if Compare_Defs_Ext(TTypeSym(generictype).TypeDef,TTypeSym(fwdparam).TypeDef,nothingn,conv,op,[cdo_strict_genconstraint_check])<te_exact then
                           fwdok:=false;
                       end
                     else if (generictype.typ=constsym) then
@@ -2641,14 +2641,14 @@ uses
           end;
 
         if (genericlist.count>0) and not Assigned(def.GenericParas) then
-          def.GenericParas:=TFPHashObjectList.create(false);
+          def.GenericParas:=TFPHashObjectList.Create(false);
         for i:=0 to genericlist.count-1 do
           begin
             generictype:=TStoredSym(genericlist[i]);
             if Assigned(generictype.owner) then
               begin
                 if generictype.typ=TypeSym then
-                  sym:=CTypeSym.create(genericlist.nameofindex(i),TTypeSym(generictype).typedef)
+                  sym:=CTypeSym.Create(genericlist.nameofindex(i),TTypeSym(generictype).TypeDef)
                 else if generictype.typ=constsym then
                   { generictype is a constsym that was created in create_generic_constsym
                     during phase 1 so we pass this directly without copying }
@@ -2670,7 +2670,7 @@ uses
               begin
                 if generictype.typ=TypeSym then
                   begin
-                    generictypedef:=TTypeSym(generictype).typedef;
+                    generictypedef:=TTypeSym(generictype).TypeDef;
                     if (generictypedef.typ=undefineddef) and (generictypedef<>CUndefinedType) then
                       begin
                         { the generic parameters were parsed before the genericdef existed thus the
@@ -2711,8 +2711,8 @@ uses
           begin
             { we need to pass nil as def here, because the constructor wants
               to set the typesym of the def which is not what we want }
-            gensym:=CTypeSym.create(copy(name,1,pos('$',name)-1),nil);
-            gensym.typedef:=CurrentStructDef;
+            gensym:=CTypeSym.Create(copy(name,1,pos('$',name)-1),nil);
+            gensym.TypeDef:=CurrentStructDef;
             include(gensym.SymOptions,sp_internal);
             { the symbol should be only visible to the generic class
               itself }
@@ -2774,16 +2774,16 @@ uses
             list:=TFPObjectList(CurrentModule.GenericDummySyms.find(n));
             if not Assigned(list) then
               begin
-                list:=TFPObjectList.create(true);
+                list:=TFPObjectList.Create(true);
                 CurrentModule.GenericDummySyms.add(n,list);
               end;
             { is the dummy sym still "dummy"? }
             if (sym.typ=TypeSym) and
                 (
                   { dummy sym defined in mode Delphi }
-                  (TTypeSym(sym).typedef.typ=undefineddef) or
+                  (TTypeSym(sym).TypeDef.typ=undefineddef) or
                   { dummy sym defined in non-Delphi mode }
-                  (TStoredDef(TTypeSym(sym).typedef).Is_Generic)
+                  (TStoredDef(TTypeSym(sym).TypeDef).Is_Generic)
                 ) then
               begin
                 { do we have a non-generic type of the same name
@@ -2798,7 +2798,7 @@ uses
               srsym:=nil;
             if Assigned(srsym) then
               begin
-                entry:=TGenericDummyEntry.create;
+                entry:=TGenericDummyEntry.Create;
                 entry.ResolvedSym:=srsym;
                 entry.DummySym:=sym;
                 list.add(entry);
@@ -2870,9 +2870,9 @@ uses
       state.oldoptoken:=optoken;
       optoken:=NOTOKEN;
       CurrentModule.SpecializeState:=@state;
-      CurrentModule.ExtendedDefs:=TFPHashObjectList.create(true);
-      CurrentModule.GenericDummySyms:=TFPHashObjectList.create(true);
-      SymTableStack:=TDefAwareSymTableStack.create;
+      CurrentModule.ExtendedDefs:=TFPHashObjectList.Create(true);
+      CurrentModule.GenericDummySyms:=TFPHashObjectList.Create(true);
+      SymTableStack:=TDefAwareSymTableStack.Create;
       if not Assigned(GenericDef.owner) then
         hmodule:=CurrentModule
       else
@@ -2881,7 +2881,7 @@ uses
         InternalError(200705152);
       { collect all unit syms in the generic's unit as we need to establish
         their unitsym.module link again so that unit identifiers can be used }
-      unitsyms:=TFPHashObjectList.create(false);
+      unitsyms:=TFPHashObjectList.Create(false);
       if (hmodule<>CurrentModule) and Assigned(hmodule.GlobalSymTable) then
         for i:=0 to hmodule.GlobalSymTable.SymList.count-1 do
           begin
@@ -2985,7 +2985,7 @@ uses
             CurrentFilePos.moduleindex:=hmodule.ModuleID;
             CurrentTokenPos:=CurrentFilePos;
             CurrentScanner.startreplaytokens(TProcDef(def.GenericDef).GenericTokenBuf,hmodule.ChangeEndian);
-            read_proc_body(def);
+            Read_Proc_Body(def);
             CurrentFilePos:=oldcurrent_filepos;
           end
         { synthetic routines will be implemented afterwards }
@@ -3054,8 +3054,8 @@ uses
       begin
         { first copy all entries and then work with that list to ensure that
           we don't get an infinite recursion }
-        list:=TFPObjectList.create(false);
-        readdlist:=TFPObjectList.create(false);
+        list:=TFPObjectList.Create(false);
+        readdlist:=TFPObjectList.Create(false);
 
         list.Capacity:=CurrentModule.PendingSpecializations.Count;
         for i:=0 to CurrentModule.PendingSpecializations.Count-1 do
@@ -3207,7 +3207,7 @@ uses
               end;
             { use the corresponding type in the generic's symtable as
               genericdef for the specialized type }
-            result:=TStoredDef(TTypeSym(sym).typedef);
+            result:=TStoredDef(TTypeSym(sym).TypeDef);
           end;
       end;
 

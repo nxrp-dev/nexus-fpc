@@ -45,7 +45,7 @@ unit optvirt;
 
         function getchild(index: LongInt): TInheritanceTreeNode;
        public
-        constructor create(_parent: TInheritanceTreeNode; _def: TObjectDef; _instantiated: boolean);
+        constructor Create(_parent: TInheritanceTreeNode; _def: TObjectDef; _instantiated: boolean);
         { destroys both this node and all of its siblings }
         destructor Destroy; override;
         function  childcount: LongInt;
@@ -79,7 +79,7 @@ unit optvirt;
 
         function  getnodefordef(def: TObjectDef): TInheritanceTreeNode;
        public
-        constructor create;
+        constructor Create;
         destructor Destroy; override;
         { adds an objectdef (the def itself, and all of its parents that do not yet exist) to
           the tree, and returns the leaf node
@@ -88,7 +88,7 @@ unit optvirt;
         procedure registerinstantiatedclassrefdef(def: TDef);
         procedure registercalledvmtentries(entries: TCalledVMTEntries);
         procedure checkforclassrefinheritance(def: TDef);
-        procedure foreachnode(proctocall: TInheritanceTreeCallback; arg: pointer);
+        procedure ForEachNode(proctocall: TInheritanceTreeCallback; arg: pointer);
         procedure foreachleafnode(proctocall: TInheritanceTreeCallback; arg: pointer);
         procedure optimizevirtualmethods;
         procedure printvmtinfo;
@@ -105,7 +105,7 @@ unit optvirt;
         finstantiated: boolean;
         function isstaticvmtentry(vmtindex: LongInt; out replacementname: PShortString): boolean;
        public
-        constructor create(hashobjectlist:TFPHashObjectList;const n: shortstring; instantiated: boolean);
+        constructor Create(hashobjectlist:TFPHashObjectList;const n: shortstring; instantiated: boolean);
         destructor Destroy; override;
 
         property instantiated: boolean read finstantiated;
@@ -121,7 +121,7 @@ unit optvirt;
         { hashtable of classes }
         fclasses: TFPHashObjectList;
        public
-        constructor create(hashobjectlist:TFPHashObjectList;const n: shortstring);reintroduce;
+        constructor Create(hashobjectlist:TFPHashObjectList;const n: shortstring);reintroduce;
         destructor Destroy; override;
 
         function addclass(const n: shortstring; instantiated: boolean): TClassDevirtInfo;
@@ -143,7 +143,7 @@ unit optvirt;
         function getstaticname(forvmtentry: boolean; objdef, procdef: TDef; out staticname: TSymStr): boolean;
         procedure documentformat(writer: TWPOSectionWriterIntf);
        public
-        constructor create; override;
+        constructor Create; override;
         destructor Destroy; override;
 
         class function getwpotype: TWPOType; override;
@@ -178,13 +178,13 @@ unit optvirt;
 
    { *************************** tinheritancetreenode ************************* }
 
-    constructor TInheritanceTreeNode.create(_parent: TInheritanceTreeNode; _def: TObjectDef; _instantiated: boolean);
+    constructor TInheritanceTreeNode.Create(_parent: TInheritanceTreeNode; _def: TObjectDef; _instantiated: boolean);
       begin
         fparent:=_parent;
         fdef:=_def;
         finstantiated:=_instantiated;
         if Assigned(_def) then
-          fcalledvmtmethods:=TBitSet.create(_def.VMTEntries.count);
+          fcalledvmtmethods:=TBitSet.Create(_def.VMTEntries.count);
       end;
 
 
@@ -232,7 +232,7 @@ unit optvirt;
           InternalError(2008092202);
 
         if not Assigned(fchilds) then
-          fchilds:=TFPObjectList.create(true);
+          fchilds:=TFPObjectList.Create(true);
         { def already a child -> return }
         result:=findchild(_def);
         if Assigned(result) then
@@ -240,7 +240,7 @@ unit optvirt;
         else
           begin
             { not found, add new child }
-            result:=TInheritanceTreeNode.create(self,_def,_instantiated);
+            result:=TInheritanceTreeNode.Create(self,_def,_instantiated);
             fchilds.add(result);
           end;
       end;
@@ -262,10 +262,10 @@ unit optvirt;
 
     { *************************** tinheritancetree ************************* }
 
-    constructor TInheritanceTree.create;
+    constructor TInheritanceTree.Create;
       begin
-        froots:=TInheritanceTreeNode.create(nil,nil,false);
-        classrefdefs:=TFPObjectList.create(false);
+        froots:=TInheritanceTreeNode.Create(nil,nil,false);
+        classrefdefs:=TFPObjectList.Create(false);
       end;
 
 
@@ -396,7 +396,7 @@ unit optvirt;
       end;
 
 
-    procedure TInheritanceTree.foreachnode(proctocall: TInheritanceTreeCallback; arg: pointer);
+    procedure TInheritanceTree.ForEachNode(proctocall: TInheritanceTreeCallback; arg: pointer);
       begin
         foreachnodefromroot(froots,proctocall,arg);
       end;
@@ -574,7 +574,7 @@ unit optvirt;
 
     procedure TInheritanceTree.printvmtinfo;
       begin
-        foreachnode(@printobjectvmtinfo,nil);
+        ForEachNode(@printobjectvmtinfo,nil);
       end;
 
 
@@ -624,11 +624,11 @@ unit optvirt;
 
    { tclassdevirtinfo }
 
-    constructor TClassDevirtInfo.create(hashobjectlist:TFPHashObjectList;const n: shortstring; instantiated: boolean);
+    constructor TClassDevirtInfo.Create(hashobjectlist:TFPHashObjectList;const n: shortstring; instantiated: boolean);
       begin
-        inherited create(hashobjectlist,n);
+        inherited Create(hashobjectlist,n);
         finstantiated:=instantiated;
-        fstaticmethodnames:=TFPList.create;
+        fstaticmethodnames:=TFPList.Create;
       end;
 
     destructor TClassDevirtInfo.Destroy;
@@ -664,10 +664,10 @@ unit optvirt;
 
     { tunitdevirtinfo }
 
-    constructor TUnitDevirtInfo.create(hashobjectlist:TFPHashObjectList;const n: shortstring);
+    constructor TUnitDevirtInfo.Create(hashobjectlist:TFPHashObjectList;const n: shortstring);
       begin
-        inherited create(hashobjectlist,n);
-        fclasses:=TFPHashObjectList.create(true);
+        inherited Create(hashobjectlist,n);
+        fclasses:=TFPHashObjectList.Create(true);
       end;
 
     destructor TUnitDevirtInfo.Destroy;
@@ -683,7 +683,7 @@ unit optvirt;
         { can't have two classes with the same name in a single unit }
         if Assigned(result) then
           InternalError(2008100501);
-        result:=TClassDevirtInfo.create(fclasses,n,instantiated);
+        result:=TClassDevirtInfo.Create(fclasses,n,instantiated);
       end;
 
     function TUnitDevirtInfo.findclass(const n: shortstring): TClassDevirtInfo;
@@ -736,9 +736,9 @@ unit optvirt;
       end;
 
 
-    constructor TProgDevirtInfo.create;
+    constructor TProgDevirtInfo.Create;
       begin
-        inherited create;
+        inherited Create;
       end;
 
 
@@ -795,7 +795,7 @@ unit optvirt;
                 TObjectDef(hp.WPOInfo.maybecreatedbyclassrefdeftypes[i]).Register_Maybe_Created_Object_Type;
             hp:=TModule(hp.next);
           end;
-         inheritancetree:=TInheritanceTree.create;
+         inheritancetree:=TInheritanceTree.Create;
 
          { add all constructed class/object types to the tree }
 {$IFDEF DEBUG_DEVIRT}
@@ -884,7 +884,7 @@ unit optvirt;
 {$ifdef DEBUG_DEVIRT}
          inheritancetree.printvmtinfo;
 {$endif DEBUG_DEVIRT}
-         inheritancetree.foreachnode(@converttreenode,nil);
+         inheritancetree.ForEachNode(@converttreenode,nil);
          inheritancetree.free;
          inheritancetree:=nil;
       end;
@@ -896,12 +896,12 @@ unit optvirt;
           result:=findunit(n)
         else
           begin
-            funits:=TFPHashObjectList.create;
+            funits:=TFPHashObjectList.Create;
             result:=nil;
           end;
         if not Assigned(result) then
           begin
-            result:=TUnitDevirtInfo.create(funits,n);
+            result:=TUnitDevirtInfo.Create(funits,n);
           end;
       end;
 

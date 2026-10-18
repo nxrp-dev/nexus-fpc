@@ -1014,12 +1014,12 @@ type
         variables are initialised. Since these types are only used for
         compile-time evaluation of conditional expressions, it doesn't matter
         that we use the base types instead of the cpu-specific ones. }
-      sintdef:=TOrdDef.create(s64bit,low(int64),high(int64),false);
-      uintdef:=TOrdDef.create(u64bit,low(qword),high(qword),false);
-      booldef:=TOrdDef.create(pasbool1,0,1,false);
+      sintdef:=TOrdDef.Create(s64bit,low(int64),high(int64),false);
+      uintdef:=TOrdDef.Create(u64bit,low(qword),high(qword),false);
+      booldef:=TOrdDef.Create(pasbool1,0,1,false);
       strdef:=TStringDef.CreateAnsi(0,false);
-      setdef:=TSetDef.create(sintdef,0,255,false);
-      realdef:=TFloatDef.create(s80real,false);
+      setdef:=TSetDef.Create(sintdef,0,255,false);
+      realdef:=TFloatDef.Create(s80real,false);
     end;
 
   class destructor TExprValue.destroydefs;
@@ -1699,7 +1699,7 @@ type
                begin
                  if Assigned(srsym)and(srsym.typ=TypeSym) then
                    begin
-                     def:=TTypeSym(srsym).typedef;
+                     def:=TTypeSym(srsym).TypeDef;
                      if Is_Class_Or_Object(def) or Is_Record(def) then
                        begin
                          preproc_consume(_POINT);
@@ -2015,9 +2015,9 @@ type
                                 end;
                               TypeSym:
                                 begin
-                                  if TTypeSym(srsym).typedef.typ in [errordef,abstractdef,ForwardDef] then
+                                  if TTypeSym(srsym).TypeDef.typ in [errordef,abstractdef,ForwardDef] then
                                     Message(parser_e_illegal_expression);
-                                  l:=TTypeSym(srsym).typedef.Size;
+                                  l:=TTypeSym(srsym).TypeDef.Size;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               else
@@ -2068,7 +2068,7 @@ type
                                 end;
                               TypeSym:
                                 begin
-                                  hdef:=TTypeSym(srsym).typedef;
+                                  hdef:=TTypeSym(srsym).TypeDef;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               else
@@ -2160,9 +2160,9 @@ type
                                 (srsym.typ=TypeSym) and
                                 (
                                   { mode delphi}
-                                  (TTypeSym(srsym).typedef.typ in [undefineddef,errordef]) or
+                                  (TTypeSym(srsym).TypeDef.typ in [undefineddef,errordef]) or
                                   { non-delphi modes }
-                                  (df_generic in TTypeSym(srsym).typedef.DefOptions)
+                                  (df_generic in TTypeSym(srsym).TypeDef.DefOptions)
                                 ) then
                               result:=TExprValue.create_bool(false)
                             else
@@ -2521,7 +2521,7 @@ type
         mac:=TMacro(Search_Macro(hs));
         if not Assigned(mac) or (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
-            mac:=TMacro.create(hs);
+            mac:=TMacro.Create(hs);
             mac.defined:=true;
             CurrentModule.LocalMacroSymTable.InsertSym(mac);
           end
@@ -2631,7 +2631,7 @@ type
         if not Assigned(mac) or
            (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
-            mac:=TMacro.create(hs);
+            mac:=TMacro.Create(hs);
             mac.defined:=true;
             mac.IsCompilerVar:=true;
             CurrentModule.LocalMacroSymTable.InsertSym(mac);
@@ -2704,7 +2704,7 @@ type
         if not Assigned(mac) or
            (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
-             mac:=TMacro.create(hs);
+             mac:=TMacro.Create(hs);
              mac.defined:=false;
              CurrentModule.LocalMacroSymTable.InsertSym(mac);
           end
@@ -2882,7 +2882,7 @@ type
                               TPreProcStack
 *****************************************************************************}
 
-    constructor TPreProcStack.create(atyp : TPreProcType;a:boolean;n:TPreProcStack);
+    constructor TPreProcStack.Create(atyp : TPreProcType;a:boolean;n:TPreProcStack);
       begin
         accept:=a;
         typ:=atyp;
@@ -3638,7 +3638,7 @@ type
           InternalError(200511175);
 
         { save current scanner state }
-        replaystack:=TReplayStack.create(token,idtoken,orgpattern,pattern,
+        replaystack:=TReplayStack.Create(token,idtoken,orgpattern,pattern,
           cstringpattern,patternw,CurrentSettings,replaytokenbuf,change_endian_for_replay,
           PendingState,status.verbosity,replaystack);
 {$ifdef check_inputpointer_limits}
@@ -3806,7 +3806,7 @@ type
                           change for the whole stack, so we only want to apply
                           the newest changes for each message type }
                         mesgnb:=tokenreadsizeint;
-                        msgset:=THashSet.create(min(mesgnb,10),false,false);
+                        msgset:=THashSet.Create(min(mesgnb,10),false,false);
                         prevmsg:=nil;
                         PMsg:=nil;
                         for i:=1 to mesgnb do
@@ -4254,7 +4254,7 @@ type
             condition:= false;
             valuedescr:= '';
           end;
-        preprocstack:=TPreProcStack.create(atyp, condition, preprocstack);
+        preprocstack:=TPreProcStack.Create(atyp, condition, preprocstack);
         preprocstack.name:=valuedescr;
         preprocstack.line_nb:=line_no;
         preprocstack.fileindex:=CurrentFilePos.fileindex;
@@ -6828,9 +6828,9 @@ exit_label:
     procedure AddDirective(const s:string; dm: TDirectiveMode; p:TDirectiveProc);
       begin
         if dm in [directive_all, directive_turbo] then
-          TDirectiveItem.create(turbo_scannerdirectives,s,p);
+          TDirectiveItem.Create(turbo_scannerdirectives,s,p);
         if dm in [directive_all, directive_mac] then
-          TDirectiveItem.create(mac_scannerdirectives,s,p);
+          TDirectiveItem.Create(mac_scannerdirectives,s,p);
       end;
 
     procedure AddConditional(const s:string; dm: TDirectiveMode; p:TDirectiveProc);

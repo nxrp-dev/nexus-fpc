@@ -31,40 +31,40 @@ interface
     type
        TCGAddNode = class(TAddNode)
 {          function pass_1: tnode; override;}
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
          protected
           { call secondpass for both left and right }
-          procedure pass_left_right; virtual;
+          procedure Pass_Left_Right; virtual;
           { set the register of the result location }
-          procedure set_result_location_reg;
+          procedure Set_Result_Location_Reg;
           { load left and right nodes into registers }
-          procedure force_reg_left_right(allow_swap,allow_constant:boolean); virtual;
+          procedure Force_Reg_Left_Right(AAllowSwap,AAllowConstant:Boolean); virtual;
 
-          function cmpnode2topcmp(unsigned: boolean): TOpCmp;
+          function CmpNode2TOpCmp(AUnsigned: Boolean): TOpCmp;
 
-          procedure second_opfloat;
-          procedure second_opboolean;
-          procedure second_opsmallset;
-          procedure second_op64bit;
-          procedure second_opordinal;
+          procedure Second_OpFloat;
+          procedure Second_OpBoolean;
+          procedure Second_OpSmallSet;
+          procedure Second_Op64Bit;
+          procedure Second_OpOrdinal;
 
-          procedure second_addstring;virtual;
-          procedure second_addfloat;virtual;abstract;
-          procedure second_addboolean;virtual;
-          procedure second_addsmallset;virtual;
-          procedure second_addsmallsetelement;virtual;
+          procedure Second_AddString;virtual;
+          procedure Second_AddFloat;virtual;abstract;
+          procedure Second_AddBoolean;virtual;
+          procedure Second_AddSmallSet;virtual;
+          procedure Second_AddSmallSetElement;virtual;
 {$ifdef x86}
 {$endif x86}
-          procedure second_opvector;virtual;abstract;
-          procedure second_add64bit;virtual;
-          procedure second_addordinal;virtual;
-          procedure second_cmpfloat;virtual;abstract;
-          procedure second_cmpboolean;virtual;
-          procedure second_cmpsmallset;virtual;abstract;
-          procedure second_cmp64bit;virtual;abstract;
-          procedure second_cmpordinal;virtual;abstract;
+          procedure Second_OpVector;virtual;abstract;
+          procedure Second_Add64Bit;virtual;
+          procedure Second_AddOrdinal;virtual;
+          procedure Second_CmpFloat;virtual;abstract;
+          procedure Second_CmpBoolean;virtual;
+          procedure Second_CmpSmallSet;virtual;abstract;
+          procedure Second_Cmp64Bit;virtual;abstract;
+          procedure Second_CmpOrdinal;virtual;abstract;
 
-          function needoverflowcheck: boolean;
+          function NeedOverflowCheck: Boolean;
        end;
 
   implementation
@@ -84,129 +84,129 @@ interface
                                   Helpers
 *****************************************************************************}
 
-    procedure TCGAddNode.pass_left_right;
+    procedure TCGAddNode.Pass_Left_Right;
 {$ifdef x86}
       var
-        tmpreg     : TRegister;
-        pushedfpu  : boolean;
+        lTempReg     : TRegister;
+        lPushedFPU  : Boolean;
 {$endif x86}
       begin
         { calculate the operator which is more difficult }
-        firstcomplex(self);
+        FirstComplex(Self);
 
         { in case of constant put it to the left }
-        if (left.nodetype=ordconstn) then
-          swapleftright;
+        if (Left.NodeType=ordconstn) then
+          SwapLeftRight;
 
-        SecondPass(left);
-        if left.Location.Loc in [LOC_FLAGS,LOC_JUMP] then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
+        SecondPass(Left);
+        if Left.Location.Loc in [LOC_FLAGS,LOC_JUMP] then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
 {$ifdef x86}
         { are too few registers free? }
-        pushedfpu:=false;
-        if (left.Location.Loc=LOC_FPUREGISTER) and
-           (node_resources_fpu(right)>=maxfpuregs) then
+        lPushedFPU:=false;
+        if (Left.Location.Loc=LOC_FPUREGISTER) and
+           (Node_Resources_FPU(Right)>=maxfpuregs) then
           begin
-            hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,left.Location,left.resultdef);
-            pushedfpu:=true;
+            hlcg.Location_Force_Mem(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef);
+            lPushedFPU:=true;
           end;
 {$endif x86}
 
-        SecondPass(right);
-        if right.Location.Loc in [LOC_FLAGS,LOC_JUMP] then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,resultdef,false);
+        SecondPass(Right);
+        if Right.Location.Loc in [LOC_FLAGS,LOC_JUMP] then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,ResultDef,false);
 {$ifdef x86}
-        if pushedfpu then
+        if lPushedFPU then
           begin
-            if Use_VectorFPU(left.resultdef) then
+            if Use_VectorFPU(Left.ResultDef) then
               begin
-                tmpreg := cg.GetMMRegister(CurrentAsmData.CurrAsmList,left.Location.Size);
-                hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.Location,tmpreg,MMS_MoveScalar);
-                location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
-                Location_Reset(left.Location,LOC_MMREGISTER,left.Location.Size);
-                left.Location.Register:=tmpreg;
+                lTempReg := cg.GetMMRegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
+                hlcg.A_LoadMM_Loc_Reg(CurrentAsmData.CurrAsmList,Left.ResultDef,Left.ResultDef,Left.Location,lTempReg,MMS_MoveScalar);
+                Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
+                Location_Reset(Left.Location,LOC_MMREGISTER,Left.Location.Size);
+                Left.Location.Register:=lTempReg;
               end
             else
               begin
-                tmpreg := cg.GetFPURegister(CurrentAsmData.CurrAsmList,left.Location.Size);
-                cg.A_LoadFPU_Loc_Reg(CurrentAsmData.CurrAsmList,left.Location.Size,left.Location,tmpreg);
-                location_freetemp(CurrentAsmData.CurrAsmList,left.Location);
-                Location_Reset(left.Location,LOC_FPUREGISTER,left.Location.Size);
-                left.Location.Register := tmpreg;
+                lTempReg := cg.GetFPURegister(CurrentAsmData.CurrAsmList,Left.Location.Size);
+                cg.A_LoadFPU_Loc_Reg(CurrentAsmData.CurrAsmList,Left.Location.Size,Left.Location,lTempReg);
+                Location_FreeTemp(CurrentAsmData.CurrAsmList,Left.Location);
+                Location_Reset(Left.Location,LOC_FPUREGISTER,Left.Location.Size);
+                Left.Location.Register := lTempReg;
                 { left operand is now on top of the stack, instead of the right one! }
-                if (right.Location.Loc=LOC_FPUREGISTER) then
-                  toggleflag(nf_swapped);
+                if (Right.Location.Loc=LOC_FPUREGISTER) then
+                  ToggleFlag(nf_swapped);
               end;
           end;
 {$endif x86}
       end;
 
 
-    procedure TCGAddNode.set_result_location_reg;
+    procedure TCGAddNode.Set_Result_Location_Reg;
       begin
-        Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+        Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-        if location.Size in [OS_64,OS_S64] then
+        if Location.Size in [OS_64,OS_S64] then
           begin
-            location.Register64.RegLo := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
-            location.Register64.RegHi := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            Location.Register64.RegLo := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+            Location.Register64.RegHi := cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
           end
         else
 {$endif}
-          location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
+          Location.Register := hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ResultDef);
       end;
 
 
-    procedure TCGAddNode.force_reg_left_right(allow_swap,allow_constant:boolean);
+    procedure TCGAddNode.Force_Reg_Left_Right(AAllowSwap,AAllowConstant:Boolean);
       begin
-        if (left.Location.Loc<>LOC_REGISTER) and
+        if (Left.Location.Loc<>LOC_REGISTER) and
            not(
-               allow_constant and
-               (left.Location.Loc in [LOC_CONSTANT,LOC_CREGISTER])
+               AAllowConstant and
+               (Left.Location.Loc in [LOC_CONSTANT,LOC_CREGISTER])
               ) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
-        if (right.Location.Loc<>LOC_REGISTER) and
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,false);
+        if (Right.Location.Loc<>LOC_REGISTER) and
            not(
-               allow_constant and
-               (right.Location.Loc in [LOC_CONSTANT,LOC_CREGISTER]) and
-               (left.Location.Loc<>LOC_CONSTANT)
+               AAllowConstant and
+               (Right.Location.Loc in [LOC_CONSTANT,LOC_CREGISTER]) and
+               (Left.Location.Loc<>LOC_CONSTANT)
               ) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,right.resultdef,false);
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,Right.ResultDef,false);
 
         { Left is always a register, right can be register or constant }
-        if left.Location.Loc=LOC_CONSTANT then
+        if Left.Location.Loc=LOC_CONSTANT then
           begin
             { when it is not allowed to swap we have a constant on
               left, that will give problems }
-            if not allow_swap then
-              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false)
+            if not AAllowSwap then
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,false)
             else
-              swapleftright;
+              SwapLeftRight;
           end;
       end;
 
 
-    function TCGAddNode.cmpnode2topcmp(unsigned: boolean): TOpCmp;
+    function TCGAddNode.CmpNode2TOpCmp(AUnsigned: Boolean): TOpCmp;
       begin
-        if unsigned then
-          case nodetype of
-            gtn:      result:=OC_A;
-            gten:     result:=OC_AE;
-            ltn:      result:=OC_B;
-            lten:     result:=OC_BE;
-            EqualN:   result:=OC_EQ;
-            unequaln: result:=OC_NE;
+        if AUnsigned then
+          case NodeType of
+            gtn:      Result:=OC_A;
+            gten:     Result:=OC_AE;
+            ltn:      Result:=OC_B;
+            lten:     Result:=OC_BE;
+            EqualN:   Result:=OC_EQ;
+            unequaln: Result:=OC_NE;
           else
             InternalError(2011010412);
           end
         else
-          case nodetype of
-            gtn:      result:=OC_GT;
-            gten:     result:=OC_GTE;
-            ltn:      result:=OC_LT;
-            lten:     result:=OC_LTE;
-            EqualN:   result:=OC_EQ;
-            unequaln: result:=OC_NE;
+          case NodeType of
+            gtn:      Result:=OC_GT;
+            gten:     Result:=OC_GTE;
+            ltn:      Result:=OC_LT;
+            lten:     Result:=OC_LTE;
+            EqualN:   Result:=OC_EQ;
+            unequaln: Result:=OC_NE;
           else
             InternalError(2011010403);
           end
@@ -216,149 +216,149 @@ interface
                                 Smallsets
 *****************************************************************************}
 
-    procedure TCGAddNode.second_opsmallset;
+    procedure TCGAddNode.Second_OpSmallSet;
       begin
         { when a setdef is passed, it has to be a smallset }
         if not(
-               ((left.nodetype=setelementn) or Is_SmallSet(left.resultdef)) and
-               ((right.nodetype=setelementn) or Is_SmallSet(right.resultdef))
+               ((Left.NodeType=setelementn) or Is_SmallSet(Left.ResultDef)) and
+               ((Right.NodeType=setelementn) or Is_SmallSet(Right.ResultDef))
               ) then
           InternalError(200203302);
-        if (left.nodetype=setelementn) or (right.nodetype=setelementn) then
-          second_addsmallsetelement
-        else if nodetype in [EqualN,unequaln,gtn,gten,lten,ltn] then
-          second_cmpsmallset
+        if (Left.NodeType=setelementn) or (Right.NodeType=setelementn) then
+          Second_AddSmallSetElement
+        else if NodeType in [EqualN,unequaln,gtn,gten,lten,ltn] then
+          Second_CmpSmallSet
         else
-          second_addsmallset;
+          Second_AddSmallSet;
       end;
 
 
-    procedure TCGAddNode.second_addsmallset;
+    procedure TCGAddNode.Second_AddSmallSet;
       var
-        cgop    : TOpCG;
-        opdone  : boolean;
+        lCGOp    : TOpCG;
+        lOpDone  : Boolean;
       begin
-        opdone := false;
-        pass_left_right;
-        force_reg_left_right(true,true);
-        set_result_location_reg;
-        case nodetype of
+        lOpDone := false;
+        Pass_Left_Right;
+        Force_Reg_Left_Right(true,true);
+        Set_Result_Location_Reg;
+        case NodeType of
           addn :
-            cgop:=OP_OR;
+            lCGOp:=OP_OR;
           symdifn :
-            cgop:=OP_XOR;
+            lCGOp:=OP_XOR;
           muln :
-            cgop:=OP_AND;
+            lCGOp:=OP_AND;
           subn :
             begin
-              cgop:=OP_AND;
-              if (not(nf_swapped in flags)) then
-                if (right.Location.Loc=LOC_CONSTANT) then
-                  right.Location.Value := not(right.Location.Value)
+              lCGOp:=OP_AND;
+              if (not(nf_swapped in Flags)) then
+                if (Right.Location.Loc=LOC_CONSTANT) then
+                  Right.Location.Value := not(Right.Location.Value)
                 else
-                  opdone := true
-              else if (left.Location.Loc=LOC_CONSTANT) then
-                left.Location.Value := not(left.Location.Value)
+                  lOpDone := true
+              else if (Left.Location.Loc=LOC_CONSTANT) then
+                Left.Location.Value := not(Left.Location.Value)
               else
                  begin
-                   swapleftright;
-                   opdone := true;
+                   SwapLeftRight;
+                   lOpDone := true;
                  end;
-              if opdone then
+              if lOpDone then
                 begin
-                  if (right.Location.Size<>left.Location.Size) or
-                     (location.Size<>left.Location.Size) then
+                  if (Right.Location.Size<>Left.Location.Size) or
+                     (Location.Size<>Left.Location.Size) then
                     InternalError(2010123001);
                   { make sure that location.register is different from
                     left.location.register, since right will overwrite it
                     and we'll use left afterwards }
-                  if (right.Location.Loc=LOC_REGISTER) then
-                    location.Register:=right.Location.Register
+                  if (Right.Location.Loc=LOC_REGISTER) then
+                    Location.Register:=Right.Location.Register
                   else
-                    location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
+                    Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
                   { make sure we don't modify left/right.location, because we told
                     force_reg_left_right above that they can be constant }
-                  hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,resultdef,right.Location.Register,location.Register);
-                  if left.Location.Loc = LOC_CONSTANT then
-                    hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,resultdef,left.Location.Value,location.Register)
+                  hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_NOT,ResultDef,Right.Location.Register,Location.Register);
+                  if Left.Location.Loc = LOC_CONSTANT then
+                    hlcg.A_Op_Const_Reg(CurrentAsmData.CurrAsmList,OP_AND,ResultDef,Left.Location.Value,Location.Register)
                   else
-                    hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_AND,resultdef,left.Location.Register,location.Register);
+                    hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,OP_AND,ResultDef,Left.Location.Register,Location.Register);
                 end;
             end;
           else
             InternalError(2002072701);
         end;
 
-        if not opdone then
+        if not lOpDone then
           begin
             // these are all commutative operations
-            if (left.Location.Loc = LOC_CONSTANT) then
-              swapleftright;
-            if (right.Location.Loc = LOC_CONSTANT) then
-              hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                right.Location.Value,left.Location.Register,
-                location.Register)
+            if (Left.Location.Loc = LOC_CONSTANT) then
+              SwapLeftRight;
+            if (Right.Location.Loc = LOC_CONSTANT) then
+              hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                Right.Location.Value,Left.Location.Register,
+                Location.Register)
             else
-              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                right.Location.Register,left.Location.Register,
-                location.Register);
+              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                Right.Location.Register,Left.Location.Register,
+                Location.Register);
           end;
       end;
 
 
-    procedure TCGAddNode.second_addsmallsetelement;
+    procedure TCGAddNode.Second_AddSmallSetElement;
       var
-        tmpreg : TRegister;
-        mask,
-        SetBase : aint;
-        cgop    : TOpCG;
+        lTempReg : TRegister;
+        lMask,
+        lSetBase : aint;
+        lCGOp    : TOpCG;
       begin
-        if nodetype<>addn then
+        if NodeType<>addn then
           InternalError(20080302);
         { no range support for smallsets }
-        if Assigned(TSetElementNode(right).right) then
+        if Assigned(TSetElementNode(Right).Right) then
           InternalError(20080303);
-        pass_left_right;
+        Pass_Left_Right;
         { setelementn is a special case, it must be on right }
-        if (nf_swapped in flags) and
-           (left.nodetype=setelementn) then
-          swapleftright;
-        force_reg_left_right(false,false);
-        set_result_location_reg;
-        SetBase:=TSetDef(left.resultdef).SetBase;
-        if (right.Location.Loc = LOC_CONSTANT) then
+        if (nf_swapped in Flags) and
+           (Left.NodeType=setelementn) then
+          SwapLeftRight;
+        Force_Reg_Left_Right(false,false);
+        Set_Result_Location_Reg;
+        lSetBase:=TSetDef(Left.ResultDef).SetBase;
+        if (Right.Location.Loc = LOC_CONSTANT) then
           begin
             if (TargetInfo.endian=endian_big) then
-              mask:=aint((aword(1) shl (resultdef.Size*8-1)) shr aword(right.Location.Value-SetBase))
+              lMask:=aint((AWord(1) shl (ResultDef.Size*8-1)) shr AWord(Right.Location.Value-lSetBase))
             else
-              mask:=aint(1 shl (right.Location.Value-SetBase));
-            hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
-              mask,left.Location.Register,location.Register);
+              lMask:=aint(1 shl (Right.Location.Value-lSetBase));
+            hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,ResultDef,
+              lMask,Left.Location.Register,Location.Register);
           end
         else
           begin
             if (TargetInfo.endian=endian_big) then
               begin
-                mask:=aint((aword(1) shl (resultdef.Size*8-1)));
-                cgop:=OP_SHR
+                lMask:=aint((AWord(1) shl (ResultDef.Size*8-1)));
+                lCGOp:=OP_SHR
               end
             else
               begin
-                mask:=1;
-                cgop:=OP_SHL
+                lMask:=1;
+                lCGOp:=OP_SHL
               end;
-            tmpreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
-            hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,mask,tmpreg);
-            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,resultdef,true);
-            register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.Location,SetBase);
-            hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
-              right.Location.Register,tmpreg);
-            if left.Location.Loc <> LOC_CONSTANT then
-              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,tmpreg,
-                  left.Location.Register,location.Register)
+            lTempReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ResultDef);
+            hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,ResultDef,lMask,lTempReg);
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,ResultDef,true);
+            Register_Maybe_Adjust_SetBase(CurrentAsmData.CurrAsmList,ResultDef,Right.Location,lSetBase);
+            hlcg.A_Op_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+              Right.Location.Register,lTempReg);
+            if Left.Location.Loc <> LOC_CONSTANT then
+              hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,ResultDef,lTempReg,
+                  Left.Location.Register,Location.Register)
             else
-              hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
-                  left.Location.Value,tmpreg,location.Register);
+              hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,ResultDef,
+                  Left.Location.Value,lTempReg,Location.Register);
           end;
       end;
 
@@ -367,97 +367,97 @@ interface
                                 Boolean
 *****************************************************************************}
 
-    procedure TCGAddNode.second_opboolean;
+    procedure TCGAddNode.Second_OpBoolean;
       begin
-        if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
-          second_cmpboolean
+        if NodeType in [ltn,lten,gtn,gten,EqualN,unequaln] then
+          Second_CmpBoolean
         else
-          second_addboolean;
+          Second_AddBoolean;
       end;
 
 
-    procedure TCGAddNode.second_addboolean;
+    procedure TCGAddNode.Second_AddBoolean;
       var
-        cgop    : TOpCG;
-        TrueLabel, FalseLabel : TAsmLabel;
-        oldflowcontrol : TFlowControl;
+        lCGOp    : TOpCG;
+        lTrueLabel, lFalseLabel : TAsmLabel;
+        lOldFlowControl : TFlowControl;
       begin
         { And,Or will only evaluate from left to right only the
           needed nodes unless full boolean evaluation is enabled }
-        if (nodetype in [orn,andn]) and
+        if (NodeType in [orn,andn]) and
            (not(cs_full_boolean_eval in CurrentSettings.LocalSwitches) or
-            (anf_short_bool in addnodeflags)) then
+            (anf_short_bool in AddNodeFlags)) then
           begin
-            case nodetype of
+            case NodeType of
               andn :
                 begin
-                   SecondPass(left);
-                   hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,left);
-                   hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.TrueLabel);
-                   CurrentAsmData.getjumplabel(TrueLabel);
-                   Location_Reset_Jump(location,TrueLabel,left.Location.FalseLabel);
+                   SecondPass(Left);
+                   hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,Left);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.TrueLabel);
+                   CurrentAsmData.getjumplabel(lTrueLabel);
+                   Location_Reset_Jump(Location,lTrueLabel,Left.Location.FalseLabel);
                 end;
               orn :
                 begin
-                   SecondPass(left);
-                   hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,left);
-                   hlcg.A_Label(CurrentAsmData.CurrAsmList,left.Location.FalseLabel);
-                   CurrentAsmData.getjumplabel(FalseLabel);
-                   Location_Reset_Jump(location,left.Location.TrueLabel,FalseLabel);
+                   SecondPass(Left);
+                   hlcg.MakeToJumpBool(CurrentAsmData.CurrAsmList,Left);
+                   hlcg.A_Label(CurrentAsmData.CurrAsmList,Left.Location.FalseLabel);
+                   CurrentAsmData.getjumplabel(lFalseLabel);
+                   Location_Reset_Jump(Location,Left.Location.TrueLabel,lFalseLabel);
                 end;
               else
                 InternalError(200307044);
             end;
             { these jumps mean we're now in a flow control construct }
-            oldflowcontrol:=flowcontrol;
+            lOldFlowControl:=flowcontrol;
             include(flowcontrol,fc_inflowcontrol);
 
-            SecondPass(right);
+            SecondPass(Right);
             { jump to the same labels as the left side, since the andn/orn
               merges the results of left and right }
-            hlcg.MakeToJumpBoolLabels(CurrentAsmData.CurrAsmList,right,location.TrueLabel,location.FalseLabel);
+            hlcg.MakeToJumpBoolLabels(CurrentAsmData.CurrAsmList,Right,Location.TrueLabel,Location.FalseLabel);
 
-            flowcontrol:=oldflowcontrol+(flowcontrol-[fc_inflowcontrol]);
+            flowcontrol:=lOldFlowControl+(flowcontrol-[fc_inflowcontrol]);
           end
         else
           begin
-            pass_left_right;
-            force_reg_left_right(false,true);
-            set_result_location_reg;
+            Pass_Left_Right;
+            Force_Reg_Left_Right(false,true);
+            Set_Result_Location_Reg;
 
-            case nodetype of
+            case NodeType of
               xorn :
-                cgop:=OP_XOR;
+                lCGOp:=OP_XOR;
               orn :
-                cgop:=OP_OR;
+                lCGOp:=OP_OR;
               andn :
-                cgop:=OP_AND;
+                lCGOp:=OP_AND;
               else
                  InternalError(200203247);
             end;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-            if right.Location.Size in [OS_64,OS_S64] then
+            if Right.Location.Size in [OS_64,OS_S64] then
               begin
-                if right.Location.Loc <> LOC_CONSTANT then
-                  cg64.A_Op64_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,location.Size,
-                     left.Location.Register64,right.Location.Register64,
-                     location.Register64)
+                if Right.Location.Loc <> LOC_CONSTANT then
+                  cg64.A_Op64_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,
+                     Left.Location.Register64,Right.Location.Register64,
+                     Location.Register64)
                 else
-                  cg64.A_Op64_Const_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,location.Size,
-                     right.Location.Value,left.Location.Register64,
-                     location.Register64);
+                  cg64.A_Op64_Const_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,
+                     Right.Location.Value,Left.Location.Register64,
+                     Location.Register64);
               end
             else
 {$endif cpu64bitalu}
               begin
-                if right.Location.Loc <> LOC_CONSTANT then
-                  hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                     left.Location.Register,right.Location.Register,
-                     location.Register)
+                if Right.Location.Loc <> LOC_CONSTANT then
+                  hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                     Left.Location.Register,Right.Location.Register,
+                     Location.Register)
                 else
-                  hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
-                     right.Location.Value,left.Location.Register,
-                     location.Register);
+                  hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+                     Right.Location.Value,Left.Location.Register,
+                     Location.Register);
               end;
          end;
       end;
@@ -467,46 +467,46 @@ interface
                                 64-bit
 *****************************************************************************}
 
-    procedure TCGAddNode.second_op64bit;
+    procedure TCGAddNode.Second_Op64Bit;
       begin
-        if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
-          second_cmp64bit
+        if NodeType in [ltn,lten,gtn,gten,EqualN,unequaln] then
+          Second_Cmp64Bit
         else
-          second_add64bit;
+          Second_Add64Bit;
       end;
 
 
-    procedure TCGAddNode.second_add64bit;
+    procedure TCGAddNode.Second_Add64Bit;
       var
-        op         : TOpCG;
-        checkoverflow : boolean;
-        ovloc : TLocation;
+        lCGOp         : TOpCG;
+        lCheckOverflow : Boolean;
+        lOverflowLoc : TLocation;
       begin
-        ovloc.Loc:=LOC_VOID;
+        lOverflowLoc.Loc:=LOC_VOID;
 
-        pass_left_right;
-        force_reg_left_right(false,true);
-        set_result_location_reg;
+        Pass_Left_Right;
+        Force_Reg_Left_Right(false,true);
+        Set_Result_Location_Reg;
 
         { assume no overflow checking is required }
-        checkoverflow := false;
-        case nodetype of
+        lCheckOverflow := false;
+        case NodeType of
           addn :
              begin
-                op:=OP_ADD;
-                checkoverflow:=true;
+                lCGOp:=OP_ADD;
+                lCheckOverflow:=true;
              end;
           subn :
              begin
-                op:=OP_SUB;
-                checkoverflow:=true;
+                lCGOp:=OP_SUB;
+                lCheckOverflow:=true;
              end;
           xorn:
-            op:=OP_XOR;
+            lCGOp:=OP_XOR;
           orn:
-            op:=OP_OR;
+            lCGOp:=OP_OR;
           andn:
-            op:=OP_AND;
+            lCGOp:=OP_AND;
           muln:
             begin
               { should be handled in pass_1 (JM) }
@@ -516,92 +516,92 @@ interface
             InternalError(2002072705);
         end;
 
-        checkoverflow:=
-          checkoverflow and
-          needoverflowcheck;
+        lCheckOverflow:=
+          lCheckOverflow and
+          NeedOverflowCheck;
 
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
-        case nodetype of
+        case NodeType of
           xorn,orn,andn,addn:
             begin
-              if (right.Location.Loc = LOC_CONSTANT) then
-                hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,resultdef,right.Location.Value,
-                  left.Location.Register,location.Register)
+              if (Right.Location.Loc = LOC_CONSTANT) then
+                hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,Right.Location.Value,
+                  Left.Location.Register,Location.Register)
               else
-                hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,resultdef,right.Location.Register,
-                  left.Location.Register,location.Register);
+                hlcg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,Right.Location.Register,
+                  Left.Location.Register,Location.Register);
             end;
           subn:
             begin
-              if (nf_swapped in flags) then
-                swapleftright;
+              if (nf_swapped in Flags) then
+                SwapLeftRight;
 
-              if left.Location.Loc <> LOC_CONSTANT then
+              if Left.Location.Loc <> LOC_CONSTANT then
                 begin
-                  if right.Location.Loc <> LOC_CONSTANT then
+                  if Right.Location.Loc <> LOC_CONSTANT then
                     // reg64 - reg64
-                    hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                      right.Location.Register,left.Location.Register,location.Register,
-                      checkoverflow,ovloc)
+                    hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                      Right.Location.Register,Left.Location.Register,Location.Register,
+                      lCheckOverflow,lOverflowLoc)
                   else
                     // reg64 - const64
-                    hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                      right.Location.Value,left.Location.Register,location.Register,
-                      checkoverflow,ovloc);
+                    hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                      Right.Location.Value,Left.Location.Register,Location.Register,
+                      lCheckOverflow,lOverflowLoc);
                 end
               else
                 begin
                   // const64 - reg64
-                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-                  hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                    right.Location.Register,left.Location.Register,location.Register,
-                    checkoverflow,ovloc);
+                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+                  hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                    Right.Location.Register,Left.Location.Register,Location.Register,
+                    lCheckOverflow,lOverflowLoc);
                 end;
             end;
           else
             InternalError(2002072803);
         end;
 {$else cpu64bitalu or cpuhighleveltarget}
-        case nodetype of
+        case NodeType of
           xorn,orn,andn,addn:
             begin
-              if (right.Location.Loc = LOC_CONSTANT) then
-                cg64.A_Op64_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,op,location.Size,right.Location.Value64,
-                  left.Location.Register64,location.Register64,
-                  checkoverflow,ovloc)
+              if (Right.Location.Loc = LOC_CONSTANT) then
+                cg64.A_Op64_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,Right.Location.Value64,
+                  Left.Location.Register64,Location.Register64,
+                  lCheckOverflow,lOverflowLoc)
               else
-                cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,op,location.Size,right.Location.Register64,
-                  left.Location.Register64,location.Register64,
-                  checkoverflow,ovloc);
+                cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,Location.Size,Right.Location.Register64,
+                  Left.Location.Register64,Location.Register64,
+                  lCheckOverflow,lOverflowLoc);
             end;
           subn:
             begin
-              if (nf_swapped in flags) then
-                swapleftright;
+              if (nf_swapped in Flags) then
+                SwapLeftRight;
 
-              if left.Location.Loc <> LOC_CONSTANT then
+              if Left.Location.Loc <> LOC_CONSTANT then
                 begin
-                  if right.Location.Loc <> LOC_CONSTANT then
+                  if Right.Location.Loc <> LOC_CONSTANT then
                     // reg64 - reg64
-                    cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,location.Size,
-                      right.Location.Register64,left.Location.Register64,
-                      location.Register64,
-                      checkoverflow,ovloc)
+                    cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,Location.Size,
+                      Right.Location.Register64,Left.Location.Register64,
+                      Location.Register64,
+                      lCheckOverflow,lOverflowLoc)
                   else
                     // reg64 - const64
-                    cg64.A_Op64_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,location.Size,
-                      right.Location.Value64,left.Location.Register64,
-                      location.Register64,
-                      checkoverflow,ovloc)
+                    cg64.A_Op64_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,Location.Size,
+                      Right.Location.Value64,Left.Location.Register64,
+                      Location.Register64,
+                      lCheckOverflow,lOverflowLoc)
                 end
               else
                 begin
                   // const64 - reg64
-                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-                  cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,location.Size,
-                    right.Location.Register64,left.Location.Register64,
-                    location.Register64,
-                    checkoverflow,ovloc);
+                  hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+                  cg64.A_Op64_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,Location.Size,
+                    Right.Location.Register64,Left.Location.Register64,
+                    Location.Register64,
+                    lCheckOverflow,lOverflowLoc);
                 end;
             end;
           else
@@ -610,8 +610,8 @@ interface
 {$endif cpu64bitalu or cpuhighleveltarget}
 
         { emit overflow check if enabled }
-        if checkoverflow then
-           hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
+        if lCheckOverflow then
+           hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,ResultDef,lOverflowLoc);
       end;
 
 
@@ -619,7 +619,7 @@ interface
                                 Strings
 *****************************************************************************}
 
-    procedure TCGAddNode.second_addstring;
+    procedure TCGAddNode.Second_AddString;
       begin
         { this should already be handled in pass1 }
         InternalError(2002072402);
@@ -630,12 +630,12 @@ interface
                                 Floats
 *****************************************************************************}
 
-    procedure TCGAddNode.second_opfloat;
+    procedure TCGAddNode.Second_OpFloat;
       begin
-        if nodetype in [ltn,lten,gtn,gten,EqualN,unequaln] then
-          second_cmpfloat
+        if NodeType in [ltn,lten,gtn,gten,EqualN,unequaln] then
+          Second_CmpFloat
         else
-          second_addfloat;
+          Second_AddFloat;
       end;
 
 
@@ -643,131 +643,131 @@ interface
                                 Ordinals
 *****************************************************************************}
 
-    procedure TCGAddNode.second_opordinal;
+    procedure TCGAddNode.Second_OpOrdinal;
       begin
-         if (nodetype in [ltn,lten,gtn,gten,EqualN,unequaln]) then
-           second_cmpordinal
+         if (NodeType in [ltn,lten,gtn,gten,EqualN,unequaln]) then
+           Second_CmpOrdinal
          else
-           second_addordinal;
+           Second_AddOrdinal;
       end;
 
 
-    procedure TCGAddNode.second_addordinal;
+    procedure TCGAddNode.Second_AddOrdinal;
       var
-        unsigned,
-        checkoverflow : boolean;
-        cgop   : TOpCG;
-        tmpreg : TRegister;
-        ovloc : TLocation;
+        lUnsigned,
+        lCheckOverflow : Boolean;
+        lCGOp   : TOpCG;
+        lTempReg : TRegister;
+        lOverflowLoc : TLocation;
       begin
-        ovloc.Loc:=LOC_VOID;
+        lOverflowLoc.Loc:=LOC_VOID;
 
-        pass_left_right;
-        force_reg_left_right(true,true);
-        set_result_location_reg;
+        Pass_Left_Right;
+        Force_Reg_Left_Right(true,true);
+        Set_Result_Location_Reg;
 
         { determine if the comparison will be unsigned }
-        unsigned:=not(Is_Signed(left.resultdef)) or
-                    not(Is_Signed(right.resultdef));
+        lUnsigned:=not(Is_Signed(Left.ResultDef)) or
+                    not(Is_Signed(Right.ResultDef));
 
         { assume no overflow checking is require }
-        checkoverflow := false;
+        lCheckOverflow := false;
 
-        case nodetype of
+        case NodeType of
           addn:
             begin
-              cgop:=OP_ADD;
-              checkoverflow:=true;
+              lCGOp:=OP_ADD;
+              lCheckOverflow:=true;
             end;
           xorn :
             begin
-              cgop:=OP_XOR;
+              lCGOp:=OP_XOR;
             end;
           orn :
             begin
-              cgop:=OP_OR;
+              lCGOp:=OP_OR;
             end;
           andn:
             begin
-              cgop:=OP_AND;
+              lCGOp:=OP_AND;
             end;
           muln:
             begin
-              checkoverflow:=true;
-              if unsigned then
-                cgop:=OP_MUL
+              lCheckOverflow:=true;
+              if lUnsigned then
+                lCGOp:=OP_MUL
               else
-                cgop:=OP_IMUL;
+                lCGOp:=OP_IMUL;
             end;
           subn :
             begin
-              checkoverflow:=true;
-              cgop:=OP_SUB;
+              lCheckOverflow:=true;
+              lCGOp:=OP_SUB;
             end;
           else
             InternalError(2013120104);
         end;
 
-       checkoverflow:=
-         checkoverflow and
-          (left.resultdef.typ<>pointerdef) and
-          (right.resultdef.typ<>pointerdef) and
-          (cs_check_overflow in CurrentSettings.LocalSwitches) and not(nf_internal in flags);
+       lCheckOverflow:=
+         lCheckOverflow and
+          (Left.ResultDef.typ<>pointerdef) and
+          (Right.ResultDef.typ<>pointerdef) and
+          (cs_check_overflow in CurrentSettings.LocalSwitches) and not(nf_internal in Flags);
 
-       if nodetype<>subn then
+       if NodeType<>subn then
         begin
-          if (right.Location.Loc<>LOC_CONSTANT) then
-            hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
-               left.Location.Register,right.Location.Register,
-               location.Register,checkoverflow,ovloc)
+          if (Right.Location.Loc<>LOC_CONSTANT) then
+            hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+               Left.Location.Register,Right.Location.Register,
+               Location.Register,lCheckOverflow,lOverflowLoc)
           else
-            hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
-               right.Location.Value,left.Location.Register,
-               location.Register,checkoverflow,ovloc);
+            hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,lCGOp,ResultDef,
+               Right.Location.Value,Left.Location.Register,
+               Location.Register,lCheckOverflow,lOverflowLoc);
         end
       else  { subtract is a special case since its not commutative }
         begin
-          if (nf_swapped in flags) then
-            swapleftright;
-          if left.Location.Loc<>LOC_CONSTANT then
+          if (nf_swapped in Flags) then
+            SwapLeftRight;
+          if Left.Location.Loc<>LOC_CONSTANT then
             begin
-              if right.Location.Loc<>LOC_CONSTANT then
-                hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                    right.Location.Register,left.Location.Register,
-                    location.Register,checkoverflow,ovloc)
+              if Right.Location.Loc<>LOC_CONSTANT then
+                hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                    Right.Location.Register,Left.Location.Register,
+                    Location.Register,lCheckOverflow,lOverflowLoc)
               else
-                hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                  right.Location.Value,left.Location.Register,
-                  location.Register,checkoverflow,ovloc);
+                hlcg.A_Op_Const_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                  Right.Location.Value,Left.Location.Register,
+                  Location.Register,lCheckOverflow,lOverflowLoc);
             end
           else
             begin
-              tmpreg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,resultdef);
-              hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,resultdef,
-                left.Location.Value,tmpreg);
-              hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
-                right.Location.Register,tmpreg,location.Register,checkoverflow,ovloc);
+              lTempReg:=hlcg.GetIntRegister(CurrentAsmData.CurrAsmList,ResultDef);
+              hlcg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,ResultDef,
+                Left.Location.Value,lTempReg);
+              hlcg.A_Op_Reg_Reg_Reg_CheckOverflow(CurrentAsmData.CurrAsmList,OP_SUB,ResultDef,
+                Right.Location.Register,lTempReg,Location.Register,lCheckOverflow,lOverflowLoc);
             end;
         end;
 
         { emit overflow check if required }
-        if checkoverflow then
-          hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
+        if lCheckOverflow then
+          hlcg.G_OverflowCheck_Loc(CurrentAsmData.CurrAsmList,Location,ResultDef,lOverflowLoc);
       end;
 
 
-    procedure TCGAddNode.second_cmpboolean;
+    procedure TCGAddNode.Second_CmpBoolean;
       begin
-        second_cmpordinal;
+        Second_CmpOrdinal;
       end;
 
-    function TCGAddNode.needoverflowcheck: boolean;
+    function TCGAddNode.NeedOverflowCheck: Boolean;
       begin
-        result:=
+        Result:=
           (cs_check_overflow in CurrentSettings.LocalSwitches) and
-          (left.resultdef.typ<>pointerdef) and
-          (right.resultdef.typ<>pointerdef) and
-          not(nf_internal in flags);
+          (Left.ResultDef.typ<>pointerdef) and
+          (Right.ResultDef.typ<>pointerdef) and
+          not(nf_internal in Flags);
       end;
 
 
@@ -775,50 +775,50 @@ interface
                                 pass_generate_code;
 *****************************************************************************}
 
-    procedure TCGAddNode.pass_generate_code;
+    procedure TCGAddNode.Pass_Generate_Code;
       begin
-        case left.resultdef.typ of
+        case Left.ResultDef.typ of
           orddef :
             begin
               { handling boolean expressions }
-              if Is_Boolean(left.resultdef) and
-                 Is_Boolean(right.resultdef) then
-                second_opboolean
+              if Is_Boolean(Left.ResultDef) and
+                 Is_Boolean(Right.ResultDef) then
+                Second_OpBoolean
 {$ifndef cpu64bitalu}
               { 64bit operations }
-              else if Is_64Bit(left.resultdef) then
-                second_op64bit
+              else if Is_64Bit(Left.ResultDef) then
+                Second_Op64Bit
 {$endif cpu64bitalu}
               else
-                second_opordinal;
+                Second_OpOrdinal;
             end;
           stringdef :
             begin
-              second_addstring;
+              Second_AddString;
             end;
           setdef :
             begin
-              if Is_SmallSet(TSetDef(left.resultdef)) then
-                second_opsmallset
+              if Is_SmallSet(TSetDef(Left.ResultDef)) then
+                Second_OpSmallSet
               else
                 InternalError(200109041);
             end;
           arraydef :
             begin
               { support dynarr=nil }
-              if Is_Dynamic_Array(left.resultdef) then
-                second_opordinal
+              if Is_Dynamic_Array(Left.ResultDef) then
+                Second_OpOrdinal
               else
                 if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
-                   Is_Vector(left.resultdef) then
-                  second_opvector
+                   Is_Vector(Left.ResultDef) then
+                  Second_OpVector
               else
                 InternalError(200306016);
             end;
           floatdef :
-            second_opfloat;
+            Second_OpFloat;
           else
-            second_opordinal;
+            Second_OpOrdinal;
         end;
       end;
 

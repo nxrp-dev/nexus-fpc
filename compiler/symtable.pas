@@ -2754,11 +2754,11 @@ implementation
              if ProcOwner.SymTableType=GlobalSymTable then
                begin
                  if Sym.Typ=ProcSym then
-                   CurrentProcInfo.add_local_ref_def(Def)
+                   CurrentProcInfo.Add_Local_Ref_Def(Def)
                  else if Sym.Typ=StaticVarSym then
-                   CurrentProcInfo.add_local_ref_sym(Sym)
+                   CurrentProcInfo.Add_Local_Ref_Sym(Sym)
                  else
-                   CurrentProcInfo.add_local_ref_sym(TLocalVarSym(Sym).DefaultConstSym);
+                   CurrentProcInfo.Add_Local_Ref_Sym(TLocalVarSym(Sym).DefaultConstSym);
                end;
            end;
        end;

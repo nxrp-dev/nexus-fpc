@@ -64,7 +64,7 @@ implementation
           CurrentFilePos:=p.fileinfo;
           CurrentSettings.LocalSwitches:=p.LocalSwitches;
           status.verbosity:=p.verbosity;
-          hp:=p.pass_typecheck;
+          hp:=p.Pass_TypeCheck;
           { should the node be replaced? }
           if Assigned(hp) then
             begin
@@ -182,11 +182,11 @@ implementation
                    CurrentSettings.LocalSwitches:=p.LocalSwitches;
                    status.verbosity:=p.verbosity;
                    { first pass }
-                   hp:=p.pass_1;
+                   hp:=p.Pass_1;
                    { inlining happens in pass_1 and can cause new }
                    { simplify opportunities                       }
                    if not Assigned(hp) then
-                     hp:=p.simplify(true);
+                     hp:=p.Simplify(true);
                    { should the node be replaced? }
                    if Assigned(hp) then
                      begin
@@ -204,7 +204,7 @@ implementation
              if not(tnf_error in p.transientflags) then
                begin
                  if (p.expectloc=LOC_INVALID) then
-                   Comment(VWarning,'Expectloc is not set in firstpass: '+nodetype2str[p.nodetype]);
+                   Comment(VWarning,'Expectloc is not set in firstpass: '+NodeType2Str[p.nodetype]);
                end;
 {$endif EXTDEBUG}
              CodeGenError:=CodeGenError or oldcodegenerror;

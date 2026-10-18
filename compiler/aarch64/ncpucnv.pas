@@ -30,8 +30,8 @@ interface
     type
       TAArch64TypeConvNode = class(TCGTypeConvNode)
         protected
-         function typecheck_int_to_real: TNode; override;
-         function first_int_to_real: TNode; override;
+         function TypeCheck_Int_To_Real: TNode; override;
+         function First_Int_To_Real: TNode; override;
 
         { procedure second_int_to_int;override; }
         { procedure second_string_to_string;override; }
@@ -41,12 +41,12 @@ interface
         { procedure second_pointer_to_array;override; }
         { procedure second_chararray_to_string;override; }
         { procedure second_char_to_string;override; }
-         procedure second_int_to_real;override;
+         procedure Second_Int_To_Real;override;
         { procedure second_real_to_real;override; }
         { procedure second_cord_to_pointer;override; }
         { procedure second_proc_to_procvar;override; }
         { procedure second_bool_to_int;override; }
-         procedure second_int_to_bool;override;
+         procedure Second_Int_To_Bool;override;
         { procedure second_load_smallset;override;  }
         { procedure second_ansistring_to_pchar;override; }
         { procedure second_pchar_to_string;override; }
@@ -70,7 +70,7 @@ implementation
                              FirstTypeConv
 *****************************************************************************}
 
-  function TAArch64TypeConvNode.typecheck_int_to_real: TNode;
+  function TAArch64TypeConvNode.TypeCheck_Int_To_Real: TNode;
     begin
       { aarch64 supports converting everything to floating point, even fixed
         point! Unfortunately, it only supports fixed point with a power-of-2
@@ -78,34 +78,34 @@ implementation
 
         Generate the division by 10000 via nodes so the 10000.0 constant can
         be reused. }
-      if Is_Currency(resultdef) and
-         not(nf_is_currency in flags) then
+      if Is_Currency(ResultDef) and
+         not(nf_is_currency in Flags) then
         begin
           { convert the equivalent int64 value to double without conversion
             (internal typecast -> will set nf_is_currency flag) }
-          result:=CTypeConvNode.Create_Internal(left,S64FloatType);
+          Result:=CTypeConvNode.Create_Internal(Left,S64FloatType);
           { turn into currency with conversion, which will divide by 10000
             (regular typecast) }
-          result:=CTypeConvNode.create(result,S64CurrencyType);
+          Result:=CTypeConvNode.Create(Result,S64CurrencyType);
           exit;
         end;
       { The only other thing we have to take care of: convert values < 32 bit
         to 32 bit }
-      if left.resultdef.Size<4 then
+      if Left.ResultDef.Size<4 then
         begin
-          if Is_Signed(left.resultdef) then
-            inserttypeconv(left,S32IntType)
+          if Is_Signed(Left.ResultDef) then
+            InsertTypeConv(Left,S32IntType)
           else
-            inserttypeconv(left,U32IntType)
+            InsertTypeConv(Left,U32IntType)
         end;
-      result:=inherited;
+      Result:=inherited;
     end;
 
 
-  function TAArch64TypeConvNode.first_int_to_real: TNode;
+  function TAArch64TypeConvNode.First_Int_To_Real: TNode;
     begin
-      result:=nil;
-      expectloc:=LOC_MMREGISTER;
+      Result:=nil;
+      ExpectLoc:=LOC_MMREGISTER;
     end;
 
 
@@ -113,38 +113,38 @@ implementation
                              SecondTypeConv
 *****************************************************************************}
 
-  procedure TAArch64TypeConvNode.second_int_to_real;
+  procedure TAArch64TypeConvNode.Second_Int_To_Real;
     var
-      op: TAsmOp;
+      lAsmOp: TAsmOp;
     begin
-      Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-      location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-      hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-      if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
+      Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+      Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+      hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+      if not(Left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
         InternalError(2014120401);
-      case left.Location.Size of
+      case Left.Location.Size of
         OS_32,
         OS_64:
-          op:=A_UCVTF;
+          lAsmOp:=A_UCVTF;
         OS_S32,
         OS_S64,
         { for currency and comp }
         OS_F64:
-          op:=A_SCVTF;
+          lAsmOp:=A_SCVTF;
         else
           InternalError(2014120402);
       end;
-      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,location.Register,left.Location.Register));
+      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(lAsmOp,Location.Register,Left.Location.Register));
       { no scaling for currency, that's handled in pass_typecheck }
     end;
 
 
-  procedure TAArch64TypeConvNode.second_int_to_bool;
+  procedure TAArch64TypeConvNode.Second_Int_To_Bool;
     var
-      ResFlags: TResFlags;
+      lResFlags: TResFlags;
     begin
-      if (nf_explicit in flags) and
-         not(left.expectloc in [LOC_FLAGS,LOC_JUMP]) then
+      if (nf_explicit in Flags) and
+         not(Left.ExpectLoc in [LOC_FLAGS,LOC_JUMP]) then
         begin
           inherited;
           exit;
@@ -153,11 +153,11 @@ implementation
       { can't use the generic code, as it assumes that OP_OR automatically sets
         the flags. We can also do things more efficiently directly }
 
-      SecondPass(left);
+      SecondPass(Left);
       if CodeGenError then
        exit;
 
-      case left.Location.Loc of
+      case Left.Location.Loc of
         LOC_SUBSETREG,
         LOC_CSUBSETREG,
         LOC_SUBSETREF,
@@ -168,27 +168,27 @@ implementation
         LOC_CREGISTER,
         LOC_JUMP:
           begin
-             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,true);
-             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,left.Location.Register,0));
-             ResFlags:=F_NE;
+             hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,true);
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,Left.Location.Register,0));
+             lResFlags:=F_NE;
           end;
         LOC_FLAGS :
-          ResFlags:=left.Location.ResFlags;
+          lResFlags:=Left.Location.ResFlags;
         else
           InternalError(2014122902);
       end;
       { load flags to register }
-      Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
-      location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,location.Size);
-      if Is_CBool(resultdef) then
+      Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
+      Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,Location.Size);
+      if Is_CBool(ResultDef) then
         begin
-          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_cond(A_CSETM,location.Register,flags_to_cond(ResFlags)));
+          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_cond(A_CSETM,Location.Register,flags_to_cond(lResFlags)));
             { truncate? (in case cbools are ever made unsigned) }
-            if resultdef.Size<4 then
-              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,location.Size,location.Register,location.Register);
+            if ResultDef.Size<4 then
+              cg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,OS_32,Location.Size,Location.Register,Location.Register);
         end
       else
-        cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,location.Size,ResFlags,location.Register);
+        cg.G_Flags2Reg(CurrentAsmData.CurrAsmList,Location.Size,lResFlags,Location.Register);
       cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
     end;
 

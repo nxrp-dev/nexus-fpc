@@ -30,12 +30,12 @@ interface
 
     type
       TI386ModDivNode = class(TX86ModDivNode)
-         procedure pass_generate_code;override;
+         procedure Pass_Generate_Code;override;
       end;
 
       TI386ShlShrNode = class(TX86ShlShrNode)
-         procedure second_64bit;override;
-         function first_shlshr64bitint: TNode; override;
+         procedure Second_64Bit;override;
+         function First_ShlShr64BitInt: TNode; override;
       end;
 
       TI386UnaryMinusNode = class(TX86UnaryMinusNode)
@@ -63,47 +63,47 @@ implementation
 
 
 
-   procedure TI386ModDivNode.pass_generate_code;
+   procedure TI386ModDivNode.Pass_Generate_Code;
       var
-        hreg1:TRegister;
-        power:LongInt;
-        hl:TAsmLabel;
+        lReg1:TRegister;
+        lPower:LongInt;
+        lLabel:TAsmLabel;
       begin
-        if Is_64BitInt(resultdef) then
+        if Is_64BitInt(ResultDef) then
           { should be handled in pass_1 (JM) }
           InternalError(2001090507);
 
-        if (nodetype=divn) and (right.nodetype=ordconstn) and
-          Is_Signed(left.resultdef) and
-          IsPowerOf2(TOrdConstNode(right).Value.svalue,power) and
+        if (NodeType=divn) and (Right.NodeType=ordconstn) and
+          Is_Signed(Left.ResultDef) and
+          IsPowerOf2(TOrdConstNode(Right).Value.svalue,lPower) and
           ((CurrentSettings.OptimizeCPUType = cpu_386) or
            (cs_opt_size in CurrentSettings.OptimizerSwitches)) then
           begin
             { signed divide-by-power-of-two optimized for size }
-            SecondPass(left);
+            SecondPass(Left);
             if CodeGenError then
               exit;
-            SecondPass(right);
+            SecondPass(Right);
             if CodeGenError then
               exit;
-            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
-            hreg1:=left.Location.Register;
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
+            lReg1:=Left.Location.Register;
             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-            emit_reg_reg(A_TEST,S_L,hreg1,hreg1);
-            CurrentAsmData.getjumplabel(hl);
-            cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NS,hl);
+            emit_reg_reg(A_TEST,S_L,lReg1,lReg1);
+            CurrentAsmData.getjumplabel(lLabel);
+            cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NS,lLabel);
             cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-            if power=1 then
-              emit_reg(A_INC,S_L,hreg1)
+            if lPower=1 then
+              emit_reg(A_INC,S_L,lReg1)
             else
-              emit_const_reg(A_ADD,S_L,TOrdConstNode(right).Value.svalue-1,hreg1);
-            cg.A_Label(CurrentAsmData.CurrAsmList,hl);
-            emit_const_reg(A_SAR,S_L,power,hreg1);
-            Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
-            location.Register:=hreg1;
+              emit_const_reg(A_ADD,S_L,TOrdConstNode(Right).Value.svalue-1,lReg1);
+            cg.A_Label(CurrentAsmData.CurrAsmList,lLabel);
+            emit_const_reg(A_SAR,S_L,lPower,lReg1);
+            Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
+            Location.Register:=lReg1;
           end
         else
-          inherited pass_generate_code;
+          inherited Pass_Generate_Code;
       end;
 
 
@@ -112,81 +112,81 @@ implementation
 *****************************************************************************}
 
 
-    function TI386ShlShrNode.first_shlshr64bitint: TNode;
+    function TI386ShlShrNode.First_ShlShr64BitInt: TNode;
       begin
-        result := nil;
+        Result := nil;
       end;
 
-    procedure TI386ShlShrNode.second_64bit;
+    procedure TI386ShlShrNode.Second_64Bit;
       var
-        hreg64hi,hreg64lo:TRegister;
-        v : TConstExprInt;
-        l2,l3:TAsmLabel;
+        lReg64Hi,lReg64Lo:TRegister;
+        lValue : TConstExprInt;
+        lLabel2,lLabel3:TAsmLabel;
       begin
         { shifting by a constant directly coded: }
-        if (right.nodetype=ordconstn) then
+        if (Right.NodeType=ordconstn) then
           begin
-            v:=TOrdConstNode(right).Value and 63;
+            lValue:=TOrdConstNode(Right).Value and 63;
 
             { load left operator in a register }
-            if not(left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) or
-              ((left.Location.Loc=LOC_CREGISTER) and ((v.svalue and 31)<>0)) then
-              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
-            hreg64hi:=left.Location.Register64.RegHi;
-            hreg64lo:=left.Location.Register64.RegLo;
+            if not(Left.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) or
+              ((Left.Location.Loc=LOC_CREGISTER) and ((lValue.svalue and 31)<>0)) then
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
+            lReg64Hi:=Left.Location.Register64.RegHi;
+            lReg64Lo:=Left.Location.Register64.RegLo;
 
-            Location_Reset(location,left.Location.Loc,Def_CGSize(resultdef));
-            if v>31 then
+            Location_Reset(Location,Left.Location.Loc,Def_CGSize(ResultDef));
+            if lValue>31 then
               begin
-                if nodetype=shln then
+                if NodeType=shln then
                   begin
-                    hreg64hi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
-                    emit_reg_reg(A_XOR,S_L,hreg64hi,hreg64hi);
-                    if ((v and 31) <> 0) then
-                      emit_const_reg(A_SHL,S_L,v.svalue and 31,hreg64lo);
+                    lReg64Hi:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                    emit_reg_reg(A_XOR,S_L,lReg64Hi,lReg64Hi);
+                    if ((lValue and 31) <> 0) then
+                      emit_const_reg(A_SHL,S_L,lValue.svalue and 31,lReg64Lo);
                   end
                 else
                   begin
-                    hreg64lo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
-                    emit_reg_reg(A_XOR,S_L,hreg64lo,hreg64lo);
-                    if ((v and 31) <> 0) then
-                      emit_const_reg(A_SHR,S_L,v.svalue and 31,hreg64hi);
+                    lReg64Lo:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_32);
+                    emit_reg_reg(A_XOR,S_L,lReg64Lo,lReg64Lo);
+                    if ((lValue and 31) <> 0) then
+                      emit_const_reg(A_SHR,S_L,lValue.svalue and 31,lReg64Hi);
                   end;
-                location.Register64.RegHi:=hreg64lo;
-                location.Register64.RegLo:=hreg64hi;
+                Location.Register64.RegHi:=lReg64Lo;
+                Location.Register64.RegLo:=lReg64Hi;
               end
             else
               begin
-                if (v.svalue and 31)<>0 then
+                if (lValue.svalue and 31)<>0 then
                   begin
-                    if nodetype=shln then
+                    if NodeType=shln then
                       begin
-                        emit_const_reg_reg(A_SHLD,S_L,v.svalue and 31,hreg64lo,hreg64hi);
-                        emit_const_reg(A_SHL,S_L,v.svalue and 31,hreg64lo);
+                        emit_const_reg_reg(A_SHLD,S_L,lValue.svalue and 31,lReg64Lo,lReg64Hi);
+                        emit_const_reg(A_SHL,S_L,lValue.svalue and 31,lReg64Lo);
                       end
                     else
                       begin
-                        emit_const_reg_reg(A_SHRD,S_L,v.svalue and 31,hreg64hi,hreg64lo);
-                        emit_const_reg(A_SHR,S_L,v.svalue and 31,hreg64hi);
+                        emit_const_reg_reg(A_SHRD,S_L,lValue.svalue and 31,lReg64Hi,lReg64Lo);
+                        emit_const_reg(A_SHR,S_L,lValue.svalue and 31,lReg64Hi);
                       end;
                   end;
-                location.Register64.RegLo:=hreg64lo;
-                location.Register64.RegHi:=hreg64hi;
+                Location.Register64.RegLo:=lReg64Lo;
+                Location.Register64.RegHi:=lReg64Hi;
               end;
           end
         else
           begin
-            Location_Reset(location,LOC_REGISTER,Def_CGSize(resultdef));
+            Location_Reset(Location,LOC_REGISTER,Def_CGSize(ResultDef));
 
             { load left operator in a register }
-            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,resultdef,false);
+            hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,ResultDef,false);
 
-            hreg64hi:=left.Location.Register64.RegHi;
-            hreg64lo:=left.Location.Register64.RegLo;
+            lReg64Hi:=Left.Location.Register64.RegHi;
+            lReg64Lo:=Left.Location.Register64.RegLo;
 
             { load right operators in a register }
             cg.GetCPURegister(CurrentAsmData.CurrAsmList,NR_ECX);
-            hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,right.resultdef,U32IntType,right.Location,NR_ECX);
+            hlcg.A_Load_Loc_Reg(CurrentAsmData.CurrAsmList,Right.ResultDef,U32IntType,Right.Location,NR_ECX);
 
             { left operator is already in a register }
             { hence are both in a register }
@@ -194,37 +194,37 @@ implementation
 
             { the damned shift instructions work only til a count of 32 }
             { so we've to do some tricks here                           }
-            CurrentAsmData.getjumplabel(l2);
-            CurrentAsmData.getjumplabel(l3);
+            CurrentAsmData.getjumplabel(lLabel2);
+            CurrentAsmData.getjumplabel(lLabel3);
             cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             emit_const_reg(A_TEST,S_B,32,NR_CL);
-            cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_E,l2);
+            cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_E,lLabel2);
             cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-            if nodetype=shln then
+            if NodeType=shln then
               begin
-                emit_reg_reg(A_SHL,S_L,NR_CL,hreg64lo);
-                emit_reg_reg(A_MOV,S_L,hreg64lo,hreg64hi);
-                emit_reg_reg(A_XOR,S_L,hreg64lo,hreg64lo);
-                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,l3);
-                cg.A_Label(CurrentAsmData.CurrAsmList,l2);
-                emit_reg_reg_reg(A_SHLD,S_L,NR_CL,hreg64lo,hreg64hi);
-                emit_reg_reg(A_SHL,S_L,NR_CL,hreg64lo);
+                emit_reg_reg(A_SHL,S_L,NR_CL,lReg64Lo);
+                emit_reg_reg(A_MOV,S_L,lReg64Lo,lReg64Hi);
+                emit_reg_reg(A_XOR,S_L,lReg64Lo,lReg64Lo);
+                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lLabel3);
+                cg.A_Label(CurrentAsmData.CurrAsmList,lLabel2);
+                emit_reg_reg_reg(A_SHLD,S_L,NR_CL,lReg64Lo,lReg64Hi);
+                emit_reg_reg(A_SHL,S_L,NR_CL,lReg64Lo);
               end
             else
               begin
-                emit_reg_reg(A_SHR,S_L,NR_CL,hreg64hi);
-                emit_reg_reg(A_MOV,S_L,hreg64hi,hreg64lo);
-                emit_reg_reg(A_XOR,S_L,hreg64hi,hreg64hi);
-                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,l3);
-                cg.A_Label(CurrentAsmData.CurrAsmList,l2);
-                emit_reg_reg_reg(A_SHRD,S_L,NR_CL,hreg64hi,hreg64lo);
-                emit_reg_reg(A_SHR,S_L,NR_CL,hreg64hi);
+                emit_reg_reg(A_SHR,S_L,NR_CL,lReg64Hi);
+                emit_reg_reg(A_MOV,S_L,lReg64Hi,lReg64Lo);
+                emit_reg_reg(A_XOR,S_L,lReg64Hi,lReg64Hi);
+                cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lLabel3);
+                cg.A_Label(CurrentAsmData.CurrAsmList,lLabel2);
+                emit_reg_reg_reg(A_SHRD,S_L,NR_CL,lReg64Hi,lReg64Lo);
+                emit_reg_reg(A_SHR,S_L,NR_CL,lReg64Hi);
               end;
-            cg.A_Label(CurrentAsmData.CurrAsmList,l3);
+            cg.A_Label(CurrentAsmData.CurrAsmList,lLabel3);
 
             cg.UngetCPURegister(CurrentAsmData.CurrAsmList,NR_ECX);
-            location.Register64.RegLo:=hreg64lo;
-            location.Register64.RegHi:=hreg64hi;
+            Location.Register64.RegLo:=lReg64Lo;
+            Location.Register64.RegHi:=lReg64Hi;
           end;
       end;
 

@@ -505,7 +505,7 @@ implementation
               inc(currp);
             SetLength(s,currp-startp);
             move(syms[startp],s[1],currp-startp);
-            arsym:=TArSymbol.create(ArSymbols,s);
+            arsym:=TArSymbol.Create(ArSymbols,s);
             arsym.MemberPos:=lsb2msb(relocs[relocidx]);
             inc(currp);
             if currp>endp then

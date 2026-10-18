@@ -63,7 +63,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `rtl-objpas` | — | Sources in `src/inc` and platform directories; CPU-specific includes. |
 | `univint` (relocated) | — | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/univint`. Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; the nxbuild recipe preserves MacPas mode. |
 | `winunits-base` | `fcl-registry`, `fcl-base`, `rtl-extra` | `buildwinutilsbase.pas` aggregate, implicit units and `w32default.res`; recipe marks libc required. |
-| `x11` | — | Bindings and their external libraries must be assessed from the selected units. |
+| `x11` (relocated) | Native X11 runtime libraries | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/x11`. All 45 units are built by `X11.nxpackage`; namespace wrappers remain. Proven binding/helper fixes and direct nxtest/symbol checks are recorded in the destination review. |
 
 The old `NeedLibC` flags are recorded as recipe facts, not a replacement for
 examining `external`/`linklib` declarations for a selected target. Likewise,

@@ -122,7 +122,7 @@ interface
          coffrelocs,
          coffrelocpos : aword;
        public
-         constructor create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);override;
+         constructor Create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);override;
          procedure writereloc_internal(aTarget:TObjSection;offset:aword;len:byte;reltype:TObjRelocationType);override;
        end;
 
@@ -138,11 +138,11 @@ interface
         end;
 
        TDJCoffObjData = class(TCoffObjData)
-         constructor create(const n:string);override;
+         constructor Create(const n:string);override;
        end;
 
        TPECoffObjData = class(TCoffObjData)
-         constructor create(const n:string);override;
+         constructor Create(const n:string);override;
        end;
 
        TCoffObjOutput = class(TObjOutput)
@@ -166,11 +166,11 @@ interface
        end;
 
        TDJCoffObjOutput = class(TCoffObjOutput)
-         constructor create(AWriter:TObjectWriter);override;
+         constructor Create(AWriter:TObjectWriter);override;
        end;
 
        TPECoffObjOutput = class(TCoffObjOutput)
-         constructor create(AWriter:TObjectWriter);override;
+         constructor Create(AWriter:TObjectWriter);override;
        end;
 
        TCoffObjInput = class(TObjInput)
@@ -197,19 +197,19 @@ interface
        end;
 
        TDJCoffObjInput = class(TCoffObjInput)
-         constructor create;override;
+         constructor Create;override;
        end;
 
        TPECoffObjInput = class(TCoffObjInput)
-         constructor create;override;
+         constructor Create;override;
        end;
 
        TDJCoffAssembler = class(TInternalAssembler)
-         constructor create(info: PAsmInfo; smart:boolean);override;
+         constructor Create(info: PAsmInfo; smart:boolean);override;
        end;
 
        TPECoffassembler = class(TInternalAssembler)
-         constructor create(info: PAsmInfo; smart:boolean);override;
+         constructor Create(info: PAsmInfo; smart:boolean);override;
        end;
 
 
@@ -1122,9 +1122,9 @@ const pemagic : array[0..3] of byte = (
                                TCoffObjSection
 ****************************************************************************}
 
-    constructor TCoffObjSection.create(AList:TFPHashObjectList;const aname:string;aalign:LongInt;aoptions:TObjSectionOptions);
+    constructor TCoffObjSection.Create(AList:TFPHashObjectList;const aname:string;aalign:LongInt;aoptions:TObjSectionOptions);
       begin
-        inherited create(AList,aname,aalign,aoptions);
+        inherited Create(AList,aname,aalign,aoptions);
       end;
 
 
@@ -1141,7 +1141,7 @@ const pemagic : array[0..3] of byte = (
 
     constructor TCoffObjData.createcoff(const n:string;awin32:boolean;acObjSection:TObjSectionClass);
       begin
-        inherited create(n);
+        inherited Create(n);
         CObjSection:=ACObjSection;
         win32:=awin32;
       end;
@@ -1339,7 +1339,7 @@ const pemagic : array[0..3] of byte = (
                                 TDJCoffObjData
 ****************************************************************************}
 
-    constructor TDJCoffObjData.create(const n:string);
+    constructor TDJCoffObjData.Create(const n:string);
       begin
         inherited createcoff(n,false,TCoffObjSection);
       end;
@@ -1349,7 +1349,7 @@ const pemagic : array[0..3] of byte = (
                                 TPECoffObjData
 ****************************************************************************}
 
-    constructor TPECoffObjData.create(const n:string);
+    constructor TPECoffObjData.Create(const n:string);
       begin
         inherited createcoff(n,true,TCoffObjSection);
       end;
@@ -1361,7 +1361,7 @@ const pemagic : array[0..3] of byte = (
 
     constructor TCoffObjOutput.createcoff(AWriter:TObjectWriter;awin32:boolean);
       begin
-        inherited create(AWriter);
+        inherited Create(AWriter);
         win32:=awin32;
       end;
 
@@ -1834,14 +1834,14 @@ const pemagic : array[0..3] of byte = (
       end;
 
 
-    constructor TDJCoffObjOutput.create(AWriter:TObjectWriter);
+    constructor TDJCoffObjOutput.Create(AWriter:TObjectWriter);
       begin
         inherited createcoff(AWriter,false);
         cobjdata:=TDJCoffObjData;
       end;
 
 
-    constructor TPECoffObjOutput.create(AWriter:TObjectWriter);
+    constructor TPECoffObjOutput.Create(AWriter:TObjectWriter);
       begin
         inherited createcoff(AWriter,true);
         cobjdata:=TPECoffObjData;
@@ -1854,7 +1854,7 @@ const pemagic : array[0..3] of byte = (
 
     constructor TCoffObjInput.createcoff(awin32:boolean);
       begin
-        inherited create;
+        inherited Create;
         win32:=awin32;
         bigobj:=false;
         FSymTbl:=nil;
@@ -2450,14 +2450,14 @@ const pemagic : array[0..3] of byte = (
       end;
 
 
-    constructor TDJCoffObjInput.create;
+    constructor TDJCoffObjInput.Create;
       begin
         inherited createcoff(false);
         cobjdata:=TDJCoffObjData;
       end;
 
 
-    constructor TPECoffObjInput.create;
+    constructor TPECoffObjInput.Create;
       begin
         inherited createcoff(true);
         cobjdata:=TPECoffObjData;

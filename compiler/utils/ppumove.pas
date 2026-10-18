@@ -249,7 +249,7 @@ begin
   gotltofiles:=false;
   If Not Quiet then
    Write ('Processing ',PPUFn,'...');
-  inppu:=TPPUFile.create(PPUFn);
+  inppu:=TPPUFile.Create(PPUFn);
   if not inppu.openfile then
    begin
      inppu.free;
@@ -295,9 +295,9 @@ begin
    end;
 { Create the new ppu }
   if PPUFn=PPLFn then
-   outppu:=TPPUFile.create('ppumove.$$$')
+   outppu:=TPPUFile.Create('ppumove.$$$')
   else
-   outppu:=TPPUFile.create(PPLFn);
+   outppu:=TPPUFile.Create(PPLFn);
   outppu.CreateFile;
 { Create new header, with the new flags }
   outppu.header:=inppu.header;

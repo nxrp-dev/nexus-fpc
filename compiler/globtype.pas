@@ -145,11 +145,8 @@ interface
          { macpas specific}
          cs_external_var, cs_externally_visible,
          cs_zerobasedstrings,
-         { i8086 specific }
-         cs_force_far_calls,
-         cs_hugeptr_arithmetic_normalization,
-         cs_hugeptr_comparison_normalization,
-         cs_legacyifend
+         { Preserve serialized switch positions after retiring 16-bit targets. }
+         cs_legacyifend = 38
        );
        TLocalSwitches = set of TLocalSwitch;
 
@@ -170,11 +167,8 @@ interface
           cs_browser,
          { target specific }
           cs_executable_stack = 18,
-         { i8086 specific }
-         cs_huge_code,
-         cs_obsolete_win16_smartcallbacks,
          { Record usage of checkpointer experimental feature }
-         cs_checkpointer_called,
+         cs_checkpointer_called = 21,
          { enable link time optimisation (both unit code generation and optimising the whole program/library) }
          cs_lto,
          { LLVM sanitizers }
@@ -189,10 +183,7 @@ interface
        TGlobalSwitch = (cs_globalnone,
          { parameter switches }
          cs_check_unit_name,cs_support_exceptions = 3,
-         cs_support_c_objectivepas,
-         cs_transparent_file_names,
-         { units }
-         cs_load_objpas_unit,
+         cs_transparent_file_names = 5,
          cs_support_vectors = 9,
          { debuginfo }
          cs_use_heaptrc,cs_use_lineinfo,
@@ -204,22 +195,17 @@ interface
          { linking }
          cs_link_nolink,cs_link_static,cs_link_smart,cs_link_shared,cs_link_deffile,
          cs_link_strip,cs_link_staticflag,cs_link_on_target,cs_link_extern,cs_link_opt_vtable,
-         cs_link_opt_used_sections,cs_link_separate_dbg_file,
+         cs_link_separate_dbg_file = 34,
           cs_link_map,cs_link_no_default_lib_order = 38,
           cs_link_pre_binutils_2_19 = 40,
-          cs_link_vlink,
-          cs_link_discard_start,cs_link_discard_zeroreg_sp,cs_link_discard_copydata,cs_link_discard_jmp_main,
-         cs_link_cvt,
          { disable LTO for the system unit (needed to work around linker bugs on macOS) }
-         cs_lto_nosystem,
+         cs_lto_nosystem = 47,
          cs_assemble_on_target,
          { use a memory model which allows large data structures, e.g. > 2 GB static data on x86-64 targets
            this not supported on all OSes }
          cs_large,
-         { if applicable, the compiler generates an executable in uf2 format }
-         cs_generate_uf2,
 	 { Use ld.lld linker }
-         cs_link_lld
+         cs_link_lld = 51
        );
        TGlobalSwitches = set of TGlobalSwitch;
 
@@ -280,8 +266,7 @@ interface
          cs_opt_remove_empty_proc,
          cs_opt_constant_propagate,
          cs_opt_dead_store_eliminate,
-         cs_opt_forcenostackframe,
-         cs_opt_use_load_modify_store,
+         cs_opt_use_load_modify_store = 25,
          cs_opt_unused_para,
          cs_opt_consts,
          cs_opt_forloop
@@ -345,14 +330,15 @@ interface
        end;
 
     const
-       OptimizerSwitchStr : array[TOptimizerSwitch] of string[18] = (
+       OptimizerSwitchStr : array[0..Ord(High(TOptimizerSwitch))] of string[18] = (
          'LEVEL1','LEVEL2','LEVEL3','LEVEL4',
          'REGVAR','UNCERTAIN','SIZE','STACKFRAME',
          'PEEPHOLE','LOOPUNROLL','TAILREC','CSE',
          'DFA','STRENGTH','SCHEDULE','AUTOINLINE','USEEBP','USERBP',
          'ORDERFIELDS','FASTMATH','DEADVALUES','REMOVEEMPTYPROCS',
          'CONSTPROP',
-         'DEADSTORE','FORCENOSTACKFRAME','USELOADMODIFYSTORE',
+         { Empty slot preserves the serialized optimizer-switch positions. }
+         'DEADSTORE','','USELOADMODIFYSTORE',
          'UNUSEDPARA','CONSTS','FORLOOP'
        );
        WPOptimizerSwitchStr : array [TWPOptimizerSwitch] of string[14] = (
@@ -453,9 +439,6 @@ interface
          app_native,    { native for Windows and NativeNT targets }
          app_gui,       { graphic user-interface application }
          app_cui,       { console application }
-         app_fs,        { full-screen type application (OS/2 and EMX only) }
-         app_arm7,      { for Nintendo DS target }
-         app_arm9,      { for Nintendo DS target }
          app_bundle,    { dynamically loadable bundle, Darwin only }
          app_com        { DOS .COM file }
        );

@@ -1202,7 +1202,7 @@ implementation
         end;
       { Release temp when it was a reference }
       if oldloc.Loc=LOC_REFERENCE then
-          location_freetemp(list,oldloc);
+          Location_FreeTemp(list,oldloc);
     end;
 
   procedure THLCG2LL.Location_Force_Mem(list: TAsmList; var l: TLocation; size: TDef);
@@ -1216,7 +1216,7 @@ implementation
             { implement here using tcg because some platforms store records
               in fpu registers in some cases, and a_loadfpu* can't deal with
               record "size" parameters }
-            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
+            TG.GetHLTemp(list,size,size.Size,tt_normal,r);
             cg.A_LoadFPU_Reg_Ref(list,l.Size,l.Size,l.Register,r);
             Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
             l.Reference:=r;
@@ -1224,7 +1224,7 @@ implementation
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
+            TG.GetHLTemp(list,size,size.Size,tt_normal,r);
             cg.A_LoadMM_Reg_Ref(list,l.Size,l.Size,l.Register,r,MMS_MoveScalar);
             Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
             l.Reference:=r;
@@ -1233,7 +1233,7 @@ implementation
         LOC_REGISTER,
         LOC_CREGISTER :
           begin
-            tg.GetHLTemp(list,size,size.Size,tt_normal,r);
+            TG.GetHLTemp(list,size,size.Size,tt_normal,r);
 {$ifdef cpu64bitalu}
             if l.Size in [OS_128,OS_S128] then
               cg128.A_Load128_Loc_Ref(list,l,r)
@@ -1264,7 +1264,7 @@ implementation
           { if it's in an fpu register, store to memory first }
           if (l.Loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
             begin
-              tg.GetTemp(list,TCgSize2Size[l.Size],TCgSize2Size[l.Size],tt_normal,href);
+              TG.GetTemp(list,TCgSize2Size[l.Size],TCgSize2Size[l.Size],tt_normal,href);
               cg.A_LoadFPU_Reg_Ref(list,l.Size,l.Size,l.Register,href);
               Location_Reset_Ref(l,LOC_REFERENCE,l.Size,size.Alignment,[]);
               l.Reference:=href;
@@ -1301,7 +1301,7 @@ implementation
                l.Size:=Def_CGSize(newsize);
                size:=newsize;
              end;
-          location_freetemp(list,l);
+          Location_FreeTemp(list,l);
           Location_Reset(l,LOC_MMREGISTER,l.Size);
           l.Register:=reg;
         end;
@@ -1380,7 +1380,7 @@ implementation
            -> don't allocate again }
          if currpara.InitialLoc.Loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER] then
            begin
-             gen_alloc_regvar(list,currpara,false);
+             Gen_Alloc_RegVar(list,currpara,false);
              hlcg.VarSym_Set_LocAlloc(list,currpara);
            end;
        end;
@@ -1491,7 +1491,7 @@ implementation
                      tmploc:=l;
                      Location_Force_Mem(list,tmploc,size);
                      cg.A_Load_Loc_CGPara(list,tmploc,cgpara);
-                     location_freetemp(list,tmploc);
+                     Location_FreeTemp(list,tmploc);
                    end;
                end
              else
@@ -1580,7 +1580,7 @@ implementation
                       already in memory, because the caller (ncgcal) will then
                       free it again later }
                     if not(l.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                      location_freetemp(list,tmploc);
+                      Location_FreeTemp(list,tmploc);
                   end
                 else
                   A_Load_Loc_CGPara(list,vardef,l,cgpara);
@@ -1712,7 +1712,7 @@ implementation
                                 { paraloc^ -> high
                                   paraloc^.next -> low }
                                 unget_para(ParaLoc^);
-                                gen_alloc_regloc(list,destloc,vardef);
+                                Gen_Alloc_RegLoc(list,destloc,vardef);
                                 { reg->reg, alignment is irrelevant }
                                 cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegHi,8);
                                 unget_para(ParaLoc^.next^);
@@ -1723,7 +1723,7 @@ implementation
                                 { paraloc^ -> low
                                   paraloc^.next -> high }
                                 unget_para(ParaLoc^);
-                                gen_alloc_regloc(list,destloc,vardef);
+                                Gen_Alloc_RegLoc(list,destloc,vardef);
                                 cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegLo,8);
                                 unget_para(ParaLoc^.next^);
                                 cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^.next^,destloc.Register128.RegHi,8);
@@ -1737,7 +1737,7 @@ implementation
                               a 64-bit int register, zero extending it. }
                             if TargetInfo.endian=ENDIAN_BIG then
                               InternalError(2018101702);  // Big endian support not implemented yet
-                            gen_alloc_regloc(list,destloc,vardef);
+                            Gen_Alloc_RegLoc(list,destloc,vardef);
                             tempreg:=cg.GetIntRegister(list,OS_64);
                             // Low part of the 128-bit param
                             unget_para(ParaLoc^);
@@ -1769,7 +1769,7 @@ implementation
                     end;
                   LOC_REFERENCE:
                     begin
-                      gen_alloc_regloc(list,destloc,vardef);
+                      Gen_Alloc_RegLoc(list,destloc,vardef);
                       Reference_Reset_Base(href,CPointerDef.getreusable(vardef),ParaLoc^.Reference.Index,ParaLoc^.Reference.Offset,CTempPosInvalid,para.Alignment,[]);
                       cg128.A_Load128_Ref_Reg(list,href,destloc.Register128);
                       unget_para(ParaLoc^);
@@ -1800,7 +1800,7 @@ implementation
                               { paraloc^ -> high
                                 paraloc^.next -> low }
                               unget_para(ParaLoc^);
-                              gen_alloc_regloc(list,destloc,vardef);
+                              Gen_Alloc_RegLoc(list,destloc,vardef);
                               { reg->reg, alignment is irrelevant }
                               cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^,destloc.Register64.RegHi,4);
                               unget_para(ParaLoc^.next^);
@@ -1811,7 +1811,7 @@ implementation
                               { paraloc^ -> low
                                 paraloc^.next -> high }
                               unget_para(ParaLoc^);
-                              gen_alloc_regloc(list,destloc,vardef);
+                              Gen_Alloc_RegLoc(list,destloc,vardef);
                               cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^,destloc.Register64.RegLo,4);
                               unget_para(ParaLoc^.next^);
                               cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^.next^,destloc.Register64.RegHi,4);
@@ -1823,7 +1823,7 @@ implementation
                     end;
                   LOC_REFERENCE:
                     begin
-                      gen_alloc_regloc(list,destloc,vardef);
+                      Gen_Alloc_RegLoc(list,destloc,vardef);
                       Reference_Reset_Base(href,CPointerDef.getreusable(vardef),ParaLoc^.Reference.Index,ParaLoc^.Reference.Offset,CTempPosInvalid,para.Alignment,[]);
                       cg64.A_Load64_Ref_Reg(list,href,destloc.Register64);
                       unget_para(ParaLoc^);
@@ -1841,7 +1841,7 @@ implementation
                       (para.Size in [OSPair,OSSPair]) then
                       begin
                         unget_para(ParaLoc^);
-                        gen_alloc_regloc(list,destloc,vardef);
+                        Gen_Alloc_RegLoc(list,destloc,vardef);
                         cg.A_Load_CGParaLoc_AnyReg(list,OS_INT,ParaLoc^,destloc.Register,sizeof(aint));
                         unget_para(ParaLoc^.Next^);
 
@@ -1863,8 +1863,8 @@ implementation
                           InternalError(200410105);
                         { store everything first to memory, then load it in
                           destloc }
-                        tg.gettemp(list,sizeleft,sizeleft,tt_persistent,tempref);
-                        gen_alloc_regloc(list,destloc,vardef);
+                        TG.GetTemp(list,sizeleft,sizeleft,tt_persistent,tempref);
+                        Gen_Alloc_RegLoc(list,destloc,vardef);
                         while sizeleft>0 do
                           begin
                             if not Assigned(ParaLoc) then
@@ -1880,13 +1880,13 @@ implementation
                           end;
                         dec(tempref.Offset,para.IntSize);
                         cg.A_Load_Ref_Reg(list,para.Size,para.Size,tempref,destloc.Register);
-                        tg.ungettemp(list,tempref);
+                        TG.UnGetTemp(list,tempref);
                       end;
                   end
                 else
                   begin
                     unget_para(ParaLoc^);
-                    gen_alloc_regloc(list,destloc,vardef);
+                    Gen_Alloc_RegLoc(list,destloc,vardef);
                     cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,sizeof(aint));
                   end;
               end;
@@ -1895,7 +1895,7 @@ implementation
         LOC_CFPUREGISTER :
           begin
             unget_para(ParaLoc^);
-            gen_alloc_regloc(list,destloc,vardef);
+            Gen_Alloc_RegLoc(list,destloc,vardef);
             { from register to register -> alignment is irrelevant }
             cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,0);
             if Assigned(ParaLoc^.next) then
@@ -1929,7 +1929,7 @@ implementation
                 { don't free before the above, because then the getintregister
                   could reallocate this register and overwrite it }
                 unget_para(ParaLoc^);
-                gen_alloc_regloc(list,destloc,vardef);
+                Gen_Alloc_RegLoc(list,destloc,vardef);
                 if (TargetInfo.endian=endian_big) then
                   { paraloc^ -> high
                     paraloc^.next -> low }
@@ -1944,7 +1944,7 @@ implementation
                 if not Assigned(ParaLoc^.next) then
                   begin
                     unget_para(ParaLoc^);
-                    gen_alloc_regloc(list,destloc,vardef);
+                    Gen_Alloc_RegLoc(list,destloc,vardef);
                     { from register to register -> alignment is irrelevant }
                     cg.A_Load_CGParaLoc_AnyReg(list,destloc.Size,ParaLoc^,destloc.Register,0);
                   end

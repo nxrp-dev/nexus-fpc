@@ -315,7 +315,7 @@ unit cpupara;
           end;
 
         { win64 follows a different convention here }
-        if x86_64_use_ms_abi(CallOption) then
+        if X86_64_Use_MS_ABI(CallOption) then
           begin
             if AggregateInRegistersWin64(VarSpez,Def.Size) then
               begin
@@ -1278,7 +1278,7 @@ unit cpupara;
                  (VarSpez=vs_const) then
                 Result:=True
               { Win ABI depends on size to pass it in a register or not }
-              else if x86_64_use_ms_abi(CallOption) then
+              else if X86_64_Use_MS_ABI(CallOption) then
                 begin
                   if CallOption = pocall_vectorcall then
                     begin
@@ -1350,7 +1350,7 @@ unit cpupara;
 
     function TCPUParaManager.Get_Volatile_Registers_Int(CallOption : TProcCallOption):TCPURegisterSet;
       begin
-        if x86_64_use_ms_abi(CallOption) then
+        if X86_64_Use_MS_ABI(CallOption) then
           Result:=[RS_RAX,RS_RCX,RS_RDX,RS_R8,RS_R9,RS_R10,RS_R11]
         else
           Result:=[RS_RAX,RS_RCX,RS_RDX,RS_RSI,RS_RDI,RS_R8,RS_R9,RS_R10,RS_R11];
@@ -1359,7 +1359,7 @@ unit cpupara;
 
     function TCPUParaManager.Get_Volatile_Registers_MM(CallOption : TProcCallOption):TCPURegisterSet;
       begin
-        if x86_64_use_ms_abi(CallOption) then
+        if X86_64_Use_MS_ABI(CallOption) then
           Result:=[RS_XMM0..RS_XMM5]
         else
           Result:=[RS_XMM0..RS_XMM15];
@@ -1540,7 +1540,7 @@ unit cpupara;
                         X64SSEClass:
                           begin
                             J := 1;
-                            if not (x86_64_use_ms_abi(P.ProcCallOption) and (P.ProcCallOption <> pocall_vectorcall)) then
+                            if not (X86_64_Use_MS_ABI(P.ProcCallOption) and (P.ProcCallOption <> pocall_vectorcall)) then
                               while I + J <= NumClasses do
                                 begin
                                   if Classes[I+J].Typ <> X64SSEUpClass then
@@ -1578,7 +1578,7 @@ unit cpupara;
                             ParaLoc^.Def:=CArrayDef.GetReusable_No_Free_Vector(ParaLoc^.Def,J);
                           end;
                         else
-                          if (x86_64_use_ms_abi(P.ProcCallOption) and (P.ProcCallOption <> pocall_vectorcall)) then
+                          if (X86_64_Use_MS_ABI(P.ProcCallOption) and (P.ProcCallOption <> pocall_vectorcall)) then
                             begin
                               SetSubReg(ParaLoc^.Register,R_SUBQ);
                               ParaLoc^.Size:=OS_M64;
@@ -1645,7 +1645,7 @@ unit cpupara;
         UseMSABI : Boolean;
       begin
         ProcParaAlign:=Get_Para_Align(P.ProcCallOption);
-        UseMSABI:=x86_64_use_ms_abi(P.ProcCallOption);
+        UseMSABI:=X86_64_Use_MS_ABI(P.ProcCallOption);
         { Register parameters are assigned from left to right }
         for I:=0 to Paras.Count-1 do
           begin
@@ -2025,7 +2025,7 @@ unit cpupara;
       begin
         IntParaReg:=0;
         MMParaReg:=0;
-        if x86_64_use_ms_abi(P.ProcCallOption) then
+        if X86_64_Use_MS_ABI(P.ProcCallOption) then
           ParaSize:=4*8
         else
           ParaSize:=0;
@@ -2053,7 +2053,7 @@ unit cpupara;
       begin
         IntParaReg:=0;
         MMParaReg:=0;
-        if x86_64_use_ms_abi(P.ProcCallOption) then
+        if X86_64_Use_MS_ABI(P.ProcCallOption) then
           ParaSize:=4*8
         else
           ParaSize:=0;

@@ -831,8 +831,8 @@ implementation
           begin
             if not Assigned(ProcSection) then
               ProcSection:=TAISection(CurrentAsmData.AsmLists[Alt].Last);
-            if Assigned(CurrentProcInfo.nexus_profile_section) then
-              CurrentProcInfo.nexus_profile_section.AssociativeSection:=ProcSection;
+            if Assigned(CurrentProcInfo.NexusProfileSection) then
+              CurrentProcInfo.NexusProfileSection.AssociativeSection:=ProcSection;
           end;
         CurrentAsmData.AsmLists[Alt].ConcatList(Code);
         { save local data (castable) also in the same file }
@@ -1072,7 +1072,7 @@ implementation
              TG.GetHLTemp(List,Size,Size.Size,tt_normal,Ref);
              A_Load_Reg_Ref(List,Size,CGPara.Location^.Def,R,Ref);
              A_LoadFPU_Ref_CGPara(List,CGPara.Location^.Def,Ref,CGPara);
-             TG.UngetTemp(List,Ref);
+             TG.UnGetTemp(List,Ref);
            end
          else
            InternalError(2010120415);
@@ -2885,7 +2885,7 @@ implementation
               TG.GetHLTemp(List,FromSize,FromSize.Size,tt_normal,Ref);
               A_LoadFPU_Reg_Ref(List,FromSize,FromSize,R,Ref);
               A_LoadFPU_Ref_CGPara(List,FromSize,Ref,CGPara);
-              TG.UngetTemp(List,Ref);
+              TG.UnGetTemp(List,Ref);
             end;
           else
             InternalError(2010120422);
@@ -3833,7 +3833,7 @@ implementation
           ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
           if Is_Open_Array(T) then
             InternalError(201103054);
-          Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+          Reference_Reset_Symbol(HRef,RTTIWriter.Get_RTTI_Label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
           if PD.Is_PushLeftRight then
             begin
               A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
@@ -3881,7 +3881,7 @@ implementation
             PD:=Search_System_Proc('fpc_initialize');
             ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
             ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
-            Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+            Reference_Reset_Symbol(HRef,RTTIWriter.Get_RTTI_Label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
             if PD.Is_PushLeftRight then
               begin
                 A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
@@ -3931,7 +3931,7 @@ implementation
             PD:=Search_System_Proc('fpc_finalize');
           ParaManager.GetCGTempParaLoc(List,PD,1,CGPara1);
           ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
-          Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+          Reference_Reset_Symbol(HRef,RTTIWriter.Get_RTTI_Label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
           if PD.Is_PushLeftRight then
             begin
               A_LoadAddr_Ref_CGPara(List,T,Ref,CGPara1);
@@ -3973,7 +3973,7 @@ implementation
       ParaManager.GetCGTempParaLoc(List,PD,2,CGPara2);
       ParaManager.GetCGTempParaLoc(List,PD,3,CGPara3);
 
-      Reference_Reset_Symbol(HRef,RTTIWriter.get_rtti_label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
+      Reference_Reset_Symbol(HRef,RTTIWriter.Get_RTTI_Label(T,InitRTTI,Def_Needs_Indirect(T)),0,SizeOf(PInt),[]);
       { if calling convention is left to right, push parameters 1 and 2 }
       if PD.Is_PushLeftRight then
         begin
@@ -4554,7 +4554,7 @@ implementation
       L.Register:=HRegister;
       { Release temp if it was a reference }
       if OldLoc.Loc=LOC_REFERENCE then
-        location_freetemp(List,OldLoc);
+        Location_FreeTemp(List,OldLoc);
     end;
 
   procedure THLCGObj.Location_Force_FPUReg(List: TAsmList; var L: TLocation; Size: TDef; MaybeConst: Boolean);
@@ -4569,7 +4569,7 @@ implementation
             Location_Force_Mem(List,L,Size);
           Reg:=GetFPURegister(List,Size);
           A_LoadFPU_Loc_Reg(List,Size,Size,L,Reg);
-          location_freetemp(List,L);
+          Location_FreeTemp(List,L);
           Location_Reset(L,LOC_FPUREGISTER,L.Size);
           L.Register:=Reg;
         end;
@@ -4699,7 +4699,7 @@ implementation
           Reg:=HLCG.GetMMRegister(List,NewSize);
           HLCG.A_LoadMM_Loc_Reg(List,Size,NewSize,L,Reg,MMS_MoveScalar);
           L.Size:=Def_CGSize(NewSize);
-          location_freetemp(List,L);
+          Location_FreeTemp(List,L);
           Location_Reset(L,LOC_MMREGISTER,L.Size);
           Size:=NewSize;
           L.Register:=Reg;
@@ -4766,7 +4766,7 @@ implementation
        CurrentFilePos:=P.FileInfo;
        if Is_Boolean(P.ResultDef) then
          begin
-            if is_constboolnode(P) then
+            if Is_ConstBoolNode(P) then
               begin
                  if TOrdConstNode(P).Value.UValue<>0 then
                    A_Jmp_Always(List,TrueLabel)
@@ -5033,11 +5033,11 @@ implementation
 
   procedure THLCGObj.Gen_Proc_Symbol_End(List: TAsmList);
     begin
-      if nexus_profile_proc_eligible(CurrentProcInfo) then
+      if Nexus_Profile_Proc_Eligible(CurrentProcInfo) then
         begin
-          if not Assigned(CurrentProcInfo.nexus_profile_endlabel) then
-            CurrentAsmData.GetJumpLabel(CurrentProcInfo.nexus_profile_endlabel);
-          List.Concat(TAILabel.Create(CurrentProcInfo.nexus_profile_endlabel));
+          if not Assigned(CurrentProcInfo.NexusProfileEndLabel) then
+            CurrentAsmData.GetJumpLabel(CurrentProcInfo.NexusProfileEndLabel);
+          List.Concat(TAILabel.Create(CurrentProcInfo.NexusProfileEndLabel));
           Emit_Nexus_Profile_Descriptor;
         end;
       if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_proginit) and
@@ -5102,7 +5102,7 @@ implementation
       ForFinalization:=False;
       if (CurrentProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) then
         begin
-          if (CurrentProcInfo.Parent.finalize_procinfo<>CurrentProcInfo) then
+          if (CurrentProcInfo.Parent.FinalizeProcInfo<>CurrentProcInfo) then
             Exit;
           CurrentProcInfo:=CurrentProcInfo.Parent;
           ForFinalization:=True;
@@ -5158,7 +5158,7 @@ implementation
              if tf_init_final_units_by_calls in TargetInfo.Flags then
                begin
                  { Only insert call if there are init functions }
-                 if CNodeUtils.has_init_list then
+                 if CNodeUtils.Has_Init_List then
                    CG.A_Call_Name(List,'FPC_INIT_FUNC_TABLE',False);
                end
              else
@@ -5170,7 +5170,7 @@ implementation
 
       { The program body starts after its units. The image was already
         registered before unit initialization. }
-      if nexus_profile_proc_eligible(CurrentProcInfo) then
+      if Nexus_Profile_Proc_Eligible(CurrentProcInfo) then
         Gen_Nexus_Profile_Call(List,'nxp_enter');
 
       List.Concat(TAIForceLine.Create);
@@ -5181,7 +5181,7 @@ implementation
       { TODO: create high level version (create compilerproc in system unit,
           look up procdef, use hlcgobj.a_call_name()) }
 
-      if nexus_profile_proc_eligible(CurrentProcInfo) then
+      if Nexus_Profile_Proc_Eligible(CurrentProcInfo) then
         Gen_Nexus_Profile_Call(List,'nxp_leave');
 
       { call __EXIT for main program }
@@ -5208,11 +5208,11 @@ implementation
     var
       SymName: string;
     begin
-      if Assigned(CurrentProcInfo.nexus_profile_descsym) then
+      if Assigned(CurrentProcInfo.NexusProfileDescSym) then
         Exit;
       SymName:='NXP_DESC_'+CurrentModule.ModuleName^+'_'+
         CurrentProcInfo.ProcDef.UniqueIDStr;
-      CurrentProcInfo.nexus_profile_descsym:=CurrentAsmData.DefineAsmSymbol(
+      CurrentProcInfo.NexusProfileDescSym:=CurrentAsmData.DefineAsmSymbol(
         SymName,AB_LOCAL,AT_DATA,VoidPointerType);
     end;
 
@@ -5234,7 +5234,7 @@ implementation
       ParaLoc^.Size:=OS_ADDR;
       ParaLoc^.Loc:=LOC_REGISTER;
       ParaLoc^.Register:=NR_RCX;
-      Reference_Reset_Symbol(HRef,CurrentProcInfo.nexus_profile_descsym,0,
+      Reference_Reset_Symbol(HRef,CurrentProcInfo.NexusProfileDescSym,0,
         SizeOf(PInt),[]);
       A_LoadAddr_Ref_CGPara(List,VoidPointerType,HRef,Para);
       AllocAllCPURegisters(List);
@@ -5325,9 +5325,9 @@ implementation
       TCB.Free;
       Section:=new_section(CurrentProcInfo.AktLocalData,sec_user,
         '.nxprof$M_'+HexStr(Int64(StableID),16),3);
-      CurrentProcInfo.nexus_profile_section:=Section;
+      CurrentProcInfo.NexusProfileSection:=Section;
       CurrentProcInfo.AktLocalData.Concat(TAISymbol.Create(
-        CurrentProcInfo.nexus_profile_descsym,NXP_DESC_SIZE));
+        CurrentProcInfo.NexusProfileDescSym,NXP_DESC_SIZE));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_32bit(NXP_DESC_MAGIC));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(NXP_DESC_ABI));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_16bit(0));
@@ -5337,7 +5337,7 @@ implementation
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym(
         CurrentAsmData.RefAsmSymbol(PD.MangledName,AT_FUNCTION)));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym(
-        CurrentProcInfo.nexus_profile_endlabel));
+        CurrentProcInfo.NexusProfileEndLabel));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
         NameLabel.Lab,NameLabel.Ofs));
       CurrentProcInfo.AktLocalData.Concat(TAIConst.create_sym_offset(
@@ -5411,7 +5411,7 @@ implementation
             Assigned(HP^.Def) and
             Is_Managed_Type(HP^.Def) then
           begin
-            TG.temp_to_ref(HP,HRef);
+            TG.Temp_To_Ref(HP,HRef);
             { On AArch64-Win64 exceptfilters have their own SP-relative temps
               but share the parent's temp allocator. Parent temps are already
               initialised by the parent; only handler-local temps need zeroing.
@@ -5445,7 +5445,7 @@ implementation
             Is_Managed_Type(HP^.Def) then
           begin
             Include(CurrentProcInfo.Flags,pi_needs_implicit_finally);
-            TG.temp_to_ref(HP,HRef);
+            TG.Temp_To_Ref(HP,HRef);
             if ForFinalization then
               CG.Adjust_ExceptFilter_Ref(HRef,True);
             G_Finalize(List,HP^.Def,HRef);
@@ -5533,8 +5533,8 @@ implementation
                       InternalError(201003032);
                     HighLoc:=HSym.InitialLoc;
                     { adjust high bound reference for exceptfilter finalization }
-                    if Assigned(CurrentProcInfo.finalize_procinfo) and
-                       (CurrentProcInfo.finalize_procinfo.ProcDef.ProcTypeOption=potype_exceptfilter) and
+                    if Assigned(CurrentProcInfo.FinalizeProcInfo) and
+                       (CurrentProcInfo.FinalizeProcInfo.ProcDef.ProcTypeOption=potype_exceptfilter) and
                        (HighLoc.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                       CG.Adjust_ExceptFilter_Ref(HighLoc.Reference,True);
                   end
@@ -5765,7 +5765,7 @@ implementation
                 end;
               { update localloc of varsym }
               if TParaVarSym(P).LocAlloc.Loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-                TG.Ungetlocal(List,TParaVarSym(P).LocAlloc.Reference);
+                TG.UnGetLocal(List,TParaVarSym(P).LocAlloc.Reference);
               TParaVarSym(P).LocAlloc:=LocalCopyLoc;
               TParaVarSym(P).InitialLoc:=LocalCopyLoc;
             end;
@@ -5911,7 +5911,7 @@ implementation
           TmpLoc:=L;
           Location_Force_Mem(List,TmpLoc,VarDef);
           A_Load_Loc_CGPara(List,VarDef,TmpLoc,CGPara);
-          location_freetemp(List,TmpLoc);
+          Location_FreeTemp(List,TmpLoc);
           Exit;
         end;
 
@@ -6031,7 +6031,7 @@ implementation
       PD:=Search_System_Proc('fpc_stackcheck');
       ParaLoc1.Init;
       ParaManager.GetCGTempParaLoc(CurrentAsmData.CurrAsmList,PD,1,ParaLoc1);
-      HLCG.A_Load_Const_CGPara(List,ParaLoc1.Def,CurrentProcInfo.calc_stackframe_size,ParaLoc1);
+      HLCG.A_Load_Const_CGPara(List,ParaLoc1.Def,CurrentProcInfo.Calc_StackFrame_Size,ParaLoc1);
       ParaManager.FreeCGPara(List,ParaLoc1);
       ParaLoc1.Done;
     end;

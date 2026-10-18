@@ -91,3 +91,46 @@ Run `bash tests/switches/Run-NXSyscallDirectiveTests.sh <compiler> <rtl-units>
 <output-directory>` with an output directory under the development worktree.
 The 36 checks cover both warnings and warnings promoted to errors in all six
 retained modes: FPC, ObjFPC, Delphi, MacPas, ISO and ExtendedPascal.
+
+## X86-64 CPU model alignment
+
+`cpu_models.pas` checks all CPU enum identities, names and saved numeric slots,
+both CPU selectors, the default model, and the distinct Core i/V2 capabilities.
+The first five enum members previously disagreed with the parallel tables.
+Reordering the enum preserves explicit `-Cp`/`-Op` option slots and their feature
+sets, including the numeric settings saved with generic tokens. The default
+`cpu_athlon64` now correctly defines `CPUATHLON64`.
+
+On Linux, run with one matching bootstrap's compiler, RTL and x86-64 compiler
+units, and an output directory under the development worktree:
+
+```sh
+bash tests/switches/Run-NXCPUModelTests.sh \
+  <compiler> <rtl-units> <cycle3/compiler-units> <output-directory>
+```
+
+The runner also checks macros and generated POPCNT instructions for the default,
+Athlon64, X86-64, X86-64-V1, Core i and X86-64-V2 selections.
+
+## Optional shortstring optimizer build
+
+Building the compiler with `-daddstringopt` needs a temporary node in
+`TAddNode.Pass_1`. Upstream commit `e35403c3b8364f7efdc40ce0af00eefec0226e24`
+removed its declaration while retaining four uses. The repair restores the
+conditional local as `lStringOptNode`; it does not enable the optional optimizer
+in normal builds.
+
+`addstringopt_shortstring.pas` checks shortstring plus character, shortstring
+plus constant, two characters, and truncation at 255 bytes. Build and run it at
+`-O2` with both the normal compiler and a compiler built with `-daddstringopt`,
+using matching RTL units and an output directory under the development worktree:
+
+```sh
+<compiler> -n -O2 -Aas-clang -XLL -Fu<rtl-units> \
+  -FU<output-directory> -o<output-directory>/addstringopt_shortstring \
+  tests/compiler-regressions/addstringopt_shortstring.pas
+<output-directory>/addstringopt_shortstring
+```
+
+The define belongs to the compiler build, not the fixture compilation. The
+compiler build itself is the regression for the missing local declaration.

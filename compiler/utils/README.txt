@@ -18,17 +18,8 @@ msgdif   : analyzes the differences between two msg files
            removed messages are prepended by "%%% "
            (they can be useful in case on error enum renaming !)
 
-gppc386  : run ppc386 (or any other compiler, by adding 'g' letter to compiler
-           name) through GNU debugger GDB.
-           This utility tries to run automatically and close if exitcode is
-           zero, but it uses a GDB script for that purpose, which
-           sets breakpoints on particular functions of the compiler for
-           this purpose. The name of these functions differs depending on
-           chosen debug format, which can lead to failure of loading of this
-           script.
-
-vppcx64  : Similar to gppc386 but used to run the compiler through
-           valgrind utility. This is only useful for compilers compiled
+vppcx64  : run the compiler through the valgrind utility.
+           This is only useful for compilers compiled
            using the '-gv' option, which ensures that the C-library
            is used.
            Some time-critical functions are known to generate some valgrind

@@ -42,7 +42,7 @@ type
     fsize,
     fobjsize  : LongWord;
   public
-    constructor create;
+    constructor Create;
     constructor createAr(const Aarfn:string);virtual;
     destructor  Destroy;override;
     function  CreateFile(const fn:string):boolean;virtual;
@@ -74,7 +74,7 @@ type
     function GetPos: LongInt;virtual;
     function GetIsArchive: boolean;virtual;
   public
-    constructor create;
+    constructor Create;
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);virtual;
     destructor  Destroy;override;
     function  openfile(const fn:string):boolean;virtual;
@@ -104,7 +104,7 @@ const
                               TObjectWriter
 ****************************************************************************}
 
-constructor TObjectWriter.create;
+constructor TObjectWriter.Create;
 begin
   SetLength(buf,BufSize);
   bufidx:=0;
@@ -246,7 +246,7 @@ end;
                               TObjectReader
 ****************************************************************************}
 
-constructor TObjectReader.create;
+constructor TObjectReader.Create;
 begin
   buf:=nil;
   bufidx:=0;

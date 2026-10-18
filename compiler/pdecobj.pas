@@ -395,7 +395,7 @@ implementation
         if p.nodetype=stringconstn then
           begin
             StringDispose(current_objectdef.IIDStr);
-            current_objectdef.IIDStr:=StringDup(TStringConstNode(p).asrawbytestring);
+            current_objectdef.IIDStr:=StringDup(TStringConstNode(p).AsRawByteString);
             valid:=String2GUID(current_objectdef.IIDStr^,current_objectdef.IIDGUID^);
             if (current_objectdef.ObjectType in [odt_interfacecom,odt_dispinterface]) and
                not valid then
@@ -1102,7 +1102,7 @@ implementation
         hadgeneric:=false;
         threadvar_fields:=false;
         object_member_blocktype:=bt_general;
-        fieldlist:=TFPObjectList.create(false);
+        fieldlist:=TFPObjectList.Create(false);
         repeat
           case CurrentScanner.token of
             _TYPE :
@@ -1417,7 +1417,7 @@ implementation
               begin
                 Message(parser_e_forward_mismatch);
                 { recover }
-                CurrentStructDef:=CObjectDef.create(ObjectType,n,nil,true);
+                CurrentStructDef:=CObjectDef.Create(ObjectType,n,nil,true);
                 include(CurrentStructDef.ObjectOptions,oo_is_forward);
               end
             else
@@ -1430,7 +1430,7 @@ implementation
               Message(parser_f_no_anonym_objects);
 
             { create new class }
-            CurrentStructDef:=CObjectDef.create(ObjectType,n,nil,true);
+            CurrentStructDef:=CObjectDef.Create(ObjectType,n,nil,true);
             TObjectDef(CurrentStructDef).HelperType:=HelperType;
 
             { include always the forward flag, it'll be removed once the whole
@@ -1584,8 +1584,8 @@ implementation
 
             if Assigned(objsym) and not (ObjectType in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
               begin
-                olddef:=TTypeSym(objsym).typedef;
-                TTypeSym(objsym).typedef:=CurrentStructDef;
+                olddef:=TTypeSym(objsym).TypeDef;
+                TTypeSym(objsym).TypeDef:=CurrentStructDef;
                 CurrentStructDef.TypeSym:=objsym;
               end
             else
@@ -1612,7 +1612,7 @@ implementation
 
             if Assigned(olddef) then
               begin
-                TTypeSym(objsym).typedef:=olddef;
+                TTypeSym(objsym).TypeDef:=olddef;
                 CurrentStructDef.TypeSym:=nil;
               end;
 

@@ -889,7 +889,7 @@ implementation
              TG.GetHLTemp(List,CGPara.Def,CGPara.Def.Size,tt_persistent,Ref);
              A_Load_Reg_Ref(List,Size,Size,R,Ref);
              A_Load_Ref_CGPara(List,Size,Ref,CGPara);
-             TG.UngetTemp(List,Ref);
+             TG.UnGetTemp(List,Ref);
              Exit;
            end;
          ParaManager.AllocCGPara(List,CGPara);
@@ -914,7 +914,7 @@ implementation
                 TG.GetTemp(List,TCgSize2Size[Size],TCgSize2Size[Size],tt_normal,Ref);
                 A_Load_Reg_Ref(List,Size,Size,R,Ref);
                 A_LoadFPU_Ref_CGPara(List,CGPara.Location^.Size,Ref,CGPara);
-                TG.UngetTemp(List,Ref);
+                TG.UnGetTemp(List,Ref);
               end
             else
               InternalError(2002071004);
@@ -1813,7 +1813,7 @@ implementation
                 TG.GetTemp(List,TCgSize2Size[Size],TCgSize2Size[Size],tt_normal,Ref);
                 A_LoadFPU_Reg_Ref(List,Size,Size,R,Ref);
                 A_LoadFPU_Ref_CGPara(List,Size,Ref,CGPara);
-                TG.UngetTemp(List,Ref);
+                TG.UnGetTemp(List,Ref);
               end;
             else
               InternalError(2010053112);
@@ -1897,7 +1897,7 @@ implementation
         TG.GetTemp(List,TCgSize2Size[FromSize],TCgSize2Size[FromSize],tt_normal,TmpRef);
         A_Load_Reg_Ref(List,FromSize,FromSize,IntReg,TmpRef);
         A_LoadFPU_Ref_Reg(List,ToSize,ToSize,TmpRef,FPUReg);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 
@@ -1912,7 +1912,7 @@ implementation
         TG.GetTemp(List,TCgSize2Size[FromSize],TCgSize2Size[FromSize],tt_normal,TmpRef);
         A_LoadFPU_Reg_Ref(List,FromSize,FromSize,FPUReg,TmpRef);
         A_Load_Ref_Reg(List,ToSize,ToSize,TmpRef,IntReg);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 
@@ -2449,7 +2449,7 @@ implementation
         TG.GetTemp(List,4,4,tt_normal,TmpRef);
         A_Load_Reg_Ref(List,FromSize,FromSize,IntReg,TmpRef);
         A_LoadMM_Ref_Reg(List,ToSize,ToSize,TmpRef,MMReg,Shuffle);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 
@@ -2463,7 +2463,7 @@ implementation
         TG.GetTemp(List,8,8,tt_normal,TmpRef);
         A_LoadMM_Reg_Ref(List,FromSize,FromSize,MMReg,TmpRef,Shuffle);
         A_Load_Ref_Reg(List,ToSize,ToSize,TmpRef,IntReg);
-        TG.UngetTemp(List,TmpRef);
+        TG.UnGetTemp(List,TmpRef);
       end;
 
 
@@ -2601,11 +2601,11 @@ implementation
 
         if Size>0 then
           begin
-            TG.GetTemp(List,Size,SizeOf(AInt),tt_noreuse,CurrentProcInfo.save_regs_ref);
+            TG.GetTemp(List,Size,SizeOf(AInt),tt_noreuse,CurrentProcInfo.SaveRegsRef);
             Include(CurrentProcInfo.Flags,pi_has_saved_regs);
 
             { Copy registers to temp }
-            HRef:=CurrentProcInfo.save_regs_ref;
+            HRef:=CurrentProcInfo.SaveRegsRef;
             for R:=Low(RegsToSaveInt) to High(RegsToSaveInt) do
               begin
                 if RegsToSaveInt[R] in RG[R_INTREGISTER].UsedInProc then
@@ -2615,7 +2615,7 @@ implementation
                     Include(RG[R_INTREGISTER].PreservedByProc,RegsToSaveInt[R]);
                   end;
               end;
-            CurrentProcInfo.saved_regs_int := RG[R_INTREGISTER].PreservedByProc;
+            CurrentProcInfo.SavedRegsInt := RG[R_INTREGISTER].PreservedByProc;
 
             if Uses_Registers(R_ADDRESSREGISTER) then
               begin
@@ -2629,7 +2629,7 @@ implementation
                       end;
                   end;
 
-                CurrentProcInfo.saved_regs_mm := RG[R_MMREGISTER].PreservedByProc;
+                CurrentProcInfo.SavedRegsMM := RG[R_MMREGISTER].PreservedByProc;
               end;
 
             if Uses_Registers(R_MMREGISTER) then
@@ -2654,7 +2654,7 @@ implementation
                       end;
                   end;
 
-                CurrentProcInfo.saved_regs_mm := RG[R_MMREGISTER].PreservedByProc;
+                CurrentProcInfo.SavedRegsMM := RG[R_MMREGISTER].PreservedByProc;
               end;
           end;
       end;
@@ -2675,7 +2675,7 @@ implementation
         RegsToSaveAddress:=ParaManager.Get_Saved_Registers_Address(CurrentProcInfo.ProcDef.ProcCallOption);
         RegsToSaveMM:=ParaManager.Get_Saved_Registers_MM(CurrentProcInfo.ProcDef.ProcCallOption);
         { Copy registers from temp }
-        HRef:=CurrentProcInfo.save_regs_ref;
+        HRef:=CurrentProcInfo.SaveRegsRef;
         for R:=Low(RegsToSaveInt) to High(RegsToSaveInt) do
           if RegsToSaveInt[R] in RG[R_INTREGISTER].UsedInProc then
             begin
@@ -2714,7 +2714,7 @@ implementation
                   end;
               end;
           end;
-        TG.UngetTemp(List,CurrentProcInfo.save_regs_ref);
+        TG.UnGetTemp(List,CurrentProcInfo.SaveRegsRef);
       end;
 
 

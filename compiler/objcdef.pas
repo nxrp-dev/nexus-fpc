@@ -34,11 +34,11 @@ interface
       type into the internal format used by the run time. Returns false
       if a type is not representable by the Objective-C run time, and in
       that case also the failing definition.  }
-    function objctryencodetype(def: TDef; out encodedtype: AnsiString; out founderror: TDef): boolean;
+    function ObjCTryEncodeType(ADef: TDef; out AEncodedType: AnsiString; out AFoundError: TDef): Boolean;
 
     { Check whether a type can be used in an Objective-C method
       signature or field declaration.  }
-    function objcchecktype(def: TDef; out founderror: TDef): boolean;
+    function ObjCCheckType(ADef: TDef; out AFoundError: TDef): Boolean;
 
     { add type info for def at the end of encodedstr. recordinfostate influences
       whether a record-style type will be fully encoded, or just using its
@@ -47,7 +47,7 @@ interface
     type
       TRecordInfoState = (ris_initial, ris_afterpointer, ris_dontprint);
 
-    function objcaddencodedtype(def: TDef; recordinfostate: TRecordInfoState; bpacked: boolean; var encodedstr: AnsiString; out founderror: TDef): boolean;
+    function ObjCAddEncodedType(ADef: TDef; ARecordInfoState: TRecordInfoState; ABitPacked: Boolean; var AEncodedString: AnsiString; out AFoundError: TDef): Boolean;
 
 implementation
 
@@ -62,108 +62,108 @@ implementation
                           Type encoding
 *******************************************************************}
 
-    function encoderecst(const recname: AnsiString; recst: TAbstractRecordSymTable; var encodedstr: AnsiString; out founderror: TDef): boolean;
+    function EncodeRecST(const ARecordName: AnsiString; ARecordST: TAbstractRecordSymTable; var AEncodedString: AnsiString; out AFoundError: TDef): Boolean;
       var
-        variantstarts: TFPList;
-        i, varindex: LongInt;
-        field,
-        firstfield: TFieldVarSym;
-        firstfieldvariant,
-        bpacked: boolean;
+        lVariantStarts: TFPList;
+        lIndex, lVariantIndex: LongInt;
+        lFieldSym,
+        lFirstField: TFieldVarSym;
+        lFirstFieldVariant,
+        lBitPacked: Boolean;
       begin
-        result:=false;
-        bpacked:=recst.FieldAlignment=BitAlignment;
+        Result:=false;
+        lBitPacked:=ARecordST.FieldAlignment=BitAlignment;
         { Is the first field already the start of a variant?  }
-        firstfield:=nil;
-        firstfieldvariant:=false;
-        for i:=0 to recst.SymList.count-1 do
+        lFirstField:=nil;
+        lFirstFieldVariant:=false;
+        for lIndex:=0 to ARecordST.SymList.count-1 do
           begin
-            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
+            if (TSym(ARecordST.SymList[lIndex]).typ<>FieldVarSym) then
               continue;
-            field:=TFieldVarSym(recst.SymList[i]);
-            if not Assigned(firstfield) then
-              firstfield:=field
-            else if (vo_is_first_field in field.VarOptions) then
+            lFieldSym:=TFieldVarSym(ARecordST.SymList[lIndex]);
+            if not Assigned(lFirstField) then
+              lFirstField:=lFieldSym
+            else if (vo_is_first_field in lFieldSym.VarOptions) then
               begin
-                if (field.FieldOffset=firstfield.FieldOffset) then
-                  firstfieldvariant:=true;
+                if (lFieldSym.FieldOffset=lFirstField.FieldOffset) then
+                  lFirstFieldVariant:=true;
               end;
           end;
-        variantstarts:=TFPList.create;
-        encodedstr:=encodedstr+'{'+recname+'=';
-        for i:=0 to recst.SymList.count-1 do
+        lVariantStarts:=TFPList.Create;
+        AEncodedString:=AEncodedString+'{'+ARecordName+'=';
+        for lIndex:=0 to ARecordST.SymList.count-1 do
           begin
-            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
+            if (TSym(ARecordST.SymList[lIndex]).typ<>FieldVarSym) then
               continue;
 
-            field:=TFieldVarSym(recst.SymList[i]);
+            lFieldSym:=TFieldVarSym(ARecordST.SymList[lIndex]);
             { start of a variant part? }
-            if ((field=firstfield) and
-                firstfieldvariant) or
-               ((field<>firstfield) and
-                (vo_is_first_field in field.VarOptions)) then
+            if ((lFieldSym=lFirstField) and
+                lFirstFieldVariant) or
+               ((lFieldSym<>lFirstField) and
+                (vo_is_first_field in lFieldSym.VarOptions)) then
               begin
-                varindex:=variantstarts.count-1;
-                if (varindex=-1) or
-                   (TFieldVarSym(variantstarts[varindex]).FieldOffset<field.FieldOffset) then
+                lVariantIndex:=lVariantStarts.count-1;
+                if (lVariantIndex=-1) or
+                   (TFieldVarSym(lVariantStarts[lVariantIndex]).FieldOffset<lFieldSym.FieldOffset) then
                   begin
                     { new, more deeply nested variant }
-                    encodedstr:=encodedstr+'(?={?=';
-                    variantstarts.add(field);
+                    AEncodedString:=AEncodedString+'(?={?=';
+                    lVariantStarts.add(lFieldSym);
                   end
                 else
                   begin
                     { close existing nested variants if any }
-                    while (varindex>=0) and
-                          (TFieldVarSym(variantstarts[varindex]).FieldOffset>field.FieldOffset) do
+                    while (lVariantIndex>=0) and
+                          (TFieldVarSym(lVariantStarts[lVariantIndex]).FieldOffset>lFieldSym.FieldOffset) do
                       begin
                         { close more deeply nested variants }
-                        encodedstr:=encodedstr+'})';
-                        dec(varindex);
+                        AEncodedString:=AEncodedString+'})';
+                        dec(lVariantIndex);
                       end;
-                    if (varindex<0) then
+                    if (lVariantIndex<0) then
                       InternalError(2009081805);
 
                     { variant at the same level as a previous one }
-                    variantstarts.count:=varindex+1;
+                    lVariantStarts.count:=lVariantIndex+1;
                     { No need to add this field, it has the same offset as the
                       previous one at this position.  }
-                    if TFieldVarSym(variantstarts[varindex]).FieldOffset<>field.FieldOffset then
+                    if TFieldVarSym(lVariantStarts[lVariantIndex]).FieldOffset<>lFieldSym.FieldOffset then
                       InternalError(2009081601);
                     { close previous variant sub-part and start new one }
-                    encodedstr:=encodedstr+'}{?=';
+                    AEncodedString:=AEncodedString+'}{?=';
                   end
               end;
-            if not objcaddencodedtype(field.vardef,ris_afterpointer,bpacked,encodedstr,founderror) then
+            if not ObjCAddEncodedType(lFieldSym.vardef,ris_afterpointer,lBitPacked,AEncodedString,AFoundError) then
               exit;
           end;
-        for i:=0 to variantstarts.count-1 do
-          encodedstr:=encodedstr+'})';
-        variantstarts.free;
-        variantstarts := nil;
-        encodedstr:=encodedstr+'}';
-        result:=true
+        for lIndex:=0 to lVariantStarts.count-1 do
+          AEncodedString:=AEncodedString+'})';
+        lVariantStarts.free;
+        lVariantStarts := nil;
+        AEncodedString:=AEncodedString+'}';
+        Result:=true
       end;
 
 
-    function objcaddencodedtype(def: TDef; recordinfostate: TRecordInfoState; bpacked: boolean; var encodedstr: AnsiString; out founderror: TDef): boolean;
+    function ObjCAddEncodedType(ADef: TDef; ARecordInfoState: TRecordInfoState; ABitPacked: Boolean; var AEncodedString: AnsiString; out AFoundError: TDef): Boolean;
       var
-        recname: AnsiString;
-        recdef: TRecordDef;
-        objdef: TObjectDef;
-        len: aint;
-        c: char;
-        newstate: TRecordInfoState;
-        addrpara: boolean;
+        lRecordName: AnsiString;
+        lRecordDef: TRecordDef;
+        lObjectDef: TObjectDef;
+        lLength: AInt;
+        lChar: char;
+        lNewState: TRecordInfoState;
+        lAddrPara: Boolean;
       begin
-        result:=true;
-        case def.typ of
+        Result:=true;
+        case ADef.typ of
           stringdef :
             begin
-              case TStringDef(def).StringType of
+              case TStringDef(ADef).StringType of
                 st_shortstring:
                   { include length byte }
-                  encodedstr:=encodedstr+'['+ToStr(TStringDef(def).len+1)+'C]';
+                  AEncodedString:=AEncodedString+'['+ToStr(TStringDef(ADef).len+1)+'C]';
                 else
                   { While we could handle refcounted Pascal strings correctly
                     when such methods are called from Pascal code, things would
@@ -171,62 +171,62 @@ implementation
                     code/reflection since the necessary refcount helper calls
                     would be missing on the caller side (unless we'd
                     automatically generate wrappers).  }
-                  result:=false;
+                  Result:=false;
               end;
             end;
           enumdef,
           orddef :
             begin
-              if bpacked and
-                 not Is_Void(def) then
-                encodedstr:=encodedstr+'b'+ToStr(def.PackedBitSize)
+              if ABitPacked and
+                 not Is_Void(ADef) then
+                AEncodedString:=AEncodedString+'b'+ToStr(ADef.PackedBitSize)
               else
                 begin
-                  if Is_Void(def) then
-                    c:='v'
+                  if Is_Void(ADef) then
+                    lChar:='v'
                   { in gcc, sizeof(_Bool) = sizeof(char) }
-                  else if Is_Boolean(def) and
-                          (def.Size=1) then
-                    c:='B'
+                  else if Is_Boolean(ADef) and
+                          (ADef.Size=1) then
+                    lChar:='B'
                   else
                     begin
-                      case def.Size of
+                      case ADef.Size of
                         1:
-                          c:='c';
+                          lChar:='c';
                         2:
-                          c:='s';
+                          lChar:='s';
                         4:
-                          c:='i';
+                          lChar:='i';
                         8:
-                          c:='q';
+                          lChar:='q';
                         else
                           InternalError(2009081502);
                       end;
-                      if not Is_Signed(def) then
-                        c:=upcase(c);
+                      if not Is_Signed(ADef) then
+                        lChar:=upcase(lChar);
                     end;
-                  encodedstr:=encodedstr+c;
+                  AEncodedString:=AEncodedString+lChar;
                 end;
             end;
           pointerdef :
             begin
-              if Is_PChar(def) then
-                encodedstr:=encodedstr+'*'
-              else if (def=ObjC_IDType) then
-                encodedstr:=encodedstr+'@'
-              else if (def=ObjC_SelType) then
-                encodedstr:=encodedstr+':'
-              else if (def=ObjC_MetaClassType) then
-                encodedstr:=encodedstr+'#'
+              if Is_PChar(ADef) then
+                AEncodedString:=AEncodedString+'*'
+              else if (ADef=ObjC_IDType) then
+                AEncodedString:=AEncodedString+'@'
+              else if (ADef=ObjC_SelType) then
+                AEncodedString:=AEncodedString+':'
+              else if (ADef=ObjC_MetaClassType) then
+                AEncodedString:=AEncodedString+'#'
               else
                 begin
-                  encodedstr:=encodedstr+'^';
-                  newstate:=recordinfostate;
-                  if (recordinfostate<ris_dontprint) then
-                    newstate:=succ(newstate);
-                  if not objcaddencodedtype(TPointerDef(def).PointedDef,newstate,false,encodedstr,founderror) then
+                  AEncodedString:=AEncodedString+'^';
+                  lNewState:=ARecordInfoState;
+                  if (ARecordInfoState<ris_dontprint) then
+                    lNewState:=succ(lNewState);
+                  if not ObjCAddEncodedType(TPointerDef(ADef).PointedDef,lNewState,false,AEncodedString,AFoundError) then
                     begin
-                      result:=false;
+                      Result:=false;
                       { report the exact (nested) error definition }
                       exit;
                     end;
@@ -234,74 +234,74 @@ implementation
             end;
           floatdef :
             begin
-              case TFloatDef(def).FloatType of
+              case TFloatDef(ADef).FloatType of
                 S32Real:
-                  c:='f';
+                  lChar:='f';
                 S64Real:
-                  c:='d';
+                  lChar:='d';
                 else
                   begin
-                    c:='!';
-                    result:=false;
+                    lChar:='!';
+                    Result:=false;
                   end;
               end;
-              encodedstr:=encodedstr+c;
+              AEncodedString:=AEncodedString+lChar;
             end;
           filedef :
-            result:=false;
+            Result:=false;
           recorddef :
             begin
-              if Assigned(def.TypeSym) then
-                recname:=def.TypeName
+              if Assigned(ADef.TypeSym) then
+                lRecordName:=ADef.TypeName
               else
-                recname:='?';
+                lRecordName:='?';
 
-              if (recordinfostate<>ris_dontprint) then
+              if (ARecordInfoState<>ris_dontprint) then
                 begin
-                  if not encoderecst(recname,TAbstractRecordSymTable(TRecordDef(def).SymTable),encodedstr,founderror) then
+                  if not EncodeRecST(lRecordName,TAbstractRecordSymTable(TRecordDef(ADef).SymTable),AEncodedString,AFoundError) then
                     begin
-                      result:=false;
+                      Result:=false;
                       { report the exact (nested) error definition }
                       exit;
                     end
                 end
               else
-                encodedstr:=encodedstr+'{'+recname+'}'
+                AEncodedString:=AEncodedString+'{'+lRecordName+'}'
             end;
           variantdef :
             begin
-              recdef:=TRecordDef(Search_System_Type('TVARDATA').typedef);
-              if (recordinfostate<>ris_dontprint) then
+              lRecordDef:=TRecordDef(Search_System_Type('TVARDATA').TypeDef);
+              if (ARecordInfoState<>ris_dontprint) then
                 begin
-                  if not encoderecst(recdef.TypeName,TAbstractRecordSymTable(recdef.SymTable),encodedstr,founderror) then
+                  if not EncodeRecST(lRecordDef.TypeName,TAbstractRecordSymTable(lRecordDef.SymTable),AEncodedString,AFoundError) then
                     begin
-                      result:=false;
+                      Result:=false;
                       { report the exact (nested) error definition }
                       exit;
                     end
                 end
               else
-                encodedstr:=encodedstr+'{'+recdef.TypeName+'}';
+                AEncodedString:=AEncodedString+'{'+lRecordDef.TypeName+'}';
             end;
           classrefdef :
             begin
-              encodedstr:=encodedstr+'^';
-              newstate:=recordinfostate;
-              if (recordinfostate<>ris_dontprint) then
-                newstate:=succ(newstate);
-              if Is_ObjCClassRef(def) then
+              AEncodedString:=AEncodedString+'^';
+              lNewState:=ARecordInfoState;
+              if (ARecordInfoState<>ris_dontprint) then
+                lNewState:=succ(lNewState);
+              if Is_ObjCClassRef(ADef) then
                 begin
-                  objdef:=TObjectDef(TClassRefDef(def).PointedDef);
-                  if (newstate<>ris_dontprint) then
+                  lObjectDef:=TObjectDef(TClassRefDef(ADef).PointedDef);
+                  if (lNewState<>ris_dontprint) then
                     { anonymous (objc)class definitions do not exist }
                     begin
-                      if not encoderecst(objdef.ObjExtName^,TAbstractRecordSymTable(objdef.SymTable),encodedstr,founderror) then
+                      if not EncodeRecST(lObjectDef.ObjExtName^,TAbstractRecordSymTable(lObjectDef.SymTable),AEncodedString,AFoundError) then
                         { The fields of an Objective-C class should always be
                           encodeable.  }
                         InternalError(2009081702);
                     end
                   else
-                    encodedstr:=encodedstr+'{'+objdef.ObjExtName^+'}'
+                    AEncodedString:=AEncodedString+'{'+lObjectDef.ObjExtName^+'}'
                 end
               { Object Pascal classrefdefs point to a vmt, not really useful
                 to completely write those here.  I'm not even sure what the
@@ -311,105 +311,105 @@ implementation
                 classrefdefs the same as such forward-defined structs.  }
               else
                 begin
-                  if Assigned(def.TypeSym) then
-                    recname:=def.TypeName
+                  if Assigned(ADef.TypeSym) then
+                    lRecordName:=ADef.TypeName
                   else
-                    recname:='?';
-                  encodedstr:=encodedstr+'{'+recname;
-                  if (newstate<>ris_dontprint) then
-                    encodedstr:=encodedstr+'=';
-                  encodedstr:=encodedstr+'}'
+                    lRecordName:='?';
+                  AEncodedString:=AEncodedString+'{'+lRecordName;
+                  if (lNewState<>ris_dontprint) then
+                    AEncodedString:=AEncodedString+'=';
+                  AEncodedString:=AEncodedString+'}'
                 end;
             end;
           setdef :
             begin
-              addrpara:=ParaManager.Push_Addr_Param(vs_value,def,pocall_cdecl);
-              if not addrpara then
+              lAddrPara:=ParaManager.Push_Addr_Param(vs_value,ADef,pocall_cdecl);
+              if not lAddrPara then
                 { encode as an record, they are always passed by value in C.  }
-                encodedstr:=encodedstr+'{?=';
+                AEncodedString:=AEncodedString+'{?=';
               { Encode the set itself as an array. Without an encompassing
                 record, these are always passed by reference in C.  }
-              encodedstr:=encodedstr+'['+ToStr(def.Size)+'C]';
-              if not addrpara then
-                encodedstr:=encodedstr+'}';
+              AEncodedString:=AEncodedString+'['+ToStr(ADef.Size)+'C]';
+              if not lAddrPara then
+                AEncodedString:=AEncodedString+'}';
             end;
           formaldef :
             begin
-              encodedstr:=encodedstr+'^v';
+              AEncodedString:=AEncodedString+'^v';
             end;
           arraydef :
             begin
-              if Is_Array_Of_Const(def) then
+              if Is_Array_Of_Const(ADef) then
                 { do nothing, varargs are ignored in signatures }
-              else if Is_Special_Array(def) then
-                result:=false
+              else if Is_Special_Array(ADef) then
+                Result:=false
               else
                 begin
-                  len:=TArrayDef(def).HighRange-TArrayDef(def).LowRange+1;
-                  if Is_Packed_Array(def) then
+                  lLength:=TArrayDef(ADef).HighRange-TArrayDef(ADef).LowRange+1;
+                  if Is_Packed_Array(ADef) then
                     begin
                       { convert from bits to bytes for bitpacked arrays }
-                      len:=(len+7) div 8;
+                      lLength:=(lLength+7) div 8;
                       { and encode as plain array of bytes }
-                      encodedstr:=encodedstr+'['+ToStr(len)+'C]';
+                      AEncodedString:=AEncodedString+'['+ToStr(lLength)+'C]';
                     end
                   else
                     begin
-                      encodedstr:=encodedstr+'['+ToStr(len);
+                      AEncodedString:=AEncodedString+'['+ToStr(lLength);
                       { Embedded structured types in the array are printed
                         in full regardless of the current recordinfostate.  }
-                      if not objcaddencodedtype(TArrayDef(def).ElementDef,ris_initial,false,encodedstr,founderror) then
+                      if not ObjCAddEncodedType(TArrayDef(ADef).ElementDef,ris_initial,false,AEncodedString,AFoundError) then
                         begin
-                          result:=false;
+                          Result:=false;
                           { report the exact (nested) error definition }
                           exit;
                         end;
-                      encodedstr:=encodedstr+']';
+                      AEncodedString:=AEncodedString+']';
                     end;
                 end;
             end;
           procvardef :
-            if not(po_is_block in TProcVarDef(def).ProcOptions) then
-              encodedstr:=encodedstr+'^?'
+            if not(po_is_block in TProcVarDef(ADef).ProcOptions) then
+              AEncodedString:=AEncodedString+'^?'
             else
-              encodedstr:=encodedstr+'@?';
+              AEncodedString:=AEncodedString+'@?';
           objectdef :
-            case TObjectDef(def).ObjectType of
+            case TObjectDef(ADef).ObjectType of
               odt_helper,
               odt_class,
               odt_object,
               odt_cppclass:
                 begin
-                  newstate:=recordinfostate;
+                  lNewState:=ARecordInfoState;
                   { implicit pointer for classes }
-                  if (TObjectDef(def).ObjectType in [odt_class,odt_helper]) then
+                  if (TObjectDef(ADef).ObjectType in [odt_class,odt_helper]) then
                     begin
-                      encodedstr:=encodedstr+'^';
+                      AEncodedString:=AEncodedString+'^';
                       { make all classes opaque, so even if they contain a
                         reference-counted field there is no problem. Since a
                         "dereferenced class" object does not exist, this should
                         not cause problems }
-                      newstate:=ris_dontprint;
+                      lNewState:=ris_dontprint;
                     end;
-                  if newstate<>ris_dontprint then
+                  if lNewState<>ris_dontprint then
                     begin
-                      if not encoderecst(def.TypeName,TAbstractRecordSymTable(TObjectDef(def).SymTable),encodedstr,founderror) then
+                      if not EncodeRecST(ADef.TypeName,TAbstractRecordSymTable(TObjectDef(ADef).SymTable),AEncodedString,AFoundError) then
                         begin
-                          result:=false;
+                          Result:=false;
                           { report the exact (nested) error definition }
                           exit;
                         end
                     end
                   else
-                    encodedstr:=encodedstr+'{'+def.TypeName+'}'
+                    AEncodedString:=AEncodedString+'{'+ADef.TypeName+'}'
                 end;
               odt_interfacecom,
               odt_interfacecom_property,
               odt_interfacecom_function,
               odt_dispinterface:
-                result:=false;
+                Result:=false;
               odt_interfacecorba:
-                encodedstr:=encodedstr+'^{'+def.TypeName+'=}';
+                AEncodedString:=AEncodedString+'^{'+ADef.TypeName+'=}';
               { In Objective-C, the actual types of class instances are
                 NSObject* etc, and those are encoded as "@". In FPC, to keep
                 the similarity with Delphi-style Object Pascal, the type is
@@ -417,27 +417,27 @@ implementation
                 has "class of NSObject" as equivalent here.  }
               odt_objcclass,
               odt_objcprotocol:
-                encodedstr:=encodedstr+'@';
+                AEncodedString:=AEncodedString+'@';
               else
                 InternalError(2009081509);
             end;
           undefineddef,
           errordef :
-            result:=false;
+            Result:=false;
           procdef :
             { must be done via objcencodemethod() }
             InternalError(2009081511);
         else
           InternalError(2009150812);
         end;
-        if not result then
-          founderror:=def;
+        if not Result then
+          AFoundError:=ADef;
       end;
 
 
-    function objctryencodetype(def: TDef; out encodedtype: AnsiString; out founderror: TDef): boolean;
+    function ObjCTryEncodeType(ADef: TDef; out AEncodedType: AnsiString; out AFoundError: TDef): Boolean;
       begin
-        result:=objcaddencodedtype(def,ris_initial,false,encodedtype,founderror);
+        Result:=ObjCAddEncodedType(ADef,ris_initial,false,AEncodedType,AFoundError);
       end;
 
 
@@ -445,47 +445,47 @@ implementation
                     ObjC type validity checking
 *******************************************************************}
 
-    function objcdochecktype(def: TDef; recordinfostate: TRecordInfoState; out founderror: TDef): boolean; forward;
+    function ObjCDoCheckType(ADef: TDef; ARecordInfoState: TRecordInfoState; out AFoundError: TDef): Boolean; forward;
 
-    function checkrecsttype(recst: TAbstractRecordSymTable; recordinfostate: TRecordInfoState; out founderror: TDef): boolean;
+    function CheckRecSTType(ARecordST: TAbstractRecordSymTable; ARecordInfoState: TRecordInfoState; out AFoundError: TDef): Boolean;
       var
-        i: LongInt;
-        field: TFieldVarSym;
-        newstate: TRecordInfoState;
+        lIndex: LongInt;
+        lFieldSym: TFieldVarSym;
+        lNewState: TRecordInfoState;
       begin
-        result:=false;
-        newstate:=recordinfostate;
+        Result:=false;
+        lNewState:=ARecordInfoState;
         { Although we never have to print the type info for nested
           records, check them anyway in case we're not after a pointer
           since if such records contain refcounted types then they
           can cause just as much trouble as if they were a simple
           refcounted field.  }
-        if (newstate=ris_afterpointer) then
-          newstate:=ris_dontprint;
-        for i:=0 to recst.SymList.count-1 do
+        if (lNewState=ris_afterpointer) then
+          lNewState:=ris_dontprint;
+        for lIndex:=0 to ARecordST.SymList.count-1 do
           begin
-            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
+            if (TSym(ARecordST.SymList[lIndex]).typ<>FieldVarSym) then
               continue;
 
-            field:=TFieldVarSym(recst.SymList[i]);
-            if not objcdochecktype(field.vardef,newstate,founderror) then
+            lFieldSym:=TFieldVarSym(ARecordST.SymList[lIndex]);
+            if not ObjCDoCheckType(lFieldSym.vardef,lNewState,AFoundError) then
               exit;
           end;
-        result:=true
+        Result:=true
       end;
 
 
-    function objcdochecktype(def: TDef; recordinfostate: TRecordInfoState; out founderror: TDef): boolean;
+    function ObjCDoCheckType(ADef: TDef; ARecordInfoState: TRecordInfoState; out AFoundError: TDef): Boolean;
       var
-        recdef: TRecordDef;
-        objdef: TObjectDef;
-        newstate: TRecordInfoState;
+        lRecordDef: TRecordDef;
+        lObjectDef: TObjectDef;
+        lNewState: TRecordInfoState;
       begin
-        result:=true;
-        case def.typ of
+        Result:=true;
+        case ADef.typ of
           stringdef :
             begin
-              case TStringDef(def).StringType of
+              case TStringDef(ADef).StringType of
                 st_shortstring:
                   ;
                 else
@@ -495,7 +495,7 @@ implementation
                     code/reflection since the necessary refcount helper calls
                     would be missing on the caller side (unless we'd
                     automatically generate wrappers).  }
-                  result:=false;
+                  Result:=false;
               end;
             end;
           enumdef,
@@ -503,35 +503,35 @@ implementation
             ;
           pointerdef :
             begin
-              newstate:=recordinfostate;
-              if (recordinfostate<ris_dontprint) then
-                newstate:=succ(newstate);
-              if not objcdochecktype(TPointerDef(def).PointedDef,newstate,founderror) then
+              lNewState:=ARecordInfoState;
+              if (ARecordInfoState<ris_dontprint) then
+                lNewState:=succ(lNewState);
+              if not ObjCDoCheckType(TPointerDef(ADef).PointedDef,lNewState,AFoundError) then
                 begin
-                  result:=false;
+                  Result:=false;
                   { report the exact (nested) error definition }
                   exit;
                 end;
             end;
           floatdef :
             begin
-              case TFloatDef(def).FloatType of
+              case TFloatDef(ADef).FloatType of
                 S32Real,
                 S64Real:
                   ;
                 else
-                  result:=false;
+                  Result:=false;
               end;
             end;
           filedef :
-            result:=false;
+            Result:=false;
           recorddef :
             begin
-              if (recordinfostate<>ris_dontprint) then
+              if (ARecordInfoState<>ris_dontprint) then
                 begin
-                  if not checkrecsttype(TAbstractRecordSymTable(TRecordDef(def).SymTable),recordinfostate,founderror) then
+                  if not CheckRecSTType(TAbstractRecordSymTable(TRecordDef(ADef).SymTable),ARecordInfoState,AFoundError) then
                     begin
-                      result:=false;
+                      Result:=false;
                       { report the exact (nested) error definition }
                       exit;
                     end
@@ -539,12 +539,12 @@ implementation
             end;
           variantdef :
             begin
-              recdef:=TRecordDef(Search_System_Type('TVARDATA').typedef);
-              if (recordinfostate<>ris_dontprint) then
+              lRecordDef:=TRecordDef(Search_System_Type('TVARDATA').TypeDef);
+              if (ARecordInfoState<>ris_dontprint) then
                 begin
-                  if not checkrecsttype(TAbstractRecordSymTable(recdef.SymTable),recordinfostate,founderror) then
+                  if not CheckRecSTType(TAbstractRecordSymTable(lRecordDef.SymTable),ARecordInfoState,AFoundError) then
                     begin
-                      result:=false;
+                      Result:=false;
                       { report the exact (nested) error definition }
                       exit;
                     end
@@ -552,17 +552,17 @@ implementation
             end;
           classrefdef:
             begin
-              if Is_ObjCClassRef(def) then
+              if Is_ObjCClassRef(ADef) then
                 begin
-                  objdef:=TObjectDef(TClassRefDef(def).PointedDef);
-                  newstate:=recordinfostate;
-                  if (recordinfostate<ris_dontprint) then
-                    newstate:=succ(newstate);
-                  if (newstate<>ris_dontprint) then
+                  lObjectDef:=TObjectDef(TClassRefDef(ADef).PointedDef);
+                  lNewState:=ARecordInfoState;
+                  if (ARecordInfoState<ris_dontprint) then
+                    lNewState:=succ(lNewState);
+                  if (lNewState<>ris_dontprint) then
                     begin
-                      if not checkrecsttype(TAbstractRecordSymTable(objdef.SymTable),recordinfostate,founderror) then
+                      if not CheckRecSTType(TAbstractRecordSymTable(lObjectDef.SymTable),ARecordInfoState,AFoundError) then
                         begin
-                          result:=false;
+                          Result:=false;
                           { report the exact (nested) error definition }
                           exit;
                         end
@@ -574,17 +574,17 @@ implementation
             ;
           arraydef :
             begin
-              if Is_Array_Of_Const(def) then
+              if Is_Array_Of_Const(ADef) then
                 { ok, varargs are ignored in signatures }
-              else if Is_Special_Array(def) then
-                result:=false
+              else if Is_Special_Array(ADef) then
+                Result:=false
               else
                 begin
-                  if not Is_Packed_Array(def) then
+                  if not Is_Packed_Array(ADef) then
                     begin
-                      if not objcdochecktype(TArrayDef(def).ElementDef,ris_initial,founderror) then
+                      if not ObjCDoCheckType(TArrayDef(ADef).ElementDef,ris_initial,AFoundError) then
                         begin
-                          result:=false;
+                          Result:=false;
                           { report the exact (nested) error definition }
                           exit;
                         end;
@@ -594,27 +594,27 @@ implementation
           procvardef :
             ;
           objectdef :
-            case TObjectDef(def).ObjectType of
+            case TObjectDef(ADef).ObjectType of
               odt_helper,
               odt_class,
               odt_object,
               odt_cppclass:
                 begin
-                  newstate:=recordinfostate;
+                  lNewState:=ARecordInfoState;
                   { implicit pointer for classes }
-                  if (TObjectDef(def).ObjectType in [odt_class,odt_helper]) then
+                  if (TObjectDef(ADef).ObjectType in [odt_class,odt_helper]) then
                     begin
                       { make all classes opaque, so even if they contain a
                         reference-counted field there is no problem. Since a
                         "dereferenced class" object does not exist, this should
                         not cause problems }
-                      newstate:=ris_dontprint;
+                      lNewState:=ris_dontprint;
                     end;
-                  if newstate<>ris_dontprint then
+                  if lNewState<>ris_dontprint then
                     begin
-                      if not checkrecsttype(TAbstractRecordSymTable(TObjectDef(def).SymTable),newstate,founderror) then
+                      if not CheckRecSTType(TAbstractRecordSymTable(TObjectDef(ADef).SymTable),lNewState,AFoundError) then
                         begin
-                          result:=false;
+                          Result:=false;
                           { report the exact (nested) error definition }
                           exit;
                         end
@@ -624,7 +624,7 @@ implementation
               odt_interfacecom_property,
               odt_interfacecom_function,
               odt_dispinterface:
-                result:=false;
+                Result:=false;
               odt_interfacecorba,
               odt_objcclass,
               odt_objcprotocol:
@@ -634,20 +634,20 @@ implementation
             end;
           undefineddef,
           errordef :
-            result:=false;
+            Result:=false;
           procdef :
-            result:=false;
+            Result:=false;
         else
           InternalError(2009170812);
         end;
-        if not result then
-          founderror:=def;
+        if not Result then
+          AFoundError:=ADef;
       end;
 
 
-    function objcchecktype(def: TDef; out founderror: TDef): boolean;
+    function ObjCCheckType(ADef: TDef; out AFoundError: TDef): Boolean;
       begin
-        result:=objcdochecktype(def,ris_initial,founderror);
+        Result:=ObjCDoCheckType(ADef,ris_initial,AFoundError);
       end;
 
 

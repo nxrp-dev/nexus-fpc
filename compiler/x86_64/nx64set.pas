@@ -32,8 +32,8 @@ interface
 
     type
       TX8664CaseNode = class(TX86CaseNode)
-         procedure optimizevalues(var max_linear_list:int64;var max_dist:qword);override;
-         procedure genjumptable(hp : PCaseLabel;min_,max_ : int64);override;
+         procedure OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);override;
+         procedure GenJumpTable(ARootLabel : PCaseLabel;AMin,AMax : Int64);override;
       end;
 
 
@@ -53,130 +53,130 @@ implementation
                             TX8664CASENODE
 *****************************************************************************}
 
-    procedure TX8664CaseNode.optimizevalues(var max_linear_list:int64;var max_dist:qword);
+    procedure TX8664CaseNode.OptimizeValues(var AMaxLinearList:Int64;var AMaxDistance:QWord);
       begin
-        inc(max_linear_list,9);
+        inc(AMaxLinearList,9);
       end;
 
 
     { Always generate position-independent jump table, it is twice less in size at a price
       of two extra instructions (which shouldn't cause more slowdown than pipeline trashing) }
-    procedure TX8664CaseNode.genjumptable(hp : PCaseLabel; min_,max_ : int64);
+    procedure TX8664CaseNode.GenJumpTable(ARootLabel : PCaseLabel; AMin,AMax : Int64);
       var
-        last: TConstExprInt;
-        tablelabel: TAsmLabel;
-        basereg,indexreg,jumpreg: TRegister;
-        href: TReference;
-        jtlist: TAsmList;
-        opcgsize: TCgSize;
-        sectype: TAsmSectiontype;
-        jtitemconsttype: TAIConstType;
-        AlmostExhaustive: Boolean;
-        lv, hv: TConstExprInt;
-        ExhaustiveLimit, Range, x, oldmin : aint;
+        lLastValue: TConstExprInt;
+        lTableLabel: TAsmLabel;
+        lBaseReg,lIndexReg,lJumpReg: TRegister;
+        lReference: TReference;
+        lJumpTableList: TAsmList;
+        lOpCGSize: TCgSize;
+        lSectionType: TAsmSectiontype;
+        lTableItemConstType: TAIConstType;
+        lAlmostExhaustive: Boolean;
+        lLowValue, lHighValue: TConstExprInt;
+        lExhaustiveLimit, lRange, lValue, lOldMin : aint;
 
       const
-        ExhaustiveLimitBase = 32;
+        cExhaustiveLimitBase = 32;
 
-      procedure genitem(t : PCaseLabel);
+      procedure GenItem(ALabel : PCaseLabel);
         var
-          i : TConstExprInt;
+          lIndex : TConstExprInt;
         begin
-          if Assigned(t^.less) then
-            genitem(t^.less);
+          if Assigned(ALabel^.Less) then
+            GenItem(ALabel^.Less);
           { fill possible hole }
-          i:=last+1;
-          while i<=t^._low-1 do
+          lIndex:=lLastValue+1;
+          while lIndex<=ALabel^.LowValue-1 do
             begin
-              jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
-              i:=i+1;
+              lJumpTableList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,FElseLabel));
+              lIndex:=lIndex+1;
             end;
-          i:=t^._low;
-          while i<=t^._high do
+          lIndex:=ALabel^.LowValue;
+          while lIndex<=ALabel^.HighValue do
             begin
-              jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
-              i:=i+1;
+              lJumpTableList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,BlockLabel(ALabel^.BlockID)));
+              lIndex:=lIndex+1;
             end;
-          last:=t^._high;
-          if Assigned(t^.greater) then
-            genitem(t^.greater);
+          lLastValue:=ALabel^.HighValue;
+          if Assigned(ALabel^.Greater) then
+            GenItem(ALabel^.Greater);
         end;
 
       begin
-        lv:=0;
-        hv:=0;
+        lLowValue:=0;
+        lHighValue:=0;
         if not(TargetInfo.system in systems_darwin) then
-          jtitemconsttype:=aitconst_32bit
+          lTableItemConstType:=aitconst_32bit
         else
           { see https://gmplib.org/list-archives/gmp-bugs/2012-December/002836.html }
-          jtitemconsttype:=aitconst_darwin_dwarf_delta32;
+          lTableItemConstType:=aitconst_darwin_dwarf_delta32;
 
-        jtlist := CurrentAsmData.CurrAsmList;
-        last:=min_;
-        opcgsize:=Def_CGSize(opsize);
+        lJumpTableList := CurrentAsmData.CurrAsmList;
+        lLastValue:=AMin;
+        lOpCGSize:=Def_CGSize(FOpSize);
 
-        AlmostExhaustive := False;
-        oldmin := min_;
+        lAlmostExhaustive := False;
+        lOldMin := AMin;
 
-        if not(jumptable_no_range) then
+        if not(FJumpTableNoRange) then
           begin
 
-            GetRange(left.resultdef,lv,hv);
-            Range := aint(max_)-aint(min_);
+            GetRange(Left.ResultDef,lLowValue,lHighValue);
+            lRange := aint(AMax)-aint(AMin);
 
             if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
               { Limit size of jump tables for small enumerations so they have
                 to be at least two-thirds full before being considered for the
                 "almost exhaustive" treatment }
-              ExhaustiveLimit := min(ExhaustiveLimitBase, labelcoverage shl 1)
+              lExhaustiveLimit := min(cExhaustiveLimitBase, LabelCoverage shl 1)
             else
-              ExhaustiveLimit := ExhaustiveLimitBase;
+              lExhaustiveLimit := cExhaustiveLimitBase;
 
             { If true, then this indicates that almost every possible value of x is covered by
               a label.  As such, it's more cost-efficient to remove the initial range check and
               instead insert the remaining values into the jump table, pointing at elselabel. [Kit] }
-            if ((hv - lv) - Range <= ExhaustiveLimit) then
+            if ((lHighValue - lLowValue) - lRange <= lExhaustiveLimit) then
               begin
-                oldmin := min_;
-                min_ := lv.svalue;
-                AlmostExhaustive := True;
+                lOldMin := AMin;
+                AMin := lLowValue.svalue;
+                lAlmostExhaustive := True;
               end
             else
               begin
                 { a <= x <= b <-> unsigned(x-a) <= (b-a) }
-                cg.A_Op_Const_Reg(jtlist,OP_SUB,opcgsize,aint(min_),hregister);
+                cg.A_Op_Const_Reg(lJumpTableList,OP_SUB,lOpCGSize,aint(AMin),FRegister);
                 { case expr greater than max_ => goto elselabel }
-                cg.A_Cmp_Const_Reg_Label(jtlist,opcgsize,OC_A,Range,hregister,elselabel);
-                min_:=0;
+                cg.A_Cmp_Const_Reg_Label(lJumpTableList,lOpCGSize,OC_A,lRange,FRegister,FElseLabel);
+                AMin:=0;
                 { do not sign extend when we load the index register, as we applied an offset above }
-                opcgsize:=TCgSize2Unsigned[opcgsize];
+                lOpCGSize:=TCgSize2Unsigned[lOpCGSize];
               end;
           end;
 
         { local label in order to avoid using GOT }
-        CurrentAsmData.getlabel(tablelabel,alt_data);
-        indexreg:=cg.MakeRegSize(jtlist,hregister,OS_ADDR);
-        cg.A_Load_Reg_Reg(jtlist,opcgsize,OS_ADDR,hregister,indexreg);
+        CurrentAsmData.getlabel(lTableLabel,alt_data);
+        lIndexReg:=cg.MakeRegSize(lJumpTableList,FRegister,OS_ADDR);
+        cg.A_Load_Reg_Reg(lJumpTableList,lOpCGSize,OS_ADDR,FRegister,lIndexReg);
         { load table address }
-        Reference_Reset_Symbol(href,tablelabel,0,4,[]);
-        basereg:=cg.GetAddressRegister(jtlist);
-        cg.A_LoadAddr_Ref_Reg(jtlist,href,basereg);
+        Reference_Reset_Symbol(lReference,lTableLabel,0,4,[]);
+        lBaseReg:=cg.GetAddressRegister(lJumpTableList);
+        cg.A_LoadAddr_Ref_Reg(lJumpTableList,lReference,lBaseReg);
         { load table slot, 32-bit sign extended }
-        Reference_Reset_Base(href,basereg,-aint(min_)*4,CTempPosInvalid,4,[]);
-        href.Index:=indexreg;
-        href.ScaleFactor:=4;
-        jumpreg:=cg.GetAddressRegister(jtlist);
-        cg.A_Load_Ref_Reg(jtlist,OS_S32,OS_ADDR,href,jumpreg);
+        Reference_Reset_Base(lReference,lBaseReg,-aint(AMin)*4,CTempPosInvalid,4,[]);
+        lReference.Index:=lIndexReg;
+        lReference.ScaleFactor:=4;
+        lJumpReg:=cg.GetAddressRegister(lJumpTableList);
+        cg.A_Load_Ref_Reg(lJumpTableList,OS_S32,OS_ADDR,lReference,lJumpReg);
         { add table address }
-        Reference_Reset_Base(href,basereg,0,CTempPosInvalid,sizeof(PInt),[]);
-        href.Index:=jumpreg;
-        href.ScaleFactor:=1;
-        cg.A_LoadAddr_Ref_Reg(jtlist,href,jumpreg);
+        Reference_Reset_Base(lReference,lBaseReg,0,CTempPosInvalid,sizeof(PInt),[]);
+        lReference.Index:=lJumpReg;
+        lReference.ScaleFactor:=1;
+        cg.A_LoadAddr_Ref_Reg(lJumpTableList,lReference,lJumpReg);
         { and finally jump }
-        emit_reg(A_JMP,S_NO,jumpreg);
+        emit_reg(A_JMP,S_NO,lJumpReg);
         { generate jump table }
         if not(TargetInfo.system in systems_darwin) then
-          sectype:=sec_rodata
+          lSectionType:=sec_rodata
         else
           { on Mac OS X, dead code stripping ("smart linking") happens based on
             global symbols: every global/static symbol (symbols that do not
@@ -189,37 +189,37 @@ implementation
             jump tables must be added in the code section and since aktlocaldata
             is inserted right after the routine, it will become part of the
             same subsection that contains the routine's code }
-          sectype:=sec_code;
+          lSectionType:=sec_code;
 
-        jtlist := CurrentProcInfo.AktLocalData;
-        new_section(jtlist,sectype,CurrentProcInfo.procdef.MangledName,4);
-        jtlist.concat(TAILabel.Create(tablelabel));
+        lJumpTableList := CurrentProcInfo.AktLocalData;
+        new_section(lJumpTableList,lSectionType,CurrentProcInfo.procdef.MangledName,4);
+        lJumpTableList.concat(TAILabel.Create(lTableLabel));
 
-        if AlmostExhaustive then
+        if lAlmostExhaustive then
           begin
             { Fill the table with the values below _min }
-            x := lv.svalue;
-            while x < oldmin do
+            lValue := lLowValue.svalue;
+            while lValue < lOldMin do
               begin
-                jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
-                Inc(x);
+                lJumpTableList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,FElseLabel));
+                Inc(lValue);
               end;
 
-            genitem(hp);
+            GenItem(ARootLabel);
 
             { Fill the table with the values above _max }
             { Subtracting one from hv and not adding 1 to max_ averts the risk of an overflow }
-            x := max_;
-            hv := hv - 1;
-            while x <= hv.svalue do
+            lValue := AMax;
+            lHighValue := lHighValue - 1;
+            while lValue <= lHighValue.svalue do
               begin
-                jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
-                Inc(x);
+                lJumpTableList.concat(TAIConst.Create_rel_sym(lTableItemConstType,lTableLabel,FElseLabel));
+                Inc(lValue);
               end;
 
           end
         else
-          genitem(hp);
+          GenItem(ARootLabel);
       end;
 
 begin

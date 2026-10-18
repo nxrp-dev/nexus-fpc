@@ -51,7 +51,7 @@ type
     { handles the @Data symbol }
     Procedure SetupData;
 
-    constructor create; override;
+    constructor Create; override;
   end;
 
   { Operands are always in AT&T order.
@@ -394,7 +394,7 @@ begin
 
 end;
 
-constructor Tx86Operand.create;
+constructor Tx86Operand.Create;
 begin
   inherited;
 

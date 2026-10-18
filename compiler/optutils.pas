@@ -74,7 +74,7 @@ unit optutils;
         i : Integer;
         p : TNode;
       begin
-        node.allocoptinfo;
+        node.AllocOptInfo;
         p:=Includes(node);
         if Assigned(p) then
           begin
@@ -95,7 +95,7 @@ unit optutils;
         i : LongInt;
       begin
         for i:=0 to Count-1 do
-          if TNode(List[i]).isequal(node) then
+          if TNode(List[i]).IsEqual(node) then
             begin
               result:=TNode(List[i]);
               exit;
@@ -125,7 +125,7 @@ unit optutils;
         for i:=0 to s.count-1 do
           begin
             WriteLn(f,'=============================== Node ',i,' ===============================');
-            printnode(f,TNode(s[i]));
+            PrintNode(f,TNode(s[i]));
             WriteLn(f);
           end;
       end;
@@ -135,14 +135,14 @@ unit optutils;
       begin
         if Assigned(n.optinfo) and ((n.optinfo^.life<>nil) or (n.optinfo^.use<>nil) or (n.optinfo^.def<>nil)) then
           begin
-            write(text(arg^),nodetype2str[n.nodetype],'(',n.fileinfo.line,',',n.fileinfo.column,') Life: ');
+            write(text(arg^),NodeType2Str[n.nodetype],'(',n.fileinfo.line,',',n.fileinfo.column,') Life: ');
             PrintDynSet(text(arg^),n.optinfo^.life);
             write(text(arg^),' Def: ');
             PrintDynSet(text(arg^),n.optinfo^.def);
             write(text(arg^),' Use: ');
             PrintDynSet(text(arg^),n.optinfo^.use);
             if Assigned(n.successor) then
-              write(text(arg^),' Successor: ',nodetype2str[n.successor.nodetype],'(',n.successor.fileinfo.line,',',n.successor.fileinfo.column,')')
+              write(text(arg^),' Successor: ',NodeType2Str[n.successor.nodetype],'(',n.successor.fileinfo.line,',',n.successor.fileinfo.column,')')
             else
               write(text(arg^),' Successor: nil');
             write(text(arg^),' DefSum: ');
@@ -155,7 +155,7 @@ unit optutils;
 
     procedure PrintDFAInfo(var f : text;p : TNode);
       begin
-        foreachnodestatic(pm_postprocess,p,@PrintNodeDFA,@f);
+        ForEachNodeStatic(pm_postprocess,p,@PrintNodeDFA,@f);
       end;
 
 
@@ -278,9 +278,9 @@ unit optutils;
                 result:=p;
                 { the successor of the last node of the for body is the dummy loop iteration node
                   it allows the dfa to inject needed life information into the loop }
-                TForNode(p).loopiteration:=CNothingNode.create;
+                TForNode(p).LoopIteration:=CNothingNode.Create;
 
-                DoSet(TForNode(p).t2,TForNode(p).loopiteration);
+                DoSet(TForNode(p).t2,TForNode(p).LoopIteration);
                 p.successor:=succ;
                 BreakContinueStack.Pop;
               end;
@@ -304,11 +304,11 @@ unit optutils;
                 p.successor:=succ;
 
                 { special case: we do not do a dyn. dfa, but we should handle endless loops }
-                if is_constboolnode(TWhileRepeatNode(p).left) then
+                if Is_ConstBoolNode(TWhileRepeatNode(p).left) then
                   begin
-                    if ((lnf_testatbegin in TWhileRepeatNode(p).loopflags) and
-                      getbooleanvalue(TWhileRepeatNode(p).left)) or (not(lnf_testatbegin in TWhileRepeatNode(p).loopflags) and
-                      not(getbooleanvalue(TWhileRepeatNode(p).left))) then
+                    if ((lnf_testatbegin in TWhileRepeatNode(p).LoopFlags) and
+                      GetBooleanValue(TWhileRepeatNode(p).left)) or (not(lnf_testatbegin in TWhileRepeatNode(p).LoopFlags) and
+                      not(GetBooleanValue(TWhileRepeatNode(p).left))) then
                       p.successor:=nil;
                   end;
 
@@ -334,9 +334,9 @@ unit optutils;
             goton:
               begin
                 result:=p;
-                if not(Assigned(TGotoNode(p).labelnode)) then
+                if not(Assigned(TGotoNode(p).LabelNode)) then
                   InternalError(2007050701);
-                p.successor:=TGotoNode(p).labelnode;
+                p.successor:=TGotoNode(p).LabelNode;
               end;
             exitn:
               begin
@@ -346,16 +346,16 @@ unit optutils;
             casen:
               begin
                 result:=p;
-                DoSet(TCaseNode(p).elseblock,succ);
-                for i:=0 to TCaseNode(p).blocks.count-1 do
-                  DoSet(PCaseBlock(TCaseNode(p).blocks[i])^.statement,succ);
+                DoSet(TCaseNode(p).ElseBlock,succ);
+                for i:=0 to TCaseNode(p).Blocks.count-1 do
+                  DoSet(PCaseBlock(TCaseNode(p).Blocks[i])^.statement,succ);
                 p.successor:=succ;
               end;
             calln:
               begin
                 { not sure if this is enough (FK) }
                 result:=p;
-                if cnf_call_never_returns in TCallNode(p).callnodeflags then
+                if cnf_call_never_returns in TCallNode(p).CallNodeFlags then
                   p.successor:=nil
                 else
                   p.successor:=succ;
@@ -418,10 +418,10 @@ unit optutils;
       var
         defsum : PDFASet;
       begin
-        p.allocoptinfo;
+        p.AllocOptInfo;
         defsum:=@p.optinfo^.defsum;
         if not Assigned(defsum^) then
-            foreachnodestatic(pm_postprocess,p,@adddef,defsum);
+            ForEachNodeStatic(pm_postprocess,p,@adddef,defsum);
       end;
 
 
@@ -431,17 +431,17 @@ unit optutils;
         i : Integer;
       begin
         Result:=fen_false;
-        n.allocoptinfo;
+        n.AllocOptInfo;
         Weight:=max(PLongInt(arg)^,1);
         case n.nodetype of
           casen:
             begin
               CalcExecutionWeights(TCaseNode(n).left,Weight);
-              CaseWeight:=max(Weight div TCaseNode(n).labelcnt,1);
-              for i:=0 to TCaseNode(n).blocks.count-1 do
-                CalcExecutionWeights(PCaseBlock(TCaseNode(n).blocks[i])^.statement,CaseWeight);
+              CaseWeight:=max(Weight div TCaseNode(n).LabelCnt,1);
+              for i:=0 to TCaseNode(n).Blocks.count-1 do
+                CalcExecutionWeights(PCaseBlock(TCaseNode(n).Blocks[i])^.statement,CaseWeight);
 
-              CalcExecutionWeights(TCaseNode(n).elseblock,CaseWeight);
+              CalcExecutionWeights(TCaseNode(n).ElseBlock,CaseWeight);
               Result:=fen_norecurse_false;
             end;
           whilerepeatn:
@@ -467,7 +467,7 @@ unit optutils;
     procedure CalcExecutionWeights(p : TNode;Initial : LongInt = 100);
       begin
         if Assigned(p) then
-          foreachnodestatic(pm_postprocess,p,@SetExecutionWeight,Pointer(@Initial));
+          ForEachNodeStatic(pm_postprocess,p,@SetExecutionWeight,Pointer(@Initial));
       end;
 
 
@@ -485,10 +485,10 @@ unit optutils;
       var
         usesum : PDFASet;
       begin
-        p.allocoptinfo;
+        p.AllocOptInfo;
         usesum:=@p.optinfo^.usesum;
         if not Assigned(usesum^) then
-            foreachnodestatic(pm_postprocess,p,@adduse,usesum);
+            ForEachNodeStatic(pm_postprocess,p,@adduse,usesum);
       end;
 
 

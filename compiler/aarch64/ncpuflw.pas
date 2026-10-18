@@ -30,24 +30,24 @@ interface
 
   type
     TAArch64RaiseNode=class(TCGRaiseNode)
-      function pass_1 : TNode;override;
+      function Pass_1 : TNode;override;
     end;
 
     TAArch64OnNode=class(TCGOnNode)
-      procedure pass_generate_code;override;
+      procedure Pass_Generate_Code;override;
     end;
 
     TAArch64TryExceptNode=class(TCGTryExceptNode)
-      procedure pass_generate_code;override;
+      procedure Pass_Generate_Code;override;
     end;
 
     TAArch64TryFinallyNode=class(TCGTryFinallyNode)
-      finalizepi: TCGProcInfo;
-      constructor create(l,r:TNode);override;
-      constructor create_implicit(l,r:TNode);override;
-      function simplify(forinline: boolean): TNode;override;
-      procedure pass_generate_code;override;
-      function dogetcopy:TNode;override;
+      FinalizationProcInfo: TCGProcInfo;
+      constructor Create(ALeft,ARight:TNode);override;
+      constructor Create_Implicit(ALeft,ARight:TNode);override;
+      function Simplify(AForInline: boolean): TNode;override;
+      procedure Pass_Generate_Code;override;
+      function DoGetCopy:TNode;override;
     end;
 
 implementation
@@ -58,210 +58,210 @@ implementation
     symconst,SymSym,symdef,
     cgbase,cgobj,cgutils,tgobj,
     cpubase,htypechk,
-    pass_1,pass_2,
+    Pass_1,pass_2,
     aasmbase,aasmtai,AAsmData,aasmcpu,
     ProcInfo,cpupi,procdefutil;
 
   var
-    endexceptlabel: TAsmLabel;
+    EndExceptLabel: TAsmLabel;
 
 
 { taarch64raisenode }
 
-function TAArch64RaiseNode.pass_1 : TNode;
+function TAArch64RaiseNode.Pass_1 : TNode;
   var
-    statements : TStatementNode;
-    raisenode : TCallNode;
+    lStatements : TStatementNode;
+    lRaiseNode : TCallNode;
   begin
     { difference from generic code is that address stack is not popped on reraise }
-    if (TargetInfo.system<>system_aarch64_win64) or Assigned(left) then
-      result:=inherited pass_1
+    if (TargetInfo.system<>system_aarch64_win64) or Assigned(Left) then
+      Result:=inherited Pass_1
     else
       begin
-        result:=internalstatements(statements);
-        raisenode:=CCallNode.createintern('fpc_reraise',nil);
-        include(raisenode.callnodeflags,cnf_call_never_returns);
-        addstatement(statements,raisenode);
+        Result:=InternalStatements(lStatements);
+        lRaiseNode:=CCallNode.CreateIntern('fpc_reraise',nil);
+        include(lRaiseNode.CallNodeFlags,cnf_call_never_returns);
+        AddStatement(lStatements,lRaiseNode);
       end;
 end;
 
 { taarch64onnode }
 
-procedure TAArch64OnNode.pass_generate_code;
+procedure TAArch64OnNode.Pass_Generate_Code;
   var
-    exceptvarsym : TLocalVarSym;
+    lExceptVarSym : TLocalVarSym;
   begin
     if (TargetInfo.system<>system_aarch64_win64) then
       begin
-        inherited pass_generate_code;
+        inherited Pass_Generate_Code;
         exit;
       end;
 
-    Location_Reset(location,LOC_VOID,OS_NO);
+    Location_Reset(Location,LOC_VOID,OS_NO);
 
     { RTL will put exceptobject into X0 when jumping here }
     cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
     { Retrieve exception variable }
-    if Assigned(excepTSymtable) then
-      exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
+    if Assigned(ExceptSymTable) then
+      lExceptVarSym:=TLocalVarSym(ExceptSymTable.SymList[0])
     else
-      exceptvarsym:=nil;
+      lExceptVarSym:=nil;
 
-    if Assigned(exceptvarsym) then
+    if Assigned(lExceptVarSym) then
       begin
-        exceptvarsym.LocAlloc.Loc:=LOC_REFERENCE;
-        exceptvarsym.LocAlloc.Size:=OS_ADDR;
-        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),VoidPointerType,exceptvarsym.LocAlloc.Reference);
-        cg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.LocAlloc.Reference);
+        lExceptVarSym.LocAlloc.Loc:=LOC_REFERENCE;
+        lExceptVarSym.LocAlloc.Size:=OS_ADDR;
+        TG.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),VoidPointerType,lExceptVarSym.LocAlloc.Reference);
+        cg.A_Load_Reg_Ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,lExceptVarSym.LocAlloc.Reference);
       end;
     cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
-    if Assigned(right) then
-      SecondPass(right);
+    if Assigned(Right) then
+      SecondPass(Right);
 
     { deallocate exception symbol }
-    if Assigned(exceptvarsym) then
+    if Assigned(lExceptVarSym) then
       begin
-        tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.Reference);
-        exceptvarsym.LocAlloc.Loc:=LOC_INVALID;
+        TG.UnGetLocal(CurrentAsmData.CurrAsmList,lExceptVarSym.LocAlloc.Reference);
+        lExceptVarSym.LocAlloc.Loc:=LOC_INVALID;
       end;
     cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
-    cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+    cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
   end;
 
 { taarch64tryfinallynode }
 
-function reset_regvars(var n: TNode; arg: pointer): TForEachNodeResult;
+function ResetRegVars(var ANode: TNode; AArg: pointer): TForEachNodeResult;
   begin
-    case n.nodetype of
+    case ANode.nodetype of
       temprefn:
-        make_not_regable(n,[]);
+        make_not_regable(ANode,[]);
       calln:
-        include(TProcInfo(arg).flags,pi_do_call);
+        include(TProcInfo(AArg).Flags,pi_do_call);
       else
         ;
     end;
-    result:=fen_true;
+    Result:=fen_true;
   end;
 
-function copy_parasize(var n: TNode; arg: pointer): TForEachNodeResult;
+function CopyParaSize(var ANode: TNode; AArg: pointer): TForEachNodeResult;
   begin
-    case n.nodetype of
+    case ANode.nodetype of
       calln:
-        TCGProcInfo(arg).allocate_push_parasize(TCallNode(n).pushed_parasize);
+        TCGProcInfo(AArg).Allocate_Push_ParaSize(TCallNode(ANode).PushedParaSize);
       else
         ;
     end;
-    result:=fen_true;
+    Result:=fen_true;
   end;
 
-constructor TAArch64TryFinallyNode.create(l, r: TNode);
+constructor TAArch64TryFinallyNode.Create(ALeft, ARight: TNode);
   begin
-    inherited create(l,r);
+    inherited Create(ALeft,ARight);
     if (TargetInfo.system=system_aarch64_win64) and
       { Don't create child procedures for generic methods, their nested-like
         behavior causes compilation errors because real nested procedures
         aren't allowed for generics. Not creating them doesn't harm because
         generic node tree is discarded without generating code. }
-       not (df_generic in CurrentProcInfo.procdef.DefOptions) then
+       not (df_generic in CurrentProcInfo.ProcDef.DefOptions) then
       begin
-        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
+        FinalizationProcInfo:=TCGProcInfo(CurrentProcInfo.Create_For_Outlining('$fin$',CurrentProcInfo.ProcDef.struct,potype_exceptfilter,VoidType,ARight));
         { the init/final code is messing with asm nodes, so inform the compiler about this }
-        include(finalizepi.flags,pi_has_assembler_block);
+        include(FinalizationProcInfo.Flags,pi_has_assembler_block);
         { Regvar optimization for symbols is suppressed when using exceptions, but
           temps may be still placed into registers. This must be fixed. }
-        foreachnodestatic(r,@reset_regvars,finalizepi);
+        ForEachNodeStatic(ARight,@ResetRegVars,FinalizationProcInfo);
       end;
   end;
 
-constructor TAArch64TryFinallyNode.create_implicit(l, r: TNode);
+constructor TAArch64TryFinallyNode.Create_Implicit(ALeft, ARight: TNode);
   begin
-    inherited create_implicit(l, r);
+    inherited Create_Implicit(ALeft, ARight);
     if (TargetInfo.system=system_aarch64_win64) then
       begin
-        if df_generic in CurrentProcInfo.procdef.DefOptions then
+        if df_generic in CurrentProcInfo.ProcDef.DefOptions then
           InternalError(2020033101);
 
-        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
-        include(finalizepi.flags,pi_do_call);
+        FinalizationProcInfo:=TCGProcInfo(CurrentProcInfo.Create_For_Outlining('$fin$',CurrentProcInfo.ProcDef.struct,potype_exceptfilter,VoidType,ARight));
+        include(FinalizationProcInfo.Flags,pi_do_call);
         { the init/final code is messing with asm nodes, so inform the compiler about this }
-        include(finalizepi.flags,pi_has_assembler_block);
+        include(FinalizationProcInfo.Flags,pi_has_assembler_block);
       end;
   end;
 
-function TAArch64TryFinallyNode.simplify(forinline: boolean): TNode;
+function TAArch64TryFinallyNode.Simplify(AForInline: boolean): TNode;
   begin
-    result:=inherited simplify(forinline);
+    Result:=inherited Simplify(AForInline);
     if (TargetInfo.system<>system_aarch64_win64) then
       exit;
-    if (result=nil) then
+    if (Result=nil) then
       begin
         { actually, this is not really the right place to do a node transformation like this }
-        if not(Assigned(finalizepi.code)) then
+        if not(Assigned(FinalizationProcInfo.Code)) then
           begin
-            finalizepi.code:=right;
-            foreachnodestatic(right,@copy_parasize,finalizepi);
-            right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.ProcSym),nil,nil,[],nil);
-            FirstPass(right);
+            FinalizationProcInfo.Code:=Right;
+            ForEachNodeStatic(Right,@CopyParaSize,FinalizationProcInfo);
+            Right:=CCallNode.Create(nil,TProcSym(FinalizationProcInfo.ProcDef.ProcSym),nil,nil,[],nil);
+            FirstPass(Right);
             { For implicit frames, no actual code is available at this time,
               it is added later in assembler form. So store the nested procinfo
               for later use. }
-            if implicitframe then
+            if ImplicitFrame then
               begin
-                CurrentProcInfo.finalize_procinfo:=finalizepi;
+                CurrentProcInfo.FinalizeProcInfo:=FinalizationProcInfo;
               end;
           end;
       end;
   end;
 
-procedure emit_nop;
+procedure EmitNop;
   var
-    dummy: TAsmLabel;
+    lDummyLabel: TAsmLabel;
   begin
     { To avoid optimizing away the whole thing, prepend a jumplabel with increased refcount }
-    CurrentAsmData.getjumplabel(dummy);
-    dummy.increfs;
-    cg.A_Label(CurrentAsmData.CurrAsmList,dummy);
+    CurrentAsmData.getjumplabel(lDummyLabel);
+    lDummyLabel.increfs;
+    cg.A_Label(CurrentAsmData.CurrAsmList,lDummyLabel);
     CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_NOP));
   end;
 
-procedure TAArch64TryFinallyNode.pass_generate_code;
+procedure TAArch64TryFinallyNode.Pass_Generate_Code;
   var
-    trylabel,
-    endtrylabel,
-    finallylabel,
-    endfinallylabel,
-    templabel,
-    oldexitlabel: TAsmLabel;
-    oldflowcontrol: TFlowControl;
-    catch_frame: boolean;
+    lTryLabel,
+    lEndTryLabel,
+    lFinallyLabel,
+    lEndFinallyLabel,
+    lTempLabel,
+    lOldExitLabel: TAsmLabel;
+    lOldFlowControl: TFlowControl;
+    lCatchFrame: boolean;
   begin
     if (TargetInfo.system<>system_aarch64_win64) then
       begin
-        inherited pass_generate_code;
+        inherited Pass_Generate_Code;
         exit;
       end;
 
-    Location_Reset(location,LOC_VOID,OS_NO);
+    Location_Reset(Location,LOC_VOID,OS_NO);
 
     { Do not generate a frame that catches exceptions if the only action
       would be reraising it. Doing so is extremely inefficient with SEH
       (in contrast with setjmp/longjmp exception handling) }
-    catch_frame:=implicitframe and
-      (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall);
+    lCatchFrame:=ImplicitFrame and
+      (CurrentProcInfo.ProcDef.ProcCallOption=pocall_safecall);
 
-    oldflowcontrol:=flowcontrol;
+    lOldFlowControl:=flowcontrol;
     flowcontrol:=[fc_inflowcontrol];
 
-    templabel:=nil;
-    CurrentAsmData.getjumplabel(trylabel);
-    CurrentAsmData.getjumplabel(endtrylabel);
-    CurrentAsmData.getjumplabel(finallylabel);
-    CurrentAsmData.getjumplabel(endfinallylabel);
-    oldexitlabel:=CurrentProcInfo.CurrExitLabel;
-    if implicitframe then
-      CurrentProcInfo.CurrExitLabel:=finallylabel;
+    lTempLabel:=nil;
+    CurrentAsmData.getjumplabel(lTryLabel);
+    CurrentAsmData.getjumplabel(lEndTryLabel);
+    CurrentAsmData.getjumplabel(lFinallyLabel);
+    CurrentAsmData.getjumplabel(lEndFinallyLabel);
+    lOldExitLabel:=CurrentProcInfo.CurrExitLabel;
+    if ImplicitFrame then
+      CurrentProcInfo.CurrExitLabel:=lFinallyLabel;
 
     { Start of scope }
     { Padding with NOP is necessary here because exceptions in called
@@ -279,17 +279,17 @@ procedure TAArch64TryFinallyNode.pass_generate_code;
       and fall into the same scope. However they should be seen in different scopes.
     }
 
-    emit_nop;
-    cg.A_Label(CurrentAsmData.CurrAsmList,trylabel);
+    EmitNop;
+    cg.A_Label(CurrentAsmData.CurrAsmList,lTryLabel);
 
     { try code }
-    if Assigned(left) then
+    if Assigned(Left) then
       begin
         { fc_unwind_xx tells exit/continue/break statements to emit special
           unwind code instead of just JMP }
-        if not implicitframe then
+        if not ImplicitFrame then
           flowcontrol:=flowcontrol+[fc_catching_exceptions,fc_unwind_exit,fc_unwind_loop];
-        SecondPass(left);
+        SecondPass(Left);
         flowcontrol:=flowcontrol-[fc_catching_exceptions,fc_unwind_exit,fc_unwind_loop];
         if CodeGenError then
           exit;
@@ -298,217 +298,217 @@ procedure TAArch64TryFinallyNode.pass_generate_code;
     { finallylabel is only used in implicit frames as an exit point from nested try..finally
       statements, if any. To prevent finalizer from being executed twice, it must come before
       endtrylabel (bug #34772) }
-    if catch_frame then
+    if lCatchFrame then
       begin
-        CurrentAsmData.getjumplabel(templabel);
-        cg.A_Label(CurrentAsmData.CurrAsmList, finallylabel);
+        CurrentAsmData.getjumplabel(lTempLabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList, lFinallyLabel);
         { jump over exception handler }
-        cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,templabel);
+        cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lTempLabel);
         { Handle the except block first, so endtrylabel serves both
           as end of scope and as unwind target. This way it is possible to
           encode everything into a single scope record. }
-        cg.A_Label(CurrentAsmData.CurrAsmList,endtrylabel);
-        if (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) then
+        cg.A_Label(CurrentAsmData.CurrAsmList,lEndTryLabel);
+        if (CurrentProcInfo.ProcDef.ProcCallOption=pocall_safecall) then
           begin
-            handle_safecall_exception;
-            cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endfinallylabel);
+            Handle_SafeCall_Exception;
+            cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lEndFinallyLabel);
           end
         else
           InternalError(2014031601);
-        cg.A_Label(CurrentAsmData.CurrAsmList,templabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList,lTempLabel);
       end
     else
       begin
         { same as emit_nop but using finallylabel instead of dummy }
-        cg.A_Label(CurrentAsmData.CurrAsmList,finallylabel);
-        finallylabel.increfs;
+        cg.A_Label(CurrentAsmData.CurrAsmList,lFinallyLabel);
+        lFinallyLabel.increfs;
         CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_NOP));
-        cg.A_Label(CurrentAsmData.CurrAsmList,endtrylabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList,lEndTryLabel);
       end;
 
     { i32913 - if the try..finally block is also inside a try..finally or
       try..except block, make a note of any Exit calls so all necessary labels
       are generated. [Kit] }
-    if ((flowcontrol*[fc_exit,fc_break,fc_continue])<>[]) and (fc_inflowcontrol in oldflowcontrol) then
-      oldflowcontrol:=oldflowcontrol+(flowcontrol*[fc_exit,fc_break,fc_continue]);
+    if ((flowcontrol*[fc_exit,fc_break,fc_continue])<>[]) and (fc_inflowcontrol in lOldFlowControl) then
+      lOldFlowControl:=lOldFlowControl+(flowcontrol*[fc_exit,fc_break,fc_continue]);
 
     flowcontrol:=[fc_inflowcontrol];
     { store the tempflags so that we can generate the finally handler later on }
-    if not implicitframe then
-      finalizepi.store_tempflags;
+    if not ImplicitFrame then
+      FinalizationProcInfo.Store_TempFlags;
     { right is a call to finalizer procedure }
-    SecondPass(right);
+    SecondPass(Right);
 
     if CodeGenError then
       exit;
 
     { normal exit from safecall proc must zero the result register }
-    if implicitframe and (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) then
+    if ImplicitFrame and (CurrentProcInfo.ProcDef.ProcCallOption=pocall_safecall) then
       cg.A_Load_Const_Reg(CurrentAsmData.CurrAsmList,OS_INT,0,NR_FUNCTION_RESULT_REG);
 
-    cg.A_Label(CurrentAsmData.CurrAsmList,endfinallylabel);
+    cg.A_Label(CurrentAsmData.CurrAsmList,lEndFinallyLabel);
 
     { generate the scope record in .xdata }
-    TCPUProcInfo(CurrentProcInfo).add_finally_scope(trylabel,endtrylabel,
-      CurrentAsmData.RefAsmSymbol(finalizepi.procdef.MangledName,AT_FUNCTION),catch_frame);
+    TCPUProcInfo(CurrentProcInfo).Add_Finally_Scope(lTryLabel,lEndTryLabel,
+      CurrentAsmData.RefAsmSymbol(FinalizationProcInfo.ProcDef.MangledName,AT_FUNCTION),lCatchFrame);
 
-    if implicitframe then
-      CurrentProcInfo.CurrExitLabel:=oldexitlabel;
-    flowcontrol:=oldflowcontrol;
+    if ImplicitFrame then
+      CurrentProcInfo.CurrExitLabel:=lOldExitLabel;
+    flowcontrol:=lOldFlowControl;
   end;
 
-function TAArch64TryFinallyNode.dogetcopy: TNode;
+function TAArch64TryFinallyNode.DoGetCopy: TNode;
   var
-    n : TAArch64TryFinallyNode;
+    lNode : TAArch64TryFinallyNode;
   begin
-    n:=TAArch64TryFinallyNode(inherited dogetcopy);
+    lNode:=TAArch64TryFinallyNode(inherited DoGetCopy);
     if (TargetInfo.system=system_aarch64_win64) then
       begin
-        n.finalizepi:=TCGProcInfo(CProcInfo.create(finalizepi.parent));
-        n.finalizepi.force_nested;
-        n.finalizepi.procdef:=Create_Outline_ProcDef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType);
-        n.finalizepi.entrypos:=finalizepi.entrypos;
-        n.finalizepi.entryswitches:=finalizepi.entryswitches;
-        n.finalizepi.exitpos:=finalizepi.exitpos;
-        n.finalizepi.exitswitches:=finalizepi.exitswitches;
-        n.finalizepi.flags:=finalizepi.flags;
+        lNode.FinalizationProcInfo:=TCGProcInfo(CProcInfo.Create(FinalizationProcInfo.Parent));
+        lNode.FinalizationProcInfo.Force_Nested;
+        lNode.FinalizationProcInfo.ProcDef:=Create_Outline_ProcDef('$fin$',CurrentProcInfo.ProcDef.struct,potype_exceptfilter,VoidType);
+        lNode.FinalizationProcInfo.EntryPos:=FinalizationProcInfo.EntryPos;
+        lNode.FinalizationProcInfo.EntrySwitches:=FinalizationProcInfo.EntrySwitches;
+        lNode.FinalizationProcInfo.ExitPos:=FinalizationProcInfo.ExitPos;
+        lNode.FinalizationProcInfo.ExitSwitches:=FinalizationProcInfo.ExitSwitches;
+        lNode.FinalizationProcInfo.Flags:=FinalizationProcInfo.Flags;
         { node already transformed? }
-        if Assigned(finalizepi.code) then
+        if Assigned(FinalizationProcInfo.Code) then
           begin
-            n.finalizepi.code:=finalizepi.code.GetCopy;
-            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.ProcSym),nil,nil,[],nil);
-            FirstPass(n.right);
+            lNode.FinalizationProcInfo.Code:=FinalizationProcInfo.Code.GetCopy;
+            lNode.Right:=CCallNode.Create(nil,TProcSym(lNode.FinalizationProcInfo.ProcDef.ProcSym),nil,nil,[],nil);
+            FirstPass(lNode.Right);
           end;
       end;
-    result:=n;
+    Result:=lNode;
   end;
 
 
 { taarch64tryexceptnode }
 
-procedure TAArch64TryExceptNode.pass_generate_code;
+procedure TAArch64TryExceptNode.Pass_Generate_Code;
   var
-    trylabel,
-    exceptlabel,oldendexceptlabel,
-    lastonlabel,
-    exitexceptlabel,
-    continueexceptlabel,
-    breakexceptlabel,
-    oldCurrExitLabel,
-    oldContinueLabel,
-    oldBreakLabel : TAsmLabel;
-    onlabel,
-    filterlabel: TAsmLabel;
-    oldflowcontrol,tryflowcontrol,
-    exceptflowcontrol : TFlowControl;
-    hnode : TNode;
-    hlist : TAsmList;
-    onnodecount : TAIConst;
-    sym : TAsmSymbol;
+    lTryLabel,
+    lExceptLabel,lOldEndExceptLabel,
+    lLastOnLabel,
+    lExitExceptLabel,
+    lContinueExceptLabel,
+    lBreakExceptLabel,
+    lOldCurrExitLabel,
+    lOldContinueLabel,
+    lOldBreakLabel : TAsmLabel;
+    lOnLabel,
+    lFilterLabel: TAsmLabel;
+    lOldFlowControl,lTryFlowControl,
+    lExceptFlowControl : TFlowControl;
+    lNode : TNode;
+    lList : TAsmList;
+    lOnNodeCount : TAIConst;
+    lSymbol : TAsmSymbol;
   label
     errorexit;
   begin
     if (TargetInfo.system<>system_aarch64_win64) then
       begin
-        inherited pass_generate_code;
+        inherited Pass_Generate_Code;
         exit;
       end;
-    Location_Reset(location,LOC_VOID,OS_NO);
+    Location_Reset(Location,LOC_VOID,OS_NO);
 
-    oldflowcontrol:=flowcontrol;
-    exceptflowcontrol:=[];
-    continueexceptlabel:=nil;
-    breakexceptlabel:=nil;
+    lOldFlowControl:=flowcontrol;
+    lExceptFlowControl:=[];
+    lContinueExceptLabel:=nil;
+    lBreakExceptLabel:=nil;
 
     include(flowcontrol,fc_inflowcontrol);
     { this can be called recursively }
-    oldBreakLabel:=nil;
-    oldContinueLabel:=nil;
-    oldendexceptlabel:=endexceptlabel;
+    lOldBreakLabel:=nil;
+    lOldContinueLabel:=nil;
+    lOldEndExceptLabel:=EndExceptLabel;
 
     { save the old labels for control flow statements }
-    oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
-    CurrentAsmData.getjumplabel(exitexceptlabel);
+    lOldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
+    CurrentAsmData.getjumplabel(lExitExceptLabel);
     if Assigned(CurrentProcInfo.CurrBreakLabel) then
       begin
-        oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
-        oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
-        CurrentAsmData.getjumplabel(breakexceptlabel);
-        CurrentAsmData.getjumplabel(continueexceptlabel);
+        lOldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
+        lOldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
+        CurrentAsmData.getjumplabel(lBreakExceptLabel);
+        CurrentAsmData.getjumplabel(lContinueExceptLabel);
       end;
 
-    CurrentAsmData.getjumplabel(exceptlabel);
-    CurrentAsmData.getjumplabel(endexceptlabel);
-    CurrentAsmData.getjumplabel(lastonlabel);
-    filterlabel:=nil;
+    CurrentAsmData.getjumplabel(lExceptLabel);
+    CurrentAsmData.getjumplabel(EndExceptLabel);
+    CurrentAsmData.getjumplabel(lLastOnLabel);
+    lFilterLabel:=nil;
 
     { start of scope }
-    CurrentAsmData.getjumplabel(trylabel);
-    emit_nop;
-    cg.A_Label(CurrentAsmData.CurrAsmList,trylabel);
+    CurrentAsmData.getjumplabel(lTryLabel);
+    EmitNop;
+    cg.A_Label(CurrentAsmData.CurrAsmList,lTryLabel);
 
     { control flow in try block needs no special handling,
       just make sure that target labels are outside the scope }
-    SecondPass(left);
-    tryflowcontrol:=flowcontrol;
+    SecondPass(Left);
+    lTryFlowControl:=flowcontrol;
     if CodeGenError then
       goto errorexit;
 
     { jump over except handlers }
-    cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+    cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
 
     { end of scope }
-    cg.A_Label(CurrentAsmData.CurrAsmList,exceptlabel);
+    cg.A_Label(CurrentAsmData.CurrAsmList,lExceptLabel);
 
     { set control flow labels for the except block }
     { and the on statements                        }
-    CurrentProcInfo.CurrExitLabel:=exitexceptlabel;
-    if Assigned(oldBreakLabel) then
+    CurrentProcInfo.CurrExitLabel:=lExitExceptLabel;
+    if Assigned(lOldBreakLabel) then
       begin
-        CurrentProcInfo.CurrContinueLabel:=continueexceptlabel;
-        CurrentProcInfo.CurrBreakLabel:=breakexceptlabel;
+        CurrentProcInfo.CurrContinueLabel:=lContinueExceptLabel;
+        CurrentProcInfo.CurrBreakLabel:=lBreakExceptLabel;
       end;
 
     flowcontrol:=[fc_inflowcontrol];
     { on statements }
-    if Assigned(right) then
+    if Assigned(Right) then
       begin
         { emit filter table to a temporary asmlist }
-        hlist:=TAsmList.Create;
-        CurrentAsmData.getaddrlabel(filterlabel);
-        new_section(hlist,sec_rodata_norel,filterlabel.name,4);
-        cg.A_Label(hlist,filterlabel);
-        onnodecount:=TAIConst.create_32bit(0);
-        hlist.concat(onnodecount);
+        lList:=TAsmList.Create;
+        CurrentAsmData.getaddrlabel(lFilterLabel);
+        new_section(lList,sec_rodata_norel,lFilterLabel.name,4);
+        cg.A_Label(lList,lFilterLabel);
+        lOnNodeCount:=TAIConst.create_32bit(0);
+        lList.concat(lOnNodeCount);
 
-        hnode:=right;
-        while Assigned(hnode) do
+        lNode:=Right;
+        while Assigned(lNode) do
           begin
-            if hnode.nodetype<>onn then
+            if lNode.nodetype<>onn then
               InternalError(2011103101);
-            CurrentAsmData.getjumplabel(onlabel);
-            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.VMT_MangledName,AT_DATA,true);
-            hlist.concat(TAIConst.create_rva_sym(sym));
-            hlist.concat(TAIConst.create_rva_sym(onlabel));
-            CurrentModule.Add_Extern_AsmSym(sym);
-            cg.A_Label(CurrentAsmData.CurrAsmList,onlabel);
-            SecondPass(hnode);
-            inc(onnodecount.Value);
-            hnode:=TOnNode(hnode).left;
+            CurrentAsmData.getjumplabel(lOnLabel);
+            lSymbol:=CurrentAsmData.RefAsmSymbol(TOnNode(lNode).ExceptType.VMT_MangledName,AT_DATA,true);
+            lList.concat(TAIConst.create_rva_sym(lSymbol));
+            lList.concat(TAIConst.create_rva_sym(lOnLabel));
+            CurrentModule.Add_Extern_AsmSym(lSymbol);
+            cg.A_Label(CurrentAsmData.CurrAsmList,lOnLabel);
+            SecondPass(lNode);
+            inc(lOnNodeCount.Value);
+            lNode:=TOnNode(lNode).Left;
           end;
         { add 'else' node to the filter list, too }
         if Assigned(t1) then
           begin
-            hlist.concat(TAIConst.create_32bit(-1));
-            hlist.concat(TAIConst.create_rva_sym(lastonlabel));
-            inc(onnodecount.Value);
+            lList.concat(TAIConst.create_32bit(-1));
+            lList.concat(TAIConst.create_rva_sym(lLastOnLabel));
+            inc(lOnNodeCount.Value);
           end;
         { now move filter table to permanent list all at once }
-        CurrentProcInfo.AktLocalData.ConcatList(hlist);
-        hlist.free;
+        CurrentProcInfo.AktLocalData.ConcatList(lList);
+        lList.free;
       end;
 
-    cg.A_Label(CurrentAsmData.CurrAsmList,lastonlabel);
+    cg.A_Label(CurrentAsmData.CurrAsmList,lLastOnLabel);
     if Assigned(t1) then
       begin
         { here we don't have to reset flowcontrol           }
@@ -516,60 +516,60 @@ procedure TAArch64TryExceptNode.pass_generate_code;
         SecondPass(t1);
         cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
         if (flowcontrol*[fc_exit,fc_break,fc_continue]<>[]) then
-          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,endexceptlabel);
+          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,EndExceptLabel);
       end;
-    exceptflowcontrol:=flowcontrol;
+    lExceptFlowControl:=flowcontrol;
 
-    if fc_exit in exceptflowcontrol then
+    if fc_exit in lExceptFlowControl then
       begin
         { do some magic for exit in the try block }
-        cg.A_Label(CurrentAsmData.CurrAsmList,exitexceptlabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList,lExitExceptLabel);
         cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
-        if (fc_unwind_exit in oldflowcontrol) then
-          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,oldCurrExitLabel)
+        if (fc_unwind_exit in lOldFlowControl) then
+          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,lOldCurrExitLabel)
         else
-          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldCurrExitLabel);
+          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldCurrExitLabel);
       end;
 
-    if fc_break in exceptflowcontrol then
+    if fc_break in lExceptFlowControl then
       begin
-        cg.A_Label(CurrentAsmData.CurrAsmList,breakexceptlabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList,lBreakExceptLabel);
         cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
-        if (fc_unwind_loop in oldflowcontrol) then
-          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,oldBreakLabel)
+        if (fc_unwind_loop in lOldFlowControl) then
+          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,lOldBreakLabel)
         else
-          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldBreakLabel);
+          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldBreakLabel);
       end;
 
-    if fc_continue in exceptflowcontrol then
+    if fc_continue in lExceptFlowControl then
       begin
-        cg.A_Label(CurrentAsmData.CurrAsmList,continueexceptlabel);
+        cg.A_Label(CurrentAsmData.CurrAsmList,lContinueExceptLabel);
         cg.G_Call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
-        if (fc_unwind_loop in oldflowcontrol) then
-          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,oldContinueLabel)
+        if (fc_unwind_loop in lOldFlowControl) then
+          cg.G_Local_Unwind(CurrentAsmData.CurrAsmList,lOldContinueLabel)
         else
-          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,oldContinueLabel);
+          cg.A_Jmp_Always(CurrentAsmData.CurrAsmList,lOldContinueLabel);
       end;
 
-    emit_nop;
-    cg.A_Label(CurrentAsmData.CurrAsmList,endexceptlabel);
-    TCPUProcInfo(CurrentProcInfo).add_except_scope(trylabel,exceptlabel,endexceptlabel,filterlabel);
+    EmitNop;
+    cg.A_Label(CurrentAsmData.CurrAsmList,EndExceptLabel);
+    TCPUProcInfo(CurrentProcInfo).Add_Except_Scope(lTryLabel,lExceptLabel,EndExceptLabel,lFilterLabel);
 
 errorexit:
     { restore all saved labels }
-    endexceptlabel:=oldendexceptlabel;
+    EndExceptLabel:=lOldEndExceptLabel;
 
     { restore the control flow labels }
-    CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-    if Assigned(oldBreakLabel) then
+    CurrentProcInfo.CurrExitLabel:=lOldCurrExitLabel;
+    if Assigned(lOldBreakLabel) then
       begin
-        CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
-        CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
+        CurrentProcInfo.CurrContinueLabel:=lOldContinueLabel;
+        CurrentProcInfo.CurrBreakLabel:=lOldBreakLabel;
       end;
 
     { return all used control flow statements }
-    flowcontrol:=oldflowcontrol+(exceptflowcontrol +
-      tryflowcontrol - [fc_inflowcontrol]);
+    flowcontrol:=lOldFlowControl+(lExceptFlowControl +
+      lTryFlowControl - [fc_inflowcontrol]);
   end;
 
 initialization

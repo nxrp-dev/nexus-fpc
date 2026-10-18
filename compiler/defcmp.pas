@@ -367,7 +367,7 @@ implementation
                    not(DefFrom.Typ in [FormalDef]) and
                    not(DefTo.Typ in [FormalDef]) and
                    { constants could get another deftype (e.g. niln) }
-                   not(FromTreeType in nodetype_const) then
+                   not(FromTreeType in cNodeTypeConst) then
                    begin
                      { not compatible anyway }
                      DoConv:=tc_not_possible;

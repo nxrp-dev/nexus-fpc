@@ -30,7 +30,7 @@ interface
 
     type
       TX8664ShlShrNode = class(TX86ShlShrNode)
-         procedure pass_generate_code;override;
+         procedure Pass_Generate_Code;override;
       end;
 
       TX8664UnaryMinusNode = class(TX86UnaryMinusNode)
@@ -55,48 +55,48 @@ implementation
 *****************************************************************************}
 
 
-    procedure TX8664ShlShrNode.pass_generate_code;
+    procedure TX8664ShlShrNode.Pass_Generate_Code;
       var
-        op : TOpCG;
-        opsize : TCgSize;
-        mask : aint;
+        lOp : TOpCG;
+        lOpSize : TCgSize;
+        lMask : aint;
       begin
-        SecondPass(left);
-        SecondPass(right);
+        SecondPass(Left);
+        SecondPass(Right);
 
         { determine operator }
-        if nodetype=shln then
-          op:=OP_SHL
+        if NodeType=shln then
+          lOp:=OP_SHL
         else
-          op:=OP_SHR;
+          lOp:=OP_SHR;
 
-        opsize:=Def_CGSize(resultdef);
-        mask:=max(resultdef.Size,4)*8-1;
+        lOpSize:=Def_CGSize(ResultDef);
+        lMask:=max(ResultDef.Size,4)*8-1;
 
         { load left operators in a register }
-        if not(left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
+        if not(Left.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
           { location_force_reg can be also used to change the size of a register }
-          (left.Location.Size<>opsize) then
-          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,CGSize_OrdDef(opsize),true);
-        Location_Reset(location,LOC_REGISTER,opsize);
-        location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,opsize);
+          (Left.Location.Size<>lOpSize) then
+          hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,CGSize_OrdDef(lOpSize),true);
+        Location_Reset(Location,LOC_REGISTER,lOpSize);
+        Location.Register:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,lOpSize);
 
         { shifting by a constant directly coded: }
-        if (right.nodetype=ordconstn) then
-          cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,op,location.Size,
-            TOrdConstNode(right).Value.uvalue and mask,left.Location.Register,location.Register)
+        if (Right.NodeType=ordconstn) then
+          cg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,lOp,Location.Size,
+            TOrdConstNode(Right).Value.uvalue and lMask,Left.Location.Register,Location.Register)
         else
           begin
             { load right operators in a register - this
               is done since most target cpu which will use this
               node do not support a shift count in a mem. location (cec)
             }
-            if not(right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
+            if not(Right.Location.Loc in [LOC_CREGISTER,LOC_REGISTER]) or
                { location_force_reg can be also used to change the size of a register }
-              (right.Location.Size<>opsize) then
-              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,right.Location,right.resultdef,CGSize_OrdDef(opsize),true);
+              (Right.Location.Size<>lOpSize) then
+              hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Right.Location,Right.ResultDef,CGSize_OrdDef(lOpSize),true);
 
-            cg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,op,opsize,right.Location.Register,left.Location.Register,location.Register);
+            cg.A_Op_Reg_Reg_Reg(CurrentAsmData.CurrAsmList,lOp,lOpSize,Right.Location.Register,Left.Location.Register,Location.Register);
           end;
       end;
 

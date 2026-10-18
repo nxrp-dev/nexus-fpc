@@ -41,7 +41,7 @@ interface
 
       PUsedRegVars = ^TUsedRegVars;
       TUsedRegVars = record
-        intregvars, addrregvars, fpuregvars, mmregvars: TSuperRegisterWorkList;
+        IntRegVars, AddrRegVars, FPURegVars, MMRegVars: TSuperRegisterWorkList;
       end;
 
 {
@@ -56,28 +56,28 @@ interface
       end;
 }
 
-    procedure firstcomplex(p : TBinaryNode);
-    procedure MakeToJumpBoolLabels(list: TAsmList; p: TNode; TrueLabel, FalseLabel: TAsmLabel);
+    procedure FirstComplex(ABinaryNode : TBinaryNode);
+    procedure MakeToJumpBoolLabels(AList: TAsmList; ANode: TNode; ATrueLabel, AFalseLabel: TAsmLabel);
 //    procedure remove_non_regvars_from_loc(const t: tlocation; var regs:Tsuperregisterset);
 
-    procedure location_force_mmreg(list:TAsmList;var l: TLocation;maybeconst:boolean);
-    procedure location_allocate_register(list:TAsmList;out l: TLocation;def: TDef;constant: boolean);
+    procedure Location_Force_MMReg(AList:TAsmList;var ALocation: TLocation;AMaybeConst:Boolean);
+    procedure Location_Allocate_Register(AList:TAsmList;out ALocation: TLocation;ADef: TDef;AConstant: Boolean);
 
     { allocate registers for a tlocation; assumes that loc.loc is already
       set to LOC_CREGISTER/LOC_CFPUREGISTER/... }
-    procedure gen_alloc_regloc(list:TAsmList;var loc: TLocation;def: TDef);
+    procedure Gen_Alloc_RegLoc(AList:TAsmList;var ALocation: TLocation;ADef: TDef);
 
-    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: TDef; var l: TLocation; SetBase: aint);
+    procedure Register_Maybe_Adjust_SetBase(AList: TAsmList; AOpDef: TDef; var ALocation: TLocation; ASetBase: AInt);
 
 
-    procedure alloc_proc_symbol(pd: TProcDef);
-    procedure release_proc_symbol(pd:TProcDef);
-    procedure gen_proc_entry_code(list:TAsmList);
-    procedure gen_proc_exit_code(list:TAsmList);
-    procedure gen_save_used_regs(list:TAsmList);
-    procedure gen_restore_used_regs(list:TAsmList);
+    procedure Alloc_Proc_Symbol(AProcDef: TProcDef);
+    procedure Release_Proc_Symbol(AProcDef:TProcDef);
+    procedure Gen_Proc_Entry_Code(AList:TAsmList);
+    procedure Gen_Proc_Exit_Code(AList:TAsmList);
+    procedure Gen_Save_Used_Regs(AList:TAsmList);
+    procedure Gen_Restore_Used_Regs(AList:TAsmList);
 
-    procedure get_used_regvars(n: TNode; var rv: TUsedRegVars);
+    procedure Get_Used_RegVars(ANode: TNode; var AUsedRegVars: TUsedRegVars);
     { adds the regvars used in n and its children to rv.allregvars,
       those which were already in rv.allregvars to rv.commonregvars and
       uses rv.myregvars as scratch (so that two uses of the same regvar
@@ -85,18 +85,18 @@ interface
       find out which regvars are used in two different node trees
       e.g. in the "else" and "then" path, or in various case blocks }
 //    procedure get_used_regvars_common(n: tnode; var rv: tusedregvarscommon);
-    procedure gen_sync_regvars(list:TAsmList; var rv: TUsedRegVars);
+    procedure Gen_Sync_RegVars(AList:TAsmList; var AUsedRegVars: TUsedRegVars);
 
-    procedure gen_alloc_symtable(list:TAsmList;pd:TProcDef;st:TSymTable);
-    procedure gen_free_symtable(list:TAsmList;st:TSymTable);
+    procedure Gen_Alloc_SymTable(AList:TAsmList;AProcDef:TProcDef;ASymTable:TSymTable);
+    procedure Gen_Free_SymTable(AList:TAsmList;ASymTable:TSymTable);
 
-    procedure location_free(list: TAsmList; const location : TLocation);
+    procedure Location_Free(AList: TAsmList; const ALocation : TLocation);
 
-    function getprocalign : shortint;
+    function GetProcAlign : ShortInt;
 
-    procedure gen_load_frame_for_exceptfilter(list : TAsmList);
+    procedure Gen_Load_Frame_For_ExceptFilter(AList : TAsmList);
 
-   procedure gen_alloc_regvar(list:TAsmList;sym: TAbstractNormalVarSym; allocreg: boolean);
+   procedure Gen_Alloc_RegVar(AList:TAsmList;ASym: TAbstractNormalVarSym; AAllocReg: Boolean);
 
 
 implementation
@@ -115,9 +115,9 @@ implementation
 {*****************************************************************************
                                   Misc Helpers
 *****************************************************************************}
-    procedure location_free(list: TAsmList; const location : TLocation);
+    procedure Location_Free(AList: TAsmList; const ALocation : TLocation);
       begin
-        case location.Loc of
+        case ALocation.Loc of
           LOC_VOID:
             ;
           LOC_REGISTER,
@@ -126,44 +126,44 @@ implementation
 {$if defined(cpu64bitalu)}
                 { x86-64 system v abi:
                   structs with up to 16 bytes are returned in registers }
-                if location.Size in [OS_128,OS_S128] then
+                if ALocation.Size in [OS_128,OS_S128] then
                   begin
-                    if GetSupReg(location.Register)<first_int_imreg then
-                      cg.UngetCPURegister(list,location.Register);
-                    if GetSupReg(location.RegisterHi)<first_int_imreg then
-                      cg.UngetCPURegister(list,location.RegisterHi);
+                    if GetSupReg(ALocation.Register)<first_int_imreg then
+                      cg.UngetCPURegister(AList,ALocation.Register);
+                    if GetSupReg(ALocation.RegisterHi)<first_int_imreg then
+                      cg.UngetCPURegister(AList,ALocation.RegisterHi);
                   end
                 else
 {$elseif not defined(cpuhighleveltarget)}
-                if location.Size in [OS_64,OS_S64] then
+                if ALocation.Size in [OS_64,OS_S64] then
                   begin
-                    if GetSupReg(location.Register64.RegLo)<first_int_imreg then
-                      cg.UngetCPURegister(list,location.Register64.RegLo);
-                    if GetSupReg(location.Register64.RegHi)<first_int_imreg then
-                      cg.UngetCPURegister(list,location.Register64.RegHi);
+                    if GetSupReg(ALocation.Register64.RegLo)<first_int_imreg then
+                      cg.UngetCPURegister(AList,ALocation.Register64.RegLo);
+                    if GetSupReg(ALocation.Register64.RegHi)<first_int_imreg then
+                      cg.UngetCPURegister(AList,ALocation.Register64.RegHi);
                   end
                 else
 {$endif cpu64bitalu and not cpuhighleveltarget}
-                  if GetSupReg(location.Register)<first_int_imreg then
-                    cg.UngetCPURegister(list,location.Register);
+                  if GetSupReg(ALocation.Register)<first_int_imreg then
+                    cg.UngetCPURegister(AList,ALocation.Register);
             end;
           LOC_FPUREGISTER,
           LOC_CFPUREGISTER:
             begin
-              if GetSupReg(location.Register)<first_fpu_imreg then
-                cg.UngetCPURegister(list,location.Register);
+              if GetSupReg(ALocation.Register)<first_fpu_imreg then
+                cg.UngetCPURegister(AList,ALocation.Register);
             end;
           LOC_MMREGISTER,
           LOC_CMMREGISTER :
             begin
-              if GetSupReg(location.Register)<first_mm_imreg then
-                cg.UngetCPURegister(list,location.Register);
+              if GetSupReg(ALocation.Register)<first_mm_imreg then
+                cg.UngetCPURegister(AList,ALocation.Register);
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
               if ParaManager.Use_Fixed_Stack then
-                location_freetemp(list,location);
+                Location_FreeTemp(AList,ALocation);
             end;
           else
             InternalError(2004110211);
@@ -171,23 +171,23 @@ implementation
       end;
 
 
-    procedure firstcomplex(p : TBinaryNode);
+    procedure FirstComplex(ABinaryNode : TBinaryNode);
       var
-        fcl, fcr: LongInt;
-        ncl, ncr: LongInt;
+        lLeftComplexity, lRightComplexity: LongInt;
+        lLeftNodeCount, lRightNodeCount: LongInt;
       begin
          { calculate boolean AND and OR from left to right if it's short boolean evaluated }
-         if (p.nodetype in [orn,andn]) and Is_Boolean(p.left.resultdef) and Is_Boolean(p.right.resultdef) and doshortbooleval(p) then
+         if (ABinaryNode.NodeType in [orn,andn]) and Is_Boolean(ABinaryNode.Left.ResultDef) and Is_Boolean(ABinaryNode.Right.ResultDef) and DoShortBoolEval(ABinaryNode) then
            begin
-             if nf_swapped in p.flags then
+             if nf_swapped in ABinaryNode.Flags then
                InternalError(200709253);
            end
          else
            begin
-             fcl:=node_resources_fpu(p.left);
-             fcr:=node_resources_fpu(p.right);
-             ncl:=node_complexity(p.left);
-             ncr:=node_complexity(p.right);
+             lLeftComplexity:=Node_Resources_FPU(ABinaryNode.Left);
+             lRightComplexity:=Node_Resources_FPU(ABinaryNode.Right);
+             lLeftNodeCount:=Node_Complexity(ABinaryNode.Left);
+             lRightNodeCount:=Node_Complexity(ABinaryNode.Right);
              { We swap left and right if
                 a) right needs more floating point registers than left, and
                    left needs more than 0 floating point registers (if it
@@ -198,139 +198,139 @@ implementation
                    and in addition right has a higher complexity than left
                    (+- needs more integer registers, but not necessarily)
              }
-             if ((fcr>fcl) and
-                 (fcl>0)) or
-                (((fcr=fcl) or
-                  (fcr=0)) and
-                 (ncr>ncl)) and
+             if ((lRightComplexity>lLeftComplexity) and
+                 (lLeftComplexity>0)) or
+                (((lRightComplexity=lLeftComplexity) or
+                  (lRightComplexity=0)) and
+                 (lRightNodeCount>lLeftNodeCount)) and
                 { if one tree contains nodes being conditionally executed, we cannot swap the trees
                   as the other tree might depend on all nodes being executed, this applies for example
                   for temp. create nodes with init part, they must be executed else things break, see
                   issue #34653
                 }
-                 not(has_conditional_nodes(p.right)) then
-               p.swapleftright
+                 not(Has_Conditional_Nodes(ABinaryNode.Right)) then
+               ABinaryNode.SwapLeftRight
            end;
       end;
 
 
-    procedure MakeToJumpBoolLabels(list: TAsmList; p: TNode; TrueLabel, FalseLabel: TAsmLabel);
+    procedure MakeToJumpBoolLabels(AList: TAsmList; ANode: TNode; ATrueLabel, AFalseLabel: TAsmLabel);
     {
       produces jumps to true respectively false labels using boolean expressions
     }
       var
-        opsize : TCgSize;
-        storepos : TFilePosInfo;
-        tmpreg : TRegister;
+        lOpSize : TCgSize;
+        lStoredFilePos : TFilePosInfo;
+        lTempReg : TRegister;
       begin
-         if tnf_error in p.transientflags then
+         if tnf_error in ANode.TransientFlags then
            exit;
-         storepos:=CurrentFilePos;
-         CurrentFilePos:=p.fileinfo;
-         if Is_Boolean(p.resultdef) then
+         lStoredFilePos:=CurrentFilePos;
+         CurrentFilePos:=ANode.FileInfo;
+         if Is_Boolean(ANode.ResultDef) then
            begin
-              if is_constboolnode(p) then
+              if Is_ConstBoolNode(ANode) then
                 begin
-                   if TOrdConstNode(p).Value.uvalue<>0 then
-                     cg.A_Jmp_Always(list,TrueLabel)
+                   if TOrdConstNode(ANode).Value.uvalue<>0 then
+                     cg.A_Jmp_Always(AList,ATrueLabel)
                    else
-                     cg.A_Jmp_Always(list,FalseLabel)
+                     cg.A_Jmp_Always(AList,AFalseLabel)
                 end
               else
                 begin
-                   opsize:=Def_CGSize(p.resultdef);
-                   case p.Location.Loc of
+                   lOpSize:=Def_CGSize(ANode.ResultDef);
+                   case ANode.Location.Loc of
                      LOC_SUBSETREG,LOC_CSUBSETREG:
                        begin
-                         if p.Location.SReg.BitLen=1 then
+                         if ANode.Location.SReg.BitLen=1 then
                            begin
-                             tmpreg:=cg.GetIntRegister(list,p.Location.SReg.SubsetRegSize);
-                             hlcg.A_Op_Const_Reg_Reg(list,OP_AND,CGSize_OrdDef(p.Location.SReg.SubsetRegSize),1 shl p.Location.SReg.StartBit,p.Location.SReg.SubsetReg,tmpreg);
+                             lTempReg:=cg.GetIntRegister(AList,ANode.Location.SReg.SubsetRegSize);
+                             hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,CGSize_OrdDef(ANode.Location.SReg.SubsetRegSize),1 shl ANode.Location.SReg.StartBit,ANode.Location.SReg.SubsetReg,lTempReg);
                            end
                          else
                            begin
-                             tmpreg:=cg.GetIntRegister(list,OS_INT);
-                             hlcg.A_Load_Loc_Reg(list,p.resultdef,OSUIntType,p.Location,tmpreg);
+                             lTempReg:=cg.GetIntRegister(AList,OS_INT);
+                             hlcg.A_Load_Loc_Reg(AList,ANode.ResultDef,OSUIntType,ANode.Location,lTempReg);
                            end;
-                         cg.A_Cmp_Const_Reg_Label(list,OS_INT,OC_NE,0,tmpreg,TrueLabel);
-                         cg.A_Jmp_Always(list,FalseLabel);
+                         cg.A_Cmp_Const_Reg_Label(AList,OS_INT,OC_NE,0,lTempReg,ATrueLabel);
+                         cg.A_Jmp_Always(AList,AFalseLabel);
                        end;
                      LOC_SUBSETREF,LOC_CSUBSETREF:
                        begin
-                         if (p.Location.SRef.BitIndexReg=NR_NO) and (p.Location.SRef.BitLen=1) then
+                         if (ANode.Location.SRef.BitIndexReg=NR_NO) and (ANode.Location.SRef.BitLen=1) then
                            begin
-                             tmpreg:=cg.GetIntRegister(list,OS_INT);
-                             hlcg.A_Load_Ref_Reg(list,U8IntType,OSUIntType,p.Location.SRef.Ref,tmpreg);
+                             lTempReg:=cg.GetIntRegister(AList,OS_INT);
+                             hlcg.A_Load_Ref_Reg(AList,U8IntType,OSUIntType,ANode.Location.SRef.Ref,lTempReg);
 
                              if TargetInfo.endian=endian_big then
-                               hlcg.A_Op_Const_Reg_Reg(list,OP_AND,OSUIntType,1 shl (8-(p.Location.SRef.StartBit+1)),tmpreg,tmpreg)
+                               hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,OSUIntType,1 shl (8-(ANode.Location.SRef.StartBit+1)),lTempReg,lTempReg)
                              else
-                               hlcg.A_Op_Const_Reg_Reg(list,OP_AND,OSUIntType,1 shl p.Location.SRef.StartBit,tmpreg,tmpreg);
+                               hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,OSUIntType,1 shl ANode.Location.SRef.StartBit,lTempReg,lTempReg);
                            end
                          else
                            begin
-                             tmpreg:=cg.GetIntRegister(list,OS_INT);
-                             hlcg.A_Load_Loc_Reg(list,p.resultdef,OSUIntType,p.Location,tmpreg);
+                             lTempReg:=cg.GetIntRegister(AList,OS_INT);
+                             hlcg.A_Load_Loc_Reg(AList,ANode.ResultDef,OSUIntType,ANode.Location,lTempReg);
                            end;
-                         cg.A_Cmp_Const_Reg_Label(list,OS_INT,OC_NE,0,tmpreg,TrueLabel);
-                         cg.A_Jmp_Always(list,FalseLabel);
+                         cg.A_Cmp_Const_Reg_Label(AList,OS_INT,OC_NE,0,lTempReg,ATrueLabel);
+                         cg.A_Jmp_Always(AList,AFalseLabel);
                        end;
                      LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE :
                        begin
 {$if defined(cpu64bitalu)}
-                         if opsize in [OS_128,OS_S128] then
+                         if lOpSize in [OS_128,OS_S128] then
                            begin
-                             hlcg.Location_Force_Reg(list,p.Location,p.resultdef,CGSize_OrdDef(opsize),true);
-                             tmpreg:=cg.GetIntRegister(list,OS_64);
-                             cg.A_Op_Reg_Reg_Reg(list,OP_OR,OS_64,p.Location.Register128.RegLo,p.Location.Register128.RegHi,tmpreg);
-                             Location_Reset(p.Location,LOC_REGISTER,OS_64);
-                             p.Location.Register:=tmpreg;
-                             opsize:=OS_64;
+                             hlcg.Location_Force_Reg(AList,ANode.Location,ANode.ResultDef,CGSize_OrdDef(lOpSize),true);
+                             lTempReg:=cg.GetIntRegister(AList,OS_64);
+                             cg.A_Op_Reg_Reg_Reg(AList,OP_OR,OS_64,ANode.Location.Register128.RegLo,ANode.Location.Register128.RegHi,lTempReg);
+                             Location_Reset(ANode.Location,LOC_REGISTER,OS_64);
+                             ANode.Location.Register:=lTempReg;
+                             lOpSize:=OS_64;
                            end;
 {$elseif not defined(cpuhighleveltarget)}
-                         if opsize in [OS_64,OS_S64] then
+                         if lOpSize in [OS_64,OS_S64] then
                            begin
-                             hlcg.Location_Force_Reg(list,p.Location,p.resultdef,CGSize_OrdDef(opsize),true);
-                             tmpreg:=cg.GetIntRegister(list,OS_32);
-                             cg.A_Op_Reg_Reg_Reg(list,OP_OR,OS_32,p.Location.Register64.RegLo,p.Location.Register64.RegHi,tmpreg);
-                             Location_Reset(p.Location,LOC_REGISTER,OS_32);
-                             p.Location.Register:=tmpreg;
-                             opsize:=OS_32;
+                             hlcg.Location_Force_Reg(AList,ANode.Location,ANode.ResultDef,CGSize_OrdDef(lOpSize),true);
+                             lTempReg:=cg.GetIntRegister(AList,OS_32);
+                             cg.A_Op_Reg_Reg_Reg(AList,OP_OR,OS_32,ANode.Location.Register64.RegLo,ANode.Location.Register64.RegHi,lTempReg);
+                             Location_Reset(ANode.Location,LOC_REGISTER,OS_32);
+                             ANode.Location.Register:=lTempReg;
+                             lOpSize:=OS_32;
                            end;
 {$endif cpu64bitalu and not cpuhighleveltarget}
-                         cg.A_Cmp_Const_Loc_Label(list,opsize,OC_NE,0,p.Location,TrueLabel);
-                         cg.A_Jmp_Always(list,FalseLabel);
+                         cg.A_Cmp_Const_Loc_Label(AList,lOpSize,OC_NE,0,ANode.Location,ATrueLabel);
+                         cg.A_Jmp_Always(AList,AFalseLabel);
                        end;
                      LOC_JUMP:
                        begin
-                         if TrueLabel<>p.Location.TrueLabel then
+                         if ATrueLabel<>ANode.Location.TrueLabel then
                            begin
-                             cg.A_Label(list,p.Location.TrueLabel);
-                             cg.A_Jmp_Always(list,TrueLabel);
+                             cg.A_Label(AList,ANode.Location.TrueLabel);
+                             cg.A_Jmp_Always(AList,ATrueLabel);
                            end;
-                         if FalseLabel<>p.Location.FalseLabel then
+                         if AFalseLabel<>ANode.Location.FalseLabel then
                            begin
-                             cg.A_Label(list,p.Location.FalseLabel);
-                             cg.A_Jmp_Always(list,FalseLabel);
+                             cg.A_Label(AList,ANode.Location.FalseLabel);
+                             cg.A_Jmp_Always(AList,AFalseLabel);
                            end;
                        end;
 {$ifdef cpuflags}
                      LOC_FLAGS :
                        begin
-                         cg.A_Jmp_Flags(list,p.Location.ResFlags,TrueLabel);
-                         cg.A_Reg_Dealloc(list,NR_DEFAULTFLAGS);
-                         cg.A_Jmp_Always(list,FalseLabel);
+                         cg.A_Jmp_Flags(AList,ANode.Location.ResFlags,ATrueLabel);
+                         cg.A_Reg_Dealloc(AList,NR_DEFAULTFLAGS);
+                         cg.A_Jmp_Always(AList,AFalseLabel);
                        end;
 {$endif cpuflags}
                      else
                        InternalError(200308241);
                    end;
                 end;
-              Location_Reset_Jump(p.Location,TrueLabel,FalseLabel);
+              Location_Reset_Jump(ANode.Location,ATrueLabel,AFalseLabel);
            end
          else
            InternalError(200112305);
-         CurrentFilePos:=storepos;
+         CurrentFilePos:=lStoredFilePos;
       end;
 
 
@@ -367,24 +367,24 @@ implementation
 *****************************************************************************}
 
 
-    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: TDef; var l: TLocation; SetBase: aint);
+    procedure Register_Maybe_Adjust_SetBase(AList: TAsmList; AOpDef: TDef; var ALocation: TLocation; ASetBase: AInt);
       var
-        tmpreg: TRegister;
+        lTempReg: TRegister;
       begin
-        if (SetBase<>0) then
+        if (ASetBase<>0) then
           begin
             { subtract the setbase }
-            case l.Loc of
+            case ALocation.Loc of
               LOC_CREGISTER:
                 begin
-                  tmpreg := hlcg.GetIntRegister(list,opdef);
-                  hlcg.A_Op_Const_Reg_Reg(list,OP_SUB,opdef,SetBase,l.Register,tmpreg);
-                  l.Loc:=LOC_REGISTER;
-                  l.Register:=tmpreg;
+                  lTempReg := hlcg.GetIntRegister(AList,AOpDef);
+                  hlcg.A_Op_Const_Reg_Reg(AList,OP_SUB,AOpDef,ASetBase,ALocation.Register,lTempReg);
+                  ALocation.Loc:=LOC_REGISTER;
+                  ALocation.Register:=lTempReg;
                 end;
               LOC_REGISTER:
                 begin
-                  hlcg.A_Op_Const_Reg(list,OP_SUB,opdef,SetBase,l.Register);
+                  hlcg.A_Op_Const_Reg(AList,OP_SUB,AOpDef,ASetBase,ALocation.Register);
                 end;
               else
                 InternalError(2007091502);
@@ -393,62 +393,62 @@ implementation
       end;
 
 
-    procedure location_force_mmreg(list:TAsmList;var l: TLocation;maybeconst:boolean);
+    procedure Location_Force_MMReg(AList:TAsmList;var ALocation: TLocation;AMaybeConst:Boolean);
       var
-        reg : TRegister;
+        lReg : TRegister;
       begin
-        if (l.Loc<>LOC_MMREGISTER)  and
-           ((l.Loc<>LOC_CMMREGISTER) or (not maybeconst)) then
+        if (ALocation.Loc<>LOC_MMREGISTER)  and
+           ((ALocation.Loc<>LOC_CMMREGISTER) or (not AMaybeConst)) then
           begin
-            reg:=cg.GetMMRegister(list,l.Size);
-            cg.A_LoadMM_Loc_Reg(list,l.Size,l,reg,nil);
-            location_freetemp(list,l);
-            Location_Reset(l,LOC_MMREGISTER,l.Size);
-            l.Register:=reg;
+            lReg:=cg.GetMMRegister(AList,ALocation.Size);
+            cg.A_LoadMM_Loc_Reg(AList,ALocation.Size,ALocation,lReg,nil);
+            Location_FreeTemp(AList,ALocation);
+            Location_Reset(ALocation,LOC_MMREGISTER,ALocation.Size);
+            ALocation.Register:=lReg;
           end;
       end;
 
 
-    procedure location_allocate_register(list: TAsmList;out l: TLocation;def: TDef;constant: boolean);
+    procedure Location_Allocate_Register(AList: TAsmList;out ALocation: TLocation;ADef: TDef;AConstant: Boolean);
       begin
-        l.Size:=Def_CGSize(def);
-        if def.typ=floatdef then
+        ALocation.Size:=Def_CGSize(ADef);
+        if ADef.typ=floatdef then
           begin
-            if Use_VectorFPU(def) then
+            if Use_VectorFPU(ADef) then
               begin
-                if constant then
-                  Location_Reset(l,LOC_CMMREGISTER,l.Size)
+                if AConstant then
+                  Location_Reset(ALocation,LOC_CMMREGISTER,ALocation.Size)
                 else
-                  Location_Reset(l,LOC_MMREGISTER,l.Size);
-                l.Register:=cg.GetMMRegister(list,l.Size);
+                  Location_Reset(ALocation,LOC_MMREGISTER,ALocation.Size);
+                ALocation.Register:=cg.GetMMRegister(AList,ALocation.Size);
               end
             else
               begin
-                if constant then
-                  Location_Reset(l,LOC_CFPUREGISTER,l.Size)
+                if AConstant then
+                  Location_Reset(ALocation,LOC_CFPUREGISTER,ALocation.Size)
                 else
-                  Location_Reset(l,LOC_FPUREGISTER,l.Size);
-                l.Register:=cg.GetFPURegister(list,l.Size);
+                  Location_Reset(ALocation,LOC_FPUREGISTER,ALocation.Size);
+                ALocation.Register:=cg.GetFPURegister(AList,ALocation.Size);
               end;
           end
         else
           begin
-            if constant then
-              Location_Reset(l,LOC_CREGISTER,l.Size)
+            if AConstant then
+              Location_Reset(ALocation,LOC_CREGISTER,ALocation.Size)
             else
-              Location_Reset(l,LOC_REGISTER,l.Size);
+              Location_Reset(ALocation,LOC_REGISTER,ALocation.Size);
 {$if defined(cpu64bitalu)}
-            if l.Size in [OS_128,OS_S128,OS_F128] then
+            if ALocation.Size in [OS_128,OS_S128,OS_F128] then
               begin
-                l.Register128.RegLo:=cg.GetIntRegister(list,OS_64);
-                l.Register128.RegHi:=cg.GetIntRegister(list,OS_64);
+                ALocation.Register128.RegLo:=cg.GetIntRegister(AList,OS_64);
+                ALocation.Register128.RegHi:=cg.GetIntRegister(AList,OS_64);
               end
             else
 {$elseif not defined(cpuhighleveltarget)}
-            if l.Size in [OS_64,OS_S64,OS_F64] then
+            if ALocation.Size in [OS_64,OS_S64,OS_F64] then
               begin
-                l.Register64.RegLo:=cg.GetIntRegister(list,OS_32);
-                l.Register64.RegHi:=cg.GetIntRegister(list,OS_32);
+                ALocation.Register64.RegLo:=cg.GetIntRegister(AList,OS_32);
+                ALocation.Register64.RegHi:=cg.GetIntRegister(AList,OS_32);
               end
             else
 {$endif cpu64bitalu and not cpuhighleveltarget}
@@ -458,7 +458,7 @@ implementation
                     tcgassignmentnode thlcgobj.maybe_change_load_node_reg is
                     called for the temporary node; so the workaround for now is
                     to fix the symptoms... }
-              l.Register:=hlcg.GetRegisterForDef(list,def);
+              ALocation.Register:=hlcg.GetRegisterForDef(AList,ADef);
           end;
       end;
 
@@ -469,45 +469,45 @@ implementation
 
     { generates the code for incrementing the reference count of parameters and
       initialize out parameters }
-    procedure Init_Paras(p:TObject;arg:pointer);
+    procedure InitParas(AObject:TObject;AArg:Pointer);
       var
-        href : TReference;
-        hsym : TParaVarSym;
-        eldef : TDef;
-        list : TAsmList;
-        NeedsInitTable : boolean;
+        lReference : TReference;
+        lParaSym : TParaVarSym;
+        lElementDef : TDef;
+        lList : TAsmList;
+        lNeedsInitTable : Boolean;
       begin
-        list:=TAsmList(arg);
-        if (TSym(p).typ=paravarsym) then
+        lList:=TAsmList(AArg);
+        if (TSym(AObject).typ=paravarsym) then
          begin
-           NeedsInitTable:=Is_Managed_Type(TParaVarSym(p).vardef);
-           if not NeedsInitTable then
+           lNeedsInitTable:=Is_Managed_Type(TParaVarSym(AObject).vardef);
+           if not lNeedsInitTable then
              exit;
-           case TParaVarSym(p).VarSpez of
+           case TParaVarSym(AObject).VarSpez of
              vs_value :
                begin
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
-                 if not((TParaVarSym(p).vardef.typ=variantdef) and
-                    ParaManager.Push_Addr_Param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)) then
+                 if not((TParaVarSym(AObject).vardef.typ=variantdef) and
+                    ParaManager.Push_Addr_Param(TParaVarSym(AObject).VarSpez,TParaVarSym(AObject).vardef,CurrentProcInfo.procdef.ProcCallOption)) then
                    begin
-                     hlcg.Location_Get_Data_Ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,
-                       Is_Open_Array(TParaVarSym(p).vardef) or
+                     hlcg.Location_Get_Data_Ref(lList,TParaVarSym(AObject).vardef,TParaVarSym(AObject).InitialLoc,lReference,
+                       Is_Open_Array(TParaVarSym(AObject).vardef) or
                        ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-                        ParaManager.Push_Addr_Param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)),
+                        ParaManager.Push_Addr_Param(vs_value,TParaVarSym(AObject).vardef,CurrentProcInfo.procdef.ProcCallOption)),
                         sizeof(PInt));
-                     if Is_Open_Array(TParaVarSym(p).vardef) then
+                     if Is_Open_Array(TParaVarSym(AObject).vardef) then
                        begin
                          { open arrays do not contain correct element count in their rtti,
                            the actual count must be passed separately. }
-                         hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                         eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
-                         if not Assigned(hsym) then
+                         lParaSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(AObject)));
+                         lElementDef:=TArrayDef(TParaVarSym(AObject).vardef).ElementDef;
+                         if not Assigned(lParaSym) then
                            InternalError(201003031);
-                         hlcg.G_Array_RTTI_Helper(list,eldef,href,hsym.InitialLoc,'fpc_addref_array');
+                         hlcg.G_Array_RTTI_Helper(lList,lElementDef,lReference,lParaSym.InitialLoc,'fpc_addref_array');
                        end
                      else
-                      hlcg.G_IncrRefCount(list,TParaVarSym(p).vardef,href);
+                      hlcg.G_IncrRefCount(lList,TParaVarSym(AObject).vardef,lReference);
                    end;
                end;
              vs_out :
@@ -515,17 +515,17 @@ implementation
                  { we have no idea about the alignment at the callee side,
                    and the user also cannot specify "unaligned" here, so
                    assume worst case }
-                 hlcg.Location_Get_Data_Ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,true,1);
-                 if Is_Open_Array(TParaVarSym(p).vardef) then
+                 hlcg.Location_Get_Data_Ref(lList,TParaVarSym(AObject).vardef,TParaVarSym(AObject).InitialLoc,lReference,true,1);
+                 if Is_Open_Array(TParaVarSym(AObject).vardef) then
                    begin
-                     hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
-                     eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
-                     if not Assigned(hsym) then
+                     lParaSym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(AObject)));
+                     lElementDef:=TArrayDef(TParaVarSym(AObject).vardef).ElementDef;
+                     if not Assigned(lParaSym) then
                        InternalError(201103033);
-                     hlcg.G_Array_RTTI_Helper(list,eldef,href,hsym.InitialLoc,'fpc_initialize_array');
+                     hlcg.G_Array_RTTI_Helper(lList,lElementDef,lReference,lParaSym.InitialLoc,'fpc_initialize_array');
                    end
                  else
-                   hlcg.G_Initialize(list,TParaVarSym(p).vardef,href);
+                   hlcg.G_Initialize(lList,TParaVarSym(AObject).vardef,lReference);
                end;
              else
                ;
@@ -534,38 +534,38 @@ implementation
       end;
 
 
-    procedure gen_alloc_regloc(list:TAsmList;var loc: TLocation;def: TDef);
+    procedure Gen_Alloc_RegLoc(AList:TAsmList;var ALocation: TLocation;ADef: TDef);
       begin
-        case loc.Loc of
+        case ALocation.Loc of
           LOC_CREGISTER:
             begin
 {$if defined(cpu64bitalu)}
-              if loc.Size in [OS_128,OS_S128] then
+              if ALocation.Size in [OS_128,OS_S128] then
                 begin
-                  loc.Register128.RegLo:=cg.GetIntRegister(list,OS_64);
-                  loc.Register128.RegHi:=cg.GetIntRegister(list,OS_64);
+                  ALocation.Register128.RegLo:=cg.GetIntRegister(AList,OS_64);
+                  ALocation.Register128.RegHi:=cg.GetIntRegister(AList,OS_64);
                 end
               else
 {$elseif not defined(cpuhighleveltarget)}
-              if loc.Size in [OS_64,OS_S64] then
+              if ALocation.Size in [OS_64,OS_S64] then
                 begin
-                  loc.Register64.RegLo:=cg.GetIntRegister(list,OS_32);
-                  loc.Register64.RegHi:=cg.GetIntRegister(list,OS_32);
+                  ALocation.Register64.RegLo:=cg.GetIntRegister(AList,OS_32);
+                  ALocation.Register64.RegHi:=cg.GetIntRegister(AList,OS_32);
                 end
               else
 {$endif cpu64bitalu and not cpuhighleveltarget}
-                if hlcg.def2regtyp(def)=R_ADDRESSREGISTER then
-                  loc.Register:=hlcg.GetAddressRegister(list,def)
+                if hlcg.def2regtyp(ADef)=R_ADDRESSREGISTER then
+                  ALocation.Register:=hlcg.GetAddressRegister(AList,ADef)
                 else
-                  loc.Register:=cg.GetIntRegister(list,loc.Size);
+                  ALocation.Register:=cg.GetIntRegister(AList,ALocation.Size);
             end;
           LOC_CFPUREGISTER:
             begin
-              loc.Register:=cg.GetFPURegister(list,loc.Size);
+              ALocation.Register:=cg.GetFPURegister(AList,ALocation.Size);
             end;
           LOC_CMMREGISTER:
             begin
-             loc.Register:=cg.GetMMRegister(list,loc.Size);
+             ALocation.Register:=cg.GetMMRegister(AList,ALocation.Size);
             end;
           else
             ;
@@ -573,45 +573,45 @@ implementation
       end;
 
 
-    procedure gen_alloc_regvar(list:TAsmList;sym: TAbstractNormalVarSym; allocreg: boolean);
+    procedure Gen_Alloc_RegVar(AList:TAsmList;ASym: TAbstractNormalVarSym; AAllocReg: Boolean);
 
-      procedure set_para_regvar_initial_location;
+      procedure SetParaRegVarInitialLocation;
         var
-          ParaLoc: PCGParaLocation;
-          loc: TLocation;
-          RegType: TRegisterType;
-          reg,reg2: TRegister;
-          size,regsize: TCGInt;
+          lParaLoc: PCGParaLocation;
+          lLocation: TLocation;
+          lRegType: TRegisterType;
+          lReg,lReg2: TRegister;
+          lSize,lRegSize: TCGInt;
         begin
-          TParaVarSym(sym).ParaLoc[calleeside].Get_Location(loc);
-          size:=TParaVarSym(sym).ParaLoc[calleeside].IntSize;
-          ParaLoc:=TParaVarSym(sym).ParaLoc[calleeside].Location;
+          TParaVarSym(ASym).ParaLoc[calleeside].Get_Location(lLocation);
+          lSize:=TParaVarSym(ASym).ParaLoc[calleeside].IntSize;
+          lParaLoc:=TParaVarSym(ASym).ParaLoc[calleeside].Location;
 {$if defined(cpu64bitalu)}
-          if sym.InitialLoc.Size in [OS_128,OS_S128] then
+          if ASym.InitialLoc.Size in [OS_128,OS_S128] then
 {$else}
-          if sym.InitialLoc.Size in [OS_64,OS_S64] then
+          if ASym.InitialLoc.Size in [OS_64,OS_S64] then
 {$endif defined(cpu64bitalu)}
             begin
               if TargetInfo.endian=endian_little then
                 begin
-                  reg:=sym.InitialLoc.Register;
-                  reg2:=sym.InitialLoc.RegisterHi;
+                  lReg:=ASym.InitialLoc.Register;
+                  lReg2:=ASym.InitialLoc.RegisterHi;
                 end
               else
                 begin
-                  reg:=sym.InitialLoc.RegisterHi;
-                  reg2:=sym.InitialLoc.Register;
+                  lReg:=ASym.InitialLoc.RegisterHi;
+                  lReg2:=ASym.InitialLoc.Register;
                 end;
             end
           else
             begin
-              reg:=sym.InitialLoc.Register;
-              reg2:=NR_NO;
+              lReg:=ASym.InitialLoc.Register;
+              lReg2:=NR_NO;
             end;
-          RegType:=GetRegType(reg);
+          lRegType:=GetRegType(lReg);
           while true do
             begin
-              regsize:=TCgSize2Size[reg_cgsize(reg)];
+              lRegSize:=TCgSize2Size[reg_cgsize(lReg)];
 {$ifndef x86}
               { The size of the stack parameter must be not less than
                 the size of the register because the spilling code for
@@ -619,77 +619,77 @@ implementation
 
                 Spilling of sub registers is supported for x86.
               }
-              if (ParaLoc<>nil) and (regsize>TCgSize2Size[ParaLoc^.Size]) then
+              if (lParaLoc<>nil) and (lRegSize>TCgSize2Size[lParaLoc^.Size]) then
                 break;
 {$endif x86}
-              cg.rg[RegType].Set_Reg_Initial_Location(reg,loc.Reference);
-              dec(size,regsize);
-              if size<=0 then
+              cg.rg[lRegType].Set_Reg_Initial_Location(lReg,lLocation.Reference);
+              dec(lSize,lRegSize);
+              if lSize<=0 then
                 break;
-              if ParaLoc<>nil then
-                ParaLoc:=ParaLoc^.Next;
-              if ParaLoc<>nil then
-                loc.Reference.Offset:=ParaLoc^.Reference.Offset
+              if lParaLoc<>nil then
+                lParaLoc:=lParaLoc^.Next;
+              if lParaLoc<>nil then
+                lLocation.Reference.Offset:=lParaLoc^.Reference.Offset
               else
-                inc(loc.Reference.Offset,regsize);
+                inc(lLocation.Reference.Offset,lRegSize);
 
                 begin
-                  if reg=reg2 then
+                  if lReg=lReg2 then
                     InternalError(2020090502);
-                  reg:=reg2;
+                  lReg:=lReg2;
                 end;
             end;
         end;
 
       var
-        usedef: TDef;
-        varloc: TAIVarLoc;
+        lUseDef: TDef;
+        lVarLoc: TAIVarLoc;
       begin
-        if allocreg then
+        if AAllocReg then
           begin
-            if sym.typ=paravarsym then
-              usedef:=TParaVarSym(sym).ParaLoc[calleeside].def
+            if ASym.typ=paravarsym then
+              lUseDef:=TParaVarSym(ASym).ParaLoc[calleeside].def
             else
-              usedef:=sym.vardef;
-            gen_alloc_regloc(list,sym.InitialLoc,usedef);
+              lUseDef:=ASym.vardef;
+            Gen_Alloc_RegLoc(AList,ASym.InitialLoc,lUseDef);
           end;
-        if (pi_has_label in CurrentProcInfo.flags) then
+        if (pi_has_label in CurrentProcInfo.Flags) then
           begin
             { Allocate register already, to prevent first allocation to be
               inside a loop }
 {$if defined(cpu64bitalu)}
-            if sym.InitialLoc.Size in [OS_128,OS_S128] then
+            if ASym.InitialLoc.Size in [OS_128,OS_S128] then
               begin
-                cg.A_Reg_Sync(list,sym.InitialLoc.Register128.RegLo);
-                cg.A_Reg_Sync(list,sym.InitialLoc.Register128.RegHi);
+                cg.A_Reg_Sync(AList,ASym.InitialLoc.Register128.RegLo);
+                cg.A_Reg_Sync(AList,ASym.InitialLoc.Register128.RegHi);
               end
             else
 {$elseif defined(cpu32bitalu) and not defined(cpuhighleveltarget)}
-            if sym.InitialLoc.Size in [OS_64,OS_S64] then
+            if ASym.InitialLoc.Size in [OS_64,OS_S64] then
               begin
-                cg.A_Reg_Sync(list,sym.InitialLoc.Register64.RegLo);
-                cg.A_Reg_Sync(list,sym.InitialLoc.Register64.RegHi);
+                cg.A_Reg_Sync(AList,ASym.InitialLoc.Register64.RegLo);
+                cg.A_Reg_Sync(AList,ASym.InitialLoc.Register64.RegHi);
               end
             else
 {$endif}
-             cg.A_Reg_Sync(list,sym.InitialLoc.Register);
+             cg.A_Reg_Sync(AList,ASym.InitialLoc.Register);
           end;
 {$if defined(cpu64bitalu)}
-        if (sym.InitialLoc.Size in [OS_128,OS_S128]) then
-          varloc:=TAIVarLoc.Create128(sym,sym.InitialLoc.Register,sym.InitialLoc.RegisterHi)
+        if (ASym.InitialLoc.Size in [OS_128,OS_S128]) then
+          lVarLoc:=TAIVarLoc.Create128(ASym,ASym.InitialLoc.Register,ASym.InitialLoc.RegisterHi)
         else
 {$elseif not defined(cpuhighleveltarget)}
-        if (sym.InitialLoc.Size in [OS_64,OS_S64]) then
-          varloc:=TAIVarLoc.Create64(sym,sym.InitialLoc.Register,sym.InitialLoc.RegisterHi)
+        if (ASym.InitialLoc.Size in [OS_64,OS_S64]) then
+          lVarLoc:=TAIVarLoc.Create64(ASym,ASym.InitialLoc.Register,ASym.InitialLoc.RegisterHi)
         else
 {$endif cpu64bitalu and not cpuhighleveltarget}
-          varloc:=TAIVarLoc.create(sym,sym.InitialLoc.Register);
-        list.concat(varloc);
+          lVarLoc:=TAIVarLoc.Create(ASym,ASym.InitialLoc.Register);
+        AList.concat(lVarLoc);
         { Notify the register allocator about memory location of
           the register which holds a value of a stack parameter }
-        if (sym.typ=paravarsym) and
-           ParaManager.Param_Use_ParaLoc(TParaVarSym(sym).ParaLoc[calleeside]) then
-          set_para_regvar_initial_location;
+        if (ASym.typ=paravarsym) and
+           ParaManager.Param_Use_ParaLoc(TParaVarSym(ASym).ParaLoc[calleeside]) then
+          SetParaRegVarInitialLocation;
       end;
 
 
@@ -697,118 +697,118 @@ implementation
                                 Entry/Exit
 ****************************************************************************}
 
-    procedure alloc_proc_symbol(pd: TProcDef);
+    procedure Alloc_Proc_Symbol(AProcDef: TProcDef);
       var
-        item: TCmdStrListItem;
+        lItem: TCmdStrListItem;
       begin
-        item:=TCmdStrListItem(pd.AliasNames.first);
-        while Assigned(item) do
+        lItem:=TCmdStrListItem(AProcDef.AliasNames.first);
+        while Assigned(lItem) do
           begin
-            CurrentAsmData.DefineProcAsmSymbol(pd,item.str,pd.NeedsGlobalAsmSym);
-            item:=TCmdStrListItem(item.next);
+            CurrentAsmData.DefineProcAsmSymbol(AProcDef,lItem.str,AProcDef.NeedsGlobalAsmSym);
+            lItem:=TCmdStrListItem(lItem.next);
          end;
       end;
 
 
-    procedure release_proc_symbol(pd:TProcDef);
+    procedure Release_Proc_Symbol(AProcDef:TProcDef);
       var
-        idx : LongInt;
-        item : TCmdStrListItem;
+        lIndex : LongInt;
+        lItem : TCmdStrListItem;
       begin
-        item:=TCmdStrListItem(pd.AliasNames.first);
-        while Assigned(item) do
+        lItem:=TCmdStrListItem(AProcDef.AliasNames.first);
+        while Assigned(lItem) do
           begin
-            idx:=CurrentAsmData.AsmSymbolDict.findindexof(item.str);
-            if idx>=0 then
-              CurrentAsmData.AsmSymbolDict.Delete(idx);
-            item:=TCmdStrListItem(item.next);
+            lIndex:=CurrentAsmData.AsmSymbolDict.findindexof(lItem.str);
+            if lIndex>=0 then
+              CurrentAsmData.AsmSymbolDict.Delete(lIndex);
+            lItem:=TCmdStrListItem(lItem.next);
           end;
       end;
 
 
-    procedure gen_proc_entry_code(list:TAsmList);
+    procedure Gen_Proc_Entry_Code(AList:TAsmList);
       var
-        hitemp,
-        lotemp, stack_frame_size : LongInt;
+        lHighTemp,
+        lLowTemp, lStackFrameSize : LongInt;
       begin
         { generate call frame marker for dwarf call frame info }
-        CurrentAsmData.asmcfi.start_frame(list);
+        CurrentAsmData.asmcfi.start_frame(AList);
 
         { labels etc. for exception frames are inserted here }
-        CurrentProcInfo.start_eh(list);
+        CurrentProcInfo.Start_EH(AList);
 
         if CurrentProcInfo.procdef.ProcTypeOption=potype_proginit then
-          CurrentAsmData.asmcfi.outmost_frame(list);
+          CurrentAsmData.asmcfi.outmost_frame(AList);
 
         { All temps are know, write offsets used for information }
         if (cs_asm_source in CurrentSettings.GlobalSwitches) and
-           (CurrentProcInfo.tempstart<>tg.lasttemp) then
+           (CurrentProcInfo.TempStart<>TG.LastTemp) then
           begin
-            if tg.direction>0 then
+            if TG.direction>0 then
               begin
-                lotemp:=CurrentProcInfo.tempstart;
-                hitemp:=tg.lasttemp;
+                lLowTemp:=CurrentProcInfo.TempStart;
+                lHighTemp:=TG.LastTemp;
               end
             else
               begin
-                lotemp:=tg.lasttemp;
-                hitemp:=CurrentProcInfo.tempstart;
+                lLowTemp:=TG.LastTemp;
+                lHighTemp:=CurrentProcInfo.TempStart;
               end;
-            list.concat(TAIComment.Create(StrPNew('Temps allocated between '+std_regname(CurrentProcInfo.framepointer)+
-              ToStr_With_Plus(lotemp)+' and '+std_regname(CurrentProcInfo.framepointer)+ToStr_With_Plus(hitemp))));
+            AList.concat(TAIComment.Create(StrPNew('Temps allocated between '+std_regname(CurrentProcInfo.FramePointer)+
+              ToStr_With_Plus(lLowTemp)+' and '+std_regname(CurrentProcInfo.FramePointer)+ToStr_With_Plus(lHighTemp))));
           end;
 
          { generate target specific proc entry code }
-         stack_frame_size := CurrentProcInfo.calc_stackframe_size;
-         if (stack_frame_size <> 0) and
+         lStackFrameSize := CurrentProcInfo.Calc_StackFrame_Size;
+         if (lStackFrameSize <> 0) and
             (po_nostackframe in CurrentProcInfo.procdef.ProcOptions) then
-           message1(parser_e_nostackframe_with_locals,ToStr(stack_frame_size));
+           message1(parser_e_nostackframe_with_locals,ToStr(lStackFrameSize));
 
-         hlcg.G_Proc_Entry(list,stack_frame_size,(po_nostackframe in CurrentProcInfo.procdef.ProcOptions));
+         hlcg.G_Proc_Entry(AList,lStackFrameSize,(po_nostackframe in CurrentProcInfo.procdef.ProcOptions));
       end;
 
 
-    procedure gen_proc_exit_code(list:TAsmList);
+    procedure Gen_Proc_Exit_Code(AList:TAsmList);
       var
-        parasize : LongInt;
+        lParaSize : LongInt;
       begin
         { c style clearstack does not need to remove parameters from the stack, only the
           return value when it was pushed by arguments }
         if CurrentProcInfo.procdef.ProcCallOption in ClearStack_PoCalls then
           begin
-            parasize:=0;
+            lParaSize:=0;
             { For safecall functions with safecall-exceptions enabled the funcret is always returned as a para
               which is considered a normal para on the c-side, so the funcret has to be pop'ed normally. }
             if not CurrentProcInfo.procdef.Generate_SafeCall_Wrapper and
                ParaManager.Ret_In_Param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef) then
-              inc(parasize,sizeof(PInt));
+              inc(lParaSize,sizeof(PInt));
           end
         else
           begin
-            parasize:=CurrentProcInfo.para_stack_size;
+            lParaSize:=CurrentProcInfo.ParaStackSize;
             { the parent frame pointer para has to be removed always by the caller in
               case of Delphi-style parent frame pointer passing }
             if (not(ParaManager.Use_Fixed_Stack) or (TargetInfo.abi=abi_i386_dynalignedstack)) and
                (po_delphi_nested_cc in CurrentProcInfo.procdef.ProcOptions) then
-              dec(parasize,sizeof(PInt));
+              dec(lParaSize,sizeof(PInt));
           end;
 
         { generate target specific proc exit code }
-        hlcg.G_Proc_Exit(list,parasize,(po_nostackframe in CurrentProcInfo.procdef.ProcOptions));
+        hlcg.G_Proc_Exit(AList,lParaSize,(po_nostackframe in CurrentProcInfo.procdef.ProcOptions));
 
         { labels etc. for exception frames are inserted here }
-        CurrentProcInfo.end_eh(list);
+        CurrentProcInfo.End_EH(AList);
 
         { release return registers, needed for optimizer }
         if not Is_Void(CurrentProcInfo.procdef.ReturnDef) then
-          ParaManager.FreeCGPara(list,CurrentProcInfo.procdef.FuncRetLoc[calleeside]);
+          ParaManager.FreeCGPara(AList,CurrentProcInfo.procdef.FuncRetLoc[calleeside]);
 
         { end of frame marker for call frame info }
-        CurrentAsmData.asmcfi.end_frame(list);
+        CurrentAsmData.asmcfi.end_frame(AList);
       end;
 
 
-    procedure gen_save_used_regs(list:TAsmList);
+    procedure Gen_Save_Used_Regs(AList:TAsmList);
       begin
         if po_noreturn in CurrentProcInfo.procdef.ProcOptions then
           exit;
@@ -816,11 +816,11 @@ implementation
         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
           exit;
 
-        cg.G_Save_Registers(list);
+        cg.G_Save_Registers(AList);
       end;
 
 
-    procedure gen_restore_used_regs(list:TAsmList);
+    procedure Gen_Restore_Used_Regs(AList:TAsmList);
       begin
         if po_noreturn in CurrentProcInfo.procdef.ProcOptions then
           exit;
@@ -828,7 +828,7 @@ implementation
         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
           exit;
 
-        cg.G_Restore_Registers(list);
+        cg.G_Restore_Registers(AList);
       end;
 
 
@@ -836,142 +836,142 @@ implementation
                                Const Data
 ****************************************************************************}
 
-    procedure gen_alloc_symtable(list:TAsmList;pd:TProcDef;st:TSymTable);
+    procedure Gen_Alloc_SymTable(AList:TAsmList;AProcDef:TProcDef;ASymTable:TSymTable);
 
       var
-        i       : LongInt;
-        highsym,
-        sym     : TSym;
-        vs      : TAbstractNormalVarSym;
-        ptrdef  : TDef;
-        isaddr  : boolean;
+        lIndex       : LongInt;
+        lHighSym,
+        lSym     : TSym;
+        lVarSym      : TAbstractNormalVarSym;
+        lPointerDef  : TDef;
+        lIsAddress  : Boolean;
       begin
-        for i:=0 to st.SymList.Count-1 do
+        for lIndex:=0 to ASymTable.SymList.Count-1 do
           begin
-            sym:=TSym(st.SymList[i]);
-            case sym.typ of
+            lSym:=TSym(ASymTable.SymList[lIndex]);
+            case lSym.typ of
               staticvarsym :
                 begin
-                  vs:=TAbstractNormalVarSym(sym);
+                  lVarSym:=TAbstractNormalVarSym(lSym);
                   { The code in loadnode.pass_generatecode will create the
                     LOC_REFERENCE instead for all none register variables. This is
                     required because we can't store an asmsymbol in the localloc because
                     the asmsymbol is invalid after an unit is compiled. This gives
                     problems when this procedure is inlined in another unit (PFV) }
-                  if vs.Is_RegVar(false) then
+                  if lVarSym.Is_RegVar(false) then
                     begin
-                      vs.InitialLoc.Loc:=TVarRegable2TCGLoc[vs.VarRegable];
-                      vs.InitialLoc.Size:=Def_CGSize(vs.vardef);
-                      gen_alloc_regvar(list,vs,true);
-                      hlcg.VarSym_Set_LocAlloc(list,vs);
+                      lVarSym.InitialLoc.Loc:=TVarRegable2TCGLoc[lVarSym.VarRegable];
+                      lVarSym.InitialLoc.Size:=Def_CGSize(lVarSym.vardef);
+                      Gen_Alloc_RegVar(AList,lVarSym,true);
+                      hlcg.VarSym_Set_LocAlloc(AList,lVarSym);
                     end;
                 end;
               paravarsym :
                 begin
-                  vs:=TAbstractNormalVarSym(sym);
+                  lVarSym:=TAbstractNormalVarSym(lSym);
                   { Parameters passed to assembler procedures need to be kept
                     in the original location }
-                  if (po_assembler in pd.ProcOptions) then
-                    TParaVarSym(vs).ParaLoc[calleeside].Get_Location(vs.InitialLoc)
+                  if (po_assembler in AProcDef.ProcOptions) then
+                    TParaVarSym(lVarSym).ParaLoc[calleeside].Get_Location(lVarSym.InitialLoc)
                   { exception filters receive their frame pointer as a parameter }
-                  else if (pd.ProcTypeOption=potype_exceptfilter) and
-                    (vo_is_parentfp in vs.VarOptions) then
+                  else if (AProcDef.ProcTypeOption=potype_exceptfilter) and
+                    (vo_is_parentfp in lVarSym.VarOptions) then
                     begin
-                      Location_Reset(vs.InitialLoc,LOC_REGISTER,OS_ADDR);
-                      vs.InitialLoc.Register:=NR_FRAME_POINTER_REG;
+                      Location_Reset(lVarSym.InitialLoc,LOC_REGISTER,OS_ADDR);
+                      lVarSym.InitialLoc.Register:=NR_FRAME_POINTER_REG;
                     end
                   { Unused parameters need to be kept in the original location
                     to prevent allocation of registers/resources for them. }
-                  else if not TParaVarSym(vs).Is_Used and
+                  else if not TParaVarSym(lVarSym).Is_Used and
                     (cs_opt_unused_para in CurrentSettings.OptimizerSwitches) then
                     begin
-                      TParaVarSym(vs).ParaLoc[calleeside].Get_Location(vs.InitialLoc);
+                      TParaVarSym(lVarSym).ParaLoc[calleeside].Get_Location(lVarSym.InitialLoc);
                     end
                   else
                     begin
                       { if an open array is used, also its high parameter is used,
                         since the hidden high parameters are inserted after the corresponding symbols,
                         we can increase the ref. count here }
-                      if Is_Open_Array(vs.vardef) or Is_Array_Of_Const(vs.vardef) then
+                      if Is_Open_Array(lVarSym.vardef) or Is_Array_Of_Const(lVarSym.vardef) then
                         begin
-                          highsym:=Get_High_Value_Sym(TParaVarSym(vs));
-                          if Assigned(highsym) then
-                            inc(highsym.refs);
+                          lHighSym:=Get_High_Value_Sym(TParaVarSym(lVarSym));
+                          if Assigned(lHighSym) then
+                            inc(lHighSym.refs);
                         end;
 
-                      isaddr:=ParaManager.Push_Addr_Param(vs.VarSpez,vs.vardef,pd.ProcCallOption);
-                      if isaddr then
-                        vs.InitialLoc.Size:=Def_CGSize(VoidPointerType)
+                      lIsAddress:=ParaManager.Push_Addr_Param(lVarSym.VarSpez,lVarSym.vardef,AProcDef.ProcCallOption);
+                      if lIsAddress then
+                        lVarSym.InitialLoc.Size:=Def_CGSize(VoidPointerType)
                       else
-                        vs.InitialLoc.Size:=Def_CGSize(vs.vardef);
+                        lVarSym.InitialLoc.Size:=Def_CGSize(lVarSym.vardef);
 
-                      if vs.Is_RegVar(isaddr) then
-                        vs.InitialLoc.Loc:=TVarRegable2TCGLoc[vs.VarRegable]
+                      if lVarSym.Is_RegVar(lIsAddress) then
+                        lVarSym.InitialLoc.Loc:=TVarRegable2TCGLoc[lVarSym.VarRegable]
                       else
                         begin
-                          vs.InitialLoc.Loc:=LOC_REFERENCE;
+                          lVarSym.InitialLoc.Loc:=LOC_REFERENCE;
                           { Reuse the parameter location for values to are at a single location on the stack }
-                          if ParaManager.Param_Use_ParaLoc(TParaVarSym(vs).ParaLoc[calleeside]) then
+                          if ParaManager.Param_Use_ParaLoc(TParaVarSym(lVarSym).ParaLoc[calleeside]) then
                             begin
-                              hlcg.ParaVarSym_Set_InitialLoc_To_ParaLoc(TParaVarSym(vs));
+                              hlcg.ParaVarSym_Set_InitialLoc_To_ParaLoc(TParaVarSym(lVarSym));
                             end
                           else
                             begin
-                              if isaddr then
+                              if lIsAddress then
                                 begin
-                                  ptrdef:=CPointerDef.getreusable(vs.vardef);
-                                  hlcg.GetLocal(list,vs,ptrdef.Size,ptrdef.Alignment,ptrdef,vs.InitialLoc.Reference)
+                                  lPointerDef:=CPointerDef.getreusable(lVarSym.vardef);
+                                  hlcg.GetLocal(AList,lVarSym,lPointerDef.Size,lPointerDef.Alignment,lPointerDef,lVarSym.InitialLoc.Reference)
                                 end
                               else
-                                hlcg.GetLocal(list,vs,vs.GetSize,TParaVarSym(vs).ParaLoc[calleeside].Alignment,vs.vardef,vs.InitialLoc.Reference);
+                                hlcg.GetLocal(AList,lVarSym,lVarSym.GetSize,TParaVarSym(lVarSym).ParaLoc[calleeside].Alignment,lVarSym.vardef,lVarSym.InitialLoc.Reference);
                             end;
                         end;
                     end;
-                  hlcg.VarSym_Set_LocAlloc(list,vs);
+                  hlcg.VarSym_Set_LocAlloc(AList,lVarSym);
                 end;
               localvarsym :
                 begin
-                  vs:=TAbstractNormalVarSym(sym);
-                  if Is_Vector(vs.vardef) and
-                     Fits_In_MM_Register(vs.vardef) then
-                    vs.InitialLoc.Size:=Def_CGMMSize(vs.vardef)
+                  lVarSym:=TAbstractNormalVarSym(lSym);
+                  if Is_Vector(lVarSym.vardef) and
+                     Fits_In_MM_Register(lVarSym.vardef) then
+                    lVarSym.InitialLoc.Size:=Def_CGMMSize(lVarSym.vardef)
                   else
-                    vs.InitialLoc.Size:=Def_CGSize(vs.vardef);
-                  if ([po_assembler,po_nostackframe] * pd.ProcOptions = [po_assembler,po_nostackframe]) and
-                     (vo_is_funcret in vs.VarOptions) then
+                    lVarSym.InitialLoc.Size:=Def_CGSize(lVarSym.vardef);
+                  if ([po_assembler,po_nostackframe] * AProcDef.ProcOptions = [po_assembler,po_nostackframe]) and
+                     (vo_is_funcret in lVarSym.VarOptions) then
                     begin
-                      ParaManager.Create_FuncRetLoc_Info(pd,calleeside);
-                      if Assigned(pd.FuncRetLoc[calleeside].Location^.next) then
+                      ParaManager.Create_FuncRetLoc_Info(AProcDef,calleeside);
+                      if Assigned(AProcDef.FuncRetLoc[calleeside].Location^.next) then
                         begin
                           { can't replace references to "result" with a complex
                             location expression inside assembler code }
-                          Location_Reset(vs.InitialLoc,LOC_INVALID,OS_NO);
+                          Location_Reset(lVarSym.InitialLoc,LOC_INVALID,OS_NO);
                         end
                       else
-                        pd.FuncRetLoc[calleeside].Get_Location(vs.InitialLoc);
+                        AProcDef.FuncRetLoc[calleeside].Get_Location(lVarSym.InitialLoc);
                     end
                   else if (m_delphi in CurrentSettings.ModeSwitches) and
-                     (po_assembler in pd.ProcOptions) and
-                     (vo_is_funcret in vs.VarOptions) and
-                     (vs.refs=0) then
+                     (po_assembler in AProcDef.ProcOptions) and
+                     (vo_is_funcret in lVarSym.VarOptions) and
+                     (lVarSym.refs=0) then
                     begin
                       { not referenced, so don't allocate. Use dummy to }
                       { avoid ie's later on because of LOC_INVALID      }
-                      vs.InitialLoc.Loc:=LOC_REGISTER;
-                      vs.InitialLoc.Size:=OS_INT;
-                      vs.InitialLoc.Register:=NR_FUNCTION_RESULT_REG;
+                      lVarSym.InitialLoc.Loc:=LOC_REGISTER;
+                      lVarSym.InitialLoc.Size:=OS_INT;
+                      lVarSym.InitialLoc.Register:=NR_FUNCTION_RESULT_REG;
                     end
-                  else if vs.Is_RegVar(false) then
+                  else if lVarSym.Is_RegVar(false) then
                     begin
-                      vs.InitialLoc.Loc:=TVarRegable2TCGLoc[vs.VarRegable];
-                      gen_alloc_regvar(list,vs,true);
+                      lVarSym.InitialLoc.Loc:=TVarRegable2TCGLoc[lVarSym.VarRegable];
+                      Gen_Alloc_RegVar(AList,lVarSym,true);
                     end
                   else
                     begin
-                      vs.InitialLoc.Loc:=LOC_REFERENCE;
-                      hlcg.GetLocal(list,vs,vs.GetSize,vs.vardef.Alignment,vs.vardef,vs.InitialLoc.Reference);
+                      lVarSym.InitialLoc.Loc:=LOC_REFERENCE;
+                      hlcg.GetLocal(AList,lVarSym,lVarSym.GetSize,lVarSym.vardef.Alignment,lVarSym.vardef,lVarSym.InitialLoc.Reference);
                     end;
-                  hlcg.VarSym_Set_LocAlloc(list,vs);
+                  hlcg.VarSym_Set_LocAlloc(AList,lVarSym);
                 end;
               else
                 ;
@@ -980,44 +980,44 @@ implementation
       end;
 
 
-    procedure add_regvars(var rv: TUsedRegVars; const location: TLocation);
+    procedure AddRegVars(var AUsedRegVars: TUsedRegVars; const ALocation: TLocation);
       begin
-        case location.Loc of
+        case ALocation.Loc of
           LOC_CREGISTER:
 {$if defined(cpu64bitalu)}
-            if location.Size in [OS_128,OS_S128] then
+            if ALocation.Size in [OS_128,OS_S128] then
               begin
-                rv.intregvars.AddNoDup(GetSupReg(location.Register128.RegLo));
-                rv.intregvars.AddNoDup(GetSupReg(location.Register128.RegHi));
+                AUsedRegVars.IntRegVars.AddNoDup(GetSupReg(ALocation.Register128.RegLo));
+                AUsedRegVars.IntRegVars.AddNoDup(GetSupReg(ALocation.Register128.RegHi));
               end
             else
 {$elseif defined(cpu32bitalu)}
-            if location.Size in [OS_64,OS_S64] then
+            if ALocation.Size in [OS_64,OS_S64] then
               begin
-                rv.intregvars.AddNoDup(GetSupReg(location.Register64.RegLo));
-                rv.intregvars.AddNoDup(GetSupReg(location.Register64.RegHi));
+                AUsedRegVars.IntRegVars.AddNoDup(GetSupReg(ALocation.Register64.RegLo));
+                AUsedRegVars.IntRegVars.AddNoDup(GetSupReg(ALocation.Register64.RegHi));
               end
             else
 {$endif}
-              if GetRegType(location.Register)=R_INTREGISTER then
-                rv.intregvars.AddNoDup(GetSupReg(location.Register))
+              if GetRegType(ALocation.Register)=R_INTREGISTER then
+                AUsedRegVars.IntRegVars.AddNoDup(GetSupReg(ALocation.Register))
               else
-                rv.addrregvars.AddNoDup(GetSupReg(location.Register));
+                AUsedRegVars.AddrRegVars.AddNoDup(GetSupReg(ALocation.Register));
           LOC_CFPUREGISTER:
-            rv.fpuregvars.AddNoDup(GetSupReg(location.Register));
+            AUsedRegVars.FPURegVars.AddNoDup(GetSupReg(ALocation.Register));
           LOC_CMMREGISTER:
-            rv.mmregvars.AddNoDup(GetSupReg(location.Register));
+            AUsedRegVars.MMRegVars.AddNoDup(GetSupReg(ALocation.Register));
           else
             ;
         end;
       end;
 
 
-    function do_get_used_regvars(var n: TNode; arg: pointer): TForEachNodeResult;
+    function DoGetUsedRegVars(var ANode: TNode; AArg: Pointer): TForEachNodeResult;
       var
-        rv: PUsedRegVars absolute arg;
+        lUsedRegVars: PUsedRegVars absolute AArg;
       begin
-        case (n.nodetype) of
+        case (ANode.NodeType) of
           temprefn:
             { We only have to synchronise a tempnode before a loop if it is }
             { not created inside the loop, and only synchronise after the   }
@@ -1030,33 +1030,33 @@ implementation
             { tempinfo^.valid will be false and so we do not add            }
             { unnecessary registers. This way, we don't have to look at     }
             { tempcreate and tempdestroy nodes to get this info (JM)        }
-            if (ti_valid in TTempRefNode(n).tempflags) then
-              add_regvars(rv^,TTempRefNode(n).tempinfo^.Location);
+            if (ti_valid in TTempRefNode(ANode).TempFlags) then
+              AddRegVars(lUsedRegVars^,TTempRefNode(ANode).TempInfo^.Location);
           loadn:
-            if (TLoadNode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) then
-              add_regvars(rv^,TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc);
+            if (TLoadNode(ANode).SymTableEntry.typ in [staticvarsym,localvarsym,paravarsym]) then
+              AddRegVars(lUsedRegVars^,TAbstractNormalVarSym(TLoadNode(ANode).SymTableEntry).LocAlloc);
           loadparentfpn:
-            if CurrentProcInfo.procdef.ParaST.SymTableLevel>TLoadParentFPNode(n).parentpd.ParaST.SymTableLevel then
-              add_regvars(rv^,TParaVarSym(CurrentProcInfo.procdef.ParentFPSym).LocAlloc);
+            if CurrentProcInfo.procdef.ParaST.SymTableLevel>TLoadParentFPNode(ANode).ParentPD.ParaST.SymTableLevel then
+              AddRegVars(lUsedRegVars^,TParaVarSym(CurrentProcInfo.procdef.ParentFPSym).LocAlloc);
           vecn:
             begin
               { range checks sometimes need the high parameter }
               if (cs_check_range in CurrentSettings.LocalSwitches) and
-                 (Is_Open_Array(TVecNode(n).left.resultdef) or
-                  Is_Array_Of_Const(TVecNode(n).left.resultdef)) and
+                 (Is_Open_Array(TVecNode(ANode).Left.ResultDef) or
+                  Is_Array_Of_Const(TVecNode(ANode).Left.ResultDef)) and
                  not(CurrentProcInfo.procdef.ProcCallOption in CDecl_PoCalls) then
-                add_regvars(rv^,TAbstractNormalVarSym(Get_High_Value_Sym(TParaVarSym(TLoadNode(TVecNode(n).left).symtableentry))).LocAlloc)
+                AddRegVars(lUsedRegVars^,TAbstractNormalVarSym(Get_High_Value_Sym(TParaVarSym(TLoadNode(TVecNode(ANode).Left).SymTableEntry))).LocAlloc)
             end;
           else
             ;
         end;
-        result := fen_true;
+        Result := fen_true;
       end;
 
 
-    procedure get_used_regvars(n: TNode; var rv: TUsedRegVars);
+    procedure Get_Used_RegVars(ANode: TNode; var AUsedRegVars: TUsedRegVars);
       begin
-        foreachnodestatic(n,@do_get_used_regvars,@rv);
+        ForEachNodeStatic(ANode,@DoGetUsedRegVars,@AUsedRegVars);
       end;
 
 (*
@@ -1099,60 +1099,60 @@ implementation
       end;
 *)
 
-    procedure gen_sync_regvars(list:TAsmList; var rv: TUsedRegVars);
+    procedure Gen_Sync_RegVars(AList:TAsmList; var AUsedRegVars: TUsedRegVars);
       var
-        count: LongInt;
+        lCount: LongInt;
       begin
-        for count := 1 to rv.intregvars.length do
-          cg.A_Reg_Sync(list,NewReg(R_INTREGISTER,rv.intregvars.ReadIdx(count-1),R_SUBWHOLE));
-        for count := 1 to rv.addrregvars.length do
-          cg.A_Reg_Sync(list,NewReg(R_ADDRESSREGISTER,rv.addrregvars.ReadIdx(count-1),R_SUBWHOLE));
-        for count := 1 to rv.fpuregvars.length do
-          cg.A_Reg_Sync(list,NewReg(R_FPUREGISTER,rv.fpuregvars.ReadIdx(count-1),R_SUBWHOLE));
-        for count := 1 to rv.mmregvars.length do
-          cg.A_Reg_Sync(list,NewReg(R_MMREGISTER,rv.mmregvars.ReadIdx(count-1),R_SUBWHOLE));
+        for lCount := 1 to AUsedRegVars.IntRegVars.length do
+          cg.A_Reg_Sync(AList,NewReg(R_INTREGISTER,AUsedRegVars.IntRegVars.ReadIdx(lCount-1),R_SUBWHOLE));
+        for lCount := 1 to AUsedRegVars.AddrRegVars.length do
+          cg.A_Reg_Sync(AList,NewReg(R_ADDRESSREGISTER,AUsedRegVars.AddrRegVars.ReadIdx(lCount-1),R_SUBWHOLE));
+        for lCount := 1 to AUsedRegVars.FPURegVars.length do
+          cg.A_Reg_Sync(AList,NewReg(R_FPUREGISTER,AUsedRegVars.FPURegVars.ReadIdx(lCount-1),R_SUBWHOLE));
+        for lCount := 1 to AUsedRegVars.MMRegVars.length do
+          cg.A_Reg_Sync(AList,NewReg(R_MMREGISTER,AUsedRegVars.MMRegVars.ReadIdx(lCount-1),R_SUBWHOLE));
       end;
 
 
-    procedure gen_free_symtable(list:TAsmList;st:TSymTable);
+    procedure Gen_Free_SymTable(AList:TAsmList;ASymTable:TSymTable);
       var
-        i   : LongInt;
-        sym : TSym;
+        lIndex   : LongInt;
+        lSym : TSym;
       begin
-        for i:=0 to st.SymList.Count-1 do
+        for lIndex:=0 to ASymTable.SymList.Count-1 do
           begin
-            sym:=TSym(st.SymList[i]);
-            if (sym.typ in [staticvarsym,localvarsym,paravarsym]) then
+            lSym:=TSym(ASymTable.SymList[lIndex]);
+            if (lSym.typ in [staticvarsym,localvarsym,paravarsym]) then
               begin
-                with TAbstractNormalVarSym(sym) do
+                with TAbstractNormalVarSym(lSym) do
                   begin
                     { Note: We need to keep the data available in memory
                       for the sub procedures that can access local data
                       in the parent procedures }
                     case LocAlloc.Loc of
                       LOC_CREGISTER :
-                        if (pi_has_label in CurrentProcInfo.flags) then
+                        if (pi_has_label in CurrentProcInfo.Flags) then
 {$if defined(cpu64bitalu)}
                           if LocAlloc.Size in [OS_128,OS_S128] then
                             begin
-                              cg.A_Reg_Sync(list,LocAlloc.Register128.RegLo);
-                              cg.A_Reg_Sync(list,LocAlloc.Register128.RegHi);
+                              cg.A_Reg_Sync(AList,LocAlloc.Register128.RegLo);
+                              cg.A_Reg_Sync(AList,LocAlloc.Register128.RegHi);
                             end
                           else
 {$elseif defined(cpu32bitalu)}
                           if LocAlloc.Size in [OS_64,OS_S64] then
                             begin
-                              cg.A_Reg_Sync(list,LocAlloc.Register64.RegLo);
-                              cg.A_Reg_Sync(list,LocAlloc.Register64.RegHi);
+                              cg.A_Reg_Sync(AList,LocAlloc.Register64.RegLo);
+                              cg.A_Reg_Sync(AList,LocAlloc.Register64.RegHi);
                             end
                           else
 {$endif}
-                            cg.A_Reg_Sync(list,LocAlloc.Register);
+                            cg.A_Reg_Sync(AList,LocAlloc.Register);
                       LOC_CFPUREGISTER,
                       LOC_CMMREGISTER,
                       LOC_CMMXREGISTER:
-                        if (pi_has_label in CurrentProcInfo.flags) then
-                          cg.A_Reg_Sync(list,LocAlloc.Register);
+                        if (pi_has_label in CurrentProcInfo.Flags) then
+                          cg.A_Reg_Sync(AList,LocAlloc.Register);
                       LOC_REFERENCE :
                         begin
                           { can't free the result, because we load it after
@@ -1162,7 +1162,7 @@ implementation
                              (([vo_is_funcret,vo_is_result]*VarOptions)=[]) and
                              ((CurrentProcInfo.procdef.ProcTypeOption<>potype_constructor) or
                               not(vo_is_self in VarOptions)) then
-                            tg.Ungetlocal(list,LocAlloc.Reference);
+                            TG.UnGetLocal(AList,LocAlloc.Reference);
                         end;
                       { function results in pure assembler routines }
                       LOC_REGISTER,
@@ -1183,27 +1183,27 @@ implementation
       end;
 
 
-    function getprocalign : shortint;
+    function GetProcAlign : ShortInt;
       begin
-        result:=CurrentSettings.Alignment.ProcAlign;
+        Result:=CurrentSettings.Alignment.ProcAlign;
       end;
 
 
-    procedure gen_load_frame_for_exceptfilter(list : TAsmList);
+    procedure Gen_Load_Frame_For_ExceptFilter(AList : TAsmList);
       var
-        para: TParaVarSym;
-        framesrc: TRegister;
+        lParaSym: TParaVarSym;
+        lFrameSource: TRegister;
       begin
-        para:=TParaVarSym(CurrentProcInfo.procdef.paras[0]);
-        if not (vo_is_parentfp in para.VarOptions) then
+        lParaSym:=TParaVarSym(CurrentProcInfo.procdef.paras[0]);
+        if not (vo_is_parentfp in lParaSym.VarOptions) then
           InternalError(201201142);
-        if (para.ParaLoc[calleeside].Location^.Loc<>LOC_REGISTER) or
-          (para.ParaLoc[calleeside].Location^.next<>nil) then
+        if (lParaSym.ParaLoc[calleeside].Location^.Loc<>LOC_REGISTER) or
+          (lParaSym.ParaLoc[calleeside].Location^.next<>nil) then
           InternalError(201201143);
-        framesrc:=para.ParaLoc[calleeside].Location^.Register;
-        cg.A_Reg_Alloc(list,framesrc);
-        cg.A_Reg_Dealloc(list,framesrc);
-        cg.A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,framesrc,NR_FRAME_POINTER_REG);
+        lFrameSource:=lParaSym.ParaLoc[calleeside].Location^.Register;
+        cg.A_Reg_Alloc(AList,lFrameSource);
+        cg.A_Reg_Dealloc(AList,lFrameSource);
+        cg.A_Load_Reg_Reg(AList,OS_ADDR,OS_ADDR,lFrameSource,NR_FRAME_POINTER_REG);
       end;
 
 end.

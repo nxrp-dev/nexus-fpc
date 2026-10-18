@@ -89,7 +89,7 @@ interface
     constructor Tx86ATTAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
-        InstrWriter := Tx86InstrWriter.create(self);
+        InstrWriter := Tx86InstrWriter.Create(self);
       end;
 
     function TX86ATTAssembler.MakeCmdLine: TCmdStr;
@@ -131,7 +131,7 @@ interface
     constructor Tx86AppleGNUAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
-        InstrWriter := Tx86InstrWriter.create(self);
+        InstrWriter := Tx86InstrWriter.Create(self);
         { Apple's assembler does not support a size suffix for popcount }
         Tx86InstrWriter(InstrWriter).fskipPopcountSuffix := true;
         { Apple's assembler is broken regarding some movq suffix handling }
@@ -145,7 +145,7 @@ interface
     constructor Tx86AoutGNUAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
-        InstrWriter := Tx86InstrWriter.create(self);
+        InstrWriter := Tx86InstrWriter.Create(self);
       end;
 
 {****************************************************************************

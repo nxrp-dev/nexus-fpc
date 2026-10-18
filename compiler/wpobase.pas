@@ -62,7 +62,7 @@ type
 
   TWPOComponentBase = class
    public
-    constructor create; reintroduce; virtual;
+    constructor Create; reintroduce; virtual;
 
     { type of whole program optimization information collected/provided by
       this class
@@ -119,15 +119,15 @@ type
     { the vmt entries }
     fcalledentries: TBitSet;
    public
-    constructor create(_objdef: TDef; nentries: LongInt);
-    constructor ppuload(ppufile: TCompilerPPUFile);
+    constructor Create(_objdef: TDef; nentries: LongInt);
+    constructor PPULoad(ppufile: TCompilerPPUFile);
     destructor Destroy; override;
-    procedure ppuwrite(ppufile: TCompilerPPUFile);
+    procedure PPUWrite(ppufile: TCompilerPPUFile);
 
     procedure BuildDeref;
     procedure BuildDerefImpl;
     procedure deref;
-    procedure derefimpl;
+    procedure DerefImpl;
 
     property objdef: TDef read fobjdef write fobjdef;
     property objdefderef: TDeref read fobjdefderef write fobjdefderef;
@@ -159,7 +159,7 @@ type
     }
     fcalledvmtentries: TFPHashList;
    public
-    constructor create; reintroduce; virtual;
+    constructor Create; reintroduce; virtual;
     destructor Destroy; override;
 
     property createdobjtypes: TFPObjectList read fcreatedobjtypes;
@@ -196,7 +196,7 @@ type
     foutputfile: text;
 
    public
-    constructor create(const fn: TCmdStr);
+    constructor Create(const fn: TCmdStr);
     destructor Destroy; override;
 
     procedure writefile;
@@ -231,7 +231,7 @@ type
      function getnextnoncommentline(out s: ShortString): boolean;
    public
 
-     constructor create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
+     constructor Create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
      destructor Destroy; override;
 
      { processes the wpo info in the file }
@@ -335,7 +335,7 @@ type
 
     function symbol_live_in_currentproc(fordef: TDef): boolean;
 
-    constructor create; reintroduce;
+    constructor Create; reintroduce;
     destructor Destroy; override;
   end;
 
@@ -356,12 +356,12 @@ implementation
 
   { tcreatedwpoinfobase }
 
-  constructor TUnitWPOInfoBase.create;
+  constructor TUnitWPOInfoBase.Create;
     begin
-      fcreatedobjtypes:=TFPObjectList.create(false);
-      fcreatedclassrefobjtypes:=TFPObjectList.create(false);
-      fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
-      fcalledvmtentries:=TFPHashList.create;
+      fcreatedobjtypes:=TFPObjectList.Create(false);
+      fcreatedclassrefobjtypes:=TFPObjectList.Create(false);
+      fmaybecreatedbyclassrefdeftypes:=TFPObjectList.Create(false);
+      fcalledvmtentries:=TFPHashList.Create;
     end;
 
 
@@ -436,7 +436,7 @@ implementation
       entries:=TCalledVMTEntries(fcalledvmtentries.find(key));
       if not Assigned(entries) then
         begin
-          entries:=TCalledVMTEntries.create(def,TObjectDef(def).VMTEntries.count);
+          entries:=TCalledVMTEntries.Create(def,TObjectDef(def).VMTEntries.count);
           fcalledvmtentries.add(key,entries);
         end;
       entries.calledentries.include(index);
@@ -469,7 +469,7 @@ implementation
       result:=true;
     end;
 
-  constructor TWPOFileReader.create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
+  constructor TWPOFileReader.Create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
     begin
       if not FileExists(fn) or
          { FileExists also returns true for directories }
@@ -532,7 +532,7 @@ implementation
                       FreeAndNil(fdest.wpoinfouse[wpotype]);
                     end;
                   { process the section }
-                  fdest.wpoinfouse[wpotype]:=sectionhandler.create;
+                  fdest.wpoinfouse[wpotype]:=sectionhandler.Create;
                   TWPOComponentBase(fdest.wpoinfouse[wpotype]).loadfromwpofilesection(self);
                 end
               else
@@ -574,7 +574,7 @@ implementation
 
   { twpocomponentbase }
 
-  constructor TWPOComponentBase.create;
+  constructor TWPOComponentBase.Create;
     begin
       { do nothing }
     end;
@@ -587,11 +587,11 @@ implementation
 
   { twpofilewriter }
 
-  constructor TWPOFileWriter.create(const fn: TCmdStr);
+  constructor TWPOFileWriter.Create(const fn: TCmdStr);
     begin
       assign(foutputfile,fn);
       ffilename:=fn;
-      fsectioncontents:=TFPObjectList.create(true);
+      fsectioncontents:=TFPObjectList.Create(true);
     end;
 
   destructor TWPOFileWriter.Destroy;
@@ -650,12 +650,12 @@ implementation
 
   procedure TWPOInfoManagerBase.setwpoinputfile(const fn: TCmdStr);
     begin
-      freader:=TWPOFileReader.create(fn,self);
+      freader:=TWPOFileReader.Create(fn,self);
     end;
 
   procedure TWPOInfoManagerBase.setwpooutputfile(const fn: TCmdStr);
     begin
-      fwriter:=TWPOFileWriter.create(fn);
+      fwriter:=TWPOFileWriter.Create(fn);
     end;
 
   procedure TWPOInfoManagerBase.parseandcheckwpoinfo;
@@ -773,7 +773,7 @@ implementation
       for i:=0 to fwpocomponents.count-1 do
         if (TWPOComponentBaseClass(fwpocomponents[i]).generatesinfoforwposwitches*CurrentSettings.GenWPOptimizerSwitches)<>[] then
           begin
-            info:=TWPOComponentBaseClass(fwpocomponents[i]).create;
+            info:=TWPOComponentBaseClass(fwpocomponents[i]).Create;
             info.constructfromcompilerstate;
             fwriter.registerwpocomponent(info);
           end;
@@ -783,10 +783,10 @@ implementation
       fwriter:=nil;
     end;
 
-  constructor TWPOInfoManagerBase.create;
+  constructor TWPOInfoManagerBase.Create;
     begin
-      inherited create;
-      fwpocomponents:=TFPHashList.create;
+      inherited Create;
+      fwpocomponents:=TFPHashList.Create;
     end;
 
   destructor TWPOInfoManagerBase.Destroy;
@@ -807,14 +807,14 @@ implementation
 
   { tcalledvmtentries }
 
-  constructor TCalledVMTEntries.create(_objdef: TDef; nentries: LongInt);
+  constructor TCalledVMTEntries.Create(_objdef: TDef; nentries: LongInt);
     begin
       objdef:=_objdef;
-      calledentries:=TBitSet.create(nentries);
+      calledentries:=TBitSet.Create(nentries);
     end;
 
 
-  constructor TCalledVMTEntries.ppuload(ppufile: TCompilerPPUFile);
+  constructor TCalledVMTEntries.PPULoad(ppufile: TCompilerPPUFile);
     var
       len: LongInt;
     begin
@@ -835,7 +835,7 @@ implementation
     end;
 
 
-  procedure TCalledVMTEntries.ppuwrite(ppufile: TCompilerPPUFile);
+  procedure TCalledVMTEntries.PPUWrite(ppufile: TCompilerPPUFile);
     begin
       ppufile.PutDeref(objdefderef);
       ppufile.PutLongInt(calledentries.DataSize);
@@ -845,7 +845,7 @@ implementation
 
   procedure TCalledVMTEntries.BuildDeref;
     begin
-      objdefderef.build(objdef);
+      objdefderef.Build(objdef);
     end;
 
 
@@ -860,7 +860,7 @@ implementation
     end;
 
 
-  procedure TCalledVMTEntries.derefimpl;
+  procedure TCalledVMTEntries.DerefImpl;
     begin
     end;
 

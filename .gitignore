@@ -35,7 +35,6 @@
 build-stamp.*
 log.*
 faillist.*
-gdb4fpc.ini
 link*.res
 longlog.*
 bin
@@ -63,7 +62,6 @@ ppas.sh
 a.out
 symbol_order*.fpc
 /compiler/ppc*
-/compiler/gppc*
 /compiler/vppc*
 !/compiler/ppcgen/*.pas
 !/compiler/ppcgen/*.inc

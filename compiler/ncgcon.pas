@@ -34,37 +34,37 @@ interface
 
     type
        TCGRealConstNode = class(TRealConstNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGOrdConstNode = class(TOrdConstNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGPointerConstNode = class(TPointerConstNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGStringConstNode = class(TStringConstNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        protected
-         procedure load_dynstring(const strpointerdef: TDef; const ElementDef: TDef; const winlikewidestring: boolean); virtual;
+         procedure Load_DynString(const AStringPointerDef: TDef; const AElementDef: TDef; const AWinLikeWideString: Boolean); virtual;
        end;
 
        TCGSetConstNode = class(TSetConstNode)
          protected
-          function emitvarsetconst: TAsmSymbol; virtual;
-          procedure handlevarsetconst;
+          function EmitVarSetConst: TAsmSymbol; virtual;
+          procedure HandleVarSetConst;
          public
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGNilNode = class(TNilNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
        TCGGUIDConstNode = class(TGUIDConstNode)
-          procedure pass_generate_code;override;
+          procedure Pass_Generate_Code;override;
        end;
 
 
@@ -85,11 +85,11 @@ implementation
                            TCGREALCONSTNODE
 *****************************************************************************}
 
-    procedure TCGRealConstNode.pass_generate_code;
+    procedure TCGRealConstNode.Pass_Generate_Code;
       { I suppose the parser/pass_1 must make sure the generated real  }
       { constants are actually supported by the target processor? (JM) }
       const
-        floattype2ait:array[TFloatType] of TAIRealConstType=
+        FloatType2AIT:array[TFloatType] of TAIRealConstType=
           (aitrealconst_s32bit,aitrealconst_s64bit,aitrealconst_s80bit,aitrealconst_s80bit,aitrealconst_s64comp,aitrealconst_s64comp);
 
       { Since the value is stored always as bestreal, we share a single pool
@@ -97,81 +97,81 @@ implementation
         be matched along with the value }
       type
         TFloatKey = record
-          value: BestReal;
-          typ: TFloatType;
+          Value: BestReal;
+          Typ: TFloatType;
         end;
 
       var
-         lastlabel : TAsmLabel;
-         realait : TAIRealConstType;
-         entry : PHashSetItem;
-         key: TFloatKey;
+         lLastLabel : TAsmLabel;
+         lRealAIT : TAIRealConstType;
+         lEntry : PHashSetItem;
+         lKey: TFloatKey;
 
       begin
-        Location_Reset_Ref(location,LOC_CREFERENCE,Def_CGSize(resultdef),Const_Align(resultdef.Alignment),[]);
-        lastlabel:=nil;
-        realait:=floattype2ait[TFloatDef(resultdef).FloatType];
+        Location_Reset_Ref(Location,LOC_CREFERENCE,Def_CGSize(ResultDef),Const_Align(ResultDef.Alignment),[]);
+        lLastLabel:=nil;
+        lRealAIT:=FloatType2AIT[TFloatDef(ResultDef).FloatType];
         { const already used ? }
-        if not Assigned(lab_real) then
+        if not Assigned(RealLabel) then
           begin
             { there may be gap between record fields, zero it out }
-            fillchar(key,sizeof(key),0);
-            key.Value:=value_real;
-            key.typ:=TFloatDef(resultdef).FloatType;
-            entry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
+            fillchar(lKey,sizeof(lKey),0);
+            lKey.Value:=ValueReal;
+            lKey.Typ:=TFloatDef(ResultDef).FloatType;
+            lEntry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@lKey, sizeof(lKey));
 
-            lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
+            RealLabel := TAsmLabel(lEntry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
-             if not(Assigned(lab_real)) then
+             if not(Assigned(RealLabel)) then
                begin
-                  CurrentAsmData.getdatalabel(lastlabel);
-                  entry^.Data:=lastlabel;
-                  lab_real:=lastlabel;
+                  CurrentAsmData.getdatalabel(lLastLabel);
+                  lEntry^.Data:=lLastLabel;
+                  RealLabel:=lLastLabel;
                   maybe_new_object_file(CurrentAsmData.asmlists[al_typedconsts]);
-                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,Const_Align(resultdef.Alignment));
-                  CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lastlabel));
-                  case realait of
+                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lLastLabel.name,Const_Align(ResultDef.Alignment));
+                  CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lLastLabel));
+                  case lRealAIT of
                     aitrealconst_s32bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s32real(Single(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s32real(Single(ValueReal)));
                       end;
 
                     aitrealconst_s64bit :
                       begin
-                          CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64real(Double(value_real)));
+                          CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64real(Double(ValueReal)));
                      end;
 
                     aitrealconst_s80bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s80real(value_real,TFloatDef(resultdef).Size));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s80real(ValueReal,TFloatDef(ResultDef).Size));
                       end;
 
                     { the round is necessary for native compilers where comp isn't a float }
                     aitrealconst_s64comp :
-                      if (value_real>BestReal(High(Int64))) or (value_real<BestReal(Low(Int64))) then
+                      if (ValueReal>BestReal(High(Int64))) or (ValueReal<BestReal(Low(Int64))) then
                         message(parser_e_range_check_error)
                       else
-                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64compreal(Round(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64compreal(Round(ValueReal)));
                   end;
-                  if (tf_needs_symbol_size in TargetInfo.flags) then
-                    CurrentAsmData.asmlists[al_typedconsts].concat(TAISymbolEnd.Create(lastlabel));
+                  if (tf_needs_symbol_size in TargetInfo.Flags) then
+                    CurrentAsmData.asmlists[al_typedconsts].concat(TAISymbolEnd.Create(lLastLabel));
                end;
           end;
-        location.Reference.Symbol:=lab_real;
+        Location.Reference.Symbol:=RealLabel;
       end;
 
 {*****************************************************************************
                             TCGORDCONSTNODE
 *****************************************************************************}
 
-    procedure TCGOrdConstNode.pass_generate_code;
+    procedure TCGOrdConstNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_CONSTANT,Def_CGSize(resultdef));
+         Location_Reset(Location,LOC_CONSTANT,Def_CGSize(ResultDef));
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
-         location.Value:=value.svalue;
+         Location.Value:=Value.svalue;
 {$else cpu64bitalu or cpuhighleveltarget}
-         location.Value64:=value.svalue;
+         Location.Value64:=Value.svalue;
 {$endif cpu64bitalu or cpuhighleveltarget}
       end;
 
@@ -180,11 +180,11 @@ implementation
                           TCGPOINTERCONSTNODE
 *****************************************************************************}
 
-    procedure TCGPointerConstNode.pass_generate_code;
+    procedure TCGPointerConstNode.Pass_Generate_Code;
       begin
          { an integer const. behaves as a memory reference }
-         Location_Reset(location,LOC_CONSTANT,OS_ADDR);
-         location.Value:=PInt(value);
+         Location_Reset(Location,LOC_CONSTANT,OS_ADDR);
+         Location.Value:=PInt(Value);
       end;
 
 
@@ -192,18 +192,18 @@ implementation
                           TCGSTRINGCONSTNODE
 *****************************************************************************}
 
-    procedure TCGStringConstNode.pass_generate_code;
+    procedure TCGStringConstNode.Pass_Generate_Code;
       var
-         lastlabel: TAsmLabOfs;
-         l: LongInt;
-         pool: THashSet;
-         entry: PHashSetItem;
-         winlikewidestring: boolean;
-         ElementDef: TDef;
-         strpointerdef: TDef;
-         datatcb: TTAITypedConstBuilder;
-         datadef: TDef;
-         t : TAIString;
+         lLastLabel: TAsmLabOfs;
+         lLength: LongInt;
+         lPool: THashSet;
+         lEntry: PHashSetItem;
+         lWinLikeWideString: Boolean;
+         lElementDef: TDef;
+         lStringPointerDef: TDef;
+         lDataBuilder: TTAITypedConstBuilder;
+         lDataDef: TDef;
+         lStringAsmItem : TAIString;
 
 
       const
@@ -216,61 +216,61 @@ implementation
           sp_unicodestr
         );
       begin
-         case cst_type of
+         case ConstStringType of
            cst_shortstring,
            cst_conststring,
            cst_ansistring:
              begin
-               ElementDef:=CAnsiCharType;
-               strpointerdef:=CharPointerType;
+               lElementDef:=CAnsiCharType;
+               lStringPointerDef:=CharPointerType;
              end;
            cst_widestring,
            cst_unicodestring:
              begin
-               ElementDef:=CWideCharType;
-               strpointerdef:=WideCharPointerType;
+               lElementDef:=CWideCharType;
+               lStringPointerDef:=WideCharPointerType;
              end;
            else
              InternalError(2014032803);
          end;
          { for empty ansistrings we could return a constant 0 }
-         if (cst_type in [cst_ansistring,cst_widestring,cst_unicodestring]) and (len=0) then
+         if (ConstStringType in [cst_ansistring,cst_widestring,cst_unicodestring]) and (Len=0) then
           begin
-            Location_Reset(location,LOC_CONSTANT,Def_CGSize(strpointerdef));
-            location.Value:=0;
+            Location_Reset(Location,LOC_CONSTANT,Def_CGSize(lStringPointerDef));
+            Location.Value:=0;
             exit;
           end;
-         winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
+         lWinLikeWideString:=(ConstStringType=cst_widestring) and (tf_winlikewidestring in TargetInfo.Flags);
          { const already used ? }
-         if not Assigned(lab_str) then
+         if not Assigned(StringLabel) then
            begin
-              pool := CurrentAsmData.ConstPools[PoolMap[cst_type]];
+              lPool := CurrentAsmData.ConstPools[PoolMap[ConstStringType]];
 
-              if cst_type in [cst_widestring, cst_unicodestring] then
-                entry := pool.FindOrAdd(pointer(ValueWS.data),len*CWideCharType.Size)
+              if ConstStringType in [cst_widestring, cst_unicodestring] then
+                lEntry := lPool.FindOrAdd(pointer(ValueWS.data),Len*CWideCharType.Size)
               else
-              if cst_type = cst_ansistring then
-                entry := PHashSetItem(TTagHashSet(pool).FindOrAdd(pointer(valueas),len,TStringDef(resultdef).encoding))
+              if ConstStringType = cst_ansistring then
+                lEntry := PHashSetItem(TTagHashSet(lPool).FindOrAdd(pointer(ValueAS),Len,TStringDef(ResultDef).encoding))
               else
-                entry := pool.FindOrAdd(pointer(valueas),len);
+                lEntry := lPool.FindOrAdd(pointer(ValueAS),Len);
 
-              lab_str := TAsmLabel(entry^.Data);  // is it needed anymore?
+              StringLabel := TAsmLabel(lEntry^.Data);  // is it needed anymore?
 
               { :-(, we must generate a new entry }
-              if not Assigned(entry^.Data) then
+              if not Assigned(lEntry^.Data) then
                 begin
-                  datatcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
-                   case cst_type of
+                  lDataBuilder:=CTAITypedConstBuilder.Create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+                   case ConstStringType of
                       cst_ansistring:
                         begin
-                           if len=0 then
+                           if Len=0 then
                              InternalError(2008032301)   { empty string should be handled above }
                            else
                              begin
-                               lastlabel:=datatcb.emit_ansistring_const(CurrentAsmData.AsmLists[al_typedconsts],asconstpchar,len,TStringDef(resultdef).encoding);
+                               lLastLabel:=lDataBuilder.emit_ansistring_const(CurrentAsmData.AsmLists[al_typedconsts],AsConstPChar,Len,TStringDef(ResultDef).encoding);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
-                               if lastlabel.ofs<>datatcb.get_string_symofs(st_ansistring,false) then
+                               if lLastLabel.ofs<>lDataBuilder.get_string_symofs(st_ansistring,false) then
                                  InternalError(2012051703);
                              end;
                            { no contents of the datatcb itself to concatenate,
@@ -280,17 +280,17 @@ implementation
                       cst_unicodestring,
                       cst_widestring:
                         begin
-                           if len=0 then
+                           if Len=0 then
                              InternalError(2008032302)   { empty string should be handled above }
                            else
                              begin
-                               lastlabel:=datatcb.emit_unicodestring_const(CurrentAsmData.AsmLists[al_typedconsts],
+                               lLastLabel:=lDataBuilder.emit_unicodestring_const(CurrentAsmData.AsmLists[al_typedconsts],
                                                ValueWS,
-                                               TStringDef(resultdef).encoding,
-                                               winlikewidestring);
+                                               TStringDef(ResultDef).encoding,
+                                               lWinLikeWideString);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
-                               if lastlabel.ofs<>datatcb.get_string_symofs(TStringDef(resultdef).StringType,winlikewidestring) then
+                               if lLastLabel.ofs<>lDataBuilder.get_string_symofs(TStringDef(ResultDef).StringType,lWinLikeWideString) then
                                  InternalError(2012051702);
                              end;
                            { no contents of the datatcb itself to concatenate,
@@ -299,73 +299,73 @@ implementation
                         end;
                       cst_shortstring:
                         begin
-                          CurrentAsmData.getdatalabel(lastlabel.lab);
+                          CurrentAsmData.getdatalabel(lLastLabel.lab);
 
                           { truncate strings larger than 255 chars }
-                          if len>255 then
-                           l:=255
+                          if Len>255 then
+                           lLength:=255
                           else
-                           l:=len;
+                           lLength:=Len;
 
                           { include length and terminating zero for quick conversion to pchar }
-                          datadef:=CArrayDef.getreusable(CAnsiCharType,l+2);
-                          datatcb.maybe_begin_aggregate(datadef);
-                          datatcb.emit_tai(TAIConst.Create_8bit(l),CAnsiCharType);
-                          t:=TAIString.Create_Data(asconstpchar,l,true);
-                          datatcb.emit_tai(t,datadef);
-                          datatcb.maybe_end_aggregate(datadef);
+                          lDataDef:=CArrayDef.getreusable(CAnsiCharType,lLength+2);
+                          lDataBuilder.maybe_begin_aggregate(lDataDef);
+                          lDataBuilder.emit_tai(TAIConst.Create_8bit(lLength),CAnsiCharType);
+                          lStringAsmItem:=TAIString.Create_Data(AsConstPChar,lLength,true);
+                          lDataBuilder.emit_tai(lStringAsmItem,lDataDef);
+                          lDataBuilder.maybe_end_aggregate(lDataDef);
                           CurrentAsmData.asmlists[al_typedconsts].ConcatList(
-                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,Const_Align(sizeof(PInt)))
+                            lDataBuilder.get_final_asmlist(lLastLabel.lab,lDataDef,sec_rodata_norel,lLastLabel.lab.name,Const_Align(sizeof(PInt)))
                           );
                         end;
                       cst_conststring:
                         begin
-                          CurrentAsmData.getdatalabel(lastlabel.lab);
+                          CurrentAsmData.getdatalabel(lLastLabel.lab);
 
                           { the data includes the terminating #0 because this
                             string can be used for pchar assignments (but it's
                             also used for array-of-char assignments, in which
                             case the terminating #0 is not part of the data) }
-                          datadef:=CArrayDef.getreusable(CAnsiCharType,len+1);
-                          datatcb.maybe_begin_aggregate(datadef);
-                          t:=TAIString.Create_Data(asconstpchar,len,true);
-                          datatcb.emit_tai(t,datadef);
-                          datatcb.maybe_end_aggregate(datadef);
+                          lDataDef:=CArrayDef.getreusable(CAnsiCharType,Len+1);
+                          lDataBuilder.maybe_begin_aggregate(lDataDef);
+                          lStringAsmItem:=TAIString.Create_Data(AsConstPChar,Len,true);
+                          lDataBuilder.emit_tai(lStringAsmItem,lDataDef);
+                          lDataBuilder.maybe_end_aggregate(lDataDef);
                           CurrentAsmData.asmlists[al_typedconsts].ConcatList(
-                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,Const_Align(sizeof(PInt)))
+                            lDataBuilder.get_final_asmlist(lLastLabel.lab,lDataDef,sec_rodata_norel,lLastLabel.lab.name,Const_Align(sizeof(PInt)))
                           );
                         end;
                       else
                         InternalError(2013120103);
                    end;
-                   datatcb.free;
-                   datatcb := nil;
-                   lab_str:=lastlabel.lab;
-                   entry^.Data:=lastlabel.lab;
+                   lDataBuilder.free;
+                   lDataBuilder := nil;
+                   StringLabel:=lLastLabel.lab;
+                   lEntry^.Data:=lLastLabel.lab;
                 end;
            end;
-         if cst_type in [cst_ansistring, cst_widestring, cst_unicodestring] then
+         if ConstStringType in [cst_ansistring, cst_widestring, cst_unicodestring] then
            begin
-             Location_Reset(location, LOC_REGISTER, Def_CGSize(strpointerdef));
-             location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,strpointerdef);
-             load_dynstring(strpointerdef, ElementDef, winlikewidestring);
+             Location_Reset(Location, LOC_REGISTER, Def_CGSize(lStringPointerDef));
+             Location.Register:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,lStringPointerDef);
+             Load_DynString(lStringPointerDef, lElementDef, lWinLikeWideString);
            end
          else
            begin
-             Location_Reset_Ref(location, LOC_CREFERENCE, Def_CGSize(resultdef), Const_Align(strpointerdef.Size), []);
-             location.Reference.Symbol:=lab_str;
+             Location_Reset_Ref(Location, LOC_CREFERENCE, Def_CGSize(ResultDef), Const_Align(lStringPointerDef.Size), []);
+             Location.Reference.Symbol:=StringLabel;
            end;
       end;
 
 
-    procedure TCGStringConstNode.load_dynstring(const strpointerdef: TDef; const ElementDef: TDef; const winlikewidestring: boolean);
+    procedure TCGStringConstNode.Load_DynString(const AStringPointerDef: TDef; const AElementDef: TDef; const AWinLikeWideString: Boolean);
       var
-        href: TReference;
+        lReference: TReference;
       begin
-        Reference_Reset_Symbol(href, lab_str,
-          CTAITypedConstBuilder.get_string_symofs(TStringDef(resultdef).StringType, winlikewidestring),
-          Const_Align(strpointerdef.Size),[]);
-        hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList, ElementDef, strpointerdef, href, location.Register)
+        Reference_Reset_Symbol(lReference, StringLabel,
+          CTAITypedConstBuilder.get_string_symofs(TStringDef(ResultDef).StringType, AWinLikeWideString),
+          Const_Align(AStringPointerDef.Size),[]);
+        hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList, AElementDef, AStringPointerDef, lReference, Location.Register)
       end;
 
 
@@ -373,85 +373,85 @@ implementation
                            TCGSETCONSTNODE
 *****************************************************************************}
 
-    function TCGSetConstNode.emitvarsetconst: TAsmSymbol;
+    function TCGSetConstNode.EmitVarSetConst: TAsmSymbol;
       type
-        TSetBytes=array[0..31] of byte;
+        TSetBytes=array[0..31] of Byte;
         PSetBytes=^TSetBytes;
       var
-        lab: TAsmLabel;
-        i: LongInt;
-        tcb: TTAITypedConstBuilder;
+        lLabel: TAsmLabel;
+        lIndex: LongInt;
+        lBuilder: TTAITypedConstBuilder;
       begin
-        CurrentAsmData.getdatalabel(lab);
-        result:=lab;
-        lab_set:=lab;
-        tcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
-        tcb.maybe_begin_aggregate(resultdef);
+        CurrentAsmData.getdatalabel(lLabel);
+        Result:=lLabel;
+        DataLabel:=lLabel;
+        lBuilder:=CTAITypedConstBuilder.Create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+        lBuilder.maybe_begin_aggregate(ResultDef);
         if (SourceInfo.endian=TargetInfo.endian) then
-          for i:=0 to resultdef.Size-1 do
-            tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),U8IntType)
+          for lIndex:=0 to ResultDef.Size-1 do
+            lBuilder.emit_tai(TAIConst.create_8bit(PSetBytes(ValueSet)^[lIndex]),U8IntType)
         else
-          for i:=0 to resultdef.Size-1 do
-            tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),U8IntType);
-        tcb.maybe_end_aggregate(resultdef);
-        CurrentAsmData.asmlists[al_typedconsts].ConcatList(tcb.get_final_asmlist(
-          result,resultdef,sec_rodata_norel,result.name,Const_Align(8)));
-        tcb.free;
-        tcb := nil;
+          for lIndex:=0 to ResultDef.Size-1 do
+            lBuilder.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(ValueSet)^[lIndex])),U8IntType);
+        lBuilder.maybe_end_aggregate(ResultDef);
+        CurrentAsmData.asmlists[al_typedconsts].ConcatList(lBuilder.get_final_asmlist(
+          Result,ResultDef,sec_rodata_norel,Result.name,Const_Align(8)));
+        lBuilder.free;
+        lBuilder := nil;
       end;
 
 
-    procedure TCGSetConstNode.handlevarsetconst;
+    procedure TCGSetConstNode.HandleVarSetConst;
       var
-         entry       : PHashSetItem;
+         lEntry       : PHashSetItem;
       begin
-        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,Const_Align(8),[]);
+        Location_Reset_Ref(Location,LOC_CREFERENCE,OS_NO,Const_Align(8),[]);
         { const already used ? }
-        if not Assigned(lab_set) then
+        if not Assigned(DataLabel) then
           begin
-            entry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.Size);
+            lEntry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(ValueSet, ResultDef.Size);
 
              { :-(, we must generate a new entry }
-             if not Assigned(entry^.Data) then
-               entry^.Data:=emitvarsetconst;
-             lab_set := TAsmSymbol(entry^.Data);
+             if not Assigned(lEntry^.Data) then
+               lEntry^.Data:=EmitVarSetConst;
+             DataLabel := TAsmSymbol(lEntry^.Data);
           end;
-        location.Reference.Symbol:=lab_set;
+        Location.Reference.Symbol:=DataLabel;
       end;
 
 
-    procedure TCGSetConstNode.pass_generate_code;
+    procedure TCGSetConstNode.Pass_Generate_Code;
        type
-         TSetBytes=array[0..31] of byte;
+         TSetBytes=array[0..31] of Byte;
          PSetBytes=^TSetBytes;
 
-        procedure smallsetconst;
+        procedure SmallSetConst;
           begin
-            Location_Reset(location,LOC_CONSTANT,Int_CGSize(resultdef.Size));
+            Location_Reset(Location,LOC_CONSTANT,Int_CGSize(ResultDef.Size));
             if (SourceInfo.endian=TargetInfo.endian) then
               begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
                 { cross-endian code below                                                   }
                 { Extra aint type cast to avoid range errors                                }
-                location.Value:=aint(pCardinal(value_set)^)
+                Location.Value:=AInt(pCardinal(ValueSet)^)
               end
             else
               begin
-                location.Value:=aint(Reverse_LongWord(Pcardinal(value_set)^));
+                Location.Value:=AInt(Reverse_LongWord(Pcardinal(ValueSet)^));
               end;
             if (TargetInfo.endian=endian_big) then
-              location.Value:=location.Value shr (32-resultdef.Size*8);
+              Location.Value:=Location.Value shr (32-ResultDef.Size*8);
           end;
 
       begin
-        adjustforsetbase;
+        AdjustForSetBase;
 
         { small sets are loaded as constants }
-        if Is_SmallSet(resultdef) then
-          smallsetconst
+        if Is_SmallSet(ResultDef) then
+          SmallSetConst
         else
-          handlevarsetconst;
+          HandleVarSetConst;
       end;
 
 
@@ -459,10 +459,10 @@ implementation
                              TCGNILNODE
 *****************************************************************************}
 
-    procedure TCGNilNode.pass_generate_code;
+    procedure TCGNilNode.Pass_Generate_Code;
       begin
-         Location_Reset(location,LOC_CONSTANT,OS_ADDR);
-         location.Value:=0;
+         Location_Reset(Location,LOC_CONSTANT,OS_ADDR);
+         Location.Value:=0;
       end;
 
 
@@ -470,35 +470,35 @@ implementation
                           TCGGUIDCONSTNODE
 *****************************************************************************}
 
-    procedure TCGGUIDConstNode.pass_generate_code;
+    procedure TCGGUIDConstNode.Pass_Generate_Code;
       var
-         lastlabel   : TAsmLabel;
-         entry       : PHashSetItem;
-         datatcb     : TTAITypedConstBuilder;
+         lLastLabel   : TAsmLabel;
+         lEntry       : PHashSetItem;
+         lDataBuilder     : TTAITypedConstBuilder;
       begin
-        Location_Reset_Ref(location,LOC_CREFERENCE,OS_NO,Const_Align(16),[]);
-        lastlabel:=nil;
+        Location_Reset_Ref(Location,LOC_CREFERENCE,OS_NO,Const_Align(16),[]);
+        lLastLabel:=nil;
         { const already used ? }
-        if not Assigned(lab_set) then
+        if not Assigned(DataLabel) then
           begin
-            entry:=CurrentAsmData.ConstPools[sp_guids].FindOrAdd(@value,sizeof(value));
-            lab_set:=TAsmLabel(entry^.Data);  // is it needed anymore?
+            lEntry:=CurrentAsmData.ConstPools[sp_guids].FindOrAdd(@Value,sizeof(Value));
+            DataLabel:=TAsmLabel(lEntry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
-             if not Assigned(entry^.Data) then
+             if not Assigned(lEntry^.Data) then
                begin
-                 CurrentAsmData.getdatalabel(lastlabel);
-                 datatcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
-                 datatcb.emit_guid_const(value);
+                 CurrentAsmData.getdatalabel(lLastLabel);
+                 lDataBuilder:=CTAITypedConstBuilder.Create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+                 lDataBuilder.emit_guid_const(Value);
                  CurrentAsmData.asmlists[al_typedconsts].ConcatList(
-                   datatcb.get_final_asmlist(lastlabel,Rec_TGUID,sec_rodata_norel,lastlabel.name,Const_Align(16)));
-                 datatcb.free;
-                 datatcb := nil;
-                 lab_set:=lastlabel;
-                 entry^.Data:=lastlabel;
+                   lDataBuilder.get_final_asmlist(lLastLabel,Rec_TGUID,sec_rodata_norel,lLastLabel.name,Const_Align(16)));
+                 lDataBuilder.free;
+                 lDataBuilder := nil;
+                 DataLabel:=lLastLabel;
+                 lEntry^.Data:=lLastLabel;
                end;
           end;
-        location.Reference.Symbol:=lab_set;
+        Location.Reference.Symbol:=DataLabel;
       end;
 
 

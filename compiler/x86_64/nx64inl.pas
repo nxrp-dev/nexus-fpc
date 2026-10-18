@@ -31,7 +31,7 @@ interface
     type
        TX8664InlineNode = class(TX86InlineNode)
         protected
-          procedure maybe_remove_round_trunc_typeconv; override;
+          procedure Maybe_Remove_Round_Trunc_TypeConv; override;
        end;
 
 implementation
@@ -40,9 +40,9 @@ implementation
     symconst,
     node,ncnv,ninl;
 
-  procedure TX8664InlineNode.maybe_remove_round_trunc_typeconv;
+  procedure TX8664InlineNode.Maybe_Remove_Round_Trunc_TypeConv;
     var
-      temp: TNode;
+      lTempNode: TNode;
     begin
       { the prototype of trunc()/round() in the system unit is declared
         with valreal as parameter type, so the argument will always be
@@ -54,16 +54,16 @@ implementation
         on the x87 all floating point types are handled the same, and
         if we call the inherited version we'll insert a call node, which
         will insert the necessary type conversion again }
-      if (left.nodetype=typeconvn) and
-         not(nf_explicit in left.flags) and
-         (TTypeConvNode(left).left.resultdef.typ=floatdef) then
+      if (Left.NodeType=typeconvn) and
+         not(nf_explicit in Left.Flags) and
+         (TTypeConvNode(Left).Left.ResultDef.typ=floatdef) then
         begin
           { get rid of the type conversion, so the use_vectorfpu will be
             applied to the original type }
-          temp:=TTypeConvNode(left).left;
-          TTypeConvNode(left).left:=nil;
-          left.free;
-          left:=temp;
+          lTempNode:=TTypeConvNode(Left).Left;
+          TTypeConvNode(Left).Left:=nil;
+          Left.free;
+          Left:=lTempNode;
         end;
     end;
 

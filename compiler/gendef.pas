@@ -30,7 +30,7 @@ uses
 type
   TDefFile=class
     fname : string;
-    constructor create(const fn:string);
+    constructor Create(const fn:string);
     destructor  Destroy;override;
     procedure addexport(const s:TSymStr);
     procedure addimport(const s:TSymStr);
@@ -57,7 +57,7 @@ uses
                                TDefFile
 ******************************************************************************}
 
-constructor TDefFile.create(const fn:string);
+constructor TDefFile.Create(const fn:string);
 begin
   fname:=fn;
   WrittenOnDisk:=false;

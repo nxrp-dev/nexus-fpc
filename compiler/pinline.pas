@@ -52,7 +52,7 @@ implementation
        { symtable }
        SymBase,symconst,symdef,SymSym,SymTable,defutil,
        { pass 1 }
-       pass_1,htypechk,
+       Pass_1,htypechk,
        ncal,nmem,ncnv,ninl,ncon,nld,nbas,ngenutil,nutils,
        { parser }
        Scanner,
@@ -113,9 +113,9 @@ implementation
                               { if no tag-field is given, do not create an assignment statement for it }
                               if Assigned(variantselectsymbol) then
                                 { setup variant selector }
-                                addstatement(newstatement,CAssignmentNode.create(
-                                    CSubscriptNode.create(variantselectsymbol,
-                                      CDerefNode.create(CTempRefNode.create(temp))),
+                                AddStatement(newstatement,CAssignmentNode.Create(
+                                    CSubscriptNode.Create(variantselectsymbol,
+                                      CDerefNode.Create(CTempRefNode.Create(temp))),
                                     p2));
                             end;
                         end
@@ -153,7 +153,7 @@ implementation
             if is_new then
               begin
                 sym:=Search_Struct_Member(classh,'CREATE');
-                p2 := CLoadVMTAddrNode.create(CTypeNode.create(p.resultdef));
+                p2 := CLoadVMTAddrNode.Create(CTypeNode.Create(p.resultdef));
               end
             else
               begin
@@ -168,7 +168,7 @@ implementation
                  if is_new then
                    p2.free;
                    p2 := nil;
-                 new_dispose_statement := CErrorNode.create;
+                 new_dispose_statement := CErrorNode.Create;
                  consume_all_until(_RKLAMMER);
                  consume(_RKLAMMER);
                  exit;
@@ -180,14 +180,14 @@ implementation
             DoTypeCheckPass(p2);
 
             if (p2.nodetype=calln) and
-               Assigned(TCallNode(p2).procdefinition) then
+               Assigned(TCallNode(p2).ProcDefinition) then
               begin
                 if is_new then
                   begin
-                    if (TCallNode(p2).procdefinition.ProcTypeOption<>potype_constructor) then
+                    if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_constructor) then
                       Message(parser_e_expr_have_to_be_constructor_call);
                     p2.resultdef:=p.resultdef;
-                    p2:=CAssignmentNode.create(p,p2);
+                    p2:=CAssignmentNode.Create(p,p2);
                     TypeCheckPass(p2);
                   end
                 else
@@ -220,7 +220,7 @@ implementation
                  p.free;
                  p := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=CNothingNode.create;
+                 new_dispose_statement:=CNothingNode.Create;
                  exit;
               end;
 
@@ -232,7 +232,7 @@ implementation
                  p.free;
                  p := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=CErrorNode.create;
+                 new_dispose_statement:=CErrorNode.Create;
                  exit;
               end;
             { first parameter must be an object or class }
@@ -272,7 +272,7 @@ implementation
                   Message(parser_e_expr_have_to_be_destructor_call);
                  p.free;
                  p := nil;
-                 new_dispose_statement:=CErrorNode.create;
+                 new_dispose_statement:=CErrorNode.Create;
               end
             else
               begin
@@ -280,11 +280,11 @@ implementation
                   p is also used in the assignment below }
                 if is_new then
                   begin
-                    p2:=CDerefNode.create(p.GetCopy);
-                    include(TDerefNode(p2).derefnodeflags,drnf_no_checkpointer);
+                    p2:=CDerefNode.Create(p.GetCopy);
+                    include(TDerefNode(p2).DerefNodeFlags,drnf_no_checkpointer);
                   end
                 else
-                  p2:=CDerefNode.create(p);
+                  p2:=CDerefNode.Create(p);
                 DoTypeCheckPass(p2);
                 if is_new then
                   callflag:=cnf_new_call
@@ -298,7 +298,7 @@ implementation
                       do_member_read(classh,false,sym,p2,again,[callflag],nil)
                     else
                       begin
-                        p2:=CCallNode.create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
+                        p2:=CCallNode.Create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
                         { support dispose(p,done()); }
                         if try_to_consume(_LKLAMMER) then
                           begin
@@ -316,18 +316,18 @@ implementation
                 DoTypeCheckPass(p2);
 
                 if (p2.nodetype=calln) and
-                   Assigned(TCallNode(p2).procdefinition) then
+                   Assigned(TCallNode(p2).ProcDefinition) then
                   begin
                     if is_new then
                      begin
-                       if (TCallNode(p2).procdefinition.ProcTypeOption<>potype_constructor) then
+                       if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_constructor) then
                          Message(parser_e_expr_have_to_be_constructor_call);
                        p2.resultdef:=p.resultdef;
-                       p2:=CAssignmentNode.create(p,p2);
+                       p2:=CAssignmentNode.Create(p,p2);
                      end
                     else
                      begin
-                       if (TCallNode(p2).procdefinition.ProcTypeOption<>potype_destructor) then
+                       if (TCallNode(p2).ProcDefinition.ProcTypeOption<>potype_destructor) then
                          Message(parser_e_expr_have_to_be_destructor_call);
                      end;
                   end
@@ -351,13 +351,13 @@ implementation
                       p.free;
                       p := nil;
                       consume(_RKLAMMER);
-                      new_dispose_statement:=CNothingNode.create;
+                      new_dispose_statement:=CNothingNode.Create;
                       exit;
                    end
                  else
                    begin
                      Message1(type_e_pointer_type_expected,p.resultdef.TypeName);
-                     new_dispose_statement:=CErrorNode.create;
+                     new_dispose_statement:=CErrorNode.Create;
                    end;
                end
              else
@@ -376,61 +376,61 @@ implementation
 
                   { create statements with call to getmem+initialize or
                     finalize+freemem }
-                  new_dispose_statement:=internalstatements(newstatement);
+                  new_dispose_statement:=InternalStatements(newstatement);
 
                   if is_new then
                    begin
                      { create temp for result }
-                     temp := CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
-                     addstatement(newstatement,temp);
+                     temp := CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent,true);
+                     AddStatement(newstatement,temp);
 
                      { create call to fpc_getmem }
-                     para := CCallParaNode.create(COrdConstNode.create
+                     para := CCallParaNode.Create(COrdConstNode.Create
                          (TPointerDef(p.resultdef).PointedDef.Size,PtrUIntType,true),nil);
-                     addstatement(newstatement,CAssignmentNode.create(
-                         CTempRefNode.create(temp),
-                         CCallNode.createintern('fpc_getmem',para)));
+                     AddStatement(newstatement,CAssignmentNode.Create(
+                         CTempRefNode.Create(temp),
+                         CCallNode.CreateIntern('fpc_getmem',para)));
 
                      { create call to fpc_initialize }
                      if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) or
                        ((m_isolike_io in CurrentSettings.ModeSwitches) and (TPointerDef(p.resultdef).PointedDef.typ=filedef)) then
-                       addstatement(newstatement,CNodeUtils.initialize_data_node(CDerefNode.create(CTempRefNode.create(temp)),false));
+                       AddStatement(newstatement,CNodeUtils.Initialize_Data_Node(CDerefNode.Create(CTempRefNode.Create(temp)),false));
 
                      { copy the temp to the destination }
-                     addstatement(newstatement,CAssignmentNode.create(
+                     AddStatement(newstatement,CAssignmentNode.Create(
                          p,
-                         CTempRefNode.create(temp)));
+                         CTempRefNode.Create(temp)));
 
                      ReadVariantRecordConstants;
 
                      { release temp }
-                     addstatement(newstatement,CTempDeleteNode.create(temp));
+                     AddStatement(newstatement,CTempDeleteNode.Create(temp));
                    end
                   else
                    begin
                      temp:=nil;
                      { create call to fpc_finalize }
                      if Is_Managed_Type(TPointerDef(p.resultdef).PointedDef) then
-                       if might_have_sideeffects(p) then
+                       if Might_Have_SideEffects(p) then
                          begin
                            { ensure that p gets evaluated only once, in case it is e.g. a call }
-                           temp:=CTempCreateNode.create_value(p.resultdef,p.resultdef.Size,tt_persistent,true,p);
-                           addstatement(newstatement,temp);
-                           addstatement(newstatement,CNodeUtils.finalize_data_node(CDerefNode.create(CTempRefNode.create(temp))));
+                           temp:=CTempCreateNode.Create_Value(p.resultdef,p.resultdef.Size,tt_persistent,true,p);
+                           AddStatement(newstatement,temp);
+                           AddStatement(newstatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(CTempRefNode.Create(temp))));
                          end
                        else
-                         addstatement(newstatement,CNodeUtils.finalize_data_node(CDerefNode.create(p.GetCopy)));
+                         AddStatement(newstatement,CNodeUtils.Finalize_Data_Node(CDerefNode.Create(p.GetCopy)));
 
                      ReadVariantRecordConstants;
 
                      { create call to fpc_freemem }
                      if not Assigned(temp) then
-                       para := CCallParaNode.create(p,nil)
+                       para := CCallParaNode.Create(p,nil)
                      else
-                       para := CCallParaNode.create(CTempRefNode.create(temp),nil);
-                     addstatement(newstatement,CCallNode.createintern('fpc_freemem',para));
+                       para := CCallParaNode.Create(CTempRefNode.Create(temp),nil);
+                     AddStatement(newstatement,CCallNode.CreateIntern('fpc_freemem',para));
                      if Assigned(temp) then
-                       addstatement(newstatement,CTempDeleteNode.create(temp));
+                       AddStatement(newstatement,CTempDeleteNode.Create(temp));
                    end;
                end;
           end;
@@ -455,7 +455,7 @@ implementation
            consume(_RKLAMMER);
            p1.free;
            p1 := nil;
-           new_function:=CErrorNode.create;
+           new_function:=CErrorNode.Create;
            exit;
          end;
 
@@ -466,7 +466,7 @@ implementation
            consume(_RKLAMMER);
            p1.free;
            p1 := nil;
-           new_function:=CErrorNode.create;
+           new_function:=CErrorNode.Create;
            exit;
          end;
 
@@ -479,7 +479,7 @@ implementation
             if p1.nodetype=typen then
               TTypeNode(p1).allowed:=true;
 
-            p1:=CInlineNode.create(in_new_x,false,p1);
+            p1:=CInlineNode.Create(in_new_x,false,p1);
           end
         else
           begin
@@ -491,13 +491,13 @@ implementation
                consume(_RKLAMMER);
                p1.free;
                p1 := nil;
-               new_function:=CErrorNode.create;
+               new_function:=CErrorNode.Create;
                exit;
              end;
             classh:=TObjectDef(TPointerDef(p1.resultdef).PointedDef);
             { use the objectdef for loading the VMT }
             p2:=p1;
-            p1:=CTypeNode.create(TPointerDef(p1.resultdef).PointedDef);
+            p1:=CTypeNode.Create(TPointerDef(p1.resultdef).PointedDef);
             DoTypeCheckPass(p1);
             { search the constructor also in the symbol tables of
               the parents }
@@ -509,8 +509,8 @@ implementation
             DoTypeCheckPass(p1);
             if not(
                    (p1.nodetype=calln) and
-                   Assigned(TCallNode(p1).procdefinition) and
-                   (TCallNode(p1).procdefinition.ProcTypeOption=potype_constructor)
+                   Assigned(TCallNode(p1).ProcDefinition) and
+                   (TCallNode(p1).ProcDefinition.ProcTypeOption=potype_constructor)
                   ) then
               Message(parser_e_expr_have_to_be_constructor_call);
             { constructors return boolean, update resultdef to return
@@ -533,11 +533,11 @@ implementation
         consume(_RKLAMMER);
         if not Assigned(paras) then
          begin
-           result:=CErrorNode.create;
+           result:=CErrorNode.Create;
            CGMessage1(parser_e_wrong_parameter_size,'SetLength');
            exit;
          end;
-        result:=CInlineNode.create(in_setlength_x,false,paras);
+        result:=CInlineNode.Create(in_setlength_x,false,paras);
       end;
 
 
@@ -569,7 +569,7 @@ implementation
                     cp:=TStringDef(strpara.resultdef).encoding;
                     if (cp=Globals.CP_NONE) then
                       cp:=0;
-                    paras:=CCallParaNode.create(genintconstnode(cp),paras);
+                    paras:=CCallParaNode.Create(GenIntConstNode(cp),paras);
                   end;
                 procname:='fpc_setstring_'+TStringDef(strpara.resultdef).StringTypName;
                 { decide which version to call based on the second parameter }
@@ -592,7 +592,7 @@ implementation
             procname:='fpc_setstring_ansistr_pansichar'
           else
             procname:='fpc_setstring_shortstr';
-        result:=CCallNode.createintern(procname,paras)
+        result:=CCallNode.CreateIntern(procname,paras)
       end;
 
 
@@ -605,7 +605,7 @@ implementation
         ppn     : TCallParaNode;
       begin
         { for easy exiting if something goes wrong }
-        result := CErrorNode.create;
+        result := CErrorNode.Create;
 
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
@@ -628,24 +628,24 @@ implementation
          begin
            destppn:=TCallParaNode(ppn.right);
            { create call to fpc_initialize/finalize_array }
-           npara:=CCallParaNode.create(CTypeConvNode.create
+           npara:=CCallParaNode.Create(CTypeConvNode.Create
                      (ppn.left,S32IntType),
-                  CCallParaNode.create(CAddrNode.Create_Internal
-                     (CRTTINode.create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
-                  CCallParaNode.create(CAddrNode.Create_Internal
+                  CCallParaNode.Create(CAddrNode.Create_Internal
+                     (CRTTINode.Create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
+                  CCallParaNode.Create(CAddrNode.Create_Internal
                      (destppn.left),nil)));
            if isinit then
-             newblock:=CCallNode.createintern('fpc_initialize_array',npara)
+             newblock:=CCallNode.CreateIntern('fpc_initialize_array',npara)
            else
-             newblock:=CCallNode.createintern('fpc_finalize_array',npara);
+             newblock:=CCallNode.CreateIntern('fpc_finalize_array',npara);
            destppn.left:=nil;
          end
         else
          begin
            if isinit then
-             newblock:=CNodeUtils.initialize_data_node(ppn.left,true)
+             newblock:=CNodeUtils.Initialize_Data_Node(ppn.left,true)
            else
-             newblock:=CNodeUtils.finalize_data_node(ppn.left);
+             newblock:=CNodeUtils.Finalize_Data_Node(ppn.left);
          end;
         ppn.left:=nil;
         paras.free;
@@ -672,7 +672,7 @@ implementation
         paras   : TNode;
         { for easy exiting if something goes wrong }
       begin
-        result := CErrorNode.create;
+        result := CErrorNode.Create;
 
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
@@ -683,7 +683,7 @@ implementation
             exit;
           end;
         result.free;
-        result:=CInlineNode.create(nr,false,paras);
+        result:=CInlineNode.Create(nr,false,paras);
       end;
 
 

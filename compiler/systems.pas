@@ -280,11 +280,6 @@ interface
          on the caller side rather than on the callee side }
        systems_caller_copy_addr_value_para = [system_aarch64_ios,system_aarch64_iphonesim,system_aarch64_darwin,system_aarch64_linux,system_aarch64_win64];
 
-       { all PPC ABIs that use a TOC register to address globals }
-       abis_ppc_toc = [
-         abi_powerpc_aix,abi_powerpc_elfv2
-       ];
-
        { pointer checking (requires special code in FPC_CHECKPOINTER,
          and can never work for libc-based targets or any other program
          linking to an external library)
@@ -311,36 +306,9 @@ interface
 
        ABIInfo : array[TABI] of TABIInfo = (
          (name: 'DEFAULT'; supported: true),
-         (name: 'SYSV'   ; supported:false),
-         (name: 'AIX'    ; supported:false),
-         (name: 'DARWIN'    ; supported:false),
-         (name: 'ELFV2'  ; supported:false),
-         (name: 'EABI'   ; supported:false),
-         (name: 'ARMEB'  ; supported:false),
-         (name: 'EABIHF' ; supported:false),
          (name: 'OLDWIN32GNU'; supported:{$ifdef I386}true{$else}false{$endif}),
          (name: 'AARCH64IOS'; supported:{$ifdef aarch64}true{$else}false{$endif}),
-         (name: 'ILP32'; supported:false),
-         (name: 'ILP32F'; supported:false),
-         (name: 'ILP32D'; supported:false),
-         (name: 'ILP32E'; supported:false),
-         (name: 'LP64'; supported:false),
-         (name: 'LP64F'; supported:false),
-         (name: 'LP64D'; supported:false),
-         (name: 'LP64Q'; supported:false),
-         (name: 'LINUX386_SYSV'; supported:{$if defined(i386)}true{$else}false{$endif}),
-         (name: 'WINDOWED'; supported:false),
-         (name: 'CALL0'; supported:false),
-         (name: 'O32'; supported:false),
-         (name: 'N32'; supported:false),
-         (name: 'O64'; supported:false),
-         (name: 'N64'; supported:false),
-         (name: 'LP64S'; supported:false),
-         (name: 'LP64F'; supported:false),
-         (name: 'LP64D'; supported:false),
-         (name: 'LP32S'; supported:false),
-         (name: 'LP32F'; supported:false),
-         (name: 'LP32D'; supported:false)
+         (name: 'LINUX386_SYSV'; supported:{$if defined(i386)}true{$else}false{$endif})
        );
 
        cgbackend2str: array[TCGBackend] of AnsiString = (
@@ -350,7 +318,6 @@ interface
        { x86 asm modes with an Intel-style syntax }
        asmmodes_x86_intel = [
 
-         asmmode_i8086_intel,
          asmmode_i386_intel,
          asmmode_x86_64_intel
        ];
@@ -360,7 +327,6 @@ interface
 {$if defined(i386) or defined(x86_64)}
          asmmode_standard,
 {$endif}
-         asmmode_i8086_att,
          asmmode_i386_att,
          asmmode_x86_64_att,
          asmmode_x86_64_gas

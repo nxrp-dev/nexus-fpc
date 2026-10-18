@@ -2576,7 +2576,7 @@ unit rgobj;
             begin
               J:=Buf[I];
               if TG.IsTemp(SpillTemps[J]) then
-                TG.UngetTemp(List,SpillTemps[J]);
+                TG.UnGetTemp(List,SpillTemps[J]);
             end;
         SpillTemps:=nil;
       end;

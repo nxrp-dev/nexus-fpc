@@ -26,13 +26,13 @@ unit nx64cnv;
 interface
 
     uses
-      node,defutil,pass_1,
+      node,defutil,Pass_1,
       nx86cnv;
 
     type
        TX8664TypeConvNode = class(TX86TypeConvNode)
          protected
-         function first_nothing : TNode;override;
+         function First_Nothing : TNode;override;
          { procedure second_int_to_int;override; }
          { procedure second_string_to_string;override; }
          { procedure second_cstring_to_pchar;override; }
@@ -42,8 +42,8 @@ interface
          { procedure second_chararray_to_string;override; }
          { procedure second_char_to_string;override; }
          { function first_int_to_real: tnode; override; }
-         function first_int_to_real : TNode;override;
-         procedure second_int_to_real;override;
+         function First_Int_To_Real : TNode;override;
+         procedure Second_Int_To_Real;override;
          { procedure second_real_to_real;override; }
          { procedure second_cord_to_pointer;override; }
          { procedure second_proc_to_procvar;override; }
@@ -69,126 +69,126 @@ implementation
       cgutils,cgobj,hlcgobj,cgx86;
 
 
-    function TX8664TypeConvNode.first_nothing : TNode;
+    function TX8664TypeConvNode.First_Nothing : TNode;
       begin
-        result:=nil;
+        Result:=nil;
         { If typecasting between a Single or Double and a record of equal size,
           we can use MOVD and MOVQ }
-        if (resultdef.typ in [recorddef,orddef]) and
-          Use_VectorFPU(left.resultdef) and
-          (resultdef.Size=left.resultdef.Size) then
-          expectloc:=LOC_MMREGISTER
-        else if (left.resultdef.typ in [recorddef,orddef]) and
-          Use_VectorFPU(resultdef) and
-          (resultdef.Size=left.resultdef.Size) then
-          expectloc:=LOC_REGISTER
+        if (ResultDef.typ in [recorddef,orddef]) and
+          Use_VectorFPU(Left.ResultDef) and
+          (ResultDef.Size=Left.ResultDef.Size) then
+          ExpectLoc:=LOC_MMREGISTER
+        else if (Left.ResultDef.typ in [recorddef,orddef]) and
+          Use_VectorFPU(ResultDef) and
+          (ResultDef.Size=Left.ResultDef.Size) then
+          ExpectLoc:=LOC_REGISTER
         else
-          result:=inherited first_nothing;
+          Result:=inherited First_Nothing;
       end;
 
 
-    function TX8664TypeConvNode.first_int_to_real : TNode;
+    function TX8664TypeConvNode.First_Int_To_Real : TNode;
       begin
-        result:=nil;
-        if Use_VectorFPU(resultdef) and
-           (TOrdDef(left.resultdef).OrdType=u32bit) and
+        Result:=nil;
+        if Use_VectorFPU(ResultDef) and
+           (TOrdDef(Left.ResultDef).OrdType=u32bit) and
            not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
-            inserttypeconv(left,S64IntType);
-            FirstPass(left);
+            InsertTypeConv(Left,S64IntType);
+            FirstPass(Left);
           end
         else
-          result:=inherited first_int_to_real;
-       if Use_VectorFPU(resultdef) then
-         expectloc:=LOC_MMREGISTER;
+          Result:=inherited First_Int_To_Real;
+       if Use_VectorFPU(ResultDef) then
+         ExpectLoc:=LOC_MMREGISTER;
       end;
 
 
-    procedure TX8664TypeConvNode.second_int_to_real;
+    procedure TX8664TypeConvNode.Second_Int_To_Real;
       var
-         href : TReference;
-         l1,l2 : TAsmLabel;
-         op : TAsmOp;
+         lReference : TReference;
+         lDataLabel,lJumpLabel : TAsmLabel;
+         lAsmOp : TAsmOp;
       begin
-        if Use_VectorFPU(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
+        if Use_VectorFPU(ResultDef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
-            if Is_Double(resultdef) then
-              op:=A_CVTSI2SD
-            else if Is_Single(resultdef) then
-              op:=A_CVTSI2SS
+            if Is_Double(ResultDef) then
+              lAsmOp:=A_CVTSI2SD
+            else if Is_Single(ResultDef) then
+              lAsmOp:=A_CVTSI2SS
             else
               InternalError(200506061);
 
-            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+            Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
 
-            case TOrdDef(left.resultdef).OrdType of
+            case TOrdDef(Left.ResultDef).OrdType of
               u64bit:
                 begin
                    { unsigned 64 bit ints are harder to handle:
                      we load bits 0..62 and then check bit 63:
                      if it is 1 then we add $80000000 000000000
                      as double                                  }
-                   CurrentAsmData.getdatalabel(l1);
-                   CurrentAsmData.getjumplabel(l2);
+                   CurrentAsmData.getdatalabel(lDataLabel);
+                   CurrentAsmData.getjumplabel(lJumpLabel);
 
                    { Get sign bit }
-                   if not(left.Location.Loc in [LOC_REGISTER,LOC_REFERENCE]) then
-                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,left.Location,left.resultdef,left.resultdef,false);
-                   case left.Location.Loc of
+                   if not(Left.Location.Loc in [LOC_REGISTER,LOC_REFERENCE]) then
+                     hlcg.Location_Force_Reg(CurrentAsmData.CurrAsmList,Left.Location,Left.ResultDef,Left.ResultDef,false);
+                   case Left.Location.Loc of
                      LOC_REGISTER :
                        begin
                          cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                         emit_const_reg(A_BT,S_Q,63,left.Location.Register);
-                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_Q,left.Location.Register,location.Register));
+                         emit_const_reg(A_BT,S_Q,63,Left.Location.Register);
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(lAsmOp,S_Q,Left.Location.Register,Location.Register));
                        end;
                      LOC_REFERENCE :
                        begin
-                         href:=left.Location.Reference;
-                         TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                         inc(href.Offset,4);
+                         lReference:=Left.Location.Reference;
+                         TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,lReference);
+                         inc(lReference.Offset,4);
                          cg.A_Reg_Alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                         emit_const_ref(A_BT,S_L,31,href);
-                         dec(href.Offset,4);
-                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_Q,href,location.Register));
+                         emit_const_ref(A_BT,S_L,31,lReference);
+                         dec(lReference.Offset,4);
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(lAsmOp,S_Q,lReference,Location.Register));
                        end;
                      else
                        InternalError(200710181);
                    end;
 
-                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NC,l2);
+                   cg.A_Jmp_Flags(CurrentAsmData.CurrAsmList,F_NC,lJumpLabel);
                    cg.A_Reg_Dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,Const_Align(sizeof(PInt)));
-                   CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(l1));
-                   Reference_Reset_Symbol(href,l1,0,4,[]);
+                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lDataLabel.name,Const_Align(sizeof(PInt)));
+                   CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lDataLabel));
+                   Reference_Reset_Symbol(lReference,lDataLabel,0,4,[]);
                    { simplify for PIC }
-                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,lReference);
 
                    { I got these constant from a test program (FK) }
-                   if Is_Double(resultdef) then
+                   if Is_Double(ResultDef) then
                      begin
                        { double (2^64) }
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit(0));
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($43f00000));
-                       TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSD,S_NO,href,location.Register));
+                       TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,lReference);
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSD,S_NO,lReference,Location.Register));
                      end
-                   else if Is_Single(resultdef) then
+                   else if Is_Single(ResultDef) then
                      begin
                        { single(2^64) }
                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($5f800000));
-                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSS,S_NO,href,location.Register));
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSS,S_NO,lReference,Location.Register));
                      end
                    else
                      InternalError(200506071);
-                   cg.A_Label(CurrentAsmData.CurrAsmList,l2);
+                   cg.A_Label(CurrentAsmData.CurrAsmList,lJumpLabel);
                 end
               else
-                inherited second_int_to_real;
+                inherited Second_Int_To_Real;
             end;
           end
         else
-          inherited second_int_to_real;
+          inherited Second_Int_To_Real;
       end;
 
 

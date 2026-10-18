@@ -223,7 +223,7 @@ implementation
 
   procedure create_hlcodegen_cpu(hlcgobjhelpers: THLCGObjHelpersClass);
     begin
-      hlcg:=THLCGAArch64.create(hlcgobjhelpers);
+      hlcg:=THLCGAArch64.Create(hlcgobjhelpers);
       create_codegen;
     end;
 

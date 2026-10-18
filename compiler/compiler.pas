@@ -212,7 +212,7 @@ begin
 
        { Compile the program }
          begin
-         m:=TPPUModule.create(Nil,'',InputFilePath+InputFileName,false);
+         m:=TPPUModule.Create(Nil,'',InputFilePath+InputFileName,false);
          m.state:=ms_compile;
          m.IsInitial:=true;
          { We need to add the initial module manually to the list of units }

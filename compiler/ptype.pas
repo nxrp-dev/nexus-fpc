@@ -145,7 +145,7 @@ implementation
                         (srsym.typ=TypeSym) then
                       begin
                         if (sp_generic_dummy in srsym.SymOptions) and
-                            not (TTypeSym(srsym).typedef.typ=undefineddef) and
+                            not (TTypeSym(srsym).TypeDef.typ=undefineddef) and
                             Assigned(def.owner.DefOwner) then
                           begin
                             { is the forward def part of a specialization? }
@@ -155,10 +155,10 @@ implementation
                             { if the genericdef of the specialization is the same as the
                               def the dummy points to, then update the found symbol }
                             if TStoredDef(tmp).Is_Specialization and
-                                (TStoredDef(tmp).GenericDef=TTypeSym(srsym).typedef) then
+                                (TStoredDef(tmp).GenericDef=TTypeSym(srsym).TypeDef) then
                               srsym:=TStoredDef(tmp).TypeSym;
                           end;
-                        TAbstractPointerDef(def).PointedDef:=TTypeSym(srsym).typedef;
+                        TAbstractPointerDef(def).PointedDef:=TTypeSym(srsym).TypeDef;
                         { correctly set the generic/specialization flags and the genericdef }
                         if df_generic in TStoredDef(TAbstractPointerDef(def).PointedDef).DefOptions then
                           include(TStoredDef(def).DefOptions,df_generic);
@@ -169,7 +169,7 @@ implementation
                               pointerdef:
                                 TStoredDef(def).GenericDef:=CPointerDef.getreusable(TStoredDef(TAbstractPointerDef(def).PointedDef).GenericDef);
                               classrefdef:
-                                TStoredDef(def).GenericDef:=CClassRefDef.create(TStoredDef(TAbstractPointerDef(def).PointedDef).GenericDef);
+                                TStoredDef(def).GenericDef:=CClassRefDef.Create(TStoredDef(TAbstractPointerDef(def).PointedDef).GenericDef);
                               else
                                 InternalError(2016120901);
                             end;
@@ -178,20 +178,20 @@ implementation
                         inc(TTypeSym(srsym).refs);
                         { we need a class type for classrefdef }
                         if (def.typ=classrefdef) and
-                           not(Is_Class(TTypeSym(srsym).typedef)) and
-                           not(Is_ObjCClass(TTypeSym(srsym).typedef)) then
-                          MessagePos1(def.TypeSym.fileinfo,type_e_class_type_expected,TTypeSym(srsym).typedef.TypeName);
+                           not(Is_Class(TTypeSym(srsym).TypeDef)) and
+                           not(Is_ObjCClass(TTypeSym(srsym).TypeDef)) then
+                          MessagePos1(def.TypeSym.fileinfo,type_e_class_type_expected,TTypeSym(srsym).TypeDef.TypeName);
                         { this could also be a generic dummy that was not
                           overridden with a specific type }
                         if (sp_generic_dummy in srsym.SymOptions) and
                             (
-                              (TTypeSym(srsym).typedef.typ=undefineddef) or
+                              (TTypeSym(srsym).TypeDef.typ=undefineddef) or
                               (
                                 { or an unspecialized generic symbol, which is
                                   the case for generics defined in non-Delphi
                                   modes }
-                                TStoredDef(TTypeSym(srsym).typedef).Is_Generic and
-                                not Defs_Belong_To_Same_Generic(def,TTypeSym(srsym).typedef)
+                                TStoredDef(TTypeSym(srsym).TypeDef).Is_Generic and
+                                not Defs_Belong_To_Same_Generic(def,TTypeSym(srsym).TypeDef)
                               )
                             ) then
                           begin
@@ -277,7 +277,7 @@ implementation
                    begin
                      structstackindex:=-1;
                      OldSymTableStack:=SymTableStack;
-                     SymTableStack:=TSymTableStack.create;
+                     SymTableStack:=TSymTableStack.Create;
                      SymTableStack.push(TAbstractRecordDef(def).SymTable);
                      t2:=GenErrorDef;
                      id_type(t2,isforwarddef,false,false,false,srsym,srsymtable,isspecialize,isunitspecific);
@@ -321,7 +321,7 @@ implementation
                  def:=structdef;
                  { we found the top-most match, now check how far down we can
                    follow }
-                 structdefstack:=TFPObjectList.create(false);
+                 structdefstack:=TFPObjectList.Create(false);
                  structdef:=BaseDef;
                  while (structdef<>def) do
                    begin
@@ -397,9 +397,9 @@ implementation
            table as forwarddef are not resolved directly }
          if Assigned(srsym) and
             (srsym.typ=TypeSym) and
-            ((TTypeSym(srsym).typedef.typ=errordef) or
+            ((TTypeSym(srsym).TypeDef.typ=errordef) or
             (not allowgenericsyms and
-            (TTypeSym(srsym).typedef.typ=undefineddef) and
+            (TTypeSym(srsym).TypeDef.typ=undefineddef) and
             not (sp_generic_para in srsym.SymOptions) and
             not (sp_explicitrename in srsym.SymOptions) and
             not Assigned(srsym.owner.DefOwner) and
@@ -414,7 +414,7 @@ implementation
          if isforwarddef and
             not(is_unit_specific) then
            begin
-             def:=CForwardDef.create(sorg,pos);
+             def:=CForwardDef.Create(sorg,pos);
              exit;
            end;
          { unknown sym ? }
@@ -432,7 +432,7 @@ implementation
             exit;
           end;
          { Give an error when referring to an errordef }
-         if (TTypeSym(srsym).typedef.typ=errordef) then
+         if (TTypeSym(srsym).TypeDef.typ=errordef) then
           begin
             Message(sym_e_error_in_type_def);
             def:=GenErrorDef;
@@ -445,14 +445,14 @@ implementation
          if (sp_generic_dummy in srsym.SymOptions) and
              Assigned(CurrentStructDef) and
              (df_generic in CurrentStructDef.DefOptions) and
-             (TTypeSym(srsym).typedef.typ=undefineddef) and
+             (TTypeSym(srsym).TypeDef.typ=undefineddef) and
              not (m_delphi in CurrentSettings.ModeSwitches) then
            begin
              def:=Get_Generic_In_Hierarchy_By_Name(srsym,CurrentStructDef);
              if Assigned(def) then
                exit;
            end;
-        def:=TTypeSym(srsym).typedef;
+        def:=TTypeSym(srsym).TypeDef;
       end;
 
 
@@ -464,7 +464,7 @@ implementation
            if Assigned(sym) and
                not (sp_generic_dummy in sym.SymOptions) and
                (sym.typ=TypeSym) then
-             result:=TTypeSym(sym).typedef
+             result:=TTypeSym(sym).TypeDef
            else
              begin
                Message(parser_e_no_generics_as_types);
@@ -567,7 +567,7 @@ implementation
         else if dospecialize then
           begin
             if def.typ=ForwardDef then
-              def:=TTypeSym(srsym).typedef;
+              def:=TTypeSym(srsym).TypeDef;
             if Assigned(srsym) then
               symname:=srsym.name
             else if Assigned(def.TypeSym) then
@@ -1030,9 +1030,9 @@ implementation
         begin
           if not Assigned(recsym) then
             exit;
-          if TTypeSym(recsym).typedef=CurrentStructDef then
+          if TTypeSym(recsym).TypeDef=CurrentStructDef then
             exit;
-          TTypeSym(recsym).typedef:=CurrentStructDef;
+          TTypeSym(recsym).TypeDef:=CurrentStructDef;
           CurrentStructDef.TypeSym:=recsym;
         end;
 
@@ -1040,9 +1040,9 @@ implementation
         begin
           if not Assigned(recsym) then
             exit;
-          if TTypeSym(recsym).typedef<>CurrentStructDef then
+          if TTypeSym(recsym).TypeDef<>CurrentStructDef then
             exit;
-          TTypeSym(recsym).typedef:=olddef;
+          TTypeSym(recsym).TypeDef:=olddef;
           CurrentStructDef.TypeSym:=nil;
         end;
 
@@ -1064,10 +1064,10 @@ implementation
          CurrentGenericDef:=nil;
          CurrentSpecializeDef:=nil;
          { create recdef }
-         recst:=TRecordSymTable.create(n,CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
+         recst:=TRecordSymTable.Create(n,CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
          { can't use recst.realname^ instead of n, because recst.realname is
            nil in case of an empty name }
-         CurrentStructDef:=CRecordDef.create(n,recst);
+         CurrentStructDef:=CRecordDef.Create(n,recst);
          result:=CurrentStructDef;
          { insert in symtablestack }
          SymTableStack.push(recst);
@@ -1106,7 +1106,7 @@ implementation
            using nested constants and such or when specializing the type
            itself as a pointer type }
          if Assigned(recsym) then
-           olddef:=TTypeSym(recsym).typedef
+           olddef:=TTypeSym(recsym).TypeDef
          else
            olddef:=nil;
          set_typesym;
@@ -1197,7 +1197,7 @@ implementation
                  between -3200..3200 will result in a signed-unsigned
                  conflict and give a range check error (PFV) }
                if not(Is_Integer(pt1.resultdef) and Is_Integer(pt2.resultdef)) then
-                 inserttypeconv(pt1,pt2.resultdef);
+                 InsertTypeConv(pt1,pt2.resultdef);
                { both must be evaluated to constants now }
                if (pt1.nodetype=ordconstn) and
                   (pt2.nodetype=ordconstn) then
@@ -1218,14 +1218,14 @@ implementation
                          orddef :
                            begin
                              if Is_Char(pt1.resultdef) then
-                               def:=COrdDef.create(uchar,lv,hv,true)
+                               def:=COrdDef.Create(uchar,lv,hv,true)
                              else
                                if Is_Boolean(pt1.resultdef) then
-                                 def:=COrdDef.create(pasbool1,lv,hv,true)
+                                 def:=COrdDef.Create(pasbool1,lv,hv,true)
                                else if Is_Signed(pt1.resultdef) then
-                                 def:=COrdDef.create(Range_To_BaseType(lv,hv),lv,hv,true)
+                                 def:=COrdDef.Create(Range_To_BaseType(lv,hv),lv,hv,true)
                                else
-                                 def:=COrdDef.create(Range_To_BaseType(lv,hv),lv,hv,true);
+                                 def:=COrdDef.Create(Range_To_BaseType(lv,hv),lv,hv,true);
                            end;
                          else
                            InternalError(2019050527);
@@ -1262,9 +1262,9 @@ implementation
                        (
                          (
                            not (m_delphi in CurrentSettings.ModeSwitches) and
-                           (TTypeSym(TTypeNode(pt1).TypeSym).typedef.typ=undefineddef) and
+                           (TTypeSym(TTypeNode(pt1).TypeSym).TypeDef.typ=undefineddef) and
                            (df_generic in CurrentStructDef.DefOptions) and
-                           (TTypeSym(TTypeNode(pt1).TypeSym).typedef.owner=CurrentStructDef.owner) and
+                           (TTypeSym(TTypeNode(pt1).TypeSym).TypeDef.owner=CurrentStructDef.owner) and
                            (upper(TTypeNode(pt1).TypeSym.realname)=copy(CurrentStructDef.ObjName^,1,pos('$',CurrentStructDef.ObjName^)-1))
                          ) or (
                            { this could be a nested specialization which uses
@@ -1272,7 +1272,7 @@ implementation
                              reference the specialization of said surrounding
                              class }
                            (df_specialization in CurrentStructDef.DefOptions) and
-                           Return_Specialization_Of_Generic(CurrentStructDef,TTypeSym(TTypeNode(pt1).TypeSym).typedef,newdef)
+                           Return_Specialization_Of_Generic(CurrentStructDef,TTypeSym(TTypeNode(pt1).TypeSym).TypeDef,newdef)
                          )
                        )
                        then
@@ -1329,7 +1329,7 @@ implementation
                          begin
                            if Assigned(def.TypeSym) then
                              begin
-                               if TTypeSym(def.TypeSym).typedef.typ<>undefineddef then
+                               if TTypeSym(def.TypeSym).TypeDef.typ<>undefineddef then
                                  { non-Delphi modes... }
                                  split_generic_name(def.TypeSym.name,genstr,gencount)
                                else
@@ -1341,7 +1341,7 @@ implementation
                            if Assigned(sym) and
                                not (sp_generic_dummy in sym.SymOptions) and
                                (sym.typ=TypeSym) then
-                             def:=TTypeSym(sym).typedef
+                             def:=TTypeSym(sym).TypeDef
                            else
                              begin
                                Message(parser_e_no_generics_as_types);
@@ -1377,7 +1377,7 @@ implementation
                  if (TEnumDef(tt2).min>=0) and
                     (TEnumDef(tt2).max<=255) then
                   // !! def:=csetdef.create(tt2,tenumdef(tt2.def).min,tenumdef(tt2.def).max),true)
-                  def:=CSetDef.create(tt2,TEnumDef(tt2).min,TEnumDef(tt2).max,true)
+                  def:=CSetDef.Create(tt2,TEnumDef(tt2).min,TEnumDef(tt2).max,true)
                  else
                   Message(sym_e_ill_type_decl_set);
                orddef :
@@ -1387,7 +1387,7 @@ implementation
                      if (m_default_unicodestring in CurrentSettings.ModeSwitches) then
                        begin
                          Message(parser_w_widechar_set_reduced);
-                         def:=CSetDef.create(CAnsiCharType,TOrdDef(CAnsiCharType).low.svalue,TOrdDef(CAnsiCharType).high.svalue,true);
+                         def:=CSetDef.Create(CAnsiCharType,TOrdDef(CAnsiCharType).low.svalue,TOrdDef(CAnsiCharType).high.svalue,true);
                        end
                      else
                        Message(sym_e_ill_type_decl_set);
@@ -1398,14 +1398,14 @@ implementation
                      if TOrdDef(tt2).high>int64(high(byte)) then
                        message(sym_e_ill_type_decl_set)
                      else
-                       def:=CSetDef.create(tt2,TOrdDef(tt2).low.svalue,TOrdDef(tt2).high.svalue,true)
+                       def:=CSetDef.Create(tt2,TOrdDef(tt2).low.svalue,TOrdDef(tt2).high.svalue,true)
                    else
                      Message(sym_e_ill_type_decl_set);
                  end;
                { generic parameter? }
                undefineddef:
                  { The element bounds are determined when specializing. }
-                 def:=CSetDef.create(tt2,0,255,true);
+                 def:=CSetDef.Create(tt2,0,255,true);
                else
                  Message(sym_e_ill_type_decl_set);
              end;
@@ -1434,13 +1434,13 @@ implementation
               if Assigned(sym) and
                   not (sp_generic_dummy in sym.SymOptions) and
                   (sym.typ=TypeSym) then
-                tt2:=TTypeSym(sym).typedef
+                tt2:=TTypeSym(sym).TypeDef
               else
                 Message(parser_e_no_generics_as_types);
             end;
           { don't use cpointerdef.getreusable() here, since this is a type
             declaration (-> must create new typedef) }
-          def:=CPointerDef.create(tt2);
+          def:=CPointerDef.Create(tt2);
           if tt2.typ=ForwardDef then
             CurrentModule.CheckForwardDefs.add(def);
         end;
@@ -1515,7 +1515,7 @@ implementation
            CurrentGenericDef:=nil;
            CurrentSpecializeDef:=nil;
            first:=true;
-           arrdef:=CArrayDef.create(0,0,S32IntType);
+           arrdef:=CArrayDef.Create(0,0,S32IntType);
            consume(_ARRAY);
 
            { usage of specialized type inside its generic template }
@@ -1579,7 +1579,7 @@ implementation
                                    between -3200..3200 will result in a signed-unsigned
                                    conflict and give a range check error (PFV) }
                                  if not(Is_Integer(TRangeNode(pt).left.resultdef) and Is_Integer(TRangeNode(pt).left.resultdef)) then
-                                   inserttypeconv(TRangeNode(pt).left,TRangeNode(pt).right.resultdef);
+                                   InsertTypeConv(TRangeNode(pt).left,TRangeNode(pt).right.resultdef);
                                  lowval:=TOrdConstNode(TRangeNode(pt).left).Value;
                                  highval:=TOrdConstNode(TRangeNode(pt).right).Value;
                                  if highval<lowval then
@@ -1619,7 +1619,7 @@ implementation
                     as element of the existing array, otherwise modify the existing array }
                   if not(first) then
                     begin
-                      arrdef.ElementDef:=CArrayDef.create(lowval.svalue,highval.svalue,IndexDef);
+                      arrdef.ElementDef:=CArrayDef.Create(lowval.svalue,highval.svalue,IndexDef);
                       { push new symtable }
                       SymTableStack.pop(arrdef.SymTable);
                       arrdef:=TArrayDef(arrdef.ElementDef);
@@ -1699,13 +1699,13 @@ implementation
               consume(CurrentScanner.token)
             else
               consume(_FUNCTION);
-            pd:=CProcVarDef.create(NormalFunctionLevel,doregister);
+            pd:=CProcVarDef.Create(NormalFunctionLevel,doregister);
 
             if Assigned(sym) then
               begin
                 pd.TypeSym:=sym;
-                olddef:=TTypeSym(sym).typedef;
-                TTypeSym(sym).typedef:=pd;
+                olddef:=TTypeSym(sym).TypeDef;
+                TTypeSym(sym).TypeDef:=pd;
               end;
 
             { usage of specialized type inside its generic template }
@@ -1767,7 +1767,7 @@ implementation
             if Assigned(sym) then
               begin
                 pd.TypeSym:=nil;
-                TTypeSym(sym).typedef:=olddef;
+                TTypeSym(sym).TypeDef:=olddef;
               end;
 
             result:=pd;
@@ -1833,7 +1833,7 @@ implementation
                       break;
                   end;
                 if not is_specialize then
-                  aktenumdef:=CEnumDef.create
+                  aktenumdef:=CEnumDef.Create
                 else
                   aktenumdef:=nil;
                 repeat
@@ -1900,11 +1900,11 @@ implementation
                           Message(parser_w_enumeration_out_of_range)
                         else
                           Message(parser_e_enumeration_out_of_range);
-                      TEnumSymTable(aktenumdef.SymTable).InsertSym(CEnumSym.create(s,aktenumdef,LongInt(l.svalue)));
+                      TEnumSymTable(aktenumdef.SymTable).InsertSym(CEnumSym.Create(s,aktenumdef,LongInt(l.svalue)));
                       if not (cs_scopedenums in CurrentSettings.LocalSwitches) or
                           { also provide the global symbol for anonymous enums }
                           not Assigned(newsym) then
-                        TStoredSymTable(aktenumdef.owner).InsertSym(CEnumSym.create(s,aktenumdef,LongInt(l.svalue)));
+                        TStoredSymTable(aktenumdef.owner).InsertSym(CEnumSym.Create(s,aktenumdef,LongInt(l.svalue)));
                       CurrentTokenPos:=storepos;
                     end;
                 until not try_to_consume(_COMMA);
@@ -1991,11 +1991,11 @@ implementation
                     single_type(hdef,SingleTypeOptionsInTypeBlock[Block_Type=bt_type]);
                     if Is_Class(hdef) or
                        Is_ObjCClass(hdef) then
-                      def:=CClassRefDef.create(hdef)
+                      def:=CClassRefDef.Create(hdef)
                     else
                       if hdef.typ=ForwardDef then
                         begin
-                          def:=CClassRefDef.create(hdef);
+                          def:=CClassRefDef.Create(hdef);
                           CurrentModule.CheckForwardDefs.add(def);
                         end
                     else
@@ -2108,7 +2108,7 @@ implementation
                 begin
                   consume(_KLAMMERAFFE);
                   single_type(tt2,SingleTypeOptionsInTypeBlock[Block_Type=bt_type]);
-                  def:=CPointerDef.create(tt2);
+                  def:=CPointerDef.Create(tt2);
                   if tt2.typ=ForwardDef then
                     CurrentModule.CheckForwardDefs.add(def);
                 end

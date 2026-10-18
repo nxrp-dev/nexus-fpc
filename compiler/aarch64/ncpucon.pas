@@ -31,8 +31,8 @@ interface
 
     type
       TAArch64RealConstNode = class(TCGRealConstNode)
-        function pass_1 : TNode;override;
-        procedure pass_generate_code;override;
+        function Pass_1 : TNode;override;
+        procedure Pass_Generate_Code;override;
       end;
 
   implementation
@@ -52,38 +52,38 @@ interface
                            TARMREALCONSTNODE
 *****************************************************************************}
 
-    function TAArch64RealConstNode.pass_1 : TNode;
+    function TAArch64RealConstNode.Pass_1 : TNode;
       begin
-        result:=nil;
-        if IsFloatImmediate(TFloatDef(resultdef).FloatType,value_real) then
+        Result:=nil;
+        if IsFloatImmediate(TFloatDef(ResultDef).FloatType,ValueReal) then
            expectloc:=LOC_MMREGISTER
          else
-           result:=Inherited pass_1;
+           Result:=Inherited Pass_1;
       end;
 
 
-    procedure TAArch64RealConstNode.pass_generate_code;
+    procedure TAArch64RealConstNode.Pass_Generate_Code;
       var
-        hreg : TRegister;
+        lReg : TRegister;
       begin
-        if IsFloatImmediate(TFloatDef(resultdef).FloatType,value_real) then
+        if IsFloatImmediate(TFloatDef(ResultDef).FloatType,ValueReal) then
           begin
-            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
+            Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_realconst(A_FMOV,
-              location.Register,value_real));
+              Location.Register,ValueReal));
           end
         { cast and compare the bit pattern as we cannot handle -0.0 }
-        else if IsPosZero(value_real) then
+        else if IsPosZero(ValueReal) then
           begin
-            Location_Reset(location,LOC_MMREGISTER,Def_CGSize(resultdef));
-            location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,location.Size);
-            hreg:=NewReg(R_MMREGISTER,GetSupReg(location.Register),R_SUBMM16B);
+            Location_Reset(Location,LOC_MMREGISTER,Def_CGSize(ResultDef));
+            Location.Register:=cg.GetMMRegister(CurrentAsmData.CurrAsmList,Location.Size);
+            lReg:=NewReg(R_MMREGISTER,GetSupReg(Location.Register),R_SUBMM16B);
             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_EOR,
-              hreg,hreg,hreg));
+              lReg,lReg,lReg));
           end
         else
-          Inherited pass_generate_code;
+          Inherited Pass_Generate_Code;
       end;
 
 begin

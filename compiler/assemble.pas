@@ -1432,7 +1432,7 @@ Implementation
                with TAISymbolPair(hp) do
                  ObjData.SymbolPairDefine(kind,sym^,value^);
              ait_label :
-               ObjData.SymbolDefine(TAILabel(hp).labsym);
+               ObjData.SymbolDefine(TAILabel(hp).LabSym);
              ait_string :
                ObjData.alloc(TAIString(hp).len);
              ait_instruction :
@@ -1578,7 +1578,7 @@ Implementation
                with TAISymbolPair(hp) do
                  ObjData.SymbolPairDefine(kind,sym^,value^);
              ait_label :
-               ObjData.SymbolDefine(TAILabel(hp).labsym);
+               ObjData.SymbolDefine(TAILabel(hp).LabSym);
              ait_string :
                ObjData.alloc(TAIString(hp).len);
              ait_instruction :
@@ -1898,7 +1898,7 @@ Implementation
                begin
                  { exporting shouldn't be necessary as labels are local,
                    but it's better to be on the safe side (PFV) }
-                 ObjOutput.exportsymbol(ObjData.SymbolRef(TAILabel(hp).labsym));
+                 ObjOutput.exportsymbol(ObjData.SymbolRef(TAILabel(hp).LabSym));
                end;
              ait_instruction :
                TAICPU(hp).Pass2(ObjData);
@@ -1948,7 +1948,7 @@ Implementation
                end;
 {$ifndef DISABLE_WIN64_SEH}
              ait_seh_directive :
-               TAISEHDirective(hp).generate_code(objdata);
+               TAISEHDirective(hp).Generate_Code(objdata);
 {$endif DISABLE_WIN64_SEH}
              ait_eabi_attribute :
                begin
@@ -2023,7 +2023,7 @@ Implementation
         hp : TAI;
         ObjWriter : TObjectWriter;
       begin
-        ObjWriter:=TObjectWriter.create;
+        ObjWriter:=TObjectWriter.Create;
         ObjOutput:=CObjOutput.Create(ObjWriter);
         ObjData:=ObjOutput.newObjData(ObjFileName);
 
@@ -2113,7 +2113,7 @@ Implementation
            not(af_needar in asminfo^.flags) then
           ObjWriter:=CInternalAr.CreateAr(CurrentModule.StaticLibFileName)
         else
-          ObjWriter:=TObjectWriter.create;
+          ObjWriter:=TObjectWriter.Create;
 
         NextSmartName(cut_normal);
         ObjOutput:=CObjOutput.Create(ObjWriter);

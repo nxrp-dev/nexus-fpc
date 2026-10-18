@@ -66,9 +66,9 @@ uses
   Verbose;
 
 
-constructor TExportLibUnix.create;
+constructor TExportLibUnix.Create;
 begin
-  inherited create;
+  inherited Create;
   fexportedsymnames:=TCmdStrList.Create_No_Double;
 end;
 

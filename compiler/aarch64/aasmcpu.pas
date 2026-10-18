@@ -342,14 +342,14 @@ implementation
 
     constructor TAICPU.op_none(op : TAsmOp);
       begin
-         inherited create(op);
+         inherited Create(op);
       end;
 
 
     { for pld }
     constructor TAICPU.op_ref(op : TAsmOp;const _op1 : TReference);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=1;
          loadref(0,_op1);
       end;
@@ -357,7 +357,7 @@ implementation
 
     constructor TAICPU.op_reg(op : TAsmOp;_op1 : TRegister);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=1;
          LoadReg(0,_op1);
       end;
@@ -365,7 +365,7 @@ implementation
 
     constructor TAICPU.op_const(op : TAsmOp;_op1 : LongInt);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=1;
          loadconst(0,aint(_op1));
       end;
@@ -373,7 +373,7 @@ implementation
 
     constructor TAICPU.op_reg_reg(op : TAsmOp;_op1,_op2 : TRegister);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -382,7 +382,7 @@ implementation
 
     constructor TAICPU.op_reg_const(op:TAsmOp; _op1: TRegister; _op2: aint);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          LoadReg(0,_op1);
          loadconst(1,aint(_op2));
@@ -391,7 +391,7 @@ implementation
 
     constructor TAICPU.op_reg_const_shifterop(op: TAsmOp; _op1: TRegister; _op2: aint; _op3: TShifterOp);
       begin
-        inherited create(op);
+        inherited Create(op);
         ops:=3;
         LoadReg(0,_op1);
         loadconst(1,_op2);
@@ -401,7 +401,7 @@ implementation
 
     constructor TAICPU.op_reg_ref(op : TAsmOp;_op1 : TRegister;const _op2 : TReference);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          LoadReg(0,_op1);
          loadref(1,_op2);
@@ -410,7 +410,7 @@ implementation
 
     constructor TAICPU.op_reg_cond(op: TAsmOp; _op1: TRegister; _op2: TAsmCond);
       begin
-        inherited create(op);
+        inherited Create(op);
         ops:=2;
         LoadReg(0,_op1);
         loadconditioncode(1,_op2);
@@ -419,7 +419,7 @@ implementation
 
     constructor TAICPU.op_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3 : TRegister);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -429,7 +429,7 @@ implementation
 
     constructor TAICPU.op_reg_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3,_op4 : TRegister);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=4;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -440,7 +440,7 @@ implementation
 
     constructor TAICPU.op_reg_realconst(op : TAsmOp; _op1 : TRegister; _op2 : BestReal);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          LoadReg(0,_op1);
          loadrealconst(1,_op2);
@@ -449,7 +449,7 @@ implementation
 
     constructor TAICPU.op_indexedreg_reg(op: TAsmOp; _op1: TRegister; _op1index: byte; _op2: TRegister);
       begin
-        inherited create(op);
+        inherited Create(op);
         ops:=2;
         loadindexedreg(0,_op1,_op1index);
         LoadReg(1,_op2);
@@ -458,7 +458,7 @@ implementation
 
     constructor TAICPU.op_reg_indexedreg(op: TAsmOp; _op1: TRegister; _op2: TRegister; _op2index: byte);
       begin
-        inherited create(op);
+        inherited Create(op);
         ops:=2;
         LoadReg(0,_op1);
         loadindexedreg(1,_op2,_op2index);
@@ -467,7 +467,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_const(op : TAsmOp;_op1,_op2 : TRegister; _op3: aint);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -477,7 +477,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_const_const(op: TAsmOp; _op1, _op2: TRegister; _op3, _op4: aint);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=4;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -488,7 +488,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_const_shifterop(op: TAsmOp; _op1, _op2: TRegister; _op3: aint; const _op4: TShifterOp);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=4;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -499,7 +499,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_sym_ofs(op : TAsmOp;_op1,_op2 : TRegister; _op3: TAsmSymbol;_op3ofs: LongInt);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -509,7 +509,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_ref(op : TAsmOp;_op1,_op2 : TRegister; const _op3: TReference);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -519,7 +519,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_shifterop(op : TAsmOp;_op1,_op2 : TRegister;_op3 : TShifterOp);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -529,7 +529,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_reg_shifterop(op : TAsmOp;_op1,_op2,_op3 : TRegister; const _op4 : TShifterOp);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=4;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -539,7 +539,7 @@ implementation
 
      constructor TAICPU.op_reg_reg_reg_cond(op: TAsmOp; _op1, _op2, _op3: TRegister; const _op4: TAsmCond);
        begin
-         inherited create(op);
+         inherited Create(op);
          ops:=4;
          LoadReg(0,_op1);
          LoadReg(1,_op2);
@@ -550,7 +550,7 @@ implementation
 
      constructor TAICPU.op_const_ref(op : TAsmOp; _op1 : aint; _op2 : TReference);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          loadconst(0,_op1);
          loadref(1,_op2);
@@ -559,7 +559,7 @@ implementation
 
     constructor TAICPU.op_cond_sym(op : TAsmOp;cond:TAsmCond;_op1 : TAsmSymbol);
       begin
-         inherited create(op);
+         inherited Create(op);
          condition:=cond;
          ops:=1;
          loadsymbol(0,_op1,0);
@@ -568,7 +568,7 @@ implementation
 
     constructor TAICPU.op_regset_reg_ref(op: TAsmOp; basereg: TRegister; nregs: byte; const ref: TReference);
       begin
-        inherited create(op);
+        inherited Create(op);
         ops:=2;
         loadregset(0,basereg,nregs);
         loadref(1, ref);
@@ -577,7 +577,7 @@ implementation
 
     constructor TAICPU.op_sym(op : TAsmOp;_op1 : TAsmSymbol);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=1;
          loadsymbol(0,_op1,0);
       end;
@@ -585,7 +585,7 @@ implementation
 
     constructor TAICPU.op_sym_ofs(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=1;
          loadsymbol(0,_op1,_op1ofs);
       end;
@@ -593,7 +593,7 @@ implementation
 
      constructor TAICPU.op_reg_sym_ofs(op : TAsmOp;_op1 : TRegister;_op2:TAsmSymbol;_op2ofs : LongInt);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          LoadReg(0,_op1);
          loadsymbol(1,_op2,_op2ofs);
@@ -602,7 +602,7 @@ implementation
 
     constructor TAICPU.op_sym_ofs_ref(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=2;
          loadsymbol(0,_op1,_op1ofs);
          loadref(1,_op2);
@@ -611,7 +611,7 @@ implementation
 
     constructor TAICPU.op_reg_const_ref(op : TAsmOp;_op1 : TRegister;_op2 : aint;_op3 : TReference);
       begin
-         inherited create(op);
+         inherited Create(op);
          ops:=3;
          LoadReg(0,_op1);
          loadconst(1,_op2);

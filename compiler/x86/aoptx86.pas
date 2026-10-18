@@ -740,7 +740,7 @@ unit aoptx86;
 
                   if (Next_Label.typ = ait_label) then
                     begin
-                      if LabelAccountedFor(TAILabel(Next_Label).labsym) then
+                      if LabelAccountedFor(TAILabel(Next_Label).LabSym) then
                         begin
                           TrackJump(JumpTargetOp(TAICPU(Next))^.Ref^.Symbol);
                           Next := Next_Label;
@@ -801,7 +801,7 @@ unit aoptx86;
                   Include(OptsToCheck, aoc_ForceNewIteration);
 
               end
-            else if LabelAccountedFor(TAILabel(Next).labsym) then
+            else if LabelAccountedFor(TAILabel(Next).LabSym) then
               Continue;
 
             { If we reach here, we're at a label that hasn't been seen before
@@ -1559,7 +1559,7 @@ unit aoptx86;
         Result := NR_NO;
         RegSet :=
           ParaManager.Get_Volatile_Registers_Int(CurrentProcInfo.procdef.ProcCallOption) +
-          CurrentProcInfo.saved_regs_int;
+          CurrentProcInfo.SavedRegsInt;
 (*
         { Don't use the frame register unless explicitly allowed (fixes i40111) }
         if ([cs_useebp, cs_userbp] * current_settings.optimizerswitches) = [] then
@@ -1637,7 +1637,7 @@ unit aoptx86;
         Result := NR_NO;
         RegSet :=
           ParaManager.Get_Volatile_Registers_MM(CurrentProcInfo.procdef.ProcCallOption) +
-          CurrentProcInfo.saved_regs_mm;
+          CurrentProcInfo.SavedRegsMM;
 
         for CurrentSuperReg in RegSet do
           begin
@@ -2337,18 +2337,18 @@ unit aoptx86;
          ) or
          ((((TAICPU(p).opcode=A_MOV) and
            MatchOpType(TAICPU(p),top_reg,top_reg) and
-           (TAICPU(p).oper[0]^.reg=CurrentProcInfo.framepointer) and
+           (TAICPU(p).oper[0]^.reg=CurrentProcInfo.FramePointer) and
            (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG)) or
            ((TAICPU(p).opcode=A_LEA) and
            MatchOpType(TAICPU(p),top_ref,top_reg) and
-           (TAICPU(p).oper[0]^.Ref^.Base=CurrentProcInfo.framepointer) and
+           (TAICPU(p).oper[0]^.Ref^.Base=CurrentProcInfo.FramePointer) and
            (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG)
            )
           ) and
           GetNextInstruction(p,hp2) and
-          MatchInstruction(hp2,A_POP,[reg2opsize(CurrentProcInfo.framepointer)]) and
+          MatchInstruction(hp2,A_POP,[reg2opsize(CurrentProcInfo.FramePointer)]) and
           MatchOpType(TAICPU(hp2),top_reg) and
-          (TAICPU(hp2).oper[0]^.reg=CurrentProcInfo.framepointer) and
+          (TAICPU(hp2).oper[0]^.reg=CurrentProcInfo.FramePointer) and
           GetNextInstruction(hp2,hp3) and
           MatchInstruction(hp3,A_RET,[S_NO])
          )
@@ -2897,7 +2897,7 @@ unit aoptx86;
 {$endif x86_64}
             (ref^.RefAddr = addr_full) or
             (ref^.Base = NR_STACK_POINTER_REG) or
-            (ref^.Base = CurrentProcInfo.framepointer)
+            (ref^.Base = CurrentProcInfo.FramePointer)
           );
       end;
 
@@ -3268,7 +3268,7 @@ unit aoptx86;
               (ref.Base<>NR_RIP) and
 {$endif x86_64}
               (ref.Base<>NR_STACK_POINTER_REG) and
-              (ref.Base<>CurrentProcInfo.framepointer) and
+              (ref.Base<>CurrentProcInfo.FramePointer) and
               (ref.Base<>ref.Index) then
               AllocRegBetween(ref.Base,p,hp1,UsedRegs);
           end
@@ -3342,7 +3342,7 @@ unit aoptx86;
           if (ThisRef.Index = NR_NO) and
             (
               (ThisRef.Base = NR_STACK_POINTER_REG) or
-              (ThisRef.Base = CurrentProcInfo.framepointer)
+              (ThisRef.Base = CurrentProcInfo.FramePointer)
             ) then
             begin
               case TAICPU(p).opsize of
@@ -4514,7 +4514,7 @@ unit aoptx86;
                                                       if ((SourceRef.Offset mod 16) = 8) and
                                                         (
                                                           { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                          (SourceRef.Base = CurrentProcInfo.framepointer) or
+                                                          (SourceRef.Base = CurrentProcInfo.FramePointer) or
                                                           ((SourceRef.Alignment >= 16) and ((SourceRef.Alignment mod 16) = 0))
                                                         ) then
                                                         TAICPU(p).opcode := MovAligned
@@ -4527,7 +4527,7 @@ unit aoptx86;
                                                       if ((TargetRef.Offset mod 16) = 8) and
                                                         (
                                                           { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                          (TargetRef.Base = CurrentProcInfo.framepointer) or
+                                                          (TargetRef.Base = CurrentProcInfo.FramePointer) or
                                                           ((TargetRef.Alignment >= 16) and ((TargetRef.Alignment mod 16) = 0))
                                                         ) then
                                                         TAICPU(hp1).opcode := MovAligned
@@ -4570,7 +4570,7 @@ unit aoptx86;
                                                           if ((SourceRef.Offset mod 16) = 0) and
                                                             (
                                                               { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                              (SourceRef.Base = CurrentProcInfo.framepointer) or
+                                                              (SourceRef.Base = CurrentProcInfo.FramePointer) or
                                                               ((SourceRef.Alignment >= 16) and ((SourceRef.Alignment mod 16) = 0))
                                                             ) then
                                                             TAICPU(hp2).opcode := MovAligned
@@ -4583,7 +4583,7 @@ unit aoptx86;
                                                           if ((TargetRef.Offset mod 16) = 0) and
                                                             (
                                                               { Base pointer is always aligned (stack pointer won't be if there's no stack frame) }
-                                                              (TargetRef.Base = CurrentProcInfo.framepointer) or
+                                                              (TargetRef.Base = CurrentProcInfo.FramePointer) or
                                                               ((TargetRef.Alignment >= 16) and ((TargetRef.Alignment mod 16) = 0))
                                                             ) then
                                                             TAICPU(hp3).opcode := MovAligned
@@ -5543,7 +5543,7 @@ unit aoptx86;
               stack, say. }
             (
               (TAICPU(p).oper[1]^.Ref^.Base = NR_STACK_POINTER_REG) and
-              (TAICPU(p).oper[1]^.Ref^.Offset < CurrentProcInfo.final_localsize)
+              (TAICPU(p).oper[1]^.Ref^.Offset < CurrentProcInfo.FinalLocalSize)
             )
           ) then
           begin
@@ -6251,7 +6251,7 @@ unit aoptx86;
                     if (InputP.typ = ait_align) or
                       (
                         (InputP.typ = ait_label) and
-                        not (TAILabel(InputP).labsym.Is_Used)
+                        not (TAILabel(InputP).LabSym.Is_Used)
                       ) then
                       GetNextInstruction(InputP, InputP);
                   end;
@@ -6322,7 +6322,7 @@ unit aoptx86;
                     if (hp1.typ = ait_align) or
                       (
                         (hp1.typ = ait_label) and
-                        not (TAILabel(hp1).labsym.Is_Used)
+                        not (TAILabel(hp1).LabSym.Is_Used)
                       ) then
                       GetNextInstruction(hp1, hp1);
                   end;
@@ -6903,7 +6903,7 @@ unit aoptx86;
           end;
 
         { Don't optimise if the stack or frame pointer is the destination register }
-        if (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG) or (TAICPU(p).oper[1]^.reg=CurrentProcInfo.framepointer) then
+        if (TAICPU(p).oper[1]^.reg=NR_STACK_POINTER_REG) or (TAICPU(p).oper[1]^.reg=CurrentProcInfo.FramePointer) then
           Exit;
         if GetNextInstruction(p,hp1) and
           (hp1.typ=ait_instruction) then
@@ -7608,7 +7608,7 @@ unit aoptx86;
             (TAICPU(hp3).opcode=A_RET) or
             (
               (TAICPU(hp3).oper[0]^.Ref^.RefAddr=addr_full) and
-              (TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol)<>TAILabel(hp_label).labsym)
+              (TAsmLabel(TAICPU(hp3).oper[0]^.Ref^.Symbol)<>TAILabel(hp_label).LabSym)
             )
           ) and
           GetNextInstruction(hp3, hp4) and
@@ -8983,7 +8983,7 @@ unit aoptx86;
                          if (p_jump.typ = ait_align) or
                            (
                              (p_jump.typ = ait_label) and
-                             not (TAILabel(p_jump).labsym.Is_Used)
+                             not (TAILabel(p_jump).LabSym.Is_Used)
                            ) then
                            GetNextInstruction(p_jump, p_jump);
                        end;
@@ -9057,7 +9057,7 @@ unit aoptx86;
                        GetNextInstruction(hp1_dist, hp1_label) and
                        (hp1_label.typ = ait_label) then
                        begin
-                         JumpLabel_far := TAILabel(hp1_label).labsym;
+                         JumpLabel_far := TAILabel(hp1_label).LabSym;
 
                          if (JumpLabel_far = JumpLabel_dist) or (JumpLabel_far = JumpLabel) then
                            { This is an infinite loop }
@@ -9182,9 +9182,9 @@ unit aoptx86;
                ) and
                GetNextInstruction(hp2, hp1_label) and
                (hp1_label.typ = ait_label) and
-               (TAILabel(hp1_label).labsym = TAICPU(hp1).oper[0]^.Ref^.Symbol) then
+               (TAILabel(hp1_label).LabSym = TAICPU(hp1).oper[0]^.Ref^.Symbol) then
                begin
-                 TAILabel(hp1_label).labsym.DecRefs;
+                 TAILabel(hp1_label).LabSym.DecRefs;
                  if (TAICPU(hp1).condition in [C_NE, C_NZ]) then
                    begin
                      DebugMsg(SPeepholeOptimization + 'CMP/JNE/MOV/@Lbl -> NOP, since the MOV is only executed if the operands are equal (CmpJneMov2Nop)', p);
@@ -9226,8 +9226,8 @@ unit aoptx86;
                  immediate anyway, so no need to check }
                GetNextInstruction(hp2, p_label) and
                (p_label.typ = ait_label) and
-               (TAILabel(p_label).labsym.getrefs = 1) and
-               (JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol = TAILabel(p_label).labsym) and
+               (TAILabel(p_label).LabSym.getrefs = 1) and
+               (JumpTargetOp(TAICPU(hp1))^.Ref^.Symbol = TAILabel(p_label).LabSym) and
                GetNextInstruction(p_label, p_dist) and
                MatchInstruction(p_dist, A_SETcc, []) and
                (TAICPU(p_dist).condition in [C_E, C_Z]) and
@@ -9257,7 +9257,7 @@ unit aoptx86;
                          TAICPU(hp1).LoadReg(0, NewReg);
 
                          { This is now a dead label }
-                         TAILabel(p_label).labsym.decrefs;
+                         TAILabel(p_label).LabSym.decrefs;
 
                          { Prefer adding before the next instruction so the FLAGS
                            register is deallocated first  }
@@ -9785,12 +9785,12 @@ unit aoptx86;
            if (TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0) then
              TAICPU(p).condition := inverse_cond(TAICPU(p).condition);
 
-           TAILabel(hp3).labsym.DecRefs;
+           TAILabel(hp3).LabSym.DecRefs;
 
            { If this isn't the only reference to the middle label, we can
              still make a saving - only that the first jump and everything
              that follows will remain. }
-           if (TAILabel(hp3).labsym.getrefs = 0) then
+           if (TAILabel(hp3).LabSym.getrefs = 0) then
              begin
                if (TAICPU(hp1).oper[0]^.Val = 1) and (TAICPU(hp4).oper[0]^.Val = 0) then
                  DebugMsg(SPeepholeOptimization + 'J(c)Mov1JmpMov0 -> Set(~c)',p)
@@ -9810,7 +9810,7 @@ unit aoptx86;
                { Don't decrement reference count before the removal loop
                  above, otherwise GetNextInstruction won't stop on the
                  the label }
-               TAILabel(hp5).labsym.DecRefs;
+               TAILabel(hp5).LabSym.DecRefs;
              end
            else
              begin
@@ -10291,7 +10291,7 @@ unit aoptx86;
                                         (
                                           { Allow the frame pointer if it's not being used by the procedure as such }
                                           Assigned(CurrentProcInfo) and
-                                          (CurrentProcInfo.framepointer <> NR_FRAME_POINTER_REG)
+                                          (CurrentProcInfo.FramePointer <> NR_FRAME_POINTER_REG)
                                         )
                                       )
                                       {$ifdef x86_64} and (ref^.Base <> NR_RIP) {$endif x86_64}
@@ -10308,7 +10308,7 @@ unit aoptx86;
                                         (
                                           { Allow the frame pointer if it's not being used by the procedure as such }
                                           Assigned(CurrentProcInfo) and
-                                          (CurrentProcInfo.framepointer <> NR_FRAME_POINTER_REG)
+                                          (CurrentProcInfo.FramePointer <> NR_FRAME_POINTER_REG)
                                         )
                                       )
                                       {$ifdef x86_64} and (ref^.Index <> NR_RIP) {$endif x86_64} and
@@ -10681,7 +10681,7 @@ unit aoptx86;
                         DebugMsg(SPeepholeOptimization + 'STC/CLC; JMP/Jcc; ... J(N)C; .Lbl -> JMP/Jcc .Lbl (StcClcJ(~c)Lbl2Jmp)', p);
 
                         JumpLabel.decrefs;
-                        TAICPU(hp1).loadsymbol(0, TAILabel(hp1_dist).labsym, 0);
+                        TAICPU(hp1).loadsymbol(0, TAILabel(hp1_dist).LabSym, 0);
 
                         RemoveCurrentP(p); { hp1 may not be the immediate next instruction }
                         Result := True;
@@ -10769,7 +10769,7 @@ unit aoptx86;
       }
       if GetNextInstruction(hp1, hp2) and
         (hp2.typ = ait_label) and
-        (TAILabel(hp2).labsym = TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)) and
+        (TAILabel(hp2).LabSym = TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)) and
         GetNextInstruction(hp2, hp3) and
         MatchInstruction(hp3, A_Jcc, []) and
         (
@@ -14275,7 +14275,7 @@ unit aoptx86;
         else
           fMidLabel := hp1;
 
-        if TAILabel(fMidLabel).labsym <> AFirstLabel then
+        if TAILabel(fMidLabel).LabSym <> AFirstLabel then
           { Not the correct label }
           fMidLabel := nil;
 
@@ -14353,7 +14353,7 @@ unit aoptx86;
             else
               fEndLabel := hp1;
 
-            if TAILabel(fEndLabel).labsym <> JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol then
+            if TAILabel(fEndLabel).LabSym <> JumpTargetOp(TAICPU(fSecondJump))^.Ref^.Symbol then
               { Second jump doesn't go to the end }
               fEndLabel := nil;
 
@@ -15000,8 +15000,8 @@ unit aoptx86;
                 MatchInstruction(hp2,A_JMP,[]) and (TAICPU(hp2).oper[0]^.Ref^.RefAddr=addr_full) and
                 GetNextInstruction(hp2,hp3) and
                 (hp3.typ=ait_label) and
-                (TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)=TAILabel(hp3).labsym) and
-                (TAILabel(hp3).labsym.getrefs=1) and
+                (TAsmLabel(TAICPU(p).oper[0]^.Ref^.Symbol)=TAILabel(hp3).LabSym) and
+                (TAILabel(hp3).LabSym.getrefs=1) and
                 GetNextInstruction(hp3,hp4) and
                 MatchInstruction(hp4,A_MOV,[]) and
                 MatchOpType(TAICPU(hp4),top_const,top_reg) and
@@ -15009,8 +15009,8 @@ unit aoptx86;
                 MatchOperand(TAICPU(hp1).oper[1]^,TAICPU(hp4).oper[1]^) and
                 GetNextInstruction(hp4,hp5) and
                 (hp5.typ=ait_label) and
-                (TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol)=TAILabel(hp5).labsym) and
-                (TAILabel(hp5).labsym.getrefs=1) then
+                (TAsmLabel(TAICPU(hp2).oper[0]^.Ref^.Symbol)=TAILabel(hp5).LabSym) and
+                (TAILabel(hp5).LabSym.getrefs=1) then
                 begin
                   AllocRegBetween(NR_FLAGS,p,hp4,UsedRegs);
                   DebugMsg(SPeepholeOptimization+'JccMovJmpMov2MovSetcc',p);

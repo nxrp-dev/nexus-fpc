@@ -52,7 +52,7 @@ implementation
        symconst,SymBase,symtype,symdef,SymSym,SymTable,defutil,defcmp,
        paramgr,
        { pass 1 }
-       pass_1,htypechk,
+       Pass_1,htypechk,
        nutils,ngenutil,nbas,ncal,nmem,nset,ncnv,ncon,nld,nflw,ninl,
        { parser }
        Scanner,
@@ -178,19 +178,19 @@ implementation
     function create_stmt_expr_block(resdef : TDef; out statements : TStatementNode;
         out resultvar : TTempCreateNode) : TNode;
       begin
-        result:=internalstatements(statements);
-        resultvar:=CTempCreateNode.create(resdef,resdef.Size,tt_persistent,
+        result:=InternalStatements(statements);
+        resultvar:=CTempCreateNode.Create(resdef,resdef.Size,tt_persistent,
                                           not is_anonymous_procdef(resdef));
-        addstatement(statements,resultvar);
+        AddStatement(statements,resultvar);
       end;
 
 
     procedure finish_stmt_expr_block(statements : TStatementNode;
         resultvar : TTempCreateNode; valuenode : TNode);
       begin
-        addstatement(statements,valuenode);
-        addstatement(statements,CTempDeleteNode.create_normal_temp(resultvar));
-        addstatement(statements,CTempRefNode.create(resultvar));
+        AddStatement(statements,valuenode);
+        AddStatement(statements,CTempDeleteNode.Create_Normal_Temp(resultvar));
+        AddStatement(statements,CTempRefNode.Create(resultvar));
       end;
 
 
@@ -217,17 +217,17 @@ implementation
             ex.free;
             if_a.free;
             else_a.free;
-            result:=CErrorNode.create;
+            result:=CErrorNode.Create;
             exit;
           end;
         result:=create_stmt_expr_block(resdef,statements,resultvar);
         if is_anonymous_procdef(resdef) then
-          finish_stmt_expr_block(statements,resultvar,CIfNode.create(ex,if_a,else_a))
+          finish_stmt_expr_block(statements,resultvar,CIfNode.Create(ex,if_a,else_a))
         else
           finish_stmt_expr_block(statements,resultvar,
-            CIfNode.create(ex,
-              CAssignmentNode.create(CTempRefNode.create(resultvar),if_a),
-              CAssignmentNode.create(CTempRefNode.create(resultvar),else_a)));
+            CIfNode.Create(ex,
+              CAssignmentNode.Create(CTempRefNode.Create(resultvar),if_a),
+              CAssignmentNode.Create(CTempRefNode.Create(resultvar),else_a)));
         exit;
       end;
 
@@ -248,7 +248,7 @@ implementation
           else_a:=statement
         else
           else_a:=nil;
-        result:=CIfNode.create(ex,if_a,else_a);
+        result:=CIfNode.Create(ex,if_a,else_a);
       end;
 
     { creates a block (list) of statements, til the next END token }
@@ -264,12 +264,12 @@ implementation
            begin
               if first=nil then
                 begin
-                   last:=CStatementNode.create(statement,nil);
+                   last:=CStatementNode.Create(statement,nil);
                    first:=last;
                 end
               else
                 begin
-                   last.right:=CStatementNode.create(statement,nil);
+                   last.right:=CStatementNode.Create(statement,nil);
                    last:=TStatementNode(last.right);
                 end;
               if not try_to_consume(_SEMICOLON) then
@@ -277,7 +277,7 @@ implementation
               consume_emptystats;
            end;
          consume(_END);
-         statements_til_end:=CBlockNode.create(first);
+         statements_til_end:=CBlockNode.Create(first);
          if Assigned(first) then
            statements_til_end.fileinfo:=first.fileinfo;
       end;
@@ -312,18 +312,18 @@ implementation
           CGMessage(type_e_ordinal_or_string_expr_expected);
           { create a valid tree }
           caseexpr.free;
-          caseexpr:=COrdConstNode.create(0,U32IntType,false);
+          caseexpr:=COrdConstNode.Create(0,U32IntType,false);
           { set error flag so no rangechecks are done }
           casedeferror:=true;
          end;
         { Create casenode }
-        result:=CCaseNode.create(caseexpr);
+        result:=CCaseNode.Create(caseexpr);
         consume(_OF);
       end;
 
 
     { parses the labels of one case block, including the colon }
-    procedure read_case_labels(casenode : TCaseNode; casedef : TDef; blockid : LongInt;
+    procedure read_case_labels(casenode : TCaseNode; casedef : TDef; BlockID : LongInt;
         casedeferror, caseofstring : boolean);
       var
         p : TNode;
@@ -336,14 +336,14 @@ implementation
             begin
               if (p.nodetype=rangen) then
                 begin
-                  TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,CWideCharType);
-                  TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,CWideCharType);
+                  TRangeNode(p).left:=CTypeConvNode.Create(TRangeNode(p).left,CWideCharType);
+                  TRangeNode(p).right:=CTypeConvNode.Create(TRangeNode(p).right,CWideCharType);
                   DoTypeCheckPass(TRangeNode(p).left);
                   DoTypeCheckPass(TRangeNode(p).right);
                 end
               else
                 begin
-                  p:=CTypeConvNode.create(p,CWideCharType);
+                  p:=CTypeConvNode.Create(p,CWideCharType);
                   DoTypeCheckPass(p);
                 end;
             end
@@ -353,13 +353,13 @@ implementation
                 begin
                   if (p.nodetype=ordconstn) then
                     begin
-                      p:=CTypeConvNode.create(p,CAnsiCharType);
+                      p:=CTypeConvNode.Create(p,CAnsiCharType);
                       DoTypeCheckPass(p);
                     end
                   else if (p.nodetype=rangen) then
                     begin
-                      TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,CAnsiCharType);
-                      TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,CAnsiCharType);
+                      TRangeNode(p).left:=CTypeConvNode.Create(TRangeNode(p).left,CAnsiCharType);
+                      TRangeNode(p).right:=CTypeConvNode.Create(TRangeNode(p).right,CAnsiCharType);
                       DoTypeCheckPass(TRangeNode(p).left);
                       DoTypeCheckPass(TRangeNode(p).right);
                     end;
@@ -375,13 +375,13 @@ implementation
 
               { type check for string case statements }
               if caseofstring and
-                is_conststring_or_constcharnode(TRangeNode(p).left) and
-                is_conststring_or_constcharnode(TRangeNode(p).right) then
+                Is_ConstString_Or_ConstCharNode(TRangeNode(p).left) and
+                Is_ConstString_Or_ConstCharNode(TRangeNode(p).right) then
               begin
                 { we need stringconstnodes, even if expression contains single chars }
-                sl1 := get_string_value(TRangeNode(p).left, TStringDef(casedef));
-                sl2 := get_string_value(TRangeNode(p).right, TStringDef(casedef));
-                if sl1.fullcompare(sl2) > 0 then
+                sl1 := Get_String_Value(TRangeNode(p).left, TStringDef(casedef));
+                sl2 := Get_String_Value(TRangeNode(p).right, TStringDef(casedef));
+                if sl1.FullCompare(sl2) > 0 then
                   CGMessage(parser_e_case_lower_less_than_upper_bound);
               end
 
@@ -390,8 +390,8 @@ implementation
                 Is_Subequal(casedef, TRangeNode(p).left.resultdef) and
                 Is_Subequal(casedef, TRangeNode(p).right.resultdef) then
                 begin
-                  hl1:=get_ordinal_value(TRangeNode(p).left);
-                  hl2:=get_ordinal_value(TRangeNode(p).right);
+                  hl1:=Get_Ordinal_Value(TRangeNode(p).left);
+                  hl2:=Get_Ordinal_Value(TRangeNode(p).right);
                   if hl1>hl2 then
                     CGMessage(parser_e_case_lower_less_than_upper_bound);
                   if not casedeferror then
@@ -404,30 +404,30 @@ implementation
                 CGMessage(parser_e_case_mismatch);
 
               if caseofstring then
-                casenode.addlabel(blockid,sl1,sl2)
+                casenode.AddLabel(BlockID,sl1,sl2)
               else
-                casenode.addlabel(blockid,hl1,hl2);
+                casenode.AddLabel(BlockID,hl1,hl2);
             end
           else
             begin
               { single value }
 
               { type check for string / ordinal case statements }
-              if (caseofstring and (not is_conststring_or_constcharnode(p))) or
+              if (caseofstring and (not Is_ConstString_Or_ConstCharNode(p))) or
                 ((not caseofstring) and (not Is_Subequal(casedef, p.resultdef))) then
                 CGMessage(parser_e_case_mismatch);
 
               if caseofstring then
                 begin
-                  sl1:=get_string_value(p, TStringDef(casedef));
-                  casenode.addlabel(blockid,sl1,sl1);
+                  sl1:=Get_String_Value(p, TStringDef(casedef));
+                  casenode.AddLabel(BlockID,sl1,sl1);
                 end
               else
                 begin
-                  hl1:=get_ordinal_value(p);
+                  hl1:=Get_Ordinal_Value(p);
                   if not casedeferror then
                     AdaptRange(casedef,hl1,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                  casenode.addlabel(blockid,hl1,hl1);
+                  casenode.AddLabel(BlockID,hl1,hl1);
                 end;
             end;
 
@@ -459,23 +459,23 @@ implementation
     function case_statement : TNode;
       var
         casedef : TDef;
-        blockid : LongInt;
+        BlockID : LongInt;
         casedeferror, caseofstring : boolean;
         casenode : TCaseNode;
       begin
         casenode:=read_case_head(casedef,casedeferror,caseofstring);
 
         { Parse all case blocks }
-        blockid:=0;
+        BlockID:=0;
         repeat
           { maybe an instruction has more case labels }
-          read_case_labels(casenode,casedef,blockid,casedeferror,caseofstring);
+          read_case_labels(casenode,casedef,BlockID,casedeferror,caseofstring);
 
           { add instruction block }
-          casenode.addblock(blockid,statement);
+          casenode.AddBlock(BlockID,statement);
 
           { next block }
-          inc(blockid);
+          inc(BlockID);
 
           if not(CurrentScanner.token in [_ELSE,_OTHERWISE,_END]) then
             consume(_SEMICOLON);
@@ -484,7 +484,7 @@ implementation
         if (CurrentScanner.token in [_ELSE,_OTHERWISE]) then
           begin
             consume_case_else;
-            casenode.addelseblock(statements_til_end);
+            casenode.AddElseBlock(statements_til_end);
           end
         else
           consume(_END);
@@ -496,7 +496,7 @@ implementation
     function case_stmt_expr : TNode;
       var
         casedef : TDef;
-        blockid : LongInt;
+        BlockID : LongInt;
         casedeferror, caseofstring : boolean;
         casenode : TCaseNode;
         resdef : TDef;
@@ -526,7 +526,7 @@ implementation
             exit(false);
 
           typcount:=hv-lv;
-          result:=not (casenode.labelcoverage<typcount);
+          result:=not (casenode.LabelCoverage<typcount);
         end;
 
       begin
@@ -535,11 +535,11 @@ implementation
         casenode:=read_case_head(casedef,casedeferror,caseofstring);
 
         { Parse all case branches }
-        blockid:=0;
+        BlockID:=0;
         repeat
-          read_case_labels(casenode,casedef,blockid,casedeferror,caseofstring);
-          casenode.addblock(blockid,read_branch);
-          inc(blockid);
+          read_case_labels(casenode,casedef,BlockID,casedeferror,caseofstring);
+          casenode.AddBlock(BlockID,read_branch);
+          inc(BlockID);
 
           if not(CurrentScanner.token in [_ELSE,_OTHERWISE,_END]) then
             consume(_SEMICOLON);
@@ -548,7 +548,7 @@ implementation
         if (CurrentScanner.token in [_ELSE,_OTHERWISE]) then
           begin
             consume_case_else;
-            casenode.addelseblock(read_branch);
+            casenode.AddElseBlock(read_branch);
             try_to_consume(_SEMICOLON);
             consume(_END);
           end
@@ -563,17 +563,17 @@ implementation
           begin
             { errors have already been reported }
             casenode.free;
-            result:=CErrorNode.create;
+            result:=CErrorNode.Create;
             exit;
           end;
         result:=create_stmt_expr_block(resdef,statements,resultvar);
         if not is_anonymous_procdef(resdef) then
           begin
-            for i:=0 to casenode.blocks.count-1 do
-              PCaseBlock(casenode.blocks[i])^.statement:=CAssignmentNode.create(
-                CTempRefNode.create(resultvar),PCaseBlock(casenode.blocks[i])^.statement);
-            if Assigned(casenode.elseblock) then
-              casenode.elseblock:=CAssignmentNode.create(CTempRefNode.create(resultvar),casenode.elseblock);
+            for i:=0 to casenode.Blocks.count-1 do
+              PCaseBlock(casenode.Blocks[i])^.statement:=CAssignmentNode.Create(
+                CTempRefNode.Create(resultvar),PCaseBlock(casenode.Blocks[i])^.statement);
+            if Assigned(casenode.ElseBlock) then
+              casenode.ElseBlock:=CAssignmentNode.Create(CTempRefNode.Create(resultvar),casenode.ElseBlock);
           end;
         finish_stmt_expr_block(statements,resultvar,casenode);
       end;
@@ -593,12 +593,12 @@ implementation
            begin
               if first=nil then
                 begin
-                   last:=CStatementNode.create(statement,nil);
+                   last:=CStatementNode.Create(statement,nil);
                    first:=last;
                 end
               else
                 begin
-                   TStatementNode(last).right:=CStatementNode.create(statement,nil);
+                   TStatementNode(last).right:=CStatementNode.Create(statement,nil);
                    last:=TStatementNode(last).right;
                 end;
               if not try_to_consume(_SEMICOLON) then
@@ -607,9 +607,9 @@ implementation
            end;
          consume(_UNTIL);
 
-         first:=CBlockNode.create(first);
+         first:=CBlockNode.Create(first);
          p_e:=comp_expr([ef_accept_equal]);
-         result:=CWhileRepeatNode.create(p_e,first,false,true);
+         result:=CWhileRepeatNode.Create(p_e,first,false,true);
       end;
 
 
@@ -623,7 +623,7 @@ implementation
          p_e:=comp_expr([ef_accept_equal]);
          consume(_DO);
          p_a:=statement;
-         result:=CWhileRepeatNode.create(p_e,p_a,true,false);
+         result:=CWhileRepeatNode.Create(p_e,p_a,true,false);
       end;
 
     { a helper function which is used both by "with" and "for-in loop" nodes }
@@ -634,7 +634,7 @@ implementation
            { equal type conversions }
            (
             (p.nodetype=typeconvn) and
-            (TTypeConvNode(p).convtype=tc_equal)
+            (TTypeConvNode(p).ConvType=tc_equal)
            ) or
            { constant array index }
            (
@@ -684,7 +684,7 @@ implementation
              hp:=hloopvar;
               while Assigned(hp) and
                     (hp.nodetype=typeconvn) and
-                    (TTypeConvNode(hp).convtype=tc_equal) do
+                    (TTypeConvNode(hp).ConvType=tc_equal) do
                begin
                  hp:=TUnaryNode(hp).left;
                end;
@@ -692,7 +692,7 @@ implementation
              if Assigned(hp) and
                 (hp.nodetype=loadn) then
                begin
-                 case TLoadNode(hp).symtableentry.typ of
+                 case TLoadNode(hp).SymTableEntry.typ of
                    staticvarsym,
                    localvarsym,
                    paravarsym :
@@ -707,14 +707,14 @@ implementation
                            (TLoadNode(hp).SymTable.SymTableLevel=MainProgramLevel) or
                            (TLoadNode(hp).SymTable.SymTableLevel=CurrentProcInfo.procdef.ParaST.SymTableLevel)
                           ) and
-                          (TAbstractVarSym(TLoadNode(hp).symtableentry).VarSpez=vs_value) and
-                          ([vo_is_thread_var,vo_is_typed_const] * TAbstractVarSym(TLoadNode(hp).symtableentry).VarOptions=[]) then
+                          (TAbstractVarSym(TLoadNode(hp).SymTableEntry).VarSpez=vs_value) and
+                          ([vo_is_thread_var,vo_is_typed_const] * TAbstractVarSym(TLoadNode(hp).SymTableEntry).VarOptions=[]) then
                          begin
                            { Assigning for-loop variable is allowed in MacPas }
                            if not(m_mac in CurrentSettings.ModeSwitches) then
                              begin
                                if not Assigned(loopvarsym) then
-                                 loopvarsym:=TAbstractVarSym(TLoadNode(hp).symtableentry);
+                                 loopvarsym:=TAbstractVarSym(TLoadNode(hp).SymTableEntry);
                                include(loopvarsym.VarOptions,vo_is_loop_counter);
                              end;
                          end
@@ -769,14 +769,14 @@ implementation
              if Assigned(loopvarsym) then
                exclude(loopvarsym.VarOptions,vo_is_loop_counter);
 
-             result:=CForNode.create(hloopvar,hfrom,hto,hblock,backward);
+             result:=CForNode.Create(hloopvar,hfrom,hto,hblock,backward);
 
              { only in tp and mac pascal mode, we care about the value of the loop counter on loop exit
 
                I am not sure though, if this is the right rule, at least in delphi the loop counter is undefined
                on loop exit, we assume the same in all FPC modes }
              if ([m_objfpc,m_fpc,m_delphi]*CurrentSettings.ModeSwitches)<>[] then
-               Include(TForNode(Result).loopflags,lnf_dont_mind_loopvar_on_exit);
+               Include(TForNode(Result).LoopFlags,lnf_dont_mind_loopvar_on_exit);
           end;
 
 
@@ -788,7 +788,7 @@ implementation
               hp:=skip_nodes_before_load(hloopvar);
               if Assigned(hp)and(hp.nodetype=loadn) then
                 begin
-                  loopvarsym:=TAbstractVarSym(TLoadNode(hp).symtableentry);
+                  loopvarsym:=TAbstractVarSym(TLoadNode(hp).SymTableEntry);
                   include(loopvarsym.VarOptions,vo_is_loop_counter);
                 end
               else
@@ -804,7 +804,7 @@ implementation
               hloopbody:=statement;
               if Assigned(loopvarsym) then
                 exclude(loopvarsym.VarOptions,vo_is_loop_counter);
-              result:=create_for_in_loop(hloopvar,hloopbody,expr);
+              result:=Create_For_In_Loop(hloopvar,hloopbody,expr);
 
               expr.free;
               expr := nil;
@@ -827,7 +827,7 @@ implementation
          else
            begin
              consume(_ASSIGNMENT); // fail
-             result:=CErrorNode.create;
+             result:=CErrorNode.Create;
            end;
       end;
 
@@ -865,13 +865,13 @@ implementation
              pushobjchild(withdef,parenthelperdef.ChildOf);
            { keep the original tobjectdef as owner, because that is used for
              visibility of the symtable }
-           st:=TWithSymTable.create(withdef,obj.SymTable.SymList,refnode.GetCopy);
+           st:=TWithSymTable.Create(withdef,obj.SymTable.SymList,refnode.GetCopy);
            SymTableStack.push(st);
            withsymtablelist.add(st);
            { push the symtable of the helper }
            if Assigned(parenthelperdef) then
              begin
-               st:=TWithSymTable.create(withdef,parenthelperdef.SymTable.SymList,refnode.GetCopy);
+               st:=TWithSymTable.Create(withdef,parenthelperdef.SymTable.SymList,refnode.GetCopy);
                SymTableStack.push(st);
                withsymtablelist.add(st);
              end;
@@ -884,12 +884,12 @@ implementation
          DoTypeCheckPass(p);
 
          if (p.nodetype=vecn) and
-            (vnf_memseg in TVecNode(p).vecnodeflags) then
+            (vnf_memseg in TVecNode(p).VecNodeFlags) then
            CGMessage(parser_e_no_with_for_variable_in_other_segments);
 
          { "with procvar" can never mean anything, so always try
            to call it in case it returns a record/object/... }
-         maybe_call_procvar(p,false);
+         Maybe_Call_ProcVar(p,false);
 
          if (p.resultdef.typ in [objectdef,recorddef,classrefdef]) or
            ((p.resultdef.typ=undefineddef) and (df_generic in CurrentProcInfo.procdef.DefOptions)) then
@@ -919,17 +919,17 @@ implementation
             else
               begin
                 { complex load, load in temp first }
-                newblock:=internalstatements(newstatement);
+                newblock:=InternalStatements(newstatement);
                 { when we can't take the address of p, load it in a temp }
                 { since we may need its address later on                 }
                 if not valid_for_addr(p,false) then
                   begin
-                    calltempnode:=CTempCreateNode.create(p.resultdef,p.resultdef.Size,tt_persistent,true);
-                    addstatement(newstatement,calltempnode);
-                    addstatement(newstatement,CAssignmentNode.create(
-                        CTempRefNode.create(calltempnode),
+                    calltempnode:=CTempCreateNode.Create(p.resultdef,p.resultdef.Size,tt_persistent,true);
+                    AddStatement(newstatement,calltempnode);
+                    AddStatement(newstatement,CAssignmentNode.Create(
+                        CTempRefNode.Create(calltempnode),
                         p));
-                    p:=CTempRefNode.create(calltempnode);
+                    p:=CTempRefNode.Create(calltempnode);
                     TypeCheckPass(p);
                   end;
                 { several object types have implicit dereferencing }
@@ -940,32 +940,32 @@ implementation
                 if hasimplicitderef then
                   hdef:=p.resultdef
                 else
-                  hdef:=CPointerDef.create(p.resultdef);
+                  hdef:=CPointerDef.Create(p.resultdef);
                 { load address of the value in a temp }
-                tempnode:=CTempCreateNode.create_withnode(hdef,sizeof(PInt),tt_persistent,true,p);
+                tempnode:=CTempCreateNode.Create_WithNode(hdef,sizeof(PInt),tt_persistent,true,p);
                 TypeCheckPass(TNode(tempnode));
                 valuenode:=p;
-                refnode:=CTempRefNode.create(tempnode);
+                refnode:=CTempRefNode.Create(tempnode);
                 fillchar(refnode.fileinfo,sizeof(TFilePosInfo),0);
                 { add address call for valuenode and deref for refnode if this
                   is not done implicitly }
                 if not hasimplicitderef then
                   begin
-                    valuenode:=CAddrNode.create_internal_nomark(valuenode);
-                    include(TAddrNode(valuenode).addrnodeflags,anf_typedaddr);
-                    refnode:=CDerefNode.create(refnode);
+                    valuenode:=CAddrNode.Create_Internal_NoMark(valuenode);
+                    include(TAddrNode(valuenode).AddrNodeFlags,anf_typedaddr);
+                    refnode:=CDerefNode.Create(refnode);
                     fillchar(refnode.fileinfo,sizeof(TFilePosInfo),0);
                   end;
-                addstatement(newstatement,tempnode);
-                addstatement(newstatement,CAssignmentNode.create(
-                    CTempRefNode.create(tempnode),
+                AddStatement(newstatement,tempnode);
+                AddStatement(newstatement,CAssignmentNode.Create(
+                    CTempRefNode.Create(tempnode),
                     valuenode));
                 TypeCheckPass(refnode);
               end;
             { Note: the symtable of the helper is pushed after the following
                     "case", the symtables of the helper's parents are passed in
                     the "case" branches }
-            withsymtablelist:=TFPObjectList.create(true);
+            withsymtablelist:=TFPObjectList.Create(true);
             case p.resultdef.typ of
               objectdef :
                 begin
@@ -1003,7 +1003,7 @@ implementation
                    if Assigned(helperdef) then
                      pushobjchild(helperdef,helperdef.ChildOf);
                    { push record symtable }
-                   st:=TWithSymTable.create(TRecordDef(p.resultdef),TRecordDef(p.resultdef).SymTable.SymList,refnode);
+                   st:=TWithSymTable.Create(TRecordDef(p.resultdef),TRecordDef(p.resultdef).SymTable.SymList,refnode);
                    SymTableStack.push(st);
                    withsymtablelist.add(st);
                 end;
@@ -1013,7 +1013,7 @@ implementation
                      InternalError(2012122802);
                    helperdef:=nil;
                    { push record symtable }
-                   st:=TWithSymTable.create(p.resultdef,nil,refnode);
+                   st:=TWithSymTable.Create(p.resultdef,nil,refnode);
                    SymTableStack.push(st);
                    withsymtablelist.add(st);
                 end;
@@ -1037,7 +1037,7 @@ implementation
                 if CurrentScanner.token<>_SEMICOLON then
                   p:=statement
                 else
-                  p:=CNothingNode.create;
+                  p:=CNothingNode.Create;
               end;
 
             { remove symtables in reverse order from the stack }
@@ -1049,11 +1049,11 @@ implementation
             { Finalize complex withnode with destroy of temp }
             if Assigned(newblock) then
              begin
-               addstatement(newstatement,p);
+               AddStatement(newstatement,p);
                if Assigned(tempnode) then
-                 addstatement(newstatement,CTempDeleteNode.create(tempnode));
+                 AddStatement(newstatement,CTempDeleteNode.Create(tempnode));
                if Assigned(calltempnode) then
-                 addstatement(newstatement,CTempDeleteNode.create(calltempnode));
+                 AddStatement(newstatement,CTempDeleteNode.Create(calltempnode));
                p:=newblock;
              end;
             result:=p;
@@ -1076,7 +1076,7 @@ implementation
                if CurrentScanner.token<>_SEMICOLON then
                 statement;
              end;
-            result:=CErrorNode.create;
+            result:=CErrorNode.Create;
           end;
       end;
 
@@ -1114,7 +1114,7 @@ implementation
            end;
          if (po_noreturn in CurrentProcInfo.procdef.ProcOptions) and (ExceptBlockCounter=0) then
            Message(parser_e_raise_with_noreturn_not_allowed);
-         p:=CRaiseNode.create(pobj,paddr,pframe);
+         p:=CRaiseNode.Create(pobj,paddr,pframe);
          raise_statement:=p;
       end;
 
@@ -1130,7 +1130,7 @@ implementation
 
 
     { parses "on [name:] type do" and pushes the exception symtable }
-    procedure read_on_head(out ot : TDef; out excepTSymtable : TSymTable);
+    procedure read_on_head(out ot : TDef; out ExceptSymTable : TSymTable);
       var
         sym : TLocalVarSym;
         ObjName,ObjRealName : TIDString;
@@ -1140,7 +1140,7 @@ implementation
         unit_found : boolean;
       begin
         ot:=GenErrorDef;
-        excepTSymtable:=nil;
+        ExceptSymTable:=nil;
         consume(_ON);
         if CurrentScanner.token=_ID then
           begin
@@ -1155,7 +1155,7 @@ implementation
               begin
                 single_type(ot,[]);
                 check_except_type_valid(ot);
-                sym:=CLocalVarSym.create(ObjRealName,vs_value,ot,[]);
+                sym:=CLocalVarSym.Create(ObjRealName,vs_value,ot,[]);
               end
             else
               begin
@@ -1176,7 +1176,7 @@ implementation
                   with "e: Exception" the e is not necessary }
                 if (srsym.typ=TypeSym) then
                   begin
-                    ot:=TTypeSym(srsym).typedef;
+                    ot:=TTypeSym(srsym).TypeDef;
                     parse_nested_types(ot,false,false,nil);
                     check_except_type_valid(ot);
                   end
@@ -1189,12 +1189,12 @@ implementation
                 { create dummy symbol so we don't need a special
                   case in ncgflw, and so that we always know the
                   type }
-                sym:=CLocalVarSym.create('$exceptsym',vs_value,ot,[]);
+                sym:=CLocalVarSym.Create('$exceptsym',vs_value,ot,[]);
               end;
-            excepTSymtable:=TSTTExceptSymTable.create;
-            excepTSymtable.DefOwner:=CurrentProcInfo.procdef;
-            excepTSymtable.InsertSym(sym);
-            SymTableStack.push(excepTSymtable);
+            ExceptSymTable:=TSTTExceptSymTable.Create;
+            ExceptSymTable.DefOwner:=CurrentProcInfo.procdef;
+            ExceptSymTable.InsertSym(sym);
+            SymTableStack.push(ExceptSymTable);
           end
         else
           consume(_ID);
@@ -1203,13 +1203,13 @@ implementation
 
 
     { appends the on node hp to the list p_specific and pops the exception symtable }
-    procedure add_on_node(hp : TNode; ot : TDef; excepTSymtable : TSymTable;
+    procedure add_on_node(hp : TNode; ot : TDef; ExceptSymTable : TSymTable;
         var p_specific, last : TNode);
       begin
          if ot.typ=errordef then
            begin
               hp.free;
-              hp:=CErrorNode.create;
+              hp:=CErrorNode.Create;
            end;
          if p_specific=nil then
            begin
@@ -1226,17 +1226,17 @@ implementation
          { that last and hp are errornodes (JM)                            }
          if last.nodetype = onn then
            begin
-             TOnNode(last).excepttype:=TObjectDef(ot);
-             TOnNode(last).excepTSymtable:=excepTSymtable;
+             TOnNode(last).ExceptType:=TObjectDef(ot);
+             TOnNode(last).ExceptSymTable:=ExceptSymTable;
            end;
          { remove exception symtable }
-         if Assigned(excepTSymtable) then
+         if Assigned(ExceptSymTable) then
            begin
-             SymTableStack.pop(excepTSymtable);
+             SymTableStack.pop(ExceptSymTable);
              if last.nodetype <> onn then
                begin
-                 excepTSymtable.free;
-                 excepTSymtable := nil;
+                 ExceptSymTable.free;
+                 ExceptSymTable := nil;
                end;
            end;
       end;
@@ -1248,7 +1248,7 @@ implementation
         p_default,p_specific,hp : TNode;
         ot : TDef;
         old_block_type : TBlockType;
-        excepTSymtable : TSymTable;
+        ExceptSymTable : TSymTable;
         oldcurrent_exceptblock: integer;
         filepostry : TFilePosInfo;
       begin
@@ -1270,26 +1270,26 @@ implementation
           begin
             if first=nil then
               begin
-                last:=CStatementNode.create(statement,nil);
+                last:=CStatementNode.Create(statement,nil);
                 first:=last;
               end
             else
               begin
-                TStatementNode(last).right:=CStatementNode.create(statement,nil);
+                TStatementNode(last).right:=CStatementNode.Create(statement,nil);
                 last:=TStatementNode(last).right;
               end;
             if not try_to_consume(_SEMICOLON) then
               break;
             consume_emptystats;
           end;
-        p_try_block:=CBlockNode.create(first);
+        p_try_block:=CBlockNode.Create(first);
 
         if try_to_consume(_FINALLY) then
           begin
             inc(ExceptBlockCounter);
             Current_ExceptBlock := ExceptBlockCounter;
             p_finally_block:=statements_til_end;
-            result:=CTryFinallyNode.create(p_try_block,p_finally_block);
+            result:=CTryFinallyNode.Create(p_try_block,p_finally_block);
             result.fileinfo:=filepostry;
           end
         else
@@ -1303,9 +1303,9 @@ implementation
               begin
                 last:=nil;
                 repeat
-                  read_on_head(ot,excepTSymtable);
-                  hp:=COnNode.create(nil,statement);
-                  add_on_node(hp,ot,excepTSymtable,p_specific,last);
+                  read_on_head(ot,ExceptSymTable);
+                  hp:=COnNode.Create(nil,statement);
+                  add_on_node(hp,ot,ExceptSymTable,p_specific,last);
                   if not try_to_consume(_SEMICOLON) then
                     break;
                   consume_emptystats;
@@ -1318,7 +1318,7 @@ implementation
             else
               p_default:=statements_til_end;
 
-            result:=CTryExceptNode.create(p_try_block,p_specific,p_default);
+            result:=CTryExceptNode.Create(p_try_block,p_specific,p_default);
           end;
         Block_Type:=old_block_type;
         Current_ExceptBlock := oldcurrent_exceptblock;
@@ -1341,7 +1341,7 @@ implementation
         begin
           while Assigned(onnode) and (onnode.nodetype=onn) do
             begin
-              TOnNode(onnode).right:=CAssignmentNode.create(CTempRefNode.create(temp),TOnNode(onnode).right);
+              TOnNode(onnode).right:=CAssignmentNode.Create(CTempRefNode.Create(temp),TOnNode(onnode).right);
               onnode:=TOnNode(onnode).left;
             end;
         end;
@@ -1351,7 +1351,7 @@ implementation
         p_default,p_specific,last,hp : TNode;
         ot : TDef;
         old_block_type : TBlockType;
-        excepTSymtable : TSymTable;
+        ExceptSymTable : TSymTable;
         oldcurrent_exceptblock: integer;
         trynode : TTryExceptNode;
         statements : TStatementNode;
@@ -1384,7 +1384,7 @@ implementation
             p_finally_block.free;
             Block_Type:=old_block_type;
             Current_ExceptBlock := oldcurrent_exceptblock;
-            result:=CErrorNode.create;
+            result:=CErrorNode.Create;
             exit;
           end;
 
@@ -1396,13 +1396,13 @@ implementation
           { on: catch specific exceptions }
           begin
             repeat
-              read_on_head(ot,excepTSymtable);
+              read_on_head(ot,ExceptSymTable);
               if ot.typ=errordef then
                 { the on node is replaced by an error node, don't use it for the result type }
-                hp:=COnNode.create(nil,expr(true))
+                hp:=COnNode.Create(nil,expr(true))
               else
-                hp:=COnNode.create(nil,read_branch);
-              add_on_node(hp,ot,excepTSymtable,p_specific,last);
+                hp:=COnNode.Create(nil,read_branch);
+              add_on_node(hp,ot,ExceptSymTable,p_specific,last);
               if not try_to_consume(_SEMICOLON) then
                 break;
               consume_emptystats;
@@ -1430,21 +1430,21 @@ implementation
         Block_Type:=old_block_type;
         Current_ExceptBlock := oldcurrent_exceptblock;
 
-        trynode:=TTryExceptNode(CTryExceptNode.create(p_try_block,p_specific,p_default));
+        trynode:=TTryExceptNode(CTryExceptNode.Create(p_try_block,p_specific,p_default));
         if not Assigned(resdef) then
           begin
             { errors have already been reported }
             trynode.free;
-            result:=CErrorNode.create;
+            result:=CErrorNode.Create;
             exit;
           end;
         result:=create_stmt_expr_block(resdef,statements,resultvar);
         if not is_anonymous_procdef(resdef) then
           begin
-            trynode.left:=CAssignmentNode.create(CTempRefNode.create(resultvar),trynode.left);
+            trynode.left:=CAssignmentNode.Create(CTempRefNode.Create(resultvar),trynode.left);
             update_onnode_assignment(resultvar,trynode.right);
             if Assigned(trynode.t1) then
-              trynode.t1:=CAssignmentNode.create(CTempRefNode.create(resultvar),trynode.t1);
+              trynode.t1:=CAssignmentNode.Create(CTempRefNode.Create(resultvar),trynode.t1);
           end;
         finish_stmt_expr_block(statements,resultvar,trynode);
       end;
@@ -1473,7 +1473,7 @@ implementation
         asmstat : TAsmNode;
         reg     : TRegister;
         asmreader : TBaseAsmReader;
-        entrypos : TFilePosInfo;
+        EntryPos : TFilePosInfo;
         hl : TAsmList;
       begin
          Inside_Asm_Statement:=true;
@@ -1483,19 +1483,19 @@ implementation
          { apply all switch changes as the assembler readers doesn't do so }
          FlushPendingSwitchesState;
 
-         if Assigned(asmmodeinfos[CurrentSettings.AsmMode]) then
+         if Assigned(asmmodeinfos[Ord(CurrentSettings.AsmMode)]) then
            begin
-             asmreader:=asmmodeinfos[CurrentSettings.AsmMode]^.CAsmReader.create;
-             entrypos:=CurrentFilePos;
+             asmreader:=asmmodeinfos[Ord(CurrentSettings.AsmMode)]^.CAsmReader.Create;
+             EntryPos:=CurrentFilePos;
              hl:=asmreader.assemble as TAsmList;
              if (not hl.empty) then
                begin
                  { mark boundaries of assembler block, this is necessary for optimizer }
-                 hl.insert(TAIMarker.create(mark_asmblockstart));
-                 hl.concat(TAIMarker.create(mark_asmblockend));
+                 hl.insert(TAIMarker.Create(mark_asmblockstart));
+                 hl.concat(TAIMarker.Create(mark_asmblockend));
                end;
-             asmstat:=CAsmNode.create(hl);
-             asmstat.fileinfo:=entrypos;
+             asmstat:=CAsmNode.Create(hl);
+             asmstat.fileinfo:=EntryPos;
              asmreader.free;
              asmreader := nil;
            end
@@ -1511,7 +1511,7 @@ implementation
          { Force an empty register list for pure assembler routines,
            so that pass2 won't allocate volatile registers for them. }
          if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
-           Include(asmstat.asmnodeflags,asmnf_has_registerlist);
+           Include(asmstat.AsmNodeFlags,asmnf_has_registerlist);
 
          { END is read, got a list of changed registers? }
          if try_to_consume(_LECKKLAMMER) then
@@ -1547,7 +1547,7 @@ implementation
                   if not try_to_consume(_COMMA) then
                     break;
                 until false;
-                Include(asmstat.asmnodeflags,asmnf_has_registerlist);
+                Include(asmstat.AsmNodeFlags,asmnf_has_registerlist);
               end;
              consume(_RECKKLAMMER);
            end;
@@ -1596,8 +1596,8 @@ implementation
       begin
         consume(_INLINE);
         consume(_LKLAMMER);
-        hl:=TAsmList.create;
-        asmstat:=CAsmNode.create(hl);
+        hl:=TAsmList.Create;
+        asmstat:=CAsmNode.Create(hl);
         asmstat.fileinfo:=CurrentFilePos;
         tokenbuf:=TDynamicArray.Create(16);
         cur_line:=0;
@@ -1713,8 +1713,8 @@ implementation
         tokenbuf.free;
         tokenbuf := nil;
         { mark boundaries of assembler block, this is necessary for optimizer }
-        hl.insert(TAIMarker.create(mark_asmblockstart));
-        hl.concat(TAIMarker.create(mark_asmblockend));
+        hl.insert(TAIMarker.Create(mark_asmblockstart));
+        hl.concat(TAIMarker.Create(mark_asmblockend));
         { Mark procedure that it has assembler blocks }
         include(CurrentProcInfo.flags,pi_has_assembler_block);
         { Assume the function result is always used }
@@ -1745,7 +1745,7 @@ implementation
                 if (CurrentScanner.token<>_INTCONST) and (CurrentScanner.token<>_ID) then
                   begin
                     Message(sym_e_label_not_found);
-                    code:=CErrorNode.create;
+                    code:=CErrorNode.Create;
                   end
                 else
                   begin
@@ -1778,7 +1778,7 @@ implementation
                      if srsym.typ<>labelsym then
                        begin
                           Message(sym_e_id_is_no_label_id);
-                          code:=CErrorNode.create;
+                          code:=CErrorNode.Create;
                        end
                      else
                        begin
@@ -1790,10 +1790,10 @@ implementation
                                Message(parser_e_goto_outside_proc);
                              include(CurrentProcInfo.flags,pi_has_global_goto);
                              if Is_Nested_PD(CurrentProcInfo.procdef) then
-                               CurrentProcInfo.set_needs_parentfp(srsym.owner.SymTableLevel);
+                               CurrentProcInfo.Set_Needs_ParentFP(srsym.owner.SymTableLevel);
                            end;
-                         code:=CGotoNode.create(TLabelSym(srsym));
-                         TGotoNode(code).labelsym:=TLabelSym(srsym);
+                         code:=CGotoNode.Create(TLabelSym(srsym));
+                         TGotoNode(code).LabelSym:=TLabelSym(srsym);
                          { set flag that this label is used }
                          TLabelSym(srsym).used:=true;
                        end;
@@ -1802,7 +1802,7 @@ implementation
            _BEGIN :
              begin
                code:=statement_block(_BEGIN);
-               Include(TBlockNode(code).blocknodeflags, bnf_strippable);
+               Include(TBlockNode(code).BlockNodeFlags, bnf_strippable);
              end;
            _IF :
              code:=if_statement;
@@ -1825,13 +1825,13 @@ implementation
            _ELSE,
            _UNTIL,
            _END:
-             code:=CNothingNode.create;
+             code:=CNothingNode.Create;
            _FAIL :
              begin
                 if (CurrentProcInfo.procdef.ProcTypeOption<>potype_constructor) then
                   Message(parser_e_fail_only_in_constructor);
                 consume(_FAIL);
-                code:=CNodeUtils.call_fail_node;
+                code:=CNodeUtils.Call_Fail_Node;
              end;
            _ASM :
              begin
@@ -1894,13 +1894,13 @@ implementation
                      end;
 
                    TLabelSym(srsym).defined:=true;
-                   p:=CLabelNode.create(nil,TLabelSym(srsym));
+                   p:=CLabelNode.Create(nil,TLabelSym(srsym));
                    TLabelSym(srsym).code:=p;
                  end
                 else
                  begin
                    Message1(sym_e_label_used_and_not_defined,s);
-                   p:=CNothingNode.create;
+                   p:=CNothingNode.Create;
                  end;
               end;
 
@@ -1910,15 +1910,15 @@ implementation
                    begin
                      astatement:=statement();
                      TypeCheckPass(astatement);
-                     p:=CBlockNode.create(CStatementNode.create(p,CStatementNode.create(astatement,nil)));
-                     Include(TBlockNode(p).blocknodeflags, bnf_strippable);
+                     p:=CBlockNode.Create(CStatementNode.Create(p,CStatementNode.Create(astatement,nil)));
+                     Include(TBlockNode(p).BlockNodeFlags, bnf_strippable);
                    end;
                end
              else
                { change a load of a procvar to a call. this is also
                  supported in fpc mode }
                if p.nodetype in [vecn,derefn,typeconvn,subscriptn,loadn] then
-                 maybe_call_procvar(p,false);
+                 Maybe_Call_ProcVar(p,false);
 
              { blockn support because a read/write is changed into a blocknode
                with a separate statement for each read/write operation (JM)
@@ -1930,10 +1930,10 @@ implementation
              if not(p.nodetype in [nothingn,errorn,calln,ifn,assignn,breakn,inlinen,
                                    continuen,labeln,blockn,exitn,goton]) or
                 ((p.nodetype=inlinen) and
-                 not TInlineNode(p).may_ignore_result) or
+                 not TInlineNode(p).May_Ignore_Result) or
                 ((p.nodetype=calln) and
-                 (Assigned(TCallNode(p).procdefinition)) and
-                 (TCallNode(p).procdefinition.ProcTypeOption=potype_operator)) then
+                 (Assigned(TCallNode(p).ProcDefinition)) and
+                 (TCallNode(p).ProcDefinition.ProcTypeOption=potype_operator)) then
                Message(parser_e_illegal_expression);
 
              if not Assigned(p.resultdef) then
@@ -1946,20 +1946,20 @@ implementation
                 - extended syntax checking }
              if (p.nodetype=calln) then
                begin
-                 exclude(TCallNode(p).callnodeflags,cnf_return_value_used);
+                 exclude(TCallNode(p).CallNodeFlags,cnf_return_value_used);
 
                  { in $x- state, the function result must not be ignored }
                  if not(cs_extsyntax in CurrentSettings.ModuleSwitches) and
                     not(Is_Void(p.resultdef)) and
                     { can be nil in case there was an error in the expression }
-                    Assigned(TCallNode(p).procdefinition) and
+                    Assigned(TCallNode(p).ProcDefinition) and
                     { allow constructor calls to drop the result if they are
                       called as instance methods instead of class methods }
                     not(
-                      (TCallNode(p).procdefinition.ProcTypeOption=potype_constructor) and
-                      Is_Class_Or_Object(TProcDef(TCallNode(p).procdefinition).struct) and
-                      Assigned(TCallNode(p).methodpointer) and
-                      (TNode(TCallNode(p).methodpointer).resultdef.typ=objectdef)
+                      (TCallNode(p).ProcDefinition.ProcTypeOption=potype_constructor) and
+                      Is_Class_Or_Object(TProcDef(TCallNode(p).ProcDefinition).struct) and
+                      Assigned(TCallNode(p).MethodPointer) and
+                      (TNode(TCallNode(p).MethodPointer).resultdef.typ=objectdef)
                     ) then
                    Message(parser_e_illegal_expression);
                end;
@@ -1992,12 +1992,12 @@ implementation
            begin
               if first=nil then
                 begin
-                   last:=CStatementNode.create(statement,nil);
+                   last:=CStatementNode.Create(statement,nil);
                    first:=last;
                 end
               else
                 begin
-                   TStatementNode(last).right:=CStatementNode.create(statement,nil);
+                   TStatementNode(last).right:=CStatementNode.Create(statement,nil);
                    last:=TStatementNode(last).right;
                 end;
               if ((CurrentScanner.token=_END) or (CurrentScanner.token=_FINALIZATION)) then
@@ -2021,7 +2021,7 @@ implementation
          if (starttoken<>_INITIALIZATION) or (CurrentScanner.token<>_FINALIZATION) then
            consume(_END);
 
-         last:=CBlockNode.create(first);
+         last:=CBlockNode.Create(first);
          last.fileinfo:=filepos;
          statement_block:=last;
       end;
@@ -2078,7 +2078,7 @@ implementation
                begin
                  { Only need to set the framepointer, the locals will
                    be inserted with the correct reference in tcgasmnode.pass_generate_code }
-                 CurrentProcInfo.framepointer:=NR_STACK_POINTER_REG;
+                 CurrentProcInfo.FramePointer:=NR_STACK_POINTER_REG;
                end;
            end;
 

@@ -271,7 +271,7 @@ implementation
         { parsing a proc or procvar ? }
         currparast:=TParaSymTable(pd.ParaST);
         { reset }
-        sc:=TFPObjectList.create(false);
+        sc:=TFPObjectList.Create(false);
         defaultrequired:=false;
         ParaNr:=0;
         Block_Type:=bt_var;
@@ -319,7 +319,7 @@ implementation
           sc.clear;
           repeat
             inc(ParaNr);
-            vs:=CParaVarSym.create(CurrentScanner.orgpattern,ParaNr*10,VarSpez,GenErrorDef,[]);
+            vs:=CParaVarSym.Create(CurrentScanner.orgpattern,ParaNr*10,VarSpez,GenErrorDef,[]);
             currparast.InsertSym(vs);
             if Assigned(vs.owner) then
              sc.add(vs)
@@ -331,7 +331,7 @@ implementation
           if parseprocvar<>pv_none then
            begin
              { inline procvar definitions are always nested procvars }
-             pv:=CProcVarDef.create(NormalFunctionLevel+1,true);
+             pv:=CProcVarDef.Create(NormalFunctionLevel+1,true);
              if CurrentScanner.token=_LKLAMMER then
                parse_parameter_dec(pv);
              if parseprocvar=pv_func then
@@ -374,7 +374,7 @@ implementation
                  begin
                    consume(_CONST);
                    srsym:=Search_System_Type('TVARREC');
-                   TArrayDef(hdef).ElementDef:=TTypeSym(srsym).typedef;
+                   TArrayDef(hdef).ElementDef:=TTypeSym(srsym).TypeDef;
                    include(TArrayDef(hdef).ArrayOptions,ado_IsArrayOfConst);
                  end
                 else
@@ -586,10 +586,10 @@ implementation
               for i:=0 to genericparams.count-1 do
                 begin
                   sym:=TTypeSym(genericparams[i]);
-                  if (sym.typ<>constsym) and TStoredDef(sym.typedef).IsRegistered then
+                  if (sym.typ<>constsym) and TStoredDef(sym.TypeDef).IsRegistered then
                     begin
-                      sym.typedef.free;
-                      sym.typedef:=nil;
+                      sym.TypeDef.free;
+                      sym.TypeDef:=nil;
                     end;
                   sym.free;
                   sym := nil;
@@ -695,10 +695,10 @@ implementation
                     error:=true;
                     continue;
                   end;
-                module:=Find_Module_From_SymTable(TTypeSym(typesrsym).typedef.owner);
+                module:=Find_Module_From_SymTable(TTypeSym(typesrsym).TypeDef.owner);
                 if not Assigned(module) then
                   InternalError(2016112803);
-                specializename:=specializename+'_$'+HexStr(module.ModuleID,8)+'$$'+TTypeSym(typesrsym).typedef.UniqueIDStr;
+                specializename:=specializename+'_$'+HexStr(module.ModuleID,8)+'$$'+TTypeSym(typesrsym).TypeDef.UniqueIDStr;
                 if i>0 then
                   prettyname:=prettyname+',';
                 prettyname:=prettyname+TTypeSym(typesrsym).prettyname;
@@ -721,7 +721,7 @@ implementation
             if not Assigned(module) then
               InternalError(2022102105);
 
-            hierarchy:=TTypeSym(typesrsym).typedef.ownerhierarchyname;
+            hierarchy:=TTypeSym(typesrsym).TypeDef.ownerhierarchyname;
             if hierarchy<>'' then
               hierarchy:='.'+hierarchy;
 
@@ -743,7 +743,7 @@ implementation
             node:=factor(false,[ef_type_only,ef_had_specialize]);
             if node.nodetype=typen then
               begin
-                sp:=TTypeNode(node).typedef.TypeSym.name;
+                sp:=TTypeNode(node).TypeDef.TypeSym.name;
               end
             else
               sp:='';
@@ -776,13 +776,13 @@ implementation
                     messagepos1(declsym.fileinfo,sym_e_generic_type_param_decl,declsym.realname);
                     result:=false;
                   end;
-                if ((implsym.typ=TypeSym) and (df_genconstraint in impltype.typedef.DefOptions)) or
+                if ((implsym.typ=TypeSym) and (df_genconstraint in impltype.TypeDef.DefOptions)) or
                     (implsym.typ=constsym) then
                   begin
                     if implsym.typ=constsym then
                       fileinfo:=impltype.fileinfo
                     else
-                      fileinfo:=TStoredDef(impltype.typedef).GenConstraintData.fileinfo;
+                      fileinfo:=TStoredDef(impltype.TypeDef).GenConstraintData.fileinfo;
                     messagepos(fileinfo,parser_e_generic_constraints_not_allowed_here);
                     result:=false;
                   end;
@@ -855,8 +855,8 @@ implementation
                ImplIntf:=nil;
                if Assigned(srsym) and
                   (srsym.typ=TypeSym) and
-                  (TTypeSym(srsym).typedef.typ=objectdef) then
-                 ImplIntf:=Find_Implemented_Interface(TObjectDef(astruct),TObjectDef(TTypeSym(srsym).typedef));
+                  (TTypeSym(srsym).TypeDef.typ=objectdef) then
+                 ImplIntf:=Find_Implemented_Interface(TObjectDef(astruct),TObjectDef(TTypeSym(srsym).TypeDef));
                if ImplIntf=nil then
                  begin
                    Message(parser_e_interface_id_expected);
@@ -870,8 +870,8 @@ implementation
                  { in case of a generic or specialized interface we need to use the
                    name of the def instead of the symbol, so that always the correct
                    name is used }
-                 if [df_generic,df_specialization]*TTypeSym(srsym).typedef.DefOptions<>[] then
-                   sp:=TObjectDef(TTypeSym(srsym).typedef).ObjName^;
+                 if [df_generic,df_specialization]*TTypeSym(srsym).TypeDef.DefOptions<>[] then
+                   sp:=TObjectDef(TTypeSym(srsym).TypeDef).ObjName^;
                { must be a directly implemented interface }
                if Assigned(ImplIntf.ImplementsGetter) then
                  Message2(parser_e_implements_no_mapping,ImplIntf.IntfDef.TypeName,astruct.ObjRealName^);
@@ -912,20 +912,20 @@ implementation
                    but we need to do this before consume_proc_name frees the
                    type parameters of the class part }
                  if (srsym.typ=TypeSym) and
-                     (TTypeSym(srsym).typedef.typ in [objectdef,recorddef]) and
-                     TStoredDef(TTypeSym(srsym).typedef).Is_Generic and
+                     (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) and
+                     TStoredDef(TTypeSym(srsym).TypeDef).Is_Generic and
                      Assigned(genericparams) then
                    { this is recoverable, so no further action necessary }
-                   check_generic_parameters(TStoredDef(TTypeSym(srsym).typedef));
+                   check_generic_parameters(TStoredDef(TTypeSym(srsym).TypeDef));
 
                  { consume proc name }
                  procstartfilepos:=CurrentTokenPos;
                  consume_proc_name;
                  { qualifier is class name ? }
                  if (srsym.typ=TypeSym) and
-                    (TTypeSym(srsym).typedef.typ in [objectdef,recorddef]) then
+                    (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) then
                   begin
-                    astruct:=TAbstractRecordDef(TTypeSym(srsym).typedef);
+                    astruct:=TAbstractRecordDef(TTypeSym(srsym).TypeDef);
                     if (CurrentScanner.token<>_POINT) then
                       if (potype in [potype_class_constructor,potype_class_destructor]) then
                         sp:=lower(sp)
@@ -939,7 +939,7 @@ implementation
                          aprocsym:=TProcSym(srsym)
                        else
                        if (srsym.typ=TypeSym) and
-                          (TTypeSym(srsym).typedef.typ in [objectdef,recorddef]) then
+                          (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) then
                          begin
                            searchagain:=true;
                            consume(_POINT);
@@ -1044,7 +1044,7 @@ implementation
                            end
                          else if (srsym.typ=TypeSym) and
                              (sp_generic_dummy in srsym.SymOptions) and
-                             (TTypeSym(srsym).typedef.typ=undefineddef) and
+                             (TTypeSym(srsym).TypeDef.typ=undefineddef) and
                              not Assigned(genericparams) then
                            begin
                              { this is a generic dummy symbol that has not yet
@@ -1081,13 +1081,13 @@ implementation
                   begin
                     aprocsym:=TProcSym(insertst.Find(sp));
                     if aprocsym=nil then
-                      aprocsym:=CProcSym.create('$'+sp);
+                      aprocsym:=CProcSym.Create('$'+sp);
                   end
                 else
                 if (potype in [potype_class_constructor,potype_class_destructor]) then
-                  aprocsym:=CProcSym.create('$'+lower(sp))
+                  aprocsym:=CProcSym.Create('$'+lower(sp))
                 else
-                  aprocsym:=CProcSym.create(orgsp);
+                  aprocsym:=CProcSym.Create(orgsp);
                 if ppf_anonymous in flags then
                   include(aprocsym.SymOptions,sp_internal);
                 if addgendummy then
@@ -1106,7 +1106,7 @@ implementation
               break;
             checkstack:=checkstack^.next;
           end;
-        pd:=CProcDef.create(st.SymTableLevel+1,not Assigned(GenericDef));
+        pd:=CProcDef.Create(st.SymTableLevel+1,not Assigned(GenericDef));
         pd.struct:=astruct;
         pd.ProcSym:=aprocsym;
         pd.ProcTypeOption:=potype;
@@ -1140,7 +1140,7 @@ implementation
                   begin
                      TSym(genericparams[i]).RegisterSym;
                      if TSym(genericparams[i]).typ=TypeSym then
-                       TStoredDef(TTypeSym(genericparams[i]).typedef).RegisterDef;
+                       TStoredDef(TTypeSym(genericparams[i]).TypeDef).RegisterDef;
                   end;
                 insert_generic_parameter_types(pd,nil,genericparams,false);
                 { the list is no longer required }
@@ -1163,7 +1163,7 @@ implementation
                   begin
                     { overloading generic routines with non-generic types is not
                       allowed, so we create a procsym as dummy }
-                    DummySym:=CProcSym.create(orgspnongen);
+                    DummySym:=CProcSym.Create(orgspnongen);
                     if Assigned(astruct) then
                       astruct.SymTable.InsertSym(DummySym)
                     else
@@ -1952,7 +1952,7 @@ begin
     begin
        { any type of parameter is allowed here! }
        pt:=comp_expr(true);
-       if is_constintnode(pt) then
+       if Is_ConstIntNode(pt) then
          begin
            include(pd.ProcOptions,po_msgint);
            pd.MessageInf.i:=pt.Value;
@@ -1973,7 +1973,7 @@ begin
   if pd.typ<>procdef then
     InternalError(200604301);
   pt:=comp_expr([ef_accept_equal]);
-  if is_constintnode(pt) then
+  if Is_ConstIntNode(pt) then
     if (TOrdConstNode(pt).Value<int64(low(LongInt))) or (TOrdConstNode(pt).Value>int64(high(LongInt))) then
       message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
     else
@@ -2059,7 +2059,7 @@ begin
     end;
   pt:=comp_expr([ef_accept_equal]);
   { message is 1-character long }
-  if is_constcharnode(pt) then
+  if Is_ConstCharNode(pt) then
     begin
       include(pd.ProcOptions,po_msgstr);
       TProcDef(pd).MessageInf.str:=StringDup(chr(byte(TOrdConstNode(pt).Value.uvalue and $FF)));
@@ -2069,10 +2069,10 @@ begin
       include(pd.ProcOptions,po_msgstr);
       if (TStringConstNode(pt).len>255) then
         Message(parser_e_message_string_too_long);
-      TProcDef(pd).MessageInf.str:=StringDup(TStringConstNode(pt).asconstpchar);
+      TProcDef(pd).MessageInf.str:=StringDup(TStringConstNode(pt).AsConstPChar);
     end
   else
-   if is_constintnode(pt) and
+   if Is_ConstIntNode(pt) and
       (Is_Class(TProcDef(pd).struct) or
       Is_ObjectPascal_Helper(TProcDef(pd).struct)) then
     begin
@@ -2088,7 +2088,7 @@ begin
   { check whether the selector name is valid in case of Objective-C }
   if (po_msgstr in pd.ProcOptions) and
      Is_ObjC_Class_Or_Protocol(TProcDef(pd).struct) and
-     not objcvalidselectorname(@TProcDef(pd).MessageInf.str^[1],length(TProcDef(pd).MessageInf.str^)) then
+     not ObjCValidSelectorName(@TProcDef(pd).MessageInf.str^[1],length(TProcDef(pd).MessageInf.str^)) then
     Message1(type_e_invalid_objc_selector_name,TProcDef(pd).MessageInf.str^);
   pt.free;
   pt := nil;

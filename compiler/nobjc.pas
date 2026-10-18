@@ -36,17 +36,17 @@ uses
 type
   TObjCSelectorNode = class(TUnaryNode)
    public
-    constructor create(formethod: TNode);
-    function pass_typecheck: TNode;override;
-    function pass_1: TNode;override;
+    constructor Create(AForMethod: TNode);
+    function Pass_TypeCheck: TNode;override;
+    function Pass_1: TNode;override;
   end;
   TObjCSelectorNodeClass = class of TObjCSelectorNode;
 
   TObjCProtocolNode = class(TUnaryNode)
    public
-    constructor create(forprotocol: TNode);
-    function pass_typecheck: TNode;override;
-    function pass_1: TNode;override;
+    constructor Create(AForProtocol: TNode);
+    function Pass_TypeCheck: TNode;override;
+    function Pass_1: TNode;override;
   end;
   TObjCProtocolNodeClass = class of TObjCProtocolNode;
 
@@ -58,7 +58,7 @@ implementation
 
 uses
   GlobType,Globals,
-  Verbose,pass_1,
+  Verbose,Pass_1,
   symdef,symconst,
   ncon,ncal,
   objcutil,
@@ -69,63 +69,63 @@ uses
                             TOBJCSELECTORNODE
 *****************************************************************************}
 
-constructor TObjCSelectorNode.create(formethod: TNode);
+constructor TObjCSelectorNode.Create(AForMethod: TNode);
   begin
-    inherited create(objcselectorn,formethod);
+    inherited Create(objcselectorn,AForMethod);
   end;
 
 
-function TObjCSelectorNode.pass_typecheck: TNode;
+function TObjCSelectorNode.Pass_TypeCheck: TNode;
   var
-    len: LongInt;
-    s: shortstring;
+    lLength: LongInt;
+    lString: ShortString;
   begin
-    s:='';
+    lString:='';
     if not(m_objectivec1 in CurrentSettings.ModeSwitches) then
       Message(parser_f_modeswitch_objc_required);
-    result:=nil;
-    TypeCheckPass(left);
+    Result:=nil;
+    TypeCheckPass(Left);
     { argument can be
        a) an objc method
        b) a pchar, zero-based chararray or ansistring
     }
-    case left.nodetype of
+    case Left.NodeType of
       loadn:
         begin
-          if (left.resultdef.typ=procdef) and
-             (po_objc in TProcDef(left.resultdef).ProcOptions) then
+          if (Left.ResultDef.typ=procdef) and
+             (po_objc in TProcDef(Left.ResultDef).ProcOptions) then
             begin
               { ok }
             end
           else
-            CGMessage1(type_e_expected_objc_method_but_got,left.resultdef.TypeName);
+            CGMessage1(type_e_expected_objc_method_but_got,Left.ResultDef.TypeName);
         end;
       stringconstn:
         begin
-          if not objcvalidselectorname(TStringConstNode(left).asconstpchar,
-                                       TStringConstNode(left).len) then
+          if not ObjCValidSelectorName(TStringConstNode(Left).AsConstPChar,
+                                       TStringConstNode(Left).len) then
             begin
-              len:=TStringConstNode(left).len;
-              if (len>255) then
-                len:=255;
-              SetLength(s,len);
-              if len>0 then
-                move(TStringConstNode(left).valueas[0],s[1],len);
-              CGMessage1(type_e_invalid_objc_selector_name,s);
+              lLength:=TStringConstNode(Left).len;
+              if (lLength>255) then
+                lLength:=255;
+              SetLength(lString,lLength);
+              if lLength>0 then
+                move(TStringConstNode(Left).ValueAS[0],lString[1],lLength);
+              CGMessage1(type_e_invalid_objc_selector_name,lString);
               exit;
             end;
         end
       else
         CGMessage(type_e_expected_objc_method);
     end;
-    resultdef:=ObjC_SelType;
+    ResultDef:=ObjC_SelType;
   end;
 
 
-function TObjCSelectorNode.pass_1: TNode;
+function TObjCSelectorNode.Pass_1: TNode;
   begin
-    result:=nil;
-    expectloc:=LOC_CREFERENCE;
+    Result:=nil;
+    ExpectLoc:=LOC_CREFERENCE;
   end;
 
 
@@ -133,33 +133,33 @@ function TObjCSelectorNode.pass_1: TNode;
                             TOBJPROTOCOLNODE
 *****************************************************************************}
 
-constructor TObjCProtocolNode.create(forprotocol: TNode);
+constructor TObjCProtocolNode.Create(AForProtocol: TNode);
   begin
-    inherited create(objcprotocoln,forprotocol);
+    inherited Create(objcprotocoln,AForProtocol);
   end;
 
 
-function TObjCProtocolNode.pass_typecheck: TNode;
+function TObjCProtocolNode.Pass_TypeCheck: TNode;
   begin
     if not(m_objectivec1 in CurrentSettings.ModeSwitches) then
       Message(parser_f_modeswitch_objc_required);
-    result:=nil;
-    TypeCheckPass(left);
-    if (left.nodetype<>typen) then
-      MessagePos(left.fileinfo,type_e_type_id_expected)
-    else if not Is_ObjCProtocol(left.resultdef) then
-      MessagePos2(left.fileinfo,type_e_incompatible_types,left.resultdef.TypeName,'ObjCProtocol');
-    resultdef:=ObjC_ProtocolType;
+    Result:=nil;
+    TypeCheckPass(Left);
+    if (Left.NodeType<>typen) then
+      MessagePos(Left.FileInfo,type_e_type_id_expected)
+    else if not Is_ObjCProtocol(Left.ResultDef) then
+      MessagePos2(Left.FileInfo,type_e_incompatible_types,Left.ResultDef.TypeName,'ObjCProtocol');
+    ResultDef:=ObjC_ProtocolType;
   end;
 
 
-function TObjCProtocolNode.pass_1: TNode;
+function TObjCProtocolNode.Pass_1: TNode;
   begin
-    result:=CCallNode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
-      CCallParaNode.create(CStringConstNode.createstr(TObjectDef(left.resultdef).ObjExtName^),nil),
-      resultdef
+    Result:=CCallNode.CreateInternResFromUnit('OBJC','OBJC_GETPROTOCOL',
+      CCallParaNode.Create(CStringConstNode.CreateStr(TObjectDef(Left.ResultDef).ObjExtName^),nil),
+      ResultDef
     );
-    TypeCheckPass(result);
+    TypeCheckPass(Result);
   end;
 
 

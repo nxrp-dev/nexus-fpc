@@ -314,7 +314,7 @@ Implementation
         (TAICPU(movp).ops=2) and
         MatchOperand(TAICPU(movp).oper[1]^, TAICPU(p).oper[0]^.reg) and
         { don't mess with moves to fp }
-        (TAICPU(movp).oper[0]^.reg<>CurrentProcInfo.framepointer) and
+        (TAICPU(movp).oper[0]^.reg<>CurrentProcInfo.FramePointer) and
         { the destination register of the mov might not be used between p and movp }
         not(RegUsedBetween(TAICPU(movp).oper[0]^.reg,p,movp)) and
         { Take care to only do this for instructions which REALLY load to the first register.
@@ -1986,7 +1986,7 @@ Implementation
                         { Only permit writes to the stack, since we can guarantee alignment with that }
                         (
                           (ThisRef.Base = NR_STACK_POINTER_REG) or
-                          (ThisRef.Base = CurrentProcInfo.framepointer)
+                          (ThisRef.Base = CurrentProcInfo.FramePointer)
                         ) then
                         begin
                           case TAICPU(hp1).oppostfix of
@@ -2423,7 +2423,7 @@ Implementation
                 { Only permit writes to the stack, since we can guarantee alignment with that }
                 (
                   (ThisRef.Base = NR_STACK_POINTER_REG) or
-                  (ThisRef.Base = CurrentProcInfo.framepointer)
+                  (ThisRef.Base = CurrentProcInfo.FramePointer)
                 ) then
                 begin
 

@@ -113,7 +113,7 @@ var
 begin
     if not(tf_init_final_units_by_calls in TargetInfo.flags) then
     begin
-        inherited insert_init_final_table(main,Entries);
+        inherited Insert_Init_Final_Table(main,Entries);
         exit;
     end;
 
@@ -126,10 +126,10 @@ begin
     for i := 0 to Entries.Count - 1 do
     begin
         Entry := PInitFinalEntry(Entries[i]);
-        if Entry^.finifunc <> '' then
-            finalList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.finifunc, AT_FUNCTION)));
-        if Entry^.initfunc <> '' then
-            initList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.initfunc, AT_FUNCTION)));
+        if Entry^.FiniFunc <> '' then
+            finalList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.FiniFunc, AT_FUNCTION)));
+        if Entry^.InitFunc <> '' then
+            initList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.InitFunc, AT_FUNCTION)));
     end;
 
     GenExit(finalList);

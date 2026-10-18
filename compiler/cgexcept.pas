@@ -41,51 +41,51 @@ unit cgexcept;
       TCGExceptionStateHandler = class
        type
         TExceptionTemps=record
-          jmpbuf,
-          envbuf,
-          reasonbuf  : TReference;
+          JmpBuf,
+          EnvBuf,
+          ReasonBuf  : TReference;
           { when using dwarf based eh handling, the landing pads get the unwind info passed, it is
             stored in the given register so it can be passed to unwind_resume }
-          unwind_info : TRegister;
+          UnwindInfo : TRegister;
         end;
 
         TExceptionState = record
-          exceptionlabel: TAsmLabel;
-          oldflowcontrol,
-          newflowcontrol: TFlowControl;
-          finallycodelabel  : TAsmLabel;
+          ExceptionLabel: TAsmLabel;
+          OldFlowControl,
+          NewFlowControl: TFlowControl;
+          FinallyCodeLabel  : TAsmLabel;
         end;
 
         TExceptFrameKind = (tek_except, tek_implicitfinally, tek_normalfinally);
 
-        class procedure get_exception_temps(list:TAsmList;var t:TExceptionTemps); virtual;
-        class procedure unget_exception_temps(list:TAsmList;const t:TExceptionTemps); virtual;
-        class procedure new_exception(list:TAsmList;const t:TExceptionTemps; const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState); virtual;
+        class procedure Get_Exception_Temps(AList:TAsmList;var ATemps:TExceptionTemps); virtual;
+        class procedure UnGet_Exception_Temps(AList:TAsmList;const ATemps:TExceptionTemps); virtual;
+        class procedure New_Exception(AList:TAsmList;const ATemps:TExceptionTemps; const AExceptFrameKind: TExceptFrameKind; out AExceptState: TExceptionState); virtual;
         { start of "except/finally" block }
-        class procedure emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptstate: TExceptionState;var exceptiontemps:TExceptionTemps); virtual;
+        class procedure Emit_Except_Label(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; var AExceptState: TExceptionState;var AExceptionTemps:TExceptionTemps); virtual;
         { end of a try-block, label comes after the end of try/except or
           try/finally }
-        class procedure end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps; var exceptionstate: TExceptionState; endlabel: TAsmLabel); virtual;
-        class procedure free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint; endexceptlabel: TAsmLabel; onlyfree:boolean); virtual;
-        class procedure handle_nested_exception(list:TAsmList;var t:TExceptionTemps;var entrystate: TExceptionState); virtual;
-        class procedure handle_reraise(list:TAsmList;const t:TExceptionTemps;const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind); virtual;
+        class procedure End_Try_Block(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; const ATemps: TExceptionTemps; var AExceptionState: TExceptionState; AEndLabel: TAsmLabel); virtual;
+        class procedure Free_Exception(AList: TAsmList; const ATemps: TExceptionTemps; const AState: TExceptionState; AReason: aint; AEndExceptLabel: TAsmLabel; AOnlyFree:boolean); virtual;
+        class procedure Handle_Nested_Exception(AList:TAsmList;var ATemps:TExceptionTemps;var AEntryState: TExceptionState); virtual;
+        class procedure Handle_ReRaise(AList:TAsmList;const ATemps:TExceptionTemps;const AEntryState: TExceptionState; const AExceptFrameKind: TExceptFrameKind); virtual;
         { start of an "on" (catch) block }
-        class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out exceptlocreg: TRegister); virtual;
+        class procedure Begin_Catch(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel; out AExceptLocDef: TDef; out AExceptLocReg: TRegister); virtual;
         { end of an "on" (catch) block }
-        class procedure end_catch(list: TAsmList); virtual;
+        class procedure End_Catch(AList: TAsmList); virtual;
         { called for a catch all exception }
-        class procedure catch_all_start(list: TAsmList); virtual;
+        class procedure Catch_All_Start(AList: TAsmList); virtual;
         { called after the catch all exception has been started with new_exception }
-        class procedure catch_all_add(list: TAsmList); virtual;
-        class procedure catch_all_end(list: TAsmList); virtual;
-        class procedure cleanupobjectstack(list: TAsmList); virtual;
-        class procedure popaddrstack(list: TAsmList); virtual;
-        class function use_cleanup(const exceptframekind: TExceptFrameKind): boolean;
+        class procedure Catch_All_Add(AList: TAsmList); virtual;
+        class procedure Catch_All_End(AList: TAsmList); virtual;
+        class procedure CleanupObjectStack(AList: TAsmList); virtual;
+        class procedure PopAddrStack(AList: TAsmList); virtual;
+        class function Use_Cleanup(const AExceptFrameKind: TExceptFrameKind): boolean;
       end;
       TCGExceptionStateHandlerClass = class of TCGExceptionStateHandler;
 
     var
-      cexceptionstatehandler: TCGExceptionStateHandlerClass = TCGExceptionStateHandler;
+      CExceptionStateHandler: TCGExceptionStateHandlerClass = TCGExceptionStateHandler;
 
   implementation
 
@@ -104,15 +104,15 @@ unit cgexcept;
                      tcgexceptionstatehandler
 *****************************************************************************}
 
-    class function TCGExceptionStateHandler.use_cleanup(const exceptframekind: TExceptFrameKind): boolean;
+    class function TCGExceptionStateHandler.Use_Cleanup(const AExceptFrameKind: TExceptFrameKind): boolean;
       begin
         { in case of an exception caught by the implicit exception frame of
           a safecall routine, this is not a cleanup frame but one that
           catches the exception and returns a value from the function }
-        result:=
-          (exceptframekind=tek_implicitfinally) and
-          not((tf_safecall_exceptions in TargetInfo.flags) and
-             (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall));
+        Result:=
+          (AExceptFrameKind=tek_implicitfinally) and
+          not((tf_safecall_exceptions in TargetInfo.Flags) and
+             (CurrentProcInfo.ProcDef.ProcCallOption=pocall_safecall));
       end;
 
     {  Allocate the buffers for exception management and setjmp environment.
@@ -129,223 +129,223 @@ unit cgexcept;
        be modified, all temps should be allocated on the heap instead of the
        stack. }
 
-    class procedure TCGExceptionStateHandler.get_exception_temps(list:TAsmList;var t:TExceptionTemps);
+    class procedure TCGExceptionStateHandler.Get_Exception_Temps(AList:TAsmList;var ATemps:TExceptionTemps);
       begin
         if not Assigned(ExceptionReasonType) then
           ExceptionReasonType:=Search_System_Proc('fpc_setjmp').ReturnDef;
-        tg.GetHLTemp(list,Rec_ExceptAddr,Rec_ExceptAddr.Size,tt_persistent,t.envbuf);
-        tg.GetHLTemp(list,Rec_Jmp_Buf,Rec_Jmp_Buf.Size,tt_persistent,t.jmpbuf);
-        tg.GetHLTemp(list,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,t.reasonbuf);
+        TG.GetHLTemp(AList,Rec_ExceptAddr,Rec_ExceptAddr.Size,tt_persistent,ATemps.EnvBuf);
+        TG.GetHLTemp(AList,Rec_Jmp_Buf,Rec_Jmp_Buf.Size,tt_persistent,ATemps.JmpBuf);
+        TG.GetHLTemp(AList,ExceptionReasonType,ExceptionReasonType.Size,tt_persistent,ATemps.ReasonBuf);
       end;
 
 
-    class procedure TCGExceptionStateHandler.unget_exception_temps(list:TAsmList;const t:TExceptionTemps);
+    class procedure TCGExceptionStateHandler.UnGet_Exception_Temps(AList:TAsmList;const ATemps:TExceptionTemps);
       begin
-        tg.Ungettemp(list,t.jmpbuf);
-        tg.ungettemp(list,t.envbuf);
-        tg.ungettemp(list,t.reasonbuf);
+        TG.UnGetTemp(AList,ATemps.JmpBuf);
+        TG.UnGetTemp(AList,ATemps.EnvBuf);
+        TG.UnGetTemp(AList,ATemps.ReasonBuf);
       end;
 
 
-    class procedure TCGExceptionStateHandler.new_exception(list:TAsmList;const t:TExceptionTemps; const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState);
+    class procedure TCGExceptionStateHandler.New_Exception(AList:TAsmList;const ATemps:TExceptionTemps; const AExceptFrameKind: TExceptFrameKind; out AExceptState: TExceptionState);
       var
-        paraloc1, paraloc2, paraloc3, pushexceptres, setjmpres: TCGPara;
-        pd: TProcDef;
-        tmpresloc: TLocation;
+        lParaLoc1, lParaLoc2, lParaLoc3, lPushExceptResult, lSetJmpResult: TCGPara;
+        lProcDef: TProcDef;
+        lTempResultLoc: TLocation;
       begin
-        CurrentAsmData.getjumplabel(exceptstate.exceptionlabel);
-        exceptstate.oldflowcontrol:=flowcontrol;
-        exceptstate.finallycodelabel:=nil;
+        CurrentAsmData.getjumplabel(AExceptState.ExceptionLabel);
+        AExceptState.OldFlowControl:=flowcontrol;
+        AExceptState.FinallyCodeLabel:=nil;
 
-        paraloc1.init;
-        paraloc2.init;
-        paraloc3.init;
+        lParaLoc1.init;
+        lParaLoc2.init;
+        lParaLoc3.init;
 
         { fpc_pushexceptaddr(exceptionframetype, setjmp_buffer, exception_address_chain_entry) }
-        pd:=Search_System_Proc('fpc_pushexceptaddr');
-        ParaManager.GetCGTempParaLoc(list,pd,1,paraloc1);
-        ParaManager.GetCGTempParaLoc(list,pd,2,paraloc2);
-        ParaManager.GetCGTempParaLoc(list,pd,3,paraloc3);
-        if pd.Is_PushLeftRight then
+        lProcDef:=Search_System_Proc('fpc_pushexceptaddr');
+        ParaManager.GetCGTempParaLoc(AList,lProcDef,1,lParaLoc1);
+        ParaManager.GetCGTempParaLoc(AList,lProcDef,2,lParaLoc2);
+        ParaManager.GetCGTempParaLoc(AList,lProcDef,3,lParaLoc3);
+        if lProcDef.Is_PushLeftRight then
           begin
             { type of exceptionframe }
-            hlcg.A_Load_Const_CGPara(list,paraloc1.def,1,paraloc1);
+            hlcg.A_Load_Const_CGPara(AList,lParaLoc1.def,1,lParaLoc1);
             { setjmp buffer }
-            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
+            hlcg.A_LoadAddr_Ref_CGPara(AList,Rec_Jmp_Buf,ATemps.JmpBuf,lParaLoc2);
             { exception address chain entry }
-            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
+            hlcg.A_LoadAddr_Ref_CGPara(AList,Rec_ExceptAddr,ATemps.EnvBuf,lParaLoc3);
           end
         else
           begin
-            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_ExceptAddr,t.envbuf,paraloc3);
-            hlcg.A_LoadAddr_Ref_CGPara(list,Rec_Jmp_Buf,t.jmpbuf,paraloc2);
-            hlcg.A_Load_Const_CGPara(list,paraloc1.def,1,paraloc1);
+            hlcg.A_LoadAddr_Ref_CGPara(AList,Rec_ExceptAddr,ATemps.EnvBuf,lParaLoc3);
+            hlcg.A_LoadAddr_Ref_CGPara(AList,Rec_Jmp_Buf,ATemps.JmpBuf,lParaLoc2);
+            hlcg.A_Load_Const_CGPara(AList,lParaLoc1.def,1,lParaLoc1);
           end;
-        ParaManager.FreeCGPara(list,paraloc3);
-        ParaManager.FreeCGPara(list,paraloc2);
-        ParaManager.FreeCGPara(list,paraloc1);
+        ParaManager.FreeCGPara(AList,lParaLoc3);
+        ParaManager.FreeCGPara(AList,lParaLoc2);
+        ParaManager.FreeCGPara(AList,lParaLoc1);
         { perform the fpc_pushexceptaddr call }
-        pushexceptres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1,@paraloc2,@paraloc3],nil);
-        paraloc1.done;
-        paraloc2.done;
-        paraloc3.done;
+        lPushExceptResult:=hlcg.G_Call_System_Proc(AList,lProcDef,[@lParaLoc1,@lParaLoc2,@lParaLoc3],nil);
+        lParaLoc1.done;
+        lParaLoc2.done;
+        lParaLoc3.done;
 
         { get the result }
-        Location_Reset(tmpresloc,LOC_REGISTER,Def_CGSize(pushexceptres.def));
-        tmpresloc.Register:=hlcg.GetAddressRegister(list,pushexceptres.def);
-        hlcg.Gen_Load_CGPara_Loc(list,pushexceptres.def,pushexceptres,tmpresloc,true);
-        pushexceptres.ResetIfTemp;
+        Location_Reset(lTempResultLoc,LOC_REGISTER,Def_CGSize(lPushExceptResult.def));
+        lTempResultLoc.Register:=hlcg.GetAddressRegister(AList,lPushExceptResult.def);
+        hlcg.Gen_Load_CGPara_Loc(AList,lPushExceptResult.def,lPushExceptResult,lTempResultLoc,true);
+        lPushExceptResult.ResetIfTemp;
 
         { fpc_setjmp(result_of_pushexceptaddr_call) }
-        pd:=Search_System_Proc('fpc_setjmp');
-        ParaManager.GetCGTempParaLoc(list,pd,1,paraloc1);
+        lProcDef:=Search_System_Proc('fpc_setjmp');
+        ParaManager.GetCGTempParaLoc(AList,lProcDef,1,lParaLoc1);
 
-        hlcg.A_Load_Reg_CGPara(list,pushexceptres.def,tmpresloc.Register,paraloc1);
-        ParaManager.FreeCGPara(list,paraloc1);
+        hlcg.A_Load_Reg_CGPara(AList,lPushExceptResult.def,lTempResultLoc.Register,lParaLoc1);
+        ParaManager.FreeCGPara(AList,lParaLoc1);
         { perform the fpc_setjmp call }
-        setjmpres:=hlcg.G_Call_System_Proc(list,pd,[@paraloc1],nil);
-        paraloc1.done;
-        Location_Reset(tmpresloc,LOC_REGISTER,Def_CGSize(setjmpres.def));
-        tmpresloc.Register:=hlcg.GetIntRegister(list,setjmpres.def);
-        hlcg.Gen_Load_CGPara_Loc(list,setjmpres.def,setjmpres,tmpresloc,true);
-        hlcg.G_Exception_Reason_Save(list,setjmpres.def,ExceptionReasonType,tmpresloc.Register,t.reasonbuf);
+        lSetJmpResult:=hlcg.G_Call_System_Proc(AList,lProcDef,[@lParaLoc1],nil);
+        lParaLoc1.done;
+        Location_Reset(lTempResultLoc,LOC_REGISTER,Def_CGSize(lSetJmpResult.def));
+        lTempResultLoc.Register:=hlcg.GetIntRegister(AList,lSetJmpResult.def);
+        hlcg.Gen_Load_CGPara_Loc(AList,lSetJmpResult.def,lSetJmpResult,lTempResultLoc,true);
+        hlcg.G_Exception_Reason_Save(AList,lSetJmpResult.def,ExceptionReasonType,lTempResultLoc.Register,ATemps.ReasonBuf);
         { if we get 1 here in the function result register, it means that we
           longjmp'd back here }
-        hlcg.A_Cmp_Const_Reg_Label(list,setjmpres.def,OC_NE,0,tmpresloc.Register,exceptstate.exceptionlabel);
-        setjmpres.ResetIfTemp;
+        hlcg.A_Cmp_Const_Reg_Label(AList,lSetJmpResult.def,OC_NE,0,lTempResultLoc.Register,AExceptState.ExceptionLabel);
+        lSetJmpResult.ResetIfTemp;
 
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
      end;
 
 
-    class procedure TCGExceptionStateHandler.emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptstate: TExceptionState;var exceptiontemps:TExceptionTemps);
+    class procedure TCGExceptionStateHandler.Emit_Except_Label(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; var AExceptState: TExceptionState;var AExceptionTemps:TExceptionTemps);
       begin
-        hlcg.A_Label(list,exceptstate.exceptionlabel);
+        hlcg.A_Label(AList,AExceptState.ExceptionLabel);
       end;
 
 
-    class procedure TCGExceptionStateHandler.end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps; var exceptionstate: TExceptionState; endlabel: TAsmLabel);
+    class procedure TCGExceptionStateHandler.End_Try_Block(AList: TAsmList; AExceptFrameKind: TExceptFrameKind; const ATemps: TExceptionTemps; var AExceptionState: TExceptionState; AEndLabel: TAsmLabel);
       begin
-         exceptionstate.newflowcontrol:=flowcontrol;
-         flowcontrol:=exceptionstate.oldflowcontrol;
+         AExceptionState.NewFlowControl:=flowcontrol;
+         flowcontrol:=AExceptionState.OldFlowControl;
       end;
 
 
-    class procedure TCGExceptionStateHandler.free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint; endexceptlabel: TAsmLabel; onlyfree: boolean);
+    class procedure TCGExceptionStateHandler.Free_Exception(AList: TAsmList; const ATemps: TExceptionTemps; const AState: TExceptionState; AReason: aint; AEndExceptLabel: TAsmLabel; AOnlyFree: boolean);
       var
-        reasonreg: TRegister;
+        lReasonReg: TRegister;
       begin
-         popaddrstack(list);
-         if not onlyfree then
+         PopAddrStack(AList);
+         if not AOnlyFree then
           begin
-            reasonreg:=hlcg.GetIntRegister(list,ExceptionReasonType);
-            hlcg.G_Exception_Reason_Load(list,ExceptionReasonType,ExceptionReasonType,t.reasonbuf,reasonreg);
-            hlcg.A_Cmp_Const_Reg_Label(list,ExceptionReasonType,OC_EQ,a,reasonreg,endexceptlabel);
+            lReasonReg:=hlcg.GetIntRegister(AList,ExceptionReasonType);
+            hlcg.G_Exception_Reason_Load(AList,ExceptionReasonType,ExceptionReasonType,ATemps.ReasonBuf,lReasonReg);
+            hlcg.A_Cmp_Const_Reg_Label(AList,ExceptionReasonType,OC_EQ,AReason,lReasonReg,AEndExceptLabel);
           end;
       end;
 
 
     { does the necessary things to clean up the object stack }
     { in the except block                                    }
-    class procedure TCGExceptionStateHandler.cleanupobjectstack(list: TAsmList);
+    class procedure TCGExceptionStateHandler.CleanupObjectStack(AList: TAsmList);
       begin
-         hlcg.G_Call_System_Proc(list,'fpc_doneexception',[],nil).ResetIfTemp;
+         hlcg.G_Call_System_Proc(AList,'fpc_doneexception',[],nil).ResetIfTemp;
       end;
 
 
     { generates code to be executed when another exeception is raised while
       control is inside except block }
-    class procedure TCGExceptionStateHandler.handle_nested_exception(list:TAsmList;var t:TExceptionTemps;var entrystate: TExceptionState);
+    class procedure TCGExceptionStateHandler.Handle_Nested_Exception(AList:TAsmList;var ATemps:TExceptionTemps;var AEntryState: TExceptionState);
       var
-         exitlabel: TAsmLabel;
+         lExitLabel: TAsmLabel;
       begin
-         CurrentAsmData.getjumplabel(exitlabel);
+         CurrentAsmData.getjumplabel(lExitLabel);
          { add an catch all action clause, at least psabieh needs this }
-         catch_all_add(list);
-         end_try_block(list,tek_except,t,entrystate,exitlabel);
-         emit_except_label(list,tek_except,entrystate,t);
+         Catch_All_Add(AList);
+         End_Try_Block(AList,tek_except,ATemps,AEntryState,lExitLabel);
+         Emit_Except_Label(AList,tek_except,AEntryState,ATemps);
          { don't generate line info for internal cleanup }
-         list.concat(TAIMarker.create(mark_NoLineInfoStart));
-         free_exception(list,t,entrystate,0,exitlabel,false);
+         AList.concat(TAIMarker.Create(mark_NoLineInfoStart));
+         Free_Exception(AList,ATemps,AEntryState,0,lExitLabel,false);
          { we don't need to save/restore registers here because reraise never }
          { returns                                                            }
-         hlcg.G_Call_System_Proc(list,'fpc_raise_nested',[],nil).ResetIfTemp;
-         hlcg.A_Label(list,exitlabel);
-         cleanupobjectstack(list);
+         hlcg.G_Call_System_Proc(AList,'fpc_raise_nested',[],nil).ResetIfTemp;
+         hlcg.A_Label(AList,lExitLabel);
+         CleanupObjectStack(AList);
       end;
 
 
-    class procedure TCGExceptionStateHandler.handle_reraise(list: TAsmList; const t: TExceptionTemps; const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind);
+    class procedure TCGExceptionStateHandler.Handle_ReRaise(AList: TAsmList; const ATemps: TExceptionTemps; const AEntryState: TExceptionState; const AExceptFrameKind: TExceptFrameKind);
       begin
-        hlcg.G_Call_System_Proc(list,'fpc_reraise',[],nil).ResetIfTemp;
+        hlcg.G_Call_System_Proc(AList,'fpc_reraise',[],nil).ResetIfTemp;
       end;
 
 
-    class procedure TCGExceptionStateHandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out exceptlocreg: TRegister);
+    class procedure TCGExceptionStateHandler.Begin_Catch(AList: TAsmList; AExceptType: TObjectDef; ANextOnLabel: TAsmLabel; out AExceptLocDef: TDef; out AExceptLocReg: TRegister);
       var
-        pd: TProcDef;
-        href2: TReference;
-        fpc_catches_res,
-        paraloc1: TCGPara;
-        exceptloc: TLocation;
-        indirect: boolean;
-        otherunit: boolean;
+        lProcDef: TProcDef;
+        lReference2: TReference;
+        lFPCCatchesResult,
+        lParaLoc1: TCGPara;
+        lExceptLoc: TLocation;
+        lIndirect: boolean;
+        lOtherUnit: boolean;
       begin
-        paraloc1.init;
-        otherunit:=FindUnitSymTable(excepttype.owner).ModuleID<>FindUnitSymTable(CurrentProcInfo.procdef.owner).ModuleID;
-        indirect:=(tf_supports_packages in TargetInfo.flags) and
+        lParaLoc1.init;
+        lOtherUnit:=FindUnitSymTable(AExceptType.owner).ModuleID<>FindUnitSymTable(CurrentProcInfo.ProcDef.owner).ModuleID;
+        lIndirect:=(tf_supports_packages in TargetInfo.Flags) and
                     (TargetInfo.system in systems_indirect_var_imports) and
-                    otherunit;
+                    lOtherUnit;
 
         { send the vmt parameter }
-        pd:=Search_System_Proc('fpc_catches');
-        Reference_Reset_Symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.VMT_MangledName, AT_DATA, indirect), 0, sizeof(PInt), []);
-        if otherunit then
-          CurrentModule.Add_Extern_AsmSym(excepttype.VMT_MangledName, AB_EXTERNAL, AT_DATA);
-        ParaManager.GetCGTempParaLoc(list, pd, 1, paraloc1);
-        hlcg.A_LoadAddr_Ref_CGPara(list, excepttype.VMT_Def, href2, paraloc1);
-        ParaManager.FreeCGPara(list, paraloc1);
-        fpc_catches_res:=hlcg.G_Call_System_Proc(list, pd, [@paraloc1], nil);
-        Location_Reset(exceptloc, LOC_REGISTER, Def_CGSize(fpc_catches_res.def));
-        exceptloc.Register:=hlcg.GetAddressRegister(list, fpc_catches_res.def);
-        hlcg.Gen_Load_CGPara_Loc(list, fpc_catches_res.def, fpc_catches_res, exceptloc, true);
+        lProcDef:=Search_System_Proc('fpc_catches');
+        Reference_Reset_Symbol(lReference2, CurrentAsmData.RefAsmSymbol(AExceptType.VMT_MangledName, AT_DATA, lIndirect), 0, sizeof(PInt), []);
+        if lOtherUnit then
+          CurrentModule.Add_Extern_AsmSym(AExceptType.VMT_MangledName, AB_EXTERNAL, AT_DATA);
+        ParaManager.GetCGTempParaLoc(AList, lProcDef, 1, lParaLoc1);
+        hlcg.A_LoadAddr_Ref_CGPara(AList, AExceptType.VMT_Def, lReference2, lParaLoc1);
+        ParaManager.FreeCGPara(AList, lParaLoc1);
+        lFPCCatchesResult:=hlcg.G_Call_System_Proc(AList, lProcDef, [@lParaLoc1], nil);
+        Location_Reset(lExceptLoc, LOC_REGISTER, Def_CGSize(lFPCCatchesResult.def));
+        lExceptLoc.Register:=hlcg.GetAddressRegister(AList, lFPCCatchesResult.def);
+        hlcg.Gen_Load_CGPara_Loc(AList, lFPCCatchesResult.def, lFPCCatchesResult, lExceptLoc, true);
 
         { is it this catch? No. go to next onlabel }
-        hlcg.A_Cmp_Const_Reg_Label(list, fpc_catches_res.def, OC_EQ, 0, exceptloc.Register, nextonlabel);
+        hlcg.A_Cmp_Const_Reg_Label(AList, lFPCCatchesResult.def, OC_EQ, 0, lExceptLoc.Register, ANextOnLabel);
 
-        paraloc1.done;
+        lParaLoc1.done;
 
-        exceptlocdef:=fpc_catches_res.def;
-        exceptlocreg:=exceptloc.Register;
+        AExceptLocDef:=lFPCCatchesResult.def;
+        AExceptLocReg:=lExceptLoc.Register;
       end;
 
 
-    class procedure TCGExceptionStateHandler.end_catch(list: TAsmList);
+    class procedure TCGExceptionStateHandler.End_Catch(AList: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure TCGExceptionStateHandler.catch_all_start(list: TAsmList);
+    class procedure TCGExceptionStateHandler.Catch_All_Start(AList: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure TCGExceptionStateHandler.catch_all_add(list: TAsmList);
+    class procedure TCGExceptionStateHandler.Catch_All_Add(AList: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure TCGExceptionStateHandler.catch_all_end(list: TAsmList);
+    class procedure TCGExceptionStateHandler.Catch_All_End(AList: TAsmList);
       begin
         { nothing to do by default }
       end;
 
-    class procedure TCGExceptionStateHandler.popaddrstack(list: TAsmList);
+    class procedure TCGExceptionStateHandler.PopAddrStack(AList: TAsmList);
       begin
-        hlcg.G_Call_System_Proc(list,'fpc_popaddrstack',[],nil).ResetIfTemp;
+        hlcg.G_Call_System_Proc(AList,'fpc_popaddrstack',[],nil).ResetIfTemp;
       end;
 
 
