@@ -1,5 +1,0 @@
-{s*:src/}=namespaced/
-{i+:src/}
-src/unixcrypt.pas=namespaced/System.Hash.Unixcrypt.pas
-src/uuid.pas=namespaced/System.Hash.Uuid.pas
-src/ntlm.pas=namespaced/System.Hash.Ntlm.pas

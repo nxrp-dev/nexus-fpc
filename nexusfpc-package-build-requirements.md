@@ -42,7 +42,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `fcl-base` | `rtl-objpas`; `univint` on Apple targets | OS include paths and event-log resource described below. |
 | `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
 | `fcl-fpcunit` (retired) | Historical: `paszlib`, `fcl-base`, `fcl-xml`; `univint` on Apple targets | Removed 2026-10-16. Useful retained tests now use Nexus nxtest directly; original framework and runners are archived in Nexus `docs/migrations/fpcunit`. |
-| `fcl-hash` | `rtl-objpas`, `rtl-extra`, `fcl-base`, `hash` | Recipes give explicit `src/` filenames. |
+| `fcl-hash` (retired) | — | Removed 2026-10-17 by owner direction. Remaining crypto services, namespace wrappers and dedicated tests were deleted; only their own tests and four retired Lab demonstrations imported them. |
 | `fcl-image` (relocated) | `pasjpeg`, `paszlib`, `fcl-base`; self-contained PasZLib CRC32 | Moved on 2026-10-16 to Nexus `packages/nexus-packages/graphics/fcl-image`; `FCLImage.nxpackage` builds all 56 runtime units. The saved package review includes original hashes, regression proofs, fixes and retained-suite results. |
 | `fcl-json` (relocated) | `fcl-base`, `rtl-objpas` | The former optional `jsonfpcunit` helper was retired; runtime JSON has no FPCUnit dependency. |
 | `fcl-net` (retired) | — | Removed on 2026-10-17 after moving the required Unix resolver into Nexus Synapse and the live certificate definitions into Nexus OpenSSL. Nexus applications use Synapse; unused FCL socket and database APIs are not retained. |
@@ -50,7 +50,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `fcl-registry` (relocated) | `fcl-base`, `fcl-xml` | Moved on 2026-10-17 to Nexus `packages/nexus-packages/fcl-registry`; `FCLRegistry.nxpackage` builds the native package and `tests/FCLRegistryTests.nxproject` owns direct nxtest coverage. Windows COM, Abbrevia and Synapse serial support remain consumers. Review and proven fixes are saved with the destination. |
 | `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM. |
 | `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
-| `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |
+| `hash` (retired) | — | Removed 2026-10-17 by owner direction, including UUID, NTLM and system crypt services and namespace wrappers. No production consumer was found. HashLib4Pascal owns ordinary digest/HMAC/checksum use; PasZLib owns its private CRC32. |
 | `iconvenc` | — | Recipe marks libc required. |
 | `iosxlocale` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/iosxlocale`; locale and wide-string bindings. |
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
@@ -123,7 +123,7 @@ old explicit/implicit target lists.
 | Windows default manifest resource | `packages/winunits-base/src/w32default.res`; referenced by `winmanutf8lfn.pas` | Old recipe copied this resource alongside installed units. Keep it available to consumers that compile the unit. This is unrelated to the removed package-manager `manifest.xml`. |
 | Windows event-log resource | `packages/fcl-base/src/win/fclel.res`, with `.mc`/`.rc` inputs | Old recipe explicitly shipped it. No active Pascal reference was found in `fcl-base/src`; do not infer that every application needs it. The `.rc` contains an obsolete absolute temporary path, so regeneration needs a separate review. |
 | Resource strings | `ResourceStrings=True` target registrations | Old installation collected `.rsj`, or historical `.rst`, alongside unit artifacts. Current Forge release/SDK copy masks already include `.rsj` and `.res`. |
-| Namespace mappings | Retained package `namespaces.lst` and `namespaced/` source trees | Example: `fcl-hash` maps `src/fprsa.pas` to `namespaced/System.Hash.Rsa.pas`. Preserve these source mappings independently of fpmake. |
+| Namespace mappings | Retained package `namespaces.lst` and `namespaced/` source trees | Example: `fcl-base` maps `src/basenenc.pas` to `namespaced/Fcl.BaseNEnc.pas`. Preserve these source mappings independently of fpmake. |
 | Translation example | `../nexus-lab/examples/runtime/base/intl/restest.<language>.po` and `.mo` | Old Makefile used `msgfmt -o restest.<language>.mo restest.<language>.po` for `fr`, `nl`, `de`, `pb`, `ru`, `cs`. All six input/output pairs exist. |
 
 ## Test preparation retained for nxtest
