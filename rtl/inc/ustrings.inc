@@ -1359,7 +1359,6 @@ end;
 {$endif FPC_HAS_SETSTRING_UNICODESTR_PCHAR}
 
 
-{$ifndef FPUNONE}
 Function fpc_Val_Real_UnicodeStr(Const S : UnicodeString; out Code : ValSInt): ValReal; [public, alias:'FPC_VAL_REAL_UNICODESTR']; compilerproc;
 Var
   SS: ShortString;
@@ -1373,7 +1372,6 @@ begin
       Val(SS,fpc_Val_Real_UnicodeStr,code);
     end;
 end;
-{$endif}
 
 
 {$ifndef FPC_STR_ENUM_INTERN}
@@ -1476,7 +1474,6 @@ end;
 
 
 
-{$ifndef FPUNONE}
 procedure fpc_UnicodeStr_Float(d : ValReal;len,fr,rt : SizeInt;out s : UnicodeString);compilerproc;
 var
   ss: shortstring;
@@ -1484,7 +1481,6 @@ begin
   str_real(len,fr,d,treal_type(rt),ss);
   s:=UnicodeString(ss);
 end;
-{$endif}
 
 
 {$ifndef FPC_STR_ENUM_INTERN}

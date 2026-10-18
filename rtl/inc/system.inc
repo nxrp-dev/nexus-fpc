@@ -92,15 +92,14 @@ begin
 end;
 {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 
-{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
+{$ifndef FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD}
 var
   { Control word of the fpu that determines which exceptions will be thrown and
     potentially other flags (precision, exception-happened flags, ... Used to
     initialise the FPU when starting a new thread (in SysResetFPU).
 
     Some platforms already have a legacy/existing global variable holding this
-    information (FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD). In case of FPUNONE,
-    we don't support floating point at all. }
+    information (FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD). }
   DefaultFPUControlWord: TNativeFPUControlWord;
 {$endif}
 
@@ -326,7 +325,6 @@ begin
 end;
 {$endif SUPPORT_EXTENDED}
 
-{$ifndef FPUNONE}
 {$ifdef FPC_USE_LIBC}
 { Include libc versions }
 {$i cgenmath.inc}
@@ -335,7 +333,6 @@ end;
 {$I math.inc}
 { Include generic version }
 {$I genmath.inc}
-{$endif}
 
 {$i gencurr.inc}
 
@@ -616,7 +613,6 @@ begin
     result:=-result-1;
 end;
 
-{$ifndef FPUNONE}
 function random: extended;
 var
   res: double;
@@ -652,7 +648,6 @@ begin
   PUint64(@res)^:=PUint64(@res)^ or uint64(exponent+BsrDWord(r0)) shl 52;
   result:=res;
 end;
-{$endif}
 
 {$pop} // random
 
@@ -694,14 +689,12 @@ begin
   random:=random(longint(l));
 end;
 
-{$ifndef FPUNONE}
 function random: extended;
 const
   c = 1.0/$10000/$10000;
 begin
   random:=rand_next*c;
 end;
-{$endif}
 
 {$endif FPC_USE_SIMPLE_RANDOM}
 {$endif FPC_HAS_FEATURE_RANDOM}
@@ -1062,21 +1055,6 @@ begin
 end;
 {$endif FPC_INIT_FINAL_UNITS_BY_CALLS}
 
-
-{*****************************************************************************
-                        FPU Exceptions state
-*****************************************************************************}
-
-{$if defined(FPU_NONE)}
-function GetNativeFPUControlWord: TNativeFPUControlWord; {$if defined(SYSTEMINLINE)}inline;{$endif}
-begin
-  result:=default(TNativeFPUControlWord);
-end;
-
-procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord); {$if defined(SYSTEMINLINE)}inline;{$endif}
-begin
-end;
-{$endif}
 
 {*****************************************************************************
                           Error / Exit / ExitProc

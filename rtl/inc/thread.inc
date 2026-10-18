@@ -32,11 +32,9 @@ Var
 
     procedure InitThread(stklen:SizeUInt);
       begin
-{$ifndef FPUNONE}
         SysInitFPU;
         { the call to SysResetFPU should not be needed here, but SysInitFPU is not properly implemented for all CPUs yet }
         SysResetFPU;
-{$endif}
 {$ifndef HAS_MEMORYMANAGER}
         { initialize this thread's heap }
         InitHeapThread;

@@ -1,7 +1,3 @@
-{$ifdef FPUSOFT}
-{$define SMALL_TEST}
-{$endif FPUSOFT}
-
 {$mode objfpc} {$longstrings on} {$coperators on} {$zerobasedstrings on}
 uses
 	SysUtils, Math;

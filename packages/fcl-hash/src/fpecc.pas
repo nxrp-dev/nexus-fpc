@@ -96,6 +96,8 @@ type
   PEccPoint = ^TEccPoint;
 
 const
+  cHighBit: UInt64 = High(UInt64) div 2 + 1;
+
   Curve_P_32: TVLI = (UInt64($FFFFFFFFFFFFFFFF), $00000000FFFFFFFF, $0000000000000000, UInt64($FFFFFFFF00000001));
   Curve_B_32: TVLI = ($3BCE3C3E27D2604B, $651D06B0CC53B0F6, UInt64($B3EBBD55769886BC), $5AC635D8AA3A93E7);
   Curve_G_32: TEccPoint = (x: (UInt64($F4A13945D898C296), UInt64($77037D812DEB33A0), UInt64($F8BCE6E563A440F2), UInt64($6B17D1F2E12C4247));
@@ -521,7 +523,7 @@ begin
         Carry := vli_add(u, u, Modulo);
       vli_rshift1(u);
       if Carry <> 0 then
-        u[NUM_ECC_DIGITS-1] := u[NUM_ECC_DIGITS-1] or $8000000000000000;
+        u[NUM_ECC_DIGITS-1] := u[NUM_ECC_DIGITS-1] or cHighBit;
     end else if (b[0] and 1) = 0 then
     begin
       vli_rshift1(b);
@@ -529,7 +531,7 @@ begin
         Carry := vli_add(v, v, Modulo);
       vli_rshift1(v);
       if Carry <> 0 then
-        v[NUM_ECC_DIGITS-1] := v[NUM_ECC_DIGITS-1] or $8000000000000000;
+        v[NUM_ECC_DIGITS-1] := v[NUM_ECC_DIGITS-1] or cHighBit;
     end else if Cmp > 0 then
     begin
       vli_sub(a, a, b);
@@ -541,7 +543,7 @@ begin
         Carry := vli_add(u, u, Modulo);
       vli_rshift1(u);
       if Carry <> 0 then
-        u[NUM_ECC_DIGITS-1] := u[NUM_ECC_DIGITS-1] or $8000000000000000;
+        u[NUM_ECC_DIGITS-1] := u[NUM_ECC_DIGITS-1] or cHighBit;
     end else
     begin
       vli_sub(b, b, a);
@@ -553,7 +555,7 @@ begin
         Carry := vli_add(v, v, Modulo);
       vli_rshift1(v);
       if Carry > 0 then
-        v[NUM_ECC_DIGITS-1] := v[NUM_ECC_DIGITS-1] or $8000000000000000;
+        v[NUM_ECC_DIGITS-1] := v[NUM_ECC_DIGITS-1] or cHighBit;
     end;
   end;
   vli_set(Output, u);
@@ -763,13 +765,13 @@ begin
     V := Native[I];
     Digits := @Bytes[8*(NUM_ECC_DIGITS-1-I)];
     Digits^[0] := V shr 56;
-    Digits^[1] := V shr 48;
-    Digits^[2] := V shr 40;
-    Digits^[3] := V shr 32;
-    Digits^[4] := V shr 24;
-    Digits^[5] := V shr 16;
-    Digits^[6] := V shr 8;
-    Digits^[7] := V;
+    Digits^[1] := (V shr 48) and $FF;
+    Digits^[2] := (V shr 40) and $FF;
+    Digits^[3] := (V shr 32) and $FF;
+    Digits^[4] := (V shr 24) and $FF;
+    Digits^[5] := (V shr 16) and $FF;
+    Digits^[6] := (V shr 8) and $FF;
+    Digits^[7] := V and $FF;
   end;
 end;
 

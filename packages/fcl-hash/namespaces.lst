@@ -2,9 +2,7 @@ src/onetimepass.pas=namespaced/System.Hash.Onetimepass.pas
 {s*:src/}=namespaced/
 {i+:src/}
 src/fptlsbigint.pas=namespaced/System.Hash.Tlsbigint.pas
-src/fpsha512.pas=namespaced/System.Hash.Sha512.pas
 src/fpecc.pas=namespaced/System.Hash.Ecc.pas
-src/fpsha256.pas=namespaced/System.Hash.Sha256.pas
 src/fprsa.pas=namespaced/System.Hash.Rsa.pas
 src/fppem.pas=namespaced/System.Hash.Pem.pas
 src/fphashutils.pas=namespaced/System.Hash.Utils.pas

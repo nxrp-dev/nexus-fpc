@@ -60,7 +60,6 @@ Type
 
    TFPUType =
      (fpu_none,
-//      fpu_soft,  { generic }
       fpu_sse64,
       fpu_x86_64_v1,
       fpu_sse3,
@@ -151,8 +150,7 @@ const
    );
 
    FPUTypeStr : array[TFPUType] of string[9] = (
-     'NONE',
-//     'SOFT',
+     '',
      'SSE64',
      'X86-64-V1',
      'SSE3',

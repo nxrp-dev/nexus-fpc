@@ -53,7 +53,6 @@ unit Math;
 interface
 
 
-{$ifndef FPUNONE}
 {$IFDEF FPC_DOTTEDUNITS}
     uses
        System.SysUtils, System.Types;
@@ -4040,8 +4039,5 @@ begin
   end;
 end;
 
-{$else}
-implementation
-{$endif FPUNONE}
 
 end.

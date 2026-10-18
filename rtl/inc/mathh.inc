@@ -35,8 +35,8 @@
 {$endif}
 
 
-    function GetNativeFPUControlWord: TNativeFPUControlWord; {$if (defined(FPUNONE)) and (defined(SYSTEMINLINE))}inline;{$endif}
-    procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord); {$if (defined(FPUNONE)) and (defined(SYSTEMINLINE))}inline;{$endif}
+    function GetNativeFPUControlWord: TNativeFPUControlWord;
+    procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord);
 
   type
     TFPURoundingMode = (rmNearest, rmDown, rmUp, rmTruncate);

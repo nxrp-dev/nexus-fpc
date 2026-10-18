@@ -15,7 +15,6 @@
 {*                       TBinaryObjectReader                                *}
 {****************************************************************************}
 
-{$ifndef FPUNONE}
 {$IFNDEF FPC_HAS_TYPE_EXTENDED}
 function ExtendedToDouble(e : pointer) : double;
 var mant : qword;
@@ -60,7 +59,6 @@ begin
   Result:=pdouble(@d)^;
 end;
 {$ENDIF}
-{$endif}
 
 procedure TAbstractObjectReader.BeginComponent(var Flags: TFilerFlags; var AChildPos: Integer;
   var CompUnitName, CompClassName, CompName: String);
@@ -95,7 +93,6 @@ begin
 end;
 
 
-{$ifndef FPUNONE}
 function TBinaryObjectReader.ReadExtended : extended; {$ifdef CLASSESINLINE}inline;{$endif CLASSESINLINE}
 {$IFNDEF FPC_HAS_TYPE_EXTENDED}
 var ext : array[0..9] of byte;
@@ -108,7 +105,6 @@ begin
   Read(Result,sizeof(Result));
   {$ENDIF}
 end;
-{$endif}
 
 constructor TBinaryObjectReader.Create(Stream: TStream; BufSize: Integer);
 begin
@@ -242,7 +238,6 @@ begin
   Read(DestData.Memory^, BinSize);
 end;
 
-{$ifndef FPUNONE}
 function TBinaryObjectReader.ReadFloat: Extended;
 begin
   Result:=ReadExtended;
@@ -272,7 +267,6 @@ begin
   r.q:=ReadQWord;
   Result:=R.d;
 end;
-{$endif}
 
 function TBinaryObjectReader.ReadCurrency: Currency;
 var
@@ -282,11 +276,10 @@ var
       2: (c: currency);
   end;
 begin
-  r.c:=ReadQWord;
+  r.q:=ReadQWord;
   Result:=r.c;
 end;
 
-{$ifndef FPUNONE}
 function TBinaryObjectReader.ReadDate: TDateTime;
 var
   r: record
@@ -298,7 +291,6 @@ begin
   r.q:=ReadQWord;
   Result:=r.d;
 end;
-{$endif}
 
 function TBinaryObjectReader.ReadIdent(ValueType: TValueType): RawByteString;
 var
@@ -547,11 +539,7 @@ begin
         ReadValue;
       end;
     vaSingle:
-{$ifndef FPUNONE}
       SkipBytes(Sizeof(Single));
-{$else}
-      SkipBytes(4);
-{$endif}
     {!!!: vaCurrency:
       SkipBytes(SizeOf(Currency));}
     vaDate, vaInt64:
@@ -1107,7 +1095,6 @@ begin
     DoFixupReferences;
 end;
 
-{$ifndef FPUNONE}
 function TReader.ReadFloat: Extended;
 begin
   if FDriver.NextValue = vaExtended then
@@ -1173,7 +1160,6 @@ begin
   end;
 end;
 
-{$endif}
 
 function TReader.ReadCurrency: Currency;
 begin
@@ -1185,7 +1171,6 @@ begin
     Result := ReadInteger;
 end;
 
-{$ifndef FPUNONE}
 function TReader.ReadDate: TDateTime;
 begin
   if FDriver.NextValue = vaDate then
@@ -1195,7 +1180,6 @@ begin
   end else
     Result := ReadInteger;
 end;
-{$endif}
 
 function TReader.ReadIdent: rawbytestring;
 var
@@ -1298,7 +1282,6 @@ begin
       begin
         Result:=ReadCurrency;
       end;
-{$ifndef fpunone}
     vaSingle:
       begin
         Result:=ReadSingle;
@@ -1311,7 +1294,6 @@ begin
       begin
         Result:=ReadDate;
       end;
-{$endif fpunone}
     vaWString,vaUTF8String:
       begin
         Result:=ReadWideString;
@@ -1491,10 +1473,8 @@ begin
           raise EReadError.Create(SInvalidPropertyValue);
         SetOrdProp(Instance, PropInfo, Value);
       end;
-{$ifndef FPUNONE}
     tkFloat:
       SetFloatProp(Instance, PropInfo, ReadFloat);
-{$endif}
     tkSet:
       begin
         CheckValue(vaSet);
@@ -1831,10 +1811,8 @@ begin
       end;}
     vaInt8, vaInt16, vaInt32:
       Writer.WriteInteger(ReadInteger);
-{$ifndef FPUNONE}
     vaExtended:
       Writer.WriteFloat(ReadFloat);
-{$endif}
     {!!!: vaString:
       Writer.WriteStr(ReadStr);}
     vaIdent:
@@ -1848,16 +1826,12 @@ begin
       end;}
     {!!!: vaSet:
       Writer.WriteSet(ReadSet);}
-{$ifndef FPUNONE}
     vaSingle:
       Writer.WriteSingle(ReadSingle);
-{$endif}
     {!!!: vaCurrency:
       Writer.WriteCurrency(ReadCurrency);}
-{$ifndef FPUNONE}
     vaDate:
       Writer.WriteDate(ReadDate);
-{$endif}
     vaInt64:
       Writer.WriteInteger(ReadInt64);
   end;

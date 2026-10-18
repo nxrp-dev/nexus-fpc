@@ -1202,7 +1202,7 @@ implementation
       begin
         Result:=False;
         for T:=Low(TFPUType) to High(TFPUType) do
-          if FPUTypeStr[T]=S then
+          if (FPUTypeStr[T]<>'') and (FPUTypeStr[T]=S) then
             begin
               A:=T;
               Result:=True;

@@ -5,7 +5,7 @@ unit utestsha512;
 interface
 
 uses
-  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fpsha512, fphashutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fphashutils;
 
 type
 
@@ -64,7 +64,8 @@ procedure Registerutestsha512Tests(ARegistry: TNXTestRegistry);
 
 implementation
 
-uses
+uses HlpHashFactory,
+
   basenenc;
 
 { TTestSHA512 }
@@ -78,7 +79,7 @@ begin
   S:=[];
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
-  TSHA512.DigestHexa(S, Digest);
+  Digest := THashFactory.TCrypto.CreateSHA2_512.ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
@@ -90,7 +91,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
-  TSHA512.DigestBase64(S,False,Digest);
+  Digest := Base64.Encode(THashFactory.TCrypto.CreateSHA2_512.ComputeBytes(S).GetBytes, False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
@@ -102,7 +103,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
-  TSHA512.HMACHexa(K,S,Digest);
+  Digest := THashFactory.THMAC.CreateHMAC(THashFactory.TCrypto.CreateSHA2_512, K).ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
@@ -177,7 +178,7 @@ begin
   BytesToHexStr(Res,@Test1Out,SizeOf(Test1Out));
   S:=TStringStream.Create('abc');
   try
-    TestContext.AssertTrue((Res)=(TSHA512.StreamHexa(S)), 'Correct hash');
+    TestContext.AssertTrue((Res)=(THashFactory.TCrypto.CreateSHA2_512.ComputeStream(S).ToString(False)), 'Correct hash');
   finally
     S.Free;
   end;
@@ -195,7 +196,7 @@ begin
   S:=[];
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
-  TSHA384.DigestHexa(S, Digest);
+  Digest := THashFactory.TCrypto.CreateSHA2_384.ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
@@ -207,7 +208,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
-  TSHA384.DigestBase64(S,False,Digest);
+  Digest := Base64.Encode(THashFactory.TCrypto.CreateSHA2_384.ComputeBytes(S).GetBytes, False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
@@ -219,7 +220,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
-  TSHA384.HMACHexa(K,S,Digest);
+  Digest := THashFactory.THMAC.CreateHMAC(THashFactory.TCrypto.CreateSHA2_384, K).ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
@@ -288,7 +289,7 @@ begin
   BytesToHexStr(Res,@Test1Out384,SizeOf(Test1Out384));
   S:=TStringStream.Create('abc');
   try
-    TestContext.AssertTrue((Res)=(TSHA384.StreamHexa(S)), 'Correct hash');
+    TestContext.AssertTrue((Res)=(THashFactory.TCrypto.CreateSHA2_384.ComputeStream(S).ToString(False)), 'Correct hash');
   finally
     S.Free;
   end;

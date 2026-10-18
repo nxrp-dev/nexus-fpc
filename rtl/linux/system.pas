@@ -594,8 +594,6 @@ begin
   InitSyscallIntf;
 {$endif}
 
-{$ifndef FPUNONE}
-{$endif}
   IsConsole := TRUE;
   StackLength := CheckInitialStkLen(initialStkLen);
   StackBottom := pointer(ptruint((ptruint(initialstkptr) or (page_size - 1)) + 1 - StackLength));

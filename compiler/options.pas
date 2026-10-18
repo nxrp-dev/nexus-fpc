@@ -4367,20 +4367,17 @@ begin
     end;
 {$endif defined(fpucapabilities)}
 
-  if InitSettings.FPUType<>fpu_none then
-    begin
 {$if defined(i386)}
-      Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
+  Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
 {$endif}
-      Def_System_Macro('FPC_HAS_TYPE_SINGLE');
-      Def_System_Macro('FPC_HAS_TYPE_DOUBLE');
+  Def_System_Macro('FPC_HAS_TYPE_SINGLE');
+  Def_System_Macro('FPC_HAS_TYPE_DOUBLE');
 {$if not defined(i386) and not defined(x86_64) and not defined(aarch64)}
-      Def_System_Macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
+  Def_System_Macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
 {$endif}
 {$ifdef x86_64}
-      Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
+  Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
 {$endif}
-    end;
     { Enable now for testing }
 {$ifndef DISABLE_TLS_DIRECTORY}
     if TargetInfo.system in systems_windows then

@@ -62,7 +62,6 @@ Type
 
    TFPUType =
      (fpu_none,
-//      fpu_soft,
       fpu_x87,
       fpu_sse,
       fpu_sse2,
@@ -144,8 +143,7 @@ const
    );
 
    FPUTypeStr : array[TFPUType] of string[7] = (
-     'NONE',
-//     'SOFT',
+     '',
      'X87',
      'SSE',
      'SSE2',

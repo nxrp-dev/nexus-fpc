@@ -25,10 +25,10 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.SysUtils, System.Classes, System.Hash.Sha1, System.Hash.Sha512, System.Hash.Sha256, System.Hash.Tlsbigint, System.Hash.Utils, System.Hash.Asn, Fcl.BaseNEnc;
+  System.SysUtils, System.Classes, System.Hash.Tlsbigint, System.Hash.Utils, System.Hash.Asn, Fcl.BaseNEnc;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  sysutils, Classes, sha1, fpsha512, fpsha256, fpTLSBigInt, fphashutils, fpasn, basenenc;
+  sysutils, Classes, fpTLSBigInt, fphashutils, fpasn, basenenc;
 {$ENDIF FPC_DOTTEDUNITS}
 
 const
@@ -198,6 +198,8 @@ function MGF1SHA1(const InputStr: string; Len: integer): string;
 function MGF1SHA256(const InputStr: string; Len: integer): string;
 
 implementation
+
+uses HlpHashFactory;
 
 const
   RSA_MODULUS_BYTES_MAX = 512; // 4096 bit maximum
@@ -1223,45 +1225,36 @@ begin
   Result:=MGF1(InputStr,@HashFunc,Len);
 end;
 
-procedure HashFuncSHA1(Input: PByte; InLen: Integer; Output: PByte);
+procedure HashFuncSHA1(AInput: PByte; ALength: Integer; AOutput: PByte);
 var
-  Context: TSHA1Context;
-  Digest: TSHA1Digest;
+  lDigest: TBytes;
 begin
-  SHA1Init(Context);
-  SHA1Update(Context,Input^,InLen);
-  SHA1Final(Context,Digest);
-  System.Move(Digest[0],Output^,SizeOf(Digest));
+  lDigest := THashFactory.TCrypto.CreateSHA1.ComputeUntyped(AInput^, ALength).GetBytes;
+  Move(lDigest[0], AOutput^, Length(lDigest));
 end;
 
-procedure HashFuncSHA256(Input: PByte; InLen: Integer; Output: PByte);
+procedure HashFuncSHA256(AInput: PByte; ALength: Integer; AOutput: PByte);
 var
-  SHA256: TSHA256;
+  lDigest: TBytes;
 begin
-  SHA256.Init;
-  SHA256.Update(Input,InLen);
-  SHA256.Final;
-  System.Move(SHA256.Digest[0],Output^,SHA256_DIGEST_SIZE);
+  lDigest := THashFactory.TCrypto.CreateSHA2_256.ComputeUntyped(AInput^, ALength).GetBytes;
+  Move(lDigest[0], AOutput^, Length(lDigest));
 end;
 
-procedure HashFuncSHA384(Input: PByte; InLen: Integer; Output: PByte);
+procedure HashFuncSHA384(AInput: PByte; ALength: Integer; AOutput: PByte);
 var
-  SHA384: TSHA384;
+  lDigest: TBytes;
 begin
-  SHA384.Init;
-  SHA384.Update(Input,InLen);
-  SHA384.Final;
-  System.Move(SHA384.Digest[0],Output^,SHA384_DIGEST_SIZE);
+  lDigest := THashFactory.TCrypto.CreateSHA2_384.ComputeUntyped(AInput^, ALength).GetBytes;
+  Move(lDigest[0], AOutput^, Length(lDigest));
 end;
 
-procedure HashFuncSHA512(Input: PByte; InLen: Integer; Output: PByte);
+procedure HashFuncSHA512(AInput: PByte; ALength: Integer; AOutput: PByte);
 var
-  SHA512: TSHA512;
+  lDigest: TBytes;
 begin
-  SHA512.Init;
-  SHA512.Update(Input,InLen);
-  SHA512.Final;
-  System.Move(SHA512.Digest[0],Output^,SHA512_DIGEST_SIZE);
+  lDigest := THashFactory.TCrypto.CreateSHA2_512.ComputeUntyped(AInput^, ALength).GetBytes;
+  Move(lDigest[0], AOutput^, Length(lDigest));
 end;
 
 { TRSAHashFuncInfo }
@@ -1269,25 +1262,25 @@ end;
 procedure TRSAHashFuncInfo.UseSHA1;
 begin
   Func:=@HashFuncSHA1;
-  DigestLen:=SizeOf(TSHA1Digest);
+  DigestLen:=20;
 end;
 
 procedure TRSAHashFuncInfo.UseSHA256;
 begin
   Func:=@HashFuncSHA256;
-  DigestLen:=SHA256_DIGEST_SIZE;
+  DigestLen:=32;
 end;
 
 procedure TRSAHashFuncInfo.UseSHA384;
 begin
   Func:=@HashFuncSHA384;
-  DigestLen:=SHA384_DIGEST_SIZE;
+  DigestLen:=48;
 end;
 
 procedure TRSAHashFuncInfo.UseSHA512;
 begin
   Func:=@HashFuncSHA512;
-  DigestLen:=SHA512_DIGEST_SIZE;
+  DigestLen:=64;
 end;
 
 { TX509RSAPrivateKey }

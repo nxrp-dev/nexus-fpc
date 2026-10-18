@@ -12,11 +12,6 @@ program calext3;
 {$R-}
 {$Q-}
 
-{ requires libgcc for the C functions }
-{$ifdef FPUSOFT}
-  {$define NO_FLOAT}
-{$endif}
-
 type
   int8_t = shortint;
   pint8_t = ^int8_t;

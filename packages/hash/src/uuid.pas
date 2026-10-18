@@ -24,10 +24,10 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.SysUtils, System.DateUtils, System.Hash.Md5, System.Hash.Sha1;
+  System.SysUtils, System.DateUtils;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  SysUtils, DateUtils, md5, sha1;
+  SysUtils, DateUtils;
 {$ENDIF FPC_DOTTEDUNITS}
 
 
@@ -143,6 +143,8 @@ function true_random: unsigned16;
 
 implementation
 
+uses HlpHashFactory, HlpIHash;
+
 
 { uuid_initialize }
 
@@ -211,24 +213,21 @@ end;
 
 procedure uuid_create_md5_from_name(out uuid: uuid_t; const nsid: uuid_t; const name: RawByteString);
 var
-  net_nsid: uuid_t;
-  c: TMDContext;
-  hash: TMDDigest;
+  lNamespace: uuid_t;
+  lHash: IHash;
+  lDigest: TBytes;
 begin
-  (* put name space ID in network byte order so it hashes the same
-     no matter what endian machine we're on *)
-  net_nsid := nsid;
-  net_nsid.time_low := ntobe(net_nsid.time_low);
-  net_nsid.time_mid := ntobe(net_nsid.time_mid);
-  net_nsid.time_hi_and_version := ntobe(net_nsid.time_hi_and_version);
-
-  MDInit(c, MD_VERSION_5);
-  MDUpdate(c, net_nsid, sizeof(net_nsid));
-  MDUpdate(c, PAnsiChar(name)^, Length(name));
-  MDFinal(c, hash);
-
-  (* the hash is in network byte order at this point *)
-  format_uuid_v3or5(uuid, @hash, UUID_VERSION_3);
+  lNamespace := nsid;
+  lNamespace.time_low := ntobe(lNamespace.time_low);
+  lNamespace.time_mid := ntobe(lNamespace.time_mid);
+  lNamespace.time_hi_and_version := ntobe(lNamespace.time_hi_and_version);
+  lHash := THashFactory.TCrypto.CreateMD5;
+  lHash.Initialize;
+  lHash.TransformUntyped(lNamespace, SizeOf(lNamespace));
+  if name <> '' then
+    lHash.TransformUntyped(name[1], Length(name));
+  lDigest := lHash.TransformFinal.GetBytes;
+  format_uuid_v3or5(uuid, @lDigest[0], UUID_VERSION_3);
 end;
 
 
@@ -236,24 +235,21 @@ end;
 
 procedure uuid_create_sha1_from_name(out uuid: uuid_t; const nsid: uuid_t; const name: RawByteString);
 var
-  net_nsid: uuid_t;
-  c: TSHA1Context;
-  hash: TSHA1Digest;
+  lNamespace: uuid_t;
+  lHash: IHash;
+  lDigest: TBytes;
 begin
-  (* put name space ID in network byte order so it hashes the same
-     no matter what endian machine we're on *)
-  net_nsid := nsid;
-  net_nsid.time_low := ntobe(net_nsid.time_low);
-  net_nsid.time_mid := ntobe(net_nsid.time_mid);
-  net_nsid.time_hi_and_version := ntobe(net_nsid.time_hi_and_version);
-
-  SHA1Init(c);
-  SHA1Update(c, net_nsid, sizeof(net_nsid));
-  SHA1Update(c, PAnsiChar(name)^, Length(name));
-  SHA1Final(c, hash);
-
-  (* the hash is in network byte order at this point *)
-  format_uuid_v3or5(uuid, @hash, UUID_VERSION_5);
+  lNamespace := nsid;
+  lNamespace.time_low := ntobe(lNamespace.time_low);
+  lNamespace.time_mid := ntobe(lNamespace.time_mid);
+  lNamespace.time_hi_and_version := ntobe(lNamespace.time_hi_and_version);
+  lHash := THashFactory.TCrypto.CreateSHA1;
+  lHash.Initialize;
+  lHash.TransformUntyped(lNamespace, SizeOf(lNamespace));
+  if name <> '' then
+    lHash.TransformUntyped(name[1], Length(name));
+  lDigest := lHash.TransformFinal.GetBytes;
+  format_uuid_v3or5(uuid, @lDigest[0], UUID_VERSION_5);
 end;
 
 
@@ -321,7 +317,7 @@ begin
   (* put in the variant and version bits *)
   uuid.time_hi_and_version := uuid.time_hi_and_version and $0FFF;
   uuid.time_hi_and_version := uuid.time_hi_and_version or (v shl 12);
-  uuid.clock_seq_hi_and_reserved := $3F;
+  uuid.clock_seq_hi_and_reserved := uuid.clock_seq_hi_and_reserved and $3F;
   uuid.clock_seq_hi_and_reserved := uuid.clock_seq_hi_and_reserved or $80;
 end;
 

@@ -25,7 +25,6 @@
         result := c
       end;
 
-{$ifndef FPUNONE}
     function round(c : currency) : int64;
       var
         rem, absrem: currency;
@@ -60,7 +59,6 @@
             end;
         end;
       end;
-{$endif FPUNONE}
 
 
     function round(c : comp) : int64; {$ifdef systeminline} inline; {$endif}

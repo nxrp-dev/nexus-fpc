@@ -854,8 +854,7 @@ implementation
                     p:=CTypeConvNode.Create_Internal(p,S32IntType)
                 else if Is_Void(p.resultdef) then
                   CGMessagePos1(p.fileinfo,type_e_wrong_type_in_array_constructor,p.resultdef.TypeName)
-                else if iscvarargs and Is_Currency(p.resultdef)
-                    and (CurrentSettings.FPUType<>fpu_none) then
+                else if iscvarargs and Is_Currency(p.resultdef) then
                   p:=CTypeConvNode.create(p,S64FloatType);
               end;
             floatdef :

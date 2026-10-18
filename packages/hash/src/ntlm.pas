@@ -23,17 +23,19 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.Math, System.Strings, System.Hash.Md5;
+  System.Math, System.Strings, System.SysUtils;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  Math, Strings, md5;
+  Math, Strings, SysUtils;
 {$ENDIF FPC_DOTTEDUNITS}
 
 
-function LMGenerate(const Password: PAnsiChar): TMDDigest;
-function NTGenerate(const Password: PAnsiChar): TMDDigest;
+function LMGenerate(const Password: PAnsiChar): TBytes;
+function NTGenerate(const Password: PAnsiChar): TBytes;
 
 implementation
+
+uses HlpHashFactory;
 
 const
   perm1: array[0..55] of Byte = (
@@ -338,10 +340,11 @@ begin
 end;*)
 
 
-function LMGenerate(const Password: PAnsiChar): TMDDigest;
+function LMGenerate(const Password: PAnsiChar): TBytes;
 var
   dospwd: array[0..14] of Byte;
 begin
+  Result := nil;
   if not Assigned(Password) then
     Exit;
 
@@ -352,17 +355,19 @@ begin
   StrUpper(PAnsiChar(@dospwd[0]));
 
   (* Only the first 14 chars are considered, password need not be null terminated *)
-  E_P16(@dospwd[0], @Result);
+  SetLength(Result, 16);
+  E_P16(@dospwd[0], @Result[0]);
 
   FillChar(dospwd, Sizeof(dospwd), 0);
 end;
 
 
-function NTGenerate(const Password: PAnsiChar): TMDDigest;
+function NTGenerate(const Password: PAnsiChar): TBytes;
 var
   pos: Integer;
   wpwd: array[0..127] of WideChar;
 begin
+  Result := nil;
   if not Assigned(Password) then
     Exit;
 
@@ -373,7 +378,7 @@ begin
     inc(pos);
   end;
 
-  Result := MDBuffer(wpwd, 2*pos, MD_VERSION_4);
+  Result := THashFactory.TCrypto.CreateMD4.ComputeUntyped(wpwd, 2 * pos).GetBytes;
   FillChar(wpwd, Sizeof(wpwd), 0);
 end;
 

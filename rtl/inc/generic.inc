@@ -2390,13 +2390,12 @@ end;
 
 {$endif ndef FPC_SYSTEM_HAS_INT_STR_QWORD}
 
-{$ifndef FPUNONE}
 {$ifndef FPC_SYSTEM_HAS_SYSRESETFPU}
 
 procedure SysResetFpu;{$ifdef SYSTEMINLINE}inline;{$endif}
 begin
   softfloat_exception_flags:=[];
-{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
+{$ifndef FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD}
   SetNativeFPUControlWord(DefaultFPUControlWord);
 {$endif}
 end;
@@ -2412,21 +2411,18 @@ begin
 end;
 
 {$endif FPC_SYSTEM_HAS_SYSINITFPU}
-{$endif}
 
 {$ifndef FPC_SYSTEM_HAS_FPC_CPUINIT}
 procedure fpc_cpuinit;
   begin
-{$ifndef FPUNONE}
 {$ifdef FPC_HAS_FEATURE_DYNLIBS}
     if not IsLibrary then
 {$endif}
       SysInitFPU;
-{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
+{$ifndef FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD}
     DefaultFPUControlWord:=GetNativeFPUControlWord;
 {$endif}
     SysResetFPU;
-{$endif}
   end;
 {$endif}
 

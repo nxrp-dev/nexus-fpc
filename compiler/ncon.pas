@@ -439,8 +439,6 @@ implementation
     {   i386           }
     constructor TRealConstNode.create(v : BestReal;def:TDef);
       begin
-         if CurrentSettings.FPUType=fpu_none then
-            InternalError(2008022401);
          if def.typ<>floatdef then
            InternalError(2002022402);
          inherited create(realconstn);

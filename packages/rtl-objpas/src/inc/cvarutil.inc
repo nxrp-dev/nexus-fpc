@@ -80,11 +80,9 @@ begin
         varSmallInt : Result := vSmallInt;
         varShortInt : Result := vShortInt;
         varInteger  : Result := smallint(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := smallint(Round(vSingle));
         varDouble   : Result := smallint(Round(vDouble));
         varDate     : Result := smallint(Round(vDate));
-{$endif}
         varCurrency : Result := smallint(Round(vCurrency));
         varBoolean  : Result := smallint(SmallInt(vBoolean));
         varVariant  : Result := VariantToSmallInt(PVarData(vPointer)^);
@@ -103,11 +101,9 @@ begin
         varSmallInt : Result := PSmallInt(vPointer)^;
         varShortInt : Result := PShortInt(vPointer)^;
         varInteger  : Result := smallint(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := smallint(Round(PSingle(vPointer)^));
         varDouble   : Result := smallint(Round(PDouble(vPointer)^));
         varDate     : Result := smallint(Round(PDate(vPointer)^));
-{$endif}
         varCurrency : Result := smallint(Round(PCurrency(vPointer)^));
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^);
         varVariant  : Result := VariantToSmallInt(PVarData(vPointer)^);
@@ -174,11 +170,9 @@ begin
         varSmallInt : Result := shortint(vSmallInt);
         varShortInt : Result := vShortInt;
         varInteger  : Result := shortint(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := shortint(Round(vSingle));
         varDouble   : Result := shortint(Round(vDouble));
         varDate     : Result := shortint(Round(vDate));
-{$endif}
         varCurrency : Result := shortint(Round(vCurrency));
         varBoolean  : Result := shortint(vBoolean);
         varVariant  : Result := VariantToShortInt(PVarData(vPointer)^);
@@ -197,11 +191,9 @@ begin
         varSmallInt : Result := shortint(PSmallInt(vPointer)^);
         varShortInt : Result := PShortInt(vPointer)^;
         varInteger  : Result := shortint(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := shortint(Round(PSingle(vPointer)^));
         varDouble   : Result := shortint(Round(PDouble(vPointer)^));
         varDate     : Result := shortint(Round(PDate(vPointer)^));
-{$endif}
         varCurrency : Result := shortint(Round(PCurrency(vPointer)^));
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^);
         varVariant  : Result := VariantToShortInt(PVarData(vPointer)^);
@@ -268,11 +260,9 @@ begin
         varSmallInt : Result := vSmallInt;
         varShortInt : Result := vShortInt;
         varInteger  : Result := vInteger;
-{$ifndef FPUNONE}
         varSingle   : Result := longint(Round(vSingle));
         varDouble   : Result := longint(Round(vDouble));
         varDate     : Result := longint(Round(vDate));
-{$endif}
         varCurrency : Result := longint(Round(vCurrency));
         varBoolean  : Result := SmallInt(vBoolean);
         varVariant  : Result := VariantToLongInt(PVarData(vPointer)^);
@@ -291,11 +281,9 @@ begin
         varSmallInt : Result := PSmallInt(vPointer)^;
         varShortInt : Result := PShortInt(vPointer)^;
         varInteger  : Result := PInteger(vPointer)^;
-{$ifndef FPUNONE}
         varSingle   : Result := longint(Round(PSingle(vPointer)^));
         varDouble   : Result := longint(Round(PDouble(vPointer)^));
         varDate     : Result := longint(Round(PDate(vPointer)^));
-{$endif}
         varCurrency : Result := longint(Round(PCurrency(vPointer)^));
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^);
         varVariant  : Result := VariantToLongInt(PVarData(vPointer)^);
@@ -362,11 +350,9 @@ begin
         varSmallInt : Result := vSmallInt;
         varShortInt : Result := vShortInt;
         varInteger  : Result := cardinal(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := cardinal(Round(vSingle));
         varDouble   : Result := cardinal(Round(vDouble));
         varDate     : Result := cardinal(Round(vDate));
-{$endif}
         varCurrency : Result := cardinal(Round(vCurrency));
         varBoolean  : Result := cardinal(SmallInt(vBoolean));
         varVariant  : Result := VariantToCardinal(PVarData(vPointer)^);
@@ -385,11 +371,9 @@ begin
         varSmallInt : Result := cardinal(PSmallInt(vPointer)^);
         varShortInt : Result := cardinal(PShortInt(vPointer)^);
         varInteger  : Result := cardinal(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := cardinal(Round(PSingle(vPointer)^));
         varDouble   : Result := cardinal(Round(PDouble(vPointer)^));
         varDate     : Result := cardinal(Round(PDate(vPointer)^));
-{$endif}
         varCurrency : Result := cardinal(Round(PCurrency(vPointer)^));
         varBoolean  : Result := cardinal(SmallInt(PWordBool(vPointer)^));
         varVariant  : Result := VariantToCardinal(PVarData(vPointer)^);
@@ -432,7 +416,6 @@ end;
 
 {--- Single ---}
 
-{$ifndef FPUNONE}
 
 Function WStrToSingle(p: Pointer) : Single;
 var
@@ -655,7 +638,6 @@ begin
   end; {$ENDIF}
 end;
 
-{$endif FPUNONE}
 
 {--- Currency ---}
 
@@ -723,7 +705,6 @@ begin
         varSmallInt : Result := vSmallInt;
         varShortInt : Result := vShortInt;
         varInteger  : Result := vInteger;
-{$ifndef FPUNONE}
         varSingle   : begin
           if (vSingle > MaxCurrency) or (vSingle < MinCurrency) then
             VariantTypeMismatch(vType, varCurrency);
@@ -739,7 +720,6 @@ begin
             VariantTypeMismatch(vType, varCurrency);
           Result := vDate;
         end;
-{$endif}
         varCurrency : Result := vCurrency;
         varBoolean  : Result := SmallInt(vBoolean);
         varVariant  : Result := VariantToCurrency(PVarData(vPointer)^);
@@ -758,7 +738,6 @@ begin
         varSmallInt : Result := PSmallInt(vPointer)^;
         varShortInt : Result := PShortInt(vPointer)^;
         varInteger  : Result := PInteger(vPointer)^;
-{$ifndef FPUNONE}
         varSingle   : begin
           if (PSingle(vPointer)^ > MaxCurrency) or (PSingle(vPointer)^ < MinCurrency) then
             VariantTypeMismatch(vType, varCurrency);
@@ -774,7 +753,6 @@ begin
             VariantTypeMismatch(vType, varCurrency);
           Result := PDate(vPointer)^;
         end;
-{$endif}
         varCurrency : Result := PCurrency(vPointer)^;
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^);
         varVariant  : Result := VariantToCurrency(PVarData(vPointer)^);
@@ -801,7 +779,6 @@ end;
 
 {--- Date ---}
 
-{$ifndef FPUNONE}
 
 Function WStrToDate(p: Pointer) : TDateTime;
 var
@@ -888,7 +865,6 @@ begin
   end; {$ENDIF}
 end;
 
-{$endif}
 
 {--- Boolean ---}
 
@@ -923,12 +899,10 @@ begin
         varSmallInt : Result := vSmallInt <> 0;
         varShortInt : Result := vShortInt <> 0;
         varInteger  : Result := vInteger <> 0;
-{$ifndef FPUNONE}
         varSingle   : Result := vSingle <> 0;
         varDouble   : Result := vDouble <> 0;
         varCurrency : Result := vCurrency <> 0;
         varDate     : Result := vDate <> 0;
-{$endif}
         varBoolean  : Result := vBoolean;
         varVariant  : Result := VariantToBoolean(PVarData(vPointer)^);
         varByte     : Result := vByte <> 0;
@@ -946,12 +920,10 @@ begin
         varSmallInt : Result := PSmallInt(vPointer)^ <> 0;
         varShortInt : Result := PShortInt(vPointer)^ <> 0;
         varInteger  : Result := PInteger(vPointer)^ <> 0;
-{$ifndef FPUNONE}
         varSingle   : Result := PSingle(vPointer)^ <> 0;
         varDouble   : Result := PDouble(vPointer)^ <> 0;
         varCurrency : Result := PCurrency(vPointer)^ <> 0;
         varDate     : Result := PDate(vPointer)^ <> 0;
-{$endif}
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^) <> 0;
         varVariant  : Result := VariantToBoolean(PVarData(vPointer)^);
         varByte     : Result := PByte(vPointer)^ <> 0;
@@ -1017,12 +989,10 @@ begin
         varSmallInt : Result := byte(vSmallInt);
         varShortInt : Result := byte(vShortInt);
         varInteger  : Result := byte(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := byte(Round(vSingle));
         varDouble   : Result := byte(Round(vDouble));
         varCurrency : Result := byte(Round(vCurrency));
         varDate     : Result := byte(Round(vDate));
-{$endif}
         varBoolean  : Result := byte(SmallInt(vBoolean));
         varVariant  : Result := VariantToByte(PVarData(vPointer)^);
         varByte     : Result := vByte;
@@ -1040,12 +1010,10 @@ begin
         varSmallInt : Result := byte(PSmallInt(vPointer)^);
         varShortInt : Result := byte(PShortInt(vPointer)^);
         varInteger  : Result := byte(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := byte(Round(PSingle(vPointer)^));
         varDouble   : Result := byte(Round(PDouble(vPointer)^));
         varCurrency : Result := byte(Round(PCurrency(vPointer)^));
         varDate     : Result := byte(Round(PDate(vPointer)^));
-{$endif}
         varBoolean  : Result := byte(SmallInt(PWordBool(vPointer)^));
         varVariant  : Result := byte(VariantToByte(PVarData(vPointer)^));
         varByte     : Result := PByte(vPointer)^;
@@ -1111,12 +1079,10 @@ begin
         varSmallInt : Result := vSmallInt;
         varShortInt : Result := vShortInt;
         varInteger  : Result := vInteger;
-{$ifndef FPUNONE}
         varSingle   : Result := Round(vSingle);
         varDouble   : Result := Round(vDouble);
         varCurrency : Result := Round(vCurrency);
         varDate     : Result := Round(vDate);
-{$endif}
         varBoolean  : Result := SmallInt(vBoolean);
         varVariant  : Result := VariantToInt64(PVarData(vPointer)^);
         varByte     : Result := vByte;
@@ -1134,12 +1100,10 @@ begin
         varSmallInt : Result := PSmallInt(vPointer)^;
         varShortInt : Result := PShortInt(vPointer)^;
         varInteger  : Result := PInteger(vPointer)^;
-{$ifndef FPUNONE}
         varSingle   : Result := Round(PSingle(vPointer)^);
         varDouble   : Result := Round(PDouble(vPointer)^);
         varCurrency : Result := Round(PCurrency(vPointer)^);
         varDate     : Result := Round(PDate(vPointer)^);
-{$endif}
         varBoolean  : Result := SmallInt(PWordBool(vPointer)^);
         varVariant  : Result := VariantToInt64(PVarData(vPointer)^);
         varByte     : Result := PByte(vPointer)^;
@@ -1205,12 +1169,10 @@ begin
         varSmallInt : Result := qword(vSmallInt);
         varShortInt : Result := qword(vShortInt);
         varInteger  : Result := qword(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := qword(Round(vSingle));
         varDouble   : Result := qword(Round(vDouble));
         varCurrency : Result := qword(Round(vCurrency));
         varDate     : Result := qword(Round(vDate));
-{$endif}
         varBoolean  : Result := qword(SmallInt(vBoolean));
         varVariant  : Result := VariantToQWord(PVarData(vPointer)^);
         varByte     : Result := vByte;
@@ -1228,12 +1190,10 @@ begin
         varSmallInt : Result := qword(PSmallInt(vPointer)^);
         varShortInt : Result := qword(PShortInt(vPointer)^);
         varInteger  : Result := qword(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := qword(Round(PSingle(vPointer)^));
         varDouble   : Result := qword(Round(PDouble(vPointer)^));
         varCurrency : Result := qword(Round(PCurrency(vPointer)^));
         varDate     : Result := qword(Round(PDate(vPointer)^));
-{$endif}
         varBoolean  : Result := qword(SmallInt(PWordBool(vPointer)^));
         varVariant  : Result := VariantToQWord(PVarData(vPointer)^);
         varByte     : Result := PByte(vPointer)^;
@@ -1280,12 +1240,10 @@ begin
         varSmallInt : Result := IntToStr(vSmallInt);
         varShortInt : Result := IntToStr(vShortInt);
         varInteger  : Result := IntToStr(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(vSingle);
         varDouble   : Result := FloatToStr(vDouble);
         varCurrency : Result := CurrToStr(vCurrency);
         varDate     : Result := VarDateToString(vDate);
-{$endif}
         varBoolean  : Result := BoolToStr(vBoolean, True);
         varVariant  : Result := VariantToWideString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(vByte);
@@ -1303,12 +1261,10 @@ begin
         varSmallInt : Result := IntToStr(PSmallInt(vPointer)^);
         varShortInt : Result := IntToStr(PShortInt(vPointer)^);
         varInteger  : Result := IntToStr(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(PSingle(vPointer)^);
         varDouble   : Result := FloatToStr(PDouble(vPointer)^);
         varCurrency : Result := CurrToStr(PCurrency(vPointer)^);
         varDate     : Result := VarDateToString(PDate(vPointer)^);
-{$endif}
         varBoolean  : Result := BoolToStr(PWordBool(vPointer)^, True);
         varVariant  : Result := VariantToWideString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(PByte(vPointer)^);
@@ -1347,12 +1303,10 @@ begin
         varSmallInt : Result := IntToStr(vSmallInt);
         varShortInt : Result := IntToStr(vShortInt);
         varInteger  : Result := IntToStr(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(vSingle);
         varDouble   : Result := FloatToStr(vDouble);
         varCurrency : Result := CurrToStr(vCurrency);
         varDate     : Result := VarDateToString(vDate);
-{$endif}
         varBoolean  : Result := BoolToStr(vBoolean, True);
         varVariant  : Result := VariantToAnsiString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(vByte);
@@ -1370,12 +1324,10 @@ begin
         varSmallInt : Result := IntToStr(PSmallInt(vPointer)^);
         varShortInt : Result := IntToStr(PShortInt(vPointer)^);
         varInteger  : Result := IntToStr(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(PSingle(vPointer)^);
         varDouble   : Result := FloatToStr(PDouble(vPointer)^);
         varCurrency : Result := CurrToStr(PCurrency(vPointer)^);
         varDate     : Result := VarDateToString(PDate(vPointer)^);
-{$endif}
         varBoolean  : Result := BoolToStr(PWordBool(vPointer)^, True);
         varVariant  : Result := VariantToAnsiString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(PByte(vPointer)^);
@@ -1413,12 +1365,10 @@ begin
         varSmallInt : Result := IntToStr(vSmallInt);
         varShortInt : Result := IntToStr(vShortInt);
         varInteger  : Result := IntToStr(vInteger);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(vSingle);
         varDouble   : Result := FloatToStr(vDouble);
         varCurrency : Result := CurrToStr(vCurrency);
         varDate     : Result := VarDateToString(vDate);
-{$endif}
         varBoolean  : Result := BoolToStr(vBoolean, True);
         varVariant  : Result := VariantToUnicodeString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(vByte);
@@ -1436,12 +1386,10 @@ begin
         varSmallInt : Result := IntToStr(PSmallInt(vPointer)^);
         varShortInt : Result := IntToStr(PShortInt(vPointer)^);
         varInteger  : Result := IntToStr(PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   : Result := FloatToStr(PSingle(vPointer)^);
         varDouble   : Result := FloatToStr(PDouble(vPointer)^);
         varCurrency : Result := CurrToStr(PCurrency(vPointer)^);
         varDate     : Result := VarDateToString(PDate(vPointer)^);
-{$endif}
         varBoolean  : Result := BoolToStr(PWordBool(vPointer)^, True);
         varVariant  : Result := VariantToUnicodeString(PVarData(vPointer)^);
         varByte     : Result := IntToStr(PByte(vPointer)^);
@@ -1590,12 +1538,10 @@ begin
         varNull                 : Write(F, 'Null');
         varSmallInt             : Write(F, vSmallInt);
         varInteger              : Write(F, vInteger);
-{$ifndef FPUNONE}
         varSingle               : Write(F, vSingle);
         varDouble               : Write(F, vDouble);
         varCurrency             : Write(F, vCurrency);
         varDate                 : Write(F, vDate);
-{$endif}
         varOleStr               : Write(F, WideString(Pointer(vOleStr)));
         varError                : Write(F, IntToHex(Cardinal(vError), 8));
         varBoolean              : Write(F, vBoolean);
@@ -1614,12 +1560,10 @@ begin
         varNull     or varByRef : Write(F, 'Null');
         varSmallInt or varByRef : Write(F, PSmallInt(vPointer)^);
         varInteger  or varByRef : Write(F, PInteger(vPointer)^);
-{$ifndef FPUNONE}
         varSingle   or varByRef : Write(F, PSingle(vPointer)^);
         varDouble   or varByRef : Write(F, PDouble(vPointer)^);
         varCurrency or varByRef : Write(F, PCurrency(vPointer)^);
         varDate     or varByRef : Write(F, PDate(vPointer)^);
-{$endif}
         varOleStr   or varByRef : Write(F, WideString(PPointer(vPointer)^));
         varError    or varByRef : Write(F, IntToHex(Cardinal(PLongWord(vPointer)^), 8));
         varBoolean  or varByRef : Write(F, PWordBool(vPointer)^);

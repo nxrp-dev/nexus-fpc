@@ -2032,12 +2032,6 @@ implementation
            Message(parser_e_error_in_real);
            d:=1.0;
          end;
-        if CurrentSettings.FPUType=fpu_none then
-          begin
-            Message(parser_e_unsupported_real);
-            result:=CErrorNode.create;
-            exit;
-          end;
         if (CurrentSettings.MinFPConstPrec=S32Real) and
            (d = Single(d)) then
           result:=CRealConstNode.create(d,S32FloatType)

@@ -171,9 +171,7 @@ end;
   {$i sysstr.inc}
 
   { Read date & Time function implementations }
-{$ifndef FPUNONE}
   {$i dati.inc}
-{$endif}
 
 {$IFNDEF HAS_GETTICKCOUNT}
 function GetTickCount: LongWord;
@@ -185,15 +183,7 @@ end;
 {$IFNDEF HAS_GETTICKCOUNT64}
 function GetTickCount64: QWord;
 begin
-{$IFDEF FPU_NONE}
-  {$IFDEF HAS_SYSTIMERTICK}
-  Result := SysTimerTick;
-  {$ELSE}
-  Result := 0;
-  {$ENDIF}
-{$ELSE}
   Result := Trunc(Now * 24 * 60 * 60 * 1000);
-{$ENDIF}
 end;
 {$ENDIF}
 
@@ -999,9 +989,7 @@ begin
       vtInteger:      Result[i]:=IntToStr(Args[i].VInteger);
       vtBoolean:      Result[i]:=BoolToStr(Args[i].VBoolean);
       vtChar:         Result[i] := Args[i].VChar;
-      {$ifndef FPUNONE}
       vtExtended:     Result[i]:= FloatToStr(Args[i].VExtended^);
-      {$ENDIF}
       vtString:       Result[i] := Args[i].VString^;
       vtPointer:      Result[i] := '0x'+HexStr(PtrInt(Args[i].VPointer),SizeOF(PtrInt));
       vtPChar:        Result[i] := Args[i].VPChar;

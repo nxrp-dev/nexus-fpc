@@ -69,9 +69,7 @@ begin
       if (VType and varByRef) = 0 then
         case VType of
           varEmpty, varNull, varSmallint, varInteger, varWord,
-{$ifndef FPUNONE}
           varSingle, varDouble, varCurrency, varDate,
-{$endif}
           varError, varBoolean, varByte,VarShortInt,
           varInt64, VarLongWord,VarQWord:
             ;
@@ -109,9 +107,7 @@ begin
         case (VType and varTypeMask) of
           varEmpty, varNull:;
           varSmallint, varInteger, varWord,
-{$ifndef FPUNONE}
           varSingle, varDouble, varCurrency, varDate,
-{$endif}
           varError, varBoolean, varByte,VarShortInt,
           varInt64, VarLongWord,VarQWord:
             Move(VBytes, VargDest.VBytes, SizeOf(VargDest.VBytes));
@@ -144,12 +140,10 @@ begin
       varEmpty, varNull:;
       varSmallint : VargDest.VSmallInt:=PSmallInt(VPointer)^;
       varInteger  : VargDest.VInteger:=PLongint(VPointer)^;
-{$ifndef FPUNONE}
       varSingle   : VargDest.VSingle:=PSingle(VPointer)^;
       varDouble   : VargDest.VDouble:=PDouble(VPointer)^;
       varCurrency : VargDest.VCurrency:=PCurrency(VPointer)^;
       varDate     : VargDest.VDate:=PDate(VPointer)^;
-{$endif}
       varBoolean  : VargDest.VBoolean:=PWordBool(VPointer)^;
       varError    : VargDest.VError:=PError(VPointer)^;
       varByte     : VargDest.VByte:=PByte(VPointer)^;
@@ -190,12 +184,10 @@ begin
         case Vartype of
           varSmallInt : VargDest.VSmallInt:=VariantToSmallInt(Tmp);
           varInteger  : VargDest.VInteger:=VariantToLongint(Tmp);
-{$ifndef FPUNONE}
           varSingle   : VargDest.VSingle:=VariantToSingle(Tmp);
           varDouble   : VargDest.VDouble:=VariantToDouble(Tmp);
           varCurrency : VargDest.VCurrency:=VariantToCurrency(Tmp);
           varDate     : VargDest.VDate:=VariantToDate(tmp);
-{$endif}
           varOleStr   : MakeWideString(VargDest.VoleStr, VariantToWideString(tmp));
           varDispatch : Result:=VAR_TYPEMISMATCH;
           varUnknown  : Result:=VAR_TYPEMISMATCH;
@@ -388,9 +380,7 @@ end;
 
 Const
   Supportedpsas = [varSmallint,varInteger,
-{$ifndef FPUNONE}
      varSingle,varDouble,varCurrency,varDate,
-{$endif}
      varOleStr,varDispatch,varError,varBoolean,varVariant,varUnknown,varShortInt,varByte,
      varWord,varLongWord,varInt64,varQWord];
   psaElementFlags : Array [varEmpty..varQWord] of Longint =

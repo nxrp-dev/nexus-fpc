@@ -97,10 +97,8 @@ type
   u_short = cushort;
   coff_t = clong;
 
-{$ifndef FPUNONE}
   cfloat                 = single;             pcfloat                = ^cfloat;
   cdouble                = double;             pcdouble               = ^cdouble;
-{$endif}
 {$endif}
 
 {$if (defined(win64)) or (defined(android))}
@@ -112,7 +110,6 @@ type
   {$define longdouble_is_double}
 {$ifend}
 
-{$ifndef FPUNONE}
 {$if defined(longdouble_is_double) or not defined(FPC_HAS_CEXTENDED)}
   clongdouble=double;
 {$else}
@@ -150,11 +147,9 @@ operator <=(const e:Double;const c:clongdouble) r:boolean;{$ifdef CTYPES_INLINE}
 operator <=(const c:clongdouble;const e:Double) r:boolean;{$ifdef CTYPES_INLINE}inline;{$endif}
 {$endif dummy}
 {$endif}
-{$endif FPUNONE}
 
 implementation
 
-{$ifndef FPUNONE}
 
 {$ifdef longdouble_assignment_overload_real128}
 
@@ -304,6 +299,5 @@ begin
 end;
 {$endif}
 {$endif}
-{$endif FPUNONE}
 
 end.

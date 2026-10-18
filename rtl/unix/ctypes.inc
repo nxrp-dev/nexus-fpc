@@ -59,11 +59,9 @@ type
   culong                 = cardinal;           pculong                = ^culong;
 {$endif}
 
-{$ifndef FPUNONE}
   cfloat                 = single;             pcfloat                = ^cfloat;
   cdouble                = double;             pcdouble               = ^cdouble;
   clongdouble            = extended;           pclongdouble           = ^clongdouble;
-{$endif}
 
 // csize_t is defined in the operatingsystem dependant ptypes.inc
 // csize_t               = ptruint;            pcsize_t               = pptruint;

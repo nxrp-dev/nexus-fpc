@@ -26,7 +26,6 @@ interface
 {$mode objfpc}
 {$H+}
 
-{$ifndef FPUNONE}
 {$IFDEF FPC_DOTTEDUNITS}
 uses
   System.SysUtils, System.Math, System.SysConst;
@@ -786,7 +785,4 @@ end;
 finalization
   setlength(theunits,0);
   setlength(thefamilies,0);
-{$else}
-implementation
-{$endif}
 end.

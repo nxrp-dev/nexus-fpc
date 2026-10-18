@@ -114,11 +114,9 @@ Type
   { moved here from psystem.pas
     Delphi allows chose of overloaded procedure depending
     on Real <-> Double, so use type here, see also tw7425.pas (FK) }
-{$ifndef FPUNONE}
   Real = type Double;
 { Include generic version of float64 record }
 {$I genmathh.inc}
-{$endif}
 
 {$ifdef CPUI386}
   {$define CPU32}
@@ -130,9 +128,7 @@ Type
   {$define SUPPORT_EXTENDED}
   {$define SUPPORT_COMP}
 
-  {$ifndef FPUNONE}
     ValReal = Extended;
-  {$endif}
 
   FarPointer = NearFsPointer;
 {$endif CPUI386}
@@ -146,14 +142,10 @@ Type
 {$ifndef FPC_COMP_IS_INT64}
   {$define SUPPORT_COMP}
 {$endif}
-  {$ifndef FPUNONE}
     ValReal = Extended;
-  {$endif}
 {$else FPC_HAS_TYPE_EXTENDED}
   {$define DEFAULT_DOUBLE}
-  {$ifndef FPUNONE}
     ValReal = Double;
-  {$endif}
 {$endif FPC_HAS_TYPE_EXTENDED}
 
   {$define SUPPORT_SINGLE}
@@ -291,20 +283,16 @@ Type
   RawByteString       = type AnsiString(CP_NONE);
 
   HRESULT             = type Longint;
-{$ifndef FPUNONE}
   TDateTime           = type Double;
   TDate               = type TDateTime;
   TTime               = type TDateTime;
-{$endif}
   TError               = type Longint;
 
-{$ifndef FPUNONE}
   PSingle             = ^Single;
   PDouble             = ^Double;
   PExtended           = ^Extended;
 
   PPDouble            = ^PDouble;
-{$endif}
   PCurrency           = ^Currency;
   PComp               = ^Comp;
 
@@ -361,10 +349,8 @@ Type
   PAnsiString         = ^AnsiString;
   PRawByteString      = ^RawByteString;
 
-{$ifndef FPUNONE}
   PDate               = ^TDateTime;
   PDateTime           = ^TDateTime;
-{$endif}
   PError              = ^TError;
 
 {$ifdef FPC_HAS_FEATURE_VARIANTS}
@@ -668,9 +654,7 @@ Function  Random(l:word):word;
 {$endif FPC_USE_SIMPLE_RANDOM}
 Function  Random(l:longint):longint;
 Function  Random(l:int64):int64;
-{$ifndef FPUNONE}
 Function  Random: extended;
-{$endif}
 Procedure Randomize;
 {$endif FPC_HAS_FEATURE_RANDOM}
 
@@ -932,10 +916,8 @@ function PopCnt(Const AValue: Word): Word;[internproc:fpc_in_popcnt_x];
 function PopCnt(Const AValue : DWord): DWord;[internproc:fpc_in_popcnt_x];
 function PopCnt(Const AValue : QWord): QWord;[internproc:fpc_in_popcnt_x];
 
-{$ifndef FPUNONE}
 { float math routines }
 {$I mathh.inc}
-{$endif}
 { currency math routines }
 {$I currh.inc}
 
@@ -1347,10 +1329,8 @@ procedure SysFlushStdIO;
 {$endif not(defined(EMBEDDED)) and not(defined(FREERTOS))}
 
 {$endif FPC_HAS_FEATURE_CONSOLEIO}
-{$ifndef FPUNONE}
 Procedure SysResetFPU;
 Procedure SysInitFPU;
-{$endif}
 
 {*****************************************************************************
                          Abstract/Assert/Error Handling

@@ -468,7 +468,6 @@ begin
   Result:=fLastTokenStr;
 end;
 
-{$ifndef FPUNONE}
 Function TParser.TokenFloat: Extended;
 
 var errcode : word;
@@ -478,7 +477,6 @@ begin
   if errcode<>0 then
     ErrorFmt(SParInvalidFloat,[fLastTokenStr]);
 end;
-{$endif}
 
 Function TParser.TokenInt: Int64;
 begin

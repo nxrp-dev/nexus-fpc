@@ -23,25 +23,19 @@ Function DoSafeLoadLibrary(const Name : RawByteString) : TLibHandle;
 {$else not FPCRTL_FILESYSTEM_TWO_BYTE_API}
 Function DoSafeLoadLibrary(const Name : UnicodeString) : TLibHandle;
 {$endif not FPCRTL_FILESYSTEM_TWO_BYTE_API}
-{$ifndef FPUNONE}
   var
     fpucw: TNativeFPUControlWord;
   begin
     try
       fpucw:=GetNativeFPUControlWord;
-{$else}
-  begin
-{$endif}
 {$ifndef FPCRTL_FILESYSTEM_TWO_BYTE_API}
       Result:=CurrentDLM.LoadLibraryA(Name);
 {$else FPCRTL_FILESYSTEM_TWO_BYTE_API}
       Result:=CurrentDLM.LoadLibraryU(Name);
 {$endif FPCRTL_FILESYSTEM_TWO_BYTE_API}
-{$ifndef FPUNONE}
     finally
       SetNativeFPUControlWord(fpucw);
     end;
-{$endif}
   end;
 
 Function LoadLibrary(const Name : RawByteString) : TLibHandle;

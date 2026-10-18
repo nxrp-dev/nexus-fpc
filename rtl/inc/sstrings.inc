@@ -447,16 +447,12 @@ end;
 { it's used inside real2str.inc and otherwise the searching via the      }
 { compilerproc name will fail (JM)                                       }
 
-{$ifndef FPUNONE}
 {$I flt_conv.inc}
-{$endif}
 
-{$ifndef FPUNONE}
 procedure fpc_shortstr_float(d : ValReal;len,fr,rt : SizeInt;out s : shortstring);[public,alias:'FPC_SHORTSTR_FLOAT']; compilerproc;
 begin
   str_real(len,fr,d,treal_type(rt),s);
 end;
-{$endif}
 
 {$ifndef FPC_STR_ENUM_INTERN}
 function fpc_shortstr_enum_intern(ordinal,len:sizeint;typinfo,ord2strindex:pointer;out s:shortstring): longint;
@@ -898,7 +894,6 @@ end;
 
 
 
-{$ifndef FPUNONE}
 procedure fpc_chararray_Float(d : ValReal;len,fr,rt : SizeInt;out a : array of AnsiChar);compilerproc;
 var
   ss : shortstring;
@@ -911,7 +906,6 @@ begin
     maxlen:=high(a)+1;
   fpc_shortstr_chararray_intern_charmove(ss,a,maxlen);
 end;
-{$endif}
 
 {$ifndef FPC_STR_ENUM_INTERN}
 procedure fpc_chararray_enum(ordinal,len:sizeint;typinfo,ord2strindex:pointer;out a : array of AnsiChar);compilerproc;
@@ -1335,12 +1329,10 @@ end;
 
 
 
-{$ifndef FPUNONE}
 Function fpc_Val_Real_ShortStr(const s : shortstring; out Code : ValSInt): ValReal; [public, alias:'FPC_VAL_REAL_SHORTSTR']; compilerproc;
 begin
     fpc_Val_Real_ShortStr := val_real( s, code );
 end;
-{$endif FPUNONE}
 
 {$ifndef FPC_STR_ENUM_INTERN}
 function fpc_val_enum_shortstr(str2ordindex:pointer;const s:shortstring;out code:valsint):longint; [public, alias:'FPC_VAL_ENUM_SHORTSTR']; compilerproc;

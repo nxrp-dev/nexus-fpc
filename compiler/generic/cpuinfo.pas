@@ -38,8 +38,7 @@ Type
 
 Type
    TFPUType =
-     (fpu_none,
-      fpu_soft
+     (fpu_none
      );
 
    TControllerType =
@@ -67,7 +66,7 @@ Const
    {$POP}
 
    CPUTypeStr : array[TCPUType] of string[8] = ('none');
-   FPUTypeStr : array[TFPUType] of string[6] = ('none','soft');
+   FPUTypeStr : array[TFPUType] of string[6] = ('');
 
 Implementation
 

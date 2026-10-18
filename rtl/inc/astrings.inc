@@ -878,7 +878,6 @@ end;
 {$endif FPC_HAS_POS_ANSICHAR_ANSISTR}
 
 
-{$ifndef FPUNONE}
 Function fpc_Val_Real_AnsiStr(Const S : RawByteString; out Code : ValSInt): ValReal; [public, alias:'FPC_VAL_REAL_ANSISTR']; compilerproc;
 Var
   SS : ShortString;
@@ -892,7 +891,6 @@ begin
       Val(SS,fpc_Val_Real_AnsiStr,code);
     end;
 end;
-{$endif}
 
 
 Function fpc_Val_Currency_AnsiStr(Const S : RawByteString; out Code : ValSInt): Currency; [public, alias:'FPC_VAL_CURRENCY_ANSISTR']; compilerproc;
@@ -982,7 +980,6 @@ end;
 
 
 
-{$ifndef FPUNONE}
 procedure fpc_AnsiStr_Float(d : ValReal;len,fr,rt : SizeInt;out s : RawByteString;cp : TSystemCodePage);[public,alias:'FPC_ANSISTR_FLOAT']; compilerproc; inline;
 var
   ss: ShortString;
@@ -991,7 +988,6 @@ begin
   s:=ss;
   SetCodePage(s,cp,false);
 end;
-{$endif}
 
 {$ifndef FPC_STR_ENUM_INTERN}
 procedure fpc_ansistr_enum(ordinal,len:sizeint;typinfo,ord2strindex:pointer;out s:RawByteString;cp : TSystemCodePage);[public,alias:'FPC_ANSISTR_ENUM'];compilerproc; inline;

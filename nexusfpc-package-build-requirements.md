@@ -123,7 +123,7 @@ old explicit/implicit target lists.
 | Windows default manifest resource | `packages/winunits-base/src/w32default.res`; referenced by `winmanutf8lfn.pas` | Old recipe copied this resource alongside installed units. Keep it available to consumers that compile the unit. This is unrelated to the removed package-manager `manifest.xml`. |
 | Windows event-log resource | `packages/fcl-base/src/win/fclel.res`, with `.mc`/`.rc` inputs | Old recipe explicitly shipped it. No active Pascal reference was found in `fcl-base/src`; do not infer that every application needs it. The `.rc` contains an obsolete absolute temporary path, so regeneration needs a separate review. |
 | Resource strings | `ResourceStrings=True` target registrations | Old installation collected `.rsj`, or historical `.rst`, alongside unit artifacts. Current Forge release/SDK copy masks already include `.rsj` and `.res`. |
-| Namespace mappings | Retained package `namespaces.lst` and `namespaced/` source trees | Example: `hash` maps `src/md5.pas` to `namespaced/System.Hash.Md5.pas`. Preserve these source mappings independently of fpmake. |
+| Namespace mappings | Retained package `namespaces.lst` and `namespaced/` source trees | Example: `fcl-hash` maps `src/fprsa.pas` to `namespaced/System.Hash.Rsa.pas`. Preserve these source mappings independently of fpmake. |
 | Translation example | `../nexus-lab/examples/runtime/base/intl/restest.<language>.po` and `.mo` | Old Makefile used `msgfmt -o restest.<language>.mo restest.<language>.po` for `fr`, `nl`, `de`, `pb`, `ru`, `cs`. All six input/output pairs exist. |
 
 ## Test preparation retained for nxtest

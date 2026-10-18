@@ -21,10 +21,10 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.SysUtils, System.Hash.Ecc, System.Hash.Sha256;
+  System.SysUtils, System.Hash.Ecc;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  sysutils, fpecc, fpsha256;
+  sysutils, fpecc;
 {$ENDIF FPC_DOTTEDUNITS}
 
 Type
@@ -41,6 +41,8 @@ Type
 
 implementation
 
+uses HlpHashFactory;
+
 
 
 { TECDSA }
@@ -53,16 +55,14 @@ end;
 class Function TECDSA.SignSHA256(aPayLoad: TBytes; aPrivateKey: TECCPrivateKey; out aSignature: TEccSignature) : Boolean;
 
 var
-  lSHA256: TSHA256;
+  lDigest: TBytes;
   eccHash : TECCHash;
   Pubkey : TECCpublicKey;
 
 begin
   aSignature:=Default(TEccSignature);
-  lSHA256.Init;
-  lSHA256.Update(aPayload);
-  lSHA256.Final;
-  Move(lSHA256.Digest[0], eccHash, SizeOf(eccHash));
+  lDigest := THashFactory.TCrypto.CreateSHA2_256.ComputeBytes(aPayload).GetBytes;
+  Move(lDigest[0], eccHash, SizeOf(eccHash));
   Result:=EcdsaSign(aPrivateKey,eccHash,aSignature);
   if Result then
     begin
@@ -100,14 +100,12 @@ end;
 Class Function TECDSA.VerifySHA256(aPayLoad : TBytes; aPublicKey : TECCPublicKey; const aSignature : TEccSignature) : Boolean; static;
 
 var
-  lSHA256: TSHA256;
+  lDigest: TBytes;
   eccHash : TECCHash;
 
 begin
-  lSHA256.Init;
-  lSHA256.Update(aPayload);
-  lSHA256.Final;
-  Move(lSHA256.Digest[0], eccHash, SizeOf(eccHash));
+  lDigest := THashFactory.TCrypto.CreateSHA2_256.ComputeBytes(aPayload).GetBytes;
+  Move(lDigest[0], eccHash, SizeOf(eccHash));
   Result:=EcdsaVerify(aPublickey,eccHash,aSignature);
 end;
 

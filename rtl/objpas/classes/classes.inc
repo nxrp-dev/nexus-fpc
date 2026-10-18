@@ -2038,7 +2038,6 @@ var
     Result:=LEtoN(Result);
   end;
 
-{$ifndef FPUNONE}
   {$IFNDEF FPC_HAS_TYPE_EXTENDED}
   function ExtendedToDouble(e : pointer) : double;
   var mant : qword;
@@ -2083,7 +2082,6 @@ var
     Result:=pdouble(@d)^;
   end;
   {$ENDIF}
-{$endif}
 
   function ReadInt(ValueType: TValueType): Int64;
   begin
@@ -2100,7 +2098,6 @@ var
     Result := ReadInt(TValueType(Input.ReadByte));
   end;
 
-{$ifndef FPUNONE}
   function ReadExtended : extended;
   {$IFNDEF FPC_HAS_TYPE_EXTENDED}
   var ext : array[0..9] of byte;
@@ -2113,7 +2110,6 @@ var
     Input.ReadBuffer(Result,sizeof(Result));
     {$ENDIF}
   end;
-{$endif}
 
   function ReadSStr: RawByteString;
   var
@@ -2202,9 +2198,7 @@ var
       s: RawByteString;
 {      len: LongInt; }
       IsFirst: Boolean;
-{$ifndef FPUNONE}
       ext: Extended;
-{$endif}
 
     begin
       case ValueType of
@@ -2227,13 +2221,11 @@ var
         vaInt16: OutLn( IntToStr(SmallInt(ReadWord)));
         vaInt32: OutLn(IntToStr(LongInt(ReadDWord)));
         vaInt64: OutLn(IntToStr(Int64(ReadQWord)));
-{$ifndef FPUNONE}
         vaExtended: begin
             ext:=ReadExtended;
             Str(ext,S);// Do not use localized strings.
             OutLn(S);
           end;
-{$endif}
         vaString: begin
             OutString(ReadSStr);
             OutLn('');
@@ -2423,7 +2415,6 @@ var
     Output.WriteBuffer(qw,sizeof(qword));
   end;
 
-{$ifndef FPUNONE}
   {$IFNDEF FPC_HAS_TYPE_EXTENDED}
   procedure DoubleToExtended(d : double; e : pointer);
   var mant : qword;
@@ -2473,7 +2464,6 @@ var
     Output.WriteBuffer(e,sizeof(e));
     {$ENDIF}
   end;
-{$endif}
 
   procedure WriteSString(const s: RawByteString);
 
@@ -2563,9 +2553,7 @@ var
 
   procedure ProcessValue;
   var
-{$ifndef FPUNONE}
     flt: Extended;
-{$endif}
     s: RawByteString;
     stream: TMemoryStream;
   begin
@@ -2575,7 +2563,6 @@ var
           WriteInteger(parser.TokenInt);
           parser.NextToken;
         end;
-{$ifndef FPUNONE}
       toFloat:
         begin
           Output.WriteByte(Ord(vaExtended));
@@ -2583,7 +2570,6 @@ var
           WriteExtended(flt);
           parser.NextToken;
         end;
-{$endif}
       toString:
         begin
           s := parser.TokenString;

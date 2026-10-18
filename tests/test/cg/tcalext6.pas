@@ -29,12 +29,6 @@ uses ctypes;
   {$undef test_longdouble}
 {$endif}
 
-{ requires libgcc for the C functions }
-{$ifdef FPUSOFT}
-  {$define NO_FLOAT}
-{$endif}
-
-
 {$ifdef OPENBSD}
   { OpenBSD GCC uses __guard_local which is defined in crtbegin.o or crtbeginS.o}
   {$define LIBC_NEEDED}

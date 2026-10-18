@@ -270,9 +270,7 @@ begin
       vtBoolean  : S:=BoolToStr(P^.VBoolean, True);
       vtChar     : S:=P^.VChar;
       vtPChar    : S:= TStringType(P^.VPChar);
-      {$ifndef FPUNONE}
       vtExtended : S:=FloatToStr(P^.VExtended^);
-      {$endif}
       vtObject   : S:=TObject(P^.VObject).Classname;
       vtClass    : S:=P^.VClass.Classname;
       vtCurrency : S:=CurrToStr(P^.VCurrency^);

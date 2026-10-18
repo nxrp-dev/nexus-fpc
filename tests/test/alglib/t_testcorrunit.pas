@@ -1,6 +1,4 @@
 { %opt=-Mdelphi -Sa }
-{ don't run this test when no hardware fpu is available, it would take a lot of time }
-{$ifndef FPUSOFT}
 program t_testcorrunit;
 uses Sysutils, u_testcorrunit;
 
@@ -19,8 +17,4 @@ begin
     end;
     Halt(0);
 end.
-{$else FPUSOFT}
-begin
-end.
-{$endif FPUSOFT}
 

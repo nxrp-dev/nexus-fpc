@@ -24,7 +24,6 @@ interface
 {$mode objfpc}
 {$H+}
 
-{$ifndef FPUNONE}
 {$IFDEF FPC_DOTTEDUNITS}
 Uses System.ConvUtils;
 {$ELSE FPC_DOTTEDUNITS}
@@ -660,7 +659,4 @@ end;
 
 initialization
  registerall;
-{$else}
-implementation
-{$endif}
 end.

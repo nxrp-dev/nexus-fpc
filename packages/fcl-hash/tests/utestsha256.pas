@@ -5,7 +5,7 @@ unit utestsha256;
 interface
 
 uses
-  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fpecc, fpsha256, fphashutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fpecc, fphashutils;
 
 type
 
@@ -68,7 +68,8 @@ procedure Registerutestsha256Tests(ARegistry: TNXTestRegistry);
 
 implementation
 
-uses
+uses HlpHashFactory,
+
    fppem, fpecdsa,  basenenc;
 
 { TTestECDSASHA256 }
@@ -88,7 +89,8 @@ begin
     TestContext.AssertTrue(PemLoadECDSA(S,aPrivateKey,aPublicKey,X,Y), 'Loaded key');
     TestContext.AssertTrue(TECDSA.SignSHA256(aInput,aPrivateKey,aSignature), 'Encrypted');
     EccPublicKeyFromPrivateKey(aPublicKey,aPrivateKey);
-    TestContext.AssertTrue(TECDSA.SignSHA256(aInput,aPrivateKey,aSignature), 'Verified our own');
+    TestContext.AssertTrue(TECDSA.VerifySHA256(aInput,aPublicKey,aSignature), 'Verified our own');
+    TestContext.AssertFalse(TECDSA.VerifySHA256(aInput + 'x',aPublicKey,aSignature), 'Reject changed payload');
   finally
     S.Free;
   end;
@@ -148,7 +150,7 @@ begin
   S:=[];
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
-  TSHA256.DigestHexa(S, Digest);
+  Digest := THashFactory.TCrypto.CreateSHA2_256.ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
@@ -160,7 +162,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
-  TSHA256.DigestBase64(S,False,Digest);
+  Digest := Base64.Encode(THashFactory.TCrypto.CreateSHA2_256.ComputeBytes(S).GetBytes, False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
@@ -172,7 +174,7 @@ var
 begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
-  TSHA256.HMACHexa(K,S,Digest);
+  Digest := THashFactory.THMAC.CreateHMAC(THashFactory.TCrypto.CreateSHA2_256, K).ComputeBytes(S).ToString(False);
   TestContext.AssertTrue((aDigest)=(Digest), 'Correct digest');
 end;
 
@@ -215,7 +217,7 @@ Var
 begin
   S:=TStringStream.Create('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
   try
-    TestContext.AssertTrue(('3964294B664613798D1A477EB8AD02118B48D0C5738C427613202F2ED123B5F1')=(TSHA256.StreamHexa(S)), 'Correct hash');
+    TestContext.AssertTrue(('3964294B664613798D1A477EB8AD02118B48D0C5738C427613202F2ED123B5F1')=(THashFactory.TCrypto.CreateSHA2_256.ComputeStream(S).ToString(False)), 'Correct hash');
   finally
     S.Free;
   end;

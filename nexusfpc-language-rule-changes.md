@@ -688,6 +688,70 @@ untouched i386 baseline to establish the retired behavior.
 
 - 2026-10-17: Retired at the project owner's direction.
 
+## NXLR-0010: Retire the no-floating-point configuration
+
+- Status: Implemented
+- Decision date: 2026-10-17
+- Implemented in: Working tree
+- Released in: Not released
+- Applies to: All retained targets and compiler modes
+- Supersedes: The no-FPU exception to NXLR-0004's unchanged FPU selections
+
+### Rule
+
+Supported NexusFPC targets provide floating-point support. `NONE` is no longer
+a selectable FPU type. `-CfNONE` and `{$FPUTYPE NONE}` are invalid; an empty FPU
+selection is invalid too. Other FPU selections retain their existing meanings.
+
+### Upstream Free Pascal Behavior
+
+The reviewed NexusFPC baseline derived from Free Pascal accepted `NONE` on
+i386 and x86-64, defined `FPUNONE`, and omitted floating-point language types
+and parts of the RTL. ARM64 already had no selectable `NONE` spelling.
+
+### Rationale
+
+Nexus supports desktop, server and mobile application targets. Integer-only
+embedded configurations are outside that matrix. The owner approved retiring
+this configuration and its compiler, RTL, package and test branches.
+
+### Compatibility Impact and Diagnostics
+
+Builds selecting `NONE` must remove that selection or choose a supported FPU
+type. Command-line selection uses the ordinary `Illegal parameter` error;
+the recognized `FPUTYPE` directive uses its existing `Illegal FPU type` error.
+There are no special retirement warnings or replacement directive handlers.
+Manually defining `FPUNONE` or `FPU_NONE` no longer selects an alternate RTL.
+Rebuild cached units with the refreshed RTL: removing declaration guards moves
+source positions recorded in unit metadata and changes dependency checksums.
+
+### Implementation
+
+The FPU-name tables and `SetFPUType` make the internal sentinel unselectable.
+Floating-point type registration and compiler conversions are unconditional.
+The RTL and rtl-objpas package retain their ordinary floating-point branches.
+The internal `fpu_none` enum value remains for generic tools and empty
+controller descriptors, preserving the ordinals of supported FPU types.
+This supersedes the no-FPU portion of NXLR-0004's compatibility statement;
+its other FPU selections and softfloat calling conventions are unchanged.
+
+### Tests
+
+`tests/switches/Run-NXRemovedFPUNoneTests.sh` checks ordinary invalid-option and
+directive diagnostics in four modes, including empty and unknown selections.
+`tests/compiler-regressions/removed_fpunone_native.pas` checks floating-point
+types, constant folding, arithmetic, text conversion and binary streaming.
+The streaming probe exposed a separate `TBinaryObjectReader.ReadCurrency`
+error: the raw 64-bit payload was assigned to the Currency overlay field,
+applying its scale a second time. The owner approved correcting the assignment
+to the QWord field. Regression inputs cover zero, positive and negative
+fractions, and both signed 64-bit storage boundaries; the untouched reader
+fails the positive fractional round trip.
+
+### Decision History
+
+- 2026-10-17: Retired at the project owner's direction.
+
 ## Change Record Format
 
 Copy this section for each proposed change. Assign identifiers sequentially in the form `NXLR-0001`.

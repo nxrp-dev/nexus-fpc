@@ -27,9 +27,7 @@ interface
 {$endif}
 
 type
-{$ifndef FPUNONE}
   LongDouble = ValReal;
-{$endif}
   FourCharArray = packed array[1..4] of AnsiChar;
 
   UnsignedByte = Byte;
@@ -398,8 +396,6 @@ begin
 end;
 
 
-{$ifndef FPUNONE}
 begin
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision])
-{$endif}
 end.

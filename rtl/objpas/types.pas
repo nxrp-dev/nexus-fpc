@@ -51,9 +51,7 @@ type
 
   PLongint = System.PLongint;
   PSmallInt = System.PSmallInt;
-{$ifndef FPUNONE}
   PDouble = System.PDouble;
-{$endif}
   PByte = System.PByte;
   Largeint = int64;
   LARGE_INT = LargeInt;
@@ -114,12 +112,10 @@ type
   TObjectDynArray = array of TObject;
   TWordDynArray = array of Word;
   TCurrencyArray = Array of currency;
-{$ifndef FPUNONE}
   TSingleDynArray = array of Single;
   TDoubleDynArray = array of Double;
   TExtendedDynArray = array of Extended;
   TCompDynArray = array of Comp;
-{$endif}
 
 {$if (defined(win32)) or (defined(win64))}
   TArray4IntegerType = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.TArray4IntegerType;

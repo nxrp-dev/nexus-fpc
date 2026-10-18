@@ -45,6 +45,12 @@ its tools must be on PATH. The Android configuration uses the installed NDK
 at `C:\android\ndk\25.2.9519653`; its Clang executable and FPC
 `CompilerUtilitiesPath` are set in `NexusFPC.Forge.Config.nxscript`.
 
+All supported targets provide floating-point support. `-CfNONE` and
+`{$FPUTYPE NONE}` are no longer supported; they receive the existing invalid
+FPU-option/value diagnostics. Other `-Cf` selections retain their meanings.
+The RTL no longer has `FPUNONE` or `FPU_NONE` conditional paths. Check with
+`bash tests/switches/Run-NXRemovedFPUNoneTests.sh <compiler> <rtl-units> <output>`.
+
 The former FPC internal linker and its executable-image writers have been
 removed. All retained targets use external linking. `-Xi`, `-Xi+` and `-Xe-`
 are rejected; `-Xe` and `-Xi-` retain their external-linking meaning.

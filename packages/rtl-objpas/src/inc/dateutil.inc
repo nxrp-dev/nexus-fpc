@@ -21,7 +21,6 @@ unit DateUtils;
 
 interface
 
-{$ifndef FPUNONE}
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
@@ -3857,5 +3856,4 @@ begin
     aType:=lttStandard;
 end;
 
-{$endif fpunone}
 end.

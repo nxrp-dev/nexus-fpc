@@ -1,4 +1,3 @@
-{$ifndef FPUNONE}
 uses
   math;
 
@@ -14,9 +13,6 @@ begin
       halt(1);
     end;
   writeln('ok');
-{$else FPUNONE}
-begin
-{$endif FPUNONE}
 end.
 
 

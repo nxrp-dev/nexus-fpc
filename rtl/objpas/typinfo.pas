@@ -89,9 +89,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
 
        TOrdType  = (otSByte,otUByte,otSWord,otUWord,otSLong,otULong,otSQWord,otUQWord);
 
-{$ifndef FPUNONE}
        TFloatType = (ftSingle,ftDouble,ftExtended,ftComp,ftCurr);
-{$endif}
        TMethodKind = (mkProcedure,mkFunction,mkConstructor,mkDestructor,
                       mkClassProcedure,mkClassFunction,mkClassConstructor,
                       mkClassDestructor,mkOperatorOverload);
@@ -696,11 +694,9 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         tkInt64: (
           dummy : Int64
         );
-{$ifndef FPUNONE}
         tkFloat:
           (FloatType : TFloatType
         );
-{$endif}
       end;
 
       PInterfaceRawData = ^TInterfaceRawData;
@@ -735,11 +731,9 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
           tkInt64: (
             dummy : Int64
           );
-{$ifndef FPUNONE}
           tkFloat:
             (FloatType : TFloatType
           );
-{$endif}
       end;
 
 
@@ -777,11 +771,9 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
           tkInt64: (
             dummy: Int64;
           );
-{$ifndef FPUNONE}
           tkFloat: (
             FloatType : TFloatType
           );
-{$endif}
       end;
 
       PRecordMethodTable = ^TRecordMethodTable;
@@ -823,11 +815,9 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         tkInt64: (
           dummy: Int64
         );
-{$ifndef FPUNONE}
         tkFloat:
           (FloatType: TFloatType
         );
-{$endif}
      end;
 
       PTypeData = ^TTypeData;
@@ -905,10 +895,8 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
                      CompTypeRef : PPTypeInfo
                     )
               );
-{$ifndef FPUNONE}
             tkFloat:
               (FloatType : TFloatType);
-{$endif}
             tkSString:
               (MaxLength : Byte);
             tkClass:
@@ -1226,12 +1214,10 @@ Procedure SetRawByteStrProp(Instance: TObject; const PropName: string; const Val
 Procedure SetRawByteStrProp(Instance: TObject; PropInfo: PPropInfo; const Value: RawByteString);
 
 
-{$ifndef FPUNONE}
 Function  GetFloatProp(Instance: TObject; PropInfo : PPropInfo) : Extended;
 Function  GetFloatProp(Instance: TObject; const PropName: string): Extended;
 Procedure SetFloatProp(Instance: TObject; const PropName: string; Value: Extended);
 Procedure SetFloatProp(Instance: TObject; PropInfo : PPropInfo;  Value : Extended);
-{$endif}
 
 Function  GetObjectProp(Instance: TObject; const PropName: string): TObject;
 Function  GetObjectProp(Instance: TObject; const PropName: string; MinClass: TClass): TObject;
@@ -3856,7 +3842,6 @@ end;
 
 
 
-{$ifndef FPUNONE}
 
 { ---------------------------------------------------------------------
   Float properties
@@ -4013,7 +3998,6 @@ begin
   SetFloatProp(Instance,FindPropInfo(Instance,PropName),Value);
 end;
 
-{$endif}
 
 { ---------------------------------------------------------------------
   Method properties

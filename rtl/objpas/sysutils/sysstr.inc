@@ -1286,7 +1286,6 @@ begin
   Result:=Buffer;
 end;
 
-{$ifndef FPUNONE}
 
 Function InternalTextToFloat(S: String; Out Value; ValueType: TFloatValue;
   Const FormatSettings: TFormatSettings): Boolean;
@@ -2152,7 +2151,6 @@ begin
   if not InternalTextToFloat(S, Result, fvCurrency,FormatSettings) then
     Result:=Default;
 end;
-{$endif FPUNONE}
 
 function AnsiDequotedStr(const S: string; AQuote: Char): string;
 
@@ -2235,22 +2233,14 @@ function TryStrToBool(const S: string; out Value: Boolean; const FormatSettings:
 Var
   Temp : String;
   I    : Longint;
-{$ifdef FPUNONE}
-  D : Longint;
-{$else}
   D : Double;
-{$endif}
   Code: word;
 begin
   Temp:=upcase(S);
   Val(temp,D,code);
   Result:=true;
   If (Code=0) or TryStrToFloat(S,D,FormatSettings) then
-{$ifdef FPUNONE}
-    Value:=(D<>0)
-{$else}
     Value:=(D<>0.0)
-{$endif}
   else
     begin
       CheckBoolStrs;
@@ -2270,7 +2260,6 @@ begin
     end;
 end;
 
-{$ifndef FPUNONE}
 
 Function FloatToTextFmt(Buffer: PChar; Value: Extended; format: PChar): Integer;
 
@@ -2476,7 +2465,6 @@ begin
   Result:=FormatCurr(Format,Value,DefaultFormatSettings);
 end;
 
-{$endif}
 
 {==============================================================================}
 {   extra functions                                                            }
@@ -2914,10 +2902,8 @@ function sscanf(const s: string; const fmt : string;const Pointers : array of Po
               case fmt[m] of
                 'd':
                   Result:=vtInteger;
-{$ifndef FPUNONE}
                 'f':
                   Result:=vtExtended;
-{$endif}
                 's':
                   Result:=vtString;
                 'c':
@@ -2970,7 +2956,6 @@ function sscanf(const s: string; const fmt : string;const Pointers : array of Po
 
             end;
 
-{$ifndef FPUNONE}
           vtExtended :
             begin
               if GetFloat>0 then
@@ -2981,7 +2966,6 @@ function sscanf(const s: string; const fmt : string;const Pointers : array of Po
               else
                 break;
             end;
-{$endif}
 
           vtString :
             begin

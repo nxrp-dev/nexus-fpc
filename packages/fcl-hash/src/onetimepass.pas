@@ -35,7 +35,7 @@ const
 Type
   TRandomBytes = Procedure (aBytes : TByteDynArray);
 
-function HOTPCalculateToken(const aSecret: AnsiString; const Counter: LongInt): LongInt;
+function HOTPCalculateToken(const aSecret: AnsiString; const ACounter: LongInt): LongInt;
 function TOTPCalculateToken(const aSecret: AnsiString): LongInt;
 function TOTPGenerateToken(const aSecret: AnsiString): LongInt;
 function TOTPValidate(const aSecret: AnsiString; const Token: LongInt; const WindowSize: LongInt; var Counter: LongInt): Boolean;
@@ -43,24 +43,7 @@ Function TOTPSharedSecret(aRandom : TRandomBytes = Nil) : AnsiString;
 
 implementation
 
-{$IFDEF FPC_DOTTEDUNITS}
-uses System.Hash.Sha1, System.Hash.Hmac;
-{$ELSE FPC_DOTTEDUNITS}
-uses sha1, hmac;
-{$ENDIF FPC_DOTTEDUNITS}
-
-// @Result[8]
-Function Int64ToRawString(const Value: Int64) : AnsiString;
-
-var
-  B: array[0..7] of Byte;
-  I: Int32;
-begin
-  PInt64(@B)^ := Value;
-  Result:='';
-  for I := 7 downto 0 do
-    Result:=Result+AnsiChar(B[I]);
-end;
+uses HlpHashFactory;
 
 function TOTPCalculateToken(const aSecret: AnsiString): Longint;
 
@@ -68,34 +51,27 @@ begin
   Result:=HOTPCalculateToken(aSecret,-1);
 end;
 
-function HOTPCalculateToken(const aSecret: AnsiString; const Counter: Longint): Longint;
-
+function HOTPCalculateToken(const ASecret: AnsiString; const ACounter: Longint): Longint;
 var
-  Digest: TSHA1Digest;
-  Key: UInt32;
-  Offset: Longint;
-  Part1, Part2, Part3, Part4: UInt32;
-  SecretBinBuf: TBytes;
-  STime, SSecretBin: RawbyteString;
-  Time: Longint;
-
+  lDigest, lSecret, lTime: TBytes;
+  lCounter: Int64;
+  lIndex, lOffset: Integer;
+  lCode: UInt32;
 begin
-  Time := Counter;
-  if Time=-1 then
-    Time := DateTimeToUnix(Now,False) div TOTP_KeyRegeneration;
-  SSecretBin:='';
-  SecretBinBuf:=Base32.Decode(aSecret);
-  STime:=Int64ToRawString(Time);
-  SetLength(SSecretBin,length(SecretBinBuf));
-  Move(SecretBinBuf[0],SSecretBin[1],length(SecretBinBuf));
-  Digest:=HMACSHA1Digest(SSecretBin, STime);
-  Offset := Digest[19] and $0F;
-  Part1 := (Digest[Offset + 0] and $7F);
-  Part2 := (Digest[Offset + 1] and $FF);
-  Part3 := (Digest[Offset + 2] and $FF);
-  Part4 := (Digest[Offset + 3] and $FF);
-  Key := (Part1 shl 24) or (Part2 shl 16) or (Part3 shl 8) or Part4;
-  Result := Key mod TOTP_Mod; // mod 1000000 in case of otpLength of 6 digits
+  lCounter := ACounter;
+  if lCounter = -1 then
+    lCounter := DateTimeToUnix(Now, False) div TOTP_KeyRegeneration;
+  lSecret := Base32.Decode(ASecret);
+  SetLength(lTime, 8);
+  for lIndex := 0 to 7 do
+    lTime[7 - lIndex] := (lCounter shr (8 * lIndex)) and $FF;
+  lDigest := THashFactory.THMAC.CreateHMAC(THashFactory.TCrypto.CreateSHA1,
+    lSecret).ComputeBytes(lTime).GetBytes;
+  lOffset := lDigest[19] and $0F;
+  lCode := (UInt32(lDigest[lOffset] and $7F) shl 24) or
+    (UInt32(lDigest[lOffset + 1]) shl 16) or
+    (UInt32(lDigest[lOffset + 2]) shl 8) or lDigest[lOffset + 3];
+  Result := lCode mod TOTP_Mod;
 end;
 
 function TOTPGenerateToken(const aSecret: AnsiString): LongInt;

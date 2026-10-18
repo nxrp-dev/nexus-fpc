@@ -750,7 +750,6 @@ begin
 end;
 
 
-{$ifndef FPUNONE}
 Function fpc_Val_Real_WideStr(Const S : WideString; out Code : ValSInt): ValReal; [public, alias:'FPC_VAL_REAL_WIDESTR']; compilerproc;
 Var
   SS: ShortString;
@@ -764,7 +763,6 @@ begin
       Val(SS,fpc_Val_Real_WideStr,code);
     end;
 end;
-{$endif}
 
 function fpc_val_enum_widestr(str2ordindex:pointer;const s:widestring;out code:valsint):longint;compilerproc;
 var
@@ -859,7 +857,6 @@ end;
 {$endif CPU64}
 
 
-{$ifndef FPUNONE}
 procedure fpc_WideStr_Float(d : ValReal;len,fr,rt : SizeInt;out s : WideString);compilerproc;
 var
   ss: ShortString;
@@ -867,7 +864,6 @@ begin
   str_real(len,fr,d,treal_type(rt),ss);
   s:=WideString(ss);
 end;
-{$endif}
 
 procedure fpc_widestr_enum(ordinal,len:sizeint;typinfo,ord2strindex:pointer;out s:widestring);compilerproc;
 var

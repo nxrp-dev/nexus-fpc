@@ -221,20 +221,10 @@ implementation
 
         procedure create_fpu_types;
         begin
-          if InitSettings.FPUType<>fpu_none then
-            begin
-              S32FloatType:=CFloatDef.create(S32Real,true);
-              S64FloatType:=CFloatDef.create(S64Real,true);
-              S80FloatType:=CFloatDef.create(s80real,true);
-              SC80FloatType:=CFloatDef.create(sc80real,true);
-            end
-          else
-            begin
-              S32FloatType:=nil;
-              S64FloatType:=nil;
-              S80FloatType:=nil;
-              SC80FloatType:=nil;
-            end;
+          S32FloatType:=CFloatDef.create(S32Real,true);
+          S64FloatType:=CFloatDef.create(S64Real,true);
+          S80FloatType:=CFloatDef.create(s80real,true);
+          SC80FloatType:=CFloatDef.create(sc80real,true);
         end;
 
       var
@@ -347,23 +337,20 @@ implementation
             COleVariantType:=CVariantDef.create(vt_olevariant);
           end;
 
-        if InitSettings.FPUType<>fpu_none then
-          begin
-            AddType('Single',S32FloatType);
-            AddType('Double',S64FloatType);
-            { extended size is the best real type for the target }
-            AddType('Extended',PBestRealType^);
-            { CExtended corresponds to the C version of the Extended type
-              (either "long double" or "double") }
-            if TargetInfo.system in (systems_android+[system_x86_64_win64]) then
-              { Microsoft C and Android x86 use Double at this boundary. }
-              AddType('CExtended',S64FloatType)
-            else
-              if TFloatDef(PBestRealType^).FloatType=s80real then
-                AddType('CExtended',SC80FloatType)
-              else
-                AddType('CExtended',PBestRealType^);
-          end;
+        AddType('Single',S32FloatType);
+        AddType('Double',S64FloatType);
+        { extended size is the best real type for the target }
+        AddType('Extended',PBestRealType^);
+        { CExtended corresponds to the C version of the Extended type
+          (either "long double" or "double") }
+        if TargetInfo.system in (systems_android+[system_x86_64_win64]) then
+          { Microsoft C and Android x86 use Double at this boundary. }
+          AddType('CExtended',S64FloatType)
+        else
+          if TFloatDef(PBestRealType^).FloatType=s80real then
+            AddType('CExtended',SC80FloatType)
+          else
+            AddType('CExtended',PBestRealType^);
 {$ifdef x86}
         if TargetInfo.system<>system_x86_64_win64 then
           AddType('Comp',CFloatDef.create(s64comp,true));
@@ -492,13 +479,10 @@ implementation
             AddType('$variant',CVariantType);
             AddType('$olevariant',COleVariantType);
           end;
-        if InitSettings.FPUType<>fpu_none then
-          begin
-            AddType('$s32real',S32FloatType);
-            AddType('$s64real',S64FloatType);
-            AddType('$s80real',S80FloatType);
-            AddType('$sc80real',SC80FloatType);
-          end;
+        AddType('$s32real',S32FloatType);
+        AddType('$s64real',S64FloatType);
+        AddType('$s80real',S80FloatType);
+        AddType('$sc80real',SC80FloatType);
         AddType('$s64currency',S64CurrencyType);
           begin
             { Add a type for virtual method tables }
@@ -593,13 +577,10 @@ implementation
         loadtype('unicodestring',CUnicodeStringType);
         loadtype('openshortstring',OpenShortStringType);
         loadtype('openchararray',OpenCharArrayType);
-        if InitSettings.FPUType <> fpu_none then
-          begin
-            loadtype('s32real',S32FloatType);
-            loadtype('s64real',S64FloatType);
-            loadtype('s80real',S80FloatType);
-            loadtype('sc80real',SC80FloatType);
-          end;
+        loadtype('s32real',S32FloatType);
+        loadtype('s64real',S64FloatType);
+        loadtype('s80real',S80FloatType);
+        loadtype('sc80real',SC80FloatType);
         loadtype('s64currency',S64CurrencyType);
         loadtype('boolean',PasBool1Type);
         loadtype('boolean8',PasBool8Type);

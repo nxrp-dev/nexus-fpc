@@ -21,11 +21,9 @@ const
    varNull = 1;
    varSmallInt = 2;
    varInteger = 3;
-{$ifndef FPUNONE}
    varSingle = 4;
    varDouble = 5;
    varDate = 7;
-{$endif}
    varCurrency = 6;
    varOleStr = 8;
    varDispatch = 9;
@@ -103,11 +101,9 @@ type
                   case word of
                      varsmallint : (vsmallint : smallint);
                      varinteger : (vinteger : longint);
-{$ifndef FPUNONE}
                      varsingle : (vsingle : single);
                      vardouble : (vdouble : double);
                      vardate : (vdate : tdatetime);
-{$endif}
                      varcurrency : (vcurrency : currency);
                      varolestr : (volestr : pwidechar);
                      vardispatch : (vdispatch : pointer);
@@ -158,10 +154,8 @@ type
       vartoint64 : function(const v : variant) : int64;
       vartoword64 : function(const v : variant) : qword;
       vartobool : function(const v : variant) : boolean;
-{$ifndef FPUNONE}
       vartoreal : function(const v : variant) : extended;
       vartotdatetime : function(const v : variant) : tdatetime;
-{$endif}
       vartocurr : function(const v : variant) : currency;
       vartopstr : procedure(var s ;const v : variant);
       vartolstr : procedure(var s : ansistring;const v : variant);
@@ -175,10 +169,8 @@ type
       varfromint : procedure(var dest : variant;const source,Range : longint);
       varfromint64 : procedure(var dest : variant;const source : int64);
       varfromword64 : procedure(var dest : variant;const source : qword);
-{$ifndef FPUNONE}
       varfromreal : procedure(var dest : variant;const source : extended);
       varfromtdatetime : procedure(var dest : Variant;const source : TDateTime);
-{$endif}
       varfromcurr : procedure(var dest : Variant;const source : Currency);
       varfrompstr: procedure(var dest : variant; const source : ShortString);
       varfromlstr: procedure(var dest : variant; const source : ansistring);
@@ -280,15 +272,11 @@ operator :=(const source : extended) dest : variant;{$ifdef SYSTEMINLINE}inline;
 {$ifdef SUPPORT_COMP}
 operator :=(const source : comp) dest : variant;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif SUPPORT_COMP}
-{$ifndef FPUNONE}
 operator :=(const source : real) dest : variant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 
 { Misc. }
 operator :=(const source : currency) dest : variant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$ifndef FPUNONE}
 operator :=(const source : tdatetime) dest : variant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 operator :=(const source : terror) dest : variant;{$ifdef SYSTEMINLINE}inline;{$endif}
 
 {**********************************************************************
@@ -339,17 +327,13 @@ operator :=(const source : variant) dest : extended;{$ifdef SYSTEMINLINE}inline;
 {$ifdef SUPPORT_COMP}
 operator :=(const source : variant) dest : comp;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif SUPPORT_COMP}
-{$ifndef FPUNONE}
 operator :=(const source : variant) dest : real;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 
 operator :=(const source : variant) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
 
 { Misc. }
 operator :=(const source : variant) dest : currency;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$ifndef FPUNONE}
 operator :=(const source : variant) dest : tdatetime;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 operator :=(const source : variant) dest : terror;{$ifdef SYSTEMINLINE}inline;{$endif}
 
 {**********************************************************************
@@ -426,15 +410,11 @@ operator :=(const source : olevariant) dest : extended;{$ifdef SYSTEMINLINE}inli
 {$ifdef SUPPORT_COMP}
 operator :=(const source : olevariant) dest : comp;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif SUPPORT_COMP}
-{$ifndef FPUNONE}
 operator :=(const source : olevariant) dest : real;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 
 { Misc. }
 operator :=(const source : olevariant) dest : currency;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$ifndef FPUNONE}
 operator :=(const source : olevariant) dest : tdatetime;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 operator :=(const source : olevariant) dest : terror;{$ifdef SYSTEMINLINE}inline;{$endif}
 
 {**********************************************************************
@@ -481,15 +461,11 @@ operator :=(const source : extended) dest : olevariant;{$ifdef SYSTEMINLINE}inli
 {$ifdef SUPPORT_COMP}
 operator :=(const source : comp) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif SUPPORT_COMP}
-{$ifndef FPUNONE}
 operator :=(const source : real) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 
 { Misc. }
 operator :=(const source : currency) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$ifndef FPUNONE}
 operator :=(const source : tdatetime) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif}
 operator :=(const source : terror) dest : olevariant;{$ifdef SYSTEMINLINE}inline;{$endif}
 
 { silly, but how else should the compiler know what to do with pos(<string type>,<variant>)? (FK) }

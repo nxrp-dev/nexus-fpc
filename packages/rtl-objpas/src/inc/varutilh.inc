@@ -59,11 +59,9 @@ function VariantToSmallInt(const VargSrc : TVarData) : SmallInt;
 function VariantToLongint(const VargSrc : TVarData) : Longint;
 function VariantToShortint(const VargSrc : TVarData) : ShortInt;
 function VariantToCardinal(const VargSrc : TVarData) : Cardinal;
-{$ifndef FPUNONE}
 function VariantToSingle(const VargSrc : TVarData) : Single;
 function VariantToDouble(const VargSrc : TVarData) : Double;
 function VariantToDate(const VargSrc : TVarData) : TDateTime;
-{$endif}
 function VariantToCurrency(const VargSrc : TVarData) : Currency;
 function VariantToBoolean(const VargSrc : TVarData) : Boolean;
 function VariantToByte(const VargSrc : TVarData) : Byte;

@@ -481,8 +481,7 @@ implementation
               inserttypeconv_internal(para.left,Bool16Type)
 
             { force automatable float type }
-            else if Is_Extended(para.left.resultdef)
-                and (CurrentSettings.FPUType<>fpu_none) then
+            else if Is_Extended(para.left.resultdef) then
               inserttypeconv_internal(para.left,S64FloatType)
 
             else if Is_ShortString(para.left.resultdef) then

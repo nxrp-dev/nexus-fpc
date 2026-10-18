@@ -21,10 +21,10 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.Classes, System.SysUtils, Fcl.BaseNEnc, System.Hash.Sha256, System.Hash.Asn, System.Hash.Utils, System.Hash.Ecc;
+  System.Classes, System.SysUtils, Fcl.BaseNEnc, System.Hash.Asn, System.Hash.Utils, System.Hash.Ecc;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  Classes, SysUtils, basenenc, fpsha256, fpasn, fphashutils, fpecc;
+  Classes, SysUtils, basenenc, fpasn, fphashutils, fpecc;
 {$ENDIF FPC_DOTTEDUNITS}
 
 const
@@ -70,6 +70,8 @@ procedure ASNParsePemSection(const PEM: String; List: TStrings; const BeginTag, 
 
 implementation
 
+uses HlpHashFactory;
+
 procedure PemLoadPublicKey64FromList(List: TStrings; out PrivateKey: TEccPrivateKey; out PublicKey: TEccPublicKey; out PublicKeyX64, PublicKeyY64, ThumbPrint: AnsiString);
 
 Var
@@ -79,7 +81,7 @@ begin
   PemLoadPublicKey64FromList(List,PrivateKey,PublicKey,PublicKeyX64,PublicKeyY64);
   // Thumbprint
   S:='{"crv":"P-256","kty":"EC","x":"' + PublicKeyX64 + '","y":"' + PublicKeyY64 + '"}';
-  TSHA256.DigestBase64(GetRawStringBytes(S),True,ThumbPrint);
+  ThumbPrint := Base64URL.Encode(THashFactory.TCrypto.CreateSHA2_256.ComputeBytes(GetRawStringBytes(S)).GetBytes, False);
 end;
 
 procedure PemLoadPublicKey64FromList(List: TStrings; out PrivateKey: TEccPrivateKey; out PublicKey: TEccPublicKey; out PublicKeyX64, PublicKeyY64: AnsiString);

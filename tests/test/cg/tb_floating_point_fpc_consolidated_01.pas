@@ -584,10 +584,8 @@ const
   texit_RET_U16BIT = $5555;
   texit_RET_S8BIT  = -80;
   texit_RET_U8BIT = $AA;
-{$ifndef FPUNONE}
   texit_RET_SINGLE = 57689.15;
   texit_RET_DOUBLE = 100012.345;
-{$endif FPUNONE}
   texit_PCHAR_STRING: pchar = 'HELLO STRING';
 
 type
@@ -635,7 +633,6 @@ var
      texit_gets64bit := texit_RET_S64BIT;
    end;
 
-{$ifndef FPUNONE}
    function texit_gets32real : single;
     begin
      texit_gets32real := texit_RET_SINGLE;
@@ -646,7 +643,6 @@ var
     begin
      texit_gets64real := texit_RET_DOUBLE;
     end;
-{$endif FPUNONE}
 
    function texit_getpchar: pchar;
     begin
@@ -791,7 +787,6 @@ function texit_exit_loc_ref_ordinal_u8bit  : byte;
   end;
 
 
-{$ifndef FPUNONE}
 function texit_exit_loc_ref_float_s32real : single;
  var
   s: single;
@@ -820,7 +815,6 @@ function texit_exit_loc_reg_float_s64real : double;
  begin
    exit(texit_gets64real);
  end;
-{$endif FPUNONE}
 
 
 function texit_exit_loc_flags : boolean;
@@ -1274,12 +1268,6 @@ end;
 
 { Case texit.pas }
 {$push}
-{$ifndef FPUNONE}
-{$endif FPUNONE}
-{$ifndef FPUNONE}
-{$endif FPUNONE}
-{$ifndef FPUNONE}
-{$endif FPUNONE}
 {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}
 {$endif FPC_HAS_FEATURE_ANSISTRINGS}
 Begin
@@ -1346,7 +1334,6 @@ Begin
  else
    writeln('Passed!');
 
-{$ifndef FPUNONE}
  write('    floating point return value...');
  texit_failed := false;
  if (trunc(texit_exit_loc_ref_float_s32real) <>  trunc(texit_RET_SINGLE)) then
@@ -1357,7 +1344,6 @@ Begin
    texit_fail
  else
    writeln('Passed!');
-{$endif FPUNONE}
 
  { procvardef is not tested since it is the same as pointer return value...}
  write('    pointer/procedure variable return value...');
@@ -1395,7 +1381,6 @@ Begin
  else
    writeln('Passed!');
 
-{$ifndef FPUNONE}
  write('    floating point return value...');
  texit_failed := false;
  if (trunc(texit_exit_loc_reg_float_s32real) <>  trunc(texit_RET_SINGLE)) then
@@ -1406,7 +1391,6 @@ Begin
    texit_fail
  else
    writeln('Passed!');
-{$endif FPUNONE}
 
  { procvardef is not tested since it is the same as pointer return value...}
  write('    pointer/procedure variable return value...');

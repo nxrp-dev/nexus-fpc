@@ -36,7 +36,6 @@ type
 
 const
   { For floattodatetime and VariantToDate }
-{$ifndef FPUNONE}
   MinDateTime: TDateTime =  -693593.99999999; { 01/01/0001 12:00:00.000 AM }
   MaxDateTime: TDateTime =  2958465.99999999;  { 12/31/9999 11:59:59.999 PM }
 
@@ -46,10 +45,6 @@ const
 {$else}
   MinCurrency: Currency = -922337203685477.0000;
   MaxCurrency: Currency =  922337203685477.0000;
-{$endif}
-{$else}
-  MinCurrency: Currency = -922337203685477;
-  MaxCurrency: Currency =  922337203685477;
 {$endif}
 
 Const
@@ -162,7 +157,6 @@ Function StrLFmt(Buffer : PChar; Maxlen : Cardinal;Fmt : PChar; Const args: Arra
 Function StrLFmt(Buffer : PChar; Maxlen : Cardinal;Fmt : PChar; Const args: Array of const; Const FormatSettings: TFormatSettings) : PChar;
 Procedure FmtStr(Var Res: String; Const Fmt : String; Const args: Array of const);
 Procedure FmtStr(Var Res: string; const Fmt : string; Const args: Array of const; Const FormatSettings: TFormatSettings);
-{$ifndef FPUNONE}
 {$ifdef FPC_HAS_TYPE_EXTENDED}
 Function FloatToStrF(Value: Extended; format: TFloatFormat; Precision, Digits: Integer): String;
 Function FloatToStrF(Value: Extended; format: TFloatFormat; Precision, Digits: Integer; Const FormatSettings: TFormatSettings): String;
@@ -243,7 +237,6 @@ Function FormatFloat(Const Format : String; Value : Extended; Const FormatSettin
 
 function FormatCurr(const Format: string; Value: Currency): string;
 Function FormatCurr(const Format: string; Value: Currency; Const FormatSettings: TFormatSettings): string;
-{$endif}
 
 function StrToBool(const S: string): Boolean;
 function StrToBool(const S: string; Const FormatSettings: TFormatSettings): Boolean;

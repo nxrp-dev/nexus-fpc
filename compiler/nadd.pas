@@ -2531,17 +2531,8 @@ const
                   left.resultdef := S64IntType;
                   right.resultdef := S64IntType;
                 end;
-            if CurrentSettings.FPUType=fpu_none then
-              begin
-                Message(parser_e_unsupported_real);
-                result:=CErrorNode.create;
-                exit;
-              end
-            else
-              begin
-                inserttypeconv(right,resultrealdef);
-                inserttypeconv(left,resultrealdef);
-              end;
+            inserttypeconv(right,resultrealdef);
+            inserttypeconv(left,resultrealdef);
           end
 
          { if both are orddefs then check sub types }

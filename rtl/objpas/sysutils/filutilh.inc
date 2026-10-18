@@ -198,9 +198,7 @@ Function FileOpen (Const FileName : unicodestring; Mode : Integer) : THandle;
 Function FileCreate (Const FileName : UnicodeString) : THandle;
 Function FileCreate (Const FileName : UnicodeString; Rights : Integer) : THandle;
 Function FileCreate (Const FileName : UnicodeString; ShareMode : Integer; Rights : Integer) : THandle;
-{$IFNDEF FPUNONE}
 Function FileAge (Const FileName : UnicodeString): Int64;
-{$ENDIF}
 Function FileExists (Const FileName : UnicodeString; FollowLink : Boolean = True) : Boolean;
 Function DirectoryExists (Const Directory : UnicodeString; FollowLink : Boolean = True) : Boolean;
 Function FileSetDate (Const FileName : UnicodeString;Age : Int64) : Longint;
@@ -243,9 +241,7 @@ Function ExeSearch  (Const Name : RawByteString; Const DirList : RawByteString =
 Function FileIsReadOnly(const FileName: RawByteString): Boolean;
 function FileAge(const FileName: RawByteString; out FileDateTime: TDateTime; FollowLink: Boolean = True): Boolean;
 function FileAgeUTC(const FileName: RawByteString; out FileDateTimeUTC: TDateTime; FollowLink: Boolean = True): Boolean;
-{$ifndef FPUNONE}
 Function FileAge (Const FileName : RawByteString): Int64;
-{$endif}
 function FileGetSymLinkTarget(const FileName: RawByteString; out SymLinkRec: TRawbyteSymLinkRec): Boolean;
 function FileGetSymLinkTarget(const FileName: RawByteString; out TargetName: RawByteString): Boolean; inline;
 

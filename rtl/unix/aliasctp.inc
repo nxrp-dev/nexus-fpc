@@ -55,11 +55,9 @@ type
   cslong                 = UT.cslong;      pcslong                = UT.pcslong;
   culong                 = UT.culong;      pculong                = UT.pculong;
 
-{$ifndef FPUNONE}
   cfloat                 = UT.cfloat;      pcfloat                = UT.pcfloat;
   cdouble                = UT.cdouble;     pcdouble               = UT.pcdouble;
 //  clongdouble            = UT.clongdouble; pclongdouble           = UT.pclongdouble;
-{$endif}
 
   csize_t                = UT.size_t;      pcsize_t               = UT.psize_t;
 

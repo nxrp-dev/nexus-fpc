@@ -23,10 +23,6 @@
 
 {$modeswitch advancedrecords} {$modeswitch class} {$modeswitch result} {$modeswitch out} {$typedaddress on}
 
-{$if not defined(FPUNONE) and not defined(FPUSOFT)}
-  {$define can_use_ln_in_constants}
-{$endif}
-
 {-$define debug_lineinfocache}
 
 unit lnfodwrf;
@@ -77,13 +73,13 @@ type
     // 64-bit CPUs tend to have more memory.
     MaxStrings = {$ifdef CPU64} 1600 {$else} 1000 {$endif};
     StringsHashSizePrecomputed = {$ifdef CPU64} 512 {$else} 256 {$endif};
-    StringsHashSize = {$ifdef can_use_ln_in_constants} 1 shl round(ln(MaxStrings / HashLoadFactor) / ln(2)) {$else} StringsHashSizePrecomputed {$endif};
+    StringsHashSize = 1 shl round(ln(MaxStrings / HashLoadFactor) / ln(2));
     StringsHashSizeMatchesPrecomputed = 1 div Ord(StringsHashSize = StringsHashSizePrecomputed);
     StringsHashSizeIsPowerOfTwo = 1 div Ord((StringsHashSize and (StringsHashSize - 1)) = 0);
 
     MaxAddresses = {$ifdef CPU64} 8000 {$else} 3600 {$endif};
     AddressesHashSizePrecomputed = {$ifdef CPU64} 2048 {$else} 1024 {$endif};
-    AddressesHashSize = {$ifdef can_use_ln_in_constants} 1 shl round(ln(MaxAddresses / HashLoadFactor) / ln(2)) {$else} AddressesHashSizePrecomputed {$endif};
+    AddressesHashSize = 1 shl round(ln(MaxAddresses / HashLoadFactor) / ln(2));
     AddressesHashSizeMatchesPrecomputed = 1 div Ord(AddressesHashSize = AddressesHashSizePrecomputed);
     AddressesHashSizeIsPowerOfTwo = 1 div Ord((AddressesHashSize and (AddressesHashSize - 1)) = 0);
     MaxStringsData = MaxStrings * (StringHeaderSize + StringLengthEstimation);

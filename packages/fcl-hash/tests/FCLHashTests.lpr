@@ -8,7 +8,7 @@ uses
   utestsha256,
   utestsha512,
   utestonetimepass,
-  utestpem;
+  utestpem, tsHashConsumerTests;
 var
   lRegistry: TNXTestRegistry;
 begin
@@ -18,6 +18,7 @@ begin
     Registerutestsha512Tests(lRegistry);
     RegisterutestonetimepassTests(lRegistry);
     RegisterutestpemTests(lRegistry);
+    RegisterHashConsumerTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

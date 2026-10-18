@@ -31,9 +31,7 @@
   { Read date & Time function declarations }
   {$i osutilsh.inc}
 
-{$ifndef FPUNONE}
   {$i datih.inc}
-{$endif}
 
 function GetTickCount: LongWord; deprecated 'Use GetTickCount64 instead';
 function GetTickCount64: QWord;
