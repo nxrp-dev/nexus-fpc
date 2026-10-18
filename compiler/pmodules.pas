@@ -391,10 +391,19 @@ implementation
       Return true if all units were loaded, no recompilation needed. }
     function loaddefaultunits(curr :TModule) : boolean;
 
-      var
-        profileunit : TPPUModule;
-        profilesym : TUnitSym;
-        isnew : boolean;
+      procedure RegisterRuntimeUnit(const AName: string);
+        var
+          lModule: TPPUModule;
+          lUnitSym: TUnitSym;
+          lIsNew: Boolean;
+        begin
+          lModule:=RegisterUnit(curr,AName,'',lIsNew);
+          if lIsNew then
+            UsedUnits.concat(TUsedUnit.Create(lModule,false,true,nil));
+          lUnitSym:=CUnitSym.Create(lModule.ModuleName^,nil);
+          inc(lUnitSym.refs);
+          curr.AddUsedUnit(lModule,true,lUnitSym);
+        end;
 
       Procedure CheckAddUnit(s: string);
 
@@ -417,7 +426,7 @@ implementation
          begin
            { Heaptrc unit, load heaptrace before any other units especially objpas }
            if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) then
-             CheckAddUnit('heaptrc');
+             RegisterRuntimeUnit('heaptrc');
            { Valgrind requires c memory manager }
            if (cs_gdb_valgrind in CurrentSettings.GlobalSwitches) or
               (([cs_sanitize_address]*CurrentSettings.ModuleSwitches)<>[]) then
@@ -438,21 +447,12 @@ implementation
         if m_objpas in CurrentSettings.ModeSwitches then
           CheckAddUnit('objpas');
 
-        { The profiling runtime can require a source rebuild, including when a
-          cached dependency changes. Register it as an implicit uses entry so
-          loadunits and the normal sequential continuation can finish it. The
-          synchronous AddUnit path only supports loading already usable PPUs. }
+        { Optional runtimes can require a source rebuild. Register them as
+          implicit uses entries for loadunits and sequential continuation. }
         if not curr.IsUnit and not curr.IsLibrary and
            (TargetInfo.system=system_x86_64_win64) and
            (cs_nexus_profile in CurrentSettings.ModuleSwitches) then
-          begin
-            profileunit:=RegisterUnit(curr,'nxprofilerruntime','',isnew);
-            if isnew then
-              UsedUnits.concat(TUsedUnit.Create(profileunit,false,true,nil));
-            profilesym:=CUnitSym.Create('NXPROFILERRUNTIME',nil);
-            inc(profilesym.refs);
-            curr.AddUsedUnit(profileunit,true,profilesym);
-          end;
+          RegisterRuntimeUnit('nxprofilerruntime');
 
         { Macpas unit? }
         if m_mac in CurrentSettings.ModeSwitches then

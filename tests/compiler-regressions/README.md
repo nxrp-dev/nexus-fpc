@@ -184,3 +184,8 @@ record parameters and retained network/UTF-16BE/GUID conversions.
 `little_endian_metadata.pas` verifies NXU/NXP little-endian header acceptance
 and rejection of retired, mixed and missing byte-order flags. Run both with
 `tests/switches/Run-NXRemovedBigEndianTests.sh` and matching compiler/RTL units.
+
+`implicit_heaptrc_source.pas` reproduces internal error 2026032615 when `-gh`
+needs to compile HeapTrc from source. `Run-NXImplicitHeapTrcTests.sh` builds the
+original RTL source directly, verifies the second build loads the unchanged
+cached unit, and requires a clean runtime heap report with `-gh -gl` enabled.

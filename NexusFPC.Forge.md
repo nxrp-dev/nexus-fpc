@@ -55,6 +55,12 @@ remain available. Check with
 `bash tests/switches/Run-NXRemovedBigEndianTests.sh <compiler> <rtl-units>
 <compiler-units> <output>`.
 
+When `-gh` needs HeapTrc from source, the compiler registers it with the normal
+serial uses-unit loader. It no longer sends that source build through the
+compiled-unit-only loader that raised internal error 2026032615. Validate the
+source and cached-unit paths with
+`bash tests/switches/Run-NXImplicitHeapTrcTests.sh <compiler> <rtl-units> <output>`.
+
 Extended Pascal mode and its `ExtPas` RTL unit are retired. `-Mextendedpascal`
 uses the ordinary illegal-parameter diagnostic; `{$mode extendedpascal}` uses
 ordinary unknown-mode handling, including `-Sew`. ISO mode remains supported.

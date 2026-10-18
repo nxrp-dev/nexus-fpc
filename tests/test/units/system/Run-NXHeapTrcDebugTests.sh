@@ -17,15 +17,12 @@ for variant in normal debug; do
     mkdir -p "$directory/units" "$directory/consumer"
     defines=()
     if [[ $variant == debug ]]; then defines=(-ddebug_heaptrc); fi
-    # Keep sibling RTL sources out of the dependency search path.
-    cp "$heaptrc_source" "$directory/units/heaptrc.pas"
     "$compiler" -n -O2 -Aas-clang -XLL "${defines[@]}" "-Fu$rtl_units" \
         "-Fi$(dirname "$heaptrc_source")" "-FU$directory/units" \
-        "$directory/units/heaptrc.pas" >"$directory/unit.log" 2>&1
-    cp "$fixture" "$directory/consumer/theaptrcreport.pas"
+        "$heaptrc_source" >"$directory/unit.log" 2>&1
     "$compiler" -n -O2 -Aas-clang -XLL "${defines[@]}" \
         "-Fu$directory/units" "-Fu$rtl_units" "-FU$directory/consumer" \
-        "-FE$directory/consumer" "$directory/consumer/theaptrcreport.pas" \
+        "-FE$directory/consumer" "$fixture" \
         >"$directory/compile.log" 2>&1
     (cd "$directory/consumer"; ./theaptrcreport) >"$directory/runtime.log" 2>&1
     echo "PASS HeapTrc $variant report and dump checks"
