@@ -1,7 +1,4 @@
 * text=auto !eol
-*.pas gitlab-language=pascal
-*.nxpk gitlab-language=pascal
-*.inc gitlab-language=pascal
 *.pas diff=pascal
 *.nxpk diff=pascal
 *.inc diff=pascal
