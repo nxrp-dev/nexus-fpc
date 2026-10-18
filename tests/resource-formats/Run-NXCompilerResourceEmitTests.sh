@@ -13,6 +13,15 @@ compiler_includes=$5
 fixture=$6
 artifact_root=$7
 source_root=$(cd "$(dirname "$0")/../.." && pwd)
+# fcl-res is owned by nexus-packages, outside the compiler source tree.
+resource_source=${NEXUS_FCL_RES_SOURCE:-"$source_root/../nexus/packages/nexus-packages/fcl-res/src"}
+if [[ -z ${NEXUS_FCL_RES_SOURCE:-} && ! -f "$resource_source/resource.pas" ]]; then
+    resource_source="$source_root/../../nexus/packages/nexus-packages/fcl-res/src"
+fi
+if [[ ! -f "$resource_source/resource.pas" ]]; then
+    echo "Relocated fcl-res source not found: $resource_source" >&2
+    exit 2
+fi
 mkdir -p "$artifact_root/units" "$artifact_root/source" "$artifact_root/logs"
 artifact_root=$(cd "$artifact_root" && pwd)
 
@@ -93,7 +102,7 @@ for index in "${!targets[@]}"; do
     cat "$artifact_root/logs/emit-$target.log"
 done
 run_step compile-reader "$compiler" -n -O2 -Cr -Co -Ci "${compiler_flags[@]}" \
-    "-Fu$rtl_units" "-Fu$artifact_root/source" "-Fu$source_root/packages/fcl-res/src" \
+    "-Fu$rtl_units" "-Fu$artifact_root/source" "-Fu$resource_source" \
     "-FU$artifact_root/units" "-o$artifact_root/nxResourceTableReaderTests" \
     "$source_root/tests/resource-formats/nxResourceTableReaderTests.pas"
 run_step readers "$artifact_root/nxResourceTableReaderTests" "$fixture" \

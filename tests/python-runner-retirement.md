@@ -71,9 +71,8 @@ Retained fixture: `artifact-identity/identity_encoding.pas`.
   revision 34 versus 35; preserve independent identity fields above 255 and at
   the maximum 32-bit revision.
 - If source is available beside a foreign-family PPU, rebuild it as NXU and run.
-- `ppufiles` and `ppumove` must accept valid Nexus units and reject wrong family,
-  header and long revisions without changing rejected inputs or queuing linker
-  work. Valid ppumove preserves NXU and queues its expected link commands.
+- `ppufiles` must accept valid Nexus units and reject wrong family, header and
+  long revisions without changing rejected inputs.
 - Accept NXP004 metadata and reject same-number PCP004 metadata in all active
   readers. The native Forge reader now owns build-path validation; do not recreate
   the retired Python validator as a separate implementation.

@@ -68,13 +68,12 @@ writers remain. Rebuild cached units and package SDKs; `NXU208` and `NXP004`
 remain unchanged.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
-readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`
+readers, embedded package units, package rewriting, and `ppufiles`
 require this family. Current bundle validators require `NXP004`.
 There is one accepted family and no legacy reader. Ordinary source fallback can
 recompile a foreign cached unit into the current format when source is available.
 Otherwise the diagnostic identifies the required Nexus signature and rebuild.
-The standalone utilities return failure for rejected artifacts; `ppumove` does
-not proceed to linking after a unit is rejected.
+The standalone unit-file reader returns failure for rejected artifacts.
 
 ## Version ownership
 

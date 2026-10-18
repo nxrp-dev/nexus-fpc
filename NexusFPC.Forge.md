@@ -267,11 +267,11 @@ To rebuild just the tools after a completed bootstrap:
 ```
 
 The Tools Project exports its binary directory and driver.
-It builds these 11 Win64 tools using the verified native compiler:
+It builds these 10 Win64 tools using the verified native compiler:
 
 | Purpose | Executables |
 | --- | --- |
-| Compiler launcher and PPU tools | `fpc`, `ppufiles`, `ppumove` |
+| Compiler launcher and PPU tools | `fpc`, `ppufiles` |
 | Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
 | Binary includes and translations | `bin2obj`, `rstconv` |
 
@@ -300,7 +300,6 @@ Use `-f rc` directly for STRINGTABLE output. Validate with
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
 PPU reading and translation output,
 compiler-driven RC embedding and regeneration of the compiler tables/messages.
-`ppumove` receives a help/startup check, not exhaustive behavioral testing.
 
 The unused `ppdep`, `postw32`, and `data2inc` tools and `data2inc.exm` example
 are retired. They had no production invocation in the retained repositories.
@@ -335,7 +334,7 @@ run before clearing the previous distribution.
 
 The output is `build/forge-bootstrap/distribution/`:
 
-- `bin/x86_64-win64/`: the 18 release tools, lexer/parser skeletons, `ppcx64`,
+- `bin/x86_64-win64/`: the 10 release tools, `ppcx64`,
   `ppcross386`, `ppcrossa64`, and `fpc.cfg`.
 - `units/<cpu>-<os>/rtl/`: compiled RTL units, objects and associated resources
   for the 13 targets. The internal `buildrtl` build helper is excluded.

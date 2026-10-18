@@ -786,13 +786,10 @@ implementation
              ;
           odt_object:
             begin
-              { size, -size, parent vmt [, dmt ] (same names as for class) }
+              { size, -size, parent vmt (same names as for class) }
               lVMTDef.Add_Field_By_Def('vInstanceSize',SizeSIntType);
               lVMTDef.Add_Field_By_Def('vInstanceSize2',SizeSIntType);
               lVMTDef.Add_Field_By_Def('vParent',VoidPointerType);
-{$ifdef WITHDMT}
-              lVMTDef.Add_Field_By_Def('',VoidPointerType);
-{$endif WITHDMT}
             end;
           else
             InternalError(2015052605);

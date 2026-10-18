@@ -54,12 +54,6 @@ interface
         procedure WriteNames(ATypedConstBuilder: TTAITypedConstBuilder; ATree: PProcDefTree);
         procedure WriteIntEntry(ATypedConstBuilder: TTAITypedConstBuilder; ATree: PProcDefTree; AEntryDef: TDef);
         procedure WriteStrEntry(ATypedConstBuilder: TTAITypedConstBuilder; ATree: PProcDefTree; AEntryDef: TDef);
-{$ifdef WITHDMT}
-        { dmt }
-        procedure InsertDMTEntry(AObject:TObject;AArg:Pointer);
-        procedure WriteDMTIndexEntry(ATree : PProcDefTree);
-        procedure WriteDMTAddressEntry(ATree : PProcDefTree);
-{$endif}
         { published methods }
         procedure Do_Count_Published_Methods(AObject:TObject;AArg:Pointer);
         procedure Do_Gen_Published_Methods(AObject:TObject;AArg:Pointer);
@@ -75,10 +69,6 @@ interface
         procedure GenPublishedMethodsTable(ATypedConstBuilder: TTAITypedConstBuilder; out ALabel: TAsmLabel; out APublishedMethodsDef: TRecordDef);
         procedure Generate_Field_Table(ATypedConstBuilder: TTAITypedConstBuilder; out ALabel: TAsmLabel; out AFieldTableDef: TRecordDef);
         procedure Generate_Abstract_Stub(AList:TAsmList;AProcDef:TProcDef); virtual;
-{$ifdef WITHDMT}
-        { generates a DMT for _class }
-        function  GenDMT : TAsmLabel;
-{$endif WITHDMT}
       public
         constructor Create(AClassDef:TObjectDef); virtual;
         { write the VMT to al_globals }
@@ -362,90 +352,6 @@ implementation
          ATypedConstBuilder.finish_internal_data_builder(lDataTypedConstBuilder,ALabel,lMsgIntDef,sizeof(PInt));
       end;
 
-{$ifdef WITHDMT}
-
-{**************************************
-              DMT
-**************************************}
-
-    procedure TVMTWriter.InsertDMTEntry(AObject:TObject;AArg:Pointer);
-
-      var
-         lProcDef : TProcDef;
-         lTree : PProcDefTree;
-
-      begin
-         if TSym(AObject).typ=ProcSym then
-           begin
-              lProcDef:=TProcSym(AObject).definition;
-              while Assigned(lProcDef) do
-                begin
-                   if (po_msgint in lProcDef.ProcOptions) then
-                     begin
-                        new(lTree);
-                        lTree^.p:=lProcDef;
-                        lTree^.Left:=nil;
-                        lTree^.Right:=nil;
-                        InsertInt(lTree,FRoot);
-                     end;
-                   lProcDef:=lProcDef.nextoverloaded;
-                end;
-           end;
-      end;
-
-    procedure TVMTWriter.WriteDMTIndexEntry(ATree : PProcDefTree);
-
-      begin
-         if Assigned(ATree^.Left) then
-           WriteDMTIndexEntry(ATree^.Left);
-         al_globals.concat(TAIConst.Create_32bit(ATree^.Data.MessageInf.i));
-         if Assigned(ATree^.Right) then
-           WriteDMTIndexEntry(ATree^.Right);
-      end;
-
-    procedure TVMTWriter.WriteDMTAddressEntry(ATree : PProcDefTree);
-
-      begin
-         if Assigned(ATree^.Left) then
-           WriteDMTAddressEntry(ATree^.Left);
-         al_globals.concat(Tai_const_symbol.Createname(ATree^.Data.MangledName,0));
-         if Assigned(ATree^.Right) then
-           WriteDMTAddressEntry(ATree^.Right);
-      end;
-
-    function TVMTWriter.GenDMT : TAsmLabel;
-
-      var
-         lLabel : TAsmLabel;
-
-      begin
-         FRoot:=nil;
-         count:=0;
-         GenDMT:=nil;
-         { insert all message handlers into a tree, sorted by number }
-         FClass.SymTable.SymList.ForEachCall(InsertDMTEntry);
-
-         if count>0 then
-           begin
-              CurrentAsmData.getglobaldatalabel(lLabel);
-              GenDMT:=lLabel;
-              al_globals.concat(CAIAlign.Create(sizeof(PInt)));
-              al_globals.concat(TAILabel.Create(lLabel));
-              { entries for caching }
-              al_globals.concat(TAIConst.Create_Ptr(0));
-              al_globals.concat(TAIConst.Create_Ptr(0));
-
-              al_globals.concat(TAIConst.Create_32bit(count));
-              if Assigned(FRoot) then
-                begin
-                   WriteDMTIndexEntry(FRoot);
-                   WriteDMTAddressEntry(FRoot);
-                   DisposeProcDefTree(FRoot);
-                end;
-           end;
-      end;
-
-{$endif WITHDMT}
 
 {**************************************
         Published Methods
@@ -1049,9 +955,6 @@ implementation
 {$ifdef vtentry}
          lString: String;
 {$endif vtentry}
-{$ifdef WITHDMT}
-         lDMTLabel : TAsmLabel;
-{$endif WITHDMT}
          lInterfaceTable : TAsmLabel;
          lTypedConstBuilder, lDataTypedConstBuilder: TTAITypedConstBuilder;
          lClassNameDef: TDef;
@@ -1067,9 +970,6 @@ implementation
          lVMTDef: TDef;
          lSym : TAsmSymbol;
       begin
-{$ifdef WITHDMT}
-         lDMTLabel:=GenDMT;
-{$endif WITHDMT}
          { this code gets executed after the current module's symtable has
            already been removed from the symtablestack -> add it again, so that
            newly created defs here end up in the right unit }
@@ -1129,15 +1029,6 @@ implementation
          { size gives back 4 for classes                    }
          lTypedConstBuilder.emit_ord_const(TObjectSymTable(FClass.SymTable).DataSize,SizeSIntType);
          lTypedConstBuilder.emit_ord_const(-Int64(TObjectSymTable(FClass.SymTable).DataSize),SizeSIntType);
-{$ifdef WITHDMT}
-         if FClass.classtype=ct_object then
-           begin
-              if Assigned(lDMTLabel) then
-                lTypedConstBuilder.emit_tai(lDMTLabel,VoidPointerType)
-              else
-                lTypedConstBuilder.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
-           end;
-{$endif WITHDMT}
          { write pointer to parent VMT, this isn't implemented in TP }
          { but this is not used in FPC ? (PM) }
          { it's not used yet, but the delphi-operators as and is need it (FK) }

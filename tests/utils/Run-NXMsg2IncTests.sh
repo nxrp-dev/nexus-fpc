@@ -33,8 +33,8 @@ done
 # IDs are shared with the English catalog; do not merely pick unused numbers.
 for name in errorpl errorpli; do
     for identifier in scan_w_appid_not_support scan_w_appname_not_support scan_e_string_exceeds_255_chars; do
-        canonical=$(sed -n "s/^$identifier=\([0-9]*\)_.*/\1/p" "$repository/compiler/msg/errore.msg")
-        actual=$(sed -n "s/^$identifier=\([0-9]*\)_.*/\1/p" "$repository/compiler/msg/$name.msg")
+        canonical=$(LC_ALL=C sed -n "s/^$identifier=\([0-9]*\)_.*/\1/p" "$repository/compiler/msg/errore.msg")
+        actual=$(LC_ALL=C sed -n "s/^$identifier=\([0-9]*\)_.*/\1/p" "$repository/compiler/msg/$name.msg")
         if [[ -z $canonical || $actual != "$canonical" ]]; then
             fail "$name $identifier ID differs from English"
         fi

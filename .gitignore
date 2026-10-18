@@ -62,7 +62,6 @@ ppas.sh
 a.out
 symbol_order*.fpc
 /compiler/ppc*
-/compiler/vppc*
 !/compiler/ppcgen/*.pas
 !/compiler/ppcgen/*.inc
 !/compiler/ppc*.pas
@@ -79,7 +78,6 @@ symbol_order*.fpc
 /compiler/utils/mk68kins
 /compiler/utils/ppudump
 /compiler/utils/ppufiles
-/compiler/utils/ppumove
 /compiler/utils/mkx86inl
 /compiler/html
 /rtl/units-*

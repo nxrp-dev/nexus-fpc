@@ -52717,7 +52717,7 @@
     {
       "case": "WITHDMT_parser_API_drift",
       "batch": "054",
-      "status": "analyzed_unchanged_before_after",
+      "status": "retired_by_explicit_owner_authorization",
       "evidence": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/dmt-probe/analysis.json",
       "before_command": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/dmt-probe/before/result.json",
       "after_command": "/media/kcollins/dev/worktree/naming-batch054-20261018-k93_c90d/dmt-probe/after/result.json",
@@ -52732,18 +52732,20 @@
       ],
       "HEAD_guarded_routine_case_only_difference": true,
       "production_fix_applied": false,
-      "scope": "WITHDMT is not enabled in retained build profiles. Compilation stops in pd_virtual before the remaining DMT code; no claim that the mode builds, and no functional repair or retirement is authorized by naming-only goal.",
+      "scope": "Historical WITHDMT parser errors retained as evidence. The owner explicitly authorized retiring this optional implementation; the default object VMT layout and shared class message-table code remain.",
       "latest_comparison": {
         "batch": "055",
         "evidence": "/media/kcollins/dev/worktree/naming-batch055-20261018-vwb9emad/dmt-probe/analysis.json",
         "identical_errors": 5,
         "repair_applied": false
-      }
+      },
+      "retirement_applied": true,
+      "retirement_validation": "/media/kcollins/dev/worktree/compiler-cleanup-v7gwz1i1/Review.md"
     },
     {
       "batch": "056",
       "case": "Polish_catalog_duplicate_02061",
-      "status": "analyzed_unchanged_sources_before_naming",
+      "status": "repaired_and_validated_by_explicit_owner_authorization",
       "files": [
         "compiler/msg/errorpl.msg",
         "compiler/msg/errorpli.msg"
@@ -52756,21 +52758,23 @@
         "subject": "+ Patches from Wojciech Malinowski",
         "cause": "Renumbered APPID from02058 to02060 and APPNAME from02059 to02061 while the string-length error remained02061. Both current Polish catalogs retain the conflict."
       },
-      "production_fix_applied": false
+      "production_fix_applied": true,
+      "repair_validation": "/media/kcollins/dev/worktree/msg-repair-xcnxvq5m/Review.md"
     },
     {
       "batch": "056",
       "case": "Turkish_catalog_comment_marker",
-      "status": "analyzed_unchanged_source_before_naming",
+      "status": "repaired_and_validated_by_explicit_owner_authorization",
       "file": "compiler/msg/errortr.msg",
       "evidence": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/catalog-analysis.json",
       "origin_commit": "44af9d87de4732e5557d2397a974f0d49461b3d6",
-      "production_fix_applied": false
+      "production_fix_applied": true,
+      "repair_validation": "/media/kcollins/dev/worktree/msg-repair-xcnxvq5m/Review.md"
     },
     {
       "batch": "056",
       "case": "msg2inc_bare_T_empty_suffix",
-      "status": "analyzed_before_naming",
+      "status": "repaired_and_validated_by_explicit_owner_authorization",
       "file": "compiler/utils/msg2inc.pas",
       "evidence": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/tex-baseline-analysis/analysis.json",
       "origin": {
@@ -52779,7 +52783,8 @@
         "cause": "The H+ change converted the previously unchecked empty shortstring suffix access into a nil AnsiString dereference. Exact historical parent source builds and accepts -T; the introducing revision builds and exits216 with the same valid input.",
         "historical_proof": "/media/kcollins/dev/worktree/naming-batch056-20261018-87cvw5no/tex-baseline-analysis/history/results.json"
       },
-      "production_fix_applied": false
+      "production_fix_applied": true,
+      "repair_validation": "/media/kcollins/dev/worktree/msg-repair-xcnxvq5m/Review.md"
     }
   ],
   "authorized_behavioral_changes": [
@@ -52817,6 +52822,43 @@
       ],
       "validation": "/media/kcollins/dev/worktree/addstringopt-repair-20261018-a2pr8y3u/Review.txt",
       "separate_from_naming_batch": "055"
+    },
+    {
+      "change": "Repair Polish message IDs, the Turkish catalog comment marker, and bare msg2inc -T parsing",
+      "authorization": "Owner explicitly instructed: Go ahead and fix the msg bugs.",
+      "status": "validated",
+      "files": [
+        "compiler/msg/errorpl.msg",
+        "compiler/msg/errorpli.msg",
+        "compiler/msg/errortr.msg",
+        "compiler/utils/msg2inc.pas",
+        "tests/utils/Run-NXMsg2IncTests.sh",
+        "tests/utils/README-msg2inc.md"
+      ],
+      "validation": "/media/kcollins/dev/worktree/msg-repair-xcnxvq5m/Review.md",
+      "separate_from_naming_batch": "056",
+      "checks": "36 regression checks with each of stock FPC 3.2.2 and NexusFPC; 22 catalogs each; exact artifact comparisons recorded separately."
+    },
+    {
+      "change": "Retire compiler EpikTimer profiling and WITHDMT; refresh compiler/tool documentation",
+      "authorization": "Owner explicitly instructed: act on your three findings.",
+      "status": "validated",
+      "files": [
+        "compiler/cprofile.pas (deleted)",
+        "compiler/cepiktimer.pas (deleted)",
+        "compiler/aopt.pas",
+        "compiler/ncgvmt.pas",
+        "compiler/nobj.pas",
+        "compiler/pdecsub.pas",
+        "compiler/symdef.pas",
+        "compiler/README.txt",
+        "compiler/utils/README.txt",
+        "tests/compiler-regressions/retired_dmt_native.pas",
+        "tests/compiler-regressions/README.md"
+      ],
+      "validation": "/media/kcollins/dev/worktree/compiler-cleanup-v7gwz1i1/Review.md",
+      "separate_from_naming_batch": "056",
+      "checks": "Stock FPC 3.2.2 three-generation baseline and cleanup bootstraps; 13-target before/after compiler/RTL matrix; 541 integration tests; native class/object regressions; whole-object artifact comparisons."
     }
   ],
   "retired_components": [
@@ -52841,6 +52883,56 @@
       "status": "removed_by_owner_instruction",
       "reason": "Unused release utilities and associated example retired; bin2obj/rstconv production consumers and creumap RTL generator remain.",
       "baseline_commit": "814f931dab17857caa48be270cc67bcb930912e8"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "compiler/utils/vppcx64.pas"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Retire the fpc_with_valgrind launcher and its exclusive README/configuration/suppression instructions and /compiler/vppc* ignore rule. Shared compiler -gv and RTL Valgrind support have independent consumers and remain. Historical source inventories are retained as history.",
+      "baseline_commit": "809ba610ddd2de4af75d6e7e372ac5a03efb270b",
+      "validation": "/media/kcollins/dev/worktree/retire-valgrind-wrapper-lmu4y40r/Review.md"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "compiler/cprofile.pas",
+        "compiler/cepiktimer.pas"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Retire the optional compiler optimizer timing infrastructure and its only import/two call sites. Shared benchmark timer code is independent. Historical naming inventories remain unchanged.",
+      "validation": "/media/kcollins/dev/worktree/compiler-cleanup-v7gwz1i1/Review.md"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "WITHDMT branches in compiler/ncgvmt.pas, compiler/nobj.pas, compiler/pdecsub.pas, compiler/symdef.pas"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Retire the broken optional object DMT parser/emitter/layout. Retain the default VMT-offset branch exactly and retain shared class message-table helpers.",
+      "validation": "/media/kcollins/dev/worktree/compiler-cleanup-v7gwz1i1/Review.md"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "compiler/utils/ppumove.pas"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Retire the unused standalone unit-library mover, its Forge target, release inventory/help check, ignore rule and active documentation/test backlog requirements. Retain PPUTool for ppufiles and shared PPU/entry-file copy routines used by compiler package rewriting. Historical inventories are preserved.",
+      "baseline_commit": "809ba610ddd2de4af75d6e7e372ac5a03efb270b",
+      "validation": "/media/kcollins/dev/worktree/retire-ppumove-1jr5cn6e/Review.md"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "compiler/utils/fpimpdef.pas",
+        "compiler/impdef.pas"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Retire the unused PE export scanner/DEF and GNU as/ar import-library generator together with its sole implementation helper. No active build or release consumer exists. Windows import generation in t_win.pas and shared process/file helpers remain unchanged. Historical naming inventories are preserved.",
+      "baseline_commit": "809ba610ddd2de4af75d6e7e372ac5a03efb270b",
+      "validation": "/media/kcollins/dev/worktree/retire-fpimpdef-gg4maqre/Review.md"
     }
   ]
 }

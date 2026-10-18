@@ -15,7 +15,7 @@ $targets = @(
     'x86_64-iphonesim', 'aarch64-iphonesim', 'aarch64-ios'
 )
 $compilers = @{i386='ppcross386.exe'; x86_64='ppcrossx64.exe'; aarch64='ppcrossa64.exe'}
-$tools = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
+$tools = @('fpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
     'rstconv','bin2obj')
 
 function Require-File([string]$Path) {

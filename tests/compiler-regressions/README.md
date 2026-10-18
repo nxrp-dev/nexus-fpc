@@ -134,3 +134,15 @@ using matching RTL units and an output directory under the development worktree:
 
 The define belongs to the compiler build, not the fixture compilation. The
 compiler build itself is the regression for the missing local declaration.
+
+## Optional DMT retirement
+
+`retired_dmt_native.pas` checks ordinary object virtual dispatch, class virtual
+and dynamic methods, an overridden integer message handler, and inherited
+integer/string message handlers. These remain supported after removing the
+optional `WITHDMT` implementation and its alternative object VMT layout.
+
+Compile and run it with a native compiler and matching RTL. Put the executable
+and unit output in a unique directory under the development worktree. For
+cross-target verification, compile with `-Cn` and compare the emitted VMT and
+message-table object data against the compiler before the removal.

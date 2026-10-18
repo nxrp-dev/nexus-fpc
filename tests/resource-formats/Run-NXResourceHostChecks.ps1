@@ -7,6 +7,7 @@ param(
     [string]$LLVMRC = 'llvm-rc',
     [string]$LLVMCvtRes = 'llvm-cvtres',
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path,
+    [string]$ResourceSource,
     [string]$Fixtures,
     [string]$MetadataFixtures,
     [switch]$NexusCompiler
@@ -15,6 +16,13 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
+if (-not $ResourceSource) {
+    $ResourceSource = Join-Path $SourceRoot '../nexus/packages/nexus-packages/fcl-res/src'
+    if (-not (Test-Path -LiteralPath $ResourceSource)) {
+        $ResourceSource = Join-Path $SourceRoot '../../nexus/packages/nexus-packages/fcl-res/src'
+    }
+}
+$ResourceSource = (Resolve-Path -LiteralPath $ResourceSource).Path
 $RtlUnits = (Resolve-Path -LiteralPath $RtlUnits).Path
 $Compiler = (Get-Command $Compiler -ErrorAction Stop).Source
 $Clang = (Get-Command $Clang -ErrorAction Stop).Source
@@ -71,7 +79,7 @@ function Compile-Check {
     $arguments = @('-n', '-O2', '-Cr', '-Co', '-Ci')
     if ($NexusCompiler) { $arguments += @('-Aas-clang', '-XLL') }
     $arguments += @("-Fu$RtlUnits", "-Fu$(Join-Path $SourceRoot 'compiler')",
-        "-Fu$(Join-Path $SourceRoot 'packages/fcl-res/src')", "-FU$units",
+        "-Fu$ResourceSource", "-FU$units",
         "-o$executable", (Join-Path $SourceRoot "tests/resource-formats/$Name.pas"))
     Invoke-Checked "compile-$Name" $Compiler $arguments
     return $executable

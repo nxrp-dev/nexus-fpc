@@ -34,7 +34,7 @@ function Assert-Contains([string]$Name, [string]$Text) {
 function Assert-Same([string]$Left, [string]$Right) {
     if ((Get-FileHash -LiteralPath $Left).Hash -ne (Get-FileHash -LiteralPath $Right).Hash) { throw "Generated file mismatch: $Left; $Right" }
 }
-$names = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
+$names = @('fpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
     'rstconv','bin2obj')
 foreach ($name in $names) {
     if (-not (Test-Path -LiteralPath (Join-Path $bin ($name+'.exe')))) { throw "Missing release tool: $name" }
@@ -66,7 +66,6 @@ end.
     Assert-Contains 'driver-program.log' 'forge-tools-ok'
     Run-Step 'ppu-read' (Join-Path $bin 'ppufiles.exe') @('-O',(Join-Path $rtl 'sysutils.nxu'))
     Assert-Contains 'ppu-read.log' 'sysutils.o'
-    Run-Step 'ppumove-help' (Join-Path $bin 'ppumove.exe') @('-h')
     Run-Step 'resource-strings' (Join-Path $bin 'rstconv.exe') @('-i','native.rsj','-o','native.po')
     Assert-Contains 'native.po' 'forge-tools-ok'
     # LLVM is the required toolchain. The compiler owns normalization and LLD

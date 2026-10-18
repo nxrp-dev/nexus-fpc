@@ -289,9 +289,9 @@ scan_w_macro_support_turned_off=02057_W_Obsˆuga makr jest wyˆ¥czona
 % -Sm on the commandline or add {$MACRO ON} in the source
 scan_e_invalid_interface_type=02058_E_Nieprawidˆowy typ interfejsu. Prawidˆowe s¥ COM, CORBA i DEFAULT.
 % The interface type that was specified is not supported
-scan_w_appid_not_support=02060_W_APPNAME jest obsˆugiwane tylko przez PalmOS
+scan_w_appid_not_support=02059_W_APPNAME jest obsˆugiwane tylko przez PalmOS
 % The \var{\{\$APPID\}} directive is only supported for the PalmOS target.
-scan_w_appname_not_support=02061_W_Dyrektywa APPNAME jest obsˆugiwana tylko przez PalmOS
+scan_w_appname_not_support=02060_W_Dyrektywa APPNAME jest obsˆugiwana tylko przez PalmOS
 % The \var{\{\$APPNAME\}} directive is only supported for the PalmOS target.
 scan_e_string_exceeds_255_chars=02061_E_Staˆe ˆaäcuchowe nie mog¥ by† dˆu¾sze ni¾ 255 znak¢w
 % A single string constant can contain at most 255 chars. Try splitting up the

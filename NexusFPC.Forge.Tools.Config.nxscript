@@ -10,7 +10,6 @@ FPC HostTool {
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/win",
         "build/forge-bootstrap/tools/packages/fcl-base/src",
         "build/forge-bootstrap/tools/packages/fcl-base/src/win",
-        "build/forge-bootstrap/tools/packages/fcl-res/src",
         "build/forge-bootstrap/tools/packages/fcl-json/src",
         "build/forge-bootstrap/tools/packages/paszlib/src"
     ];

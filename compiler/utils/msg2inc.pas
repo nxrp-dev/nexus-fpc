@@ -779,9 +779,10 @@ begin
         delete(lArgument,1,2);
         case lChar of
          'T' : begin
-                 case upcase(lArgument[1]) of
-                  'S' : TexHeader:=True;
-                 end;
+                 if lArgument<>'' then
+                   case upcase(lArgument[1]) of
+                    'S' : TexHeader:=True;
+                   end;
                  Mode:=ModeTex;
                end;
          'I' : Mode:=ModeIntel;

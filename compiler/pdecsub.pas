@@ -1927,10 +1927,6 @@ begin
 end;
 
 procedure pd_virtual(pd:TAbstractProcDef);
-{$ifdef WITHDMT}
-var
-  pt : TNode;
-{$endif WITHDMT}
 begin
   if Assigned(pd.owner) and
      (po_external in pd.ProcOptions) then
@@ -1946,22 +1942,6 @@ begin
   if Is_ObjectPascal_Helper(TProcDef(pd).struct) and
       (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_VIRTUAL].str);
-{$ifdef WITHDMT}
-  if Is_Object(TProcDef(pd).struct) and
-     (token<>_SEMICOLON) then
-    begin
-       { any type of parameter is allowed here! }
-       pt:=comp_expr(true);
-       if Is_ConstIntNode(pt) then
-         begin
-           include(pd.ProcOptions,po_msgint);
-           pd.MessageInf.i:=pt.Value;
-         end
-       else
-         Message(parser_e_ill_msg_expr);
-       disposetree(pt);
-    end;
-{$endif WITHDMT}
 end;
 
 

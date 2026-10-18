@@ -25,12 +25,6 @@ Group ReleaseTools {
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];
     }
-    CopyFile Stage_fcl_res {
-        Source: "packages/fcl-res/src";
-        Destination: "build/forge-bootstrap/tools/packages/fcl-res/src";
-        Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc"];
-    }
     CopyFile Stage_fcl_json {
         Source: "../../nexus/packages/nexus-packages/serialization/fcl-json/src";
         Destination: "build/forge-bootstrap/tools/packages/fcl-json/src";
@@ -57,13 +51,6 @@ Group ReleaseTools {
         EntryPoint: "build/forge-bootstrap/seed/source/utils/ppufiles.pas";
         Output: "build/forge-bootstrap/tools/bin/ppufiles.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/ppufiles";
-    }
-    CreateDirectory Units_ppumove { Path: "build/forge-bootstrap/tools/units/ppumove"; }
-    FPC Build_ppumove (PPUTool) {
-        Source: ["build/forge-bootstrap/seed/source/utils/ppumove.pas"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/ppumove.pas";
-        Output: "build/forge-bootstrap/tools/bin/ppumove.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/ppumove";
     }
     CreateDirectory Units_mkx86ins { Path: "build/forge-bootstrap/tools/units/mkx86ins"; }
     FPC Build_mkx86ins (HostTool) {

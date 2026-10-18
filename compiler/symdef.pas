@@ -8179,11 +8179,7 @@ implementation
           VMTMethodOffset:=Index*VoidCodePointerType.Size;
         else
           { the +2*sizeof(pint) is size and -size }
-{$ifdef WITHDMT}
-          VMTMethodOffset:=Index*VoidCodePointerType.Size+2*VoidPointerType.Size+2*SizeOf(PInt);
-{$else WITHDMT}
           VMTMethodOffset:=Index*VoidCodePointerType.Size+1*VoidPointerType.Size+2*SizeOf(PInt);
-{$endif WITHDMT}
         end;
       end;
 

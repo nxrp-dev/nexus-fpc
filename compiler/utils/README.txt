@@ -5,9 +5,13 @@ msg2inc  : Convert a compiler message file (errorX.msg) to .inc files to
            include it as the default language in the compiler. It can
            also convert the .msg to .tex for inclusion the documentation
 
-nasmconv : Convert a Nasm insns.dat to i386tab.inc so it can be used with
-           the compiler
+mkx86ins, mkx86reg : Generate x86 instruction and register tables.
+mkx86inl          : Generate x86 intrinsic declarations and tables.
+mka64ins, mka64reg : Generate AArch64 instruction and register tables.
 
+The generation commands and retained release-tool list are documented in
+NexusFPC.Forge.md at the repository root. Run generators in an
+isolated source copy under the development worktree, outside this checkout.
 
 msgdif   : analyzes the differences between two msg files
            msgdif errore.msg errord.msg
@@ -17,32 +21,4 @@ msgdif   : analyzes the differences between two msg files
            the message line itself)
            removed messages are prepended by "%%% "
            (they can be useful in case on error enum renaming !)
-
-vppcx64  : run the compiler through the valgrind utility.
-           This is only useful for compilers compiled
-           using the '-gv' option, which ensures that the C-library
-           is used.
-           Some time-critical functions are known to generate some valgrind
-           specific errors, which can be discarded using specific Makefile
-           parameters.
-           VALGRIND_FPC="--error-exitcode=138 --undef-value-errors=no \
-           --errors-for-leak-kinds=none --error-limit=no  --gen-suppressions=yes \
-           --suppressions=`pwd`/fpc-suppressions.txt"
-
-           Example of suppression file for x86_64 compiler binaries (which
-           can be for any target CPU), linked to the fact that indexbyte function
-           in x86_64 RTL reads memory by 16-byte long chuncks, thus possibly
-           reading past end of allocation.
-
-cat fpc-suppressions.txt
-{
-    <avoid_invalid_read_in_indexbyte>
-    Memcheck:Addr16
-    fun:SYSTEM_$$_INDEXBYTE$formal$INT64$BYTE$$INT64
-}
-{
-    <avoid_invalid_read_in_comparebyte>
-    Memcheck:Addr16
-    fun:SYSTEM_$$_COMPAREBYTE$formal$formal$INT64$$INT64
-}
 

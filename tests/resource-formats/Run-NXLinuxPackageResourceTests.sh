@@ -7,6 +7,15 @@ fi
 compiler=$(realpath "$1")
 rtl=$(realpath "$2")
 root=$(cd "$(dirname "$0")/../.." && pwd)
+# fcl-res is owned by nexus-packages, outside the compiler source tree.
+resource_source=${NEXUS_FCL_RES_SOURCE:-"$root/../nexus/packages/nexus-packages/fcl-res/src"}
+if [[ -z ${NEXUS_FCL_RES_SOURCE:-} && ! -f "$resource_source/resource.pas" ]]; then
+    resource_source="$root/../../nexus/packages/nexus-packages/fcl-res/src"
+fi
+if [[ ! -f "$resource_source/resource.pas" ]]; then
+    echo "Relocated fcl-res source not found: $resource_source" >&2
+    exit 2
+fi
 mkdir -p "$3"
 out=$(realpath "$3")
 case "$out/" in "$root/"*) echo 'Use an external output directory.' >&2; exit 2 ;; esac
@@ -59,7 +68,7 @@ printf 'package Consumer; requires Provider; contains ConsumerUnit; end.\n' >"$o
 cd "$out/consumer"
 step consumer "$compiler" "${flags[@]}" "-FU$out/consumer" "-FE$out/consumer" consumer.nxpk
 step reader-compile "$compiler" -n -O2 -Aas-clang -XLL "-Fu$rtl" \
-    "-Fu$root/compiler" "-Fu$root/packages/fcl-res/src" "-FU$out/reader" "-FE$out/reader" \
+    "-Fu$root/compiler" "-Fu$resource_source" "-FU$out/reader" "-FE$out/reader" \
     "$root/tests/resource-formats/nxResourceTableReaderTests.pas"
 step provider-resources "$out/reader/nxResourceTableReaderTests" \
     "$out/expected.res" "$out/packages/Provider.nxpl"

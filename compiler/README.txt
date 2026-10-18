@@ -1,49 +1,33 @@
-This directory contains the sources of the Free Pascal Compiler
+This directory contains the NexusFPC compiler sources.
 
-If you want to compile/modify the compiler, please read first the
-programmers manual.
+Builds use the Forge projects in ../NexusFPC.Forge.nxscript. Read
+../NexusFPC.Forge.md for prerequisites, generation steps, the supported target
+matrix, release tools and SDK assembly.
 
-NexusFPC compiler builds use the Forge projects in ../NexusFPC.Forge.nxscript.
-See ../NexusFPC.Forge.md for bootstrap prerequisites, the retained target matrix,
-generated compiler inputs, release tools and distribution assembly. The compiler
-makefiles and their build/installation targets are retired.
+The retained compiler backends are i386, x86_64 and aarch64. Supported targets
+are selected by both CPU and OS in ../NexusFPC.Forge.Targets.nxscript:
 
-The compiler-switch notes below are historical upstream reference. They are not
-the supported Nexus target matrix or a replacement for the current Forge recipe.
+  Linux:         i386, x86_64, aarch64
+  Windows:       i386 (win32), x86_64 and aarch64 (win64)
+  Android:       x86_64, aarch64
+  macOS:         x86_64, aarch64 (darwin)
+  iOS simulator: x86_64, aarch64 (iphonesim)
+  iOS device:    aarch64 (ios)
 
-Possible compiler switches (* marks a currently required switch):
-  -----------------------------------------------------------------
-  GDB*                support of the GNU Debugger
-  I386                generate a compiler for the Intel i386+
-  x86_64              generate a compiler for the AMD x86-64 architecture
-  M68K                generate a compiler for the M68000
-  SPARC               generate a compiler for SPARC
-  POWERPC             generate a compiler for the PowerPC
-  VIS                 generate a compile for the VIS
-  DEBUG               version with debug code is generated
-  EXTDEBUG            some extra debug code is executed
-  EXTERN_MSG          Don't compile the msgfiles in the compiler, always
-                      use external messagefiles, default for TP
-  NOAG386INT          no Intel Assembler output
-  NOAG386NSM          no NASM output
-  NOAG386BIN          leaves out the binary writer, default for TP
-  NORA386DIR          No direct i386 assembler reader
-  TEST_GENERIC        Test Generic version of code generator
-                      (uses generic RTL calls)
-  -----------------------------------------------------------------
-  cpuflags            The target processor has status flags (on by default)
-  cpufpemu            The target compiler will also support emitting software
-                       floating point operations
-  cpu64bitaddr        The targets use a 64-bit address space (pointers and
-                       the default integer type are 64 bit)
-  cpu64bitalu         The target cpu has 64-bit registers available (unless
-                       cpu64bitaddr is also defined, pointers and default
-                       integer type remain 32 bit, but the cpu can perform
-                       64 bit calculations directly without needing helpers)
-  -----------------------------------------------------------------
+Forge entry points:
+  Build:Bootstrap   Build the native compiler and RTL from the FPC 3.2.2 seed;
+                    verify compiler generations two and three byte for byte.
+  Build:Cross       Build a selected target compiler and RTL.
+  Build:Tools       Build the retained release utilities.
+  Build:PackageSDK  Assemble the runtime-package SDK.
+  Build:Release     Assemble the completed target matrix and release.
 
-  Required switches for a i386 compiler be compiled by Free Pascal Compiler:
-  GDB;I386
+Use the documented Clang/LLVM assembler and LLD linker path. Compiler inputs
+are generated from the .dat and message sources by the utilities in utils/;
+see ../NexusFPC.Forge.Tables.nxscript and utils/README.txt.
 
-to build a compiler to SPARC target using a Win32/i386 you just use :
-      make CPU_TARGET=SPARC
+Keep generated files outside the source checkout, in a unique directory under
+the development worktree. Full rebuild validation uses an isolated checkout.
+The Linux bootstrap helper in ../nexus-private/scripts/linux/ (relative to the
+repository root) executes the documented stages and accepts --toolchain-root
+for this purpose. Use --no-promote for validation builds.
