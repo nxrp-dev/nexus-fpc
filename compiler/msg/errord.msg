@@ -4421,7 +4421,6 @@ A*2WR_Erzeuge "relocation code" (Windows)
 8*2Wt<x>_Setze das Format der Ziel-Executable
 8*3Wtcom_Erzeuge eine DOS .COM Datei (erfordert das winzige (tiny) Speichermodell)
 8*3Wtexe_Erzeuge eine DOS .EXE Datei (Voreinstellung)
-P*2WT_Spezifiziere "MPW tool type application" (Classic Mac OS)
 **2WX_Ermîgliche den executable stack (Linux)
 **1X_Programm-Optionen:
 **2X9_Erzeuge Linkerscript fÅr GNU Binutils ld Ñlter als Version 2.19.1 (Linux)

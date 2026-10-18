@@ -2220,7 +2220,6 @@ S*2Aas_asemblacja przy u¿yciu GNU AS
 **2Mfpc_dialekt free pascala (domy¶lny)
 **2Mobjfpc_w³±czenie niektórych rozszerzeñ Delphi 2
 **2Mdelphi_kompatybilno¶æ z Delphi
-**2Mgpc_kompatybilno¶æ z gpc
 **2Mmac_kompatybilno¶æ z dialektami pascala na Macintosha
 **1n_zignorowanie standardowego pliku konfiguracyjnego
 **1o<x>_zmiana nazwy skompilowanego programu na <x>
@@ -2267,7 +2266,6 @@ S*2Aas_asemblacja przy u¿yciu GNU AS
 **3SIcom_interfejsy kompatybilne z COM (domy¶lne)
 **3SIcorba_interfejsy kompatybilne z CORBA
 **2Sm_wspieranie makr jak w C (opcja globalna)
-**2Sp_to samo co -Mgpc
 **1s_pominiêcie wywo³ania asemblera i linkera
 **2sh_generacja skryptu do linkowania na ho¶cie
 **2st_generacja skryptu do linkowania na celu
@@ -2321,7 +2319,6 @@ S*2Tlinux_Linux
 3*2WR_generuje kod relokacji
 P*2WC_aplikacja konsolowa (tylko MacOS)
 P*2WG_aplikacja graficzna (tylko MacOS)
-P*2WT_aplikacja narzêdziowa (narzêdzie MPW, tylko MacOS)
 **1X_opcje plików wykonywalnych:
 **2Xc_podaje --shared do linkera (tylko Unix)
 **2Xd_nie u¿ywa standardowej ¶cie¿ki bibliotek (potrzebne do cross-kompilacji)

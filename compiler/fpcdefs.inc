@@ -64,8 +64,6 @@
   {$define DEBUG_DEVIRT}
 {$endif}
 
-{$define USEEXCEPT}
-
 { This fake CPU is used to allow incorporation of globtype unit
   into utils/ppudump without any CPU specific code PM }
 {$ifdef generic_cpu}

@@ -2956,7 +2956,6 @@ A*2WN_Non generare codice di rilocazione,
 A*3*_(necessario per il debug sotto Windows)
 3*2WR_Genera codice di rilocazione (Windows)
 A*2WR_Genera codice di rilocazione (Windows)
-P*2WT_Specifica applicazione tipo tool MPW (Classic Mac OS)
 3*2WX_Abilita stack dell'eseguibile (Linux)
 A*2WX_Abilita stack dell'eseguibile (Linux)
 p*2WX_Abilita stack dell'eseguibile (Linux)

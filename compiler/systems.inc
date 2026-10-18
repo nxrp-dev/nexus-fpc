@@ -121,7 +121,6 @@
 
        TAr = (ar_none
             ,ar_gnu_ar
-            ,ar_mpw_ar
             ,ar_gnu_ar_scripted
             ,ar_gnu_gar
        );
@@ -133,8 +132,7 @@
        );
 
        TScriptType = (script_none
-            ,script_dos,script_unix,
-            script_mpw
+            ,script_dos,script_unix
        );
 
        TABI = (abi_default

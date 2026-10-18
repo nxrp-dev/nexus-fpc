@@ -131,8 +131,6 @@ interface
   const
     ExecuteProcess = 'Do not use' deprecated 'Use cfileutil.RequotedExecuteProcess instead, ExecuteProcess cannot deal with single quotes as used by Unix command lines';
 
-function Unix2AmigaPath(Path: String): String;
-
 implementation
 
     uses
@@ -141,13 +139,6 @@ implementation
 
     var
       DirCache : TDirectoryCache;
-
-
-function Unix2AmigaPath(Path: String): String;
-begin
-  Unix2AmigaPath:=Path;
-end;
-
 
 
 {****************************************************************************

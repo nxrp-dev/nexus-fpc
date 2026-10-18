@@ -28,11 +28,6 @@ interface
   uses
     GlobType,ConstExp,EntFile,NXArtifactID;
 
-{ Also write the ppu if only crc if done, this can be used with ppudump to
-  see the differences between the intf and implementation }
-{ define DEBUG_GENERATE_INTERFACE_PPU}
-
-
 const
   { These revisions belong to the NXU family, independently of upstream FPC.
     Also advance the long revision for incompatible compiler/RTL ABI changes. }
@@ -115,10 +110,6 @@ type
     function GetHeaderSize:LongInt;override;
     function GetHeaderAddr:PEntryHeader;override;
     procedure ResetFile;override;
-{$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-  public
-    WritingInterfacePPU : Boolean;
-{$endif DEBUG_GENERATE_INTERFACE_PPU}
   public
     Header           : TPPUHeader;
     { crc for the entire unit }
@@ -142,7 +133,6 @@ type
   {read}
   { nothing special currently }
   {write}
-    function  CreateFile:Boolean;override;
     procedure WriteHeader;override;
   end;
 
@@ -162,9 +152,6 @@ constructor TPPUFile.Create(const FN:string);
 begin
   inherited Create(FN);
   CRCOnly:=False;
-{$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-  WritingInterfacePPU:=False;
-{$endif}
 end;
 
 destructor TPPUFile.Destroy;
@@ -253,20 +240,6 @@ end;
 {*****************************************************************************
                                 TPPUFile Writing
 *****************************************************************************}
-
-function TPPUFile.CreateFile:Boolean;
-begin
-{$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-  if CRCOnly then
-    begin
-      FName:=FName+'.intf';
-      CRCOnly:=False;
-      WritingInterfacePPU:=True;
-    end;
-{$endif}
-  Result:=inherited CreateFile;
-end;
-
 
 procedure TPPUFile.WriteHeader;
 var

@@ -3632,7 +3632,6 @@ A*2WR_Generate relocation code (Windows)
 8*2Wt<x>_Set the target executable format
 8*3Wtexe_Create a DOS .EXE file (default)
 8*3Wtcom_Create a DOS .COM file (requires tiny memory model)
-P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2WX_Enable executable stack (Linux)
 **1X_Executable options:
 **2Xc_Pass --shared/-dynamic to the linker (BeOS, Darwin, FreeBSD, Linux)

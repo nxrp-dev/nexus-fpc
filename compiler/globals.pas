@@ -58,10 +58,6 @@ TPCompilerReal,
          [m_objfpc,m_fpc,m_class,m_objpas,m_result,m_string_pchar,m_nested_comment,
           m_repeat_forward,m_cvar_support,m_initfinal,m_out,m_default_para,m_hintdirective,
           m_property,m_default_inline,m_except,m_multiline_strings];
-{$ifdef gpc_mode}
-       GPCModeSwitches =
-         [m_gpc,m_tp_procvar];
-{$endif}
        MacModeSwitches =
          [m_mac,m_cvar_support,m_mac_procvar,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_default_inline];
        ISOModeSwitches =
@@ -297,9 +293,6 @@ Const
        ParaLinkOptions   : TCmdStr;
        ParaDynamicLinker : string;
        ParaPrintNodeTree : Byte;
-{$ifdef PREPROCWRITE}
-       ParaPreprocess    : Boolean;
-{$endif PREPROCWRITE}
        PrintNodeFile     : Text;
 
        {  typical cross compiling params}

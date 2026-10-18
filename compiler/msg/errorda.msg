@@ -3595,7 +3595,6 @@ option_help_pages=11025_[
 **2Mfpc_free pascal dialekt (standard)
 **2Mobjfpc_slå visse udvidelser fra Delphi 2 til
 **2Mdelphi_forsøg at være Delphi-kompatibel
-**2Mgpc_forsøg at være GNU-Pascal-kompatibel
 **2Mmacpas_forsøg at være kompatibel med pascal-dialekter fra macintosh 
 **1n_spring læsning af standardkonfigurationsfil over
 **1o<x>_ændr navnet af det producerede program til <x>
@@ -3610,7 +3609,6 @@ option_help_pages=11025_[
 **2Sh_brug ansistrenge
 **2Si_brug C++-lignende INLINE
 **2Sm_understøt makroer som I C (globalt)
-**2Sp_samme som -Mgpc
 **1s_kør hverken assembler eller linker
 **2sh_generér script til linkning på værtscomputeren
 **2st_generér script til linkning på mål-computeren
@@ -3705,7 +3703,6 @@ P*2Tmacos_MacOS (klassisk) på PowerPC
 P*2Tmorphos_MorphOS
 P*2WC_Vælg konsoleapplikation (MacOS only)
 P*2WG_Vælg grafisk applikation (MacOS only)
-P*2WT_Vælg værktøjsapplikation (MPW tool, MacOS only)
 **1*_
 **1?_vis denne hjælp
 **1h_vis denne hjælp uden at vente på tastetryk

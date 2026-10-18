@@ -3788,7 +3788,6 @@ A*2WR_生成重定位代码(Windows)
 8*2Wt<x>_设置目标可执行文件格式
 8*3Wtcom_创建 DOS .COM 文件(需要微型内存模型)
 8*3Wtexe_创建 DOS .EXE 文件(默认)
-P*2WT_指定 MPW 工具类型应用程序(经典 Mac OS)
 **2WX_启用可执行栈(Linux)
 **1X_可执行文件选项：
 **2X9_为版本低于 2.19.1 的 GNU Binutils ld 生成链接器脚本(Linux)

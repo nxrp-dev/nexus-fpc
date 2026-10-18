@@ -3705,7 +3705,6 @@ P*2WG_Tetapkan aplikasi tipe grafis (Classic Mac OS)
 A*2WN_Jangan hasilkan kode relokasi, diperlukan untuk debugging (Windows)
 3*2WR_Hasilkan kode relokasi (Windows)
 A*2WR_Hasilkan kode relokasi (Windows)
-P*2WT_Tetapkan aplikasi tipe piranti MPW (Mac OS Klasik)
 **1X_Opsi executable:
 **2Xc_Oper --shared/-dynamic ke linker (BeOS, Darwin, FreeBSD, Linux)
 **2Xd_Jangan gunakan path pencarian librari standar (diperlukan untuk kompilasi silang)

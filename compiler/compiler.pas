@@ -211,11 +211,6 @@ begin
        WriteCmdStrList(general_t_unitscope,NamespaceList);
 
        { Compile the program }
-  {$ifdef PREPROCWRITE}
-       if ParaPreprocess then
-        parser.preprocess(InputFilePath+InputFileName)
-       else
-  {$endif PREPROCWRITE}
          begin
          m:=TPPUModule.create(Nil,'',InputFilePath+InputFileName,false);
          m.state:=ms_compile;

@@ -99,7 +99,6 @@ Type
     procedure Interpret_I_U(more: TCmdStr; ispara: boolean);
     procedure Interpret_K_l(opt, more: TCmdStr);
     procedure Interpret_L_l(opt, more: TCmdStr);
-    procedure Interpret_M_l(opt, more: TCmdStr);
     procedure Interpret_M_U(opt, more: TCmdStr);
     procedure Interpret_N_l(opt, more: TCmdStr);
     procedure Interpret_O_l(opt, more: TCmdStr);
@@ -1272,7 +1271,6 @@ begin
            'I' : Interpret_I_U(more,ispara);
            'k' : Interpret_K_l(opt,more);
            'l' : Interpret_L_l(opt,more);
-           'm' : Interpret_M_l(opt,more);
            'M' : Interpret_M_U(opt,more);
            'n' : Interpret_N_l(opt,more);
            'o' : Interpret_O_l(opt,more);
@@ -2849,15 +2847,6 @@ begin
 end;
 
 
-procedure TOption.Interpret_M_l(opt, more: TCmdStr);
-
-begin
-{$ifdef PREPROCWRITE}
-  ParaPreprocess:=not UnSetBool(more,0,opt,true);
-{$endif PREPROCWRITE}
-end;
-
-
 procedure TOption.Interpret_M_U(opt, more: TCmdStr);
 
 begin
@@ -3112,10 +3101,6 @@ begin
               exclude(InitSettings.GlobalSwitches,cs_transparent_file_names)
             else
               include(InitSettings.GlobalSwitches,cs_transparent_file_names);
-          {$ifdef gpc_mode}
-          'p' : //an alternative to -Mgpc
-            SetCompileMode('GPC',true);
-          {$endif}
           'v' :
             If UnsetBool(More, j, opt, false) then
               exclude(InitSettings.GlobalSwitches,cs_support_vectors)

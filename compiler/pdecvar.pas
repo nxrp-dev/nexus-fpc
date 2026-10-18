@@ -1152,27 +1152,6 @@ implementation
           vs.VarState:=vs_initialised;
         end;
 
-{$ifdef gpc_mode}
-        procedure read_gpc_name(sc : TFPObjectList);
-        var
-          vs : TAbstractNormalVarSym;
-          C_Name : string;
-        begin
-          consume(_ID);
-          C_Name:=get_stringconst;
-          vs:=TAbstractNormalVarSym(sc[0]);
-          if sc.count>1 then
-            Message(parser_e_directive_only_one_var,'ABSOLUTE');
-          if vs.typ=staticvarsym then
-            begin
-              TStaticVarSym(vs).Set_MangledName(C_Name);
-              include(vs.VarOptions,vo_is_external);
-            end
-          else
-            Message(parser_e_no_local_var_external);
-        end;
-{$endif}
-
         procedure read_absolute(sc : TFPObjectList);
         var
           vs     : TAbstractVarSym;
@@ -1404,13 +1383,6 @@ implementation
              Block_Type:=bt_var_type;
              consume(_COLON);
              typepos:=CurrentTokenPos;
-
-{$ifdef gpc_mode}
-             if (m_gpc in CurrentSettings.ModeSwitches) and
-                (token=_ID) and
-                (CurrentScanner.orgpattern='__asmname__') then
-               read_gpc_name(sc);
-{$endif}
 
              read_anon_type(hdef,false,nil);
              for i:=0 to sc.count-1 do

@@ -2198,7 +2198,6 @@ S*2Aas_assemblar utilitzant GNU AS
 **2Mfpc_dialecte Free Pascal (predeterminat)
 **2Mobjfpc_Activa algunes extensions Delphi 2
 **2Mdelphi_Intenta ser compatible amb Delphi
-**2Mgpc_Intenta ser compatible amb gpc
 **2Mmacpas_Intenta ser compatible amb dialectes Pascal del Macintosh
 **1n_No llegeix el fitxer de configuració predeterminat
 **1o<x>_Canvia el nom de l'executable produït a <x>
@@ -2245,7 +2244,6 @@ S*2Aas_assemblar utilitzant GNU AS
 **3SIcom_interfície compatible amb COM (predeterminat)
 **3SIcorba_interfície compatible amb CORBA
 **2Sm_Permet macros tipus C (globals)
-**2Sp_Igual que -Mgpc
 **1s_No cridis l'assemblador ni l'enllaçador
 **2sh_Genera la seqüència per enllaçar a l'anfitrió
 **2st_Genera la seqüència per enllaçar al destí
@@ -2298,7 +2296,6 @@ S*2Tlinux_Linux
 3*2WR_Genera codi reagrupat
 P*2WC_Especifica aplicació tipus consola (només MacOS)
 P*2WG_Especifica aplicació gràfica (només MacOS)
-P*2WT_Especifica aplicació tipus eina (eina MPW, només MacOS)
 **1X_Opcions de l'executable:
 **2Xc_passa --shared a l'enllaçador (només Unix)
 **2Xd_no utilitzar el camí normalitzat de biblioteques (necessària per compilar entre diferents SO)

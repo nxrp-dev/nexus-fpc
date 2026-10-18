@@ -1164,12 +1164,6 @@ implementation
       begin
         OldCRC:=DoCRC;
         DoCRC:=False;
-{$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-	{ Accept invalid marker inside getppucrc }
-        if WritingInterfacePPU then
-          PutLongInt(D.DataIdx)
-        else
-{$endif}
         if (D.DataIdx=-1) and not CRCOnly then
           InternalError(2019022201)
         else

@@ -1855,10 +1855,6 @@ var
          if not PPUFile.CreateFile then
            Message(unit_f_ppu_cannot_write);
 
-{$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-        if PPUFile.WritingInterfacePPU then
-          PPUFile.CRCOnly:=False;
-{$endif DEBUG_GENERATE_INTERFACE_PPU}
          { extra header (sub version, module flags) }
          WriteExtraHeader;
 
@@ -1906,8 +1902,7 @@ var
              InterfaceCRC:=PPUFile.InterfaceCRC;
              IndirectCRC:=PPUFile.IndirectCRC;
            end;
-         { end of implementation, to generate a correct ppufile
-           for ppudump when using DEBUG_GENERATE_INTERFACE_PPU define }
+         { end of implementation }
          PPUFile.WriteEntry(IBEndImplementation);
 
 

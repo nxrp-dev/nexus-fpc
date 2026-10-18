@@ -1785,7 +1785,6 @@ option_help_pages=11025_[
 **2Sh_Utilise les ansistrings
 **2Si_supporte les INLINE type C++
 **2Sm_support des macros comme C (global)
-**2Sp_essaye d'ˆtre compatible avec GPC
 **1s_n'appelle pas l'assembleur ni le linker
 **1u<x>_rend le symbole <x> non d‚fini
 **1U_options d'unit‚s :

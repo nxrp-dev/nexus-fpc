@@ -193,7 +193,6 @@ interface
          cs_transparent_file_names,
          { units }
          cs_load_objpas_unit,
-         cs_load_gpc_unit,
          cs_support_vectors = 9,
          { debuginfo }
          cs_use_heaptrc,cs_use_lineinfo,
@@ -394,7 +393,6 @@ interface
        TModeSwitch = (m_none,
          { generic }
          m_fpc,m_objfpc,m_delphi,m_mac = 5,m_iso,m_extpas,
-         {$ifdef gpc_mode}m_gpc,{$endif}
          { more specific }
          m_class,               { delphi class model }
          m_objpas,              { load objpas unit }
@@ -456,7 +454,6 @@ interface
          app_gui,       { graphic user-interface application }
          app_cui,       { console application }
          app_fs,        { full-screen type application (OS/2 and EMX only) }
-         app_tool,      { tool application, (MPW tool for MacOS, MacOS only) }
          app_arm7,      { for Nintendo DS target }
          app_arm9,      { for Nintendo DS target }
          app_bundle,    { dynamically loadable bundle, Darwin only }
@@ -597,7 +594,6 @@ interface
 
        modeswitchstr : array[0..ord(high(TModeSwitch))] of string[30] = ('',
          '','','','','','','',
-         {$ifdef gpc_mode}'',{$endif}
          { more specific }
          'CLASS',
          'OBJPAS',

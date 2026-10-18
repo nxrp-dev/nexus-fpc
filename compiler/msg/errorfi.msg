@@ -3643,7 +3643,6 @@ S*2Aas_assembler avec GNU AS
 **2Mfpc_dialecte Free Pascal (par défaut)
 **2Mobjfpc_activation de certaines extensions Delphi 2
 **2Mdelphi_essaye d'être compatible avec Delphi
-**2Mgpc_essaye d'être compatible avec gpc
 **2Mmacpas_essaye d'être compatible avec les dialectes Pascal du Macintosh
 **1n_ne pas lire le fichier de configuration par défaut
 **1o<x>_change le nom de l'executable en <x>
@@ -3692,7 +3691,6 @@ S*2Aas_assembler avec GNU AS
 **3SIcom_interface compatible COM (par défaut)
 **3SIcorba_interface compatible CORBA
 **2Sm_support des macros comme C (global)
-**2Sp_identique à -Mgpc
 **1s_n'appelle pas l'assembleur ni le linker
 **2sh_générer un script à lier sur l'hôte
 **2st_générer un script à lier sur la cible
@@ -3747,7 +3745,6 @@ S*2Tlinux_Linux
 3*2WR_générer du code relogeable
 P*2WC_générer une application console (MacOS seulement)
 P*2WG_générer une application graphique (MacOS seulement)
-P*2WT_générer une application utilitaire (MPW tool, MacOS seulement)
 **1X_options pour executable :
 **2Xc_passer --shared à l'éditeur de liens (Unix seulement)
 **2Xd_ne pas utiliser le chemin de recherche des bibliothèques standard (nécessaire à la compilation pour une autre cible)

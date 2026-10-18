@@ -3538,7 +3538,6 @@ option_help_pages=11025_[
 **2Sh_Gebruik ansistrings
 **2Si_Ondersteun INLINE
 **2Sm_Ondersteun macros zoals in C (globaal)
-**2Sp_Probeer GNU-Pascal-compatibel te zijn
 **1s_Roep assembler en linker niet op (slechts met -a)
 **1sh_Genereer een script om op het hostplatform te linken
 **1sr_Voer geen registertoewijzing uit (optimalisaties worden uitgeschakeld)

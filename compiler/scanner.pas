@@ -37,7 +37,6 @@ interface
     const
        max_include_nesting=32;
        max_macro_nesting=16;
-       preprocbufsize=32*1024;
 
        { when parsing an internally generated macro, if an identifier is
          prefixed with this constant then it will always be interpreted as a
@@ -292,24 +291,6 @@ interface
           function DumpPointer : string;
 {$endif EXTDEBUG}
        end;
-
-{$ifdef PREPROCWRITE}
-       TPreProcFile=class
-         f   : text;
-         buf : TByteDynArray;
-         spacefound,
-         eolfound : boolean;
-         constructor create(const fn:string);
-         destructor  Destroy; override;
-         procedure Add(const s:string);
-         procedure AddSpace;
-       end;
-{$endif PREPROCWRITE}
-
-{$ifdef PREPROCWRITE}
-    var
-        preprocfile     : TPreProcFile;  { used with only preprocessing }
-{$endif PREPROCWRITE}
 
     type
         TDirectiveMode = (directive_all, directive_turbo, directive_mac);
@@ -567,10 +548,6 @@ implementation
           { TODO: enable this for 2.3/2.9 }
           //  include(current_settings.localswitches, cs_typed_addresses);
         end
-{$ifdef gpc_mode}
-        else if s='GPC' then
-          CurrentSettings.ModeSwitches:=GPCModeSwitches
-{$endif}
         else
          if s='MACPAS' then
           CurrentSettings.ModeSwitches:=MacModeSwitches
@@ -696,10 +673,6 @@ implementation
               Undef_System_Macro('FPC_DELPHI')
             else if (m_objfpc in oldmodeswitches) then
               Undef_System_Macro('FPC_OBJFPC')
-{$ifdef gpc_mode}
-            else if (m_gpc in oldmodeswitches) then
-              Undef_System_Macro('FPC_GPC')
-{$endif}
             else if (m_mac in oldmodeswitches) then
               Undef_System_Macro('FPC_MACPAS')
             else if (m_iso in oldmodeswitches) then
@@ -707,15 +680,11 @@ implementation
             else if (m_extpas in oldmodeswitches) then
               Undef_System_Macro('FPC_EXTENDEDPASCAL');
 
-            { define new symbol in Delphi, ObjFPC, GPC, or MacPas mode }
+            { define new symbol for the selected language mode }
             if (m_delphi in CurrentSettings.ModeSwitches) then
               Def_System_Macro('FPC_DELPHI')
             else if (m_objfpc in CurrentSettings.ModeSwitches) then
               Def_System_Macro('FPC_OBJFPC')
-{$ifdef gpc_mode}
-            else if (m_gpc in CurrentSettings.ModeSwitches) then
-              Def_System_Macro('FPC_GPC')
-{$endif}
             else if (m_mac in CurrentSettings.ModeSwitches) then
               Def_System_Macro('FPC_MACPAS')
             else if (m_iso in CurrentSettings.ModeSwitches) then
@@ -2910,59 +2879,6 @@ type
       end;
 
 {*****************************************************************************
-                            Preprocessor writing
-*****************************************************************************}
-
-{$ifdef PREPROCWRITE}
-    constructor TPreProcFile.create(const fn:string);
-      begin
-        inherited create;
-      { open outputfile }
-        assign(f,fn);
-        {$push}{$I-}
-         rewrite(f);
-        {$pop}
-        if IOResult<>0 then
-         Comment(VFatal,'can''t create file '+fn);
-        SetLength(buf,preprocbufsize);
-        settextbuf(f,buf[0],preprocbufsize);
-      { reset }
-        eolfound:=false;
-        spacefound:=false;
-      end;
-
-
-    destructor TPreProcFile.Destroy;
-      begin
-        close(f);
-        buf:=nil;
-      end;
-
-
-    procedure TPreProcFile.add(const s:string);
-      begin
-        write(f,s);
-      end;
-
-    procedure TPreProcFile.addspace;
-      begin
-        if eolfound then
-         begin
-           WriteLn(f,'');
-           eolfound:=false;
-           spacefound:=false;
-         end
-        else
-         if spacefound then
-          begin
-            write(f,' ');
-            spacefound:=false;
-          end;
-      end;
-{$endif PREPROCWRITE}
-
-
-{*****************************************************************************
                               TPreProcStack
 *****************************************************************************}
 
@@ -4476,21 +4392,6 @@ type
              Message1(scan_w_illegal_switch,'$');
              exit;
            end;
-{$ifdef PREPROCWRITE}
-         if ParaPreprocess then
-          begin
-            if not (m_mac in CurrentSettings.ModeSwitches) then
-              t:=TDirectiveItem(turbo_scannerdirectives.Find(hs))
-            else
-              t:=TDirectiveItem(mac_scannerdirectives.Find(hs));
-            if Assigned(t) and not(t.is_conditional) then
-             begin
-               preprocfile.AddSpace;
-               preprocfile.Add('{$'+hs+CurrentScanner.readcomment+'}');
-               exit;
-             end;
-          end;
-{$endif PREPROCWRITE}
          { skip this directive? }
          if (ignoredirectives.find(hs)<>nil) then
           begin
@@ -6133,15 +6034,6 @@ type
               end;
             ' ',#9..#13 :
               begin
-{$ifdef PREPROCWRITE}
-                if ParaPreprocess then
-                 begin
-                   if c=#10 then
-                    preprocfile.eolfound:=true
-                   else
-                    preprocfile.spacefound:=true;
-                 end;
-{$endif PREPROCWRITE}
                 skipspace;
               end
             else

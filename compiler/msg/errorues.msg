@@ -3553,7 +3553,6 @@ S*2Aas_ensamblar usando GNU AS
 **2Mfpc_dialecto de free pascal(default)
 **2Mobjfpc_activar algunas extensiones de Delphi 2
 **2Mdelphi_tratar de ser compatible con Delphi
-**2Mgpc_tratar de ser compatible con gpc
 **2Mmacpas_tratar de ser compatible con dialectos de macintosh pascal
 **1n_no leer la configuración por defecto
 **1o<x>_cambiar el nombre del ejecutable producido a <x>
@@ -3600,7 +3599,6 @@ S*2Aas_ensamblar usando GNU AS
 **3SIcom_interfaces compatibles COM (defecto)
 **3SIcorba_interfaces compatibles CORBA
 **2Sm_soportar macros tipo C (global)
-**2Sp_igual que -Mgpc
 **1s_no llamar al ensamblador ni enlazador
 **2sh_Generar script para enlazar en host
 **2st_Generar script para enlazar en destino
@@ -3653,7 +3651,6 @@ S*2Tlinux_Linux
 3*2WR_Generar código de reubicación
 P*2WC_Especifica aplicación de colnsola (MacOS sólo)
 P*2WG_Especifica aplicación gráfica (MacOS sólo)
-P*2WT_Especifica aplicación de tipo herramienta (herramienta MPW, MacOS sólo)
 **1X_opciones de ejecutable:
 **2Xc_pasar --shared al enlazador (Unix sólo)
 **2Xd_no utilizar la ruta de librería por defecto (necesario para compilación cruzada)

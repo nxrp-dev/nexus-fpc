@@ -3364,7 +3364,6 @@ V*2Wpxxxx_Especifica o tipo de controlador, veja fpc -i para valores poss¡veis
 3*2WR_Gera c¢digo de reloca‡Æo (Windows)
 4*2WR_Gera c¢digo de reloca‡Æo (Windows)
 A*2WR_Gera c¢digo de reloca‡Æo (Windows)
-P*2WT_Especifica aplica‡Æo do tipo ferramenta MPW (Classic Mac OS)
 **2WX_Habilita pilha execut vel (Linux)
 **1X_Op‡äes do execut vel:
 **2Xc_Passar --shared/-dynamic para o vinculador (BeOS, Darwin, FreeBSD, Linux)

@@ -27,9 +27,6 @@ interface
 
 uses FModule;
 
-{$ifdef PREPROCWRITE}
-    procedure preprocess(const FileName:string);
-{$endif PREPROCWRITE}
     function compile_module(module : TModule) : boolean;
     procedure parsing_done(module : TModule);
     procedure initparser;
@@ -227,89 +224,6 @@ implementation
          SmartLinkOFiles.Free;
          SmartLinkOFiles := nil;
       end;
-
-
-
-
-{$ifdef PREPROCWRITE}
-    procedure preprocess(const FileName:string);
-      var
-        i : LongInt;
-      begin
-         preprocfile:=TPreProcFile.create('pre_'+FileName);
-       { initialize a module }
-         SetCurrentModule(TPPUModule.create(nil,'',FileName,false));
-         MacroSymTableStack:=TSymTableStack.create;
-
-
-         Set_Current_Scanner(TScannerFile.Create(FileName));
-         CurrentScanner.firstfile;
-         CurrentModule.Scanner:=CurrentScanner;
-
-         { init macros before anything in the file is parsed.}
-         CurrentModule.LocalMacroSymTable:= TMacroSymTable.create(false);
-         MacroSymTableStack.push(InitialMacroSymTable);
-         MacroSymTableStack.push(CurrentModule.LocalMacroSymTable);
-
-         { read the first token }
-         // current_scanner.readtoken(false);
-
-         Main_Module:=CurrentModule;
-         repeat
-           CurrentScanner.readtoken(true);
-           preprocfile.AddSpace;
-           case CurrentScanner.token of
-             _ID :
-               begin
-                 preprocfile.Add(CurrentScanner.orgpattern);
-               end;
-             _REALNUMBER,
-             _INTCONST :
-               preprocfile.Add(CurrentScanner.pattern);
-             _CSTRING :
-               begin
-                 i:=0;
-                 while (i<length(CurrentScanner.cstringpattern)) do
-                  begin
-                    inc(i);
-                    if CurrentScanner.cstringpattern[i]='''' then
-                     begin
-                       insert('''',CurrentScanner.cstringpattern,i);
-                       inc(i);
-                     end;
-                  end;
-                 preprocfile.Add(''''+CurrentScanner.cstringpattern+'''');
-               end;
-             _CCHAR :
-               begin
-                 case CurrentScanner.pattern[1] of
-                   #39 :
-                     CurrentScanner.pattern:='''''''';
-                   #0..#31,
-                   #128..#255 :
-                     begin
-                       str(ord(CurrentScanner.pattern[1]),CurrentScanner.pattern);
-                       CurrentScanner.pattern:='#'+CurrentScanner.pattern;
-                     end;
-                   else
-                     CurrentScanner.pattern:=''''+CurrentScanner.pattern[1]+'''';
-                 end;
-                 preprocfile.Add(CurrentScanner.pattern);
-               end;
-             _EOF :
-               break;
-             else
-               preprocfile.Add(tokeninfo^[CurrentScanner.token].str)
-           end;
-         until false;
-       { free scanner }
-         CurrentScanner.free;
-         Set_Current_Scanner(nil);
-       { close }
-         preprocfile.free;
-         preprocfile := nil;
-      end;
-{$endif PREPROCWRITE}
 
 
 {*****************************************************************************

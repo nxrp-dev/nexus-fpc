@@ -505,6 +505,14 @@ unknown-directive diagnostic. Public RTTI calling-convention values are unchange
 NXU long revision 46 covers the changed tokens, option sets and generic records;
 rebuild all cached units, packages and SDKs.
 
+The dormant `gpc_mode`, `PREPROCWRITE` and `DEBUG_GENERATE_INTERFACE_PPU`
+features are removed. Defining those names when building the compiler has no
+effect. Lowercase `-m` now receives the ordinary invalid-option diagnostic;
+uppercase `-M` language modes and `-Sm` macro support remain available. Normal
+unit CRC tracking and compiled-unit inspection tools remain available.
+The unused `fixlog`, `fixtab`, `fixmsg` and `dummyas` utilities are also removed.
+This cleanup does not change NXU compatibility revision 46.
+
 The owner explicitly declined additional whole-program optimization passes on
 2026-10-11 after measurement. The WPO recipe and the Forge settings added for it
 have been removed. WPO is not a remaining make-parity requirement for our compiler
