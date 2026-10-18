@@ -65,9 +65,6 @@ interface
           function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t:text);override;
           function emit_data(tcb:TTAITypedConstBuilder):sizeint; override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TRealConstNodeClass = class of TRealConstNode;
 
@@ -92,10 +89,6 @@ interface
           function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t:text);override;
           function emit_data(tcb:TTAITypedConstBuilder):sizeint; override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TOrdConstNodeClass = class of TOrdConstNode;
 
@@ -114,9 +107,6 @@ interface
           function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t : text); override;
           function emit_data(tcb:TTAITypedConstBuilder):sizeint; override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TPointerConstNodeClass = class of TPointerConstNode;
 
@@ -161,9 +151,6 @@ interface
             empty dynamic strings }
           class function emptydynstrnil: boolean; virtual;
           procedure printnodedata(var T: Text); override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TStringConstNodeClass = class of TStringConstNode;
 
@@ -737,13 +724,6 @@ implementation
         result:=resultdef.Size;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TRealConstNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<value>', RealToStr(value_real), '</value>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                               TORDCONSTNODE
@@ -851,20 +831,6 @@ implementation
         result:=resultdef.Size;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TOrdConstNode.XMLPrintNodeInfo(var T: Text);
-      begin
-        inherited XMLPrintNodeInfo(T);
-        Write(T, ' rangecheck="', rangecheck, '"');
-      end;
-
-
-    procedure TOrdConstNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<value>', ToStr(value), '</value>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                             TPOINTERCONSTNODE
@@ -958,13 +924,6 @@ implementation
         result:=resultdef.Size;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TPointerConstNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<value>$', HexStr(PUint(value),sizeof(PUint)*2), '</value>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                              TSTRINGCONSTNODE
@@ -1408,51 +1367,6 @@ implementation
           WriteLn(t,PrintNodeIndention,'value = ""');
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TStringConstNode.XMLPrintNodeData(var T: Text);
-      var
-        OutputStr: AnsiString;
-      begin
-        inherited XMLPrintNodeData(T);
-        Write(T, PrintNodeIndention, '<stringtype>');
-        case cst_type of
-        cst_conststring:
-          Write(T, 'conststring');
-        cst_shortstring:
-          Write(T, 'shortstring');
-        cst_longstring:
-          Write(T, 'longstring');
-        cst_ansistring:
-          Write(T, 'ansistring');
-        cst_widestring:
-          Write(T, 'widestring');
-        cst_unicodestring:
-          Write(T, 'unicodestring');
-        end;
-        WriteLn(T, '</stringtype>');
-        WriteLn(T, PrintNodeIndention, '<length>', len, '</length>');
-
-        if len = 0 then
-          begin
-            WriteLn(T, PrintNodeIndention, '<value />');
-            Exit;
-          end;
-
-        case cst_type of
-        cst_widestring, cst_unicodestring:
-          begin
-            { value_str is of type PCompilerWideString }
-            SetLength(OutputStr, len);
-            UnicodeToUtf8(PChar(OutputStr), PUnicodeChar(ValueWS.data), len + 1); { +1 for the null terminator }
-          end;
-        else
-          OutputStr := PAnsiChar(@valueas[0]);
-          SetLength(OutputStr, len);
-        end;
-
-        WriteLn(T, PrintNodeIndention, '<value>', SanitiseXMLString(OutputStr), '</value>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                              TSETCONSTNODE

@@ -64,9 +64,6 @@ interface
     {$ifdef state_tracking}
           function track_state_pass(exec_known:boolean):boolean;override;
     {$endif}
-    {$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-    {$endif DEBUG_NODE_XML}
          protected
           { override the following if you want to implement }
           { parts explicitely in the code generator (JM)    }
@@ -5090,27 +5087,5 @@ const
         end;
     end;
 {$endif}
-{$ifdef DEBUG_NODE_XML}
-    procedure TAddNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TAddNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in addnodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' addnodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-      end;
-{$endif DEBUG_NODE_XML}
 
 end.

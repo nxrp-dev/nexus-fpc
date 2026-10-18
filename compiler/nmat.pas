@@ -45,9 +45,6 @@ interface
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
           function dogetcopy : TNode;override;
-    {$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-    {$endif DEBUG_NODE_XML}
          protected
           { override the following if you want to implement }
           { parts explicitely in the code generator (JM)    }
@@ -781,28 +778,6 @@ implementation
          expectloc:=LOC_REGISTER;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TModDivNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TModDivNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in moddivnodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' moddivnodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {****************************************************************************
                               TSHLSHRNODE

@@ -207,9 +207,6 @@ interface
        {$endif state_tracking}
           function  docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
           function  para_count:LongInt;
           function  required_para_count:LongInt;
           function  GetParaFromIndex(const Index: Integer): TCallParaNode;
@@ -1990,86 +1987,6 @@ implementation
            (not(cnf_typedefset in callnodeflags) and not(cnf_typedefset in TCallNode(p).callnodeflags)));
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TCallNode.XMLPrintNodeData(var T: Text);
-      begin
-        if Assigned(procdefinition) and (procdefinition.typ=procdef) then
-          WriteLn(T, PrintNodeIndention, '<procname>', SanitiseXMLString(TProcDef(procdefinition).FullProcName(True)), '</procname>')
-        else
-          begin
-            if Assigned(symtableprocentry) then
-              WriteLn(T, PrintNodeIndention, '<procname>', symtableprocentry.name, '</procname>')
-          end;
-
-        if intrinsiccode <> Default(TInlineNumber) then
-          WriteLn(T, PrintNodeIndention, '<intrinsiccode>', intrinsiccode, '</intrinsiccode>');
-
-        if Assigned(methodpointer) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<methodpointer>');
-            PrintNodeIndent;
-            XMLPrintNode(T, methodpointer);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</methodpointer>');
-          end;
-
-        if Assigned(funcretnode) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<funcretnode>');
-            PrintNodeIndent;
-            XMLPrintNode(T, funcretnode);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</funcretnode>');
-          end;
-
-        if Assigned(vmt_entry) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<vmt_entry>');
-            PrintNodeIndent;
-            XMLPrintNode(T, vmt_entry);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</vmt_entry>');
-          end;
-
-        if Assigned(call_self_node) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<call_self_node>');
-            PrintNodeIndent;
-            XMLPrintNode(T, call_self_node);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</call_self_node>');
-          end;
-
-        if Assigned(call_vmt_node) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<call_vmt_node>');
-            PrintNodeIndent;
-            XMLPrintNode(T, call_vmt_node);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</call_vmt_node>');
-          end;
-
-        if Assigned(callinitblock) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<callinitblock>');
-            PrintNodeIndent;
-            XMLPrintNode(T, callinitblock);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</callinitblock>');
-          end;
-
-        if Assigned(callcleanupblock) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<callcleanupblock>');
-            PrintNodeIndent;
-            XMLPrintNode(T, callcleanupblock);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</callcleanupblock>');
-          end;
-
-        inherited XMLPrintNodeData(T);
-      end;
-{$endif DEBUG_NODE_XML}
 
     procedure TCallNode.printnodedata(var t:text);
       begin

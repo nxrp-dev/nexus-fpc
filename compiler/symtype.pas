@@ -60,12 +60,6 @@ interface
          { initialize the defid field; only call from a constructor as it threats
            0 as an invalid value! }
          procedure InitDefID;
-{$ifdef DEBUG_NODE_XML}
-         procedure XMLPrintDefTree(var T: Text; Sym: TSym); virtual;
-         procedure XMLPrintDefInfo(var T: Text; Sym: TSym); dynamic;
-         procedure XMLPrintDefData(var T: Text; Sym: TSym); virtual;
-         function XMLPrintType: AnsiString; virtual;
-{$endif DEBUG_NODE_XML}
         public
          RegisteredInModule : TModuleBase;
          TypeSym    : TSym;  { which type the definition was generated this def }
@@ -111,9 +105,6 @@ interface
            has been requested; otherwise, first call register_def }
          function  DefListIndex: LongInt;
          procedure RegisterDef; virtual; abstract;
-{$ifdef DEBUG_NODE_XML}
-         procedure XMLPrintDef(Sym: TSym);
-{$endif DEBUG_NODE_XML}
          property IsRegistered: Boolean read Registered;
       end;
 
@@ -293,84 +284,6 @@ implementation
           DefID:=DefIDNotRegistered;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TDef.XMLPrintDefTree(var T: Text; Sym: TSym);
-      begin
-        Write(T, PrintNodeIndention, '<definition');
-        XMLPrintDefInfo(T, Sym);
-        WriteLn(T, '>');
-        PrintNodeIndent;
-        { Printing the type here instead of in XMLPrintDefData ensures it
-          always appears first no matter how XMLPrintDefData is overridden }
-        WriteLn(T, PrintNodeIndention, '<type>', XMLPrintType, '</type>');
-        XMLPrintDefData(T, Sym);
-        PrintNodeUnindent;
-        WriteLn(T, PrintNodeIndention, '</definition>');
-        WriteLn(T, PrintNodeIndention);
-      end;
-
-
-    procedure TDef.XMLPrintDefInfo(var T: Text; Sym: TSym);
-      var
-        I: TSymOption;
-        First: Boolean;
-      begin
-        { Note that if we've declared something like "INT = Integer", the
-          INT name gets lost in the system and 'typename' just returns
-          Integer, so the correct details can be found via Sym }
-        Write(T, ' name="', SanitiseXMLString(Sym.RealName),
-          '" pos="', Sym.FileInfo.Line, ',', Sym.FileInfo.Column);
-
-        First := True;
-        for I := Low(TSymOption) to High(TSymOption) do
-          if I in Sym.SymOptions then
-            begin
-              if First then
-                begin
-                  Write(T, '" symoptions="', I);
-                  First := False;
-                end
-              else
-                Write(T, ',', I)
-            end;
-
-        Write(T, '"');
-      end;
-
-
-    procedure TDef.XMLPrintDefData(var T: Text; Sym: TSym);
-      begin
-        WriteLn(T, PrintNodeIndention, '<size>', Size, '</size>');
-
-        if (Alignment = StructAlignment) and (Alignment = AggregateAlignment) then
-          begin
-            { Straightforward and simple }
-            WriteLn(T, PrintNodeIndention, '<alignment>', Alignment, '</alignment>');
-          end
-        else
-          begin
-            WriteLn(T, PrintNodeIndention, '<alignment>');
-            PrintNodeIndent;
-            WriteLn(T, PrintNodeIndention, '<basic>', Alignment, '</basic>');
-
-            if (StructAlignment <> Alignment) then
-              WriteLn(T, PrintNodeIndention, '<struct>', StructAlignment, '</struct>');
-
-            if (AggregateAlignment <> Alignment) and (AggregateAlignment <> StructAlignment) then
-              WriteLn(T, PrintNodeIndention, '<aggregate>', AggregateAlignment, '</aggregate>');
-
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</alignment>');
-          end;
-      end;
-
-
-    function TDef.XMLPrintType: AnsiString;
-      begin
-        Result := SanitiseXMLString(GetTypeName);
-      end;
-
-{$endif DEBUG_NODE_XML}
 
     constructor TDef.Create(DT:TDefTyp);
       begin
@@ -569,31 +482,6 @@ implementation
           InternalError(2015102502)
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TDef.XMLPrintDef(Sym: TSym);
-      var
-        T: Text;
-
-      begin
-        if CurrentModule.PPXFileFail then
-          Exit;
-
-        Assign(T, CurrentModule.PPXFileName);
-        {$push} {$I-}
-        Append(T);
-        if IOResult <> 0 then
-          begin
-            Message1(exec_e_cant_create_archivefile,CurrentModule.PPXFileName);
-            CurrentModule.PPXFileFail := True;
-            Exit;
-          end;
-        {$pop}
-
-        XMLPrintDefTree(T, Sym);
-        Close(T);
-      end;
-
-{$endif DEBUG_NODE_XML}
 
 
 {****************************************************************************

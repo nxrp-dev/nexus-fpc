@@ -1165,9 +1165,6 @@ type
             status.SkipError:=true;
             SymTableStack.pop(curr.GlobalSymTable);
             curr.state:=ms_moduleerror;
-{$ifdef DEBUG_NODE_XML}
-            XMLFinalizeNodeFile('unit');
-{$endif DEBUG_NODE_XML}
             exit(false);
           end;
 
@@ -1264,9 +1261,6 @@ type
          curr.SetFileName(main_file.path+main_file.name,true);
          curr.SetModuleName(unitname);
 
-{$ifdef DEBUG_NODE_XML}
-         XMLInitializeNodeFile('unit', unitname);
-{$endif DEBUG_NODE_XML}
 
          { check for system unit }
          new(s2);
@@ -1568,9 +1562,6 @@ type
             status.SkipError:=true;
             module_is_done(module);
             module.state:=ms_moduleerror;
-{$ifdef DEBUG_NODE_XML}
-            XMLFinalizeNodeFile('unit');
-{$endif DEBUG_NODE_XML}
             SetCurrentModule(old_module);
             exit(false);
           end;
@@ -1729,9 +1720,6 @@ type
               end;
             module_is_done(module);
             module.state := ms_moduleerror;
-{$ifdef DEBUG_NODE_XML}
-            XMLFinalizeNodeFile('unit');
-{$endif DEBUG_NODE_XML}
             SetCurrentModule(old_module);
             exit;
           end;
@@ -1779,9 +1767,6 @@ type
         module_is_done(module);
         module.End_Of_Parsing;
 
-{$ifdef DEBUG_NODE_XML}
-        XMLFinalizeNodeFile('unit');
-{$endif DEBUG_NODE_XML}
         if ((status.verbosity and VStatus)<>0) then
         begin
           {$IF defined(Debug_FreeParseMem)}
@@ -1854,9 +1839,6 @@ type
 
          setupglobalswitches;
 
-{$ifdef DEBUG_NODE_XML}
-         XMLInitializeNodeFile('package', module_name);
-{$endif DEBUG_NODE_XML}
 
          consume(_SEMICOLON);
 
@@ -2067,9 +2049,6 @@ type
              SymTableStack.pop(curr.LocalSymTable);
            end;
 
-{$ifdef DEBUG_NODE_XML}
-         XMLFinalizeNodeFile('package');
-{$endif DEBUG_NODE_XML}
 
          { leave when we got an error }
          if (ErrorCount>0) and not status.SkipError then
@@ -2344,12 +2323,6 @@ type
         hp2:=nil;
         resources_used:=false;
 
-  {$ifdef DEBUG_NODE_XML}
-        if IsLibrary then
-          XMLFinalizeNodeFile('library')
-        else
-          XMLFinalizeNodeFile('program');
-  {$endif DEBUG_NODE_XML}
 
         { reset wpo flags for all defs }
         reset_all_defs(curr);
@@ -2728,9 +2701,6 @@ type
          read, all following directives are parsed as well }
         setupglobalswitches;
 
-        {$ifdef DEBUG_NODE_XML}
-        XMLInitializeNodeFile('library', program_name);
-        {$endif DEBUG_NODE_XML}
       end;
 
     type
@@ -2789,9 +2759,6 @@ type
           setupglobalswitches;
 
 
-{$ifdef DEBUG_NODE_XML}
-          XMLInitializeNodeFile('program', program_name);
-{$endif DEBUG_NODE_XML}
         end;
 
     function proc_program(curr: TModule; IsLibrary : boolean) : boolean;
@@ -2850,9 +2817,6 @@ type
              { setup things using the switches }
              setupglobalswitches;
 
-{$ifdef DEBUG_NODE_XML}
-             XMLInitializeNodeFile('program', curr.RealModuleName^);
-{$endif DEBUG_NODE_XML}
            end;
 
          { load all packages, so we know whether a unit is contained inside a

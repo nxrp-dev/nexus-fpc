@@ -1198,10 +1198,6 @@ implementation
            if Assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
              Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).TypeSym.prettyname);
 
- {$ifdef DEBUG_NODE_XML}
-          if Assigned(hdef) then
-            hdef.XMLPrintDef(newtype);
- {$endif DEBUG_NODE_XML}
 
          until ((CurrentScanner.token<>_ID) and (CurrentScanner.token<>_LECKKLAMMER)) or
                (in_structure and

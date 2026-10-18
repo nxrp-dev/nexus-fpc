@@ -37,9 +37,6 @@ interface
           constructor create;virtual;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeTree(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TNothingNodeClass = class of TNothingNode;
 
@@ -94,15 +91,6 @@ interface
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function docompare(p: TNode): boolean; override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-          procedure XMLPrintNodeData(var T: Text); override;
-       protected
-          class procedure XMLPadString(var S: string; Len: Integer); static;
-
-          function XMLFormatOp(const Oper: POper): string; virtual;
-          procedure XMLProcessInstruction(var T: Text; p: TAI); virtual;
-{$endif DEBUG_NODE_XML}
        end;
        TAsmNodeClass = class of TAsmNode;
 
@@ -136,9 +124,6 @@ interface
 {$ifdef state_tracking}
           function track_state_pass(exec_known:boolean):boolean;override;
 {$endif state_tracking}
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-{$endif DEBUG_NODE_XML}
           property statements : TNode read left write left;
        end;
        TBlockNodeClass = class of TBlockNode;
@@ -257,10 +242,6 @@ interface
           procedure includetempflag(flag: TTempInfoFlag); inline;
           procedure excludetempflag(flag: TTempInfoFlag); inline;
           property tempflags: TTempInfoFlags read gettempinfoflags write settempinfoflags;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
 
        { a node which will create a (non)persistent temp of a given type with a given  }
@@ -288,9 +269,6 @@ interface
           function pass_typecheck: TNode; override;
           function docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
         end;
        TTempCreateNodeClass = class of TTempCreateNode;
 
@@ -326,9 +304,6 @@ interface
           function docompare(p: TNode): boolean; override;
           destructor Destroy; override;
           procedure printnodedata(var t:text);override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
          protected
           release_to_normal : boolean;
         private
@@ -374,15 +349,6 @@ implementation
       pass_1,
       nutils,nld,ncnv,
       ProcInfo
-{$ifdef DEBUG_NODE_XML}
-      ,
-      cpubase,
-      CUtils,
-{$ifdef aarch64}
-      agcpugas, { Needed for gas_shiftmode2str }
-{$endif aarch64}
-      itcpugas
-{$endif DEBUG_NODE_XML}
       ;
 
 
@@ -495,15 +461,6 @@ implementation
         expectloc:=LOC_VOID;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TNothingNode.XMLPrintNodeTree(var T: Text);
-      begin
-        Write(T, PrintNodeIndention, '<', nodetype2str[nodetype]);
-        XMLPrintNodeInfo(T);
-        { "Nothing nodes" contain no data, so just use "/>" to terminate it early }
-        WriteLn(T, ' />');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                              TFIRSTERROR
@@ -1023,30 +980,6 @@ implementation
             end;
       end;
 {$endif state_tracking}
-{$ifdef DEBUG_NODE_XML}
-    procedure TBlockNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i_bnf: TBlockNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-
-        First := True;
-        for i_bnf in blocknodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' blocknodeflags="', i_bnf);
-                First := False;
-              end
-            else
-              Write(T, ',', i_bnf)
-          end;
-
-        if not First then
-          write(T,'"');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                              TASMNODE
@@ -1200,110 +1133,6 @@ implementation
         docompare := false;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TAsmNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TAsmNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in asmnodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' asmnodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-      end;
-
-
-    procedure TAsmNode.XMLProcessInstruction(var T: Text; p: TAI);
-      var
-        ThisOp, ThisOper: string;
-        X: Integer;
-      begin
-        case p.typ of
-          { Instructions are handled on a per-platform basis }
-
-          ait_label:
-            WriteLn(T, PrintNodeIndention, TAILabel(p).labsym.name, ':');
-
-          ait_const:
-            begin
-              case TAIConst(p).consttype of
-                aitconst_64bit:
-                  WriteLn(T, PrintNodeIndention, '.quad 0x', HexStr(TAIConst(p).Value, 16));
-                aitconst_32bit:
-                  WriteLn(T, PrintNodeIndention, '.long 0x', HexStr(TAIConst(p).Value, 8));
-                aitconst_16bit:
-                  WriteLn(T, PrintNodeIndention, '.word 0x', HexStr(TAIConst(p).Value, 4));
-                aitconst_8bit:
-                  WriteLn(T, PrintNodeIndention, '.byte 0x', HexStr(TAIConst(p).Value, 2));
-                else
-                  WriteLn(T, PrintNodeIndention, '; (Other constant)');
-              end;
-            end;
-
-          ait_realconst:
-            WriteLn(T, PrintNodeIndention, '; (Real constant)');
-
-          else
-            { Do nothing };
-        end;
-      end;
-
-
-    class procedure TAsmNode.XMLPadString(var S: string; Len: Integer);
-      var
-        X, C: Integer;
-      begin
-        C := Length(S);
-        if C < Len then
-          begin
-            SetLength(S, Len);
-            for X := C + 1 to Len do
-              S[X] := ' '
-          end;
-      end;
-
-
-    function TAsmNode.XMLFormatOp(const Oper: POper): string;
-      begin
-        case Oper^.typ of
-          top_reg:
-            Result := gas_regname(Oper^.reg);
-
-          top_local:
-            { Local variable }
-            Result := TSym(Oper^.localoper^.localsym).prettyname;
-
-          top_bool:
-            begin
-              if Oper^.b then
-                Result := 'TRUE'
-              else
-                Result := 'FALSE';
-            end;
-          else
-            Result := '(unk)';
-        end;
-      end;
-
-
-    procedure TAsmNode.XMLPrintNodeData(var T: Text);
-      begin
-        if not Assigned(p_asm) then
-          Exit;
-
-        WriteLn(T, PrintNodeIndention, '(Assembler output not currently supported on this platform)');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                           TEMPBASENODE
@@ -1351,47 +1180,6 @@ implementation
         settempinfoflags(gettempinfoflags-[flag])
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TTempBaseNode.XMLPrintNodeInfo(var T: Text);
-      begin
-        inherited XMLPrintNodeInfo(T);
-
-        { The raw pointer is the only way to uniquely identify the temp }
-        Write(T, ' id="', WritePointer(tempinfo), '"');
-      end;
-
-
-    procedure TTempBaseNode.XMLPrintNodeData(var T: Text);
-      var
-        Flag: TTempInfoFlag;
-        NotFirst: Boolean;
-      begin
-        inherited XMLPrintNodeData(t);
-
-        if not Assigned(tempinfo) then
-          exit;
-
-        WriteLn(T, PrintNodeIndention, '<typedef>', SanitiseXMLString(tempinfo^.typedef.TypeSymbolPrettyName), '</typedef>');
-
-        NotFirst := False;
-        for Flag := Low(TTempInfoFlag) to High(TTempInfoFlag) do
-          if (Flag in tempinfo^.flags) then
-            if not NotFirst then
-              begin
-                Write(T, PrintNodeIndention, '<tempflags>', Flag);
-                NotFirst := True;
-              end
-            else
-              Write(T, ',', Flag);
-
-        if NotFirst then
-          WriteLn(T, '</tempflags>')
-        else
-          WriteLn(T, PrintNodeIndention, '<tempflags />');
-
-        WriteLn(T, PrintNodeIndention, '<temptype>', tempinfo^.temptype, '</temptype>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                           TEMPCREATENODE
@@ -1608,23 +1396,6 @@ implementation
         printnode(t,tempinfo^.tempinitcode);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TTempCreateNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<size>', size, '</size>');
-        if Assigned(TempInfo^.TempInitCode) then
-          begin
-            WriteLn(T, PrintNodeIndention, '<tempinit>');
-            PrintNodeIndent;
-            XMLPrintNode(T, TempInfo^.TempInitCode);
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</tempinit>');
-          end
-        else
-          WriteLn(T, PrintNodeIndention, '<tempinit />');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                              TEMPREFNODE
@@ -1888,12 +1659,5 @@ implementation
           tempinfo^.typedef.GetTypeName,'", temptype = ',tempinfo^.temptype,', tempinfo = $',HexStr(ptrint(tempinfo),sizeof(ptrint)*2));
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TTempDeleteNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<release_to_normal>', release_to_normal, '</release_to_normal>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 end.

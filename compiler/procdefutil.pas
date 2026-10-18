@@ -854,12 +854,6 @@ implementation
           if ParaPrintNodeTree <> 0 then
             PI.PrintProc('after parsing');
 
-{$ifdef DEBUG_NODE_XML}
-          { Methods of generic classes don't get any code generated, so output
-            the node tree here }
-          if (df_generic in PI.ProcDef.DefOptions) then
-            PI.XMLPrintProc(True);
-{$endif DEBUG_NODE_XML}
         end;
 
     var

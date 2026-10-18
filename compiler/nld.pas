@@ -74,9 +74,6 @@ interface
           procedure mark_write;override;
           function  docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
           procedure setprocdef(p : TProcDef;forfuncref:boolean);
           property procdef: TProcDef read fprocdef;
        end;
@@ -110,10 +107,6 @@ interface
           function track_state_pass(exec_known:boolean):boolean;override;
        {$endif state_tracking}
           function docompare(p: TNode): boolean; override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var T: Text); override;
-          procedure XMLPrintNodeData(var T: Text); override;
-{$endif DEBUG_NODE_XML}
        end;
        TAssignmentNodeClass = class of TAssignmentNode;
 
@@ -149,9 +142,6 @@ interface
           procedure force_type(def:TDef);
           procedure insert_typeconvs;
           function isempty : boolean;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var t : text);override;
-{$endif DEBUG_NODE_XML}
        end;
        TArrayConstructorNodeClass = class of TArrayConstructorNode;
 
@@ -575,16 +565,6 @@ implementation
         WriteLn(t,'');
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TLoadNode.XMLPrintNodeData(var T: Text);
-      begin
-        inherited XMLPrintNodeData(T);
-        WriteLn(T, PrintNodeIndention, '<symbol>', symtableentry.name, '</symbol>');
-
-        if symtableentry.typ = ProcSym then
-          WriteLn(T, PrintNodeIndention, '<procdef>', fprocdef.MangledName, '</procdef>');
-      end;
-{$endif DEBUG_NODE_XML}
 
     procedure TLoadNode.setprocdef(p : TProcDef;forfuncref:boolean);
       begin
@@ -1127,38 +1107,6 @@ implementation
 {$endif}
 
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TAssignmentNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TAssignmentNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in assignmentnodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' assignmentnodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-      end;
-
-
-    procedure TAssignmentNode.XMLPrintNodeData(var T: Text);
-      begin
-        { For assignments, put the left and right branches on the same level for clarity }
-        XMLPrintNode(T, Left);
-        XMLPrintNode(T, Right);
-        PrintNodeUnindent;
-        WriteLn(T, PrintNodeIndention, '</', nodetype2str[nodetype], '>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 
 {*****************************************************************************
@@ -1433,28 +1381,6 @@ implementation
         docompare:=inherited docompare(p);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TArrayConstructorNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TArrayConstructorNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in arrayconstructornodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' arrayconstructornodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {*****************************************************************************
                               TTYPENODE

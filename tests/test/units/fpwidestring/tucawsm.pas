@@ -1,21 +1,17 @@
-{ %FILES=CollationTest_NON_IGNORABLE_SHORT.txt CollationTest_SHIFTED_SHORT.txt}
+{ %FILES=CollationTests.zip utNXCollationData.pas}
 program tucawsm;
 { Test the Unicode Collation Algorithm (UCA) incremental implementation
-  This test uses the UCA test files :
-    * CollationTest_NON_IGNORABLE_SHORT.txt
-    * CollationTest_SHIFTED_SHORT.txt
-  These files are in the zip archive at
-    http://www.unicode.org/Public/cldr/30/core.zip
-    in the "\common\uca" folder and named
-      CollationTest_CLDR_NON_IGNORABLE_SHORT.txt and
-      CollationTest_CLDR_SHIFTED_SHORT.txt
+  The unchanged Unicode test files are members of CollationTests.zip.
+  LoadCollationData extracts directly into the existing memory stream;
+  the test's finally block frees the data. No text files are written.
+  Provenance: Nexus ATTRIBUTIONS.md, Unicode collation conformance data.
 }
 
 {$mode objfpc}{$H+}
 
 uses
   SysUtils, Classes, Math,{$ifdef WINCE}StreamIO,{$endif}
-  unicodedata, unicodeducet, fpwidestring;
+  utNXCollationData, unicodedata, unicodeducet, fpwidestring;
 
 var
   TotalErrorCount : Integer;
@@ -220,14 +216,16 @@ begin
   stream := TMemoryStream.Create();
   try
     collation^.VariableWeight := TUCA_VariableKind.ucaNonIgnorable;
-    stream.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'CollationTest_NON_IGNORABLE_SHORT.txt');
+    LoadCollationData(stream, ExtractFilePath(ParamStr(0)) + 'CollationTests.zip',
+      'CollationTest_NON_IGNORABLE_SHORT.txt');
     stream.Position := 0;
     WriteLn('Testing CollationTest_NON_IGNORABLE_SHORT.txt ...');
     CheckContent(stream,collation);
     WriteLn();WriteLn();
 
     collation^.VariableWeight := TUCA_VariableKind.ucaShifted;
-    stream.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'CollationTest_SHIFTED_SHORT.txt');
+    LoadCollationData(stream, ExtractFilePath(ParamStr(0)) + 'CollationTests.zip',
+      'CollationTest_SHIFTED_SHORT.txt');
     stream.Position := 0;
     WriteLn('Testing CollationTest_SHIFTED_SHORT.txt ...');
     CheckContent(stream,collation);

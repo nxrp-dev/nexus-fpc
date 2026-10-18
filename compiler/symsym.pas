@@ -240,10 +240,6 @@ interface
           function BitOffset: ASizeUInt;
           function MangledName:TSymStr;override;
           destructor Destroy;override;
-{$ifdef DEBUG_NODE_XML}
-        public
-          procedure XMLPrintFieldData(var T: Text);
-{$endif DEBUG_NODE_XML}
       end;
       TFieldVarSymClass = class of TFieldVarSym;
 
@@ -428,10 +424,6 @@ interface
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
           procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
-{$ifdef DEBUG_NODE_XML}
-        public
-          procedure XMLPrintConstData(var T: Text);
-{$endif DEBUG_NODE_XML}
        end;
        TConstSymClass = class of TConstSym;
 
@@ -2137,15 +2129,6 @@ implementation
         inherited Destroy;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-      procedure TFieldVarSym.XMLPrintFieldData(var T: Text);
-        begin
-          WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(VarDef.GetTypeName), '</type>');
-          WriteLn(T, PrintNodeIndention, '<visibility>', Visibility, '</visibility>');
-          WriteLn(T, PrintNodeIndention, '<offset>', FieldOffset, '</offset>');
-          WriteLn(T, PrintNodeIndention, '<size>', VarDef.Size, '</size>');
-        end;
-{$endif DEBUG_NODE_XML}
 
 {****************************************************************************
                         TABSTRACTNORMALVARSYM
@@ -2930,48 +2913,6 @@ implementation
         WriteEntry(PPUFile,IBConstSym);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TConstSym.XMLPrintConstData(var T: Text);
-      begin
-        WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(ConstDef.GetTypeName), '</type>');
-
-        case ConstTyp of
-          ConstNone:
-            ;
-          ConstString,
-          ConstResourceString,
-          ConstWResourceString,
-          ConstWString:
-            begin
-              WriteLn(T, PrintNodeIndention, '<length>', Value.Len, '</length>');
-              if Value.Len = 0 then
-                WriteLn(T, PrintNodeIndention, '<value />')
-              else
-                WriteLn(T, PrintNodeIndention, '<value>', SanitiseXMLString(PChar(Value.ValuePtr)), '</value>');
-            end;
-          ConstOrd,
-          ConstSet:
-            WriteLn(T, PrintNodeIndention, '<value>', ToStr(Value.ValueOrd), '</value>');
-          ConstPointer:
-            WriteLn(T, PrintNodeIndention, '<value>', WriteConstPUInt(Value.ValueOrdPtr), '</value>');
-          ConstReal:
-            WriteLn(T, PrintNodeIndention, '<value>', PBestReal(Value.ValuePtr)^, '</value>');
-          ConstNil:
-            WriteLn(T, PrintNodeIndention, '<value>nil</value>');
-          ConstGUID:
-            WriteLn(T, PrintNodeIndention, '<value>', WriteGUID(PGUID(Value.ValuePtr)^), '</value>');
-        end;
-
-        WriteLn(T, PrintNodeIndention, '<visibility>', Visibility, '</visibility>');
-
-        if not (ConstTyp in [ConstString, ConstResourceString, ConstWResourceString, ConstWString]) then
-          { constdef.size will return an internal error for string
-            constants because constdef is an open array internally }
-          WriteLn(T, PrintNodeIndention, '<size>', ConstDef.Size, '</size>');
-
-//        WriteLn(T, PrintNodeIndention, '<const_type>', consttyp, '</const_type>');
-      end;
-{$endif DEBUG_NODE_XML}
 
 {****************************************************************************
                                   TENUMSYM

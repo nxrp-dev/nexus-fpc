@@ -45,7 +45,6 @@ unit cpunode;
          the processor specific nodes must be included
          after the generic one (FK)
        }
-       nx86bas,
        nx86set,
        nx86con,
        nx86cnv,

@@ -492,6 +492,10 @@ its seed outputs as well as each native generation, so seed PPUs and options
 files cannot carry over from an earlier build. Cross recipes use the final
 ordinary native compiler and RTL. Stripping removes compiler debugging symbols.
 
+The compiler's former `DEBUG_NODE_XML` exporter has been removed. Defining that
+name while building the compiler no longer enables XML node dumps. The existing
+`-vp` plain-text node diagnostics remain available.
+
 The owner explicitly declined additional whole-program optimization passes on
 2026-10-11 after measurement. The WPO recipe and the Forge settings added for it
 have been removed. WPO is not a remaining make-parity requirement for our compiler

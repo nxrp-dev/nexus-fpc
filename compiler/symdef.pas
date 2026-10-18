@@ -329,10 +329,6 @@ interface
        TAbstractRecordDef= class(TStoredDef)
        private
           RTTIString     : string;
-{$ifdef DEBUG_NODE_XML}
-       protected
-          procedure XMLPrintDefData(var T: Text; Sym: TSym); override;
-{$endif DEBUG_NODE_XML}
        public
           ObjName,
           ObjRealName    : PShortString;
@@ -392,10 +388,6 @@ interface
        end;
 
        TRecordDef = class(TAbstractRecordDef)
-{$ifdef DEBUG_NODE_XML}
-       protected
-          function XMLPrintType: AnsiString; override;
-{$endif DEBUG_NODE_XML}
        public
           VariantRecDesc : PVariantRecDesc;
           IsUnion       : Boolean;
@@ -471,12 +463,6 @@ interface
        TObjectDef = class(TAbstractRecordDef)
        private
           FCurrentDispID: LongInt;
-{$ifdef DEBUG_NODE_XML}
-       protected
-          function XMLPrintType: AnsiString; override;
-          procedure XMLPrintDefInfo(var T: Text; Sym: TSym); override;
-          procedure XMLPrintDefData(var T: Text; Sym: TSym); override;
-{$endif DEBUG_NODE_XML}
        public
           ChildOf        : TObjectDef;
           ChildOfDeref   : TDeref;
@@ -5102,92 +5088,6 @@ implementation
                   (RTTI.Options[ro_properties]<>[]);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TAbstractRecordDef.XMLPrintDefData(var T: Text; Sym: TSym);
-
-      procedure WriteSymOptions(SourceSym: TSym);
-        var
-          I: TSymOption;
-          First: Boolean;
-        begin
-          First := True;
-          for I := Low(TSymOption) to High(TSymOption) do
-            if I in SourceSym.SymOptions then
-              begin
-                if First then
-                  begin
-                    Write(T, '" symoptions="', I);
-                    First := False;
-                  end
-                else
-                  Write(T, ',', I)
-              end;
-        end;
-
-      var
-        List: TFPHashObjectList;
-        I: Integer;
-      begin
-        WriteLn(T, PrintNodeIndention, '<size>', Size, '</size>');
-
-        if (Alignment = StructAlignment) and (Alignment = AggregateAlignment) then
-          begin
-            { Straightforward and simple }
-            WriteLn(T, PrintNodeIndention, '<alignment>', Alignment, '</alignment>');
-          end
-        else
-          begin
-            WriteLn(T, PrintNodeIndention, '<alignment>');
-            PrintNodeIndent;
-            WriteLn(T, PrintNodeIndention, '<basic>', Alignment, '</basic>');
-
-            if (StructAlignment <> Alignment) then
-              WriteLn(T, PrintNodeIndention, '<struct>', StructAlignment, '</struct>');
-
-            if (AggregateAlignment <> Alignment) and (AggregateAlignment <> StructAlignment) then
-              WriteLn(T, PrintNodeIndention, '<aggregate>', AggregateAlignment, '</aggregate>');
-
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</alignment>');
-          end;
-
-        { List the fields }
-        List := SymTable.SymList;
-        for I := 0 to List.Count - 1 do
-          case TSym(List[I]).Typ of
-{            staticvarsym,localvarsym,paravarsym,fieldvarsym,
-            typesym,procsym,unitsym,}
-            ConstSym:
-              with TConstSym(List[I]) do
-                begin
-                  Write(T, PrintNodeIndention, '<const name="', RealName, '" pos="', FileInfo.Line, ',', FileInfo.Column);
-                  WriteSymOptions(TSym(List[I]));
-                  WriteLn(T, '">');
-                  PrintNodeIndent;
-                  XMLPrintConstData(T);
-                  PrintNodeUnindent;
-                  WriteLn(T, PrintNodeIndention, '</const>');
-                end;
- {
-            errorsym,syssym,labelsym,absolutevarsym,propertysym,
-            macrosym,namespacesym,undefinedsym,programparasym
-}
-            FieldVarSym:
-              with TFieldVarSym(List[I]) do
-                begin
-                  Write(T, PrintNodeIndention, '<field name="', RealName, '" pos="', FileInfo.Line, ',', FileInfo.Column);
-                  WriteSymOptions(TSym(List[I]));
-                  WriteLn(T, '">');
-                  PrintNodeIndent;
-                  XMLPrintFieldData(T);
-                  PrintNodeUnindent;
-                  WriteLn(T, PrintNodeIndention, '</field>');
-                end;
-            else
-              ;
-          end;
-      end;
-{$endif DEBUG_NODE_XML}
 
     procedure TAbstractRecordDef.SetObjRealName(const N:string);
       begin
@@ -5534,12 +5434,6 @@ implementation
           GetTypeName:='<record type>';
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    function TRecordDef.XMLPrintType: AnsiString;
-      begin
-        Result := '&lt;record&gt;';
-      end;
-{$endif DEBUG_NODE_XML}
 
 {***************************************************************************
                        TABSTRACTPROCDEF
@@ -8808,53 +8702,6 @@ implementation
           end;
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    function TObjectDef.XMLPrintType: AnsiString;
-      begin
-        if (oo_is_forward in ObjectOptions) then
-          Result := '&lt;class prototype&gt;'
-        else
-          Result := '&lt;class&gt;';
-      end;
-
-
-    procedure TObjectDef.XMLPrintDefInfo(var T: Text; Sym: TSym);
-      var
-        I: TObjectOption;
-        First: Boolean;
-      begin
-        inherited XMLPrintDefInfo(T, Sym);
-
-        First := True;
-        for I := Low(TObjectOption) to High(TObjectOption) do
-          if I in ObjectOptions then
-            begin
-              if First then
-                begin
-                  Write(T, ' objectoptions="', I);
-                  First := False;
-                end
-              else
-                Write(T, ',', I)
-            end;
-
-        if not First then
-          Write(T, '"');
-      end;
-
-
-    procedure TObjectDef.XMLPrintDefData(var T: Text; Sym: TSym);
-      begin
-        { There's nothing useful yet if the type is only forward-declared }
-        if not (oo_is_forward in ObjectOptions) then
-          begin
-            if Assigned(ChildOf) then
-              WriteLn(T, PrintNodeIndention, '<ancestor>', SanitiseXMLString(ChildOf.TypeSym.RealName), '</ancestor>');
-
-            inherited XMLPrintDefData(T, Sym);
-          end;
-      end;
-{$endif DEBUG_NODE_XML}
 
 
 {****************************************************************************

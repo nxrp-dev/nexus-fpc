@@ -35,7 +35,6 @@ implementation
     symcpu,
     aasmdef,
 
-    narmbas,
     ncpuadd,ncpumat,ncpumem,ncpuinl,ncpucnv,ncpuset,ncpucon,ncpuflw,naarch64util
 
     ;

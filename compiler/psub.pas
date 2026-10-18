@@ -93,9 +93,6 @@ interface
 
         function has_assembler_child : boolean;
         procedure set_eh_info; override;
-{$ifdef DEBUG_NODE_XML}
-        procedure XMLPrintProc(FirstHalf: Boolean);
-{$endif DEBUG_NODE_XML}
       end;
 
       TReadProcFlag = (
@@ -108,10 +105,6 @@ interface
 
     procedure printnode_reset;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure XMLInitializeNodeFile(RootName, ModuleName: shortstring);
-    procedure XMLFinalizeNodeFile(RootName: shortstring);
-{$endif DEBUG_NODE_XML}
     { reads the declaration blocks }
     procedure read_declarations(IsLibrary : boolean);
 
@@ -1381,170 +1374,6 @@ implementation
       end;
 
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TCGProcInfo.XMLPrintProc(FirstHalf: Boolean);
-      var
-        T: Text;
-        W: Word;
-        syssym: TSysSym;
-        separate : boolean;
-
-      procedure PrintType(Flag: string);
-        begin
-          if df_generic in procdef.DefOptions then
-            Write(T, ' type="generic ', Flag, '"')
-          else
-            Write(T, ' type="', Flag, '"');
-        end;
-
-      procedure PrintOption(Flag: string);
-        begin
-          WriteLn(T, PrintNodeIndention, '<option>', Flag, '</option>');
-        end;
-
-      begin
-        if CurrentModule.PPXFileFail then
-          Exit;
-
-        Assign(T, CurrentModule.PPXFileName);
-        {$push} {$I-}
-        Append(T);
-        if IOResult <> 0 then
-          begin
-            Message1(exec_e_cant_create_archivefile,CurrentModule.PPXFileName);
-            CurrentModule.PPXFileFail := True;
-            Exit;
-          end;
-        {$pop}
-
-        separate := (df_generic in procdef.DefOptions);
-
-        { First half prints the header and the nodes as a "code" tag }
-        if FirstHalf or separate then
-          begin
-            Write(T, PrintNodeIndention, '<subroutine');
-            { Check to see if the procedure is a class or object method }
-            if Assigned(procdef.struct) then
-              begin
-                if Assigned(procdef.struct.ObjRealName) then
-                  Write(T, ' struct="', SanitiseXMLString(procdef.struct.ObjRealName^), '"')
-                else
-                  Write(T, ' struct="&lt;NULL&gt;"');
-              end;
-            case procdef.ProcTypeOption of
-              potype_none:
-                { Do nothing - should this be an internal error though? };
-              potype_procedure,
-              potype_function:
-                if po_classmethod in procdef.ProcOptions then
-                  begin
-                    if po_staticmethod in procdef.ProcOptions then
-                      PrintType('static class method')
-                    else
-                      PrintType('class method');
-                  end
-                else if df_generic in procdef.DefOptions then
-                  Write(T, ' type="generic"');
-              potype_proginit,
-              potype_unitinit:
-                PrintType('initialization');
-              potype_unitfinalize:
-                PrintType('finalization');
-              potype_constructor:
-                PrintType('constructor');
-              potype_destructor:
-                PrintType('destructor');
-              potype_operator:
-                PrintType('operator');
-              potype_class_constructor:
-                PrintType('class constructor');
-              potype_class_destructor:
-                PrintType('class destructor');
-              potype_propgetter:
-                PrintType('dispinterface getter');
-              potype_propsetter:
-                PrintType('dispinterface setter');
-              potype_exceptfilter:
-                PrintType('except filter');
-              potype_mainstub:
-                PrintType('main stub');
-              potype_libmainstub:
-                PrintType('library main stub');
-              potype_pkgstub:
-                PrintType('package stub');
-            end;
-
-            Write(T, ' name="', SanitiseXMLString(procdef.CustomProcName([pno_showhidden, pno_noclassmarker])), '"');
-            if (po_hascallingconvention in procdef.ProcOptions) or (procdef.ProcCallOption <> pocall_default) then
-              Write(T, ' convention="', proccalloptionStr[procdef.ProcCallOption], '"');
-            WriteLn(T, '>');
-
-            PrintNodeIndent;
-
-            if Assigned(procdef.ReturnDef) and not Is_Void(procdef.ReturnDef) then
-              WriteLn(T, PrintNodeIndention, '<returndef>', SanitiseXMLString(procdef.ReturnDef.TypeSymbolPrettyName), '</returndef>');
-
-            if po_reintroduce in procdef.ProcOptions then
-              PrintOption('reintroduce');
-            if po_virtualmethod in procdef.ProcOptions then
-              PrintOption('virtual');
-            if po_finalmethod in procdef.ProcOptions then
-              PrintOption('final');
-            if po_overridingmethod in procdef.ProcOptions then
-              PrintOption('override');
-            if po_overload in procdef.ProcOptions then
-              PrintOption('overload');
-            if po_compilerproc in procdef.ProcOptions then
-              PrintOption('compilerproc');
-            if po_assembler in procdef.ProcOptions then
-              PrintOption('assembler');
-            if po_nostackframe in procdef.ProcOptions then
-              PrintOption('nostackframe');
-            if po_inline in procdef.ProcOptions then
-              PrintOption('inline');
-            if po_noreturn in procdef.ProcOptions then
-              PrintOption('noreturn');
-            if po_noinline in procdef.ProcOptions then
-              PrintOption('noinline');
-          end;
-
-          if Assigned(Code) then
-            begin
-              if FirstHalf then
-                WriteLn(T, PrintNodeIndention, '<code>')
-              else
-                begin
-                  WriteLn(T); { Line for spacing }
-                  WriteLn(T, PrintNodeIndention, '<firstpass>');
-                end;
-
-              PrintNodeIndent;
-              XMLPrintNode(T, Code);
-              PrintNodeUnindent;
-
-              if FirstHalf then
-                WriteLn(T, PrintNodeIndention, '</code>')
-              else
-                WriteLn(T, PrintNodeIndention, '</firstpass>');
-            end
-          else { Code=Nil }
-            begin
-              { Don't print anything for second half - if there's no code, there's no firstpass }
-              if FirstHalf then
-                WriteLn(T, PrintNodeIndention, '<code />');
-            end;
-
-        { Print footer only for second half }
-        if (not FirstHalf) or separate then
-          begin
-            PrintNodeUnindent;
-            WriteLn(T, PrintNodeIndention, '</subroutine>');
-            WriteLn(T); { Line for spacing }
-          end;
-
-        Close(T);
-      end;
-{$endif DEBUG_NODE_XML}
 
     procedure TCGProcInfo.generate_code_tree;
       var
@@ -1824,11 +1653,6 @@ implementation
           procedure there would be at least a blocknode }
         if not Assigned(code) then
           begin
-{$ifdef DEBUG_NODE_XML}
-            { Print out nodes as they appear after the first pass }
-            XMLPrintProc(True);
-            XMLPrintProc(False);
-{$endif DEBUG_NODE_XML}
             exit;
           end;
 
@@ -1918,10 +1742,6 @@ implementation
            (procdef.ProcCallOption=pocall_safecall) then
           include(flags, pi_needs_implicit_finally);
 {$endif}
-{$ifdef DEBUG_NODE_XML}
-        { Print out nodes as they appear after the first pass }
-        XMLPrintProc(True);
-{$endif DEBUG_NODE_XML}
 
         { firstpass everything }
         flowcontrol:=[];
@@ -1950,10 +1770,6 @@ implementation
         { only do secondpass if there are no errors }
         if (ErrorCount<>0) then
           begin
-{$ifdef DEBUG_NODE_XML}
-            { Print out nodes as they appear after the first pass }
-            XMLPrintProc(False);
-{$endif DEBUG_NODE_XML}
           end
         else
           begin
@@ -2002,10 +1818,6 @@ implementation
             if ParaPrintNodeTree <> 0 then
               printproc( 'right before code generation');
 
-{$ifdef DEBUG_NODE_XML}
-            { Print out nodes as they appear after the first pass }
-            XMLPrintProc(False);
-{$endif DEBUG_NODE_XML}
 
             { generate code for the node tree }
             DoSecondPass(code);
@@ -2514,12 +2326,6 @@ implementation
          if ParaPrintNodeTree <> 0 then
            printproc( 'after parsing');
 
-{$ifdef DEBUG_NODE_XML}
-         { Methods of generic classes don't get any code generated, so output
-           the node tree here }
-         if (df_generic in procdef.DefOptions) then
-           XMLPrintProc(True);
-{$endif DEBUG_NODE_XML}
 
          { ... remove symbol tables }
          remove_from_symtablestack;
@@ -2951,52 +2757,6 @@ implementation
           MessagePos1(TSym(p).fileinfo,sym_e_forward_type_not_resolved,TSym(p).realname);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure XMLInitializeNodeFile(RootName, ModuleName: shortstring);
-      var
-        T: Text;
-      begin
-        Assign(T, CurrentModule.PPXFileName);
-        {$push} {$I-}
-        Rewrite(T);
-        if IOResult<>0 then
-          begin
-            Message1(exec_e_cant_create_archivefile,CurrentModule.PPXFileName);
-            CurrentModule.PPXFileFail := True;
-            Exit;
-          end;
-        {$pop}
-        { Mark the node dump file as available for writing }
-        CurrentModule.PPXFileFail := False;
-        WriteLn(T, '<?xml version="1.0" encoding="utf-8"?>');
-        WriteLn(T, '<', RootName, ' name="', ModuleName, '">');
-        Close(T);
-
-        PrintNodeIndention := PrintNodeSpacing;
-      end;
-
-
-    procedure XMLFinalizeNodeFile(RootName: shortstring);
-      var
-        T: Text;
-      begin
-        if CurrentModule.PPXFileFail then
-          Exit;
-
-        CurrentModule.PPXFileFail := True; { File is now considered closed no matter what happens }
-        Assign(T, CurrentModule.PPXFileName);
-        {$push} {$I-}
-        Append(T);
-        if IOResult<>0 then
-          begin
-            Message1(exec_e_cant_create_archivefile,CurrentModule.PPXFileName);
-            Exit;
-          end;
-        {$pop}
-        WriteLn(T, '</', RootName, '>');
-        Close(T);
-      end;
-{$endif DEBUG_NODE_XML}
 
     procedure read_declarations(IsLibrary : boolean);
       var

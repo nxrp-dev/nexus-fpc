@@ -45,9 +45,6 @@ interface
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function dogetcopy : TNode;override;
           procedure printnodeinfo(var t : text);override;
-{$ifdef DEBUG_NODE_XML}
-          procedure XMLPrintNodeInfo(var t : text);override;
-{$endif DEBUG_NODE_XML}
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function pass_typecheck_cpu:TNode;virtual;
@@ -215,30 +212,6 @@ implementation
         write(t,', inlinenumber = ',inlinenumber);
       end;
 
-{$ifdef DEBUG_NODE_XML}
-    procedure TInlineNode.XMLPrintNodeInfo(var T: Text);
-      var
-        i: TInlineNodeFlag;
-        First: Boolean;
-      begin
-        inherited XMLPrintNodeInfo(T);
-        First := True;
-        for i in inlinenodeflags do
-          begin
-            if First then
-              begin
-                Write(T, ' inlinenodeflags="', i);
-                First := False;
-              end
-            else
-              Write(T, ',', i)
-          end;
-        if not First then
-          Write(T, '"');
-
-        Write(T, ' inlinenumber="', inlinenumber, '"');
-      end;
-{$endif DEBUG_NODE_XML}
 
     function get_str_int_func(def: TDef): string;
     var
