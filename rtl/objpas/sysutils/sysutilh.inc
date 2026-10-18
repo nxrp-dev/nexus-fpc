@@ -52,29 +52,17 @@ type
 
    LongRec = packed record
       case Integer of
-{$ifdef FPC_LITTLE_ENDIAN}
         0 : (Lo,Hi : Word);
-{$else FPC_LITTLE_ENDIAN}
-        0 : (Hi,Lo : Word);
-{$endif FPC_LITTLE_ENDIAN}
         1 : (Bytes : Array[0..3] of Byte);
    end;
 
    WordRec = packed record
-{$ifdef FPC_LITTLE_ENDIAN}
      Lo,Hi : Byte;
-{$else FPC_LITTLE_ENDIAN}
-     Hi,Lo : Byte;
-{$endif FPC_LITTLE_ENDIAN}
    end;
 
    Int64Rec = packed record
       case integer of
-{$ifdef FPC_LITTLE_ENDIAN}
         0 : (Lo,Hi : Cardinal);
-{$else FPC_LITTLE_ENDIAN}
-        0 : (Hi,Lo : Cardinal);
-{$endif FPC_LITTLE_ENDIAN}
         1 : (Words : Array[0..3] of Word);
         2 : (Bytes : Array[0..7] of Byte);
    end;
@@ -83,11 +71,7 @@ type
 
    OWordRec = packed record
       case integer of
-{$ifdef FPC_LITTLE_ENDIAN}
         0 : (Lo,Hi : QWord);
-{$else FPC_LITTLE_ENDIAN}
-        0 : (Hi,Lo : QWord);
-{$endif FPC_LITTLE_ENDIAN}
         1 : (DWords : Array[0..3] of DWord);
         2 : (Words : Array[0..7] of Word);
         3 : (Bytes : Array[0..15] of Byte);

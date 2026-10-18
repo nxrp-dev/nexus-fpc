@@ -19,9 +19,6 @@ uses dos;
 {$IFDEF GO32V2}
         {$DEFINE EXTATTR}
 {$ENDIF}
-{$IFDEF OS2}
-        {$DEFINE EXTATTR}
-{$ENDIF}
 {$IFDEF WIN32}
         {$DEFINE EXTATTR}
 {$ENDIF}

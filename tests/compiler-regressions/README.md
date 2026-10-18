@@ -90,7 +90,7 @@ Linux RTL system calls and the procedure calling-convention parser are unchanged
 Run `bash tests/switches/Run-NXSyscallDirectiveTests.sh <compiler> <rtl-units>
 <output-directory>` with an output directory under the development worktree.
 The 36 checks cover both warnings and warnings promoted to errors in all six
-retained modes: FPC, ObjFPC, Delphi, MacPas, ISO and ExtendedPascal.
+retained modes: FPC, ObjFPC, Delphi, MacPas and ISO.
 
 ## X86-64 CPU model alignment
 
@@ -178,3 +178,9 @@ values, and ordinary Variant negation. LongWord inputs on both sides of
 `$80000000`, including `$FFFFFFFF`, check that negation widens the operand to
 Int64 before changing its sign in both ordinary and by-reference paths.
 Outputs belong under the worktree.
+
+`little_endian_platform.pas` verifies native layout, bitpacked access, small
+record parameters and retained network/UTF-16BE/GUID conversions.
+`little_endian_metadata.pas` verifies NXU/NXP little-endian header acceptance
+and rejection of retired, mixed and missing byte-order flags. Run both with
+`tests/switches/Run-NXRemovedBigEndianTests.sh` and matching compiler/RTL units.

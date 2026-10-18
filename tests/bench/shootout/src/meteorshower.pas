@@ -272,13 +272,8 @@ const s_firstOne:array[0..31] of byte=(
 
 function first_set_bit(v:bitvec):cardinal;inline;
 
-{$ifdef endian_little}
 const l=0;
       h=1;
-{$else}
-const l=1;
-      h=0;
-{$endif}
 
 var d:double;
     u:array[0..1] of bitvec absolute d;

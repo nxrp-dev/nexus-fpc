@@ -35,7 +35,7 @@ interface
     CurrentPCPVersion=4;
 
     { unit flags }
-    PfBigEndian          = $000004;
+    PfEndianMask         = $001004; { Includes the retired byte-order flag. }
     //uf_in_library          = $000020; { is the file in another file than <ppufile>.* ? }
     //uf_smart_linked        = $000040; { the ppu can be smartlinked }
     //uf_static_linked       = $000080; { the ppu can be linked static }
@@ -80,7 +80,7 @@ interface
 implementation
 
 uses
-  FPCHash;
+  CRC32;
 
   { tpcpfile }
 
@@ -129,35 +129,6 @@ uses
       if Result<>SizeOf(TPCPHeader) then
         Exit;
       HeaderRead:=True;
-      { The header is always stored in little endian order }
-      { therefore swap if on a big endian machine          }
-    {$IFDEF ENDIAN_BIG}
-      Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
-      Header.Common.CPU := SwapEndian(Header.Common.CPU);
-      Header.Common.Target := SwapEndian(Header.Common.Target);
-      Header.Common.Flags := SwapEndian(Header.Common.Flags);
-      Header.Common.Size := SwapEndian(Header.Common.Size);
-      Header.Checksum := SwapEndian(Header.Checksum);
-      Header.RequiredListSize:=SwapEndian(Header.RequiredListSize);
-      Header.PPUListSize:=SwapEndian(Header.PPUListSize);
-    {$ENDIF}
-      { the PPU DATA is stored in native order }
-      if (Header.Common.Flags and PfBigEndian) = PfBigEndian then
-       Begin
-    {$IFDEF ENDIAN_LITTLE}
-         ChangeEndian := True;
-    {$ELSE}
-         ChangeEndian := False;
-    {$ENDIF}
-       End
-      else if (Header.Common.Flags and PfLittleEndian) = PfLittleEndian then
-       Begin
-    {$IFDEF ENDIAN_BIG}
-         ChangeEndian := True;
-    {$ELSE}
-         ChangeEndian := False;
-    {$ENDIF}
-       End;
     end;
 
   procedure TPCPFile.ResetFile;
@@ -176,20 +147,7 @@ uses
       { update size (w/o header!) in the header }
       Header.Common.Size:=BufStart-SizeOf(TPCPHeader);
       { set the endian flag }
-{$ifndef FPC_BIG_ENDIAN}
       Header.Common.Flags:=Header.Common.Flags or PfLittleEndian;
-{$else not FPC_BIG_ENDIAN}
-      Header.Common.Flags:=Header.Common.Flags or PfBigEndian;
-      { Now swap the header in the correct endian (always little endian) }
-      Header.Common.Compiler:=SwapEndian(Header.Common.Compiler);
-      Header.Common.CPU:=SwapEndian(Header.Common.CPU);
-      Header.Common.Target:=SwapEndian(Header.Common.Target);
-      Header.Common.Flags:=SwapEndian(Header.Common.Flags);
-      Header.Common.Size:=SwapEndian(Header.Common.Size);
-      Header.Checksum:=SwapEndian(Header.Checksum);
-      Header.RequiredListSize:=SwapEndian(Header.RequiredListSize);
-      Header.PPUListSize:=SwapEndian(Header.PPUListSize);
-{$endif not FPC_BIG_ENDIAN}
     { write header and restore filepos after it }
       OPos:=F.Position;
       F.Position:=0;
@@ -203,8 +161,7 @@ uses
       Result:=HeaderRead and
                (Header.Common.Size<=DWORD(FSize-SizeOf(TPCPHeader))) and
                (Header.RequiredListSize>=0) and (Header.PPUListSize>=0) and
-               (((Header.Common.Flags and (PfBigEndian or PfLittleEndian))=PfBigEndian) or
-                ((Header.Common.Flags and (PfBigEndian or PfLittleEndian))=PfLittleEndian)) and
+               ((Header.Common.Flags and PfEndianMask)=PfLittleEndian) and
                ((Header.Common.ID[1]=NexusPCPSignature[1]) and
                 (Header.Common.ID[2]=NexusPCPSignature[2]) and
                 (Header.Common.ID[3]=NexusPCPSignature[3]));

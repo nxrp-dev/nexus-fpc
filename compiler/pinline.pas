@@ -80,7 +80,7 @@ implementation
         var
           lIndex,lIndexJ : LongInt;
         begin
-          if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) and (Is_Record(TPointerDef(lNode.resultdef).PointedDef)) then
+          if (([m_iso]*CurrentSettings.ModeSwitches)<>[]) and (Is_Record(TPointerDef(lNode.resultdef).PointedDef)) then
             begin
               lVariantDesc:=TRecordDef(TPointerDef(lNode.resultdef).PointedDef).VariantRecDesc;
               while (CurrentScanner.token=_COMMA) and Assigned(lVariantDesc) do
@@ -203,7 +203,7 @@ implementation
             New_Dispose_Statement := lNode2;
           end
         { constructor,destructor specified }
-        else if (([m_mac,m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and
+        else if (([m_mac,m_iso]*CurrentSettings.ModeSwitches)=[]) and
                 try_to_consume(_COMMA) then
           begin
             { extended syntax of new and dispose }

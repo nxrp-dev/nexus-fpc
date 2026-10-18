@@ -123,11 +123,6 @@ interface
               begin
                 hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(Left.ResultDef),CPointerDef.getreusable(ResultDef),Location.Reference);
                 Location.Size:=lNewSize;
-                if (TargetInfo.endian = ENDIAN_BIG) then
-                  begin
-                    inc(Location.Reference.Offset,lLeftSize-lResultSize);
-                    Location.Reference.Alignment:=NewAlignment(Location.Reference.Alignment,lLeftSize-lResultSize);
-                  end;
               end
 {$if not defined(cpuhighleveltarget)}
             { On targets without 8/16 bit register components, 8/16-bit operations
@@ -567,10 +562,7 @@ interface
                     end;
                   LOC_REGISTER,LOC_CREGISTER:
                     begin
-                      if TargetInfo.endian=endian_little then
-                        Location.Register:=Left.Location.Register
-                      else
-                        Location.Register:=Left.Location.RegisterHi;
+                      Location.Register:=Left.Location.Register;
                     end;
                   else
                     InternalError(2013031502)

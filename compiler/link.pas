@@ -119,7 +119,7 @@ Implementation
 {$ifdef hasUnix}
       BaseUnix,
 {$endif hasUnix}
-      Globals,Verbose,CompHook,PPU,FPCHash,Triplet,tripletcpu,
+      Globals,Verbose,CompHook,PPU,Triplet,tripletcpu,
       aasmbase,aasmcpu,ogbase,NXPackageFile;
 
     var
@@ -1090,91 +1090,6 @@ Implementation
         end;
 
 
-      function MayBeSwapHeader(h : TELF32Header) : TELF32Header;
-        begin
-          result:=h;
-          if SourceInfo.endian<>TargetInfo.endian then
-            with h do
-              begin
-                result.e_type:=swapendian(e_type);
-                result.e_machine:=swapendian(e_machine);
-                result.e_version:=swapendian(e_version);
-                result.e_entry:=swapendian(e_entry);
-                result.e_phoff:=swapendian(e_phoff);
-                result.e_shoff:=swapendian(e_shoff);
-                result.e_flags:=swapendian(e_flags);
-                result.e_ehsize:=swapendian(e_ehsize);
-                result.e_phentsize:=swapendian(e_phentsize);
-                result.e_phnum:=swapendian(e_phnum);
-                result.e_shentsize:=swapendian(e_shentsize);
-                result.e_shnum:=swapendian(e_shnum);
-                result.e_shstrndx:=swapendian(e_shstrndx);
-              end;
-        end;
-
-
-      function MayBeSwapHeader(h : TELF64Header) : TELF64Header;
-        begin
-          result:=h;
-          if SourceInfo.endian<>TargetInfo.endian then
-            with h do
-              begin
-                result.e_type:=swapendian(e_type);
-                result.e_machine:=swapendian(e_machine);
-                result.e_version:=swapendian(e_version);
-                result.e_entry:=swapendian(e_entry);
-                result.e_phoff:=swapendian(e_phoff);
-                result.e_shoff:=swapendian(e_shoff);
-                result.e_flags:=swapendian(e_flags);
-                result.e_ehsize:=swapendian(e_ehsize);
-                result.e_phentsize:=swapendian(e_phentsize);
-                result.e_phnum:=swapendian(e_phnum);
-                result.e_shentsize:=swapendian(e_shentsize);
-                result.e_shnum:=swapendian(e_shnum);
-                result.e_shstrndx:=swapendian(e_shstrndx);
-              end;
-        end;
-
-
-      function MaybeSwapSecHeader(h : TELF32SecHdr) : TELF32SecHdr;
-        begin
-          result:=h;
-          if SourceInfo.endian<>TargetInfo.endian then
-            with h do
-              begin
-                result.sh_name:=swapendian(sh_name);
-                result.sh_type:=swapendian(sh_type);
-                result.sh_flags:=swapendian(sh_flags);
-                result.sh_addr:=swapendian(sh_addr);
-                result.sh_offset:=swapendian(sh_offset);
-                result.sh_size:=swapendian(sh_size);
-                result.sh_link:=swapendian(sh_link);
-                result.sh_info:=swapendian(sh_info);
-                result.sh_addralign:=swapendian(sh_addralign);
-                result.sh_entsize:=swapendian(sh_entsize);
-              end;
-        end;
-
-
-      function MaybeSwapSecHeader(h : TELF64SecHdr) : TELF64SecHdr;
-        begin
-          result:=h;
-          if SourceInfo.endian<>TargetInfo.endian then
-            with h do
-              begin
-                result.sh_name:=swapendian(sh_name);
-                result.sh_type:=swapendian(sh_type);
-                result.sh_flags:=swapendian(sh_flags);
-                result.sh_addr:=swapendian(sh_addr);
-                result.sh_offset:=swapendian(sh_offset);
-                result.sh_size:=swapendian(sh_size);
-                result.sh_link:=swapendian(sh_link);
-                result.sh_info:=swapendian(sh_info);
-                result.sh_addralign:=swapendian(sh_addralign);
-                result.sh_entsize:=swapendian(sh_entsize);
-              end;
-        end;
-
       var
         f : file;
 
@@ -1217,15 +1132,15 @@ Implementation
         with elfheader32 do
           if not((magic0123[0]=#$7f) and (magic0123[1]='E') and (magic0123[2]='L') and (magic0123[3]='F')) then
             Exit;
+        if elfheader32.data_encoding<>1 then
+          Exit;
         case elfheader32.file_class of
           1:
             begin
-              elfheader32:=MayBeSwapHeader(elfheader32);
               seek(f,elfheader32.e_shoff);
               { read string section header }
               seek(f,elfheader32.e_shoff+sizeof(TELF32SecHdr)*elfheader32.e_shstrndx);
               blockread(f,secheader32,sizeof(secheader32));
-              secheader32:=MaybeSwapSecHeader(secheader32);
               stringoffset:=secheader32.sh_offset;
 
               seek(f,elfheader32.e_shoff);
@@ -1233,7 +1148,6 @@ Implementation
               for i:=0 to elfheader32.e_shnum-1 do
                 begin
                   blockread(f,secheader32,sizeof(secheader32));
-                  secheader32:=MaybeSwapSecHeader(secheader32);
                   secname:=ReadSectionName(stringoffset+secheader32.sh_name);
                   case secname of
                     '.text':
@@ -1263,12 +1177,10 @@ Implementation
               with elfheader64 do
                 if not((magic0123[0]=#$7f) and (magic0123[1]='E') and (magic0123[2]='L') and (magic0123[3]='F')) then
                   Exit;
-              elfheader64:=MayBeSwapHeader(elfheader64);
               seek(f,elfheader64.e_shoff);
               { read string section header }
               seek(f,elfheader64.e_shoff+sizeof(TELF64SecHdr)*elfheader64.e_shstrndx);
               blockread(f,secheader64,sizeof(secheader64));
-              secheader64:=MaybeSwapSecHeader(secheader64);
               stringoffset:=secheader64.sh_offset;
 
               seek(f,elfheader64.e_shoff);
@@ -1276,7 +1188,6 @@ Implementation
               for i:=0 to elfheader64.e_shnum-1 do
                 begin
                   blockread(f,secheader64,sizeof(secheader64));
-                  secheader64:=MaybeSwapSecHeader(secheader64);
                   secname:=ReadSectionName(stringoffset+secheader64.sh_name);
                   case secname of
                     '.text':

@@ -31,7 +31,7 @@ Type
 
 
 Const
-  CPUEndian = {$IFDEF FPC_LITTLE_ENDIAN}TEndian.Little{$ELSE}TEndian.Big{$ENDIF};
+  CPUEndian = TEndian.Little;
 
 Type
   TGuidHelper = record helper for TGUID

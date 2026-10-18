@@ -5,7 +5,6 @@ interface
 {$IFDEF FPC_DOTTEDUNITS}
 uses
   sysinit,
-  extpas,
   heaptrc,
   fpintres,
   System.CTypes, System.Strings,
@@ -20,7 +19,6 @@ uses
 {$ELSE FPC_DOTTEDUNITS}
 uses
   sysinit,
-  extpas,
   heaptrc,
   fpintres,
   ctypes, strings,

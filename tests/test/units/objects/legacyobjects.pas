@@ -211,19 +211,11 @@ TYPE
 {---------------------------------------------------------------------------}
 TYPE
    WordRec = packed RECORD
-{$ifdef ENDIAN_LITTLE}
      Lo, Hi: Byte;                                    { Word to bytes }
-{$else}
-     Hi,Lo: Byte;
-{$endif}
    END;
 
    LongRec = packed RECORD
-{$ifdef ENDIAN_LITTLE}
      Lo, Hi: Word;                                    { LongInt to words }
-{$else}
-     Hi,Lo: Word;                                    { LongInt to words }
-{$endif}
    END;
 
    PtrRec = packed RECORD

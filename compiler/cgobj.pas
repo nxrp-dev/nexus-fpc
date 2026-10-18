@@ -882,7 +882,6 @@ implementation
     procedure TCG.A_Load_Reg_CGPara(List : TAsmList;Size : TCgSize;R : TRegister;const CGPara : TCGPara);
       var
          Ref : TReference;
-         TmpReg : TRegister;
       begin
          if Assigned(CGPara.Location^.Next) then
            begin
@@ -893,12 +892,6 @@ implementation
              Exit;
            end;
          ParaManager.AllocCGPara(List,CGPara);
-         if CGPara.Location^.ShiftVal<0 then
-           begin
-             TmpReg:=GetIntRegister(List,CGPara.Location^.Size);
-             A_Op_Const_Reg_Reg(List,OP_SHL,CGPara.Location^.Size,-CGPara.Location^.ShiftVal,R,TmpReg);
-             R:=TmpReg;
-           end;
          case CGPara.Location^.Loc of
             LOC_REGISTER,LOC_CREGISTER:
               A_Load_Reg_Reg(List,Size,CGPara.Location^.Size,R,CGPara.Location^.Register);
@@ -928,8 +921,6 @@ implementation
       begin
          CGPara.Check_Simple_Location;
          ParaManager.AllocCGPara(List,CGPara);
-         if CGPara.Location^.ShiftVal<0 then
-           A:=A shl -CGPara.Location^.ShiftVal;
          case CGPara.Location^.Loc of
             LOC_REGISTER,LOC_CREGISTER:
               A_Load_Const_Reg(List,CGPara.Location^.Size,A,CGPara.Location^.Register);
@@ -976,8 +967,6 @@ implementation
                    begin
                      CGPara.Check_Simple_Location;
                      A_Load_Ref_Reg(List,Size,Location^.Size,TmpRef,Location^.Register);
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Size,-Location^.ShiftVal,Location^.Register);
                    end
                  { there's a lot more data left, and the current paraloc's
                    register is entirely filled with part of that data }
@@ -991,8 +980,6 @@ implementation
                  else if SizeLeft in [1,2,4,8] then
                    begin
                      A_Load_Ref_Reg(List,Int_CGSize(SizeLeft),Location^.Size,TmpRef,Location^.Register);
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Size,-Location^.ShiftVal,Location^.Register);
                    end
                  { we're at the end of the data, and we need multiple loads
                    to get it in the register because it's an irregular size }
@@ -1009,8 +996,6 @@ implementation
                        begin
                          A_Load_Ref_Reg(List,OS_32,Location^.Size,TmpRef,Location^.Register);
                          Dec(SizeLeft,4);
-                         if TargetInfo.Endian=endian_big then
-                           A_Op_Const_Reg(List,OP_SHL,Location^.Size,SizeLeft*8,Location^.Register);
                          Inc(TmpRef.Offset,4);
                          RegHasValue:=True;
                        end;
@@ -1022,18 +1007,12 @@ implementation
                          Dec(SizeLeft,2);
                          if RegHasValue then
                            begin
-                             if TargetInfo.Endian=endian_big then
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Size,SizeLeft*8,TmpReg)
-                             else
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Size,(OrgSizeLeft-(SizeLeft+2))*8,TmpReg);
+                             A_Op_Const_Reg(List,OP_SHL,Location^.Size,(OrgSizeLeft-(SizeLeft+2))*8,TmpReg);
                              A_Op_Reg_Reg(List,OP_OR,Location^.Size,TmpReg,Location^.Register);
                            end
                          else
                            begin
-                             if TargetInfo.Endian=endian_big then
-                               A_Op_Const_Reg_Reg(List,OP_SHL,Location^.Size,SizeLeft*8,TmpReg,Location^.Register)
-                             else
-                               A_Load_Reg_Reg(List,Location^.Size,Location^.Size,TmpReg,Location^.Register);
+                             A_Load_Reg_Reg(List,Location^.Size,Location^.Size,TmpReg,Location^.Register);
                            end;
                          Inc(TmpRef.Offset,2);
                          RegHasValue:=True;
@@ -1045,16 +1024,13 @@ implementation
                          Dec(SizeLeft,1);
                          if RegHasValue then
                            begin
-                             if TargetInfo.Endian=endian_little then
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Size,(OrgSizeLeft-(SizeLeft+1))*8,TmpReg);
+                             A_Op_Const_Reg(List,OP_SHL,Location^.Size,(OrgSizeLeft-(SizeLeft+1))*8,TmpReg);
                              A_Op_Reg_Reg(List,OP_OR,Location^.Size,TmpReg,Location^.Register)
                            end
                          else
                            A_Load_Reg_Reg(List,Location^.Size,Location^.Size,TmpReg,Location^.Register);
                          Inc(TmpRef.Offset);
                        end;
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Size,-Location^.ShiftVal,Location^.Register);
                      { the loop will already adjust the offset and sizeleft }
                      Dec(TmpRef.Offset,OrgSizeLeft);
                      SizeLeft:=OrgSizeLeft;
@@ -1159,33 +1135,6 @@ implementation
             begin
               HReg:=ParaLoc.Register;
               CGSize:=ParaLoc.Size;
-              if (ParaLoc.ShiftVal>0) and
-	        not ((TargetInfo.Endian=endian_big) and (SizeLeft in [3,5,6,7])) then
-                A_Op_Const_Reg_Reg(List,OP_SHL,OS_INT,ParaLoc.ShiftVal,ParaLoc.Register,ParaLoc.Register)
-              { in case the original size was 3 or 5/6/7 bytes, the value was
-                shifted to the top of the to 4 resp. 8 byte register on the
-                caller side and needs to be stored with those bytes at the
-                start of the reference -> don't shift right }
-              else if (ParaLoc.ShiftVal<0)
-{$ifdef LIMIT_NEG_SHIFTVALUES}
-{$ifdef CPU64BITALU}
-                      and ((-ParaLoc.ShiftVal) in [56{for byte},48{for two bytes},32{for four bytes}])
-{$else}
-                      and ((-ParaLoc.ShiftVal) in [24{for byte},16{for two bytes}])
-{$endif}
-{$endif}
-                  then
-                begin
-                  A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,-ParaLoc.ShiftVal,ParaLoc.Register,ParaLoc.Register);
-                  { convert to a register of 1/2/4 bytes in size, since the
-                    original register had to be made larger to be able to hold
-                    the shifted value }
-                  CGSize:=Int_CGSize(TCgSize2Size[OS_INT]-(-ParaLoc.ShiftVal div 8));
-                  if CGSize=OS_NO then
-                    CGSize:=OS_INT;
-                  HReg:=GetIntRegister(List,CGSize);
-                  A_Load_Reg_Reg(List,OS_INT,CGSize,ParaLoc.Register,HReg);
-                end;
               { use the exact size to avoid overwriting of adjacent data }
               if TCgSize2Size[CGSize]<=SizeLeft then
                 A_Load_Reg_Ref(List,ParaLoc.Size,CGSize,HReg,Ref)
@@ -1195,16 +1144,7 @@ implementation
                     A_Load_Reg_Ref(List,ParaLoc.Size,Int_CGSize(SizeLeft),HReg,Ref);
                   3:
                     begin
-                      if TargetInfo.Endian=endian_big then
-                        begin
-                          HRef:=Ref;
-                          Inc(HRef.Offset,2);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_8,HReg,HRef);
-                          A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,8,HReg,HReg);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_16,HReg,Ref);
-                        end
-                      else
-                        begin
+                      begin
                           A_Load_Reg_Ref(List,ParaLoc.Size,OS_16,HReg,Ref);
                           HRef:=Ref;
                           Inc(HRef.Offset,2);
@@ -1214,16 +1154,7 @@ implementation
                     end;
                   5:
                     begin
-                      if TargetInfo.Endian=endian_big then
-                        begin
-                          HRef:=Ref;
-                          Inc(HRef.Offset,4);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_8,HReg,HRef);
-                          A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,8,HReg,HReg);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
-                        end
-                      else
-                       begin
+                      begin
                           A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
                           HRef:=Ref;
                           Inc(HRef.Offset,4);
@@ -1233,16 +1164,7 @@ implementation
                     end;
                   6:
                     begin
-                      if TargetInfo.Endian=endian_big then
-                        begin
-                          HRef:=Ref;
-                          Inc(HRef.Offset,4);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_16,HReg,HRef);
-                          A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,16,HReg,HReg);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
-                        end
-                      else
-                       begin
+                      begin
                           A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
                           HRef:=Ref;
                           Inc(HRef.Offset,4);
@@ -1252,22 +1174,7 @@ implementation
                     end;
                   7:
                     begin
-                      if TargetInfo.Endian=endian_big then
-                        begin
-                          HRef:=Ref;
-                          Inc(HRef.Offset,6);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_8,HReg,HRef);
-
-                          A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,8,HReg,HReg);
-                          HRef:=Ref;
-                          Inc(HRef.Offset,4);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_16,HReg,HRef);
-
-                          A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,16,HReg,HReg);
-                          A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
-                        end
-                      else
-                       begin
+                      begin
                           A_Load_Reg_Ref(List,ParaLoc.Size,OS_32,HReg,Ref);
 
                           HRef:=Ref;
@@ -1321,8 +1228,6 @@ implementation
          case ParaLoc.Loc of
            LOC_REGISTER :
              begin
-               if ParaLoc.ShiftVal<0 then
-                 A_Op_Const_Reg_Reg(List,OP_SHR,OS_INT,-ParaLoc.ShiftVal,ParaLoc.Register,ParaLoc.Register);
                case GetRegType(Reg) of
                  R_ADDRESSREGISTER,
                  R_INTREGISTER:
@@ -1415,16 +1320,11 @@ implementation
                 begin
                   TmpReg:=GetIntRegister(List,OS_16);
                   A_Load_Reg_Reg(List,FromSize,OS_16,Register,TmpReg);
-                  if TargetInfo.Endian=endian_big then
-                    Inc(TmpRef.Offset);
                   TmpReg:=MakeRegSize(List,TmpReg,OS_8);
                   A_Load_Reg_Ref(List,OS_8,OS_8,TmpReg,TmpRef);
                   TmpReg:=MakeRegSize(List,TmpReg,OS_16);
                   A_Op_Const_Reg(List,OP_SHR,OS_16,8,TmpReg);
-                  if TargetInfo.Endian=endian_big then
-                    Dec(TmpRef.Offset)
-                  else
-                    Inc(TmpRef.Offset);
+                  Inc(TmpRef.Offset);
                   TmpReg:=MakeRegSize(List,TmpReg,OS_8);
                   A_Load_Reg_Ref(List,OS_8,OS_8,TmpReg,TmpRef);
                 end;
@@ -1433,18 +1333,13 @@ implementation
                   { could add an optimised case for ref.alignment=2 }
                   TmpReg:=GetIntRegister(List,OS_32);
                   A_Load_Reg_Reg(List,FromSize,OS_32,Register,TmpReg);
-                  if TargetInfo.Endian=endian_big then
-                    Inc(TmpRef.Offset,3);
                   TmpReg:=MakeRegSize(List,TmpReg,OS_8);
                   A_Load_Reg_Ref(List,OS_8,OS_8,TmpReg,TmpRef);
                   TmpReg:=MakeRegSize(List,TmpReg,OS_32);
                   for I:=1 to 3 do
                     begin
                       A_Op_Const_Reg(List,OP_SHR,OS_32,8,TmpReg);
-                      if TargetInfo.Endian=endian_big then
-                        Dec(TmpRef.Offset)
-                      else
-                        Inc(TmpRef.Offset);
+                      Inc(TmpRef.Offset);
                       TmpReg:=MakeRegSize(List,TmpReg,OS_8);
                       A_Load_Reg_Ref(List,OS_8,OS_8,TmpReg,TmpRef);
                       TmpReg:=MakeRegSize(List,TmpReg,OS_32);
@@ -1484,16 +1379,12 @@ implementation
                       HiSize:=OS_S8;
                     { first load in tmpreg, because the target register }
                     { may be used in ref as well                        }
-                    if TargetInfo.Endian=endian_little then
-                      Inc(TmpRef.Offset);
+                    Inc(TmpRef.Offset);
                     TmpReg:=GetIntRegister(List,OS_8);
                     A_Load_Ref_Reg(List,HiSize,HiSize,TmpRef,TmpReg);
                     TmpReg:=MakeRegSize(List,TmpReg,FromSize);
                     A_Op_Const_Reg(List,OP_SHL,FromSize,8,TmpReg);
-                    if TargetInfo.Endian=endian_little then
-                      Dec(TmpRef.Offset)
-                    else
-                      Inc(TmpRef.Offset);
+                    Dec(TmpRef.Offset);
                     TmpReg2:=MakeRegSize(List,Register,OS_16);
                     A_Load_Ref_Reg(List,OS_8,OS_16,TmpRef,TmpReg2);
                     A_Op_Reg_Reg(List,OP_OR,OS_16,TmpReg,TmpReg2);
@@ -1502,15 +1393,11 @@ implementation
               OS_32,OS_S32:
                 if Ref.Alignment=2 then
                   begin
-                    if TargetInfo.Endian=endian_little then
-                      Inc(TmpRef.Offset,2);
+                    Inc(TmpRef.Offset,2);
                     TmpReg:=GetIntRegister(List,OS_32);
                     A_Load_Ref_Reg(List,OS_16,OS_32,TmpRef,TmpReg);
                     A_Op_Const_Reg(List,OP_SHL,OS_32,16,TmpReg);
-                    if TargetInfo.Endian=endian_little then
-                      Dec(TmpRef.Offset,2)
-                    else
-                      Inc(TmpRef.Offset,2);
+                    Dec(TmpRef.Offset,2);
                     TmpReg2:=MakeRegSize(List,Register,OS_32);
                     A_Load_Ref_Reg(List,OS_16,OS_32,TmpRef,TmpReg2);
                     A_Op_Reg_Reg(List,OP_OR,OS_32,TmpReg,TmpReg2);
@@ -1518,18 +1405,14 @@ implementation
                   end
                 else
                   begin
-                    if TargetInfo.Endian=endian_little then
-                      Inc(TmpRef.Offset,3);
+                    Inc(TmpRef.Offset,3);
                     TmpReg:=GetIntRegister(List,OS_32);
                     A_Load_Ref_Reg(List,OS_8,OS_32,TmpRef,TmpReg);
                     TmpReg2:=GetIntRegister(List,OS_32);
                     for I:=1 to 3 do
                       begin
                         A_Op_Const_Reg(List,OP_SHL,OS_32,8,TmpReg);
-                        if TargetInfo.Endian=endian_little then
-                          Dec(TmpRef.Offset)
-                        else
-                          Inc(TmpRef.Offset);
+                        Dec(TmpRef.Offset);
                         A_Load_Ref_Reg(List,OS_8,OS_32,TmpRef,TmpReg2);
                         A_Op_Reg_Reg(List,OP_OR,OS_32,TmpReg2,TmpReg);
                       end;
@@ -2328,15 +2211,7 @@ implementation
                     else
                       InternalError(2009112910);
                   end;
-                  if (TargetInfo.Endian=ENDIAN_BIG) then
-                    begin
-                      { paraloc^ -> high
-                        paraloc^.next -> low }
-                      Reg64.RegHi:=CGPara.Location^.Register;
-                      Reg64.RegLo:=TmpReg;
-                    end
-                  else
-                    begin
+                  begin
                       { paraloc^ -> low
                         paraloc^.next -> high }
                       Reg64.RegLo:=CGPara.Location^.Register;
@@ -3157,15 +3032,7 @@ implementation
             { Order for multiple locations is always
                 paraloc^ -> high
                 paraloc^.next -> low }
-            if (TargetInfo.Endian=ENDIAN_BIG) then
-              begin
-                { paraloc^ -> high
-                  paraloc^.next -> low }
-                Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
-                Move(CGPara.Location^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
-              end
-            else
-              begin
+            begin
                 { paraloc^ -> low
                   paraloc^.next -> high }
                 Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
@@ -3179,14 +3046,8 @@ implementation
               InternalError(2012090606);
             Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
             Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
-            { for big endian low is at +8, for little endian high }
-            if TargetInfo.Endian = endian_big then
-              begin
-                Inc(CGParaLo.Location^.Reference.Offset,8);
-                CGParaLo.Alignment:=NewAlignment(CGParaLo.Alignment,8);
-              end
-            else
-              begin
+
+            begin
                 Inc(CGParaHi.Location^.Reference.Offset,8);
                 CGParaHi.Alignment:=NewAlignment(CGParaHi.Alignment,8);
               end;
@@ -3213,12 +3074,6 @@ implementation
         TmpReg: TRegister;
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg:=Reg.RegLo;
-            Reg.RegLo:=Reg.RegHi;
-            Reg.RegHi:=TmpReg;
-          end;
         CG.A_Load_Reg_Ref(List,OS_64,OS_64,Reg.RegLo,Ref);
         TmpRef := Ref;
         Inc(TmpRef.Offset,8);
@@ -3232,12 +3087,6 @@ implementation
         TmpReg: TRegister;
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg := Reg.RegLo;
-            Reg.RegLo := Reg.RegHi;
-            Reg.RegHi := TmpReg;
-          end;
         TmpRef := Ref;
         if (TmpRef.Base=Reg.RegLo) then
          begin
@@ -3348,10 +3197,7 @@ implementation
         SplitParaLoc128(ParaLoc,TmpLocLo,TmpLocHi);
         TmpRefHi:=R;
         TmpRefLo:=R;
-        if TargetInfo.Endian=endian_big then
-          Inc(TmpRefLo.Offset,8)
-        else
-          Inc(TmpRefHi.Offset,8);
+        Inc(TmpRefHi.Offset,8);
         CG.A_Load_Ref_CGPara(List,OS_64,TmpRefHi,TmpLocHi);
         CG.A_Load_Ref_CGPara(List,OS_64,TmpRefLo,TmpLocLo);
         TmpLocLo.Done;

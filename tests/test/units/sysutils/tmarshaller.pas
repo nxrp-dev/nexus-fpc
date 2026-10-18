@@ -4,7 +4,6 @@
 	{$warn 4055 off : Conversion between ordinals and pointers is not portable}
 {$else}
 	{$define delphi}
-	{$define endian_little}
 	{$apptype console}
 {$endif}
 
@@ -99,8 +98,8 @@ const
 	SjJaKa: array[0 .. 1] of byte = ($82, $A9); // Bytes of か in Shift JIS.
 	Utf8JaA: array[0 .. 2] of byte = ($E3, $81, $82); // Bytes of あ in UTF-8.
 	Utf8JaKa: array[0 .. 2] of byte = ($E3, $81, $8B); // Bytes of か in UTF-8.
-	Utf16JaA: array[0 .. 1] of byte = {$ifdef endian_little} ($42, $30) {$else} ($30, $42) {$endif}; // Bytes of あ in UTF-16.
-	Utf16JaKa: array[0 .. 1] of byte = {$ifdef endian_little} ($4B, $30) {$else} ($30, $4B) {$endif}; // Bytes of か in UTF-16.
+	Utf16JaA: array[0 .. 1] of byte =  ($42, $30) ; // Bytes of あ in UTF-16.
+	Utf16JaKa: array[0 .. 1] of byte =  ($4B, $30) ; // Bytes of か in UTF-16.
 
 	function Concat(const a, b: array of byte): {$ifdef fpc} specialize {$endif} TArray<byte>;
 	begin

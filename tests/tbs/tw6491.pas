@@ -40,7 +40,7 @@ end;
 
 
 begin
-{$if not(defined(Windows) or defined(go32v2) or defined(os2) or defined(emx))}
+{$if not(defined(Windows) or defined(go32v2))}
   AllowDirectorySeparators:=['\'];
   AllowDriveSeparators:=[':'];
 {$endif}

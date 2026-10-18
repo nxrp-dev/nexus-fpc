@@ -6,9 +6,7 @@ function get_sign(d: double): Integer;
   begin
     get_sign:=1;
     p:=pbyte(@d);
-{$ifdef FPC_LITTLE_ENDIAN}
     inc(p,sizeof(d)-1);
-{$endif}
     if (p^ and $80)<>0 then
       get_sign:=-1;
   end;

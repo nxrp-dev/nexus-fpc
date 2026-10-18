@@ -1,24 +1,5 @@
 program Whet;
 
-{$IFDEF VirtualPascal}
-{$AlignCode+,AlignData+,AlignRec+,Asm-,B-,Cdecl-,D-,Delphi-,Frame+,G4+,I-}
-{$Optimise+,OrgName-,P-,Q-,R-,SmartLink+,Speed+,T-,V-,W-,X+,Z-,ZD-}
-uses
-  Dos, Os2Def, Os2Base;
-{$ENDIF}
-
-{$IFDEF Speed}
-{$B-,D-,I-,L-,O-,Q-,R-,S-,V-,Z-}
-uses
-  Dos, BseDos;
-{$ENDIF}
-
-{$IFDEF Speed_Pascal_20}
-{$B-,D-,I-,L-,O-,Q-,R-,S-,V-,Z-}
-uses
-  Dos,BseDos,OS2Def;
-{$ENDIF}
-
 {$IFDEF VER70}
 {$A+,B-,D-,E-,F-,G+,I-,L-,N+,O-,P-,Q-,R-,S-,T-,V-,X-,Y-}
 {$M 16384,0,655360}
@@ -54,17 +35,6 @@ const
    A major loop is executed 'II' times to increase wall-clock timing accuracy *)
    NLoopValue = 100;
 
-{$IFDEF OS2}
-function TimeNow : LongInt;
-var
-  Clocks : LongInt;
-  rc     : ApiRet;
-begin
-  rc := DosQuerySysInfo(qsv_Ms_Count, qsv_Ms_Count, Clocks, SizeOf(Clocks));
-  TimeNow := Clocks;
-end;
-
-{$ELSE}
 function TimeNow : Int64;
 
 var
@@ -74,7 +44,6 @@ begin
   gettime(h,m,s,s100);
   TimeNow := h*3600*1000+m*60*1000+s*1000+s100*10;
 end;
-{$ENDIF}
 
 
 

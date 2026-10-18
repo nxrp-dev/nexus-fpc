@@ -34,7 +34,7 @@ procedure WritePackageBytes(const AFileName: string; const AData: TBytes);
 
 implementation
 
-uses ZBase, ZCompres, ZInflate;
+uses PasZLib;
 
 const
   CMagic = 'NXPM0002';

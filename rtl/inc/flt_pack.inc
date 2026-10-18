@@ -30,13 +30,8 @@ var
     split: TSplitFloat;
 begin
     split.f := f;
- {$ifdef endian_big}
-    minus := ( split.b[0] and $80 <> 0 );
-    unpack_float.e := ( split.w[0] shr 7 ) and $FF;
- {$else endian_little}
     minus := ( split.b[3] and $80 <> 0 );
     unpack_float.e := ( split.w[1] shr 7 ) and $FF;
- {$endif endian}
     unpack_float.f := split.d and $007FFFFF;
 end;
 
@@ -57,15 +52,9 @@ var
     split: TSplitFloat;
 begin
     split.d := m;
- {$ifdef endian_big}
-    split.w[0] := split.w[0] + ( exp and $FF ) shl 7;
-    if minus then
-        split.b[0] := split.b[0] or $80;
- {$else endian_little}
     split.w[1] := split.w[1] + ( exp and $FF ) shl 7;
     if minus then
         split.b[3] := split.b[3] or $80;
- {$endif endian}
     f := split.f;
 end;
 
@@ -93,13 +82,8 @@ var
     doublebits: TSplitFloat;
 begin
     doublebits.f := f;
-  {$ifdef endian_big}
-    minus := ( doublebits.b[0] and $80 <>0 );
-    unpack_float.e := ( doublebits.w[0] shr 4 ) and $7FF;
-  {$else endian_little}
     minus := ( doublebits.b[7] and $80 <> 0 );
     unpack_float.e := ( doublebits.w[3] shr 4 ) and $7FF;
-  {$endif endian}
     unpack_float.f := doublebits.l and $000FFFFFFFFFFFFF;
 end;
 
@@ -122,15 +106,9 @@ var
     doublebits: TSplitFloat;
 begin
     doublebits.l := m;
-  {$ifdef endian_big}
-    doublebits.w[0] := doublebits.w[0] + ( exp and $7FF ) shl 4;
-    if minus then
-        doublebits.b[0] := doublebits.b[0] or $80;
-  {$else endian_little}
     doublebits.w[3] := doublebits.w[3] + ( exp and $7FF ) shl 4;
     if minus then
         doublebits.b[7] := doublebits.b[7] or $80;
-  {$endif endian}
     f := doublebits.f;
 end;
 
@@ -155,14 +133,10 @@ var
     split: TSplitFloat;
 begin
     split.f := f;
-  {$ifdef endian_big}
-    {$error Big endian extended double [80-bit] is not implemented}
-  {$else endian_little}
     minus := ( split.b[9] and $80 <> 0 );
     unpack_float.e := split.e and $7FFF;
     unpack_float.f := split.l;
     unpack_float.fh := 0;
-  {$endif endian}
 end;
 
 {$endif unpack floatx80}
@@ -180,14 +154,10 @@ type
 var
     split: TSplitFloat;
 begin
-  {$ifdef endian_big}
-    {$error Big endian extended double [80-bit] is not implemented}
-  {$else endian_little}
     split.l := m;
     split.e := exp and $7FFF;
     if minus then
         split.b[9] := split.b[9] or $80;
-  {$endif endian}
     f := split.f;
 end;
 

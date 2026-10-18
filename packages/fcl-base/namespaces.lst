@@ -44,7 +44,6 @@ src/blowfish.pas=namespaced/System.Hash.Blowfish.pas
 src/blowfish2.pas=namespaced/System.Hash.Blowfish2.pas
 src/nullstream.pas=namespaced/Fcl.Streams.Null.pas
 src/syncobjs.pas=namespaced/System.SyncObjs.pas
-src/avl_tree.pas=namespaced/Fcl.AVLTree.pas
 src/cachecls.pas=namespaced/Fcl.CacheCls.pas
 src/fptimer.pas=namespaced/Fcl.Timer.pas
 src/fppromise.pas=namespaced/Fcl.Promise.pas

@@ -2104,7 +2104,7 @@ implementation
                 end;
               end
             else
-              if (CurrentScanner.token=_KLAMMERAFFE) and (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
+              if (CurrentScanner.token=_KLAMMERAFFE) and (([m_iso]*CurrentSettings.ModeSwitches)<>[]) then
                 begin
                   consume(_KLAMMERAFFE);
                   single_type(tt2,SingleTypeOptionsInTypeBlock[Block_Type=bt_type]);

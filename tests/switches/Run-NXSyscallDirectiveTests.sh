@@ -11,7 +11,7 @@ rtl_units=$(realpath "$2")
 mkdir -p "$3"
 output=$(realpath "$3")
 checks=0
-for mode in FPC ObjFPC Delphi MacPas ISO ExtendedPascal; do
+for mode in FPC ObjFPC Delphi MacPas ISO; do
     for convention in empty LEGACY BASEREG; do
         directory="$output/$mode-$convention"
         mkdir -p "$directory"

@@ -160,8 +160,7 @@ implementation
           S64Real,
           s64comp,
           s64currency:
-            if TargetInfo.endian = endian_little then
-              inc(lSignReference.Offset,4);
+            inc(lSignReference.Offset,4);
           S32Real :
             ;
           else

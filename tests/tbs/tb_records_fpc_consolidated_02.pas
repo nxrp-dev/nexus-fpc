@@ -78,7 +78,6 @@ type
     case Integer of
       0:
         (
-          {$IFDEF ENDIAN_LITTLE}
           Lo32 : DWord;
           case Integer of
             0:
@@ -88,25 +87,10 @@ type
               );
             1:
               ( Hi64: Int64; );
-          {$ELSE ENDIAN_LITTLE}
-          Hi32 : LongInt;
-          case Integer of
-            0:
-              (
-                Mid32 : DWord;
-                Lo32 : DWord;
-              );
-            1:
-              ( Lo64: QWord; );
-          {$ENDIF ENDIAN_LITTLE}
         );
       1:
         (
-          {$IFDEF ENDIAN_LITTLE}
           Lo64 : QWord;
-          {$ELSE ENDIAN_LITTLE}
-          Hi64 : Int64;
-          {$ENDIF ENDIAN_LITTLE}
         );
   end;
 
@@ -155,12 +139,6 @@ end;
 
 { Case tw8283.pas }
 {$push}
-{$IFDEF ENDIAN_LITTLE}
-{$ELSE ENDIAN_LITTLE}
-{$ENDIF ENDIAN_LITTLE}
-{$IFDEF ENDIAN_LITTLE}
-{$ELSE ENDIAN_LITTLE}
-{$ENDIF ENDIAN_LITTLE}
 begin
   tw8283_test
 end;

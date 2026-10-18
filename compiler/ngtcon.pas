@@ -364,25 +364,7 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
       var
         shiftcount: LongInt;
       begin
-        if (TargetInfo.endian=endian_big) then
-          begin
-            { bitpacked format: left-aligned (i.e., "big endian bitness") }
-            if (bp.PackedBitSize<AIntBits) and
-               (bp.curbitoffset<AIntBits) then
-              bp.curval:=bp.curval or (shiftleft(value,AIntBits-bp.PackedBitSize) shr bp.curbitoffset);
-            shiftcount:=((AIntBits-bp.PackedBitSize)-bp.curbitoffset);
-            { carry-over to the next element? }
-            if (shiftcount<0) then
-              begin
-                if shiftcount>=-AIntBits then
-                  bp.nextval:=(value and getbitmask(-shiftcount)) shl
-                              (AIntBits+shiftcount)
-                else
-                  bp.nextval:=0;
-              end
-          end
-        else
-          begin
+        begin
             { bitpacked format: right aligned (i.e., "little endian bitness") }
             { work around broken x86 shifting }
             if bp.curbitoffset<AIntBits then
@@ -415,19 +397,10 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
           end;
         while (bitstowrite>=8) do
           begin
-            if (TargetInfo.endian=endian_little) then
-              begin
+            begin
                 { write lowest byte }
                 writeval:=byte(bp.curval);
                 bp.curval:=bp.curval shr 8;
-              end
-            else
-              begin
-                { write highest byte }
-                writeval:=bp.curval shr (AIntBits-8);
-{$push}{$r-,q-}
-                bp.curval:=bp.curval shl 8;
-{$pop}
               end;
             ftcb.emit_tai(TAIConst.create_8bit(writeval),U8IntType);
             dec(bitstowrite,8);
@@ -1083,15 +1056,9 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                 { this writing is endian-dependant   }
                 if not Is_SmallSet(def) then
                   begin
-                    if SourceInfo.endian=TargetInfo.endian then
-                      begin
+                    begin
                         for i:=0 to node.resultdef.Size-1 do
                           ftcb.emit_tai(TAIConst.create_8bit(PSetBytes(TSetConstNode(node).ValueSet)^[i]),U8IntType);
-                      end
-                    else
-                      begin
-                        for i:=0 to node.resultdef.Size-1 do
-                          ftcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(TSetConstNode(node).ValueSet)^[i])),U8IntType);
                       end;
                   end
                 else
@@ -1100,29 +1067,19 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
                       could automatically merge the bytes inside the
                       typed const builder, but it's not easy :/ ) }
                     setval:=0;
-                    if SourceInfo.endian=TargetInfo.endian then
-                      begin
+                    begin
                         for i:=0 to node.resultdef.Size-1 do
                           setval:=setval or (PSetBytes(TSetConstNode(node).ValueSet)^[i] shl (i*8));
-                      end
-                    else
-                      begin
-                        for i:=0 to node.resultdef.Size-1 do
-                          setval:=setval or (Reverse_Byte(PSetBytes(TSetConstNode(node).ValueSet)^[i]) shl (i*8));
                       end;
                     case def.Size of
                       1:
                         ftcb.emit_tai(TAIConst.create_8bit(setval),def);
                       2:
                         begin
-                          if TargetInfo.endian=endian_big then
-                            setval:=swapendian(word(setval));
                           ftcb.emit_tai(TAIConst.create_16bit(setval),def);
                         end;
                       4:
                         begin
-                          if TargetInfo.endian=endian_big then
-                            setval:=swapendian(cardinal(setval));
                           ftcb.emit_tai(TAIConst.create_32bit(LongInt(setval)),def);
                         end;
                       else

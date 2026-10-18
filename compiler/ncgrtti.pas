@@ -533,11 +533,7 @@ implementation
           lParaSpec:=lParaSpec or PfVMT;
         if vo_is_funcret in AParaSym.VarOptions then
           lParaSpec:=lParaSpec or PfResult;
-        { set bits run from the highest to the lowest bit on
-          big endian systems
-        }
-        if (TargetInfo.endian = endian_big) then
-          lParaSpec:=Reverse_Word(lParaSpec);
+
         { write flags for current parameter }
         ATypedConstBuilder.emit_ord_const(lParaSpec,U16IntType);
       end;
@@ -2063,8 +2059,6 @@ implementation
               lInterfaceFlags:=lInterfaceFlags or (1 shl ord(ifHasStrGUID));
             if (ADef.ObjectType=odt_dispinterface) then
               lInterfaceFlags:=lInterfaceFlags or (1 shl ord(ifDispInterface));
-            if (TargetInfo.endian=endian_big) then
-              lInterfaceFlags:=Reverse_Byte(lInterfaceFlags);
               {
               ifDispatch, }
             ATypedConstBuilder.emit_ord_const(lInterfaceFlags,U8IntType);

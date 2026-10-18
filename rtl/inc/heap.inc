@@ -170,9 +170,7 @@ type
   but otherwise it will be freed to the OS.
 }
 
-{$ifdef ENDIAN_LITTLE}
-  {$define HEAP_INC_USE_SETS} { Potentially better codegen than “or 1 shl” etc. (at least on x86). Can be adapted for big endian, too, but I have no such platform to test. }
-{$endif ENDIAN_LITTLE}
+  {$define HEAP_INC_USE_SETS} { Potentially better codegen than “or 1 shl” etc. (at least on x86). }
 
 { Manually optimize away barriers. }
 {$if defined(CPUI386) or defined(CPUX86_64)}
@@ -236,8 +234,7 @@ type
     HugeLastFlag = 1 shl 2;
   {$endif}
 
-    FixedChunkOffsetDivisor = 4; { Dividing arena offsets (= any fixed chunk sizes) by FixedChunkOffsetDivisor must give even values.
-                                   This evenness is required only for ENDIAN_BIG, but for simplicity is always maintained. }
+    FixedChunkOffsetDivisor = 4; { Scale factor for fixed-arena chunk offsets. }
 
     FirstVarStepP2 = 5;
     VarSizeQuant = 1 shl FirstVarStepP2;
@@ -295,17 +292,11 @@ type
       h[0:15] is a negative offset, so h[15] is usually 1 as a sign bit, except for the first chunk in the arena whose offset is 0.
       That’s why we subtract extra 2, guaranteeing h[15] = 1 for fixed chunks.
 
-      Big-endian:
-      sizeFlags[31:24] sizeFlags[23:16] sizeFlags[15:8] sizeFlags[7:0]
-                                                h[15:8]         h[7:0]
-      sizeFlags is always odd thanks to UsedFlag; h is always even thanks to the FixedChunkOffsetDivisor choice and to subtracting 2 instead of, say, 1.
-      So h[0] = 0 for fixed chunks.
-
       Variable chunks are further distinguished from huge chunks with “sizeFlags >= VarSizeQuant” (which is equivalent to “sizeFlags and VarSizeMask <> 0”),
       relying on the fact that variable chunks can’t have zero size.
       When not HAS_SYSOSFREE, this happens naturally: sizeFlags overlap with VarHugeHeader.flags.
       When HAS_SYSOSFREE, AllocHuge fakes the sizeFlags value that would fail the initial test for a fixed chunk and then also fail “sizeFlags >= VarSizeQuant”;
-        sizeFlags = 1 works for both endiannesses. }
+        sizeFlags = 1 satisfies both tests. }
 
     pCommonHeader = ^CommonHeader;
     CommonHeader = record
@@ -621,12 +612,8 @@ type
   class function HeapInc.IsFixedHeader(h: uint16): boolean;
   begin
     { See the comment on CommonHeader. }
-  {$if defined(ENDIAN_LITTLE)}
     result := int16(h) < 0; { Logically “h and (1 shl 15) <> 0”, but int16(h) < 0 saves 2 code bytes on x86 when h comes from a register. }
-  {$elseif defined(ENDIAN_BIG)}
-    result := h and 1 = 0;
-  {$else} {$error endian?}
-  {$endif};
+;
   end;
 
   procedure HeapInc.VarFreeMap.Add(c: pFreeVarChunk; binIndex: SizeUint);

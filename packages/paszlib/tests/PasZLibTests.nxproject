@@ -14,7 +14,7 @@ module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project PasZLibTests {
     RootDirectory: "../../../../nexus";
-    OutputRoot: "output/PasZLibTests/" + @Tools.Native.Name;
+    OutputRoot: "../../worktree/PasZLibTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: [
@@ -35,9 +35,7 @@ Project PasZLibTests {
                 @PasZLibTests.OutputRoot,
                 @Tools.Native.RTLPath,
                 "packages/nexus-packages/nxtest/src",
-                @Tools.NexusFPC.SourcePath + "/packages/paszlib/src",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NexusFPC.SourcePath + "/rtl/objpas",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
@@ -45,9 +43,6 @@ Project PasZLibTests {
             ];
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/pthreads/src",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.OS,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-extra/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/" + @Tools.Native.PascalPlatform,

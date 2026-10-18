@@ -40,11 +40,11 @@ Project Bootstrap Build[Bootstrap] {
         ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nor.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
     }
     CopyFile StageMetadataCompression {
-        Source: "packages/paszlib/src";
+        Source: "rtl/objpas";
         Destination: "build/forge-bootstrap/seed/dependencies/paszlib";
         Recursive: True;
         CleanDestination: True;
-        IncludeMasks: ["*.pas", "*.inc"];
+        IncludeMasks: ["crc32.pas", "paszlib.pas"];
     }
     CopyFile StageRTL {
         Source: "rtl";
@@ -1181,10 +1181,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
         }
-        FPC Build_extpas (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pas";
-        }
         FPC Build_syscall (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/unix/syscall.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/unix/syscall.pas";
@@ -1438,10 +1434,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
         }
-        FPC BuildAndroid_extpas (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pas";
-        }
         FPC BuildAndroid_syscall (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/unix/syscall.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/unix/syscall.pas";
@@ -1606,10 +1598,6 @@ Project Cross Build[Cross] {
         FPC BuildApple_iso7185 (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pas";
-        }
-        FPC BuildApple_extpas (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pas";
         }
         FPC BuildApple_strings (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/strings.pas"];

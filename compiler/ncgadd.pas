@@ -328,22 +328,13 @@ interface
         lSetBase:=TSetDef(Left.ResultDef).SetBase;
         if (Right.Location.Loc = LOC_CONSTANT) then
           begin
-            if (TargetInfo.endian=endian_big) then
-              lMask:=aint((AWord(1) shl (ResultDef.Size*8-1)) shr AWord(Right.Location.Value-lSetBase))
-            else
-              lMask:=aint(1 shl (Right.Location.Value-lSetBase));
+            lMask:=aint(1 shl (Right.Location.Value-lSetBase));
             hlcg.A_Op_Const_Reg_Reg(CurrentAsmData.CurrAsmList,OP_OR,ResultDef,
               lMask,Left.Location.Register,Location.Register);
           end
         else
           begin
-            if (TargetInfo.endian=endian_big) then
-              begin
-                lMask:=aint((AWord(1) shl (ResultDef.Size*8-1)));
-                lCGOp:=OP_SHR
-              end
-            else
-              begin
+            begin
                 lMask:=1;
                 lCGOp:=OP_SHL
               end;

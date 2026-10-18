@@ -5,7 +5,7 @@ unit buildrtl;
 {$IFDEF FPC_DOTTEDUNITS}
     uses
       sysinitpas, sysinitcyg, sysinitgprof,
-      extpas, heaptrc,
+      heaptrc,
       System.CTypes, System.Strings,
       WinApi.Windows,  initc,  System.CMem, System.DynLibs, WinApi.Signals,
       TP.DOS, WinApi.Messages,
@@ -18,7 +18,7 @@ unit buildrtl;
 {$ELSE FPC_DOTTEDUNITS}
   uses
       sysinitpas, sysinitcyg, sysinitgprof,
-      extpas, heaptrc,
+      heaptrc,
       ctypes, strings,
       windows,  initc, cmem, dynlibs, signals,
       dos, messages,

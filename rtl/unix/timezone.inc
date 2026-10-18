@@ -256,20 +256,12 @@ function ReadTimezoneFile(fn:string) : Boolean;
 
   function decode(const l:longint):longint;
   begin
-    {$IFDEF ENDIAN_LITTLE}
     decode:=SwapEndian(l);
-    {$ELSE}
-    decode:=l;
-    {$ENDIF}
   end;
 
   function decode(const l:int64):int64;
   begin
-    {$IFDEF ENDIAN_LITTLE}
     decode:=SwapEndian(l);
-    {$ELSE}
-    decode:=l;
-    {$ENDIF}
   end;
 
 const

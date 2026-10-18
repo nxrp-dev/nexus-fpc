@@ -231,11 +231,7 @@ Type
       SysDefault                 = TColor($20000000) platform;
       var
         case Integer of
-          0:  {$IFDEF ENDIAN_BIG}
-              (A,B,G,R : Byte);
-              {$else}
-              (R,G,B,A : Byte);
-              {$ENDIF}
+          0:                (R,G,B,A : Byte);
           1: (Color : TColor);
       end;
 
@@ -411,11 +407,7 @@ Type
           2:
             (HiWord, LoWord: Word);
           3:
-    {$IFDEF BIGENDIAN}
-            (A, R, G, B: Byte);
-    {$ELSE}
             (B, G, R, A: Byte);
-    {$ENDIF}
   end;
   TAlphaColorRec = TAlphaColors;
   PAlphaColorRec = ^TAlphaColorRec;

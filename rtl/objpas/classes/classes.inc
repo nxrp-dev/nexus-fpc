@@ -2134,38 +2134,24 @@ var
   function ReadWStr: WideString;
   var
     len: DWord;
-  {$IFDEF ENDIAN_BIG}
-    i : integer;
-  {$ENDIF}
   begin
     len := ReadDWord;
     SetLength(Result, len);
     if (len > 0) then
     begin
       Input.ReadBuffer(Pointer(@Result[1])^, len*2);
-      {$IFDEF ENDIAN_BIG}
-      for i:=1 to len do
-        Result[i]:=widechar(SwapEndian(word(Result[i])));
-      {$ENDIF}
     end;
   end;
 
   function ReadUStr: UnicodeString;
   var
     len: DWord;
-  {$IFDEF ENDIAN_BIG}
-    i : integer;
-  {$ENDIF}
   begin
     len := ReadDWord;
     SetLength(Result, len);
     if (len > 0) then
     begin
       Input.ReadBuffer(Pointer(@Result[1])^, len*2);
-      {$IFDEF ENDIAN_BIG}
-      for i:=1 to len do
-        Result[i]:=widechar(SwapEndian(word(Result[i])));
-      {$ENDIF}
     end;
   end;
 
@@ -2497,23 +2483,12 @@ var
 
   procedure WriteWString(Const s: WideString);
   var len : longword;
-  {$IFDEF ENDIAN_BIG}
-      i : integer;
-      ws : widestring;
-  {$ENDIF}
   begin
     len:=Length(s);
     WriteDWord(len);
     if len > 0 then
     begin
-      {$IFDEF ENDIAN_BIG}
-      setlength(ws,len);
-      for i:=1 to len do
-        ws[i]:=widechar(SwapEndian(word(s[i])));
-      Output.WriteBuffer(ws[1], len*sizeof(widechar));
-      {$ELSE}
       Output.WriteBuffer(s[1], len*sizeof(widechar));
-      {$ENDIF}
     end;
   end;
 

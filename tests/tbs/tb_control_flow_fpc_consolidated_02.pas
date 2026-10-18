@@ -20,9 +20,6 @@ program nexus_consolidated_tests;
 {$ifdef FPC_ISO}
 {$fatal FPC_ISO defined}
 {$endif}
-{$ifdef FPC_EXTENDEDPASCAL}
-{$fatal FPC_EXTENDEDPASCAL defined}
-{$endif}
 
 
 {$pop}
@@ -279,9 +276,6 @@ begin
 {$endif}
 {$ifdef FPC_ISO}
 {$fatal FPC_ISO defined}
-{$endif}
-{$ifdef FPC_EXTENDEDPASCAL}
-{$fatal FPC_EXTENDEDPASCAL defined}
 {$endif}
 begin
 end;

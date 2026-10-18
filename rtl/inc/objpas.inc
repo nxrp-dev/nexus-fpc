@@ -385,13 +385,9 @@ end;
 
 
 class function TGUID.Create(const aData : PByte; aBigEndian: Boolean = False): TGUID; overload; static;
-
-const
-  SysBigendian = {$IFDEF FPC_LITTLE_ENDIAN} false {$ELSE} true {$ENDIF};
-
 begin
   Result := PGuid(aData)^;
-  if (aBigEndian=SysBigEndian) then
+  if not aBigEndian then
     exit;
   Result.D1:=SwapEndian(Result.D1);
   Result.D2:=SwapEndian(Result.D2);
@@ -404,12 +400,12 @@ const
   (
     // Character 1: {.
     // Bytes 0−3 go to characters 2−9 as uint32.
-  {$ifdef ENDIAN_LITTLE} 8{..9}, 6{..7}, 4{..5}, 2{..3}, {$else} 2{..3}, 4{..5}, 6{..7}, 8{..9}, {$endif}
+   8{..9}, 6{..7}, 4{..5}, 2{..3},
     // Character 10: -.
     // Bytes 4−5 go to characters 11−14 as uint16.
     // Character 15: -.
     // Bytes 6-7 go to characters 16−19 as uint16.
-  {$ifdef ENDIAN_LITTLE} 13{..14}, 11{..12}, 18{..19}, 16{..17}, {$else} 11{..12}, 13{..14}, 16{..17}, 18{..19}, {$endif}
+   13{..14}, 11{..12}, 18{..19}, 16{..17},
     // Character 20: -.
     // Bytes 8-9 go to characters 21−24 as single bytes.
     21{..22}, 23{..24},

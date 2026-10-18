@@ -21,7 +21,7 @@ Project CollationDataTests {
                 @Tools.Native.RTLPath,
                 "packages/nexus-packages/nxtest/src",
                 "../nexus-fpc/tests/test/units/fpwidestring",
-                "../nexus-fpc/packages/paszlib/src"
+                "../nexus-fpc/rtl/objpas"
             ];
         }
     }

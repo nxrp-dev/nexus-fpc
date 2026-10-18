@@ -387,12 +387,8 @@ implementation
         DataLabel:=lLabel;
         lBuilder:=CTAITypedConstBuilder.Create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
         lBuilder.maybe_begin_aggregate(ResultDef);
-        if (SourceInfo.endian=TargetInfo.endian) then
-          for lIndex:=0 to ResultDef.Size-1 do
-            lBuilder.emit_tai(TAIConst.create_8bit(PSetBytes(ValueSet)^[lIndex]),U8IntType)
-        else
-          for lIndex:=0 to ResultDef.Size-1 do
-            lBuilder.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(ValueSet)^[lIndex])),U8IntType);
+        for lIndex:=0 to ResultDef.Size-1 do
+            lBuilder.emit_tai(TAIConst.create_8bit(PSetBytes(ValueSet)^[lIndex]),U8IntType);
         lBuilder.maybe_end_aggregate(ResultDef);
         CurrentAsmData.asmlists[al_typedconsts].ConcatList(lBuilder.get_final_asmlist(
           Result,ResultDef,sec_rodata_norel,Result.name,Const_Align(8)));
@@ -428,20 +424,13 @@ implementation
         procedure SmallSetConst;
           begin
             Location_Reset(Location,LOC_CONSTANT,Int_CGSize(ResultDef.Size));
-            if (SourceInfo.endian=TargetInfo.endian) then
-              begin
+            begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
-                { cross-endian code below                                                   }
+
                 { Extra aint type cast to avoid range errors                                }
                 Location.Value:=AInt(pCardinal(ValueSet)^)
-              end
-            else
-              begin
-                Location.Value:=AInt(Reverse_LongWord(Pcardinal(ValueSet)^));
               end;
-            if (TargetInfo.endian=endian_big) then
-              Location.Value:=Location.Value shr (32-ResultDef.Size*8);
           end;
 
       begin

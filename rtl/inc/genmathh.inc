@@ -63,19 +63,11 @@
 type
 { also necessary for Int() on systems with 64bit floats (JM) }
 { case record required to get correct alignment for floating point type }
-{$ifdef ENDIAN_LITTLE}
   float64 = record
     case byte of
       1: (dummy : double);
       2: (low,high: longword);
   end;
-{$else}
-  float64 = record
-    case byte of
-      1: (dummy : double);
-      2: (high,low: longword);
-  end;
-{$endif}
 {$define FPC_SYSTEM_HAS_float64}
 {$endif FPC_SYSTEM_HAS_float64}
 

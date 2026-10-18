@@ -378,9 +378,10 @@ interface
        { Switches which can be changed by a mode }
        TModeSwitch = (m_none,
          { generic }
-         m_fpc,m_objfpc,m_delphi,m_mac = 5,m_iso,m_extpas,
+         m_fpc,m_objfpc,m_delphi,m_mac = 5,m_iso,
          { more specific }
-         m_class,               { delphi class model }
+         { Preserve serialized mode-switch bit positions. }
+         m_class = 8,           { delphi class model }
          m_objpas,              { load objpas unit }
          m_result,              { result in functions }
          m_string_pchar,        { pchar 2 string conversion }
@@ -430,7 +431,7 @@ interface
        TModeSwitches = set of TModeSwitch;
 
     const
-       alllanguagemodes = [m_fpc,m_objfpc,m_delphi,m_mac,m_iso,m_extpas];
+       alllanguagemodes = [m_fpc,m_objfpc,m_delphi,m_mac,m_iso];
 
     type
        { Application types (platform specific) }

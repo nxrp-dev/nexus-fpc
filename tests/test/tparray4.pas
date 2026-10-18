@@ -29,11 +29,7 @@ begin
      (FPCKeyMap(km)[4] <> 0) or
      (FPCKeyMap(km)[5] <> 0) or
      (FPCKeyMap(km)[6] <> 0) or
-{$ifdef ENDIAN_BIG}
-     (FPCKeyMap(km)[7] <> 128) or
-{$else ENDIAN_BIG}
      (FPCKeyMap(km)[7] <> 1) or
-{$endif ENDIAN_BIG}
      (FPCKeyMap(km)[8] <> 0) or
      (FPCKeyMap(km)[9] <> 0) or
      (FPCKeyMap(km)[10] <> 0) or

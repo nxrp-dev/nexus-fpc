@@ -135,6 +135,9 @@ netwlibc/libc.pas=namespaced/netwlibc/Api.Libc.pas
 netwlibc/nwsnut.pas=namespaced/netware/NetWareApi.nwsnut.pas
 netwlibc/sysutils.pas=netwlibc/System.SysUtils.pas
 objpas/character.pas=namespaced/common/System.Character.pas
+objpas/crc32.pas=namespaced/common/System.CRC32.pas
+objpas/paszlib.pas=namespaced/common/System.ZLib.PasZLib.pas
+objpas/paszlibio.pas=namespaced/common/System.ZLib.PasZLibIO.pas
 {s*:objpas/}=objpas/
 {i+:objpas/}
 objpas/fpwidestring.pas=namespaced/common/System.FPWideString.pas

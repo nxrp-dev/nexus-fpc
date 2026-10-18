@@ -211,7 +211,7 @@ type
      e_res2 : array[0..9] of word;
      e_lfanew : longint;
   end;
-{$endif EMX or PE32 or PE32PLUS or GO32v2}
+{$endif PE32 or PE32PLUS}
 
 
 {****************************************************************************
@@ -694,7 +694,7 @@ begin
    exit;
   seek(e.f,e.ImgOffset);
   blockread(e.f,elfheader,sizeof(telfheader));
- if elfheader.magic0123<>{$ifdef ENDIAN_LITTLE}$464c457f{$else}$7f454c46{$endif} then
+ if elfheader.magic0123<>$464c457f then
    exit;
   if elfheader.e_shentsize<>sizeof(telfsechdr) then
    exit;

@@ -1,6 +1,7 @@
 {$IFNDEF FPC_DOTTEDUNITS}
-unit utNXPasZLibCRC32;
+unit CRC32;
 {$ENDIF}
+
 
 {**********************************************************************
     This file is part of the Free Pascal free component library.
@@ -8,7 +9,7 @@ unit utNXPasZLibCRC32;
     Copyright (c) 2007 by Daniel Mantione
       member of the Free Pascal development team
 
-    Private IEEE CRC32 implementation shared by PasZLib compression units.
+    IEEE CRC32 shared by the compiler and RTL compression units.
 
     See the file COPYING.FPC, included in this distribution,
     for details about the copyright.
@@ -20,13 +21,17 @@ unit utNXPasZLibCRC32;
  **********************************************************************}
 
 { CRC32 table/core moved from ZStream; Nexus consolidation (c) 2026 Kevin Collins.
-  Private compression implementation. The public zlib facade stays in PasZLib. }
+  Shared RTL checksum implementation; the zlib facade retains nil-buffer semantics. }
 {$mode objfpc}
 interface
 
-function PasZLibCRC32(ASeed: Cardinal; ABuffer: PByte; ACount: Cardinal): Cardinal;
-function PasZLibCRC32Byte(AState: Cardinal; AValue: Byte): Cardinal; inline;
-function PasZLibCRCTable: Pointer; inline;
+function CRC32Buffer(ASeed: Cardinal; ABuffer: PByte; ACount: SizeUInt): Cardinal;
+function CRC32Byte(AState: Cardinal; AValue: Byte): Cardinal; inline;
+function CRC32Table: Pointer; inline;
+
+{ ASeed is a completed CRC, allowing incremental updates. An empty buffer
+  preserves ASeed. CRC32Byte updates the raw, uncomplemented accumulator. }
+function UpdateCRC32(ASeed: Cardinal; const ABuffer; ACount: SizeInt): Cardinal;
 
 implementation
 
@@ -66,30 +71,35 @@ const
     $b3667a2e, $c4614ab8, $5d681b02, $2a6f2b94, $b40bbe37, $c30c8ea1, $5a05df1b, $2d02ef8d
   );
 
-function PasZLibCRC32Byte(AState: Cardinal; AValue: Byte): Cardinal;
+function CRC32Byte(AState: Cardinal; AValue: Byte): Cardinal;
 begin
   Result := cCRC32Table[Byte(AState xor AValue)] xor (AState shr 8);
 end;
 
-function PasZLibCRC32(ASeed: Cardinal; ABuffer: PByte; ACount: Cardinal): Cardinal;
+function CRC32Buffer(ASeed: Cardinal; ABuffer: PByte; ACount: SizeUInt): Cardinal;
 var
-  lIndex: Cardinal;
+  lIndex: SizeUInt;
 begin
-  if ABuffer = nil then Exit(0);
   Result := ASeed xor $FFFFFFFF;
   lIndex := 0;
   while lIndex < ACount do
   begin
-    Result := PasZLibCRC32Byte(Result, ABuffer^);
+    Result := CRC32Byte(Result, ABuffer^);
     Inc(ABuffer);
     Inc(lIndex);
   end;
   Result := Result xor $FFFFFFFF;
 end;
 
-function PasZLibCRCTable: Pointer;
+function CRC32Table: Pointer;
 begin
   Result := @cCRC32Table[0];
+end;
+
+function UpdateCRC32(ASeed: Cardinal; const ABuffer; ACount: SizeInt): Cardinal;
+begin
+  if ACount <= 0 then Exit(ASeed);
+  Result := CRC32Buffer(ASeed, @ABuffer, SizeUInt(ACount));
 end;
 
 end.

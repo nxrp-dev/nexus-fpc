@@ -3505,15 +3505,9 @@ function IsNan(const d : Double): Boolean;
   var
     fraczero, expMaximal: boolean;
   begin
-{$if defined(FPC_BIG_ENDIAN)}
-    expMaximal := ((TSplitDouble(d).cards[0] shr 20) and $7ff) = 2047;
-    fraczero:= (TSplitDouble(d).cards[0] and $fffff = 0) and
-                (TSplitDouble(d).cards[1] = 0);
-{$else FPC_BIG_ENDIAN}
     expMaximal := ((TSplitDouble(d).cards[1] shr 20) and $7ff) = 2047;
     fraczero := (TSplitDouble(d).cards[1] and $fffff = 0) and
                 (TSplitDouble(d).cards[0] = 0);
-{$endif}
     Result:=expMaximal and not(fraczero);
   end;
 {$endif FPC_HAS_TYPE_DOUBLE}
@@ -3523,13 +3517,9 @@ function IsNan(const d : Extended): Boolean; overload;
   var
     fraczero, expMaximal: boolean;
   begin
-{$ifdef FPC_BIG_ENDIAN}
-  {$error no support for big endian extended type yet}
-{$else FPC_BIG_ENDIAN}
     expMaximal := (TSplitExtended(d).w and $7fff) = 32767;
     fraczero := (TSplitExtended(d).cards[0] = 0) and
                     ((TSplitExtended(d).cards[1] and $7fffffff) = 0);
-{$endif FPC_BIG_ENDIAN}
     Result:=expMaximal and not(fraczero);
   end;
 {$endif FPC_HAS_TYPE_EXTENDED}
@@ -3544,15 +3534,9 @@ function IsInfinite(const d : Double): Boolean; overload;
   var
     fraczero, expMaximal: boolean;
   begin
-{$if defined(FPC_BIG_ENDIAN)}
-    expMaximal := ((TSplitDouble(d).cards[0] shr 20) and $7ff) = 2047;
-    fraczero:= (TSplitDouble(d).cards[0] and $fffff = 0) and
-                (TSplitDouble(d).cards[1] = 0);
-{$else FPC_BIG_ENDIAN}
     expMaximal := ((TSplitDouble(d).cards[1] shr 20) and $7ff) = 2047;
     fraczero := (TSplitDouble(d).cards[1] and $fffff = 0) and
                 (TSplitDouble(d).cards[0] = 0);
-{$endif}
     Result:=expMaximal and fraczero;
   end;
 {$endif FPC_HAS_TYPE_DOUBLE}
@@ -3562,13 +3546,9 @@ function IsInfinite(const d : Extended): Boolean; overload;
   var
     fraczero, expMaximal: boolean;
   begin
-{$ifdef FPC_BIG_ENDIAN}
-  {$error no support for big endian extended type yet}
-{$else FPC_BIG_ENDIAN}
     expMaximal := (TSplitExtended(d).w and $7fff) = 32767;
     fraczero := (TSplitExtended(d).cards[0] = 0) and
                     ((TSplitExtended(d).cards[1] and $7fffffff) = 0);
-{$endif FPC_BIG_ENDIAN}
     Result:=expMaximal and fraczero;
   end;
 {$endif FPC_HAS_TYPE_EXTENDED}
@@ -3578,11 +3558,7 @@ begin
 {$if defined(FPC_HAS_TYPE_EXTENDED)}
   TSplitExtended(x).w:=(TSplitExtended(x).w and $7fff) or (TSplitExtended(y).w and $8000);
 {$elseif defined(FPC_HAS_TYPE_DOUBLE)}
-  {$if defined(FPC_BIG_ENDIAN)}
-  TSplitDouble(x).cards[0]:=(TSplitDouble(x).cards[0] and $7fffffff) or (TSplitDouble(y).cards[0] and longword($80000000));
-  {$else}
   TSplitDouble(x).cards[1]:=(TSplitDouble(x).cards[1] and $7fffffff) or (TSplitDouble(y).cards[1] and longword($80000000));
-  {$endif}
 {$else}
   longword(x):=longword(x and $7fffffff) or (longword(y) and longword($80000000));
 {$endif}

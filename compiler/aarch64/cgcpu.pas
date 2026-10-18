@@ -947,12 +947,6 @@ implementation
               { split into two 32 bit loads }
               hreg1:=GetIntRegister(list,OS_32);
               hreg2:=GetIntRegister(list,OS_32);
-              if TargetInfo.endian=endian_big then
-                begin
-                  tmpreg:=hreg1;
-                  hreg1:=hreg2;
-                  hreg2:=tmpreg;
-                end;
               { can we use LDP? }
               if (ref.Alignment=4) and
                  (simple_ref_type(A_LDP,OS_32,PF_None,ref)=sr_simple) then
@@ -973,17 +967,12 @@ implementation
               if ref.Alignment=2 then
                 begin
                   href:=ref;
-                  if TargetInfo.endian=endian_big then
-                    inc(href.Offset,TCgSize2Size[fromsize]-2);
                   tmpreg:=GetIntRegister(list,OS_32);
                   A_Load_Ref_Reg(list,OS_16,OS_32,href,tmpreg);
                   tmpreg2:=GetIntRegister(list,OS_32);
                   for i:=1 to (TCgSize2Size[fromsize]-1) div 2 do
                     begin
-                      if TargetInfo.endian=endian_big then
-                        dec(href.Offset,2)
-                      else
-                        inc(href.Offset,2);
+                      inc(href.Offset,2);
                       A_Load_Ref_Reg(list,OS_16,OS_32,href,tmpreg2);
                       list.concat(TAICPU.op_reg_reg_const_const(A_BFI,tmpreg,tmpreg2,i*16,16));
                     end;
@@ -992,17 +981,12 @@ implementation
               else
                 begin
                   href:=ref;
-                  if TargetInfo.endian=endian_big then
-                    inc(href.Offset,TCgSize2Size[fromsize]-1);
                   tmpreg:=GetIntRegister(list,OS_32);
                   A_Load_Ref_Reg(list,OS_8,OS_32,href,tmpreg);
                   tmpreg2:=GetIntRegister(list,OS_32);
                   for i:=1 to TCgSize2Size[fromsize]-1 do
                     begin
-                      if TargetInfo.endian=endian_big then
-                        dec(href.Offset)
-                      else
-                        inc(href.Offset);
+                      inc(href.Offset);
                       A_Load_Ref_Reg(list,OS_8,OS_32,href,tmpreg2);
                       list.concat(TAICPU.op_reg_reg_const_const(A_BFI,tmpreg,tmpreg2,i*8,8));
                     end;
@@ -1346,12 +1330,6 @@ implementation
             hreg2:=GetIntRegister(list,OS_32);
             A_Load_Reg_Reg(list,OS_32,OS_32,MakeRegSize(register,OS_32),hreg1);
             A_Op_Const_Reg_Reg(list,OP_SHR,OS_64,32,register,MakeRegSize(hreg2,OS_64));
-            if TargetInfo.endian=endian_big then
-              begin
-                tmpreg:=hreg1;
-                hreg1:=hreg2;
-                hreg2:=tmpreg;
-              end;
             { can we use STP? }
             if (ref.Alignment=4) and
                (simple_ref_type(A_STP,OS_32,PF_None,ref)=sr_simple) then

@@ -81,7 +81,6 @@ cmem.pas         Link to (a?) C runtimes memory allocator
 ctypes.pas       Aliases for common C/POSIX types
 dynlibs.pas     Dynamic library loading implementation
 exeinfo.pas      Part of traceback support
-extpas.pas       Extended pascal compatible mode runtime parts
 fpintres.pas     Internal resource support
 getopts.pas      Pascal implementation of the GNU Getops
 heaptrc.pas      Runtime memory leak tracer and tests for memory integrity

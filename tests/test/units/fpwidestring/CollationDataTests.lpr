@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 program CollationDataTests;
 {$mode objfpc}{$H+}
-uses Classes, SysUtils, PasZLib, Zipper, ZStream, utNXCollationData,
+uses Classes, SysUtils, PasZLib, PasZLibIO,  utNXCollationData,
   obNXTestContext, obNXTestRegistry, obNXTestSuite, utNXTestConsole;
 
 const

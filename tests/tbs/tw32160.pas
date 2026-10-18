@@ -30,15 +30,6 @@ type PPpvInt32=^PpvInt32;
      TpvUInt128=packed record
       public
        class operator IntDivide(const a:TpvUInt128;const b:TpvUInt64):TpvUInt128;
-{$ifdef BIG_ENDIAN}
-       case byte of
-        0:(
-         Hi,Lo:TpvUInt64;
-        );
-        1:(
-         Q3,Q2,Q1,Q0:TpvUInt32;
-        );
-{$else}
        case byte of
         0:(
          Lo,Hi:TpvUInt64;
@@ -46,7 +37,6 @@ type PPpvInt32=^PpvInt32;
         1:(
          Q0,Q1,Q2,Q3:TpvUInt32;
         );
- {$endif}
      end;
 
 implementation

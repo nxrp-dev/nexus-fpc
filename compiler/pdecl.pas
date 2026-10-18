@@ -384,7 +384,7 @@ implementation
                 else
                   begin
                     { strip leading 0's in iso mode }
-                    if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
+                    if (([m_iso]*CurrentSettings.ModeSwitches)<>[]) then
                       while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
                         delete(CurrentScanner.pattern,1,1);
                     labelsym:=CLabelSym.Create(CurrentScanner.pattern);

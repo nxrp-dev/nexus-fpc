@@ -2778,8 +2778,6 @@ link_e_undefined_symbol_in_obj=09221_E_未定义的符号：$1（首次在 $2 �
 % 指定的符号被使用但未定义，首次在指定的对象文件中出现。
 link_e_undefined_symbol=09222_E_未定义的符号：$1
 % 指定的符号被使用但未定义。
-link_w_unsupported_cross_endian_internal_linker=09223_W_交叉字节序配置下的内部链接器仍在开发中
-% 内部链接器不能正确处理字节序转换。
 link_f_executable_too_big_exceeds_X_by_Y_bytes=09224_F_可执行文件映像对于 $1 目标来说太大（超出 $2 $3 字节）。
 % 结果文件太大
 % \end{description}
@@ -3085,9 +3083,6 @@ option_subtarget_is_already_set=11065_W_子目标已设置为: $1
 % 当指定了多个 \var{-t} 选项时显示。
 option_subtarget_config_not_found=11066_E_指定了子目标 $1 但未找到对应的配置文件 $2。
 % 当指定了多个 \var{-t} 选项时显示。
-option_switch_bin_to_src_assembler_cross_endian=11068_N_在交叉字节序配置中切换汇编器为默认源代码写入汇编器
-% 这通知你汇编器已被更改，因为
-% 二进制汇编器写入器尚未准备好用于交叉字节序配置。
 %
 % \end{description}
 # EndOfTeX
@@ -3393,7 +3388,6 @@ x*2Aas_使用 GNU AS 汇编
 **1C<x>_代码生成选项:
 **2C3_启用常量的 IEEE 错误检查
 **2Ca<x>_选择 ABI；使用 fpc -i 或 fpc -ia 查看可能的值
-**2Cb_为目标架构的大端变体生成代码
 **2Cc<x>_将默认调用约定设置为 <x>
 V*2Cd<x>_丢弃选定的 RTL 启动段(谨慎使用)
 V*3Cdc_丢弃初始化数据。数据默认为 noinit 段
@@ -3504,7 +3498,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 **1M<x>_将语言模式设置为 <x> / 启用模式开关 <x> (参见选项 -im)
 **2Mdelphi_Delphi 7 兼容模式
 **2Mdelphiunicode_Delphi 2009 及更高版本兼容模式
-**2Mextendedpascal_ISO 10206 模式
 **2Mfpc_Free Pascal 方言(默认)
 **2Miso_ISO 7185 模式
 **2Mmacpas_Macintosh Pascal 方言兼容模式

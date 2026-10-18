@@ -106,12 +106,6 @@ unit cg64f32;
                                      Helpers
 ****************************************************************************}
 
-    procedure Swap64(var Q : Int64);
-      begin
-         Q:=(Int64(Lo(Q)) shl 32) or Hi(Q);
-      end;
-
-
     procedure SplitParaLoc64(const CGPara:TCGPara;var CGParaLo,CGParaHi:TCGPara);
       var
         ParaLocLo,ParaLocLo2,ParaLocLo3,ParaLocLo4,
@@ -143,24 +137,7 @@ unit cg64f32;
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.Endian=ENDIAN_BIG) then
-                begin
-                  { is there any big endian 8 bit ALU/16 bit Addr CPU? }
-                  InternalError(2015041001);
-                  { paraloc^ -> high }
-                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
-                  ParaLocHi^.Next:=nil;
-                  ParaLocHi2:=CGParaHi.Add_Location;
-                  Move(CGPara.Location^.Next,ParaLocHi2^,SizeOf(ParaLocHi2^));
-
-                  { paraloc^.next^.next^ -> low }
-                  Move(CGPara.Location^.Next^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
-                  ParaLocLo^.Next:=nil;
-                  ParaLocLo2:=CGParaLo.Add_Location;
-                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
-                end
-              else
-                begin
+              begin
                   { paraloc^ -> low }
                   Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
                   ParaLocLo^.Next:=nil;
@@ -199,10 +176,7 @@ unit cg64f32;
               ParaLocHi4^.Size:=OS_8;
               ParaLocHi4^.Next:=nil;
               if CGPara.Size=OS_S64 then
-                if TargetInfo.Endian=ENDIAN_BIG then
-                  ParaLocHi^.Size:=OS_S8
-                else
-                  ParaLocLo4^.Size:=OS_S8;
+                ParaLocLo4^.Size:=OS_S8;
             end;
           4:
             begin
@@ -210,22 +184,7 @@ unit cg64f32;
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.Endian=ENDIAN_BIG) then
-                begin
-                  { paraloc^ -> high }
-                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
-                  ParaLocHi^.Next:=nil;
-                  ParaLocHi2:=CGParaHi.Add_Location;
-                  Move(CGPara.Location^.Next,ParaLocHi2^,SizeOf(ParaLocHi2^));
-
-                  { paraloc^.next^.next^ -> low }
-                  Move(CGPara.Location^.Next^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
-                  ParaLocLo^.Next:=nil;
-                  ParaLocLo2:=CGParaLo.Add_Location;
-                  Move(CGPara.Location^.Next^.Next^.Next^,ParaLocLo2^,SizeOf(ParaLocLo2^));
-                end
-              else
-                begin
+              begin
                   { paraloc^ -> low }
                   Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
                   ParaLocLo^.Next:=nil;
@@ -247,10 +206,7 @@ unit cg64f32;
               ParaLocHi2^.Size:=OS_16;
               ParaLocHi2^.Next:=nil;
               if CGPara.Size=OS_S64 then
-                if TargetInfo.Endian=ENDIAN_BIG then
-                  ParaLocHi^.Size:=OS_S16
-                else
-                  ParaLocLo2^.Size:=OS_S16;
+                ParaLocLo2^.Size:=OS_S16;
             end;
           2:
             begin
@@ -258,15 +214,7 @@ unit cg64f32;
               { Order for multiple locations is always
                   paraloc^ -> high
                   paraloc^.next -> low }
-              if (TargetInfo.Endian=ENDIAN_BIG) then
-                begin
-                  { paraloc^ -> high
-                    paraloc^.next -> low }
-                  Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
-                  Move(CGPara.Location^.Next^,ParaLocLo^,SizeOf(ParaLocLo^));
-                end
-              else
-                begin
+              begin
                   { paraloc^ -> low
                     paraloc^.next -> high }
                   Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
@@ -287,13 +235,7 @@ unit cg64f32;
               Move(CGPara.Location^,ParaLocLo^,SizeOf(ParaLocLo^));
               Move(CGPara.Location^,ParaLocHi^,SizeOf(ParaLocHi^));
               { for big endian low is at +4, for little endian high }
-              if TargetInfo.Endian = endian_big then
-                begin
-                  Inc(CGParaLo.Location^.Reference.Offset,4);
-                  CGParaLo.Alignment:=NewAlignment(CGParaLo.Alignment,4);
-                end
-              else
-                begin
+              begin
                   Inc(CGParaHi.Location^.Reference.Offset,4);
                   CGParaHi.Alignment:=NewAlignment(CGParaHi.Alignment,4);
                 end;
@@ -316,15 +258,8 @@ unit cg64f32;
 
     procedure TCG64F32.A_Load64_Reg_Ref(List : TAsmList;Reg : TRegister64;const Ref : TReference);
       var
-        TmpReg: TRegister;
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg:=Reg.RegLo;
-            Reg.RegLo:=Reg.RegHi;
-            Reg.RegHi:=TmpReg;
-          end;
         TmpRef := Ref;
 
         CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg.RegLo,TmpRef);
@@ -337,8 +272,6 @@ unit cg64f32;
       var
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          Swap64(Value);
         CG.A_Load_Const_Ref(List,OS_32,LongInt(Lo(Value)),Ref);
         TmpRef := Ref;
         Inc(TmpRef.Offset,4);
@@ -351,12 +284,6 @@ unit cg64f32;
         TmpReg: TRegister;
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg := Reg.RegLo;
-            Reg.RegLo := Reg.RegHi;
-            Reg.RegHi := TmpReg;
-          end;
         TmpRef := Ref;
 
         if (TmpRef.Base=Reg.RegLo) then
@@ -412,12 +339,6 @@ unit cg64f32;
             Exit;
           end;
 
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg := DestReg.RegLo;
-            DestReg.RegLo := DestReg.RegHi;
-            DestReg.RegHi := TmpReg;
-          end;
         TmpSRef:=SRef;
         if (TmpSRef.Ref.Base=DestReg.RegLo) then
          begin
@@ -454,12 +375,6 @@ unit cg64f32;
             Exit;
           end;
 
-        if TargetInfo.Endian = endian_big then
-          begin
-            TmpReg:=FromReg.RegLo;
-            FromReg.RegLo:=FromReg.RegHi;
-            FromReg.RegHi:=TmpReg;
-          end;
         TmpSRef:=SRef;
         TmpSRef.BitLen:=32;
         HLCG.A_Load_Reg_SubsetRef(List,U32IntType,U32IntType,FromReg.RegLo,TmpSRef);
@@ -476,8 +391,6 @@ unit cg64f32;
         if (SRef.BitIndexReg <> NR_NO) or
            (SRef.BitLen <> 64) then
           InternalError(2006082312);
-        if TargetInfo.Endian = endian_big then
-          Swap64(A);
         TmpSRef := SRef;
         TmpSRef.BitLen := 32;
         HLCG.A_Load_Const_SubsetRef(List,U32IntType,LongInt(Lo(A)),TmpSRef);
@@ -593,10 +506,7 @@ unit cg64f32;
       var
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,Ref)
-        else
-          begin
+        begin
             TmpRef := Ref;
             Inc(TmpRef.Offset,4);
             CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,TmpRef)
@@ -607,14 +517,7 @@ unit cg64f32;
       var
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_little then
-          CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,Ref)
-        else
-          begin
-            TmpRef := Ref;
-            Inc(TmpRef.Offset,4);
-            CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,TmpRef)
-          end;
+        CG.A_Load_Reg_Ref(List,OS_32,OS_32,Reg,Ref);
       end;
 
 
@@ -622,10 +525,7 @@ unit cg64f32;
       var
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_big then
-          CG.A_Load_Ref_Reg(List,OS_32,OS_32,Ref,Reg)
-        else
-          begin
+        begin
             TmpRef := Ref;
             Inc(TmpRef.Offset,4);
             CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg)
@@ -637,14 +537,7 @@ unit cg64f32;
       var
         TmpRef: TReference;
       begin
-        if TargetInfo.Endian = endian_little then
-          CG.A_Load_Ref_Reg(List,OS_32,OS_32,Ref,Reg)
-        else
-          begin
-            TmpRef := Ref;
-            Inc(TmpRef.Offset,4);
-            CG.A_Load_Ref_Reg(List,OS_32,OS_32,TmpRef,Reg)
-          end;
+        CG.A_Load_Ref_Reg(List,OS_32,OS_32,Ref,Reg);
       end;
 
 
@@ -793,15 +686,7 @@ unit cg64f32;
         TmpLocLo.Init;
         TmpLocHi.Init;
         SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
-        if TargetInfo.Endian=endian_big then
-          begin
-            { Keep this order of first lo before hi to have
-              the correct push order for m68k }
-            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegLo,TmpLocLo);
-            CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegHi,TmpLocHi);
-          end
-        else
-          begin
+        begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
             CG.A_Load_Reg_CGPara(List,OS_32,Reg.RegHi,TmpLocHi);
@@ -819,15 +704,7 @@ unit cg64f32;
         TmpLocLo.Init;
         TmpLocHi.Init;
         SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
-        if TargetInfo.Endian=endian_big then
-          begin
-            { Keep this order of first lo before hi to have
-              the correct push order for m68k }
-            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Lo(Value)),TmpLocLo);
-            CG.A_Load_Const_CGPara(List,OS_32,LongInt(Hi(Value)),TmpLocHi);
-          end
-        else
-          begin
+        begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
             CG.A_Load_Const_CGPara(List,OS_32,LongInt(Hi(Value)),TmpLocHi);
@@ -848,16 +725,7 @@ unit cg64f32;
         SplitParaLoc64(ParaLoc,TmpLocLo,TmpLocHi);
         TmpRefHi:=R;
         TmpRefLo:=R;
-        if TargetInfo.Endian=endian_big then
-          begin
-            { Keep this order of first lo before hi to have
-              the correct push order for m68k }
-            Inc(TmpRefLo.Offset,4);
-            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefLo,TmpLocLo);
-            CG.A_Load_Ref_CGPara(List,OS_32,TmpRefHi,TmpLocHi);
-          end
-        else
-          begin
+        begin
             { Keep this order of first hi before lo to have
               the correct push order for i386 }
             Inc(TmpRefHi.Offset,4);
@@ -971,12 +839,6 @@ unit cg64f32;
              Location_Copy(TempLoc,L);
              TempLoc.Size:=OS_32;
 
-             if (TempLoc.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
-                (TargetInfo.Endian = endian_big) then
-               begin
-                 Inc(TempLoc.Reference.Offset,4);
-                 TempLoc.Reference.Alignment:=NewAlignment(TempLoc.Reference.Alignment,4);
-               end;
 
              HLCG.G_RangeCheck(List,TempLoc,HDef,ToDef);
              HDef.Free;

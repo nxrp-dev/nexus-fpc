@@ -179,26 +179,15 @@ const
    (cp:1200; name:'UTF16LE'),
    (cp:1200; name:'UCS-2LE'),
    (cp:1200; name:'CP1200'),
-{$ifdef FPC_LITTLE_ENDIAN}
    (* Default is little endian, because the platform is *)
    (cp:1200; name:'UTF16'),
    (cp:1200; name:'UTF-16'),
    (cp:1200; name:'UCS-2'),
-{$endif}
    (cp:1201; name:'UTF-16BE'),
    (cp:1201; name:'UTF16BE'),
    (cp:1201; name:'UCS-2BE'),
    (cp:1201; name:'unicodeFFFE'),
    (cp:1201; name:'CP1201'),
-{$ifdef FPC_BIG_ENDIAN}
-   (*
-    * Default is big endian.
-    * See rfc2781 4.3 Interpreting text labelled as UTF-16.
-    *)
-   (cp:1201; name:'UTF16'),
-   (cp:1201; name:'UTF-16'),
-   (cp:1201; name:'UCS-2'),
-{$endif}
    (cp:1250; name:'CP1250'),
    (cp:1250; name:'MS-EE'),
    (cp:1250; name:'WINDOWS-1250'),
@@ -256,17 +245,11 @@ const
    (cp:12000; name:'UTF-32LE'),
    (cp:12000; name:'CP12000'),
    (cp:12000; name:'UTF32LE'),
-{$ifdef FPC_LITTLE_ENDIAN}
    (cp:12000; name:'UTF32'),
    (cp:12000; name:'UTF-32'),
-{$endif}
    (cp:12001; name:'UTF-32BE'),
    (cp:12001; name:'CP12001'),
    (cp:12001; name:'UTF32BE'),
-{$ifdef FPC_BIG_ENDIAN}
-   (cp:12001; name:'UTF32'),
-   (cp:12001; name:'UTF-32'),
-{$endif}
    (cp:20000; name:'x-Chinese_CNS'), (* CNS Taiwan; Chinese Traditional (CNS) *)
    (cp:20001; name:'x-cp20001'), (* TCA Taiwan *)
    (cp:20002; name:'x_Chinese-Eten'), (* Eten Taiwan; Chinese Traditional (Eten) *)

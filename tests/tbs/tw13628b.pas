@@ -16,9 +16,6 @@ const
    {$DEFINE NODLLPREFIX}
   {$endif windows}
 
-  {$ifdef os2}
-   {$DEFINE NODLLPREFIX}
-  {$endif os2}
 
   {$IFDEF NODLLPREFIX}
   libname = 'tw13628a.' + SharedSuffix;

@@ -22,7 +22,6 @@
  ****************************************************************************
 }
    type
-       TEndian = (endian_little,endian_big);
 
      (*
        IMPORTANT NOTE:

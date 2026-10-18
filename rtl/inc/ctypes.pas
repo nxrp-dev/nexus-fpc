@@ -153,16 +153,8 @@ implementation
 
 {$ifdef longdouble_assignment_overload_real128}
 
-{$ifdef ENDIAN_LITTLE}
 const r128_mantissa_ofs=0;
       r128_exponent_ofs=14;
-{$else}
-const r128_mantissa_ofs=2;
-      r128_exponent_ofs=0;
-{$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
-  {$define USE_UNALIGNED}
-{$endif FPC_REQUIRES_PROPER_ALIGNMENT}
-{$endif}
 
 operator := (const v:clongdouble) r:double;
 var

@@ -199,7 +199,6 @@ interface
           res          : TRes;
           dbg          : TDbg;
           script       : TScriptType;
-          endian       : TEndian;
           alignment    : TAlignmentInfo;
           {
             Offset from the argument pointer register to the first

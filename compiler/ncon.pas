@@ -1444,8 +1444,8 @@ implementation
             { This is endian-neutral in the new set format: in both cases, }
             { the first byte contains the first elements of the set.       }
             { Since the compiler/base rtl cannot contain packed sets before }
-            { they work for big endian, it's no problem that the code below }
-            { is wrong for the old big endian set format (setbase cannot be }
+
+
             { <>0 with non-packed sets).                                    }
             for lIndex:=0 to TSetDef(ResultDef).Size-1 do
               begin
@@ -1560,20 +1560,13 @@ implementation
       begin
         if Is_SmallSet(ResultDef) then
           begin
-            if (SourceInfo.endian=TargetInfo.endian) then
-              begin
+            begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
-                { cross-endian code below                                                   }
+
                 { Extra aint type cast to avoid range errors                                }
                  lSetValue:=AInt(pCardinal(ValueSet)^)
-              end
-            else
-              begin
-                lSetValue:=AInt(Reverse_LongWord(Pcardinal(ValueSet)^));
               end;
-            if (TargetInfo.endian=endian_big) then
-              lSetValue:=lSetValue shr (32-ResultDef.Size*8);
             case ResultDef.Size of
               1:
                 ABuilder.emit_ord_const(Byte(lSetValue),U8IntType);
@@ -1589,12 +1582,8 @@ implementation
           end
         else
           begin
-            if (SourceInfo.endian=TargetInfo.endian) then
-              for lIndex:=0 to ResultDef.Size-1 do
-                ABuilder.emit_tai(TAIConst.create_8bit(PSetBytes(ValueSet)^[lIndex]),U8IntType)
-            else
-              for lIndex:=0 to ResultDef.Size-1 do
-                ABuilder.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(ValueSet)^[lIndex])),U8IntType);
+            for lIndex:=0 to ResultDef.Size-1 do
+                ABuilder.emit_tai(TAIConst.create_8bit(PSetBytes(ValueSet)^[lIndex]),U8IntType);
           end;
         Result:=ResultDef.Size;
       end;

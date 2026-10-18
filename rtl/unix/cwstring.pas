@@ -112,13 +112,8 @@ const
 {$endif}
 
 { unicode encoding name }
-{$ifdef FPC_LITTLE_ENDIAN}
   unicode_encoding2 = 'UTF-16LE';
   unicode_encoding4 = 'UCS-4LE';
-{$else  FPC_LITTLE_ENDIAN}
-  unicode_encoding2 = 'UTF-16BE';
-  unicode_encoding4 = 'UCS-4BE';
-{$endif  FPC_LITTLE_ENDIAN}
 
 { en_US.UTF-8 needs maximally 6 chars, UCS-4/UTF-32 needs 4   }
 { -> 10 should be enough? Should actually use MB_CUR_MAX, but }

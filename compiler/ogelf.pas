@@ -532,31 +532,7 @@ implementation
                 data:=0;
               end;
           end;
-        if TargetInfo.endian<>SourceInfo.endian then
-          begin
-            ba.q:=0;
-            if (len<=sizeof(data)) then
-              case len of
-                1 : ba.b:=byte(data);
-                2 : begin
-                      ba.w:=word(data);
-                      ba.w:=swapendian(ba.w);
-                    end;
-                4 : begin
-                      ba.d:=dword(data);
-                      ba.d:=swapendian(ba.d);
-                    end;
-                8 : begin
-                      ba.q:=qword(data);
-                      ba.q:=swapendian(ba.q);
-                    end;
-              else
-                InternalError(2024012501);
-              end;
-            CurrObjSec.write(ba,len);
-          end
-        else
-          CurrObjSec.write(data,len);
+        CurrObjSec.write(data,len);
       end;
 
 
@@ -610,7 +586,6 @@ implementation
         elfsym.st_shndx:=ashndx;
         inc(symidx);
         inc(shinfo);
-        MaybeSwapElfSymbol(elfsym);
         write(elfsym,sizeof(elfsym));
       end;
 
@@ -679,7 +654,6 @@ implementation
             objsym.symidx:=symidx;
           end;
         inc(symidx);
-        MaybeSwapElfSymbol(elfsym);
         write(elfsym,sizeof(TELFSymbol));
       end;
 
@@ -737,7 +711,6 @@ implementation
 
             { write reloc }
             { ElfXX_Rel is essentially ElfXX_Rela without the addend field. }
-            MaybeSwapElfReloc(rel);
             relocsect.write(rel,relocsect.shentsize);
           end;
       end;
@@ -829,7 +802,6 @@ implementation
         sechdr.sh_info:=s.shinfo;
         sechdr.sh_addralign:=s.secalign;
         sechdr.sh_entsize:=s.shentsize;
-        MaybeSwapSecHeader(sechdr);
         writer.write(sechdr,sizeof(sechdr));
       end;
 
@@ -904,10 +876,7 @@ implementation
            header.e_ident[EI_MAG2]:=ELFMAG2;
            header.e_ident[EI_MAG3]:=ELFMAG3;
            header.e_ident[EI_CLASS]:=ELFCLASS;
-           if TargetInfo.endian=endian_big then
-             header.e_ident[EI_DATA]:=ELFDATA2MSB
-           else
-             header.e_ident[EI_DATA]:=ELFDATA2LSB;
+           header.e_ident[EI_DATA]:=ELFDATA2LSB;
 
            header.e_ident[EI_VERSION]:=1;
            header.e_type:=ET_REL;
@@ -921,7 +890,6 @@ implementation
            header.e_shentsize:=sizeof(TElfsechdr);
            if Assigned(ElfTarget.encodeflags) then
              header.e_flags:=ElfTarget.encodeflags();
-           MaybeSwapHeader(header);
            writer.write(header,sizeof(header));
            writer.writezeros($40-sizeof(header)); { align }
            { Sections }
@@ -991,7 +959,6 @@ implementation
         for i:=0 to secrec.relocs-1 do
           begin
             FReader.Read(rel,secrec.relentsize);
-            MaybeSwapElfReloc(rel);
             reltyp:=rel.info and $FF;
 {$ifdef cpu64bitaddr}
             relsym:=rel.info shr 32;
@@ -1034,7 +1001,6 @@ implementation
         for i:=1 to count-1 do
           begin
             FReader.Read(sym,sizeof(TELFSymbol));
-            MaybeSwapElfSymbol(sym);
             if sym.st_name>=strtablen then
               InternalError(2012060205);
 
@@ -1224,7 +1190,6 @@ implementation
 
                 FReader.Seek(symtaboffset+shdr.sh_info*sizeof(TELFSymbol));
                 FReader.Read(sym,sizeof(TELFSymbol));
-                MaybeSwapElfSymbol(sym);
                 if sym.st_name>=strtablen then
                   InternalError(2012110705);
                 if (sym.st_shndx=index) and (sym.st_info=((STB_LOCAL shl 4) or STT_SECTION)) then
@@ -1282,12 +1247,11 @@ implementation
             InputError('Wrong ELF file class (32/64 bit mismatch)');
             exit;
           end;
-        if (header.e_ident[EI_DATA]<>1+ord(TargetInfo.endian=endian_big)) then
+        if header.e_ident[EI_DATA]<>ELFDATA2LSB then
           begin
             InputError('ELF endianness does not match target');
             exit;
           end;
-        MaybeSwapHeader(header);
         if (header.e_version<>1) then
           begin
             InputError('Unknown ELF data version');
@@ -1338,7 +1302,6 @@ implementation
         for i:=0 to (shdr.sh_size div shdr.sh_entsize)-1 do
           begin
             FReader.Read(dt,sizeof(TELFDyn));
-            MaybeSwapElfDyn(dt);
             case dt.d_tag of
               DT_NULL:
                 break;
@@ -1381,9 +1344,6 @@ implementation
             InputError('Can''t read ELF section headers');
             exit;
           end;
-        if SourceInfo.endian<>TargetInfo.endian then
-          for i:=0 to nsects-1 do
-            MaybeSwapSecHeader(shdrs[i]);
 
         { First, load the .shstrtab section }
         if shstrndx>=nsects then
@@ -1463,9 +1423,6 @@ implementation
                       SetLength(symversions,shdrs[i].sh_size);
                       FReader.seek(shdrs[i].sh_offset);
                       FReader.read(symversions[0],shdrs[i].sh_size);
-                      if SourceInfo.endian<>TargetInfo.endian then
-                        for j:=0 to syms-1 do
-                          symversions[j]:=SwapEndian(symversions[j]);
                     end;
 
                   SHT_GNU_verdef:
@@ -1481,7 +1438,6 @@ implementation
                         begin
                           FReader.seek(vdoffset);
                           FReader.Read(vd,sizeof(TELFVerDef));
-                          MaybeSwapElfverdef(vd);
                           if vd.vd_version<>VER_DEF_CURRENT then
                             InternalError(2012120502);
                           FReader.seek(vdoffset+vd.vd_aux);
@@ -1490,7 +1446,6 @@ implementation
                             subsequent one(s) point to parent(s). For our purposes, version hierarchy
                             looks irrelevant. }
                           FReader.Read(vda,sizeof(TELFVerDAux));
-                          MaybeSwapElfverdaux(vda);
                           if vda.vda_name>=strtablen then
                             InternalError(2012120503);
                           if (vd.vd_flags and VER_FLG_BASE)<>0 then
@@ -1563,8 +1518,6 @@ implementation
                 FReader.Seek(shdrs[i+1].sh_offset);
                 { first dword is flags }
                 FReader.Read(tmp,sizeof(LongWord));
-                if SourceInfo.endian<>TargetInfo.endian then
-                  tmp:=SwapEndian(tmp);
                 if (tmp and GRP_COMDAT)<>0 then
                   grp.IsComdat:=true;
 
@@ -1573,8 +1526,6 @@ implementation
                 for j:=0 to count-1 do
                   begin
                     FReader.Read(tmp,sizeof(LongWord));
-                    if SourceInfo.endian<>TargetInfo.endian then
-                      tmp:=SwapEndian(tmp);
                     if (tmp>=nsects) then
                       InternalError(2012110805);
                     objsec:=FSecTbl[tmp].sec;

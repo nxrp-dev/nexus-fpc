@@ -8,16 +8,8 @@ program testbug;
  {$ifdef cpu386}
   {$asmmode intel}
  {$endif}
- {$ifdef FPC_LITTLE_ENDIAN}
-  {$define LITTLE_ENDIAN}
- {$else}
-  {$ifdef FPC_BIG_ENDIAN}
-   {$define BIG_ENDIAN}
-  {$endif}
- {$endif}
  {$define caninline}
 {$else}
- {$define LITTLE_ENDIAN}
  {$ifndef cpu64}
   {$define cpu32}
  {$endif}
@@ -44,19 +36,11 @@ type TBesenNumber=double;
      TBesenDoubleBytes=array[0..sizeof(double)-1] of byte;
 
 const BesenDoubleZero:TBesenNumber=0.0;
-{$ifdef FPC_BIG_ENDIAN}
-      BesenDoubleNaN:TBesenDoubleBytes=($7f,$ff,$ff,$ff,$ff,$ff,$ff,$ff);
-      BesenDoubleInfPos:TBesenDoubleBytes=($7f,$f0,$00,$00,$00,$00,$00,$00);
-      BesenDoubleInfNeg:TBesenDoubleBytes=($ff,$f0,$00,$00,$00,$00,$00,$00);
-      BesenDoubleMax:TBesenDoubleBytes=($7f,$ef,$ff,$ff,$ff,$ff,$ff,$ff);
-      BesenDoubleMin:TBesenDoubleBytes=($00,$00,$00,$00,$00,$00,$00,$01);
-{$else}
       BesenDoubleNaN:TBesenDoubleBytes=($ff,$ff,$ff,$ff,$ff,$ff,$ff,$7f);
       BesenDoubleInfPos:TBesenDoubleBytes=($00,$00,$00,$00,$00,$00,$f0,$7f);
       BesenDoubleInfNeg:TBesenDoubleBytes=($00,$00,$00,$00,$00,$00,$f0,$ff);
       BesenDoubleMax:TBesenDoubleBytes=($ff,$ff,$ff,$ff,$ff,$ff,$ef,$7f);
       BesenDoubleMin:TBesenDoubleBytes=($01,$00,$00,$00,$00,$00,$00,$00);
-{$endif}
 
 function BesenIsNaN(const AValue:TBesenNumber):boolean; {$ifdef caninline}inline;{$endif}
 begin

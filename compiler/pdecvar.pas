@@ -728,10 +728,7 @@ implementation
                   case pt.nodetype of
                     setconstn :
                       begin
-                        if (SourceInfo.endian=TargetInfo.endian) then
-                          p.default:=PLongInt(TSetConstNode(pt).ValueSet)^
-                        else
-                          p.default:=LongInt(Reverse_LongWord(plongword(TSetConstNode(pt).ValueSet)^));
+                        p.default:=PLongInt(TSetConstNode(pt).ValueSet)^;
                         include(p.PropOptions,ppo_default_is_set);
                       end;
                     ordconstn :
@@ -1912,7 +1909,7 @@ implementation
                     Message(parser_e_illegal_expression);
                   InsertTypeConv(pt,casetype);
                   { iso pascal does not support ranges in variant record definitions }
-                  if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and try_to_consume(_POINTPOINT) then
+                  if (([m_iso]*CurrentSettings.ModeSwitches)=[]) and try_to_consume(_POINTPOINT) then
                     pt:=CRangeNode.Create(pt,comp_expr([ef_accept_equal]))
                   else
                     begin

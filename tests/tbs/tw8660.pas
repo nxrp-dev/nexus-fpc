@@ -29,11 +29,7 @@ begin
   V := C.St;
   writeln(sizeof(V), ' ', byte(V)); // It's OK
   writeln(sizeof(C.St), ' ', byte(C.St)); // It's OK
-{$ifdef FPC_LITTLE_ENDIAN}
   if GetOrdProp(C, 'St')<>5 then
-{$else}
-  if GetOrdProp(C, 'St')<>160 then
-{$endif}
     halt(1);
   if GetSetProp(C, 'St')<>'ckNormal,ckVip' then
     halt(2);

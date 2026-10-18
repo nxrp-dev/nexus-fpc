@@ -16,11 +16,7 @@ uses
 {$endif HASSYSUTILS}
 type
    tqwordrec = packed record
-{$ifndef ENDIAN_BIG}
       low,high : dword;
-{$else}
-      high, low : dword;
-{$endif}
    end;
 
 const

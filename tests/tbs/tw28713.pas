@@ -7,12 +7,7 @@ type
 
   WordRec = packed record
 {$ifdef FPC}
-{$ifdef FPC_LITTLE_ENDIAN}
     LoByte,HiByte:Byte
-{$endif}
-{$ifdef FPC_BIG_ENDIAN}
-    HiByte,LoByte:Byte
-{$endif}
 {$endif}
   end;
 

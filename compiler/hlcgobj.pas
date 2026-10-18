@@ -1047,16 +1047,9 @@ implementation
   procedure THLCGObj.A_Load_Reg_CGPara(List: TAsmList; Size: TDef; R: TRegister; const CGPara: TCGPara);
     var
       Ref: TReference;
-      TmpReg : TRegister;
     begin
       CGPara.Check_Simple_Location;
       ParaManager.AllocCGPara(List,CGPara);
-      if CGPara.Location^.ShiftVal<0 then
-        begin
-          TmpReg:=GetIntRegister(List,CGPara.Location^.Def);
-          A_Op_Const_Reg_Reg(List,OP_SHL,CGPara.Location^.Def,-CGPara.Location^.ShiftVal,R,TmpReg);
-          R:=TmpReg;
-        end;
       case CGPara.Location^.Loc of
          LOC_REGISTER,LOC_CREGISTER:
            A_Load_Reg_Reg(List,Size,CGPara.Location^.Def,R,CGPara.Location^.Register);
@@ -1085,8 +1078,6 @@ implementation
     begin
        CGPara.Check_Simple_Location;
        ParaManager.AllocCGPara(List,CGPara);
-      if CGPara.Location^.ShiftVal<0 then
-        A:=A shl -CGPara.Location^.ShiftVal;
        case CGPara.Location^.Loc of
           LOC_REGISTER,LOC_CREGISTER:
             A_Load_Const_Reg(List,CGPara.Location^.Def,A,CGPara.Location^.Register);
@@ -1132,8 +1123,6 @@ implementation
                    begin
                      CGPara.Check_Simple_Location;
                      A_Load_Ref_Reg(List,Size,Location^.Def,TmpRef,Location^.Register);
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                    end
                  { there's a lot more data left, and the current paraloc's
                    register is entirely filled with part of that data }
@@ -1150,8 +1139,6 @@ implementation
                        because that may be larger than location^.register in
                        case of padding at the end of a record }
                      A_Load_Ref_Reg(List,Location^.Def,Location^.Def,TmpRef,Location^.Register);
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                    end
                  { we're at the end of the data, and we need multiple loads
                    to get it in the register because it's an irregular size }
@@ -1168,8 +1155,6 @@ implementation
                        begin
                          A_Load_Ref_Reg(List,U32IntType,Location^.Def,TmpRef,Location^.Register);
                          Dec(SizeLeft,4);
-                         if TargetInfo.Endian=endian_big then
-                           A_Op_Const_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,Location^.Register);
                          Inc(TmpRef.Offset,4);
                          RegHasValue:=True;
                        end;
@@ -1181,18 +1166,12 @@ implementation
                          Dec(SizeLeft,2);
                          if RegHasValue then
                            begin
-                             if TargetInfo.Endian=endian_big then
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,TmpReg)
-                             else
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+2))*8,TmpReg);
+                             A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+2))*8,TmpReg);
                              A_Op_Reg_Reg(List,OP_OR,Location^.Def,TmpReg,Location^.Register);
                            end
                          else
                            begin
-                             if TargetInfo.Endian=endian_big then
-                               A_Op_Const_Reg_Reg(List,OP_SHL,Location^.Def,SizeLeft*8,TmpReg,Location^.Register)
-                             else
-                               A_Load_Reg_Reg(List,Location^.Def,Location^.Def,TmpReg,Location^.Register);
+                             A_Load_Reg_Reg(List,Location^.Def,Location^.Def,TmpReg,Location^.Register);
                            end;
                          Inc(TmpRef.Offset,2);
                          RegHasValue:=True;
@@ -1204,16 +1183,13 @@ implementation
                          Dec(SizeLeft,1);
                          if RegHasValue then
                            begin
-                             if TargetInfo.Endian=endian_little then
-                               A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+1))*8,TmpReg);
+                             A_Op_Const_Reg(List,OP_SHL,Location^.Def,(OrgSizeLeft-(SizeLeft+1))*8,TmpReg);
                              A_Op_Reg_Reg(List,OP_OR,Location^.Def,TmpReg,Location^.Register)
                            end
                          else
                            A_Load_Reg_Reg(List,Location^.Def,Location^.Def,TmpReg,Location^.Register);
                          Inc(TmpRef.Offset);
                        end;
-                     if Location^.ShiftVal<0 then
-                       A_Op_Const_Reg(List,OP_SHL,Location^.Def,-Location^.ShiftVal,Location^.Register);
                      { the loop will already adjust the offset and sizeleft }
                      Dec(TmpRef.Offset,OrgSizeLeft);
                      SizeLeft:=OrgSizeLeft;
@@ -1636,19 +1612,7 @@ implementation
           { can't use a_load_reg_subsetreg to merge the results, as that one
             does not support sizes > AIntBits either }
           TmpReg:=HLCG.GetIntRegister(List,ToSize);
-          if TargetInfo.Endian=endian_big then
-            begin
-              A_Op_Const_Reg_Reg(List,OP_SHL,ToSize,SRef.BitLen-AIntBits,ValueReg,TmpReg);
-              if Is_Signed(FromSubsetSize) then
-                begin
-                  ValueReg:=TmpReg;
-                  TmpReg:=HLCG.GetIntRegister(List,ToSize);
-                  A_Op_Const_Reg_Reg(List,OP_AND,ToSize,(TCGInt(1) shl (SRef.BitLen-AIntBits))-1,ExtraValueReg,TmpReg);
-                  ValueReg:=TmpReg;
-                end
-            end
-          else
-            begin
+          begin
               A_Op_Const_Reg_Reg(List,OP_SHL,ToSize,AIntBits,ExtraValueReg,TmpReg);
               if Is_Signed(FromSubsetSize) then
                 begin
@@ -1683,10 +1647,7 @@ implementation
               ToSReg.SubsetReg:=ValueReg;
               ToSReg.SubsetRegSize:=Def_CGSize(ALUUIntType);
               { subsetregs always count bits from right to left }
-              if (TargetInfo.Endian=endian_big) then
-                ToSReg.StartBit:=LoadBitSize-(SRef.StartBit+SRef.BitLen)
-              else
-                ToSReg.StartBit:=SRef.StartBit;
+              ToSReg.StartBit:=SRef.StartBit;
               ToSReg.BitLen:=SRef.BitLen;
               A_Load_SubsetReg_Reg(List,FromSubsetSize,ToSize,ToSReg,DestReg);
               Exit;
@@ -1695,20 +1656,7 @@ implementation
             begin
               if (SRef.StartBit<>0) then
                 InternalError(2006081510);
-              if (TargetInfo.Endian=endian_big) then
-                begin
-                  A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,ValueReg);
-                  if Is_Signed(FromSubsetSize) then
-                    begin
-                      { sign extend to entire register }
-                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize,ValueReg);
-                      A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
-                    end
-                  else
-                    A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-SRef.BitLen,ValueReg);
-                end
-              else
-                begin
+              begin
                   A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,ValueReg);
                   if Is_Signed(FromSubsetSize) then
                     begin
@@ -1769,17 +1717,8 @@ implementation
           TmpSRef.BitLen:=AIntBits;
           FromReg1:=HLCG.GetIntRegister(List,ALUUIntType);
           A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,FromReg1);
-          if TargetInfo.Endian=endian_big then
-            begin
-              Inc(TmpSRef.Ref.Offset,SRef.BitLen-AIntBits);
-            end;
           A_Load_Reg_SubsetRef(List,ALUUIntType,ALUUIntType,FromReg1,TmpSRef);
-          if TargetInfo.Endian=endian_big then
-            begin
-              TmpSRef.Ref.Offset:=SRef.Ref.Offset;
-            end
-          else
-            begin
+          begin
               Inc(TmpSRef.Ref.Offset,AIntBits div 8);
             end;
           TmpSRef.BitLen:=SRef.BitLen-AIntBits;
@@ -1830,17 +1769,8 @@ implementation
             InternalError(2019052902);
           TmpSRef:=SRef;
           TmpSRef.BitLen:=AIntBits;
-          if TargetInfo.Endian=endian_big then
-            begin
-              Inc(TmpSRef.Ref.Offset,SRef.BitLen-AIntBits);
-            end;
           A_Load_Const_SubsetRef(List,ToSubsetSize,AInt(A),TmpSRef);
-          if TargetInfo.Endian=endian_big then
-            begin
-              TmpSRef.Ref.Offset:=SRef.Ref.Offset;
-            end
-          else
-            begin
+          begin
               Inc(TmpSRef.Ref.Offset,AIntBits div 8);
             end;
           TmpSRef.BitLen:=SRef.BitLen-AIntBits;
@@ -1911,21 +1841,11 @@ implementation
     begin
       TmpValue:=GetIntRegister(List,ValueSize);
 
-      if (TargetInfo.Endian=endian_little) then
-        begin
+      begin
           { rotate value register "bitnumber" bits to the right }
           A_Op_Reg_Reg_Reg(List,OP_SHR,ValueSize,BitNumber,Value,TmpValue);
           { extract the bit we want }
           A_Op_Const_Reg(List,OP_AND,ValueSize,1,TmpValue);
-        end
-      else
-        begin
-          { highest (leftmost) bit = bit 0 -> shl bitnumber results in wanted }
-          { bit in uppermost position, then move it to the lowest position    }
-          { "and" is not necessary since combination of shl/shr will clear    }
-          { all other bits                                                    }
-          A_Op_Reg_Reg_Reg(List,OP_SHL,ValueSize,BitNumber,Value,TmpValue);
-          A_Op_Const_Reg(List,OP_SHR,ValueSize,ValueSize.Size*8-1,TmpValue);
         end;
       A_Load_Reg_Reg(List,ValueSize,DestSize,TmpValue,DestReg);
     end;
@@ -1949,7 +1869,7 @@ implementation
       TmpSReg: TSubsetRegister;
     begin
       { the first parameter is used to calculate the bit offset in }
-      { case of big endian, and therefore must be the size of the  }
+
       { set and not of the whole subsetreg                         }
       TmpSReg:=Get_Bit_Const_Reg_SReg(FromSubsetSize,BitNumber,SetReg.SubsetReg);
       { now fix the size of the subsetreg }
@@ -2024,18 +1944,10 @@ implementation
     begin
       TmpValue:=GetIntRegister(List,DestSize);
 
-      if (TargetInfo.Endian=endian_little) then
-        begin
+      begin
           A_Load_Const_Reg(List,DestSize,1,TmpValue);
           { rotate bit "bitnumber" bits to the left }
           A_Op_Reg_Reg(List,OP_SHL,DestSize,BitNumber,TmpValue);
-        end
-      else
-        begin
-          { highest (leftmost) bit = bit 0 -> "$80/$8000/$80000000/ ... }
-          { shr bitnumber" results in correct mask                      }
-          A_Load_Const_Reg(List,DestSize,1 shl (DestSize.Size*8-1),TmpValue);
-          A_Op_Reg_Reg(List,OP_SHR,DestSize,BitNumber,TmpValue);
         end;
       { set/clear the bit we want }
       if DoSet then
@@ -2067,7 +1979,7 @@ implementation
       TmpSReg: TSubsetRegister;
     begin
       { the first parameter is used to calculate the bit offset in }
-      { case of big endian, and therefore must be the size of the  }
+
       { set and not of the whole subsetreg                         }
       TmpSReg:=Get_Bit_Const_Reg_SReg(DestSize,BitNumber,DestReg.SubsetReg);
       { now fix the size of the subsetreg }
@@ -2150,18 +2062,11 @@ implementation
     offset (either constant -startbit- or variable -bitindexreg-, always OS_INT)
     and a bit length (always constant).
 
-    Bit packed values are stored differently in memory depending on whether we
-    are on a big or a little endian system (compatible with at least GPC). The
-    size of the basic working unit is always the smallest power-of-2 byte size
+    Bit packed values use little-endian memory order. The size of the basic working unit is always the smallest power-of-2 byte size
     which can contain the bit value (so 1..8 bits -> 1 byte, 9..16 bits -> 2
     bytes, 17..32 bits -> 4 bytes etc).
 
-    On a big endian, 5-bit: values are stored like this:
-      11111222 22333334 44445555 56666677 77788888
-    The leftmost bit of each 5-bit value corresponds to the most significant
-    bit.
-
-    On little endian, it goes like this:
+    For 5-bit values:
       22211111 43333322 55554444 77666665 88888777
     In this case, per byte the left-most bit is more significant than those on
     the right, but the bits in the next byte are all more significant than
@@ -2169,10 +2074,7 @@ implementation
     three bits of that value, while the 22 in the second byte are the upper
     two bits.
 
-    Big endian, 9 bit values:
-      11111111 12222222 22333333 33344444 ...
-
-    Little endian, 9 bit values:
+    For 9-bit values:
       11111111 22222221 33333322 44444333 ...
     This is memory representation and the 16 bit values are byteswapped.
     Similarly as in the previous case, the 2222222 string contains the lower
@@ -2183,15 +2085,9 @@ implementation
       22222221 11111111 44444333 33333322 ...
       (l)ow  u     l     l    u     l   u
 
-    The startbit/bitindex in a subsetreference always refers to
-    a) on big endian: the most significant bit of the value
-       (bits counted from left to right, both memory an registers)
-    b) on little endian: the least significant bit when the value
-       is loaded in a register (bit counted from right to left)
-
-    Although a) results in more complex code for big endian systems, it's
-    needed for compatibility both with GPC and with e.g. bitpacked arrays in
-    Apple's universal interfaces which depend on these layout differences).
+    The startbit/bitindex in a subsetreference refers to the least
+    significant bit when the value is loaded in a register (bits counted
+    from right to left).
 
     Note: when changing the loadsize calculated in get_subsetref_load_info,
     make sure the appropriate alignment is guaranteed, at least in case of
@@ -2224,27 +2120,7 @@ implementation
     var
       RestBits: Byte;
     begin
-      if (TargetInfo.Endian=endian_big) then
-        begin
-          { valuereg contains the upper bits, extra_value_reg the lower }
-          RestBits:=(SRef.BitLen-(LoadBitSize-SRef.StartBit));
-          if Is_Signed(SubsetSize) then
-            begin
-              { sign extend }
-              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize+SRef.StartBit,ValueReg);
-              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg);
-            end
-          else
-            begin
-              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,RestBits,ValueReg);
-              { mask other bits }
-              if (SRef.BitLen<>AIntBits) then
-                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
-            end;
-          A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-RestBits,ExtraValueReg)
-        end
-      else
-        begin
+      begin
           { valuereg contains the lower bits, extra_value_reg the upper }
           A_Op_Const_Reg(List,OP_SHR,ALUUIntType,SRef.StartBit,ValueReg);
           if Is_Signed(SubsetSize) then
@@ -2276,51 +2152,7 @@ implementation
       Inc(TmpRef.Offset,LoadBitSize div 8);
       ExtraValueReg:=GetIntRegister(List,ALUUIntType);
 
-      if (TargetInfo.Endian=endian_big) then
-        begin
-          { since this is a dynamic index, it's possible that the value   }
-          { is entirely in valuereg.                                      }
-
-          { get the data in valuereg in the right place }
-          A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,ValueReg);
-          if Is_Signed(SubsetSize) then
-            begin
-              A_Op_Const_Reg(List,OP_SHL,ALUUIntType,AIntBits-LoadBitSize,ValueReg);
-              A_Op_Const_Reg(List,OP_SAR,ALUUIntType,AIntBits-SRef.BitLen,ValueReg)
-            end
-          else
-            begin
-              A_Op_Const_Reg(List,OP_SHR,ALUUIntType,LoadBitSize-SRef.BitLen,ValueReg);
-              if (LoadBitSize<>AIntBits) then
-                { mask left over bits }
-                A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),ValueReg);
-            end;
-          TmpReg := GetIntRegister(List,ALUUIntType);
-
-          { ensure we don't load anything past the end of the array }
-          CurrentAsmData.GetJumpLabel(HL);
-          A_Cmp_Const_Reg_Label(List,ALUUIntType,OC_BE,LoadBitSize-SRef.BitLen,SRef.BitIndexReg,HL);
-
-          { the bits in extra_value_reg (if any) start at the most significant bit =>         }
-          { extra_value_reg must be shr by (loadbitsize-sref.bitlen)+(loadsize-sref.bitindex) }
-          { => = -(sref.bitindex+(sref.bitlen-2*loadbitsize))                                 }
-          A_Op_Const_Reg_Reg(List,OP_ADD,ALUUIntType,SRef.BitLen-2*LoadBitSize,SRef.BitIndexReg,TmpReg);
-          A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpReg,TmpReg);
-
-          { load next "loadbitsize" bits of the array }
-          A_Load_Ref_Reg(List,CGSize_OrdDef(Int_CGSize(LoadBitSize div 8)),ALUUIntType,TmpRef,ExtraValueReg);
-
-          A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,TmpReg,ExtraValueReg);
-          { if there are no bits in extra_value_reg, then sref.bitindex was      }
-          { < loadsize-sref.bitlen, and therefore tmpreg will now be >= loadsize }
-          { => extra_value_reg is now 0                                          }
-          { merge }
-          A_Op_Reg_Reg(List,OP_OR,ALUUIntType,ExtraValueReg,ValueReg);
-          { no need to mask, necessary masking happened earlier on }
-          A_Label(List,HL);
-        end
-      else
-        begin
+      begin
           A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
           { ensure we don't load anything past the end of the array }
@@ -2381,10 +2213,7 @@ implementation
               ToSReg.SubsetReg:=ValueReg;
               ToSReg.SubsetRegSize:=Def_CGSize(ALUUIntType);
               { subsetregs always count bits from right to left }
-              if (TargetInfo.Endian=endian_big) then
-                ToSReg.StartBit:=LoadBitSize-(SRef.StartBit+SRef.BitLen)
-              else
-                ToSReg.StartBit:=SRef.StartBit;
+              ToSReg.StartBit:=SRef.StartBit;
               ToSReg.BitLen:=SRef.BitLen;
               A_Load_RegConst_SubsetReg_Intern(List,FromSize,SubsetSize,FromReg,ToSReg,SlOpt);
             end
@@ -2400,7 +2229,7 @@ implementation
               { zero the bits we have to insert }
               if (SlOpt<>SL_SETMAX) then
                 begin
-                  if (SlOpt=SL_SETZERO) and (SRef.BitLen=1) and (TargetInfo.Endian=endian_little) then
+                  if (SlOpt = SL_SETZERO) and (SRef . BitLen = 1) then
                     begin
                       A_Bit_Set_Reg_Reg(List,False,ALUUIntType,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
@@ -2413,13 +2242,7 @@ implementation
                   else
                     begin
                       MaskReg:=GetIntRegister(List,ALUUIntType);
-                      if (TargetInfo.Endian = endian_big) then
-                        begin
-                          A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen),MaskReg);
-                          A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,MaskReg);
-                        end
-                      else
-                        begin
+                      begin
                           A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
                           A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,MaskReg);
                         end;
@@ -2436,7 +2259,7 @@ implementation
                     A_Load_Reg_Reg(List,FromSize,ALUUIntType,FromReg,TmpReg)
                   { setting of a single bit?
                     then we might take advantage of the CPU's bit set instruction }
-                  else if (SRef.BitLen=1) and (TargetInfo.Endian=endian_little) then
+                  else if SRef . BitLen = 1 then
                     begin
                       A_Bit_Set_Reg_Reg(List,True,ALUUIntType,ALUUIntType,SRef.BitIndexReg,ValueReg);
 
@@ -2450,21 +2273,7 @@ implementation
                     A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1), TmpReg)
                   else
                     A_Load_Const_Reg(List,ALUUIntType,-1,TmpReg);
-                  if (TargetInfo.Endian=endian_big) then
-                    begin
-                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,LoadBitSize-SRef.BitLen,TmpReg);
-                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        begin
-                          if (LoadBitSize<>AIntBits) then
-                            BitMask:=(((AWord(1) shl LoadBitSize)-1) xor ((AWord(1) shl (LoadBitSize-SRef.BitLen))-1))
-                          else
-                            BitMask:=(High(AWord) xor ((AWord(1) shl (LoadBitSize-SRef.BitLen))-1));
-                          A_Op_Const_Reg(List,OP_AND,ALUUIntType,BitMask,TmpReg);
-                        end;
-                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,TmpReg);
-                    end
-                  else
-                    begin
+                  begin
                       if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
                       A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,TmpReg);
@@ -2499,17 +2308,7 @@ implementation
               { transfer first part }
               FromSReg.BitLen:=LoadBitSize-SRef.StartBit;
               ToSReg.BitLen:=FromSReg.BitLen;
-              if (TargetInfo.Endian=endian_big) then
-                begin
-                  { valuereg must contain the upper bits of the value at bits [0..loadbitsize-startbit] }
-
-                  { upper bits of the value ... }
-                  FromSReg.StartBit:=SRef.BitLen-(LoadBitSize-SRef.StartBit);
-                  { ... to bit 0 }
-                  ToSReg.StartBit:=0
-                end
-              else
-                begin
+              begin
                   { valuereg must contain the lower bits of the value at bits [startbit..loadbitsize] }
 
                   { lower bits of the value ... }
@@ -2534,18 +2333,7 @@ implementation
 {$endif}
 
               { transfer second part }
-              if (TargetInfo.Endian = endian_big) then
-                begin
-                  { extra_value_reg must contain the lower bits of the value at bits  }
-                  { [(loadbitsize-(bitlen-(loadbitsize-startbit)))..loadbitsize]  }
-                  { (loadbitsize-(bitlen-(loadbitsize-startbit))) = 2*loadbitsize }
-                  { - bitlen - startbit }
-
-                  FromSReg.StartBit:=0;
-                  ToSReg.StartBit:=2*LoadBitSize-SRef.BitLen-SRef.StartBit
-                end
-              else
-                begin
+              begin
                   { extra_value_reg must contain the upper bits of the value at bits [0..bitlen-(loadbitsize-startbit)] }
 
                   FromSReg.StartBit:=FromSReg.BitLen;
@@ -2580,13 +2368,7 @@ implementation
               if (SlOpt <> SL_SETMAX) then
                 begin
                   MaskReg := GetIntRegister(List,ALUUIntType);
-                  if (TargetInfo.Endian = endian_big) then
-                    begin
-                      A_Load_Const_Reg(List,ALUUIntType,TCGInt(((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen)),MaskReg);
-                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,MaskReg);
-                    end
-                  else
-                    begin
+                  begin
                       A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
                       A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,SRef.BitIndexReg,MaskReg);
                     end;
@@ -2605,16 +2387,7 @@ implementation
                     A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen) - 1), TmpReg)
                   else
                     A_Load_Const_Reg(List,ALUUIntType,-1,TmpReg);
-                  if (TargetInfo.Endian = endian_big) then
-                    begin
-                      A_Op_Const_Reg(List,OP_SHL,ALUUIntType,LoadBitSize-SRef.BitLen,TmpReg);
-                      if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        { mask left over bits }
-                        A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt(((AWord(1) shl SRef.BitLen)-1) shl (LoadBitSize-SRef.BitLen)),TmpReg);
-                      A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,SRef.BitIndexReg,TmpReg);
-                    end
-                  else
-                    begin
+                  begin
                       if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         { mask left over bits }
                         A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
@@ -2649,15 +2422,7 @@ implementation
               if (SlOpt<>SL_SETMAX) then
                 begin
                   MaskReg:=GetIntRegister(List,ALUUIntType);
-                  if (TargetInfo.Endian=endian_big) then
-                    begin
-                      A_Op_Const_Reg_Reg(List,OP_ADD,ALUUIntType,SRef.BitLen-2*LoadBitSize,SRef.BitIndexReg,TmpIndexReg);
-                      A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpIndexReg,TmpIndexReg);
-                      A_Load_Const_Reg(List,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),MaskReg);
-                      A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,TmpIndexReg,MaskReg);
-                    end
-                  else
-                    begin
+                  begin
                       { Y-x = -(x-Y) }
                       A_Op_Const_Reg_Reg(List,OP_SUB,ALUUIntType,LoadBitSize,SRef.BitIndexReg,TmpIndexReg);
                       A_Op_Reg_Reg(List,OP_NEG,ALUUIntType,TmpIndexReg,TmpIndexReg);
@@ -2671,10 +2436,7 @@ implementation
 
               if (SlOpt<>SL_SETZERO) then
                 begin
-                  if (TargetInfo.Endian=endian_big) then
-                    A_Op_Reg_Reg(List,OP_SHL,ALUUIntType,TmpIndexReg,TmpReg)
-                  else
-                    begin
+                  begin
                       if not(SlOpt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         A_Op_Const_Reg(List,OP_AND,ALUUIntType,TCGInt((AWord(1) shl SRef.BitLen)-1),TmpReg);
                       A_Op_Reg_Reg(List,OP_SHR,ALUUIntType,TmpIndexReg,TmpReg);
@@ -2766,10 +2528,7 @@ implementation
       Result.SubsetReg:=SetReg;
       Result.SubsetRegSize:=Def_CGSize(SetRegSize);
       { subsetregs always count from the least significant to the most significant bit }
-      if (TargetInfo.Endian=endian_big) then
-        Result.StartBit:=(SetRegSize.Size*8)-BitNumber-1
-      else
-        Result.StartBit:=BitNumber;
+      Result.StartBit:=BitNumber;
       Result.BitLen:=1;
     end;
 

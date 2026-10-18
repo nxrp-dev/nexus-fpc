@@ -35,9 +35,6 @@ uses
 {$ifdef go32v2}
   {$define LIMIT83FS}
 {$endif}
-{$ifdef os2}
-  {$define LIMIT83FS}
-{$endif}
 {$ifdef msdos}
   {$define LIMIT83FS}
 {$endif}

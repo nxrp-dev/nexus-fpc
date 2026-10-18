@@ -64,10 +64,6 @@ TPCompilerReal,
          [m_iso,m_tp_procvar,m_duplicate_names,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_isolike_io,
           m_isolike_program_para,
           m_isolike_mod];
-       ExtPasModeSwitches =
-         [m_extpas,m_tp_procvar,m_duplicate_names,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_isolike_io,
-          m_isolike_program_para,
-          m_isolike_mod];
 
        { maximum nesting of routines }
        MaxNesting = 32;
@@ -78,7 +74,6 @@ TPCompilerReal,
 
        TreeLogFileName = 'tree.log';
 
-{$ifdef FPC_LITTLE_ENDIAN}
        MathQNaN : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,252,255));
        MathInf : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,240,127));
        MathNegInf : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,240,255));
@@ -86,15 +81,6 @@ TPCompilerReal,
        MathNegZero : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,0,128));
        MathPi : TCompDoubleRec = (Bytes : (24,45,68,84,251,33,9,64));
        MathPiExtended : TCompExtendedRec = (Bytes : (53,194,104,33,162,218,15,201,0,64));
-{$else FPC_LITTLE_ENDIAN}
-       MathQNaN : TCompDoubleRec = (Bytes : (255,252,0,0,0,0,0,0));
-       MathInf : TCompDoubleRec = (Bytes : (127,240,0,0,0,0,0,0));
-       MathNegInf : TCompDoubleRec = (Bytes : (255,240,0,0,0,0,0,0));
-       MathPosZero : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : TCompDoubleRec = (Bytes : (128,0,0,0,0,0,0,0));
-       MathPi : TCompDoubleRec =  (Bytes : (64,9,33,251,84,68,45,24));
-       MathPiExtended : TCompExtendedRec = (Bytes : (64,0,201,15,218,162,33,104,194,53));
-{$endif FPC_LITTLE_ENDIAN}
 
        CP_UTF8 = 65001;
        CP_UTF16LE = 1200;

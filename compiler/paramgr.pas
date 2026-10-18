@@ -496,11 +496,6 @@ implementation
             NewParaLoc:=CGPara.Add_Location;
             NewParaLoc^.Size:=ParaLoc^.Size;
             NewParaLoc^.Def:=ParaLoc^.Def;
-            { shiftval overlaps with part of the reference, so it may be
-              different from 0 and if wr then force the newparaloc to a register
-              in the optimization below, shiftval will remain <> 0 }
-            if not(ParaLoc^.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-              NewParaLoc^.ShiftVal:=ParaLoc^.ShiftVal;
             { $warning maybe release this optimization for all targets?  }
             { released for all CPUs:
               i386 isn't affected anyways because it uses the stack to push parameters
@@ -773,8 +768,7 @@ implementation
         else
           begin
             Reg:=TRegisterRec(ParaLoc^.Register);
-            { use sign extension }
-            Result.Offset:=ParaLoc^.ShiftVal;
+            Result.Offset:=0;
             Result.LocType:=$00;
           end;
         case Reg.RegType of

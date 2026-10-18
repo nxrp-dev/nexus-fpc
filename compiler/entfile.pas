@@ -254,7 +254,6 @@ type
   public
     EntryTyp : Byte;
     Size             : Integer;
-    ChangeEndian    : Boolean; { Used in ppudump util }
 {$ifdef generic_cpu}
     HasMore,
 {$endif not generic_cpu}
@@ -366,7 +365,6 @@ constructor TEntryFile.Create(const FN:string
 begin
   FName:=FN;
   FIsFile:=False;
-  ChangeEndian:=False;
   Mode:=0;
   NewHeader;
   Error:=False;
@@ -566,8 +564,6 @@ begin
      SkipData(Entry.Size-EntryIdx);
     end;
   ReadData(Entry,SizeOf(TEntry));
-  if ChangeEndian then
-    Entry.Size:=SwapEndian(Entry.Size);
   EntryStart:=BufferedPosition;
   EntryIdx:=0;
 {$ifdef generic_cpu}
@@ -683,8 +679,6 @@ begin
     end
   else
     ReadData(Result,SizeOf(Word));
-  if ChangeEndian then
-   Result:=SwapEndian(Result);
   Inc(EntryIdx,2);
 end;
 
@@ -704,8 +698,6 @@ begin
     end
   else
     ReadData(Result,SizeOf(LongInt));
-  if ChangeEndian then
-   Result:=SwapEndian(Result);
   Inc(EntryIdx,4);
 end;
 
@@ -725,8 +717,6 @@ begin
     end
   else
     ReadData(Result,SizeOf(DWord));
-  if ChangeEndian then
-   Result:=SwapEndian(Result);
   Inc(EntryIdx,4);
 end;
 
@@ -746,8 +736,6 @@ begin
     end
   else
     ReadData(Result,SizeOf(Int64));
-  if ChangeEndian then
-   Result:=SwapEndian(Result);
   Inc(EntryIdx,8);
 end;
 
@@ -767,8 +755,6 @@ begin
     end
   else
     ReadData(Result,SizeOf(QWord));
-  if ChangeEndian then
-   Result:=SwapEndian(Result);
   Inc(EntryIdx,8);
 end;
 
@@ -1034,13 +1020,8 @@ end;
 
 
 procedure TEntryFile.GetSet(out Arr: array of Byte);
-var
-  I : LongInt;
 begin
   GetData(Arr,SizeOf(Arr));
-  if ChangeEndian then
-    for I:=Low(Arr) to High(Arr) do
-      Arr[I]:=Reverse_Byte(Arr[I]);
 end;
 
 

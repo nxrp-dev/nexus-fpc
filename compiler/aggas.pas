@@ -74,8 +74,6 @@ interface
         procedure WriteInstruction(hp: TAI);
         procedure WriteWeakSymbolRef(s: TAsmSymbol); virtual;
         procedure WriteHiddenSymbol(sym: TAsmSymbol);
-        procedure WriteAixStringConst(hp: TAIString);
-        procedure WriteAixIntConst(hp: TAIConst);
         procedure WriteUnalignedIntConst(hp: TAIConst);
         procedure WriteDirectiveName(dir: TAsmDirective); virtual;
        public
@@ -1032,17 +1030,10 @@ implementation
                         InternalError(200404292);
                       begin
                           writer.AsmWrite(ait_const2str[aitconst_32bit]);
-                          if TargetInfo.endian = endian_little then
-                            begin
+                          begin
                               writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).Value))));
                               writer.AsmWrite(',');
                               writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).Value))));
-                            end
-                          else
-                            begin
-                              writer.AsmWrite(ToStr(LongInt(hi(TAIConst(hp).Value))));
-                              writer.AsmWrite(',');
-                              writer.AsmWrite(ToStr(LongInt(lo(TAIConst(hp).Value))));
                             end;
                         end;
                       writer.AsmLn;
@@ -1543,134 +1534,13 @@ implementation
       end;
 
 
-    procedure TGNUAssembler.WriteAixStringConst(hp: TAIString);
-      type
-        TTerminationKind = (term_none,term_string,term_nostring);
-
-      var
-        i: LongInt;
-        pos: LongInt;
-        s: string;
-        ch: char;
-        instring: boolean;
-
-      procedure newstatement(terminationkind: TTerminationKind);
-        begin
-          case terminationkind of
-            term_none: ;
-            term_string:
-              writer.AsmWriteLn('"');
-            term_nostring:
-              writer.AsmLn;
-          end;
-          writer.AsmWrite(#9'.byte'#9);
-          pos:=20;
-          instring:=false;
-        end;
-
-      begin
-        pos:=0;
-        instring:=false;
-        for i:=1 to hp.len do
-          begin
-            if pos=0 then
-              newstatement(term_none);
-            ch:=hp.str[i-1];
-            case ch of
-              #0..#31,
-              #127..#255 :
-                begin
-                  if instring then
-                    newstatement(term_string);
-                  if pos=20 then
-                    s:=ToStr(ord(ch))
-                  else
-                    s:=', '+ToStr(ord(ch))
-                end;
-              '"' :
-                if instring then
-                  s:='""'
-                else
-                  begin
-                    if pos<>20 then
-                      newstatement(term_nostring);
-                    s:='"""';
-                    instring:=true;
-                  end;
-              else
-                if not instring then
-                  begin
-                    if (pos<>20) then
-                      newstatement(term_nostring);
-                    s:='"'+ch;
-                    instring:=true;
-                  end
-                else
-                  s:=ch;
-            end;
-            writer.AsmWrite(s);
-            inc(pos,length(s));
-            if (pos>line_length) or (i=TAIString(hp).len) then
-              begin
-                if instring then
-                  writer.AsmWriteLn('"')
-                else
-                  writer.AsmLn;
-                pos:=0;
-              end;
-         end;
-      end;
-
-
-    procedure TGNUAssembler.WriteAixIntConst(hp: TAIConst);
-      var
-        pos, size: LongInt;
-      begin
-        { only big endian AIX supported for now }
-        if TargetInfo.endian<>endian_big then
-          InternalError(2012010401);
-        { limitation: can only write 4 bytes at a time }
-        pos:=0;
-        size:=TAIConst(hp).Size;
-        while pos<(size-4) do
-          begin
-            writer.AsmWrite(#9'.vbyte'#9'4, ');
-            writer.AsmWriteln(ToStr(LongInt(TAIConst(hp).Value shr ((size-pos-4)*8))));
-            inc(pos,4);
-         end;
-        writer.AsmWrite(#9'.vbyte'#9);
-        writer.AsmWrite(ToStr(size-pos));
-        writer.AsmWrite(', ');
-        case size-pos of
-          1: writer.AsmWrite(ToStr(byte(TAIConst(hp).Value)));
-          2: writer.AsmWrite(ToStr(word(TAIConst(hp).Value)));
-          4: writer.AsmWrite(ToStr(LongInt(TAIConst(hp).Value)));
-          else
-            InternalError(2012010402);
-        end;
-      end;
-
     procedure TGNUAssembler.WriteUnalignedIntConst(hp: TAIConst);
       var
         pos, size: LongInt;
       begin
         size:=TAIConst(hp).Size;
         writer.AsmWrite(#9'.byte'#9);
-        if TargetInfo.endian=endian_big then
-          begin
-            pos:=size-1;
-            while pos>=0 do
-              begin
-                writer.AsmWrite(ToStr((TAIConst(hp).Value shr (pos*8)) and $ff));
-                dec(pos);
-                if pos>=0 then
-                  writer.AsmWrite(', ')
-                else
-                  writer.AsmLn;
-              end;
-          end
-        else
-          begin
+        begin
             pos:=0;
             while pos<size do
               begin

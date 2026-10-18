@@ -74,7 +74,6 @@ unit i_win;
             res          : res_coff;
             dbg          : dbg_dwarf3;
             script       : script_dos;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 16;
@@ -144,7 +143,6 @@ unit i_win;
             res          : res_coff;
             dbg          : dbg_dwarf3;
             script       : script_dos;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 16;
@@ -214,7 +212,6 @@ unit i_win;
             res          : res_coff;
             dbg          : dbg_dwarf3;
             script       : script_dos;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 8;

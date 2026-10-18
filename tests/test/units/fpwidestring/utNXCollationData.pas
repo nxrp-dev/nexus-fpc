@@ -9,7 +9,7 @@ procedure LoadCollationData(AStream: TMemoryStream;
   const AArchiveName, AEntryName: string);
 
 implementation
-uses SysUtils, Zipper;
+uses SysUtils, PasZLibIO;
 
 type
   TCollationExtractor = class(TUnZipper)

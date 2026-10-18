@@ -311,7 +311,6 @@ begin
   b := a;
   c := b;
 
-{$IFDEF ENDIAN_LITTLE}
   if (u.i and $3) = 0 then
   begin
     while (ALength > 12) do
@@ -422,7 +421,6 @@ begin
     end;
   end
   else
-{$ENDIF}
   begin
     while ALength > 12 do
     begin
@@ -513,7 +511,6 @@ begin
   c := b;
   c += ASecondaryHashAndInitVal;
 
-{$IFDEF ENDIAN_LITTLE}
   if (u.i and $3) = 0 then
   begin
     while (ALength > 12) do
@@ -634,7 +631,6 @@ begin
     end;
   end
   else
-{$ENDIF}
   begin
     while ALength > 12 do
     begin
@@ -717,7 +713,6 @@ begin
   c := b;
   c += ASecondaryHashAndInitVal;
 
-{$IFDEF ENDIAN_LITTLE}
   if (u.i and $3) = 0 then
   begin
     while (ALength > 12) do
@@ -838,7 +833,6 @@ begin
     end;
   end
   else
-{$ENDIF}
   begin
     while ALength > 12 do
     begin
@@ -917,7 +911,6 @@ begin
   b := a;
   c := b;
 
-{.$IFDEF ENDIAN_LITTLE} // Delphi version don't care
   if (u.i and $3) = 0 then
   begin
     while (ALength > 12) do

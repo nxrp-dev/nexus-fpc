@@ -1,26 +1,35 @@
 # Nexus PasZLib
 
-This is the authoritative PasZLib source for Nexus, including compiler bootstrap,
-release tools and applications. The duplicate External Packages copy was retired
-on 2026-10-17 by owner direction. Keep one source tree here for now.
+The authoritative runtime source is directly in NexusFPC `rtl/objpas`:
 
-Use `src` in unit/include search paths together with the matching NexusFPC RTL
-only. CRC32 is private to this source closure; neither legacy hashing packages
-nor HashLib4Pascal are dependencies, including tests. Existing build recipes select this directory through
-`Tools.NexusFPC.SourcePath`. Do not mix units from another PasZLib copy.
+- `paszlib.pas`: in-memory zlib compression, decompression and Adler32.
+- `paszlibio.pas`: compressed streams, gzip files and ZIP/Zip64 archives.
+- `crc32.pas`: the shared IEEE CRC32 table and update routines used by the
+  compiler and compression code.
 
-`tests/PasZLibTests.nxproject` builds direct nxtest CRC32/window/header regressions
-and the retained stream-seek, ZIP/Zip64 and single-entry extraction checks through
-Nexus nxbuild. The nxtest executable is `NXPasZLibTests`. Build output is in Nexus
-`output/PasZLibTests/<native-target>`. Run with `tests/test.zip` in a disposable
-working directory and place temporary files there. The full ZIP suite includes
-a deliberately large 65,537-entry case.
+Use `PasZLib` for the buffer/stream-state API, `PasZLibIO` for stream classes
+and archive/file APIs, and `CRC32` for direct checksums. Current source consumers
+select `rtl/objpas` through `Tools.NexusFPC.SourcePath`; no separate compression
+package or compatibility units are required. The old split units and their
+namespace wrappers have been removed. Dotted origins now belong to the RTL's
+namespace map. No legacy hash or HashLib4Pascal dependency is introduced.
 
-Examples are centralized in Nexus Lab `examples/data/compression/paszlib`, with
-one native `PasZLibExamples.nxproject` recipe. See [the reconciliation record](CONSOLIDATION.md)
-for comparison decisions, native checks and limits.
+The bootstrap retains its existing stages and options. Its source locations and
+file-selection masks select the relocated units. The stock FPC 3.2.2 seed remains
+supported. Runtime units compile from the selected matching RTL and source, as
+they did before consolidation; this change adds no SDK/bootstrap stages.
 
-Original legal text remains in `readme.txt`, the runtime source headers,
-`../COPYING.FPC` and `../../rtl/COPYING.txt`. Upstream authors, import history,
-current ownership and retired-copy history are maintained in the
-[central attribution record](../../../nexus/ATTRIBUTIONS.md#paszlib).
+`tests/PasZLibTests.nxproject` builds direct nxtest compression/CRC32 regressions
+and retained stream-seek, ZIP/Zip64 and single-entry checks through nxbuild. Run
+with `tests/test.zip` in a disposable directory under the development worktree.
+The full ZIP suite includes 65,537 entries.
+`tests/ReadOnlyGzipTests.nxproject` checks the retained `NO_DEFLATE` gzip-file
+configuration, including rejected write opens and stream writes. Generated files belong in worktree,
+never the source checkout. Examples remain in Nexus Lab
+`examples/data/compression/paszlib`.
+
+Original legal text remains in `readme.txt`, the RTL source headers,
+`../COPYING.FPC` and `../../rtl/COPYING.txt`. See the
+[central attribution record](../../../nexus/ATTRIBUTIONS.md#paszlib),
+[earlier reconciliation](CONSOLIDATION.md) and
+[RTL consolidation review](../../rtl/objpas/paszlib-consolidation.md).

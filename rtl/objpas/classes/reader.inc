@@ -409,38 +409,24 @@ end;
 function TBinaryObjectReader.ReadWideString: WideString;
 var
   len: DWord;
-{$IFDEF ENDIAN_BIG}
-  i : integer;
-{$ENDIF}
 begin
   len := ReadDWord;
   SetLength(Result, len);
   if (len > 0) then
   begin
     Read(Pointer(@Result[1])^, len*2);
-    {$IFDEF ENDIAN_BIG}
-    for i:=1 to len do
-      Result[i]:=widechar(SwapEndian(word(Result[i])));
-    {$ENDIF}
   end;
 end;
 
 function TBinaryObjectReader.ReadUnicodeString: UnicodeString;
 var
   len: DWord;
-{$IFDEF ENDIAN_BIG}
-  i : integer;
-{$ENDIF}
 begin
   len := ReadDWord;
   SetLength(Result, len);
   if (len > 0) then
   begin
     Read(Pointer(@Result[1])^, len*2);
-    {$IFDEF ENDIAN_BIG}
-    for i:=1 to len do
-      Result[i]:=UnicodeChar(SwapEndian(word(Result[i])));
-    {$ENDIF}
   end;
 end;
 

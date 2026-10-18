@@ -14,9 +14,6 @@ program tb0659f;
 {$ifndef FPC_ISO}
 {$fatal FPC_ISO not defined}
 {$endif}
-{$ifdef FPC_EXTENDEDPASCAL}
-{$fatal FPC_EXTENDEDPASCAL defined}
-{$endif}
 
 begin
 end.

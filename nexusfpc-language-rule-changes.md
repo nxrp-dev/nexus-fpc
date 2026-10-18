@@ -752,6 +752,38 @@ fails the positive fractional round trip.
 
 - 2026-10-17: Retired at the project owner's direction.
 
+## NXLR-0011: Retire Extended Pascal mode
+
+- Status: Implemented
+- Decision date: 2026-10-18
+- Implemented in: Current worktree
+- Released in: Not released
+- Applies to: Extended Pascal mode on every target
+- Supersedes: Extended Pascal participation in NXLR-0008
+
+### Rule and diagnostics
+
+Extended Pascal is no longer a compiler language mode. The former
+`-Mextendedpascal` selection receives the normal illegal-parameter diagnostic.
+`{$mode extendedpascal}` receives the same warning as an arbitrary unknown
+mode; `-Sew` promotes that warning to an error. No special retired-mode handler
+is retained. The compiler no longer predefines `FPC_EXTENDEDPASCAL`.
+
+### Implementation and tests
+
+Remove the mode preset, parser/keyword membership, automatic RTL imports,
+`ExtPas` unit, target build entries and nxbuild language selection. Preserve
+shared ISO behavior and serialized bit positions of surviving mode switches.
+Remove fixtures specific to the retired dialect; existing ISO counterparts
+retain the shared case-statement and coverage behavior. The C-operator and
+retired-SYSCALL scripts continue to cover every surviving language mode.
+`Run-NXRemovedExtendedPascalTests.sh` compares the retired name with an arbitrary
+unknown mode through command-line, source-directive and warning-as-error paths.
+
+### Decision history
+
+- 2026-10-18: Retired at the project owner's direction.
+
 ## Change Record Format
 
 Copy this section for each proposed change. Assign identifiers sequentially in the form `NXLR-0001`.

@@ -17,7 +17,7 @@ program Bin2Obj;
 
 {$mode objfpc}
 
-uses Classes,GetOpts, IOStream,ZStream,IDEA,SysUtils,Dos;
+uses Classes,GetOpts, IOStream,PasZLibIO,IDEA,SysUtils,Dos;
 
 var
   ConstName,

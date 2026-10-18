@@ -2855,7 +2855,7 @@ const
                    the result also unsigned. This is compatible with Delphi (PFV) }
                  if Is_Signed(lLeftDef) or
                     Is_Signed(lRightDef) or
-                    (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) or
+                    (([m_iso]*CurrentSettings.ModeSwitches)<>[]) or
 
                     (NodeType=subn) then
                    begin

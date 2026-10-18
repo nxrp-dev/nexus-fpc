@@ -12,11 +12,7 @@ end;
 var
   p : p_int;
   r : packed record
-{$ifdef ENDIAN_BIG}
-        j,i : smallint;
-{$else}
         i,j : smallint;
-{$endif}
       end;
 
 begin

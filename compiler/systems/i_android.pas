@@ -72,7 +72,6 @@ unit i_android;
              res          : res_elf;
              dbg          : dbg_dwarf3;
              script       : script_unix;
-             endian       : endian_little;
              alignment    :
                (
                  ProcAlign       : 8;
@@ -139,7 +138,6 @@ unit i_android;
              res          : res_elf;
              dbg          : dbg_dwarf3;
              script       : script_unix;
-             endian       : endian_little;
              alignment    :
                (
                  ProcAlign       : 16;

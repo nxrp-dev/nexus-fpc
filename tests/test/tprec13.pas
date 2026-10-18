@@ -28,7 +28,7 @@ begin
       d:= 2;
       e:= -1;
     end { with };
-  if ( SizeOf ( r ) = 1 + SizeOf (Integer) ) and ( rb = {$ifdef FPC_BIG_ENDIAN} %01010111 {$else} %11110010 {$endif} ) then
+  if ( SizeOf ( r ) = 1 + SizeOf (Integer) ) and ( rb =  %11110010  ) then
     writeln ( 'OK' )
   else
     begin

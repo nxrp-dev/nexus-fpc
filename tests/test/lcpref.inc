@@ -31,9 +31,6 @@
   {$endif}
 {$endif}
 
-{$ifdef emx}
-  {$define FPC_HAS_UNDERSCORE_PREFIX}
-{$endif}
 
 {$ifdef go32v2}
   {$define FPC_HAS_UNDERSCORE_PREFIX}
@@ -43,9 +40,6 @@
   {$define FPC_HAS_UNDERSCORE_PREFIX}
 {$endif}
 
-{$ifdef os2}
-  {$define FPC_HAS_UNDERSCORE_PREFIX}
-{$endif}
 
 {$ifdef palmos}
   {$define FPC_HAS_UNDERSCORE_PREFIX}

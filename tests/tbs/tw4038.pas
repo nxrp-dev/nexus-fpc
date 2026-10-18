@@ -17,11 +17,7 @@ begin
   {$ifdef go32v2}
   s:=FileSearch('gecho.exe',GetEnvironmentVariable('PATH'));
   {$else go32v2}
-   {$IFDEF OS2}
-  s:=FileSearch('gecho.exe',GetEnvironmentVariable('PATH'));
-   {$ELSE OS2}
   s:='echo';
-   {$ENDIF OS2}
   {$endif go32v2}
  {$endif windows}
 {$endif}

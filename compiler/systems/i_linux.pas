@@ -72,7 +72,6 @@ unit i_linux;
             res          : res_elf;
             dbg          : dbg_dwarf3;
             script       : script_unix;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 16;
@@ -144,7 +143,6 @@ unit i_linux;
             res          : res_elf;
             dbg          : dbg_dwarf3;
             script       : script_unix;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 16;
@@ -220,7 +218,6 @@ unit i_linux;
             res          : res_elf;
             dbg          : dbg_dwarf3;
             script       : script_unix;
-            endian       : endian_little;
             alignment    :
               (
                 ProcAlign       : 8;

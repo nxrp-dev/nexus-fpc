@@ -2747,7 +2747,6 @@ S*2Aas_Assembla con GNU AS
 **1B_Costruisce tutti i moduli
 **1C<x>_Opzioni di generazione del codice:
 **2Ca<x>_Seleziona l'ABI, vedi fpc -i per i valori possibili
-**2Cb_Genera codice big-endian
 **2Cc<x>_Imposta la convenzione di chiamata di default a <x>
 **2Ce_Compilazione con opcode in virgola mobile emulati
 **2Cf<x>_Sceglie il set di istruzioni FPU, (vedi fpc -i)

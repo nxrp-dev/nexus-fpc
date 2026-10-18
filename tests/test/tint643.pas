@@ -6,11 +6,7 @@ uses
 
 type
    tqwordrec = packed record
-{$ifndef ENDIAN_BIG}
       low,high : dword;
-{$else}
-      high, low : dword;
-{$endif}
    end;
 
 procedure assignqword(h,l : dword;var q : qword);

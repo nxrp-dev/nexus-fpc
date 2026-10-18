@@ -802,7 +802,7 @@ implementation
          { only do in pass_1, so that simplify can run first and
              1) possibly simplify the case node without triggering a warning
              2) possibly give a compile-time error if not all cases are handled
-                in ISO/Extended Pascal mode }
+                in ISO Pascal mode }
          if Is_Ordinal(Left.ResultDef) then
            CheckOrdinalCoverage;
 
@@ -1020,7 +1020,7 @@ implementation
               Result:=ElseBlock.GetCopy
             else
               begin
-                if ([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[] then
+                if ([m_iso]*CurrentSettings.ModeSwitches)<>[] then
                   CGMessage1(cg_e_case_missing_value,ToStr(TOrdConstNode(Left).Value))
                 else
                   CGMessage(cg_w_case_incomplete);
@@ -1264,8 +1264,8 @@ implementation
               begin
                 { labels for some values of the operand are missing, and no else block is present }
                 CGMessage(cg_w_case_incomplete);
-                { in Standard/Extended Pascal, this is a dynamic violation error if it actually happens }
-                if ([m_extpas,m_iso]*CurrentSettings.ModeSwitches)<>[] then
+                { in ISO Pascal, this is a dynamic violation error if it actually happens }
+                if ([m_iso]*CurrentSettings.ModeSwitches)<>[] then
                   begin
                     ElseBlock:=CCallNode.CreateIntern('fpc_rangeerror',nil);
                     TypeCheckPass(ElseBlock);

@@ -388,12 +388,7 @@ unit charset;
 
     function LoadBinaryUnicodeMapping(const Directory, CPName : string) : PUnicodeMap;
       const
-        {$IFDEF ENDIAN_LITTLE}
           EndianSuffix = 'le';
-        {$ENDIF ENDIAN_LITTLE}
-        {$IFDEF ENDIAN_BIG}
-          EndianSuffix = 'be';
-        {$ENDIF ENDIAN_BIG}
       var
         FileName : string;
       begin

@@ -99,7 +99,6 @@ unit unicodedata;
 {$IFNDEF FPC}
   {$UNDEF HAS_COMPARE_BYTE}
   {$UNDEF HAS_PUSH}
-  {$DEFINE ENDIAN_LITTLE}
 {$ENDIF !FPC}
 
 {$SCOPEDENUMS ON}
@@ -221,11 +220,7 @@ type
 
   TUInt24Rec = packed record
   public
-  {$ifdef ENDIAN_LITTLE}
     a, b, c : Byte;
-  {$else ENDIAN_LITTLE}
-    c, b, a : Byte;
-  {$endif ENDIAN_LITTLE}
   public
     property byte0 : Byte read a write a;
     property byte1 : Byte read b write b;
@@ -272,11 +267,7 @@ type
 
 const
   ZERO_UINT24 : UInt24 =
-  {$ifdef ENDIAN_LITTLE}
     (a : 0; b : 0; c : 0;);
-  {$else ENDIAN_LITTLE}
-    (c : 0; b : 0; a : 0;);
-  {$endif ENDIAN_LITTLE}
 
 type
   PUC_Prop = ^TUC_Prop;
@@ -618,14 +609,8 @@ type
   TEndianKind = (Little, Big);
 const
   ENDIAN_SUFFIX : array[TEndianKind] of UnicodeString = ('le','be');
-{$IFDEF ENDIAN_LITTLE}
   ENDIAN_NATIVE     = TEndianKind.Little;
   ENDIAN_NON_NATIVE = TEndianKind.Big;
-{$ENDIF ENDIAN_LITTLE}
-{$IFDEF ENDIAN_BIG}
-  ENDIAN_NATIVE = TEndianKind.Big;
-  ENDIAN_NON_NATIVE = TEndianKind.Little;
-{$ENDIF ENDIAN_BIG}
 
 resourcestring
   SCollationNotFound = 'Collation not found : "%s".';
@@ -635,19 +620,11 @@ implementation
 type
 
   TCardinalRec = packed record
-  {$ifdef ENDIAN_LITTLE}
     byte0, byte1, byte2, byte3 : Byte;
-  {$else ENDIAN_LITTLE}
-    byte3, byte2, byte1, byte0 : Byte;
-  {$endif ENDIAN_LITTLE}
   end;
 
   TWordRec = packed record
-  {$ifdef ENDIAN_LITTLE}
     byte0, byte1 : Byte;
-  {$else ENDIAN_LITTLE}
-    byte1, byte0 : Byte;
-  {$endif ENDIAN_LITTLE}
   end;
 
 const
@@ -1597,12 +1574,7 @@ begin
 end;
 
 {$INCLUDE unicodedata.inc}
-{$IFDEF ENDIAN_LITTLE}
   {$INCLUDE unicodedata_le.inc}
-{$ENDIF ENDIAN_LITTLE}
-{$IFDEF ENDIAN_BIG}
-  {$INCLUDE unicodedata_be.inc}
-{$ENDIF ENDIAN_BIG}
 
 procedure FromUCS4(const AValue : UCS4Char; out AHighS, ALowS : UnicodeChar);
 begin

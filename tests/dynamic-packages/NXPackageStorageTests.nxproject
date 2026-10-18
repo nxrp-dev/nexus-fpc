@@ -16,7 +16,7 @@ Project NXPackageStorageTests {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
             UnitPaths: [@Tools.Native.RTLPath,
                 "packages/nexus-packages/nxtest/src",
-                "../nexus-fpc/compiler", "../nexus-fpc/packages/paszlib/src"];
+                "../nexus-fpc/compiler", "../nexus-fpc/rtl/objpas"];
         }
     }
 }

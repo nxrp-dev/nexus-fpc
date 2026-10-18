@@ -2633,7 +2633,7 @@ cg_n_no_inline=06058_N_Call to subroutine "$1" marked as inline is not inlined
 % the directive inline is ignored.
 cg_e_case_missing_value=06059_E_Case statement does not handle ordinal value "$1", and no else/otherwise statement is present.
 # The case statement does not handle the specified value and does not have an else/otherwise statement, and the compiler determined
-# that this value can be passed to the case statement. This is a compile-time error in ISO and Extended Pascal.
+# that this value can be passed to the case statement. This is a compile-time error in ISO Pascal.
 cg_w_case_incomplete=06060_W_Case statement does not handle all possible cases
 % The case statement does not contain labels for all possible values of the operand, and no else statement is present.
 cg_w_cannot_compile_subroutine=06061_W_The current subroutine "$1" cannot be compiled for the target CPU, creating dummy
@@ -3626,9 +3626,6 @@ option_subtarget_is_already_set=11065_W_Subtarget is already set to: $1
 option_subtarget_config_not_found=11066_E_Subtarget $1 specified but no corresponding config file $2 found.
 % Displayed if more than one \var{-t} option is specified.
 % Displayed if more than one \var{-t} option is specified.
-option_switch_bin_to_src_assembler_cross_endian=11068_N_Switching assembler to default source writing assembler in cross-endian configuration
-% This notifies you that the assembler has been changed because
-% the binary assembler writer is not yet ready for cross-endian configuration.
 option_e_win16_unsupported_memory_model=11069_W_Unsupported memory model $1 for Win16 OS
 % i8086-win16 system only supports large and huge memory models.
 option_n_win16_set_default_large_memory_model=11070_N_Setting memory model for Win16 system to "large"
@@ -3960,7 +3957,6 @@ x*2Aas_Assemble using GNU AS
 **1C<x>_Code generation options:
 **2C3_Turn on IEEE error checking for constants
 **2Ca<x>_Select ABI; see fpc -i or fpc -ia for possible values
-**2Cb_Generate code for a big-endian variant of the target architecture
 **2Cc<x>_Set default calling convention to <x>
 V*2CC_Use compact vector table
 V*2Cd<x>_Discard selected RTL startup sections (use with caution)
@@ -4068,7 +4064,6 @@ A*2CV<x>_Set section threadvar model to <x>
 **1M<x>_Set language mode to <x> / enable modeswitch <x> (see option -im)
 **2Mdelphi_Delphi 7 compatibility mode
 **2Mdelphiunicode_Delphi 2009 and later compatibility mode
-**2Mextendedpascal_ISO 10206 mode
 **2Mfpc_Free Pascal dialect (default)
 **2Miso_ISO 7185 mode
 **2Mmacpas_Macintosh Pascal dialects compatibility mode

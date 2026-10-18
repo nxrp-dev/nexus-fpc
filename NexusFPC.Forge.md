@@ -45,6 +45,22 @@ its tools must be on PATH. The Android configuration uses the installed NDK
 at `C:\android\ndk\25.2.9519653`; its Clang executable and FPC
 `CompilerUtilitiesPath` are set in `NexusFPC.Forge.Config.nxscript`.
 
+All supported hosts and targets are little-endian. The target byte-order
+selector `-Cb` (including `-Cb+` and `-Cb-`) is retired and uses the ordinary
+illegal-parameter diagnostic. Big-endian platform macros and nxbuild's
+`BigEndianCode` option are removed. NXU/NXP readers reject non-little-endian
+metadata; existing little-endian flag positions and metadata layouts remain
+unchanged. Network byte order, UTF-16BE, GUID and other data-format conversions
+remain available. Check with
+`bash tests/switches/Run-NXRemovedBigEndianTests.sh <compiler> <rtl-units>
+<compiler-units> <output>`.
+
+Extended Pascal mode and its `ExtPas` RTL unit are retired. `-Mextendedpascal`
+uses the ordinary illegal-parameter diagnostic; `{$mode extendedpascal}` uses
+ordinary unknown-mode handling, including `-Sew`. ISO mode remains supported.
+Check with `bash tests/switches/Run-NXRemovedExtendedPascalTests.sh <compiler>
+<rtl-units> <output>`.
+
 All supported targets provide floating-point support. `-CfNONE` and
 `{$FPUTYPE NONE}` are no longer supported; they receive the existing invalid
 FPU-option/value diagnostics. Other `-Cf` selections retain their meanings.

@@ -121,20 +121,12 @@ uses
 
 function FCC(const literal: string): LongWord; {$ifdef systeminline}inline;{$endif}
 begin
-{$ifdef FPC_LITTLE_ENDIAN}
   FCC := (ord(literal[1]) shl 24) or (ord(literal[2]) shl 16) or (ord(literal[3]) shl 8) or ord(literal[4]);
-{$else FPC_LITTLE_ENDIAN}
-  FCC := PLongWord(@literal[1])^;
-{$endif FPC_LITTLE_ENDIAN}
 end;
 
 function FOUR_CHAR_CODE(const literal: string): LongWord; {$ifdef systeminline}inline;{$endif}
 begin
-{$ifdef FPC_LITTLE_ENDIAN}
   FOUR_CHAR_CODE := (ord(literal[1]) shl 24) or (ord(literal[2]) shl 16) or (ord(literal[3]) shl 8) or ord(literal[4]);
-{$else FPC_LITTLE_ENDIAN}
-  FOUR_CHAR_CODE := PLongWord(@literal[1])^;
-{$endif FPC_LITTLE_ENDIAN}
 end;
 
 Function Member (Instance : TObject; AClass : TClass) : boolean; {$ifdef systeminline}inline;{$endif}

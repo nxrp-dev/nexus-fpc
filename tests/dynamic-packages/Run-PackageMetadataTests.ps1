@@ -97,7 +97,7 @@ function Mutate([byte[]]$Data,[int]$Offset,[string]$Format,$Value){
 }
 Read-Case 'independent-empty-v4' (Fixture Case)
 Read-Case 'independent-two-units-v4' (Fixture Case @() @('UX','UY'))
-Read-Case 'opposite-endian-metadata-v4' (Fixture Case @() @('UX') $true)
+Reject 'opposite-endian-metadata-v4' (Fixture Case @() @('UX') $true) "Can't find package"
 Read-Case 'metadata-over-buffer-boundary' (Fixture Case @(0..1599 | ForEach-Object {'Required{0:D4}' -f $_}))
 Save D @() @('UX'); Save B @('D'); Save C @('d'); Save A @('B','C')
 $null=Invoke-TestProcess diamond $lDriver @('graph',$lFixtures,'A') 0 'PASS graph 4'
@@ -144,7 +144,7 @@ Reject empty-contained-name (Fixture Case @() @(''))
 $lFirst=[BitConverter]::ToInt32($lBase,$lOffsets[243][1])
 $b=$lBase.Clone(); [Text.Encoding]::ASCII.GetBytes('PPU').CopyTo($b,$lFirst)
 Reject foreign-embedded-unit-same-version $b 'requires NexusFPC NXU signature'
-foreach($c in @(@('ppu-magic',0,'B',0),@('ppu-version',3,'B',57),@('ppu-cpu',8,'H',65535),@('ppu-target',10,'H',65535),@('ppu-size',16,'U',[uint32]::MaxValue))){
+foreach($c in @(@('ppu-magic',0,'B',0),@('ppu-version',3,'B',57),@('ppu-cpu',8,'H',65535),@('ppu-target',10,'H',65535),@('ppu-byte-order',12,'U',4),@('ppu-size',16,'U',[uint32]::MaxValue))){
     Reject $c[0] (Mutate $lBase ($lFirst+$c[1]) $c[2] $c[3])
 }
 Reject truncated-embedded-ppu ([byte[]]$lBase[0..($lFirst+39)])

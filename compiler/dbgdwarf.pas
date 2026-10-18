@@ -1430,8 +1430,7 @@ implementation
                         of the high order bit of a value of the given type
                         from the high order bit of the storage unit used to
                         contain that value." }
-                    if TargetInfo.endian=endian_little then
-                      append_attribute(DW_AT_bit_offset,DW_FORM_data1,[(def.Size-10)*8]);
+                    append_attribute(DW_AT_bit_offset,DW_FORM_data1,[(def.Size-10)*8]);
                   end;
               end
             else
@@ -2409,11 +2408,9 @@ implementation
 {$warn 6018 off}            { Unreachable code due to compile time evaluation }
                             TempList.concat(TAIConst.Create_type_name(aitconst_dtpoff,sym.MangledName,0));
                             { so far, aitconst_dtpoff is solely 32 bit }
-                            if (sizeof(PUint)=8) and (TargetInfo.endian=endian_little) then
+                            if sizeof ( PUint ) = 8 then
                               TempList.concat(TAIConst.create_32bit(0));
                             TempList.concat(TAIConst.create_8bit(ord(DW_OP_GNU_push_tls_address)));
-                            if (sizeof(PUint)=8) and (TargetInfo.endian=endian_big) then
-                              TempList.concat(TAIConst.create_32bit(0));
 {$pop}
 
                             blocksize:=2+sizeof(PUint);
@@ -2660,8 +2657,7 @@ implementation
             FieldOffset:=(sym.FieldOffset div (fieldnatsize*8)) * fieldnatsize;
             inc(FieldOffset,offset);
             BitOffset:=sym.FieldOffset mod (fieldnatsize*8);
-            if (TargetInfo.endian=endian_little) then
-              BitOffset:=(fieldnatsize*8)-BitOffset-sym.vardef.PackedBitSize;
+            BitOffset:=(fieldnatsize*8)-BitOffset-sym.vardef.PackedBitSize;
             append_entry(DW_TAG_member,false,[
               DW_AT_name,DW_FORM_string,symname(sym, false)+#0,
               { gcc also generates both a bit and byte size attribute }
@@ -2779,8 +2775,6 @@ implementation
               while (i<size) do
                 begin
                   b:=PByte(sym.Value.ValuePtr+i)^;
-                  if (TargetInfo.endian<>SourceInfo.endian) then
-                    b:=Reverse_Byte(b);
 		  CurrentAsmData.asmlists[al_dwarf_info].concat(TAIConst.create_8bit(b));
                   inc(i);
                 end;

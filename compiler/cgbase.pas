@@ -237,15 +237,9 @@ interface
         TRegisterHighEnum := High(LongInt)
       );
       TRegisterRec=packed record
-{$ifdef FPC_BIG_ENDIAN}
-         RegType : TRegisterType;
-         SubReg  : TSubRegister;
-         SupReg  : TSuperRegister;
-{$else FPC_BIG_ENDIAN}
          SupReg  : TSuperRegister;
          SubReg  : TSubRegister;
          RegType : TRegisterType;
-{$endif FPC_BIG_ENDIAN}
       end;
 
       { A type to store register locations for 64 Bit values. }

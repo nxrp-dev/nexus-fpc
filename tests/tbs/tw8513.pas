@@ -33,19 +33,11 @@ begin
     specially optimized versions (e.g. FillChar(..., ItemAsByte)
     can be used in this case to fill the array of TMyType). }
 
-{$ifdef FPC_BIG_ENDIAN}
-  item:=$deadbeef;
-{$else}
   item:=$efbeadde;
-{$endif}
   if (itemasbyte <> $de) then
     halt(1);
 
-{$ifdef FPC_BIG_ENDIAN}
-  if (itemasword <> $dead) then
-{$else}
   if (itemasword <> $adde) then
-{$endif}
     halt(3);
 
   r.a := $de;

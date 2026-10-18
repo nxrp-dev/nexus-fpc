@@ -32,10 +32,10 @@ Group ReleaseTools {
         IncludeMasks: ["*.pas", "*.inc"];
     }
     CopyFile Stage_paszlib {
-        Source: "packages/paszlib/src";
+        Source: "rtl/objpas";
         Destination: "build/forge-bootstrap/tools/packages/paszlib/src";
         Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc"];
+        IncludeMasks: ["crc32.pas", "paszlib.pas", "paszlibio.pas"];
     }
     CreateDirectory Units_fpc { Path: "build/forge-bootstrap/tools/units/fpc"; }
     FPC Build_fpc (HostTool) {

@@ -185,16 +185,7 @@ implementation
       var
         lReg: TRegister;
       begin
-        { emit bit test operation -- warning: do not use
-          location_force_reg() to force a set into a register, except
-          to a register of the same size as the set. The reason is
-          that on big endian systems, this would require moving the
-          set to the most significant part of the new register,
-          and location_force_register can't do that (it does not
-          know the type).
 
-         a_bit_test_reg_loc_reg() properly takes into account the
-         size of the set to adjust the register index to test }
         hlcg.A_Bit_Test_Reg_Loc_Reg(CurrentAsmData.CurrAsmList,
           AUnsignedOpDef, Right.ResultDef, AUnsignedOpDef,
           Left.Location.Register, Right.Location, Location.Register);

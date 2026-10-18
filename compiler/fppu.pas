@@ -29,7 +29,7 @@ interface
     uses
       CMsgs,Verbose,
       CUtils,CClasses,CStreams,
-      GlobType,Globals,GlobStat,FPCHash,FinPut,FModule,
+      GlobType,Globals,GlobStat,CRC32,FinPut,FModule,
       SymBase,PPU,SymType;
 
     type
@@ -396,7 +396,6 @@ var
         CRCFinal:=True;
         InterfaceCRC:=PPUFile.Header.InterfaceChecksum;
         IndirectCRC:=PPUFile.Header.IndirectChecksum;
-        ChangeEndian:=PPUFile.ChangeEndian;
       { Show Debug info }
         if PPUFileTime<>-1 then
           Message1(unit_u_ppu_time,FileTimeString(PPUFileTime))

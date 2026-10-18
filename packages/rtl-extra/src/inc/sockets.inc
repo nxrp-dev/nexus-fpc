@@ -237,40 +237,24 @@ type thostaddr= packed array[1..4] of byte;
 
 function htonl( host : cardinal):cardinal; inline;overload;
 begin
-{$ifdef FPC_BIG_ENDIAN}
-  htonl:=host;
-{$else}
   htonl:=SwapEndian(host);
-{$endif}
 end;
 
 Function NToHl (Net : cardinal) : cardinal; inline;overload;
 begin
-{$ifdef FPC_BIG_ENDIAN}
-  ntohl:=net;
-{$else}
   ntohl:=SwapEndian(net);
-{$endif}
 end;
 
 function htons( host : word):word; inline;
 
 begin
-{$ifdef FPC_BIG_ENDIAN}
-  htons:=host;
-{$else}
   htons:=SwapEndian(host);
-{$endif}
 end;
 
 Function NToHs (Net : word):word; inline;
 
 begin
-{$ifdef FPC_BIG_ENDIAN}
-  ntohs:=net;
-{$else}
   ntohs:=SwapEndian(net);
-{$endif}
 end;
 
 Type array4int = array[1..4] of byte;

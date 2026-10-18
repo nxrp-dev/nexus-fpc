@@ -545,16 +545,7 @@ unit cpupara;
 
                    end;
 
-                 { in case it's a composite, "The argument is passed as though
-                   it had been loaded into the registers from a double-word-
-                   aligned address with an appropriate sequence of LDR
-                   instructions loading consecutive registers from memory" ->
-                   in case of big endian, values in not completely filled
-                   registers must be shifted to the top bits }
-                 if (TargetInfo.Endian=endian_big) and
-                    not(ParaLoc^.Size in [OS_64,OS_S64]) and
-                    (ParaDef.Typ in [SetDef,RecordDef,ArrayDef,ObjectDef]) then
-                   ParaLoc^.ShiftVal:=-(8-TCgSize2Size[ParaLoc^.Size])*8;
+
                end;
              LOC_MMREGISTER:
                begin
@@ -590,14 +581,8 @@ unit cpupara;
                   else
                     StackSlotLen:=Align(ParaLen,8);
 
-                  { from the ABI: if arguments occupy partial stack space, they
-                    have to occupy the lowest significant bits of a register
-                    containing that value which is then stored to memory ->
-                    in case of big endian, skip the alignment bytes (if any) }
-                  if TargetInfo.Endian=endian_little then
-                    ParaLoc^.Reference.Offset:=CurStackOffset
-                  else
-                    ParaLoc^.Reference.Offset:=CurStackOffset+StackSlotLen-ParaLen;
+
+                  ParaLoc^.Reference.Offset:=CurStackOffset;
                   if Side=CallerSide then
                     ParaLoc^.Reference.Index:=NR_STACK_POINTER_REG
                   else

@@ -461,13 +461,6 @@ implementation
         if m_iso in CurrentSettings.ModeSwitches then
           CheckAddUnit('iso7185');
 
-        if m_extpas in CurrentSettings.ModeSwitches then
-          begin
-            { basic procedures for Extended Pascal are for now provided by the iso unit }
-            CheckAddUnit('iso7185');
-            CheckAddUnit('extpas');
-          end;
-
         { blocks support? }
         if m_blocks in CurrentSettings.ModeSwitches then
           CheckAddUnit('blockrtl');

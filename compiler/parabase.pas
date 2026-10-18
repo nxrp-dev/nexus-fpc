@@ -51,27 +51,6 @@ unit parabase;
            LOC_CMMREGISTER,
            LOC_REGISTER,
            LOC_CREGISTER : (
-             {
-
-             * If shiftval > 0:
-
-             The number of bits the value in the register must be shifted to the left before
-             it can be stored to memory in the function prolog.
-             This is used for passing OS_NO memory blocks less than register size and of "odd"
-             (3, 5, 6, 7) size on big endian machines, so that small memory blocks passed via
-             registers are properly aligned.
-
-             E.g. the value $5544433 is passed in bits 40-63 of the register (others are zero),
-             but they should actually be stored in the first bits of the stack location reserved
-             for this value. So they have to be shifted left by this amount of bits before.
-
-             * if shiftval < 0:
-
-             Similar as above, but the shifting must always be done and
-               1) for all parameter sizes < regsize
-               2) on the caller side
-             }
-             ShiftVal : ShortInt;
              Register : TRegister);
        end;
 
@@ -126,7 +105,7 @@ unit parabase;
          LocType : Byte;
          RegSub : Byte;
          RegIndex : Word;
-         { either stack offset or shiftval }
+         { Stack offset; zero for register locations. }
          Offset : AInt;
        end;
 
@@ -253,13 +232,7 @@ implementation
                     InternalError(200408206);
                   if (Location^.Next^.Loc<>LOC_REGISTER) then
                     InternalError(200408207);
-                  if (TargetInfo.Endian = ENDIAN_BIG) then
-                    begin
-                      NewLoc.Register64.RegHi:=Location^.Register;
-                      NewLoc.Register64.RegLo:=Location^.Next^.Register;
-                    end
-                  else
-                    begin
+                  begin
                       NewLoc.Register64.RegLo:=Location^.Register;
                       NewLoc.Register64.RegHi:=Location^.Next^.Register;
                     end;
@@ -365,7 +338,7 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  PPUFile.PutByte(HParaLoc^.ShiftVal);
+                  PPUFile.PutByte(0); { Reserved parameter-alignment byte. }
                   PPUFile.PutLongInt(LongInt(HParaLoc^.Register));
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)
@@ -411,7 +384,7 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  HParaLoc^.ShiftVal:=PPUFile.GetByte;
+                  PPUFile.GetByte; { Reserved parameter-alignment byte. }
                   HParaLoc^.Register:=TRegister(PPUFile.GetLongInt);
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)

@@ -3556,7 +3556,6 @@ S*2Aas_Monta usando o GNU AS
 **1C<x>_Opções geração de código:
 **2C3<x>_Ligar verificação de erro IEEE para constantes
 **2Ca<x>_Seleciona ABI, veja fpc -i para possíveis valores
-**2Cb_Gera código 'big-endian'
 **2Cc<x>_Ajusta convenção de chamada para <x>
 **2Ce_Compilação com opcodes de ponto flutuante emulados
 **2Cf<x>_Seleciona conjunto de instruções fpu a usar, veja fpc -i para possíveis valores

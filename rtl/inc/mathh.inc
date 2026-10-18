@@ -145,11 +145,7 @@ procedure float_raise(i: TFPUExceptionMask);
         case byte of
           0: (Bytes : array[0..9] of Byte);
           1: (Words : array[0..4] of Word);
-{$ifdef ENDIAN_LITTLE}
           2: (Frac : QWord; _Exp: Word);
-{$else ENDIAN_LITTLE}
-          2: (_Exp: Word; Frac : QWord);
-{$endif ENDIAN_LITTLE}
           3: (Value: Extended);
       end;
 {$endif SUPPORT_EXTENDED}

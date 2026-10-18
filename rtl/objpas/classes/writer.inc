@@ -320,47 +320,25 @@ end;
 
 procedure TBinaryObjectWriter.WriteWideString(const Value: WideString);
 var len : longword;
-{$IFDEF ENDIAN_BIG}
-    i : integer;
-    ws : widestring;
-{$ENDIF}
 begin
   WriteValue(vaWString);
   len:=Length(Value);
   WriteDWord(len);
   if len > 0 then
   begin
-    {$IFDEF ENDIAN_BIG}
-    setlength(ws,len);
-    for i:=1 to len do
-      ws[i]:=widechar(SwapEndian(word(Value[i])));
-    Write(ws[1], len*sizeof(widechar));
-    {$ELSE}
     Write(Value[1], len*sizeof(widechar));
-    {$ENDIF}
   end;
 end;
 
 procedure TBinaryObjectWriter.WriteUnicodeString(const Value: UnicodeString);
 var len : longword;
-{$IFDEF ENDIAN_BIG}
-    i : integer;
-    us : UnicodeString;
-{$ENDIF}
 begin
   WriteValue(vaUString);
   len:=Length(Value);
   WriteDWord(len);
   if len > 0 then
   begin
-    {$IFDEF ENDIAN_BIG}
-    setlength(us,len);
-    for i:=1 to len do
-      us[i]:=widechar(SwapEndian(word(Value[i])));
-    Write(us[1], len*sizeof(UnicodeChar));
-    {$ELSE}
     Write(Value[1], len*sizeof(UnicodeChar));
-    {$ENDIF}
   end;
 end;
 

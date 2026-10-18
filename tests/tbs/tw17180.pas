@@ -8,16 +8,8 @@ program testbug;
  {$ifdef cpu386}
   {$asmmode intel}
  {$endif}
- {$ifdef FPC_LITTLE_ENDIAN}
-  {$define LITTLE_ENDIAN}
- {$else}
-  {$ifdef FPC_BIG_ENDIAN}
-   {$define BIG_ENDIAN}
-  {$endif}
- {$endif}
  {$define caninline}
 {$else}
- {$define LITTLE_ENDIAN}
  {$ifndef cpu64}
   {$define cpu32}
  {$endif}

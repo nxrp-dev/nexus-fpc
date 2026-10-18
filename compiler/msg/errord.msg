@@ -2646,7 +2646,7 @@ cg_n_no_inline=06058_N_Der Aufruf der Routine "$1" ist als "inline" markiert, wi
 % the directive inline is ignored.
 cg_e_case_missing_value=06059_E_Case-Anweisung behandelt den ordinalen Wert "$1" nicht und hat auch keine else/otherwise-Anweisung
 # The case statement does not handle the specified value and does not have an else/otherwise statement, and the compiler determined
-# that this value can be passed to the case statement. This is a compile-time error in ISO and Extended Pascal.
+# that this value can be passed to the case statement. This is a compile-time error in ISO Pascal.
 cg_w_case_incomplete=06060_W_Case-Anweisung deckt nicht alle mîglichen FÑlle ab und hat keine else-Anweisung
 % The case statement does not contain labels for all possible values of the operand, and no else statement is present.
 cg_w_cannot_compile_subroutine=06061_W_Die laufende Subroutine "$1" kann fÅr den Zielprozessor nicht Åbersetzt werden, erzeuge statt dessen ein Dummy
@@ -3286,8 +3286,6 @@ link_e_undefined_symbol_in_obj=09221_E_Nicht definiertes Symbol: $1 (Zuerst gese
 % The specified symbol is used, but not defined and was first seen in the specified object file.
 link_e_undefined_symbol=09222_E_Nicht definiertes Symbol: $1
 % The specified symbol is used, but not defined.
-link_w_unsupported_cross_endian_internal_linker=09223_W_Der interne Linker in cross-endian Konfiguration ist noch eine unfertige Baustelle
-% The internal linker does not correctly handle endianess conversion.
 link_f_executable_too_big_exceeds_X_by_Y_bytes=09224_F_Die Grî·e des ausfÅhrbaren Image ist fÅr das Zielsystem $1 zu gro· (Åberschreitet $2 um $3 Byte)
 % The result File is too big
 %
@@ -3700,9 +3698,6 @@ option_subtarget_is_already_set=11065_W_Subzielsystem is bereits auf $1 gesetzt
 % Displayed if more than one \var{-t} option is specified.
 option_subtarget_config_not_found=11066_E_Subzielsystem $1 angegeben, aber keine entsprechende Konfigurationsdatei $2 gefunden.
 % Displayed if more than one \var{-t} option is specified.
-option_switch_bin_to_src_assembler_cross_endian=11068_N_Schalte in der cross-endian Konfiguration um auf den voreingestellten, Quellcode-schreibenden Assembler
-% This notifies you that the assembler has been changed because
-% the binary assembler writer is not yet ready for cross-endian configuration.
 option_e_win16_unsupported_memory_model=11069_W_Nicht unterstÅtztes Speichermodell $1 fÅr das System Win16
 % i8086-win16 system only supports large and huge memory models.
 option_n_win16_set_default_large_memory_model=11070_N_Setze das Speichermodell fÅr das System Win16 auf "large"
@@ -4030,7 +4025,6 @@ x*2Aas_Assembliere mit Hilfe von GNU AS
 **1C<x>_Optionen fÅr Code-Erzeugung:
 **2C3<x>_Schalte IEEE-PrÅfung von Konstanten ein
 **2Ca<x>_WÑhle ABI aus; fpc -i oder fpc -ia geben die mîglichen Werte aus
-**2Cb_Erzeuge Code fÅr die "big-endian"-Variante der Zielarchitektur
 **2Cc<x>_Setze "default calling convention" zu <x>
 V*2Cd<x>_Verwerfe ausgewÑhlte RTL Start-Sektionen (Mit Vorsicht nutzen)
 V*3Cdc_Verwerfe Intialisierungsdaten. FÅr die Daten wird die Voreinstellung der Noinit-Sektion verwendet
@@ -4138,7 +4132,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **1M<x>_Setze Sprachmodus zu <x> / Schalte Modeswitch <x> an (siehe Option -im)
 **2Mdelphi_KompatibilitÑts-Modus fÅr Delphi 7
 **2Mdelphiunicode_KompatibilitÑts-Modus fÅr Delphi 2009 und spÑter
-**2Mextendedpascal_ISO 10206 Modus
 **2Mfpc_Free Pascal Dialekt (Voreinstellung)
 **2Miso_ISO 7185 Modus
 **2Mmacpas_KompatibilitÑts-Modus fÅr MacIntosh Pascal-Dialekte

@@ -1372,15 +1372,11 @@ implementation
                lExprType:=UIntType;
 
                { create word(byte(char) shl 8 or 1) for little endian machines}
-               { and word(byte(char) or 256) for big endian machines          }
+
                Left := CTypeConvNode.Create_Internal(Left,lExprType);
-               if (TargetInfo.endian = endian_little) then
-                 Left := CAddNode.Create(orn,
+               Left := CAddNode.Create(orn,
                    CShlShrNode.Create(shln,Left,COrdConstNode.Create(8,lExprType,false)),
-                   COrdConstNode.Create(1,lExprType,false))
-               else
-                 Left := CAddNode.Create(orn,Left,
-                   COrdConstNode.Create(1 shl 8,lExprType,false));
+                   COrdConstNode.Create(1,lExprType,false));
                Left := CTypeConvNode.Create_Internal(Left,U16IntType);
                TypeCheckPass(Left);
              end;
@@ -3786,8 +3782,6 @@ implementation
                    else
                      begin
                        { for constant values on absolute variables, swapping is required }
-                       if (TargetInfo.endian = endian_big) and (nf_absolute in Flags) then
-                         SwapConstValue(TOrdConstNode(Left).Value,TOrdConstNode(Left).ResultDef.Size);
                        if not(nf_generic_para in Flags) then
                           AdaptRange(
                             ResultDef,TOrdConstNode(Left).Value,
@@ -3797,8 +3791,6 @@ implementation
                             nf_explicit in Flags,
                             cs_check_range in LocalSwitches);
                        { swap value back, but according to new type }
-                       if (TargetInfo.endian = endian_big) and (nf_absolute in Flags) then
-                         SwapConstValue(TOrdConstNode(Left).Value,ResultDef.Size);
 
                        { cut off the new value? }
                        if ResultDef.Size<Left.ResultDef.Size then

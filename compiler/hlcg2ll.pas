@@ -1167,16 +1167,10 @@ implementation
 
                          l.Register:=cg.MakeRegSize(list,l.Register,dst_cgsize);
                      end;
-                   { for big endian systems, the reference's offset must }
+
                    { be increased in this case, since they have the      }
                    { MSB first in memory and e.g. byte(word_var) should  }
                    { return  the second byte in this case (JM)           }
-                   if (TargetInfo.endian = ENDIAN_BIG) and
-                      (l.Loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                     begin
-                       inc(l.Reference.Offset,TCgSize2Size[l.Size]-TCgSize2Size[dst_cgsize]);
-                       l.Reference.Alignment:=NewAlignment(l.Reference.Alignment,TCgSize2Size[l.Size]-TCgSize2Size[dst_cgsize]);
-                     end;
 {$ifdef x86}
                    if not (l.Loc in [LOC_SUBSETREG,LOC_CSUBSETREG]) then
                      begin
@@ -1669,10 +1663,7 @@ implementation
                       end
                     else
                       begin
-                        { the min(...) call ensures that we do not store more than place is left as
-                           paraloc^.size could be bigger than destloc.size of a parameter occupies a full register
-                           and as on big endian system the parameters might be left aligned, we have to work
-                           with the full register size for paraloc^.size }
+
                         if TCgSize2Size[destloc.Size]<>0 then
                           loadsize:=min(min(TCgSize2Size[ParaLoc^.Size],TCgSize2Size[destloc.Size]),sizeleft)
                         else
@@ -1707,19 +1698,7 @@ implementation
                       case TCgSize2Size[ParaLoc^.Size] of
                         8:
                           begin
-                            if (TargetInfo.endian=ENDIAN_BIG) then
-                              begin
-                                { paraloc^ -> high
-                                  paraloc^.next -> low }
-                                unget_para(ParaLoc^);
-                                Gen_Alloc_RegLoc(list,destloc,vardef);
-                                { reg->reg, alignment is irrelevant }
-                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^,destloc.Register128.RegHi,8);
-                                unget_para(ParaLoc^.next^);
-                                cg.A_Load_CGParaLoc_AnyReg(list,OS_64,ParaLoc^.next^,destloc.Register128.RegLo,8);
-                              end
-                            else
-                              begin
+                            begin
                                 { paraloc^ -> low
                                   paraloc^.next -> high }
                                 unget_para(ParaLoc^);
@@ -1735,8 +1714,6 @@ implementation
                               It is needed to copy them to 2 64-bit int registers.
                               A code generator or a target cpu must support loading of a 32-bit MM register to
                               a 64-bit int register, zero extending it. }
-                            if TargetInfo.endian=ENDIAN_BIG then
-                              InternalError(2018101702);  // Big endian support not implemented yet
                             Gen_Alloc_RegLoc(list,destloc,vardef);
                             tempreg:=cg.GetIntRegister(list,OS_64);
                             // Low part of the 128-bit param
@@ -1795,19 +1772,7 @@ implementation
 
 
                         2:
-                          if (TargetInfo.endian=ENDIAN_BIG) then
-                            begin
-                              { paraloc^ -> high
-                                paraloc^.next -> low }
-                              unget_para(ParaLoc^);
-                              Gen_Alloc_RegLoc(list,destloc,vardef);
-                              { reg->reg, alignment is irrelevant }
-                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^,destloc.Register64.RegHi,4);
-                              unget_para(ParaLoc^.next^);
-                              cg.A_Load_CGParaLoc_AnyReg(list,OS_32,ParaLoc^.next^,destloc.Register64.RegLo,4);
-                            end
-                          else
-                            begin
+                          begin
                               { paraloc^ -> low
                                 paraloc^.next -> high }
                               unget_para(ParaLoc^);
@@ -1930,12 +1895,7 @@ implementation
                   could reallocate this register and overwrite it }
                 unget_para(ParaLoc^);
                 Gen_Alloc_RegLoc(list,destloc,vardef);
-                if (TargetInfo.endian=endian_big) then
-                  { paraloc^ -> high
-                    paraloc^.next -> low }
-                  reg64:=JoinReg64(tempreg,ParaLoc^.Register)
-                else
-                  reg64:=JoinReg64(ParaLoc^.Register,tempreg);
+                reg64:=JoinReg64(ParaLoc^.Register,tempreg);
                 cg64.A_LoadMM_IntReg64_Reg(list,OS_F64,reg64,destloc.Register);
               end
             else

@@ -88,14 +88,13 @@ interface
          patternw : TCompilerWideString;
          settings : TSettings;
          tokenbuf : TDynamicArray;
-         tokenbuf_needs_swapping : boolean;
          next     : TReplayStack;
          pending  : TPendingState;
          verbosity : LongInt;
          constructor Create(atoken: TToken;aidtoken:TToken;
            const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
            apatternw:TCompilerWideString;asettings:TSettings;
-           atokenbuf:TDynamicArray;ChangeEndian:boolean;const apending:TPendingState;
+           atokenbuf:TDynamicArray;const apending:TPendingState;
            averbosity:LongInt;anext:TReplayStack);
          destructor Destroy;override;
        end;
@@ -188,8 +187,6 @@ interface
 
           { true, if we are parsing preprocessor expressions }
           in_preproc_comp_expr : boolean;
-          { true if tokens must be converted to opposite endianess}
-          change_endian_for_replay : boolean;
           { hack to allow reading generic generated identifiers IDs}
           allowgenericid : boolean;
 
@@ -237,7 +234,7 @@ interface
           procedure stoprecordtokens;
           function is_recording_tokens:boolean;
           procedure replaytoken;
-          procedure startreplaytokens(buf:TDynamicArray; ChangeEndian:boolean);
+          procedure startreplaytokens(buf:TDynamicArray);
           { bit length asizeint is target depend }
           procedure tokenwritesizeint(val : asizeint);
           procedure tokenwritelongint(val : LongInt);
@@ -555,9 +552,6 @@ implementation
          if s='ISO' then
           CurrentSettings.ModeSwitches:=ISOModeSwitches
         else
-         if s='EXTENDEDPASCAL' then
-          CurrentSettings.ModeSwitches:=ExtPasModeSwitches
-        else
          b:=false;
 
 
@@ -571,9 +565,8 @@ implementation
 
            HandleModeSwitches(m_none,changeinit);
 
-           { turn on bitpacking and case checking for mode macpas and iso pascal,
-             as well as extended pascal }
-           if ([m_mac,m_iso,m_extpas] * CurrentSettings.ModeSwitches <> []) then
+           { turn on bitpacking and case checking for mode macpas and iso pascal }
+           if ([m_mac,m_iso] * CurrentSettings.ModeSwitches <> []) then
              begin
                include(CurrentSettings.LocalSwitches,cs_bitpacking);
                include(CurrentSettings.LocalSwitches,cs_check_all_case_coverage);
@@ -584,8 +577,8 @@ implementation
                  end;
              end;
 
-            { support goto/label by default in delphi/mac/iso/extpas modes }
-            if ([m_delphi,m_mac,m_iso,m_extpas] * CurrentSettings.ModeSwitches <> []) then
+            { support goto/label by default in delphi/mac/iso modes }
+            if ([m_delphi,m_mac,m_iso] * CurrentSettings.ModeSwitches <> []) then
              begin
                include(CurrentSettings.ModuleSwitches,cs_support_goto);
                if changeinit then
@@ -676,9 +669,7 @@ implementation
             else if (m_mac in oldmodeswitches) then
               Undef_System_Macro('FPC_MACPAS')
             else if (m_iso in oldmodeswitches) then
-              Undef_System_Macro('FPC_ISO')
-            else if (m_extpas in oldmodeswitches) then
-              Undef_System_Macro('FPC_EXTENDEDPASCAL');
+              Undef_System_Macro('FPC_ISO');
 
             { define new symbol for the selected language mode }
             if (m_delphi in CurrentSettings.ModeSwitches) then
@@ -688,9 +679,7 @@ implementation
             else if (m_mac in CurrentSettings.ModeSwitches) then
               Def_System_Macro('FPC_MACPAS')
             else if (m_iso in CurrentSettings.ModeSwitches) then
-              Def_System_Macro('FPC_ISO')
-            else if (m_extpas in CurrentSettings.ModeSwitches) then
-              Def_System_Macro('FPC_EXTENDEDPASCAL');
+              Def_System_Macro('FPC_ISO');
          end;
 
         SetCompileMode:=b;
@@ -2895,7 +2884,7 @@ type
     constructor TReplayStack.Create(atoken:TToken;aidtoken:TToken;
       const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
       apatternw:TCompilerWideString;asettings:TSettings;
-      atokenbuf:TDynamicArray;ChangeEndian:boolean;const apending:TPendingState;
+      atokenbuf:TDynamicArray;const apending:TPendingState;
       averbosity:LongInt;anext:TReplayStack);
       begin
         token:=atoken;
@@ -2912,7 +2901,6 @@ type
         pending:=apending;
         verbosity:=averbosity;
         tokenbuf:=atokenbuf;
-        tokenbuf_needs_swapping:=ChangeEndian;
         next:=anext;
       end;
 
@@ -2975,7 +2963,6 @@ type
         lasttoken:=NOTOKEN;
         nexttoken:=NOTOKEN;
         ignoredirectives:=TFPHashList.Create;
-        change_endian_for_replay:=false;
         InitWideString(patternw);
       end;
 
@@ -3245,8 +3232,6 @@ type
         val : asizeint;
       begin
         replaytokenbuf.read(val,sizeof(asizeint));
-        if change_endian_for_replay then
-          val:=swapendian(val);
         result:=val;
       end;
 
@@ -3255,8 +3240,6 @@ type
         val : LongWord;
       begin
         replaytokenbuf.read(val,sizeof(LongWord));
-        if change_endian_for_replay then
-          val:=swapendian(val);
         result:=val;
       end;
 
@@ -3265,8 +3248,6 @@ type
         val : LongInt;
       begin
         replaytokenbuf.read(val,sizeof(LongInt));
-        if change_endian_for_replay then
-          val:=swapendian(val);
         result:=val;
       end;
 
@@ -3291,8 +3272,6 @@ type
         val : smallint;
       begin
         replaytokenbuf.read(val,sizeof(smallint));
-        if change_endian_for_replay then
-          val:=swapendian(val);
         result:=val;
       end;
 
@@ -3301,8 +3280,6 @@ type
         val : word;
       begin
         replaytokenbuf.read(val,sizeof(word));
-        if change_endian_for_replay then
-          val:=swapendian(val);
         result:=val;
       end;
 
@@ -3319,13 +3296,8 @@ type
    end;
 
    procedure TScannerFile.tokenreadset(var b;size : LongInt);
-   var
-     i : LongInt;
    begin
      replaytokenbuf.read(b,size);
-     if change_endian_for_replay then
-       for i:=0 to size-1 do
-         PByte(@b)[i]:=Reverse_Byte(PByte(@b)[i]);
    end;
 
    procedure TScannerFile.tokenwriteenum(var b;size : LongInt);
@@ -3350,8 +3322,7 @@ type
        var
          startpos, endpos : LongWord;
       begin
-        { WARNING all those fields need to be in the correct
-        order otherwise cross_endian PPU reading will fail }
+        { Keep this field order matched with tokenwritesettings. }
         startpos:=replaytokenbuf.pos;
         with asettings do
           begin
@@ -3424,8 +3395,7 @@ type
        var
          sizepos, startpos, endpos : LongWord;
       begin
-        { WARNING all those fields need to be in the correct
-        order otherwise cross_endian PPU reading will fail }
+        { Keep this field order matched with tokenreadsettings. }
         sizepos:=recordtokenbuf.pos;
         size:=0;
         tokenwritesizeint(size);
@@ -3542,7 +3512,6 @@ type
             PMsg:=CurrentSettings.PMessage;
             while Assigned(PMsg) do
               begin
-                { What about endianess here?}
                 { SB: this is handled by tokenreadlongint }
                 val:=PMsg^.Value;
                 tokenwritelongint(val);
@@ -3632,14 +3601,14 @@ type
       end;
 
 
-    procedure TScannerFile.startreplaytokens(buf:TDynamicArray; ChangeEndian:boolean);
+    procedure TScannerFile.startreplaytokens(buf:TDynamicArray);
       begin
         if not Assigned(buf) then
           InternalError(200511175);
 
         { save current scanner state }
         replaystack:=TReplayStack.Create(token,idtoken,orgpattern,pattern,
-          cstringpattern,patternw,CurrentSettings,replaytokenbuf,change_endian_for_replay,
+          cstringpattern,patternw,CurrentSettings,replaytokenbuf,
           PendingState,status.verbosity,replaystack);
 {$ifdef check_inputpointer_limits}
         if Assigned(hidden_inputpointer) then
@@ -3654,9 +3623,6 @@ type
         { ensure that existing message state records won't be freed }
         CurrentSettings.PMessage:=nil;
         PendingState:=default(TPendingState);
-
-        { Initialize value of change_endian_for_replay variable }
-        change_endian_for_replay:=ChangeEndian;
 
         { reload next token }
         replaytokenbuf.seek(0);
@@ -3700,7 +3666,6 @@ type
             CopyWideString(replaystack.patternw,patternw);
             cstringpattern:=replaystack.cstringpattern;
             replaytokenbuf:=replaystack.tokenbuf;
-            change_endian_for_replay:=replaystack.tokenbuf_needs_swapping;
             { restore compiler settings }
             CurrentSettings:=replaystack.settings;
             PendingState:=replaystack.pending;

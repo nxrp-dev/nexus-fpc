@@ -577,16 +577,7 @@ implementation
                          hlcg.A_LoadAddr_Ref_Reg(CurrentAsmData.CurrAsmList,ProcDef,CProcVarDef.GetReusableProcAddr(ProcDef,pc_address_only),lReference,Location.Register);
                        end;
 
-                     { to get methodpointers stored correctly, code and self register must be swapped on
-                       big endian targets }
-                     if TargetInfo.endian=endian_big then
-                       begin
-                         { cpus with 16 bit address registers don't use registerhi here }
 
-                         lReg:=Location.Register;
-                         Location.Register:=Location.RegisterHi;
-                         Location.RegisterHi:=lReg;
-                       end;
                    end
                  else
                    begin
@@ -718,11 +709,7 @@ implementation
                 if Right.NodeType=ordconstn then
                   begin
                     hlcg.G_PtrTypeCast_Ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(Left.ResultDef),CPointerDef.getreusable(U16IntType),Left.Location.Reference);
-                    if (TargetInfo.endian = endian_little) then
-                      hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,U16IntType,(TOrdConstNode(Right).Value.svalue shl 8) or 1,
-                          SetAlignment(Left.Location.Reference,1))
-                    else
-                      hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,U16IntType,TOrdConstNode(Right).Value.svalue or (1 shl 8),
+                    hlcg.A_Load_Const_Ref(CurrentAsmData.CurrAsmList,U16IntType,(TOrdConstNode(Right).Value.svalue shl 8) or 1,
                           SetAlignment(Left.Location.Reference,1));
                   end
                 else

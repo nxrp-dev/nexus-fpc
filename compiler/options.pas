@@ -185,23 +185,8 @@ end;
 
 procedure set_endianess_macros;
   begin
-    { endian define }
-    case TargetInfo.endian of
-      endian_little :
-        begin
-          Def_System_Macro('ENDIAN_LITTLE');
-          Def_System_Macro('FPC_LITTLE_ENDIAN');
-          Undef_System_Macro('ENDIAN_BIG');
-          Undef_System_Macro('FPC_BIG_ENDIAN');
-        end;
-      endian_big :
-        begin
-          Def_System_Macro('ENDIAN_BIG');
-          Def_System_Macro('FPC_BIG_ENDIAN');
-          Undef_System_Macro('ENDIAN_LITTLE');
-          Undef_System_Macro('FPC_LITTLE_ENDIAN');
-        end;
-    end;
+    Def_System_Macro('ENDIAN_LITTLE');
+    Def_System_Macro('FPC_LITTLE_ENDIAN');
   end;
 
 
@@ -2062,15 +2047,6 @@ begin
            ABISetExplicitly:=true;
            break;
          end;
-
-       'b' :
-          begin
-            if UnsetBool(More, j, opt, false) then
-              TargetInfo.endian:=endian_little
-            else
-              TargetInfo.endian:=endian_big;
-            set_endianess_macros;
-          end;
 
        'c' :
           begin
@@ -4110,12 +4086,7 @@ begin
   if (option.paratargetasm<>as_none) then
     begin
       if (option.paratargetasm=as_default) then
-        begin
-          if (TargetInfo.endian<>SourceInfo.endian) then
-            option.paratargetasm:=TargetInfo.assemextern
-          else
-            option.paratargetasm:=TargetInfo.assem;
-        end;
+        option.paratargetasm:=TargetInfo.assem;
       if not SetTargetAsm(option.paratargetasm) then
         begin
           if Assigned(asminfos[option.paratargetasm]) then
@@ -4147,16 +4118,9 @@ begin
   if (af_outputbinary in TargetAsm.flags) and
      ((cs_asm_leave in InitSettings.GlobalSwitches) or
       { if -s is passed, we shouldn't call the internal assembler }
-      (cs_asm_extern in InitSettings.GlobalSwitches)) or
-      ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
+      (cs_asm_extern in InitSettings.GlobalSwitches)) then
    begin
-     if ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
-       begin
-         if not ((TargetInfo.assem = TargetInfo.assemextern) or (TargetInfo.assem = as_none)) then
-           Message(option_switch_bin_to_src_assembler_cross_endian);
-       end
-     else
-       Message(option_switch_bin_to_src_assembler);
+     Message(option_switch_bin_to_src_assembler);
 
      SetTargetAsm(TargetInfo.assemextern);
 

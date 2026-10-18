@@ -69,8 +69,8 @@ begin
     Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,TSysParam(fd),0,Offset,whence);
   {$else}
     Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,0,TSysParam(fd),0,
-       {$ifdef ENDIAN_BIG}hi(offset),lo(offset){$endif}
-       {$ifdef ENDIAN_LITTLE}lo(Offset),hi(offset){$endif},
+
+       lo(Offset),hi(offset),
        Whence);
   {$endif}
 end;
@@ -93,8 +93,8 @@ begin
   Fpmmap:=pointer(ptruint(do_syscall(TSysParam(syscall_nr_mmap),TSysParam(Start),TSysParam(Len),TSysParam(Prot),TSysParam(Flags),TSysParam(fd),0,TSysParam(offst))));
 {$else}
   Fpmmap:=pointer(ptruint(do_syscall(syscall_nr_mmap,TSysParam(Start),Len,Prot,Flags,fd,0,
-         {$ifdef FPC_BIG_ENDIAN}    hi(offst),lo(offst){$endif}
-         {$ifdef FPC_LITTLE_ENDIAN} lo(offst),hi(offst){$endif}
+
+          lo(offst),hi(offst)
          )));
 {$endif}
 end;

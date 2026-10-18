@@ -567,11 +567,11 @@ begin
 	{$else}
            Fppread:=do_syscall(syscall_nr_pread,Fd,TSysParam(buf),nbytes,
            {$ifdef 64bitfs}
-	     {$ifdef FPC_BIG_ENDIAN}    hi(offset),lo(offset){$endif}
-	     {$ifdef FPC_LITTLE_ENDIAN} lo(offset),hi(offset){$endif}
+
+	      lo(offset),hi(offset)
            {$else}
-	     {$ifdef FPC_BIG_ENDIAN}    0,lo(offset){$endif}
-	     {$ifdef FPC_LITTLE_ENDIAN} lo(offset),0{$endif}
+
+	      lo(offset),0
 	   {$endif}
             );
         {$endif}
@@ -586,11 +586,11 @@ begin
            Fppwrite:=do_syscall(syscall_nr_pwrite,Fd,TSysParam(buf),nbytes,
 	  // ,0  = possible alignment here.
            {$ifdef 64bitfs}
-	     {$ifdef FPC_BIG_ENDIAN}    hi(offset),lo(offset){$endif}
-	     {$ifdef FPC_LITTLE_ENDIAN} lo(offset),hi(offset){$endif}
+
+	      lo(offset),hi(offset)
            {$else}
-	     {$ifdef FPC_BIG_ENDIAN}    0,lo(offset){$endif}
-	     {$ifdef FPC_LITTLE_ENDIAN} lo(offset),0{$endif}
+
+	      lo(offset),0
 	   {$endif}
             );
         {$endif}

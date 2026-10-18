@@ -4,7 +4,7 @@ program tczstreamseek;
 
 uses
   classes,
-  zstream;
+  PasZLibIO;
 
 const
   val: Uint32 = $123456;

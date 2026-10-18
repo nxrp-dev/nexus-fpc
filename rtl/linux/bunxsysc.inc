@@ -654,8 +654,8 @@ begin
   Fppread:=do_syscall(syscall_nr_pread64,Fd,TSysParam(buf),nbytes,TSysParam(OffSet));
 {$else}
   Fppread:=do_syscall(syscall_nr_pread64,Fd,TSysParam(buf),nbytes,
-    {$ifdef FPC_BIG_ENDIAN}    hi(offset),lo(offset){$endif}
-    {$ifdef FPC_LITTLE_ENDIAN} lo(offset),hi(offset){$endif}
+
+     lo(offset),hi(offset)
    );
 {$endif}
 end;
@@ -667,8 +667,8 @@ begin
   Fppwrite:=do_syscall(syscall_nr_pwrite64,Fd,TSysParam(buf),nbytes,TSysParam(OffSet));
 {$else}
   Fppwrite:=do_syscall(syscall_nr_pwrite64,Fd,TSysParam(buf),nbytes,
-    {$ifdef FPC_BIG_ENDIAN}    hi(offset),lo(offset){$endif}
-    {$ifdef FPC_LITTLE_ENDIAN} lo(offset),hi(offset){$endif}
+
+     lo(offset),hi(offset)
   );
 {$endif}
 end;

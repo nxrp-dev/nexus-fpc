@@ -147,14 +147,10 @@ implementation
       type
         TByteArr=array[0..3] of byte;
       begin
-{$ifndef FPC_BIG_ENDIAN}
         TByteArr(result)[0]:=TByteArr(l)[3];
         TByteArr(result)[1]:=TByteArr(l)[2];
         TByteArr(result)[2]:=TByteArr(l)[1];
         TByteArr(result)[3]:=TByteArr(l)[0];
-{$else}
-        result:=l;
-{$endif}
       end;
 
 

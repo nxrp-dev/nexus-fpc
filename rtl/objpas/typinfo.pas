@@ -1485,13 +1485,6 @@ end;
 
 Function SetToString(TypeInfo: PTypeInfo; Value: LongInt; Brackets: Boolean) : String;
 begin
-{$if defined(FPC_BIG_ENDIAN)}
-  { correctly adjust packed sets that are smaller than 32-bit }
-  case GetTypeData(TypeInfo)^.OrdType of
-    otSByte,otUByte: Value := Value shl (SizeOf(Integer)*8-8);
-    otSWord,otUWord: Value := Value shl (SizeOf(Integer)*8-16);
-  end;
-{$endif}
   Result := SetToString(TypeInfo, @Value, Brackets);
 end;
 
@@ -1598,13 +1591,6 @@ end;
 Function StringToSet(TypeInfo: PTypeInfo; const Value: string): LongInt;
 begin
   StringToSet(TypeInfo, Value, @Result);
-{$if defined(FPC_BIG_ENDIAN)}
-  { correctly adjust packed sets that are smaller than 32-bit }
-  case GetTypeData(TypeInfo)^.OrdType of
-    otSByte,otUByte: Result := Result shr (SizeOf(Integer)*8-8);
-    otSWord,otUWord: Result := Result shr (SizeOf(Integer)*8-16);
-  end;
-{$endif}
 end;
 
 procedure StringToSet(TypeInfo: PTypeInfo; const Value: String; Result: Pointer);
@@ -1655,13 +1641,6 @@ end;
 Function ArrayToSet(TypeInfo: PTypeInfo; const Value: array of Byte): LongInt;
 begin
   ArrayToSet(TypeInfo, Value, @Result);
-{$if defined(FPC_BIG_ENDIAN)}
-  { correctly adjust packed sets that are smaller than 32-bit }
-  case GetTypeData(TypeInfo)^.OrdType of
-    otSByte,otUByte: Result := Result shr (SizeOf(Integer)*8-8);
-    otSWord,otUWord: Result := Result shr (SizeOf(Integer)*8-16);
-  end;
-{$endif}
 end;
 
 procedure ArrayToSet(TypeInfo: PTypeInfo; const Value: array of Byte; Result: Pointer);
@@ -1679,11 +1658,6 @@ begin
     begin
       ElOfs := B shr 5;
       BitOfs := B and $1F;
-{$ifdef FPC_BIG_ENDIAN}
-      { on Big Endian systems enum values start from the MSB, thus we need
-        to reverse the shift }
-      BitOfs := 31 - BitOfs;
-{$endif}
       ResArr[ElOfs] := ResArr[ElOfs] or (LongInt(1) shl BitOfs);
     end;
 end;

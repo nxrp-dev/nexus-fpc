@@ -26,10 +26,6 @@ uses
   windows;
 {$endif mswindows}
 
-{$IFDEF OS2}
-function _DosError (Error: longint): longint; cdecl;
-                                                 external 'DOSCALLS' index 212;
-{$ENDIF OS2}
 
 begin
 {$ifdef mswindows}
@@ -38,7 +34,4 @@ begin
     SEM_NOGPFAULTERRORBOX or
     SEM_NOOPENFILEERRORBOX);
 {$endif mswindows}
-{$IFDEF OS2}
-  if os_Mode = osOS2 then _DosError (0);
-{$ENDIF OS2}
 end.

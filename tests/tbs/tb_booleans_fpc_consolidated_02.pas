@@ -123,11 +123,7 @@ function tw8144_DoCheck(tw8144_Key:WideChar):boolean;
 begin
  tw8144_DoCheck:=(tw8144_Key in [WideChar(#0), WideChar(#8), WideChar(#10),
     WideChar(#13), WideChar(#27)
-{$IFNDEF OS2}
-{ OS/2 Unicode support uses #127 as replacement character for translation
-  of characters which do not exist in the current system codepage. }
                                 , WideChar(#127)
-{$ENDIF OS2}
                                                 ]);
 end;
 
@@ -741,8 +737,6 @@ begin
 {$push}
 {$pop}
 {$push}
-{$IFNDEF OS2}
-{$ENDIF OS2}
 {$pop}
 begin
 
@@ -893,8 +887,6 @@ end;
 
 { Case tw8144.pas }
 {$push}
-{$IFNDEF OS2}
-{$ENDIF OS2}
 begin
   for tw8144_Key:=WideChar(128) to WideChar(2048) do
    if tw8144_DoCheck(tw8144_Key) then

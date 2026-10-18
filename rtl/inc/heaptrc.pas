@@ -577,15 +577,11 @@ type
     begin
       dec(result, FirstByte5 - 5);
     {$if defined(CPU32)}
-      v := unaligned(pUint32(pb {$ifdef endian_big} + result - 4 {$else} + 1 {$endif})^);
+      v := unaligned(pUint32(pb  + 1 )^);
     {$elseif defined(CPU64)}
       v := unaligned(pUint32(pb + 1)^);
       if result > 5 then
-      {$ifdef endian_big}
-        v := v shl (result * 8 - 40) or unaligned(pUint32(pb + result - 4)^);
-      {$else}
         v := v or PtrUint(unaligned(pUint32(pb + result - 4)^)) shl (result * 8 - 40);
-      {$endif}
     {$else} {$error >64 bits} {$endif}
     end;
   end;
@@ -650,8 +646,8 @@ type
           result := 2 + BsrQWord
             (v or 1 {“or 1” not required logically, triggers node_not_zero optimization}) div 8;
           pb[0] := 246 + result;
-          unaligned(pUint32(pb + 1)^) := uint32(v {$ifdef endian_big} shr (8 * result - 40) {$endif});
-          unaligned(pUint32(pb + result - 4)^) := uint32(v {$ifdef endian_little} shr (8 * result - 40) {$endif});
+          unaligned(pUint32(pb + 1)^) := uint32(v );
+          unaligned(pUint32(pb + result - 4)^) := uint32(v  shr (8 * result - 40) );
         {$else} {$error >64 bits} {$endif}
         end;
 {$ifdef can_use_int32_case}

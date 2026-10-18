@@ -161,7 +161,6 @@ interface
         ModuleFlags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
         IsLibrary     : Boolean;  { if it is a library (win32 dll) }
         IsPackage     : Boolean;
-        ChangeEndian : Boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
         UnitMap       : TUnitMapArray; { mapping of all used units }
         UnitMapSize   : LongInt;  { number of units in the map }
         DerefMap      : TDerefMapArray; { mapping of all units needed for deref }
@@ -682,7 +681,6 @@ implementation
         IsUnit:=AIsUnit;
         IsLibrary:=False;
         IsPackage:=False;
-        ChangeEndian:=False;
         IsDbgInfoWritten:=False;
         ModeSwitchAllowed:= True;
         ModuleOptions:=[];

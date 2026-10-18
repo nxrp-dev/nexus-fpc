@@ -449,7 +449,7 @@ implementation
 
     procedure consume_case_else;
       begin
-        if ([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[] then
+        if ([m_iso]*CurrentSettings.ModeSwitches)<>[] then
           consume(_OTHERWISE)
         else if not try_to_consume(_ELSE) then
           consume(_OTHERWISE);
@@ -1631,7 +1631,7 @@ implementation
           { Set the current token to ; to make the constant evaluator happy }
           CurrentScanner.token:=_SEMICOLON;
           { Parse recorded tokens }
-          CurrentScanner.startreplaytokens(tokenbuf,false);
+          CurrentScanner.startreplaytokens(tokenbuf);
 
           if cur_line<>CurrentFilePos.line then
             begin
@@ -1761,7 +1761,7 @@ implementation
                           InternalError(201008021);
 
                         { strip leading 0's in iso mode }
-                        if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
+                        if (([m_iso]*CurrentSettings.ModeSwitches)<>[]) then
                           while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
                             delete(CurrentScanner.pattern,1,1);
 
@@ -1874,7 +1874,7 @@ implementation
                 try_to_consume(_COLON) then
               begin
                 { in iso mode, 0003: is equal to 3: }
-                if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
+                if (([m_iso]*CurrentSettings.ModeSwitches)<>[]) then
                   SearchSym(ToStr(TOrdConstNode(p).Value),srsym,srsymtable)
                 else
                   SearchSym(s,srsym,srsymtable);

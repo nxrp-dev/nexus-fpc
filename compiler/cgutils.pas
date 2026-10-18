@@ -113,11 +113,7 @@ unit cgutils;
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
                 1 : (Value : Int64);
 {$else cpu64bitalu or cpuhighleveltarget}
-    {$ifdef FPC_BIG_ENDIAN}
-                1 : (ValueDummy,Value : LongInt);
-    {$else FPC_BIG_ENDIAN}
                 1 : (Value : LongInt);
-    {$endif FPC_BIG_ENDIAN}
 {$endif cpu64bitalu or cpuhighleveltarget}
                 2 : (Value64 : Int64);
               );

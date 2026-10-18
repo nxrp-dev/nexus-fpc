@@ -613,11 +613,7 @@ BEGIN
           halt(1);
        {$T-}
         tw0882_bw:=word(Addr(tw0882_bb0^[tw0882_mr.i1])^);
-{$ifndef ENDIAN_BIG}
         if tw0882_bw <> (2 shl 8 + 1) then
-{$else ENDIAN_BIG}
-        if tw0882_bw <> (1 shl 8 + 2) then
-{$endif ENDIAN_BIG}
           halt(1);
 END
 ;

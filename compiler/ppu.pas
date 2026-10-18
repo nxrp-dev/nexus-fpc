@@ -41,7 +41,7 @@ const
   CurrentPPULongVersion = 46;
 
 { unit flags }
-  UfBigEndian          = $000004;
+  UfEndianMask         = $001004; { Includes the retired byte-order flag. }
   UfInLibrary          = $000020; { is the file in another file than <ppufile>.* ? }
   UfSmartLinked        = $000040; { the ppu can be smartlinked }
   UfStaticLinked       = $000080; { the ppu can be linked static }
@@ -141,7 +141,7 @@ implementation
   uses
     CompHook,
     Globals,
-    FPCHash;
+    CRC32;
 
 
 {*****************************************************************************
@@ -161,7 +161,8 @@ end;
 
 function TPPUFile.CheckPPUId:Boolean;
 begin
-  CheckPPUId:=((Header.Common.ID[1]=NexusPPUSignature[1]) and
+  CheckPPUId:=((Header.Common.Flags and UfEndianMask)=UfLittleEndian) and
+               ((Header.Common.ID[1]=NexusPPUSignature[1]) and
                 (Header.Common.ID[2]=NexusPPUSignature[2]) and
                 (Header.Common.ID[3]=NexusPPUSignature[3]));
 end;
@@ -204,25 +205,6 @@ begin
       Do_Comment(VError,' Invalid header size '+ToStr(Result)+' (expecting '+ToStr(SizeOf(TPPUHeader))+')');
       Exit(-1);
     end;
-  { The header is always stored in little endian order }
-  { therefore swap if on a big endian machine          }
-{$IFDEF ENDIAN_BIG}
-  Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
-  Header.Common.CPU := SwapEndian(Header.Common.CPU);
-  Header.Common.Target := SwapEndian(Header.Common.Target);
-  Header.Common.Flags := SwapEndian(Header.Common.Flags);
-  Header.Common.Size := SwapEndian(Header.Common.Size);
-  Header.Checksum := SwapEndian(Header.Checksum);
-  Header.InterfaceChecksum := SwapEndian(Header.InterfaceChecksum);
-  Header.IndirectChecksum := SwapEndian(Header.IndirectChecksum);
-  Header.DefListSize:=SwapEndian(Header.DefListSize);
-  Header.SymListSize:=SwapEndian(Header.SymListSize);
-
-  { the PPU DATA is stored in native order }
-  ChangeEndian := (Header.Common.Flags and UfLittleEndian) = UfLittleEndian;
-{$ELSE not ENDIAN_BIG}
-  ChangeEndian := (Header.Common.Flags and UfBigEndian) = UfBigEndian;
-{$ENDIF}
 end;
 
 function TPPUFile.OutputAllowed: Boolean;
@@ -252,22 +234,7 @@ begin
   { update size (w/o header!) in the header }
   Header.Common.Size:=BufStart-SizeOf(TPPUHeader);
   { set the endian flag }
-{$ifndef FPC_BIG_ENDIAN}
-    Header.Common.Flags := Header.Common.Flags or UfLittleEndian;
-{$else not FPC_BIG_ENDIAN}
-    Header.Common.Flags := Header.Common.Flags or UfBigEndian;
-    { Now swap the header.common in the correct endian (always little endian) }
-    Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
-    Header.Common.CPU := SwapEndian(Header.Common.CPU);
-    Header.Common.Target := SwapEndian(Header.Common.Target);
-    Header.Common.Flags := SwapEndian(Header.Common.Flags);
-    Header.Common.Size := SwapEndian(Header.Common.Size);
-    Header.Checksum := SwapEndian(Header.Checksum);
-    Header.InterfaceChecksum := SwapEndian(Header.InterfaceChecksum);
-    Header.IndirectChecksum := SwapEndian(Header.IndirectChecksum);
-    Header.DefListSize:=SwapEndian(Header.DefListSize);
-    Header.SymListSize:=SwapEndian(Header.SymListSize);
-{$endif not FPC_BIG_ENDIAN}
+  Header.Common.Flags:=Header.Common.Flags or UfLittleEndian;
 { write header and restore filepos after it }
   OPos:=F.Position;
   F.Position:=0;

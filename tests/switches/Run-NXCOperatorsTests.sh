@@ -36,7 +36,7 @@ expect_disabled() {
 }
 
 build_and_run default coperators_default.pas
-for mode in fpc objfpc delphi macpas iso extendedpascal; do
+for mode in fpc objfpc delphi macpas iso; do
     build_and_run "mode-$mode" coperators_default.pas "-M$mode"
 done
 expect_disabled command-off coperators_default.pas -Sc-

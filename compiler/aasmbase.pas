@@ -254,7 +254,7 @@ interface
 implementation
 
     uses
-      Verbose,FPCHash;
+      Verbose,CRC32;
 
 
     function create_smartlink_sections:boolean;inline;

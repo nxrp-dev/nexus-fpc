@@ -265,13 +265,8 @@ end;
 
 type
 tshlshr_tint64record = packed record
-{$ifdef ENDIAN_BIG}
-   highval : longint;
-   lowval  : longint;
-{$else}
    lowval  : longint;
    highval : longint;
-{$endif}
 end;
 
 
@@ -543,9 +538,6 @@ end;
 {$ifndef fpc}
 {$else fpc}
 {$endif fpc}
-{$ifdef ENDIAN_BIG}
-{$else}
-{$endif}
 {$IFDEF FPC}
 {$ENDIF}
 Begin

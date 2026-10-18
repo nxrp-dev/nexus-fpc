@@ -30,14 +30,8 @@ type
   TEndianKind = (Little, Big);
 const
   EndianSuffix : array[TEndianKind] of string[2] = ('le','be');
-{$IFDEF ENDIAN_LITTLE}
   EndianNative     = TEndianKind.Little;
   EndianNonNative = TEndianKind.Big;
-{$ENDIF ENDIAN_LITTLE}
-{$IFDEF ENDIAN_BIG}
-  EndianNative = TEndianKind.Big;
-  EndianNonNative = TEndianKind.Little;
-{$ENDIF ENDIAN_BIG}
 
   procedure CreateBinaryFile(AMap : PUnicodeMap; const ABaseFile : string);
 

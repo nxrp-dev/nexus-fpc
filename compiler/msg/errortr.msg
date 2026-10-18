@@ -3343,7 +3343,6 @@ S*2Aas_Assemble using GNU AS
 **1C<x>_Code generation options:
 **2C3_Turn on ieee error checking for constants
 **2Ca<x>_Select ABI; see fpc -i or fpc -ia for possible values
-**2Cb_Generate code for a big-endian variant of the target architecture
 **2Cc<x>_Set default calling convention to <x>
 **2Ce_Compilation with emulated floating point opcodes
 **2Cf<x>_Select fpu instruction set to use; see fpc -i or fpc -if for possible values

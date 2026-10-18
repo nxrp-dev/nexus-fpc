@@ -17,18 +17,10 @@
 {$R- no range checking }
 
     type
-{$ifdef ENDIAN_LITTLE}
        tqwordrec = packed record
          low : dword;
          high : dword;
        end;
-{$endif ENDIAN_LITTLE}
-{$ifdef ENDIAN_BIG}
-       tqwordrec = packed record
-         high : dword;
-         low : dword;
-       end;
-{$endif ENDIAN_BIG}
 
 
 

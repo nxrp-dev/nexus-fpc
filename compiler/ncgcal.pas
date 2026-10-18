@@ -889,17 +889,12 @@ implementation
            it) }
          ACallProcDef:=CProcVarDef.GetReusableProcAddr(ProcDefinition,pc_address_only);
          AReg:=hlcg.GetAddressRegister(CurrentAsmData.CurrAsmList,ACallProcDef);
-         { in case we have a method pointer on a big endian target in registers,
-           the method address is stored in registerhi (it's the first field
-           in the tmethod record) }
+
          if (Right.Location.Loc in [LOC_REGISTER,LOC_CREGISTER]) then
            begin
              if not(Right.Location.Size in [OSPair,OSSPair]) then
                InternalError(2014081401);
-             if (TargetInfo.endian=endian_big) then
-               lSourceReg:=Right.Location.RegisterHi
-             else
-               lSourceReg:=Right.Location.Register;
+             lSourceReg:=Right.Location.Register;
              hlcg.A_Load_Reg_Reg(CurrentAsmData.CurrAsmList,ACallProcDef,ACallProcDef,lSourceReg,AReg)
            end
          else

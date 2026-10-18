@@ -136,12 +136,12 @@ procedure fpc_varset_set_range(const orgset; var dest;l,h,size : ptrint); compil
     if partbits<>0 then { Head. }
       if partbits>=nbits then
         begin
-          bp^:=bp^ or {$ifdef endian_little} (1 shl nbits-1) shl 8 shr partbits {$else} (1 shl nbits-1) shl partbits shr nbits {$endif};
+          bp^:=bp^ or  (1 shl nbits-1) shl 8 shr partbits ;
           exit;
         end
       else
         begin
-          bp^:=bp^ or {$ifdef endian_little} byte($FF00 shr partbits) {$else} (1 shl partbits-1) {$endif};
+          bp^:=bp^ or  byte($FF00 shr partbits) ;
           inc(bp);
           nbits:=nbits-partbits;
         end;
@@ -150,7 +150,7 @@ procedure fpc_varset_set_range(const orgset; var dest;l,h,size : ptrint); compil
     bp:=bp+partbytes;
     nbits:=nbits and 7;
     if nbits<>0 then { Tail. }
-      bp^:=bp^ or {$ifdef endian_little} (1 shl nbits-1) {$else} byte($FF00 shr nbits) {$endif};
+      bp^:=bp^ or  (1 shl nbits-1) ;
   end;
 {$endif ndef FPC_SYSTEM_HAS_FPC_VARSET_SET_RANGE}
 

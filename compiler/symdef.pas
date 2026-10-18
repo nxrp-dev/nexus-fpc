@@ -1346,7 +1346,7 @@ implementation
       { other }
       AAsmBase,
       GenDef,
-      FPCHash,
+      FPCHash, CRC32,
       EntFile
       ;
 
@@ -2709,10 +2709,7 @@ implementation
       begin
          inherited Create(StringDef,DoRegister);
          StringType:=st_widestring;
-         if TargetInfo.Endian=endian_little then
-           Encoding:=CP_UTF16LE
-         else
-           Encoding:=CP_UTF16BE;
+         Encoding:=CP_UTF16LE;
          Len:=-1;
       end;
 
@@ -2721,10 +2718,7 @@ implementation
       begin
          inherited PPULoad(StringDef,PPUFile);
          StringType:=st_widestring;
-         if TargetInfo.Endian=endian_little then
-           Encoding:=CP_UTF16LE
-         else
-           Encoding:=CP_UTF16BE;
+         Encoding:=CP_UTF16LE;
          Len:=PPUFile.GetASizeInt;
          PPULoadPlatform(PPUFile);
       end;
@@ -2734,10 +2728,7 @@ implementation
       begin
          inherited Create(StringDef,DoRegister);
          StringType:=st_unicodestring;
-         if TargetInfo.Endian=endian_little then
-           Encoding:=CP_UTF16LE
-         else
-           Encoding:=CP_UTF16BE;
+         Encoding:=CP_UTF16LE;
          Len:=-1;
       end;
 

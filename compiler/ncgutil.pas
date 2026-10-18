@@ -262,10 +262,7 @@ implementation
                              lTempReg:=cg.GetIntRegister(AList,OS_INT);
                              hlcg.A_Load_Ref_Reg(AList,U8IntType,OSUIntType,ANode.Location.SRef.Ref,lTempReg);
 
-                             if TargetInfo.endian=endian_big then
-                               hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,OSUIntType,1 shl (8-(ANode.Location.SRef.StartBit+1)),lTempReg,lTempReg)
-                             else
-                               hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,OSUIntType,1 shl ANode.Location.SRef.StartBit,lTempReg,lTempReg);
+                             hlcg.A_Op_Const_Reg_Reg(AList,OP_AND,OSUIntType,1 shl ANode.Location.SRef.StartBit,lTempReg,lTempReg);
                            end
                          else
                            begin
@@ -592,15 +589,9 @@ implementation
           if ASym.InitialLoc.Size in [OS_64,OS_S64] then
 {$endif defined(cpu64bitalu)}
             begin
-              if TargetInfo.endian=endian_little then
-                begin
+              begin
                   lReg:=ASym.InitialLoc.Register;
                   lReg2:=ASym.InitialLoc.RegisterHi;
-                end
-              else
-                begin
-                  lReg:=ASym.InitialLoc.RegisterHi;
-                  lReg2:=ASym.InitialLoc.Register;
                 end;
             end
           else

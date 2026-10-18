@@ -3677,7 +3677,7 @@ implementation
               (
                (CurrentScanner.token=_LKLAMMER) or
                (
-                (([m_delphi,m_mac,m_iso,m_extpas] * CurrentSettings.ModeSwitches) <> []) and
+                (([m_delphi,m_mac,m_iso] * CurrentSettings.ModeSwitches) <> []) and
                 (afterassignment or in_args)
                )
               ) then

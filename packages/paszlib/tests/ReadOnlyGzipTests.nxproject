@@ -1,0 +1,24 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
+
+Project ReadOnlyGzipTests {
+    RootDirectory: "../../../../nexus";
+    OutputRoot: "../../worktree/ReadOnlyGzipTests/" + @Tools.Native.Name;
+    FPC Tests {
+        CompilerPath: @Tools.Native.FPCCompiler;
+        SourceFiles: ["../nexus-fpc/packages/paszlib/tests/ReadOnlyGzipTests.lpr"];
+        OutputPath: @ReadOnlyGzipTests.OutputRoot;
+        RawOptions: ["-dNO_DEFLATE", "-O2", "-Sa", "-Cr", "-Co", "-Ci", "-gl"];
+        Config Options { DisableDefaultConfigFiles: True; }
+        Language Pascal { Mode: ObjFPC; }
+        Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
+        Files Paths {
+            UnitPaths: [@Tools.Native.RTLPath,
+                @Tools.NexusFPC.SourcePath + "/rtl/objpas",
+                "packages/nexus-packages/nxtest/src"];
+        }
+    }
+}

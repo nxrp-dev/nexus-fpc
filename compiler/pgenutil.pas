@@ -72,7 +72,7 @@ implementation
 
 uses
   { common }
-  CUtils,FPCHash,
+  CUtils,CRC32,
   { global }
   Globals,tokens,Verbose,FinPut,ConstExp,
   { symtable }
@@ -2083,7 +2083,7 @@ uses
                 replaydepth:=CurrentScanner.replay_stack_depth;
                 if GenericDef.typ=procdef then
                   begin
-                    CurrentScanner.startreplaytokens(TProcDef(GenericDef).GenericDeclTokenBuf,hmodule.ChangeEndian);
+                    CurrentScanner.startreplaytokens(TProcDef(GenericDef).GenericDeclTokenBuf);
                     parse_proc_head(TProcDef(GenericDef).struct,TProcDef(GenericDef).ProcTypeOption,[],GenericDef,generictypelist,pd);
                     if Assigned(pd) then
                       begin
@@ -2100,7 +2100,7 @@ uses
                   end
                 else
                   begin
-                    CurrentScanner.startreplaytokens(GenericDef.GenericTokenBuf,hmodule.ChangeEndian);
+                    CurrentScanner.startreplaytokens(GenericDef.GenericTokenBuf);
                     if Assigned(context.ForwardDef) then
                       begin
                         tsrsym:=nil;
@@ -2984,7 +2984,7 @@ uses
             { use the index the module got from the current compilation process }
             CurrentFilePos.moduleindex:=hmodule.ModuleID;
             CurrentTokenPos:=CurrentFilePos;
-            CurrentScanner.startreplaytokens(TProcDef(def.GenericDef).GenericTokenBuf,hmodule.ChangeEndian);
+            CurrentScanner.startreplaytokens(TProcDef(def.GenericDef).GenericTokenBuf);
             Read_Proc_Body(def);
             CurrentFilePos:=oldcurrent_filepos;
           end

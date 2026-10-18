@@ -951,10 +951,7 @@ Implementation
          else
            Replace(result,'$NOWARN','-W');
 
-         if TargetInfo.endian=endian_little then
-           Replace(result,'$ENDIAN','-mlittle')
-         else
-           Replace(result,'$ENDIAN','-mbig');
+         Replace(result,'$ENDIAN','-mlittle');
 
          { as we don't keep track of the amount of sections we created we simply
            enable Big Obj COFF files always for targets that need them }
@@ -1067,7 +1064,7 @@ Implementation
     procedure TExternalAssembler.WriteRealConstAsBytes(hp: TAIRealConst; const dbdir: string; do_line: boolean);
       var
         pdata: PByte;
-        index, step, real_byte_count: LongInt;
+        index, real_byte_count: LongInt;
         ssingle: single;
         ddouble: double;
         ccomp: int64;
@@ -1114,24 +1111,11 @@ Implementation
             end;
         end;
         real_byte_count:=TAIRealConst(hp).DataSize;
-        { write bytes in inverse order if source and target endianess don't
-          match }
-        if SourceInfo.endian<>TargetInfo.endian then
-          begin
-            { go from back to front }
-
-              index:=real_byte_count-1;
-            step:=-1;
-          end
-        else
-          begin
-            index:=0;
-            step:=1;
-          end;
+        index:=0;
         repeat
 
           writer.AsmWrite(ToStr(pdata[index]));
-          inc(index,step);
+          inc(index);
           dec(real_byte_count);
           if real_byte_count<>0 then
             writer.AsmWrite(',');
@@ -1760,12 +1744,6 @@ Implementation
                        pdata:=@ccomp;
                      end;
                  end;
-                 if SourceInfo.endian<>TargetInfo.endian then
-                   begin
-                     for index:=0 to real_byte_count-1 do
-                       lebbuf[index]:=PByte(pdata)[real_byte_count-1-index];
-                     pdata:=@lebbuf;
-                   end;
                  ObjData.writebytes(pdata^,real_byte_count);
                  ObjData.writebytes(zerobuf,TAIRealConst(hp).savesize-real_byte_count);
                end;
@@ -1820,34 +1798,7 @@ Implementation
                        else if relative_reloc then
                          ObjData.writereloc(ObjData.CurrObjSec.Size+TAIConst(hp).Size-objsym.address+TAIConst(hp).symofs,TAIConst(hp).Size,objsymend,RELOC_RELATIVE)
                        else
-                         if SourceInfo.endian<>TargetInfo.endian then
-                           begin
-                             case TAIConst(hp).Size of
-                                1 : begin
-                                      b:=byte(TAIConst(hp).Value);
-                                      ObjData.writebytes(b,1);
-                                    end;
-                                2 : begin
-                                      w:=word(TAIConst(hp).Value);
-                                      w:=swapendian(w);
-                                      ObjData.writebytes(w,2);
-                                    end;
-                                4 : begin
-                                      d:=dword(TAIConst(hp).Value);
-                                      d:=swapendian(d);
-                                      ObjData.writebytes(d,4);
-                                    end;
-                                8 : begin
-                                      q:=qword(TAIConst(hp).Value);
-                                      q:=swapendian(q);
-                                      ObjData.writebytes(q,8);
-                                    end;
-                             else
-                               InternalError(2024012502);
-                             end;
-                           end
-                         else
-                           ObjData.writebytes(TAIConst(hp).Value,TAIConst(hp).Size);
+                         ObjData.writebytes(TAIConst(hp).Value,TAIConst(hp).Size);
                      end;
                    aitconst_rva_symbol :
                      begin
@@ -1960,16 +1911,12 @@ Implementation
                      s:='A';
                      eabi_section.write(s[1],1);
                      ddword:=eabi_section.Size-1;
-                     if SourceInfo.endian<>TargetInfo.endian then
-                       ddword:=SwapEndian(ddword);
                      eabi_section.write(ddword,4);
                      s:='aeabi'#0;
                      eabi_section.write(s[1],6);
                      s:=#1;
                      eabi_section.write(s[1],1);
                      ddword:=eabi_section.Size-1-4-6-1;
-                     if SourceInfo.endian<>TargetInfo.endian then
-                       ddword:=SwapEndian(ddword);
                      eabi_section.write(ddword,4);
                    end;
                  leblen:=EncodeULEB128(TAIAttribute(hp).tag,lebbuf,0);
@@ -1997,13 +1944,9 @@ Implementation
                  TmpDataPos:=eabi_section.Data.Pos;
                  eabi_section.Data.seek(1);
                  ddword:=eabi_section.Size-1;
-                 if SourceInfo.endian<>TargetInfo.endian then
-                   ddword:=SwapEndian(ddword);
                  eabi_section.Data.write(ddword,4);
                  eabi_section.Data.seek(12);
                  ddword:=eabi_section.Size-1-4-6;
-                 if SourceInfo.endian<>TargetInfo.endian then
-                   ddword:=SwapEndian(ddword);
                  eabi_section.Data.write(ddword,4);
                  eabi_section.Data.Seek(TmpDataPos);
                end;

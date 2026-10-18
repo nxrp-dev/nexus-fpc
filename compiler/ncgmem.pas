@@ -490,7 +490,7 @@ implementation
                            else
                              lWordOffset:=sizeof(aword)*8;
 
-                           if (FieldSym.FieldOffset>=lWordOffset) xor (TargetInfo.endian=endian_big) then
+                           if FieldSym . FieldOffset >= lWordOffset then
                              Location.SReg.SubsetReg := Left.Location.RegisterHi
                            else
                              Location.SReg.SubsetReg := Left.Location.Register;
@@ -508,19 +508,13 @@ implementation
 
                        if not Is_Packed_Record_Or_Object(Left.ResultDef) then
                          begin
-                           if (TargetInfo.endian = ENDIAN_BIG) then
-                             Location.SReg.StartBit := (TCgSize2Size[Location.SReg.SubsetRegSize] - TCgSize2Size[Location.Size] - FieldSym.FieldOffset) * 8+lOffsetCorrection
-                           else
-                             Location.SReg.StartBit := (FieldSym.FieldOffset * 8)-lOffsetCorrection;
+                           Location.SReg.StartBit := (FieldSym.FieldOffset * 8)-lOffsetCorrection;
                            Location.SReg.BitLen := TCgSize2Size[Location.Size] * 8;
                          end
                        else
                          begin
                            Location.SReg.BitLen := ResultDef.PackedBitSize;
-                           if (TargetInfo.endian = ENDIAN_BIG) then
-                             Location.SReg.StartBit := (TCgSize2Size[Location.SReg.SubsetRegSize]*8 - Location.SReg.BitLen) - FieldSym.FieldOffset+lOffsetCorrection
-                           else
-                             Location.SReg.StartBit := FieldSym.FieldOffset-lOffsetCorrection;
+                           Location.SReg.StartBit := FieldSym.FieldOffset-lOffsetCorrection;
                          end;
                      end;
                  end;
@@ -530,19 +524,13 @@ implementation
                    Location.Size:=Def_CGSize(ResultDef);
                    if not Is_Packed_Record_Or_Object(Left.ResultDef) then
                      begin
-                       if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(Location.SReg.StartBit, (Left.ResultDef.Size - TCgSize2Size[Location.Size] - FieldSym.FieldOffset) * 8)
-                       else
-                         inc(Location.SReg.StartBit, FieldSym.FieldOffset * 8);
+                       inc(Location.SReg.StartBit, FieldSym.FieldOffset * 8);
                        Location.SReg.BitLen := TCgSize2Size[Location.Size] * 8;
                      end
                    else
                      begin
                        Location.SReg.BitLen := ResultDef.PackedBitSize;
-                       if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(Location.SReg.StartBit, Left.Location.SReg.BitLen - Location.SReg.BitLen - FieldSym.FieldOffset)
-                       else
-                         inc(Location.SReg.StartBit, FieldSym.FieldOffset);
+                       inc(Location.SReg.StartBit, FieldSym.FieldOffset);
                      end;
                  end;
                else
@@ -1049,19 +1037,11 @@ implementation
 {$if defined(cpu64bitalu)}
                       lReg:=Left.Location.Register;
 {$else defined(cpu64bitalu)}
-                      if TargetInfo.endian=endian_little then
-                        begin
+                      begin
                           if Location.Reference.Offset>3 then
                             lReg:=Left.Location.Register64.RegHi
                           else
                             lReg:=Left.Location.Register64.RegLo;
-                        end
-                      else
-                        begin
-                          if Location.Reference.Offset>3 then
-                            lReg:=Left.Location.Register64.RegLo
-                          else
-                            lReg:=Left.Location.Register64.RegHi;
                         end;
 {$endif defined(cpu64bitalu)}
 

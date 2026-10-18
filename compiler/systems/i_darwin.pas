@@ -69,7 +69,6 @@ const
         res          : res_macho;
         dbg          : dbg_dwarf3;
         script       : script_unix;
-        endian       : endian_little;
         alignment    :
           (
             ProcAlign       : 16;
@@ -136,7 +135,6 @@ const
         res          : res_macho;
         dbg          : dbg_dwarf3;
         script       : script_unix;
-        endian       : endian_little;
         alignment    :
           (
             ProcAlign       : 16;
@@ -205,7 +203,6 @@ const
         res          : res_macho;
         dbg          : dbg_dwarf3;
         script       : script_unix;
-        endian       : endian_little;
         alignment    :
           (
             ProcAlign       : 16;
@@ -271,7 +268,6 @@ const
         res          : res_macho;
         dbg          : dbg_dwarf3;
         script       : script_unix;
-        endian       : endian_little;
         alignment    :
           (
             ProcAlign       : 16;
@@ -338,7 +334,6 @@ const
         res          : res_macho;
         dbg          : dbg_dwarf3;
         script       : script_unix;
-        endian       : endian_little;
         alignment    :
           (
             ProcAlign       : 16;

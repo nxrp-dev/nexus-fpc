@@ -2818,7 +2818,7 @@ procedure fpc_cpucodeinit;
               .byte  0x0f,0x28,0xf7
             {$else}
               movaps %xmm7, %xmm6
-            {$endif not EMX}
+            {$endif OLD_ASSEMBLER}
             end;
             sse_check:=false;
             has_sse_support:=os_supports_sse;

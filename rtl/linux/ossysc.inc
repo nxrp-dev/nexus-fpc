@@ -354,8 +354,8 @@ begin
  Fpftruncate:=Do_syscall(syscall_nr_ftruncate,TSysParam(fd),TSysParam(flength));
 {$else}
  Fpftruncate:=Do_syscall(syscall_nr_ftruncate64,TSysParam(fd),
-   {$ifdef FPC_BIG_ENDIAN}    tsysparam(hi(flength)),tsysparam(lo(flength)){$endif}
-   {$ifdef FPC_LITTLE_ENDIAN} tsysparam(lo(flength)),tsysparam(hi(flength)){$endif}
+
+    tsysparam(lo(flength)),tsysparam(hi(flength))
    );
 {$endif}
 end;

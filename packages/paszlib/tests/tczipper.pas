@@ -19,7 +19,7 @@ program tczipper;
 
 uses
   SysUtils, classes,
-  zipper, unzip, zdeflate, zinflate, zip, zstream, nullstream;
+  PasZLibIO, PasZLib, nullstream;
 
 type
 

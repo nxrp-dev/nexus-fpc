@@ -23,12 +23,6 @@ program create_startup_test_crash;
 {$ifdef wince}
 {$define HasExeSuffix}
 {$endif}
-{$ifdef os2}
-{$define HasExeSuffix}
-{$endif}
-{$ifdef emx}
-{$define HasExeSuffix}
-{$endif}
 {$ifdef wdosx}
 {$define HasExeSuffix}
 {$endif}

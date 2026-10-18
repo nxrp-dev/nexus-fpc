@@ -1,6 +1,6 @@
 program testsingle;
 
-uses sysutils, zipper;
+uses sysutils, PasZLibIO;
 
 Var
   FN : String;
