@@ -57,12 +57,6 @@ function  IsMemoryManagerSet: Boolean;
 
 { Variables }
 const
-{$ifdef LEGACYHEAP}
-  { if more than MaxKeptOSChunks are free, the heap manager will release chunks back to the OS }
-  MaxKeptOSChunks: DWord = 4;
-  growheapsizesmall : ptruint=32*1024; { fixed-size small blocks will grow with 32k }
-  growheapsize1 : ptruint=256*1024;  { < 256k will grow with 256k }
-{$endif LEGACYHEAP}
   growheapsize2 : ptruint=1024*1024; { > 256k will grow with 1m }
 var
   ReturnNilIfGrowHeapFails : boolean;
@@ -101,7 +95,7 @@ function GetHeapStatus:THeapStatus;
 function GetFPCHeapStatus:TFPCHeapStatus;
 
 { Support for DeferInitHeapProcessWide and DoneHeapProcessWide is not free, so they must be enabled explicitly by defining SUPPORT_INIT_HEAP_PROCESS_WIDE. }
-{$if defined(FPC_HAS_FEATURE_THREADING) and not defined(FPC_NO_DEFAULT_HEAP) and not defined(HAS_MEMORYMANAGER) and not defined(LEGACYHEAP)}
+{$if defined(FPC_HAS_FEATURE_THREADING) and not defined(FPC_NO_DEFAULT_HEAP) and not defined(HAS_MEMORYMANAGER)}
   {$if defined(WINDOWS)}
     {$define SUPPORT_INIT_HEAP_PROCESS_WIDE}
   {$endif need *HeapProcessWide (platforms)}

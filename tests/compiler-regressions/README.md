@@ -146,3 +146,35 @@ Compile and run it with a native compiler and matching RTL. Put the executable
 and unit output in a unique directory under the development worktree. For
 cross-target verification, compile with `-Cn` and compare the emitted VMT and
 message-table object data against the compiler before the removal.
+
+## X86 MOVZX memory operands
+
+`x86_movzx_memory_operand.pas` exercises the real `OptPass1Movx` pass against
+matching compiler units. On a Linux x64 host, it reserves valid memory-reference
+descriptors at two controlled addresses. One address, when incorrectly read
+through `TOper.reg`, collides with the EAX-family encoding. Both memory loads
+must survive; same-register mask optimizations must still run, and moves
+between distinct registers must survive. It checks both byte/word extensions
+with the i386 and x86-64 backends. The x86-64 generator uses these same dword
+MOVZX forms for unsigned extension to qword, implicitly clearing the upper bits.
+
+```sh
+bash tests/switches/Run-NXX86MovzxTests.sh \
+  <host-compiler> <host-rtl-units> <matching-backend-compiler-units> \
+  <output-directory-under-worktree>
+```
+
+The harness uses Linux `MAP_FIXED_NOREPLACE`; inability to reserve either
+address is an error, not a skipped test. It restores each instruction's owned
+reference before destruction, including when testing an unfixed optimizer.
+No production compiler instrumentation is required.
+
+`variants_byref_negation.pas` retains the runtime reproducer that exposed the
+missing memory reload in `Variants.sysvarneg`. Compile the Variants unit itself
+with the tested compiler and optimization setting, then compile and run this
+fixture with that unit and its matching RTL. It checks signed/unsigned integer,
+floating-point and Currency negation, result subtypes, unchanged referenced
+values, and ordinary Variant negation. LongWord inputs on both sides of
+`$80000000`, including `$FFFFFFFF`, check that negation widens the operand to
+Int64 before changing its sign in both ordinary and by-reference paths.
+Outputs belong under the worktree.

@@ -15852,7 +15852,8 @@ unit aoptx86;
                       ;
                 end;
                 { we cannot get rid of the and, but can we get rid of the movz ?}
-                if SuperRegistersEqual(TAICPU(p).oper[0]^.reg,TAICPU(p).oper[1]^.reg) then
+                if (TAICPU(p).oper[0]^.typ = top_reg) and
+                  SuperRegistersEqual(TAICPU(p).oper[0]^.reg,TAICPU(p).oper[1]^.reg) then
                   begin
                     case TAICPU(p).opsize Of
                       S_BL, S_BW{$ifdef x86_64}, S_BQ{$endif x86_64}:

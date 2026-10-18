@@ -54,7 +54,7 @@ are saved there. Code review was explicitly waived for that relocation.
 | `iconvenc` | — | Recipe marks libc required. |
 | `iosxlocale` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/iosxlocale`; locale and wide-string bindings. |
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
-| `libffi` | `rtl-objpas` | `ffi.pas`, `ffi.manager.pas`; recipe marks libc required. The recipe builds Pascal bindings, not libffi C sources. |
+| `libffi` (relocated) | `rtl-objpas`, `rtl-generics` through RTTI; external native libffi | Moved 2026-10-18 to Nexus `packages/nexus-packages/libffi`; `LibFFI.nxpackage` builds both Pascal units. Optional RTTI invocation/callback provider, with Lua and test/example consumers. Not a compiler/bootstrap or RTL build input; review, direct nxtest regressions and C ABI probes accompany the destination. |
 | `pasjpeg` (relocated) | — | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/pasjpeg`. `PasJPEG.nxpackage` builds the portable codec, both coefficient-transcoding units and the repaired BMP/JPEG stream API. The saved review records source hashes, direct nxtest proofs and native results. |
 | `paszlib` | — | `paszlib.pas`, `zip.pas`, `unzip.pas`, `zipper.pas`, plus implicitly compiled units. CRC32 is private in `utNXPasZLibCRC32`; no legacy hash or HashLib dependency. |
 | `pthreads` | — | Pascal platform bindings; preserve their source-level library declarations. |

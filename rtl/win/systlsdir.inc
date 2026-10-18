@@ -91,16 +91,12 @@ procedure Exec_Tls_callback(Handle : pointer; reason : Dword; Reserved : pointer
            SetupEntryInformation(SysInitEntryInformation);
            {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
            InitHeap;
-         {$ifndef LEGACYHEAP}
            DeferInitHeapProcessWide;
-         {$endif ndef LEGACYHEAP}
            InitSystemThreads;
          end;
        DLL_PROCESS_DETACH :
          begin
-         {$ifndef LEGACYHEAP}
            DoneHeapProcessWide;
-         {$endif ndef LEGACYHEAP}
          end;
        DLL_THREAD_ATTACH :
          begin

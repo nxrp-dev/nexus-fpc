@@ -44,7 +44,6 @@ objc1.inc       Interface of interface to the Objective-C 1.0 runtime
 objcnf.inc      Interface to the Objective-C non-fragile run time (1.5+/2.x) 
 objpas.inc      Delphi dialect system unit extensions (relative to BP7)
 objpash.inc     Declarations of Delphi dialect system unit extensions 
-oldheap.inc     Old version of the heapmanager
 osheap.inc      OS heap manager for small targets
 psabieh.inc     Non Windows exception and unwinding handling
 psabiehh.inc    Declarations for Non Windows exception and unwinding handling
@@ -62,8 +61,6 @@ textrec.inc     Definition of Textrec record
 thread.inc      OS independent part of multi threading support in FPC
 threadh.inc     Declarations for multi threading support
 threadvr.inc    Threadvar support, platform independent part
-tinyheap.inc    Tiny heap manager for the i8086 near heap
-tnyheaph.inc    declarations for tiny heap manager
 typefile.inc    Text file record definition
 typshrd.inc     Implementation for (TRect,Tpoint and similar types) in windows or unit types, depending on target
 typshrdh.inc    Declaration for (TRect,Tpoint and similar types) in windows or unit types, depending on target

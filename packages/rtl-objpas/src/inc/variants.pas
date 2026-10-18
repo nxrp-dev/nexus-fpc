@@ -1856,7 +1856,7 @@ begin
     end;
     varLongWord:
       if vLongWord and $80000000 <> 0 then begin
-        vInt64 := -vLongWord;
+        vInt64 := -Int64(vLongWord);
         vType := varInt64;
       end else begin
         vInteger := -vLongWord;
@@ -1920,7 +1920,7 @@ begin
           end;
           varLongWord:
             if PLongWord(vPointer)^ and $80000000 <> 0 then begin
-              vInt64 := -PLongWord(vPointer)^;
+              vInt64 := -Int64(PLongWord(vPointer)^);
               vType := varInt64;
             end else begin
               vInteger := -PLongWord(vPointer)^;

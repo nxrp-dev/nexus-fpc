@@ -52785,6 +52785,27 @@
       },
       "production_fix_applied": true,
       "repair_validation": "/media/kcollins/dev/worktree/msg-repair-xcnxvq5m/Review.md"
+    },
+    {
+      "case": "i386_Variants_byref_negation_wrong_code",
+      "status": "operand_type_guard_implemented_and_validated",
+      "evidence": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/movzx-variants-fix/Review.md",
+      "symptom": "OptPass1Movx compared the reg field of a top_ref operand without checking its type. Certain reference-pointer addresses compared equal to the EAX register encoding and triggered MovzAnd2And2, deleting a necessary memory load. A valid reference-address collision reproduces the entire original bad Variants object byte for byte. The unchecked predicate originated in upstream commit 08b61997ca9 on 2020-09-21. The owner-authorized correction requires top_reg before comparing registers. Retained deterministic regressions fail against both original backends and pass against both corrected backends, preserving register-mask optimization; stock 3.2.2 bootstrap, all 13 target builds, 541 integration tests and the original runtime reproducer at five optimization settings pass.",
+      "production_fix_applied": true
+    },
+    {
+      "case": "i386_Variants_large_unsigned_negation",
+      "status": "explicit_operand_widening_implemented_and_validated",
+      "evidence": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/movzx-variants-fix/Review.md",
+      "symptom": "On i386, ordinary and by-reference negation of large LongWord Variants negated the operand in native 32-bit arithmetic before storing the result in Int64; $FFFFFFFF became 1. The unchanged library reproduces the failure. Owner explicitly authorized widening the operand to Int64 before negation in both existing Int64 branches and retaining the regressions. The 180-check fixture covers both sides of $80000000 and $FFFFFFFF, result subtypes and unchanged referenced sources; it passes with Variants rebuilt at five optimization settings on i386 and x86-64.",
+      "production_fix_applied": true
+    },
+    {
+      "case": "heaptrc_special_unit_source_autocompilation",
+      "status": "reproduced_before_after_no_repair_applied",
+      "evidence": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/special-unit-analysis/analysis.json",
+      "symptom": "-gh with only the minimal SDK and heaptrc source reaches FinishModule special-unit recompile prohibition, Internal error 2026032615. Normal Forge stages precompile heaptrc successfully; complete-RTL runtime tests pass.",
+      "production_fix_applied": false
     }
   ],
   "authorized_behavioral_changes": [
@@ -52859,6 +52880,29 @@
       "validation": "/media/kcollins/dev/worktree/compiler-cleanup-v7gwz1i1/Review.md",
       "separate_from_naming_batch": "056",
       "checks": "Stock FPC 3.2.2 three-generation baseline and cleanup bootstraps; 13-target before/after compiler/RTL matrix; 541 integration tests; native class/object regressions; whole-object artifact comparisons."
+    },
+    {
+      "change": "Retire LEGACYHEAP, unreferenced tiny-heap files and Perl message scanner; align nxbuild debug choices",
+      "authorization": "Owner explicitly instructed: act on your findings including retiring LEGACYHEAP.",
+      "status": "implemented_and_validated_with_separate_open_wrong_code_finding",
+      "validation": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/Review.md",
+      "separate_from_naming_goal": true
+    },
+    {
+      "change": "Guard x86 MOVZX register optimization and widen large unsigned Variant operands before negation",
+      "authorization": "Owner instructed make the fix, then explicitly approved including the separately verified Variants correction and its regressions.",
+      "status": "implemented_and_validated",
+      "files": [
+        "compiler/x86/aoptx86.pas",
+        "packages/rtl-objpas/src/inc/variants.pas",
+        "tests/compiler-regressions/x86_movzx_memory_operand.pas",
+        "tests/compiler-regressions/variants_byref_negation.pas",
+        "tests/compiler-regressions/README.md",
+        "tests/switches/Run-NXX86MovzxTests.sh"
+      ],
+      "validation": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/movzx-variants-fix/Review.md",
+      "checks": "Stock FPC 3.2.2 bootstrap with matching generations two/three; deterministic regressions failing on both old backends and passing all 24 checks on both corrected backends; 1800 Variant checks across five optimization settings on i386/x86-64; 541 integration tests; 13 cross-target builds and Variants object comparisons.",
+      "separate_from_naming_goal": true
     }
   ],
   "retired_components": [
@@ -52933,6 +52977,19 @@
       "reason": "Retire the unused PE export scanner/DEF and GNU as/ar import-library generator together with its sole implementation helper. No active build or release consumer exists. Windows import generation in t_win.pas and shared process/file helpers remain unchanged. Historical naming inventories are preserved.",
       "baseline_commit": "809ba610ddd2de4af75d6e7e372ac5a03efb270b",
       "validation": "/media/kcollins/dev/worktree/retire-fpimpdef-gg4maqre/Review.md"
+    },
+    {
+      "date": "2026-10-18",
+      "paths": [
+        "rtl/inc/oldheap.inc",
+        "LEGACYHEAP selection and platform branches",
+        "rtl/inc/tinyheap.inc",
+        "rtl/inc/tnyheaph.inc",
+        "compiler/utils/msgused.pl"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Owner explicitly authorized all reviewed findings including LEGACYHEAP retirement. The current heap.inc implementation and the exact previously selected startup paths are retained. nxbuild retired debug choices are removed in the sibling repository. Valgrind remains supported.",
+      "validation": "/media/kcollins/dev/worktree/heap-debug-cleanup-y7jo6thv/Review.md"
     }
   ]
 }

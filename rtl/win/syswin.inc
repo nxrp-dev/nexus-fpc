@@ -539,9 +539,7 @@ function Dll_entry{$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}(constref info : TE
 {$ifdef FPC_USE_SEH}
                try
 {$endif}
-{$ifndef LEGACYHEAP}
                DeferInitHeapProcessWide;
-{$endif ndef LEGACYHEAP}
 {$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}
                EntryInformation.PascalMain();
 {$else FPC_HAS_INDIRECT_ENTRY_INFORMATION}
@@ -591,9 +589,7 @@ function Dll_entry{$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}(constref info : TE
                InternalExit;
              end;
 
-{$ifndef LEGACYHEAP}
            DoneHeapProcessWide; { Iterates alive “HeapInc.ThreadState”s so requires alive threadvars, careful. }
-{$endif ndef LEGACYHEAP}
            SysReleaseThreadVars;
            { Free TLS resources used by ThreadVars }
            SysFiniMultiThreading;

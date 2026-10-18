@@ -6,7 +6,7 @@ module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project RTLObjPasTests {
     RootDirectory: "../../../../nexus";
-    OutputRoot: "output/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-objpas";
+    OutputRoot: "../../worktree/libffi-relocation/rtl-objpas/" + @Tools.Native.Name + "/rtl-objpas";
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: [
@@ -24,7 +24,7 @@ Project RTLObjPasTests {
                 @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/libffi/src",
+                "packages/nexus-packages/libffi/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-generics/src",
                 "packages/nexus-packages/nxtest/src"
             ];
