@@ -1,3 +1,0 @@
-src/pthreads.pas=namespaced/UnixApi.Pthreads.pas
-{s*:src/}=namespaced/
-{i+:src/}

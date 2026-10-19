@@ -3,8 +3,11 @@ program nxResourceMetadataTests;
 {$mode objfpc}{$H+}
 
 uses
+  obNXTestRegistry, obNXTestContext, utNXTestConsole,
   Classes, SysUtils, ResourceCatalog, ResourceArtifacts, ResourceTools,
   ResourceMetadata;
+
+var TestContext: TNXTestContext;
 
 type
   TBoundedStream = class(TMemoryStream)
@@ -25,7 +28,7 @@ var
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
-  if not ACondition then raise Exception.Create(AMessage);
+  TestContext.AssertTrue(ACondition, AMessage);
   Inc(LChecks);
 end;
 
@@ -85,7 +88,9 @@ begin
   Check(LBad.Size = 0, 'Validation failure wrote partial metadata');
 end;
 
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   try
     Check(ParamCount = 1, 'Expected an external artifact filename');
     LOriginal := TModuleResourceInputs.Create;
@@ -214,7 +219,15 @@ begin
     begin
       WriteLn('FAIL ', E.ClassName, ': ', E.Message);
       DumpExceptionBackTrace(Output);
-      Halt(1);
+      TestContext.Fail(E.ClassName + ': ' + E.Message);
     end;
   end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Resources.Metadata').AddTest('SerializationAndRejection', @RunCase, 'resources');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

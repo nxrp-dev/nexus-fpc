@@ -39,6 +39,8 @@ See [the saved validation results](../../nexusfpc-dynamic-packages-gap-analysis.
 
 `Run-NexusProfilerTests.ps1` covers the broader profiler behavior, including
 format, activation, calls, exceptions, existing thread support, control, and
-optimized builds. `Run-NXProfileFormatTests.ps1` covers the format and event-memory
-fixtures separately. Supply `-SourceRoot`, `-Compiler`, `-RtlUnits`, and a fresh
-`-OutputRoot` when invoking these scripts directly.
+optimized builds. It now invokes the native `NXProfilerTests` format and
+event-memory suite. The duplicate standalone format runner was removed. Supply
+`-SourceRoot`, `-Compiler`, `-RtlUnits`, and a fresh `-OutputRoot` when invoking
+the integration script; build `packages/nexusprofiler/tests/NXProfilerTests.nxproject`
+for the eight unit cases independently.

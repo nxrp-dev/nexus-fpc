@@ -11,3 +11,6 @@ matching compiler and RTL in Nexus `projects/nxbuild/nxbuild.environment.nxscrip
 No FPCUnit bridge or external test discovery is involved.
 
 Run `RTLCollectionsTests` from its output directory.
+
+Suite ownership, output paths, consolidation decisions and explicit skips are
+listed in [the central nxtest guide](../../../NXTEST.md).

@@ -2,16 +2,21 @@
 
 `nxsystemids.pas` includes the production enum declarations and checks the
 fixed numbers of all 4 surviving CPU members and 18 surviving system members.
+It registers directly with nxtest under `Compiler.TargetIdentities`.
 It also checks packed type/set sizes, set membership, and numeric table indexes
 using the compiler's `PACKENUM 1` / `PACKSET 1` settings.
 
 Run from the repository root in PowerShell:
 
 ```powershell
+$nxTestSources = Join-Path $PWD '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path $nxTestSources)) {
+    $nxTestSources = Join-Path $PWD '../../nexus/packages/nexus-packages/nxtest/src'
+}
 $testOutput = Join-Path $env:TEMP ('NexusFPC-SystemIds-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $testOutput | Out-Null
 ./compiler/ppcx64.exe -n -Furtl/units/x86_64-win64 `
-    "-FU$testOutput" "-FE$testOutput" tests/systemids/nxsystemids.pas
+    "-Fu$nxTestSources" "-FU$testOutput" "-FE$testOutput" tests/systemids/nxsystemids.pas
 if ($LASTEXITCODE -ne 0) { throw 'Identifier test compilation failed' }
 & "$testOutput/nxsystemids.exe"
 if ($LASTEXITCODE -ne 0) { throw 'Identifier test failed' }

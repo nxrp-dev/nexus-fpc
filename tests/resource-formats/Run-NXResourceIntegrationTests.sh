@@ -114,21 +114,21 @@ rm 'relocated units/resunit.nxr1.res'
 reject missing-artifact 'resunit.nxr1.res' "$compiler" "${flags[@]}" "-Fu$out/relocated units" main.pas
 
 # Direct forms still load through Classes. RES signatures override extensions.
-cp "$root/tests/test/units/system/"tres6.{pas,lfm} .
+cp "$root/tests/rtl/fixtures/system/"tres6.{pas,lfm} .
 step form "$compiler" "${flags[@]}" tres6.pas
 expect Foobar ./tres6
-cp "$root/tests/test/units/system/tres4.res" direct.dcr
-sed 's/tres4.res/direct.dcr/' "$root/tests/test/units/system/tres4.pas" >tres4.pas
+cp "$root/tests/rtl/fixtures/system/tres4.res" direct.dcr
+sed 's/tres4.res/direct.dcr/' "$root/tests/rtl/fixtures/system/tres4.pas" >tres4.pas
 step dcr "$compiler" "${flags[@]}" tres4.pas
 step dcr-runtime ./tres4
 
 # Retain the existing language fallback/enumeration assertions and run their RC
 # sources through the production preprocessor, catalog and image emitter.
-cp "$root/tests/test/units/system/"tres*.txt .
-cp "$root/tests/test/units/system/"tres{1,b,5}.rc .
+cp "$root/tests/rtl/fixtures/system/"tres*.txt .
+cp "$root/tests/rtl/fixtures/system/"tres{1,b,5}.rc .
 for name in tres tres2 tres3 tres5; do
     sed -e 's/tres1.res/tres1.rc/' -e 's/tresb.res/tresb.rc/' \
-        "$root/tests/test/units/system/$name.pas" >"$name.pas"
+        "$root/tests/rtl/fixtures/system/$name.pas" >"$name.pas"
     step "legacy-$name" "$compiler" "${flags[@]}" "$name.pas"
     step "legacy-runtime-$name" "./$name"
 done

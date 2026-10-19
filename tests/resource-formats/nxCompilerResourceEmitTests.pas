@@ -5,15 +5,20 @@ program nxCompilerResourceEmitTests;
 { Compile against one consistent target compiler-unit closure. The test runs
   on the host and writes data-only assembly for that closure's target width. }
 uses
+  obNXTestRegistry, obNXTestContext, utNXTestConsole,
   SysUtils, Compiler, GlobType, Globals, Systems, CFileUtl, CClasses, Verbose,
   FModule, AAsmData, AAsmBase, AAsmTai, Assemble, AgGas,
   ResourceCatalog, ResourceEmit;
+
+var TestContext: TNXTestContext;
 
 var
   LCatalog: TResourceCatalog;
   LAssembler: TExternalAssembler;
   LTarget: TSystem;
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   try
     if ParamCount <> 3 then
       raise Exception.Create('Usage: nxCompilerResourceEmitTests <target> <input.res> <output.s>');
@@ -89,7 +94,15 @@ begin
     begin
       WriteLn('FAIL ', E.ClassName, ': ', E.Message);
       DumpExceptionBackTrace(Output);
-      Halt(1);
+      TestContext.Fail(E.ClassName + ': ' + E.Message);
     end;
   end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Resources.CompilerEmission').AddTest('TargetAssembly', @RunCase, 'resources');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

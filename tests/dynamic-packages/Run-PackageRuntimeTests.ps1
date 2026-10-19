@@ -7,9 +7,13 @@ $ErrorActionPreference='Stop'
 Initialize-PackageTests $OutputRoot
 $SdkRoot=(Resolve-Path $SdkRoot).Path; $SourceRoot=(Resolve-Path $SourceRoot).Path
 $lCompiler="$SdkRoot/bin/ppcx64.exe"
+$lNXTestSources=Join-Path $SourceRoot '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path "$lNXTestSources/obNXTestRegistry.pas")) {
+    $lNXTestSources=Join-Path $SourceRoot '../../nexus/packages/nexus-packages/nxtest/src'
+}
 $null=Invoke-TestProcess 'build-probe' $lCompiler ((Get-TestCompilerOptions $SdkRoot $script:TestOutput)+@("$PSScriptRoot/package_native_probe.pas"))
-$null=Invoke-TestProcess 'build-lifecycle' $lCompiler ((Get-TestCompilerOptions $SdkRoot $script:TestOutput)+@("-Fu$SourceRoot/rtl/inc","$PSScriptRoot/package_lifecycle_test.pas"))
-$null=Invoke-TestProcess 'run-lifecycle' "$script:TestOutput/package_lifecycle_test.exe"
+$null=Invoke-TestProcess 'build-lifecycle' $lCompiler ((Get-TestCompilerOptions $SdkRoot $script:TestOutput)+@("-O-","-Fu$SourceRoot/rtl/inc","-Fu$lNXTestSources","$PSScriptRoot/NXPackageLifecycleTests.lpr"))
+$null=Invoke-TestProcess 'run-lifecycle' "$script:TestOutput/NXPackageLifecycleTests.exe"
 $lPPU=Get-Content "$SourceRoot/compiler/ppu.pas" -Raw
 $lVersion=[uint64][regex]::Match($lPPU,'CurrentPPUVersion\s*=\s*(\d+)').Groups[1].Value
 $lRevision=[uint64][regex]::Match($lPPU,'CurrentPPULongVersion\s*=\s*(\d+)').Groups[1].Value

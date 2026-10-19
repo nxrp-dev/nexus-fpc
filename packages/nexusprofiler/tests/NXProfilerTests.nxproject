@@ -1,0 +1,30 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
+
+Project NXProfilerTests {
+    RootDirectory: "../../../../nexus";
+    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/profiler";
+    FPC Tests {
+        CompilerPath: @Tools.Native.FPCCompiler;
+        SourceFiles: [
+            @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/tests/NXProfilerTests.lpr"
+        ];
+        OutputPath: @NXProfilerTests.OutputRoot;
+        RawOptions: ["-O2", "-Cr", "-Co"];
+        Config Options { DisableDefaultConfigFiles: True; }
+        Language Pascal { Mode: ObjFPC; }
+        Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
+        Files Paths {
+            CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
+            UnitPaths: [
+                @Tools.Native.RTLPath,
+                @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/tests",
+                @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/src",
+                "packages/nexus-packages/nxtest/src"
+            ];
+        }
+    }
+}

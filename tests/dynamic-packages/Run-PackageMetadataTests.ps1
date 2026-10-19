@@ -11,17 +11,27 @@ $lOptions=(Get-TestCompilerOptions $SdkRoot $lBuild)+@('-B','-O1','-dx86_64')
 foreach($lPart in @('','x86_64','x86','systems')){
     $lOptions+="-Fu$SdkRoot/work/seed/source/$lPart","-Fi$SdkRoot/work/seed/source/$lPart"
 }
-$null=Invoke-TestProcess 'build-driver' $lCompiler ($lOptions+@("$PSScriptRoot/package_metadata_test.pas"))
-$lDriver="$lBuild/package_metadata_test.exe"
-$null=Invoke-TestProcess 'names' $lDriver @('names',$lFixtures) 0 'PASS names'
-$null=Invoke-TestProcess 'disabled-path' $lDriver @('disabled',$lFixtures,'DoesNotExist') 0 'PASS graph 1'
+$lNXTestSources=Join-Path $PSScriptRoot '../../../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path "$lNXTestSources/obNXTestRegistry.pas")) {
+    $lNXTestSources=Join-Path $PSScriptRoot '../../../../nexus/packages/nexus-packages/nxtest/src'
+}
+$lOptions+="-Fu$lNXTestSources"
+$null=Invoke-TestProcess 'build-driver' $lCompiler ($lOptions+@("$PSScriptRoot/NXPackageMetadataTests.lpr"))
+$lDriver="$lBuild/NXPackageMetadataTests.exe"
+function Invoke-MetadataTest([string]$Label,[string[]]$Arguments,[int]$Expected=0,
+    [string]$Contains='',[string]$WorkingDirectory=$script:TestOutput) {
+    if ($Expected -ne 0) { $Arguments=@('--expect-rejection')+$Arguments }
+    return Invoke-TestProcess $Label $lDriver $Arguments 0 $Contains $WorkingDirectory
+}
+$null=Invoke-MetadataTest 'names' @('names',$lFixtures) 0 'PASS names'
+$null=Invoke-MetadataTest 'disabled-path' @('disabled',$lFixtures,'DoesNotExist') 0 'PASS graph 1'
 $lCommon=Get-TestCompilerOptions $SdkRoot $lFixtures
 Write-TestFile "$lFixtures/ux.pas" 'unit ux; interface function Marker: LongInt; implementation function Marker: LongInt; begin Result:=37; end; end.'
 $null=Invoke-TestProcess 'compile-unit' $lCompiler ($lCommon+@("$lFixtures/ux.pas"))
 $lOriginalHash=(Get-FileHash "$lFixtures/ux.nxu").Hash
-$null=Invoke-TestProcess 'write-roundtrip' $lDriver @('write',$lFixtures,"$lFixtures/ux.nxu")
+$null=Invoke-MetadataTest 'write-roundtrip' @('write',$lFixtures,"$lFixtures/ux.nxu")
 Assert-PackageTest ($lOriginalHash -eq (Get-FileHash "$lFixtures/ux.nxu").Hash) 'Writer changed original PPU'
-$null=Invoke-TestProcess 'read-roundtrip' $lDriver @('read',$lFixtures,'Fixture') 0 'PASS read 1'
+$null=Invoke-MetadataTest 'read-roundtrip' @('read',$lFixtures,'Fixture') 0 'PASS read 1'
 $lSeed=[IO.File]::ReadAllBytes("$lFixtures/Fixture.nxp")
 function Entries([byte[]]$Data) {
     $p=32; $end=32+[BitConverter]::ToUInt32($Data,16); $result=@{}
@@ -87,7 +97,7 @@ function Save([string]$Name,[string[]]$Requires=@(),[string[]]$Units=@()){
 }
 function Read-Case([string]$Label,[byte[]]$Data,[int]$Expected=0,[string]$Contains='PASS read'){
     [IO.File]::WriteAllBytes("$lFixtures/Case.nxp",$Data)
-    $null=Invoke-TestProcess $Label $lDriver @('read',$lFixtures,'Case') $Expected $Contains
+    $null=Invoke-MetadataTest $Label @('read',$lFixtures,'Case') $Expected $Contains
 }
 function Reject([string]$Label,[byte[]]$Data,[string]$Contains='Invalid PCP file'){Read-Case $Label $Data 1 $Contains}
 function Mutate([byte[]]$Data,[int]$Offset,[string]$Format,$Value){
@@ -100,18 +110,18 @@ Read-Case 'independent-two-units-v4' (Fixture Case @() @('UX','UY'))
 Reject 'opposite-endian-metadata-v4' (Fixture Case @() @('UX') $true) "Can't find package"
 Read-Case 'metadata-over-buffer-boundary' (Fixture Case @(0..1599 | ForEach-Object {'Required{0:D4}' -f $_}))
 Save D @() @('UX'); Save B @('D'); Save C @('d'); Save A @('B','C')
-$null=Invoke-TestProcess diamond $lDriver @('graph',$lFixtures,'A') 0 'PASS graph 4'
+$null=Invoke-MetadataTest diamond @('graph',$lFixtures,'A') 0 'PASS graph 4'
 Save A @('a')
-$null=Invoke-TestProcess self-cycle $lDriver @('graph',$lFixtures,'A') 1 'Circular package dependency: A -> A'
+$null=Invoke-MetadataTest self-cycle @('graph',$lFixtures,'A') 1 'Circular package dependency: A -> A'
 Save A @('B'); Save B @('C'); Save C @('a')
-$null=Invoke-TestProcess indirect-cycle $lDriver @('graph',$lFixtures,'A') 1 'Circular package dependency: A -> B -> C -> A'
-$null=Invoke-TestProcess building-self-without-pcp $lDriver @('building',$lFixtures,'Root','root') 1 'Circular package dependency: Root -> root'
+$null=Invoke-MetadataTest indirect-cycle @('graph',$lFixtures,'A') 1 'Circular package dependency: A -> B -> C -> A'
+$null=Invoke-MetadataTest building-self-without-pcp @('building',$lFixtures,'Root','root') 1 'Circular package dependency: Root -> root'
 Save B @('Root')
-$null=Invoke-TestProcess building-indirect-without-pcp $lDriver @('building',$lFixtures,'Root','B') 1 'Circular package dependency: Root -> B -> Root'
+$null=Invoke-MetadataTest building-indirect-without-pcp @('building',$lFixtures,'Root','B') 1 'Circular package dependency: Root -> B -> Root'
 Save B @() @('UX'); Save C @() @('ux'); Save A @('B','C')
-$null=Invoke-TestProcess duplicate-owner $lDriver @('graph',$lFixtures,'A') 1 'Unit UX is contained in both packages B and C'
+$null=Invoke-MetadataTest duplicate-owner @('graph',$lFixtures,'A') 1 'Unit UX is contained in both packages B and C'
 Save A @('C','B')
-$null=Invoke-TestProcess duplicate-owner-reversed $lDriver @('graph',$lFixtures,'A') 1 'Unit UX is contained in both packages C and B'
+$null=Invoke-MetadataTest duplicate-owner-reversed @('graph',$lFixtures,'A') 1 'Unit UX is contained in both packages C and B'
 $lBase=Fixture Case @() @('UX','UY'); $lOffsets=Entries $lBase
 $b=$lBase.Clone(); [Text.Encoding]::ASCII.GetBytes('PCP').CopyTo($b,0)
 Reject foreign-package-same-version $b 'expected NXP signature'
@@ -151,10 +161,10 @@ Reject truncated-embedded-ppu ([byte[]]$lBase[0..($lFirst+39)])
 Hide-TestUnit $lFixtures ux
 Write-TestFile "$lFixtures/consumer.pas" 'program consumer; uses ux; begin if Marker<>37 then Halt(1); end.'
 Write-TestFile "$lFixtures/consumer.rsp" (($lCommon+@('-Cn','-FPFixture',"-Fp$lFixtures")) -join "`n")
-$null=Invoke-TestProcess source-free-pcp-consumption $lDriver @('consume','-n @consumer.rsp consumer.pas') 0 '' $lFixtures
+$null=Invoke-MetadataTest source-free-pcp-consumption @('consume','-n @consumer.rsp consumer.pas') 0 '' $lFixtures
 Assert-PackageTest (-not(Test-Path "$lFixtures/ux.nxu") -and -not(Test-Path "$lFixtures/ux.o")) 'Standalone artifacts leaked'
 Write-TestFile "$lFixtures/conflict.nxpk" 'package conflict; requires Fixture; contains ux; end.'
-$null=Invoke-TestProcess contains-required-unit $lDriver @('consume','-n @consumer.rsp conflict.nxpk') 1 'is already contained in package Fixture' $lFixtures
+$null=Invoke-MetadataTest contains-required-unit @('consume','-n @consumer.rsp conflict.nxpk') 1 'is already contained in package Fixture' $lFixtures
 Write-TestFile "$lFixtures/standardunit.pas" 'unit standardunit; interface const Value=37; implementation end.'
 Write-TestFile "$lFixtures/supported.nxpk" 'package supported; {$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif} contains standardunit; end.'
 $null=Invoke-TestProcess standard-compiler-package $lCompiler ($lCommon+@('-Cn',"$lFixtures/supported.nxpk"))

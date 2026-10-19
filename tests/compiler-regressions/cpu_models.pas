@@ -4,7 +4,9 @@ program CPUModels;
 
 {$mode objfpc}
 
-uses CPUInfo, Globals;
+uses obNXTestRegistry, obNXTestContext, utNXTestConsole, CPUInfo, Globals;
+
+var TestContext: TNXTestContext;
 
 const
   cModels: array[0..22] of record
@@ -37,7 +39,7 @@ const
   );
 
 var
-  lIndex, lFailures, lChecks: LongInt;
+  lIndex, lChecks: LongInt;
   lSettings: TSettings;
   lCPU: TCPUType;
 
@@ -46,12 +48,13 @@ begin
   Inc(lChecks);
   if not ACondition then
   begin
-    WriteLn('FAIL: ', AMessage);
-    Inc(lFailures);
+    TestContext.Fail(AMessage);
   end;
 end;
 
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   Check(Ord(High(TCPUType)) = High(cModels), 'CPU model coverage');
   for lIndex := Low(cModels) to High(cModels) do
   begin
@@ -82,7 +85,13 @@ begin
   Check(cpu_capabilities[cpu_core_i] = cpu_x86_64_v1_flags +
     [CPUX86_HAS_SSSE3, CPUX86_HAS_SSE4_1, CPUX86_HAS_POPCNT], 'Core i features');
   Check(cpu_capabilities[cpu_x86_64_v2] = cpu_x86_64_v2_flags, 'V2 features');
-  if lFailures <> 0 then
-    Halt(1);
   WriteLn('PASS: ', lChecks, ' CPU model checks');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.CPUModels').AddTest('NamesSlotsSelectorsAndCapabilities', @RunCase, 'compiler-units');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

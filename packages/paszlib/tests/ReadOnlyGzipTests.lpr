@@ -61,7 +61,7 @@ begin
   lRegistry := TNXTestRegistry.Create;
   try
     lSuite := lRegistry.AddSuite('PasZLib');
-    lSuite.AddTest('ReadOnlyGzip', @TestReadOnlyGzip);
+    lSuite.AddTest('ReadOnlyGzip', @TestReadOnlyGzip, 'gzip');
     ExitCode := RunConsoleTests(lRegistry);
   finally lRegistry.Free; end;
 end.

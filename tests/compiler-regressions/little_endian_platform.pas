@@ -8,7 +8,8 @@ program little_endian_platform;
 {$if not defined(ENDIAN_LITTLE) or not defined(FPC_LITTLE_ENDIAN)}
   {$fatal Missing little-endian platform macro}
 {$endif}
-uses SysUtils;
+uses SysUtils, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+var TestContext: TNXTestContext;
 type
   TSmallRecord = packed record
     A, B, C: Byte;
@@ -25,8 +26,7 @@ var
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
-  if not ACondition then
-    raise Exception.Create(AMessage);
+  TestContext.AssertTrue(ACondition, AMessage);
 end;
 
 function SumRecord(AValue: TSmallRecord): Integer; noinline;
@@ -34,11 +34,27 @@ begin
   Result := AValue.A + AValue.B * 2 + AValue.C * 3;
 end;
 
+procedure NativeLayout(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   lNumber := QWord($0102030405060708);
   Move(lNumber, lBytes, SizeOf(lBytes));
   for lIndex := 0 to High(lBytes) do
     Check(lBytes[lIndex] = 8 - lIndex, 'Native byte order');
+  for lIndex := Low(lValues) to High(lValues) do
+    lValues[lIndex] := lIndex + 7;
+  for lIndex := Low(lValues) to High(lValues) do
+    Check(lValues[lIndex] = lIndex + 7, 'Bitpacked element access');
+  lRecord.A := 17;
+  lRecord.B := 41;
+  lRecord.C := 63;
+  Check(SumRecord(lRecord) = 288, 'Composite parameter placement');
+end;
+
+procedure DataConversions(AContext: TNXTestContext);
+begin
+  TestContext := AContext;
+  lNumber := QWord($0102030405060708);
   Check(NToBE(Word($1234)) = $3412, '16-bit network order');
   Check(NToBE(LongWord($12345678)) = $78563412, '32-bit network order');
   Check(NToBE(lNumber) = QWord($0807060504030201), '64-bit network order');
@@ -53,13 +69,13 @@ begin
     $88, $99, $AA, $BB, $CC, $DD, $EE, $FF);
   lGuid := TGUID.Create(lEncoded, 0, True);
   Check(GUIDToString(lGuid) = '{00112233-4455-6677-8899-AABBCCDDEEFF}', 'Big-endian GUID data');
-  for lIndex := Low(lValues) to High(lValues) do
-    lValues[lIndex] := lIndex + 7;
-  for lIndex := Low(lValues) to High(lValues) do
-    Check(lValues[lIndex] = lIndex + 7, 'Bitpacked element access');
-  lRecord.A := 17;
-  lRecord.B := 41;
-  lRecord.C := 63;
-  Check(SumRecord(lRecord) = 288, 'Composite parameter placement');
-  WriteLn('PASS little-endian layout, bitpacked values, record parameters, network order, UTF-16BE and GUID data');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.Layout').AddTest('LittleEndian', @NativeLayout, 'compiler-layout');
+    lRegistry.AddSuite('RTL.DataConversions').AddTest('NetworkUnicodeAndGuid', @DataConversions, 'rtl-conversion');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally TestContext := nil; lRegistry.Free; end;
 end.

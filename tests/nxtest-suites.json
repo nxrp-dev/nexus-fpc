@@ -1,0 +1,171 @@
+{
+  "projects": [
+    {
+      "project": "../nexus/packages/nexus-packages/fcl-base/tests/FCLBaseTests.nxproject",
+      "output": "fcl-base"
+    },
+    {
+      "project": "packages/nexusprofiler/tests/NXProfilerTests.nxproject",
+      "output": "profiler"
+    },
+    {
+      "project": "packages/paszlib/tests/PasZLibTests.nxproject",
+      "output": "paszlib"
+    },
+    {
+      "project": "packages/paszlib/tests/ReadOnlyGzipTests.nxproject",
+      "output": "paszlib-readonly"
+    },
+    {
+      "project": "packages/rtl-generics/tests/RTLGenericsTests.nxproject",
+      "output": "rtl-generics"
+    },
+    {
+      "project": "packages/rtl-objpas/tests/RTLObjPasTests.nxproject",
+      "output": "rtl-objpas"
+    },
+    {
+      "project": "tests/dynamic-packages/NXPackageLifecycleTests.nxproject",
+      "output": "package-lifecycle"
+    },
+    {
+      "project": "tests/dynamic-packages/NXPackageStorageTests.nxproject",
+      "output": "package-storage"
+    },
+    {
+      "project": "tests/linker/NXSharedLibraryTests.nxproject",
+      "output": "linker"
+    },
+    {
+      "project": "tests/resource-formats/ResourceTests.nxproject",
+      "output": "resources"
+    },
+    {
+      "project": "tests/rtl/RTLRegressionTests.nxproject",
+      "output": "rtl-regressions"
+    },
+    {
+      "project": "tests/test/units/fpcunit/RTLCollectionsTests.nxproject",
+      "output": "rtl-collections"
+    },
+    {
+      "project": "tests/test/units/fpwidestring/CollationDataTests.nxproject",
+      "output": "collation-data"
+    },
+    {
+      "project": "tests/tppu/CompilerRecompileTests.nxproject",
+      "output": "compiler-ppu"
+    },
+    {
+      "project": "tests/utils/unittests/CompilerUtilsTests.nxproject",
+      "output": "compiler-utils"
+    }
+  ],
+  "fixture_manifest": "tests/rtl/fixtures.tsv",
+  "failures": "tests/NXTEST-FAILURES.md",
+  "specialized_programs": [
+    {
+      "program": "tests/clangassembler/NXClangBackendTests.lpr",
+      "suites": [
+        "Compiler.Clang.Assembler",
+        "Compiler.Clang.Linker",
+        "Compiler.Clang.Archives"
+      ],
+      "build": "tests/clangassembler/README.md",
+      "requires": "Matching backend compiler units; TEST_I386 / TEST_AARCH64 select other target tables"
+    },
+    {
+      "program": "tests/systemids/nxsystemids.pas",
+      "suites": [
+        "Compiler.TargetIdentities"
+      ],
+      "build": "tests/systemids/README.md",
+      "requires": "Compiler source enum includes and matching native RTL"
+    },
+    {
+      "program": "tests/compiler-regressions/cpu_models.pas",
+      "build": "tests/switches/Run-NXCPUModelTests.sh",
+      "requires": "Matching x86-64 compiler-unit closure"
+    },
+    {
+      "program": "tests/compiler-regressions/x86_movzx_memory_operand.pas",
+      "build": "tests/switches/Run-NXX86MovzxTests.sh",
+      "requires": "Matching i386 or x86-64 compiler-unit closure; Linux controlled address reservation"
+    },
+    {
+      "program": "tests/compiler-regressions/little_endian_metadata.pas",
+      "build": "tests/switches/Run-NXRemovedBigEndianTests.sh",
+      "requires": "Matching compiler-unit closure"
+    },
+    {
+      "program": "tests/compiler-regressions/little_endian_platform.pas",
+      "build": "tests/switches/Run-NXRemovedBigEndianTests.sh",
+      "requires": "Native matching RTL"
+    },
+    {
+      "program": "tests/compiler-regressions/removed_fpunone_native.pas",
+      "build": "tests/switches/Run-NXRemovedFPUNoneTests.sh",
+      "requires": "Native matching RTL"
+    },
+    {
+      "program": "tests/compiler-real/tcompilerreal.pas",
+      "build": "tests/compiler-real/Run-CompilerRealTests.ps1",
+      "requires": "x86 hardware Extended compiler/RTL"
+    },
+    {
+      "program": "tests/compiler-real/textendedabi.pas",
+      "build": "tests/compiler-real/Run-CompilerRealTests.ps1",
+      "requires": "x86 Extended ABI; also consumed by Run-PackageRealTests.ps1"
+    },
+    {
+      "program": "tests/compiler-real/tmathabi.pas",
+      "build": "tests/compiler-real/Run-CompilerRealTests.ps1",
+      "requires": "x86 Extended ABI; also consumed by Run-PackageRealTests.ps1"
+    },
+    {
+      "program": "tests/compiler-real/textendedrtti.pas",
+      "build": "tests/compiler-real/Run-CompilerRealTests.ps1",
+      "requires": "x86 Extended RTTI, Generics and libffi"
+    },
+    {
+      "program": "tests/compiler-real/tcachedreal.pas",
+      "build": "tests/compiler-real/Run-CompilerRealTests.ps1",
+      "requires": "Fresh/source-hidden saved-unit build variants"
+    },
+    {
+      "program": "tests/dynamic-packages/NXPackageMetadataTests.lpr",
+      "build": "tests/dynamic-packages/Run-PackageMetadataTests.ps1",
+      "requires": "Matching compiler-unit closure and generated package metadata"
+    },
+    {
+      "program": "tests/resource-formats/nxResourceMetadataTests.pas",
+      "build": "tests/resource-formats/Run-NXResourceMetadataTests.sh",
+      "requires": "Private output path"
+    },
+    {
+      "program": "tests/resource-formats/nxFileInfoMetadataTests.pas",
+      "build": "tests/resource-formats/Run-NXFileInfoMetadataTests.sh",
+      "requires": "Generated PE version metadata fixtures"
+    },
+    {
+      "program": "tests/resource-formats/nxResourceRuntimeTests.pas",
+      "build": "tests/resource-formats/Prepare-NXResourceRuntimeCheck.sh",
+      "requires": "Embedded-resource link variants"
+    },
+    {
+      "program": "tests/resource-formats/nxResourceTableReaderTests.pas",
+      "build": "tests/resource-formats/Run-NXResourceTablesTests.sh",
+      "requires": "Generated target images"
+    },
+    {
+      "program": "tests/resource-formats/nxCompilerResourceEmitTests.pas",
+      "build": "tests/resource-formats/Run-NXCompilerResourceEmitTests.sh",
+      "requires": "Matching compiler-unit closure and target object formats"
+    },
+    {
+      "program": "tests/resource-formats/nxCRC32WidthTests.pas",
+      "build": "tests/resource-formats/Run-NXCRC32WidthTests.sh",
+      "requires": "x86 SSE4.2 for hardware cases; reference case always available"
+    }
+  ]
+}

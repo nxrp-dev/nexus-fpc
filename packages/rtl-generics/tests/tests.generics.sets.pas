@@ -440,15 +440,15 @@ procedure RegistertestsgenericssetsTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.sets.TTestSets');
-  lSuite.AddTest('Test_HashSet_General', @RunTTestSetsTest_HashSet_General);
-  lSuite.AddTest('Test_SortedSet_General', @RunTTestSetsTest_SortedSet_General);
-  lSuite.AddTest('Test_SortedHashSet_General', @RunTTestSetsTest_SortedHashSet_General);
-  lSuite.AddTest('Test_HashSet', @RunTTestSetsTest_HashSet);
-  lSuite.AddTest('Test_SortedSet', @RunTTestSetsTest_SortedSet);
-  lSuite.AddTest('Test_SortedHashSet', @RunTTestSetsTest_SortedHashSet);
-  lSuite.AddTest('Test_THashSet_Notification', @RunTTestSetsTest_THashSet_Notification);
-  lSuite.AddTest('Test_TSortedSet_Notification', @RunTTestSetsTest_TSortedSet_Notification);
-  lSuite.AddTest('Test_TSortedHashSet_Notification', @RunTTestSetsTest_TSortedHashSet_Notification);
+  lSuite.AddTest('Test_HashSet_General', @RunTTestSetsTest_HashSet_General, 'generics');
+  lSuite.AddTest('Test_SortedSet_General', @RunTTestSetsTest_SortedSet_General, 'generics');
+  lSuite.AddTest('Test_SortedHashSet_General', @RunTTestSetsTest_SortedHashSet_General, 'generics');
+  lSuite.AddTest('Test_HashSet', @RunTTestSetsTest_HashSet, 'generics');
+  lSuite.AddTest('Test_SortedSet', @RunTTestSetsTest_SortedSet, 'generics');
+  lSuite.AddTest('Test_SortedHashSet', @RunTTestSetsTest_SortedHashSet, 'generics');
+  lSuite.AddTest('Test_THashSet_Notification', @RunTTestSetsTest_THashSet_Notification, 'generics');
+  lSuite.AddTest('Test_TSortedSet_Notification', @RunTTestSetsTest_TSortedSet_Notification, 'generics');
+  lSuite.AddTest('Test_TSortedHashSet_Notification', @RunTTestSetsTest_TSortedHashSet_Notification, 'generics');
 end;
 
 end.

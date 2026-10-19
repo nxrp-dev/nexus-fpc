@@ -16,7 +16,7 @@ uses
   tests.generics.stdcollections,
   tests.generics.dictionary,
   tests.generics.dictionary2,
-  tsNXCollectionErrors;
+  tsNXCollectionErrors, tsNXStringHash, tsNXAdversarialSort;
 var
   lRegistry: TNXTestRegistry;
 begin
@@ -34,6 +34,8 @@ begin
     RegistertestsgenericsdictionaryTests(lRegistry);
     Registertestsgenericsdictionary2Tests(lRegistry);
     RegisterNXCollectionErrorTests(lRegistry);
+    RegisterStringHashTests(lRegistry);
+    RegisterAdversarialSortTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

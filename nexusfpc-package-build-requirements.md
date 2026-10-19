@@ -49,15 +49,15 @@ are saved there. Code review was explicitly waived for that relocation.
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
 | `fcl-registry` (relocated) | `fcl-base`, `fcl-xml` | Moved on 2026-10-17 to Nexus `packages/nexus-packages/fcl-registry`; `FCLRegistry.nxpackage` builds the native package and `tests/FCLRegistryTests.nxproject` owns direct nxtest coverage. Windows COM, Abbrevia and Synapse serial support remain consumers. Review and proven fixes are saved with the destination. |
 | `fcl-res` (relocated) | RTL; `fcl-base` for the Lab `restool` example | Moved 2026-10-18 to Nexus `packages/nexus-packages/fcl-res`. `FCLRes.nxpackage` builds all 27 units; the saved review records direct nxtest proofs/fixes. Setup and compiler resource-format tests consume this owner. No compiler bootstrap input or release-tool staging is required. |
-| `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
+| `fcl-xml` (relocated) | `fcl-base`; relocated `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` (retired) | — | Removed 2026-10-17 by owner direction, including UUID, NTLM and system crypt services and namespace wrappers. No production consumer was found. HashLib4Pascal owns ordinary digest/HMAC/checksum use; the compiler and PasZLib share RTL CRC32. |
-| `iconvenc` | — | Recipe marks libc required. |
+| `iconvenc` (relocated) | — | Moved 2026-10-18 to Nexus `packages/nexus-packages/iconvenc`; native Iconv package, C-backed direct regressions and saved review. Recipe marks libc required. |
 | `iosxlocale` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/iosxlocale`; locale and wide-string bindings. |
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
 | `libffi` (relocated) | `rtl-objpas`, `rtl-generics` through RTTI; external native libffi | Moved 2026-10-18 to Nexus `packages/nexus-packages/libffi`; `LibFFI.nxpackage` builds both Pascal units. Optional RTTI invocation/callback provider, with Lua and test/example consumers. Not a compiler/bootstrap or RTL build input; review, direct nxtest regressions and C ABI probes accompany the destination. |
 | `pasjpeg` (relocated) | — | Moved 2026-10-17 to Nexus `packages/nexus-packages/graphics/pasjpeg`. `PasJPEG.nxpackage` builds the portable codec, both coefficient-transcoding units and the repaired BMP/JPEG stream API. The saved review records source hashes, direct nxtest proofs and native results. |
 | `paszlib` (RTL source) | — | Runtime units consolidated in `rtl/objpas/paszlib.pas` and `paszlibio.pas`; shared `crc32.pas` also serves the compiler. Tests/legal history remain under `packages/paszlib`. No hash package dependency. |
-| `pthreads` | — | Pascal platform bindings; preserve their source-level library declarations. |
+| `pthreads` (relocated) | — | Moved 2026-10-18 to Nexus `packages/nexus-packages/pthreads`; native package, ABI/signature regressions and saved review. FCL Base SyncObjs uses this provider on Unix. |
 | `rtl-extra` | — | Retained networking/locale subset; Android selects its own `clocale`. Sorting moved to `rtl-objpas`; legacy Objects is test-only. |
 | `rtl-generics` | `rtl-objpas` Variants; no high-level Rtti dependency | Sources in `src`, includes in `src/inc`. Missing-key exceptions use plain resource strings. |
 | `rtl-objpas` | `rtl-generics` for Rtti | Rtti caches reflection objects in `TDictionary`; its source closure needs `rtl-generics/src` and `src/inc`. Variants remains a lower-level input to Generics.Defaults. Existing source-unit dependency resolution handles this closure; compiler bootstrap is unchanged. |
@@ -74,8 +74,9 @@ for example, `univint/src/MacOS.pas` itself specifies `{$mode macpas}`, and
 ## Source selection and compiler settings
 
 The `users` package was restored on 2026-10-15 for fpGUI's Linux file-owner
-and group-name lookup. Its five runtime units are `users`, `pwd`, `grp`,
-`shadow`, and `crypth`, under `packages/users/src`. They depend on RTL units;
+and group-name lookup, then relocated on 2026-10-18 to Nexus
+`packages/nexus-packages/users`. Its five runtime units are `users`, `pwd`,
+`grp`, `shadow`, and `crypth`, under that package's `src`. They depend on RTL units;
 `crypth` additionally links the host's `crypt` library. Namespace mappings and
 examples are retained using `.pas` filenames. The retired Make/fpmake drivers
 are not part of this restoration.
@@ -128,8 +129,10 @@ old explicit/implicit target lists.
 
 ## Test preparation retained for nxtest
 
-The test sources and data remain. The retired Make runners are not being
-reimplemented in Forge as part of this cleanup.
+The retired Make runners are not reimplemented in Forge. The subsequent
+[unit-test migration](tests/NXTEST.md) owns native suites and moved runtime RTL
+compiler inputs to `tests/rtl/fixtures`; the requirements below also retain
+separate compiler/integration fixture preparation.
 
 - `tests/test/cg/obj/` contains `ctest.c`, `tcext3.c` through `tcext7.c`,
   `cpptcl1.cpp`, `cpptcl2.cpp` and `ttasm1.asm`. The old runner compiled the

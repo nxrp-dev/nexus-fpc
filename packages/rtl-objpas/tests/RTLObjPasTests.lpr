@@ -18,7 +18,7 @@ uses
   utcvector,
   utcpoint,
   tests.rtti.intercept,
-  tsNXRttiCache;
+  tsNXRttiCache, tsNXDateUtils, tsNXUnicodeText, tsNXVariantNegation;
 var
   lRegistry: TNXTestRegistry;
 begin
@@ -38,6 +38,9 @@ begin
     RegisterutcpointTests(lRegistry);
     RegistertestsrttiinterceptTests(lRegistry);
     RegisterNXRttiCacheTests(lRegistry);
+    RegisterDateUtilsTests(lRegistry);
+    RegisterUnicodeTextTests(lRegistry);
+    RegisterVariantNegationTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

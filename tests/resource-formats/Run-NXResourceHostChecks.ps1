@@ -23,6 +23,11 @@ if (-not $ResourceSource) {
     }
 }
 $ResourceSource = (Resolve-Path -LiteralPath $ResourceSource).Path
+$NxtestSource = Join-Path $SourceRoot '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path -LiteralPath $NxtestSource)) {
+    $NxtestSource = Join-Path $SourceRoot '../../nexus/packages/nexus-packages/nxtest/src'
+}
+$NxtestSource = (Resolve-Path -LiteralPath $NxtestSource).Path
 $RtlUnits = (Resolve-Path -LiteralPath $RtlUnits).Path
 $Compiler = (Get-Command $Compiler -ErrorAction Stop).Source
 $Clang = (Get-Command $Clang -ErrorAction Stop).Source
@@ -79,8 +84,10 @@ function Compile-Check {
     $arguments = @('-n', '-O2', '-Cr', '-Co', '-Ci')
     if ($NexusCompiler) { $arguments += @('-Aas-clang', '-XLL') }
     $arguments += @("-Fu$RtlUnits", "-Fu$(Join-Path $SourceRoot 'compiler')",
-        "-Fu$ResourceSource", "-FU$units",
-        "-o$executable", (Join-Path $SourceRoot "tests/resource-formats/$Name.pas"))
+        "-Fu$ResourceSource", "-Fu$NxtestSource", "-FU$units")
+    $source = "$Name.pas"
+    if ($Name -eq 'ResourceTests') { $source = 'ResourceTests.lpr' }
+    $arguments += @("-o$executable", (Join-Path $SourceRoot "tests/resource-formats/$source"))
     Invoke-Checked "compile-$Name" $Compiler $arguments
     return $executable
 }
@@ -104,10 +111,10 @@ foreach ($name in @('first', 'second', 'first-images', 'second-images')) {
     Invoke-Checked "rc-$name" $LLVMRC @('/no-preprocess', '/C', '65001', '/I',
         $catalog, '/FO', (Join-Path $catalog "$name.res"), (Join-Path $catalog "$name.rc"))
 }
-$exe = Compile-Check 'nxResourceCatalogTests'
-Invoke-Checked 'catalog' $exe @((Join-Path $catalog 'first.res'),
+$resources = Compile-Check 'ResourceTests'
+Invoke-Checked 'catalog' $resources @('catalog', (Join-Path $catalog 'first.res'),
     (Join-Path $catalog 'second.res'), (Join-Path $catalog 'merged.res'),
-    (Join-Path $SourceRoot 'tests/test/units/system/tres4.res'),
+    (Join-Path $SourceRoot 'tests/rtl/fixtures/system/tres4.res'),
     (Join-Path $catalog 'first-images.res'), (Join-Path $catalog 'second-images.res'))
 foreach ($machine in @('X86', 'X64', 'ARM64')) {
     foreach ($file in @('merged', 'merged.images')) {
@@ -116,12 +123,9 @@ foreach ($machine in @('X86', 'X64', 'ARM64')) {
             (Join-Path $catalog "$file.res"))
     }
 }
-$exe = Compile-Check 'nxResourceInputsTests'
-Invoke-Checked 'inputs' $exe @($SourceRoot, (Join-Path $ArtifactRoot 'nxResourceInputsTests'))
-$exe = Compile-Check 'nxResourceToolsTests'
-Invoke-Checked 'tools' $exe @($Clang, $LLVMRC, (Join-Path $ArtifactRoot 'nxResourceToolsTests'))
-$exe = Compile-Check 'nxResourceArtifactsTests'
-Invoke-Checked 'artifacts' $exe @($SourceRoot,
+Invoke-Checked 'inputs' $resources @('inputs', $SourceRoot, (Join-Path $ArtifactRoot 'nxResourceInputsTests'))
+Invoke-Checked 'tools' $resources @('tools', $Clang, $LLVMRC, (Join-Path $ArtifactRoot 'nxResourceToolsTests'))
+Invoke-Checked 'artifacts' $resources @('artifacts', $SourceRoot,
     (Join-Path $ArtifactRoot 'nxResourceArtifactsTests'), $Clang, $LLVMRC)
 $exe = Compile-Check 'nxResourceMetadataTests'
 Invoke-Checked 'metadata' $exe @((Join-Path $ArtifactRoot 'nxResourceMetadataTests/metadata.bin'))

@@ -324,14 +324,14 @@ procedure RegistertclinkedlistTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tclinkedlist.TTestLinkedList');
-  lSuite.AddTest('TestCreate', @RunTTestLinkedListTestCreate);
-  lSuite.AddTest('TestAdd', @RunTTestLinkedListTestAdd);
-  lSuite.AddTest('TestAdd2', @RunTTestLinkedListTestAdd2);
-  lSuite.AddTest('TestClear', @RunTTestLinkedListTestClear);
-  lSuite.AddTest('TestRemove', @RunTTestLinkedListTestRemove);
-  lSuite.AddTest('TestRemove2', @RunTTestLinkedListTestRemove2);
-  lSuite.AddTest('TestRemove3', @RunTTestLinkedListTestRemove3);
-  lSuite.AddTest('TestVisit', @RunTTestLinkedListTestVisit);
+  lSuite.AddTest('TestCreate', @RunTTestLinkedListTestCreate, 'collections');
+  lSuite.AddTest('TestAdd', @RunTTestLinkedListTestAdd, 'collections');
+  lSuite.AddTest('TestAdd2', @RunTTestLinkedListTestAdd2, 'collections');
+  lSuite.AddTest('TestClear', @RunTTestLinkedListTestClear, 'collections');
+  lSuite.AddTest('TestRemove', @RunTTestLinkedListTestRemove, 'collections');
+  lSuite.AddTest('TestRemove2', @RunTTestLinkedListTestRemove2, 'collections');
+  lSuite.AddTest('TestRemove3', @RunTTestLinkedListTestRemove3, 'collections');
+  lSuite.AddTest('TestVisit', @RunTTestLinkedListTestVisit, 'collections');
 end;
 
 end.

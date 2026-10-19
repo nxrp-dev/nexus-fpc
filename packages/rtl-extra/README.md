@@ -15,7 +15,7 @@ wrapper moved unchanged to `packages/rtl-objpas`. Namespace mappings list the
 retained platform sources only; original source headers remain intact.
 
 The legacy Objects implementation is now the private `LegacyObjects` fixture
-under `tests/test/units/objects`. The object-language compiler regressions remain.
+under `tests/rtl/fixtures/objects`. The object-language compiler regressions remain.
 The two short-string stream tests now name ShortString explicitly, as required
 by Nexus's documented string policy. `toperator5` retains its six operator tests
 with a self-contained complex record; library-only Matrix/UComplex tests were

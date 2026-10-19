@@ -3,8 +3,11 @@ program NXFileInfoMetadataTests;
 {$mode objfpc}{$H+}
 
 uses
+  obNXTestRegistry, obNXTestContext, utNXTestConsole,
   SysUtils, FileInfo, Resource, VersionTypes,
   ResReader, WinPEImageReader, ELFReader, MachOReader;
+
+var TestContext: TNXTestContext;
 
 procedure CheckVersion(AInfo: TVersionInfo; const AFileName: string;
   AMajor, AMinor, ARelease, ABuild: Word);
@@ -20,11 +23,13 @@ end;
 
 var
   LInfo: TVersionInfo;
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   if ParamCount <> 2 then
   begin
     WriteLn(StdErr, 'Usage: nxFileInfoMetadataTests <version-1.2.3.4> <version-5.6.7.8>');
-    Halt(2);
+    AContext.Fail('Expected two executable metadata fixtures');
   end;
   LInfo := TVersionInfo.Create;
   try
@@ -35,4 +40,12 @@ begin
     LInfo.Free;
   end;
   WriteLn('PASS: executable metadata reader and repeated version loading');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Resources.ImageMetadata').AddTest('RepeatedVersionLoading', @RunCase, 'resources');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

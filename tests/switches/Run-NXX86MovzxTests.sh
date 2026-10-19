@@ -12,7 +12,12 @@ compiler_units=$(realpath "$3")
 mkdir -p "$4"
 output=$(realpath "$4")
 test_dir=$(cd "$(dirname "$0")" && pwd)
-"$compiler" -n -O2 -Aas-clang -XLL "-Fu$rtl_units" "-Fu$compiler_units" \
+nxtest_source="$test_dir/../../../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$test_dir/../../../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
+"$compiler" "-Fu$nxtest_source" -n -O2 -Aas-clang -XLL "-Fu$rtl_units" "-Fu$compiler_units" \
     "-FU$output" "-o$output/x86_movzx_memory_operand" \
     "$test_dir/../compiler-regressions/x86_movzx_memory_operand.pas" \
     >"$output/build.log" 2>&1

@@ -17,8 +17,8 @@ From Nexus on native Linux:
 
 ```sh
 output/nxbuild-next/x86_64-linux/nxbuild /action=build /project=../nexus-fpc/tests/test/units/fpwidestring/CollationDataTests.nxproject
-cp ../nexus-fpc/tests/test/units/fpwidestring/CollationTests.zip output/CollationDataTests/x86_64-linux/
-output/CollationDataTests/x86_64-linux/CollationDataTests
+cp ../nexus-fpc/tests/test/units/fpwidestring/CollationTests.zip ../../worktree/nexus/nexus-fpc-tests/x86_64-linux/collation-data/
+../../worktree/nexus/nexus-fpc-tests/x86_64-linux/collation-data/CollationDataTests
 ```
 
 All **5 tests pass** with range, overflow and I/O checks: both original byte lengths
@@ -37,3 +37,6 @@ errors. The fixture ZIP and memory loader remain here in one maintained location
 See the package's
 [review](../../../../../nexus/packages/nexus-packages/rtl-unicode/CODE_REVIEW.md)
 for the restored provider's regression and conformance results.
+
+The conformance and wide-string compiler inputs are also owned by the
+[native RTL regression catalog](../../../NXTEST.md).

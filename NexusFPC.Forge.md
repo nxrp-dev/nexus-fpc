@@ -750,8 +750,9 @@ Their useful package dependencies, paths, resource requirements, namespace
 relationships and test preparation are recorded in
 [Package build requirements](nexusfpc-package-build-requirements.md), with an
 exact Git reference for the full old declarations. Package source and tests
-remain for package selection and nxtest migration. Legacy test runners that
-rebuild through Make require migration; this cleanup adds no ad hoc test
+remain for package selection. [Native nxtest unit suites](tests/NXTEST.md) now
+own unit coverage; compiler/integration orchestration has its separate backlog.
+Legacy test runners that rebuild through Make are retired; this cleanup adds no ad hoc test
 compatibility paths. Historical documents and logs retain earlier results.
 
 Dynamic-library and runtime-package support is standard compiler functionality
@@ -761,5 +762,6 @@ must produce the units and runtime-package artifacts those choices require.
 Historical make shared/smart targets are not an independent migration requirement.
 
 Ad hoc regression-suite integration is explicitly excluded from this migration.
-Testing will move to nxtest through later work; maintaining additional Forge
-integration for the current ad hoc suites is not a prerequisite for retiring make.
+Unit testing now uses [the native nxtest suites](tests/NXTEST.md). Additional
+compiler/integration-suite orchestration is separate from the retired make build
+and is not a prerequisite for that build migration.

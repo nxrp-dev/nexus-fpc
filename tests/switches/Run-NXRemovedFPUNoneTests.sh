@@ -11,6 +11,10 @@ rtl_units=$(realpath "$2")
 mkdir -p "$3"
 output=$(realpath "$3")
 test_dir=$(cd "$(dirname "$0")" && pwd)
+nxtest_source="$test_dir/../../../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$test_dir/../../../../nexus/packages/nexus-packages/nxtest/src"
+fi
 printf 'program Empty; begin end.\n' >"$output/empty.pas"
 checks=0
 for mode in FPC ObjFPC Delphi MacPas; do
@@ -33,7 +37,8 @@ for mode in FPC ObjFPC Delphi MacPas; do
         checks=$((checks + 2))
     done
 done
-"$compiler" -n -XLL -Cn "-Fu$rtl_units" "-FU$output" "-FE$output" \
+"$compiler" -n -Aas-clang -XLL "-Fu$rtl_units" "-Fu$nxtest_source" "-FU$output" "-FE$output" \
     "$test_dir/../compiler-regressions/removed_fpunone_native.pas" \
     >"$output/retained-native.log" 2>&1
+"$output/removed_fpunone_native" | tee "$output/retained-native-run.log"
 echo "PASS: $checks unsupported FPU diagnostics; floating-point operations retained"

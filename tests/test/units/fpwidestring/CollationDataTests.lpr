@@ -154,11 +154,11 @@ begin
   lRegistry := TNXTestRegistry.Create;
   try
     lSuite := lRegistry.AddSuite('CollationData');
-    lSuite.AddTest('NonIgnorable', @TestNonIgnorable);
-    lSuite.AddTest('Shifted', @TestShifted);
-    lSuite.AddTest('MissingMember', @TestMissingMember);
-    lSuite.AddTest('MissingArchive', @TestMissingArchive);
-    lSuite.AddTest('CorruptMember', @TestCorruptMember);
+    lSuite.AddTest('NonIgnorable', @TestNonIgnorable, 'unicode-data');
+    lSuite.AddTest('Shifted', @TestShifted, 'unicode-data');
+    lSuite.AddTest('MissingMember', @TestMissingMember, 'unicode-data');
+    lSuite.AddTest('MissingArchive', @TestMissingArchive, 'unicode-data');
+    lSuite.AddTest('CorruptMember', @TestCorruptMember, 'unicode-data');
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

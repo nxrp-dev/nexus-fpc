@@ -20,7 +20,7 @@ Group ReleaseTools {
         IncludeMasks: ["*.pas", "*.inc"];
     }
     CopyFile Stage_fcl_base {
-        Source: "packages/fcl-base/src";
+        Source: "../../nexus/packages/nexus-packages/fcl-base/src";
         Destination: "build/forge-bootstrap/tools/packages/fcl-base/src";
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];

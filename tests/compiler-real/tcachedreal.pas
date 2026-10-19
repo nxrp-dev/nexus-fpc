@@ -1,8 +1,10 @@
 program tcachedreal;
 {$mode objfpc}{$H-}{$inline on}
-uses urealconstants;
+uses SysUtils, urealconstants, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+var TestContext: TNXTestContext;
+
 procedure Check(ACondition: Boolean; ACode: Integer);
-begin if not ACondition then Halt(ACode); end;
+begin TestContext.AssertTrue(ACondition, 'Saved constant check ' + IntToStr(ACode)); end;
 function RawCurrency(AValue: Currency): Int64;
 begin Move(AValue,Result,SizeOf(Result)); end;
 {$ifdef FPC_HAS_TYPE_EXTENDED}
@@ -13,6 +15,7 @@ begin
   Check((lBits.Significand=ASignificand) and (lBits.Exponent=AExponent),ACode);
 end;
 {$endif}
+procedure Run;
 var lValue: Double; lBits: QWord;
 begin
   Check(cLowBit=1.0/cLowBitDenominator,1);
@@ -32,5 +35,20 @@ begin
   CheckExtended(cLargest,High(QWord),$7FFE,9);
   CheckExtended(cSmallest,1,0,10);
 {$endif}
-  WriteLn('cached real constants passed');
+end;
+
+procedure NativeCase(AContext: TNXTestContext);
+begin
+  TestContext := AContext;
+  try Run; finally
+    TestContext := nil;
+  end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.Numeric.Cache').AddTest('SavedConstants', @NativeCase, 'compiler-numeric-cache');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

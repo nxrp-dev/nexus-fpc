@@ -70,7 +70,7 @@ use optimization for the deliberately large Zip64 case.
 | Untouched official source, four large-stream nxtest cases | All four raise ERangeError. The ZIP example separately identifies match_start subtraction in fill_window. |
 | After the window fix, isolated stored-header proof | Fast/default/maximum pass; StoredHeader and StoredWindow still raise ERangeError in the level-zero header calculation. |
 | Final official source | **5 nxtest cases pass; 0 failures/errors/skips.** |
-| Final retained suite | tczstreamseek, testsingle and tczipper all pass, including all enabled large-entry tests. |
+| Historical retained suite | tczstreamseek, testsingle and tczipper passed before their native migration. Current coverage is in `tests/tsNXArchiveTests.pas`, registered by `NXPasZLibTests`. |
 | Canonical Lab examples | All 10 programs build with the official source. Memory/gzip examples, stored/default ZIP entry generation, ZIP CLI roundtrip and minigzip roundtrip pass. Python zipfile/gzip independently decode the resulting archives. |
 | Affected runtime consumers | FCLImage.nxpackage and FCLDB.nxpackage build with NexusFPC. |
 | Catalogs | Machine pool, owned packages and external packages catalogs validate after removal of the duplicate PasZLib entries. |

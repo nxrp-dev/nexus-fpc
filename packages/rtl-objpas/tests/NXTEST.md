@@ -14,3 +14,6 @@ Run `RTLObjPasTests` from its output directory.
 
 Use a compiler/RTL pair built from current NexusFPC source. The old SDK
 installed during migration predates the CRC32 operand-width correction.
+
+Suite ownership, output paths, consolidation decisions and explicit skips are
+listed in [the central nxtest guide](../../../tests/NXTEST.md).

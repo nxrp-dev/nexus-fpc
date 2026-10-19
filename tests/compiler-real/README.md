@@ -12,6 +12,12 @@ Currency literal range state and exact scaled values survive PPU reuse.
 
 ## Regression checks
 
+The core, Extended ABI, math ABI, numeric RTTI and cached-constant drivers now
+register native nxtest cases. `Run-CompilerRealTests.ps1` supplies the sibling
+nxtest sources and retains the original ordinary/optimized/fresh/cached builds.
+`Run-PackageRealTests.ps1` uses those same native math/ABI drivers across the
+shared-package boundary. No second assertion runner is retained.
+
 Use a matched compiler and freshly built RTL:
 
 ```powershell

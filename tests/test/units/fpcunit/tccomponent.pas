@@ -592,21 +592,21 @@ procedure RegistertccomponentTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tccomponent.TTestTComponent');
-  lSuite.AddTest('TestCreate', @RunTTestTComponentTestCreate);
-  lSuite.AddTest('TestName', @RunTTestTComponentTestName);
-  lSuite.AddTest('TestIdentiFierName', @RunTTestTComponentTestIdentiFierName);
-  lSuite.AddTest('TestIdentiFierNameTwo', @RunTTestTComponentTestIdentiFierNameTwo);
-  lSuite.AddTest('TestIdentiFierNameThree', @RunTTestTComponentTestIdentiFierNameThree);
-  lSuite.AddTest('TestIdentiFierNameFour', @RunTTestTComponentTestIdentiFierNameFour);
-  lSuite.AddTest('TestOwner', @RunTTestTComponentTestOwner);
-  lSuite.AddTest('TestChildren', @RunTTestTComponentTestChildren);
-  lSuite.AddTest('TestDestroyChild', @RunTTestTComponentTestDestroyChild);
-  lSuite.AddTest('TestDestroyChildren', @RunTTestTComponentTestDestroyChildren);
-  lSuite.AddTest('TestUniqueName', @RunTTestTComponentTestUniqueName);
-  lSuite.AddTest('TestRemoveComponent', @RunTTestTComponentTestRemoveComponent);
+  lSuite.AddTest('TestCreate', @RunTTestTComponentTestCreate, 'collections');
+  lSuite.AddTest('TestName', @RunTTestTComponentTestName, 'collections');
+  lSuite.AddTest('TestIdentiFierName', @RunTTestTComponentTestIdentiFierName, 'collections');
+  lSuite.AddTest('TestIdentiFierNameTwo', @RunTTestTComponentTestIdentiFierNameTwo, 'collections');
+  lSuite.AddTest('TestIdentiFierNameThree', @RunTTestTComponentTestIdentiFierNameThree, 'collections');
+  lSuite.AddTest('TestIdentiFierNameFour', @RunTTestTComponentTestIdentiFierNameFour, 'collections');
+  lSuite.AddTest('TestOwner', @RunTTestTComponentTestOwner, 'collections');
+  lSuite.AddTest('TestChildren', @RunTTestTComponentTestChildren, 'collections');
+  lSuite.AddTest('TestDestroyChild', @RunTTestTComponentTestDestroyChild, 'collections');
+  lSuite.AddTest('TestDestroyChildren', @RunTTestTComponentTestDestroyChildren, 'collections');
+  lSuite.AddTest('TestUniqueName', @RunTTestTComponentTestUniqueName, 'collections');
+  lSuite.AddTest('TestRemoveComponent', @RunTTestTComponentTestRemoveComponent, 'collections');
   lSuite:=ARegistry.AddSuite('tccomponent.TTestTComponentNotifies');
-  lSuite.AddTest('TestInsertNotification', @RunTTestTComponentNotifiesTestInsertNotification);
-  lSuite.AddTest('TestRemoveNotification', @RunTTestTComponentNotifiesTestRemoveNotification);
+  lSuite.AddTest('TestInsertNotification', @RunTTestTComponentNotifiesTestInsertNotification, 'collections');
+  lSuite.AddTest('TestRemoveNotification', @RunTTestTComponentNotifiesTestRemoveNotification, 'collections');
 end;
 
 end.

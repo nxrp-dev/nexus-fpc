@@ -1,20 +1,20 @@
-# PasZLib verification
+# PasZLib native tests
 
-Use NexusFPC and Nexus nxbuild with `PasZLibTests.nxproject`.
-Build output is Nexus `output/PasZLibTests/<native-target>`.
+Build `PasZLibTests.nxproject` with Nexus nxbuild and a matching NexusFPC/RTL.
+Run `NXPasZLibTests` from its output directory under the configured
+`Tools.OutputRoot/nexus-fpc-tests/<target>/paszlib`.
 
-- `NXPasZLibTests` runs five direct nxtest regressions covering stored zlib
-  headers and 192 KiB stream roundtrips at stored, fast, default and maximum
-  compression levels.
-- `tczstreamseek` checks decompression seek/position semantics.
-- `testsingle` extracts one member from `test.zip`.
-- `tczipper` runs its retained ZIP and Zip64 suite, including 65,537 entries.
-  Allow several minutes for that intentionally large case. Its optional 4 GiB
-  case remains disabled in the original source.
+Native suites own compression streams/seeking, gzip, shared CRC32 and archives.
+The former `tczipper`, `tczstreamseek` and `testsingle` programs are consolidated
+into `tsNXArchiveTests`: file/content roundtrips, stream/empty entries, the
+65,537-entry Zip64 boundary, long/platform filenames, save-to-file, selected
+member extraction and invalid seeks. Fixtures create their own inputs and clean
+up streams and temporary files; no checked-in ZIP needs staging.
 
-Run the retained programs in a disposable working directory containing the
-checked-in `test.zip`; direct temporary files there as well. They deliberately
-write test archives/files. Assertions and runtime checks are enabled by the
-native recipe. No FPCUnit framework or bridge is used.
+The 4 GiB case is reported as skipped unless `NXTEST_LARGE_ZIP=1` is set.
+`ReadOnlyGzipTests.nxproject` retains a separate `NO_DEFLATE` compilation and native
+reader/rejected-writer case.
 
-See [reconciliation and verified results](../CONSOLIDATION.md).
+See [the suite catalog](../../../tests/NXTEST.md),
+[consolidation decisions](../../../tests/NXTEST.md#consolidation-decisions) and
+[recorded package verification](../CONSOLIDATION.md).

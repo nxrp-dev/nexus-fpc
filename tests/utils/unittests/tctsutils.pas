@@ -23,6 +23,7 @@ Type
   Private
     FConfig : TConfig;
     FFileName : String;
+    FDirectory : String;
     FReadResult : Boolean;
   Public
     procedure SetUp; virtual;
@@ -68,13 +69,13 @@ implementation
 { TTestUtilsCase }
 
 procedure TTestUtilsCase.SetUp;
+var lId: TGUID;
 begin
-
   FReadResult:=False;
-  FFileName:=GetTempDir(False)+CaseName+'.pas';
-  if FileExists(FFileName) then
-    if not DeleteFile(FFileName) then
-      TestContext.Fail('Failed to delete file '+FFileName);
+  CreateGUID(lId);
+  FDirectory:=IncludeTrailingPathDelimiter(GetTempDir(False))+'nxtest-directives-'+GUIDToString(lId);
+  TestContext.AssertTrue(ForceDirectories(FDirectory), 'Create private directive fixture directory');
+  FFileName:=IncludeTrailingPathDelimiter(FDirectory)+CaseName+'.pas';
 end;
 
 procedure TTestUtilsCase.TearDown;
@@ -82,7 +83,8 @@ begin
   if (FFileName<>'') and FileExists(FFileName) then
     if not DeleteFile(FFileName) then
       TestContext.Fail('Failed to delete file '+FFileName);
-
+  if FDirectory<>'' then
+    TestContext.AssertTrue(RemoveDir(FDirectory), 'Remove private directive fixture directory');
 end;
 
 procedure TTestUtilsCase.DoRead;
@@ -597,34 +599,34 @@ procedure RegistertctsutilsTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tctsutils.TTestUtilsCase');
-  lSuite.AddTest('TestNoFile', @RunTTestUtilsCaseTestNoFile);
-  lSuite.AddTest('TestEmptyFile', @RunTTestUtilsCaseTestEmptyFile);
-  lSuite.AddTest('TestNoPercent', @RunTTestUtilsCaseTestNoPercent);
-  lSuite.AddTest('TestNoEndComment', @RunTTestUtilsCaseTestNoEndComment);
-  lSuite.AddTest('TestSpaces', @RunTTestUtilsCaseTestSpaces);
-  lSuite.AddTest('TestCodeAndNote', @RunTTestUtilsCaseTestCodeAndNote);
-  lSuite.AddTest('TestConfig', @RunTTestUtilsCaseTestConfig);
-  lSuite.AddTest('TestNeedOptions', @RunTTestUtilsCaseTestNeedOptions);
-  lSuite.AddTest('TestDelOptions', @RunTTestUtilsCaseTestDelOptions);
-  lSuite.AddTest('TestNeedTarget', @RunTTestUtilsCaseTestNeedTarget);
-  lSuite.AddTest('TestSkipTarget', @RunTTestUtilsCaseTestSkipTarget);
-  lSuite.AddTest('TestNeedCPU', @RunTTestUtilsCaseTestNeedCPU);
-  lSuite.AddTest('TestSkipCPU', @RunTTestUtilsCaseTestSkipCPU);
-  lSuite.AddTest('TestSkipEMU', @RunTTestUtilsCaseTestSkipEMU);
-  lSuite.AddTest('TestMinVersion', @RunTTestUtilsCaseTestMinVersion);
-  lSuite.AddTest('TestMaxVersion', @RunTTestUtilsCaseTestMaxVersion);
-  lSuite.AddTest('TestResultCode', @RunTTestUtilsCaseTestResultCode);
-  lSuite.AddTest('TestUsesGraph', @RunTTestUtilsCaseTestUsesGraph);
-  lSuite.AddTest('TestShouldFail', @RunTTestUtilsCaseTestShouldFail);
-  lSuite.AddTest('TestNoRun', @RunTTestUtilsCaseTestNoRun);
-  lSuite.AddTest('TestNeedLibrary', @RunTTestUtilsCaseTestNeedLibrary);
-  lSuite.AddTest('TestNeedAfter', @RunTTestUtilsCaseTestNeedAfter);
-  lSuite.AddTest('TestTimeout', @RunTTestUtilsCaseTestTimeout);
-  lSuite.AddTest('TestFiles', @RunTTestUtilsCaseTestFiles);
-  lSuite.AddTest('TestWPOParas', @RunTTestUtilsCaseTestWPOParas);
-  lSuite.AddTest('TestWPOPasses', @RunTTestUtilsCaseTestWPOPasses);
-  lSuite.AddTest('TestDelFiles', @RunTTestUtilsCaseTestDelFiles);
-  lSuite.AddTest('TestInteractive', @RunTTestUtilsCaseTestInteractive);
+  lSuite.AddTest('TestNoFile', @RunTTestUtilsCaseTestNoFile, 'compiler-utils');
+  lSuite.AddTest('TestEmptyFile', @RunTTestUtilsCaseTestEmptyFile, 'compiler-utils');
+  lSuite.AddTest('TestNoPercent', @RunTTestUtilsCaseTestNoPercent, 'compiler-utils');
+  lSuite.AddTest('TestNoEndComment', @RunTTestUtilsCaseTestNoEndComment, 'compiler-utils');
+  lSuite.AddTest('TestSpaces', @RunTTestUtilsCaseTestSpaces, 'compiler-utils');
+  lSuite.AddTest('TestCodeAndNote', @RunTTestUtilsCaseTestCodeAndNote, 'compiler-utils');
+  lSuite.AddTest('TestConfig', @RunTTestUtilsCaseTestConfig, 'compiler-utils');
+  lSuite.AddTest('TestNeedOptions', @RunTTestUtilsCaseTestNeedOptions, 'compiler-utils');
+  lSuite.AddTest('TestDelOptions', @RunTTestUtilsCaseTestDelOptions, 'compiler-utils');
+  lSuite.AddTest('TestNeedTarget', @RunTTestUtilsCaseTestNeedTarget, 'compiler-utils');
+  lSuite.AddTest('TestSkipTarget', @RunTTestUtilsCaseTestSkipTarget, 'compiler-utils');
+  lSuite.AddTest('TestNeedCPU', @RunTTestUtilsCaseTestNeedCPU, 'compiler-utils');
+  lSuite.AddTest('TestSkipCPU', @RunTTestUtilsCaseTestSkipCPU, 'compiler-utils');
+  lSuite.AddTest('TestSkipEMU', @RunTTestUtilsCaseTestSkipEMU, 'compiler-utils');
+  lSuite.AddTest('TestMinVersion', @RunTTestUtilsCaseTestMinVersion, 'compiler-utils');
+  lSuite.AddTest('TestMaxVersion', @RunTTestUtilsCaseTestMaxVersion, 'compiler-utils');
+  lSuite.AddTest('TestResultCode', @RunTTestUtilsCaseTestResultCode, 'compiler-utils');
+  lSuite.AddTest('TestUsesGraph', @RunTTestUtilsCaseTestUsesGraph, 'compiler-utils');
+  lSuite.AddTest('TestShouldFail', @RunTTestUtilsCaseTestShouldFail, 'compiler-utils');
+  lSuite.AddTest('TestNoRun', @RunTTestUtilsCaseTestNoRun, 'compiler-utils');
+  lSuite.AddTest('TestNeedLibrary', @RunTTestUtilsCaseTestNeedLibrary, 'compiler-utils');
+  lSuite.AddTest('TestNeedAfter', @RunTTestUtilsCaseTestNeedAfter, 'compiler-utils');
+  lSuite.AddTest('TestTimeout', @RunTTestUtilsCaseTestTimeout, 'compiler-utils');
+  lSuite.AddTest('TestFiles', @RunTTestUtilsCaseTestFiles, 'compiler-utils');
+  lSuite.AddTest('TestWPOParas', @RunTTestUtilsCaseTestWPOParas, 'compiler-utils');
+  lSuite.AddTest('TestWPOPasses', @RunTTestUtilsCaseTestWPOPasses, 'compiler-utils');
+  lSuite.AddTest('TestDelFiles', @RunTTestUtilsCaseTestDelFiles, 'compiler-utils');
+  lSuite.AddTest('TestInteractive', @RunTTestUtilsCaseTestInteractive, 'compiler-utils');
 end;
 
 end.

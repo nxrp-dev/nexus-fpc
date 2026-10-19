@@ -10,6 +10,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
+$NxtestSource = Join-Path $SourceRoot '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path -LiteralPath $NxtestSource)) {
+    $NxtestSource = Join-Path $SourceRoot '../../nexus/packages/nexus-packages/nxtest/src'
+}
+$NxtestSource = (Resolve-Path -LiteralPath $NxtestSource).Path
 $Compiler = (Get-Command $Compiler -ErrorAction Stop).Source
 $RtlUnits = (Resolve-Path -LiteralPath $RtlUnits).Path
 $FixtureRes = (Resolve-Path -LiteralPath $FixtureRes).Path
@@ -25,7 +30,7 @@ Copy-Item -LiteralPath $FixtureRes -Destination (Join-Path $ArtifactRoot 'runtim
 Copy-Item -LiteralPath (Join-Path $SourceRoot 'tests/resource-formats/nxResourceRuntimeTests.pas') -Destination $ArtifactRoot
 $executable = Join-Path $ArtifactRoot 'nxResourceRuntimeTests.exe'
 $arguments = @('-n', '-al', '-O2', '-Cr', '-Co', '-Ci', '-Aas-clang', '-XLL',
-    "-T$TargetOS", "-Fu$RtlUnits", "-Fu$(Join-Path $SourceRoot 'compiler')",
+    "-T$TargetOS", "-Fu$RtlUnits", "-Fu$(Join-Path $SourceRoot 'compiler')", "-Fu$NxtestSource",
     "-FU$units", "-FE$ArtifactRoot", "-o$executable")
 $arguments += $CompilerArguments
 $arguments += (Join-Path $ArtifactRoot 'nxResourceRuntimeTests.pas')

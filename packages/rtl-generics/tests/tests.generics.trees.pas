@@ -275,11 +275,11 @@ procedure RegistertestsgenericstreesTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.trees.TTestTrees');
-  lSuite.AddTest('Test_IndexedAVLTree_Add_General', @RunTTestTreesTest_IndexedAVLTree_Add_General);
-  lSuite.AddTest('Test_IndexedAVLTree_Add', @RunTTestTreesTest_IndexedAVLTree_Add);
-  lSuite.AddTest('Test_IndexedAVLTree_Delete', @RunTTestTreesTest_IndexedAVLTree_Delete);
-  lSuite.AddTest('Test_IndexedAVLTree_Items', @RunTTestTreesTest_IndexedAVLTree_Items);
-  lSuite.AddTest('Test_TAVLTreeMap_Notification', @RunTTestTreesTest_TAVLTreeMap_Notification);
+  lSuite.AddTest('Test_IndexedAVLTree_Add_General', @RunTTestTreesTest_IndexedAVLTree_Add_General, 'generics');
+  lSuite.AddTest('Test_IndexedAVLTree_Add', @RunTTestTreesTest_IndexedAVLTree_Add, 'generics');
+  lSuite.AddTest('Test_IndexedAVLTree_Delete', @RunTTestTreesTest_IndexedAVLTree_Delete, 'generics');
+  lSuite.AddTest('Test_IndexedAVLTree_Items', @RunTTestTreesTest_IndexedAVLTree_Items, 'generics');
+  lSuite.AddTest('Test_TAVLTreeMap_Notification', @RunTTestTreesTest_TAVLTreeMap_Notification, 'generics');
 end;
 
 end.

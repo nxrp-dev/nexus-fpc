@@ -266,13 +266,13 @@ procedure RegistertcbucketlistTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tcbucketlist.TTestBucketList');
-  lSuite.AddTest('TestCreate', @RunTTestBucketListTestCreate);
-  lSuite.AddTest('TestAdd', @RunTTestBucketListTestAdd);
-  lSuite.AddTest('TestAdd2', @RunTTestBucketListTestAdd2);
-  lSuite.AddTest('TestAddDuplicate', @RunTTestBucketListTestAddDuplicate);
-  lSuite.AddTest('TestDelete', @RunTTestBucketListTestDelete);
-  lSuite.AddTest('TestDelete2', @RunTTestBucketListTestDelete2);
-  lSuite.AddTest('TestClear', @RunTTestBucketListTestClear);
+  lSuite.AddTest('TestCreate', @RunTTestBucketListTestCreate, 'collections');
+  lSuite.AddTest('TestAdd', @RunTTestBucketListTestAdd, 'collections');
+  lSuite.AddTest('TestAdd2', @RunTTestBucketListTestAdd2, 'collections');
+  lSuite.AddTest('TestAddDuplicate', @RunTTestBucketListTestAddDuplicate, 'collections');
+  lSuite.AddTest('TestDelete', @RunTTestBucketListTestDelete, 'collections');
+  lSuite.AddTest('TestDelete2', @RunTTestBucketListTestDelete2, 'collections');
+  lSuite.AddTest('TestClear', @RunTTestBucketListTestClear, 'collections');
 end;
 
 end.

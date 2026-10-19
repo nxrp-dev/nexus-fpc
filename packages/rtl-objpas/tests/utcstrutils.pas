@@ -137,7 +137,7 @@ procedure RegisterutcstrutilsTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('utcstrutils.TTestStrUtils');
-  lSuite.AddTest('TestNaturalCompareText', @RunTTestStrUtilsTestNaturalCompareText);
+  lSuite.AddTest('TestNaturalCompareText', @RunTTestStrUtilsTestNaturalCompareText, 'strings');
 end;
 
 end.

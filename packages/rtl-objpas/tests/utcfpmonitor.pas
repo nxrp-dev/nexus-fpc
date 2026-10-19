@@ -448,13 +448,13 @@ procedure RegisterutcfpmonitorTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('utcfpmonitor.TTestMonitorSupport');
-  lSuite.AddTest('TestHookup', @RunTTestMonitorSupportTestHookup);
-  lSuite.AddTest('TestLock', @RunTTestMonitorSupportTestLock);
-  lSuite.AddTest('TestLockMulti', @RunTTestMonitorSupportTestLockMulti);
-  lSuite.AddTest('TestTryLock', @RunTTestMonitorSupportTestTryLock);
-  lSuite.AddTest('TestPulse', @RunTTestMonitorSupportTestPulse);
-  lSuite.AddTest('TestPulseAll', @RunTTestMonitorSupportTestPulseAll);
-  lSuite.AddTest('TestWait', @RunTTestMonitorSupportTestWait);
+  lSuite.AddTest('TestHookup', @RunTTestMonitorSupportTestHookup, 'synchronization');
+  lSuite.AddTest('TestLock', @RunTTestMonitorSupportTestLock, 'synchronization');
+  lSuite.AddTest('TestLockMulti', @RunTTestMonitorSupportTestLockMulti, 'synchronization');
+  lSuite.AddTest('TestTryLock', @RunTTestMonitorSupportTestTryLock, 'synchronization');
+  lSuite.AddTest('TestPulse', @RunTTestMonitorSupportTestPulse, 'synchronization');
+  lSuite.AddTest('TestPulseAll', @RunTTestMonitorSupportTestPulseAll, 'synchronization');
+  lSuite.AddTest('TestWait', @RunTTestMonitorSupportTestWait, 'synchronization');
 end;
 
 end.

@@ -29,7 +29,6 @@ procedure TrimE(var s:string);
 function upper(const s : string) : string;
 procedure Verbose(lvl:TVerboseLevel; const s:string);
 function GetConfig(const logprefix,fn:string;out aConfig:TConfig):boolean;
-function GetUnitTestConfig(const logprefix,fn,SrcDir: string; out aConfig : TConfig) : Boolean;
 Function GetFileContents (FN : String) : String;
 
 const
@@ -428,71 +427,6 @@ Function GetFileContents (FN : String) : String;
 begin
   Result:=Sysutils.GetFileAsString(FN);
 end;
-
-function GetUnitTestConfig(const logprefix,fn,SrcDir : string; out aConfig : TConfig) : Boolean;
-
-var
-  Path       : string;
-  lClassName  : string;
-  lMethodName : string;
-  slashpos   : integer;
-  FileName   : string;
-  s,line     : string;
-  Src : TStrings;
-
-begin
-  Result := False;
-  aConfig:=Default(TConfig);
-  if pos('.',fn) > 0 then exit; // This is normally not a unit-test
-  slashpos := posr('/',fn);
-  if slashpos < 1 then exit;
-  lMethodName := copy(fn,slashpos+1,length(fn));
-  Path := copy(fn,1,slashpos-1);
-  slashpos := posr('/',Path);
-  if slashpos > 0 then
-    begin
-    lClassName := copy(Path,slashpos+1,length(Path));
-    Path := copy(Path,1,slashpos-1);
-    end
-  else
-    begin
-    lClassName := Path;
-    path := '.';
-    end;
-  if upper(lClassName[1])<>'T' then exit;
-  FileName := SrcDir+Path+DirectorySeparator+copy(lowercase(lClassName),2,length(lClassName));
-  if FileExists(FileName+'.pas') then
-    FileName := FileName + '.pas'
-  else
-    exit;
-  Src:=TStringList.Create;
-  try
-    Verbose(V_Debug,logprefix+'Reading: '+FileName);
-    Src.LoadFromFile(FileName);
-    for Line in Src do
-      if Line<>'' then
-        begin
-        s:=Line;
-        TrimB(s);
-        if SameText(copy(s,1,9),'PROCEDURE') then
-          begin
-           if pos(';',s)>11 then
-            begin
-              s := copy(s,11,pos(';',s)-11);
-              TrimB(s);
-              if SameText(s,lClassName+'.'+lMethodName) then
-               begin
-                 Result := True;
-                 aConfig.Note:= 'unittest';
-               end;
-            end;
-          end;
-        end;
-  finally
-    Src.Free
-  end;
-end;
-
 
 
 end.

@@ -564,20 +564,20 @@ procedure RegistertestsgenericsstackTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.stack.TTestSimpleStack');
-  lSuite.AddTest('TestEmpty', @RunTTestSimpleStackTestEmpty);
-  lSuite.AddTest('TestAdd', @RunTTestSimpleStackTestAdd);
-  lSuite.AddTest('TestClear', @RunTTestSimpleStackTestClear);
-  lSuite.AddTest('TestGetValue', @RunTTestSimpleStackTestGetValue);
-  lSuite.AddTest('TestPeek', @RunTTestSimpleStackTestPeek);
-  lSuite.AddTest('TestPop', @RunTTestSimpleStackTestPop);
-  lSuite.AddTest('TestToArray', @RunTTestSimpleStackTestToArray);
-  lSuite.AddTest('TestEnumerator', @RunTTestSimpleStackTestEnumerator);
-  lSuite.AddTest('TestValueNotification', @RunTTestSimpleStackTestValueNotification);
-  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleStackTestValueNotificationDelete);
+  lSuite.AddTest('TestEmpty', @RunTTestSimpleStackTestEmpty, 'generics');
+  lSuite.AddTest('TestAdd', @RunTTestSimpleStackTestAdd, 'generics');
+  lSuite.AddTest('TestClear', @RunTTestSimpleStackTestClear, 'generics');
+  lSuite.AddTest('TestGetValue', @RunTTestSimpleStackTestGetValue, 'generics');
+  lSuite.AddTest('TestPeek', @RunTTestSimpleStackTestPeek, 'generics');
+  lSuite.AddTest('TestPop', @RunTTestSimpleStackTestPop, 'generics');
+  lSuite.AddTest('TestToArray', @RunTTestSimpleStackTestToArray, 'generics');
+  lSuite.AddTest('TestEnumerator', @RunTTestSimpleStackTestEnumerator, 'generics');
+  lSuite.AddTest('TestValueNotification', @RunTTestSimpleStackTestValueNotification, 'generics');
+  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleStackTestValueNotificationDelete, 'generics');
   lSuite:=ARegistry.AddSuite('tests.generics.stack.TTestSingleObjectStack');
-  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectStackTestEmpty);
-  lSuite.AddTest('TestFreeOnPop', @RunTTestSingleObjectStackTestFreeOnPop);
-  lSuite.AddTest('TestNoFreeOnPop', @RunTTestSingleObjectStackTestNoFreeOnPop);
+  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectStackTestEmpty, 'generics');
+  lSuite.AddTest('TestFreeOnPop', @RunTTestSingleObjectStackTestFreeOnPop, 'generics');
+  lSuite.AddTest('TestNoFreeOnPop', @RunTTestSingleObjectStackTestNoFreeOnPop, 'generics');
 end;
 
 end.

@@ -6,7 +6,7 @@ module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project RTLGenericsTests {
     RootDirectory: "../../../../nexus";
-    OutputRoot: "output/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-generics";
+    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-generics";
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: [

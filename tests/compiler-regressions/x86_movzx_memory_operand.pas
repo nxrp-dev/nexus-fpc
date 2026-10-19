@@ -4,8 +4,10 @@ program X86MovzxMemoryOperand;
 
 {$mode objfpc}{$H+}
 
-uses BaseUnix, CgBase, CgUtils, CPUBase, CPUInfo, Globals,
+uses obNXTestRegistry, obNXTestContext, utNXTestConsole, BaseUnix, CgBase, CgUtils, CPUBase, CPUInfo, Globals,
   AAsmBase, AAsmData, AAsmTai, AAsmCPU, AOptX86;
+
+var TestContext: TNXTestContext;
 
 const
   cMapFixedNoReplace = $100000;
@@ -28,7 +30,7 @@ type
   end;
 
 var
-  lChecks, lFailures: LongInt;
+  lChecks: LongInt;
 
 function TProbeOptimizer.OptimizeMove(var AInstruction: TAI): Boolean;
 begin
@@ -54,8 +56,7 @@ begin
   Inc(lChecks);
   if not ACondition then
   begin
-    WriteLn('FAIL: ', AMessage);
-    Inc(lFailures);
+    TestContext.Fail(AMessage);
   end;
 end;
 
@@ -82,7 +83,7 @@ begin
       if Pointer(lMappedReference) <> Pointer(AAddress) then
       begin
         WriteLn('FAIL: cannot reserve diagnostic address ', HexStr(AAddress, 8));
-        Halt(2);
+        TestContext.Fail('Could not reserve the required optimizer probe address');
       end;
       Reference_Reset(lReference, 1, []);
       lReference.Base := NR_EBX;
@@ -138,14 +139,22 @@ begin
   TestMove(ASize, ASource, AOther, 0, AName + ' distinct registers');
 end;
 
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   CurrentSettings := Default_Settings;
   CurrentSettings.OptimizerSwitches := level2optimizerswitches;
   TestSize(S_BL, NR_AL, NR_EAX, NR_EDX, 'byte to dword');
   TestSize(S_WL, NR_AX, NR_EAX, NR_EDX, 'word to dword');
   { The x86-64 generator also uses these dword MOVZX forms for unsigned
     extension to qword: a dword write implicitly clears the upper 32 bits. }
-  if lFailures <> 0 then
-    Halt(1);
   WriteLn('PASS: ', lChecks, ' memory-load and register-mask checks');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.X86Optimizer').AddTest('MemoryOperandsAndRegisterMasks', @RunCase, 'compiler-units');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

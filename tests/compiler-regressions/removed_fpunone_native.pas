@@ -9,7 +9,8 @@ program RemovedFPUNoneNative;
   {$fatal The compiler must advertise Single and Double}
 {$endif}
 
-uses SysUtils, Classes, Math;
+uses SysUtils, Classes, Math, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+var TestContext: TNXTestContext;
 
 const
   cHalf = 1 / 2;
@@ -41,14 +42,14 @@ begin
       lReader.Free;
     end;
     Move(lActual, lActualRaw, SizeOf(lActualRaw));
-    if lActualRaw <> ARaw then Halt(8);
+    TestContext.AssertTrue(lActualRaw = ARaw, 'Exact Currency storage: ' + IntToStr(ARaw));
   finally
     lStream.Free;
   end;
 end;
 
+procedure MixedSequence(AContext: TNXTestContext);
 var
-  lIndex: SizeInt;
   lSingle: Single;
   lDouble: Double;
   lExtended: Extended;
@@ -62,13 +63,13 @@ begin
   lDouble := lSingle + 0.75;
   lExtended := lDouble / 2;
   lCurrency := lExtended;
-  if (lSingle <> 0.5) or (lDouble <> 1.25) or
-     (lExtended <> 0.625) or (lCurrency <> 0.625) then Halt(1);
-  if Sqrt(4.0) <> 2.0 then Halt(2);
+  AContext.AssertTrue((lSingle = 0.5) and (lDouble = 1.25) and
+    (lExtended = 0.625) and (lCurrency = 0.625), 'Floating arithmetic and conversion');
+  AContext.AssertTrue(Sqrt(4.0) = 2.0, 'Floating format/stream check 2');
   lFormatSettings := DefaultFormatSettings;
   lFormatSettings.DecimalSeparator := '.';
-  if StrToFloat('1.25', lFormatSettings) <> lDouble then Halt(3);
-  if FloatToStrF(lDouble, ffFixed, 15, 2, lFormatSettings) <> '1.25' then Halt(7);
+  AContext.AssertTrue(StrToFloat('1.25', lFormatSettings) = lDouble, 'Floating format/stream check 3');
+  AContext.AssertTrue(FloatToStrF(lDouble, ffFixed, 15, 2, lFormatSettings) = '1.25', 'Floating format/stream check 7');
   lStream := TMemoryStream.Create;
   try
     lWriter := TWriter.Create(lStream, 256);
@@ -82,16 +83,35 @@ begin
     lStream.Position := 0;
     lReader := TReader.Create(lStream, 256);
     try
-      if lReader.ReadFloat <> lExtended then Halt(4);
-      if lReader.ReadSingle <> lSingle then Halt(5);
-      if lReader.ReadCurrency <> lCurrency then Halt(6);
+      AContext.AssertTrue(lReader.ReadFloat = lExtended, 'Floating format/stream check 4');
+      AContext.AssertTrue(lReader.ReadSingle = lSingle, 'Floating format/stream check 5');
+      AContext.AssertTrue(lReader.ReadCurrency = lCurrency, 'Floating format/stream check 6');
     finally
       lReader.Free;
     end;
   finally
     lStream.Free;
   end;
-  for lIndex := Low(cCurrencyStorage) to High(cCurrencyStorage) do
-    CheckCurrencyRoundTrip(cCurrencyStorage[lIndex]);
-  WriteLn('PASS: floating-point types, arithmetic, formatting and streaming');
+end;
+
+procedure CurrencyBounds(AContext: TNXTestContext);
+var lIndex: SizeInt;
+begin
+  TestContext := AContext;
+  try
+    for lIndex := Low(cCurrencyStorage) to High(cCurrencyStorage) do
+      CheckCurrencyRoundTrip(cCurrencyStorage[lIndex]);
+  finally TestContext := nil; end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    with lRegistry.AddSuite('RTL.Streaming.Numeric') do
+    begin
+      AddTest('MixedSequence', @MixedSequence, 'rtl-streaming');
+      AddTest('CurrencyBounds', @CurrencyBounds, 'rtl-streaming');
+    end;
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

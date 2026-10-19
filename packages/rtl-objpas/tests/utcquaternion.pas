@@ -246,13 +246,13 @@ procedure RegisterutcquaternionTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('utcquaternion.TTestQuaternion3D');
-  lSuite.AddTest('TestHookUp', @RunTTestQuaternion3DTestHookUp);
-  lSuite.AddTest('TestCreateVectorAngle', @RunTTestQuaternion3DTestCreateVectorAngle);
-  lSuite.AddTest('TestCreateVectorVector', @RunTTestQuaternion3DTestCreateVectorVector);
-  lSuite.AddTest('TestCreateYawPitchRoll', @RunTTestQuaternion3DTestCreateYawPitchRoll);
-  lSuite.AddTest('TestCreateMatrix', @RunTTestQuaternion3DTestCreateMatrix);
-  lSuite.AddTest('TestAssignToMatrix', @RunTTestQuaternion3DTestAssignToMatrix);
-  lSuite.AddTest('TestMultiply', @RunTTestQuaternion3DTestMultiply);
+  lSuite.AddTest('TestHookUp', @RunTTestQuaternion3DTestHookUp, 'math-vectors');
+  lSuite.AddTest('TestCreateVectorAngle', @RunTTestQuaternion3DTestCreateVectorAngle, 'math-vectors');
+  lSuite.AddTest('TestCreateVectorVector', @RunTTestQuaternion3DTestCreateVectorVector, 'math-vectors');
+  lSuite.AddTest('TestCreateYawPitchRoll', @RunTTestQuaternion3DTestCreateYawPitchRoll, 'math-vectors');
+  lSuite.AddTest('TestCreateMatrix', @RunTTestQuaternion3DTestCreateMatrix, 'math-vectors');
+  lSuite.AddTest('TestAssignToMatrix', @RunTTestQuaternion3DTestAssignToMatrix, 'math-vectors');
+  lSuite.AddTest('TestMultiply', @RunTTestQuaternion3DTestMultiply, 'math-vectors');
 end;
 
 end.

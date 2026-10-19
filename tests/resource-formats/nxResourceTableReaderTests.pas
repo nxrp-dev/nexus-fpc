@@ -3,6 +3,7 @@ program NXResourceTableReaderTests;
 {$mode objfpc}{$H+}
 
 uses
+  obNXTestRegistry, obNXTestContext, utNXTestConsole,
   {$ifdef unix}CWString,{$endif}
   Classes, SysUtils, ResourceCatalog, Resource, ElfReader, ElfTypes, ElfConsts, MachOReader;
 
@@ -199,27 +200,33 @@ begin
   end;
 end;
 
+procedure CheckImage(AContext: TNXTestContext);
+var lName: string;
+begin
+  lName := Copy(AContext.Result.TestId, Length('Resources.ImageReaders.') + 1, MaxInt);
+  LFile := StrToInt(Copy(lName, 1, Pos('_', lName) - 1));
+  LExpected := TResourceCatalog.Create;
+  try
+    LExpected.LoadRes(ParamStr(1));
+    LStream := TFileStream.Create(ParamStr(LFile), fmOpenRead or fmShareDenyWrite);
+    try
+      CompareStream(LStream, ExtractFileName(ParamStr(LFile)));
+      CheckDynamicRelocations(LStream, ExtractFileName(ParamStr(LFile)));
+    finally LStream.Free; end;
+  finally LExpected.Free; end;
+end;
+var lRegistry: TNXTestRegistry; lIndex: Integer;
 begin
   if ParamCount < 2 then
   begin
     WriteLn(StdErr, 'Usage: nxResourceTableReaderTests <expected.res> <object-or-image> [...]');
     Halt(2);
   end;
-  LExpected := TResourceCatalog.Create;
+  lRegistry := TNXTestRegistry.Create;
   try
-    LExpected.LoadRes(ParamStr(1));
-    for LFile := 2 to ParamCount do
-    begin
-      LStream := nil;
-      try
-        LStream := TFileStream.Create(ParamStr(LFile), fmOpenRead or fmShareDenyWrite);
-        CompareStream(LStream, ExtractFileName(ParamStr(LFile)));
-        CheckDynamicRelocations(LStream, ExtractFileName(ParamStr(LFile)));
-      finally
-        LStream.Free;
-      end;
-    end;
-  finally
-    LExpected.Free;
-  end;
+    for lIndex := 2 to ParamCount do
+      lRegistry.AddSuite('Resources.ImageReaders').AddTest(IntToStr(lIndex) + '_' +
+        ExtractFileName(ParamStr(lIndex)), @CheckImage, 'resource-image-readers');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

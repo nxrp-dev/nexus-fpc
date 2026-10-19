@@ -70,8 +70,8 @@ var
   lSuite: TNXTestSuite;
 begin
   lSuite := ARegistry.AddSuite('Collections.MissingKeys');
-  lSuite.AddTest('Dictionary', @TestDictionaryMissingKey);
-  lSuite.AddTest('CuckooMap', @TestCuckooMissingKey);
-  lSuite.AddTest('AVLTree', @TestTreeMissingKey);
+  lSuite.AddTest('Dictionary', @TestDictionaryMissingKey, 'generics');
+  lSuite.AddTest('CuckooMap', @TestCuckooMissingKey, 'generics');
+  lSuite.AddTest('AVLTree', @TestTreeMissingKey, 'generics');
 end;
 end.

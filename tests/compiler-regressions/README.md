@@ -77,8 +77,8 @@ do not infer its behavior from the 3.2.2 result or matching source alone.
 
 `removed_java_native.pas` exercises retained constructor inheritance, overloads,
 CORBA interfaces, and virtual/final methods after retiring JVM compiler support.
-`removed_sdcc_registration.pas` links against matching compiler units to check
-that the retained archive drivers register and no SDCC archive command remains.
+The former `removed_sdcc_registration.pas` coverage is consolidated into the
+native archive suite in [NXClangBackendTests](../clangassembler/README.md).
 
 ## Syscall directive diagnostics
 
@@ -169,10 +169,11 @@ address is an error, not a skipped test. It restores each instruction's owned
 reference before destruction, including when testing an unfixed optimizer.
 No production compiler instrumentation is required.
 
-`variants_byref_negation.pas` retains the runtime reproducer that exposed the
+The native `RTL.Variants.Negation.ByReferenceAndOrdinary` case in
+`packages/rtl-objpas/tests/tsNXVariantNegation.pas` retains the reproducer that exposed the
 missing memory reload in `Variants.sysvarneg`. Compile the Variants unit itself
 with the tested compiler and optimization setting, then compile and run this
-fixture with that unit and its matching RTL. It checks signed/unsigned integer,
+RTLObjPasTests with that unit and its matching RTL. It checks signed/unsigned integer,
 floating-point and Currency negation, result subtypes, unchanged referenced
 values, and ordinary Variant negation. LongWord inputs on both sides of
 `$80000000`, including `$FFFFFFFF`, check that negation widens the operand to

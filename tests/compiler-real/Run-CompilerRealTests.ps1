@@ -12,6 +12,11 @@ $Compiler = (Resolve-Path -LiteralPath $Compiler).Path
 $RTL = (Resolve-Path -LiteralPath $RTL).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 $lSource = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$lNxtest = Join-Path $lSource '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path -LiteralPath $lNxtest)) {
+    $lNxtest = Join-Path $lSource '../../nexus/packages/nexus-packages/nxtest/src'
+}
+$lNxtest = (Resolve-Path -LiteralPath $lNxtest).Path
 [void](New-Item -ItemType Directory -Force -Path $OutputRoot)
 $lResults = [Collections.Generic.List[object]]::new()
 
@@ -40,7 +45,7 @@ function Invoke-Check([string]$AName, [string]$AProgram, [string[]]$AArguments, 
 foreach ($lVariant in @('normal','O2')) {
     $lDirectory = Join-Path $OutputRoot $lVariant
     [void](New-Item -ItemType Directory -Force -Path $lDirectory)
-    $lOptions = @('-n', "-T$Target", '-Aas-clang', '-XLL', "-Fu$RTL", "-FU$lDirectory", "-FE$lDirectory")
+    $lOptions = @('-n', "-T$Target", '-Aas-clang', '-XLL', "-Fu$RTL", "-Fu$lNxtest", "-FU$lDirectory", "-FE$lDirectory")
     if ($lVariant -eq 'O2') { $lOptions += '-O2' }
     Invoke-Check "$lVariant-core-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/tcompilerreal.pas"))
     Invoke-Check "$lVariant-core-run" "$lDirectory/tcompilerreal.exe" @()
@@ -51,6 +56,8 @@ foreach ($lVariant in @('normal','O2')) {
     $lCPU = if ($Target -eq 'win64') { 'x86_64' } else { 'i386' }
     Invoke-Check "$lVariant-rtti-build" $Compiler ($lOptions + @(
         "-Fu$lSource/packages/rtl-objpas/src/inc", "-Fu$lSource/packages/rtl-objpas/src/$lCPU",
+        "-Fu$lSource/packages/rtl-generics/src", "-Fi$lSource/packages/rtl-generics/src/inc",
+        "-Fu$(Join-Path $lNxtest '../../libffi/src')",
         "-Fi$lSource/packages/rtl-objpas/src/$lCPU",
         "-Fi$lSource/packages/rtl-objpas/src/win", "$PSScriptRoot/textendedrtti.pas"))
     Invoke-Check "$lVariant-rtti-run" "$lDirectory/textendedrtti.exe" @()

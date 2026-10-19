@@ -2,7 +2,8 @@ program NXCRC32WidthTests;
 
 {$mode objfpc}{$H+}{$asmmode intel}
 
-uses SysUtils, CPU;
+uses SysUtils, CPU, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+var TestContext: TNXTestContext;
 
 function ReadByte(ASeed: Cardinal; ABuffer: PByte): Cardinal; assembler; nostackframe;
 asm
@@ -57,16 +58,17 @@ var
 procedure Check(AActual, AExpected: Cardinal; const AWidth: string);
 begin
   if AActual <> AExpected then
-    raise Exception.CreateFmt('CRC32 %s differs at offset %d, variant %d',
-      [AWidth, lOffset, lVariant]);
+    TestContext.Fail(Format('CRC32 %s differs at offset %d, variant %d',
+      [AWidth, lOffset, lVariant]));
   Inc(lChecks);
 end;
 
+procedure CRC32Widths(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   if not SSE42Support then
   begin
-    WriteLn('SKIP execution: CPU lacks SSE4.2; retain instruction-encoding checks');
-    Halt(77);
+    AContext.Skip('CPU lacks SSE4.2; instruction encodings are checked independently');
   end;
   for lVariant := 0 to 7 do
   begin
@@ -85,4 +87,19 @@ begin
     end;
   end;
   WriteLn('PASS ', lChecks, ' CRC32 source-width checks');
+end;
+procedure ReferenceVector(AContext: TNXTestContext);
+const cText: RawByteString = '123456789';
+begin
+  AContext.AssertTrue((ReferenceCRC($FFFFFFFF, @cText[1], Length(cText)) xor $FFFFFFFF) = $E3069283,
+    'Independent CRC32C check vector');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.X86.Instructions').AddTest('CRC32CReference', @ReferenceVector, 'compiler-instructions');
+    lRegistry.AddSuite('Compiler.X86.Instructions').AddTest('CRC32SourceWidths', @CRC32Widths, 'compiler-instructions');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

@@ -4,7 +4,7 @@ dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
 module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 Project SharedLibraryTests {
  RootDirectory: "../../../nexus";
- OutputRoot: "output/nexusfpc-linker-tests/" + @Tools.Native.Name;
+ OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/linker";
  FPC Tests {
   CompilerPath: @Tools.Native.FPCCompiler;
   SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/linker/NXSharedLibraryTests.lpr"];
@@ -14,8 +14,8 @@ Project SharedLibraryTests {
   Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
   Files Paths {
    CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
-   UnitPaths: [@Tools.Native.RTLPath, @Tools.NexusFPC.SourcePath + "/tests/linker", "packages/nexus-packages/nxtest/src", "packages/nexus-packages/fcl-process/src", @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"];
-   IncludePaths: ["packages/nexus-packages/fcl-process/src/unix", @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/unix", @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/dummy", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/unix", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
+   UnitPaths: [@Tools.Native.RTLPath, @Tools.NexusFPC.SourcePath + "/tests/linker", "packages/nexus-packages/nxtest/src", "packages/nexus-packages/fcl-process/src", "packages/nexus-packages/fcl-base/src", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"];
+   IncludePaths: ["packages/nexus-packages/fcl-process/src/unix", "packages/nexus-packages/fcl-base/src/unix", "packages/nexus-packages/fcl-base/src/dummy", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/unix", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
   }
  }
 }

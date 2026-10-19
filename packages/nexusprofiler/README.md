@@ -80,8 +80,11 @@ The writer facade exists during compiler-generated startup so early events can e
 ## Validation
 
 ```powershell
-.\tests\nexusprofiler\Run-NXProfileFormatTests.ps1
+nxbuild /action=build /project=../nexus-fpc/packages/nexusprofiler/tests/NXProfilerTests.nxproject
 .\tests\nexusprofiler\Run-NexusProfilerTests.ps1
 ```
 
-The format tests include independent block lifecycle, reuse, and concurrent producer coverage for `TNXEventMemory`.
+Run `NXProfilerTests` from its native output directory. Its eight nxtest cases
+cover format roundtrips, truncated/malformed inputs, file APIs and independent
+block lifecycle, reuse, pool limits and concurrent producers for `TNXEventMemory`.
+See [the central suite guide](../../tests/NXTEST.md).

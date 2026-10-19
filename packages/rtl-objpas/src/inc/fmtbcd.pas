@@ -2846,7 +2846,7 @@ writeln ( '> ', i4, ' ', bh.Singles[i4], ' ', Add );
 
   function FormatBCD ( const Format : ShortString;
                              BCD : tBCD ) : FmtBCDStringtype;
-    // Tests: tests/test/units/fmtbcd/
+    // Tests: tests/rtl/fixtures/fmtbcd/
     type
       TSection=record
         FmtStart, FmtEnd,      // positions in Format string,

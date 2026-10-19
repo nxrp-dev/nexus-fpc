@@ -12,6 +12,12 @@ mkdir -p "$3"
 artifact_root=$(realpath "$3")
 mkdir -p "$artifact_root/units" "$artifact_root/logs"
 
+nxtest_source="$source_root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$source_root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
+
 run_step() {
     local name=$1
     shift
@@ -23,11 +29,11 @@ run_step() {
     fi
 }
 
-run_step compile "$compiler" -n -O2 -Cr -Co -Ci \
-    "-Fu$rtl_units" "-Fu$source_root/compiler" \
+run_step compile "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci \
+    "-Fu$rtl_units" "-Fu$source_root/compiler" "-Fu$nxtest_source" \
     "-FU$artifact_root/units" "-FE$artifact_root" \
     "-o$artifact_root/nxResourceCatalogTests" \
-    "$source_root/tests/resource-formats/nxResourceCatalogTests.pas"
+    "$source_root/tests/resource-formats/ResourceTests.lpr"
 
 printf 'Nexus resource payload\000\377' >"$artifact_root/payload.bin"
 cat >"$artifact_root/first.rc" <<'EOF'
@@ -85,9 +91,9 @@ EOF
     run_step "$fixture-images-rc" llvm-rc /no-preprocess /I "$artifact_root" \
         /FO "$artifact_root/$fixture-images.res" "$artifact_root/$fixture-images.rc"
 done
-run_step catalog "$artifact_root/nxResourceCatalogTests" \
+run_step catalog "$artifact_root/nxResourceCatalogTests" catalog \
     "$artifact_root/first.res" "$artifact_root/second.res" "$artifact_root/merged.res" \
-    "$source_root/tests/test/units/system/tres4.res" \
+    "$source_root/tests/rtl/fixtures/system/tres4.res" \
     "$artifact_root/first-images.res" "$artifact_root/second-images.res"
 cat "$artifact_root/logs/catalog.log"
 for machine in X86 X64 ARM64; do

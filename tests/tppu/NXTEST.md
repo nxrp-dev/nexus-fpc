@@ -21,3 +21,6 @@ python3 ../nexus-fpc/tests/tppu/RunTests.py --program output/nexus-fpc-tests/x86
 The helper copies fixtures into the runner output directory and configures
 the tested compiler explicitly. Its missing-system case deliberately receives
 no RTL path. Tests never write into the source fixtures.
+
+Suite ownership, output paths, consolidation decisions and explicit skips are
+listed in [the central nxtest guide](../NXTEST.md).

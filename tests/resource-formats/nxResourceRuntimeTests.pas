@@ -3,7 +3,10 @@ program nxResourceRuntimeTests;
 {$mode objfpc}{$H+}{$codepage utf8}
 
 uses
+  obNXTestRegistry, obNXTestContext, utNXTestConsole,
   Classes, SysUtils, ResourceCatalog;
+
+var TestContext: TNXTestContext;
 
 {$R runtimetables.res}
 
@@ -71,7 +74,7 @@ const
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
-  if not ACondition then raise Exception.Create(AMessage);
+  TestContext.AssertTrue(ACondition, AMessage);
 end;
 
 function Key(AValue: TResourceNamePointer): TResourceKey;
@@ -152,7 +155,9 @@ begin
   end;
 end;
 
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   try
     Check(ParamCount <= 1, 'Expected at most one table fixture RES filename');
     if ParamCount = 1 then LFixture := ParamStr(1)
@@ -180,7 +185,15 @@ begin
     begin
       WriteLn('FAIL ', E.ClassName, ': ', E.Message);
       DumpExceptionBackTrace(Output);
-      Halt(1);
+      TestContext.Fail(E.ClassName + ': ' + E.Message);
     end;
   end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Resources.Runtime').AddTest('EnumerationLookupAndStreams', @RunCase, 'resources');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

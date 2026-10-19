@@ -85,8 +85,8 @@ procedure RegisterPackageStorageTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite := ARegistry.AddSuite('PackageStorage');
-  lSuite.AddTest('Storage', @TestStorage);
-  lSuite.AddTest('MalformedStorage', @TestMalformedStorage);
-  lSuite.AddTest('OldStorage', @TestOldStorage);
+  lSuite.AddTest('Storage', @TestStorage, 'package-storage');
+  lSuite.AddTest('MalformedStorage', @TestMalformedStorage, 'package-storage');
+  lSuite.AddTest('OldStorage', @TestOldStorage, 'package-storage');
 end;
 end.

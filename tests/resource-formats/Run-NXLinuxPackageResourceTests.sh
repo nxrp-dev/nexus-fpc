@@ -7,6 +7,11 @@ fi
 compiler=$(realpath "$1")
 rtl=$(realpath "$2")
 root=$(cd "$(dirname "$0")/../.." && pwd)
+nxtest_source="$root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
 # fcl-res is owned by nexus-packages, outside the compiler source tree.
 resource_source=${NEXUS_FCL_RES_SOURCE:-"$root/../nexus/packages/nexus-packages/fcl-res/src"}
 if [[ -z ${NEXUS_FCL_RES_SOURCE:-} && ! -f "$resource_source/resource.pas" ]]; then
@@ -67,7 +72,7 @@ EOF
 printf 'package Consumer; requires Provider; contains ConsumerUnit; end.\n' >"$out/consumer/consumer.nxpk"
 cd "$out/consumer"
 step consumer "$compiler" "${flags[@]}" "-FU$out/consumer" "-FE$out/consumer" consumer.nxpk
-step reader-compile "$compiler" -n -O2 -Aas-clang -XLL "-Fu$rtl" \
+step reader-compile "$compiler" "-Fu$nxtest_source" -n -O2 -Aas-clang -XLL "-Fu$rtl" \
     "-Fu$root/compiler" "-Fu$resource_source" "-FU$out/reader" "-FE$out/reader" \
     "$root/tests/resource-formats/nxResourceTableReaderTests.pas"
 step provider-resources "$out/reader/nxResourceTableReaderTests" \

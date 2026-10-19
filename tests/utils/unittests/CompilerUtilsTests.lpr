@@ -5,13 +5,14 @@ program CompilerUtilsTests;
 uses
   {$IFDEF UNIX}cthreads, cwstring,{$ENDIF}
   obNXTestRegistry, utNXTestConsole,
-  tctsutils;
+  tctsutils, tsNXArtifactIdentity;
 var
   lRegistry: TNXTestRegistry;
 begin
   lRegistry := TNXTestRegistry.Create;
   try
     RegistertctsutilsTests(lRegistry);
+    RegisterArtifactIdentityTests(lRegistry);
     ExitCode := RunConsoleTests(lRegistry);
   finally
     lRegistry.Free;

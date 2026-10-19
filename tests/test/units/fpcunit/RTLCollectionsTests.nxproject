@@ -6,7 +6,7 @@ module "../../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project RTLCollectionsTests {
     RootDirectory: "../../../../../nexus";
-    OutputRoot: "output/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-collections";
+    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-collections";
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: [
@@ -21,7 +21,7 @@ Project RTLCollectionsTests {
             UnitPaths: [
                 @Tools.Native.RTLPath,
                 @Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit",
-                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
+                "packages/nexus-packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 "packages/nexus-packages/nxtest/src"

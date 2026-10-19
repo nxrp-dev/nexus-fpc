@@ -6,7 +6,7 @@ module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project CompilerUtilsTests {
     RootDirectory: "../../../../nexus";
-    OutputRoot: "output/nexus-fpc-tests/" + @Tools.Native.Name + "/compiler-utils";
+    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/compiler-utils";
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: [
@@ -22,18 +22,19 @@ Project CompilerUtilsTests {
                 @Tools.Native.RTLPath,
                 @Tools.NexusFPC.SourcePath + "/tests/utils/unittests",
                 "packages/nexus-packages/fcl-process/src",
-                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src",
+                "packages/nexus-packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/tests/utils",
+                @Tools.NexusFPC.SourcePath + "/compiler",
                 "packages/nexus-packages/nxtest/src"
             ];
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
-                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/" + @Tools.Native.OS,
-                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/fcl-base/src/dummy",
+                "packages/nexus-packages/fcl-base/src/" + @Tools.Native.OS,
+                "packages/nexus-packages/fcl-base/src/" + @Tools.Native.PascalPlatform,
+                "packages/nexus-packages/fcl-base/src/dummy",
                 "packages/nexus-packages/fcl-process/src/" + @Tools.Native.PascalPlatform
             ];
         }

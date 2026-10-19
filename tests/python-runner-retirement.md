@@ -60,7 +60,9 @@ and `nxprofile_trace_probe.pas`; runtime sources under `packages/nexusprofiler/s
 ## Artifact identity
 
 Former runner: `artifact-identity/run_artifact_identity_tests.py`.
-Retained fixture: `artifact-identity/identity_encoding.pas`.
+The identity-packing unit checks are now native CompilerUtils cases in
+`utils/unittests/tsNXArtifactIdentity.pas`; the standalone program is removed.
+The build/cache/family rejection integration backlog below remains distinct.
 
 - Build independent upstream and Nexus versions of a unit whose Marker returns
   37; verify PPU versus NXU208 signatures and a source-hidden Nexus round trip.

@@ -549,20 +549,20 @@ procedure RegistertestsgenericsqueueTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.queue.TTestSimpleQueue');
-  lSuite.AddTest('TestEmpty', @RunTTestSimpleQueueTestEmpty);
-  lSuite.AddTest('TestAdd', @RunTTestSimpleQueueTestAdd);
-  lSuite.AddTest('TestClear', @RunTTestSimpleQueueTestClear);
-  lSuite.AddTest('TestGetValue', @RunTTestSimpleQueueTestGetValue);
-  lSuite.AddTest('TestPeek', @RunTTestSimpleQueueTestPeek);
-  lSuite.AddTest('TestDequeue', @RunTTestSimpleQueueTestDequeue);
-  lSuite.AddTest('TestToArray', @RunTTestSimpleQueueTestToArray);
-  lSuite.AddTest('TestEnumerator', @RunTTestSimpleQueueTestEnumerator);
-  lSuite.AddTest('TestValueNotification', @RunTTestSimpleQueueTestValueNotification);
-  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleQueueTestValueNotificationDelete);
+  lSuite.AddTest('TestEmpty', @RunTTestSimpleQueueTestEmpty, 'generics');
+  lSuite.AddTest('TestAdd', @RunTTestSimpleQueueTestAdd, 'generics');
+  lSuite.AddTest('TestClear', @RunTTestSimpleQueueTestClear, 'generics');
+  lSuite.AddTest('TestGetValue', @RunTTestSimpleQueueTestGetValue, 'generics');
+  lSuite.AddTest('TestPeek', @RunTTestSimpleQueueTestPeek, 'generics');
+  lSuite.AddTest('TestDequeue', @RunTTestSimpleQueueTestDequeue, 'generics');
+  lSuite.AddTest('TestToArray', @RunTTestSimpleQueueTestToArray, 'generics');
+  lSuite.AddTest('TestEnumerator', @RunTTestSimpleQueueTestEnumerator, 'generics');
+  lSuite.AddTest('TestValueNotification', @RunTTestSimpleQueueTestValueNotification, 'generics');
+  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleQueueTestValueNotificationDelete, 'generics');
   lSuite:=ARegistry.AddSuite('tests.generics.queue.TTestSingleObjectQueue');
-  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectQueueTestEmpty);
-  lSuite.AddTest('TestFreeOnDequeue', @RunTTestSingleObjectQueueTestFreeOnDequeue);
-  lSuite.AddTest('TestNoFreeOnDeQueue', @RunTTestSingleObjectQueueTestNoFreeOnDeQueue);
+  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectQueueTestEmpty, 'generics');
+  lSuite.AddTest('TestFreeOnDequeue', @RunTTestSingleObjectQueueTestFreeOnDequeue, 'generics');
+  lSuite.AddTest('TestNoFreeOnDeQueue', @RunTTestSingleObjectQueueTestNoFreeOnDeQueue, 'generics');
 end;
 
 end.

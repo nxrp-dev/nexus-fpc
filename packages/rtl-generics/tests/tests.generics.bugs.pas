@@ -232,13 +232,13 @@ procedure RegistertestsgenericsbugsTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.bugs.TTestBugs');
-  lSuite.AddTest('Test_QuadraticProbing_InfinityLoop', @RunTTestBugsTest_QuadraticProbing_InfinityLoop);
-  lSuite.AddTest('Test_GetEqualityComparer', @RunTTestBugsTest_GetEqualityComparer);
-  lSuite.AddTest('TestBinaryOrdering', @RunTTestBugsTestBinaryOrdering);
-  lSuite.AddTest('TestAnsiStringBinaryOrdering', @RunTTestBugsTestAnsiStringBinaryOrdering);
-  lSuite.AddTest('TestDictionaryWithStringKeys', @RunTTestBugsTestDictionaryWithStringKeys);
-  lSuite.AddTest('TestListIndexOf', @RunTTestBugsTestListIndexOf);
-  lSuite.AddTest('TestContainsValue', @RunTTestBugsTestContainsValue);
+  lSuite.AddTest('Test_QuadraticProbing_InfinityLoop', @RunTTestBugsTest_QuadraticProbing_InfinityLoop, 'generics');
+  lSuite.AddTest('Test_GetEqualityComparer', @RunTTestBugsTest_GetEqualityComparer, 'generics');
+  lSuite.AddTest('TestBinaryOrdering', @RunTTestBugsTestBinaryOrdering, 'generics');
+  lSuite.AddTest('TestAnsiStringBinaryOrdering', @RunTTestBugsTestAnsiStringBinaryOrdering, 'generics');
+  lSuite.AddTest('TestDictionaryWithStringKeys', @RunTTestBugsTestDictionaryWithStringKeys, 'generics');
+  lSuite.AddTest('TestListIndexOf', @RunTTestBugsTestListIndexOf, 'generics');
+  lSuite.AddTest('TestContainsValue', @RunTTestBugsTestContainsValue, 'generics');
 end;
 
 end.

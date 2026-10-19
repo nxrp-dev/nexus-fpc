@@ -13,6 +13,11 @@ compiler_includes=$5
 fixture=$6
 artifact_root=$7
 source_root=$(cd "$(dirname "$0")/../.." && pwd)
+nxtest_source="$source_root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$source_root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
 # fcl-res is owned by nexus-packages, outside the compiler source tree.
 resource_source=${NEXUS_FCL_RES_SOURCE:-"$source_root/../nexus/packages/nexus-packages/fcl-res/src"}
 if [[ -z ${NEXUS_FCL_RES_SOURCE:-} && ! -f "$resource_source/resource.pas" ]]; then
@@ -44,7 +49,7 @@ compiler_flags=()
 if [[ -f "$compiler_units/globtype.nxu" ]]; then
     compiler_flags=(-Aas-clang -XLL)
 fi
-run_step compile "$compiler" -n -O2 -Cr -Co -Ci "${compiler_flags[@]}" \
+run_step compile "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci "${compiler_flags[@]}" \
     "-d$target_cpu" -dREVINC -dRELEASE \
     "-Fu$rtl_units" "-Fu$compiler_units" "-Fu$artifact_root/source" \
     "-Fi$compiler_includes" "-FU$artifact_root/units" \
@@ -101,7 +106,7 @@ for index in "${!targets[@]}"; do
     images+=("$image")
     cat "$artifact_root/logs/emit-$target.log"
 done
-run_step compile-reader "$compiler" -n -O2 -Cr -Co -Ci "${compiler_flags[@]}" \
+run_step compile-reader "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci "${compiler_flags[@]}" \
     "-Fu$rtl_units" "-Fu$artifact_root/source" "-Fu$resource_source" \
     "-FU$artifact_root/units" "-o$artifact_root/nxResourceTableReaderTests" \
     "$source_root/tests/resource-formats/nxResourceTableReaderTests.pas"

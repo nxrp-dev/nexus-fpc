@@ -12,9 +12,14 @@ compiler_units=$(realpath "$3")
 mkdir -p "$4"
 output=$(realpath "$4")
 test_dir=$(cd "$(dirname "$0")" && pwd)
+nxtest_source="$test_dir/../../../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$test_dir/../../../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
 options=(-n -O2 -Aas-clang -XLL "-Fu$rtl_units")
 mkdir -p "$output/models"
-"$compiler" "${options[@]}" "-Fu$compiler_units" \
+"$compiler" "${options[@]}" "-Fu$nxtest_source" "-Fu$compiler_units" \
     "-FU$output/models" "-FE$output/models" \
     "$test_dir/../compiler-regressions/cpu_models.pas" >"$output/models/build.log" 2>&1
 "$output/models/cpu_models" | tee "$output/models/run.log"

@@ -287,14 +287,14 @@ procedure RegistertcpersistentTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tcpersistent.TTestTPersistent');
-  lSuite.AddTest('TestPropCount', @RunTTestTPersistentTestPropCount);
-  lSuite.AddTest('TestNamePath', @RunTTestTPersistentTestNamePath);
+  lSuite.AddTest('TestPropCount', @RunTTestTPersistentTestPropCount, 'collections');
+  lSuite.AddTest('TestNamePath', @RunTTestTPersistentTestNamePath, 'collections');
   lSuite:=ARegistry.AddSuite('tcpersistent.TTestPersistentDescendent');
-  lSuite.AddTest('TestPropCount', @RunTTestPersistentDescendentTestPropCount);
-  lSuite.AddTest('TestNamePath', @RunTTestPersistentDescendentTestNamePath);
-  lSuite.AddTest('TestNamePathWithOwner', @RunTTestPersistentDescendentTestNamePathWithOwner);
-  lSuite.AddTest('TestAssign', @RunTTestPersistentDescendentTestAssign);
-  lSuite.AddTest('TestAssignFail', @RunTTestPersistentDescendentTestAssignFail);
+  lSuite.AddTest('TestPropCount', @RunTTestPersistentDescendentTestPropCount, 'collections');
+  lSuite.AddTest('TestNamePath', @RunTTestPersistentDescendentTestNamePath, 'collections');
+  lSuite.AddTest('TestNamePathWithOwner', @RunTTestPersistentDescendentTestNamePathWithOwner, 'collections');
+  lSuite.AddTest('TestAssign', @RunTTestPersistentDescendentTestAssign, 'collections');
+  lSuite.AddTest('TestAssignFail', @RunTTestPersistentDescendentTestAssignFail, 'collections');
 end;
 
 end.

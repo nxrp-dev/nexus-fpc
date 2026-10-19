@@ -195,15 +195,15 @@ begin
   lClang := ExpandFileName(AClang);
   lReadObj := ExpandFileName(AReadObj);
   lSuite := ARegistry.AddSuite('LinuxSharedLibraries');
-  lSuite.AddTest('ExternalSONAME', @TestExternalSONAME);
-  lSuite.AddTest('LinkLibSONAME', @TestLinkLibSONAME);
-  lSuite.AddTest('CachedUnitSONAME', @TestCachedUnitSONAME);
-  lSuite.AddTest('ExplicitLookup', @TestExplicitLookup);
-  lSuite.AddTest('BareLibraryName', @TestBareLibraryName);
-  lSuite.AddTest('BareArchiveFallback', @TestBareArchiveFallback);
-  lSuite.AddTest('ExplicitFilename', @TestExplicitFilename);
-  lSuite.AddTest('ExactPath', @TestExactPath);
-  lSuite.AddTest('MissingABIDoesNotFallback', @TestMissingABIDoesNotFallback);
-  lSuite.AddTest('NXPLFilename', @TestNXPLFilename);
+  lSuite.AddTest('ExternalSONAME', @TestExternalSONAME, 'linker');
+  lSuite.AddTest('LinkLibSONAME', @TestLinkLibSONAME, 'linker');
+  lSuite.AddTest('CachedUnitSONAME', @TestCachedUnitSONAME, 'linker');
+  lSuite.AddTest('ExplicitLookup', @TestExplicitLookup, 'linker');
+  lSuite.AddTest('BareLibraryName', @TestBareLibraryName, 'linker');
+  lSuite.AddTest('BareArchiveFallback', @TestBareArchiveFallback, 'linker');
+  lSuite.AddTest('ExplicitFilename', @TestExplicitFilename, 'linker');
+  lSuite.AddTest('ExactPath', @TestExactPath, 'linker');
+  lSuite.AddTest('MissingABIDoesNotFallback', @TestMissingABIDoesNotFallback, 'linker');
+  lSuite.AddTest('NXPLFilename', @TestNXPLFilename, 'linker');
 end;
 end.

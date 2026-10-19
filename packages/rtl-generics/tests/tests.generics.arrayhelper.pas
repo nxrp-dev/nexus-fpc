@@ -282,15 +282,15 @@ procedure RegistertestsgenericsarrayhelperTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.generics.arrayhelper.TTestArrayHelper');
-  lSuite.AddTest('Test_BinarySearch_Integers', @RunTTestArrayHelperTest_BinarySearch_Integers);
-  lSuite.AddTest('Test_BinarySearch_EmptyArray', @RunTTestArrayHelperTest_BinarySearch_EmptyArray);
-  lSuite.AddTest('Test_IndexOf', @RunTTestArrayHelperTest_IndexOf);
-  lSuite.AddTest('Test_FirstIndexOf', @RunTTestArrayHelperTest_FirstIndexOf);
-  lSuite.AddTest('Test_LastIndexOf', @RunTTestArrayHelperTest_LastIndexOf);
-  lSuite.AddTest('Test_Min', @RunTTestArrayHelperTest_Min);
-  lSuite.AddTest('Test_Max', @RunTTestArrayHelperTest_Max);
-  lSuite.AddTest('Test_Contains', @RunTTestArrayHelperTest_Contains);
-  lSuite.AddTest('Test_Reverse', @RunTTestArrayHelperTest_Reverse);
+  lSuite.AddTest('Test_BinarySearch_Integers', @RunTTestArrayHelperTest_BinarySearch_Integers, 'generics');
+  lSuite.AddTest('Test_BinarySearch_EmptyArray', @RunTTestArrayHelperTest_BinarySearch_EmptyArray, 'generics');
+  lSuite.AddTest('Test_IndexOf', @RunTTestArrayHelperTest_IndexOf, 'generics');
+  lSuite.AddTest('Test_FirstIndexOf', @RunTTestArrayHelperTest_FirstIndexOf, 'generics');
+  lSuite.AddTest('Test_LastIndexOf', @RunTTestArrayHelperTest_LastIndexOf, 'generics');
+  lSuite.AddTest('Test_Min', @RunTTestArrayHelperTest_Min, 'generics');
+  lSuite.AddTest('Test_Max', @RunTTestArrayHelperTest_Max, 'generics');
+  lSuite.AddTest('Test_Contains', @RunTTestArrayHelperTest_Contains, 'generics');
+  lSuite.AddTest('Test_Reverse', @RunTTestArrayHelperTest_Reverse, 'generics');
 end;
 
 end.

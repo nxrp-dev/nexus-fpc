@@ -6,7 +6,7 @@ module "../../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project CollationDataTests {
     RootDirectory: "../../../../../nexus";
-    OutputRoot: "output/CollationDataTests/" + @Tools.Native.Name;
+    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/collation-data";
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/test/units/fpwidestring/CollationDataTests.lpr"];

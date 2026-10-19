@@ -632,17 +632,17 @@ procedure RegistertestsrttiinterceptTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tests.rtti.intercept.TTestVirtualMethodInterceptor');
-  lSuite.AddTest('TestBeforeAfterFire', @RunTTestVirtualMethodInterceptorTestBeforeAfterFire);
-  lSuite.AddTest('TestUnproxifyRestores', @RunTTestVirtualMethodInterceptorTestUnproxifyRestores);
-  lSuite.AddTest('TestSuppressInvoke', @RunTTestVirtualMethodInterceptorTestSuppressInvoke);
-  lSuite.AddTest('TestModifyResult', @RunTTestVirtualMethodInterceptorTestModifyResult);
-  lSuite.AddTest('TestExceptionReraise', @RunTTestVirtualMethodInterceptorTestExceptionReraise);
-  lSuite.AddTest('TestExceptionSwallow', @RunTTestVirtualMethodInterceptorTestExceptionSwallow);
-  lSuite.AddTest('TestNonVirtualNotIntercepted', @RunTTestVirtualMethodInterceptorTestNonVirtualNotIntercepted);
-  lSuite.AddTest('TestIsOperatorAndParent', @RunTTestVirtualMethodInterceptorTestIsOperatorAndParent);
-  lSuite.AddTest('TestVarParameter', @RunTTestVirtualMethodInterceptorTestVarParameter);
-  lSuite.AddTest('TestChildOverride', @RunTTestVirtualMethodInterceptorTestChildOverride);
-  lSuite.AddTest('TestNoRttiVirtualMethodNotCrash', @RunTTestVirtualMethodInterceptorTestNoRttiVirtualMethodNotCrash);
+  lSuite.AddTest('TestBeforeAfterFire', @RunTTestVirtualMethodInterceptorTestBeforeAfterFire, 'rtti');
+  lSuite.AddTest('TestUnproxifyRestores', @RunTTestVirtualMethodInterceptorTestUnproxifyRestores, 'rtti');
+  lSuite.AddTest('TestSuppressInvoke', @RunTTestVirtualMethodInterceptorTestSuppressInvoke, 'rtti');
+  lSuite.AddTest('TestModifyResult', @RunTTestVirtualMethodInterceptorTestModifyResult, 'rtti');
+  lSuite.AddTest('TestExceptionReraise', @RunTTestVirtualMethodInterceptorTestExceptionReraise, 'rtti');
+  lSuite.AddTest('TestExceptionSwallow', @RunTTestVirtualMethodInterceptorTestExceptionSwallow, 'rtti');
+  lSuite.AddTest('TestNonVirtualNotIntercepted', @RunTTestVirtualMethodInterceptorTestNonVirtualNotIntercepted, 'rtti');
+  lSuite.AddTest('TestIsOperatorAndParent', @RunTTestVirtualMethodInterceptorTestIsOperatorAndParent, 'rtti');
+  lSuite.AddTest('TestVarParameter', @RunTTestVirtualMethodInterceptorTestVarParameter, 'rtti');
+  lSuite.AddTest('TestChildOverride', @RunTTestVirtualMethodInterceptorTestChildOverride, 'rtti');
+  lSuite.AddTest('TestNoRttiVirtualMethodNotCrash', @RunTTestVirtualMethodInterceptorTestNoRttiVirtualMethodNotCrash, 'rtti');
 end;
 
 end.

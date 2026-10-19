@@ -1,6 +1,6 @@
 program textendedrtti;
 {$mode objfpc}{$H+}{$M+}
-uses Rtti, TypInfo;
+uses Rtti, TypInfo, obNXTestRegistry, obNXTestContext, utNXTestConsole;
 type
   TSample = class
   private
@@ -12,6 +12,7 @@ type
     property IntegerValue: Comp read FComp write FComp;
     property MoneyValue: Currency read FCurrency write FCurrency;
   end;
+procedure NumericProperties(AContext: TNXTestContext);
 var
   lContext: TRttiContext;
   lSample: TSample;
@@ -28,18 +29,25 @@ begin
     lSample.MoneyValue:=12345.6789;
     lType:=lContext.GetType(TSample.ClassInfo);
     lValue:=lType.GetProperty('RealValue').GetValue(lSample);
-    if (lValue.Kind<>tkFloat) or (lValue.AsExtended-1<>lSmall) then Halt(1);
+    AContext.AssertTrue((lValue.Kind=tkFloat) and (lValue.AsExtended-1=lSmall), 'Extended property retains low bits');
     lValue:=lType.GetProperty('IntegerValue').GetValue(lSample);
 {$ifdef FPC_COMP_IS_INT64}
-    if (lValue.Kind<>tkInt64) or (lValue.AsInt64<>123456789) then Halt(2);
+    AContext.AssertTrue((lValue.Kind=tkInt64) and (lValue.AsInt64=123456789), 'Integer Comp property');
 {$else}
-    if (lValue.Kind<>tkFloat) or (lValue.AsExtended<>123456789) then Halt(2);
+    AContext.AssertTrue((lValue.Kind=tkFloat) and (lValue.AsExtended=123456789), 'Floating Comp property');
 {$endif}
     lValue:=lType.GetProperty('MoneyValue').GetValue(lSample);
-    if lValue.AsCurrency<>lSample.MoneyValue then Halt(3);
+    AContext.AssertTrue(lValue.AsCurrency=lSample.MoneyValue, 'Currency property value');
   finally
     lSample.Free;
     lContext.Free;
   end;
-  WriteLn('Extended, Comp and Currency RTTI passed');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('RTL.Rtti.NumericProperties').AddTest('ExtendedCompAndCurrency', @NumericProperties, 'rtl-rtti');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

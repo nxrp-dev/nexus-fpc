@@ -7,6 +7,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $lSource = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$lNxtest = Join-Path $lSource '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path -LiteralPath $lNxtest)) {
+    $lNxtest = Join-Path $lSource '../../nexus/packages/nexus-packages/nxtest/src'
+}
+$lNxtest = (Resolve-Path -LiteralPath $lNxtest).Path
 $SdkRoot = (Resolve-Path -LiteralPath $SdkRoot).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 . "$lSource/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
@@ -21,7 +26,7 @@ $lBuild = "$lSource/tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1"
     -OutputDirectory "$OutputRoot/provider" -Kind Package -SmartLink:$SmartLink
 & $lBuild -SdkRoot $SdkRoot -Source "$lInputs/consumer/textendedabi.pas" `
     -OutputDirectory "$OutputRoot/host" -Kind Console -RequiredPackages nativeabi `
-    -PackagePath "$OutputRoot/provider" -SmartLink:$SmartLink
+    -PackagePath "$OutputRoot/provider" -UnitPath $lNxtest -SmartLink:$SmartLink
 $lBundle = Get-NexusPackageBundle "$OutputRoot/host"
 & "$lBundle/textendedabi.exe" *> "$OutputRoot/extended-run.log"
 if ($LASTEXITCODE -ne 0) { throw 'Extended runtime package ABI test failed.' }
@@ -31,10 +36,10 @@ if ($LASTEXITCODE -ne 0 -or
     throw 'Host must import the provider DLL; compiling the unit into the host is not this test.'
 }
 foreach ($lFixture in @('tests/compiler-real/tmathabi.pas','tests/tbs/tw1737.pas',
-    'tests/test/units/system/ttrig_tolerance.pas','tests/test/twrstr8.pas')) {
+    'tests/rtl/fixtures/system/ttrig_tolerance.pas','tests/test/twrstr8.pas')) {
     $lName = [IO.Path]::GetFileNameWithoutExtension($lFixture)
     $lOutput = Join-Path $OutputRoot $lName
-    & $lBuild -SdkRoot $SdkRoot -Source "$lSource/$lFixture" -OutputDirectory $lOutput -Kind Console -SmartLink:$SmartLink
+    & $lBuild -SdkRoot $SdkRoot -Source "$lSource/$lFixture" -OutputDirectory $lOutput -Kind Console -UnitPath $lNxtest -SmartLink:$SmartLink
     $lBundle = Get-NexusPackageBundle $lOutput
     & "$lBundle/$lName.exe" *> "$OutputRoot/$lName-run.log"
     if ($LASTEXITCODE -ne 0) { throw "$lName shared-RTL test failed." }

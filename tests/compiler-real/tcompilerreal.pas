@@ -1,14 +1,12 @@
 program tcompilerreal;
 {$mode objfpc}{$H-}
-uses Math, tpcompilerreal, unativerealbits;
+uses Math, tpcompilerreal, unativerealbits, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+
+var TestContext: TNXTestContext;
 
 procedure Check(ACondition: Boolean; const AMessage: ShortString);
 begin
-  if not ACondition then
-    begin
-      WriteLn(AMessage);
-      Halt(1);
-    end;
+  TestContext.AssertTrue(ACondition, AMessage);
 end;
 
 function Parse(const AText: ShortString): bestreal;
@@ -21,13 +19,12 @@ end;
 procedure CheckBits(const AValue: bestreal; ASignificand: QWord;
   AExponent: Word; const AMessage: ShortString);
 begin
-  if (TExtended80Rec(AValue).Frac<>ASignificand) or (TExtended80Rec(AValue)._Exp<>AExponent) then
-    begin
-      WriteLn(AMessage,': ',HexStr(TExtended80Rec(AValue)._Exp,4),HexStr(TExtended80Rec(AValue).Frac,16));
-      Halt(1);
-    end;
+  TestContext.AssertTrue((TExtended80Rec(AValue).Frac=ASignificand) and
+    (TExtended80Rec(AValue)._Exp=AExponent), AMessage+': '+
+    HexStr(TExtended80Rec(AValue)._Exp,4)+HexStr(TExtended80Rec(AValue).Frac,16));
 end;
 
+procedure Run;
 var
   lValue, lSmall: bestreal;
   lText: ShortString;
@@ -97,5 +94,23 @@ begin
   CheckBits(ArcTan(FromBits(0,$8000)),0,$8000,'atan(-0)');
   Check(IsNan(Ln(bestreal(-1))),'ln negative');
   Check(IsNan(Sin(FromBits(QWord($8000000000000000),$7FFF))),'sin infinity');
-  WriteLn('compiler real core passed');
+end;
+
+procedure NativeCase(AContext: TNXTestContext);
+var lSavedMask: TFPUExceptionMask;
+begin
+  TestContext := AContext;
+  lSavedMask := GetExceptionMask;
+  try Run; finally
+    SetExceptionMask(lSavedMask);
+    TestContext := nil;
+  end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.Numeric.Native').AddTest('ParsingAndEvaluation', @NativeCase, 'compiler-numeric');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

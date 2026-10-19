@@ -1,9 +1,11 @@
 program textendedabi;
 {$mode objfpc}{$H-}
-uses SysUtils, Math, uextendedabi;
+uses SysUtils, Math, uextendedabi, obNXTestRegistry, obNXTestContext, utNXTestConsole;
+
+var TestContext: TNXTestContext;
 
 procedure Check(ACondition: Boolean; ACode: Integer);
-begin if not ACondition then Halt(ACode); end;
+begin TestContext.AssertTrue(ACondition, 'Extended ABI check ' + IntToStr(ACode)); end;
 
 function Callback(AValue: Extended): Extended; cdecl;
 begin Result:=AValue-1; end;
@@ -15,6 +17,7 @@ begin Result:=2; end;
 function SelectType(AValue: Extended): Integer; overload;
 begin Result:=3; end;
 
+procedure Run;
 var
   lSmall, lValue, lZero: Extended;
   lRecord: TExtendedRecord;
@@ -60,5 +63,23 @@ begin
   Check(lCaught,14);
   lValue:=1+lSmall;
   Check(lValue-1=lSmall,15);
-  WriteLn('Extended ABI passed');
+end;
+
+procedure NativeCase(AContext: TNXTestContext);
+var lSavedMask: TFPUExceptionMask;
+begin
+  TestContext := AContext;
+  lSavedMask := GetExceptionMask;
+  try Run; finally
+    SetExceptionMask(lSavedMask);
+    TestContext := nil;
+  end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.ABI.Extended').AddTest('ParametersRecordsAndRecovery', @NativeCase, 'compiler-abi');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

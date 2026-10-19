@@ -2,7 +2,9 @@
   SPDX-License-Identifier: MPL-2.0-no-copyleft-exception }
 program little_endian_metadata;
 {$mode objfpc}{$H+}
-uses SysUtils, PPU, PCP, NXArtifactID;
+uses obNXTestRegistry, obNXTestContext, utNXTestConsole, SysUtils, PPU, PCP, NXArtifactID;
+var TestContext: TNXTestContext;
+
 const
   cFlags: array[0..3] of Cardinal = ($1000, 4, $1004, 0);
 var
@@ -15,7 +17,9 @@ var
   lName: string;
   lIndex: Integer;
   lExpected: Boolean;
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   for lFlags in cFlags do
   begin
     lExpected := lFlags = $1000;
@@ -53,4 +57,12 @@ begin
     end;
   end;
   WriteLn('PASS NXU/NXP: accept little-endian; reject retired, mixed and missing byte-order flags');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.ArtifactHeaders').AddTest('ByteOrderValidation', @RunCase, 'compiler-units');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

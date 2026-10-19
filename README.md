@@ -31,7 +31,8 @@ release assembly and prerequisites. Makefiles, make generators, fpmake,
 make-based bootstrap/cross scripts and upstream make CI have been retired.
 [Recovered package build requirements](nexusfpc-package-build-requirements.md)
 record the useful details from the removed package and test recipes. Package
-sources await selection; test migration awaits nxtest. Native Linux-hosted
+sources await selection. [Native nxtest suites](tests/NXTEST.md) now own unit
+coverage, with documented skips for unresolved failures. Native Linux-hosted
 builds and Linux SDK construction through Forge remain deferred. The compiler
 and RTL still support the retained Linux
 cross targets and the Linux package runtime.

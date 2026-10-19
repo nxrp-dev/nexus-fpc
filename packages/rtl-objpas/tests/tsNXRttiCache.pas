@@ -75,7 +75,7 @@ var
   lSuite: TNXTestSuite;
 begin
   lSuite := ARegistry.AddSuite('Rtti.Cache');
-  lSuite.AddTest('IdentityAndVisibility', @TestCacheIdentity);
-  lSuite.AddTest('ClearAndRebuild', @TestCacheRebuild);
+  lSuite.AddTest('IdentityAndVisibility', @TestCacheIdentity, 'rtti');
+  lSuite.AddTest('ClearAndRebuild', @TestCacheRebuild, 'rtti');
 end;
 end.

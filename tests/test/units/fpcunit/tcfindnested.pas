@@ -373,20 +373,20 @@ procedure RegistertcfindnestedTests(ARegistry: TNXTestRegistry);
 var lSuite: TNXTestSuite;
 begin
   lSuite:=ARegistry.AddSuite('tcfindnested.TTestFindComponent');
-  lSuite.AddTest('TestFindA', @RunTTestFindComponentTestFindA);
-  lSuite.AddTest('TestEmpty', @RunTTestFindComponentTestEmpty);
-  lSuite.AddTest('TestFindB', @RunTTestFindComponentTestFindB);
-  lSuite.AddTest('TestFindACaseDiffer', @RunTTestFindComponentTestFindACaseDiffer);
-  lSuite.AddTest('TestFindBCaseDiffer', @RunTTestFindComponentTestFindBCaseDiffer);
-  lSuite.AddTest('TestFindNonExist', @RunTTestFindComponentTestFindNonExist);
-  lSuite.AddTest('TestFindNonExistSub', @RunTTestFindComponentTestFindNonExistSub);
-  lSuite.AddTest('TestFindOwner', @RunTTestFindComponentTestFindOwner);
-  lSuite.AddTest('TestFindOwnerNameOwner', @RunTTestFindComponentTestFindOwnerNameOwner);
-  lSuite.AddTest('TestFindOwnerNamed', @RunTTestFindComponentTestFindOwnerNamed);
-  lSuite.AddTest('TestFindOwnerSelf', @RunTTestFindComponentTestFindOwnerSelf);
-  lSuite.AddTest('TestFindSubA', @RunTTestFindComponentTestFindSubA);
-  lSuite.AddTest('TestFindSubB', @RunTTestFindComponentTestFindSubB);
-  lSuite.AddTest('TestFindSubNoC', @RunTTestFindComponentTestFindSubNoC);
+  lSuite.AddTest('TestFindA', @RunTTestFindComponentTestFindA, 'collections');
+  lSuite.AddTest('TestEmpty', @RunTTestFindComponentTestEmpty, 'collections');
+  lSuite.AddTest('TestFindB', @RunTTestFindComponentTestFindB, 'collections');
+  lSuite.AddTest('TestFindACaseDiffer', @RunTTestFindComponentTestFindACaseDiffer, 'collections');
+  lSuite.AddTest('TestFindBCaseDiffer', @RunTTestFindComponentTestFindBCaseDiffer, 'collections');
+  lSuite.AddTest('TestFindNonExist', @RunTTestFindComponentTestFindNonExist, 'collections');
+  lSuite.AddTest('TestFindNonExistSub', @RunTTestFindComponentTestFindNonExistSub, 'collections');
+  lSuite.AddTest('TestFindOwner', @RunTTestFindComponentTestFindOwner, 'collections');
+  lSuite.AddTest('TestFindOwnerNameOwner', @RunTTestFindComponentTestFindOwnerNameOwner, 'collections');
+  lSuite.AddTest('TestFindOwnerNamed', @RunTTestFindComponentTestFindOwnerNamed, 'collections');
+  lSuite.AddTest('TestFindOwnerSelf', @RunTTestFindComponentTestFindOwnerSelf, 'collections');
+  lSuite.AddTest('TestFindSubA', @RunTTestFindComponentTestFindSubA, 'collections');
+  lSuite.AddTest('TestFindSubB', @RunTTestFindComponentTestFindSubB, 'collections');
+  lSuite.AddTest('TestFindSubNoC', @RunTTestFindComponentTestFindSubNoC, 'collections');
 end;
 
 end.

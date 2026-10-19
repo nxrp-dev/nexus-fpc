@@ -12,6 +12,11 @@ compiler_units=$(realpath "$3")
 mkdir -p "$4"
 out=$(realpath "$4")
 test_dir=$(cd "$(dirname "$0")" && pwd)
+nxtest_source="$test_dir/../../../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$test_dir/../../../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
 flags=(-n -O2 -Aas-clang -XLL "-Fu$rtl" "-FU$out" "-FE$out")
 printf 'program Empty; begin end.\n' >"$out/empty.pas"
 for option in -Cb -Cb+ -Cb- -CDefinitelyInvalid; do
@@ -26,9 +31,9 @@ if grep -E '^[[:space:]]*-Cb([[:space:]]|$)' "$out/help.log"; then
     echo 'Compiler help still advertises a big-endian platform option.' >&2
     exit 1
 fi
-"$compiler" "${flags[@]}" "$test_dir/../compiler-regressions/little_endian_platform.pas" >"$out/data-build.log" 2>&1
+"$compiler" "${flags[@]}" "-Fu$nxtest_source" "$test_dir/../compiler-regressions/little_endian_platform.pas" >"$out/data-build.log" 2>&1
 "$out/little_endian_platform" | tee "$out/data-run.log"
-"$compiler" "${flags[@]}" "-Fu$compiler_units" \
+"$compiler" "${flags[@]}" "-Fu$nxtest_source" "-Fu$compiler_units" \
     "$test_dir/../compiler-regressions/little_endian_metadata.pas" >"$out/metadata-build.log" 2>&1
 "$out/little_endian_metadata" "$out" | tee "$out/metadata-run.log"
 echo 'PASS: retired byte-order options, platform macros, retained data conversions and metadata rejection'

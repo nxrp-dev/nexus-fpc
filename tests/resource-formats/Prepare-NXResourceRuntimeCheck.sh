@@ -12,6 +12,10 @@ mkdir -p "$5"
 artifact_root=$(realpath "$5")
 shift 5
 source_root=$(cd "$(dirname "$0")/../.." && pwd)
+nxtest_source="$source_root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$source_root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
 case "$artifact_root/" in
     "$source_root/"*) echo 'Use an output directory outside the source tree.' >&2; exit 2 ;;
 esac
@@ -21,7 +25,7 @@ cp "$source_root/tests/resource-formats/nxResourceRuntimeTests.pas" "$artifact_r
 executable=nxResourceRuntimeTests
 case $target_os in win32|win64) executable+=.exe ;; esac
 command=("$compiler" -n -al -O2 -Cr -Co -Ci -Aas-clang -XLL "-T$target_os"
-    "-Fu$rtl_units" "-Fu$source_root/compiler" "-FU$artifact_root/units"
+    "-Fu$rtl_units" "-Fu$source_root/compiler" "-Fu$nxtest_source" "-FU$artifact_root/units"
     "-FE$artifact_root" "-o$artifact_root/$executable" "$@"
     "$artifact_root/nxResourceRuntimeTests.pas")
 printf '%q ' "${command[@]}" >"$artifact_root/logs/compiler-command.txt"

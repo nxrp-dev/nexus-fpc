@@ -21,6 +21,12 @@ mkdir -p "$3"
 artifact_root=$(realpath "$3")
 mkdir -p "$artifact_root/units" "$artifact_root/logs"
 
+nxtest_source="$source_root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$source_root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
+
 run_step() {
     local name=$1
     shift
@@ -32,11 +38,11 @@ run_step() {
     fi
 }
 
-run_step compile "$compiler" -n -O2 -Cr -Co -Ci \
-    "-Fu$rtl_units" "-Fu$source_root/compiler" \
+run_step compile "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci \
+    "-Fu$rtl_units" "-Fu$source_root/compiler" "-Fu$nxtest_source" \
     "-FU$artifact_root/units" "-FE$artifact_root" \
     "-o$artifact_root/nxResourceTablesTests" \
-    "$source_root/tests/resource-formats/nxResourceTablesTests.pas"
+    "$source_root/tests/resource-formats/ResourceTests.lpr"
 for version_index in 1 2; do
     if [[ $version_index -eq 1 ]]; then file_version=1,2,3,4
     else file_version=5,6,7,8
@@ -56,7 +62,7 @@ EOF
     run_step "version-rc-$version_index" llvm-rc /no-preprocess /C 65001 \
         /FO "$artifact_root/version$version_index.res" "$artifact_root/version$version_index.rc"
 done
-run_step tables "$artifact_root/nxResourceTablesTests" "$artifact_root" "$artifact_root/version1.res"
+run_step tables "$artifact_root/nxResourceTablesTests" tables "$artifact_root" "$artifact_root/version1.res"
 cat "$artifact_root/logs/tables.log"
 
 triples=(
@@ -76,8 +82,8 @@ for index in "${!triples[@]}"; do
         "$artifact_root/target-$index.o"
 done
 
-run_step compile-reader "$compiler" -n -O2 -Cr -Co -Ci \
-    "-Fu$rtl_units" "-Fu$source_root/compiler" "-Fu$resource_source" \
+run_step compile-reader "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci \
+    "-Fu$rtl_units" "-Fu$source_root/compiler" "-Fu$nxtest_source" "-Fu$resource_source" \
     "-FU$artifact_root/units" "-FE$artifact_root" \
     "-o$artifact_root/nxResourceTableReaderTests" \
     "$source_root/tests/resource-formats/nxResourceTableReaderTests.pas"
@@ -110,13 +116,13 @@ run_step readers "$artifact_root/nxResourceTableReaderTests" "$artifact_root/tab
     "${objects[@]}" "${images[@]}"
 cat "$artifact_root/logs/readers.log"
 
-run_step compile-fileinfo "$compiler" -n -O2 -Cr -Co -Ci \
+run_step compile-fileinfo "$compiler" "-Fu$nxtest_source" -n -O2 -Cr -Co -Ci \
     "-Fu$rtl_units" "-Fu$resource_source" \
     "-FU$artifact_root/units" "-FE$artifact_root" \
     "-o$artifact_root/nxFileInfoMetadataTests" \
     "$source_root/tests/resource-formats/nxFileInfoMetadataTests.pas"
 mkdir -p "$artifact_root/version2" "$artifact_root/version1-images" "$artifact_root/version2-images"
-run_step tables-version2 "$artifact_root/nxResourceTablesTests" \
+run_step tables-version2 "$artifact_root/nxResourceTablesTests" tables \
     "$artifact_root/version2" "$artifact_root/version2.res"
 for index in "${!triples[@]}"; do
     if [[ $index -eq 0 ]]; then layout=elf32

@@ -9,6 +9,11 @@ fi
 compiler=$(realpath "$1")
 rtl_units=$(realpath "$2")
 source_root=$(cd "$(dirname "$0")/../.." && pwd)
+nxtest_source="$source_root/../nexus/packages/nexus-packages/nxtest/src"
+if [[ ! -f "$nxtest_source/obNXTestRegistry.pas" ]]; then
+    nxtest_source="$source_root/../../nexus/packages/nexus-packages/nxtest/src"
+fi
+
 # fcl-res is owned by nexus-packages, outside the compiler source tree.
 resource_source=${NEXUS_FCL_RES_SOURCE:-"$source_root/../nexus/packages/nexus-packages/fcl-res/src"}
 if [[ -z ${NEXUS_FCL_RES_SOURCE:-} && ! -f "$resource_source/resource.pas" ]]; then
@@ -33,7 +38,7 @@ run_step() {
     fi
 }
 
-run_step compile "$compiler" -n -O2 \
+run_step compile "$compiler" "-Fu$nxtest_source" -n -O2 \
     "-Fu$rtl_units" "-Fu$resource_source" \
     "-FU$artifact_root/units" "-FE$artifact_root" \
     "-o$artifact_root/nxFileInfoMetadataTests" \

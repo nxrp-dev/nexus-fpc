@@ -5,7 +5,11 @@ program NXSystemIds;
 {$packset 1}
 {$R+}
 
+uses obNXTestRegistry, obNXTestContext, utNXTestConsole;
+
 {$I ../../compiler/systems.inc}
+
+var TestContext: TNXTestContext;
 
 type
   TNXCPUSet = set of TSystemCPU;
@@ -16,7 +20,7 @@ begin
   if AActual <> AExpected then
     begin
       WriteLn(AName, ': expected ', AExpected, ', got ', AActual);
-      Halt(1);
+      TestContext.Fail(AName + ': wrong ordinal');
     end;
 end;
 
@@ -25,7 +29,9 @@ var
   Targets: TNXSystemSet;
   CPUValues: array[0..Ord(High(TSystemCPU))] of LongInt;
   SystemValues: array[0..Ord(High(TSystem))] of LongInt;
+procedure RunCase(AContext: TNXTestContext);
 begin
+  TestContext := AContext;
   CheckOrdinal('cpu_no', Ord(cpu_no), 0);
   CheckOrdinal('cpu_i386', Ord(cpu_i386), 1);
   CheckOrdinal('cpu_x86_64', Ord(cpu_x86_64), 8);
@@ -65,10 +71,10 @@ begin
   SystemValues[Ord(system_x86_64_win64)] := 37;
   SystemValues[Ord(system_x86_64_android)] := 101;
   if not ((cpu_i386 in CPUs) and (cpu_x86_64 in CPUs) and
-          (cpu_aarch64 in CPUs)) then Halt(2);
+          (cpu_aarch64 in CPUs)) then AContext.Fail('CPU set membership');
   if not ((system_x86_64_linux in Targets) and
           (system_x86_64_win64 in Targets) and
-          (system_x86_64_android in Targets)) then Halt(3);
+          (system_x86_64_android in Targets)) then AContext.Fail('Target set membership');
   CheckOrdinal('i386 CPU index', CPUValues[Ord(cpu_i386)], 1);
   CheckOrdinal('x86-64 CPU index', CPUValues[Ord(cpu_x86_64)], 8);
   CheckOrdinal('AArch64 CPU index', CPUValues[Ord(cpu_aarch64)], 16);
@@ -76,4 +82,12 @@ begin
   CheckOrdinal('Win64 system index', SystemValues[Ord(system_x86_64_win64)], 37);
   CheckOrdinal('Android system index', SystemValues[Ord(system_x86_64_android)], 101);
   WriteLn('PASS: surviving CPU and system IDs, sizes, sets, and numeric indexes');
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('Compiler.TargetIdentities').AddTest('StoredIdsAndLayouts', @RunCase, 'compiler-units');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

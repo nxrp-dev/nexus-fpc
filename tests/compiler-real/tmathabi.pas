@@ -1,6 +1,6 @@
 program tmathabi;
 {$mode objfpc}{$H-}
-uses Math;
+uses SysUtils, Math, obNXTestRegistry, obNXTestContext, utNXTestConsole;
 type
   TGuardedExtended = packed record
     Before: QWord;
@@ -12,10 +12,13 @@ const
 var
   lSin, lCos: TGuardedExtended;
   lTheta, lX, lY: Extended;
+var TestContext: TNXTestContext;
+
 procedure Check(ACondition: Boolean; ACode: Integer);
-begin if not ACondition then Halt(ACode); end;
+begin TestContext.AssertTrue(ACondition, 'Extended Math ABI check ' + IntToStr(ACode)); end;
 procedure Near(AValue, AExpected: Extended; ACode: Integer);
 begin Check(Abs(AValue-AExpected)<1.0e-18,ACode); end;
+procedure Run;
 begin
   lSin.Before:=cGuard;
   lSin.After:=cGuard;
@@ -45,5 +48,20 @@ begin
   lY:=-1;
   Near(ArcTan2(lY,lX),-3*Pi/4,10);
   Near(ArcCos(Extended(-1)),Pi,11);
-  WriteLn('Extended Math ABI passed');
+end;
+
+procedure NativeCase(AContext: TNXTestContext);
+begin
+  TestContext := AContext;
+  try Run; finally
+    TestContext := nil;
+  end;
+end;
+var lRegistry: TNXTestRegistry;
+begin
+  lRegistry := TNXTestRegistry.Create;
+  try
+    lRegistry.AddSuite('RTL.Math.ABI').AddTest('ExtendedFunctions', @NativeCase, 'rtl-math-abi');
+    ExitCode := RunConsoleTests(lRegistry);
+  finally lRegistry.Free; end;
 end.

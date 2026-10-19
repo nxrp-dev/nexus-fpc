@@ -34,11 +34,6 @@ New-Item -ItemType Directory -Force -Path $probeOutput | Out-Null
     (Join-Path $testSource 'nxprofile_trace_probe.pas') | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'Trace probe compilation failed' }
 $traceProbe = Join-Path $probeOutput 'nxprofile_trace_probe.exe'
-& $Compiler -n "-Fu$RtlUnits" "-Fu$profileSource" "-FE$probeOutput" `
-    "-FU$probeOutput" -B -O2 -Aas-clang -XLL `
-    (Join-Path $testSource 'nxprofile_control_probe.pas') | Out-Host
-if ($LASTEXITCODE -ne 0) { throw 'Control probe compilation failed' }
-$controlProbe = Join-Path $probeOutput 'nxprofile_control_probe.exe'
 
 function Invoke-Compile {
     param(
@@ -97,9 +92,18 @@ function Invoke-ProfiledExe([string]$Output, [string]$Name) {
 }
 
 Write-Host 'Format reader and writer'
-& (Join-Path $SourceRoot 'tests\nexusprofiler\Run-NXProfileFormatTests.ps1') `
-    -SourceRoot $SourceRoot -Compiler $Compiler -RtlUnits $RtlUnits `
-    -OutputRoot (Join-Path $OutputRoot 'format') | Out-Host
+$formatOutput = Join-Path $OutputRoot 'format'
+New-Item -ItemType Directory -Force -Path $formatOutput | Out-Null
+$nxtestSource = Join-Path $SourceRoot '../nexus/packages/nexus-packages/nxtest/src'
+if (-not (Test-Path (Join-Path $nxtestSource 'obNXTestRegistry.pas'))) {
+    $nxtestSource = Join-Path $SourceRoot '../../nexus/packages/nexus-packages/nxtest/src'
+}
+& $Compiler -n "-Fu$RtlUnits" "-Fu$profileSource" "-Fu$nxtestSource" `
+    "-FE$formatOutput" "-FU$formatOutput" -O2 -Cr -Co -Aas-clang -XLL `
+    (Join-Path $testSource 'NXProfilerTests.lpr') | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'Native profiler unit test compilation failed' }
+& (Join-Path $formatOutput 'NXProfilerTests.exe') | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'Native profiler unit tests failed' }
 
 Write-Host 'Activation, PPU state, and ordinary build isolation'
 $activationSource = Join-Path $OutputRoot 'activation-source'
@@ -226,10 +230,10 @@ $controlTraces = @(Get-ChildItem -LiteralPath $controlOutput `
     -Filter 'nexus-profile-*.nxtrace' | Sort-Object Name)
 Assert-True ($controlTraces.Count -eq 2) `
     'Profiler control did not create one trace per active interval'
-& $controlProbe $controlTraces[0].FullName 'FIRSTINTERVALLEAF' `
+& (Join-Path $formatOutput 'NXProfilerTests.exe') control $controlTraces[0].FullName 'FIRSTINTERVALLEAF' `
     'PAUSEDLEAF' 'SECONDINTERVALLEAF' | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'First controlled interval is invalid' }
-& $controlProbe $controlTraces[1].FullName 'SECONDINTERVALLEAF' `
+& (Join-Path $formatOutput 'NXProfilerTests.exe') control $controlTraces[1].FullName 'SECONDINTERVALLEAF' `
     'PAUSEDLEAF' 'FIRSTINTERVALLEAF' | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'Second controlled interval is invalid' }
 
