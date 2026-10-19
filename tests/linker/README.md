@@ -1,12 +1,18 @@
 # Linux shared-library linking regressions
 
-These ten direct nxtest cases compile tiny C providers and Pascal consumers,
+These thirteen direct nxtest cases compile tiny C and Pascal providers and consumers,
 execute the consumers and inspect their ELF DT_NEEDED entries with LLVM.
 Versioned-library cases deliberately provide no unversioned `.so` alias.
 They cover external declarations, linklib directives, source-hidden NXU imports,
 explicit `:filename` lookup, literal filenames without a lib prefix, a path with
 spaces, bare-name behavior and static archive fallback, a missing ABI and an NXPL filename control.
 The NXPL control tests exact filename handling, not package metadata or ownership.
+
+The PIC cases check the Linux x86-64 compiler default, explicit `-Cg-` opt-out,
+and a Pascal shared library using a separately compiled, source-hidden unit and
+the supplied RTL. The library and unit are compiled without `-Cg`; the library
+must link with `-z text`, contain no `TEXTREL` dynamic tag, and load, execute and
+unload successfully. The PIC cases require an x86-64 Linux compiler and RTL.
 
 Build `NXSharedLibraryTests.nxproject` with Nexus nxbuild and the configured
 NexusFPC toolchain. The test driver accepts five arguments:

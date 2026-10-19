@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project RTLObjPasTests {
+    Id: "NXRP.CompilerTests.RTLObjPasTests";
+    Requires: [@Projects.FCLBase, @Projects.LibFFI, @Projects.NexusTest];
     RootDirectory: "../../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-objpas";
+    OutputRoot: @Tools.OutputRoot + "/RTLObjPasTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
-        SourceFiles: [
-            @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/tests/RTLObjPasTests.lpr"
-        ];
+        SourceFiles: [@Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/tests/RTLObjPasTests.lpr"];
         OutputPath: @RTLObjPasTests.OutputRoot;
         Config Options { DisableDefaultConfigFiles: True; }
         Language Pascal { Mode: ObjFPC; }
@@ -21,12 +22,9 @@ Project RTLObjPasTests {
             UnitPaths: [
                 @Tools.Native.RTLPath,
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/tests",
-                "packages/nexus-packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                "packages/nexus-packages/libffi/src",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-generics/src",
-                "packages/nexus-packages/nxtest/src"
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-generics/src"
             ];
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,

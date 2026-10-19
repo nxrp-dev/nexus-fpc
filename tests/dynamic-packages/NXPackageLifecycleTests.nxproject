@@ -10,11 +10,14 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project NXPackageLifecycleTests {
+    Id: "NXRP.CompilerTests.NXPackageLifecycleTests";
+    Requires: [@Projects.NexusTest];
     RootDirectory: "../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/package-lifecycle";
+    OutputRoot: @Tools.OutputRoot + "/NXPackageLifecycleTests/" + @Tools.Native.Name;
 
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
@@ -27,7 +30,6 @@ Project NXPackageLifecycleTests {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
             UnitPaths: [
                 @Tools.Native.RTLPath,
-                "packages/nexus-packages/nxtest/src",
                 "../nexus-fpc/tests/compiler-regressions",
                 "../nexus-fpc/compiler",
                 "../nexus-fpc/rtl/objpas",

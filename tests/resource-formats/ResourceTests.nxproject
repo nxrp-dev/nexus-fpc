@@ -1,10 +1,13 @@
 // Copyright (c) 2026 Kevin Collins.
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 Project ResourceTests {
- RootDirectory: "../../../nexus";
- OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/resources";
+    Id: "NXRP.CompilerTests.ResourceTests";
+    Requires: [@Projects.NexusTest, @Projects.FCLProcess, @Projects.FCLBase];
+    RootDirectory: "../../../nexus";
+    OutputRoot: @Tools.OutputRoot + "/ResourceTests/" + @Tools.Native.Name;
  FPC Tests {
   CompilerPath: @Tools.Native.FPCCompiler;
   SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/resource-formats/ResourceTests.lpr"];
@@ -14,8 +17,13 @@ Project ResourceTests {
   Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
   Files Paths {
    CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
-   UnitPaths: [@Tools.Native.RTLPath, @Tools.NexusFPC.SourcePath + "/compiler", @Tools.NexusFPC.SourcePath + "/tests/resource-formats", "packages/nexus-packages/nxtest/src", "packages/nexus-packages/fcl-process/src", "packages/nexus-packages/fcl-base/src", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"];
-   IncludePaths: ["packages/nexus-packages/fcl-process/src/" + @Tools.Native.PascalPlatform, "packages/nexus-packages/fcl-base/src/" + @Tools.Native.PascalPlatform, "packages/nexus-packages/fcl-base/src/dummy", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform, @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
+   UnitPaths: [
+       @Tools.Native.RTLPath,
+       @Tools.NexusFPC.SourcePath + "/compiler",
+       @Tools.NexusFPC.SourcePath + "/tests/resource-formats",
+       @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"
+   ];
+   IncludePaths: [@Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform, @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
   }
  }
 }

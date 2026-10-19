@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project NXProfilerTests {
+    Id: "NXRP.CompilerTests.NXProfilerTests";
+    Requires: [@Projects.NexusTest];
     RootDirectory: "../../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/profiler";
+    OutputRoot: @Tools.OutputRoot + "/NXProfilerTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
-        SourceFiles: [
-            @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/tests/NXProfilerTests.lpr"
-        ];
+        SourceFiles: [@Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/tests/NXProfilerTests.lpr"];
         OutputPath: @NXProfilerTests.OutputRoot;
         RawOptions: ["-O2", "-Cr", "-Co"];
         Config Options { DisableDefaultConfigFiles: True; }
@@ -22,8 +23,7 @@ Project NXProfilerTests {
             UnitPaths: [
                 @Tools.Native.RTLPath,
                 @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/tests",
-                @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/src",
-                "packages/nexus-packages/nxtest/src"
+                @Tools.NexusFPC.SourcePath + "/packages/nexusprofiler/src"
             ];
         }
     }

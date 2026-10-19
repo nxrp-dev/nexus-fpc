@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project ReadOnlyGzipTests {
+    Id: "NXRP.CompilerTests.ReadOnlyGzipTests";
+    Requires: [@Projects.NexusTest];
     RootDirectory: "../../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/paszlib-readonly";
+    OutputRoot: @Tools.OutputRoot + "/ReadOnlyGzipTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: ["../nexus-fpc/packages/paszlib/tests/ReadOnlyGzipTests.lpr"];
@@ -16,9 +19,10 @@ Project ReadOnlyGzipTests {
         Language Pascal { Mode: ObjFPC; }
         Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
         Files Paths {
-            UnitPaths: [@Tools.Native.RTLPath,
-                @Tools.NexusFPC.SourcePath + "/rtl/objpas",
-                "packages/nexus-packages/nxtest/src"];
+            UnitPaths: [
+                @Tools.Native.RTLPath,
+                @Tools.NexusFPC.SourcePath + "/rtl/objpas"
+            ];
         }
     }
 }

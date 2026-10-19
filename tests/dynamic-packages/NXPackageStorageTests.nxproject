@@ -1,10 +1,13 @@
 // Copyright (c) 2026 Kevin Collins.
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 Project NXPackageStorageTests {
+    Id: "NXRP.CompilerTests.NXPackageStorageTests";
+    Requires: [@Projects.NexusTest];
     RootDirectory: "../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/package-storage";
+    OutputRoot: @Tools.OutputRoot + "/NXPackageStorageTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/dynamic-packages/NXPackageStorageTests.lpr"];
@@ -14,9 +17,11 @@ Project NXPackageStorageTests {
         Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
         Files Paths {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
-            UnitPaths: [@Tools.Native.RTLPath,
-                "packages/nexus-packages/nxtest/src",
-                "../nexus-fpc/compiler", "../nexus-fpc/rtl/objpas"];
+            UnitPaths: [
+                @Tools.Native.RTLPath,
+                "../nexus-fpc/compiler",
+                "../nexus-fpc/rtl/objpas"
+            ];
         }
     }
 }

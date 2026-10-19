@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project RTLCollectionsTests {
+    Id: "NXRP.CompilerTests.RTLCollectionsTests";
+    Requires: [@Projects.FCLBase, @Projects.NexusTest];
     RootDirectory: "../../../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/rtl-collections";
+    OutputRoot: @Tools.OutputRoot + "/RTLCollectionsTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
-        SourceFiles: [
-            @Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit/RTLCollectionsTests.lpr"
-        ];
+        SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit/RTLCollectionsTests.lpr"];
         OutputPath: @RTLCollectionsTests.OutputRoot;
         Config Options { DisableDefaultConfigFiles: True; }
         Language Pascal { Mode: ObjFPC; }
@@ -21,14 +22,12 @@ Project RTLCollectionsTests {
             UnitPaths: [
                 @Tools.Native.RTLPath,
                 @Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit",
-                "packages/nexus-packages/fcl-base/src",
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                "packages/nexus-packages/nxtest/src"
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform
             ];
             IncludePaths: [
                 @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64",
+                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"
             ];
         }
     }

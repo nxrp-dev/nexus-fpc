@@ -39,12 +39,21 @@ begin
     lSource], lOutput), lOutput);
 end;
 
-function CompileFile(const ADirectory, AFileName: string): Boolean;
-var lOutput: string;
+function CompileFile(const ADirectory, AFileName: string;
+  const AExtraOption: string = ''): Boolean;
+var lOutput: string; lArguments: array of string;
 begin
-  Result := RunCommand(lCompiler, ['-n', '-Aas-clang', '-XLL', '-Fu' + lRTL,
+  lArguments := ['-n', '-Aas-clang', '-XLL', '-Fu' + lRTL,
     '-Fu' + ADirectory, '-FU' + ADirectory, '-FE' + ADirectory,
-    '-Fl' + ADirectory, '-k-rpath=$ORIGIN', ADirectory + '/' + AFileName], lOutput, [poStderrToOutPut]);
+    '-Fl' + ADirectory, '-k-rpath=$ORIGIN'];
+  if AExtraOption <> '' then
+    begin
+      SetLength(lArguments, Length(lArguments) + 1);
+      lArguments[High(lArguments)] := AExtraOption;
+    end;
+  SetLength(lArguments, Length(lArguments) + 1);
+  lArguments[High(lArguments)] := ADirectory + '/' + AFileName;
+  Result := RunCommand(lCompiler, lArguments, lOutput, [poStderrToOutPut]);
   SaveText(ADirectory + '/' + AFileName + '.log', lOutput);
 end;
 
@@ -185,6 +194,70 @@ begin
   CheckProbe(AContext, lDirectory, 'ExactPackage.nxpl');
 end;
 
+procedure TestPICDefault(AContext: TNXTestContext);
+var lDirectory, lOutput: string;
+begin
+  lDirectory := CaseDirectory('pic-default');
+  SaveText(lDirectory + '/probe.pas', 'program probe;' + LineEnding +
+    '{$ifndef FPC_PIC}{$fatal Linux x86-64 must default to PIC}{$endif}' + LineEnding +
+    'begin WriteLn(''pic-default''); end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'probe.pas'),
+    'Compiler failed; see ' + lDirectory + '/probe.pas.log');
+  AContext.AssertTrue(RunCommand(lDirectory + '/probe', [], lOutput, [poStderrToOutPut]), lOutput);
+  AContext.AssertEquals('pic-default', Trim(lOutput));
+end;
+
+procedure TestPICOptOut(AContext: TNXTestContext);
+var lDirectory, lOutput: string;
+begin
+  lDirectory := CaseDirectory('pic-opt-out');
+  SaveText(lDirectory + '/probe.pas', 'program probe;' + LineEnding +
+    '{$ifdef FPC_PIC}{$fatal Explicit PIC opt-out was ignored}{$endif}' + LineEnding +
+    'var Value: LongInt = 42;' + LineEnding +
+    'begin WriteLn(Value); end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'probe.pas', '-Cg-'),
+    'Compiler failed; see ' + lDirectory + '/probe.pas.log');
+  AContext.AssertTrue(RunCommand(lDirectory + '/probe', [], lOutput, [poStderrToOutPut]), lOutput);
+  AContext.AssertEquals('42', Trim(lOutput));
+end;
+
+procedure TestDefaultPICSharedLibrary(AContext: TNXTestContext);
+var lDirectory, lOutput: string;
+begin
+  lDirectory := CaseDirectory('pic-shared-library');
+  SaveText(lDirectory + '/nxpicstate.pas',
+    'unit nxpicstate; {$mode objfpc}{$H+}' + LineEnding +
+    'interface function NextValue: LongInt; cdecl;' + LineEnding +
+    'implementation uses SysUtils; var Value: LongInt = 40;' + LineEnding +
+    'function NextValue: LongInt; cdecl;' + LineEnding +
+    'begin Inc(Value); Result := StrToInt(IntToStr(Value)); end; end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'nxpicstate.pas'),
+    'Unit compilation failed; see ' + lDirectory + '/nxpicstate.pas.log');
+  AContext.AssertTrue(RenameFile(lDirectory + '/nxpicstate.pas',
+    lDirectory + '/nxpicstate.hidden'));
+  SaveText(lDirectory + '/nxpic.pas', 'library nxpic;' + LineEnding +
+    'uses nxpicstate; exports NextValue name ''nx_pic_value''; begin end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'nxpic.pas', '-k-ztext'),
+    'Shared library failed; see ' + lDirectory + '/nxpic.pas.log');
+  AContext.AssertTrue(RunCommand(lReadObj, ['--dynamic-table',
+    lDirectory + '/libnxpic.so'], lOutput, [poStderrToOutPut]), lOutput);
+  SaveText(lDirectory + '/dynamic-table.txt', lOutput);
+  AContext.AssertTrue(Pos('TEXTREL', lOutput) = 0, lOutput);
+  SaveText(lDirectory + '/probe.pas', 'program probe; {$mode objfpc}' + LineEnding +
+    'uses DynLibs;' + LineEnding +
+    'type TNextValue = function: LongInt; cdecl;' + LineEnding +
+    'var Handle: TLibHandle; NextValue: TNextValue;' + LineEnding +
+    'begin Handle := LoadLibrary(''libnxpic.so''); if Handle = NilHandle then Halt(1);' + LineEnding +
+    'Pointer(NextValue) := GetProcedureAddress(Handle, ''nx_pic_value'');' + LineEnding +
+    'if not Assigned(NextValue) then Halt(2);' + LineEnding +
+    'if NextValue() <> 41 then Halt(3); if NextValue() <> 42 then Halt(4);' + LineEnding +
+    'if not UnloadLibrary(Handle) then Halt(5); WriteLn(''pic-shared''); end.');
+  AContext.AssertTrue(CompileFile(lDirectory, 'probe.pas'),
+    'Consumer compilation failed; see ' + lDirectory + '/probe.pas.log');
+  AContext.AssertTrue(RunCommand(lDirectory + '/probe', [], lOutput, [poStderrToOutPut]), lOutput);
+  AContext.AssertEquals('pic-shared', Trim(lOutput));
+end;
+
 procedure RegisterSharedLibraryTests(ARegistry: TNXTestRegistry;
   const ACompiler, ARTL, AOutput, AClang, AReadObj: string);
 var lSuite: TNXTestSuite;
@@ -205,5 +278,8 @@ begin
   lSuite.AddTest('ExactPath', @TestExactPath, 'linker');
   lSuite.AddTest('MissingABIDoesNotFallback', @TestMissingABIDoesNotFallback, 'linker');
   lSuite.AddTest('NXPLFilename', @TestNXPLFilename, 'linker');
+  lSuite.AddTest('PICDefault', @TestPICDefault, 'linker');
+  lSuite.AddTest('PICOptOut', @TestPICOptOut, 'linker');
+  lSuite.AddTest('DefaultPICSharedLibrary', @TestDefaultPICSharedLibrary, 'linker');
 end;
 end.

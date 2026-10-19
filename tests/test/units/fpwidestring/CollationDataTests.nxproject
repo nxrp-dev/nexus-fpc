@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
 
 dialect "../../../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module Projects "../../../../../nexus/projects/nxbuild/Projects.nxscript";
 module "../../../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
 
 Project CollationDataTests {
+    Id: "NXRP.CompilerTests.CollationDataTests";
+    Requires: [@Projects.NexusTest];
     RootDirectory: "../../../../../nexus";
-    OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/collation-data";
+    OutputRoot: @Tools.OutputRoot + "/CollationDataTests/" + @Tools.Native.Name;
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/test/units/fpwidestring/CollationDataTests.lpr"];
@@ -19,7 +22,6 @@ Project CollationDataTests {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
             UnitPaths: [
                 @Tools.Native.RTLPath,
-                "packages/nexus-packages/nxtest/src",
                 "../nexus-fpc/tests/test/units/fpwidestring",
                 "../nexus-fpc/rtl/objpas"
             ];

@@ -102,7 +102,7 @@ unit i_linux;
             name         : 'Linux for x86-64';
             shortname    : 'Linux';
             flags        : [tf_smartlink_sections,tf_needs_symbol_size,tf_needs_dwarf_cfi,
-                            tf_library_needs_pic,tf_needs_symbol_type,tf_files_case_sensitive,
+                            tf_library_needs_pic,tf_pic_default,tf_needs_symbol_type,tf_files_case_sensitive,
                             tf_has_winlike_resources,tf_safecall_exceptions,tf_safecall_clearstack
 
 {$ifdef psabieh}
