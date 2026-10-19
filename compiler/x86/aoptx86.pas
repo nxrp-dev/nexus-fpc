@@ -4473,6 +4473,9 @@ unit aoptx86;
                                       SourceRef := TAICPU(p).oper[0]^.Ref^;
                                       TargetRef := TAICPU(hp1).oper[1]^.Ref^;
                                       if (TAICPU(p).opsize = S_Q) and
+                                        { top_ref also represents symbolic immediates; these
+                                          form addresses rather than load memory to copy. }
+                                        (SourceRef.RefAddr <> addr_full) and
                                         not RegUsedAfterInstruction(p_TargetReg, hp1, TmpUsedRegs) and
                                         GetNextInstruction(hp1, hp2) and
                                         MatchInstruction(hp2, A_MOV, [TAICPU(p).opsize]) and

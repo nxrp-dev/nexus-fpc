@@ -192,7 +192,7 @@ var
       OldSwitchesStateStackPos:=SwitchesStateStackPos;
 
       { save cg }
-      OldParseOnly:=parse_only;
+      OldParseOnly:=ParseOnly;
 
       { save akt... state }
       { handle the postponed case first }
@@ -258,7 +258,7 @@ var
       SwitchesStateStackPos:=OldSwitchesStateStackPos;
 
       { restore cg }
-      parse_only:=OldParseOnly;
+      ParseOnly:=OldParseOnly;
 
       { restore symtable state }
       SymTableStack:=OldSymTableStack;
@@ -322,12 +322,12 @@ var
 
       // keep "current_settings"
 
-      parse_only:=False;
+      ParseOnly:=False;
       CurrentAsmData:=nil;
       CurrentDebugInfo:=nil;
 
       Parser_Current_File:='';
-      Set_Current_Scanner(nil);
+      SetCurrentScanner(nil);
     end;
 
   constructor TGlobalState.Create(ForModuleSwitch: Boolean);

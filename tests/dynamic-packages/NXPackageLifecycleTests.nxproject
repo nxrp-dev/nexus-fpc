@@ -1,22 +1,38 @@
 // Copyright (c) 2026 Kevin Collins.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// This Source Code Form is "Incompatible With Secondary Licenses",
+// as defined by the Mozilla Public License, v. 2.0.
+//
 // SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
 dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
 module "../../../nexus/projects/nxbuild/nxbuild.environment.nxscript";
+
 Project NXPackageLifecycleTests {
     RootDirectory: "../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/nexus-fpc-tests/" + @Tools.Native.Name + "/package-lifecycle";
+
     FPC Tests {
         CompilerPath: @Tools.Native.FPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/dynamic-packages/NXPackageLifecycleTests.lpr"];
         OutputPath: @NXPackageLifecycleTests.OutputRoot;
-        RawOptions: ["-O-", "-gl", "-Cr", "-Co", "-Ci"];
+        RawOptions: ["-O2", "-gl", "-Cr", "-Co", "-Ci"];
         Config Options { DisableDefaultConfigFiles: True; }
         Assembler Native TargetOS[linux] { OutputFormat: "as-clang"; }
         Files Paths {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
-            UnitPaths: [@Tools.Native.RTLPath,
+            UnitPaths: [
+                @Tools.Native.RTLPath,
                 "packages/nexus-packages/nxtest/src",
-                "../nexus-fpc/compiler", "../nexus-fpc/rtl/objpas", "../nexus-fpc/rtl/inc"];
+                "../nexus-fpc/tests/compiler-regressions",
+                "../nexus-fpc/compiler",
+                "../nexus-fpc/rtl/objpas",
+                "../nexus-fpc/rtl/inc"
+            ];
         }
     }
 }

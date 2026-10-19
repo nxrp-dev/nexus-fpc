@@ -65,6 +65,18 @@
   "failures": "tests/NXTEST-FAILURES.md",
   "specialized_programs": [
     {
+      "program": "tests/compiler-regressions/NXScannerBuildTests.lpr",
+      "suites": ["Compiler.Scanner.BuildFlags", "Compiler.Scanner.StringLiterals"],
+      "build": "tests/compiler-regressions/scanner-build-flags.md",
+      "requires": "Linux x86-64 bootstrap compiler, matching RTL, generated compiler sources, isolated outputs and Nexus NXTest sources"
+    },
+    {
+      "program": "tests/compiler-regressions/NXScannerReplayTests.lpr",
+      "suites": ["Compiler.Scanner.Replay", "Compiler.Scanner.Replay.MessageCounts"],
+      "build": "tests/compiler-regressions/scanner-replay.md",
+      "requires": "Matching native compiler-unit closure and Nexus NXTest sources"
+    },
+    {
       "program": "tests/clangassembler/NXClangBackendTests.lpr",
       "suites": [
         "Compiler.Clang.Assembler",

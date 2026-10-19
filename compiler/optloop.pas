@@ -271,30 +271,30 @@ unit optloop;
       end;
 
 
-    function is_loop_invariant(loop : TNode;expr : TNode) : boolean;
+    function is_loop_invariant(loop : TNode;Expr : TNode) : boolean;
       begin
-        result:=Is_ConstNode(expr);
-        case expr.nodetype of
+        result:=Is_ConstNode(Expr);
+        case Expr.nodetype of
           loadn:
             begin
               if (pi_dfaavailable in CurrentProcInfo.flags) and
                 Assigned(loop.optinfo) and
-                Assigned(expr.optinfo) and
-                not(expr.IsEqual(TForNode(loop).left)) then
+                Assigned(Expr.optinfo) and
+                not(Expr.IsEqual(TForNode(loop).left)) then
                 { no aliasing? }
-                result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(TAbstractVarSym(TLoadNode(expr).SymTableEntry).AddrTaken) and
+                result:=(([nf_write,nf_modify]*Expr.flags)=[]) and not(TAbstractVarSym(TLoadNode(Expr).SymTableEntry).AddrTaken) and
                 { no definition in the loop? }
-                  not(DynSetIn(TForNode(loop).t2.optinfo^.defsum,expr.optinfo^.Index));
+                  not(DynSetIn(TForNode(loop).t2.optinfo^.defsum,Expr.optinfo^.Index));
             end;
           vecn:
             begin
-              result:=((TVecNode(expr).left.nodetype=loadn) or is_loop_invariant(loop,TVecNode(expr).left)) and
-                is_loop_invariant(loop,TVecNode(expr).right);
+              result:=((TVecNode(Expr).left.nodetype=loadn) or is_loop_invariant(loop,TVecNode(Expr).left)) and
+                is_loop_invariant(loop,TVecNode(Expr).right);
             end;
           typeconvn:
-            result:=is_loop_invariant(loop,TTypeConvNode(expr).left);
+            result:=is_loop_invariant(loop,TTypeConvNode(Expr).left);
           addn,subn:
-            result:=is_loop_invariant(loop,TAddNode(expr).left) and is_loop_invariant(loop,TAddNode(expr).right);
+            result:=is_loop_invariant(loop,TAddNode(Expr).left) and is_loop_invariant(loop,TAddNode(Expr).right);
           else
             ;
         end;
@@ -313,13 +313,13 @@ unit optloop;
         ninductions : sizeint;
         inductions : array of record
           temp : TTempCreateNode;
-          expr : TNode;
+          Expr : TNode;
         end;
         changedforloop,
         containsnestedforloop,
         docalcatend : boolean;
         function findpreviousstrengthreduction(var n: TNode): boolean;
-        procedure addinduction(temp : TTempCreateNode; expr : TNode);
+        procedure addinduction(temp : TTempCreateNode; Expr : TNode);
         function dostrengthreductiontest(var n: TNode): TForEachNodeResult;
         procedure optimizeinductionvariablessingleforloop(var n: TNode);
       end;
@@ -334,7 +334,7 @@ unit optloop;
         for i:=0 to ninductions-1 do
           begin
             { do we already maintain one expression? }
-            if inductions[i].expr.IsEqual(n) then
+            if inductions[i].Expr.IsEqual(n) then
               begin
                 case n.nodetype of
                   muln:
@@ -352,7 +352,7 @@ unit optloop;
       end;
 
 
-    procedure TOptimizeInductionVariablesContext.addinduction(temp : TTempCreateNode; expr : TNode);
+    procedure TOptimizeInductionVariablesContext.addinduction(temp : TTempCreateNode; Expr : TNode);
       begin
         if not Assigned(initcode) then
           begin
@@ -365,7 +365,7 @@ unit optloop;
         if ninductions>=length(inductions) then
           SetLength(inductions,4+ninductions+ninductions shr 1);
         inductions[ninductions].temp:=temp;
-        inductions[ninductions].expr:=expr;
+        inductions[ninductions].Expr:=Expr;
         inc(ninductions);
       end;
 

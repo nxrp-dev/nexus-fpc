@@ -147,6 +147,17 @@ and unit output in a unique directory under the development worktree. For
 cross-target verification, compile with `-Cn` and compare the emitted VMT and
 message-table object data against the compiler before the removal.
 
+## X86 move-pair optimization
+
+`tsNXMovePairs.pas` registers four native `Compiler.X86.MovePairs` cases in
+`NXPackageLifecycleTests`: ascending/descending address assignments and real
+memory copies. That project now builds at `-O2`. It catches PKG-001, where
+`OptPass1MOV` accepted symbolic immediate addresses as memory for SIMD copying.
+Use a bootstrapped compiler containing the `addr_full` guard. Linux x64 validation
+with the existing bootstrap script's installed compiler and RTL passes all five
+project cases at `-O1`, `-O2` and `-O2 -CfAVX`; genuine memory
+copies still use MOVDQU/VMOVDQU. See the [resolved failure record](../NXTEST-FAILURES.md).
+
 ## X86 MOVZX memory operands
 
 `x86_movzx_memory_operand.pas` exercises the real `OptPass1Movx` pass against

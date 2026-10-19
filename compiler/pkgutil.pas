@@ -879,7 +879,7 @@ implementation
                         if PD.Has_Alias_Name(SymName) or
                             (
                               ([po_external,po_has_importdll]*PD.ProcOptions=[po_external,po_has_importdll]) and
-                              (SymName=proc_get_importname(PD))
+                              (SymName=ProcGetImportName(PD))
                             ) then
                           begin
                             Found:=True;

@@ -34,35 +34,35 @@ interface
 
     type
       TExprFlag = (
-        ef_accept_equal,
-        ef_type_only,
-        ef_had_specialize,
-        ef_check_attr_suffix
+        efAcceptEqual,
+        efTypeOnly,
+        efHadSpecialize,
+        efCheckAttrSuffix
       );
       TExprFlags = set of TExprFlag;
 
     { reads a whole expression }
-    function expr(dotypecheck:boolean) : TNode;
+    function Expr(ADoTypeCheck:Boolean) : TNode;
 
     { reads an expression without assignments and .. }
-    function comp_expr(flags:TExprFlags):TNode;
+    function CompExpr(AFlags:TExprFlags):TNode;
 
     { reads a single factor }
-    function factor(GetAddr:boolean;flags:TExprFlags) : TNode;
+    function Factor(AGetAddr:Boolean;AFlags:TExprFlags) : TNode;
 
-    procedure string_dec(var def: TDef; allowtypedef: boolean);
+    procedure StringDec(var ADef: TDef; AAllowTypeDef: Boolean);
 
-    function parse_paras(__colon,__namedpara : boolean;end_of_paras : TToken) : TNode;
+    function ParseParas(AColon,ANamedPara : Boolean;AEndOfParas : TToken) : TNode;
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:TAbstractRecordDef;GetAddr:boolean;sym:TSym;var p1:TNode;var again:boolean;callflags:TCallNodeFlags;spezcontext:TSpecializationContext);
+    procedure DoMemberRead(AStruct:TAbstractRecordDef;AGetAddr:Boolean;ASym:TSym;var ANode:TNode;var AAgain:Boolean;ACallFlags:TCallNodeFlags;ASpecializationContext:TSpecializationContext);
 
-    function get_intconst:TConstExprInt;
-    function get_stringconst:string;
+    function GetIntConst:TConstExprInt;
+    function GetStringConst:String;
 
     { Does some postprocessing for a generic type (especially when nested types
       of the specialization are used) }
-    procedure post_comp_expr_gendef(var def: TDef);
+    procedure PostCompExprGenDef(var ADef: TDef);
 
 implementation
 
@@ -84,106 +84,106 @@ implementation
        pbase,pinline,ptype,pgenutil,psub,ProcInfo,CPUInfo
        ;
 
-    function sub_expr(pred_level:TOperatorPrecedence;flags:TExprFlags;factornode:TNode):TNode;forward;
+    function SubExpr(APrecedence:TOperatorPrecedence;AFlags:TExprFlags;AFactorNode:TNode):TNode;forward;
 
     var
        { true, if the inherited call is anonymous }
-       anon_inherited : boolean = false;
+       AnonInherited : Boolean = false;
        { last def found, only used by anon. inherited calls to insert proper type casts }
-       srdef : TDef = nil;
+       SRDef : TDef = nil;
        { true while parsing the argument of NameOf }
-       nameof_active : boolean = false;
+       NameOfActive : Boolean = false;
        { last symbol found while parsing the argument of NameOf }
-       nameof_sym : TSym = nil;
+       NameOfSym : TSym = nil;
        { position of the token following nameof_sym }
-       nameof_nextpos : TFilePosInfo;
+       NameOfNextPos : TFilePosInfo;
 
-    procedure nameof_record_sym(sym:TSym);
+    procedure NameOfRecordSym(ASym:TSym);
       begin
-        if not nameof_active or not Assigned(sym) then
+        if not NameOfActive or not Assigned(ASym) then
           exit;
-        nameof_sym:=sym;
-        nameof_nextpos:=CurrentFilePos;
+        NameOfSym:=ASym;
+        NameOfNextPos:=CurrentFilePos;
       end;
 
     { returns the declared name of sym without generic parameters }
-    function nameof_symname(sym:TSym):string;
+    function NameOfSymName(ASym:TSym):String;
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        if (sym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-           (vo_is_funcret in TAbstractVarSym(sym).VarOptions) then
+        if (ASym.typ in [absolutevarsym,localvarsym,paravarsym]) and
+           (vo_is_funcret in TAbstractVarSym(ASym).VarOptions) then
           begin
             { the function result symbols are stored uppercase }
-            if vo_is_result in TAbstractVarSym(sym).VarOptions then
+            if vo_is_result in TAbstractVarSym(ASym).VarOptions then
               exit('Result');
-            if Assigned(sym.owner.DefOwner) and
-               (TDef(sym.owner.DefOwner).typ=procdef) then
-              exit(TProcDef(sym.owner.DefOwner).ProcSym.realname);
+            if Assigned(ASym.owner.DefOwner) and
+               (TDef(ASym.owner.DefOwner).typ=procdef) then
+              exit(TProcDef(ASym.owner.DefOwner).ProcSym.realname);
           end;
         { use the declared unit name, e.g. the implicit system unit is stored uppercase }
-        if (sym.typ=UnitSym) and
-           Assigned(TUnitSym(sym).module) and
-           Assigned(TModule(TUnitSym(sym).module).RealModuleName) then
-          exit(TModule(TUnitSym(sym).module).RealModuleName^);
-        result:=sym.realname;
-        for i:=1 to length(result) do
-          if result[i] in ['$','<'] then
+        if (ASym.typ=UnitSym) and
+           Assigned(TUnitSym(ASym).module) and
+           Assigned(TModule(TUnitSym(ASym).module).RealModuleName) then
+          exit(TModule(TUnitSym(ASym).module).RealModuleName^);
+        Result:=ASym.realname;
+        for lIndex:=1 to length(Result) do
+          if Result[lIndex] in ['$','<'] then
             begin
-              if i>1 then
-                SetLength(result,i-1);
+              if lIndex>1 then
+                SetLength(Result,lIndex-1);
               break;
             end;
       end;
 
-    procedure string_dec(var def:TDef; allowtypedef: boolean);
+    procedure StringDec(var ADef:TDef; AAllowTypeDef: Boolean);
     { reads a string type with optional length }
     { and returns a pointer to the string      }
     { definition                               }
       var
-         p : TNode;
+         lNode : TNode;
       begin
-         def:=CShortStringType;
-         consume(_STRING);
-         if CurrentScanner.token=_LECKKLAMMER then
+         ADef:=CShortStringType;
+         Consume(_STRING);
+         if CurrentScanner.FToken=_LECKKLAMMER then
            begin
-             if not(allowtypedef) then
+             if not(AAllowTypeDef) then
                Message(parser_e_no_local_para_def);
-             consume(_LECKKLAMMER);
-             p:=comp_expr([ef_accept_equal]);
-             if not Is_ConstIntNode(p) then
+             Consume(_LECKKLAMMER);
+             lNode:=CompExpr([efAcceptEqual]);
+             if not Is_ConstIntNode(lNode) then
                begin
                  Message(parser_e_illegal_expression);
                  { error recovery }
-                 consume(_RECKKLAMMER);
+                 Consume(_RECKKLAMMER);
                end
              else
                begin
                 { the node is a generic param while parsing a generic def
                   so disable the range checking for the string }
-                if parse_generic and
-                  (nf_generic_para in p.flags) then
-                  TOrdConstNode(p).Value:=255;
-                if TOrdConstNode(p).Value<=0 then
+                if ParseGeneric and
+                  (nf_generic_para in lNode.flags) then
+                  TOrdConstNode(lNode).Value:=255;
+                if TOrdConstNode(lNode).Value<=0 then
                   begin
                      Message(parser_e_invalid_string_size);
-                     TOrdConstNode(p).Value:=255;
+                     TOrdConstNode(lNode).Value:=255;
                   end;
-                if TOrdConstNode(p).Value>255 then
+                if TOrdConstNode(lNode).Value>255 then
                   begin
                     { longstring is currently unsupported (CEC)! }
 {                    t:=cstringdef.createlong(tordconstnode(p).value))}
                     Message(parser_e_invalid_string_size);
-                    TOrdConstNode(p).Value:=255;
-                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).Value),true);
+                    TOrdConstNode(lNode).Value:=255;
+                    ADef:=CStringDef.CreateShort(Int64(TOrdConstNode(lNode).Value),true);
                   end
                 else
-                  if TOrdConstNode(p).Value<>255 then
-                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).Value),true);
-                consume(_RECKKLAMMER);
+                  if TOrdConstNode(lNode).Value<>255 then
+                    ADef:=CStringDef.CreateShort(Int64(TOrdConstNode(lNode).Value),true);
+                Consume(_RECKKLAMMER);
               end;
-             p.free;
-             p := nil;
+             lNode.free;
+             lNode := nil;
            end
           else
             begin
@@ -193,94 +193,94 @@ implementation
               if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                 begin
                   if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                    def:=CUnicodeStringType
+                    ADef:=CUnicodeStringType
                   else
-                    def:=CAnsiStringType
+                    ADef:=CAnsiStringType
                 end
               else
-                def:=CShortStringType;
+                ADef:=CShortStringType;
             end;
        end;
 
 
-    function parse_paras(__colon,__namedpara : boolean;end_of_paras : TToken) : TNode;
+    function ParseParas(AColon,ANamedPara : Boolean;AEndOfParas : TToken) : TNode;
       var
-         p1,p2,argname : TNode;
-         prev_in_args,
-         old_named_args_allowed : boolean;
+         lNode,lLastNode,lArgName : TNode;
+         lPrevInArgs,
+         lOldNamedArgsAllowed : Boolean;
       begin
-         if CurrentScanner.token=end_of_paras then
+         if CurrentScanner.FToken=AEndOfParas then
            begin
-              parse_paras:=nil;
+              ParseParas:=nil;
               exit;
            end;
          { save old values }
-         prev_in_args:=in_args;
-         old_named_args_allowed:=named_args_allowed;
+         lPrevInArgs:=InArgs;
+         lOldNamedArgsAllowed:=NamedArgsAllowed;
          { set para parsing values }
-         in_args:=true;
-         named_args_allowed:=false;
-         p2:=nil;
+         InArgs:=true;
+         NamedArgsAllowed:=false;
+         lLastNode:=nil;
          repeat
-           if __namedpara then
+           if ANamedPara then
              begin
-               if CurrentScanner.token=_COMMA then
+               if CurrentScanner.FToken=_COMMA then
                  begin
                    { empty parameter }
-                   p2:=CCallParaNode.Create(CNothingNode.Create,p2);
+                   lLastNode:=CCallParaNode.Create(CNothingNode.Create,lLastNode);
                  end
                else
                  begin
-                   named_args_allowed:=true;
-                   p1:=comp_expr([ef_accept_equal]);
-                   named_args_allowed:=false;
-                   if found_arg_name then
+                   NamedArgsAllowed:=true;
+                   lNode:=CompExpr([efAcceptEqual]);
+                   NamedArgsAllowed:=false;
+                   if FoundArgName then
                      begin
-                       argname:=p1;
-                       p1:=comp_expr([ef_accept_equal]);
-                       p2:=CCallParaNode.Create(p1,p2);
-                       TCallParaNode(p2).ParameterName:=argname;
+                       lArgName:=lNode;
+                       lNode:=CompExpr([efAcceptEqual]);
+                       lLastNode:=CCallParaNode.Create(lNode,lLastNode);
+                       TCallParaNode(lLastNode).ParameterName:=lArgName;
                      end
                    else
-                     p2:=CCallParaNode.Create(p1,p2);
-                   found_arg_name:=false;
+                     lLastNode:=CCallParaNode.Create(lNode,lLastNode);
+                   FoundArgName:=false;
                  end;
              end
            else
              begin
-               p1:=comp_expr([ef_accept_equal]);
-               p2:=CCallParaNode.Create(p1,p2);
+               lNode:=CompExpr([efAcceptEqual]);
+               lLastNode:=CCallParaNode.Create(lNode,lLastNode);
              end;
            { it's for the str(l:5,s); }
-           if __colon and (CurrentScanner.token=_COLON) then
+           if AColon and (CurrentScanner.FToken=_COLON) then
              begin
-               consume(_COLON);
-               p1:=comp_expr([ef_accept_equal]);
-               p2:=CCallParaNode.Create(p1,p2);
-               include(TCallParaNode(p2).CallParaFlags,cpf_is_colon_para);
-               if try_to_consume(_COLON) then
+               Consume(_COLON);
+               lNode:=CompExpr([efAcceptEqual]);
+               lLastNode:=CCallParaNode.Create(lNode,lLastNode);
+               include(TCallParaNode(lLastNode).CallParaFlags,cpf_is_colon_para);
+               if TryToConsume(_COLON) then
                  begin
-                   p1:=comp_expr([ef_accept_equal]);
-                   p2:=CCallParaNode.Create(p1,p2);
-                   include(TCallParaNode(p2).CallParaFlags,cpf_is_colon_para);
+                   lNode:=CompExpr([efAcceptEqual]);
+                   lLastNode:=CCallParaNode.Create(lNode,lLastNode);
+                   include(TCallParaNode(lLastNode).CallParaFlags,cpf_is_colon_para);
                  end
              end;
-         until not try_to_consume(_COMMA);
-         in_args:=prev_in_args;
-         named_args_allowed:=old_named_args_allowed;
-         parse_paras:=p2;
+         until not TryToConsume(_COMMA);
+         InArgs:=lPrevInArgs;
+         NamedArgsAllowed:=lOldNamedArgsAllowed;
+         ParseParas:=lLastNode;
       end;
 
 
-     function gen_c_style_operator(ntyp:TNodeType;p1,p2:TNode) : TNode;
+     function GenCStyleOperator(ANodeType:TNodeType;ALeft,ARight:TNode) : TNode;
        var
-         hdef  : TDef;
-         temp  : TTempCreateNode;
-         newstatement : TStatementNode;
+         lDef  : TDef;
+         lTemp  : TTempCreateNode;
+         lStatement : TStatementNode;
        begin
          { Properties are not allowed, because the write can
            be different from the read }
-         if (nf_isproperty in p1.flags) then
+         if (nf_isproperty in ALeft.flags) then
            begin
              Message(type_e_variable_id_expected);
              { We can continue with the loading,
@@ -288,247 +288,247 @@ implementation
                result can be wrong }
            end;
 
-         if Might_Have_SideEffects(p1,[]) then
+         if Might_Have_SideEffects(ALeft,[]) then
            begin
-             TypeCheckPass(p1);
-             result:=InternalStatements(newstatement);
-             hdef:=CPointerDef.getreusable(p1.resultdef);
-             temp:=CTempCreateNode.Create(hdef,sizeof(PInt),tt_persistent,false);
-             AddStatement(newstatement,temp);
-             AddStatement(newstatement,CAssignmentNode.Create(CTempRefNode.Create(temp),CAddrNode.Create_Internal(p1)));
-             AddStatement(newstatement,CAssignmentNode.Create(
-                 CDerefNode.Create(CTempRefNode.Create(temp)),
-                 CAddNode.Create(ntyp,
-                     CDerefNode.Create(CTempRefNode.Create(temp)),
-                     p2)));
-             AddStatement(newstatement,CTempDeleteNode.Create(temp));
+             TypeCheckPass(ALeft);
+             Result:=InternalStatements(lStatement);
+             lDef:=CPointerDef.getreusable(ALeft.resultdef);
+             lTemp:=CTempCreateNode.Create(lDef,sizeof(PInt),tt_persistent,false);
+             AddStatement(lStatement,lTemp);
+             AddStatement(lStatement,CAssignmentNode.Create(CTempRefNode.Create(lTemp),CAddrNode.Create_Internal(ALeft)));
+             AddStatement(lStatement,CAssignmentNode.Create(
+                 CDerefNode.Create(CTempRefNode.Create(lTemp)),
+                 CAddNode.Create(ANodeType,
+                     CDerefNode.Create(CTempRefNode.Create(lTemp)),
+                     ARight)));
+             AddStatement(lStatement,CTempDeleteNode.Create(lTemp));
            end
          else
-           result:=CAssignmentNode.Create(p1,CAddNode.Create(ntyp,p1.GetCopy,p2));
+           Result:=CAssignmentNode.Create(ALeft,CAddNode.Create(ANodeType,ALeft.GetCopy,ARight));
        end;
 
 
-     function statement_syssym(l : TInlineNumber) : TNode;
+     function StatementSysSym(AInlineNumber : TInlineNumber) : TNode;
       var
-        p1,p2,paras  : TNode;
-        err,
-        prev_in_args : boolean;
-        def : TDef;
-        exit_procinfo: TProcInfo;
-        old_nameof_active,
-        nameof_ok : boolean;
-        old_nameof_sym : TSym;
-        old_nameof_nextpos : TFilePosInfo;
+        lNode,lSecondNode,lParas  : TNode;
+        lError,
+        lPrevInArgs : Boolean;
+        lDef : TDef;
+        lExitProcInfo: TProcInfo;
+        lOldNameOfActive,
+        lNameOfOK : Boolean;
+        lOldNameOfSym : TSym;
+        lOldNameOfNextPos : TFilePosInfo;
       begin
-        prev_in_args:=in_args;
-        case l of
+        lPrevInArgs:=InArgs;
+        case AInlineNumber of
 
           in_new_x :
             begin
-              if afterassignment or in_args then
-               statement_syssym:=New_Function
+              if AfterAssignment or InArgs then
+               StatementSysSym:=New_Function
               else
-               statement_syssym:=New_Dispose_Statement(true);
+               StatementSysSym:=New_Dispose_Statement(true);
             end;
 
           in_dispose_x :
             begin
-              statement_syssym:=New_Dispose_Statement(false);
+              StatementSysSym:=New_Dispose_Statement(false);
             end;
 
           in_ord_x,
           in_chr_byte:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_RKLAMMER);
-              p1:=GenInlineNode(l,false,p1);
-              statement_syssym := p1;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_RKLAMMER);
+              lNode:=GenInlineNode(AInlineNumber,false,lNode);
+              StatementSysSym := lNode;
             end;
 
           in_exit :
             begin
-              statement_syssym:=nil;
-              if try_to_consume(_LKLAMMER) then
+              StatementSysSym:=nil;
+              if TryToConsume(_LKLAMMER) then
                 begin
                   if not (m_mac in CurrentSettings.ModeSwitches) then
                     begin
-                      if not(try_to_consume(_RKLAMMER)) then
+                      if not(TryToConsume(_RKLAMMER)) then
                         begin
-                          p1:=comp_expr([ef_accept_equal]);
-                          consume(_RKLAMMER);
+                          lNode:=CompExpr([efAcceptEqual]);
+                          Consume(_RKLAMMER);
                           if not Assigned(CurrentProcInfo) or
                              (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
                              Is_Void(CurrentProcInfo.procdef.ReturnDef) then
                             begin
                               Message(parser_e_void_function);
                               { recovery }
-                              p1.free;
-                              p1:=nil;
+                              lNode.free;
+                              lNode:=nil;
                             end;
                         end
                       else
-                        p1:=nil;
+                        lNode:=nil;
                     end
                   else
                     begin
                       { non local exit ? }
-                      if CurrentProcInfo.procdef.ProcSym.name<>CurrentScanner.pattern then
+                      if CurrentProcInfo.procdef.ProcSym.name<>CurrentScanner.FPattern then
                         begin
-                          exit_procinfo:=CurrentProcInfo.parent;
-                          while Assigned(exit_procinfo) do
+                          lExitProcInfo:=CurrentProcInfo.parent;
+                          while Assigned(lExitProcInfo) do
                             begin
-                              if exit_procinfo.procdef.ProcSym.name=CurrentScanner.pattern then
+                              if lExitProcInfo.procdef.ProcSym.name=CurrentScanner.FPattern then
                                 break;
-                              exit_procinfo:=exit_procinfo.parent;
+                              lExitProcInfo:=lExitProcInfo.parent;
                             end;
-                          if Assigned(exit_procinfo) then
+                          if Assigned(lExitProcInfo) then
                             begin
-                              if not(Assigned(exit_procinfo.NestedExitLabel)) then
+                              if not(Assigned(lExitProcInfo.NestedExitLabel)) then
                                 begin
                                   include(CurrentProcInfo.flags,pi_has_nested_exit);
                                   exclude(CurrentProcInfo.procdef.ProcOptions,po_inline);
                                   if Is_Nested_PD(CurrentProcInfo.procdef) then
-                                    CurrentProcInfo.Set_Needs_ParentFP(exit_procinfo.procdef.ParaST.SymTableLevel);
+                                    CurrentProcInfo.Set_Needs_ParentFP(lExitProcInfo.procdef.ParaST.SymTableLevel);
 
-                                  exit_procinfo.NestedExitLabel:=CLabelSym.Create('$nestedexit');
+                                  lExitProcInfo.NestedExitLabel:=CLabelSym.Create('$nestedexit');
 
                                   { the compiler is responsible to define this label }
-                                  exit_procinfo.NestedExitLabel.defined:=true;
-                                  exit_procinfo.NestedExitLabel.used:=true;
+                                  lExitProcInfo.NestedExitLabel.defined:=true;
+                                  lExitProcInfo.NestedExitLabel.used:=true;
 
-                                  exit_procinfo.NestedExitLabel.JumpBuf:=CLocalVarSym.Create('LABEL$_'+exit_procinfo.NestedExitLabel.name,vs_value,Rec_Jmp_Buf,[]);
-                                  exit_procinfo.procdef.LocalST.InsertSym(exit_procinfo.NestedExitLabel);
-                                  exit_procinfo.procdef.LocalST.InsertSym(exit_procinfo.NestedExitLabel.JumpBuf);
+                                  lExitProcInfo.NestedExitLabel.JumpBuf:=CLocalVarSym.Create('LABEL$_'+lExitProcInfo.NestedExitLabel.name,vs_value,Rec_Jmp_Buf,[]);
+                                  lExitProcInfo.procdef.LocalST.InsertSym(lExitProcInfo.NestedExitLabel);
+                                  lExitProcInfo.procdef.LocalST.InsertSym(lExitProcInfo.NestedExitLabel.JumpBuf);
                                 end;
 
-                              statement_syssym:=CGotoNode.Create(exit_procinfo.NestedExitLabel);
-                              TGotoNode(statement_syssym).LabelSym:=exit_procinfo.NestedExitLabel;
+                              StatementSysSym:=CGotoNode.Create(lExitProcInfo.NestedExitLabel);
+                              TGotoNode(StatementSysSym).LabelSym:=lExitProcInfo.NestedExitLabel;
                             end
                           else
                             Message(parser_e_macpas_exit_wrong_param);
                         end;
-                      consume(_ID);
-                      consume(_RKLAMMER);
-                      p1:=nil;
+                      Consume(_ID);
+                      Consume(_RKLAMMER);
+                      lNode:=nil;
                     end
                 end
               else
-                p1:=nil;
-              if not Assigned(statement_syssym) then
-                statement_syssym:=CExitNode.Create(p1);
+                lNode:=nil;
+              if not Assigned(StatementSysSym) then
+                StatementSysSym:=CExitNode.Create(lNode);
             end;
 
           in_break :
             begin
-              statement_syssym:=CBreakNode.Create
+              StatementSysSym:=CBreakNode.Create
             end;
 
           in_continue :
             begin
-              statement_syssym:=CContinueNode.Create
+              StatementSysSym:=CContinueNode.Create
             end;
 
           in_leave :
             begin
               if m_mac in CurrentSettings.ModeSwitches then
-                statement_syssym:=CBreakNode.Create
+                StatementSysSym:=CBreakNode.Create
               else
                 begin
-                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
-                  statement_syssym:=CErrorNode.Create;
+                  Message1(sym_e_id_not_found, CurrentScanner.FOrgPattern);
+                  StatementSysSym:=CErrorNode.Create;
                 end;
             end;
 
           in_cycle :
             begin
               if m_mac in CurrentSettings.ModeSwitches then
-                statement_syssym:=CContinueNode.Create
+                StatementSysSym:=CContinueNode.Create
               else
                 begin
-                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
-                  statement_syssym:=CErrorNode.Create;
+                  Message1(sym_e_id_not_found, CurrentScanner.FOrgPattern);
+                  StatementSysSym:=CErrorNode.Create;
                 end;
             end;
 
           in_typeof_x :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_RKLAMMER);
-              if p1.nodetype=typen then
-                TTypeNode(p1).allowed:=true;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_RKLAMMER);
+              if lNode.nodetype=typen then
+                TTypeNode(lNode).allowed:=true;
               { Allow classrefdef, which is required for
                 Typeof(self) in static class methods }
-              if not(Is_ObjC_Class_Or_Protocol(p1.resultdef)) and
-                 ((p1.resultdef.typ = objectdef) or
+              if not(Is_ObjC_Class_Or_Protocol(lNode.resultdef)) and
+                 ((lNode.resultdef.typ = objectdef) or
                   (Assigned(CurrentProcInfo) and
                    ((po_classmethod in CurrentProcInfo.procdef.ProcOptions) or
                     (po_staticmethod in CurrentProcInfo.procdef.ProcOptions)) and
-                   (p1.resultdef.typ=classrefdef))) then
-               statement_syssym:=GenInlineNode(in_typeof_x,false,p1)
+                   (lNode.resultdef.typ=classrefdef))) then
+               StatementSysSym:=GenInlineNode(in_typeof_x,false,lNode)
               else
                begin
                  Message(parser_e_class_id_expected);
-                 p1.free;
-                 p1 := nil;
-                 statement_syssym:=CErrorNode.Create;
+                 lNode.free;
+                 lNode := nil;
+                 StatementSysSym:=CErrorNode.Create;
                end;
             end;
 
           in_sizeof_x,
           in_bitsizeof_x :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_RKLAMMER);
-              if ((p1.nodetype<>typen) and
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_RKLAMMER);
+              if ((lNode.nodetype<>typen) and
                  (
-                  (Is_Object(p1.resultdef) and
-                   (oo_has_constructor in TObjectDef(p1.resultdef).ObjectOptions)) or
-                  Is_Open_Array(p1.resultdef) or
-                  Is_Array_Of_Const(p1.resultdef) or
-                  Is_Open_String(p1.resultdef)
+                  (Is_Object(lNode.resultdef) and
+                   (oo_has_constructor in TObjectDef(lNode.resultdef).ObjectOptions)) or
+                  Is_Open_Array(lNode.resultdef) or
+                  Is_Array_Of_Const(lNode.resultdef) or
+                  Is_Open_String(lNode.resultdef)
                  )) or
                  { keep the function call if it is a type parameter to avoid arithmetic errors due to constant folding }
-                 Is_TypeParam(p1.resultdef) then
+                 Is_TypeParam(lNode.resultdef) then
                 begin
-                  statement_syssym:=GenInlineNode(in_sizeof_x,false,p1);
+                  StatementSysSym:=GenInlineNode(in_sizeof_x,false,lNode);
                   { no packed bit support for these things }
-                  if l=in_bitsizeof_x then
-                    statement_syssym:=CAddNode.Create(muln,statement_syssym,COrdConstNode.Create(8,SizeSIntType,true));
+                  if AInlineNumber=in_bitsizeof_x then
+                    StatementSysSym:=CAddNode.Create(muln,StatementSysSym,COrdConstNode.Create(8,SizeSIntType,true));
                   { type sym is a generic parameter }
-                  if Assigned(p1.resultdef.TypeSym) and (sp_generic_para in p1.resultdef.TypeSym.SymOptions) then
-                    include(statement_syssym.flags,nf_generic_para);
+                  if Assigned(lNode.resultdef.TypeSym) and (sp_generic_para in lNode.resultdef.TypeSym.SymOptions) then
+                    include(StatementSysSym.flags,nf_generic_para);
                 end
               else
                begin
                  { allow helpers for SizeOf and BitSizeOf }
-                 if p1.nodetype=typen then
-                   TTypeNode(p1).HelperAllowed:=true;
-                 if (p1.resultdef.typ=ForwardDef) then
-                   Message1(type_e_type_is_not_completly_defined,TForwardDef(p1.resultdef).ToSymName^);
-                 if (l = in_sizeof_x) or
-                    (not((p1.nodetype = vecn) and
-                         Is_Packed_Array(TVecNode(p1).left.resultdef)) and
-                     not((p1.nodetype = subscriptn) and
-                         Is_Packed_Record_Or_Object(TSubscriptNode(p1).left.resultdef))) then
+                 if lNode.nodetype=typen then
+                   TTypeNode(lNode).HelperAllowed:=true;
+                 if (lNode.resultdef.typ=ForwardDef) then
+                   Message1(type_e_type_is_not_completly_defined,TForwardDef(lNode.resultdef).ToSymName^);
+                 if (AInlineNumber = in_sizeof_x) or
+                    (not((lNode.nodetype = vecn) and
+                         Is_Packed_Array(TVecNode(lNode).left.resultdef)) and
+                     not((lNode.nodetype = subscriptn) and
+                         Is_Packed_Record_Or_Object(TSubscriptNode(lNode).left.resultdef))) then
                    begin
-                     statement_syssym:=GenIntConstNode(p1.resultdef.Size,SizeSIntType);
-                     if (l = in_bitsizeof_x) then
-                       statement_syssym:=CAddNode.Create(muln,statement_syssym,COrdConstNode.Create(8,SizeSIntType,true));
+                     StatementSysSym:=GenIntConstNode(lNode.resultdef.Size,SizeSIntType);
+                     if (AInlineNumber = in_bitsizeof_x) then
+                       StatementSysSym:=CAddNode.Create(muln,StatementSysSym,COrdConstNode.Create(8,SizeSIntType,true));
                    end
                  else
-                   statement_syssym:=GenIntConstNode(p1.resultdef.PackedBitSize,SizeSIntType);
+                   StatementSysSym:=GenIntConstNode(lNode.resultdef.PackedBitSize,SizeSIntType);
                  { type def is a struct with generic fields }
-                 if df_has_generic_fields in p1.resultdef.DefOptions then
-                    include(statement_syssym.flags,nf_generic_para);
+                 if df_has_generic_fields in lNode.resultdef.DefOptions then
+                    include(StatementSysSym.flags,nf_generic_para);
                  { p1 not needed !}
-                 p1.free;
-                 p1 := nil;
+                 lNode.free;
+                 lNode := nil;
                end;
             end;
 
@@ -537,27 +537,27 @@ implementation
           in_gettypekind_x,
           in_ismanagedtype_x:
             begin
-              if (l in [in_typeinfo_x,in_gettypekind_x,in_ismanagedtype_x]) or
+              if (AInlineNumber in [in_typeinfo_x,in_gettypekind_x,in_ismanagedtype_x]) or
                  (m_objectivec1 in CurrentSettings.ModeSwitches) then
                 begin
-                  consume(_LKLAMMER);
-                  in_args:=true;
-                  p1:=comp_expr([ef_accept_equal]);
+                  Consume(_LKLAMMER);
+                  InArgs:=true;
+                  lNode:=CompExpr([efAcceptEqual]);
                   { When reading a class type it is parsed as loadvmtaddrn,
                     typeinfo only needs the type so we remove the loadvmtaddrn }
-                  if p1.nodetype=loadvmtaddrn then
+                  if lNode.nodetype=loadvmtaddrn then
                     begin
-                      p2:=TLoadVMTAddrNode(p1).left;
-                      TLoadVMTAddrNode(p1).left:=nil;
-                      p1.free;
-                      p1:=p2;
+                      lSecondNode:=TLoadVMTAddrNode(lNode).left;
+                      TLoadVMTAddrNode(lNode).left:=nil;
+                      lNode.free;
+                      lNode:=lSecondNode;
                     end;
-                  if p1.nodetype=typen then
+                  if lNode.nodetype=typen then
                   begin
-                    TTypeNode(p1).allowed:=true;
+                    TTypeNode(lNode).allowed:=true;
                     { allow helpers for TypeInfo }
-                    if l in [in_typeinfo_x,in_gettypekind_x,in_ismanagedtype_x] then
-                      TTypeNode(p1).HelperAllowed:=true;
+                    if AInlineNumber in [in_typeinfo_x,in_gettypekind_x,in_ismanagedtype_x] then
+                      TTypeNode(lNode).HelperAllowed:=true;
                   end;
     {              else
                     begin
@@ -565,364 +565,364 @@ implementation
                        p1:=cerrornode.create;
                        Message(parser_e_illegal_parameter_list);
                     end;}
-                  consume(_RKLAMMER);
-                  p2:=GenInlineNode(l,false,p1);
-                  statement_syssym:=p2;
+                  Consume(_RKLAMMER);
+                  lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+                  StatementSysSym:=lSecondNode;
                 end
               else
                 begin
-                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
-                  statement_syssym:=CErrorNode.Create;
+                  Message1(sym_e_id_not_found, CurrentScanner.FOrgPattern);
+                  StatementSysSym:=CErrorNode.Create;
                 end;
             end;
 
           in_isconstvalue_x:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_RKLAMMER);
-              p2:=GenInlineNode(l,false,p1);
-              statement_syssym:=p2;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_RKLAMMER);
+              lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_aligned_x,
           in_unaligned_x,
           in_volatile_x:
             begin
-              err:=false;
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              p2:=CCallParaNode.Create(p1,nil);
-              p2:=GenInlineNode(l,false,p2);
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              lError:=false;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              lSecondNode:=CCallParaNode.Create(lNode,nil);
+              lSecondNode:=GenInlineNode(AInlineNumber,false,lSecondNode);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_assigned_x :
             begin
-              err:=false;
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
+              lError:=false;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
               { When reading a class type it is parsed as loadvmtaddrn,
                 typeinfo only needs the type so we remove the loadvmtaddrn }
-              if p1.nodetype=loadvmtaddrn then
+              if lNode.nodetype=loadvmtaddrn then
                 begin
-                  p2:=TLoadVMTAddrNode(p1).left;
-                  TLoadVMTAddrNode(p1).left:=nil;
-                  p1.free;
-                  p1:=p2;
+                  lSecondNode:=TLoadVMTAddrNode(lNode).left;
+                  TLoadVMTAddrNode(lNode).left:=nil;
+                  lNode.free;
+                  lNode:=lSecondNode;
                 end;
               if not CodeGenError then
                begin
-                 case p1.resultdef.typ of
+                 case lNode.resultdef.typ of
                    procdef, { procvar }
                    pointerdef,
                    procvardef,
                    classrefdef : ;
                    objectdef :
-                     if not Is_Implicit_Pointer_Object_Type(p1.resultdef) then
+                     if not Is_Implicit_Pointer_Object_Type(lNode.resultdef) then
                        begin
                          Message(parser_e_illegal_parameter_list);
-                         err:=true;
+                         lError:=true;
                        end;
                    arraydef :
-                     if not Is_Dynamic_Array(p1.resultdef) then
+                     if not Is_Dynamic_Array(lNode.resultdef) then
                        begin
                          Message(parser_e_illegal_parameter_list);
-                         err:=true;
+                         lError:=true;
                        end;
                    else
-                     if p1.resultdef.typ<>undefineddef then
+                     if lNode.resultdef.typ<>undefineddef then
                        begin
                          Message(parser_e_illegal_parameter_list);
-                         err:=true;
+                         lError:=true;
                        end;
                  end;
                end
               else
-               err:=true;
-              if not err then
+               lError:=true;
+              if not lError then
                begin
-                 p2:=CCallParaNode.Create(p1,nil);
-                 p2:=GenInlineNode(in_assigned_x,false,p2);
+                 lSecondNode:=CCallParaNode.Create(lNode,nil);
+                 lSecondNode:=GenInlineNode(in_assigned_x,false,lSecondNode);
                end
               else
                begin
-                 p1.free;
-                 p1 := nil;
-                 p2:=CErrorNode.Create;
+                 lNode.free;
+                 lNode := nil;
+                 lSecondNode:=CErrorNode.Create;
                end;
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_addr_x :
             begin
-              consume(_LKLAMMER);
-              got_addrn:=true;
-              p1:=factor(true,[]);
+              Consume(_LKLAMMER);
+              GotAddrN:=true;
+              lNode:=Factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if CurrentScanner.token<>_RKLAMMER then
-                p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-              p1:=CAddrNode.Create(p1);
-              got_addrn:=false;
-              consume(_RKLAMMER);
-              statement_syssym:=p1;
+              if CurrentScanner.FToken<>_RKLAMMER then
+                lNode:=SubExpr(opcompare,[efAcceptEqual],lNode);
+              lNode:=CAddrNode.Create(lNode);
+              GotAddrN:=false;
+              Consume(_RKLAMMER);
+              StatementSysSym:=lNode;
             end;
 
 
 
           in_ofs_x :
             begin
-              consume(_LKLAMMER);
-              got_addrn:=true;
-              p1:=factor(true,[]);
+              Consume(_LKLAMMER);
+              GotAddrN:=true;
+              lNode:=Factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if CurrentScanner.token<>_RKLAMMER then
-                p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-              p1:=CAddrNode.Create(p1);
-              include(TAddrNode(p1).AddrNodeFlags,anf_ofs);
-              got_addrn:=false;
+              if CurrentScanner.FToken<>_RKLAMMER then
+                lNode:=SubExpr(opcompare,[efAcceptEqual],lNode);
+              lNode:=CAddrNode.Create(lNode);
+              include(TAddrNode(lNode).AddrNodeFlags,anf_ofs);
+              GotAddrN:=false;
               { Ofs() returns a cardinal/qword, not a pointer }
-              InsertTypeConv_Internal(p1,UIntType);
-              consume(_RKLAMMER);
-              statement_syssym:=p1;
+              InsertTypeConv_Internal(lNode,UIntType);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lNode;
             end;
 
           in_seg_x :
             begin
-              consume(_LKLAMMER);
-              got_addrn:=true;
-              p1:=factor(true,[]);
+              Consume(_LKLAMMER);
+              GotAddrN:=true;
+              lNode:=Factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if CurrentScanner.token<>_RKLAMMER then
-                p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-              p1:=GenInlineNode(in_seg_x,false,p1);
-              got_addrn:=false;
-              consume(_RKLAMMER);
-              statement_syssym:=p1;
+              if CurrentScanner.FToken<>_RKLAMMER then
+                lNode:=SubExpr(opcompare,[efAcceptEqual],lNode);
+              lNode:=GenInlineNode(in_seg_x,false,lNode);
+              GotAddrN:=false;
+              Consume(_RKLAMMER);
+              StatementSysSym:=lNode;
             end;
 
           in_high_x,
           in_low_x :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              p2:=GenInlineNode(l,false,p1);
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_succ_x,
           in_pred_x :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              p2:=GenInlineNode(l,false,p1);
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_inc_x,
           in_dec_x :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              if try_to_consume(_COMMA) then
-                p2:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil)
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              if TryToConsume(_COMMA) then
+                lSecondNode:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil)
               else
-                p2:=nil;
-              p2:=CCallParaNode.Create(p1,p2);
-              statement_syssym:=GenInlineNode(l,false,p2);
-              consume(_RKLAMMER);
+                lSecondNode:=nil;
+              lSecondNode:=CCallParaNode.Create(lNode,lSecondNode);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,lSecondNode);
+              Consume(_RKLAMMER);
             end;
 
           in_slice_x:
             begin
-              if not(in_args) then
+              if not(InArgs) then
                 begin
                   message(parser_e_illegal_slice);
-                  consume(_LKLAMMER);
-                  in_args:=true;
-                  comp_expr([ef_accept_equal]).free; // no nil needed
-                  if try_to_consume(_COMMA) then
-                    comp_expr([ef_accept_equal]).free; // no nil needed
-                  statement_syssym:=CErrorNode.Create;
-                  consume(_RKLAMMER);
+                  Consume(_LKLAMMER);
+                  InArgs:=true;
+                  CompExpr([efAcceptEqual]).free; // no nil needed
+                  if TryToConsume(_COMMA) then
+                    CompExpr([efAcceptEqual]).free; // no nil needed
+                  StatementSysSym:=CErrorNode.Create;
+                  Consume(_RKLAMMER);
                 end
               else
                 begin
-                  consume(_LKLAMMER);
-                  in_args:=true;
-                  p1:=comp_expr([ef_accept_equal]);
+                  Consume(_LKLAMMER);
+                  InArgs:=true;
+                  lNode:=CompExpr([efAcceptEqual]);
                   Consume(_COMMA);
                   if not(CodeGenError) then
-                    p2:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil)
+                    lSecondNode:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil)
                   else
-                    p2:=CErrorNode.Create;
-                  p2:=CCallParaNode.Create(p1,p2);
-                  statement_syssym:=GenInlineNode(l,false,p2);
-                  consume(_RKLAMMER);
+                    lSecondNode:=CErrorNode.Create;
+                  lSecondNode:=CCallParaNode.Create(lNode,lSecondNode);
+                  StatementSysSym:=GenInlineNode(AInlineNumber,false,lSecondNode);
+                  Consume(_RKLAMMER);
                 end;
             end;
 
           in_initialize_x:
             begin
-              statement_syssym:=Inline_Initialize;
+              StatementSysSym:=Inline_Initialize;
             end;
 
           in_finalize_x:
             begin
-              statement_syssym:=Inline_Finalize;
+              StatementSysSym:=Inline_Finalize;
             end;
 
           in_copy_x:
             begin
-              statement_syssym:=Inline_Copy;
+              StatementSysSym:=Inline_Copy;
             end;
 
           in_concat_x :
             begin
-              statement_syssym:=Inline_Concat;
+              StatementSysSym:=Inline_Concat;
             end;
 
           in_read_x,
           in_readln_x,
           in_readstr_x:
             begin
-              if try_to_consume(_LKLAMMER) then
+              if TryToConsume(_LKLAMMER) then
                begin
-                 paras:=parse_paras(false,false,_RKLAMMER);
-                 consume(_RKLAMMER);
+                 lParas:=ParseParas(false,false,_RKLAMMER);
+                 Consume(_RKLAMMER);
                end
               else
-               paras:=nil;
-              p1:=GenInlineNode(l,false,paras);
-              statement_syssym := p1;
+               lParas:=nil;
+              lNode:=GenInlineNode(AInlineNumber,false,lParas);
+              StatementSysSym := lNode;
             end;
 
           in_setlength_x:
             begin
-              statement_syssym := Inline_SetLength;
+              StatementSysSym := Inline_SetLength;
             end;
 
           in_objc_selector_x:
             begin
               if (m_objectivec1 in CurrentSettings.ModeSwitches) then
                 begin
-                  consume(_LKLAMMER);
-                  in_args:=true;
+                  Consume(_LKLAMMER);
+                  InArgs:=true;
                   { don't turn procsyms into calls (getaddr = true) }
-                  p1:=factor(true,[]);
-                  p2:=GenInlineNode(l,false,p1);
-                  consume(_RKLAMMER);
-                  statement_syssym:=p2;
+                  lNode:=Factor(true,[]);
+                  lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+                  Consume(_RKLAMMER);
+                  StatementSysSym:=lSecondNode;
                 end
               else
                 begin
-                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
-                  statement_syssym:=CErrorNode.Create;
+                  Message1(sym_e_id_not_found, CurrentScanner.FOrgPattern);
+                  StatementSysSym:=CErrorNode.Create;
                 end;
             end;
 
           in_length_x:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              p2:=GenInlineNode(l,false,p1);
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              lSecondNode:=GenInlineNode(AInlineNumber,false,lNode);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_write_x,
           in_writeln_x,
           in_writestr_x :
             begin
-              if try_to_consume(_LKLAMMER) then
+              if TryToConsume(_LKLAMMER) then
                begin
-                 paras:=parse_paras(true,false,_RKLAMMER);
-                 consume(_RKLAMMER);
+                 lParas:=ParseParas(true,false,_RKLAMMER);
+                 Consume(_RKLAMMER);
                end
               else
-               paras:=nil;
-              p1 := GenInlineNode(l,false,paras);
-              statement_syssym := p1;
+               lParas:=nil;
+              lNode := GenInlineNode(AInlineNumber,false,lParas);
+              StatementSysSym := lNode;
             end;
 
           in_str_x_string :
             begin
-              consume(_LKLAMMER);
-              paras:=parse_paras(true,false,_RKLAMMER);
-              consume(_RKLAMMER);
-              p1 := GenInlineNode(l,false,paras);
-              statement_syssym := p1;
+              Consume(_LKLAMMER);
+              lParas:=ParseParas(true,false,_RKLAMMER);
+              Consume(_RKLAMMER);
+              lNode := GenInlineNode(AInlineNumber,false,lParas);
+              StatementSysSym := lNode;
             end;
 
           in_val_x:
             Begin
-              consume(_LKLAMMER);
-              in_args := true;
-              p1:= CCallParaNode.Create(comp_expr([ef_accept_equal]), nil);
-              consume(_COMMA);
-              p2 := CCallParaNode.Create(comp_expr([ef_accept_equal]),p1);
-              if try_to_consume(_COMMA) then
-                p2 := CCallParaNode.Create(comp_expr([ef_accept_equal]),p2);
-              consume(_RKLAMMER);
-              p2 := GenInlineNode(l,false,p2);
-              statement_syssym := p2;
+              Consume(_LKLAMMER);
+              InArgs := true;
+              lNode:= CCallParaNode.Create(CompExpr([efAcceptEqual]), nil);
+              Consume(_COMMA);
+              lSecondNode := CCallParaNode.Create(CompExpr([efAcceptEqual]),lNode);
+              if TryToConsume(_COMMA) then
+                lSecondNode := CCallParaNode.Create(CompExpr([efAcceptEqual]),lSecondNode);
+              Consume(_RKLAMMER);
+              lSecondNode := GenInlineNode(AInlineNumber,false,lSecondNode);
+              StatementSysSym := lSecondNode;
             End;
 
           in_include_x_y,
           in_exclude_x_y :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_COMMA);
-              p2:=comp_expr([ef_accept_equal]);
-              statement_syssym:=GenInlineNode(l,false,CCallParaNode.Create(p1,CCallParaNode.Create(p2,nil)));
-              consume(_RKLAMMER);
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_COMMA);
+              lSecondNode:=CompExpr([efAcceptEqual]);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,CCallParaNode.Create(lNode,CCallParaNode.Create(lSecondNode,nil)));
+              Consume(_RKLAMMER);
             end;
 
           in_pack_x_y_z,
           in_unpack_x_y_z :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_COMMA);
-              p2:=comp_expr([ef_accept_equal]);
-              consume(_COMMA);
-              paras:=comp_expr([ef_accept_equal]);
-              statement_syssym:=GenInlineNode(l,false,CCallParaNode.Create(p1,CCallParaNode.Create(p2,CCallParaNode.Create(paras,nil))));
-              consume(_RKLAMMER);
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_COMMA);
+              lSecondNode:=CompExpr([efAcceptEqual]);
+              Consume(_COMMA);
+              lParas:=CompExpr([efAcceptEqual]);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,CCallParaNode.Create(lNode,CCallParaNode.Create(lSecondNode,CCallParaNode.Create(lParas,nil))));
+              Consume(_RKLAMMER);
             end;
 
           in_assert_x_y :
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              if try_to_consume(_COMMA) then
-                 p2:=comp_expr([ef_accept_equal])
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              if TryToConsume(_COMMA) then
+                 lSecondNode:=CompExpr([efAcceptEqual])
               else
                begin
                  { then insert an empty string }
-                 p2:=CStringConstNode.CreateStr('');
+                 lSecondNode:=CStringConstNode.CreateStr('');
                end;
-              statement_syssym:=GenInlineNode(l,false,CCallParaNode.Create(p1,CCallParaNode.Create(p2,nil)));
-              consume(_RKLAMMER);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,CCallParaNode.Create(lNode,CCallParaNode.Create(lSecondNode,nil)));
+              Consume(_RKLAMMER);
             end;
           in_get_frame:
             begin
-              statement_syssym:=GenInlineNode(l,false,nil);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,nil);
             end;
 (*
           in_get_caller_frame:
@@ -943,162 +943,162 @@ implementation
 *)
           in_default_x:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              def:=nil;
-              single_type(def,[stoAllowSpecialization]);
-              statement_syssym:=CErrorNode.Create;
-              if def<>GenErrorDef then
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lDef:=nil;
+              SingleType(lDef,[stoAllowSpecialization]);
+              StatementSysSym:=CErrorNode.Create;
+              if lDef<>GenErrorDef then
                 { "type expected" error is already done by single_type }
-                if def.typ=ForwardDef then
-                  Message1(type_e_type_is_not_completly_defined,TForwardDef(def).ToSymName^)
+                if lDef.typ=ForwardDef then
+                  Message1(type_e_type_is_not_completly_defined,TForwardDef(lDef).ToSymName^)
                 else
                   begin
-                    statement_syssym.free;
-                    statement_syssym:=GenInlineNode(in_default_x,false,CTypeNode.Create(def));
+                    StatementSysSym.free;
+                    StatementSysSym:=GenInlineNode(in_default_x,false,CTypeNode.Create(lDef));
                   end;
               { consume the right bracket here for a nicer error position }
-              consume(_RKLAMMER);
+              Consume(_RKLAMMER);
             end;
 
           in_nameof_x:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
+              Consume(_LKLAMMER);
+              InArgs:=true;
               { save the state: e.g. NameOf(TGen<byte>) may parse NameOf while specializing }
-              old_nameof_active:=nameof_active;
-              old_nameof_sym:=nameof_sym;
-              old_nameof_nextpos:=nameof_nextpos;
-              nameof_active:=true;
-              nameof_sym:=nil;
+              lOldNameOfActive:=NameOfActive;
+              lOldNameOfSym:=NameOfSym;
+              lOldNameOfNextPos:=NameOfNextPos;
+              NameOfActive:=true;
+              NameOfSym:=nil;
               { only an identifier or a dotted identifier chain is allowed }
-              nameof_ok:=CurrentScanner.token=_ID;
-              if CurrentScanner.token=_RKLAMMER then
+              lNameOfOK:=CurrentScanner.FToken=_ID;
+              if CurrentScanner.FToken=_RKLAMMER then
                 { NameOf() }
-                p1:=CNothingNode.Create
+                lNode:=CNothingNode.Create
               else
                 { getaddr: do not turn a procedure into a call }
-                p1:=factor(true,[]);
-              if CurrentScanner.token<>_RKLAMMER then
+                lNode:=Factor(true,[]);
+              if CurrentScanner.FToken<>_RKLAMMER then
                 begin
                   { e.g. inline specialization TBird<Boolean> }
-                  p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-                  if p1.nodetype in [addn,subn,muln,slashn,divn,modn,symdifn,starstarn,
+                  lNode:=SubExpr(opcompare,[efAcceptEqual],lNode);
+                  if lNode.nodetype in [addn,subn,muln,slashn,divn,modn,symdifn,starstarn,
                       EqualN,unequaln,ltn,lten,gtn,gten,inn,isn,asn,orn,andn,xorn,
                       shln,shrn,notn,assignn] then
-                    nameof_ok:=false;
+                    lNameOfOK:=false;
                 end;
               { the last found identifier must be directly followed by ")" }
-              nameof_ok:=nameof_ok and
-                Assigned(nameof_sym) and
-                (nameof_sym.typ<>errorsym) and
-                (nameof_nextpos.line=CurrentFilePos.line) and
-                (nameof_nextpos.column=CurrentFilePos.column) and
-                (nameof_nextpos.fileindex=CurrentFilePos.fileindex) and
-                (nameof_nextpos.moduleindex=CurrentFilePos.moduleindex);
-              if nameof_ok then
-                statement_syssym:=CStringConstNode.CreateStr(nameof_symname(nameof_sym))
+              lNameOfOK:=lNameOfOK and
+                Assigned(NameOfSym) and
+                (NameOfSym.typ<>errorsym) and
+                (NameOfNextPos.line=CurrentFilePos.line) and
+                (NameOfNextPos.column=CurrentFilePos.column) and
+                (NameOfNextPos.fileindex=CurrentFilePos.fileindex) and
+                (NameOfNextPos.moduleindex=CurrentFilePos.moduleindex);
+              if lNameOfOK then
+                StatementSysSym:=CStringConstNode.CreateStr(NameOfSymName(NameOfSym))
               else
                 begin
-                  if p1.nodetype<>errorn then
+                  if lNode.nodetype<>errorn then
                     Message(parser_e_illegal_expression);
-                  statement_syssym:=CErrorNode.Create;
+                  StatementSysSym:=CErrorNode.Create;
                 end;
-              p1.free;
-              nameof_active:=old_nameof_active;
-              nameof_sym:=old_nameof_sym;
-              nameof_nextpos:=old_nameof_nextpos;
-              consume(_RKLAMMER);
+              lNode.free;
+              NameOfActive:=lOldNameOfActive;
+              NameOfSym:=lOldNameOfSym;
+              NameOfNextPos:=lOldNameOfNextPos;
+              Consume(_RKLAMMER);
             end;
 
           in_setstring_x_y_z:
             begin
-              statement_syssym := Inline_SetString;
+              StatementSysSym := Inline_SetString;
             end;
 
           in_delete_x_y_z:
             begin
-              statement_syssym:=Inline_Delete;
+              StatementSysSym:=Inline_Delete;
             end;
 
           in_insert_x_y_z:
             begin
-              statement_syssym:=Inline_Insert;
+              StatementSysSym:=Inline_Insert;
             end;
           in_const_eh_return_data_regno:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              p2:=GenInlineNode(l,true,p1);
-              consume(_RKLAMMER);
-              statement_syssym:=p2;
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              lSecondNode:=GenInlineNode(AInlineNumber,true,lNode);
+              Consume(_RKLAMMER);
+              StatementSysSym:=lSecondNode;
             end;
 
           in_atomic_inc,
           in_atomic_dec:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              if try_to_consume(_COMMA) then
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              if TryToConsume(_COMMA) then
                 begin
-                  p2:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil);
+                  lSecondNode:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil);
                 end
               else
-                p2:=nil;
-              statement_syssym:=GenInlineNode(l,false,CCallParaNode.Create(p1,p2));
-              consume(_RKLAMMER);
+                lSecondNode:=nil;
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,CCallParaNode.Create(lNode,lSecondNode));
+              Consume(_RKLAMMER);
             end;
 
           in_atomic_xchg:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              p1:=comp_expr([ef_accept_equal]);
-              consume(_COMMA);
-              p2:=comp_expr([ef_accept_equal]);
-              statement_syssym:=GenInlineNode(l,false,CCallParaNode.Create(p1,CCallParaNode.Create(p2,nil)));
-              consume(_RKLAMMER);
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lNode:=CompExpr([efAcceptEqual]);
+              Consume(_COMMA);
+              lSecondNode:=CompExpr([efAcceptEqual]);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,CCallParaNode.Create(lNode,CCallParaNode.Create(lSecondNode,nil)));
+              Consume(_RKLAMMER);
             end;
 
           in_atomic_cmp_xchg:
             begin
-              consume(_LKLAMMER);
-              in_args:=true;
-              paras:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil);
-              consume(_COMMA);
-              TCallParaNode(paras).right:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil);
-              consume(_COMMA);
-              TCallParaNode(TCallParaNode(paras).right).right:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil);
-              if try_to_consume(_COMMA) then
+              Consume(_LKLAMMER);
+              InArgs:=true;
+              lParas:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil);
+              Consume(_COMMA);
+              TCallParaNode(lParas).right:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil);
+              Consume(_COMMA);
+              TCallParaNode(TCallParaNode(lParas).right).right:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil);
+              if TryToConsume(_COMMA) then
                 begin
-                  TCallParaNode(TCallParaNode(TCallParaNode(paras).right).right).right:=CCallParaNode.Create(comp_expr([ef_accept_equal]),nil);
+                  TCallParaNode(TCallParaNode(TCallParaNode(lParas).right).right).right:=CCallParaNode.Create(CompExpr([efAcceptEqual]),nil);
                 end;
-              statement_syssym:=GenInlineNode(l,false,paras);
-              consume(_RKLAMMER);
+              StatementSysSym:=GenInlineNode(AInlineNumber,false,lParas);
+              Consume(_RKLAMMER);
             end;
 
           else
             InternalError(15);
 
         end;
-        in_args:=prev_in_args;
+        InArgs:=lPrevInArgs;
       end;
 
 
-    function maybe_load_methodpointer(st:TSymTable;var p1:TNode):boolean;
+    function MaybeLoadMethodPointer(ASymTable:TSymTable;var ANode:TNode):Boolean;
       var
-        pd: TProcDef;
+        lProcDef: TProcDef;
       begin
-        maybe_load_methodpointer:=false;
-        if not Assigned(p1) then
+        MaybeLoadMethodPointer:=false;
+        if not Assigned(ANode) then
          begin
-           case st.SymTableType of
+           case ASymTable.SymTableType of
              withsymtable :
                begin
-                 if (st.DefOwner.typ=objectdef) then
-                   p1:=TNode(TWithSymTable(st).WithRefNode).GetCopy;
+                 if (ASymTable.DefOwner.typ=objectdef) then
+                   ANode:=TNode(TWithSymTable(ASymTable).WithRefNode).GetCopy;
                end;
              ObjectSymtable,
              recordsymtable:
@@ -1106,23 +1106,23 @@ implementation
                  { Escape nested procedures }
                  if Assigned(CurrentProcInfo) then
                    begin
-                     pd:=CurrentProcInfo.Get_Normal_Proc.procdef;
+                     lProcDef:=CurrentProcInfo.Get_Normal_Proc.procdef;
                      { We are calling from the static class method which has no self node }
-                     if Assigned(pd) and pd.No_Self_Node then
-                       if st.SymTableType=recordsymtable then
-                         p1:=CTypeNode.Create(pd.struct)
+                     if Assigned(lProcDef) and lProcDef.No_Self_Node then
+                       if ASymTable.SymTableType=recordsymtable then
+                         ANode:=CTypeNode.Create(lProcDef.struct)
                        else
-                         p1:=CLoadVMTAddrNode.Create(CTypeNode.Create(pd.struct))
+                         ANode:=CLoadVMTAddrNode.Create(CTypeNode.Create(lProcDef.struct))
                      else
-                       p1:=Load_Self_Node;
+                       ANode:=Load_Self_Node;
                    end
                  else
-                   p1:=Load_Self_Node;
+                   ANode:=Load_Self_Node;
                  { don't try to call the invokable again }
-                 if Is_Invokable(TDef(st.DefOwner)) then
-                   include(p1.flags,nf_load_procvar);
+                 if Is_Invokable(TDef(ASymTable.DefOwner)) then
+                   include(ANode.flags,nf_load_procvar);
                  { We are calling a member }
-                 maybe_load_methodpointer:=true;
+                 MaybeLoadMethodPointer:=true;
                end;
              else
                ;
@@ -1132,49 +1132,49 @@ implementation
 
 
     { reads the parameter for a subroutine call }
-    procedure do_proc_call(sym:TSym;st:TSymTable;obj:TAbstractRecordDef;GetAddr:boolean;var again : boolean;var p1:TNode;callflags:TCallNodeFlags;spezcontext:TSpecializationContext);
+    procedure DoProcCall(ASym:TSym;ASymTable:TSymTable;AObjectDef:TAbstractRecordDef;AGetAddr:Boolean;var AAgain : Boolean;var ANode:TNode;ACallFlags:TCallNodeFlags;ASpecializationContext:TSpecializationContext);
       var
-         membercall,
-         prevafterassn : boolean;
-         i        : integer;
-         para,p2  : TNode;
-         currpara : TParaVarSym;
-         aprocdef : TProcDef;
+         lMemberCall,
+         lPrevAfterAssignment : Boolean;
+         lIndex        : Integer;
+         lParaNode,lCallNode  : TNode;
+         lCurrentPara : TParaVarSym;
+         lProcDef : TProcDef;
       begin
-         prevafterassn:=afterassignment;
-         afterassignment:=false;
-         membercall:=false;
-         aprocdef:=nil;
+         lPrevAfterAssignment:=AfterAssignment;
+         AfterAssignment:=false;
+         lMemberCall:=false;
+         lProcDef:=nil;
 
          { when it is a call to a member we need to load the
            methodpointer first
          }
-         membercall:=maybe_load_methodpointer(st,p1);
+         lMemberCall:=MaybeLoadMethodPointer(ASymTable,ANode);
 
          { When we are expecting a procvar we also need
            to get the address in some cases }
-         if Assigned(getprocvardef) or Assigned(getfuncrefdef) then
+         if Assigned(GetProcVarDef) or Assigned(GetFuncRefDef) then
           begin
             if (Block_Type=bt_const) or
-               GetAddr then
+               AGetAddr then
              begin
-               if Assigned(getfuncrefdef) then
-                 aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef)
+               if Assigned(GetFuncRefDef) then
+                 lProcDef:=TProcSym(ASym).Find_ProcDef_ByFuncRefDef(GetFuncRefDef)
                else
-                 aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
-               GetAddr:=true;
+                 lProcDef:=TProcSym(ASym).Find_ProcDef_ByProcVarDef(GetProcVarDef);
+               AGetAddr:=true;
              end
             else
              if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                  (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                not(CurrentScanner.token in [_CARET,_POINT,_LKLAMMER]) then
+                not(CurrentScanner.FToken in [_CARET,_POINT,_LKLAMMER]) then
               begin
-                if Assigned(getfuncrefdef) then
-                  aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef)
+                if Assigned(GetFuncRefDef) then
+                  lProcDef:=TProcSym(ASym).Find_ProcDef_ByFuncRefDef(GetFuncRefDef)
                 else
-                  aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
-                if Assigned(aprocdef) then
-                 GetAddr:=true;
+                  lProcDef:=TProcSym(ASym).Find_ProcDef_ByProcVarDef(GetProcVarDef);
+                if Assigned(lProcDef) then
+                 AGetAddr:=true;
               end;
           end;
 
@@ -1182,211 +1182,211 @@ implementation
            in the case of opening parenthesis is possible to get pointer to
            function result (lack of checking for token was the reason of
            tw10933.pas test failure) }
-         if GetAddr and (CurrentScanner.token<>_LKLAMMER) then
+         if AGetAddr and (CurrentScanner.FToken<>_LKLAMMER) then
            begin
              { for now we don't support pointers to generic functions, but since
                this is only temporary we use a non translated message }
-             if Assigned(spezcontext) then
+             if Assigned(ASpecializationContext) then
                begin
-                 if nameof_active then
+                 if NameOfActive then
                    { NameOf(GenericFunc<T>) only needs the name }
-                   p1:=CNothingNode.Create
+                   ANode:=CNothingNode.Create
                  else
                    begin
                      comment(VError, 'Pointers to generics functions not implemented');
-                     p1:=CErrorNode.Create;
+                     ANode:=CErrorNode.Create;
                    end;
-                 spezcontext.free;
-                 spezcontext := nil;
+                 ASpecializationContext.free;
+                 ASpecializationContext := nil;
                  exit;
                end;
 
              { Retrieve info which procvar to call. For tp_procvar the
                aprocdef is already loaded above so we can reuse it }
-             if not Assigned(aprocdef) and
-                Assigned(getprocvardef) then
-               aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
-             if not Assigned(aprocdef) and
-                Assigned(getfuncrefdef) then
-               aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef);
+             if not Assigned(lProcDef) and
+                Assigned(GetProcVarDef) then
+               lProcDef:=TProcSym(ASym).Find_ProcDef_ByProcVarDef(GetProcVarDef);
+             if not Assigned(lProcDef) and
+                Assigned(GetFuncRefDef) then
+               lProcDef:=TProcSym(ASym).Find_ProcDef_ByFuncRefDef(GetFuncRefDef);
 
              { ensure that the correct function is considered as captured }
              if Assigned(CurrentProcInfo) and
-                 Assigned(aprocdef) and
-                 (aprocdef.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
-                 (aprocdef.ParaST.SymTableLevel>NormalFunctionLevel) and
+                 Assigned(lProcDef) and
+                 (lProcDef.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
+                 (lProcDef.ParaST.SymTableLevel>NormalFunctionLevel) and
                  (CurrentProcInfo.procdef.ParaST.SymTableLevel>NormalFunctionLevel) then
-               CurrentProcInfo.Add_Captured_Sym(sym,aprocdef,CurrentFilePos);
+               CurrentProcInfo.Add_Captured_Sym(ASym,lProcDef,CurrentFilePos);
 
              { generate a methodcallnode or proccallnode }
              { we shouldn't convert things like @tcollection.load }
-             p2:=CLoadNode.Create_ProcVar(sym,aprocdef,st);
-             if Assigned(p1) then
+             lCallNode:=CLoadNode.Create_ProcVar(ASym,lProcDef,ASymTable);
+             if Assigned(ANode) then
               begin
                 { for loading methodpointer of an inherited function
                   we use self as instance and load the address of
                   the function directly and not through the vmt (PFV) }
-                if (cnf_inherited in callflags) then
+                if (cnf_inherited in ACallFlags) then
                   begin
-                    include(TLoadNode(p2).LoadNodeFlags,loadnf_inherited);
-                    p1.free;
-                    p1:=Load_Self_Node;
+                    include(TLoadNode(lCallNode).LoadNodeFlags,loadnf_inherited);
+                    ANode.free;
+                    ANode:=Load_Self_Node;
                   end;
-                if (p1.nodetype<>typen) then
-                  TLoadNode(p2).Set_MP(p1)
+                if (ANode.nodetype<>typen) then
+                  TLoadNode(lCallNode).Set_MP(ANode)
                 else
                   begin
-                    TypeCheckPass(p1);
-                    if (p1.resultdef.typ=classrefdef) and
+                    TypeCheckPass(ANode);
+                    if (ANode.resultdef.typ=classrefdef) and
                        (
-                         Assigned(getprocvardef) or
-                         Assigned(getfuncrefdef)
+                         Assigned(GetProcVarDef) or
+                         Assigned(GetFuncRefDef)
                        ) then
                       begin
-                        p1:=CLoadVMTAddrNode.Create(p1);
-                        TLoadNode(p2).Set_MP(p1);
+                        ANode:=CLoadVMTAddrNode.Create(ANode);
+                        TLoadNode(lCallNode).Set_MP(ANode);
                       end
-                    else if (p1.resultdef.typ=objectdef) then
+                    else if (ANode.resultdef.typ=objectdef) then
                       { so we can create the correct  method pointer again in case
                         this is a "objectprocvar:=@classname.method" expression }
-                      TLoadNode(p2).SymTable:=TObjectDef(p1.resultdef).SymTable
+                      TLoadNode(lCallNode).SymTable:=TObjectDef(ANode.resultdef).SymTable
                     else
-                      p1.free; // no nil needed
+                      ANode.free; // no nil needed
                   end;
               end;
-             p1:=p2;
+             ANode:=lCallNode;
 
              { no postfix operators }
-             again:=false;
+             AAgain:=false;
            end
          else
            begin
-             para:=nil;
-             if anon_inherited then
+             lParaNode:=nil;
+             if AnonInherited then
               begin
                 if not Assigned(CurrentProcInfo) then
                   InternalError(200305054);
-                for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
+                for lIndex:=0 to CurrentProcInfo.procdef.paras.count-1 do
                   begin
-                    currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-                    if not(vo_is_hidden_para in currpara.VarOptions) then
+                    lCurrentPara:=TParaVarSym(CurrentProcInfo.procdef.paras[lIndex]);
+                    if not(vo_is_hidden_para in lCurrentPara.VarOptions) then
                       begin
                         { inheritance by msgint? }
-                        if Assigned(srdef) then
+                        if Assigned(SRDef) then
                           { anonymous inherited via msgid calls only require a var parameter for
                             both methods, so we need some type casting here }
-                          para:=CCallParaNode.Create(CTypeConvNode.Create_Internal(CTypeConvNode.Create_Internal(
-                            CLoadNode.Create(currpara,currpara.owner),CFormalType),TParaVarSym(TProcDef(srdef).paras[i]).vardef),
-                          para)
+                          lParaNode:=CCallParaNode.Create(CTypeConvNode.Create_Internal(CTypeConvNode.Create_Internal(
+                            CLoadNode.Create(lCurrentPara,lCurrentPara.owner),CFormalType),TParaVarSym(TProcDef(SRDef).paras[lIndex]).vardef),
+                          lParaNode)
                         else
-                          para:=CCallParaNode.Create(CLoadNode.Create(currpara,currpara.owner),para);
+                          lParaNode:=CCallParaNode.Create(CLoadNode.Create(lCurrentPara,lCurrentPara.owner),lParaNode);
                       end;
                  end;
               end
              else
               begin
-                if try_to_consume(_LKLAMMER) then
+                if TryToConsume(_LKLAMMER) then
                  begin
-                   para:=parse_paras(false,false,_RKLAMMER);
-                   consume(_RKLAMMER);
+                   lParaNode:=ParseParas(false,false,_RKLAMMER);
+                   Consume(_RKLAMMER);
                  end;
               end;
              { indicate if this call was generated by a member and
                no explicit self is used, this is needed to determine
                how to handle a destructor call (PFV) }
-             if membercall then
-               include(callflags,cnf_member_call);
-             if Assigned(obj) then
+             if lMemberCall then
+               include(ACallFlags,cnf_member_call);
+             if Assigned(AObjectDef) then
                begin
-                 if not (st.SymTableType in [ObjectSymtable,recordsymtable]) then
+                 if not (ASymTable.SymTableType in [ObjectSymtable,recordsymtable]) then
                    InternalError(200310031);
-                 p1:=CCallNode.Create(para,TProcSym(sym),obj.SymTable,p1,callflags,spezcontext);
+                 ANode:=CCallNode.Create(lParaNode,TProcSym(ASym),AObjectDef.SymTable,ANode,ACallFlags,ASpecializationContext);
                end
              else
-               p1:=CCallNode.Create(para,TProcSym(sym),st,p1,callflags,spezcontext);
+               ANode:=CCallNode.Create(lParaNode,TProcSym(ASym),ASymTable,ANode,ACallFlags,ASpecializationContext);
              { in case of calling an anonymous function we already know the concrete
                procdef that is going to be called }
-             if (TProcSym(sym).ProcdefList.count=1) and (po_anonymous in TProcDef(TProcSym(sym).procdeflist[0]).ProcOptions) then
-               TCallNode(p1).ProcDefinition:=TProcDef(TProcSym(sym).procdeflist[0]);
+             if (TProcSym(ASym).ProcdefList.count=1) and (po_anonymous in TProcDef(TProcSym(ASym).procdeflist[0]).ProcOptions) then
+               TCallNode(ANode).ProcDefinition:=TProcDef(TProcSym(ASym).procdeflist[0]);
            end;
-         afterassignment:=prevafterassn;
+         AfterAssignment:=lPrevAfterAssignment;
       end;
 
 
-    procedure handle_procvar(pv : TProcVarDef;var p2 : TNode);
+    procedure HandleProcVar(AProcVarDef : TProcVarDef;var ANode : TNode);
       var
-        hp,hp2 : TNode;
-        hpp    : ^TNode;
-        currprocdef : TProcDef;
+        lNode,lLoadNode : TNode;
+        lNodeSlot    : ^TNode;
+        lCurrentProcDef : TProcDef;
       begin
-        if not Assigned(pv) then
+        if not Assigned(AProcVarDef) then
          InternalError(200301121);
         if (m_tp_procvar in CurrentSettings.ModeSwitches) or
            (m_mac_procvar in CurrentSettings.ModeSwitches) then
          begin
-           hp:=p2;
-           hpp:=@p2;
-           while Assigned(hp) and
-                 (hp.nodetype=typeconvn) do
+           lNode:=ANode;
+           lNodeSlot:=@ANode;
+           while Assigned(lNode) and
+                 (lNode.nodetype=typeconvn) do
             begin
-              hp:=TTypeConvNode(hp).left;
+              lNode:=TTypeConvNode(lNode).left;
               { save original address of the old tree so we can replace the node }
-              hpp:=@hp;
+              lNodeSlot:=@lNode;
             end;
-           if (hp.nodetype=calln) and
+           if (lNode.nodetype=calln) and
               { a procvar can't have parameters! }
-              not Assigned(TCallNode(hp).left) then
+              not Assigned(TCallNode(lNode).left) then
             begin
-              currprocdef:=TCallNode(hp).SymTableProcEntry.Find_ProcDef_ByProcVarDef(pv);
-              if Assigned(currprocdef) then
+              lCurrentProcDef:=TCallNode(lNode).SymTableProcEntry.Find_ProcDef_ByProcVarDef(AProcVarDef);
+              if Assigned(lCurrentProcDef) then
                begin
-                 hp2:=CLoadNode.Create_ProcVar(TProcSym(TCallNode(hp).SymTableProcEntry),currprocdef,TCallNode(hp).SymTableProc);
-                 if (po_methodpointer in pv.ProcOptions) then
-                   TLoadNode(hp2).Set_MP(TCallNode(hp).MethodPointer.GetCopy);
-                 hp.free;
-                 hp := nil;
+                 lLoadNode:=CLoadNode.Create_ProcVar(TProcSym(TCallNode(lNode).SymTableProcEntry),lCurrentProcDef,TCallNode(lNode).SymTableProc);
+                 if (po_methodpointer in AProcVarDef.ProcOptions) then
+                   TLoadNode(lLoadNode).Set_MP(TCallNode(lNode).MethodPointer.GetCopy);
+                 lNode.free;
+                 lNode := nil;
                  { replace the old callnode with the new loadnode }
-                 hpp^:=hp2;
+                 lNodeSlot^:=lLoadNode;
                end;
             end;
          end;
       end;
 
 
-    procedure handle_funcref(fr:TObjectDef;var p2:TNode);
+    procedure HandleFuncRef(AFuncRefDef:TObjectDef;var ANode:TNode);
       var
-        hp,hp2 : TNode;
-        hpp    : ^TNode;
-        currprocdef : TProcDef;
+        lNode,lLoadNode : TNode;
+        lNodeSlot    : ^TNode;
+        lCurrentProcDef : TProcDef;
       begin
-        if not Assigned(fr) then
+        if not Assigned(AFuncRefDef) then
           InternalError(2022032401);
-        if not Is_Invokable(fr) then
+        if not Is_Invokable(AFuncRefDef) then
           InternalError(2022032402);
         if (m_tp_procvar in CurrentSettings.ModeSwitches) or
            (m_mac_procvar in CurrentSettings.ModeSwitches) then
          begin
-           hp:=p2;
-           hpp:=@p2;
-           while Assigned(hp) and
-                 (hp.nodetype=typeconvn) do
+           lNode:=ANode;
+           lNodeSlot:=@ANode;
+           while Assigned(lNode) and
+                 (lNode.nodetype=typeconvn) do
             begin
-              hp:=TTypeConvNode(hp).left;
+              lNode:=TTypeConvNode(lNode).left;
               { save original address of the old tree so we can replace the node }
-              hpp:=@hp;
+              lNodeSlot:=@lNode;
             end;
-           if (hp.nodetype=calln) and
+           if (lNode.nodetype=calln) and
               { a procvar can't have parameters! }
-              not Assigned(TCallNode(hp).left) then
+              not Assigned(TCallNode(lNode).left) then
             begin
-              currprocdef:=TCallNode(hp).SymTableProcEntry.Find_ProcDef_ByFuncRefDef(fr);
-              if Assigned(currprocdef) then
+              lCurrentProcDef:=TCallNode(lNode).SymTableProcEntry.Find_ProcDef_ByFuncRefDef(AFuncRefDef);
+              if Assigned(lCurrentProcDef) then
                begin
-                 hp2:=CLoadNode.Create_ProcVar(TProcSym(TCallNode(hp).SymTableProcEntry),currprocdef,TCallNode(hp).SymTableProc);
-                 hp.free;
-                 hp := nil;
+                 lLoadNode:=CLoadNode.Create_ProcVar(TProcSym(TCallNode(lNode).SymTableProcEntry),lCurrentProcDef,TCallNode(lNode).SymTableProc);
+                 lNode.free;
+                 lNode := nil;
                  { replace the old callnode with the new loadnode }
-                 hpp^:=hp2;
+                 lNodeSlot^:=lLoadNode;
                end;
             end;
          end;
@@ -1394,138 +1394,138 @@ implementation
 
 
     { the following procedure handles the access to a property symbol }
-    procedure handle_propertysym(propsym : TPropertySym;st : TSymTable;var p1 : TNode);
+    procedure HandlePropertySym(APropertySym : TPropertySym;ASymTable : TSymTable;var ANode : TNode);
       var
-         paras : TNode;
-         p2    : TNode;
-         membercall : boolean;
-         callflags  : TCallNodeFlags;
-         PropAccessList : TPropAccessList;
-         sym: TSym;
+         lParas : TNode;
+         lValueNode    : TNode;
+         lMemberCall : Boolean;
+         lCallFlags  : TCallNodeFlags;
+         lPropAccessList : TPropAccessList;
+         lSym: TSym;
       begin
          { NameOf(property) needs neither parameters nor read access }
-         if nameof_active and (CurrentScanner.token=_RKLAMMER) then
+         if NameOfActive and (CurrentScanner.FToken=_RKLAMMER) then
            begin
-             p1.free;
-             p1:=CNothingNode.Create;
+             ANode.free;
+             ANode:=CNothingNode.Create;
              exit;
            end;
          { property parameters? read them only if the property really }
          { has parameters                                             }
-         paras:=nil;
-         if (ppo_hasparameters in propsym.PropOptions) then
+         lParas:=nil;
+         if (ppo_hasparameters in APropertySym.PropOptions) then
            begin
-             if try_to_consume(_LECKKLAMMER) then
+             if TryToConsume(_LECKKLAMMER) then
                begin
-                 paras:=parse_paras(false,false,_RECKKLAMMER);
-                 consume(_RECKKLAMMER);
+                 lParas:=ParseParas(false,false,_RECKKLAMMER);
+                 Consume(_RECKKLAMMER);
                end;
            end;
          { indexed property }
-         if (ppo_indexed in propsym.PropOptions) then
+         if (ppo_indexed in APropertySym.PropOptions) then
            begin
-             p2:=COrdConstNode.Create(propsym.Index,propsym.IndexDef,true);
-             paras:=CCallParaNode.Create(p2,paras);
+             lValueNode:=COrdConstNode.Create(APropertySym.Index,APropertySym.IndexDef,true);
+             lParas:=CCallParaNode.Create(lValueNode,lParas);
            end;
          { we need only a write property if a := follows }
          { if not(afterassignment) and not(in_args) then }
-         if CurrentScanner.token=_ASSIGNMENT then
+         if CurrentScanner.FToken=_ASSIGNMENT then
            begin
-              if propsym.GetPropAccessList(palt_write,PropAccessList) then
+              if APropertySym.GetPropAccessList(palt_write,lPropAccessList) then
                 begin
-                   sym:=PropAccessList.FirstSym^.sym;
-                   case sym.typ of
+                   lSym:=lPropAccessList.FirstSym^.sym;
+                   case lSym.typ of
                      ProcSym :
                        begin
-                         callflags:=[];
+                         lCallFlags:=[];
                          { generate the method call }
-                         membercall:=maybe_load_methodpointer(st,p1);
-                         if membercall then
-                           include(callflags,cnf_member_call);
-                         p1:=CCallNode.Create(paras,TProcSym(sym),st,p1,callflags,nil);
-                         AddSymRef(sym);
-                         paras:=nil;
-                         consume(_ASSIGNMENT);
+                         lMemberCall:=MaybeLoadMethodPointer(ASymTable,ANode);
+                         if lMemberCall then
+                           include(lCallFlags,cnf_member_call);
+                         ANode:=CCallNode.Create(lParas,TProcSym(lSym),ASymTable,ANode,lCallFlags,nil);
+                         AddSymRef(lSym);
+                         lParas:=nil;
+                         Consume(_ASSIGNMENT);
                          { read the expression }
-                         if propsym.PropDef.typ=procvardef then
-                           getprocvardef:=TProcVarDef(propsym.PropDef)
-                         else if Is_Invokable(propsym.PropDef) then
-                           getfuncrefdef:=TObjectDef(propsym.PropDef);
-                         p2:=comp_expr([ef_accept_equal]);
-                         if Assigned(getprocvardef) then
-                           handle_procvar(getprocvardef,p2)
-                         else if Assigned(getfuncrefdef) then
-                           handle_funcref(getfuncrefdef,p2);
-                         TCallNode(p1).left:=CCallParaNode.Create(p2,TCallNode(p1).left);
+                         if APropertySym.PropDef.typ=procvardef then
+                           GetProcVarDef:=TProcVarDef(APropertySym.PropDef)
+                         else if Is_Invokable(APropertySym.PropDef) then
+                           GetFuncRefDef:=TObjectDef(APropertySym.PropDef);
+                         lValueNode:=CompExpr([efAcceptEqual]);
+                         if Assigned(GetProcVarDef) then
+                           HandleProcVar(GetProcVarDef,lValueNode)
+                         else if Assigned(GetFuncRefDef) then
+                           HandleFuncRef(GetFuncRefDef,lValueNode);
+                         TCallNode(ANode).left:=CCallParaNode.Create(lValueNode,TCallNode(ANode).left);
                          { mark as property, both the tcallnode and the real call block }
-                         include(p1.flags,nf_isproperty);
-                         getprocvardef:=nil;
-                         getfuncrefdef:=nil;
+                         include(ANode.flags,nf_isproperty);
+                         GetProcVarDef:=nil;
+                         GetFuncRefDef:=nil;
                        end;
                      FieldVarSym :
                        begin
                          { generate access code }
-                         if not Handle_StaticField_Access(sym,p1) then
-                           PropAccessList_To_Node(p1,st,PropAccessList);
-                         include(p1.flags,nf_isproperty);
-                         consume(_ASSIGNMENT);
+                         if not Handle_StaticField_Access(lSym,ANode) then
+                           PropAccessList_To_Node(ANode,ASymTable,lPropAccessList);
+                         include(ANode.flags,nf_isproperty);
+                         Consume(_ASSIGNMENT);
                          { read the expression }
-                         if propsym.PropDef.typ=procvardef then
-                           getprocvardef:=TProcVarDef(propsym.PropDef)
-                         else if Is_Invokable(propsym.PropDef) then
-                           getfuncrefdef:=TObjectDef(propsym.PropDef);
-                         p2:=comp_expr([ef_accept_equal]);
-                         if Assigned(getprocvardef) then
-                           handle_procvar(getprocvardef,p2)
-                         else if Assigned(getfuncrefdef) then
-                           handle_funcref(getfuncrefdef,p2);
-                         getprocvardef:=nil;
-                         getfuncrefdef:=nil;
-                         p1:=CAssignmentNode.Create(p1,p2);
+                         if APropertySym.PropDef.typ=procvardef then
+                           GetProcVarDef:=TProcVarDef(APropertySym.PropDef)
+                         else if Is_Invokable(APropertySym.PropDef) then
+                           GetFuncRefDef:=TObjectDef(APropertySym.PropDef);
+                         lValueNode:=CompExpr([efAcceptEqual]);
+                         if Assigned(GetProcVarDef) then
+                           HandleProcVar(GetProcVarDef,lValueNode)
+                         else if Assigned(GetFuncRefDef) then
+                           HandleFuncRef(GetFuncRefDef,lValueNode);
+                         GetProcVarDef:=nil;
+                         GetFuncRefDef:=nil;
+                         ANode:=CAssignmentNode.Create(ANode,lValueNode);
                       end
                     else
                       begin
-                        p1:=CErrorNode.Create;
+                        ANode:=CErrorNode.Create;
                         Message(parser_e_no_procedure_to_access_property);
                       end;
                   end;
                 end
               else
                 begin
-                   p1:=CErrorNode.Create;
+                   ANode:=CErrorNode.Create;
                    Message(parser_e_no_procedure_to_access_property);
                 end;
            end
          else
            begin
-              if propsym.GetPropAccessList(palt_read,PropAccessList) then
+              if APropertySym.GetPropAccessList(palt_read,lPropAccessList) then
                 begin
-                   sym := PropAccessList.FirstSym^.sym;
-                   case sym.typ of
+                   lSym := lPropAccessList.FirstSym^.sym;
+                   case lSym.typ of
                      FieldVarSym :
                        begin
                          { generate access code }
-                         if not Handle_StaticField_Access(sym,p1) then
-                           PropAccessList_To_Node(p1,st,PropAccessList);
-                         include(p1.flags,nf_isproperty);
+                         if not Handle_StaticField_Access(lSym,ANode) then
+                           PropAccessList_To_Node(ANode,ASymTable,lPropAccessList);
+                         include(ANode.flags,nf_isproperty);
                          { catch expressions like "(propx):=1;" }
-                         include(p1.flags,nf_no_lvalue);
+                         include(ANode.flags,nf_no_lvalue);
                        end;
                      ProcSym :
                        begin
-                          callflags:=[];
+                          lCallFlags:=[];
                           { generate the method call }
-                          membercall:=maybe_load_methodpointer(st,p1);
-                          if membercall then
-                            include(callflags,cnf_member_call);
-                          p1:=CCallNode.Create(paras,TProcSym(sym),st,p1,callflags,nil);
-                          paras:=nil;
-                          include(p1.flags,nf_isproperty);
-                          include(p1.flags,nf_no_lvalue);
+                          lMemberCall:=MaybeLoadMethodPointer(ASymTable,ANode);
+                          if lMemberCall then
+                            include(lCallFlags,cnf_member_call);
+                          ANode:=CCallNode.Create(lParas,TProcSym(lSym),ASymTable,ANode,lCallFlags,nil);
+                          lParas:=nil;
+                          include(ANode.flags,nf_isproperty);
+                          include(ANode.flags,nf_no_lvalue);
                        end
                      else
                        begin
-                          p1:=CErrorNode.Create;
+                          ANode:=CErrorNode.Create;
                           Message(type_e_mismatch);
                        end;
                   end;
@@ -1533,107 +1533,107 @@ implementation
               else
                 begin
                    { error, no function to read property }
-                   p1:=CErrorNode.Create;
+                   ANode:=CErrorNode.Create;
                    Message(parser_e_no_procedure_to_access_property);
                 end;
            end;
         { release paras if not used }
-        if Assigned(paras) then
-          paras.free; // no nil needed
+        if Assigned(lParas) then
+          lParas.free; // no nil needed
       end;
 
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:TAbstractRecordDef;GetAddr:boolean;sym:TSym;var p1:TNode;var again:boolean;callflags:TCallNodeFlags;spezcontext:TSpecializationContext);
+    procedure DoMemberRead(AStruct:TAbstractRecordDef;AGetAddr:Boolean;ASym:TSym;var ANode:TNode;var AAgain:Boolean;ACallFlags:TCallNodeFlags;ASpecializationContext:TSpecializationContext);
       var
-        isclassref:boolean;
-        isrecordtype:boolean;
-        isobjecttype:boolean;
-        ishelpertype:boolean;
+        lIsClassRef:Boolean;
+        lIsRecordType:Boolean;
+        lIsObjectType:Boolean;
+        lIsHelperType:Boolean;
       begin
-         if sym=nil then
+         if ASym=nil then
            begin
               { current_scanner.pattern is still valid unless
               there is another ID just after the ID of sym }
-              Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
-              p1.free;
-              p1:=CErrorNode.Create;
+              Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
+              ANode.free;
+              ANode:=CErrorNode.Create;
               { try to clean up }
-              spezcontext.free;
-              spezcontext := nil;
-              again:=false;
+              ASpecializationContext.free;
+              ASpecializationContext := nil;
+              AAgain:=false;
            end
          else
            begin
-              nameof_record_sym(sym);
-              if Assigned(p1) then
+              NameOfRecordSym(ASym);
+              if Assigned(ANode) then
                begin
-                 if not Assigned(p1.resultdef) then
-                   DoTypeCheckPass(p1);
-                 isclassref:=(p1.resultdef.typ=classrefdef);
-                 isrecordtype:=(p1.nodetype=typen) and (p1.resultdef.typ=recorddef);
-                 isobjecttype:=(p1.nodetype=typen) and Is_Object(p1.resultdef);
-                 ishelpertype:=Is_ObjectPascal_Helper(TDef(sym.owner.DefOwner)) and
-                               (p1.nodetype=typen) and
-                               not Is_ObjectPascal_Helper(p1.resultdef)
+                 if not Assigned(ANode.resultdef) then
+                   DoTypeCheckPass(ANode);
+                 lIsClassRef:=(ANode.resultdef.typ=classrefdef);
+                 lIsRecordType:=(ANode.nodetype=typen) and (ANode.resultdef.typ=recorddef);
+                 lIsObjectType:=(ANode.nodetype=typen) and Is_Object(ANode.resultdef);
+                 lIsHelperType:=Is_ObjectPascal_Helper(TDef(ASym.owner.DefOwner)) and
+                               (ANode.nodetype=typen) and
+                               not Is_ObjectPascal_Helper(ANode.resultdef)
                                 {and
                                not (cnf_inherited in callflags)};
                end
               else
                 begin
-                  isclassref:=false;
-                  isrecordtype:=false;
-                  isobjecttype:=false;
-                  ishelpertype:=false;
+                  lIsClassRef:=false;
+                  lIsRecordType:=false;
+                  lIsObjectType:=false;
+                  lIsHelperType:=false;
                 end;
 
-              if Assigned(spezcontext) and not (sym.typ=ProcSym) then
+              if Assigned(ASpecializationContext) and not (ASym.typ=ProcSym) then
                 InternalError(2015091801);
 
               { we assume, that only procsyms and varsyms are in an object }
               { symbol table, for classes, properties are allowed          }
-              case sym.typ of
+              case ASym.typ of
                  ProcSym:
                    begin
-                      do_proc_call(sym,sym.owner,structh,
-                                   (GetAddr and not(CurrentScanner.token in [_CARET,_POINT])),
-                                   again,p1,callflags,spezcontext);
+                      DoProcCall(ASym,ASym.owner,AStruct,
+                                   (AGetAddr and not(CurrentScanner.FToken in [_CARET,_POINT])),
+                                   AAgain,ANode,ACallFlags,ASpecializationContext);
                       { we need to know which procedure is called }
-                      DoTypeCheckPass(p1);
+                      DoTypeCheckPass(ANode);
 
                       { We are loading... }
-                      if p1.nodetype=loadn then
+                      if ANode.nodetype=loadn then
                        begin
                          { an instance method }
-                         if not (po_classmethod in TLoadNode(p1).procdef.ProcOptions) and
+                         if not (po_classmethod in TLoadNode(ANode).procdef.ProcOptions) and
                              { into a method pointer (not just taking a code address) }
-                             not GetAddr and
+                             not AGetAddr and
                              { and the selfarg is... }
                              (
                                { either a record/object/helper type, }
-                               not Assigned(TLoadNode(p1).left) or
+                               not Assigned(TLoadNode(ANode).left) or
                                { or a class/metaclass type, or a class reference }
-                               (TLoadNode(p1).left.resultdef.typ=classrefdef)
+                               (TLoadNode(ANode).left.resultdef.typ=classrefdef)
                              ) then
                            Message(parser_e_only_class_members_via_class_ref);
                        end
                       { calling using classref? }
                       else if (
-                            isclassref or
+                            lIsClassRef or
                             (
-                              (isobjecttype or
-                               isrecordtype or
-                               ishelpertype) and
-                              not (cnf_inherited in callflags)
+                              (lIsObjectType or
+                               lIsRecordType or
+                               lIsHelperType) and
+                              not (cnf_inherited in ACallFlags)
                             )
                           ) and
-                         (p1.nodetype=calln) and
-                         Assigned(TCallNode(p1).ProcDefinition) then
+                         (ANode.nodetype=calln) and
+                         Assigned(TCallNode(ANode).ProcDefinition) then
                         begin
-                          if not isobjecttype then
+                          if not lIsObjectType then
                             begin
-                              if not(po_classmethod in TCallNode(p1).ProcDefinition.ProcOptions) and
-                                 not(TCallNode(p1).ProcDefinition.ProcTypeOption=potype_constructor) then
+                              if not(po_classmethod in TCallNode(ANode).ProcDefinition.ProcOptions) and
+                                 not(TCallNode(ANode).ProcDefinition.ProcTypeOption=potype_constructor) then
                                 Message(parser_e_only_class_members_via_class_ref);
                             end
                           else
@@ -1657,13 +1657,13 @@ implementation
                                         tparent.test;
                                       end;
                               }
-                              if (TCallNode(p1).ProcDefinition.ProcTypeOption<>potype_constructor) and
-                                 not(po_staticmethod in TCallNode(p1).ProcDefinition.ProcOptions) and
+                              if (TCallNode(ANode).ProcDefinition.ProcTypeOption<>potype_constructor) and
+                                 not(po_staticmethod in TCallNode(ANode).ProcDefinition.ProcOptions) and
                                  (not Assigned(CurrentStructDef) or
-                                  not Def_Is_Related(CurrentStructDef,structh)) then
+                                  not Def_Is_Related(CurrentStructDef,AStruct)) then
                                 begin
-                                  p1.free;
-                                  p1:=CErrorNode.Create;
+                                  ANode.free;
+                                  ANode:=CErrorNode.Create;
                                   Message(parser_e_only_static_members_via_object_type);
                                   exit;
                                 end;
@@ -1675,72 +1675,72 @@ implementation
                             variable of that type though as we don't know the
                             type of the class
                             Note: structh might be Nil in case of a type helper }
-                          if Assigned(structh) and
-                              (TCallNode(p1).ProcDefinition.ProcTypeOption=potype_constructor) and
-                              (oo_is_abstract in structh.ObjectOptions) and
-                              Assigned(TCallNode(p1).MethodPointer) and
-                              (TCallNode(p1).MethodPointer.nodetype=loadvmtaddrn) then
-                            Message1(type_w_instance_abstract_class,structh.RTTIName);
+                          if Assigned(AStruct) and
+                              (TCallNode(ANode).ProcDefinition.ProcTypeOption=potype_constructor) and
+                              (oo_is_abstract in AStruct.ObjectOptions) and
+                              Assigned(TCallNode(ANode).MethodPointer) and
+                              (TCallNode(ANode).MethodPointer.nodetype=loadvmtaddrn) then
+                            Message1(type_w_instance_abstract_class,AStruct.RTTIName);
                         end
                    end;
                  FieldVarSym:
                    begin
-                      if not Handle_StaticField_Access(sym,p1) then
+                      if not Handle_StaticField_Access(ASym,ANode) then
                         begin
-                          if isclassref then
-                            if Assigned(p1) and
+                          if lIsClassRef then
+                            if Assigned(ANode) and
                               (
-                                Is_Self_Node(p1) or
+                                Is_Self_Node(ANode) or
                                 (Assigned(CurrentProcInfo) and (CurrentProcInfo.Get_Normal_Proc.procdef.No_Self_Node) and
-                                (CurrentProcInfo.procdef.struct=structh))) then
+                                (CurrentProcInfo.procdef.struct=AStruct))) then
                               Message(parser_e_only_class_members)
                             else
                               Message(parser_e_only_class_members_via_class_ref);
-                          p1:=CSubscriptNode.Create(sym,p1);
+                          ANode:=CSubscriptNode.Create(ASym,ANode);
                         end;
                    end;
                  propertysym:
                    begin
-                      if isclassref and not (sp_static in sym.SymOptions) then
+                      if lIsClassRef and not (sp_static in ASym.SymOptions) then
                         Message(parser_e_only_class_members_via_class_ref);
-                      handle_propertysym(TPropertySym(sym),sym.owner,p1);
+                      HandlePropertySym(TPropertySym(ASym),ASym.owner,ANode);
                    end;
                  TypeSym:
                    begin
-                     p1.free;
-                     if try_to_consume(_LKLAMMER) then
+                     ANode.free;
+                     if TryToConsume(_LKLAMMER) then
                       begin
-                        p1:=comp_expr([ef_accept_equal]);
-                        consume(_RKLAMMER);
-                        p1:=CTypeConvNode.Create_Explicit(p1,TTypeSym(sym).TypeDef);
+                        ANode:=CompExpr([efAcceptEqual]);
+                        Consume(_RKLAMMER);
+                        ANode:=CTypeConvNode.Create_Explicit(ANode,TTypeSym(ASym).TypeDef);
                       end
                      else
                        begin
-                         p1:=CTypeNode.Create(TTypeSym(sym).TypeDef);
-                         if (Is_Class(TTypeSym(sym).TypeDef) or
-                             Is_ObjCClass(TTypeSym(sym).TypeDef)) and
+                         ANode:=CTypeNode.Create(TTypeSym(ASym).TypeDef);
+                         if (Is_Class(TTypeSym(ASym).TypeDef) or
+                             Is_ObjCClass(TTypeSym(ASym).TypeDef)) and
                             not(Block_Type in [bt_type,bt_const_type,bt_var_type]) then
-                           p1:=CLoadVMTAddrNode.Create(p1);
+                           ANode:=CLoadVMTAddrNode.Create(ANode);
                        end;
                    end;
                  constsym:
                    begin
-                     p1.free;
-                     p1:=GenConstSymTree(TConstSym(sym));
+                     ANode.free;
+                     ANode:=GenConstSymTree(TConstSym(ASym));
                    end;
                  staticvarsym:
                    begin
                      { typed constant is a staticvarsym
                        now they are absolutevarsym }
-                     p1.free;
-                     p1:=CLoadNode.Create(sym,sym.Owner);
+                     ANode.free;
+                     ANode:=CLoadNode.Create(ASym,ASym.Owner);
                    end;
                  absolutevarsym:
                    begin
-                     p1.free;
-                     p1:=nil;
+                     ANode.free;
+                     ANode:=nil;
                      { typed constants are absolutebarsyms now to handle storage properly }
-                     PropAccessList_To_Node(p1,nil,TAbsoluteVarSym(sym).Ref);
+                     PropAccessList_To_Node(ANode,nil,TAbsoluteVarSym(ASym).Ref);
                    end
                  else
                    InternalError(16);
@@ -1749,49 +1749,49 @@ implementation
       end;
 
 
-    function handle_specialize_inline_specialization(var srsym:TSym;enforce_unit:boolean;out srsymtable:TSymTable;out spezcontext:TSpecializationContext):boolean;
+    function HandleSpecializeInlineSpecialization(var ASym:TSym;AEnforceUnit:Boolean;out ASymTable:TSymTable;out ASpecializationContext:TSpecializationContext):Boolean;
       var
-        spezdef : TDef;
+        lSpecializeDef : TDef;
       begin
-        result:=false;
-        spezcontext:=nil;
-        srsymtable:=nil;
-        if not Assigned(srsym) then
-          message1(sym_e_id_no_member,CurrentScanner.orgpattern)
+        Result:=false;
+        ASpecializationContext:=nil;
+        ASymTable:=nil;
+        if not Assigned(ASym) then
+          message1(sym_e_id_no_member,CurrentScanner.FOrgPattern)
         else
-          if not (srsym.typ in [TypeSym,ProcSym]) then
+          if not (ASym.typ in [TypeSym,ProcSym]) then
             message(type_e_type_id_expected)
           else
             begin
-              if srsym.typ=TypeSym then
-                spezdef:=TTypeSym(srsym).TypeDef
-              else if TProcSym(srsym).procdeflist.count>0 then
-                spezdef:=TDef(TProcSym(srsym).procdeflist[0])
+              if ASym.typ=TypeSym then
+                lSpecializeDef:=TTypeSym(ASym).TypeDef
+              else if TProcSym(ASym).procdeflist.count>0 then
+                lSpecializeDef:=TDef(TProcSym(ASym).procdeflist[0])
               else
-                spezdef:=nil;
-              spezdef:=generate_specialization_phase1(spezcontext,spezdef,enforce_unit,srsym.realname,srsym.owner);
-              case spezdef.typ of
+                lSpecializeDef:=nil;
+              lSpecializeDef:=GenerateSpecializationPhase1(ASpecializationContext,lSpecializeDef,AEnforceUnit,ASym.realname,ASym.owner);
+              case lSpecializeDef.typ of
                 errordef:
                   begin
-                    spezcontext.free;
-                    spezcontext:=nil;
-                    srsym:=GenErrorSym;
+                    ASpecializationContext.free;
+                    ASpecializationContext:=nil;
+                    ASym:=GenErrorSym;
                   end;
                 procdef:
                   begin
                     if Block_Type<>bt_body then
                       begin
                         message(parser_e_illegal_expression);
-                        spezcontext.free;
-                        spezcontext:=nil;
-                        srsym:=GenErrorSym;
+                        ASpecializationContext.free;
+                        ASpecializationContext:=nil;
+                        ASym:=GenErrorSym;
                       end
                     else
                       begin
-                        srsym:=TProcDef(spezdef).ProcSym;
-                        srsymtable:=srsym.owner;
-                        nameof_record_sym(srsym);
-                        result:=true;
+                        ASym:=TProcDef(lSpecializeDef).ProcSym;
+                        ASymTable:=ASym.owner;
+                        NameOfRecordSym(ASym);
+                        Result:=true;
                       end;
                   end;
                 objectdef,
@@ -1799,16 +1799,16 @@ implementation
                 arraydef,
                 procvardef:
                   begin
-                    spezdef:=generate_specialization_phase2(spezcontext,TStoredDef(spezdef),false,'');
-                    spezcontext.free;
-                    spezcontext:=nil;
-                    if spezdef<>GenErrorDef then
+                    lSpecializeDef:=GenerateSpecializationPhase2(ASpecializationContext,TStoredDef(lSpecializeDef),false,'');
+                    ASpecializationContext.free;
+                    ASpecializationContext:=nil;
+                    if lSpecializeDef<>GenErrorDef then
                       begin
-                        srsym:=spezdef.TypeSym;
-                        srsymtable:=srsym.owner;
-                        Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                        nameof_record_sym(srsym);
-                        result:=true;
+                        ASym:=lSpecializeDef.TypeSym;
+                        ASymTable:=ASym.owner;
+                        Check_Hints(ASym,ASym.SymOptions,ASym.DeprecatedMsg);
+                        NameOfRecordSym(ASym);
+                        Result:=true;
                       end;
                   end;
                 else
@@ -1818,85 +1818,85 @@ implementation
       end;
 
 
-    function handle_factor_typenode(hdef:TDef;GetAddr:boolean;var again:boolean;sym:TSym;typeonly:boolean):TNode;
+    function HandleFactorTypeNode(ADef:TDef;AGetAddr:Boolean;var AAgain:Boolean;ASym:TSym;ATypeOnly:Boolean):TNode;
       var
-        srsym : TSym;
-        srsymtable : TSymTable;
-        erroroutresult,
-        isspecialize : boolean;
-        spezcontext : TSpecializationContext;
-        savedfilepos : TFilePosInfo;
+        lSearchSym : TSym;
+        lSearchSymTable : TSymTable;
+        lErrorOutResult,
+        lIsSpecialize : Boolean;
+        lSpecializationContext : TSpecializationContext;
+        lSavedFilePos : TFilePosInfo;
       begin
-         spezcontext:=nil;
-         if sym=nil then
-           sym:=hdef.TypeSym;
+         lSpecializationContext:=nil;
+         if ASym=nil then
+           ASym:=ADef.TypeSym;
          { allow Ordinal(Value) for type declarations since it
            can be an enumeration declaration or a set lke:
            (OrdinalType(const1)..OrdinalType(const2) }
-         if (not typeonly or Is_Ordinal(hdef)) and
-            try_to_consume(_LKLAMMER) then
+         if (not ATypeOnly or Is_Ordinal(ADef)) and
+            TryToConsume(_LKLAMMER) then
           begin
-            result:=comp_expr([ef_accept_equal]);
-            consume(_RKLAMMER);
+            Result:=CompExpr([efAcceptEqual]);
+            Consume(_RKLAMMER);
             { type casts to class helpers aren't allowed }
-            if Is_ObjectPascal_Helper(hdef) then
+            if Is_ObjectPascal_Helper(ADef) then
               Message(parser_e_no_category_as_types)
               { recovery by not creating a conversion node }
             else
               begin
-                result:=CTypeConvNode.Create_Explicit(result,hdef);
-                if Is_Currency(hdef) then
+                Result:=CTypeConvNode.Create_Explicit(Result,ADef);
+                if Is_Currency(ADef) then
                   { Make sure currency types are correctly scaled }
-                  Include(result.flags,nf_is_currency);
+                  Include(Result.flags,nf_is_currency);
               end;
           end
          { not LKLAMMER }
-         else if (CurrentScanner.token=_POINT) and
-            (Is_Object(hdef) or Is_Record(hdef)) then
+         else if (CurrentScanner.FToken=_POINT) and
+            (Is_Object(ADef) or Is_Record(ADef)) then
            begin
-             consume(_POINT);
+             Consume(_POINT);
              { handles calling methods declared in parent objects
                using "parentobject.methodname()" }
              if Assigned(CurrentStructDef) and
-                not(GetAddr) and
-                Def_Is_Related(CurrentStructDef,hdef) then
+                not(AGetAddr) and
+                Def_Is_Related(CurrentStructDef,ADef) then
                begin
-                 result:=CTypeNode.Create(hdef);
-                 TTypeNode(result).TypeSym:=sym;
+                 Result:=CTypeNode.Create(ADef);
+                 TTypeNode(Result).TypeSym:=ASym;
                  if not (m_delphi in CurrentSettings.ModeSwitches) and
-                     (Block_Type in inline_specialization_block_types) and
-                     (CurrentScanner.token=_ID) and
-                     (CurrentScanner.idtoken=_SPECIALIZE) then
+                     (Block_Type in cInlineSpecializationBlockTypes) and
+                     (CurrentScanner.FToken=_ID) and
+                     (CurrentScanner.FIDToken=_SPECIALIZE) then
                    begin
-                     consume(_ID);
-                     if CurrentScanner.token<>_ID then
+                     Consume(_ID);
+                     if CurrentScanner.FToken<>_ID then
                        message(type_e_type_id_expected);
-                     isspecialize:=true;
+                     lIsSpecialize:=true;
                    end
                  else
-                   isspecialize:=false;
+                   lIsSpecialize:=false;
                  { search also in inherited methods }
-                 SearchSym_In_Class(TObjectDef(hdef),TObjectDef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
-                 if isspecialize then
+                 SearchSym_In_Class(TObjectDef(ADef),TObjectDef(CurrentStructDef),CurrentScanner.FPattern,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                 if lIsSpecialize then
                    begin
-                     consume(_ID);
-                     if not handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
+                     Consume(_ID);
+                     if not HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
                        begin
-                         result.free;
-                         result:=CErrorNode.Create;
+                         Result.free;
+                         Result:=CErrorNode.Create;
                        end;
                    end
                  else
                    begin
-                     if Assigned(srsym) then
-                       Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                     consume(_ID);
+                     if Assigned(lSearchSym) then
+                       Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg);
+                     Consume(_ID);
                    end;
-                 if result.nodetype<>errorn then
-                   do_member_read(TAbstractRecordDef(hdef),false,srsym,result,again,[],spezcontext)
+                 if Result.nodetype<>errorn then
+                   DoMemberRead(TAbstractRecordDef(ADef),false,lSearchSym,Result,AAgain,[],lSpecializationContext)
                  else begin
-                   spezcontext.free;
-                   spezcontext := nil;
+                   lSpecializationContext.free;
+                   lSpecializationContext := nil;
                  end;
                end
              else
@@ -1904,54 +1904,54 @@ implementation
                 { handles:
                     * @TObject.Load
                     * static methods and variables }
-                result:=CTypeNode.Create(hdef);
-                TTypeNode(result).TypeSym:=sym;
+                Result:=CTypeNode.Create(ADef);
+                TTypeNode(Result).TypeSym:=ASym;
                 if not (m_delphi in CurrentSettings.ModeSwitches) and
-                    (Block_Type in inline_specialization_block_types) and
-                    (CurrentScanner.token=_ID) and
-                    (CurrentScanner.idtoken=_SPECIALIZE) then
+                    (Block_Type in cInlineSpecializationBlockTypes) and
+                    (CurrentScanner.FToken=_ID) and
+                    (CurrentScanner.FIDToken=_SPECIALIZE) then
                   begin
-                    consume(_ID);
-                    if CurrentScanner.token<>_ID then
+                    Consume(_ID);
+                    if CurrentScanner.FToken<>_ID then
                       message(type_e_type_id_expected);
-                    isspecialize:=true;
+                    lIsSpecialize:=true;
                   end
                 else
-                  isspecialize:=false;
-                erroroutresult:=true;
+                  lIsSpecialize:=false;
+                lErrorOutResult:=true;
                 { TP allows also @TMenu.Load if Load is only }
                 { defined in an ancestor class               }
-                srsym:=Search_Struct_Member(TAbstractRecordDef(hdef),CurrentScanner.pattern);
-                if isspecialize and Assigned(srsym) then
+                lSearchSym:=Search_Struct_Member(TAbstractRecordDef(ADef),CurrentScanner.FPattern);
+                if lIsSpecialize and Assigned(lSearchSym) then
                   begin
-                    consume(_ID);
-                    if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
-                      erroroutresult:=false;
+                    Consume(_ID);
+                    if HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
+                      lErrorOutResult:=false;
                   end
                 else
                   begin
-                    if Assigned(srsym) then
+                    if Assigned(lSearchSym) then
                       begin
-                        savedfilepos:=CurrentFilePos;
-                        consume(_ID);
-                        if not (sp_generic_dummy in srsym.SymOptions) or
-                            not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                          Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,savedfilepos)
+                        lSavedFilePos:=CurrentFilePos;
+                        Consume(_ID);
+                        if not (sp_generic_dummy in lSearchSym.SymOptions) or
+                            not (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
+                          Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg,lSavedFilePos)
                         else
-                          result:=CSpecializeNode.Create(result,GetAddr,srsym,false);
-                        erroroutresult:=false;
+                          Result:=CSpecializeNode.Create(Result,AGetAddr,lSearchSym,false);
+                        lErrorOutResult:=false;
                       end
                     else
-                      Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
+                      Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
                   end;
-                if erroroutresult then
+                if lErrorOutResult then
                   begin
-                    result.free;
-                    result:=CErrorNode.Create;
+                    Result.free;
+                    Result:=CErrorNode.Create;
                   end
                 else
-                  if result.nodetype<>specializen then
-                    do_member_read(TAbstractRecordDef(hdef),GetAddr,srsym,result,again,[],spezcontext);
+                  if Result.nodetype<>specializen then
+                    DoMemberRead(TAbstractRecordDef(ADef),AGetAddr,lSearchSym,Result,AAgain,[],lSpecializationContext);
               end;
            end
          else
@@ -1963,55 +1963,55 @@ implementation
               (for "TClassHelper" alone) and tcallnode.pass_1
               (for "TClassHelper.Something") }
             { class reference ? }
-            if Is_Class(hdef) or
-               Is_ObjCClass(hdef) then
+            if Is_Class(ADef) or
+               Is_ObjCClass(ADef) then
              begin
-               if GetAddr and (CurrentScanner.token=_POINT) then
+               if AGetAddr and (CurrentScanner.FToken=_POINT) then
                 begin
-                  consume(_POINT);
+                  Consume(_POINT);
                   { allows @Object.Method }
                   { also allows static methods and variables }
-                  result:=CTypeNode.Create(hdef);
-                  TTypeNode(result).TypeSym:=sym;
+                  Result:=CTypeNode.Create(ADef);
+                  TTypeNode(Result).TypeSym:=ASym;
                   { TP allows also @TMenu.Load if Load is only }
                   { defined in an ancestor class               }
-                  srsym:=Search_Struct_Member(TObjectDef(hdef),CurrentScanner.pattern);
-                  if Assigned(srsym) then
+                  lSearchSym:=Search_Struct_Member(TObjectDef(ADef),CurrentScanner.FPattern);
+                  if Assigned(lSearchSym) then
                    begin
-                     Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                     consume(_ID);
+                     Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg);
+                     Consume(_ID);
                      { in case of @Object.Method1.Method2, we have to call
                        Method1 -> create a loadvmtaddr node as self instead of
                        a typen (the typenode would be changed to self of the
                        current method in case Method1 is a constructor, see
                        mantis #24844) }
                      if not(Block_Type in [bt_type,bt_const_type,bt_var_type]) and
-                        (srsym.typ=ProcSym) and
-                        (CurrentScanner.token in [_CARET,_POINT]) then
-                       result:=CLoadVMTAddrNode.Create(result);
-                     do_member_read(TAbstractRecordDef(hdef),GetAddr,srsym,result,again,[],nil);
+                        (lSearchSym.typ=ProcSym) and
+                        (CurrentScanner.FToken in [_CARET,_POINT]) then
+                       Result:=CLoadVMTAddrNode.Create(Result);
+                     DoMemberRead(TAbstractRecordDef(ADef),AGetAddr,lSearchSym,Result,AAgain,[],nil);
                    end
                   else
                    begin
-                     Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
-                     consume(_ID);
+                     Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
+                     Consume(_ID);
                    end;
                 end
                else
                 begin
-                  result:=CTypeNode.Create(hdef);
-                  TTypeNode(result).TypeSym:=sym;
+                  Result:=CTypeNode.Create(ADef);
+                  TTypeNode(Result).TypeSym:=ASym;
                   { For a type block we simply return only
                     the type. For all other blocks we return
                     a loadvmt node }
                   if not(Block_Type in [bt_type,bt_const_type,bt_var_type]) then
-                    result:=CLoadVMTAddrNode.Create(result);
+                    Result:=CLoadVMTAddrNode.Create(Result);
                 end;
              end
             else
               begin
-                result:=CTypeNode.Create(hdef);
-                TTypeNode(result).TypeSym:=sym;
+                Result:=CTypeNode.Create(ADef);
+                TTypeNode(Result).TypeSym:=ASym;
               end;
           end;
       end;
@@ -2021,26 +2021,26 @@ implementation
 ****************************************************************************}
 
 {$push} {$R-}{$Q-} { Need to protect against integer overflows }
-    function real_const_node_from_pattern(const s:string):TNode;
+    function RealConstNodeFromPattern(const AText:String):TNode;
       var
-        d : BestReal;
-        code : integer;
+        lRealValue : BestReal;
+        lCode : Integer;
       begin
-        Val(s,d,code);
-        if code<>0 then
+        Val(AText,lRealValue,lCode);
+        if lCode<>0 then
          begin
            Message(parser_e_error_in_real);
-           d:=1.0;
+           lRealValue:=1.0;
          end;
         if (CurrentSettings.MinFPConstPrec=S32Real) and
-           (d = Single(d)) then
-          result:=CRealConstNode.Create(d,S32FloatType)
+           (lRealValue = Single(lRealValue)) then
+          Result:=CRealConstNode.Create(lRealValue,S32FloatType)
         else if (CurrentSettings.MinFPConstPrec=S64Real) and
-                (d = Double(d)) then
-          result:=CRealConstNode.Create(d,S64FloatType)
+                (lRealValue = Double(lRealValue)) then
+          Result:=CRealConstNode.Create(lRealValue,S64FloatType)
         else
-          result:=CRealConstNode.Create(d,PBestRealType^);
-        TRealConstNode(result).SetCurrencyLiteral(s);
+          Result:=CRealConstNode.Create(lRealValue,PBestRealType^);
+        TRealConstNode(Result).SetCurrencyLiteral(AText);
       end;
 {$pop}
 
@@ -2049,28 +2049,28 @@ implementation
 ---------------------------------------------}
 
     { returns whether or not p1 has been changed }
-    function postfixoperators(var p1:TNode;var again:boolean;GetAddr:boolean): boolean;
+    function PostfixOperators(var AOperand:TNode;var AAgain:Boolean;AGetAddr:Boolean): Boolean;
 
       { tries to avoid syntax errors after invalid qualifiers }
-      procedure recoverconsume_postfixops;
+      procedure RecoverConsumePostfixOps;
        begin
          repeat
-           if not try_to_consume(_CARET) then
-             if try_to_consume(_POINT) then
-               try_to_consume(_ID)
-             else if try_to_consume(_LECKKLAMMER) then
+           if not TryToConsume(_CARET) then
+             if TryToConsume(_POINT) then
+               TryToConsume(_ID)
+             else if TryToConsume(_LECKKLAMMER) then
                begin
                  repeat
-                   comp_expr([ef_accept_equal]);
-                 until not try_to_consume(_COMMA);
-                 consume(_RECKKLAMMER);
+                   CompExpr([efAcceptEqual]);
+                 until not TryToConsume(_COMMA);
+                 Consume(_RECKKLAMMER);
                end
-             else if try_to_consume(_LKLAMMER) and not try_to_consume(_RKLAMMER) then
+             else if TryToConsume(_LKLAMMER) and not TryToConsume(_RKLAMMER) then
                begin
                  repeat
-                   comp_expr([ef_accept_equal]);
-                 until not try_to_consume(_COMMA);
-                 consume(_RKLAMMER);
+                   CompExpr([efAcceptEqual]);
+                 until not TryToConsume(_COMMA);
+                 Consume(_RKLAMMER);
                end
              else
                break;
@@ -2078,300 +2078,300 @@ implementation
        end;
 
 
-      procedure handle_variantarray;
+      procedure HandleVariantArray;
        var
-         p4 : TNode;
-         newstatement : TStatementNode;
-         tempresultvariant,
-         temp    : TTempCreateNode;
-         paras : TCallParaNode;
-         newblock : TNode;
-         countindices : LongInt;
-         elements: TFPList;
-         arraydef: TDef;
+         lIndexNode : TNode;
+         lStatement : TStatementNode;
+         lResultVariantTemp,
+         lTemp    : TTempCreateNode;
+         lParas : TCallParaNode;
+         lBlock : TNode;
+         lIndexCount : LongInt;
+         lElements: TFPList;
+         lArrayDef: TDef;
        begin
          { create statements with call initialize the arguments and
            call fpc_dynarr_setlength }
-         newblock:=InternalStatements(newstatement);
+         lBlock:=InternalStatements(lStatement);
 
          { store all indices in a temporary array }
-         countindices:=0;
-         elements:=TFPList.Create;
+         lIndexCount:=0;
+         lElements:=TFPList.Create;
          repeat
-           p4:=comp_expr([ef_accept_equal]);
-           elements.add(p4);
-         until not try_to_consume(_COMMA);
+           lIndexNode:=CompExpr([efAcceptEqual]);
+           lElements.add(lIndexNode);
+         until not TryToConsume(_COMMA);
 
-         arraydef:=CArrayDef.getreusable(S32IntType,elements.count);
-         temp:=CTempCreateNode.Create(arraydef,arraydef.Size,tt_persistent,false);
-         AddStatement(newstatement,temp);
-         for countindices:=0 to elements.count-1 do
+         lArrayDef:=CArrayDef.getreusable(S32IntType,lElements.count);
+         lTemp:=CTempCreateNode.Create(lArrayDef,lArrayDef.Size,tt_persistent,false);
+         AddStatement(lStatement,lTemp);
+         for lIndexCount:=0 to lElements.count-1 do
            begin
-             AddStatement(newstatement,
+             AddStatement(lStatement,
                CAssignmentNode.Create(
                  CVecNode.Create(
-                   CTempRefNode.Create(temp),
-                   GenIntConstNode(countindices)
+                   CTempRefNode.Create(lTemp),
+                   GenIntConstNode(lIndexCount)
                  ),
-                 TNode(elements[countindices])
+                 TNode(lElements[lIndexCount])
                )
              );
            end;
-         countindices:=elements.count;
-         elements.free;
-         elements := nil;
+         lIndexCount:=lElements.count;
+         lElements.free;
+         lElements := nil;
 
-         consume(_RECKKLAMMER);
+         Consume(_RECKKLAMMER);
 
          { we need only a write access if a := follows }
-         if CurrentScanner.token=_ASSIGNMENT then
+         if CurrentScanner.FToken=_ASSIGNMENT then
            begin
-             consume(_ASSIGNMENT);
-             p4:=comp_expr([ef_accept_equal]);
+             Consume(_ASSIGNMENT);
+             lIndexNode:=CompExpr([efAcceptEqual]);
 
              { create call to fpc_vararray_put }
-             paras:=CCallParaNode.Create(COrdConstNode.Create
-                   (countindices,S32IntType,true),
+             lParas:=CCallParaNode.Create(COrdConstNode.Create
+                   (lIndexCount,S32IntType,true),
                 CCallParaNode.Create(CAddrNode.Create_Internal
-               (CVecNode.Create(CTempRefNode.Create(temp),GenIntConstNode(0))),
-                CCallParaNode.Create(CTypeConvNode.Create_Internal(p4,CVariantType),
-                CCallParaNode.Create(CTypeConvNode.Create_Internal(p1,CVariantType)
+               (CVecNode.Create(CTempRefNode.Create(lTemp),GenIntConstNode(0))),
+                CCallParaNode.Create(CTypeConvNode.Create_Internal(lIndexNode,CVariantType),
+                CCallParaNode.Create(CTypeConvNode.Create_Internal(AOperand,CVariantType)
                   ,nil))));
 
-             AddStatement(newstatement,CCallNode.CreateIntern('fpc_vararray_put',paras));
-             AddStatement(newstatement,CTempDeleteNode.Create(temp));
+             AddStatement(lStatement,CCallNode.CreateIntern('fpc_vararray_put',lParas));
+             AddStatement(lStatement,CTempDeleteNode.Create(lTemp));
            end
          else
            begin
              { create temp for result }
-             tempresultvariant:=CTempCreateNode.Create(CVariantType,CVariantType.Size,tt_persistent,true);
-             AddStatement(newstatement,tempresultvariant);
+             lResultVariantTemp:=CTempCreateNode.Create(CVariantType,CVariantType.Size,tt_persistent,true);
+             AddStatement(lStatement,lResultVariantTemp);
 
              { create call to fpc_vararray_get }
-             paras:=CCallParaNode.Create(COrdConstNode.Create
-                   (countindices,S32IntType,true),
+             lParas:=CCallParaNode.Create(COrdConstNode.Create
+                   (lIndexCount,S32IntType,true),
                 CCallParaNode.Create(CAddrNode.Create_Internal
-               (CTempRefNode.Create(temp)),
-                CCallParaNode.Create(p1,
+               (CTempRefNode.Create(lTemp)),
+                CCallParaNode.Create(AOperand,
                 CCallParaNode.Create(
-                    CTempRefNode.Create(tempresultvariant)
+                    CTempRefNode.Create(lResultVariantTemp)
                   ,nil))));
 
-             AddStatement(newstatement,CCallNode.CreateIntern('fpc_vararray_get',paras));
-             AddStatement(newstatement,CTempDeleteNode.Create(temp));
+             AddStatement(lStatement,CCallNode.CreateIntern('fpc_vararray_get',lParas));
+             AddStatement(lStatement,CTempDeleteNode.Create(lTemp));
              { the last statement should return the value as
                location and type, this is done be referencing the
                temp and converting it first from a persistent temp to
                normal temp }
-             AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(tempresultvariant));
-             AddStatement(newstatement,CTempRefNode.Create(tempresultvariant));
+             AddStatement(lStatement,CTempDeleteNode.Create_Normal_Temp(lResultVariantTemp));
+             AddStatement(lStatement,CTempRefNode.Create(lResultVariantTemp));
            end;
-         p1:=newblock;
+         AOperand:=lBlock;
        end;
 
-      function parse_array_constructor(arrdef:TArrayDef): TNode;
+      function ParseArrayConstructor(AArrayDef:TArrayDef): TNode;
         var
-          newstatement,assstatement:TStatementNode;
-          arrnode:TTempCreateNode;
-          temp2:TTempCreateNode;
-          assnode:TNode;
-          paracount:integer;
+          lStatement,lAssignmentStatement:TStatementNode;
+          lArrayTemp:TTempCreateNode;
+          lTempNode:TTempCreateNode;
+          lAssignmentNode:TNode;
+          lParaCount:Integer;
         begin
-          result:=InternalStatements(newstatement);
+          Result:=InternalStatements(lStatement);
           { create temp for result }
-          arrnode:=CTempCreateNode.Create(arrdef,arrdef.Size,tt_persistent,true);
-          AddStatement(newstatement,arrnode);
+          lArrayTemp:=CTempCreateNode.Create(AArrayDef,AArrayDef.Size,tt_persistent,true);
+          AddStatement(lStatement,lArrayTemp);
 
-          paracount:=0;
+          lParaCount:=0;
           { check arguments and create an assignment calls }
-          if try_to_consume(_LKLAMMER) then
+          if TryToConsume(_LKLAMMER) then
             begin
-              assnode:=InternalStatements(assstatement);
+              lAssignmentNode:=InternalStatements(lAssignmentStatement);
               repeat
                 { arr[i] := param_i }
-                AddStatement(assstatement,
+                AddStatement(lAssignmentStatement,
                   CAssignmentNode.Create(
                     CVecNode.Create(
-                      CTempRefNode.Create(arrnode),
-                      COrdConstNode.Create(paracount,arrdef.RangeDef,false)),
-                    comp_expr([ef_accept_equal])));
-                inc(paracount);
-              until not try_to_consume(_COMMA);
-              consume(_RKLAMMER);
+                      CTempRefNode.Create(lArrayTemp),
+                      COrdConstNode.Create(lParaCount,AArrayDef.RangeDef,false)),
+                    CompExpr([efAcceptEqual])));
+                inc(lParaCount);
+              until not TryToConsume(_COMMA);
+              Consume(_RKLAMMER);
             end
           else
-            assnode:=nil;
+            lAssignmentNode:=nil;
 
           { get temp for array of lengths }
-          temp2:=CTempCreateNode.Create(SIntType,SIntType.Size,tt_persistent,false);
-          AddStatement(newstatement,temp2);
+          lTempNode:=CTempCreateNode.Create(SIntType,SIntType.Size,tt_persistent,false);
+          AddStatement(lStatement,lTempNode);
 
           { one dimensional }
-          AddStatement(newstatement,CAssignmentNode.Create(
-              CTempRefNode.Create(temp2),
+          AddStatement(lStatement,CAssignmentNode.Create(
+              CTempRefNode.Create(lTempNode),
               COrdConstNode.Create
-                 (paracount,S32IntType,true)));
+                 (lParaCount,S32IntType,true)));
           { create call to fpc_dynarr_setlength }
-          AddStatement(newstatement,CCallNode.CreateIntern('fpc_dynarray_setlength',
+          AddStatement(lStatement,CCallNode.CreateIntern('fpc_dynarray_setlength',
               CCallParaNode.Create(CAddrNode.Create_Internal
-                    (CTempRefNode.Create(temp2)),
+                    (CTempRefNode.Create(lTempNode)),
                  CCallParaNode.Create(COrdConstNode.Create
                     (1,S32IntType,true),
                  CCallParaNode.Create(CAddrNode.Create_Internal
-                    (CRTTINode.Create(TStoredDef(arrdef),initrtti,rdt_normal)),
+                    (CRTTINode.Create(TStoredDef(AArrayDef),initrtti,rdt_normal)),
                  CCallParaNode.Create(
                    CTypeConvNode.Create_Internal(
-                     CTempRefNode.Create(arrnode),VoidPointerType),
+                     CTempRefNode.Create(lArrayTemp),VoidPointerType),
                    nil))))
 
             ));
           { add assignment statements }
-          AddStatement(newstatement,CTempDeleteNode.Create(temp2));
-          if Assigned(assnode) then
-            AddStatement(newstatement,assnode);
+          AddStatement(lStatement,CTempDeleteNode.Create(lTempNode));
+          if Assigned(lAssignmentNode) then
+            AddStatement(lStatement,lAssignmentNode);
           { the last statement should return the value as
             location and type, this is done be referencing the
             temp and converting it first from a persistent temp to
             normal temp }
-          AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(arrnode));
-          AddStatement(newstatement,CTempRefNode.Create(arrnode));
+          AddStatement(lStatement,CTempDeleteNode.Create_Normal_Temp(lArrayTemp));
+          AddStatement(lStatement,CTempRefNode.Create(lArrayTemp));
         end;
 
-      function try_type_helper(var node:TNode;def:TDef):boolean;
+      function TryTypeHelper(var ANode:TNode;ADef:TDef):Boolean;
         var
-          srsym : TSym;
-          srsymtable : TSymTable;
-          n : TNode;
-          newstatement : TStatementNode;
-          temp : TTempCreateNode;
-          extdef : TDef;
+          lSearchSym : TSym;
+          lSearchSymTable : TSymTable;
+          lNode : TNode;
+          lStatement : TStatementNode;
+          lTemp : TTempCreateNode;
+          lExtendedDef : TDef;
         begin
-          result:=false;
-          if (CurrentScanner.token=_ID) and (Block_Type in [bt_body,bt_general,bt_except,bt_const]) then
+          Result:=false;
+          if (CurrentScanner.FToken=_ID) and (Block_Type in [bt_body,bt_general,bt_except,bt_const]) then
             begin
-              if not Assigned(def) then
-                if node.nodetype=addrn then
+              if not Assigned(ADef) then
+                if ANode.nodetype=addrn then
                   { always use the pointer type for addr nodes as otherwise
                     we'll have an anonymous pointertype with no name }
-                  def:=VoidPointerType
+                  ADef:=VoidPointerType
                 else
-                  def:=node.resultdef;
-              result:=Search_ObjectPascal_Helper(def,nil,CurrentScanner.pattern,srsym,srsymtable);
-              if result then
+                  ADef:=ANode.resultdef;
+              Result:=Search_ObjectPascal_Helper(ADef,nil,CurrentScanner.FPattern,lSearchSym,lSearchSymTable);
+              if Result then
                 begin
-                  if not (srsymtable.SymTableType=objectsymtable) or
-                      not Is_ObjectPascal_Helper(TDef(srsymtable.DefOwner)) then
+                  if not (lSearchSymTable.SymTableType=objectsymtable) or
+                      not Is_ObjectPascal_Helper(TDef(lSearchSymTable.DefOwner)) then
                     InternalError(2013011401);
                   { convert const node to temp node of the extended type }
-                  if node.nodetype in (cNodeTypeConst+[addrn]) then
+                  if ANode.nodetype in (cNodeTypeConst+[addrn]) then
                     begin
-                      extdef:=TObjectDef(srsymtable.DefOwner).ExtendedDef;
-                      newstatement:=nil;
-                      n:=InternalStatements(newstatement);
-                      temp:=CTempCreateNode.Create(extdef,extdef.Size,tt_persistent,false);
-                      AddStatement(newstatement,temp);
-                      AddStatement(newstatement,CAssignmentNode.Create(CTempRefNode.Create(temp),node));
-                      AddStatement(newstatement,CTempDeleteNode.Create_Normal_Temp(temp));
-                      AddStatement(newstatement,CTempRefNode.Create(temp));
-                      node:=n;
-                      DoTypeCheckPass(node)
+                      lExtendedDef:=TObjectDef(lSearchSymTable.DefOwner).ExtendedDef;
+                      lStatement:=nil;
+                      lNode:=InternalStatements(lStatement);
+                      lTemp:=CTempCreateNode.Create(lExtendedDef,lExtendedDef.Size,tt_persistent,false);
+                      AddStatement(lStatement,lTemp);
+                      AddStatement(lStatement,CAssignmentNode.Create(CTempRefNode.Create(lTemp),ANode));
+                      AddStatement(lStatement,CTempDeleteNode.Create_Normal_Temp(lTemp));
+                      AddStatement(lStatement,CTempRefNode.Create(lTemp));
+                      ANode:=lNode;
+                      DoTypeCheckPass(ANode)
                     end;
-                  Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                  consume(_ID);
-                  do_member_read(nil,GetAddr,srsym,node,again,[],nil);
+                  Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg);
+                  Consume(_ID);
+                  DoMemberRead(nil,AGetAddr,lSearchSym,ANode,AAgain,[],nil);
                 end;
             end;
         end;
 
     var
-     protsym  : TPropertySym;
-     p2,p3  : TNode;
-     srsym  : TSym;
-     srsymtable : TSymTable;
-     structh    : TAbstractRecordDef;
+     lPropertySym  : TPropertySym;
+     lSecondNode,lThirdNode  : TNode;
+     lSearchSym  : TSym;
+     lSearchSymTable : TSymTable;
+     lStruct    : TAbstractRecordDef;
      { shouldn't be used that often, so the extra overhead is ok to save
        stack space }
-     dispatchstring : AnsiString;
-     autoderef,
-     erroroutp1,
-     allowspecialize,
-     isspecialize,
-     found,
-     haderror,
-     nodechanged    : boolean;
-     calltype: TDispCallType;
-     valstr,expstr : string;
-     intval : qword;
-     code : integer;
-     strdef : TDef;
-     spezcontext : TSpecializationContext;
-     old_current_filepos : TFilePosInfo;
+     lDispatchString : AnsiString;
+     lAutoDeref,
+     lErrorOutOperand,
+     lAllowSpecialize,
+     lIsSpecialize,
+     lFound,
+     lHadError,
+     lNodeChanged    : Boolean;
+     lCallType: TDispCallType;
+     lValueString,lExponentString : String;
+     lIntValue : QWord;
+     lCode : Integer;
+     lStringDef : TDef;
+     lSpecializationContext : TSpecializationContext;
+     lOldCurrentFilePos : TFilePosInfo;
     label
-     skipreckklammercheck,
-     skippointdefcheck;
+     SkipRecKlammerCheck,
+     SkipPointDefCheck;
     begin
-     result:=false;
-     again:=true;
-     while again do
+     Result:=false;
+     AAgain:=true;
+     while AAgain do
       begin
-        spezcontext:=nil;
+        lSpecializationContext:=nil;
         { we need the resultdef }
-        DoTypeCheckPassChanged(p1,nodechanged);
-        result:=result or nodechanged;
+        DoTypeCheckPassChanged(AOperand,lNodeChanged);
+        Result:=Result or lNodeChanged;
 
         if CodeGenError then
          begin
-           recoverconsume_postfixops;
+           RecoverConsumePostfixOps;
            exit;
          end;
         { handle token }
-        case CurrentScanner.token of
+        case CurrentScanner.FToken of
           _CARET:
              begin
-               consume(_CARET);
+               Consume(_CARET);
 
                { support in tp/mac procvar mode procvar^ if the procvar returns a
                  pointer type }
                if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                    (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                  (p1.resultdef.typ=procvardef) and
-                  (TProcVarDef(p1.resultdef).ReturnDef.typ=pointerdef) then
+                  (AOperand.resultdef.typ=procvardef) and
+                  (TProcVarDef(AOperand.resultdef).ReturnDef.typ=pointerdef) then
                  begin
-                   p1:=CCallNode.Create_ProcVar(nil,p1);
-                   TypeCheckPass(p1);
+                   AOperand:=CCallNode.Create_ProcVar(nil,AOperand);
+                   TypeCheckPass(AOperand);
                  end;
 
                { iso file buf access? }
                if (m_isolike_io in CurrentSettings.ModeSwitches) and
-                 (p1.resultdef.typ=filedef) then
+                 (AOperand.resultdef.typ=filedef) then
                  begin
-                   case TFileDef(p1.resultdef).FileTyp of
+                   case TFileDef(AOperand.resultdef).FileTyp of
                      ft_text:
                        begin
-                         p1:=CDerefNode.Create(CCallNode.CreateIntern('fpc_getbuf_text',CCallParaNode.Create(p1,nil)));
-                         TypeCheckPass(p1);
+                         AOperand:=CDerefNode.Create(CCallNode.CreateIntern('fpc_getbuf_text',CCallParaNode.Create(AOperand,nil)));
+                         TypeCheckPass(AOperand);
                        end;
                      ft_typed:
                        begin
-                         p1:=CDerefNode.Create(CTypeConvNode.Create_Internal(CCallNode.CreateIntern('fpc_getbuf_typedfile',CCallParaNode.Create(p1,nil)),
-                           CPointerDef.getreusable(TFileDef(p1.resultdef).TypedFileDef)));
-                         TypeCheckPass(p1);
+                         AOperand:=CDerefNode.Create(CTypeConvNode.Create_Internal(CCallNode.CreateIntern('fpc_getbuf_typedfile',CCallParaNode.Create(AOperand,nil)),
+                           CPointerDef.getreusable(TFileDef(AOperand.resultdef).TypedFileDef)));
+                         TypeCheckPass(AOperand);
                        end;
                      else
                        InternalError(2019050530);
                    end;
                  end
-               else if not(p1.resultdef.typ in [pointerdef,undefineddef]) then
+               else if not(AOperand.resultdef.typ in [pointerdef,undefineddef]) then
                  begin
                     { ^ as binary operator is a problem!!!! (FK) }
-                    again:=false;
+                    AAgain:=false;
                     Message(parser_e_invalid_qualifier);
-                    recoverconsume_postfixops;
-                    p1.free;
-                    p1:=CErrorNode.Create;
+                    RecoverConsumePostfixOps;
+                    AOperand.free;
+                    AOperand:=CErrorNode.Create;
                  end
                else
-                 p1:=CDerefNode.Create(p1);
+                 AOperand:=CDerefNode.Create(AOperand);
              end;
 
           _LECKKLAMMER:
@@ -2380,368 +2380,368 @@ implementation
                  array type }
                if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                    (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                  (p1.resultdef.typ=procvardef) and
-                  (TProcVarDef(p1.resultdef).ReturnDef.typ=arraydef) then
+                  (AOperand.resultdef.typ=procvardef) and
+                  (TProcVarDef(AOperand.resultdef).ReturnDef.typ=arraydef) then
                  begin
-                   p1:=CCallNode.Create_ProcVar(nil,p1);
-                   TypeCheckPass(p1);
+                   AOperand:=CCallNode.Create_ProcVar(nil,AOperand);
+                   TypeCheckPass(AOperand);
                  end;
 
-               if Is_Class_Or_Interface_Or_Object(p1.resultdef) or
-                  Is_DispInterface(p1.resultdef) or
-                  Is_Record(p1.resultdef) then
+               if Is_Class_Or_Interface_Or_Object(AOperand.resultdef) or
+                  Is_DispInterface(AOperand.resultdef) or
+                  Is_Record(AOperand.resultdef) then
                  begin
                    { default property }
-                   protsym:=Search_Default_Property(TAbstractRecordDef(p1.resultdef));
-                   if not(Assigned(protsym)) then
+                   lPropertySym:=Search_Default_Property(TAbstractRecordDef(AOperand.resultdef));
+                   if not(Assigned(lPropertySym)) then
                      begin
-                        p1.free;
-                        p1:=CErrorNode.Create;
-                        again:=false;
+                        AOperand.free;
+                        AOperand:=CErrorNode.Create;
+                        AAgain:=false;
                         message(parser_e_no_default_property_available);
                      end
                    else
                      begin
                        { The property symbol is referenced indirect }
-                       protsym.IncRefCount;
-                       handle_propertysym(protsym,protsym.owner,p1);
+                       lPropertySym.IncRefCount;
+                       HandlePropertySym(lPropertySym,lPropertySym.owner,AOperand);
                      end;
                  end
                else
                  begin
-                   consume(_LECKKLAMMER);
+                   Consume(_LECKKLAMMER);
                    repeat
                      { in all of the cases below, p1 is changed }
-                     case p1.resultdef.typ of
+                     case AOperand.resultdef.typ of
                        pointerdef:
                          begin
                             { support delphi autoderef }
-                            if (TPointerDef(p1.resultdef).PointedDef.typ=arraydef) and
+                            if (TPointerDef(AOperand.resultdef).PointedDef.typ=arraydef) and
                                (m_autoderef in CurrentSettings.ModeSwitches) then
-                              p1:=CDerefNode.Create(p1);
-                            p2:=comp_expr([ef_accept_equal]);
+                              AOperand:=CDerefNode.Create(AOperand);
+                            lSecondNode:=CompExpr([efAcceptEqual]);
                             { Support Pbytevar[0..9] which returns array [0..9].}
-                            if try_to_consume(_POINTPOINT) then
-                              p2:=CRangeNode.Create(p2,comp_expr([ef_accept_equal]));
-                            p1:=CVecNode.Create(p1,p2);
+                            if TryToConsume(_POINTPOINT) then
+                              lSecondNode:=CRangeNode.Create(lSecondNode,CompExpr([efAcceptEqual]));
+                            AOperand:=CVecNode.Create(AOperand,lSecondNode);
                          end;
                        variantdef:
                          begin
-                           handle_variantarray;
+                           HandleVariantArray;
                            { the RECKKLAMMER is already read }
-                           goto skipreckklammercheck;
+                           goto SkipRecKlammerCheck;
                          end;
                        stringdef :
                          begin
-                           p2:=comp_expr([ef_accept_equal]);
+                           lSecondNode:=CompExpr([efAcceptEqual]);
                            { Support string[0..9] which returns array [0..9] of char.}
-                           if try_to_consume(_POINTPOINT) then
-                             p2:=CRangeNode.Create(p2,comp_expr([ef_accept_equal]));
-                           p1:=CVecNode.Create(p1,p2);
+                           if TryToConsume(_POINTPOINT) then
+                             lSecondNode:=CRangeNode.Create(lSecondNode,CompExpr([efAcceptEqual]));
+                           AOperand:=CVecNode.Create(AOperand,lSecondNode);
                          end;
                        arraydef:
                          begin
-                           p2:=comp_expr([ef_accept_equal]);
-                           if try_to_consume(_POINTPOINT) then
+                           lSecondNode:=CompExpr([efAcceptEqual]);
+                           if TryToConsume(_POINTPOINT) then
                              { Support arrayvar[0..9] which returns array [0..9] of arraytype.}
-                             p2:=CRangeNode.Create(p2,comp_expr([ef_accept_equal]));
-                           p1:=CVecNode.Create(p1,p2);
+                             lSecondNode:=CRangeNode.Create(lSecondNode,CompExpr([efAcceptEqual]));
+                           AOperand:=CVecNode.Create(AOperand,lSecondNode);
                          end;
                        else
                          begin
-                           if p1.resultdef.typ<>undefineddef then
+                           if AOperand.resultdef.typ<>undefineddef then
                              Message(parser_e_invalid_qualifier);
-                           p1.free;
-                           p1:=CErrorNode.Create;
-                           comp_expr([ef_accept_equal]);
-                           again:=false;
+                           AOperand.free;
+                           AOperand:=CErrorNode.Create;
+                           CompExpr([efAcceptEqual]);
+                           AAgain:=false;
                          end;
                      end;
-                     DoTypeCheckPass(p1);
-                   until not try_to_consume(_COMMA);
-                   consume(_RECKKLAMMER);
+                     DoTypeCheckPass(AOperand);
+                   until not TryToConsume(_COMMA);
+                   Consume(_RECKKLAMMER);
                    { handle_variantarray eats the RECKKLAMMER and jumps here }
-                 skipreckklammercheck:
+                 SkipRecKlammerCheck:
                  end;
              end;
 
           _POINT :
              begin
-               consume(_POINT);
-               allowspecialize:=not (m_delphi in CurrentSettings.ModeSwitches) and (Block_Type in inline_specialization_block_types);
-               if allowspecialize and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_SPECIALIZE) then
+               Consume(_POINT);
+               lAllowSpecialize:=not (m_delphi in CurrentSettings.ModeSwitches) and (Block_Type in cInlineSpecializationBlockTypes);
+               if lAllowSpecialize and (CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_SPECIALIZE) then
                  begin
                    //consume(_ID);
-                   isspecialize:=true;
+                   lIsSpecialize:=true;
                  end
                else
-                 isspecialize:=false;
-               autoderef:=false;
-               if (p1.resultdef.typ=pointerdef) and
+                 lIsSpecialize:=false;
+               lAutoDeref:=false;
+               if (AOperand.resultdef.typ=pointerdef) and
                   (m_autoderef in CurrentSettings.ModeSwitches) and
                   { don't auto-deref objc.id, because then the code
                     below for supporting id.anyobjcmethod isn't triggered }
-                  (p1.resultdef<>ObjC_IDType) then
+                  (AOperand.resultdef<>ObjC_IDType) then
                  begin
-                   p1:=CDerefNode.Create(p1);
-                   DoTypeCheckPass(p1);
-                   autoderef:=true;
+                   AOperand:=CDerefNode.Create(AOperand);
+                   DoTypeCheckPass(AOperand);
+                   lAutoDeref:=true;
                  end;
                { procvar.<something> can never mean anything so always
                  try to call it in case it returns a record/object/... }
-               Maybe_Call_ProcVar(p1,Is_Invokable(p1.resultdef) and not Is_FuncRef(p1.resultdef));
+               Maybe_Call_ProcVar(AOperand,Is_Invokable(AOperand.resultdef) and not Is_FuncRef(AOperand.resultdef));
 
-               if (p1.nodetype=ordconstn) and
-                   not Is_Boolean(p1.resultdef) and
-                   not Is_Enum(p1.resultdef) then
+               if (AOperand.nodetype=ordconstn) and
+                   not Is_Boolean(AOperand.resultdef) and
+                   not Is_Enum(AOperand.resultdef) then
                  begin
                    { type helpers are checked first }
-                   if (CurrentScanner.token=_ID) and try_type_helper(p1,nil) then
-                     goto skippointdefcheck;
+                   if (CurrentScanner.FToken=_ID) and TryTypeHelper(AOperand,nil) then
+                     goto SkipPointDefCheck;
                    { only an "e" or "E" can follow an intconst with a ".", the
                      other case (another intconst) is handled by the scanner }
-                   if (CurrentScanner.token=_ID) and (CurrentScanner.pattern[1]='E') then
+                   if (CurrentScanner.FToken=_ID) and (CurrentScanner.FPattern[1]='E') then
                      begin
-                       haderror:=false;
-                       if length(CurrentScanner.pattern)>1 then
+                       lHadError:=false;
+                       if length(CurrentScanner.FPattern)>1 then
                          begin
-                           expstr:=copy(CurrentScanner.pattern,2,length(CurrentScanner.pattern)-1);
-                           val(expstr,intval,code);
-                           if code<>0 then
+                           lExponentString:=copy(CurrentScanner.FPattern,2,length(CurrentScanner.FPattern)-1);
+                           val(lExponentString,lIntValue,lCode);
+                           if lCode<>0 then
                              begin
-                               haderror:=true;
-                               intval:=intval; // Hackfix the "var assigned but never used" note.
+                               lHadError:=true;
+                               lIntValue:=lIntValue; // Hackfix the "var assigned but never used" note.
                              end;
                          end
                        else
-                         expstr:='';
-                       consume(CurrentScanner.token);
-                       if TOrdConstNode(p1).Value.signed then
-                         str(TOrdConstNode(p1).Value.svalue,valstr)
+                         lExponentString:='';
+                       Consume(CurrentScanner.FToken);
+                       if TOrdConstNode(AOperand).Value.signed then
+                         str(TOrdConstNode(AOperand).Value.svalue,lValueString)
                        else
-                         str(TOrdConstNode(p1).Value.uvalue,valstr);
-                       valstr:=valstr+'.0E';
-                       if expstr='' then
-                         case CurrentScanner.token of
+                         str(TOrdConstNode(AOperand).Value.uvalue,lValueString);
+                       lValueString:=lValueString+'.0E';
+                       if lExponentString='' then
+                         case CurrentScanner.FToken of
                            _MINUS:
                              begin
-                               consume(CurrentScanner.token);
-                               if CurrentScanner.token=_INTCONST then
+                               Consume(CurrentScanner.FToken);
+                               if CurrentScanner.FToken=_INTCONST then
                                  begin
-                                   valstr:=valstr+'-'+CurrentScanner.pattern;
-                                   consume(CurrentScanner.token);
+                                   lValueString:=lValueString+'-'+CurrentScanner.FPattern;
+                                   Consume(CurrentScanner.FToken);
                                  end
                                else
-                                 haderror:=true;
+                                 lHadError:=true;
                              end;
                            _PLUS:
                              begin
-                               consume(CurrentScanner.token);
-                               if CurrentScanner.token=_INTCONST then
+                               Consume(CurrentScanner.FToken);
+                               if CurrentScanner.FToken=_INTCONST then
                                  begin
-                                   valstr:=valstr+CurrentScanner.pattern;
-                                   consume(CurrentScanner.token);
+                                   lValueString:=lValueString+CurrentScanner.FPattern;
+                                   Consume(CurrentScanner.FToken);
                                  end
                                else
-                                 haderror:=true;
+                                 lHadError:=true;
                              end;
                            _INTCONST:
                              begin
-                               valstr:=valstr+CurrentScanner.pattern;
-                               consume(_INTCONST);
+                               lValueString:=lValueString+CurrentScanner.FPattern;
+                               Consume(_INTCONST);
                              end;
                            else
-                             haderror:=true;
+                             lHadError:=true;
                          end
                        else
-                         valstr:=valstr+expstr;
-                       if haderror then
+                         lValueString:=lValueString+lExponentString;
+                       if lHadError then
                          begin
                            Message(parser_e_error_in_real);
-                           p2:=CErrorNode.Create;
+                           lSecondNode:=CErrorNode.Create;
                          end
                        else
-                         p2:=real_const_node_from_pattern(valstr);
-                       p1.free;
-                       p1:=p2;
-                       again:=false;
-                       goto skippointdefcheck;
+                         lSecondNode:=RealConstNodeFromPattern(lValueString);
+                       AOperand.free;
+                       AOperand:=lSecondNode;
+                       AAgain:=false;
+                       goto SkipPointDefCheck;
                      end
                    else
                      begin
                        { just convert the ordconst to a realconst }
-                       p2:=CRealConstNode.Create(TOrdConstNode(p1).Value,PBestRealType^);
-                       p1.free;
-                       p1:=p2;
-                       again:=false;
-                       goto skippointdefcheck;
+                       lSecondNode:=CRealConstNode.Create(TOrdConstNode(AOperand).Value,PBestRealType^);
+                       AOperand.free;
+                       AOperand:=lSecondNode;
+                       AAgain:=false;
+                       goto SkipPointDefCheck;
                      end;
                  end;
 
-               if (p1.nodetype=stringconstn) and (CurrentScanner.token=_ID) then
+               if (AOperand.nodetype=stringconstn) and (CurrentScanner.FToken=_ID) then
                  begin
-                   strdef:=nil;
+                   lStringDef:=nil;
                    { the def of a string const is an array }
-                   case TStringConstNode(p1).ConstStringType of
+                   case TStringConstNode(AOperand).ConstStringType of
                      cst_conststring:
                        if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                          if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                           strdef:=CUnicodeStringType
+                           lStringDef:=CUnicodeStringType
                          else
-                           strdef:=CAnsiStringType
+                           lStringDef:=CAnsiStringType
                        else
-                         strdef:=CShortStringType;
+                         lStringDef:=CShortStringType;
                      cst_shortstring:
-                       strdef:=CShortStringType;
+                       lStringDef:=CShortStringType;
                      cst_ansistring:
                        { use getansistringdef? }
-                       strdef:=CAnsiStringType;
+                       lStringDef:=CAnsiStringType;
                      cst_widestring:
-                       strdef:=CWideStringType;
+                       lStringDef:=CWideStringType;
                      cst_unicodestring:
-                       strdef:=CUnicodeStringType;
+                       lStringDef:=CUnicodeStringType;
                      cst_longstring:
                        { let's see when someone stumbles upon this...}
                        InternalError(201301111);
                    end;
-                   if try_type_helper(p1,strdef) then
-                     goto skippointdefcheck;
+                   if TryTypeHelper(AOperand,lStringDef) then
+                     goto SkipPointDefCheck;
                  end;
 
                { this is skipped if label skippointdefcheck is used }
-               case p1.resultdef.typ of
+               case AOperand.resultdef.typ of
                  recorddef:
                    begin
-                     if isspecialize or (CurrentScanner.token=_ID) then
+                     if lIsSpecialize or (CurrentScanner.FToken=_ID) then
                        begin
-                         erroroutp1:=true;
-                         srsym:=nil;
-                         structh:=TAbstractRecordDef(p1.resultdef);
-                         if isspecialize then
+                         lErrorOutOperand:=true;
+                         lSearchSym:=nil;
+                         lStruct:=TAbstractRecordDef(AOperand.resultdef);
+                         if lIsSpecialize then
                            begin
                              { consume the specialize }
-                             consume(_ID);
-                             if CurrentScanner.token<>_ID then
-                               consume(_ID)
+                             Consume(_ID);
+                             if CurrentScanner.FToken<>_ID then
+                               Consume(_ID)
                              else
                                begin
-                                 SearchSym_In_Record(structh,CurrentScanner.pattern,srsym,srsymtable);
-                                 consume(_ID);
-                                 if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
-                                   erroroutp1:=false;
+                                 SearchSym_In_Record(lStruct,CurrentScanner.FPattern,lSearchSym,lSearchSymTable);
+                                 Consume(_ID);
+                                 if HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
+                                   lErrorOutOperand:=false;
                                end;
                            end
                          else
                            begin
-                             SearchSym_In_Record(structh,CurrentScanner.pattern,srsym,srsymtable);
-                             if Assigned(srsym) then
+                             SearchSym_In_Record(lStruct,CurrentScanner.FPattern,lSearchSym,lSearchSymTable);
+                             if Assigned(lSearchSym) then
                                begin
-                                 old_current_filepos:=CurrentFilePos;
-                                 consume(_ID);
-                                 if not (sp_generic_dummy in srsym.SymOptions) or
-                                     not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                   Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
+                                 lOldCurrentFilePos:=CurrentFilePos;
+                                 Consume(_ID);
+                                 if not (sp_generic_dummy in lSearchSym.SymOptions) or
+                                     not (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
+                                   Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg,lOldCurrentFilePos)
                                  else
-                                   p1:=CSpecializeNode.Create(p1,GetAddr,srsym,false);
-                                 erroroutp1:=false;
+                                   AOperand:=CSpecializeNode.Create(AOperand,AGetAddr,lSearchSym,false);
+                                 lErrorOutOperand:=false;
                                end
                              else
                                begin
-                                 Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
+                                 Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
                                  { try to clean up }
-                                 consume(_ID);
+                                 Consume(_ID);
                                end;
                            end;
-                         if erroroutp1 then
+                         if lErrorOutOperand then
                            begin
-                             p1.free;
-                             p1:=CErrorNode.Create;
+                             AOperand.free;
+                             AOperand:=CErrorNode.Create;
                            end
                          else
-                           if p1.nodetype<>specializen then
-                             do_member_read(structh,GetAddr,srsym,p1,again,[],spezcontext);
+                           if AOperand.nodetype<>specializen then
+                             DoMemberRead(lStruct,AGetAddr,lSearchSym,AOperand,AAgain,[],lSpecializationContext);
                        end
                      else
-                     consume(_ID);
+                     Consume(_ID);
                    end;
                  enumdef:
                    begin
-                     if CurrentScanner.token=_ID then
+                     if CurrentScanner.FToken=_ID then
                        begin
-                         srsym:=TSym(TEnumDef(p1.resultdef).SymTable.Find(CurrentScanner.pattern));
-                         if Assigned(srsym) and (srsym.typ=enumsym) and (p1.nodetype=typen) then
+                         lSearchSym:=TSym(TEnumDef(AOperand.resultdef).SymTable.Find(CurrentScanner.FPattern));
+                         if Assigned(lSearchSym) and (lSearchSym.typ=enumsym) and (AOperand.nodetype=typen) then
                            begin
-                             p1.free;
-                             Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                             p1:=GenEnumNode(TEnumSym(srsym));
-                             consume(_ID);
-                             nameof_record_sym(srsym);
+                             AOperand.free;
+                             Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg);
+                             AOperand:=GenEnumNode(TEnumSym(lSearchSym));
+                             Consume(_ID);
+                             NameOfRecordSym(lSearchSym);
                            end
                          else
-                           if not try_type_helper(p1,nil) then
+                           if not TryTypeHelper(AOperand,nil) then
                              begin
-                               p1.free;
-                               Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
-                               p1:=CErrorNode.Create;
-                               consume(_ID);
+                               AOperand.free;
+                               Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
+                               AOperand:=CErrorNode.Create;
+                               Consume(_ID);
                              end;
                        end
                      else
                        begin
-                         p1.free;
-                         p1:=CErrorNode.Create;
-                         consume(_ID);
+                         AOperand.free;
+                         AOperand:=CErrorNode.Create;
+                         Consume(_ID);
                        end
                    end;
                  arraydef:
                    begin
-                     if Is_Dynamic_Array(p1.resultdef) then
+                     if Is_Dynamic_Array(AOperand.resultdef) then
                        begin
-                         if CurrentScanner.token=_ID then
+                         if CurrentScanner.FToken=_ID then
                            begin
-                             if not try_type_helper(p1,nil) then
+                             if not TryTypeHelper(AOperand,nil) then
                                begin
-                                 if p1.nodetype=typen then
+                                 if AOperand.nodetype=typen then
                                    begin
-                                     if CurrentScanner.pattern='CREATE' then
+                                     if CurrentScanner.FPattern='CREATE' then
                                        begin
-                                         consume(_ID);
-                                         p2:=parse_array_constructor(TArrayDef(p1.resultdef));
-                                         p1.free;
-                                         p1:=p2;
+                                         Consume(_ID);
+                                         lSecondNode:=ParseArrayConstructor(TArrayDef(AOperand.resultdef));
+                                         AOperand.free;
+                                         AOperand:=lSecondNode;
                                        end
                                      else
                                        begin
-                                         Message2(scan_f_syn_expected,'CREATE',CurrentScanner.pattern);
-                                         p1.free;
-                                         p1:=CErrorNode.Create;
-                                         consume(_ID);
+                                         Message2(scan_f_syn_expected,'CREATE',CurrentScanner.FPattern);
+                                         AOperand.free;
+                                         AOperand:=CErrorNode.Create;
+                                         Consume(_ID);
                                        end;
                                    end
                                  else
                                    begin
                                      Message(parser_e_invalid_qualifier);
-                                     p1.free;
-                                     p1:=CErrorNode.Create;
-                                     consume(_ID);
+                                     AOperand.free;
+                                     AOperand:=CErrorNode.Create;
+                                     Consume(_ID);
                                    end;
                                end;
                            end
                          else
                            begin
                              Message(parser_e_invalid_qualifier);
-                             p1.free;
-                             p1:=CErrorNode.Create;
-                             consume(_ID);
+                             AOperand.free;
+                             AOperand:=CErrorNode.Create;
+                             Consume(_ID);
                            end;
                        end
                      else
-                       if (CurrentScanner.token<>_ID) or not try_type_helper(p1,nil) then
+                       if (CurrentScanner.FToken<>_ID) or not TryTypeHelper(AOperand,nil) then
                          begin
                            Message(parser_e_invalid_qualifier);
-                           p1.free;
-                           p1:=CErrorNode.Create;
-                           consume(_ID);
+                           AOperand.free;
+                           AOperand:=CErrorNode.Create;
+                           Consume(_ID);
                          end;
                    end;
                   variantdef:
@@ -2751,43 +2751,43 @@ implementation
                         lhs := v.ident(parameters) -> method call
                         v.ident[parameters] := rhs -> property put
                         v.ident(parameters) := rhs -> also property put }
-                      if CurrentScanner.token=_ID then
+                      if CurrentScanner.FToken=_ID then
                         begin
-                          if not try_type_helper(p1,nil) then
+                          if not TryTypeHelper(AOperand,nil) then
                             begin
-                              dispatchstring:=CurrentScanner.orgpattern;
-                              consume(_ID);
-                              calltype:=dct_method;
-                              if try_to_consume(_LKLAMMER) then
+                              lDispatchString:=CurrentScanner.FOrgPattern;
+                              Consume(_ID);
+                              lCallType:=dct_method;
+                              if TryToConsume(_LKLAMMER) then
                                 begin
-                                  p2:=parse_paras(false,true,_RKLAMMER);
-                                  consume(_RKLAMMER);
+                                  lSecondNode:=ParseParas(false,true,_RKLAMMER);
+                                  Consume(_RKLAMMER);
                                 end
-                              else if try_to_consume(_LECKKLAMMER) then
+                              else if TryToConsume(_LECKKLAMMER) then
                                 begin
-                                  p2:=parse_paras(false,true,_RECKKLAMMER);
-                                  consume(_RECKKLAMMER);
-                                  calltype:=dct_propget;
+                                  lSecondNode:=ParseParas(false,true,_RECKKLAMMER);
+                                  Consume(_RECKKLAMMER);
+                                  lCallType:=dct_propget;
                                 end
                               else
-                                p2:=nil;
+                                lSecondNode:=nil;
                               { property setter? }
-                              if (CurrentScanner.token=_ASSIGNMENT) and not(afterassignment) then
+                              if (CurrentScanner.FToken=_ASSIGNMENT) and not(AfterAssignment) then
                                 begin
-                                  consume(_ASSIGNMENT);
+                                  Consume(_ASSIGNMENT);
                                   { read the expression }
-                                  p3:=comp_expr([ef_accept_equal]);
+                                  lThirdNode:=CompExpr([efAcceptEqual]);
                                   { concat value parameter too }
-                                  p2:=CCallParaNode.Create(p3,p2);
-                                  p1:=Translate_Disp_Call(p1,p2,dct_propput,dispatchstring,0,VoidType);
+                                  lSecondNode:=CCallParaNode.Create(lThirdNode,lSecondNode);
+                                  AOperand:=Translate_Disp_Call(AOperand,lSecondNode,dct_propput,lDispatchString,0,VoidType);
                                 end
                               else
                               { this is only an approximation
                                 setting useresult if not necessary is only a waste of time, no more, no less (FK) }
-                              if afterassignment or in_args or (CurrentScanner.token<>_SEMICOLON) then
-                                p1:=Translate_Disp_Call(p1,p2,calltype,dispatchstring,0,CVariantType)
+                              if AfterAssignment or InArgs or (CurrentScanner.FToken<>_SEMICOLON) then
+                                AOperand:=Translate_Disp_Call(AOperand,lSecondNode,lCallType,lDispatchString,0,CVariantType)
                               else
-                                p1:=Translate_Disp_Call(p1,p2,calltype,dispatchstring,0,VoidType);
+                                AOperand:=Translate_Disp_Call(AOperand,lSecondNode,lCallType,lDispatchString,0,VoidType);
                             end;
                         end
                       else { Error }
@@ -2795,304 +2795,304 @@ implementation
                      end;
                   classrefdef:
                     begin
-                      erroroutp1:=true;
-                      if CurrentScanner.token=_ID then
+                      lErrorOutOperand:=true;
+                      if CurrentScanner.FToken=_ID then
                         begin
-                          srsym:=nil;
-                          structh:=TObjectDef(TClassRefDef(p1.resultdef).PointedDef);
-                          if isspecialize then
+                          lSearchSym:=nil;
+                          lStruct:=TObjectDef(TClassRefDef(AOperand.resultdef).PointedDef);
+                          if lIsSpecialize then
                             begin
                               { consume the specialize }
-                              consume(_ID);
-                              if CurrentScanner.token<>_ID then
-                                consume(_ID)
+                              Consume(_ID);
+                              if CurrentScanner.FToken<>_ID then
+                                Consume(_ID)
                               else
                                 begin
-                                  SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
-                                  consume(_ID);
-                                  if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
-                                    erroroutp1:=false;
+                                  SearchSym_In_Class(TObjectDef(lStruct),TObjectDef(lStruct),CurrentScanner.FPattern,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                                  Consume(_ID);
+                                  if HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
+                                    lErrorOutOperand:=false;
                                 end;
                             end
                           else
                             begin
-                              SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
-                              if Assigned(srsym) then
+                              SearchSym_In_Class(TObjectDef(lStruct),TObjectDef(lStruct),CurrentScanner.FPattern,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                              if Assigned(lSearchSym) then
                                 begin
-                                  old_current_filepos:=CurrentFilePos;
-                                  consume(_ID);
-                                  if not (sp_generic_dummy in srsym.SymOptions) or
-                                      not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                    Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
+                                  lOldCurrentFilePos:=CurrentFilePos;
+                                  Consume(_ID);
+                                  if not (sp_generic_dummy in lSearchSym.SymOptions) or
+                                      not (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
+                                    Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg,lOldCurrentFilePos)
                                   else
-                                    p1:=CSpecializeNode.Create(p1,GetAddr,srsym,false);
-                                  erroroutp1:=false;
+                                    AOperand:=CSpecializeNode.Create(AOperand,AGetAddr,lSearchSym,false);
+                                  lErrorOutOperand:=false;
                                 end
                               else
                                 begin
-                                  Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
+                                  Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
                                   { try to clean up }
-                                  consume(_ID);
+                                  Consume(_ID);
                                 end;
                             end;
-                          if erroroutp1 then
+                          if lErrorOutOperand then
                             begin
-                              p1.free;
-                              p1:=CErrorNode.Create;
+                              AOperand.free;
+                              AOperand:=CErrorNode.Create;
                             end
                           else
-                            if p1.nodetype<>specializen then
-                              do_member_read(structh,GetAddr,srsym,p1,again,[],spezcontext);
+                            if AOperand.nodetype<>specializen then
+                              DoMemberRead(lStruct,AGetAddr,lSearchSym,AOperand,AAgain,[],lSpecializationContext);
                         end
                       else { Error }
                         Consume(_ID);
                     end;
                   objectdef:
                     begin
-                      if isspecialize or (CurrentScanner.token=_ID) then
+                      if lIsSpecialize or (CurrentScanner.FToken=_ID) then
                         begin
-                          erroroutp1:=true;
-                          srsym:=nil;
-                          structh:=TObjectDef(p1.resultdef);
-                          if isspecialize then
+                          lErrorOutOperand:=true;
+                          lSearchSym:=nil;
+                          lStruct:=TObjectDef(AOperand.resultdef);
+                          if lIsSpecialize then
                             begin
                               { consume the "specialize" }
-                              consume(_ID);
-                              if CurrentScanner.token<>_ID then
-                                consume(_ID)
+                              Consume(_ID);
+                              if CurrentScanner.FToken<>_ID then
+                                Consume(_ID)
                               else
                                 begin
-                                  SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
-                                  consume(_ID);
-                                  if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
-                                    erroroutp1:=false;
+                                  SearchSym_In_Class(TObjectDef(lStruct),TObjectDef(lStruct),CurrentScanner.FPattern,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                                  Consume(_ID);
+                                  if HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
+                                    lErrorOutOperand:=false;
                                 end;
                             end
                           else
                             begin
-                              SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
-                              if Assigned(srsym) then
+                              SearchSym_In_Class(TObjectDef(lStruct),TObjectDef(lStruct),CurrentScanner.FPattern,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                              if Assigned(lSearchSym) then
                                 begin
-                                   old_current_filepos:=CurrentFilePos;
-                                   consume(_ID);
-                                   if not (sp_generic_dummy in srsym.SymOptions) or
-                                       not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                     Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
+                                   lOldCurrentFilePos:=CurrentFilePos;
+                                   Consume(_ID);
+                                   if not (sp_generic_dummy in lSearchSym.SymOptions) or
+                                       not (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
+                                     Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg,lOldCurrentFilePos)
                                    else
-                                     p1:=CSpecializeNode.Create(p1,GetAddr,srsym,false);
-                                   erroroutp1:=false;
+                                     AOperand:=CSpecializeNode.Create(AOperand,AGetAddr,lSearchSym,false);
+                                   lErrorOutOperand:=false;
                                 end
                               else
                                 begin
-                                   Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
+                                   Message1(sym_e_id_no_member,CurrentScanner.FOrgPattern);
                                    { try to clean up }
-                                   consume(_ID);
+                                   Consume(_ID);
                                 end;
                             end;
-                          if erroroutp1 then
+                          if lErrorOutOperand then
                             begin
-                              p1.free;
-                              p1:=CErrorNode.Create;
+                              AOperand.free;
+                              AOperand:=CErrorNode.Create;
                             end
                           else
-                            if p1.nodetype<>specializen then
-                              do_member_read(structh,GetAddr,srsym,p1,again,[],spezcontext);
+                            if AOperand.nodetype<>specializen then
+                              DoMemberRead(lStruct,AGetAddr,lSearchSym,AOperand,AAgain,[],lSpecializationContext);
                         end
                       else { Error }
                         Consume(_ID);
                     end;
                   pointerdef:
                     begin
-                      if (p1.resultdef=ObjC_IDType) then
+                      if (AOperand.resultdef=ObjC_IDType) then
                         begin
                           { objc's id type can be used to call any
                             Objective-C method of any Objective-C class
                             type that's currently in scope }
-                          if Search_ObjC_Method(CurrentScanner.pattern,srsym,srsymtable) then
+                          if Search_ObjC_Method(CurrentScanner.FPattern,lSearchSym,lSearchSymTable) then
                             begin
-                              consume(_ID);
-                              do_proc_call(srsym,srsymtable,nil,
-                                (GetAddr and not(CurrentScanner.token in [_CARET,_POINT])),
-                                again,p1,[cnf_objc_id_call],nil);
+                              Consume(_ID);
+                              DoProcCall(lSearchSym,lSearchSymTable,nil,
+                                (AGetAddr and not(CurrentScanner.FToken in [_CARET,_POINT])),
+                                AAgain,AOperand,[cnf_objc_id_call],nil);
                               { we need to know which procedure is called }
-                              DoTypeCheckPass(p1);
+                              DoTypeCheckPass(AOperand);
                             end
                           else
                             begin
-                              consume(_ID);
+                              Consume(_ID);
                               Message(parser_e_methode_id_expected);
                             end;
                         end
                       else
                         begin
-                          if not try_type_helper(p1,nil) then
+                          if not TryTypeHelper(AOperand,nil) then
                             begin
                               Message(parser_e_invalid_qualifier);
-                              if TPointerDef(p1.resultdef).PointedDef.typ in [recorddef,objectdef,classrefdef] then
+                              if TPointerDef(AOperand.resultdef).PointedDef.typ in [recorddef,objectdef,classrefdef] then
                                 Message(parser_h_maybe_deref_caret_missing);
                             end;
                         end
                     end;
                   else
                     begin
-                      if autoderef then
+                      if lAutoDeref then
                         begin
                           { always try with the not dereferenced node }
-                          p2:=TDerefNode(p1).left;
-                          found:=try_type_helper(p2,nil);
-                          if found then
+                          lSecondNode:=TDerefNode(AOperand).left;
+                          lFound:=TryTypeHelper(lSecondNode,nil);
+                          if lFound then
                             begin
-                              TDerefNode(p1).left:=nil;
-                              p1.free;
-                              p1:=p2;
+                              TDerefNode(AOperand).left:=nil;
+                              AOperand.free;
+                              AOperand:=lSecondNode;
                             end;
                         end
                       else
-                        found:=try_type_helper(p1,nil);
-                      if not found then
+                        lFound:=TryTypeHelper(AOperand,nil);
+                      if not lFound then
                         begin
-                          if p1.resultdef.typ<>undefineddef then
+                          if AOperand.resultdef.typ<>undefineddef then
                             Message(parser_e_invalid_qualifier);
-                          p1.free;
-                          p1:=CErrorNode.Create;
+                          AOperand.free;
+                          AOperand:=CErrorNode.Create;
                           { Error }
-                          consume(_ID);
+                          Consume(_ID);
                         end;
                     end;
                end;
                { processing an ordconstnode avoids the resultdef check }
-               skippointdefcheck:
+               SkipPointDefCheck:
              end;
 
           else
             begin
               { is this a procedure variable ? }
-              if Is_Invokable(p1.resultdef) and
-                  (CurrentScanner.token=_LKLAMMER) then
+              if Is_Invokable(AOperand.resultdef) and
+                  (CurrentScanner.FToken=_LKLAMMER) then
                 begin
-                  if not SearchSym_In_Class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),MethodNameFuncRefInvokeFind,srsym,srsymtable,[]) then
+                  if not SearchSym_In_Class(TObjectDef(AOperand.resultdef),TObjectDef(AOperand.resultdef),MethodNameFuncRefInvokeFind,lSearchSym,lSearchSymTable,[]) then
                     InternalError(2021040202);
-                  include(p1.flags,nf_load_procvar);
-                  do_proc_call(srsym,srsymtable,TAbstractRecordDef(p1.resultdef),false,again,p1,[],nil);
+                  include(AOperand.flags,nf_load_procvar);
+                  DoProcCall(lSearchSym,lSearchSymTable,TAbstractRecordDef(AOperand.resultdef),false,AAgain,AOperand,[],nil);
                 end
-              else if Assigned(p1.resultdef) and
-                 (p1.resultdef.typ=procvardef) then
+              else if Assigned(AOperand.resultdef) and
+                 (AOperand.resultdef.typ=procvardef) then
                 begin
                   { Typenode for typecasting or expecting a procvar }
-                  if (p1.nodetype=typen) or
+                  if (AOperand.nodetype=typen) or
                      (
-                      Assigned(getprocvardef) and
-                      Equal_Defs(p1.resultdef,getprocvardef)
+                      Assigned(GetProcVarDef) and
+                      Equal_Defs(AOperand.resultdef,GetProcVarDef)
                      ) or
                      (
-                      Assigned(getfuncrefdef) and
-                      Equal_Defs(p1.resultdef,getfuncrefdef)
+                      Assigned(GetFuncRefDef) and
+                      Equal_Defs(AOperand.resultdef,GetFuncRefDef)
                      ) then
                     begin
-                      if try_to_consume(_LKLAMMER) then
+                      if TryToConsume(_LKLAMMER) then
                         begin
-                          p1:=comp_expr([ef_accept_equal]);
-                          consume(_RKLAMMER);
-                          p1:=CTypeConvNode.Create_Explicit(p1,p1.resultdef);
+                          AOperand:=CompExpr([efAcceptEqual]);
+                          Consume(_RKLAMMER);
+                          AOperand:=CTypeConvNode.Create_Explicit(AOperand,AOperand.resultdef);
                         end
                       else
-                        again:=false
+                        AAgain:=false
                     end
                   else
                     begin
-                      if try_to_consume(_LKLAMMER) then
+                      if TryToConsume(_LKLAMMER) then
                         begin
-                          p2:=parse_paras(false,false,_RKLAMMER);
-                          consume(_RKLAMMER);
-                          p1:=CCallNode.Create_ProcVar(p2,p1);
+                          lSecondNode:=ParseParas(false,false,_RKLAMMER);
+                          Consume(_RKLAMMER);
+                          AOperand:=CCallNode.Create_ProcVar(lSecondNode,AOperand);
                           { proc():= is never possible }
-                          if CurrentScanner.token=_ASSIGNMENT then
+                          if CurrentScanner.FToken=_ASSIGNMENT then
                             begin
                               Message(parser_e_illegal_expression);
-                              p1.free;
-                              p1:=CErrorNode.Create;
-                              again:=false;
+                              AOperand.free;
+                              AOperand:=CErrorNode.Create;
+                              AAgain:=false;
                             end;
                         end
                       else
-                        again:=false;
+                        AAgain:=false;
                     end;
                 end
               else
-                again:=false;
+                AAgain:=false;
              end;
         end;
 
         { we only try again if p1 was changed }
-        if again or
-           (p1.nodetype=errorn) then
-          result:=true;
+        if AAgain or
+           (AOperand.nodetype=errorn) then
+          Result:=true;
       end; { while again }
     end;
 
-    function is_member_read(sym: TSym; st: TSymTable; var p1: TNode;
-                            out memberparentdef: TDef): boolean;
+    function IsMemberRead(ASym: TSym; ASymTable: TSymTable; var ANode: TNode;
+                            out AMemberParentDef: TDef): Boolean;
       var
-        hdef : TDef;
+        lDef : TDef;
       begin
-        result:=true;
-        memberparentdef:=nil;
+        Result:=true;
+        AMemberParentDef:=nil;
 
-        case st.SymTableType of
+        case ASymTable.SymTableType of
           ObjectSymtable,
           recordsymtable:
             begin
-              memberparentdef:=TDef(st.DefOwner);
+              AMemberParentDef:=TDef(ASymTable.DefOwner);
               exit;
             end;
           WithSymtable:
             begin
-              if Assigned(p1) then
+              if Assigned(ANode) then
                InternalError(2007012002);
 
-              hdef:=TNode(TWithSymTable(st).WithRefNode).resultdef;
-              p1:=TNode(TWithSymTable(st).WithRefNode).GetCopy;
+              lDef:=TNode(TWithSymTable(ASymTable).WithRefNode).resultdef;
+              ANode:=TNode(TWithSymTable(ASymTable).WithRefNode).GetCopy;
 
-              if not(hdef.typ in [objectdef,classrefdef]) then
+              if not(lDef.typ in [objectdef,classrefdef]) then
                 exit;
 
-              if (hdef.typ=classrefdef) then
-                hdef:=TClassRefDef(hdef).PointedDef;
-              memberparentdef:=hdef;
+              if (lDef.typ=classrefdef) then
+                lDef:=TClassRefDef(lDef).PointedDef;
+              AMemberParentDef:=lDef;
             end;
           else
-            result:=false;
+            Result:=false;
         end;
       end;
 
   {$maxfpuregisters 0}
 
 
-    function factor_handle_sym(srsym:TSym;srsymtable:TSymTable;var again:boolean;GetAddr:boolean;unit_found:boolean;flags:TExprFlags;var spezcontext:TSpecializationContext):TNode;
+    function FactorHandleSym(ASym:TSym;ASymTable:TSymTable;var AAgain:Boolean;AGetAddr:Boolean;AUnitFound:Boolean;AFlags:TExprFlags;var ASpecializationContext:TSpecializationContext):TNode;
       var
-        hdef : TDef;
-        pd : TProcDef;
-        callflags : TCallNodeFlags;
-        tmpgetaddr : boolean;
+        lDef : TDef;
+        lProcDef : TProcDef;
+        lCallFlags : TCallNodeFlags;
+        lTempGetAddr : Boolean;
       begin
-        hdef:=nil;
-        result:=nil;
-        case srsym.typ of
+        lDef:=nil;
+        Result:=nil;
+        case ASym.typ of
           absolutevarsym :
             begin
-              if (TAbsoluteVarSym(srsym).AbsTyp=tovar) then
+              if (TAbsoluteVarSym(ASym).AbsTyp=tovar) then
                 begin
-                  result:=nil;
-                  PropAccessList_To_Node(result,nil,TAbsoluteVarSym(srsym).Ref);
-                  result:=CTypeConvNode.Create(result,TAbsoluteVarSym(srsym).vardef);
-                  include(result.flags,nf_absolute);
-                  if TAbsoluteVarSym(srsym).vardef=S64CurrencyType then
+                  Result:=nil;
+                  PropAccessList_To_Node(Result,nil,TAbsoluteVarSym(ASym).Ref);
+                  Result:=CTypeConvNode.Create(Result,TAbsoluteVarSym(ASym).vardef);
+                  include(Result.flags,nf_absolute);
+                  if TAbsoluteVarSym(ASym).vardef=S64CurrencyType then
                     { If a Currency type is connected to another type, we have
                       to make sure a scalar is never applied }
-                    include(result.flags,nf_is_currency);
+                    include(Result.flags,nf_is_currency);
                 end
               else
-                result:=CLoadNode.Create(srsym,srsymtable);
+                Result:=CLoadNode.Create(ASym,ASymTable);
             end;
 
           staticvarsym,
@@ -3103,147 +3103,147 @@ implementation
               { check if we are reading a field of an object/class/   }
               { record. is_member_read() will deal with withsymtables }
               { if needed.                                            }
-              result:=nil;
-              if is_member_read(srsym,srsymtable,result,hdef) then
+              Result:=nil;
+              if IsMemberRead(ASym,ASymTable,Result,lDef) then
                 begin
                   { if the field was originally found in an     }
                   { objectsymtable, it means it's part of self  }
                   { if only method from which it was called is  }
                   { not class static                            }
-                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) then
+                  if (ASymTable.SymTableType in [ObjectSymtable,recordsymtable]) then
                     { if we are accessing a owner procsym from the nested }
                     { class we need to call it as a class member          }
                     if Assigned(CurrentStructDef) and
-                        (((CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef)) or
-                         (sp_static in srsym.SymOptions)) then
-                      if srsymtable.SymTableType=recordsymtable then
-                        result:=CTypeNode.Create(hdef)
+                        (((CurrentStructDef<>lDef) and Is_Owned_By(CurrentStructDef,lDef)) or
+                         (sp_static in ASym.SymOptions)) then
+                      if ASymTable.SymTableType=recordsymtable then
+                        Result:=CTypeNode.Create(lDef)
                       else
-                        result:=CLoadVMTAddrNode.Create(CTypeNode.Create(hdef))
+                        Result:=CLoadVMTAddrNode.Create(CTypeNode.Create(lDef))
                     else
                       begin
                         if Assigned(CurrentProcInfo) then
                           begin
-                            pd:=CurrentProcInfo.Get_Normal_Proc.procdef;
-                            if Assigned(pd) and pd.No_Self_Node then
-                              result:=CLoadVMTAddrNode.Create(CTypeNode.Create(pd.struct))
+                            lProcDef:=CurrentProcInfo.Get_Normal_Proc.procdef;
+                            if Assigned(lProcDef) and lProcDef.No_Self_Node then
+                              Result:=CLoadVMTAddrNode.Create(CTypeNode.Create(lProcDef.struct))
                             else
-                              result:=Load_Self_Node;
+                              Result:=Load_Self_Node;
                           end
                         else
-                          result:=Load_Self_Node;
+                          Result:=Load_Self_Node;
                       end;
                   { now, if the field itself is part of an objectsymtab }
                   { (it can be even if it was found in a withsymtable,  }
                   {  e.g., "with classinstance do field := 5"), then    }
                   { let do_member_read handle it                        }
-                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
-                    do_member_read(TAbstractRecordDef(hdef),GetAddr,srsym,result,again,[],nil)
+                  if (ASym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
+                    DoMemberRead(TAbstractRecordDef(lDef),AGetAddr,ASym,Result,AAgain,[],nil)
                   else
                     { otherwise it's a regular record subscript }
-                    result:=CSubscriptNode.Create(srsym,result);
+                    Result:=CSubscriptNode.Create(ASym,Result);
                 end
               else
                 { regular non-field load }
-                result:=CLoadNode.Create(srsym,srsymtable);
+                Result:=CLoadNode.Create(ASym,ASymTable);
             end;
 
           syssym :
             begin
-              result:=statement_syssym(TSysSym(srsym).number);
+              Result:=StatementSysSym(TSysSym(ASym).number);
             end;
 
           TypeSym :
             begin
-              hdef:=TTypeSym(srsym).TypeDef;
-              if not Assigned(hdef) then
+              lDef:=TTypeSym(ASym).TypeDef;
+              if not Assigned(lDef) then
                begin
-                 again:=false;
+                 AAgain:=false;
                end
               else
                begin
                  if (m_delphi in CurrentSettings.ModeSwitches) and
-                     (sp_generic_dummy in srsym.SymOptions) and
-                     (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
+                     (sp_generic_dummy in ASym.SymOptions) and
+                     (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
                    begin
                      if Block_Type in [bt_type,bt_const_type,bt_var_type] then
                        begin
-                         if not handle_specialize_inline_specialization(srsym,unit_found,srsymtable,spezcontext) or (srsym.typ=ProcSym) then
+                         if not HandleSpecializeInlineSpecialization(ASym,AUnitFound,ASymTable,ASpecializationContext) or (ASym.typ=ProcSym) then
                            begin
-                             spezcontext.free;
-                             spezcontext := nil;
-                             result:=CErrorNode.Create;
-                             if try_to_consume(_LKLAMMER) then
+                             ASpecializationContext.free;
+                             ASpecializationContext := nil;
+                             Result:=CErrorNode.Create;
+                             if TryToConsume(_LKLAMMER) then
                               begin
-                                parse_paras(false,false,_RKLAMMER);
-                                consume(_RKLAMMER);
+                                ParseParas(false,false,_RKLAMMER);
+                                Consume(_RKLAMMER);
                               end;
                            end
                          else
                            begin
-                             if srsym.typ<>TypeSym then
+                             if ASym.typ<>TypeSym then
                                InternalError(2015071705);
-                             hdef:=TTypeSym(srsym).TypeDef;
-                             result:=handle_factor_typenode(hdef,GetAddr,again,srsym,ef_type_only in flags);
+                             lDef:=TTypeSym(ASym).TypeDef;
+                             Result:=HandleFactorTypeNode(lDef,AGetAddr,AAgain,ASym,efTypeOnly in AFlags);
                            end;
                        end
                      else
-                       result:=CSpecializeNode.Create(nil,GetAddr,srsym,unit_found)
+                       Result:=CSpecializeNode.Create(nil,AGetAddr,ASym,AUnitFound)
                    end
                  else
                    begin
                      { We need to know if this unit uses Variants }
-                     if ((hdef=CVariantType) or (hdef=COleVariantType)) and
+                     if ((lDef=CVariantType) or (lDef=COleVariantType)) and
                         not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
                        include(CurrentModule.ModuleFlags,mf_uses_variants);
-                     result:=handle_factor_typenode(hdef,GetAddr,again,srsym,ef_type_only in flags);
+                     Result:=HandleFactorTypeNode(lDef,AGetAddr,AAgain,ASym,efTypeOnly in AFlags);
                    end;
                end;
             end;
 
           enumsym :
             begin
-              result:=GenEnumNode(TEnumSym(srsym));
+              Result:=GenEnumNode(TEnumSym(ASym));
             end;
 
           constsym :
             begin
-              if TConstSym(srsym).ConstTyp in [constresourcestring,constwresourcestring]then
+              if TConstSym(ASym).ConstTyp in [constresourcestring,constwresourcestring]then
                 begin
-                  result:=CLoadNode.Create(srsym,srsymtable);
-                  DoTypeCheckPass(result);
+                  Result:=CLoadNode.Create(ASym,ASymTable);
+                  DoTypeCheckPass(Result);
                   if Is_SystemUnit_Unicode then
-                    result.resultdef:=CStringDef.CreateUnicode(true)
+                    Result.resultdef:=CStringDef.CreateUnicode(true)
                   else
-                    result.resultdef:=GetAnsiStringDef;
+                    Result.resultdef:=GetAnsiStringDef;
                 end
               else
-                result:=GenConstSymTree(TConstSym(srsym));
+                Result:=GenConstSymTree(TConstSym(ASym));
             end;
 
           ProcSym :
             begin
-              result:=nil;
+              Result:=nil;
               if (m_delphi in CurrentSettings.ModeSwitches) and
-                  (sp_generic_dummy in srsym.SymOptions) and
-                  (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
+                  (sp_generic_dummy in ASym.SymOptions) and
+                  (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
                 begin
-                  result:=CSpecializeNode.Create(nil,GetAddr,srsym,unit_found)
+                  Result:=CSpecializeNode.Create(nil,AGetAddr,ASym,AUnitFound)
                 end
               { check if it's a method/class method }
-              else if is_member_read(srsym,srsymtable,result,hdef) then
+              else if IsMemberRead(ASym,ASymTable,Result,lDef) then
                 begin
                   { if we are accessing a owner procsym from the nested }
                   { class we need to call it as a class member          }
-                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) and
-                    Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef) then
-                    result:=CLoadVMTAddrNode.Create(CTypeNode.Create(hdef));
+                  if (ASymTable.SymTableType in [ObjectSymtable,recordsymtable]) and
+                    Assigned(CurrentStructDef) and (CurrentStructDef<>lDef) and Is_Owned_By(CurrentStructDef,lDef) then
+                    Result:=CLoadVMTAddrNode.Create(CTypeNode.Create(lDef));
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
-                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
+                  if (ASym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                     begin
-                      do_member_read(TAbstractRecordDef(hdef),GetAddr,srsym,result,again,[],spezcontext);
-                      spezcontext:=nil;
+                      DoMemberRead(TAbstractRecordDef(lDef),AGetAddr,ASym,Result,AAgain,[],ASpecializationContext);
+                      ASpecializationContext:=nil;
                     end
                   else
                     { no procsyms in records (yet) }
@@ -3252,45 +3252,45 @@ implementation
               else
                 begin
                   { regular procedure/function call }
-                  if not unit_found then
-                    callflags:=[]
+                  if not AUnitFound then
+                    lCallFlags:=[]
                   else
-                    callflags:=[cnf_unit_specified];
+                    lCallFlags:=[cnf_unit_specified];
                   { TP7 ugliness: @proc^ is parsed as (@proc)^,
                     but @notproc^ is parsed as @(notproc^) }
                   if m_tp_procvar in CurrentSettings.ModeSwitches then
-                    tmpgetaddr:=GetAddr and not(CurrentScanner.token in [_POINT,_LECKKLAMMER])
+                    lTempGetAddr:=AGetAddr and not(CurrentScanner.FToken in [_POINT,_LECKKLAMMER])
                   else
-                    tmpgetaddr:=GetAddr and not(CurrentScanner.token in [_CARET,_POINT,_LECKKLAMMER]);
-                  do_proc_call(srsym,srsymtable,nil,tmpgetaddr,
-                               again,result,callflags,spezcontext);
-                  spezcontext:=nil;
+                    lTempGetAddr:=AGetAddr and not(CurrentScanner.FToken in [_CARET,_POINT,_LECKKLAMMER]);
+                  DoProcCall(ASym,ASymTable,nil,lTempGetAddr,
+                               AAgain,Result,lCallFlags,ASpecializationContext);
+                  ASpecializationContext:=nil;
                 end;
             end;
 
           propertysym :
             begin
-              result:=nil;
+              Result:=nil;
               { property of a class/object? }
-              if is_member_read(srsym,srsymtable,result,hdef) then
+              if IsMemberRead(ASym,ASymTable,Result,lDef) then
                 begin
-                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) then
+                  if (ASymTable.SymTableType in [ObjectSymtable,recordsymtable]) then
                     { if we are accessing a owner procsym from the nested }
                     { class or from a static class method we need to call }
                     { it as a class member                                }
-                    if (Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef)) or
+                    if (Assigned(CurrentStructDef) and (CurrentStructDef<>lDef) and Is_Owned_By(CurrentStructDef,lDef)) or
                        (Assigned(CurrentProcInfo) and CurrentProcInfo.Get_Normal_Proc.procdef.No_Self_Node) then
                       begin
-                        result:=CTypeNode.Create(hdef);
-                        if not Is_Record(hdef) then
-                          result:=CLoadVMTAddrNode.Create(result);
+                        Result:=CTypeNode.Create(lDef);
+                        if not Is_Record(lDef) then
+                          Result:=CLoadVMTAddrNode.Create(Result);
                       end
                     else
-                      result:=Load_Self_Node;
+                      Result:=Load_Self_Node;
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
-                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
-                    do_member_read(TAbstractRecordDef(hdef),GetAddr,srsym,result,again,[],nil)
+                  if (ASym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
+                    DoMemberRead(TAbstractRecordDef(lDef),AGetAddr,ASym,Result,AAgain,[],nil)
                   else
                     { no propertysyms in records (yet) }
                     InternalError(2009111510);
@@ -3298,266 +3298,266 @@ implementation
               else
               { no method pointer }
                 begin
-                  handle_propertysym(TPropertySym(srsym),srsymtable,result);
+                  HandlePropertySym(TPropertySym(ASym),ASymTable,Result);
                 end;
             end;
 
           labelsym :
             begin
               { Support @label }
-              if GetAddr then
+              if AGetAddr then
                 begin
-                  if srsym.owner<>CurrentProcInfo.procdef.LocalST then
+                  if ASym.owner<>CurrentProcInfo.procdef.LocalST then
                     CGMessage(parser_e_label_outside_proc);
-                  result:=CLoadNode.Create(srsym,srsym.owner)
+                  Result:=CLoadNode.Create(ASym,ASym.owner)
                 end
               else
                 begin
-                  consume(_COLON);
-                  if TLabelSym(srsym).defined then
+                  Consume(_COLON);
+                  if TLabelSym(ASym).defined then
                     Message(sym_e_label_already_defined);
-                  if SymTableStack.top.SymTableLevel<>srsymtable.SymTableLevel then
+                  if SymTableStack.top.SymTableLevel<>ASymTable.SymTableLevel then
                     begin
                       include(CurrentProcInfo.flags,pi_has_interproclabel);
                       if (CurrentProcInfo.procdef.ProcTypeOption in [potype_unitinit,potype_unitfinalize]) then
                         Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                     end;
-                  TLabelSym(srsym).defined:=true;
-                  result:=CLabelNode.Create(nil,TLabelSym(srsym));
-                  TLabelSym(srsym).code:=result;
+                  TLabelSym(ASym).defined:=true;
+                  Result:=CLabelNode.Create(nil,TLabelSym(ASym));
+                  TLabelSym(ASym).code:=Result;
                 end;
             end;
 
           undefinedsym :
             begin
-              result:=CNothingNode.Create;
-              result.resultdef:=CUndefinedDef.Create(true);
+              Result:=CNothingNode.Create;
+              Result.resultdef:=CUndefinedDef.Create(true);
               { clean up previously created dummy symbol }
-              srsym.free;
-              srsym := nil;
+              ASym.free;
+              ASym := nil;
             end;
 
           UnitSym,
           namespacesym :
             begin
-              if nameof_active then
+              if NameOfActive then
                 { NameOf(unitname) }
-                result:=CNothingNode.Create
+                Result:=CNothingNode.Create
               else
                 begin
-                  result:=CErrorNode.Create;
+                  Result:=CErrorNode.Create;
                   Message(parser_e_illegal_expression);
                 end;
             end;
 
           errorsym :
             begin
-              result:=CErrorNode.Create;
-              if try_to_consume(_LKLAMMER) then
+              Result:=CErrorNode.Create;
+              if TryToConsume(_LKLAMMER) then
                begin
-                 parse_paras(false,false,_RKLAMMER);
-                 consume(_RKLAMMER);
+                 ParseParas(false,false,_RKLAMMER);
+                 Consume(_RKLAMMER);
                end;
             end;
 
           else
             begin
-              result:=CErrorNode.Create;
+              Result:=CErrorNode.Create;
               Message(parser_e_illegal_expression);
             end;
         end; { end case }
       end;
 
 
-    function factor(GetAddr:boolean;flags:TExprFlags) : TNode;
+    function Factor(AGetAddr:Boolean;AFlags:TExprFlags) : TNode;
 
          {---------------------------------------------
                          Factor_read_id
          ---------------------------------------------}
 
-       procedure factor_read_id(out p1:TNode;out again:boolean);
+       procedure FactorReadID(out ANode:TNode;out AAgain:Boolean);
 
-         function findwithsymtable : boolean;
+         function FindWithSymTable : Boolean;
            var
-             hp : PSymTableStackItem;
+             lStackItem : PSymTableStackItem;
            begin
-             result:=true;
-             hp:=SymTableStack.stack;
-             while Assigned(hp) do
+             Result:=true;
+             lStackItem:=SymTableStack.stack;
+             while Assigned(lStackItem) do
                begin
-                 if hp^.SymTable.SymTableType=withsymtable then
+                 if lStackItem^.SymTable.SymTableType=withsymtable then
                    exit;
-                 hp:=hp^.next;
+                 lStackItem:=lStackItem^.next;
                end;
-             result:=false;
+             Result:=false;
            end;
 
          var
-           srsym: TSym;
-           srsymtable: TSymTable;
-           hdef: TDef;
-           orgstoredpattern,
-           storedpattern: string;
-           t : TToken;
-           consumeid,
-           wasgenericdummy,
-           allowspecialize,
-           isspecialize,
-           unit_found : boolean;
-           dummypos,
-           tokenpos: TFilePosInfo;
-           spezcontext : TSpecializationContext;
-           cufflags : TConsumeUnitSymFlags;
+           lSearchSym: TSym;
+           lSearchSymTable: TSymTable;
+           lDef: TDef;
+           lSavedOrgPattern,
+           lSavedPattern: String;
+           lToken : TToken;
+           lConsumeID,
+           lWasGenericDummy,
+           lAllowSpecialize,
+           lIsSpecialize,
+           lUnitFound : Boolean;
+           lDummyPos,
+           lTokenPos: TFilePosInfo;
+           lSpecializationContext : TSpecializationContext;
+           lUnitSymFlags : TConsumeUnitSymFlags;
          begin
            { allow post fix operators }
-           again:=true;
+           AAgain:=true;
 
            { preinitalize tokenpos }
-           tokenpos:=CurrentFilePos;
-           p1:=nil;
-           spezcontext:=nil;
+           lTokenPos:=CurrentFilePos;
+           ANode:=nil;
+           lSpecializationContext:=nil;
 
            { avoid warning }
-           fillchar(dummypos,sizeof(dummypos),0);
+           fillchar(lDummyPos,sizeof(lDummyPos),0);
 
-           allowspecialize:=not (m_delphi in CurrentSettings.ModeSwitches) and
-                            not (ef_had_specialize in flags) and
-                            (Block_Type in inline_specialization_block_types);
-           if allowspecialize and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_SPECIALIZE) then
+           lAllowSpecialize:=not (m_delphi in CurrentSettings.ModeSwitches) and
+                            not (efHadSpecialize in AFlags) and
+                            (Block_Type in cInlineSpecializationBlockTypes);
+           if lAllowSpecialize and (CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_SPECIALIZE) then
              begin
-               consume(_ID);
-               isspecialize:=true;
+               Consume(_ID);
+               lIsSpecialize:=true;
              end
            else
-             isspecialize:=ef_had_specialize in flags;
+             lIsSpecialize:=efHadSpecialize in AFlags;
 
            { first check for identifier }
-           if CurrentScanner.token<>_ID then
+           if CurrentScanner.FToken<>_ID then
              begin
-               srsym:=GenErrorSym;
-               srsymtable:=nil;
-               consume(_ID);
-               unit_found:=false;
+               lSearchSym:=GenErrorSym;
+               lSearchSymTable:=nil;
+               Consume(_ID);
+               lUnitFound:=false;
              end
            else
              begin
-               storedpattern:=CurrentScanner.pattern;
-               orgstoredpattern:=CurrentScanner.orgpattern;
+               lSavedPattern:=CurrentScanner.FPattern;
+               lSavedOrgPattern:=CurrentScanner.FOrgPattern;
                { store the position of the token before consuming it }
-               tokenpos:=CurrentFilePos;
-               consumeid:=true;
-               srsym:=nil;
-               if ef_check_attr_suffix in flags then
+               lTokenPos:=CurrentFilePos;
+               lConsumeID:=true;
+               lSearchSym:=nil;
+               if efCheckAttrSuffix in AFlags then
                  begin
-                   if not (ef_type_only in flags) then
+                   if not (efTypeOnly in AFlags) then
                      InternalError(2019063001);
-                   consume(_ID);
-                   consumeid:=false;
-                   if CurrentScanner.token<>_POINT then
-                     SearchSym_Type(storedpattern+CustomAttributeSuffix,srsym,srsymtable);
+                   Consume(_ID);
+                   lConsumeID:=false;
+                   if CurrentScanner.FToken<>_POINT then
+                     SearchSym_Type(lSavedPattern+CustomAttributeSuffix,lSearchSym,lSearchSymTable);
                  end;
-               if not Assigned(srsym) then
+               if not Assigned(lSearchSym) then
                  begin
-                   if ef_type_only in flags then
-                     SearchSym_Type(storedpattern,srsym,srsymtable)
+                   if efTypeOnly in AFlags then
+                     SearchSym_Type(lSavedPattern,lSearchSym,lSearchSymTable)
                    else
-                     SearchSym(storedpattern,srsym,srsymtable);
+                     SearchSym(lSavedPattern,lSearchSym,lSearchSymTable);
                  end;
                { handle unit specification like System.Writeln }
-               if not isspecialize then
+               if not lIsSpecialize then
                  begin
-                   cufflags:=[];
-                   if consumeid then
-                     include(cufflags,cuf_consume_id);
-                   if allowspecialize then
-                     include(cufflags,cuf_allow_specialize);
-                   if ef_check_attr_suffix in flags then
-                     include(cufflags,cuf_check_attr_suffix);
-                   if nameof_active then
-                     include(cufflags,cuf_allow_unit_only);
-                   unit_found:=try_consume_unitsym(srsym,srsymtable,t,cufflags,isspecialize,CurrentScanner.pattern);
-                   if unit_found then
-                     consumeid:=true;
+                   lUnitSymFlags:=[];
+                   if lConsumeID then
+                     include(lUnitSymFlags,cufConsumeID);
+                   if lAllowSpecialize then
+                     include(lUnitSymFlags,cufAllowSpecialize);
+                   if efCheckAttrSuffix in AFlags then
+                     include(lUnitSymFlags,cufCheckAttrSuffix);
+                   if NameOfActive then
+                     include(lUnitSymFlags,cufAllowUnitOnly);
+                   lUnitFound:=TryConsumeUnitSym(lSearchSym,lSearchSymTable,lToken,lUnitSymFlags,lIsSpecialize,CurrentScanner.FPattern);
+                   if lUnitFound then
+                     lConsumeID:=true;
                  end
                else
                  begin
-                   unit_found:=false;
-                   t:=_ID;
+                   lUnitFound:=false;
+                   lToken:=_ID;
                  end;
                { NOTOKEN: NameOf(unitname), the unit name is already consumed }
-               if consumeid and (t<>NOTOKEN) then
+               if lConsumeID and (lToken<>NOTOKEN) then
                  begin
-                   storedpattern:=CurrentScanner.pattern;
-                   orgstoredpattern:=CurrentScanner.orgpattern;
+                   lSavedPattern:=CurrentScanner.FPattern;
+                   lSavedOrgPattern:=CurrentScanner.FOrgPattern;
                    { store the position of the token before consuming it }
-                   tokenpos:=CurrentFilePos;
-                   consume(t);
+                   lTokenPos:=CurrentFilePos;
+                   Consume(lToken);
                  end;
                { named parameter support }
-               found_arg_name:=false;
+               FoundArgName:=false;
 
-               if not(unit_found) and
-                   not isspecialize and
-                  named_args_allowed and
-                  (CurrentScanner.token=_ASSIGNMENT) then
+               if not(lUnitFound) and
+                   not lIsSpecialize and
+                  NamedArgsAllowed and
+                  (CurrentScanner.FToken=_ASSIGNMENT) then
                   begin
-                    found_arg_name:=true;
-                    p1:=CStringConstNode.CreateStr(orgstoredpattern);
-                    consume(_ASSIGNMENT);
+                    FoundArgName:=true;
+                    ANode:=CStringConstNode.CreateStr(lSavedOrgPattern);
+                    Consume(_ASSIGNMENT);
                     exit;
                   end;
 
-               if isspecialize then
+               if lIsSpecialize then
                  begin
-                   if not Assigned(srsym) then
+                   if not Assigned(lSearchSym) then
                      begin
-                       identifier_not_found(orgstoredpattern,tokenpos);
-                       srsym:=GenErrorSym;
-                       srsymtable:=nil;
+                       IdentifierNotFound(lSavedOrgPattern,lTokenPos);
+                       lSearchSym:=GenErrorSym;
+                       lSearchSymTable:=nil;
                      end
                    else
                      begin
-                       if not unit_found then
-                         srsymtable:=nil;
+                       if not lUnitFound then
+                         lSearchSymTable:=nil;
                        {$push}
                        {$warn 5036 off}
-                       hdef:=generate_specialization_phase1(spezcontext,nil,unit_found,nil,orgstoredpattern,srsymtable,dummypos);
+                       lDef:=GenerateSpecializationPhase1(lSpecializationContext,nil,lUnitFound,nil,lSavedOrgPattern,lSearchSymTable,lDummyPos);
                        {$pop}
-                       if hdef=GenErrorDef then
+                       if lDef=GenErrorDef then
                          begin
-                           spezcontext.free;
-                           spezcontext:=nil;
-                           srsym:=GenErrorSym;
-                           srsymtable:=nil;
+                           lSpecializationContext.free;
+                           lSpecializationContext:=nil;
+                           lSearchSym:=GenErrorSym;
+                           lSearchSymTable:=nil;
                          end
                        else
                          begin
-                           if hdef.typ in [objectdef,recorddef,procvardef,arraydef] then
+                           if lDef.typ in [objectdef,recorddef,procvardef,arraydef] then
                              begin
-                               hdef:=generate_specialization_phase2(spezcontext,TStoredDef(hdef),false,'');
-                               spezcontext.free;
-                               spezcontext:=nil;
-                               if hdef<>GenErrorDef then
+                               lDef:=GenerateSpecializationPhase2(lSpecializationContext,TStoredDef(lDef),false,'');
+                               lSpecializationContext.free;
+                               lSpecializationContext:=nil;
+                               if lDef<>GenErrorDef then
                                  begin
-                                   srsym:=hdef.TypeSym;
-                                   srsymtable:=srsym.owner;
+                                   lSearchSym:=lDef.TypeSym;
+                                   lSearchSymTable:=lSearchSym.owner;
                                  end
                                else
                                  begin
-                                   srsym:=GenErrorSym;
-                                   srsymtable:=nil;
+                                   lSearchSym:=GenErrorSym;
+                                   lSearchSymTable:=nil;
                                  end;
                              end
                            else
-                             if hdef.typ=procdef then
+                             if lDef.typ=procdef then
                                begin
-                                 if not(Block_Type in inline_specialization_block_types) then
+                                 if not(Block_Type in cInlineSpecializationBlockTypes) then
                                    message(parser_e_illegal_expression);
-                                 srsym:=TProcDef(hdef).ProcSym;
-                                 if Assigned(spezcontext.SymTable) then
-                                   srsymtable:=spezcontext.SymTable
+                                 lSearchSym:=TProcDef(lDef).ProcSym;
+                                 if Assigned(lSpecializationContext.FSymTable) then
+                                   lSearchSymTable:=lSpecializationContext.FSymTable
                                  else
-                                   srsymtable:=srsym.owner;
+                                   lSearchSymTable:=lSearchSym.owner;
                                end
                              else
                                InternalError(2015061204);
@@ -3565,144 +3565,144 @@ implementation
                      end;
                  end;
 
-               wasgenericdummy:=false;
-               if Assigned(srsym) and
-                   (sp_generic_dummy in srsym.SymOptions) and
-                   (srsym.typ in [ProcSym,TypeSym]) and
+               lWasGenericDummy:=false;
+               if Assigned(lSearchSym) and
+                   (sp_generic_dummy in lSearchSym.SymOptions) and
+                   (lSearchSym.typ in [ProcSym,TypeSym]) and
                    (
                      (
                        (m_delphi in CurrentSettings.ModeSwitches) and
-                       not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
+                       not (CurrentScanner.FToken in [_LT, _LSHARPBRACKET]) and
                        (
                          (
-                           (srsym.typ=TypeSym) and
-                           (TTypeSym(srsym).TypeDef.typ=undefineddef)
+                           (lSearchSym.typ=TypeSym) and
+                           (TTypeSym(lSearchSym).TypeDef.typ=undefineddef)
                          ) or (
-                           (srsym.typ=ProcSym) and
-                           (TProcSym(srsym).procdeflist.count=0)
+                           (lSearchSym.typ=ProcSym) and
+                           (TProcSym(lSearchSym).procdeflist.count=0)
                          )
                        )
                      )
                      or
                      (
                        not (m_delphi in CurrentSettings.ModeSwitches) and
-                       not isspecialize and
+                       not lIsSpecialize and
                        (
-                         not parse_generic or
+                         not ParseGeneric or
                          not (
                            Assigned(CurrentStructDef) and
-                           Assigned(Get_Generic_In_Hierarchy_By_Name(srsym,CurrentStructDef))
+                           Assigned(Get_Generic_In_Hierarchy_By_Name(lSearchSym,CurrentStructDef))
                          )
                        )
                      )
                    ) then
                  begin
-                   srsym:=resolve_generic_dummysym(srsym.name);
-                   if Assigned(srsym) then
-                     srsymtable:=srsym.owner
+                   lSearchSym:=ResolveGenericDummySym(lSearchSym.name);
+                   if Assigned(lSearchSym) then
+                     lSearchSymTable:=lSearchSym.owner
                    else
                      begin
-                       srsymtable:=nil;
-                       wasgenericdummy:=true;
+                       lSearchSymTable:=nil;
+                       lWasGenericDummy:=true;
                      end;
                  end;
 
                { check hints, but only if it isn't a potential generic symbol;
                  that is checked in sub_expr if it isn't a generic }
-               if Assigned(srsym) and
+               if Assigned(lSearchSym) and
                    not (
-                     (srsym.typ=TypeSym) and
+                     (lSearchSym.typ=TypeSym) and
                      (
-                       (TTypeSym(srsym).TypeDef.typ in [recorddef,objectdef,arraydef,procvardef,undefineddef]) or
+                       (TTypeSym(lSearchSym).TypeDef.typ in [recorddef,objectdef,arraydef,procvardef,undefineddef]) or
                        (
-                         (TTypeSym(srsym).TypeDef.typ=errordef) and
-                         (sp_generic_dummy in srsym.SymOptions)
+                         (TTypeSym(lSearchSym).TypeDef.typ=errordef) and
+                         (sp_generic_dummy in lSearchSym.SymOptions)
                        )
                      ) and
-                     not (sp_generic_para in srsym.SymOptions) and
-                     (CurrentScanner.token in [_LT, _LSHARPBRACKET])
+                     not (sp_generic_para in lSearchSym.SymOptions) and
+                     (CurrentScanner.FToken in [_LT, _LSHARPBRACKET])
                    ) then
-                 Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,tokenpos);
+                 Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg,lTokenPos);
 
                { if nothing found give error and return errorsym }
-               if not Assigned(srsym) or
+               if not Assigned(lSearchSym) or
                    { is this a generic dummy symbol? }
-                   ((srsym.typ=TypeSym) and
-                   Assigned(TTypeSym(srsym).TypeDef) and
-                   (TTypeSym(srsym).TypeDef.typ=undefineddef) and
-                   not (sp_generic_para in srsym.SymOptions) and
-                   not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
+                   ((lSearchSym.typ=TypeSym) and
+                   Assigned(TTypeSym(lSearchSym).TypeDef) and
+                   (TTypeSym(lSearchSym).TypeDef.typ=undefineddef) and
+                   not (sp_generic_para in lSearchSym.SymOptions) and
+                   not (CurrentScanner.FToken in [_LT, _LSHARPBRACKET]) and
                    not (
                      { in non-Delphi modes the generic class' name without a
                        "specialization" or "<T>" may be used to identify the
                        current class }
-                     (sp_generic_dummy in srsym.SymOptions) and
+                     (sp_generic_dummy in lSearchSym.SymOptions) and
                      Assigned(CurrentStructDef) and
                      (df_generic in CurrentStructDef.DefOptions) and
                      not (m_delphi in CurrentSettings.ModeSwitches) and
-                     Assigned(Get_Generic_In_Hierarchy_By_Name(srsym,CurrentStructDef))
+                     Assigned(Get_Generic_In_Hierarchy_By_Name(lSearchSym,CurrentStructDef))
                    )) and
                    { it could be a rename of a generic para }
                    { Note: if this generates false positives we'll need to
                            include a "basesym" to tsym to track the original
                            symbol }
-                   not (sp_explicitrename in srsym.SymOptions) then
+                   not (sp_explicitrename in lSearchSym.SymOptions) then
                  begin
                    { if a generic is parsed and when we are inside an with block,
                      a symbol might not be defined }
                    if Assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.DefOptions) and
-                      findwithsymtable then
+                      FindWithSymTable then
                      begin
                        { create dummy symbol, it will be freed later on }
-                       srsym:=TStoredSym.Create(undefinedsym,'$undefinedsym');
-                       srsymtable:=nil;
+                       lSearchSym:=TStoredSym.Create(undefinedsym,'$undefinedsym');
+                       lSearchSymTable:=nil;
                      end
                    else
                      begin
-                       if wasgenericdummy then
-                         messagepos(tokenpos,parser_e_no_generics_as_types)
+                       if lWasGenericDummy then
+                         messagepos(lTokenPos,parser_e_no_generics_as_types)
                        else
-                         identifier_not_found(orgstoredpattern,tokenpos);
-                       srsym:=GenErrorSym;
-                       srsymtable:=nil;
+                         IdentifierNotFound(lSavedOrgPattern,lTokenPos);
+                       lSearchSym:=GenErrorSym;
+                       lSearchSymTable:=nil;
                      end;
                  end;
              end;
 
            { Access to funcret or need to call the function? }
-           if (srsym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-              (vo_is_funcret in TAbstractVarSym(srsym).VarOptions) and
+           if (lSearchSym.typ in [absolutevarsym,localvarsym,paravarsym]) and
+              (vo_is_funcret in TAbstractVarSym(lSearchSym).VarOptions) and
               { result(x) is not allowed }
-              not(vo_is_result in TAbstractVarSym(srsym).VarOptions) and
+              not(vo_is_result in TAbstractVarSym(lSearchSym).VarOptions) and
               (
-               (CurrentScanner.token=_LKLAMMER) or
+               (CurrentScanner.FToken=_LKLAMMER) or
                (
                 (([m_delphi,m_mac,m_iso] * CurrentSettings.ModeSwitches) <> []) and
-                (afterassignment or in_args)
+                (AfterAssignment or InArgs)
                )
               ) then
             begin
-              hdef:=TDef(srsym.owner.DefOwner);
-              if Assigned(hdef) and
-                 (hdef.typ=procdef) then
-                srsym:=TProcDef(hdef).ProcSym
+              lDef:=TDef(lSearchSym.owner.DefOwner);
+              if Assigned(lDef) and
+                 (lDef.typ=procdef) then
+                lSearchSym:=TProcDef(lDef).ProcSym
               else
                 begin
                   Message(parser_e_illegal_expression);
-                  srsym:=GenErrorSym;
+                  lSearchSym:=GenErrorSym;
                 end;
-              srsymtable:=srsym.owner;
+              lSearchSymTable:=lSearchSym.owner;
             end;
 
             begin
-              nameof_record_sym(srsym);
-              p1:=factor_handle_sym(srsym,srsymtable,again,GetAddr,unit_found,flags,spezcontext);
+              NameOfRecordSym(lSearchSym);
+              ANode:=FactorHandleSym(lSearchSym,lSearchSymTable,AAgain,AGetAddr,lUnitFound,AFlags,lSpecializationContext);
 
-              if Assigned(spezcontext) then
+              if Assigned(lSpecializationContext) then
                 InternalError(2015061207);
 
-              if Assigned(p1) and (p1.nodetype<>errorn) then
-                p1.fileinfo:=tokenpos;
+              if Assigned(ANode) and (ANode.nodetype<>errorn) then
+                ANode.fileinfo:=lTokenPos;
             end;
          end;
 
@@ -3711,52 +3711,52 @@ implementation
          ---------------------------------------------}
 
          { Read a set between [] }
-         function factor_read_set:TNode;
+         function FactorReadSet:TNode;
          var
-           p1,p2 : TNode;
-           lastp,
-           buildp : TArrayConstructorNode;
+           lElementNode,lRangeHighNode : TNode;
+           lLastElement,
+           lArrayConstructor : TArrayConstructorNode;
          begin
-           buildp:=nil;
-           lastp:=nil;
+           lArrayConstructor:=nil;
+           lLastElement:=nil;
          { be sure that a least one arrayconstructn is used, also for an
            empty [] }
-           if CurrentScanner.token=_RECKKLAMMER then
-             buildp:=CArrayConstructorNode.Create(nil,buildp)
+           if CurrentScanner.FToken=_RECKKLAMMER then
+             lArrayConstructor:=CArrayConstructorNode.Create(nil,lArrayConstructor)
            else
             repeat
-              p1:=comp_expr([ef_accept_equal]);
-              if try_to_consume(_POINTPOINT) then
+              lElementNode:=CompExpr([efAcceptEqual]);
+              if TryToConsume(_POINTPOINT) then
                 begin
-                  p2:=comp_expr([ef_accept_equal]);
-                  p1:=CArrayConstructorRangeNode.Create(p1,p2);
+                  lRangeHighNode:=CompExpr([efAcceptEqual]);
+                  lElementNode:=CArrayConstructorRangeNode.Create(lElementNode,lRangeHighNode);
                 end;
                { insert at the end of the tree, to get the correct order }
-             if not Assigned(buildp) then
+             if not Assigned(lArrayConstructor) then
                begin
-                 buildp:=CArrayConstructorNode.Create(p1,nil);
-                 lastp:=buildp;
+                 lArrayConstructor:=CArrayConstructorNode.Create(lElementNode,nil);
+                 lLastElement:=lArrayConstructor;
                end
              else
                begin
-                 lastp.right:=CArrayConstructorNode.Create(p1,nil);
-                 lastp:=TArrayConstructorNode(lastp.right);
+                 lLastElement.right:=CArrayConstructorNode.Create(lElementNode,nil);
+                 lLastElement:=TArrayConstructorNode(lLastElement.right);
                end;
            { there could be more elements }
-           until not try_to_consume(_COMMA);
+           until not TryToConsume(_COMMA);
            if Block_Type in [bt_body,bt_except] then
-             Include(buildp.ArrayConstructorNodeFlags, acnf_allow_array_constructor);
-           factor_read_set:=buildp;
+             Include(lArrayConstructor.ArrayConstructorNodeFlags, acnf_allow_array_constructor);
+           FactorReadSet:=lArrayConstructor;
          end;
 
-         function can_load_self_node: boolean;
+         function CanLoadSelfNode: Boolean;
          begin
-           result:=false;
+           Result:=false;
            if (Block_Type in [bt_const,bt_type,bt_const_type,bt_var_type]) or
               not Assigned(CurrentStructDef) or
               not Assigned(CurrentProcInfo) then
              exit;
-           result:=not CurrentProcInfo.Get_Normal_Proc.procdef.No_Self_Node;
+           Result:=not CurrentProcInfo.Get_Normal_Proc.procdef.No_Self_Node;
          end;
 
 
@@ -3765,125 +3765,125 @@ implementation
       ---------------------------------------------}
 
       var
-         l          : LongInt;
-         ic         : int64;
-         qc         : qword;
-         p1         : TNode;
-         code       : integer;
-         srsym      : TSym;
-         srsymtable : TSymTable;
-         pd         : TProcDef;
-         hclassdef  : TObjectDef;
-         d          : BestReal;
-         hs,hsorg   : string;
-         hdef       : TDef;
-         filepos    : TFilePosInfo;
-         callflags  : TCallNodeFlags;
-         idstr      : TIDString;
-         spezcontext : TSpecializationContext;
-         isspecialize,
-         mightbegeneric,
-         useself,
-         dopostfix,
-         again,
-         updatefpos,
-         nodechanged  : boolean;
-         oldprocvardef : TProcVarDef;
-         oldfuncrefdef : TObjectDef;
+         lLength          : LongInt;
+         lIntConst         : Int64;
+         lQWordConst         : QWord;
+         lNode         : TNode;
+         lCode       : Integer;
+         lSearchSym      : TSym;
+         lSearchSymTable : TSymTable;
+         lProcDef         : TProcDef;
+         lClassDef  : TObjectDef;
+         lRealValue          : BestReal;
+         lText,lOrgText   : String;
+         lDef       : TDef;
+         lFilePos    : TFilePosInfo;
+         lCallFlags  : TCallNodeFlags;
+         lIDString      : TIDString;
+         lSpecializationContext : TSpecializationContext;
+         lIsSpecialize,
+         lMightBeGeneric,
+         lUseSelf,
+         lDoPostfix,
+         lAgain,
+         lUpdateFilePos,
+         lNodeChanged  : Boolean;
+         lOldProcVarDef : TProcVarDef;
+         lOldFuncRefDef : TObjectDef;
       begin
         { can't keep a copy of p1 and compare pointers afterwards, because
           p1 may be freed and reallocated in the same place!  }
-        dopostfix:=true;
-        updatefpos:=false;
-        p1:=nil;
-        filepos:=CurrentTokenPos;
-        again:=false;
-        pd:=nil;
-        isspecialize:=false;
-        if CurrentScanner.token=_ID then
+        lDoPostfix:=true;
+        lUpdateFilePos:=false;
+        lNode:=nil;
+        lFilePos:=CurrentTokenPos;
+        lAgain:=false;
+        lProcDef:=nil;
+        lIsSpecialize:=false;
+        if CurrentScanner.FToken=_ID then
          begin
-           again:=true;
+           lAgain:=true;
            { Handle references to self }
-           if (CurrentScanner.idtoken=_SELF) and can_load_self_node then
+           if (CurrentScanner.FIDToken=_SELF) and CanLoadSelfNode then
              begin
-               p1:=Load_Self_Node;
-               consume(_ID);
-               again:=true;
+               lNode:=Load_Self_Node;
+               Consume(_ID);
+               lAgain:=true;
              end
            else
-             factor_read_id(p1,again);
+             FactorReadID(lNode,lAgain);
 
-           if Assigned(p1) then
+           if Assigned(lNode) then
             begin
               { factor_read_id will set the filepos to after the id,
                 and in case of _SELF the filepos will already be the
                 same as filepos (so setting it again doesn't hurt).  }
-              p1.fileinfo:=filepos;
-              filepos:=CurrentTokenPos;
+              lNode.fileinfo:=lFilePos;
+              lFilePos:=CurrentTokenPos;
             end;
            { handle post fix operators }
-           if (p1.nodetype=specializen) then
+           if (lNode.nodetype=specializen) then
              { post fix operators are handled after specialization }
-             dopostfix:=false
+             lDoPostfix:=false
            else
              if (m_delphi in CurrentSettings.ModeSwitches) and
-                 (Block_Type in inline_specialization_block_types) and
-                 (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
+                 (Block_Type in cInlineSpecializationBlockTypes) and
+                 (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
                begin
-                 idstr:='';
-                 case p1.nodetype of
+                 lIDString:='';
+                 case lNode.nodetype of
                    typen:
-                     idstr:=TTypeNode(p1).TypeSym.name;
+                     lIDString:=TTypeNode(lNode).TypeSym.name;
                    loadvmtaddrn:
-                     if TLoadVMTAddrNode(p1).left.nodetype=typen then
-                       idstr:=TTypeNode(TLoadVMTAddrNode(p1).left).TypeSym.name;
+                     if TLoadVMTAddrNode(lNode).left.nodetype=typen then
+                       lIDString:=TTypeNode(TLoadVMTAddrNode(lNode).left).TypeSym.name;
                    loadn:
-                     idstr:=TLoadNode(p1).SymTableEntry.name;
+                     lIDString:=TLoadNode(lNode).SymTableEntry.name;
                    calln:
-                     idstr:=TCallNode(p1).SymTableProcEntry.name;
+                     lIDString:=TCallNode(lNode).SymTableProcEntry.name;
                    else
                      ;
                  end;
                  { if this is the case then the postfix handling is done in
                    sub_expr if necessary }
-                 dopostfix:=not could_be_generic(idstr);
+                 lDoPostfix:=not CouldBeGeneric(lIDString);
                end;
            { TP7 ugliness: @proc^ is parsed as (@proc)^, but @notproc^ is parsed
              as @(notproc^) }
-           if (m_tp_procvar in CurrentSettings.ModeSwitches) and (CurrentScanner.token=_CARET) and
-              GetAddr and (p1.nodetype=loadn) and (TLoadNode(p1).SymTableEntry.typ=ProcSym) then
-             dopostfix:=false;
+           if (m_tp_procvar in CurrentSettings.ModeSwitches) and (CurrentScanner.FToken=_CARET) and
+              AGetAddr and (lNode.nodetype=loadn) and (TLoadNode(lNode).SymTableEntry.typ=ProcSym) then
+             lDoPostfix:=false;
            { maybe an additional parameter instead of misusing hadspezialize? }
-           if dopostfix and not (ef_had_specialize in flags) then
-             updatefpos:=postfixoperators(p1,again,GetAddr);
+           if lDoPostfix and not (efHadSpecialize in AFlags) then
+             lUpdateFilePos:=PostfixOperators(lNode,lAgain,AGetAddr);
          end
         else
          begin
-           updatefpos:=true;
-           case CurrentScanner.token of
+           lUpdateFilePos:=true;
+           case CurrentScanner.FToken of
              _RETURN :
                 begin
-                  consume(_RETURN);
-                  p1:=nil;
-                  if not(CurrentScanner.token in [_SEMICOLON,_ELSE,_END]) then
+                  Consume(_RETURN);
+                  lNode:=nil;
+                  if not(CurrentScanner.FToken in [_SEMICOLON,_ELSE,_END]) then
                     begin
-                      p1:=comp_expr([ef_accept_equal]);
+                      lNode:=CompExpr([efAcceptEqual]);
                       if not Assigned(CurrentProcInfo) or
                          (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
                          Is_Void(CurrentProcInfo.procdef.ReturnDef) then
                         begin
                           Message(parser_e_void_function);
                           { recovery }
-                          p1.free;
-                          p1:=nil;
+                          lNode.free;
+                          lNode:=nil;
                         end;
                     end;
-                  p1 := CExitNode.Create(p1);
+                  lNode := CExitNode.Create(lNode);
                 end;
              _INHERITED :
                begin
-                 again:=true;
-                 consume(_INHERITED);
+                 lAgain:=true;
+                 Consume(_INHERITED);
                  if Assigned(CurrentProcInfo) and
                     Assigned(CurrentStructDef) and
                     (CurrentStructDef.typ=objectdef) then
@@ -3894,87 +3894,87 @@ implementation
                         (m_delphi in CurrentSettings.ModeSwitches) and
                         (TObjectDef(CurrentStructDef).HelperType=ht_record) then
                       Message(parser_e_inherited_not_in_record);
-                    hclassdef:=TObjectDef(CurrentStructDef).ChildOf;
+                    lClassDef:=TObjectDef(CurrentStructDef).ChildOf;
                     { Objective-C categories *replace* methods in the class
                       they extend, or add methods to it. So calling an
                       inherited method always calls the method inherited from
                       the parent of the extended class }
                     if Is_ObjCCategory(CurrentStructDef) then
-                      hclassdef:=hclassdef.ChildOf;
-                    spezcontext:=nil;
+                      lClassDef:=lClassDef.ChildOf;
+                    lSpecializationContext:=nil;
                     { if inherited; only then we need the method with
                       the same name }
-                    if CurrentScanner.token <> _ID then
+                    if CurrentScanner.FToken <> _ID then
                      begin
-                       hs:=CurrentProcInfo.procdef.ProcSym.name;
-                       hsorg:=CurrentProcInfo.procdef.ProcSym.realname;
-                       anon_inherited:=true;
+                       lText:=CurrentProcInfo.procdef.ProcSym.name;
+                       lOrgText:=CurrentProcInfo.procdef.ProcSym.realname;
+                       AnonInherited:=true;
                        { For message methods we need to search using the message
                          number or string }
-                       pd:=TProcDef(TProcSym(CurrentProcInfo.procdef.ProcSym).ProcdefList[0]);
-                       srdef:=nil;
-                       if (po_msgint in pd.ProcOptions) then
-                         SearchSym_In_Class_By_MsgInt(hclassdef,pd.MessageInf.i,srdef,srsym,srsymtable)
+                       lProcDef:=TProcDef(TProcSym(CurrentProcInfo.procdef.ProcSym).ProcdefList[0]);
+                       SRDef:=nil;
+                       if (po_msgint in lProcDef.ProcOptions) then
+                         SearchSym_In_Class_By_MsgInt(lClassDef,lProcDef.MessageInf.i,SRDef,lSearchSym,lSearchSymTable)
                        else
-                        if (po_msgstr in pd.ProcOptions) then
-                          SearchSym_In_Class_By_MsgStr(hclassdef,pd.MessageInf.str^,srsym,srsymtable)
+                        if (po_msgstr in lProcDef.ProcOptions) then
+                          SearchSym_In_Class_By_MsgStr(lClassDef,lProcDef.MessageInf.str^,lSearchSym,lSearchSymTable)
                        else
                        { helpers have their own ways of dealing with inherited }
                        if Is_ObjectPascal_Helper(CurrentStructDef) then
-                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),lText,lSearchSym,lSearchSymTable,[ssf_has_inherited])
                        else
-                         SearchSym_In_Class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
+                         SearchSym_In_Class(lClassDef,CurrentStructDef,lText,lSearchSym,lSearchSymTable,[ssf_search_helper]);
                      end
                     else
                      begin
                        if not (m_delphi in CurrentSettings.ModeSwitches) and
-                           (Block_Type in inline_specialization_block_types) and
-                           (CurrentScanner.token=_ID) and
-                           (CurrentScanner.idtoken=_SPECIALIZE) then
+                           (Block_Type in cInlineSpecializationBlockTypes) and
+                           (CurrentScanner.FToken=_ID) and
+                           (CurrentScanner.FIDToken=_SPECIALIZE) then
                          begin
-                           consume(_ID);
-                           if CurrentScanner.token<>_ID then
+                           Consume(_ID);
+                           if CurrentScanner.FToken<>_ID then
                              message(parser_e_methode_id_expected);
-                           isspecialize:=true;
+                           lIsSpecialize:=true;
                          end
                        else
-                         isspecialize:=false;
-                       hs:=CurrentScanner.pattern;
-                       hsorg:=CurrentScanner.orgpattern;
-                       consume(_ID);
-                       anon_inherited:=false;
+                         lIsSpecialize:=false;
+                       lText:=CurrentScanner.FPattern;
+                       lOrgText:=CurrentScanner.FOrgPattern;
+                       Consume(_ID);
+                       AnonInherited:=false;
                        { helpers have their own ways of dealing with inherited }
                        if Is_ObjectPascal_Helper(CurrentStructDef) then
-                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),lText,lSearchSym,lSearchSymTable,[ssf_has_inherited])
                        else
-                         SearchSym_In_Class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
-                       if isspecialize and Assigned(srsym) then
+                         SearchSym_In_Class(lClassDef,CurrentStructDef,lText,lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                       if lIsSpecialize and Assigned(lSearchSym) then
                          begin
-                           if not handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
-                             srsym:=nil;
+                           if not HandleSpecializeInlineSpecialization(lSearchSym,false,lSearchSymTable,lSpecializationContext) then
+                             lSearchSym:=nil;
                          end;
                      end;
-                    if Assigned(srsym) then
+                    if Assigned(lSearchSym) then
                      begin
-                       mightbegeneric:=(m_delphi in CurrentSettings.ModeSwitches) and
-                                         (CurrentScanner.token in [_LT,_LSHARPBRACKET]) and
-                                         (sp_generic_dummy in srsym.SymOptions);
+                       lMightBeGeneric:=(m_delphi in CurrentSettings.ModeSwitches) and
+                                         (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) and
+                                         (sp_generic_dummy in lSearchSym.SymOptions);
                        { load the procdef from the inherited class and
                          not from self }
-                       case srsym.typ of
+                       case lSearchSym.typ of
                          TypeSym,
                          ProcSym:
                            begin
                              { typesym is only a valid choice if we're dealing
                                with a potential generic }
-                             if (srsym.typ=TypeSym) and not mightbegeneric then
+                             if (lSearchSym.typ=TypeSym) and not lMightBeGeneric then
                                begin
                                  Message(parser_e_methode_id_expected);
-                                 p1:=CErrorNode.Create;
+                                 lNode:=CErrorNode.Create;
                                end
                              else
                                begin
-                                 useself:=false;
+                                 lUseSelf:=false;
                                  if Is_ObjectPascal_Helper(CurrentStructDef) then
                                    begin
                                      { for a helper load the procdef either from the
@@ -3982,36 +3982,36 @@ implementation
                                        the extended type of the parent helper
                                        depending on the def the found symbol belongs
                                        to }
-                                     if (srsym.Owner.DefOwner.typ=objectdef) and
-                                         Is_ObjectPascal_Helper(TObjectDef(srsym.Owner.DefOwner)) then
-                                       if Def_Is_Related(CurrentStructDef,TDef(srsym.Owner.DefOwner)) and
+                                     if (lSearchSym.Owner.DefOwner.typ=objectdef) and
+                                         Is_ObjectPascal_Helper(TObjectDef(lSearchSym.Owner.DefOwner)) then
+                                       if Def_Is_Related(CurrentStructDef,TDef(lSearchSym.Owner.DefOwner)) and
                                            Assigned(TObjectDef(CurrentStructDef).ChildOf) then
-                                         hdef:=TObjectDef(CurrentStructDef).ChildOf
+                                         lDef:=TObjectDef(CurrentStructDef).ChildOf
                                        else
                                          begin
-                                           hdef:=TObjectDef(srsym.Owner.DefOwner).ExtendedDef;
-                                           useself:=true;
+                                           lDef:=TObjectDef(lSearchSym.Owner.DefOwner).ExtendedDef;
+                                           lUseSelf:=true;
                                          end
                                      else
                                        begin
-                                         hdef:=TDef(srsym.Owner.DefOwner);
-                                         useself:=true;
+                                         lDef:=TDef(lSearchSym.Owner.DefOwner);
+                                         lUseSelf:=true;
                                        end;
                                    end
                                  else
-                                   hdef:=hclassdef;
+                                   lDef:=lClassDef;
                                  if (po_classmethod in CurrentProcInfo.procdef.ProcOptions) or
                                     (po_staticmethod in CurrentProcInfo.procdef.ProcOptions) then
-                                   hdef:=CClassRefDef.Create(hdef);
-                                 if useself then
+                                   lDef:=CClassRefDef.Create(lDef);
+                                 if lUseSelf then
                                    begin
-                                     p1:=CTypeConvNode.Create_Internal(Load_Self_Node,hdef);
+                                     lNode:=CTypeConvNode.Create_Internal(Load_Self_Node,lDef);
                                    end
                                  else
                                    begin
-                                     p1:=CTypeNode.Create(hdef);
+                                     lNode:=CTypeNode.Create(lDef);
                                      { we need to allow helpers here }
-                                     TTypeNode(p1).HelperAllowed:=true;
+                                     TTypeNode(lNode).HelperAllowed:=true;
                                    end;
                                end;
                            end;
@@ -4020,59 +4020,59 @@ implementation
                          else
                            begin
                              Message(parser_e_methode_id_expected);
-                             p1:=CErrorNode.Create;
+                             lNode:=CErrorNode.Create;
                            end;
                        end;
-                       if mightbegeneric then
+                       if lMightBeGeneric then
                          begin
-                           p1:=CSpecializeNode.Create_Inherited(p1,GetAddr,srsym,hclassdef);
+                           lNode:=CSpecializeNode.Create_Inherited(lNode,AGetAddr,lSearchSym,lClassDef);
                          end
                        else
                          begin
-                           if not isspecialize then
-                             Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
-                           callflags:=[cnf_inherited];
+                           if not lIsSpecialize then
+                             Check_Hints(lSearchSym,lSearchSym.SymOptions,lSearchSym.DeprecatedMsg);
+                           lCallFlags:=[cnf_inherited];
                            include(CurrentProcInfo.flags,pi_has_inherited);
-                           if anon_inherited then
-                             include(callflags,cnf_anon_inherited);
-                           do_member_read(hclassdef,GetAddr,srsym,p1,again,callflags,spezcontext);
+                           if AnonInherited then
+                             include(lCallFlags,cnf_anon_inherited);
+                           DoMemberRead(lClassDef,AGetAddr,lSearchSym,lNode,lAgain,lCallFlags,lSpecializationContext);
                          end;
-                       if p1.nodetype=errorn then
+                       if lNode.nodetype=errorn then
                        begin
-                         spezcontext.free;
-                         spezcontext := nil;
+                         lSpecializationContext.free;
+                         lSpecializationContext := nil;
                        end;
                      end
                     else
                      begin
-                       if anon_inherited then
+                       if AnonInherited then
                         begin
                           { For message methods we need to call DefaultHandler }
-                          if (po_msgint in pd.ProcOptions) or
-                             (po_msgstr in pd.ProcOptions) then
+                          if (po_msgint in lProcDef.ProcOptions) or
+                             (po_msgstr in lProcDef.ProcOptions) then
                             begin
-                              SearchSym_In_Class(hclassdef,hclassdef,'DEFAULTHANDLER',srsym,srsymtable,[ssf_search_helper]);
-                              if not Assigned(srsym) or
-                                 (srsym.typ<>ProcSym) then
+                              SearchSym_In_Class(lClassDef,lClassDef,'DEFAULTHANDLER',lSearchSym,lSearchSymTable,[ssf_search_helper]);
+                              if not Assigned(lSearchSym) or
+                                 (lSearchSym.typ<>ProcSym) then
                                 InternalError(200303171);
-                              p1:=nil;
-                              do_proc_call(srsym,srsym.owner,hclassdef,false,again,p1,[],nil);
+                              lNode:=nil;
+                              DoProcCall(lSearchSym,lSearchSym.owner,lClassDef,false,lAgain,lNode,[],nil);
                             end
                           else
                             begin
                               { we need to ignore the inherited; }
-                              p1:=CNothingNode.Create;
+                              lNode:=CNothingNode.Create;
                             end;
                         end
                        else
                         begin
-                          Message1(sym_e_id_no_member,hsorg);
-                          p1:=CErrorNode.Create;
+                          Message1(sym_e_id_no_member,lOrgText);
+                          lNode:=CErrorNode.Create;
                         end;
-                       again:=false;
+                       lAgain:=false;
                      end;
                     { turn auto inheriting off }
-                    anon_inherited:=false;
+                    AnonInherited:=false;
                   end
                  else
                    begin
@@ -4082,69 +4082,69 @@ implementation
                        Message(parser_e_inherited_not_in_record)
                      else
                        Message(parser_e_generic_methods_only_in_methods);
-                     again:=false;
-                     p1:=CErrorNode.Create;
+                     lAgain:=false;
+                     lNode:=CErrorNode.Create;
                    end;
-                 if p1.nodetype<>specializen then
-                   postfixoperators(p1,again,GetAddr);
+                 if lNode.nodetype<>specializen then
+                   PostfixOperators(lNode,lAgain,AGetAddr);
                end;
 
              _INTCONST :
                begin
                  {Try first wether the value fits in an int64.}
-                 val(CurrentScanner.pattern,ic,code);
-                 if code=0 then
+                 val(CurrentScanner.FPattern,lIntConst,lCode);
+                 if lCode=0 then
                    begin
-                      consume(_INTCONST);
-                      Int_To_Type(ic,hdef);
-                      p1:=COrdConstNode.Create(ic,hdef,true);
+                      Consume(_INTCONST);
+                      Int_To_Type(lIntConst,lDef);
+                      lNode:=COrdConstNode.Create(lIntConst,lDef,true);
                    end
                  else
                    begin
                      { try qword next }
-                     val(CurrentScanner.pattern,qc,code);
-                     if code=0 then
+                     val(CurrentScanner.FPattern,lQWordConst,lCode);
+                     if lCode=0 then
                        begin
-                          consume(_INTCONST);
-                          Int_To_Type(qc,hdef);
-                          p1:=COrdConstNode.Create(qc,hdef,true);
+                          Consume(_INTCONST);
+                          Int_To_Type(lQWordConst,lDef);
+                          lNode:=COrdConstNode.Create(lQWordConst,lDef,true);
                        end;
                    end;
-                 if code<>0 then
+                 if lCode<>0 then
                    begin
                      { finally float }
-                     Val(CurrentScanner.pattern,d,code);
-                     if code<>0 then
+                     Val(CurrentScanner.FPattern,lRealValue,lCode);
+                     if lCode<>0 then
                        begin
                           Message(parser_e_invalid_integer);
-                          consume(_INTCONST);
-                          l:=1;
-                          p1:=COrdConstNode.Create(l,SIntType,true);
+                          Consume(_INTCONST);
+                          lLength:=1;
+                          lNode:=COrdConstNode.Create(lLength,SIntType,true);
                        end
                      else
                        begin
-                          consume(_INTCONST);
-                          p1:=CRealConstNode.Create(d,PBestRealType^);
+                          Consume(_INTCONST);
+                          lNode:=CRealConstNode.Create(lRealValue,PBestRealType^);
                        end;
                    end
                  else
                    { the necessary range checking has already been done by val }
-                   TOrdConstNode(p1).rangecheck:=false;
-                 if CurrentScanner.token=_POINT then
+                   TOrdConstNode(lNode).rangecheck:=false;
+                 if CurrentScanner.FToken=_POINT then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
              _REALNUMBER :
                begin
-                 p1:=real_const_node_from_pattern(CurrentScanner.pattern);
-                 consume(_REALNUMBER);
-                 if CurrentScanner.token=_POINT then
+                 lNode:=RealConstNodeFromPattern(CurrentScanner.FPattern);
+                 Consume(_REALNUMBER);
+                 if CurrentScanner.FToken=_POINT then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
@@ -4152,193 +4152,193 @@ implementation
                begin
                  if cs_compilesystem in CurrentSettings.ModuleSwitches then
                    Message(parser_e_nostringaliasinsystem);
-                 string_dec(hdef,true);
+                 StringDec(lDef,true);
                  { STRING can be also a type cast }
-                 if try_to_consume(_LKLAMMER) then
+                 if TryToConsume(_LKLAMMER) then
                   begin
-                    p1:=comp_expr([ef_accept_equal]);
-                    consume(_RKLAMMER);
-                    p1:=CTypeConvNode.Create_Explicit(p1,hdef);
+                    lNode:=CompExpr([efAcceptEqual]);
+                    Consume(_RKLAMMER);
+                    lNode:=CTypeConvNode.Create_Explicit(lNode,lDef);
                     { handle postfix operators here e.g. string(a)[10] }
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end
                  else
                    begin
-                     p1:=CTypeNode.Create(hdef);
-                     if CurrentScanner.token=_POINT then
+                     lNode:=CTypeNode.Create(lDef);
+                     if CurrentScanner.FToken=_POINT then
                        begin
-                         again:=true;
+                         lAgain:=true;
                          { handle type helpers here }
-                         postfixoperators(p1,again,GetAddr);
+                         PostfixOperators(lNode,lAgain,AGetAddr);
                        end;
                    end;
                end;
 
              _FILE :
                begin
-                 hdef:=CFileType;
-                 consume(_FILE);
+                 lDef:=CFileType;
+                 Consume(_FILE);
                  { FILE can be also a type cast }
-                 if try_to_consume(_LKLAMMER) then
+                 if TryToConsume(_LKLAMMER) then
                   begin
-                    p1:=comp_expr([ef_accept_equal]);
-                    consume(_RKLAMMER);
-                    p1:=CTypeConvNode.Create_Explicit(p1,hdef);
+                    lNode:=CompExpr([efAcceptEqual]);
+                    Consume(_RKLAMMER);
+                    lNode:=CTypeConvNode.Create_Explicit(lNode,lDef);
                     { handle postfix operators here e.g. string(a)[10] }
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end
                  else
                   begin
-                    p1:=CTypeNode.Create(hdef);
+                    lNode:=CTypeNode.Create(lDef);
                   end;
                end;
 
              _CSTRING :
                begin
-                 p1:=CStringConstNode.CreatePChar(pchar(CurrentScanner.cstringpattern),length(CurrentScanner.cstringpattern),nil);
-                 consume(_CSTRING);
-                 if CurrentScanner.token in postfixoperator_tokens then
+                 lNode:=CStringConstNode.CreatePChar(pchar(CurrentScanner.FCStringPattern),length(CurrentScanner.FCStringPattern),nil);
+                 Consume(_CSTRING);
+                 if CurrentScanner.FToken in postfixoperator_tokens then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
              _CCHAR :
                begin
-                 p1:=COrdConstNode.Create(ord(CurrentScanner.pattern[1]),CAnsiCharType,true);
-                 consume(_CCHAR);
-                 if CurrentScanner.token=_POINT then
+                 lNode:=COrdConstNode.Create(ord(CurrentScanner.FPattern[1]),CAnsiCharType,true);
+                 Consume(_CCHAR);
+                 if CurrentScanner.FToken=_POINT then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
              _CWSTRING:
                begin
-                 if GetLengthWideString(CurrentScanner.patternw)=1 then
-                   p1:=COrdConstNode.Create(ord(GetCharWideString(CurrentScanner.patternw,0)),CWideCharType,true)
+                 if GetLengthWideString(CurrentScanner.FPatternW)=1 then
+                   lNode:=COrdConstNode.Create(ord(GetCharWideString(CurrentScanner.FPatternW,0)),CWideCharType,true)
                  else
-                   p1:=CStringConstNode.CreateUniStr(CurrentScanner.patternw);
-                 consume(_CWSTRING);
-                 if CurrentScanner.token in postfixoperator_tokens then
+                   lNode:=CStringConstNode.CreateUniStr(CurrentScanner.FPatternW);
+                 Consume(_CWSTRING);
+                 if CurrentScanner.FToken in postfixoperator_tokens then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
              _CWCHAR:
                begin
-                 p1:=COrdConstNode.Create(ord(GetCharWideString(CurrentScanner.patternw,0)),CWideCharType,true);
-                 consume(_CWCHAR);
-                 if CurrentScanner.token=_POINT then
+                 lNode:=COrdConstNode.Create(ord(GetCharWideString(CurrentScanner.FPatternW,0)),CWideCharType,true);
+                 Consume(_CWCHAR);
+                 if CurrentScanner.FToken=_POINT then
                    begin
-                     again:=true;
-                     postfixoperators(p1,again,GetAddr);
+                     lAgain:=true;
+                     PostfixOperators(lNode,lAgain,AGetAddr);
                    end;
                end;
 
              _KLAMMERAFFE :
                begin
-                 consume(_KLAMMERAFFE);
-                 got_addrn:=true;
+                 Consume(_KLAMMERAFFE);
+                 GotAddrN:=true;
                  { support both @<x> and @(<x>) }
-                 if try_to_consume(_LKLAMMER) then
+                 if TryToConsume(_LKLAMMER) then
                   begin
-                    p1:=factor(true,[]);
+                    lNode:=Factor(true,[]);
                     { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-                    if CurrentScanner.token<>_RKLAMMER then
-                      p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-                    consume(_RKLAMMER);
+                    if CurrentScanner.FToken<>_RKLAMMER then
+                      lNode:=SubExpr(opcompare,[efAcceptEqual],lNode);
+                    Consume(_RKLAMMER);
                   end
                  else
-                  p1:=factor(true,[]);
-                 if (CurrentScanner.token in postfixoperator_tokens) and
+                  lNode:=Factor(true,[]);
+                 if (CurrentScanner.FToken in postfixoperator_tokens) and
                    { TP7 ugliness: @proc^ is parsed as (@proc)^, but @notproc^
                      is parsed as @(notproc^) }
                     not
                     (
                      (m_tp_procvar in CurrentSettings.ModeSwitches) and
-                     (CurrentScanner.token=_CARET) and (p1.nodetype=loadn) and (TLoadNode(p1).SymTableEntry.typ=ProcSym)
+                     (CurrentScanner.FToken=_CARET) and (lNode.nodetype=loadn) and (TLoadNode(lNode).SymTableEntry.typ=ProcSym)
                     )
                    then
                   begin
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end;
-                 got_addrn:=false;
-                 p1:=CAddrNode.Create(p1);
-                 p1.fileinfo:=filepos;
+                 GotAddrN:=false;
+                 lNode:=CAddrNode.Create(lNode);
+                 lNode.fileinfo:=lFilePos;
                  if cs_typed_addresses in CurrentSettings.LocalSwitches then
-                   include(TAddrNode(p1).AddrNodeFlags,anf_typedaddr);
+                   include(TAddrNode(lNode).AddrNodeFlags,anf_typedaddr);
                  { Store the procvar that we are expecting, the
                    addrn will use the information to find the correct
                    procdef or it will return an error }
-                 if Assigned(getprocvardef) and
-                    (TAddrNode(p1).left.nodetype = loadn) then
-                   TAddrNode(p1).GetProcVarDef:=getprocvardef;
-                 if (CurrentScanner.token in postfixoperator_tokens) then
+                 if Assigned(GetProcVarDef) and
+                    (TAddrNode(lNode).left.nodetype = loadn) then
+                   TAddrNode(lNode).GetProcVarDef:=GetProcVarDef;
+                 if (CurrentScanner.FToken in postfixoperator_tokens) then
                   begin
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end;
                end;
 
              _LKLAMMER :
                begin
-                 consume(_LKLAMMER);
-                 p1:=comp_expr([ef_accept_equal]);
-                 consume(_RKLAMMER);
+                 Consume(_LKLAMMER);
+                 lNode:=CompExpr([efAcceptEqual]);
+                 Consume(_RKLAMMER);
                  { it's not a good solution
                    but (a+b)^ makes some problems  }
-                 if CurrentScanner.token in postfixoperator_tokens then
+                 if CurrentScanner.FToken in postfixoperator_tokens then
                   begin
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end;
                end;
 
              _LECKKLAMMER :
                begin
-                 consume(_LECKKLAMMER);
-                 p1:=factor_read_set;
-                 consume(_RECKKLAMMER);
+                 Consume(_LECKKLAMMER);
+                 lNode:=FactorReadSet;
+                 Consume(_RECKKLAMMER);
                end;
 
              _PLUS :
                begin
-                 consume(_PLUS);
-                 p1:=factor(false,[]);
-                 p1:=CUnaryPlusNode.Create(p1);
+                 Consume(_PLUS);
+                 lNode:=Factor(false,[]);
+                 lNode:=CUnaryPlusNode.Create(lNode);
                end;
 
              _MINUS :
                begin
-                 consume(_MINUS);
-                 if (CurrentScanner.token = _INTCONST) and not(m_isolike_unary_minus in CurrentSettings.ModeSwitches) then
+                 Consume(_MINUS);
+                 if (CurrentScanner.FToken = _INTCONST) and not(m_isolike_unary_minus in CurrentSettings.ModeSwitches) then
                     begin
                       { ugly hack, but necessary to be able to parse }
                       { -9223372036854775808 as int64 (JM)           }
-                      CurrentScanner.pattern := '-'+CurrentScanner.pattern;
-                      p1:=sub_expr(oppower,[],nil);
+                      CurrentScanner.FPattern := '-'+CurrentScanner.FPattern;
+                      lNode:=SubExpr(oppower,[],nil);
                       {  -1 ** 4 should be - (1 ** 4) and not
                          (-1) ** 4
                          This was the reason of tw0869.pas test failure PM }
-                      if p1.nodetype=starstarn then
+                      if lNode.nodetype=starstarn then
                         begin
-                          if TBinaryNode(p1).left.nodetype=ordconstn then
+                          if TBinaryNode(lNode).left.nodetype=ordconstn then
                             begin
-                              TOrdConstNode(TBinaryNode(p1).left).Value:=-TOrdConstNode(TBinaryNode(p1).left).Value;
-                              p1:=CUnaryMinusNode.Create(p1);
+                              TOrdConstNode(TBinaryNode(lNode).left).Value:=-TOrdConstNode(TBinaryNode(lNode).left).Value;
+                              lNode:=CUnaryMinusNode.Create(lNode);
                             end
-                          else if TBinaryNode(p1).left.nodetype=realconstn then
+                          else if TBinaryNode(lNode).left.nodetype=realconstn then
                             begin
-                              TRealConstNode(TBinaryNode(p1).left).NegateValue;
-                              p1:=CUnaryMinusNode.Create(p1);
+                              TRealConstNode(TBinaryNode(lNode).left).NegateValue;
+                              lNode:=CUnaryMinusNode.Create(lNode);
                             end
                           else
                             InternalError(20021029);
@@ -4347,30 +4347,30 @@ implementation
                  else
                    begin
                      if m_isolike_unary_minus in CurrentSettings.ModeSwitches then
-                       p1:=sub_expr(opmultiply,[],nil)
+                       lNode:=SubExpr(opmultiply,[],nil)
                      else
-                       p1:=sub_expr(oppower,[],nil);
+                       lNode:=SubExpr(oppower,[],nil);
 
-                     p1:=CUnaryMinusNode.Create(p1);
+                     lNode:=CUnaryMinusNode.Create(lNode);
                    end;
                end;
 
              _OP_NOT :
                begin
-                 consume(_OP_NOT);
-                 p1:=factor(false,[]);
-                 p1:=CNotNode.Create(p1);
+                 Consume(_OP_NOT);
+                 lNode:=Factor(false,[]);
+                 lNode:=CNotNode.Create(lNode);
                end;
 
              _NIL :
                begin
-                 consume(_NIL);
-                 p1:=CNilNode.Create;
+                 Consume(_NIL);
+                 lNode:=CNilNode.Create;
                  { It's really ugly code nil^, but delphi allows it }
-                 if CurrentScanner.token in [_CARET,_POINT] then
+                 if CurrentScanner.FToken in [_CARET,_POINT] then
                   begin
-                    again:=true;
-                    postfixoperators(p1,again,GetAddr);
+                    lAgain:=true;
+                    PostfixOperators(lNode,lAgain,AGetAddr);
                   end;
                end;
              _OBJCPROTOCOL:
@@ -4382,11 +4382,11 @@ implementation
                    This code is for handling the second case. Because of 1),
                    we cannot simply use a system unit symbol.
                  }
-                 consume(_OBJCPROTOCOL);
-                 consume(_LKLAMMER);
-                 p1:=factor(false,[]);
-                 consume(_RKLAMMER);
-                 p1:=CInlineNode.Create(in_objc_protocol_x,false,p1);
+                 Consume(_OBJCPROTOCOL);
+                 Consume(_LKLAMMER);
+                 lNode:=Factor(false,[]);
+                 Consume(_RKLAMMER);
+                 lNode:=CInlineNode.Create(in_objc_protocol_x,false,lNode);
                end;
 
              _PROCEDURE,
@@ -4395,224 +4395,224 @@ implementation
                  if (Block_Type=bt_body) and
                      (m_anonymous_functions in CurrentSettings.ModeSwitches) then
                    begin
-                     filepos:=CurrentFilePos;
-                     oldprocvardef:=getprocvardef;
-                     oldfuncrefdef:=getfuncrefdef;
-                     getprocvardef:=nil;
-                     getfuncrefdef:=nil;
-                     pd:=Read_Proc([rpf_anonymous],nil);
-                     getprocvardef:=oldprocvardef;
-                     getfuncrefdef:=oldfuncrefdef;
+                     lFilePos:=CurrentFilePos;
+                     lOldProcVarDef:=GetProcVarDef;
+                     lOldFuncRefDef:=GetFuncRefDef;
+                     GetProcVarDef:=nil;
+                     GetFuncRefDef:=nil;
+                     lProcDef:=Read_Proc([rpf_anonymous],nil);
+                     GetProcVarDef:=lOldProcVarDef;
+                     GetFuncRefDef:=lOldFuncRefDef;
                      { assume that we try to get the address except if certain
                        tokens follow that indicate a call }
-                     do_proc_call(pd.ProcSym,pd.owner,nil,not (CurrentScanner.token in [_POINT,_CARET,_LECKKLAMMER]),
-                                  again,p1,[],nil);
+                     DoProcCall(lProcDef.ProcSym,lProcDef.owner,nil,not (CurrentScanner.FToken in [_POINT,_CARET,_LECKKLAMMER]),
+                                  lAgain,lNode,[],nil);
                      { don't allow @<anon func>, but keep the parsing for recovery }
-                     if (p1.nodetype<>errorn) and GetAddr then
+                     if (lNode.nodetype<>errorn) and AGetAddr then
                        begin
-                         p1.free;
-                         p1:=CErrorNode.Create;
-                         MessagePos(filepos,parser_e_illegal_expression);
+                         lNode.free;
+                         lNode:=CErrorNode.Create;
+                         MessagePos(lFilePos,parser_e_illegal_expression);
                        end;
                    end
                  else
                    begin
                      Message(parser_e_illegal_expression);
-                     p1:=CErrorNode.Create;
+                     lNode:=CErrorNode.Create;
                      { recover }
-                     consume(CurrentScanner.token);
+                     Consume(CurrentScanner.FToken);
                    end;
                end
 
-             else if not statement_expr(p1) then
+             else if not StatementExpr(lNode) then
                begin
                  Message(parser_e_illegal_expression);
-                 p1:=CErrorNode.Create;
+                 lNode:=CErrorNode.Create;
                  { recover }
-                 consume(CurrentScanner.token);
+                 Consume(CurrentScanner.FToken);
                end;
            end;
         end;
 
         { generate error node if no node is created }
-        if not Assigned(p1) then
+        if not Assigned(lNode) then
          begin
 {$ifdef EXTDEBUG}
            Comment(VWarning,'factor: p1=nil');
 {$endif}
-           p1:=CErrorNode.Create;
-           updatefpos:=true;
+           lNode:=CErrorNode.Create;
+           lUpdateFilePos:=true;
          end;
 
         { get the resultdef for the node if nothing stops us }
-        if (not Assigned(p1.resultdef)) and dopostfix then
+        if (not Assigned(lNode.resultdef)) and lDoPostfix then
           begin
-            DoTypeCheckPassChanged(p1,nodechanged);
-            updatefpos:=updatefpos or nodechanged;
+            DoTypeCheckPassChanged(lNode,lNodeChanged);
+            lUpdateFilePos:=lUpdateFilePos or lNodeChanged;
           end;
 
-        if Assigned(p1) and
-           updatefpos then
-          p1.fileinfo:=filepos;
-        factor:=p1;
+        if Assigned(lNode) and
+           lUpdateFilePos then
+          lNode.fileinfo:=lFilePos;
+        Factor:=lNode;
       end;
   {$maxfpuregisters default}
 
-    procedure post_comp_expr_gendef(var def: TDef);
+    procedure PostCompExprGenDef(var ADef: TDef);
       var
-        p1 : TNode;
-        again : boolean;
+        lNode : TNode;
+        lAgain : Boolean;
       begin
-        if not Assigned(def) then
+        if not Assigned(ADef) then
           InternalError(2011053001);
-        again:=false;
+        lAgain:=false;
         { handle potential typecasts, etc }
-        p1:=handle_factor_typenode(def,false,again,nil,false);
+        lNode:=HandleFactorTypeNode(ADef,false,lAgain,nil,false);
         { parse postfix operators }
-        postfixoperators(p1,again,false);
-        if Assigned(p1) and (p1.nodetype=typen) then
-          def:=TTypeNode(p1).TypeDef
+        PostfixOperators(lNode,lAgain,false);
+        if Assigned(lNode) and (lNode.nodetype=typen) then
+          ADef:=TTypeNode(lNode).TypeDef
         else
-          def:=GenErrorDef;
+          ADef:=GenErrorDef;
       end;
 
 {****************************************************************************
                              Sub_Expr
 ****************************************************************************}
-    function sub_expr(pred_level:TOperatorPrecedence;flags:TExprFlags;factornode:TNode):TNode;
+    function SubExpr(APrecedence:TOperatorPrecedence;AFlags:TExprFlags;AFactorNode:TNode):TNode;
     {Reads a subexpression while the operators are of the current precedence
      level, or any higher level. Replaces the old term, simple_expr and
      simpl2_expr.}
 
-      function istypenode(n:TNode):boolean;inline;
+      function IsTypeNode(ANode:TNode):Boolean;inline;
       { Checks whether the given node is a type node or a VMT node containing a
         typenode. This is used in the code for inline specializations in the
         _LT branch below }
         begin
-          result:=Assigned(n) and
+          Result:=Assigned(ANode) and
                     (
-                      (n.nodetype=typen) or
+                      (ANode.nodetype=typen) or
                       (
-                        (n.nodetype=loadvmtaddrn) and
-                        (TLoadVMTAddrNode(n).left.nodetype=typen)
+                        (ANode.nodetype=loadvmtaddrn) and
+                        (TLoadVMTAddrNode(ANode).left.nodetype=typen)
                       )
                     );
         end;
 
-      function gettypedef(n:TNode):TDef;inline;
+      function GetTypeDef(ANode:TNode):TDef;inline;
       { This returns the typedef that belongs to the given typenode or
         loadvmtaddrnode. n must not be Nil! }
         begin
-          if n.nodetype=typen then
-            result:=TTypeNode(n).TypeDef
+          if ANode.nodetype=typen then
+            Result:=TTypeNode(ANode).TypeDef
           else
-            result:=TTypeNode(TLoadVMTAddrNode(n).left).TypeDef;
+            Result:=TTypeNode(TLoadVMTAddrNode(ANode).left).TypeDef;
         end;
 
-      function gettypedef(sym:TSym):TDef;inline;
+      function GetTypeDef(ASym:TSym):TDef;inline;
         begin
-          result:=nil;
-          case sym.typ of
+          Result:=nil;
+          case ASym.typ of
             TypeSym:
-              result:=TTypeSym(sym).TypeDef;
+              Result:=TTypeSym(ASym).TypeDef;
             ProcSym:
-              if not (sp_generic_dummy in sym.SymOptions) or (TProcSym(sym).procdeflist.count>0) then
-                result:=TDef(TProcSym(sym).procdeflist[0]);
+              if not (sp_generic_dummy in ASym.SymOptions) or (TProcSym(ASym).procdeflist.count>0) then
+                Result:=TDef(TProcSym(ASym).procdeflist[0]);
             else
               InternalError(2015092701);
           end;
         end;
 
-      function getgenericsym(n:TNode;out srsym:TSym):boolean;
+      function GetGenericSym(ANode:TNode;out ASym:TSym):Boolean;
         var
-          srsymtable : TSymTable;
+          lSearchSymTable : TSymTable;
         begin
-          srsym:=nil;
-          case n.nodetype of
+          ASym:=nil;
+          case ANode.nodetype of
             typen:
-              srsym:=TTypeNode(n).TypeDef.TypeSym;
+              ASym:=TTypeNode(ANode).TypeDef.TypeSym;
             loadvmtaddrn:
-              srsym:=TTypeNode(TLoadVMTAddrNode(n).left).TypeDef.TypeSym;
+              ASym:=TTypeNode(TLoadVMTAddrNode(ANode).left).TypeDef.TypeSym;
             loadn:
-              if not SearchSym_With_SymOption(TLoadNode(n).SymTableEntry.Name,srsym,srsymtable,sp_generic_dummy) then
-                srsym:=nil;
+              if not SearchSym_With_SymOption(TLoadNode(ANode).SymTableEntry.Name,ASym,lSearchSymTable,sp_generic_dummy) then
+                ASym:=nil;
             calln:
-              srsym:=TCallNode(n).SymTableProcEntry;
+              ASym:=TCallNode(ANode).SymTableProcEntry;
             specializen:
-              srsym:=TSpecializeNode(n).sym;
+              ASym:=TSpecializeNode(ANode).sym;
             { TODO : handle const nodes }
             else
               ;
           end;
-          result:=Assigned(srsym);
+          Result:=Assigned(ASym);
         end;
 
-      function generate_inline_specialization(gendef:TDef;n:TNode;filepos:TFilePosInfo;parseddef:TDef;gensym:TSym;p2:TNode):TNode;
+      function GenerateInlineSpecialization(AGenDef:TDef;ANode:TNode;AFilePos:TFilePosInfo;AParsedDef:TDef;AGenSym:TSym;ARightNode:TNode):TNode;
         var
-          again,
-          GetAddr,
-          unitspecific : boolean;
-          pload : TNode;
-          spezcontext : TSpecializationContext;
-          orggensym : TSym;
-          structdef,
-          InheritedDef : TAbstractRecordDef;
-          callflags : TCallNodeFlags;
+          lAgain,
+          lGetAddr,
+          lUnitSpecific : Boolean;
+          lLoadNode : TNode;
+          lSpecializationContext : TSpecializationContext;
+          lOriginalGenSym : TSym;
+          lStructDef,
+          lInheritedDef : TAbstractRecordDef;
+          lCallFlags : TCallNodeFlags;
         begin
-          if not Assigned(gensym) then
+          if not Assigned(AGenSym) then
             InternalError(2025103101);
 
-          if n.nodetype=specializen then
+          if ANode.nodetype=specializen then
             begin
-              GetAddr:=TSpecializeNode(n).GetAddr;
-              pload:=TSpecializeNode(n).left;
-              InheritedDef:=TAbstractRecordDef(TSpecializeNode(n).InheritedDef);
-              unitspecific:=TSpecializeNode(n).UnitSpecific;
-              TSpecializeNode(n).left:=nil;
+              lGetAddr:=TSpecializeNode(ANode).GetAddr;
+              lLoadNode:=TSpecializeNode(ANode).left;
+              lInheritedDef:=TAbstractRecordDef(TSpecializeNode(ANode).InheritedDef);
+              lUnitSpecific:=TSpecializeNode(ANode).UnitSpecific;
+              TSpecializeNode(ANode).left:=nil;
             end
           else
             begin
-              GetAddr:=false;
-              pload:=nil;
-              InheritedDef:=nil;
-              unitspecific:=false;
+              lGetAddr:=false;
+              lLoadNode:=nil;
+              lInheritedDef:=nil;
+              lUnitSpecific:=false;
             end;
 
-          if Assigned(parseddef) and Assigned(gensym) and Assigned(p2) then
-            gendef:=generate_specialization_phase1(spezcontext,gendef,unitspecific,parseddef,gensym.realname,gensym.owner,p2.fileinfo)
+          if Assigned(AParsedDef) and Assigned(AGenSym) and Assigned(ARightNode) then
+            AGenDef:=GenerateSpecializationPhase1(lSpecializationContext,AGenDef,lUnitSpecific,AParsedDef,AGenSym.realname,AGenSym.owner,ARightNode.fileinfo)
           else
-            gendef:=generate_specialization_phase1(spezcontext,gendef,unitspecific,gensym.realname,gensym.owner);
-          orggensym:=gensym;
-          case gendef.typ of
+            AGenDef:=GenerateSpecializationPhase1(lSpecializationContext,AGenDef,lUnitSpecific,AGenSym.realname,AGenSym.owner);
+          lOriginalGenSym:=AGenSym;
+          case AGenDef.typ of
             errordef:
               begin
-                spezcontext.free;
-                spezcontext:=nil;
-                gensym:=GenErrorSym;
+                lSpecializationContext.free;
+                lSpecializationContext:=nil;
+                AGenSym:=GenErrorSym;
               end;
             objectdef,
             recorddef,
             procvardef,
             arraydef:
               begin
-                gendef:=generate_specialization_phase2(spezcontext,TStoredDef(gendef),false,'');
-                spezcontext.free;
-                spezcontext:=nil;
-                if gendef.typ=errordef then
-                  gensym:=GenErrorSym
+                AGenDef:=GenerateSpecializationPhase2(lSpecializationContext,TStoredDef(AGenDef),false,'');
+                lSpecializationContext.free;
+                lSpecializationContext:=nil;
+                if AGenDef.typ=errordef then
+                  AGenSym:=GenErrorSym
                 else
-                  gensym:=gendef.TypeSym;
+                  AGenSym:=AGenDef.TypeSym;
               end;
             procdef:
               begin
                 if not (Block_Type in [bt_body,bt_except]) then
                   begin
                     message(parser_e_illegal_expression);
-                    gensym:=GenErrorSym;
+                    AGenSym:=GenErrorSym;
                   end
                 else
                   begin
-                    gensym:=TProcDef(gendef).ProcSym;
+                    AGenSym:=TProcDef(AGenDef).ProcSym;
                   end;
               end;
             else
@@ -4620,62 +4620,62 @@ implementation
           end;
           { the generic parameters are parsed and the specialization is done,
             NameOf uses the generic name }
-          nameof_record_sym(orggensym);
+          NameOfRecordSym(lOriginalGenSym);
 
           { in case of a class or a record the specialized generic
             is always a classrefdef }
-          again:=false;
+          lAgain:=false;
 
-          if Assigned(pload) then
+          if Assigned(lLoadNode) then
             begin
-              result:=pload;
-              TypeCheckPass(result);
-              structdef:=InheritedDef;
-              if not Assigned(structdef) then
-                case result.resultdef.typ of
+              Result:=lLoadNode;
+              TypeCheckPass(Result);
+              lStructDef:=lInheritedDef;
+              if not Assigned(lStructDef) then
+                case Result.resultdef.typ of
                   objectdef,
                   recorddef:
                     begin
-                      structdef:=TAbstractRecordDef(result.resultdef);
+                      lStructDef:=TAbstractRecordDef(Result.resultdef);
                     end;
                   classrefdef:
                     begin
-                      structdef:=TAbstractRecordDef(TClassRefDef(result.resultdef).PointedDef);
+                      lStructDef:=TAbstractRecordDef(TClassRefDef(Result.resultdef).PointedDef);
                     end;
                   else
                     InternalError(2015092703);
                 end;
-              if not (structdef.typ in [recorddef,objectdef]) then
+              if not (lStructDef.typ in [recorddef,objectdef]) then
                 InternalError(2018092101);
-              if Assigned(InheritedDef) then
+              if Assigned(lInheritedDef) then
                 begin
-                  callflags:=[cnf_inherited];
+                  lCallFlags:=[cnf_inherited];
                   include(CurrentProcInfo.flags,pi_has_inherited);
                 end
               else
-                callflags:=[];
-              do_member_read(structdef,GetAddr,gensym,result,again,callflags,spezcontext);
-              spezcontext:=nil;
+                lCallFlags:=[];
+              DoMemberRead(lStructDef,lGetAddr,AGenSym,Result,lAgain,lCallFlags,lSpecializationContext);
+              lSpecializationContext:=nil;
             end
           else
             begin
-              if gensym.typ=ProcSym then
+              if AGenSym.typ=ProcSym then
                 begin
-                  result:=nil;
+                  Result:=nil;
                   { check if it's a method/class method }
-                  if is_member_read(gensym,gensym.owner,result,parseddef) then
+                  if IsMemberRead(AGenSym,AGenSym.owner,Result,AParsedDef) then
                     begin
                       { if we are accessing a owner procsym from the nested }
                       { class we need to call it as a class member }
-                      if (gensym.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
-                          Assigned(CurrentStructDef) and (CurrentStructDef<>parseddef) and Is_Owned_By(CurrentStructDef,parseddef) then
-                        result:=CLoadVMTAddrNode.Create(CTypeNode.Create(parseddef));
+                      if (AGenSym.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
+                          Assigned(CurrentStructDef) and (CurrentStructDef<>AParsedDef) and Is_Owned_By(CurrentStructDef,AParsedDef) then
+                        Result:=CLoadVMTAddrNode.Create(CTypeNode.Create(AParsedDef));
                       { not srsymtable.symtabletype since that can be }
                       { withsymtable as well                          }
-                      if (gensym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
+                      if (AGenSym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                         begin
-                          do_member_read(TAbstractRecordDef(parseddef),GetAddr,gensym,result,again,[],spezcontext);
-                          spezcontext:=nil;
+                          DoMemberRead(TAbstractRecordDef(AParsedDef),lGetAddr,AGenSym,Result,lAgain,[],lSpecializationContext);
+                          lSpecializationContext:=nil;
                         end
                       else
                         { no procsyms in records (yet) }
@@ -4684,36 +4684,36 @@ implementation
                   else
                     begin
                       { regular procedure/function call }
-                      do_proc_call(gensym,gensym.owner,nil,
-                                   (GetAddr and not(CurrentScanner.token in [_CARET,_POINT,_LECKKLAMMER])),
-                                   again,result,[],spezcontext);
-                      spezcontext:=nil;
+                      DoProcCall(AGenSym,AGenSym.owner,nil,
+                                   (lGetAddr and not(CurrentScanner.FToken in [_CARET,_POINT,_LECKKLAMMER])),
+                                   lAgain,Result,[],lSpecializationContext);
+                      lSpecializationContext:=nil;
                     end;
                   end
                 else
                   { handle potential typecasts, etc }
-                  result:=handle_factor_typenode(gendef,nameof_active,again,nil,false);
+                  Result:=HandleFactorTypeNode(AGenDef,NameOfActive,lAgain,nil,false);
             end;
 
           { parse postfix operators, NameOf does not need an instance }
-          if postfixoperators(result,again,nameof_active) then
-            if Assigned(result) then
-              result.fileinfo:=filepos
+          if PostfixOperators(Result,lAgain,NameOfActive) then
+            if Assigned(Result) then
+              Result.fileinfo:=AFilePos
             else
-              result:=CErrorNode.Create;
+              Result:=CErrorNode.Create;
 
-          spezcontext.free;
-          spezcontext := nil;
+          lSpecializationContext.free;
+          lSpecializationContext := nil;
         end;
 
-      function maybe_handle_specialization(var p1,p2:TNode;filepos:TFilePosInfo):boolean;
+      function MaybeHandleSpecialization(var ALeftNode,ARightNode:TNode;AFilePos:TFilePosInfo):Boolean;
         var
-          gensym : TSym;
-          parseddef,
-          gendef : TDef;
-          ptmp : TNode;
+          lGenSym : TSym;
+          lParsedDef,
+          lGenDef : TDef;
+          lTempNode : TNode;
         begin
-          result:=false;
+          Result:=false;
           { we need to decide whether we have an inline specialization
             (type nodes to the left and right of "<", mode Delphi and
             ">" or "," following) or a normal "<" comparison }
@@ -4721,89 +4721,89 @@ implementation
                    same name is defined in the same unit where the
                    generic is defined (though "same unit" is not
                    necessarily needed) }
-          if getgenericsym(p1,gensym) and
+          if GetGenericSym(ALeftNode,lGenSym) and
              { Attention: when nested specializations are supported
                           p2 could be a loadn if a "<" follows }
-             istypenode(p2) and
+             IsTypeNode(ARightNode) and
               (m_delphi in CurrentSettings.ModeSwitches) and
               { TODO : add _LT, _LSHARPBRACKET for nested specializations }
-              (CurrentScanner.token in [_GT,_RSHARPBRACKET,_COMMA]) then
+              (CurrentScanner.FToken in [_GT,_RSHARPBRACKET,_COMMA]) then
             begin
               { this is an inline specialization }
 
               { retrieve the defs of two nodes }
-              if p1.nodetype=specializen then
-                gendef:=gettypedef(TSpecializeNode(p1).sym)
+              if ALeftNode.nodetype=specializen then
+                lGenDef:=GetTypeDef(TSpecializeNode(ALeftNode).sym)
               else
-                gendef:=nil;
-              parseddef:=gettypedef(p2);
+                lGenDef:=nil;
+              lParsedDef:=GetTypeDef(ARightNode);
 
               { check the hints for parseddef }
-              Check_Hints(parseddef.TypeSym,parseddef.TypeSym.SymOptions,parseddef.TypeSym.DeprecatedMsg,p1.fileinfo);
+              Check_Hints(lParsedDef.TypeSym,lParsedDef.TypeSym.SymOptions,lParsedDef.TypeSym.DeprecatedMsg,ALeftNode.fileinfo);
 
-              ptmp:=generate_inline_specialization(gendef,p1,filepos,parseddef,gensym,p2);
+              lTempNode:=GenerateInlineSpecialization(lGenDef,ALeftNode,AFilePos,lParsedDef,lGenSym,ARightNode);
 
               { we don't need these nodes anymore }
-              p1.free;
-              p2.free;
-              p2 := nil;
+              ALeftNode.free;
+              ARightNode.free;
+              ARightNode := nil;
 
-              p1:=ptmp;
+              ALeftNode:=lTempNode;
 
-              result:=true;
+              Result:=true;
             end;
         end;
 
       label
         SubExprStart;
       var
-        p1,p2,ptmp : TNode;
-        oldt    : TToken;
-        filepos : TFilePosInfo;
-        gendef : TDef;
-        gensym : TSym;
-        genlist : TFPObjectList;
-        dummyagain : boolean;
-        dummyspezctxt : TSpecializationContext;
+        lLeftNode,lRightNode,lTempNode : TNode;
+        lOldToken    : TToken;
+        lFilePos : TFilePosInfo;
+        lGenDef : TDef;
+        lGenSym : TSym;
+        lGenList : TFPObjectList;
+        lDummyAgain : Boolean;
+        lDummySpecializationContext : TSpecializationContext;
       begin
         SubExprStart:
-        if pred_level=highest_precedence then
+        if APrecedence=highest_precedence then
           begin
-            if factornode=nil then
-              p1:=factor(false,flags)
+            if AFactorNode=nil then
+              lLeftNode:=Factor(false,AFlags)
             else
-              p1:=factornode;
+              lLeftNode:=AFactorNode;
           end
         else
-          p1:=sub_expr(succ(pred_level),flags+[ef_accept_equal],factornode);
+          lLeftNode:=SubExpr(succ(APrecedence),AFlags+[efAcceptEqual],AFactorNode);
         repeat
-          if (CurrentScanner.token in [NOTOKEN..last_operator]) and
-             (CurrentScanner.token in operator_levels[pred_level]) and
-             ((CurrentScanner.token<>_EQ) or (ef_accept_equal in flags)) then
+          if (CurrentScanner.FToken in [NOTOKEN..last_operator]) and
+             (CurrentScanner.FToken in operator_levels[APrecedence]) and
+             ((CurrentScanner.FToken<>_EQ) or (efAcceptEqual in AFlags)) then
            begin
-             oldt:=CurrentScanner.token;
-             filepos:=CurrentTokenPos;
-             consume(CurrentScanner.token);
-             if pred_level=highest_precedence then
-               p2:=factor(false,[])
+             lOldToken:=CurrentScanner.FToken;
+             lFilePos:=CurrentTokenPos;
+             Consume(CurrentScanner.FToken);
+             if APrecedence=highest_precedence then
+               lRightNode:=Factor(false,[])
              else
-               p2:=sub_expr(succ(pred_level),flags+[ef_accept_equal],nil);
-             case oldt of
+               lRightNode:=SubExpr(succ(APrecedence),AFlags+[efAcceptEqual],nil);
+             case lOldToken of
                _PLUS :
-                 p1:=CAddNode.Create(addn,p1,p2);
+                 lLeftNode:=CAddNode.Create(addn,lLeftNode,lRightNode);
                _MINUS :
-                 p1:=CAddNode.Create(subn,p1,p2);
+                 lLeftNode:=CAddNode.Create(subn,lLeftNode,lRightNode);
                _STAR :
-                 p1:=CAddNode.Create(muln,p1,p2);
+                 lLeftNode:=CAddNode.Create(muln,lLeftNode,lRightNode);
                _SLASH :
-                 p1:=CAddNode.Create(slashn,p1,p2);
+                 lLeftNode:=CAddNode.Create(slashn,lLeftNode,lRightNode);
                _EQ:
-                 p1:=CAddNode.Create(EqualN,p1,p2);
+                 lLeftNode:=CAddNode.Create(EqualN,lLeftNode,lRightNode);
                _GT :
-                 p1:=CAddNode.Create(gtn,p1,p2);
+                 lLeftNode:=CAddNode.Create(gtn,lLeftNode,lRightNode);
                _LT :
                  begin
-                   if maybe_handle_specialization(p1,p2,filepos) then
+                   if MaybeHandleSpecialization(lLeftNode,lRightNode,lFilePos) then
                      begin
                        { with p1 now set we are in reality directly behind the
                          call to "factor" thus we need to call down to that
@@ -4821,176 +4821,176 @@ implementation
 
                        { potential generic types that are followed by a "<": }
 
-                       if p1.nodetype=specializen then
+                       if lLeftNode.nodetype=specializen then
                          begin
-                           genlist:=TFPObjectList(CurrentModule.GenericDummySyms.find(TSpecializeNode(p1).sym.name));
-                           if Assigned(genlist) and (genlist.count>0) then
+                           lGenList:=TFPObjectList(CurrentModule.GenericDummySyms.find(TSpecializeNode(lLeftNode).sym.name));
+                           if Assigned(lGenList) and (lGenList.count>0) then
                              begin
-                               gensym:=TGenericDummyEntry(genlist.last).ResolvedSym;
-                               Check_Hints(gensym,gensym.SymOptions,gensym.DeprecatedMsg,p1.fileinfo);
+                               lGenSym:=TGenericDummyEntry(lGenList.last).ResolvedSym;
+                               Check_Hints(lGenSym,lGenSym.SymOptions,lGenSym.DeprecatedMsg,lLeftNode.fileinfo);
 
-                               dummyagain:=false;
-                               dummyspezctxt:=nil;
+                               lDummyAgain:=false;
+                               lDummySpecializationContext:=nil;
 
-                               ptmp:=factor_handle_sym(gensym,
-                                                       gensym.owner,
-                                                       dummyagain,
-                                                       TSpecializeNode(p1).GetAddr,
+                               lTempNode:=FactorHandleSym(lGenSym,
+                                                       lGenSym.owner,
+                                                       lDummyAgain,
+                                                       TSpecializeNode(lLeftNode).GetAddr,
                                                        false,
-                                                       flags,
-                                                       dummyspezctxt);
+                                                       AFlags,
+                                                       lDummySpecializationContext);
 
-                               if dummyagain then
+                               if lDummyAgain then
                                  InternalError(2022012201);
 
-                               p1.free;
-                               p1:=ptmp;
+                               lLeftNode.free;
+                               lLeftNode:=lTempNode;
                              end
                            else
                              begin
-                               identifier_not_found(TSpecializeNode(p1).sym.realname);
-                               p1.free;
-                               p1:=CErrorNode.Create;
+                               IdentifierNotFound(TSpecializeNode(lLeftNode).sym.realname);
+                               lLeftNode.free;
+                               lLeftNode:=CErrorNode.Create;
                              end;
                          end;
 
                        { a) might not have their resultdef set }
-                       if not Assigned(p1.resultdef) then
-                         DoTypeCheckPass(p1);
+                       if not Assigned(lLeftNode.resultdef) then
+                         DoTypeCheckPass(lLeftNode);
 
                        { b) are not checked whether they are an undefined def,
                             but not a generic parameter }
-                       if (p1.nodetype=typen) and
-                           (TTypeNode(p1).TypeDef.typ=undefineddef) and
-                           Assigned(TTypeNode(p1).TypeDef.TypeSym) and
-                           not (sp_generic_para in TTypeNode(p1).TypeDef.TypeSym.SymOptions) then
+                       if (lLeftNode.nodetype=typen) and
+                           (TTypeNode(lLeftNode).TypeDef.typ=undefineddef) and
+                           Assigned(TTypeNode(lLeftNode).TypeDef.TypeSym) and
+                           not (sp_generic_para in TTypeNode(lLeftNode).TypeDef.TypeSym.SymOptions) then
                          begin
-                           identifier_not_found(TTypeNode(p1).TypeDef.TypeSym.RealName);
-                           p1.Free;
-                           p1:=CErrorNode.Create;
+                           IdentifierNotFound(TTypeNode(lLeftNode).TypeDef.TypeSym.RealName);
+                           lLeftNode.Free;
+                           lLeftNode:=CErrorNode.Create;
                          end;
 
                        { c) don't have their hints checked }
-                       if istypenode(p1) then
+                       if IsTypeNode(lLeftNode) then
                          begin
-                           gendef:=gettypedef(p1);
-                           if gendef.typ in [objectdef,recorddef,arraydef,procvardef] then
-                             Check_Hints(gendef.TypeSym,gendef.TypeSym.SymOptions,gendef.TypeSym.DeprecatedMsg);
+                           lGenDef:=GetTypeDef(lLeftNode);
+                           if lGenDef.typ in [objectdef,recorddef,arraydef,procvardef] then
+                             Check_Hints(lGenDef.TypeSym,lGenDef.TypeSym.SymOptions,lGenDef.TypeSym.DeprecatedMsg);
                          end;
 
                        { Note: the second part of the expression will be needed
                                for nested specializations }
-                       if istypenode(p2) {and
+                       if IsTypeNode(lRightNode) {and
                            not (current_scanner.token in [_LT, _LSHARPBRACKET])} then
                          begin
-                           gendef:=gettypedef(p2);
-                           if gendef.typ in [objectdef,recorddef,arraydef,procvardef] then
-                             Check_Hints(gendef.TypeSym,gendef.TypeSym.SymOptions,gendef.TypeSym.DeprecatedMsg);
+                           lGenDef:=GetTypeDef(lRightNode);
+                           if lGenDef.typ in [objectdef,recorddef,arraydef,procvardef] then
+                             Check_Hints(lGenDef.TypeSym,lGenDef.TypeSym.SymOptions,lGenDef.TypeSym.DeprecatedMsg);
                          end;
 
                        { create the comparison node for "<" }
-                       p1:=CAddNode.Create(ltn,p1,p2)
+                       lLeftNode:=CAddNode.Create(ltn,lLeftNode,lRightNode)
                      end;
                  end;
                _GTE :
-                 p1:=CAddNode.Create(gten,p1,p2);
+                 lLeftNode:=CAddNode.Create(gten,lLeftNode,lRightNode);
                _LTE :
-                 p1:=CAddNode.Create(lten,p1,p2);
+                 lLeftNode:=CAddNode.Create(lten,lLeftNode,lRightNode);
                _SYMDIF :
-                 p1:=CAddNode.Create(symdifn,p1,p2);
+                 lLeftNode:=CAddNode.Create(symdifn,lLeftNode,lRightNode);
                _STARSTAR :
-                 p1:=CAddNode.Create(starstarn,p1,p2);
+                 lLeftNode:=CAddNode.Create(starstarn,lLeftNode,lRightNode);
                _OP_AS,
                _OP_IS :
                  begin
                    if (m_delphi in CurrentSettings.ModeSwitches) and
-                       (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
-                       getgenericsym(p2,gensym) then
+                       (CurrentScanner.FToken in [_LT, _LSHARPBRACKET]) and
+                       GetGenericSym(lRightNode,lGenSym) then
                      begin
                        { for now we're handling this as a generic declaration;
                          there could be cases though (because of operator
                          overloading) where this is the wrong decision... }
-                       if gensym.typ=TypeSym then
-                         gendef:=TTypeSym(gensym).TypeDef
+                       if lGenSym.typ=TypeSym then
+                         lGenDef:=TTypeSym(lGenSym).TypeDef
                        else
-                         if gensym.typ=ProcSym then
-                           gendef:=TDef(TProcSym(gensym).procdeflist[0])
+                         if lGenSym.typ=ProcSym then
+                           lGenDef:=TDef(TProcSym(lGenSym).procdeflist[0])
                          else
                            InternalError(2015072401);
 
-                       ptmp:=generate_inline_specialization(gendef,p2,filepos,nil,gensym,nil);
+                       lTempNode:=GenerateInlineSpecialization(lGenDef,lRightNode,lFilePos,nil,lGenSym,nil);
 
                        { we don't need the old p2 anymore }
-                       p2.Free;
+                       lRightNode.Free;
 
-                       p2:=ptmp;
+                       lRightNode:=lTempNode;
 
                        { here we don't need to call back down to "factor", thus
                          no "goto" }
                      end;
 
                    { now generate the "is" or "as" node }
-                   case oldt of
+                   case lOldToken of
                      _OP_AS:
-                       p1:=CAsNode.Create(p1,p2);
+                       lLeftNode:=CAsNode.Create(lLeftNode,lRightNode);
                      _OP_IS:
-                       p1:=CIsNode.Create(p1,p2);
+                       lLeftNode:=CIsNode.Create(lLeftNode,lRightNode);
                      else
                        InternalError(2019050528);
                    end;
                  end;
                _OP_IN :
-                 p1:=CInNode.Create(p1,p2);
+                 lLeftNode:=CInNode.Create(lLeftNode,lRightNode);
                _OP_OR,
                _PIPE {macpas only} :
                  begin
-                   p1:=CAddNode.Create(orn,p1,p2);
-                   if (oldt = _PIPE) then
-                     include(TAddNode(p1).AddNodeFlags,anf_short_bool);
+                   lLeftNode:=CAddNode.Create(orn,lLeftNode,lRightNode);
+                   if (lOldToken = _PIPE) then
+                     include(TAddNode(lLeftNode).AddNodeFlags,anf_short_bool);
                  end;
                _OP_AND,
                _AMPERSAND {macpas only} :
                  begin
-                   p1:=CAddNode.Create(andn,p1,p2);
-                   if (oldt = _AMPERSAND) then
-                     include(TAddNode(p1).AddNodeFlags,anf_short_bool);
+                   lLeftNode:=CAddNode.Create(andn,lLeftNode,lRightNode);
+                   if (lOldToken = _AMPERSAND) then
+                     include(TAddNode(lLeftNode).AddNodeFlags,anf_short_bool);
                  end;
                _OP_DIV :
-                 p1:=CModDivNode.Create(divn,p1,p2);
+                 lLeftNode:=CModDivNode.Create(divn,lLeftNode,lRightNode);
                _OP_NOT :
-                 p1:=CNotNode.Create(p1);
+                 lLeftNode:=CNotNode.Create(lLeftNode);
                _OP_MOD :
                  begin
-                   p1:=CModDivNode.Create(modn,p1,p2);
+                   lLeftNode:=CModDivNode.Create(modn,lLeftNode,lRightNode);
                    if m_isolike_mod in CurrentSettings.ModeSwitches then
-                     include(TModDivNode(p1).ModDivNodeFlags,mdnf_isomod);
+                     include(TModDivNode(lLeftNode).ModDivNodeFlags,mdnf_isomod);
                  end;
                _OP_SHL :
-                 p1:=CShlShrNode.Create(shln,p1,p2);
+                 lLeftNode:=CShlShrNode.Create(shln,lLeftNode,lRightNode);
                _OP_SHR :
-                 p1:=CShlShrNode.Create(shrn,p1,p2);
+                 lLeftNode:=CShlShrNode.Create(shrn,lLeftNode,lRightNode);
                _OP_XOR :
-                 p1:=CAddNode.Create(xorn,p1,p2);
+                 lLeftNode:=CAddNode.Create(xorn,lLeftNode,lRightNode);
                _ASSIGNMENT :
-                 p1:=CAssignmentNode.Create(p1,p2);
+                 lLeftNode:=CAssignmentNode.Create(lLeftNode,lRightNode);
                _NE :
-                 p1:=CAddNode.Create(unequaln,p1,p2);
+                 lLeftNode:=CAddNode.Create(unequaln,lLeftNode,lRightNode);
                else
                  InternalError(2019050529);
              end;
-             p1.fileinfo:=filepos;
+             lLeftNode.fileinfo:=lFilePos;
            end
           else
            break;
         until false;
-        if (p1.nodetype=specializen) and
-            (CurrentScanner.token=_LSHARPBRACKET) and
+        if (lLeftNode.nodetype=specializen) and
+            (CurrentScanner.FToken=_LSHARPBRACKET) and
             (m_delphi in CurrentSettings.ModeSwitches) then
           begin
-            filepos:=CurrentTokenPos;
-            consume(CurrentScanner.token);
-            p2:=factor(false,[]);
-            if maybe_handle_specialization(p1,p2,filepos) then
+            lFilePos:=CurrentTokenPos;
+            Consume(CurrentScanner.FToken);
+            lRightNode:=Factor(false,[]);
+            if MaybeHandleSpecialization(lLeftNode,lRightNode,lFilePos) then
               begin
                 { with p1 now set we are in reality directly behind the
                   call to "factor" thus we need to call down to that
@@ -5004,173 +5004,173 @@ implementation
               end else
                 message(parser_e_illegal_expression);
           end;
-        sub_expr:=p1;
+        SubExpr:=lLeftNode;
       end;
 
 
-    function comp_expr(flags:TExprFlags):TNode;
+    function CompExpr(AFlags:TExprFlags):TNode;
       var
-         oldafterassignment : boolean;
-         p1 : TNode;
+         lOldAfterAssignment : Boolean;
+         lNode : TNode;
       begin
-         oldafterassignment:=afterassignment;
-         afterassignment:=true;
-         p1:=sub_expr(opcompare,flags,nil);
+         lOldAfterAssignment:=AfterAssignment;
+         AfterAssignment:=true;
+         lNode:=SubExpr(opcompare,AFlags,nil);
          { get the resultdef for this expression }
-         if not Assigned(p1.resultdef) then
-          DoTypeCheckPass(p1);
-         afterassignment:=oldafterassignment;
-         comp_expr:=p1;
+         if not Assigned(lNode.resultdef) then
+          DoTypeCheckPass(lNode);
+         AfterAssignment:=lOldAfterAssignment;
+         CompExpr:=lNode;
       end;
 
 
-    function expr(dotypecheck : boolean) : TNode;
+    function Expr(ADoTypeCheck : Boolean) : TNode;
 
       var
-         p1,p2 : TNode;
-         filepos : TFilePosInfo;
-         oldafterassignment,
-         updatefpos          : boolean;
-         oldflags : TNodeFlags;
+         lLeftNode,lRightNode : TNode;
+         lFilePos : TFilePosInfo;
+         lOldAfterAssignment,
+         lUpdateFilePos          : Boolean;
+         lOldFlags : TNodeFlags;
       begin
-         oldafterassignment:=afterassignment;
-         p1:=sub_expr(opcompare,[ef_accept_equal],nil);
+         lOldAfterAssignment:=AfterAssignment;
+         lLeftNode:=SubExpr(opcompare,[efAcceptEqual],nil);
          { get the resultdef for this expression }
-         if not Assigned(p1.resultdef) and
-            dotypecheck then
-          DoTypeCheckPass(p1);
-         filepos:=CurrentTokenPos;
-         if CurrentScanner.token in [_ASSIGNMENT,_PLUSASN,_MINUSASN,_STARASN,_SLASHASN] then
-           afterassignment:=true;
-         updatefpos:=true;
-         case CurrentScanner.token of
+         if not Assigned(lLeftNode.resultdef) and
+            ADoTypeCheck then
+          DoTypeCheckPass(lLeftNode);
+         lFilePos:=CurrentTokenPos;
+         if CurrentScanner.FToken in [_ASSIGNMENT,_PLUSASN,_MINUSASN,_STARASN,_SLASHASN] then
+           AfterAssignment:=true;
+         lUpdateFilePos:=true;
+         case CurrentScanner.FToken of
            _POINTPOINT :
              begin
-                consume(_POINTPOINT);
-                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-                p1:=CRangeNode.Create(p1,p2);
+                Consume(_POINTPOINT);
+                lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+                lLeftNode:=CRangeNode.Create(lLeftNode,lRightNode);
              end;
            _ASSIGNMENT :
              begin
-                consume(_ASSIGNMENT);
-                if Assigned(p1.resultdef) then
-                  if (p1.resultdef.typ=procvardef) then
-                    getprocvardef:=TProcVarDef(p1.resultdef)
-                  else if Is_Invokable(p1.resultdef) then
-                    getfuncrefdef:=TObjectDef(p1.resultdef);
-                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-                if Assigned(getprocvardef) then
-                  handle_procvar(getprocvardef,p2)
-                else if Assigned(getfuncrefdef) then
-                  handle_funcref(getfuncrefdef,p2);
-                getprocvardef:=nil;
-                getfuncrefdef:=nil;
-                p1:=CAssignmentNode.Create(p1,p2);
+                Consume(_ASSIGNMENT);
+                if Assigned(lLeftNode.resultdef) then
+                  if (lLeftNode.resultdef.typ=procvardef) then
+                    GetProcVarDef:=TProcVarDef(lLeftNode.resultdef)
+                  else if Is_Invokable(lLeftNode.resultdef) then
+                    GetFuncRefDef:=TObjectDef(lLeftNode.resultdef);
+                lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+                if Assigned(GetProcVarDef) then
+                  HandleProcVar(GetProcVarDef,lRightNode)
+                else if Assigned(GetFuncRefDef) then
+                  HandleFuncRef(GetFuncRefDef,lRightNode);
+                GetProcVarDef:=nil;
+                GetFuncRefDef:=nil;
+                lLeftNode:=CAssignmentNode.Create(lLeftNode,lRightNode);
              end;
            _PLUSASN :
              begin
                if not(cs_support_c_operators in CurrentSettings.ModuleSwitches) then
                  Message(parser_e_coperators_off);
-               consume(_PLUSASN);
-               p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-               p1:=gen_c_style_operator(addn,p1,p2);
+               Consume(_PLUSASN);
+               lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+               lLeftNode:=GenCStyleOperator(addn,lLeftNode,lRightNode);
             end;
           _MINUSASN :
             begin
                if not(cs_support_c_operators in CurrentSettings.ModuleSwitches) then
                  Message(parser_e_coperators_off);
-               consume(_MINUSASN);
-               p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-               p1:=gen_c_style_operator(subn,p1,p2);
+               Consume(_MINUSASN);
+               lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+               lLeftNode:=GenCStyleOperator(subn,lLeftNode,lRightNode);
             end;
           _STARASN :
             begin
                if not(cs_support_c_operators in CurrentSettings.ModuleSwitches) then
                  Message(parser_e_coperators_off);
-               consume(_STARASN  );
-               p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-               p1:=gen_c_style_operator(muln,p1,p2);
+               Consume(_STARASN  );
+               lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+               lLeftNode:=GenCStyleOperator(muln,lLeftNode,lRightNode);
             end;
           _SLASHASN :
             begin
                if not(cs_support_c_operators in CurrentSettings.ModuleSwitches) then
                  Message(parser_e_coperators_off);
-               consume(_SLASHASN  );
-               p2:=sub_expr(opcompare,[ef_accept_equal],nil);
-               p1:=gen_c_style_operator(slashn,p1,p2);
+               Consume(_SLASHASN  );
+               lRightNode:=SubExpr(opcompare,[efAcceptEqual],nil);
+               lLeftNode:=GenCStyleOperator(slashn,lLeftNode,lRightNode);
             end;
           else
-            updatefpos:=false;
+            lUpdateFilePos:=false;
          end;
-         oldflags:=p1.flags;
+         lOldFlags:=lLeftNode.flags;
          { get the resultdef for this expression }
-         if not Assigned(p1.resultdef) and
-            dotypecheck then
-          DoTypeCheckPass(p1);
+         if not Assigned(lLeftNode.resultdef) and
+            ADoTypeCheck then
+          DoTypeCheckPass(lLeftNode);
          { transfer generic parameter flag }
-         if nf_generic_para in oldflags then
-           include(p1.flags,nf_generic_para);
-         afterassignment:=oldafterassignment;
-         if updatefpos then
-           p1.fileinfo:=filepos;
-         expr:=p1;
+         if nf_generic_para in lOldFlags then
+           include(lLeftNode.flags,nf_generic_para);
+         AfterAssignment:=lOldAfterAssignment;
+         if lUpdateFilePos then
+           lLeftNode.fileinfo:=lFilePos;
+         Expr:=lLeftNode;
       end;
 
-    function get_intconst:TConstExprInt;
+    function GetIntConst:TConstExprInt;
     {Reads an expression, tries to evaluate it and check if it is an integer
      constant. Then the constant is returned.}
     var
-      p:TNode;
+      lNode:TNode;
     begin
-      result:=0;
-      p:=comp_expr([ef_accept_equal]);
+      Result:=0;
+      lNode:=CompExpr([efAcceptEqual]);
       if not CodeGenError then
        begin
-         if (p.nodetype<>ordconstn) or
-            not(Is_Integer(p.resultdef)) then
+         if (lNode.nodetype<>ordconstn) or
+            not(Is_Integer(lNode.resultdef)) then
           Message(parser_e_illegal_expression)
          else
-          result:=TOrdConstNode(p).Value;
+          Result:=TOrdConstNode(lNode).Value;
        end;
-      p.free;
-      p := nil;
+      lNode.free;
+      lNode := nil;
     end;
 
 
-    function get_stringconst:string;
+    function GetStringConst:String;
     {Reads an expression, tries to evaluate it and checks if it is a string
      constant. Then the constant is returned.}
     var
-      p:TNode;
-      snode : TStringConstNode absolute p;
-      pw : TCompilerWideString;
-      pc : PAnsiChar;
-      len : Integer;
+      lNode:TNode;
+      lStringNode : TStringConstNode absolute lNode;
+      lWideString : TCompilerWideString;
+      lChars : PAnsiChar;
+      lLength : Integer;
 
     begin
-      get_stringconst:='';
-      p:=comp_expr([ef_accept_equal]);
-      if p.nodetype<>stringconstn then
+      GetStringConst:='';
+      lNode:=CompExpr([efAcceptEqual]);
+      if lNode.nodetype<>stringconstn then
         begin
-          if (p.nodetype=ordconstn) and Is_Char(p.resultdef) then
-            get_stringconst:=char(TOrdConstNode(p).Value.svalue)
+          if (lNode.nodetype=ordconstn) and Is_Char(lNode.resultdef) then
+            GetStringConst:=Char(TOrdConstNode(lNode).Value.svalue)
           else
             Message(parser_e_illegal_expression);
         end
-      else if (TStringConstNode(p).ConstStringType in [cst_unicodestring,cst_widestring]) then
+      else if (TStringConstNode(lNode).ConstStringType in [cst_unicodestring,cst_widestring]) then
          begin
-           pw:=snode.ValueWS;
-           len:=GetLengthWideString(pw);
-           pc:=GetMem(Len+1);
-           pc[len]:=#0;
-           Unicode2ASCII(pw,pc,CurrentSettings.SourceCodePage);
-           get_stringconst:=StrPas(pc);
-           FreeMem(pc);
+           lWideString:=lStringNode.ValueWS;
+           lLength:=GetLengthWideString(lWideString);
+           lChars:=GetMem(lLength+1);
+           lChars[lLength]:=#0;
+           Unicode2ASCII(lWideString,lChars,CurrentSettings.SourceCodePage);
+           GetStringConst:=StrPas(lChars);
+           FreeMem(lChars);
          end
       else
-        get_stringconst:=snode.AsRawByteString;
-      p.free;
-      p := nil;
+        GetStringConst:=lStringNode.AsRawByteString;
+      lNode.free;
+      lNode := nil;
     end;
 
 end.

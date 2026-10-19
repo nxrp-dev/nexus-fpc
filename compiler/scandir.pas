@@ -77,7 +77,7 @@ unit scandir;
         state : char;
       begin
       { c contains the next char, a + or - would be fine }
-        state:=CurrentScanner.readstate;
+        state:=CurrentScanner.ReadState;
         if state in ['-','+'] then
           HandleSwitch(sw,state);
       end;
@@ -97,7 +97,7 @@ unit scandir;
       var
         state : char;
       begin
-        state:=CurrentScanner.readstate;
+        state:=CurrentScanner.ReadState;
         if (sw<>cs_modulenone) and (state in ['-','+']) then
          begin
            if state='-' then
@@ -112,14 +112,14 @@ unit scandir;
       var
         state : char;
       begin
-        state:=CurrentScanner.readstate;
+        state:=CurrentScanner.ReadState;
         if (sw<>cs_localnone) and (state in ['-','+']) then
           RecordPendingLocalSwitch(sw,state);
       end;
 
     function do_localswitchdefault(sw:TLocalSwitch): char;
       begin
-        result:=CurrentScanner.readstatedefault;
+        result:=CurrentScanner.ReadStateDefault;
         if (sw<>cs_localnone) and (result in ['-','+','*']) then
           RecordPendingLocalSwitch(sw,result);
       end;
@@ -130,9 +130,9 @@ unit scandir;
         state : char;
       begin
         if optional then
-          state:=CurrentScanner.readoptionalstate('+')
+          state:=CurrentScanner.ReadOptionalState('+')
         else
-          state:=CurrentScanner.readstate;
+          state:=CurrentScanner.ReadState;
         if state='-' then
           exclude(CurrentModule.ModuleFlags,flag)
         else
@@ -142,8 +142,8 @@ unit scandir;
 
     procedure do_message(w:integer);
       begin
-        CurrentScanner.skipspace;
-        Message1(w,CurrentScanner.readlongcomment);
+        CurrentScanner.SkipSpace;
+        Message1(w,CurrentScanner.ReadLongComment);
       end;
 
 
@@ -156,9 +156,9 @@ unit scandir;
       begin
         { change description global var in all cases }
         { it not used but in win32 and os2 }
-        CurrentScanner.skipspace;
+        CurrentScanner.SkipSpace;
         { we should only accept Major.Minor format for win32 and os2 }
-        CurrentScanner.readnumber;
+        CurrentScanner.ReadNumber;
         major:=0;
         minor:=0;
         revision:=0;
@@ -167,32 +167,32 @@ unit scandir;
         majorl:=0;
         minorl:=0;
         revisionl:=0;
-        val(CurrentScanner.pattern,majorl,error);
+        val(CurrentScanner.FPattern,majorl,error);
         if (error<>0) or (majorl > high(word)) or (majorl < 0) then
           begin
-            Message1(scan_w_wrong_version_ignored,CurrentScanner.pattern);
+            Message1(scan_w_wrong_version_ignored,CurrentScanner.FPattern);
             exit;
           end;
         IsSet:=true;
-        if CurrentScanner.c='.' then
+        if CurrentScanner.FChar='.' then
           begin
-            CurrentScanner.readchar;
-            CurrentScanner.readnumber;
-            val(CurrentScanner.pattern,minorl,error);
+            CurrentScanner.ReadChar;
+            CurrentScanner.ReadNumber;
+            val(CurrentScanner.FPattern,minorl,error);
             if (error<>0) or (minorl > high(word)) or (minorl < 0) then
               begin
-                Message1(scan_w_wrong_version_ignored,ToStr(majorl)+'.'+CurrentScanner.pattern);
+                Message1(scan_w_wrong_version_ignored,ToStr(majorl)+'.'+CurrentScanner.FPattern);
                 exit;
               end;
-            if (CurrentScanner.c='.') and
+            if (CurrentScanner.FChar='.') and
                allowrevision then
               begin
-                 CurrentScanner.readchar;
-                 CurrentScanner.readnumber;
-                 val(CurrentScanner.pattern,revisionl,error);
+                 CurrentScanner.ReadChar;
+                 CurrentScanner.ReadNumber;
+                 val(CurrentScanner.FPattern,revisionl,error);
                  if (error<>0) or (revisionl > high(word)) or (revisionl < 0) then
                    begin
-                      Message1(scan_w_wrong_version_ignored,ToStr(majorl)+'.'+ToStr(minorl)+'.'+CurrentScanner.pattern);
+                      Message1(scan_w_wrong_version_ignored,ToStr(majorl)+'.'+ToStr(minorl)+'.'+CurrentScanner.FPattern);
                       exit;
                    end;
                  major:=word(majorl);
@@ -224,11 +224,11 @@ unit scandir;
         hs : string;
         b : LongInt;
       begin
-        CurrentScanner.skipspace;
-        if not(CurrentScanner.c in ['0'..'9']) then
+        CurrentScanner.SkipSpace;
+        if not(CurrentScanner.FChar in ['0'..'9']) then
          begin
            { Support also the ON and OFF as switch }
-           hs:=CurrentScanner.readid;
+           hs:=CurrentScanner.ReadID;
            if (hs='ON') then
             CurrentSettings.PackRecords:=4
            else if (hs='OFF') then
@@ -252,7 +252,7 @@ unit scandir;
          end
         else
          begin
-           b:=CurrentScanner.readval;
+           b:=CurrentScanner.ReadVal;
            case b of
              1,2,4,8,16,32 : CurrentSettings.PackRecords:=b;
            else
@@ -287,8 +287,8 @@ unit scandir;
         cpu: TCPUType;
         found: Boolean;
       begin
-        CurrentScanner.skipspace;
-        s:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        s:=CurrentScanner.ReadID;
         If Inside_Asm_Statement then
           Message1(scan_w_no_asm_reader_switch_inside_asm,s);
         if s='ANY' then
@@ -315,8 +315,8 @@ unit scandir;
         s : string;
         AsmMode: TAsmMode;
       begin
-        CurrentScanner.skipspace;
-        s:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        s:=CurrentScanner.ReadID;
         If Inside_Asm_Statement then
           Message1(scan_w_no_asm_reader_switch_inside_asm,s);
         if s='DEFAULT' then
@@ -345,8 +345,8 @@ unit scandir;
               Message(scan_w_switch_is_global)
             else
               begin
-                 CurrentScanner.skipspace;
-                 hs:=CurrentScanner.readid;
+                 CurrentScanner.SkipSpace;
+                 hs:=CurrentScanner.ReadID;
                  if hs='GUI' then
                    SetApptype(app_gui)
                  else if hs='CONSOLE' then
@@ -364,8 +364,8 @@ unit scandir;
       var
          hs : string;
       begin
-        CurrentScanner.skipspace;
-        hs:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        hs:=CurrentScanner.ReadID;
         if (hs='') then
           Message(parser_e_proc_directive_expected)
         else
@@ -446,8 +446,8 @@ unit scandir;
           Message(scan_w_description_not_support);
         { change description global var in all cases }
         { it not used but in win32 and os2 }
-        CurrentScanner.skipspace;
-        Description:=CurrentScanner.readcomment;
+        CurrentScanner.SkipSpace;
+        Description:=CurrentScanner.ReadComment;
         DescriptionSetExplicity:=true;
       end;
 
@@ -473,9 +473,9 @@ unit scandir;
 
     procedure dir_fputype;
       begin
-        CurrentScanner.skipspace;
+        CurrentScanner.SkipSpace;
         Undef_System_Macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
-        if not(SetFPUType(upper(CurrentScanner.readcomment),CurrentSettings.FPUType)) then
+        if not(SetFPUType(upper(CurrentScanner.ReadComment),CurrentSettings.FPUType)) then
           comment(VError,'Illegal FPU type');
         Def_System_Macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
      end;
@@ -487,13 +487,13 @@ unit scandir;
         else if not(TargetInfo.system in systems_darwin) then
           begin
             Message(scan_w_frameworks_darwin_only);
-            CurrentScanner.skipspace;
-            CurrentScanner.readcomment
+            CurrentScanner.SkipSpace;
+            CurrentScanner.ReadComment
           end
         else
           begin
-            CurrentScanner.skipspace;
-            CurrentModule.LocalFrameworkSearchPath.AddPath(CurrentScanner.readcomment,false);
+            CurrentScanner.SkipSpace;
+            CurrentModule.LocalFrameworkSearchPath.AddPath(CurrentScanner.ReadComment,false);
           end;
       end;
 
@@ -516,8 +516,8 @@ unit scandir;
       begin
         if not (TargetInfo.system in systems_windows) then
           Message(scan_w_imagebase_not_support);
-        CurrentScanner.skipspace;
-        ImageBase:=CurrentScanner.readval;
+        CurrentScanner.SkipSpace;
+        ImageBase:=CurrentScanner.ReadVal;
         ImageBaseSetExplicity:=true
       end;
 
@@ -539,8 +539,8 @@ unit scandir;
          Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            path:=CurrentScanner.readcomment;
+            CurrentScanner.SkipSpace;
+            path:=CurrentScanner.ReadComment;
             CurrentModule.LocalIncludeSearchPath.AddPath(path,false);
             Message2(general_t_includepath_local,CurrentModule.RealModuleName^,path);
           end;
@@ -561,8 +561,8 @@ unit scandir;
         hs : string;
       begin
         {corba/com/default}
-        CurrentScanner.skipspace;
-        hs:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        hs:=CurrentScanner.ReadID;
         if (hs='CORBA') then
           CurrentSettings.InterfaceType:=it_interfacecorba
         else if (hs='COM') then
@@ -592,8 +592,8 @@ unit scandir;
          Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            path:=CurrentScanner.readcomment;
+            CurrentScanner.SkipSpace;
+            path:=CurrentScanner.ReadComment;
             CurrentModule.LocalLibrarySearchPath.AddPath(path,false);
             Message2(general_t_librarypath_local,CurrentModule.RealModuleName^,path);
           end;
@@ -603,14 +603,14 @@ unit scandir;
       var
         s : string;
       begin
-        CurrentScanner.skipspace;
-        if CurrentScanner.c = '''' then
+        CurrentScanner.SkipSpace;
+        if CurrentScanner.FChar = '''' then
           begin
-            s:= CurrentScanner.readquotedstring;
-            CurrentScanner.readcomment
+            s:= CurrentScanner.ReadQuotedString;
+            CurrentScanner.ReadComment
           end
         else
-          s:= TrimSpace(CurrentScanner.readcomment);
+          s:= TrimSpace(CurrentScanner.ReadComment);
         s:=FixFileName(s);
         if ExtractFileExt(s)='' then
           s:=ChangeFileExt(s,TargetInfo.objext);
@@ -621,14 +621,14 @@ unit scandir;
       var
         s : string;
       begin
-        CurrentScanner.skipspace;
-        if CurrentScanner.c = '''' then
+        CurrentScanner.SkipSpace;
+        if CurrentScanner.FChar = '''' then
           begin
-            s:= CurrentScanner.readquotedstring;
-            CurrentScanner.readcomment
+            s:= CurrentScanner.ReadQuotedString;
+            CurrentScanner.ReadComment
           end
         else
-          s:= TrimSpace(CurrentScanner.readcomment);
+          s:= TrimSpace(CurrentScanner.ReadComment);
         s:=FixFileName(s);
         if (TargetInfo.system in systems_darwin) then
           CurrentModule.LinkOtherFrameworks.add(s,link_always)
@@ -648,16 +648,16 @@ unit scandir;
         p : LongInt;
         linkMode : TLinkMode;
       begin
-        CurrentScanner.skipspace;
-        if CurrentScanner.c = '''' then
+        CurrentScanner.SkipSpace;
+        if CurrentScanner.FChar = '''' then
           begin
-            libname:= CurrentScanner.readquotedstring;
-            s:= CurrentScanner.readcomment;
+            libname:= CurrentScanner.ReadQuotedString;
+            s:= CurrentScanner.ReadComment;
             p:=pos(',',s);
           end
         else
           begin
-            s:= CurrentScanner.readcomment;
+            s:= CurrentScanner.ReadComment;
             p:=pos(',',s);
             if p=0 then
               libname:=TrimSpace(s)
@@ -727,8 +727,8 @@ unit scandir;
       var
         s: string;
       begin
-        CurrentScanner.skipspace;
-        s:=TrimSpace(CurrentScanner.readcomment);
+        CurrentScanner.SkipSpace;
+        s:=TrimSpace(CurrentScanner.ReadComment);
         if Assigned(CurrentModule.MainName) and
            (s<>CurrentModule.MainName^) then
           begin
@@ -748,10 +748,10 @@ unit scandir;
          l  : integer;
          hs : string;
       begin
-         CurrentScanner.skipspace;
-         if not(CurrentScanner.c in ['0'..'9']) then
+         CurrentScanner.SkipSpace;
+         if not(CurrentScanner.FChar in ['0'..'9']) then
            begin
-              hs:=CurrentScanner.readid;
+              hs:=CurrentScanner.ReadID;
               if (hs='NORMAL') or (hs='DEFAULT') then
                 CurrentSettings.MaxFPURegisters:=-1
               else
@@ -759,7 +759,7 @@ unit scandir;
            end
          else
            begin
-              l:=CurrentScanner.readval;
+              l:=CurrentScanner.ReadVal;
               case l of
                  0..8:
                    CurrentSettings.MaxFPURegisters:=l;
@@ -773,8 +773,8 @@ unit scandir;
       begin
         if not (TargetInfo.system in systems_windows) then
           Message(scan_w_maxstacksize_not_support);
-        CurrentScanner.skipspace;
-        MaxStackSize:=CurrentScanner.readval;
+        CurrentScanner.SkipSpace;
+        MaxStackSize:=CurrentScanner.ReadVal;
         MaxStackSizeSetExplicity:=true;
       end;
 
@@ -786,8 +786,8 @@ unit scandir;
       begin
         heapsize_limit:=high(LongInt);
         maxheapsize_limit:=high(LongInt);
-        CurrentScanner.skipspace;
-        l:=CurrentScanner.readval;
+        CurrentScanner.SkipSpace;
+        l:=CurrentScanner.ReadVal;
         if (l>=1024)
 
           and (l<67107840)
@@ -796,18 +796,18 @@ unit scandir;
           StackSize:=min(l,67107839)
         else
           Message(scan_w_invalid_stacksize);
-        if CurrentScanner.c=',' then
+        if CurrentScanner.FChar=',' then
           begin
-            CurrentScanner.readchar;
-            CurrentScanner.skipspace;
-            l:=CurrentScanner.readval64;
+            CurrentScanner.ReadChar;
+            CurrentScanner.SkipSpace;
+            l:=CurrentScanner.ReadVal64;
             if l>=1024 then
               HeapSize:=min(l,heapsize_limit);
-            if CurrentScanner.c=',' then
+            if CurrentScanner.FChar=',' then
               begin
-                CurrentScanner.readchar;
-                CurrentScanner.skipspace;
-                l:=CurrentScanner.readval64;
+                CurrentScanner.ReadChar;
+                CurrentScanner.SkipSpace;
+                l:=CurrentScanner.ReadVal64;
                 if l>=HeapSize then
                   MaxHeapSize:=min(l,maxheapsize_limit)
                 else
@@ -824,13 +824,13 @@ unit scandir;
         w  : LongInt;
       begin
         w:=0;
-        CurrentScanner.skipspace;
+        CurrentScanner.SkipSpace;
         { Message level specified? }
-        if CurrentScanner.c='''' then
+        if CurrentScanner.FChar='''' then
           w:=scan_n_user_defined
         else
           begin
-            hs:=CurrentScanner.readid;
+            hs:=CurrentScanner.ReadID;
             if (hs='WARN') or (hs='WARNING') then
               w:=scan_w_user_defined
             else
@@ -854,15 +854,15 @@ unit scandir;
         { Only print message when there was no error }
         if w<>0 then
           begin
-            CurrentScanner.skipspace;
-            if CurrentScanner.c='''' then
-              s:=CurrentScanner.readlongquotedstring
+            CurrentScanner.SkipSpace;
+            if CurrentScanner.FChar='''' then
+              s:=CurrentScanner.ReadLongQuotedString
             else
-              s:=CurrentScanner.readlongcomment;
+              s:=CurrentScanner.ReadLongComment;
             Message1(w,s);
           end
         else
-          CurrentScanner.readcomment;
+          CurrentScanner.ReadComment;
       end;
 
 
@@ -870,8 +870,8 @@ unit scandir;
       begin
         if not (TargetInfo.system in systems_windows) then
           Message(scan_w_minstacksize_not_support);
-        CurrentScanner.skipspace;
-        MinStackSize:=CurrentScanner.readval;
+        CurrentScanner.SkipSpace;
+        MinStackSize:=CurrentScanner.ReadVal;
         MinStackSizeSetExplicity:=true;
       end;
 
@@ -883,13 +883,13 @@ unit scandir;
         Message(scan_w_switch_is_global)
       else
         begin
-          CurrentScanner.skipspace;
-          CurrentScanner.readstring;
+          CurrentScanner.SkipSpace;
+          CurrentScanner.ReadString;
           if not CurrentModule.ModeSwitchAllowed and
-              not ((m_mac in CurrentSettings.ModeSwitches) and (CurrentScanner.pattern='MACPAS')) then
-            Message1(scan_e_mode_switch_not_allowed,CurrentScanner.pattern)
-          else if not SetCompileMode(CurrentScanner.pattern,false) then
-            Message1(scan_w_illegal_switch,CurrentScanner.pattern)
+              not ((m_mac in CurrentSettings.ModeSwitches) and (CurrentScanner.FPattern='MACPAS')) then
+            Message1(scan_e_mode_switch_not_allowed,CurrentScanner.FPattern)
+          else if not SetCompileMode(CurrentScanner.FPattern,false) then
+            Message1(scan_w_illegal_switch,CurrentScanner.FPattern)
         end;
       CurrentModule.ModeSwitchAllowed:= false;
     end;
@@ -900,8 +900,8 @@ unit scandir;
       begin
         if not (m_multiline_strings in CurrentSettings.ModeSwitches) then
           Message1(scan_e_illegal_directive,'MULTILINESTRINGLINEENDING');
-        CurrentScanner.skipspace;
-        s:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        s:=CurrentScanner.ReadID;
         if (s='CR') then
           CurrentSettings.LineEndingType:=le_cr
         else if (s='CRLF') then
@@ -922,8 +922,8 @@ unit scandir;
       begin
         if not (m_delphi in CurrentSettings.ModeSwitches) then
           Message1(scan_e_illegal_directive,'TEXTBLOCK');
-        CurrentScanner.skipspace;
-        s:=CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        s:=CurrentScanner.ReadID;
         if (s='CR') then
           CurrentSettings.LineEndingType:=le_cr
         else if (s='CRLF') then
@@ -943,10 +943,10 @@ unit scandir;
       begin
         if not (m_multiline_strings in CurrentSettings.ModeSwitches) then
           Message1(scan_e_illegal_directive,'MULTILINESTRINGTRIMLEFT');
-        CurrentScanner.skipspace;
-        if (CurrentScanner.c in ['0'..'9']) then
+        CurrentScanner.SkipSpace;
+        if (CurrentScanner.FChar in ['0'..'9']) then
           begin
-            count:=CurrentScanner.readval;
+            count:=CurrentScanner.ReadVal;
             if (count<0) or (count>high(word)) then
               Message(scan_e_trimcount_out_of_range)
             else
@@ -957,7 +957,7 @@ unit scandir;
           end
         else
           begin
-            s:=CurrentScanner.readid;
+            s:=CurrentScanner.ReadID;
             if s='ALL' then
               begin
                 CurrentSettings.WhitespaceTrimCount:=high(word);
@@ -984,13 +984,13 @@ unit scandir;
           Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            CurrentScanner.readstring;
-            s:=CurrentScanner.pattern;
+            CurrentScanner.SkipSpace;
+            CurrentScanner.ReadString;
+            s:=CurrentScanner.FPattern;
             { don't combine the assignments to s as the method call will be
               done before "current_scanner.pattern" is assigned to s and the method changes
               "current_scanner.pattern" }
-            s:=s+CurrentScanner.readoptionalstate('+');
+            s:=s+CurrentScanner.ReadOptionalState('+');
             if not SetCompileModeSwitch(s,false) then
               Message1(scan_w_illegal_switch,s)
           end;
@@ -1008,9 +1008,9 @@ unit scandir;
         Message(scan_w_switch_is_global)
       else
         begin
-          CurrentScanner.skipspace;
-          CurrentScanner.readstring;
-          s:=CurrentScanner.orgpattern;
+          CurrentScanner.SkipSpace;
+          CurrentScanner.ReadString;
+          s:=CurrentScanner.FOrgPattern;
           While (s<>'') do
             begin
               // We may not yet have a correct module namespacelist.
@@ -1019,12 +1019,12 @@ unit scandir;
               else // copied when correct module is activated
                 PreModule_NamespaceList.Insert(s);
               s:='';
-              if CurrentScanner.c=',' then
+              if CurrentScanner.FChar=',' then
                 begin
-                  CurrentScanner.readchar;
-                  CurrentScanner.skipspace;
-                  CurrentScanner.readstring;
-                  s:=CurrentScanner.orgpattern;
+                  CurrentScanner.ReadChar;
+                  CurrentScanner.SkipSpace;
+                  CurrentScanner.ReadString;
+                  s:=CurrentScanner.FOrgPattern;
                 end;
             end;
           end;
@@ -1053,8 +1053,8 @@ unit scandir;
          Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            path:=CurrentScanner.readcomment;
+            CurrentScanner.SkipSpace;
+            path:=CurrentScanner.ReadComment;
             CurrentModule.LocalObjectSearchPath.AddPath(path,false);
             Message2(general_t_objectpath_local,CurrentModule.RealModuleName^,path);
           end;
@@ -1069,9 +1069,9 @@ unit scandir;
       var
         hs : string;
       begin
-        CurrentScanner.skipspace;
+        CurrentScanner.SkipSpace;
         { Support also the ON and OFF as switch }
-        hs:=CurrentScanner.readid;
+        hs:=CurrentScanner.ReadID;
         if (hs='ON') then
           RecordPendingOptimizerSwitches(level2optimizerswitches)
         else if (hs='OFF') then
@@ -1097,10 +1097,10 @@ unit scandir;
         hs : string;
         v : LongInt;
       begin
-        CurrentScanner.skipspace;
-        if not(CurrentScanner.c in ['0'..'9']) then
+        CurrentScanner.SkipSpace;
+        if not(CurrentScanner.FChar in ['0'..'9']) then
          begin
-           hs:=CurrentScanner.readid;
+           hs:=CurrentScanner.ReadID;
            if (hs='NORMAL') or (hs='DEFAULT') then
             RecordPendingPackEnum(4)
            else
@@ -1108,11 +1108,11 @@ unit scandir;
          end
         else
          begin
-           v:=CurrentScanner.readval;
+           v:=CurrentScanner.ReadVal;
            case v of
             1,2,4 : RecordPendingPackEnum(v);
            else
-            Message1(scan_e_illegal_pack_enum, CurrentScanner.pattern);
+            Message1(scan_e_illegal_pack_enum, CurrentScanner.FPattern);
            end;
          end;
       end;
@@ -1120,9 +1120,9 @@ unit scandir;
 
     procedure dir_minfpconstprec;
       begin
-        CurrentScanner.skipspace;
-        if not SetMinFPConstPrec(CurrentScanner.readid,CurrentSettings.MinFPConstPrec) then
-          Message1(scan_e_illegal_minfpconstprec, CurrentScanner.pattern);
+        CurrentScanner.SkipSpace;
+        if not SetMinFPConstPrec(CurrentScanner.ReadID,CurrentSettings.MinFPConstPrec) then
+          Message1(scan_e_illegal_minfpconstprec, CurrentScanner.FPattern);
       end;
 
 
@@ -1131,10 +1131,10 @@ unit scandir;
         hs : string;
         v : LongInt;
       begin
-        CurrentScanner.skipspace;
-        if not(CurrentScanner.c in ['0'..'9']) then
+        CurrentScanner.SkipSpace;
+        if not(CurrentScanner.FChar in ['0'..'9']) then
          begin
-           hs:=CurrentScanner.readid;
+           hs:=CurrentScanner.ReadID;
            { C has the special recordalignmax of C_alignment }
            if (hs='C') then
             RecordPendingPackRecords(CAlignment)
@@ -1146,11 +1146,11 @@ unit scandir;
          end
         else
          begin
-           v:=CurrentScanner.readval;
+           v:=CurrentScanner.ReadVal;
            case v of
              1,2,4,8,16,32 : RecordPendingPackRecords(v);
            else
-            Message1(scan_e_illegal_pack_records,CurrentScanner.pattern);
+            Message1(scan_e_illegal_pack_records,CurrentScanner.FPattern);
            end;
          end;
       end;
@@ -1161,10 +1161,10 @@ unit scandir;
         hs : string;
         v : LongInt;
       begin
-        CurrentScanner.skipspace;
-        if not(CurrentScanner.c in ['1','2','4','8']) then
+        CurrentScanner.SkipSpace;
+        if not(CurrentScanner.FChar in ['1','2','4','8']) then
          begin
-           hs:=CurrentScanner.readid;
+           hs:=CurrentScanner.ReadID;
            if (hs='FIXED') or (hs='DEFAULT') OR (hs='NORMAL') then
             RecordPendingSetAlloc(0) {Fixed mode, sets are 4 or 32 bytes}
            else
@@ -1172,7 +1172,7 @@ unit scandir;
          end
         else
          begin
-           v:=CurrentScanner.readval;
+           v:=CurrentScanner.ReadVal;
            case v of
             1,2,4,8 : RecordPendingSetAlloc(v);
            else
@@ -1291,16 +1291,16 @@ unit scandir;
         Origin : TPathStr;
         OriginLine : LongInt;
       begin
-        Origin:=CurrentScanner.InputFile.Path+CurrentScanner.InputFile.Name;
-        OriginLine:=CurrentScanner.line_no;
-        CurrentScanner.skipspace;
-        if CurrentScanner.c = '''' then
+        Origin:=CurrentScanner.FInputFile.Path+CurrentScanner.FInputFile.Name;
+        OriginLine:=CurrentScanner.FLineNumber;
+        CurrentScanner.SkipSpace;
+        if CurrentScanner.FChar = '''' then
           begin
-            s:= CurrentScanner.readquotedstring;
-            CurrentScanner.readcomment
+            s:= CurrentScanner.ReadQuotedString;
+            CurrentScanner.ReadComment
           end
         else
-          s:= TrimSpace(CurrentScanner.readcomment);
+          s:= TrimSpace(CurrentScanner.ReadComment);
 
         { replace * with the name of the main source.
           This should always be defined. }
@@ -1331,14 +1331,14 @@ unit scandir;
         begin
           result:=[];
           sym:=Search_System_Type('TVISIBILITYCLASSES');
-          if CurrentScanner.readpreprocset(TSetDef(sym.TypeDef),value,'RTTI') then
+          if CurrentScanner.ReadPreProcSet(TSetDef(sym.TypeDef),value,'RTTI') then
             begin
               result:=PRTTIVisibilities(@value)^;
               // if the set was empty we need to read the next id
               if result=[] then
                 begin
-                  CurrentScanner.skipspace;
-                  CurrentScanner.readid
+                  CurrentScanner.SkipSpace;
+                  CurrentScanner.ReadID
                 end;
             end;
         end;
@@ -1362,9 +1362,9 @@ unit scandir;
         options[ro_properties]:=false;
 
         { read the clause }
-        CurrentScanner.skipspace;
-        CurrentScanner.readid;
-        case CurrentScanner.pattern of
+        CurrentScanner.SkipSpace;
+        CurrentScanner.ReadID;
+        case CurrentScanner.FPattern of
           'INHERIT':
             dir.clause:=rtc_inherit;
           'EXPLICIT':
@@ -1374,14 +1374,14 @@ unit scandir;
         end;
 
         { read the visibility options}
-        CurrentScanner.skipspace;
-        CurrentScanner.readid;
+        CurrentScanner.SkipSpace;
+        CurrentScanner.ReadID;
         { the inherit clause doesn't require any options but explicit does }
-        if (CurrentScanner.pattern='') and (dir.clause=rtc_explicit) then
+        if (CurrentScanner.FPattern='') and (dir.clause=rtc_explicit) then
           Message(scan_e_incomplete_rtti_clause);
-        while CurrentScanner.pattern<>'' do
+        while CurrentScanner.FPattern<>'' do
           begin
-            case CurrentScanner.pattern of
+            case CurrentScanner.FPattern of
               'METHODS':
                 option:=ro_methods;
               'PROPERTIES':
@@ -1390,15 +1390,15 @@ unit scandir;
                 option:=ro_fields;
               otherwise
                 begin
-                  if CurrentScanner.preproc_token=_ID then
-                    Message1(scan_e_invalid_rtti_option,CurrentScanner.pattern);
+                  if CurrentScanner.FPreProcToken=_ID then
+                    Message1(scan_e_invalid_rtti_option,CurrentScanner.FPattern);
                   break;
                 end;
             end;
             { the option has already been used }
             if options[option] then
               begin
-                Message1(scan_e_duplicate_rtti_option,CurrentScanner.pattern);
+                Message1(scan_e_duplicate_rtti_option,CurrentScanner.FPattern);
                 break;
               end;
             dir.options[option]:=read_rtti_options;
@@ -1446,7 +1446,7 @@ unit scandir;
       begin
         if not (TargetInfo.system in (systems_all_windows)) then
           Message(scan_w_setpeflags_not_support);
-        if CurrentScanner.readpreprocint(flags,'SETPEFLAGS') then
+        if CurrentScanner.ReadPreProcInt(flags,'SETPEFLAGS') then
           begin
             if flags>$ffff then
               message(scan_e_illegal_peflag);
@@ -1461,7 +1461,7 @@ unit scandir;
       begin
         if not (TargetInfo.system in (systems_all_windows)) then
           Message(scan_w_setpeoptflags_not_support);
-        if CurrentScanner.readpreprocint(flags,'SETPEOPTFLAGS') then
+        if CurrentScanner.ReadPreProcInt(flags,'SETPEOPTFLAGS') then
           begin
             if flags>$ffff then
               message(scan_e_illegal_peoptflag);
@@ -1544,19 +1544,19 @@ unit scandir;
         name, value: string;
       begin
         { note: *not* recorded in the tokenstream, so not replayed for generics }
-        CurrentScanner.skipspace;
-        name:=CurrentScanner.readid;
-        if CurrentScanner.c='=' then
+        CurrentScanner.SkipSpace;
+        name:=CurrentScanner.ReadID;
+        if CurrentScanner.FChar='=' then
           begin
-            CurrentScanner.readchar;
-            CurrentScanner.readid;
-            value:=CurrentScanner.orgpattern;
+            CurrentScanner.ReadChar;
+            CurrentScanner.ReadID;
+            value:=CurrentScanner.FOrgPattern;
             if not UpdateTargetSwitchStr(name+'='+value,CurrentSettings.TargetSwitches,CurrentModule.InGlobal) then
               Message1(scan_w_illegal_switch,name);
           end
-        else if CurrentScanner.c='-' then
+        else if CurrentScanner.FChar='-' then
           begin
-            CurrentScanner.readchar;
+            CurrentScanner.ReadChar;
             if not UpdateTargetSwitchStr(name+'-',CurrentSettings.TargetSwitches,CurrentModule.InGlobal) then
               Message1(scan_w_illegal_switch,name);
           end
@@ -1583,8 +1583,8 @@ unit scandir;
          Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            unitpath:=CurrentScanner.readcomment;
+            CurrentScanner.SkipSpace;
+            unitpath:=CurrentScanner.ReadComment;
             if (CurrentModule.path<>'') and
                not Path_Absolute(unitpath) then
              unitpath:=CurrentModule.path+SourceInfo.DirSep+unitpath;
@@ -1595,7 +1595,7 @@ unit scandir;
 
     procedure dir_varparacopyoutcheck;
       begin
-        Message1(scan_w_illegal_switch,CurrentScanner.pattern);
+        Message1(scan_w_illegal_switch,CurrentScanner.FPattern);
       end;
 
     procedure dir_varpropsetter;
@@ -1624,25 +1624,25 @@ unit scandir;
           begin
             { change description global var in all cases }
             { it not used but in win32 and os2 }
-            CurrentScanner.skipspace;
+            CurrentScanner.SkipSpace;
             { we should only accept Major.Minor format for win32 and os2 }
-            CurrentScanner.readnumber;
+            CurrentScanner.ReadNumber;
             major:=0;
             minor:=0;
-            val(CurrentScanner.pattern,major,error);
+            val(CurrentScanner.FPattern,major,error);
             if (error<>0) or (major > high(word)) or (major < 0) then
               begin
-                Message1(scan_w_wrong_version_ignored,CurrentScanner.pattern);
+                Message1(scan_w_wrong_version_ignored,CurrentScanner.FPattern);
                 exit;
               end;
-            if CurrentScanner.c='.' then
+            if CurrentScanner.FChar='.' then
               begin
-                CurrentScanner.readchar;
-                CurrentScanner.readnumber;
-                val(CurrentScanner.pattern,minor,error);
+                CurrentScanner.ReadChar;
+                CurrentScanner.ReadNumber;
+                val(CurrentScanner.FPattern,minor,error);
                 if (error<>0) or (minor > high(word)) or (minor < 0) then
                   begin
-                    Message1(scan_w_wrong_version_ignored,ToStr(major)+'.'+CurrentScanner.pattern);
+                    Message1(scan_w_wrong_version_ignored,ToStr(major)+'.'+CurrentScanner.FPattern);
                     exit;
                   end;
                 DLLMajor:=word(major);
@@ -1679,16 +1679,16 @@ unit scandir;
         msgstate : TMsgState;
         i : integer;
       begin
-        CurrentScanner.skipspace;
-        ident:=CurrentScanner.readid;
-        CurrentScanner.skipspace;
-        if CurrentScanner.c in ['+','-'] then
+        CurrentScanner.SkipSpace;
+        ident:=CurrentScanner.ReadID;
+        CurrentScanner.SkipSpace;
+        if CurrentScanner.FChar in ['+','-'] then
           begin
-            state:=CurrentScanner.c;
-            CurrentScanner.readchar;
+            state:=CurrentScanner.FChar;
+            CurrentScanner.ReadChar;
           end
         else
-          state:=CurrentScanner.readid;
+          state:=CurrentScanner.ReadID;
 
         { support both delphi and fpc switches }
         { use local ms_on/off/error tmsgstate values }
@@ -1838,7 +1838,7 @@ unit scandir;
 
     procedure dir_hugecode;
       begin
-        Message1(scan_n_ignored_switch,CurrentScanner.pattern);
+        Message1(scan_n_ignored_switch,CurrentScanner.FPattern);
       end;
 
     procedure dir_hugepointernormalization;
@@ -1860,8 +1860,8 @@ unit scandir;
       var
         s : string;
       begin
-        CurrentScanner.skipspace;
-        s:=CurrentScanner.readcomment;
+        CurrentScanner.SkipSpace;
+        s:=CurrentScanner.ReadComment;
         if not(UpdateAlignmentStr(s,CurrentSettings.Alignment)) then
           message(scanner_e_illegal_alignment_directive);
       end;
@@ -1874,8 +1874,8 @@ unit scandir;
           Message(scan_w_switch_is_global)
         else
           begin
-            CurrentScanner.skipspace;
-            s:=CurrentScanner.readcomment;
+            CurrentScanner.SkipSpace;
+            s:=CurrentScanner.ReadComment;
             if (upper(s)='UTF8') or (upper(s)='UTF-8') then
               CurrentSettings.SourceCodePage:=CP_UTF8
             else if not CPAvailable(s) then
@@ -1920,135 +1920,135 @@ unit scandir;
 
     procedure InitScannerDirectives;
       begin
-        AddDirective('A1',directive_all, @dir_a1);
-        AddDirective('A2',directive_all, @dir_a2);
-        AddDirective('A4',directive_all, @dir_a4);
-        AddDirective('A8',directive_all, @dir_a8);
-        AddDirective('ALIGN',directive_all, @dir_align);
-        AddDirective('APPTYPE',directive_all, @dir_apptype);
-        AddDirective('ASMCPU',directive_all, @dir_asmcpu);
-        AddDirective('ASMMODE',directive_all, @dir_asmmode);
-        AddDirective('ASSERTIONS',directive_all, @dir_assertions);
-        AddDirective('BOOLEVAL',directive_all, @dir_booleval);
-        AddDirective('BITPACKING',directive_all, @dir_bitpacking);
-        AddDirective('CALLING',directive_all, @dir_calling);
-        AddDirective('CHECKCASECOVERAGE',directive_all, @dir_checkcasecoverage);
-        AddDirective('CHECKFPUEXCEPTIONS',directive_all, @dir_checkfpuexceptions);
-        AddDirective('CHECKPOINTER',directive_all, @dir_checkpointer);
-        AddDirective('CODEALIGN',directive_all, @dir_codealign);
-        AddDirective('CODEPAGE',directive_all, @dir_codepage);
-        AddDirective('COPERATORS',directive_all, @dir_coperators);
-        AddDirective('D',directive_all, @dir_description);
-        AddDirective('DEBUGINFO',directive_all, @dir_debuginfo);
-        AddDirective('DEFINITIONINFO',directive_all, @dir_definitioninfo);
-        AddDirective('DENYPACKAGEUNIT',directive_all,@dir_denypackageunit);
-        AddDirective('DESCRIPTION',directive_all, @dir_description);
-        AddDirective('ENDREGION',directive_all, @dir_endregion);
-        AddDirective('ERROR',directive_all, @dir_error);
-        AddDirective('ERRORC',directive_mac, @dir_error);
-        AddDirective('EXCESSPRECISION',directive_all, @dir_excessprecision);
-        AddDirective('EXTENDEDSYNTAX',directive_all, @dir_extendedsyntax);
-        AddDirective('EXTERNALSYM',directive_all, @dir_externalsym);
-        AddDirective('FATAL',directive_all, @dir_fatal);
-        AddDirective('FPUTYPE',directive_all, @dir_fputype);
-        AddDirective('FRAMEWORKPATH',directive_all, @dir_frameworkpath);
-        AddDirective('GOTO',directive_all, @dir_goto);
-        AddDirective('HINT',directive_all, @dir_hint);
-        AddDirective('HINTS',directive_all, @dir_hints);
-        AddDirective('HPPEMIT',directive_all, @dir_hppemit);
-        AddDirective('HUGECODE',directive_all, @dir_hugecode);
-        AddDirective('HUGEPOINTERNORMALIZATION',directive_all,@dir_hugepointernormalization);
-        AddDirective('HUGEPOINTERARITHMETICNORMALIZATION',directive_all,@dir_hugepointerarithmeticnormalization);
-        AddDirective('HUGEPOINTERCOMPARISONNORMALIZATION',directive_all,@dir_hugepointercomparisonnormalization);
-        AddDirective('IEEEERRORS',directive_all,@dir_ieeeerrors);
-        AddDirective('IOCHECKS',directive_all, @dir_iochecks);
-        AddDirective('IMAGEBASE',directive_all, @dir_imagebase);
-        AddDirective('IMPLICITEXCEPTIONS',directive_all, @dir_implicitexceptions);
-        AddDirective('IMPORTEDDATA',directive_all, @dir_importeddata);
-        AddDirective('INCLUDEPATH',directive_all, @dir_includepath);
-        AddDirective('INFO',directive_all, @dir_info);
-        AddDirective('INLINE',directive_all, @dir_inline);
-        AddDirective('INTERFACES',directive_all, @dir_interfaces);
-        AddDirective('L',directive_all, @dir_link);
-        AddDirective('LEGACYIFEND',directive_all, @dir_legacyifend);
-        AddDirective('LIBEXPORT',directive_mac, @dir_libexport);
-        AddDirective('LIBRARYPATH',directive_all, @dir_librarypath);
-        AddDirective('LINK',directive_all, @dir_link);
-        AddDirective('LINKFRAMEWORK',directive_all, @dir_linkframework);
-        AddDirective('LINKLIB',directive_all, @dir_linklib);
-        AddDirective('LOCALSYMBOLS',directive_all, @dir_localsymbols);
-        AddDirective('LONGSTRINGS',directive_all, @dir_longstrings);
-        AddDirective('M',directive_all, @dir_memory);
-        AddDirective('MACRO',directive_all, @dir_macro);
-        AddDirective('MAXFPUREGISTERS',directive_all, @dir_maxfpuregisters);
-        AddDirective('MAXSTACKSIZE',directive_all, @dir_maxstacksize);
-        AddDirective('MEMORY',directive_all, @dir_memory);
-        AddDirective('MESSAGE',directive_all, @dir_message);
-        AddDirective('MINENUMSIZE',directive_all, @dir_packenum);
-        AddDirective('MINFPCONSTPREC',directive_all, @dir_minfpconstprec);
-        AddDirective('MINSTACKSIZE',directive_all, @dir_minstacksize);
-        AddDirective('MODE',directive_all, @dir_mode);
-        AddDirective('MODESWITCH',directive_all, @dir_modeswitch);
-        AddDirective('TEXTBLOCK',directive_all, @dir_textblock);
-        AddDirective('MULTILINESTRINGLINEENDING',directive_all, @dir_multilinestringlineending);
-        AddDirective('MULTILINESTRINGTRIMLEFT',directive_all, @dir_multilinestringtrimleft);
-        AddDirective('NAMESPACES',directive_all, @dir_namespaces);
-        AddDirective('NODEFINE',directive_all, @dir_nodefine);
-        AddDirective('NOTE',directive_all, @dir_note);
-        AddDirective('NOTES',directive_all, @dir_notes);
-        AddDirective('OBJECTCHECKS',directive_all, @dir_objectchecks);
-        AddDirective('OBJECTPATH',directive_all, @dir_objectpath);
-        AddDirective('OPENSTRINGS',directive_all, @dir_openstrings);
-        AddDirective('OPTIMIZATION',directive_all, @dir_optimization);
-        AddDirective('OV',directive_mac, @dir_overflowchecks);
-        AddDirective('OVERFLOWCHECKS',directive_all, @dir_overflowchecks);
-        AddDirective('PACKENUM',directive_all, @dir_packenum);
-        AddDirective('PACKRECORDS',directive_all, @dir_packrecords);
-        AddDirective('PACKSET',directive_all, @dir_packset);
-        AddDirective('PASCALMAINNAME',directive_all, @dir_pascalmainname);
-        AddDirective('PIC',directive_all, @dir_pic);
-        AddDirective('POINTERMATH',directive_all, @dir_pointermath);
-        AddDirective('POP',directive_all, @dir_pop);
-        AddDirective('POPOPT',directive_all, @dir_pop);
-        AddDirective('PUSH',directive_all, @dir_push);
-        AddDirective('PUSHOPT',directive_all, @dir_push);
-        AddDirective('R',directive_all, @dir_resource);
-        AddDirective('RTTI',directive_all, @dir_rtti);
-        AddDirective('RANGECHECKS',directive_all, @dir_rangechecks);
-        AddDirective('REFERENCEINFO',directive_all, @dir_referenceinfo);
-        AddDirective('REGION',directive_all, @dir_region);
-        AddDirective('RESOURCE',directive_all, @dir_resource);
-        AddDirective('SAFEFPUEXCEPTIONS',directive_all, @dir_safefpuexceptions);
-        AddDirective('SCOPEDENUMS',directive_all, @dir_scopedenums);
-        AddDirective('SETPEFLAGS', directive_all, @dir_setpeflags);
-        AddDirective('SETPEOPTFLAGS', directive_all, @dir_setpeoptflags);
-        AddDirective('SETPEOSVERSION', directive_all, @dir_setpeosversion);
-        AddDirective('SETPEUSERVERSION', directive_all, @dir_setpeuserversion);
-        AddDirective('SETPESUBSYSVERSION', directive_all, @dir_setpesubsysversion);
-        AddDirective('SMARTLINK',directive_all, @dir_smartlink);
-        AddDirective('STACKCHECKING',directive_all,@dir_stackchecking);
-        AddDirective('STACKFRAMES',directive_all, @dir_stackframes);
-        AddDirective('STOP',directive_all, @dir_stop);
-        AddDirective('STRINGCHECKS', directive_all, @dir_stringchecks);
-        AddDirective('TARGETSWITCH',directive_all, @dir_targetswitch);
-        AddDirective('TYPEDADDRESS',directive_all, @dir_typedaddress);
-        AddDirective('TYPEINFO',directive_all, @dir_typeinfo);
-        AddDirective('UNITPATH',directive_all, @dir_unitpath);
-        AddDirective('VARPARACOPYOUTCHECK',directive_all, @dir_varparacopyoutcheck);
-        AddDirective('VARPROPSETTER',directive_all, @dir_varpropsetter);
-        AddDirective('VARSTRINGCHECKS',directive_all, @dir_varstringchecks);
-        AddDirective('VERSION',directive_all, @dir_version);
-        AddDirective('WAIT',directive_all, @dir_wait);
-        AddDirective('WARN',directive_all, @dir_warn);
-        AddDirective('WARNING',directive_all, @dir_warning);
-        AddDirective('WARNINGS',directive_all, @dir_warnings);
-        AddDirective('WEAKPACKAGEUNIT',directive_all, @dir_weakpackageunit);
-        AddDirective('WRITEABLECONST',directive_all, @dir_writeableconst);
-        AdDDirective('YD',directive_all, @dir_yd);
-        AddDirective('Z1',directive_all, @dir_z1);
-        AddDirective('Z2',directive_all, @dir_z2);
-        AddDirective('Z4',directive_all, @dir_z4);
-        AddDirective('ZEROBASEDSTRINGS',directive_all, @dir_zerobasesstrings);
+        AddDirective('A1',directiveAll, @dir_a1);
+        AddDirective('A2',directiveAll, @dir_a2);
+        AddDirective('A4',directiveAll, @dir_a4);
+        AddDirective('A8',directiveAll, @dir_a8);
+        AddDirective('ALIGN',directiveAll, @dir_align);
+        AddDirective('APPTYPE',directiveAll, @dir_apptype);
+        AddDirective('ASMCPU',directiveAll, @dir_asmcpu);
+        AddDirective('ASMMODE',directiveAll, @dir_asmmode);
+        AddDirective('ASSERTIONS',directiveAll, @dir_assertions);
+        AddDirective('BOOLEVAL',directiveAll, @dir_booleval);
+        AddDirective('BITPACKING',directiveAll, @dir_bitpacking);
+        AddDirective('CALLING',directiveAll, @dir_calling);
+        AddDirective('CHECKCASECOVERAGE',directiveAll, @dir_checkcasecoverage);
+        AddDirective('CHECKFPUEXCEPTIONS',directiveAll, @dir_checkfpuexceptions);
+        AddDirective('CHECKPOINTER',directiveAll, @dir_checkpointer);
+        AddDirective('CODEALIGN',directiveAll, @dir_codealign);
+        AddDirective('CODEPAGE',directiveAll, @dir_codepage);
+        AddDirective('COPERATORS',directiveAll, @dir_coperators);
+        AddDirective('D',directiveAll, @dir_description);
+        AddDirective('DEBUGINFO',directiveAll, @dir_debuginfo);
+        AddDirective('DEFINITIONINFO',directiveAll, @dir_definitioninfo);
+        AddDirective('DENYPACKAGEUNIT',directiveAll,@dir_denypackageunit);
+        AddDirective('DESCRIPTION',directiveAll, @dir_description);
+        AddDirective('ENDREGION',directiveAll, @dir_endregion);
+        AddDirective('ERROR',directiveAll, @dir_error);
+        AddDirective('ERRORC',directiveMac, @dir_error);
+        AddDirective('EXCESSPRECISION',directiveAll, @dir_excessprecision);
+        AddDirective('EXTENDEDSYNTAX',directiveAll, @dir_extendedsyntax);
+        AddDirective('EXTERNALSYM',directiveAll, @dir_externalsym);
+        AddDirective('FATAL',directiveAll, @dir_fatal);
+        AddDirective('FPUTYPE',directiveAll, @dir_fputype);
+        AddDirective('FRAMEWORKPATH',directiveAll, @dir_frameworkpath);
+        AddDirective('GOTO',directiveAll, @dir_goto);
+        AddDirective('HINT',directiveAll, @dir_hint);
+        AddDirective('HINTS',directiveAll, @dir_hints);
+        AddDirective('HPPEMIT',directiveAll, @dir_hppemit);
+        AddDirective('HUGECODE',directiveAll, @dir_hugecode);
+        AddDirective('HUGEPOINTERNORMALIZATION',directiveAll,@dir_hugepointernormalization);
+        AddDirective('HUGEPOINTERARITHMETICNORMALIZATION',directiveAll,@dir_hugepointerarithmeticnormalization);
+        AddDirective('HUGEPOINTERCOMPARISONNORMALIZATION',directiveAll,@dir_hugepointercomparisonnormalization);
+        AddDirective('IEEEERRORS',directiveAll,@dir_ieeeerrors);
+        AddDirective('IOCHECKS',directiveAll, @dir_iochecks);
+        AddDirective('IMAGEBASE',directiveAll, @dir_imagebase);
+        AddDirective('IMPLICITEXCEPTIONS',directiveAll, @dir_implicitexceptions);
+        AddDirective('IMPORTEDDATA',directiveAll, @dir_importeddata);
+        AddDirective('INCLUDEPATH',directiveAll, @dir_includepath);
+        AddDirective('INFO',directiveAll, @dir_info);
+        AddDirective('INLINE',directiveAll, @dir_inline);
+        AddDirective('INTERFACES',directiveAll, @dir_interfaces);
+        AddDirective('L',directiveAll, @dir_link);
+        AddDirective('LEGACYIFEND',directiveAll, @dir_legacyifend);
+        AddDirective('LIBEXPORT',directiveMac, @dir_libexport);
+        AddDirective('LIBRARYPATH',directiveAll, @dir_librarypath);
+        AddDirective('LINK',directiveAll, @dir_link);
+        AddDirective('LINKFRAMEWORK',directiveAll, @dir_linkframework);
+        AddDirective('LINKLIB',directiveAll, @dir_linklib);
+        AddDirective('LOCALSYMBOLS',directiveAll, @dir_localsymbols);
+        AddDirective('LONGSTRINGS',directiveAll, @dir_longstrings);
+        AddDirective('M',directiveAll, @dir_memory);
+        AddDirective('MACRO',directiveAll, @dir_macro);
+        AddDirective('MAXFPUREGISTERS',directiveAll, @dir_maxfpuregisters);
+        AddDirective('MAXSTACKSIZE',directiveAll, @dir_maxstacksize);
+        AddDirective('MEMORY',directiveAll, @dir_memory);
+        AddDirective('MESSAGE',directiveAll, @dir_message);
+        AddDirective('MINENUMSIZE',directiveAll, @dir_packenum);
+        AddDirective('MINFPCONSTPREC',directiveAll, @dir_minfpconstprec);
+        AddDirective('MINSTACKSIZE',directiveAll, @dir_minstacksize);
+        AddDirective('MODE',directiveAll, @dir_mode);
+        AddDirective('MODESWITCH',directiveAll, @dir_modeswitch);
+        AddDirective('TEXTBLOCK',directiveAll, @dir_textblock);
+        AddDirective('MULTILINESTRINGLINEENDING',directiveAll, @dir_multilinestringlineending);
+        AddDirective('MULTILINESTRINGTRIMLEFT',directiveAll, @dir_multilinestringtrimleft);
+        AddDirective('NAMESPACES',directiveAll, @dir_namespaces);
+        AddDirective('NODEFINE',directiveAll, @dir_nodefine);
+        AddDirective('NOTE',directiveAll, @dir_note);
+        AddDirective('NOTES',directiveAll, @dir_notes);
+        AddDirective('OBJECTCHECKS',directiveAll, @dir_objectchecks);
+        AddDirective('OBJECTPATH',directiveAll, @dir_objectpath);
+        AddDirective('OPENSTRINGS',directiveAll, @dir_openstrings);
+        AddDirective('OPTIMIZATION',directiveAll, @dir_optimization);
+        AddDirective('OV',directiveMac, @dir_overflowchecks);
+        AddDirective('OVERFLOWCHECKS',directiveAll, @dir_overflowchecks);
+        AddDirective('PACKENUM',directiveAll, @dir_packenum);
+        AddDirective('PACKRECORDS',directiveAll, @dir_packrecords);
+        AddDirective('PACKSET',directiveAll, @dir_packset);
+        AddDirective('PASCALMAINNAME',directiveAll, @dir_pascalmainname);
+        AddDirective('PIC',directiveAll, @dir_pic);
+        AddDirective('POINTERMATH',directiveAll, @dir_pointermath);
+        AddDirective('POP',directiveAll, @dir_pop);
+        AddDirective('POPOPT',directiveAll, @dir_pop);
+        AddDirective('PUSH',directiveAll, @dir_push);
+        AddDirective('PUSHOPT',directiveAll, @dir_push);
+        AddDirective('R',directiveAll, @dir_resource);
+        AddDirective('RTTI',directiveAll, @dir_rtti);
+        AddDirective('RANGECHECKS',directiveAll, @dir_rangechecks);
+        AddDirective('REFERENCEINFO',directiveAll, @dir_referenceinfo);
+        AddDirective('REGION',directiveAll, @dir_region);
+        AddDirective('RESOURCE',directiveAll, @dir_resource);
+        AddDirective('SAFEFPUEXCEPTIONS',directiveAll, @dir_safefpuexceptions);
+        AddDirective('SCOPEDENUMS',directiveAll, @dir_scopedenums);
+        AddDirective('SETPEFLAGS', directiveAll, @dir_setpeflags);
+        AddDirective('SETPEOPTFLAGS', directiveAll, @dir_setpeoptflags);
+        AddDirective('SETPEOSVERSION', directiveAll, @dir_setpeosversion);
+        AddDirective('SETPEUSERVERSION', directiveAll, @dir_setpeuserversion);
+        AddDirective('SETPESUBSYSVERSION', directiveAll, @dir_setpesubsysversion);
+        AddDirective('SMARTLINK',directiveAll, @dir_smartlink);
+        AddDirective('STACKCHECKING',directiveAll,@dir_stackchecking);
+        AddDirective('STACKFRAMES',directiveAll, @dir_stackframes);
+        AddDirective('STOP',directiveAll, @dir_stop);
+        AddDirective('STRINGCHECKS', directiveAll, @dir_stringchecks);
+        AddDirective('TARGETSWITCH',directiveAll, @dir_targetswitch);
+        AddDirective('TYPEDADDRESS',directiveAll, @dir_typedaddress);
+        AddDirective('TYPEINFO',directiveAll, @dir_typeinfo);
+        AddDirective('UNITPATH',directiveAll, @dir_unitpath);
+        AddDirective('VARPARACOPYOUTCHECK',directiveAll, @dir_varparacopyoutcheck);
+        AddDirective('VARPROPSETTER',directiveAll, @dir_varpropsetter);
+        AddDirective('VARSTRINGCHECKS',directiveAll, @dir_varstringchecks);
+        AddDirective('VERSION',directiveAll, @dir_version);
+        AddDirective('WAIT',directiveAll, @dir_wait);
+        AddDirective('WARN',directiveAll, @dir_warn);
+        AddDirective('WARNING',directiveAll, @dir_warning);
+        AddDirective('WARNINGS',directiveAll, @dir_warnings);
+        AddDirective('WEAKPACKAGEUNIT',directiveAll, @dir_weakpackageunit);
+        AddDirective('WRITEABLECONST',directiveAll, @dir_writeableconst);
+        AdDDirective('YD',directiveAll, @dir_yd);
+        AddDirective('Z1',directiveAll, @dir_z1);
+        AddDirective('Z2',directiveAll, @dir_z2);
+        AddDirective('Z4',directiveAll, @dir_z4);
+        AddDirective('ZEROBASEDSTRINGS',directiveAll, @dir_zerobasesstrings);
       end;
 
 end.

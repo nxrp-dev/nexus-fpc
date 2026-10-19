@@ -35,55 +35,55 @@ interface
 
     type
       TPDFlag=(
-        pd_body,         { directive needs a body }
-        pd_implemen,     { directive can be used in implementation section }
-        pd_interface,    { directive can be used in interface section }
-        pd_object,       { directive can be used with object declaration }
-        pd_record,       { directive can be used with record declaration }
-        pd_procvar,      { directive can be used with procvar declaration }
-        pd_notobject,    { directive can not be used with object declaration }
-        pd_notrecord,    { directive can not be used with record declaration }
-        pd_notobjintf,   { directive can not be used with interface declaration }
-        pd_notprocvar,   { directive can not be used with procvar declaration }
-        pd_dispinterface,{ directive can be used with dispinterface methods }
-        pd_cppobject,    { directive can be used with cppclass }
-        pd_objcclass,    { directive can be used with objcclass }
-        pd_objcprot,     { directive can be used with objcprotocol }
-        pd_nothelper     { directive can not be used with record/class helper declaration }
+        pdBody,         { directive needs a body }
+        pdImplemen,     { directive can be used in implementation section }
+        pdInterface,    { directive can be used in interface section }
+        pdObject,       { directive can be used with object declaration }
+        pdRecord,       { directive can be used with record declaration }
+        pdProcVar,      { directive can be used with procvar declaration }
+        pdNotObject,    { directive can not be used with object declaration }
+        pdNotRecord,    { directive can not be used with record declaration }
+        pdNotObjIntf,   { directive can not be used with interface declaration }
+        pdNotProcVar,   { directive can not be used with procvar declaration }
+        pdDispInterface,{ directive can be used with dispinterface methods }
+        pdCPPObject,    { directive can be used with cppclass }
+        pdObjCClass,    { directive can be used with objcclass }
+        pdObjCProt,     { directive can be used with objcprotocol }
+        pdNotHelper     { directive can not be used with record/class helper declaration }
       );
       TPDFlags=set of TPDFlag;
 
       TParseProcFlag=(
-        ppf_classmethod,
-        ppf_generic,
-        ppf_anonymous
+        ppfClassMethod,
+        ppfGeneric,
+        ppfAnonymous
       );
       TParseProcFlags=set of TParseProcFlag;
 
-    function  check_proc_directive(isprocvar:boolean):boolean;
+    function  CheckProcDirective(AIsProcVar:Boolean):Boolean;
 
-    function  proc_get_importname(pd:TProcDef):string;
-    procedure proc_set_mangledname(pd:TProcDef);
+    function  ProcGetImportName(AProcDef:TProcDef):String;
+    procedure ProcSetMangledName(AProcDef:TProcDef);
 
-    procedure parse_parameter_dec(pd:TAbstractProcDef);
-    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:TPDFlags);
-    procedure parse_proctype_directives(pd_or_invkdef:TDef);
-    procedure parse_object_proc_directives(pd:TProcDef);
-    procedure parse_record_proc_directives(pd:TProcDef);
-    function  parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:TParseProcFlags;GenericDef:TDef;generictypelist:TFPHashObjectList;out pd:TProcDef):boolean;
-    function  parse_proc_dec(flags:TParseProcFlags;astruct:TAbstractRecordDef):TProcDef;
-    procedure parse_proc_dec_finish(pd:TProcDef;flags:TParseProcFlags;astruct:TAbstractRecordDef);
+    procedure ParseParameterDec(AProcDef:TAbstractProcDef);
+    procedure ParseProcDirectives(AProcDef:TAbstractProcDef;var APDFlags:TPDFlags);
+    procedure ParseProcTypeDirectives(AProcOrInvokeDef:TDef);
+    procedure ParseObjectProcDirectives(AProcDef:TProcDef);
+    procedure ParseRecordProcDirectives(AProcDef:TProcDef);
+    function  ParseProcHead(AStruct:TAbstractRecordDef;AProcType:TProcTypeOption;AFlags:TParseProcFlags;AGenericDef:TDef;AGenericTypeList:TFPHashObjectList;out AProcDef:TProcDef):Boolean;
+    function  ParseProcDec(AFlags:TParseProcFlags;AStruct:TAbstractRecordDef):TProcDef;
+    procedure ParseProcDecFinish(AProcDef:TProcDef;AFlags:TParseProcFlags;AStruct:TAbstractRecordDef);
 
     { parse a record method declaration (not a (class) constructor/destructor) }
-    function parse_record_method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
+    function ParseRecordMethodDec(AStruct: TAbstractRecordDef; AIsClassDef: Boolean;AHadGeneric:Boolean): TProcDef;
 
     { helper functions - they insert nested objects hierarchy to the symtablestack
       with object hierarchy
     }
-    function push_child_hierarchy(obj:TAbstractRecordDef):integer;
-    function pop_child_hierarchy(obj:TAbstractRecordDef):integer;
-    function push_nested_hierarchy(obj:TAbstractRecordDef):integer;
-    function pop_nested_hierarchy(obj:TAbstractRecordDef):integer;
+    function PushChildHierarchy(AObjectDef:TAbstractRecordDef):Integer;
+    function PopChildHierarchy(AObjectDef:TAbstractRecordDef):Integer;
+    function PushNestedHierarchy(AObjectDef:TAbstractRecordDef):Integer;
+    function PopNestedHierarchy(AObjectDef:TAbstractRecordDef):Integer;
 
 implementation
 
@@ -115,74 +115,74 @@ implementation
         Declaring it as string here results in an error when compiling (PFV) }
       CurrentProcInfo = 'error';
 
-    function push_child_hierarchy(obj:TAbstractRecordDef):integer;
+    function PushChildHierarchy(AObjectDef:TAbstractRecordDef):Integer;
       var
-        _class,hp : TObjectDef;
+        lClass,lPreviousClass : TObjectDef;
       begin
-        if obj.typ=recorddef then
+        if AObjectDef.typ=recorddef then
           begin
-            SymTableStack.push(obj.SymTable);
-            result:=1;
+            SymTableStack.push(AObjectDef.SymTable);
+            Result:=1;
             exit;
           end;
-        result:=0;
+        Result:=0;
         { insert class hierarchy in the reverse order }
-        hp:=nil;
+        lPreviousClass:=nil;
         repeat
-          _class:=TObjectDef(obj);
-          while _class.ChildOf<>hp do
-            _class:=_class.ChildOf;
-          hp:=_class;
-          SymTableStack.push(_class.SymTable);
-          inc(result);
-        until hp=obj;
+          lClass:=TObjectDef(AObjectDef);
+          while lClass.ChildOf<>lPreviousClass do
+            lClass:=lClass.ChildOf;
+          lPreviousClass:=lClass;
+          SymTableStack.push(lClass.SymTable);
+          inc(Result);
+        until lPreviousClass=AObjectDef;
       end;
 
-    function push_nested_hierarchy(obj:TAbstractRecordDef):integer;
+    function PushNestedHierarchy(AObjectDef:TAbstractRecordDef):Integer;
       begin
-        result:=0;
-        if obj.owner.SymTableType in [ObjectSymtable,recordsymtable] then
-          inc(result,push_nested_hierarchy(TAbstractRecordDef(obj.owner.DefOwner)));
-        inc(result,push_child_hierarchy(obj));
+        Result:=0;
+        if AObjectDef.owner.SymTableType in [ObjectSymtable,recordsymtable] then
+          inc(Result,PushNestedHierarchy(TAbstractRecordDef(AObjectDef.owner.DefOwner)));
+        inc(Result,PushChildHierarchy(AObjectDef));
       end;
 
-    function pop_child_hierarchy(obj:TAbstractRecordDef):integer;
+    function PopChildHierarchy(AObjectDef:TAbstractRecordDef):Integer;
       var
-        _class : TObjectDef;
+        lClass : TObjectDef;
       begin
-        if obj.typ=recorddef then
+        if AObjectDef.typ=recorddef then
           begin
-            SymTableStack.pop(obj.SymTable);
-            result:=1;
+            SymTableStack.pop(AObjectDef.SymTable);
+            Result:=1;
             exit;
           end;
-        result:=0;
-        _class:=TObjectDef(obj);
-        while Assigned(_class) do
+        Result:=0;
+        lClass:=TObjectDef(AObjectDef);
+        while Assigned(lClass) do
           begin
-            SymTableStack.pop(_class.SymTable);
-            _class:=_class.ChildOf;
-            inc(result);
+            SymTableStack.pop(lClass.SymTable);
+            lClass:=lClass.ChildOf;
+            inc(Result);
           end;
       end;
 
-    function pop_nested_hierarchy(obj:TAbstractRecordDef):integer;
+    function PopNestedHierarchy(AObjectDef:TAbstractRecordDef):Integer;
       begin
-        result:=pop_child_hierarchy(obj);
-        if obj.owner.SymTableType in [ObjectSymtable,recordsymtable] then
-          inc(result,pop_nested_hierarchy(TAbstractRecordDef(obj.owner.DefOwner)));
+        Result:=PopChildHierarchy(AObjectDef);
+        if AObjectDef.owner.SymTableType in [ObjectSymtable,recordsymtable] then
+          inc(Result,PopNestedHierarchy(TAbstractRecordDef(AObjectDef.owner.DefOwner)));
       end;
 
 
-    procedure check_msg_para(p:TObject;arg:pointer);
+    procedure CheckMsgPara(AObject:TObject;AArg:Pointer);
       begin
-        if (TSym(p).typ<>paravarsym) then
+        if (TSym(AObject).typ<>paravarsym) then
          exit;
-        with TParaVarSym(p) do
+        with TParaVarSym(AObject) do
           begin
             { Count parameters }
             if (ParaNr>=10) then
-              inc(PLongInt(arg)^);
+              inc(PLongInt(AArg)^);
             { First parameter must be var }
             if (ParaNr=10) and
                (VarSpez<>vs_var) then
@@ -191,209 +191,209 @@ implementation
       end;
 
 
-    procedure parse_parameter_dec(pd:TAbstractProcDef);
+    procedure ParseParameterDec(AProcDef:TAbstractProcDef);
       {
         handle_procvar needs the same changes
       }
       type
-        TPPV = (pv_none,pv_proc,pv_func);
+        TPPV = (pvNone,pvProc,pvFunc);
       var
-        sc      : TFPObjectList;
-        hdef    : TDef;
-        arrayelementdef : TDef;
-        vs      : TParaVarSym;
-        i       : LongInt;
-        srsym   : TSym;
-        pv      : TProcVarDef;
-        VarSpez : TVarSpez;
-        defaultvalue : TConstSym;
-        defaultrequired : boolean;
-        old_block_type : TBlockType;
-        currparast : TParaSymTable;
-        parseprocvar : TPPV;
-        ParaNr : integer;
-        need_array,
-        is_univ: boolean;
-        stoptions : TSingleTypeOptions;
+        lSymbols      : TFPObjectList;
+        lDef    : TDef;
+        lArrayElementDef : TDef;
+        lParaVarSym      : TParaVarSym;
+        lIndex       : LongInt;
+        lSearchSym   : TSym;
+        lProcVarDef      : TProcVarDef;
+        lVarSpez : TVarSpez;
+        lDefaultValue : TConstSym;
+        lDefaultRequired : Boolean;
+        lOldBlockType : TBlockType;
+        lCurrentParaST : TParaSymTable;
+        lParseProcVar : TPPV;
+        lParaNr : Integer;
+        lNeedArray,
+        lIsUniv: Boolean;
+        lTypeOptions : TSingleTypeOptions;
 
-        procedure handle_default_para_value;
+        procedure HandleDefaultParaValue;
           var
-            convpd : TProcDef;
-            doconv : TConvertType;
-            nodetype : TNodeType;
-            bt : TBlockType;
+            lConvertProcDef : TProcDef;
+            lConversion : TConvertType;
+            lNodeType : TNodeType;
+            lBlockType : TBlockType;
           begin
             { only allowed for types that can be represented by a
               constant expression }
-            if try_to_consume(_EQ) then
+            if TryToConsume(_EQ) then
              begin
-               if (hdef.typ in [recorddef,variantdef,filedef,formaldef]) or
-                  Is_Object(hdef) or
-                  ((hdef.typ=arraydef) and
-                   not Is_Dynamic_Array(hdef)) then
-                 Message1(type_e_invalid_default_value,FullTypeName(hdef,nil));
-               vs:=TParaVarSym(sc[0]);
-               if sc.count>1 then
+               if (lDef.typ in [recorddef,variantdef,filedef,formaldef]) or
+                  Is_Object(lDef) or
+                  ((lDef.typ=arraydef) and
+                   not Is_Dynamic_Array(lDef)) then
+                 Message1(type_e_invalid_default_value,FullTypeName(lDef,nil));
+               lParaVarSym:=TParaVarSym(lSymbols[0]);
+               if lSymbols.count>1 then
                  Message(parser_e_default_value_only_one_para);
-               if not(vs.VarSpez in [vs_value,vs_const,vs_constref]) then
+               if not(lParaVarSym.VarSpez in [vs_value,vs_const,vs_constref]) then
                  Message(parser_e_default_value_val_const);
-               bt:=Block_Type;
+               lBlockType:=Block_Type;
                Block_Type:=bt_const;
                { prefix 'def' to the parameter name }
-               defaultvalue:=ReadConstant('$def'+vs.name,vs.fileinfo,nodetype);
-               Block_Type:=bt;
-               if Assigned(defaultvalue) then
+               lDefaultValue:=ReadConstant('$def'+lParaVarSym.name,lParaVarSym.fileinfo,lNodeType);
+               Block_Type:=lBlockType;
+               if Assigned(lDefaultValue) then
                  begin
-                   include(defaultvalue.SymOptions,sp_internal);
-                   pd.ParaST.InsertSym(defaultvalue);
+                   include(lDefaultValue.SymOptions,sp_internal);
+                   AProcDef.ParaST.InsertSym(lDefaultValue);
                    { check whether the default value is of the correct
                      type }
-                   if Compare_Defs_Ext(defaultvalue.ConstDef,hdef,nodetype,doconv,convpd,[])<=te_convert_operator then
-                     MessagePos2(defaultvalue.fileinfo,type_e_incompatible_types,FullTypeName(defaultvalue.ConstDef,hdef),FullTypeName(hdef,defaultvalue.ConstDef));
+                   if Compare_Defs_Ext(lDefaultValue.ConstDef,lDef,lNodeType,lConversion,lConvertProcDef,[])<=te_convert_operator then
+                     MessagePos2(lDefaultValue.fileinfo,type_e_incompatible_types,FullTypeName(lDefaultValue.ConstDef,lDef),FullTypeName(lDef,lDefaultValue.ConstDef));
                  end;
-               defaultrequired:=true;
+               lDefaultRequired:=true;
              end
             else
              begin
-               if defaultrequired then
-                 Message1(parser_e_default_value_expected_for_para,vs.name);
+               if lDefaultRequired then
+                 Message1(parser_e_default_value_expected_for_para,lParaVarSym.name);
              end;
           end;
 
 
       begin
-        old_block_type:=Block_Type;
-        consume(_LKLAMMER);
+        lOldBlockType:=Block_Type;
+        Consume(_LKLAMMER);
         { Delphi/Kylix supports nonsense like }
         { procedure p();                      }
-        if try_to_consume(_RKLAMMER) then
+        if TryToConsume(_RKLAMMER) then
           exit;
         { parsing a proc or procvar ? }
-        currparast:=TParaSymTable(pd.ParaST);
+        lCurrentParaST:=TParaSymTable(AProcDef.ParaST);
         { reset }
-        sc:=TFPObjectList.Create(false);
-        defaultrequired:=false;
-        ParaNr:=0;
+        lSymbols:=TFPObjectList.Create(false);
+        lDefaultRequired:=false;
+        lParaNr:=0;
         Block_Type:=bt_var;
-        is_univ:=false;
+        lIsUniv:=false;
         repeat
-          parseprocvar:=pv_none;
-          if try_to_consume(_VAR) then
-            VarSpez:=vs_var
+          lParseProcVar:=pvNone;
+          if TryToConsume(_VAR) then
+            lVarSpez:=vs_var
           else
-            if try_to_consume(_CONST) then
-              VarSpez:=vs_const
+            if TryToConsume(_CONST) then
+              lVarSpez:=vs_const
           else
             if (m_out in CurrentSettings.ModeSwitches) and
-               try_to_consume(_OUT) then
-              VarSpez:=vs_out
+               TryToConsume(_OUT) then
+              lVarSpez:=vs_out
           else
-           if try_to_consume(_CONSTREF) then
-             VarSpez:=vs_constref
+           if TryToConsume(_CONSTREF) then
+             lVarSpez:=vs_constref
           else
             if (m_mac in CurrentSettings.ModeSwitches) and
-               try_to_consume(_POINTPOINTPOINT) then
+               TryToConsume(_POINTPOINTPOINT) then
               begin
-                include(pd.ProcOptions,po_varargs);
+                include(AProcDef.ProcOptions,po_varargs);
                 break;
               end
           else
             if (m_nested_procvars in CurrentSettings.ModeSwitches) and
-               try_to_consume(_PROCEDURE) then
+               TryToConsume(_PROCEDURE) then
               begin
-                parseprocvar:=pv_proc;
-                VarSpez:=vs_const;
+                lParseProcVar:=pvProc;
+                lVarSpez:=vs_const;
               end
           else
             if (m_nested_procvars in CurrentSettings.ModeSwitches) and
-               try_to_consume(_FUNCTION) then
+               TryToConsume(_FUNCTION) then
               begin
-                parseprocvar:=pv_func;
-                VarSpez:=vs_const;
+                lParseProcVar:=pvFunc;
+                lVarSpez:=vs_const;
               end
           else
-              VarSpez:=vs_value;
-          defaultvalue:=nil;
-          hdef:=nil;
+              lVarSpez:=vs_value;
+          lDefaultValue:=nil;
+          lDef:=nil;
           { read identifiers and insert with error type }
-          sc.clear;
+          lSymbols.clear;
           repeat
-            inc(ParaNr);
-            vs:=CParaVarSym.Create(CurrentScanner.orgpattern,ParaNr*10,VarSpez,GenErrorDef,[]);
-            currparast.InsertSym(vs);
-            if Assigned(vs.owner) then
-             sc.add(vs)
+            inc(lParaNr);
+            lParaVarSym:=CParaVarSym.Create(CurrentScanner.FOrgPattern,lParaNr*10,lVarSpez,GenErrorDef,[]);
+            lCurrentParaST.InsertSym(lParaVarSym);
+            if Assigned(lParaVarSym.owner) then
+             lSymbols.add(lParaVarSym)
             else
-             vs.free; // no nil needed
-            consume(_ID);
-          until not try_to_consume(_COMMA);
+             lParaVarSym.free; // no nil needed
+            Consume(_ID);
+          until not TryToConsume(_COMMA);
           { macpas anonymous procvar }
-          if parseprocvar<>pv_none then
+          if lParseProcVar<>pvNone then
            begin
              { inline procvar definitions are always nested procvars }
-             pv:=CProcVarDef.Create(NormalFunctionLevel+1,true);
-             if CurrentScanner.token=_LKLAMMER then
-               parse_parameter_dec(pv);
-             if parseprocvar=pv_func then
+             lProcVarDef:=CProcVarDef.Create(NormalFunctionLevel+1,true);
+             if CurrentScanner.FToken=_LKLAMMER then
+               ParseParameterDec(lProcVarDef);
+             if lParseProcVar=pvFunc then
               begin
                 Block_Type:=bt_var_type;
-                consume(_COLON);
-                single_type(pv.ReturnDef,[]);
+                Consume(_COLON);
+                SingleType(lProcVarDef.ReturnDef,[]);
                 Block_Type:=bt_var;
               end;
              { possible proc directives }
-             if check_proc_directive(true) then
-               parse_proctype_directives(pv);
+             if CheckProcDirective(true) then
+               ParseProcTypeDirectives(lProcVarDef);
              { Add implicit hidden parameters and function result }
-             Handle_Calling_Convention(pv,cHCCDefaultActionsIntf);
-             hdef:=pv;
+             Handle_Calling_Convention(lProcVarDef,cHCCDefaultActionsIntf);
+             lDef:=lProcVarDef;
            end
           else
           { read type declaration, force reading for value paras }
-           if (CurrentScanner.token=_COLON) or (VarSpez=vs_value) then
+           if (CurrentScanner.FToken=_COLON) or (lVarSpez=vs_value) then
            begin
-             consume(_COLON);
+             Consume(_COLON);
              { check for an open array }
-             need_array:=false;
+             lNeedArray:=false;
              { bitpacked open array are not yet supported }
-             if (CurrentScanner.token=_PACKED) and
+             if (CurrentScanner.FToken=_PACKED) and
                 not(cs_bitpacking in CurrentSettings.LocalSwitches) then
                begin
-                 consume(_PACKED);
-                 need_array:=true;
+                 Consume(_PACKED);
+                 lNeedArray:=true;
                end;
-             if (CurrentScanner.token=_ARRAY) or
-                need_array then
+             if (CurrentScanner.FToken=_ARRAY) or
+                lNeedArray then
               begin
-                consume(_ARRAY);
-                consume(_OF);
+                Consume(_ARRAY);
+                Consume(_OF);
                 { define range and type of range }
-                hdef:=CArrayDef.Create_OpenArray;
+                lDef:=CArrayDef.Create_OpenArray;
                 { array of const ? }
-                if (CurrentScanner.token=_CONST) and (m_objpas in CurrentSettings.ModeSwitches) then
+                if (CurrentScanner.FToken=_CONST) and (m_objpas in CurrentSettings.ModeSwitches) then
                  begin
-                   consume(_CONST);
-                   srsym:=Search_System_Type('TVARREC');
-                   TArrayDef(hdef).ElementDef:=TTypeSym(srsym).TypeDef;
-                   include(TArrayDef(hdef).ArrayOptions,ado_IsArrayOfConst);
+                   Consume(_CONST);
+                   lSearchSym:=Search_System_Type('TVARREC');
+                   TArrayDef(lDef).ElementDef:=TTypeSym(lSearchSym).TypeDef;
+                   include(TArrayDef(lDef).ArrayOptions,ado_IsArrayOfConst);
                  end
                 else
                  begin
                    { define field type }
                    if m_delphi in CurrentSettings.ModeSwitches then
-                     stoptions:=[stoAllowSpecialization]
+                     lTypeOptions:=[stoAllowSpecialization]
                    else
-                     stoptions:=[];
-                   single_type(arrayelementdef,stoptions);
-                   if Assigned(arrayelementdef.TypeSym) then
-                     Check_Hints(arrayelementdef.TypeSym,arrayelementdef.TypeSym.SymOptions,arrayelementdef.TypeSym.DeprecatedMsg);
-                   TArrayDef(hdef).ElementDef:=arrayelementdef;
+                     lTypeOptions:=[];
+                   SingleType(lArrayElementDef,lTypeOptions);
+                   if Assigned(lArrayElementDef.TypeSym) then
+                     Check_Hints(lArrayElementDef.TypeSym,lArrayElementDef.TypeSym.SymOptions,lArrayElementDef.TypeSym.DeprecatedMsg);
+                   TArrayDef(lDef).ElementDef:=lArrayElementDef;
                  end;
               end
              else
               begin
                 if (m_mac in CurrentSettings.ModeSwitches) then
-                  is_univ:=try_to_consume(_UNIV);
+                  lIsUniv:=TryToConsume(_UNIV);
 
                 { this is not really working and generates internal errors
                 if try_to_consume(_TYPE) then
@@ -401,21 +401,21 @@ implementation
                 else }
                   begin
                     Block_Type:=bt_var_type;
-                    single_type(hdef,[stoAllowSpecialization]);
+                    SingleType(lDef,[stoAllowSpecialization]);
                     Block_Type:=bt_var;
                   end;
 
                 { open string ? }
-                if Is_ShortString(hdef) then
+                if Is_ShortString(lDef) then
                   begin
-                    case VarSpez of
+                    case lVarSpez of
                       vs_var,vs_out:
                         begin
                           { not 100% Delphi-compatible: type xstr=string[255] cannot
                             become an openstring there, while here it can }
                           if (cs_openstring in CurrentSettings.LocalSwitches) and
-                             (TStringDef(hdef).len=255) then
-                            hdef:=OpenShortStringType
+                             (TStringDef(lDef).len=255) then
+                            lDef:=OpenShortStringType
                         end;
                       vs_value:
                        begin
@@ -424,8 +424,8 @@ implementation
                             use in passing its original length), so change these
                             into regular shortstring parameters (seems to be what
                             Delphi also does) }
-                        if Is_Open_String(hdef) then
-                          hdef:=CShortStringType;
+                        if Is_Open_String(lDef) then
+                          lDef:=CShortStringType;
                        end;
                       else
                         ;
@@ -434,130 +434,130 @@ implementation
 
                 { default parameter }
                 if (m_default_para in CurrentSettings.ModeSwitches) then
-                  handle_default_para_value;
+                  HandleDefaultParaValue;
               end;
            end
           else
-           hdef:=CFormalType;
+           lDef:=CFormalType;
 
-          if Assigned(hdef.TypeSym) then
-            Check_Hints(hdef.TypeSym,hdef.TypeSym.SymOptions,hdef.TypeSym.DeprecatedMsg);
+          if Assigned(lDef.TypeSym) then
+            Check_Hints(lDef.TypeSym,lDef.TypeSym.SymOptions,lDef.TypeSym.DeprecatedMsg);
 
           { File types are only allowed for var and out parameters }
-          if (hdef.typ=filedef) and
-             not(VarSpez in [vs_out,vs_var]) then
+          if (lDef.typ=filedef) and
+             not(lVarSpez in [vs_out,vs_var]) then
             CGMessage(cg_e_file_must_call_by_reference);
 
           { Dispinterfaces are restricted to using only automatable types }
-          if (pd.typ=procdef) and Is_DispInterface(TProcDef(pd).struct) and
-             not Is_Automatable(hdef) then
-            Message1(type_e_not_automatable,hdef.TypeName);
+          if (AProcDef.typ=procdef) and Is_DispInterface(TProcDef(AProcDef).struct) and
+             not Is_Automatable(lDef) then
+            Message1(type_e_not_automatable,lDef.TypeName);
 
           { univ cannot be used with types whose size is not known at compile
             time }
-          if is_univ and
-             not Is_Valid_Univ_Para_Type(hdef) then
-            Message1(parser_e_invalid_univ_para,hdef.TypeName);
+          if lIsUniv and
+             not Is_Valid_Univ_Para_Type(lDef) then
+            Message1(parser_e_invalid_univ_para,lDef.TypeName);
 
-          for i:=0 to sc.count-1 do
+          for lIndex:=0 to lSymbols.count-1 do
             begin
-              vs:=TParaVarSym(sc[i]);
-              vs.UnivPara:=is_univ;
+              lParaVarSym:=TParaVarSym(lSymbols[lIndex]);
+              lParaVarSym.UnivPara:=lIsUniv;
               { update varsym }
-              vs.vardef:=hdef;
-              vs.DefaultConstSym:=defaultvalue;
+              lParaVarSym.vardef:=lDef;
+              lParaVarSym.DefaultConstSym:=lDefaultValue;
 
             end;
-        until not try_to_consume(_SEMICOLON);
+        until not TryToConsume(_SEMICOLON);
 
         { remove parasymtable from stack }
-        sc.free;
-        sc := nil;
+        lSymbols.free;
+        lSymbols := nil;
         { reset object options }
-        Block_Type:=old_block_type;
-        consume(_RKLAMMER);
+        Block_Type:=lOldBlockType;
+        Consume(_RKLAMMER);
       end;
 
 
-    function parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:TParseProcFlags;GenericDef:TDef;generictypelist:TFPHashObjectList;out pd:TProcDef):boolean;
+    function ParseProcHead(AStruct:TAbstractRecordDef;AProcType:TProcTypeOption;AFlags:TParseProcFlags;AGenericDef:TDef;AGenericTypeList:TFPHashObjectList;out AProcDef:TProcDef):Boolean;
       var
-        hs       : string;
-        orgsp,sp,orgspnongen,spnongen : TIDString;
-        DummySym,srsym : TSym;
-        checkstack : PSymTableStackItem;
-        oldfilepos,
-        classstartfilepos,
-        procstartfilepos : TFilePosInfo;
-        i,
-        index : LongInt;
-        addgendummy,
-        hadspecialize,
-        firstpart,
-        found,
-        searchagain : boolean;
-        st,
-        insertst,
-        genericst: TSymTable;
-        aprocsym : TProcSym;
-        popclass : integer;
-        parentdef : TObjectDef;
-        ImplIntf : TImplementedInterface;
-        old_parse_generic : boolean;
-        old_current_structdef: TAbstractRecordDef;
-        old_current_genericdef,
-        old_current_specializedef: TStoredDef;
-        lasttoken,lastidtoken: TToken;
-        genericparams : TFPHashObjectList;
+        lText       : String;
+        lOrgPattern,lPattern,lOrgPatternNonGen,lPatternNonGen : TIDString;
+        lDummySym,lSearchSym : TSym;
+        lCheckStack : PSymTableStackItem;
+        lOldFilePos,
+        lClassStartFilePos,
+        lProcStartFilePos : TFilePosInfo;
+        lIndex,
+        lDirectiveIndex : LongInt;
+        lAddGenDummy,
+        lHadSpecialize,
+        lFirstPart,
+        lFound,
+        lSearchAgain : Boolean;
+        lSymTable,
+        lInsertSymTable,
+        lGenericSymTable: TSymTable;
+        lProcSym : TProcSym;
+        lPopClass : Integer;
+        lParentDef : TObjectDef;
+        lImplIntf : TImplementedInterface;
+        lOldParseGeneric : Boolean;
+        lOldCurrentStructDef: TAbstractRecordDef;
+        lOldCurrentGenericDef,
+        lOldCurrentSpecializeDef: TStoredDef;
+        lLastToken,lLastIDToken: TToken;
+        lGenericParams : TFPHashObjectList;
 
-        procedure parse_operator_name;
+        procedure ParseOperatorName;
          begin
-           if (lasttoken in [first_overloaded..last_overloaded]) then
+           if (lLastToken in [first_overloaded..last_overloaded]) then
             begin
-              optoken:=CurrentScanner.token;
+              OpToken:=CurrentScanner.FToken;
             end
            else
             begin
-              case lasttoken of
+              case lLastToken of
                 _CARET:
                   Message1(parser_e_overload_operator_failed,'**');
                 _ID:
-                  case lastidtoken of
-                    _ENUMERATOR:optoken:=_OP_ENUMERATOR;
-                    _EXPLICIT:optoken:=_OP_EXPLICIT;
-                    _INC:optoken:=_OP_INC;
-                    _DEC:optoken:=_OP_DEC;
-                    _INITIALIZE:optoken:=_OP_INITIALIZE;
-                    _FINALIZE:optoken:=_OP_FINALIZE;
-                    _ADDREF:optoken:=_OP_ADDREF;
-                    _COPY:optoken:=_OP_COPY;
+                  case lLastIDToken of
+                    _ENUMERATOR:OpToken:=_OP_ENUMERATOR;
+                    _EXPLICIT:OpToken:=_OP_EXPLICIT;
+                    _INC:OpToken:=_OP_INC;
+                    _DEC:OpToken:=_OP_DEC;
+                    _INITIALIZE:OpToken:=_OP_INITIALIZE;
+                    _FINALIZE:OpToken:=_OP_FINALIZE;
+                    _ADDREF:OpToken:=_OP_ADDREF;
+                    _COPY:OpToken:=_OP_COPY;
                     else
                     if (m_delphi in CurrentSettings.ModeSwitches) then
-                      case lastidtoken of
-                        _IMPLICIT:optoken:=_ASSIGNMENT;
-                        _NEGATIVE:optoken:=_MINUS;
-                        _POSITIVE:optoken:=_PLUS;
-                        _LOGICALNOT:optoken:=_OP_NOT;
-                        _IN:optoken:=_OP_IN;
-                        _EQUAL:optoken:=_EQ;
-                        _NOTEQUAL:optoken:=_NE;
-                        _GREATERTHAN:optoken:=_GT;
-                        _GREATERTHANOREQUAL:optoken:=_GTE;
-                        _LESSTHAN:optoken:=_LT;
-                        _LESSTHANOREQUAL:optoken:=_LTE;
-                        _ADD:optoken:=_PLUS;
-                        _SUBTRACT:optoken:=_MINUS;
-                        _MULTIPLY:optoken:=_STAR;
-                        _DIVIDE:optoken:=_SLASH;
-                        _INTDIVIDE:optoken:=_OP_DIV;
-                        _MODULUS:optoken:=_OP_MOD;
-                        _LEFTSHIFT:optoken:=_OP_SHL;
-                        _RIGHTSHIFT:optoken:=_OP_SHR;
-                        _LOGICALAND:optoken:=_OP_AND;
-                        _LOGICALOR:optoken:=_OP_OR;
-                        _LOGICALXOR:optoken:=_OP_XOR;
-                        _BITWISEAND:optoken:=_OP_AND;
-                        _BITWISEOR:optoken:=_OP_OR;
-                        _BITWISEXOR:optoken:=_OP_XOR;
+                      case lLastIDToken of
+                        _IMPLICIT:OpToken:=_ASSIGNMENT;
+                        _NEGATIVE:OpToken:=_MINUS;
+                        _POSITIVE:OpToken:=_PLUS;
+                        _LOGICALNOT:OpToken:=_OP_NOT;
+                        _IN:OpToken:=_OP_IN;
+                        _EQUAL:OpToken:=_EQ;
+                        _NOTEQUAL:OpToken:=_NE;
+                        _GREATERTHAN:OpToken:=_GT;
+                        _GREATERTHANOREQUAL:OpToken:=_GTE;
+                        _LESSTHAN:OpToken:=_LT;
+                        _LESSTHANOREQUAL:OpToken:=_LTE;
+                        _ADD:OpToken:=_PLUS;
+                        _SUBTRACT:OpToken:=_MINUS;
+                        _MULTIPLY:OpToken:=_STAR;
+                        _DIVIDE:OpToken:=_SLASH;
+                        _INTDIVIDE:OpToken:=_OP_DIV;
+                        _MODULUS:OpToken:=_OP_MOD;
+                        _LEFTSHIFT:OpToken:=_OP_SHL;
+                        _RIGHTSHIFT:OpToken:=_OP_SHR;
+                        _LOGICALAND:OpToken:=_OP_AND;
+                        _LOGICALOR:OpToken:=_OP_OR;
+                        _LOGICALXOR:OpToken:=_OP_XOR;
+                        _BITWISEAND:OpToken:=_OP_AND;
+                        _BITWISEOR:OpToken:=_OP_OR;
+                        _BITWISEXOR:OpToken:=_OP_XOR;
                         else
                           Message1(parser_e_overload_operator_failed,'');
                       end
@@ -568,412 +568,412 @@ implementation
                   Message1(parser_e_overload_operator_failed,'');
               end;
             end;
-           sp:=Overloaded_Names[optoken];
-           orgsp:=sp;
-           spnongen:=sp;
-           orgspnongen:=orgsp;
+           lPattern:=Overloaded_Names[OpToken];
+           lOrgPattern:=lPattern;
+           lPatternNonGen:=lPattern;
+           lOrgPatternNonGen:=lOrgPattern;
          end;
 
-        procedure consume_proc_name;
+        procedure ConsumeProcName;
           var
-            s : string;
-            i : LongInt;
-            sym : TTypeSym;
+            lText : String;
+            lIndex : LongInt;
+            lTypeSym : TTypeSym;
           begin
-            lasttoken:=CurrentScanner.token;
-            lastidtoken:=CurrentScanner.idtoken;
-            if Assigned(genericparams) then
-              for i:=0 to genericparams.count-1 do
+            lLastToken:=CurrentScanner.FToken;
+            lLastIDToken:=CurrentScanner.FIDToken;
+            if Assigned(lGenericParams) then
+              for lIndex:=0 to lGenericParams.count-1 do
                 begin
-                  sym:=TTypeSym(genericparams[i]);
-                  if (sym.typ<>constsym) and TStoredDef(sym.TypeDef).IsRegistered then
+                  lTypeSym:=TTypeSym(lGenericParams[lIndex]);
+                  if (lTypeSym.typ<>constsym) and TStoredDef(lTypeSym.TypeDef).IsRegistered then
                     begin
-                      sym.TypeDef.free;
-                      sym.TypeDef:=nil;
+                      lTypeSym.TypeDef.free;
+                      lTypeSym.TypeDef:=nil;
                     end;
-                  sym.free;
-                  sym := nil;
+                  lTypeSym.free;
+                  lTypeSym := nil;
                 end;
-            genericparams.free;
-            genericparams:=nil;
-            hadspecialize:=false;
-            if potype=potype_operator then
-              optoken:=NOTOKEN;
-            if (potype=potype_operator) and (CurrentScanner.token<>_ID) then
+            lGenericParams.free;
+            lGenericParams:=nil;
+            lHadSpecialize:=false;
+            if AProcType=potype_operator then
+              OpToken:=NOTOKEN;
+            if (AProcType=potype_operator) and (CurrentScanner.FToken<>_ID) then
               begin
-                parse_operator_name;
-                consume(CurrentScanner.token);
+                ParseOperatorName;
+                Consume(CurrentScanner.FToken);
               end
             else
               begin
-                sp:=CurrentScanner.pattern;
-                orgsp:=CurrentScanner.orgpattern;
-                spnongen:=sp;
-                orgspnongen:=orgsp;
-                if firstpart and
+                lPattern:=CurrentScanner.FPattern;
+                lOrgPattern:=CurrentScanner.FOrgPattern;
+                lPatternNonGen:=lPattern;
+                lOrgPatternNonGen:=lOrgPattern;
+                if lFirstPart and
                     not (m_delphi in CurrentSettings.ModeSwitches) and
-                    (CurrentScanner.idtoken=_SPECIALIZE) then
-                  hadspecialize:=true;
-                consume(_ID);
-                if ((ppf_generic in flags) or (m_delphi in CurrentSettings.ModeSwitches)) and
-                    (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
+                    (CurrentScanner.FIDToken=_SPECIALIZE) then
+                  lHadSpecialize:=true;
+                Consume(_ID);
+                if ((ppfGeneric in AFlags) or (m_delphi in CurrentSettings.ModeSwitches)) and
+                    (CurrentScanner.FToken in [_LT,_LSHARPBRACKET]) then
                   begin
-                    consume(CurrentScanner.token);
-                    if CurrentScanner.token in [_GT,_RSHARPBRACKET] then
+                    Consume(CurrentScanner.FToken);
+                    if CurrentScanner.FToken in [_GT,_RSHARPBRACKET] then
                       message(type_e_type_id_expected)
                     else
                       begin
-                        genericparams:=parse_generic_parameters(true);
-                        if not Assigned(genericparams) then
+                        lGenericParams:=ParseGenericParameters(true);
+                        if not Assigned(lGenericParams) then
                           InternalError(2015061201);
-                        if genericparams.count=0 then
+                        if lGenericParams.count=0 then
                           InternalError(2015061202);
-                        s:='';
-                        str(genericparams.count,s);
-                        spnongen:=sp;
-                        orgspnongen:=orgsp;
-                        sp:=sp+'$'+s;
-                        orgsp:=orgsp+'$'+s;
+                        lText:='';
+                        str(lGenericParams.count,lText);
+                        lPatternNonGen:=lPattern;
+                        lOrgPatternNonGen:=lOrgPattern;
+                        lPattern:=lPattern+'$'+lText;
+                        lOrgPattern:=lOrgPattern+'$'+lText;
                       end;
-                    if not try_to_consume(_GT) then
-                      consume(_RSHARPBRACKET);
+                    if not TryToConsume(_GT) then
+                      Consume(_RSHARPBRACKET);
                   end;
               end;
-            firstpart:=false;
+            lFirstPart:=false;
           end;
 
-        function search_object_name(const sp:TIDString;gen_error:boolean):TSym;
+        function SearchObjectName(const APattern:TIDString;AGenError:Boolean):TSym;
           var
-            storepos:TFilePosInfo;
-            srsymtable:TSymTable;
+            lSavedPos:TFilePosInfo;
+            lSearchSymTable:TSymTable;
           begin
-            storepos:=CurrentTokenPos;
-            CurrentTokenPos:=procstartfilepos;
-            SearchSym(sp,result,srsymtable);
-            if not Assigned(result) then
+            lSavedPos:=CurrentTokenPos;
+            CurrentTokenPos:=lProcStartFilePos;
+            SearchSym(APattern,Result,lSearchSymTable);
+            if not Assigned(Result) then
               begin
-                if gen_error then
-                  identifier_not_found(orgsp);
-                result:=GenErrorSym;
+                if AGenError then
+                  IdentifierNotFound(lOrgPattern);
+                Result:=GenErrorSym;
               end;
-            CurrentTokenPos:=storepos;
+            CurrentTokenPos:=lSavedPos;
           end;
 
-        function handle_generic_interface:boolean;
+        function HandleGenericInterface:Boolean;
           var
-            i : LongInt;
-            sym : TTypeSym;
-            typesrsym : TSym;
-            typesrsymtable : TSymTable;
-            hierarchy,
-            specializename,
-            prettyname: AnsiString;
-            error : boolean;
-            genname,
-            ugenname : TIDString;
-            module : TModule;
+            lIndex : LongInt;
+            lTypeSym : TTypeSym;
+            lTypeSearchSym : TSym;
+            lTypeSearchSymTable : TSymTable;
+            lHierarchy,
+            lSpecializeName,
+            lPrettyName: AnsiString;
+            lError : Boolean;
+            lGenName,
+            lUpperGenName : TIDString;
+            lModule : TModule;
           begin
-            result:=false;
-            if not Assigned(genericparams) then
+            Result:=false;
+            if not Assigned(lGenericParams) then
               exit;
-            specializename:='$';
-            prettyname:='';
-            error:=false;
-            for i:=0 to genericparams.count-1 do
+            lSpecializeName:='$';
+            lPrettyName:='';
+            lError:=false;
+            for lIndex:=0 to lGenericParams.count-1 do
               begin
-                sym:=TTypeSym(genericparams[i]);
+                lTypeSym:=TTypeSym(lGenericParams[lIndex]);
                 { ToDo: position }
-                if not SearchSym(upper(sym.RealName),typesrsym,typesrsymtable) then
+                if not SearchSym(upper(lTypeSym.RealName),lTypeSearchSym,lTypeSearchSymTable) then
                   begin
-                    message1(sym_e_id_not_found,sym.name);
-                    error:=true;
+                    message1(sym_e_id_not_found,lTypeSym.name);
+                    lError:=true;
                     continue;
                   end;
-                if typesrsym.typ<>TypeSym then
+                if lTypeSearchSym.typ<>TypeSym then
                   begin
                     message(type_e_type_id_expected);
-                    error:=true;
+                    lError:=true;
                     continue;
                   end;
-                module:=Find_Module_From_SymTable(TTypeSym(typesrsym).TypeDef.owner);
-                if not Assigned(module) then
+                lModule:=Find_Module_From_SymTable(TTypeSym(lTypeSearchSym).TypeDef.owner);
+                if not Assigned(lModule) then
                   InternalError(2016112803);
-                specializename:=specializename+'_$'+HexStr(module.ModuleID,8)+'$$'+TTypeSym(typesrsym).TypeDef.UniqueIDStr;
-                if i>0 then
-                  prettyname:=prettyname+',';
-                prettyname:=prettyname+TTypeSym(typesrsym).prettyname;
+                lSpecializeName:=lSpecializeName+'_$'+HexStr(lModule.ModuleID,8)+'$$'+TTypeSym(lTypeSearchSym).TypeDef.UniqueIDStr;
+                if lIndex>0 then
+                  lPrettyName:=lPrettyName+',';
+                lPrettyName:=lPrettyName+TTypeSym(lTypeSearchSym).prettyname;
               end;
-            result:=true;
-            if error then
+            Result:=true;
+            if lError then
               begin
-                srsym:=GenErrorSym;
+                lSearchSym:=GenErrorSym;
                 exit;
               end;
 
-            if not SearchSym(sp,typesrsym,typesrsymtable) or (typesrsym.typ<>TypeSym) then
+            if not SearchSym(lPattern,lTypeSearchSym,lTypeSearchSymTable) or (lTypeSearchSym.typ<>TypeSym) then
               begin
-                identifier_not_found(sp);
-                srsym:=GenErrorSym;
+                IdentifierNotFound(lPattern);
+                lSearchSym:=GenErrorSym;
                 exit;
               end;
 
-            module:=Find_Module_From_SymTable(TTypeSym(typesrsym).owner);
-            if not Assigned(module) then
+            lModule:=Find_Module_From_SymTable(TTypeSym(lTypeSearchSym).owner);
+            if not Assigned(lModule) then
               InternalError(2022102105);
 
-            hierarchy:=TTypeSym(typesrsym).TypeDef.ownerhierarchyname;
-            if hierarchy<>'' then
-              hierarchy:='.'+hierarchy;
+            lHierarchy:=TTypeSym(lTypeSearchSym).TypeDef.ownerhierarchyname;
+            if lHierarchy<>'' then
+              lHierarchy:='.'+lHierarchy;
 
-            genname:=generate_generic_name(sp,specializename,module.ModuleName^+hierarchy);
-            ugenname:=upper(genname);
+            lGenName:=GenerateGenericName(lPattern,lSpecializeName,lModule.ModuleName^+lHierarchy);
+            lUpperGenName:=upper(lGenName);
 
-            srsym:=search_object_name(ugenname,false);
-            if not Assigned(srsym) then
+            lSearchSym:=SearchObjectName(lUpperGenName,false);
+            if not Assigned(lSearchSym) then
               begin
-                Message1(type_e_generic_declaration_does_not_match,sp+'<'+prettyname+'>');
-                srsym:=GenErrorSym;
+                Message1(type_e_generic_declaration_does_not_match,lPattern+'<'+lPrettyName+'>');
+                lSearchSym:=GenErrorSym;
               end;
           end;
 
-        procedure specialize_generic_interface;
+        procedure SpecializeGenericInterface;
           var
-            node : TNode;
+            lNode : TNode;
           begin
-            node:=factor(false,[ef_type_only,ef_had_specialize]);
-            if node.nodetype=typen then
+            lNode:=Factor(false,[efTypeOnly,efHadSpecialize]);
+            if lNode.nodetype=typen then
               begin
-                sp:=TTypeNode(node).TypeDef.TypeSym.name;
+                lPattern:=TTypeNode(lNode).TypeDef.TypeSym.name;
               end
             else
-              sp:='';
+              lPattern:='';
           end;
 
-        function check_generic_parameters(def:TStoredDef):boolean;
+        function CheckGenericParameters(ADef:TStoredDef):Boolean;
           var
-            i : LongInt;
-            declsym,
-            implsym : TSym;
-            impltype : TTypeSym absolute implsym;
-            implname : TSymStr;
-            fileinfo : TFilePosInfo;
+            lIndex : LongInt;
+            lDeclSym,
+            lImplSym : TSym;
+            lImplType : TTypeSym absolute lImplSym;
+            lImplName : TSymStr;
+            lFileInfo : TFilePosInfo;
           begin
-            result:=true;
-            if not Assigned(def.GenericParas) then
+            Result:=true;
+            if not Assigned(ADef.GenericParas) then
               InternalError(2018090102);
-            if not Assigned(genericparams) then
+            if not Assigned(lGenericParams) then
               InternalError(2018090103);
-            if def.GenericParas.count<>genericparams.count then
+            if ADef.GenericParas.count<>lGenericParams.count then
               InternalError(2018090104);
-            for i:=0 to def.GenericParas.count-1 do
+            for lIndex:=0 to ADef.GenericParas.count-1 do
               begin
-                declsym:=TSym(def.GenericParas[i]);
-                implsym:=TSym(genericparams[i]);
-                implname:=upper(genericparams.nameofindex(i));
-                if declsym.name<>implname then
+                lDeclSym:=TSym(ADef.GenericParas[lIndex]);
+                lImplSym:=TSym(lGenericParams[lIndex]);
+                lImplName:=upper(lGenericParams.nameofindex(lIndex));
+                if lDeclSym.name<>lImplName then
                   begin
-                    messagepos1(implsym.fileinfo,sym_e_generic_type_param_mismatch,implsym.realname);
-                    messagepos1(declsym.fileinfo,sym_e_generic_type_param_decl,declsym.realname);
-                    result:=false;
+                    messagepos1(lImplSym.fileinfo,sym_e_generic_type_param_mismatch,lImplSym.realname);
+                    messagepos1(lDeclSym.fileinfo,sym_e_generic_type_param_decl,lDeclSym.realname);
+                    Result:=false;
                   end;
-                if ((implsym.typ=TypeSym) and (df_genconstraint in impltype.TypeDef.DefOptions)) or
-                    (implsym.typ=constsym) then
+                if ((lImplSym.typ=TypeSym) and (df_genconstraint in lImplType.TypeDef.DefOptions)) or
+                    (lImplSym.typ=constsym) then
                   begin
-                    if implsym.typ=constsym then
-                      fileinfo:=impltype.fileinfo
+                    if lImplSym.typ=constsym then
+                      lFileInfo:=lImplType.fileinfo
                     else
-                      fileinfo:=TStoredDef(impltype.TypeDef).GenConstraintData.fileinfo;
-                    messagepos(fileinfo,parser_e_generic_constraints_not_allowed_here);
-                    result:=false;
+                      lFileInfo:=TStoredDef(lImplType.TypeDef).GenConstraintData.fileinfo;
+                    messagepos(lFileInfo,parser_e_generic_constraints_not_allowed_here);
+                    Result:=false;
                   end;
               end;
           end;
 
       begin
-        sp:='';
-        orgsp:='';
-        spnongen:='';
-        orgspnongen:='';
+        lPattern:='';
+        lOrgPattern:='';
+        lPatternNonGen:='';
+        lOrgPatternNonGen:='';
 
         { Save the position where this procedure really starts }
-        procstartfilepos:=CurrentTokenPos;
-        old_parse_generic:=parse_generic;
+        lProcStartFilePos:=CurrentTokenPos;
+        lOldParseGeneric:=ParseGeneric;
 
-        firstpart:=true;
-        result:=false;
-        pd:=nil;
-        aprocsym:=nil;
-        srsym:=nil;
-        genericparams:=nil;
-        hadspecialize:=false;
-        addgendummy:=false;
+        lFirstPart:=true;
+        Result:=false;
+        AProcDef:=nil;
+        lProcSym:=nil;
+        lSearchSym:=nil;
+        lGenericParams:=nil;
+        lHadSpecialize:=false;
+        lAddGenDummy:=false;
 
         { ensure that we don't insert into a withsymtable (can happen with
           anonymous functions) }
-        checkstack:=SymTableStack.stack;
-        while checkstack^.SymTable.SymTableType in [withsymtable] do
-          checkstack:=checkstack^.next;
-        insertst:=checkstack^.SymTable;
+        lCheckStack:=SymTableStack.stack;
+        while lCheckStack^.SymTable.SymTableType in [withsymtable] do
+          lCheckStack:=lCheckStack^.next;
+        lInsertSymTable:=lCheckStack^.SymTable;
 
-        if not Assigned(GenericDef) then
+        if not Assigned(AGenericDef) then
           begin
-            if ppf_anonymous in flags then
+            if ppfAnonymous in AFlags then
               begin
-                if not (insertst.SymTableType in [LocalSymTable,staticsymtable]) then
+                if not (lInsertSymTable.SymTableType in [LocalSymTable,staticsymtable]) then
                   InternalError(2021050101);
                 { generate a unique name for the anonymous function; don't use
                   something like file position however as this might be inside
                   an include file that's included multiple times }
-                str(insertst.SymList.count,orgsp);
-                orgsp:='__FPCINTERNAL__Anonymous_'+orgsp;
-                sp:=upper(orgsp);
-                spnongen:=sp;
-                orgspnongen:=orgsp;
+                str(lInsertSymTable.SymList.count,lOrgPattern);
+                lOrgPattern:='__FPCINTERNAL__Anonymous_'+lOrgPattern;
+                lPattern:=upper(lOrgPattern);
+                lPatternNonGen:=lPattern;
+                lOrgPatternNonGen:=lOrgPattern;
               end
             else
-              consume_proc_name;
+              ConsumeProcName;
 
             { examine interface map: function/procedure iname.functionname=locfuncname }
-            if Assigned(astruct) and
-               (astruct.typ=objectdef) and
-               Assigned(TObjectDef(astruct).ImplementedInterfaces) and
-               (TObjectDef(astruct).ImplementedInterfaces.count>0) and
+            if Assigned(AStruct) and
+               (AStruct.typ=objectdef) and
+               Assigned(TObjectDef(AStruct).ImplementedInterfaces) and
+               (TObjectDef(AStruct).ImplementedInterfaces.count>0) and
                (
-                 (CurrentScanner.token=_POINT) or
+                 (CurrentScanner.FToken=_POINT) or
                  (
-                   hadspecialize and
-                   (CurrentScanner.token=_ID)
+                   lHadSpecialize and
+                   (CurrentScanner.FToken=_ID)
                  )
                ) then
              begin
-               if hadspecialize and (CurrentScanner.token=_ID) then
-                 specialize_generic_interface;
-               consume(_POINT);
-               if hadspecialize or not handle_generic_interface then
-                 srsym:=search_object_name(sp,true);
+               if lHadSpecialize and (CurrentScanner.FToken=_ID) then
+                 SpecializeGenericInterface;
+               Consume(_POINT);
+               if lHadSpecialize or not HandleGenericInterface then
+                 lSearchSym:=SearchObjectName(lPattern,true);
                { qualifier is interface? }
-               ImplIntf:=nil;
-               if Assigned(srsym) and
-                  (srsym.typ=TypeSym) and
-                  (TTypeSym(srsym).TypeDef.typ=objectdef) then
-                 ImplIntf:=Find_Implemented_Interface(TObjectDef(astruct),TObjectDef(TTypeSym(srsym).TypeDef));
-               if ImplIntf=nil then
+               lImplIntf:=nil;
+               if Assigned(lSearchSym) and
+                  (lSearchSym.typ=TypeSym) and
+                  (TTypeSym(lSearchSym).TypeDef.typ=objectdef) then
+                 lImplIntf:=Find_Implemented_Interface(TObjectDef(AStruct),TObjectDef(TTypeSym(lSearchSym).TypeDef));
+               if lImplIntf=nil then
                  begin
                    Message(parser_e_interface_id_expected);
                    { error recovery }
-                   consume(_ID);
-                   if try_to_consume(_EQ) then
-                     consume(_ID);
+                   Consume(_ID);
+                   if TryToConsume(_EQ) then
+                     Consume(_ID);
                    exit;
                  end
                else
                  { in case of a generic or specialized interface we need to use the
                    name of the def instead of the symbol, so that always the correct
                    name is used }
-                 if [df_generic,df_specialization]*TTypeSym(srsym).TypeDef.DefOptions<>[] then
-                   sp:=TObjectDef(TTypeSym(srsym).TypeDef).ObjName^;
+                 if [df_generic,df_specialization]*TTypeSym(lSearchSym).TypeDef.DefOptions<>[] then
+                   lPattern:=TObjectDef(TTypeSym(lSearchSym).TypeDef).ObjName^;
                { must be a directly implemented interface }
-               if Assigned(ImplIntf.ImplementsGetter) then
-                 Message2(parser_e_implements_no_mapping,ImplIntf.IntfDef.TypeName,astruct.ObjRealName^);
-               consume(_ID);
+               if Assigned(lImplIntf.ImplementsGetter) then
+                 Message2(parser_e_implements_no_mapping,lImplIntf.IntfDef.TypeName,AStruct.ObjRealName^);
+               Consume(_ID);
                { Create unique name <interface>.<method> }
-               hs:=sp+'.'+CurrentScanner.pattern;
-               consume(_EQ);
-               if Assigned(ImplIntf) and
-                  (CurrentScanner.token=_ID) then
-                 ImplIntf.AddMapping(hs,CurrentScanner.pattern);
-               consume(_ID);
-               result:=true;
+               lText:=lPattern+'.'+CurrentScanner.FPattern;
+               Consume(_EQ);
+               if Assigned(lImplIntf) and
+                  (CurrentScanner.FToken=_ID) then
+                 lImplIntf.AddMapping(lText,CurrentScanner.FPattern);
+               Consume(_ID);
+               Result:=true;
                exit;
              end;
 
-            if Assigned(genericparams) and Assigned(CurrentGenericDef) then
+            if Assigned(lGenericParams) and Assigned(CurrentGenericDef) then
               Message(parser_f_no_generic_inside_generic);
 
             { method  ? }
-            srsym:=nil;
-            if not Assigned(astruct) and
+            lSearchSym:=nil;
+            if not Assigned(AStruct) and
                (SymTableStack.top.SymTableLevel=MainProgramLevel) and
-               try_to_consume(_POINT) then
+               TryToConsume(_POINT) then
              begin
                repeat
-                 classstartfilepos:=procstartfilepos;
-                 searchagain:=false;
+                 lClassStartFilePos:=lProcStartFilePos;
+                 lSearchAgain:=false;
 
                  { throw the error at the right location }
-                 oldfilepos:=CurrentFilePos;
-                 CurrentFilePos:=procstartfilepos;
-                 if not Assigned(astruct) and not Assigned(srsym) then
-                   srsym:=search_object_name(sp,true);
-                 CurrentFilePos:=oldfilepos;
+                 lOldFilePos:=CurrentFilePos;
+                 CurrentFilePos:=lProcStartFilePos;
+                 if not Assigned(AStruct) and not Assigned(lSearchSym) then
+                   lSearchSym:=SearchObjectName(lPattern,true);
+                 CurrentFilePos:=lOldFilePos;
 
                  { we need to check whether the names of the generic parameter
                    types match with the one in the declaration of a class/record,
                    but we need to do this before consume_proc_name frees the
                    type parameters of the class part }
-                 if (srsym.typ=TypeSym) and
-                     (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) and
-                     TStoredDef(TTypeSym(srsym).TypeDef).Is_Generic and
-                     Assigned(genericparams) then
+                 if (lSearchSym.typ=TypeSym) and
+                     (TTypeSym(lSearchSym).TypeDef.typ in [objectdef,recorddef]) and
+                     TStoredDef(TTypeSym(lSearchSym).TypeDef).Is_Generic and
+                     Assigned(lGenericParams) then
                    { this is recoverable, so no further action necessary }
-                   check_generic_parameters(TStoredDef(TTypeSym(srsym).TypeDef));
+                   CheckGenericParameters(TStoredDef(TTypeSym(lSearchSym).TypeDef));
 
                  { consume proc name }
-                 procstartfilepos:=CurrentTokenPos;
-                 consume_proc_name;
+                 lProcStartFilePos:=CurrentTokenPos;
+                 ConsumeProcName;
                  { qualifier is class name ? }
-                 if (srsym.typ=TypeSym) and
-                    (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) then
+                 if (lSearchSym.typ=TypeSym) and
+                    (TTypeSym(lSearchSym).TypeDef.typ in [objectdef,recorddef]) then
                   begin
-                    astruct:=TAbstractRecordDef(TTypeSym(srsym).TypeDef);
-                    if (CurrentScanner.token<>_POINT) then
-                      if (potype in [potype_class_constructor,potype_class_destructor]) then
-                        sp:=lower(sp)
+                    AStruct:=TAbstractRecordDef(TTypeSym(lSearchSym).TypeDef);
+                    if (CurrentScanner.FToken<>_POINT) then
+                      if (AProcType in [potype_class_constructor,potype_class_destructor]) then
+                        lPattern:=lower(lPattern)
                       else
-                      if (potype=potype_operator) and (optoken=NOTOKEN) then
-                        parse_operator_name;
-                    srsym:=TSym(astruct.SymTable.Find(sp));
-                    if Assigned(srsym) then
+                      if (AProcType=potype_operator) and (OpToken=NOTOKEN) then
+                        ParseOperatorName;
+                    lSearchSym:=TSym(AStruct.SymTable.Find(lPattern));
+                    if Assigned(lSearchSym) then
                      begin
-                       if srsym.typ=ProcSym then
-                         aprocsym:=TProcSym(srsym)
+                       if lSearchSym.typ=ProcSym then
+                         lProcSym:=TProcSym(lSearchSym)
                        else
-                       if (srsym.typ=TypeSym) and
-                          (TTypeSym(srsym).TypeDef.typ in [objectdef,recorddef]) then
+                       if (lSearchSym.typ=TypeSym) and
+                          (TTypeSym(lSearchSym).TypeDef.typ in [objectdef,recorddef]) then
                          begin
-                           searchagain:=true;
-                           consume(_POINT);
+                           lSearchAgain:=true;
+                           Consume(_POINT);
                          end
                        else
                          begin
                            {  we use a different error message for tp7 so it looks more compatible }
                            if (m_fpc in CurrentSettings.ModeSwitches) then
-                             Message1(parser_e_overloaded_no_procedure,srsym.realname)
+                             Message1(parser_e_overloaded_no_procedure,lSearchSym.realname)
                            else
                              Message(parser_e_methode_id_expected);
                            { rename the name to an unique name to avoid an
                              error when inserting the symbol in the symtable }
-                           orgsp:=orgsp+'$'+ToStr(CurrentFilePos.line);
+                           lOrgPattern:=lOrgPattern+'$'+ToStr(CurrentFilePos.line);
                          end;
                      end
                     else
                      begin
-                       MessagePos(procstartfilepos,parser_e_methode_id_expected);
+                       MessagePos(lProcStartFilePos,parser_e_methode_id_expected);
                        { recover by making it a normal procedure instead of method }
-                       astruct:=nil;
+                       AStruct:=nil;
                      end;
                   end
                  else
-                  MessagePos(classstartfilepos,parser_e_class_id_expected);
-               until not searchagain;
+                  MessagePos(lClassStartFilePos,parser_e_class_id_expected);
+               until not lSearchAgain;
              end
             else
              begin
                { check for constructor/destructor/class operators which are not allowed here }
-               if (not parse_only) and
-                  ((potype in [potype_constructor,potype_destructor,
+               if (not ParseOnly) and
+                  ((AProcType in [potype_constructor,potype_destructor,
                                potype_class_constructor,potype_class_destructor]) or
-                   ((potype=potype_operator) and (m_delphi in CurrentSettings.ModeSwitches))) then
+                   ((AProcType=potype_operator) and (m_delphi in CurrentSettings.ModeSwitches))) then
                  Message(parser_e_only_methods_allowed);
 
                repeat
@@ -981,267 +981,267 @@ implementation
                    the check was already done with oo_has_class_constructor or
                    oo_has_class_destructor -> skip searching
                    (bug #28801) }
-                 if (potype in [potype_class_constructor,potype_class_destructor]) then
+                 if (AProcType in [potype_class_constructor,potype_class_destructor]) then
                    break;
 
-                 searchagain:=false;
-                 CurrentTokenPos:=procstartfilepos;
+                 lSearchAgain:=false;
+                 CurrentTokenPos:=lProcStartFilePos;
 
-                 if (potype=potype_operator)and(optoken=NOTOKEN) then
-                   parse_operator_name;
+                 if (AProcType=potype_operator)and(OpToken=NOTOKEN) then
+                   ParseOperatorName;
 
-                 srsym:=TSym(insertst.Find(sp));
+                 lSearchSym:=TSym(lInsertSymTable.Find(lPattern));
 
                  { Also look in the globalsymtable if we didn't found
                    the symbol in the localsymtable }
-                 if not Assigned(srsym) and
-                    not(parse_only) and
+                 if not Assigned(lSearchSym) and
+                    not(ParseOnly) and
                     (SymTableStack.top=CurrentModule.LocalSymTable) and
                     Assigned(CurrentModule.GlobalSymTable) then
-                   srsym:=TSym(CurrentModule.GlobalSymTable.Find(sp));
+                   lSearchSym:=TSym(CurrentModule.GlobalSymTable.Find(lPattern));
 
                  { if the symbol isn't assigned, but we're parsing a class or
                    object then check in the parent types for symbols of the same
                    name that are generics and declare the new symbol as a generic
                    dummy symbol }
 
-                 if not Assigned(srsym) and Is_Class_Or_Object(astruct) then
+                 if not Assigned(lSearchSym) and Is_Class_Or_Object(AStruct) then
                    begin
-                     parentdef:=TObjectDef(astruct).ChildOf;
-                     while Assigned(parentdef) do
+                     lParentDef:=TObjectDef(AStruct).ChildOf;
+                     while Assigned(lParentDef) do
                        begin
-                         srsym:=TSym(parentdef.SymTable.Find(sp));
-                         if Assigned(srsym) and (sp_generic_dummy in srsym.SymOptions) then
+                         lSearchSym:=TSym(lParentDef.SymTable.Find(lPattern));
+                         if Assigned(lSearchSym) and (sp_generic_dummy in lSearchSym.SymOptions) then
                            begin
-                             addgendummy:=true;
+                             lAddGenDummy:=true;
                              break;
                            end;
-                         parentdef:=parentdef.ChildOf;
+                         lParentDef:=lParentDef.ChildOf;
                        end;
-                     srsym:=nil;
+                     lSearchSym:=nil;
                    end;
 
                  { Check if overloaded is a procsym }
-                 if Assigned(srsym) then
+                 if Assigned(lSearchSym) then
                    begin
-                     if srsym.typ=ProcSym then
-                       aprocsym:=TProcSym(srsym)
+                     if lSearchSym.typ=ProcSym then
+                       lProcSym:=TProcSym(lSearchSym)
                      else
                        begin
                          { when the other symbol is a unit symbol then hide the unit symbol }
-                         if srsym.typ=UnitSym then
+                         if lSearchSym.typ=UnitSym then
                           begin
-                            HideSym(srsym);
-                            searchagain:=true;
+                            HideSym(lSearchSym);
+                            lSearchAgain:=true;
                           end
                          else
                          if (m_delphi in CurrentSettings.ModeSwitches) and
-                            (srsym.typ=absolutevarsym) and
-                            ([vo_is_funcret,vo_is_result]*TAbstractVarSym(srsym).VarOptions=[vo_is_funcret]) then
+                            (lSearchSym.typ=absolutevarsym) and
+                            ([vo_is_funcret,vo_is_result]*TAbstractVarSym(lSearchSym).VarOptions=[vo_is_funcret]) then
                            begin
-                             HideSym(srsym);
-                             searchagain:=true;
+                             HideSym(lSearchSym);
+                             lSearchAgain:=true;
                            end
-                         else if (srsym.typ=TypeSym) and
-                             (sp_generic_dummy in srsym.SymOptions) and
-                             (TTypeSym(srsym).TypeDef.typ=undefineddef) and
-                             not Assigned(genericparams) then
+                         else if (lSearchSym.typ=TypeSym) and
+                             (sp_generic_dummy in lSearchSym.SymOptions) and
+                             (TTypeSym(lSearchSym).TypeDef.typ=undefineddef) and
+                             not Assigned(lGenericParams) then
                            begin
                              { this is a generic dummy symbol that has not yet
                                been used; so we rename the dummy symbol and continue
                                as if nothing happened }
-                             HideSym(srsym);
-                             searchagain:=true;
-                             addgendummy:=true;
+                             HideSym(lSearchSym);
+                             lSearchAgain:=true;
+                             lAddGenDummy:=true;
                            end
                          else
                           begin
                             {  we use a different error message for tp7 so it looks more compatible }
                             if (m_fpc in CurrentSettings.ModeSwitches) then
-                              Message1(parser_e_overloaded_no_procedure,srsym.realname)
+                              Message1(parser_e_overloaded_no_procedure,lSearchSym.realname)
                             else
-                              Message1(sym_e_duplicate_id,srsym.realname);
+                              Message1(sym_e_duplicate_id,lSearchSym.realname);
                             { rename the name to an unique name to avoid an
                               error when inserting the symbol in the symtable }
-                            orgsp:=orgsp+'$'+ToStr(CurrentFilePos.line);
+                            lOrgPattern:=lOrgPattern+'$'+ToStr(CurrentFilePos.line);
                           end;
                        end;
                   end;
-               until not searchagain;
+               until not lSearchAgain;
              end;
 
             { test again if assigned, it can be reset to recover }
-            if not Assigned(aprocsym) then
+            if not Assigned(lProcSym) then
               begin
                 { create a new procsym and set the real filepos }
-                CurrentTokenPos:=procstartfilepos;
+                CurrentTokenPos:=lProcStartFilePos;
                 { for operator we have only one procsym for each overloaded
                   operation }
-                if (potype=potype_operator) then
+                if (AProcType=potype_operator) then
                   begin
-                    aprocsym:=TProcSym(insertst.Find(sp));
-                    if aprocsym=nil then
-                      aprocsym:=CProcSym.Create('$'+sp);
+                    lProcSym:=TProcSym(lInsertSymTable.Find(lPattern));
+                    if lProcSym=nil then
+                      lProcSym:=CProcSym.Create('$'+lPattern);
                   end
                 else
-                if (potype in [potype_class_constructor,potype_class_destructor]) then
-                  aprocsym:=CProcSym.Create('$'+lower(sp))
+                if (AProcType in [potype_class_constructor,potype_class_destructor]) then
+                  lProcSym:=CProcSym.Create('$'+lower(lPattern))
                 else
-                  aprocsym:=CProcSym.Create(orgsp);
-                if ppf_anonymous in flags then
-                  include(aprocsym.SymOptions,sp_internal);
-                if addgendummy then
-                  include(aprocsym.SymOptions,sp_generic_dummy);
-                insertst.InsertSym(aprocsym);
+                  lProcSym:=CProcSym.Create(lOrgPattern);
+                if ppfAnonymous in AFlags then
+                  include(lProcSym.SymOptions,sp_internal);
+                if lAddGenDummy then
+                  include(lProcSym.SymOptions,sp_generic_dummy);
+                lInsertSymTable.InsertSym(lProcSym);
               end;
           end;
 
         { to get the correct symtablelevel we must ignore ObjectSymtables }
-        st:=nil;
-        checkstack:=SymTableStack.stack;
-        while Assigned(checkstack) do
+        lSymTable:=nil;
+        lCheckStack:=SymTableStack.stack;
+        while Assigned(lCheckStack) do
           begin
-            st:=checkstack^.SymTable;
-            if st.SymTableType in [staticsymtable,GlobalSymTable,LocalSymTable] then
+            lSymTable:=lCheckStack^.SymTable;
+            if lSymTable.SymTableType in [staticsymtable,GlobalSymTable,LocalSymTable] then
               break;
-            checkstack:=checkstack^.next;
+            lCheckStack:=lCheckStack^.next;
           end;
-        pd:=CProcDef.Create(st.SymTableLevel+1,not Assigned(GenericDef));
-        pd.struct:=astruct;
-        pd.ProcSym:=aprocsym;
-        pd.ProcTypeOption:=potype;
-        if ppf_anonymous in flags then
+        AProcDef:=CProcDef.Create(lSymTable.SymTableLevel+1,not Assigned(AGenericDef));
+        AProcDef.struct:=AStruct;
+        AProcDef.ProcSym:=lProcSym;
+        AProcDef.ProcTypeOption:=AProcType;
+        if ppfAnonymous in AFlags then
           begin
-            include(pd.ProcOptions,po_anonymous);
+            include(AProcDef.ProcOptions,po_anonymous);
             { inherit the "static" and "class" flag from the method the anonymous function
               is contained in }
-            if (st.SymTableType=LocalSymTable) and
-                (st.DefOwner.typ=procdef) and
-                ([po_staticmethod,po_classmethod]*TProcDef(st.DefOwner).ProcOptions<>[]) then
-              pd.ProcOptions:=pd.ProcOptions+([po_staticmethod,po_classmethod]*TProcDef(st.DefOwner).ProcOptions);
+            if (lSymTable.SymTableType=LocalSymTable) and
+                (lSymTable.DefOwner.typ=procdef) and
+                ([po_staticmethod,po_classmethod]*TProcDef(lSymTable.DefOwner).ProcOptions<>[]) then
+              AProcDef.ProcOptions:=AProcDef.ProcOptions+([po_staticmethod,po_classmethod]*TProcDef(lSymTable.DefOwner).ProcOptions);
           end;
 
-        if Assigned(genericparams) then
+        if Assigned(lGenericParams) then
           begin
-            if potype=potype_constructor then
+            if AProcType=potype_constructor then
               begin
                 Message(parser_e_constructors_cannot_take_type_parameters);
-                genericparams.free;
-                genericparams:=nil;
+                lGenericParams.free;
+                lGenericParams:=nil;
               end
             else
               begin
-                include(pd.DefOptions,df_generic);
+                include(AProcDef.DefOptions,df_generic);
                 { push the parameter symtable so that constraint definitions are added
                   there and not in the owner symtable }
-                SymTableStack.push(pd.ParaST);
+                SymTableStack.push(AProcDef.ParaST);
                 { register the parameters }
-                for i:=0 to genericparams.count-1 do
+                for lIndex:=0 to lGenericParams.count-1 do
                   begin
-                     TSym(genericparams[i]).RegisterSym;
-                     if TSym(genericparams[i]).typ=TypeSym then
-                       TStoredDef(TTypeSym(genericparams[i]).TypeDef).RegisterDef;
+                     TSym(lGenericParams[lIndex]).RegisterSym;
+                     if TSym(lGenericParams[lIndex]).typ=TypeSym then
+                       TStoredDef(TTypeSym(lGenericParams[lIndex]).TypeDef).RegisterDef;
                   end;
-                insert_generic_parameter_types(pd,nil,genericparams,false);
+                InsertGenericParameterTypes(AProcDef,nil,lGenericParams,false);
                 { the list is no longer required }
-                genericparams.free;
-                genericparams:=nil;
-                SymTableStack.pop(pd.ParaST);
-                parse_generic:=true;
+                lGenericParams.free;
+                lGenericParams:=nil;
+                SymTableStack.pop(AProcDef.ParaST);
+                ParseGeneric:=true;
                 { also generate a dummy symbol if none exists already }
-                if Assigned(astruct) then
-                  DummySym:=TSym(astruct.SymTable.find(spnongen))
+                if Assigned(AStruct) then
+                  lDummySym:=TSym(AStruct.SymTable.find(lPatternNonGen))
                 else
                   begin
-                    DummySym:=TSym(insertst.find(spnongen));
-                    if not Assigned(DummySym) and
+                    lDummySym:=TSym(lInsertSymTable.find(lPatternNonGen));
+                    if not Assigned(lDummySym) and
                         (SymTableStack.top=CurrentModule.LocalSymTable) and
                         Assigned(CurrentModule.GlobalSymTable) then
-                      DummySym:=TSym(CurrentModule.GlobalSymTable.find(spnongen));
+                      lDummySym:=TSym(CurrentModule.GlobalSymTable.find(lPatternNonGen));
                   end;
-                if not Assigned(DummySym) then
+                if not Assigned(lDummySym) then
                   begin
                     { overloading generic routines with non-generic types is not
                       allowed, so we create a procsym as dummy }
-                    DummySym:=CProcSym.Create(orgspnongen);
-                    if Assigned(astruct) then
-                      astruct.SymTable.InsertSym(DummySym)
+                    lDummySym:=CProcSym.Create(lOrgPatternNonGen);
+                    if Assigned(AStruct) then
+                      AStruct.SymTable.InsertSym(lDummySym)
                     else
-                      insertst.InsertSym(DummySym);
+                      lInsertSymTable.InsertSym(lDummySym);
                   end
-                else if (DummySym.typ<>ProcSym) and
+                else if (lDummySym.typ<>ProcSym) and
                     (
                       { show error only for the declaration, not also the implementation }
-                      not Assigned(astruct) or
+                      not Assigned(AStruct) or
                       (SymTableStack.top.SymTableLevel<>MainProgramLevel)
                     ) then
-                  Message1(sym_e_duplicate_id,DummySym.realname);
-                if not (sp_generic_dummy in DummySym.SymOptions) then
+                  Message1(sym_e_duplicate_id,lDummySym.realname);
+                if not (sp_generic_dummy in lDummySym.SymOptions) then
                   begin
-                    include(DummySym.SymOptions,sp_generic_dummy);
-                    add_generic_dummysym(DummySym,'');
+                    include(lDummySym.SymOptions,sp_generic_dummy);
+                    AddGenericDummySym(lDummySym,'');
                   end;
-                if DummySym.typ=ProcSym then
-                  TProcSym(DummySym).Add_Generic_Overload(aprocsym);
+                if lDummySym.typ=ProcSym then
+                  TProcSym(lDummySym).Add_Generic_Overload(lProcSym);
                 { start token recorder for the declaration }
-                pd.Init_GenericDecl;
-                CurrentScanner.startrecordtokens(pd.GenericDeclTokenBuf);
+                AProcDef.Init_GenericDecl;
+                CurrentScanner.StartRecordTokens(AProcDef.GenericDeclTokenBuf);
               end;
           end
-        else if Assigned(GenericDef) then
-          insert_generic_parameter_types(pd,TStoredDef(GenericDef),generictypelist,false);
+        else if Assigned(AGenericDef) then
+          InsertGenericParameterTypes(AProcDef,TStoredDef(AGenericDef),AGenericTypeList,false);
 
         { methods inherit df_generic or df_specialization from the objectdef }
-        if Assigned(pd.struct) and
-           (pd.ParaST.SymTableLevel=NormalFunctionLevel) then
+        if Assigned(AProcDef.struct) and
+           (AProcDef.ParaST.SymTableLevel=NormalFunctionLevel) then
           begin
-            if (df_generic in pd.struct.DefOptions) then
+            if (df_generic in AProcDef.struct.DefOptions) then
               begin
-                include(pd.DefOptions,df_generic);
-                parse_generic:=true;
+                include(AProcDef.DefOptions,df_generic);
+                ParseGeneric:=true;
               end;
-            if (df_specialization in pd.struct.DefOptions) then
+            if (df_specialization in AProcDef.struct.DefOptions) then
               begin
                 if Assigned(CurrentSpecializeDef) then
                   begin
-                    include(pd.DefOptions,df_specialization);
+                    include(AProcDef.DefOptions,df_specialization);
                     { Find corresponding genericdef, we need it later to
                       replay the tokens to generate the body }
-                    if not Assigned(pd.struct.GenericDef) then
+                    if not Assigned(AProcDef.struct.GenericDef) then
                       InternalError(200512113);
-                    genericst:=pd.struct.GenericDef.GetSymTable(gs_record);
-                    if not Assigned(genericst) then
+                    lGenericSymTable:=AProcDef.struct.GenericDef.GetSymTable(gs_record);
+                    if not Assigned(lGenericSymTable) then
                       InternalError(200512114);
 
                     { when searching for the correct procdef to use as genericdef we need to ignore
                       everything except procdefs so that we can find the correct indices }
-                    index:=0;
-                    found:=false;
-                    for i:=0 to pd.owner.DefList.count-1 do
+                    lDirectiveIndex:=0;
+                    lFound:=false;
+                    for lIndex:=0 to AProcDef.owner.DefList.count-1 do
                       begin
-                        if TDef(pd.owner.DefList[i]).typ<>procdef then
+                        if TDef(AProcDef.owner.DefList[lIndex]).typ<>procdef then
                           continue;
-                        if pd.owner.DefList[i]=pd then
+                        if AProcDef.owner.DefList[lIndex]=AProcDef then
                           begin
-                            found:=true;
+                            lFound:=true;
                             break;
                           end;
-                        inc(index);
+                        inc(lDirectiveIndex);
                       end;
-                    if not found then
+                    if not lFound then
                       InternalError(2014052301);
 
-                    for i:=0 to genericst.DefList.count-1 do
+                    for lIndex:=0 to lGenericSymTable.DefList.count-1 do
                       begin
-                        if TDef(genericst.DefList[i]).typ<>procdef then
+                        if TDef(lGenericSymTable.DefList[lIndex]).typ<>procdef then
                           continue;
-                        if index=0 then
-                          pd.GenericDef:=TStoredDef(genericst.DefList[i]);
-                        dec(index);
+                        if lDirectiveIndex=0 then
+                          AProcDef.GenericDef:=TStoredDef(lGenericSymTable.DefList[lIndex]);
+                        dec(lDirectiveIndex);
                       end;
 
-                    if not Assigned(pd.GenericDef) or
-                       (pd.GenericDef.typ<>procdef) then
+                    if not Assigned(AProcDef.GenericDef) or
+                       (AProcDef.GenericDef.typ<>procdef) then
                       InternalError(200512115);
                   end
                 else
@@ -1250,115 +1250,115 @@ implementation
           end;
 
         { methods need to be exported }
-        if Assigned(astruct) and
+        if Assigned(AStruct) and
            (
             (SymTableStack.top.SymTableType in [ObjectSymtable,recordsymtable]) or
             (SymTableStack.top.SymTableLevel=MainProgramLevel)
            ) then
-          include(pd.ProcOptions,po_global);
+          include(AProcDef.ProcOptions,po_global);
 
         { symbol options that need to be kept per procdef }
-        pd.fileinfo:=procstartfilepos;
-        pd.visibility:=insertst.CurrentVisibility;
-        if insertst.CurrentlyOptional then
-          include(pd.ProcOptions,po_optional);
+        AProcDef.fileinfo:=lProcStartFilePos;
+        AProcDef.visibility:=lInsertSymTable.CurrentVisibility;
+        if lInsertSymTable.CurrentlyOptional then
+          include(AProcDef.ProcOptions,po_optional);
 
         { parse parameters }
-        if CurrentScanner.token=_LKLAMMER then
+        if CurrentScanner.FToken=_LKLAMMER then
           begin
-            old_current_structdef:=nil;
-            old_current_genericdef:=CurrentGenericDef;
-            old_current_specializedef:=nil;
+            lOldCurrentStructDef:=nil;
+            lOldCurrentGenericDef:=CurrentGenericDef;
+            lOldCurrentSpecializeDef:=nil;
             { Add ObjectSymtable to be able to find nested type definitions }
-            popclass:=0;
-            if Assigned(pd.struct) and
-               (pd.ParaST.SymTableLevel>=NormalFunctionLevel) and
+            lPopClass:=0;
+            if Assigned(AProcDef.struct) and
+               (AProcDef.ParaST.SymTableLevel>=NormalFunctionLevel) and
                not(SymTableStack.top.SymTableType in [ObjectSymtable,recordsymtable]) then
               begin
-                popclass:=push_nested_hierarchy(pd.struct);
-                old_current_structdef:=CurrentStructDef;
-                old_current_specializedef:=CurrentSpecializeDef;
-                CurrentStructDef:=pd.struct;
+                lPopClass:=PushNestedHierarchy(AProcDef.struct);
+                lOldCurrentStructDef:=CurrentStructDef;
+                lOldCurrentSpecializeDef:=CurrentSpecializeDef;
+                CurrentStructDef:=AProcDef.struct;
                 if Assigned(CurrentStructDef) and (df_generic in CurrentStructDef.DefOptions) then
                   CurrentGenericDef:=CurrentStructDef;
                 if Assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.DefOptions) then
                   CurrentSpecializeDef:=CurrentStructDef;
               end;
-            if pd.Is_Generic then
-              CurrentGenericDef:=pd;
+            if AProcDef.Is_Generic then
+              CurrentGenericDef:=AProcDef;
             { Add parameter symtable }
-            if pd.ParaST.SymTableType<>staticsymtable then
-              SymTableStack.push(pd.ParaST);
-            parse_parameter_dec(pd);
-            if pd.ParaST.SymTableType<>staticsymtable then
-              SymTableStack.pop(pd.ParaST);
-            CurrentGenericDef:=old_current_genericdef;
-            if popclass>0 then
+            if AProcDef.ParaST.SymTableType<>staticsymtable then
+              SymTableStack.push(AProcDef.ParaST);
+            ParseParameterDec(AProcDef);
+            if AProcDef.ParaST.SymTableType<>staticsymtable then
+              SymTableStack.pop(AProcDef.ParaST);
+            CurrentGenericDef:=lOldCurrentGenericDef;
+            if lPopClass>0 then
               begin
-                CurrentStructDef:=old_current_structdef;
-                CurrentSpecializeDef:=old_current_specializedef;
-                dec(popclass,pop_nested_hierarchy(pd.struct));
-                if popclass<>0 then
+                CurrentStructDef:=lOldCurrentStructDef;
+                CurrentSpecializeDef:=lOldCurrentSpecializeDef;
+                dec(lPopClass,PopNestedHierarchy(AProcDef.struct));
+                if lPopClass<>0 then
                   InternalError(201011260); // 11 nov 2010 index 0
               end;
           end;
 
-        parse_generic:=old_parse_generic;
-        result:=true;
+        ParseGeneric:=lOldParseGeneric;
+        Result:=true;
       end;
 
 
-    procedure parse_proc_dec_finish(pd:TProcDef;flags:TParseProcFlags;astruct:TAbstractRecordDef);
+    procedure ParseProcDecFinish(AProcDef:TProcDef;AFlags:TParseProcFlags;AStruct:TAbstractRecordDef);
       var
-        i: integer;
-        found: boolean;
+        lIndex: Integer;
+        lFound: Boolean;
 
-        procedure read_returndef(pd: TProcDef);
+        procedure ReadReturnDef(AProcDef: TProcDef);
           var
-            popclass: integer;
-            old_parse_generic: boolean;
-            old_current_structdef: TAbstractRecordDef;
-            old_current_genericdef,
-            old_current_specializedef: TStoredDef;
+            lPopClass: Integer;
+            lOldParseGeneric: Boolean;
+            lOldCurrentStructDef: TAbstractRecordDef;
+            lOldCurrentGenericDef,
+            lOldCurrentSpecializeDef: TStoredDef;
           begin
-            old_parse_generic:=parse_generic;
+            lOldParseGeneric:=ParseGeneric;
             { Add ObjectSymtable to be able to find generic type definitions }
-            popclass:=0;
-            old_current_structdef:=nil;
-            old_current_genericdef:=CurrentGenericDef;
-            old_current_specializedef:=CurrentSpecializeDef;
+            lPopClass:=0;
+            lOldCurrentStructDef:=nil;
+            lOldCurrentGenericDef:=CurrentGenericDef;
+            lOldCurrentSpecializeDef:=CurrentSpecializeDef;
             CurrentGenericDef:=nil;
             CurrentSpecializeDef:=nil;
-            if Assigned(pd.struct) and
-               (pd.ParaST.SymTableLevel>=NormalFunctionLevel) and
+            if Assigned(AProcDef.struct) and
+               (AProcDef.ParaST.SymTableLevel>=NormalFunctionLevel) and
                not (SymTableStack.top.SymTableType in [ObjectSymtable,recordsymtable]) then
               begin
-                popclass:=push_nested_hierarchy(pd.struct);
-                old_current_structdef:=CurrentStructDef;
-                CurrentStructDef:=pd.struct;
+                lPopClass:=PushNestedHierarchy(AProcDef.struct);
+                lOldCurrentStructDef:=CurrentStructDef;
+                CurrentStructDef:=AProcDef.struct;
               end;
-            if df_generic in pd.DefOptions then
+            if df_generic in AProcDef.DefOptions then
               begin
-                if pd.Is_Generic then
-                  CurrentGenericDef:=pd
-                else if Assigned(pd.struct) then
-                  CurrentGenericDef:=pd.struct
+                if AProcDef.Is_Generic then
+                  CurrentGenericDef:=AProcDef
+                else if Assigned(AProcDef.struct) then
+                  CurrentGenericDef:=AProcDef.struct
                 else
                   InternalError(2016090202);
               end;
-            if df_specialization in pd.DefOptions then
+            if df_specialization in AProcDef.DefOptions then
               begin
-                if pd.Is_Specialization then
-                  CurrentSpecializeDef:=pd
-                else if Assigned(pd.struct) then
-                  CurrentSpecializeDef:=pd.struct
+                if AProcDef.Is_Specialization then
+                  CurrentSpecializeDef:=AProcDef
+                else if Assigned(AProcDef.struct) then
+                  CurrentSpecializeDef:=AProcDef.struct
                 else
                   InternalError(2016090203);
               end;
-            parse_generic:=(df_generic in pd.DefOptions);
-            if pd.Is_Generic or pd.Is_Specialization then
-              SymTableStack.push(pd.ParaST);
-            pd.ReturnDef:=result_type([stoAllowSpecialization]);
+            ParseGeneric:=(df_generic in AProcDef.DefOptions);
+            if AProcDef.Is_Generic or AProcDef.Is_Specialization then
+              SymTableStack.push(AProcDef.ParaST);
+            AProcDef.ReturnDef:=ResultType([stoAllowSpecialization]);
 
             // Issue #24863, enabled only for the main progra commented out for now because it breaks building of RTL and needs extensive
 // testing and/or RTL patching.
@@ -1367,187 +1367,187 @@ implementation
                not(cs_compilesystem in current_settings.moduleswitches) then
               include(current_module.moduleflags,mf_uses_variants);
 }
-            if Is_DispInterface(pd.struct) and not Is_Automatable(pd.ReturnDef) then
-              Message1(type_e_not_automatable,pd.ReturnDef.TypeName);
+            if Is_DispInterface(AProcDef.struct) and not Is_Automatable(AProcDef.ReturnDef) then
+              Message1(type_e_not_automatable,AProcDef.ReturnDef.TypeName);
 
-            if Assigned(pd.ReturnDef.TypeSym) then
-              Check_Hints(pd.ReturnDef.TypeSym,pd.ReturnDef.TypeSym.SymOptions,pd.ReturnDef.TypeSym.DeprecatedMsg);
+            if Assigned(AProcDef.ReturnDef.TypeSym) then
+              Check_Hints(AProcDef.ReturnDef.TypeSym,AProcDef.ReturnDef.TypeSym.SymOptions,AProcDef.ReturnDef.TypeSym.DeprecatedMsg);
 
-            if pd.Is_Generic or pd.Is_Specialization then
-              SymTableStack.pop(pd.ParaST);
-            if popclass>0 then
+            if AProcDef.Is_Generic or AProcDef.Is_Specialization then
+              SymTableStack.pop(AProcDef.ParaST);
+            if lPopClass>0 then
               begin
-                CurrentStructDef:=old_current_structdef;
-                dec(popclass,pop_nested_hierarchy(pd.struct));
-                if popclass<>0 then
+                CurrentStructDef:=lOldCurrentStructDef;
+                dec(lPopClass,PopNestedHierarchy(AProcDef.struct));
+                if lPopClass<>0 then
                   InternalError(201012020);
               end;
-            CurrentGenericDef:=old_current_genericdef;
-            CurrentSpecializeDef:=old_current_specializedef;
-            parse_generic:=old_parse_generic;
+            CurrentGenericDef:=lOldCurrentGenericDef;
+            CurrentSpecializeDef:=lOldCurrentSpecializeDef;
+            ParseGeneric:=lOldParseGeneric;
           end;
 
       begin
-        case pd.ProcTypeOption of
+        case AProcDef.ProcTypeOption of
           potype_procedure:
             begin
-              pd.ReturnDef:=VoidType;
-              if ppf_classmethod in flags then
-                include(pd.ProcOptions,po_classmethod);
+              AProcDef.ReturnDef:=VoidType;
+              if ppfClassMethod in AFlags then
+                include(AProcDef.ProcOptions,po_classmethod);
             end;
           potype_function:
             begin
-              if po_anonymous in pd.ProcOptions then
+              if po_anonymous in AProcDef.ProcOptions then
                 begin
                   { allow a different result name for anonymous functions (especially
                     for modes without Result modeswitch), but for consistency with
                     operators we allow this in other modes as well }
-                  if CurrentScanner.token<>_ID then
+                  if CurrentScanner.FToken<>_ID then
                     begin
                        if not(m_result in CurrentSettings.ModeSwitches) then
-                         consume(_ID);
+                         Consume(_ID);
                     end
                   else
                     begin
-                      pd.ResultName:=StringDup(CurrentScanner.orgpattern);
-                      consume(_ID);
+                      AProcDef.ResultName:=StringDup(CurrentScanner.FOrgPattern);
+                      Consume(_ID);
                     end;
                 end;
-              if try_to_consume(_COLON) then
+              if TryToConsume(_COLON) then
                begin
-                 read_returndef(pd);
+                 ReadReturnDef(AProcDef);
                end
               else
                begin
                   if (
-                      parse_only and
-                      not(Is_Interface(pd.struct))
+                      ParseOnly and
+                      not(Is_Interface(AProcDef.struct))
                      ) or
                      (m_repeat_forward in CurrentSettings.ModeSwitches) then
                   begin
-                    consume(_COLON);
-                    consume_all_until(_SEMICOLON);
+                    Consume(_COLON);
+                    ConsumeAllUntil(_SEMICOLON);
                   end;
                end;
-              if ppf_classmethod in flags then
-               include(pd.ProcOptions,po_classmethod);
+              if ppfClassMethod in AFlags then
+               include(AProcDef.ProcOptions,po_classmethod);
             end;
           potype_constructor,
           potype_class_constructor:
             begin
-              if not (ppf_classmethod in flags) and
-                 Assigned(pd) and
-                 Assigned(pd.struct) then
+              if not (ppfClassMethod in AFlags) and
+                 Assigned(AProcDef) and
+                 Assigned(AProcDef.struct) then
                 begin
                   { Set return type, class constructors return the
                     created instance, object constructors return boolean }
-                  if Is_Class(pd.struct) or
-                     Is_Record(pd.struct) then
-                    pd.ReturnDef:=pd.struct
+                  if Is_Class(AProcDef.struct) or
+                     Is_Record(AProcDef.struct) then
+                    AProcDef.ReturnDef:=AProcDef.struct
                   else
-                    if Is_ObjectPascal_Helper(pd.struct) then
-                      pd.ReturnDef:=TObjectDef(pd.struct).ExtendedDef
+                    if Is_ObjectPascal_Helper(AProcDef.struct) then
+                      AProcDef.ReturnDef:=TObjectDef(AProcDef.struct).ExtendedDef
                     else
 {$ifdef CPU64bitaddr}
-                      pd.ReturnDef:=Bool64Type;
+                      AProcDef.ReturnDef:=Bool64Type;
 {$else CPU64bitaddr}
-                      pd.ReturnDef:=Bool32Type;
+                      AProcDef.ReturnDef:=Bool32Type;
 {$endif CPU64bitaddr}
                 end
               else
-                pd.ReturnDef:=VoidType;
+                AProcDef.ReturnDef:=VoidType;
             end;
           potype_class_destructor,
           potype_destructor:
             begin
-              if Assigned(pd) then
-                pd.ReturnDef:=VoidType;
+              if Assigned(AProcDef) then
+                AProcDef.ReturnDef:=VoidType;
             end;
           potype_operator:
             begin
               { operators always need to be searched in all units (that
                 contain operators) }
-              include(pd.ProcOptions,po_overload);
-              pd.ProcSym.owner.IncludeOption(sto_has_operator);
-              if pd.ParaST.SymTableLevel>NormalFunctionLevel then
+              include(AProcDef.ProcOptions,po_overload);
+              AProcDef.ProcSym.owner.IncludeOption(sto_has_operator);
+              if AProcDef.ParaST.SymTableLevel>NormalFunctionLevel then
                 Message(parser_e_no_local_operator);
-              if ppf_classmethod in flags then
+              if ppfClassMethod in AFlags then
                 begin
-                  include(pd.ProcOptions,po_classmethod);
+                  include(AProcDef.ProcOptions,po_classmethod);
                   { any class operator is also static }
-                  include(pd.ProcOptions,po_staticmethod);
+                  include(AProcDef.ProcOptions,po_staticmethod);
                 end;
-              if CurrentScanner.token<>_ID then
+              if CurrentScanner.FToken<>_ID then
                 begin
                    if not(m_result in CurrentSettings.ModeSwitches) then
-                     consume(_ID);
+                     Consume(_ID);
                 end
               else
                 begin
-                  pd.ResultName:=StringDup(CurrentScanner.orgpattern);
-                  consume(_ID);
+                  AProcDef.ResultName:=StringDup(CurrentScanner.FOrgPattern);
+                  Consume(_ID);
                 end;
               { operators without result (management operators) }
-              if optoken in [_OP_INITIALIZE, _OP_FINALIZE, _OP_ADDREF, _OP_COPY] then
+              if OpToken in [_OP_INITIALIZE, _OP_FINALIZE, _OP_ADDREF, _OP_COPY] then
                 begin
                   { single var parameter to point the record }
-                  if (optoken in [_OP_INITIALIZE, _OP_FINALIZE, _OP_ADDREF]) and
+                  if (OpToken in [_OP_INITIALIZE, _OP_FINALIZE, _OP_ADDREF]) and
                      (
-                      (pd.ParaST.SymList.Count<>1) or
-                      (TParaVarSym(pd.ParaST.SymList[0]).vardef<>pd.struct) or
-                      (TParaVarSym(pd.ParaST.SymList[0]).VarSpez<>vs_var)
+                      (AProcDef.ParaST.SymList.Count<>1) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[0]).vardef<>AProcDef.struct) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[0]).VarSpez<>vs_var)
                      ) then
                     Message(parser_e_overload_impossible)
                   { constref (source) and var (dest) parameter to point the records }
-                  else if (optoken=_OP_COPY) and
+                  else if (OpToken=_OP_COPY) and
                      (
-                      (pd.ParaST.SymList.Count<>2) or
-                      (TParaVarSym(pd.ParaST.SymList[0]).vardef<>pd.struct) or
-                      (TParaVarSym(pd.ParaST.SymList[0]).VarSpez<>vs_constref) or
-                      (TParaVarSym(pd.ParaST.SymList[1]).vardef<>pd.struct) or
-                      (TParaVarSym(pd.ParaST.SymList[1]).VarSpez<>vs_var)
+                      (AProcDef.ParaST.SymList.Count<>2) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[0]).vardef<>AProcDef.struct) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[0]).VarSpez<>vs_constref) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[1]).vardef<>AProcDef.struct) or
+                      (TParaVarSym(AProcDef.ParaST.SymList[1]).VarSpez<>vs_var)
                      ) then
                     Message(parser_e_overload_impossible);
 
-                  TRecordSymTable(pd.ProcSym.Owner).IncludeManagementOperator(
-                    Token2ManagementOperator(optoken));
-                  pd.ReturnDef:=VoidType
+                  TRecordSymTable(AProcDef.ProcSym.Owner).IncludeManagementOperator(
+                    Token2ManagementOperator(OpToken));
+                  AProcDef.ReturnDef:=VoidType
                 end
               else
-                if not try_to_consume(_COLON) then
+                if not TryToConsume(_COLON) then
                   begin
-                    consume(_COLON);
-                    pd.ReturnDef:=GenErrorDef;
-                    consume_all_until(_SEMICOLON);
+                    Consume(_COLON);
+                    AProcDef.ReturnDef:=GenErrorDef;
+                    ConsumeAllUntil(_SEMICOLON);
                   end
                 else
                  begin
-                   read_returndef(pd);
+                   ReadReturnDef(AProcDef);
                    { check that class operators have either return type of structure or }
                    { at least one argument of that type                                 }
-                   if (po_classmethod in pd.ProcOptions) and
-                      (pd.ReturnDef <> pd.struct) then
+                   if (po_classmethod in AProcDef.ProcOptions) and
+                      (AProcDef.ReturnDef <> AProcDef.struct) then
                      begin
-                       found:=false;
-                       for i := 0 to pd.ParaST.SymList.Count - 1 do
-                         if TParaVarSym(pd.ParaST.SymList[i]).vardef=pd.struct then
+                       lFound:=false;
+                       for lIndex := 0 to AProcDef.ParaST.SymList.Count - 1 do
+                         if TParaVarSym(AProcDef.ParaST.SymList[lIndex]).vardef=AProcDef.struct then
                            begin
-                             found:=true;
+                             lFound:=true;
                              break;
                            end;
-                       if not found then
-                         if Assigned(pd.struct) then
-                           Message1(parser_e_at_least_one_argument_must_be_of_type,pd.struct.RTTIName)
+                       if not lFound then
+                         if Assigned(AProcDef.struct) then
+                           Message1(parser_e_at_least_one_argument_must_be_of_type,AProcDef.struct.RTTIName)
                          else
-                           MessagePos(pd.fileinfo,type_e_type_id_expected);
+                           MessagePos(AProcDef.fileinfo,type_e_type_id_expected);
                      end;
-                   if not Assigned(pd.struct) or Assigned(astruct) then
+                   if not Assigned(AProcDef.struct) or Assigned(AStruct) then
                      begin
-                       if (optoken in [_ASSIGNMENT,_OP_EXPLICIT]) and
-                          Equal_Defs(pd.ReturnDef,TParaVarSym(pd.ParaST.SymList[0]).vardef) and
-                          (pd.ReturnDef.typ<>undefineddef) and (TParaVarSym(pd.ParaST.SymList[0]).vardef.typ<>undefineddef) then
+                       if (OpToken in [_ASSIGNMENT,_OP_EXPLICIT]) and
+                          Equal_Defs(AProcDef.ReturnDef,TParaVarSym(AProcDef.ParaST.SymList[0]).vardef) and
+                          (AProcDef.ReturnDef.typ<>undefineddef) and (TParaVarSym(AProcDef.ParaST.SymList[0]).vardef.typ<>undefineddef) then
                          message(parser_e_no_such_assignment)
-                       else if not IsOperatorAcceptable(pd,optoken) then
+                       else if not IsOperatorAcceptable(AProcDef,OpToken) then
                          Message(parser_e_overload_impossible);
                      end;
                  end;
@@ -1556,192 +1556,192 @@ implementation
             InternalError(2015052202);
         end;
 
-        if (pd.ProcCallOption in CDecl_PoCalls) and
-           (pd.paras.count>0) and
-           Is_Array_Of_Const(TParaVarSym(pd.paras[pd.paras.count-1]).vardef) then
+        if (AProcDef.ProcCallOption in CDecl_PoCalls) and
+           (AProcDef.paras.count>0) and
+           Is_Array_Of_Const(TParaVarSym(AProcDef.paras[AProcDef.paras.count-1]).vardef) then
           begin
-            include(pd.ProcOptions,po_variadic);
+            include(AProcDef.ProcOptions,po_variadic);
           end;
 
         { support procedure proc stdcall export; }
-        if not(check_proc_directive(false)) then
+        if not(CheckProcDirective(false)) then
           begin
-            if (CurrentScanner.token=_COLON) and not(Assigned(pd) and Is_Void(pd.ReturnDef)) then
+            if (CurrentScanner.FToken=_COLON) and not(Assigned(AProcDef) and Is_Void(AProcDef.ReturnDef)) then
               begin
                 message(parser_e_field_not_allowed_here);
-                consume_all_until(_SEMICOLON);
+                ConsumeAllUntil(_SEMICOLON);
               end;
-            if not (ppf_anonymous in flags) then
-              consume(_SEMICOLON);
+            if not (ppfAnonymous in AFlags) then
+              Consume(_SEMICOLON);
           end;
 
       end;
 
-    function parse_proc_dec(flags:TParseProcFlags;astruct:TAbstractRecordDef):TProcDef;
+    function ParseProcDec(AFlags:TParseProcFlags;AStruct:TAbstractRecordDef):TProcDef;
       var
-        pd : TProcDef;
-        old_block_type : TBlockType;
-        recover : boolean;
+        lProcDef : TProcDef;
+        lOldBlockType : TBlockType;
+        lRecover : Boolean;
 
-        procedure finish_intf_mapping;
+        procedure FinishIntfMapping;
           begin
-            if CurrentScanner.token=_COLON then
+            if CurrentScanner.FToken=_COLON then
               begin
                 message(parser_e_field_not_allowed_here);
-                consume_all_until(_SEMICOLON);
+                ConsumeAllUntil(_SEMICOLON);
               end;
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
           end;
 
       begin
-        pd:=nil;
-        recover:=false;
-        case CurrentScanner.token of
+        lProcDef:=nil;
+        lRecover:=false;
+        case CurrentScanner.FToken of
           _FUNCTION :
             begin
-              consume(_FUNCTION);
-              if parse_proc_head(astruct,potype_function,flags,nil,nil,pd) then
+              Consume(_FUNCTION);
+              if ParseProcHead(AStruct,potype_function,AFlags,nil,nil,lProcDef) then
                 begin
                   { pd=nil when it is a interface mapping }
-                  if Assigned(pd) then
-                    parse_proc_dec_finish(pd,flags,astruct)
+                  if Assigned(lProcDef) then
+                    ParseProcDecFinish(lProcDef,AFlags,AStruct)
                   else
-                    finish_intf_mapping;
+                    FinishIntfMapping;
                 end
               else
                 begin
                   { recover }
-                  consume(_COLON);
-                  consume_all_until(_SEMICOLON);
-                  recover:=true;
+                  Consume(_COLON);
+                  ConsumeAllUntil(_SEMICOLON);
+                  lRecover:=true;
                 end;
             end;
 
           _PROCEDURE :
             begin
-              consume(_PROCEDURE);
-              if parse_proc_head(astruct,potype_procedure,flags,nil,nil,pd) then
+              Consume(_PROCEDURE);
+              if ParseProcHead(AStruct,potype_procedure,AFlags,nil,nil,lProcDef) then
                 begin
                   { pd=nil when it is an interface mapping }
-                  if Assigned(pd) then
-                    parse_proc_dec_finish(pd,flags,astruct)
+                  if Assigned(lProcDef) then
+                    ParseProcDecFinish(lProcDef,AFlags,AStruct)
                   else
-                    finish_intf_mapping;
+                    FinishIntfMapping;
                 end
               else
-                recover:=true;
+                lRecover:=true;
             end;
 
           _CONSTRUCTOR :
             begin
-              consume(_CONSTRUCTOR);
-              if ppf_classmethod in flags then
-                recover:=not parse_proc_head(astruct,potype_class_constructor,[],nil,nil,pd)
+              Consume(_CONSTRUCTOR);
+              if ppfClassMethod in AFlags then
+                lRecover:=not ParseProcHead(AStruct,potype_class_constructor,[],nil,nil,lProcDef)
               else
-                recover:=not parse_proc_head(astruct,potype_constructor,[],nil,nil,pd);
-              if not recover then
-                parse_proc_dec_finish(pd,flags,astruct);
+                lRecover:=not ParseProcHead(AStruct,potype_constructor,[],nil,nil,lProcDef);
+              if not lRecover then
+                ParseProcDecFinish(lProcDef,AFlags,AStruct);
             end;
 
           _DESTRUCTOR :
             begin
-              consume(_DESTRUCTOR);
-              if ppf_classmethod in flags then
-                recover:=not parse_proc_head(astruct,potype_class_destructor,[],nil,nil,pd)
+              Consume(_DESTRUCTOR);
+              if ppfClassMethod in AFlags then
+                lRecover:=not ParseProcHead(AStruct,potype_class_destructor,[],nil,nil,lProcDef)
               else
-                recover:=not parse_proc_head(astruct,potype_destructor,[],nil,nil,pd);
-              if not recover then
-                parse_proc_dec_finish(pd,flags,astruct);
+                lRecover:=not ParseProcHead(AStruct,potype_destructor,[],nil,nil,lProcDef);
+              if not lRecover then
+                ParseProcDecFinish(lProcDef,AFlags,AStruct);
             end;
         else
-          if (CurrentScanner.token=_OPERATOR) or
-             ((ppf_classmethod in flags) and (CurrentScanner.idtoken=_OPERATOR)) then
+          if (CurrentScanner.FToken=_OPERATOR) or
+             ((ppfClassMethod in AFlags) and (CurrentScanner.FIDToken=_OPERATOR)) then
             begin
               { we need to set the block type to bt_body, so that operator names
                 like ">", "=>" or "<>" are parsed correctly instead of e.g.
                 _LSHARPBRACKET and _RSHARPBRACKET for "<>" }
-              old_block_type:=Block_Type;
+              lOldBlockType:=Block_Type;
               Block_Type:=bt_body;
-              consume(_OPERATOR);
-              parse_proc_head(astruct,potype_operator,[],nil,nil,pd);
-              Block_Type:=old_block_type;
-              if Assigned(pd) then
-                parse_proc_dec_finish(pd,flags,astruct)
+              Consume(_OPERATOR);
+              ParseProcHead(AStruct,potype_operator,[],nil,nil,lProcDef);
+              Block_Type:=lOldBlockType;
+              if Assigned(lProcDef) then
+                ParseProcDecFinish(lProcDef,AFlags,AStruct)
               else
                 begin
                   { recover }
-                  try_to_consume(_ID);
-                  consume(_COLON);
-                  consume_all_until(_SEMICOLON);
-                  recover:=true;
+                  TryToConsume(_ID);
+                  Consume(_COLON);
+                  ConsumeAllUntil(_SEMICOLON);
+                  lRecover:=true;
                 end;
             end;
         end;
 
-        if recover and not(check_proc_directive(false)) then
+        if lRecover and not(CheckProcDirective(false)) then
           begin
-            if (CurrentScanner.token=_COLON) and not(Assigned(pd) and Is_Void(pd.ReturnDef)) then
+            if (CurrentScanner.FToken=_COLON) and not(Assigned(lProcDef) and Is_Void(lProcDef.ReturnDef)) then
               begin
                 message(parser_e_field_not_allowed_here);
-                consume_all_until(_SEMICOLON);
+                ConsumeAllUntil(_SEMICOLON);
               end;
-            if not (ppf_anonymous in flags) then
-              consume(_SEMICOLON);
+            if not (ppfAnonymous in AFlags) then
+              Consume(_SEMICOLON);
           end;
 
         { we've parsed the final semicolon, so stop recording tokens }
-        if Assigned(pd) and
-            (df_generic in pd.DefOptions) and
-            Assigned(pd.GenericDeclTokenBuf) then
-          CurrentScanner.stoprecordtokens;
+        if Assigned(lProcDef) and
+            (df_generic in lProcDef.DefOptions) and
+            Assigned(lProcDef.GenericDeclTokenBuf) then
+          CurrentScanner.StopRecordTokens;
 
-        result:=pd;
+        Result:=lProcDef;
       end;
 
 
-    function parse_record_method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
+    function ParseRecordMethodDec(AStruct: TAbstractRecordDef; AIsClassDef: Boolean;AHadGeneric:Boolean): TProcDef;
       var
-        oldparse_only: boolean;
-        flags : TParseProcFlags;
+        lOldParseOnly: Boolean;
+        lFlags : TParseProcFlags;
       begin
-        oldparse_only:=parse_only;
-        parse_only:=true;
-        flags:=[];
-        if is_classdef then
-          include(flags,ppf_classmethod);
-        if hadgeneric then
-          include(flags,ppf_generic);
-        result:=parse_proc_dec(flags,astruct);
+        lOldParseOnly:=ParseOnly;
+        ParseOnly:=true;
+        lFlags:=[];
+        if AIsClassDef then
+          include(lFlags,ppfClassMethod);
+        if AHadGeneric then
+          include(lFlags,ppfGeneric);
+        Result:=ParseProcDec(lFlags,AStruct);
 
         { this is for error recovery as well as forward }
         { interface mappings, i.e. mapping to a method  }
         { which isn't declared yet                      }
-        if Assigned(result) then
+        if Assigned(Result) then
           begin
-            parse_record_proc_directives(result);
+            ParseRecordProcDirectives(Result);
 
             { since records have no inheritance, don't allow non-static
               class methods. Delphi does the same. }
-            if (result.ProcTypeOption<>potype_operator) and
-               is_classdef and
-               not (po_staticmethod in result.ProcOptions) then
-              MessagePos(result.fileinfo, parser_e_class_methods_only_static_in_records);
+            if (Result.ProcTypeOption<>potype_operator) and
+               AIsClassDef and
+               not (po_staticmethod in Result.ProcOptions) then
+              MessagePos(Result.fileinfo, parser_e_class_methods_only_static_in_records);
 
             // we can't add hidden params here because record is not yet defined
             // and therefore record size which has influence on parameter passing rules may change too
             // look at record_dec to see where calling conventions are applied (issue #0021044)
-            Handle_Calling_Convention(result,cHCCDefaultActionsIntfStruct);
+            Handle_Calling_Convention(Result,cHCCDefaultActionsIntfStruct);
 
             { add definition to procsym }
-            Proc_Add_Definition(result);
+            Proc_Add_Definition(Result);
 
-            if result.Is_Generic then
-              astruct.SymTable.IncludeOption(sto_has_generic);
+            if Result.Is_Generic then
+              AStruct.SymTable.IncludeOption(sto_has_generic);
           end;
 
-        maybe_parse_hint_directives(result);
+        MaybeParseHintDirectives(Result);
 
-        parse_only:=oldparse_only;
+        ParseOnly:=lOldParseOnly;
       end;
 
 
@@ -1749,215 +1749,215 @@ implementation
                         Procedure directive handlers
 ****************************************************************************}
 
-procedure pd_compilerproc(pd:TAbstractProcDef);
+procedure PDCompilerProc(AProcDef:TAbstractProcDef);
 var
-  v : TConstExprInt;
+  lValue : TConstExprInt;
 begin
   { check for optional syssym index }
-  if try_to_consume(_COLON) then
+  if TryToConsume(_COLON) then
     begin
-      v:=get_intconst;
-      if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
-        message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
-      else if not Assigned(TSysSym.Find_By_Number(LongInt(v.svalue))) then
-        message1(parser_e_invalid_internal_function_index,ToStr(v))
+      lValue:=GetIntConst;
+      if (lValue<Int64(low(LongInt))) or (lValue>Int64(high(LongInt))) then
+        message3(type_e_range_check_error_bounds,ToStr(lValue),ToStr(low(LongInt)),ToStr(high(LongInt)))
+      else if not Assigned(TSysSym.Find_By_Number(LongInt(lValue.svalue))) then
+        message1(parser_e_invalid_internal_function_index,ToStr(lValue))
       else
-        TProcDef(pd).ExtNumber:=LongInt(v.svalue);
+        TProcDef(AProcDef).ExtNumber:=LongInt(lValue.svalue);
     end;
 end;
 
-procedure pd_export(pd:TAbstractProcDef);
+procedure PDExport(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304264);
-  if Assigned(TProcDef(pd).struct) then
+  if Assigned(TProcDef(AProcDef).struct) then
     Message(parser_e_methods_dont_be_export);
-  if pd.ParaST.SymTableLevel>NormalFunctionLevel then
+  if AProcDef.ParaST.SymTableLevel>NormalFunctionLevel then
     Message(parser_e_dont_nest_export);
 end;
 
-procedure pd_forward(pd:TAbstractProcDef);
+procedure PDForward(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304265);
-  TProcDef(pd).ForwardDef:=true;
+  TProcDef(AProcDef).ForwardDef:=true;
 end;
 
 
-procedure pd_alias(pd:TAbstractProcDef);
+procedure PDAlias(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304266);
-  consume(_COLON);
-  TProcDef(pd).AliasNames.insert(get_stringconst);
-  include(pd.ProcOptions,po_has_public_name);
+  Consume(_COLON);
+  TProcDef(AProcDef).AliasNames.insert(GetStringConst);
+  include(AProcDef.ProcOptions,po_has_public_name);
 end;
 
 
-procedure pd_public(pd:TAbstractProcDef);
+procedure PDPublic(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042601);
-  if try_to_consume(_NAME) then
+  if TryToConsume(_NAME) then
     begin
-      TProcDef(pd).AliasNames.insert(get_stringconst);
-      include(pd.ProcOptions,po_has_public_name);
+      TProcDef(AProcDef).AliasNames.insert(GetStringConst);
+      include(AProcDef.ProcOptions,po_has_public_name);
     end;
 end;
 
 
-procedure pd_asmname(pd:TAbstractProcDef);
+procedure PDAsmName(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304267);
-  if CurrentScanner.token=_CCHAR then
+  if CurrentScanner.FToken=_CCHAR then
     begin
-      TProcDef(pd).AliasNames.insert(TargetInfo.Cprefix+CurrentScanner.pattern);
-      consume(_CCHAR)
+      TProcDef(AProcDef).AliasNames.insert(TargetInfo.Cprefix+CurrentScanner.FPattern);
+      Consume(_CCHAR)
     end
   else
     begin
-      TProcDef(pd).AliasNames.insert(TargetInfo.Cprefix+CurrentScanner.cstringpattern);
-      consume(_CSTRING);
+      TProcDef(AProcDef).AliasNames.insert(TargetInfo.Cprefix+CurrentScanner.FCStringPattern);
+      Consume(_CSTRING);
     end;
   { we don't need anything else }
-  TProcDef(pd).ForwardDef:=false;
+  TProcDef(AProcDef).ForwardDef:=false;
 end;
 
 
-procedure pd_internconst(pd:TAbstractProcDef);
+procedure PDInternConst(AProcDef:TAbstractProcDef);
 
 var v:TConstExprInt;
 
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304268);
-  consume(_COLON);
-  v:=get_intconst;
-  if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
+  Consume(_COLON);
+  v:=GetIntConst;
+  if (v<Int64(low(LongInt))) or (v>Int64(high(LongInt))) then
     message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
   else
-    TProcDef(pd).ExtNumber:=LongInt(v.svalue);
+    TProcDef(AProcDef).ExtNumber:=LongInt(v.svalue);
 end;
 
 
-procedure pd_internproc(pd:TAbstractProcDef);
+procedure PDInternProc(AProcDef:TAbstractProcDef);
 
 var v:TConstExprInt;
 
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042602);
-  consume(_COLON);
-  v:=get_intconst;
-  if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
+  Consume(_COLON);
+  v:=GetIntConst;
+  if (v<Int64(low(LongInt))) or (v>Int64(high(LongInt))) then
     message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
   else
-    TProcDef(pd).ExtNumber:=LongInt(v.svalue);
+    TProcDef(AProcDef).ExtNumber:=LongInt(v.svalue);
   { the proc is defined }
-  TProcDef(pd).ForwardDef:=false;
+  TProcDef(AProcDef).ForwardDef:=false;
 end;
 
-procedure pd_interrupt(pd:TAbstractProcDef);
+procedure PDInterrupt(AProcDef:TAbstractProcDef);
 begin
-  if pd.ParaST.SymTableLevel>NormalFunctionLevel then
+  if AProcDef.ParaST.SymTableLevel>NormalFunctionLevel then
     Message(parser_e_dont_nest_interrupt);
 end;
 
-procedure pd_abstract(pd:TAbstractProcDef);
+procedure PDAbstract(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200304269);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) then
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_ABSTRACT].str);
-  if Assigned(TProcDef(pd).struct) and
-    (oo_is_sealed in TProcDef(pd).struct.ObjectOptions) then
+  if Assigned(TProcDef(AProcDef).struct) and
+    (oo_is_sealed in TProcDef(AProcDef).struct.ObjectOptions) then
     Message(parser_e_sealed_class_cannot_have_abstract_methods)
-  else if (po_virtualmethod in pd.ProcOptions) then
+  else if (po_virtualmethod in AProcDef.ProcOptions) then
     begin
-      include(pd.ProcOptions,po_abstractmethod);
+      include(AProcDef.ProcOptions,po_abstractmethod);
       { one more abstract method }
-      inc(TObjectDef(pd.owner.DefOwner).AbstractCnt);
+      inc(TObjectDef(AProcDef.owner.DefOwner).AbstractCnt);
     end
   else
     Message(parser_e_only_virtual_methods_abstract);
   { the method is defined }
-  TProcDef(pd).ForwardDef:=false;
+  TProcDef(AProcDef).ForwardDef:=false;
 end;
 
-procedure pd_final(pd:TAbstractProcDef);
+procedure PDFinal(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200910170);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) and
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) and
       (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_FINAL].str);
-  if (po_virtualmethod in pd.ProcOptions) then
-    include(pd.ProcOptions,po_finalmethod)
+  if (po_virtualmethod in AProcDef.ProcOptions) then
+    include(AProcDef.ProcOptions,po_finalmethod)
   else
     Message(parser_e_only_virtual_methods_final);
 end;
 
-procedure pd_enumerator(pd:TAbstractProcDef);
+procedure PDEnumerator(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200910250);
-  if (CurrentScanner.token = _ID) then
+  if (CurrentScanner.FToken = _ID) then
   begin
-    if CurrentScanner.pattern='MOVENEXT' then
+    if CurrentScanner.FPattern='MOVENEXT' then
     begin
-      if oo_has_enumerator_movenext in TProcDef(pd).struct.ObjectOptions then
+      if oo_has_enumerator_movenext in TProcDef(AProcDef).struct.ObjectOptions then
         message(parser_e_only_one_enumerator_movenext);
-      pd.CalcParas;
-      if (pd.ProcTypeOption = potype_function) and Is_Boolean(pd.ReturnDef) and
-         (pd.MinParaCount = 0) then
+      AProcDef.CalcParas;
+      if (AProcDef.ProcTypeOption = potype_function) and Is_Boolean(AProcDef.ReturnDef) and
+         (AProcDef.MinParaCount = 0) then
       begin
-        include(TProcDef(pd).struct.ObjectOptions, oo_has_enumerator_movenext);
-        include(pd.ProcOptions,po_enumerator_movenext);
+        include(TProcDef(AProcDef).struct.ObjectOptions, oo_has_enumerator_movenext);
+        include(AProcDef.ProcOptions,po_enumerator_movenext);
       end
       else
         Message(parser_e_enumerator_movenext_is_not_valid)
     end
     else
-      Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.pattern);
-    consume(CurrentScanner.token);
+      Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.FPattern);
+    Consume(CurrentScanner.FToken);
   end
   else
     Message(parser_e_enumerator_identifier_required);
 end;
 
-procedure pd_virtual(pd:TAbstractProcDef);
+procedure PDVirtual(AProcDef:TAbstractProcDef);
 begin
-  if Assigned(pd.owner) and
-     (po_external in pd.ProcOptions) then
+  if Assigned(AProcDef.owner) and
+     (po_external in AProcDef.ProcOptions) then
     Message2(parser_e_proc_dir_conflict,'EXTERNAL','"VIRTUAL"');
 
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042610);
-  if (pd.ProcTypeOption=potype_constructor) and
-     Is_Object(TProcDef(pd).struct) then
+  if (AProcDef.ProcTypeOption=potype_constructor) and
+     Is_Object(TProcDef(AProcDef).struct) then
     Message(parser_e_constructor_cannot_be_not_virtual);
-  if pd.Is_Generic then
+  if AProcDef.Is_Generic then
     message(parser_e_genfuncs_cannot_be_virtual);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) and
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) and
       (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_VIRTUAL].str);
 end;
 
 
-procedure pd_dispid(pd:TAbstractProcDef);
+procedure PDDispID(AProcDef:TAbstractProcDef);
 
 var pt:TNode;
 
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200604301);
-  pt:=comp_expr([ef_accept_equal]);
+  pt:=CompExpr([efAcceptEqual]);
   if Is_ConstIntNode(pt) then
-    if (TOrdConstNode(pt).Value<int64(low(LongInt))) or (TOrdConstNode(pt).Value>int64(high(LongInt))) then
+    if (TOrdConstNode(pt).Value<Int64(low(LongInt))) or (TOrdConstNode(pt).Value>Int64(high(LongInt))) then
       message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
     else
-      TProcDef(pd).DispID:=TOrdConstNode(pt).Value.svalue
+      TProcDef(AProcDef).DispID:=TOrdConstNode(pt).Value.svalue
   else
     message(parser_e_dispid_must_be_ord_const);
   pt.free;
@@ -1965,133 +1965,133 @@ begin
 end;
 
 
-procedure pd_static(pd:TAbstractProcDef);
+procedure PDStatic(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2013032001);
-  if not Assigned(TProcDef(pd).struct) then
+  if not Assigned(TProcDef(AProcDef).struct) then
     InternalError(2013032002);
-  include(TProcDef(pd).ProcSym.SymOptions,sp_static);
+  include(TProcDef(AProcDef).ProcSym.SymOptions,sp_static);
   { "static" is not allowed for operators or normal methods (except in objects) }
-  if (pd.ProcTypeOption=potype_operator) or
+  if (AProcDef.ProcTypeOption=potype_operator) or
       (
-        not (po_classmethod in pd.ProcOptions) and
-        not Is_Object(TProcDef(pd).struct)
+        not (po_classmethod in AProcDef.ProcOptions) and
+        not Is_Object(TProcDef(AProcDef).struct)
       )
       then
     Message1(parser_e_dir_not_allowed,arraytokeninfo[_STATIC].str);
-  include(pd.ProcOptions,po_staticmethod);
+  include(AProcDef.ProcOptions,po_staticmethod);
 end;
 
-procedure pd_override(pd:TAbstractProcDef);
+procedure PDOverride(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042611);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) then
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) then
     begin
       if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_OVERRIDE].str)
     end
-  else if not(Is_Class_Or_Interface_Or_ObjC(TProcDef(pd).struct)) then
+  else if not(Is_Class_Or_Interface_Or_ObjC(TProcDef(AProcDef).struct)) then
     Message(parser_e_no_object_override)
-  else if Is_ObjCCategory(TProcDef(pd).struct) then
+  else if Is_ObjCCategory(TProcDef(AProcDef).struct) then
     Message(parser_e_no_category_override)
-  else if (po_external in pd.ProcOptions) and
-          not Is_ObjC_Class_Or_Protocol(TProcDef(pd).struct) and
-          not Is_CPPClass(TProcDef(pd).struct) then
+  else if (po_external in AProcDef.ProcOptions) and
+          not Is_ObjC_Class_Or_Protocol(TProcDef(AProcDef).struct) and
+          not Is_CPPClass(TProcDef(AProcDef).struct) then
     Message2(parser_e_proc_dir_conflict,'OVERRIDE','"EXTERNAL"');
 end;
 
-procedure pd_overload(pd:TAbstractProcDef);
+procedure PDOverload(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042612);
-  include(TProcDef(pd).ProcSym.SymOptions,sp_has_overloaded);
+  include(TProcDef(AProcDef).ProcSym.SymOptions,sp_has_overloaded);
 end;
 
-procedure pd_message(pd:TAbstractProcDef);
+procedure PDMessage(AProcDef:TAbstractProcDef);
 var
-  pt : TNode;
-  paracnt : LongInt;
+  lNode : TNode;
+  lParaCount : LongInt;
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042613);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) then
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) then
     begin
       if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_MESSAGE].str);
     end
   else
-    if not Is_Class(TProcDef(pd).struct) and
-       not Is_ObjC_Class_Or_Protocol(TProcDef(pd).struct) then
+    if not Is_Class(TProcDef(AProcDef).struct) and
+       not Is_ObjC_Class_Or_Protocol(TProcDef(AProcDef).struct) then
       Message(parser_e_msg_only_for_classes);
-  if ([po_msgstr,po_msgint]*pd.ProcOptions)<>[] then
+  if ([po_msgstr,po_msgint]*AProcDef.ProcOptions)<>[] then
     Message(parser_e_multiple_messages);
   { check parameter type }
-  if not Is_ObjC_Class_Or_Protocol(TProcDef(pd).struct) then
+  if not Is_ObjC_Class_Or_Protocol(TProcDef(AProcDef).struct) then
     begin
-      if po_external in pd.ProcOptions then
+      if po_external in AProcDef.ProcOptions then
         Message2(parser_e_proc_dir_conflict,'MESSAGE','"EXTERNAL"');
-      paracnt:=0;
-      pd.ParaST.SymList.ForEachCall(@check_msg_para,@paracnt);
-      if paracnt<>1 then
+      lParaCount:=0;
+      AProcDef.ParaST.SymList.ForEachCall(@CheckMsgPara,@lParaCount);
+      if lParaCount<>1 then
         Message(parser_e_ill_msg_param);
     end;
-  pt:=comp_expr([ef_accept_equal]);
+  lNode:=CompExpr([efAcceptEqual]);
   { message is 1-character long }
-  if Is_ConstCharNode(pt) then
+  if Is_ConstCharNode(lNode) then
     begin
-      include(pd.ProcOptions,po_msgstr);
-      TProcDef(pd).MessageInf.str:=StringDup(chr(byte(TOrdConstNode(pt).Value.uvalue and $FF)));
+      include(AProcDef.ProcOptions,po_msgstr);
+      TProcDef(AProcDef).MessageInf.str:=StringDup(chr(Byte(TOrdConstNode(lNode).Value.uvalue and $FF)));
     end
-  else if pt.nodetype=stringconstn then
+  else if lNode.nodetype=stringconstn then
     begin
-      include(pd.ProcOptions,po_msgstr);
-      if (TStringConstNode(pt).len>255) then
+      include(AProcDef.ProcOptions,po_msgstr);
+      if (TStringConstNode(lNode).len>255) then
         Message(parser_e_message_string_too_long);
-      TProcDef(pd).MessageInf.str:=StringDup(TStringConstNode(pt).AsConstPChar);
+      TProcDef(AProcDef).MessageInf.str:=StringDup(TStringConstNode(lNode).AsConstPChar);
     end
   else
-   if Is_ConstIntNode(pt) and
-      (Is_Class(TProcDef(pd).struct) or
-      Is_ObjectPascal_Helper(TProcDef(pd).struct)) then
+   if Is_ConstIntNode(lNode) and
+      (Is_Class(TProcDef(AProcDef).struct) or
+      Is_ObjectPascal_Helper(TProcDef(AProcDef).struct)) then
     begin
-      include(pd.ProcOptions,po_msgint);
-      if (TOrdConstNode(pt).Value<int64(low(TProcDef(pd).MessageInf.i))) or
-         (TOrdConstNode(pt).Value>int64(high(TProcDef(pd).MessageInf.i))) then
-        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(TProcDef(pd).MessageInf.i)),ToStr(high(TProcDef(pd).MessageInf.i)))
+      include(AProcDef.ProcOptions,po_msgint);
+      if (TOrdConstNode(lNode).Value<Int64(low(TProcDef(AProcDef).MessageInf.i))) or
+         (TOrdConstNode(lNode).Value>Int64(high(TProcDef(AProcDef).MessageInf.i))) then
+        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(lNode).Value),ToStr(low(TProcDef(AProcDef).MessageInf.i)),ToStr(high(TProcDef(AProcDef).MessageInf.i)))
       else
-        TProcDef(pd).MessageInf.i:=TOrdConstNode(pt).Value.svalue;
+        TProcDef(AProcDef).MessageInf.i:=TOrdConstNode(lNode).Value.svalue;
     end
   else
     Message(parser_e_ill_msg_expr);
   { check whether the selector name is valid in case of Objective-C }
-  if (po_msgstr in pd.ProcOptions) and
-     Is_ObjC_Class_Or_Protocol(TProcDef(pd).struct) and
-     not ObjCValidSelectorName(@TProcDef(pd).MessageInf.str^[1],length(TProcDef(pd).MessageInf.str^)) then
-    Message1(type_e_invalid_objc_selector_name,TProcDef(pd).MessageInf.str^);
-  pt.free;
-  pt := nil;
+  if (po_msgstr in AProcDef.ProcOptions) and
+     Is_ObjC_Class_Or_Protocol(TProcDef(AProcDef).struct) and
+     not ObjCValidSelectorName(@TProcDef(AProcDef).MessageInf.str^[1],length(TProcDef(AProcDef).MessageInf.str^)) then
+    Message1(type_e_invalid_objc_selector_name,TProcDef(AProcDef).MessageInf.str^);
+  lNode.free;
+  lNode := nil;
 end;
 
 
-procedure pd_reintroduce(pd:TAbstractProcDef);
+procedure PDReintroduce(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(200401211);
-  if Is_ObjectPascal_Helper(TProcDef(pd).struct) then
+  if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) then
     begin
       if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_REINTRODUCE].str);
     end
   else
-    if not(Is_Class_Or_Interface_Or_Object(TProcDef(pd).struct)) and
-       not(Is_ObjCCategory(TProcDef(pd).struct)) then
+    if not(Is_Class_Or_Interface_Or_Object(TProcDef(AProcDef).struct)) and
+       not(Is_ObjCCategory(TProcDef(AProcDef).struct)) then
       Message(parser_e_no_object_reintroduce);
 end;
 
 
-procedure pd_external(pd:TAbstractProcDef);
+procedure PDExternal(AProcDef:TAbstractProcDef);
 {
   If import_dll=nil the procedure is assumed to be in another
   object file. In that object file it should have the name to
@@ -2101,12 +2101,12 @@ procedure pd_external(pd:TAbstractProcDef);
   the procedure is either imported by number or by name. (DM)
 }
 var
-  hs : string;
-  v:TConstExprInt;
+  lLibraryName : String;
+  lValue:TConstExprInt;
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2003042615);
-  with TProcDef(pd) do
+  with TProcDef(AProcDef) do
     begin
       ForwardDef:=false;
       { forbid local external procedures }
@@ -2116,42 +2116,42 @@ begin
         This isn't really correct, an contant string expression follows
         so we check if an semicolon follows, else a string constant have to
         follow (FK) }
-      if not(CurrentScanner.token=_SEMICOLON) and not(CurrentScanner.idtoken=_NAME) then
+      if not(CurrentScanner.FToken=_SEMICOLON) and not(CurrentScanner.FIDToken=_NAME) then
         begin
           { Always add library prefix and suffix to create an uniform name }
-          hs:=get_stringconst;
-          if ExtractFileExt(hs)='' then
-            hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
-          if Copy(hs,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
-            hs:=TargetInfo.sharedlibprefix+hs;
-          ImportDLL:=StringDup(hs);
+          lLibraryName:=GetStringConst;
+          if ExtractFileExt(lLibraryName)='' then
+            lLibraryName:=ChangeFileExt(lLibraryName,TargetInfo.sharedlibext);
+          if Copy(lLibraryName,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
+            lLibraryName:=TargetInfo.sharedlibprefix+lLibraryName;
+          ImportDLL:=StringDup(lLibraryName);
           include(ProcOptions,po_has_importdll);
-          if (CurrentScanner.idtoken=_NAME) then
+          if (CurrentScanner.FIDToken=_NAME) then
            begin
-             consume(_NAME);
-             ImportName:=StringDup(get_stringconst);
+             Consume(_NAME);
+             ImportName:=StringDup(GetStringConst);
              include(ProcOptions,po_has_importname);
              if ImportName^='' then
                message(parser_e_empty_import_name);
            end;
-          if (CurrentScanner.idtoken=_INDEX) then
+          if (CurrentScanner.FIDToken=_INDEX) then
            begin
              {After the word index follows the index number in the DLL.}
-             consume(_INDEX);
-             v:=get_intconst;
-             if (v<int64(low(ImportNr))) or (v>int64(high(ImportNr))) then
+             Consume(_INDEX);
+             lValue:=GetIntConst;
+             if (lValue<Int64(low(ImportNr))) or (lValue>Int64(high(ImportNr))) then
                message(parser_e_range_check_error)
              else
-               ImportNr:=LongInt(v.svalue);
+               ImportNr:=LongInt(lValue.svalue);
            end;
-          if (CurrentScanner.idtoken=_SUSPENDING) then
+          if (CurrentScanner.FIDToken=_SUSPENDING) then
            begin
              message(parser_e_suspending_externals_not_supported_on_current_platform);
-             consume(_SUSPENDING);
-             if CurrentScanner.idtoken=_FIRST then
-               consume(_FIRST)
-             else if CurrentScanner.idtoken=_LAST then
-               consume(_LAST);
+             Consume(_SUSPENDING);
+             if CurrentScanner.FIDToken=_FIRST then
+               Consume(_FIRST)
+             else if CurrentScanner.FIDToken=_LAST then
+               Consume(_LAST);
            end;
           { default is to used the realname of the procedure }
           if (ImportNr=0) and not Assigned(ImportName) then
@@ -2162,10 +2162,10 @@ begin
         end
       else
         begin
-          if (CurrentScanner.idtoken=_NAME) then
+          if (CurrentScanner.FIDToken=_NAME) then
            begin
-             consume(_NAME);
-             ImportName:=StringDup(get_stringconst);
+             Consume(_NAME);
+             ImportName:=StringDup(GetStringConst);
              include(ProcOptions,po_has_importname);
              if ImportName^='' then
                message(parser_e_empty_import_name);
@@ -2175,601 +2175,601 @@ begin
 end;
 
 
-procedure pd_weakexternal(pd:TAbstractProcDef);
+procedure PDWeakExternal(AProcDef:TAbstractProcDef);
 begin
   if not(TargetInfo.system in systems_weak_linking) then
     message(parser_e_weak_external_not_supported)
   else
-    pd_external(pd);
+    PDExternal(AProcDef);
 end;
 
 
-procedure pd_winapi(pd:TAbstractProcDef);
+procedure PDWinAPI(AProcDef:TAbstractProcDef);
 begin
   if not(TargetInfo.system in systems_all_windows+[system_i386_nativent]) then
-    pd.ProcCallOption:=pocall_cdecl
+    AProcDef.ProcCallOption:=pocall_cdecl
   else
-    pd.ProcCallOption:=pocall_stdcall;
-  include(pd.ProcOptions,po_hascallingconvention);
+    AProcDef.ProcCallOption:=pocall_stdcall;
+  include(AProcDef.ProcOptions,po_hascallingconvention);
 end;
 
 
-procedure pd_hardfloat(pd:TAbstractProcDef);
+procedure PDHardFloat(AProcDef:TAbstractProcDef);
 begin
 end;
 
-procedure pd_section(pd:TAbstractProcDef);
+procedure PDSection(AProcDef:TAbstractProcDef);
 begin
-  if pd.typ<>procdef then
+  if AProcDef.typ<>procdef then
     InternalError(2021032801);
   Message(parser_e_section_directive_not_allowed_for_target);
 {$ifdef symansistr}
-  TProcDef(pd).section:=get_stringconst;
+  TProcDef(AProcDef).section:=GetStringConst;
 {$else symansistr}
-  TProcDef(pd).section:=StringDup(get_stringconst);
+  TProcDef(AProcDef).section:=StringDup(GetStringConst);
 {$endif}
 end;
 
 type
-   TPDHandler=procedure(pd:TAbstractProcDef);
+   TPDHandler=procedure(AProcDef:TAbstractProcDef);
    TProcDirRec=record
-     idtok     : TToken;
-     pd_flags  : TPDFlags;
-     handler   : TPDHandler;
-     pocall    : TProcCallOption;
-     pooption  : TProcOptions;
-     mutexclpocall : TProcCallOptions;
-     mutexclpotype : TProcTypeOptions;
-     mutexclpo     : TProcOptions;
+     IDTok     : TToken;
+     PDFlags  : TPDFlags;
+     Handler   : TPDHandler;
+     POCall    : TProcCallOption;
+     POOption  : TProcOptions;
+     MutexClPOCall : TProcCallOptions;
+     MutexClPOType : TProcTypeOptions;
+     MutexClPO     : TProcOptions;
    end;
 const
   {Should contain the number of procedure directives we support.}
-  num_proc_directives=52;
+  cNumProcDirectives=52;
 var
-  proc_direcdata:array[1..num_proc_directives] of TProcDirRec=
+  ProcDirecData:array[1..cNumProcDirectives] of TProcDirRec=
    (
     (
-      idtok:_ABSTRACT;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
-      handler  : @pd_abstract;
-      pocall   : pocall_none;
-      pooption : [po_abstractmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_exports,po_interrupt,po_inline]
+      IDTok:_ABSTRACT;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdNotRecord];
+      Handler  : @PDAbstract;
+      POCall   : pocall_none;
+      POOption : [po_abstractmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_exports,po_interrupt,po_inline]
     ),(
-      idtok:_ALIAS;
-      pd_flags : [pd_implemen,pd_body,pd_notobjintf];
-      handler  : @pd_alias;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_inline]
+      IDTok:_ALIAS;
+      PDFlags : [pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : @PDAlias;
+      POCall   : pocall_none;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_inline]
     ),(
-      idtok:_ASMNAME;
-      pd_flags : [pd_interface,pd_implemen,pd_notobjintf];
-      handler  : @pd_asmname;
-      pocall   : pocall_cdecl;
-      pooption : [po_external];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_inline]
+      IDTok:_ASMNAME;
+      PDFlags : [pdInterface,pdImplemen,pdNotObjIntf];
+      Handler  : @PDAsmName;
+      POCall   : pocall_cdecl;
+      POOption : [po_external];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_inline]
     ),(
-      idtok:_ASSEMBLER;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_assembler];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : [po_external]
+      IDTok:_ASSEMBLER;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_assembler];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_C; {same as cdecl for mode mac}
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_cdecl;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_assembler,po_external]
+      IDTok:_C; {same as cdecl for mode mac}
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_cdecl;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_assembler,po_external]
     ),(
-      idtok:_CBLOCK;
-      pd_flags : [pd_procvar];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_is_block];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_assembler,po_external]
+      IDTok:_CBLOCK;
+      PDFlags : [pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_is_block];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_assembler,po_external]
     ),(
-      idtok:_CDECL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_cdecl;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_assembler,po_external]
+      IDTok:_CDECL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_cdecl;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_assembler,po_external]
     ),(
-      idtok:_DISPID;
-      pd_flags : [pd_dispinterface];
-      handler  : @pd_dispid;
-      pocall   : pocall_none;
-      pooption : [po_dispid];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt,po_external,po_inline]
+      IDTok:_DISPID;
+      PDFlags : [pdDispInterface];
+      Handler  : @PDDispID;
+      POCall   : pocall_none;
+      POOption : [po_dispid];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt,po_external,po_inline]
     ),(
-      idtok:_DYNAMIC;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
-      handler  : @pd_virtual;
-      pocall   : pocall_none;
-      pooption : [po_virtualmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_exports,po_interrupt,po_external,po_overridingmethod,po_inline]
+      IDTok:_DYNAMIC;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdNotRecord];
+      Handler  : @PDVirtual;
+      POCall   : pocall_none;
+      POOption : [po_virtualmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_exports,po_interrupt,po_external,po_overridingmethod,po_inline]
     ),(
-      idtok:_EXPORT;
-      pd_flags : [pd_body,pd_interface,pd_implemen,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_export;
-      pocall   : pocall_none;
-      pooption : [po_exports,po_global];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external,po_interrupt,po_inline]
+      IDTok:_EXPORT;
+      PDFlags : [pdBody,pdInterface,pdImplemen,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDExport;
+      POCall   : pocall_none;
+      POOption : [po_exports,po_global];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external,po_interrupt,po_inline]
     ),(
-      idtok:_EXTERNAL;
-      pd_flags : [pd_implemen,pd_interface,pd_notobject,pd_notobjintf,pd_cppobject,pd_notrecord,pd_nothelper];
-      handler  : @pd_external;
-      pocall   : pocall_none;
-      pooption : [po_external];
-      mutexclpocall : [];
+      IDTok:_EXTERNAL;
+      PDFlags : [pdImplemen,pdInterface,pdNotObject,pdNotObjIntf,pdCPPObject,pdNotRecord,pdNotHelper];
+      Handler  : @PDExternal;
+      POCall   : pocall_none;
+      POOption : [po_external];
+      MutexClPOCall : [];
       { allowed for external cpp classes }
-      mutexclpotype : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
+      MutexClPOType : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
     ),(
-      idtok:_FAR16;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar,pd_notobject,pd_notrecord,pd_nothelper];
-      handler  : nil;
-      pocall   : pocall_far16;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : [po_external]
+      IDTok:_FAR16;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar,pdNotObject,pdNotRecord,pdNotHelper];
+      Handler  : nil;
+      POCall   : pocall_far16;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_FINAL;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
-      handler  : @pd_final;
-      pocall   : pocall_none;
-      pooption : [po_finalmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_exports,po_interrupt,po_inline]
+      IDTok:_FINAL;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdNotRecord];
+      Handler  : @PDFinal;
+      POCall   : pocall_none;
+      POOption : [po_finalmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_exports,po_interrupt,po_inline]
     ),(
-      idtok:_FORWARD;
-      pd_flags : [pd_implemen,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_forward;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_inline]
+      IDTok:_FORWARD;
+      PDFlags : [pdImplemen,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDForward;
+      POCall   : pocall_none;
+      POOption : [];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_inline]
     ),(
-      idtok:_OLDFPCCALL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_oldfpccall;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : []
+      IDTok:_OLDFPCCALL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_oldfpccall;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : []
     ),(
-      idtok:_INLINE;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_inline];
-      mutexclpocall : [pocall_safecall];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_noinline,po_exports,po_external,po_interrupt,po_virtualmethod,po_iocheck]
+      IDTok:_INLINE;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_inline];
+      MutexClPOCall : [pocall_safecall];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_noinline,po_exports,po_external,po_interrupt,po_virtualmethod,po_iocheck]
     ),(
-      idtok:_NOINLINE;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_noinline];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : [po_inline,po_external]
+      IDTok:_NOINLINE;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_noinline];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : [po_inline,po_external]
     ),(
-      idtok:_INTERNCONST;
-      pd_flags : [pd_interface,pd_body,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_internconst;
-      pocall   : pocall_none;
-      pooption : [po_internconst];
-      mutexclpocall : [];
-      mutexclpotype : [potype_operator];
-      mutexclpo     : []
+      IDTok:_INTERNCONST;
+      PDFlags : [pdInterface,pdBody,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDInternConst;
+      POCall   : pocall_none;
+      POOption : [po_internconst];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_operator];
+      MutexClPO     : []
     ),(
-      idtok:_INTERNPROC;
-      pd_flags : [pd_interface,pd_implemen,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_internproc;
-      pocall   : pocall_internproc;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_exports,po_external,po_interrupt,po_assembler,po_iocheck,po_virtualmethod]
+      IDTok:_INTERNPROC;
+      PDFlags : [pdInterface,pdImplemen,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDInternProc;
+      POCall   : pocall_internproc;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_exports,po_external,po_interrupt,po_assembler,po_iocheck,po_virtualmethod]
     ),(
-      idtok:_INTERRUPT;
-      pd_flags : [pd_implemen,pd_body,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_interrupt;
+      IDTok:_INTERRUPT;
+      PDFlags : [pdImplemen,pdBody,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDInterrupt;
 {$ifdef i386}
-      pocall   : pocall_oldfpccall;
+      POCall   : pocall_oldfpccall;
 {$else i386}
-      pocall   : pocall_stdcall;
+      POCall   : pocall_stdcall;
 {$endif i386}
-      pooption : [po_interrupt];
-      mutexclpocall : [pocall_internproc,pocall_cdecl,pocall_cppdecl,pocall_stdcall,pocall_mwpascal,
+      POOption : [po_interrupt];
+      MutexClPOCall : [pocall_internproc,pocall_cdecl,pocall_cppdecl,pocall_stdcall,pocall_mwpascal,
                        pocall_pascal,pocall_far16,pocall_oldfpccall,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external,po_inline,po_exports]
+      MutexClPOType : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external,po_inline,po_exports]
     ),(
-      idtok:_IOCHECK;
-      pd_flags : [pd_implemen,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_iocheck];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external]
+      IDTok:_IOCHECK;
+      PDFlags : [pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_iocheck];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_LOCAL;
-      pd_flags : [pd_implemen,pd_body];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_kylixlocal];
-      mutexclpocall : [pocall_internproc,pocall_far16];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_exports]
+      IDTok:_LOCAL;
+      PDFlags : [pdImplemen,pdBody];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_kylixlocal];
+      MutexClPOCall : [pocall_internproc,pocall_far16];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_exports]
     ),(
-      idtok:_MESSAGE;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_objcprot,pd_notrecord];
-      handler  : @pd_message;
-      pocall   : pocall_none;
-      pooption : []; { can be po_msgstr or po_msgint }
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt,po_inline]
+      IDTok:_MESSAGE;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdObjCClass,pdObjCProt,pdNotRecord];
+      Handler  : @PDMessage;
+      POCall   : pocall_none;
+      POOption : []; { can be po_msgstr or po_msgint }
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt,po_inline]
     ),(
-      idtok:_MWPASCAL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_mwpascal;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : []
+      IDTok:_MWPASCAL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_mwpascal;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [];
+      MutexClPO     : []
     ),(
-      idtok:_NORETURN;
-      pd_flags : [pd_implemen,pd_interface,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_noreturn];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt,po_virtualmethod,po_iocheck]
+      IDTok:_NORETURN;
+      PDFlags : [pdImplemen,pdInterface,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_noreturn];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_operator,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt,po_virtualmethod,po_iocheck]
     ),(
-      idtok:_NOSTACKFRAME;
-      pd_flags : [pd_implemen,pd_body,pd_procvar,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_nostackframe];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : []
+      IDTok:_NOSTACKFRAME;
+      PDFlags : [pdImplemen,pdBody,pdProcVar,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_nostackframe];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : []
     ),(
-      idtok:_OVERLOAD;
-      pd_flags : [pd_implemen,pd_interface,pd_body,pd_objcclass,pd_objcprot];
-      handler  : @pd_overload;
-      pocall   : pocall_none;
-      pooption : [po_overload];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : []
+      IDTok:_OVERLOAD;
+      PDFlags : [pdImplemen,pdInterface,pdBody,pdObjCClass,pdObjCProt];
+      Handler  : @PDOverload;
+      POCall   : pocall_none;
+      POOption : [po_overload];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : []
     ),(
-      idtok:_OVERRIDE;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_notrecord];
-      handler  : @pd_override;
-      pocall   : pocall_none;
-      pooption : [po_overridingmethod,po_virtualmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_exports,po_interrupt,po_virtualmethod,po_inline]
+      IDTok:_OVERRIDE;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdObjCClass,pdNotRecord];
+      Handler  : @PDOverride;
+      POCall   : pocall_none;
+      POOption : [po_overridingmethod,po_virtualmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_exports,po_interrupt,po_virtualmethod,po_inline]
     ),(
-      idtok:_PASCAL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_pascal;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external]
+      IDTok:_PASCAL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_pascal;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_PUBLIC;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_public;
-      pocall   : pocall_none;
-      pooption : [po_public,po_global];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_inline]
+      IDTok:_PUBLIC;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDPublic;
+      POCall   : pocall_none;
+      POOption : [po_public,po_global];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_inline]
     ),(
-      idtok:_REGISTER;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_register;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external]
+      IDTok:_REGISTER;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_register;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_REINTRODUCE;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_notrecord];
-      handler  : @pd_reintroduce;
-      pocall   : pocall_none;
-      pooption : [po_reintroduce];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_interrupt,po_exports,po_overridingmethod,po_inline]
+      IDTok:_REINTRODUCE;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdObjCClass,pdNotRecord];
+      Handler  : @PDReintroduce;
+      POCall   : pocall_none;
+      POOption : [po_reintroduce];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_interrupt,po_exports,po_overridingmethod,po_inline]
     ),(
-      idtok:_SAFECALL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_safecall;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external]
+      IDTok:_SAFECALL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_safecall;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_SECTION;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_section;
-      pocall   : pocall_none;
-      pooption : [po_public,po_global];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_external,po_inline,po_interrupt]
+      IDTok:_SECTION;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObject,pdNotObjIntf,pdNotRecord,pdNotHelper];
+      Handler  : @PDSection;
+      POCall   : pocall_none;
+      POOption : [po_public,po_global];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_external,po_inline,po_interrupt]
     ),(
-      idtok:_SOFTFLOAT;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_softfloat;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      IDTok:_SOFTFLOAT;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_softfloat;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
       { it's available with po_external because the libgcc floating point routines on the arm
         uses this calling convention }
-      mutexclpo     : []
+      MutexClPO     : []
     ),(
-      idtok:_STATIC;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_object,pd_record,pd_notobjintf];
-      handler  : @pd_static;
-      pocall   : pocall_none;
-      pooption : [po_staticmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt,po_exports,po_virtualmethod]
+      IDTok:_STATIC;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdObject,pdRecord,pdNotObjIntf];
+      Handler  : @PDStatic;
+      POCall   : pocall_none;
+      POOption : [po_staticmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt,po_exports,po_virtualmethod]
     ),(
-      idtok:_STDCALL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_stdcall;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external]
+      IDTok:_STDCALL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_stdcall;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_VIRTUAL;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
-      handler  : @pd_virtual;
-      pocall   : pocall_none;
-      pooption : [po_virtualmethod];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [potype_class_constructor,potype_class_destructor];
-      mutexclpo     : cVirtualMutuallyExclusiveProcOptions
+      IDTok:_VIRTUAL;
+      PDFlags : [pdInterface,pdObject,pdNotObjIntf,pdNotRecord];
+      Handler  : @PDVirtual;
+      POCall   : pocall_none;
+      POOption : [po_virtualmethod];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [potype_class_constructor,potype_class_destructor];
+      MutexClPO     : cVirtualMutuallyExclusiveProcOptions
     ),(
-      idtok:_CPPDECL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_cppdecl;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_assembler,po_external,po_virtualmethod]
+      IDTok:_CPPDECL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_cppdecl;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_assembler,po_external,po_virtualmethod]
     ),(
-      idtok:_VARARGS;
-      pd_flags : [pd_interface,pd_implemen,pd_procvar,pd_objcclass,pd_objcprot];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_varargs];
-      mutexclpocall : [pocall_internproc,pocall_register,
+      IDTok:_VARARGS;
+      PDFlags : [pdInterface,pdImplemen,pdProcVar,pdObjCClass,pdObjCProt];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_varargs];
+      MutexClPOCall : [pocall_internproc,pocall_register,
                        pocall_far16,pocall_oldfpccall,pocall_mwpascal];
-      mutexclpotype : [];
-      mutexclpo     : [po_assembler,po_interrupt,po_inline]
+      MutexClPOType : [];
+      MutexClPO     : [po_assembler,po_interrupt,po_inline]
     ),(
-      idtok:_COMPILERPROC;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobjintf];
-      handler  : @pd_compilerproc;
-      pocall   : pocall_none;
-      pooption : [po_compilerproc];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_COMPILERPROC;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : @PDCompilerProc;
+      POCall   : pocall_none;
+      POOption : [po_compilerproc];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_WEAKEXTERNAL;
-      pd_flags : [pd_implemen,pd_interface,pd_notobject,pd_notobjintf,pd_cppobject,pd_notrecord,pd_nothelper];
-      handler  : @pd_weakexternal;
-      pocall   : pocall_none;
+      IDTok:_WEAKEXTERNAL;
+      PDFlags : [pdImplemen,pdInterface,pdNotObject,pdNotObjIntf,pdCPPObject,pdNotRecord,pdNotHelper];
+      Handler  : @PDWeakExternal;
+      POCall   : pocall_none;
       { mark it both external and weak external, so we don't have to
         adapt all code for external symbols to also check for weak external
       }
-      pooption : [po_external,po_weakexternal];
-      mutexclpocall : [pocall_internproc];
+      POOption : [po_external,po_weakexternal];
+      MutexClPOCall : [pocall_internproc];
       { allowed for external cpp classes }
-      mutexclpotype : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
+      MutexClPOType : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
     ),(
-      idtok:_WINAPI;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : @pd_winapi;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [pocall_stdcall,pocall_cdecl,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_external]
+      IDTok:_WINAPI;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : @PDWinAPI;
+      POCall   : pocall_none;
+      POOption : [];
+      MutexClPOCall : [pocall_stdcall,pocall_cdecl,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_external]
     ),(
-      idtok:_ENUMERATOR;
-      pd_flags : [pd_interface,pd_object,pd_record];
-      handler  : @pd_enumerator;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_exports,po_interrupt,po_external,po_inline]
+      IDTok:_ENUMERATOR;
+      PDFlags : [pdInterface,pdObject,pdRecord];
+      Handler  : @PDEnumerator;
+      POCall   : pocall_none;
+      POOption : [];
+      MutexClPOCall : [pocall_internproc];
+      MutexClPOType : [];
+      MutexClPO     : [po_exports,po_interrupt,po_external,po_inline]
     ),(
-      idtok:_RTLPROC;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_notobjintf];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_rtlproc];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_RTLPROC;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdNotObjIntf];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_rtlproc];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_HARDFLOAT;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : @pd_hardfloat;
-      pocall   : pocall_hardfloat;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      IDTok:_HARDFLOAT;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : @PDHardFloat;
+      POCall   : pocall_hardfloat;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
       { it's available with po_external because the libgcc floating point routines on the arm
         uses this calling convention }
-      mutexclpo     : []
+      MutexClPO     : []
     ),(
-      idtok:_SYSV_ABI_DEFAULT;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_sysv_abi_default;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_SYSV_ABI_DEFAULT;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_sysv_abi_default;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_SYSV_ABI_CDECL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_sysv_abi_cdecl;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_SYSV_ABI_CDECL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_sysv_abi_cdecl;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_MS_ABI_DEFAULT;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_ms_abi_default;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_MS_ABI_DEFAULT;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_ms_abi_default;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_MS_ABI_CDECL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_ms_abi_cdecl;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_MS_ABI_CDECL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_ms_abi_cdecl;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_VECTORCALL;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar];
-      handler  : nil;
-      pocall   : pocall_vectorcall;
-      pooption : [];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_VECTORCALL;
+      PDFlags : [pdInterface,pdImplemen,pdBody,pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_vectorcall;
+      POOption : [];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     ),(
-      idtok:_WASMFUNCREF;
-      pd_flags : [pd_procvar];
-      handler  : nil;
-      pocall   : pocall_none;
-      pooption : [po_wasm_funcref];
-      mutexclpocall : [];
-      mutexclpotype : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
-      mutexclpo     : [po_interrupt]
+      IDTok:_WASMFUNCREF;
+      PDFlags : [pdProcVar];
+      Handler  : nil;
+      POCall   : pocall_none;
+      POOption : [po_wasm_funcref];
+      MutexClPOCall : [];
+      MutexClPOType : [potype_constructor,potype_destructor,potype_class_constructor,potype_class_destructor];
+      MutexClPO     : [po_interrupt]
     )
    );
 
 
-    function check_proc_directive(isprocvar:boolean):boolean;
+    function CheckProcDirective(AIsProcVar:Boolean):Boolean;
       var
-        i : LongInt;
+        lIndex : LongInt;
       begin
-        result:=false;
-        for i:=1 to num_proc_directives do
-         if proc_direcdata[i].idtok=CurrentScanner.idtoken then
+        Result:=false;
+        for lIndex:=1 to cNumProcDirectives do
+         if ProcDirecData[lIndex].IDTok=CurrentScanner.FIDToken then
           begin
-            if ((not isprocvar) or
-               (pd_procvar in proc_direcdata[i].pd_flags)) and
+            if ((not AIsProcVar) or
+               (pdProcVar in ProcDirecData[lIndex].PDFlags)) and
                { don't eat a public directive in classes }
-               not((CurrentScanner.idtoken=_PUBLIC) and (SymTableStack.top.SymTableType=ObjectSymtable)) then
-              result:=true;
+               not((CurrentScanner.FIDToken=_PUBLIC) and (SymTableStack.top.SymTableType=ObjectSymtable)) then
+              Result:=true;
             exit;
           end;
       end;
 
 
-    function find_proc_directive_index(tok: TToken): LongInt; inline;
+    function FindProcDirectiveIndex(AToken: TToken): LongInt; inline;
       begin
-        result:=-1;
-        for result:=1 to num_proc_directives do
-          if proc_direcdata[result].idtok=tok then
+        Result:=-1;
+        for Result:=1 to cNumProcDirectives do
+          if ProcDirecData[Result].IDTok=AToken then
             exit;
-        result:=-1;
+        Result:=-1;
       end;
 
 
-    function parse_proc_direc(pd:TAbstractProcDef;var pdflags:TPDFlags):boolean;
+    function ParseProcDirec(AProcDef:TAbstractProcDef;var APDFlags:TPDFlags):Boolean;
       {
         Parse the procedure directive, returns true if a correct directive is found
       }
       var
-        p     : LongInt;
-        name : TIDString;
-        po_comp : TProcOptions;
-        tokenloc : TFilePosInfo;
+        lDirectiveIndex     : LongInt;
+        lName : TIDString;
+        lProcOptions : TProcOptions;
+        lTokenPos : TFilePosInfo;
       begin
-        parse_proc_direc:=false;
-        name:=tokeninfo^[CurrentScanner.idtoken].str;
+        ParseProcDirec:=false;
+        lName:=tokeninfo^[CurrentScanner.FIDToken].str;
 
       { Hint directive? Then exit immediately }
         if (m_hintdirective in CurrentSettings.ModeSwitches) then
          begin
-           case CurrentScanner.idtoken of
+           case CurrentScanner.FIDToken of
              _LIBRARY,
              _PLATFORM,
              _UNIMPLEMENTED,
              _EXPERIMENTAL,
              _DEPRECATED :
-               if (m_delphi in CurrentSettings.ModeSwitches) and (pd.typ=procdef) then
+               if (m_delphi in CurrentSettings.ModeSwitches) and (AProcDef.typ=procdef) then
                  begin
-                   maybe_parse_hint_directives(TProcDef(pd));
+                   MaybeParseHintDirectives(TProcDef(AProcDef));
                    { could the new token still be a directive? }
-                   if CurrentScanner.token<>_ID then
+                   if CurrentScanner.FToken<>_ID then
                      exit;
                  end
                else
@@ -2781,194 +2781,194 @@ var
 
         { C directive is MacPas only, because it breaks too much existing code
           on other platforms (PFV) }
-        if (CurrentScanner.idtoken=_C) and
+        if (CurrentScanner.FIDToken=_C) and
            not(m_mac in CurrentSettings.ModeSwitches) then
           exit;
 
       { retrieve data for directive if found }
-      p:=find_proc_directive_index(CurrentScanner.idtoken);
+      lDirectiveIndex:=FindProcDirectiveIndex(CurrentScanner.FIDToken);
 
       { Check if the procedure directive is known }
-        if p=-1 then
+        if lDirectiveIndex=-1 then
          begin
             { parsing a procvar type the name can be any
               next variable !! }
-            if ((pdflags * [pd_procvar,pd_object,pd_record,pd_objcclass,pd_objcprot])=[]) and
-               not(CurrentScanner.idtoken in [_PROPERTY,_GENERIC]) then
-              Message1(parser_w_unknown_proc_directive_ignored,CurrentScanner.pattern);
+            if ((APDFlags * [pdProcVar,pdObject,pdRecord,pdObjCClass,pdObjCProt])=[]) and
+               not(CurrentScanner.FIDToken in [_PROPERTY,_GENERIC]) then
+              Message1(parser_w_unknown_proc_directive_ignored,CurrentScanner.FPattern);
             exit;
          end;
 
         { check if method and directive not for object, like public.
           This needs to be checked also for procvars }
-        if (pd_notobject in proc_direcdata[p].pd_flags) and
-           (SymTableStack.top.SymTableType=ObjectSymtable) and not((pd_cppobject in proc_direcdata[p].pd_flags) and Is_CPPClass(TDef(SymTableStack.top.DefOwner))) then
+        if (pdNotObject in ProcDirecData[lDirectiveIndex].PDFlags) and
+           (SymTableStack.top.SymTableType=ObjectSymtable) and not((pdCPPObject in ProcDirecData[lDirectiveIndex].PDFlags) and Is_CPPClass(TDef(SymTableStack.top.DefOwner))) then
            exit;
 
-        if (pd_notrecord in proc_direcdata[p].pd_flags) and
+        if (pdNotRecord in ProcDirecData[lDirectiveIndex].PDFlags) and
            (SymTableStack.top.SymTableType=recordsymtable) then
           exit;
 
         { Keep track of the token's position in the file so it's correctly indicated if an error occurs. }
-        tokenloc := CurrentTokenPos;
+        lTokenPos := CurrentTokenPos;
 
         { consume directive, and turn flag on }
-        consume(CurrentScanner.token);
-        parse_proc_direc:=true;
+        Consume(CurrentScanner.FToken);
+        ParseProcDirec:=true;
 
         { Conflicts between directives? }
-        if (pd.ProcTypeOption in proc_direcdata[p].mutexclpotype) then
+        if (AProcDef.ProcTypeOption in ProcDirecData[lDirectiveIndex].MutexClPOType) then
           begin
-            MessagePos2(tokenloc, parser_e_proc_dir_conflict,name,ProcTypeOptionKeywords[pd.ProcTypeOption]);
+            MessagePos2(lTokenPos, parser_e_proc_dir_conflict,lName,ProcTypeOptionKeywords[AProcDef.ProcTypeOption]);
             exit;
           end;
 
-        if (pd.ProcCallOption in proc_direcdata[p].mutexclpocall) then
+        if (AProcDef.ProcCallOption in ProcDirecData[lDirectiveIndex].MutexClPOCall) then
           begin
-            MessagePos2(tokenloc, parser_e_proc_dir_conflict,name,'"' + UpCase(proccalloptionStr[pd.ProcCallOption]) + '"');
+            MessagePos2(lTokenPos, parser_e_proc_dir_conflict,lName,'"' + UpCase(proccalloptionStr[AProcDef.ProcCallOption]) + '"');
             exit;
           end;
 
-        po_comp := (pd.ProcOptions*proc_direcdata[p].mutexclpo);
-        if (po_comp<>[]) then
+        lProcOptions := (AProcDef.ProcOptions*ProcDirecData[lDirectiveIndex].MutexClPO);
+        if (lProcOptions<>[]) then
           begin
-            MessagePos2(tokenloc, parser_e_proc_dir_conflict,name,Get_First_Proc_Str(po_comp));
+            MessagePos2(lTokenPos, parser_e_proc_dir_conflict,lName,Get_First_Proc_Str(lProcOptions));
             exit;
           end;
 
         { set calling convention }
-        if proc_direcdata[p].pocall<>pocall_none then
+        if ProcDirecData[lDirectiveIndex].POCall<>pocall_none then
          begin
-           if (po_hascallingconvention in pd.ProcOptions) then
+           if (po_hascallingconvention in AProcDef.ProcOptions) then
             begin
-              MessagePos2(tokenloc, parser_w_proc_overriding_calling,
-                proccalloptionStr[pd.ProcCallOption],
-                proccalloptionStr[proc_direcdata[p].pocall]);
+              MessagePos2(lTokenPos, parser_w_proc_overriding_calling,
+                proccalloptionStr[AProcDef.ProcCallOption],
+                proccalloptionStr[ProcDirecData[lDirectiveIndex].POCall]);
             end;
            { check if the target processor supports this calling convention }
-           if not(proc_direcdata[p].pocall in supported_calling_conventions) then
+           if not(ProcDirecData[lDirectiveIndex].POCall in supported_calling_conventions) then
              begin
-               MessagePos1(tokenloc, parser_e_illegal_calling_convention,proccalloptionStr[proc_direcdata[p].pocall]);
+               MessagePos1(lTokenPos, parser_e_illegal_calling_convention,proccalloptionStr[ProcDirecData[lDirectiveIndex].POCall]);
                { recover }
-               proc_direcdata[p].pocall:=pocall_stdcall;
+               ProcDirecData[lDirectiveIndex].POCall:=pocall_stdcall;
              end;
-           pd.ProcCallOption:=proc_direcdata[p].pocall;
-           include(pd.ProcOptions,po_hascallingconvention);
+           AProcDef.ProcCallOption:=ProcDirecData[lDirectiveIndex].POCall;
+           include(AProcDef.ProcOptions,po_hascallingconvention);
          end;
 
-        if pd.typ=procdef then
+        if AProcDef.typ=procdef then
          begin
            { Check if the directive is only for objects }
-           if (pd_object in proc_direcdata[p].pd_flags) and
-              not Assigned(TProcDef(pd).struct) then
+           if (pdObject in ProcDirecData[lDirectiveIndex].PDFlags) and
+              not Assigned(TProcDef(AProcDef).struct) then
             exit;
 
            { Check if the directive is only for records }
-           if (pd_record in proc_direcdata[p].pd_flags) and
-              not Assigned(TProcDef(pd).struct) then
+           if (pdRecord in ProcDirecData[lDirectiveIndex].PDFlags) and
+              not Assigned(TProcDef(AProcDef).struct) then
             exit;
 
            { check if method and directive not for interface }
-           if (pd_notobjintf in proc_direcdata[p].pd_flags) and
-              Is_Interface(TProcDef(pd).struct) then
+           if (pdNotObjIntf in ProcDirecData[lDirectiveIndex].PDFlags) and
+              Is_Interface(TProcDef(AProcDef).struct) then
             exit;
 
            { check if method and directive not for interface }
-           if Is_DispInterface(TProcDef(pd).struct) and
-             not(pd_dispinterface in proc_direcdata[p].pd_flags) then
+           if Is_DispInterface(TProcDef(AProcDef).struct) and
+             not(pdDispInterface in ProcDirecData[lDirectiveIndex].PDFlags) then
             exit;
 
            { check if method and directive not for objcclass }
-           if Is_ObjCClass(TProcDef(pd).struct) and
-             not(pd_objcclass in proc_direcdata[p].pd_flags) then
+           if Is_ObjCClass(TProcDef(AProcDef).struct) and
+             not(pdObjCClass in ProcDirecData[lDirectiveIndex].PDFlags) then
             exit;
 
            { check if method and directive not for objcprotocol }
-           if Is_ObjCProtocol(TProcDef(pd).struct) and
-             not(pd_objcprot in proc_direcdata[p].pd_flags) then
+           if Is_ObjCProtocol(TProcDef(AProcDef).struct) and
+             not(pdObjCProt in ProcDirecData[lDirectiveIndex].PDFlags) then
             exit;
 
            { check if method and directive not for record/class helper }
-           if Is_ObjectPascal_Helper(TProcDef(pd).struct) and
-             (pd_nothelper in proc_direcdata[p].pd_flags) then
+           if Is_ObjectPascal_Helper(TProcDef(AProcDef).struct) and
+             (pdNotHelper in ProcDirecData[lDirectiveIndex].PDFlags) then
              exit;
          end;
 
         { Check the pd_flags if the directive should be allowed }
-        if (pd_interface in pdflags) and
-           not(pd_interface in proc_direcdata[p].pd_flags) then
+        if (pdInterface in APDFlags) and
+           not(pdInterface in ProcDirecData[lDirectiveIndex].PDFlags) then
           begin
-            MessagePos1(tokenloc, parser_e_proc_dir_not_allowed_in_interface,name);
+            MessagePos1(lTokenPos, parser_e_proc_dir_not_allowed_in_interface,lName);
             exit;
           end;
-        if (pd_implemen in pdflags) and
-           not(pd_implemen in proc_direcdata[p].pd_flags) then
+        if (pdImplemen in APDFlags) and
+           not(pdImplemen in ProcDirecData[lDirectiveIndex].PDFlags) then
           begin
-            MessagePos1(tokenloc, parser_e_proc_dir_not_allowed_in_implementation,name);
+            MessagePos1(lTokenPos, parser_e_proc_dir_not_allowed_in_implementation,lName);
             exit;
           end;
-        if (pd_procvar in pdflags) and
-           not(pd_procvar in proc_direcdata[p].pd_flags) then
+        if (pdProcVar in APDFlags) and
+           not(pdProcVar in ProcDirecData[lDirectiveIndex].PDFlags) then
           begin
             { reset mismatching calling convention to avoid further errors, see e.g. tests/webtbf/tw41041.pas }
-            if proc_direcdata[p].pocall<>pocall_none then
-              pd.ProcCallOption:=pocall_default;
+            if ProcDirecData[lDirectiveIndex].POCall<>pocall_none then
+              AProcDef.ProcCallOption:=pocall_default;
 
-            MessagePos1(tokenloc, parser_e_proc_dir_not_allowed_in_procvar,name);
+            MessagePos1(lTokenPos, parser_e_proc_dir_not_allowed_in_procvar,lName);
             exit;
           end;
 
         { Return the new pd_flags }
-        if not(pd_body in proc_direcdata[p].pd_flags) then
-          exclude(pdflags,pd_body);
+        if not(pdBody in ProcDirecData[lDirectiveIndex].PDFlags) then
+          exclude(APDFlags,pdBody);
 
         { Add the correct flag }
-        pd.ProcOptions:=pd.ProcOptions+proc_direcdata[p].pooption;
+        AProcDef.ProcOptions:=AProcDef.ProcOptions+ProcDirecData[lDirectiveIndex].POOption;
 
         { Call the handler }
-        if pointer(proc_direcdata[p].handler)<>nil then
-          proc_direcdata[p].handler(pd);
+        if Pointer(ProcDirecData[lDirectiveIndex].Handler)<>nil then
+          ProcDirecData[lDirectiveIndex].Handler(AProcDef);
       end;
 
 
-    function proc_get_importname(pd:TProcDef):string;
+    function ProcGetImportName(AProcDef:TProcDef):String;
       var
-        dllname, importname : string;
+        lDLLName, lImportName : String;
 
       begin
-        result:='';
-        if not(po_external in pd.ProcOptions) then
+        Result:='';
+        if not(po_external in AProcDef.ProcOptions) then
           InternalError(200412151);
         { external name or number is specified }
-        if Assigned(pd.ImportName) or (pd.ImportNr<>0) then
+        if Assigned(AProcDef.ImportName) or (AProcDef.ImportNr<>0) then
           begin
-            if Assigned(pd.ImportDLL) then
-              dllname:=pd.ImportDLL^
+            if Assigned(AProcDef.ImportDLL) then
+              lDLLName:=AProcDef.ImportDLL^
             else
-              dllname:='';
-            if Assigned(pd.ImportName) then
-              importname:=pd.ImportName^
+              lDLLName:='';
+            if Assigned(AProcDef.ImportName) then
+              lImportName:=AProcDef.ImportName^
             else
-              importname:='';
-            proc_get_importname:=Make_DLLMangledName(dllname,
-              importname,pd.ImportNr,pd.ProcCallOption);
+              lImportName:='';
+            ProcGetImportName:=Make_DLLMangledName(lDLLName,
+              lImportName,AProcDef.ImportNr,AProcDef.ProcCallOption);
           end
         else
           begin
             { Default names when importing variables }
-            case pd.ProcCallOption of
+            case AProcDef.ProcCallOption of
               pocall_cdecl,
               pocall_sysv_abi_cdecl,
               pocall_ms_abi_cdecl:
                 begin
-                  if Assigned(pd.struct) then
-                    result:=TargetInfo.Cprefix+pd.struct.ObjRealName^+'_'+pd.ProcSym.realname
+                  if Assigned(AProcDef.struct) then
+                    Result:=TargetInfo.Cprefix+AProcDef.struct.ObjRealName^+'_'+AProcDef.ProcSym.realname
                   else
-                    result:=TargetInfo.Cprefix+pd.ProcSym.realname;
+                    Result:=TargetInfo.Cprefix+AProcDef.ProcSym.realname;
                 end;
               pocall_cppdecl :
                 begin
-                  result:=TargetInfo.Cprefix+pd.CPlusPlusMangledName;
+                  Result:=TargetInfo.Cprefix+AProcDef.CPlusPlusMangledName;
                 end;
               else
                 begin
@@ -2976,9 +2976,9 @@ var
                   { but according to MacPas mode description
                     Cprefix should still be used PM }
                   if (m_mac in CurrentSettings.ModeSwitches) then
-                    result:=TargetInfo.Cprefix+TProcDef(pd).ProcSym.realname
+                    Result:=TargetInfo.Cprefix+TProcDef(AProcDef).ProcSym.realname
                   else
-                    result:=pd.ProcSym.realname;
+                    Result:=AProcDef.ProcSym.realname;
 
                 end;
             end;
@@ -2986,171 +2986,171 @@ var
       end;
 
 
-    procedure proc_set_mangledname(pd:TProcDef);
+    procedure ProcSetMangledName(AProcDef:TProcDef);
       var
-        s : string;
+        lName : String;
       begin
         { When the mangledname is already set we aren't allowed to change
           it because it can already be used somewhere (PFV) }
-        if not(po_has_mangledname in pd.ProcOptions) then
+        if not(po_has_mangledname in AProcDef.ProcOptions) then
           begin
-            if (po_external in pd.ProcOptions) and not (po_wasm_suspending in pd.ProcOptions) then
+            if (po_external in AProcDef.ProcOptions) and not (po_wasm_suspending in AProcDef.ProcOptions) then
               begin
                 { External Procedures are only allowed to change the mangledname
                   in their first declaration }
-                if (pd.ForwardDef or (not pd.HasForward)) then
+                if (AProcDef.ForwardDef or (not AProcDef.HasForward)) then
                   begin
-                    s:=proc_get_importname(pd);
-                    if s<>'' then
+                    lName:=ProcGetImportName(AProcDef);
+                    if lName<>'' then
                       begin
-                        pd.SetMangledName(s);
+                        AProcDef.SetMangledName(lName);
                       end;
                     { since this is an external declaration, there won't be an
                       implementation that needs to match the original symbol
                       again -> immediately convert here }
-                    if po_compilerproc in pd.ProcOptions then
-                      pd.SetCompilerProcName;
+                    if po_compilerproc in AProcDef.ProcOptions then
+                      AProcDef.SetCompilerProcName;
                   end
               end
             else
             { Normal procedures }
               begin
-                if (po_compilerproc in pd.ProcOptions) then
+                if (po_compilerproc in AProcDef.ProcOptions) then
                   begin
-                    pd.SetMangledName(lower(pd.ProcSym.name));
+                    AProcDef.SetMangledName(lower(AProcDef.ProcSym.name));
                   end;
               end;
           end;
 
         { Public/exported alias names }
-        if (([po_public,po_exports]*pd.ProcOptions)<>[]) and
-           not(po_has_public_name in pd.ProcOptions) then
+        if (([po_public,po_exports]*AProcDef.ProcOptions)<>[]) and
+           not(po_has_public_name in AProcDef.ProcOptions) then
           begin
-            case pd.ProcCallOption of
+            case AProcDef.ProcCallOption of
               pocall_cdecl,
               pocall_sysv_abi_cdecl,
               pocall_ms_abi_cdecl:
                 begin
-                  if Assigned(pd.struct) then
-                   pd.AliasNames.insert(TargetInfo.Cprefix+pd.struct.ObjRealName^+'_'+pd.ProcSym.realname)
+                  if Assigned(AProcDef.struct) then
+                   AProcDef.AliasNames.insert(TargetInfo.Cprefix+AProcDef.struct.ObjRealName^+'_'+AProcDef.ProcSym.realname)
                   else
                     begin
                       { Export names are not mangled on Windows, see also pexports.pas }
                       if (TargetInfo.system in systems_all_windows) and
-                        (po_exports in pd.ProcOptions) then
-                        pd.AliasNames.insert(pd.ProcSym.realname)
+                        (po_exports in AProcDef.ProcOptions) then
+                        AProcDef.AliasNames.insert(AProcDef.ProcSym.realname)
                       else
-                        pd.AliasNames.insert(TargetInfo.Cprefix+pd.ProcSym.realname);
+                        AProcDef.AliasNames.insert(TargetInfo.Cprefix+AProcDef.ProcSym.realname);
                     end;
                 end;
               pocall_cppdecl :
                 begin
-                  pd.AliasNames.insert(TargetInfo.Cprefix+pd.CPlusPlusMangledName);
+                  AProcDef.AliasNames.insert(TargetInfo.Cprefix+AProcDef.CPlusPlusMangledName);
                 end;
               else
                 ;
             end;
             { prevent adding the alias a second time }
-            include(pd.ProcOptions,po_has_public_name);
+            include(AProcDef.ProcOptions,po_has_public_name);
           end;
       end;
 
 
-    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:TPDFlags);
+    procedure ParseProcDirectives(AProcDef:TAbstractProcDef;var APDFlags:TPDFlags);
       {
         Parse the procedure directives. It does not matter if procedure directives
         are written using ;procdir; or ['procdir'] syntax.
       }
       var
-        stoprecording,
-        res : boolean;
+        lStopRecording,
+        lResult : Boolean;
       begin
         if (m_mac in CurrentSettings.ModeSwitches) and (cs_externally_visible in CurrentSettings.LocalSwitches) then
           begin
-            TProcDef(pd).AliasNames.insert(TargetInfo.Cprefix+TProcDef(pd).ProcSym.realname);
-            include(pd.ProcOptions,po_public);
-            include(pd.ProcOptions,po_has_public_name);
-            include(pd.ProcOptions,po_global);
+            TProcDef(AProcDef).AliasNames.insert(TargetInfo.Cprefix+TProcDef(AProcDef).ProcSym.realname);
+            include(AProcDef.ProcOptions,po_public);
+            include(AProcDef.ProcOptions,po_has_public_name);
+            include(AProcDef.ProcOptions,po_global);
           end;
 
         { methods from external class definitions are all external themselves }
-        if (pd.typ=procdef) and
-           Assigned(TProcDef(pd).struct) and
-           (TProcDef(pd).struct.typ=objectdef) and
-           (oo_is_external in TObjectDef(TProcDef(pd).struct).ObjectOptions) then
-          TProcDef(pd).Make_External;
+        if (AProcDef.typ=procdef) and
+           Assigned(TProcDef(AProcDef).struct) and
+           (TProcDef(AProcDef).struct.typ=objectdef) and
+           (oo_is_external in TObjectDef(TProcDef(AProcDef).struct).ObjectOptions) then
+          TProcDef(AProcDef).Make_External;
 
         { Class constructors and destructor are static class methods in real. }
         { There are many places in the compiler where either class or static  }
         { method flag changes the behavior. It is simpler to add them to      }
         { the class constructors/destructors options than to fix all the      }
         { occurrences. (Paul)                                                 }
-        if pd.ProcTypeOption in [potype_class_constructor,potype_class_destructor] then
+        if AProcDef.ProcTypeOption in [potype_class_constructor,potype_class_destructor] then
           begin
-            include(pd.ProcOptions,po_classmethod);
-            include(pd.ProcOptions,po_staticmethod);
+            include(AProcDef.ProcOptions,po_classmethod);
+            include(AProcDef.ProcOptions,po_staticmethod);
           end;
 
         { for a generic routine we also need to record the procedure          }
         { directives, but only if we aren't already recording for a           }
         { surrounding generic                                                 }
-        if pd.Is_Generic and (pd.typ=procdef) and not CurrentScanner.is_recording_tokens then
+        if AProcDef.Is_Generic and (AProcDef.typ=procdef) and not CurrentScanner.IsRecordingTokens then
           begin
-            CurrentScanner.startrecordtokens(TProcDef(pd).GenericDeclTokenBuf);
-            stoprecording:=true;
+            CurrentScanner.StartRecordTokens(TProcDef(AProcDef).GenericDeclTokenBuf);
+            lStopRecording:=true;
           end
         else
-          stoprecording:=false;
+          lStopRecording:=false;
 
-        while (CurrentScanner.token=_ID) or
+        while (CurrentScanner.FToken=_ID) or
             (
               not (m_prefixed_attributes in CurrentSettings.ModeSwitches) and
-              (CurrentScanner.token=_LECKKLAMMER)
+              (CurrentScanner.FToken=_LECKKLAMMER)
             ) do
          begin
            if not (m_prefixed_attributes in CurrentSettings.ModeSwitches) and
-              try_to_consume(_LECKKLAMMER) then
+              TryToConsume(_LECKKLAMMER) then
             begin
               repeat
-                parse_proc_direc(pd,pdflags);
-              until not try_to_consume(_COMMA);
-              consume(_RECKKLAMMER);
+                ParseProcDirec(AProcDef,APDFlags);
+              until not TryToConsume(_COMMA);
+              Consume(_RECKKLAMMER);
               { we always expect at least '[];' }
-              res:=true;
+              lResult:=true;
             end
            else
             begin
-              res:=parse_proc_direc(pd,pdflags);
+              lResult:=ParseProcDirec(AProcDef,APDFlags);
             end;
            { A procedure directive normally followed by a semicolon, but in
              a const section or reading a type we should stop when _EQ is found,
              because a constant/default value follows }
-           if res then
+           if lResult then
             begin
               if (Block_Type=bt_const_type) and
-                 (CurrentScanner.token=_EQ) then
+                 (CurrentScanner.FToken=_EQ) then
                break;
               { support procedure proc;stdcall export; }
-              if not(check_proc_directive((pd.typ=procvardef))) then
+              if not(CheckProcDirective((AProcDef.typ=procvardef))) then
                 begin
                   { support "record p : procedure stdcall end;" and
                     "var p : procedure stdcall = nil;" }
                   if (
-                      (pd_procvar in pdflags) and
-                       (CurrentScanner.token in [_END,_RKLAMMER,_EQ])
+                      (pdProcVar in APDFlags) and
+                       (CurrentScanner.FToken in [_END,_RKLAMMER,_EQ])
                     ) or (
-                      (po_anonymous in pd.ProcOptions) and
-                      (CurrentScanner.token in [_BEGIN,_VAR,_CONST,_TYPE,_LABEL,_FUNCTION,_PROCEDURE,_OPERATOR])
+                      (po_anonymous in AProcDef.ProcOptions) and
+                      (CurrentScanner.FToken in [_BEGIN,_VAR,_CONST,_TYPE,_LABEL,_FUNCTION,_PROCEDURE,_OPERATOR])
                     ) then
                     break
                   else
                     begin
-                      if (CurrentScanner.token=_COLON) then
+                      if (CurrentScanner.FToken=_COLON) then
                         begin
                           Message(parser_e_field_not_allowed_here);
-                          consume_all_until(_SEMICOLON);
+                          ConsumeAllUntil(_SEMICOLON);
                         end;
-                      consume(_SEMICOLON)
+                      Consume(_SEMICOLON)
                     end;
                 end;
             end
@@ -3158,8 +3158,8 @@ var
             break;
          end;
 
-        if stoprecording then
-          CurrentScanner.stoprecordtokens;
+        if lStopRecording then
+          CurrentScanner.StopRecordTokens;
 
          { nostackframe requires assembler, but assembler
            may be specified in the implementation part only,
@@ -3168,43 +3168,43 @@ var
            we postpone the possible error message to the real implementation
            parse_only does not need to be considered as po_nostackframe
            is an implementation only directive  }
-         if (po_nostackframe in pd.ProcOptions) and
-            not (po_assembler in pd.ProcOptions) and
-            ((pd.typ<>procdef) or not TProcDef(pd).ForwardDef) then
+         if (po_nostackframe in AProcDef.ProcOptions) and
+            not (po_assembler in AProcDef.ProcOptions) and
+            ((AProcDef.typ<>procdef) or not TProcDef(AProcDef).ForwardDef) then
            message(parser_e_nostackframe_without_assembler);
       end;
 
 
-    procedure parse_proctype_directives(pd_or_invkdef:TDef);
+    procedure ParseProcTypeDirectives(AProcOrInvokeDef:TDef);
       var
-        pdflags : TPDFlags;
-        pd : TAbstractProcDef;
+        lPDFlags : TPDFlags;
+        lProcDef : TAbstractProcDef;
       begin
-        if Is_FuncRef(pd_or_invkdef) then
-          pd:=Get_Invoke_ProcDef(TObjectDef(pd_or_invkdef))
-        else if pd_or_invkdef.typ=procvardef then
-          pd:=TProcVarDef(pd_or_invkdef)
+        if Is_FuncRef(AProcOrInvokeDef) then
+          lProcDef:=Get_Invoke_ProcDef(TObjectDef(AProcOrInvokeDef))
+        else if AProcOrInvokeDef.typ=procvardef then
+          lProcDef:=TProcVarDef(AProcOrInvokeDef)
         else
           InternalError(2022012501);
-        pdflags:=[pd_procvar];
-        parse_proc_directives(pd,pdflags);
+        lPDFlags:=[pdProcVar];
+        ParseProcDirectives(lProcDef,lPDFlags);
       end;
 
 
-    procedure parse_object_proc_directives(pd:TProcDef);
+    procedure ParseObjectProcDirectives(AProcDef:TProcDef);
       var
-        pdflags : TPDFlags;
+        lPDFlags : TPDFlags;
       begin
-        pdflags:=[pd_object];
-        parse_proc_directives(pd,pdflags);
+        lPDFlags:=[pdObject];
+        ParseProcDirectives(AProcDef,lPDFlags);
       end;
 
-    procedure parse_record_proc_directives(pd:TProcDef);
+    procedure ParseRecordProcDirectives(AProcDef:TProcDef);
       var
-        pdflags : TPDFlags;
+        lPDFlags : TPDFlags;
       begin
-        pdflags:=[pd_record];
-        parse_proc_directives(pd,pdflags);
+        lPDFlags:=[pdRecord];
+        ParseProcDirectives(AProcDef,lPDFlags);
       end;
 
 end.

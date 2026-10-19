@@ -1748,7 +1748,7 @@ implementation
             else
               begin
                 if AddGenerics then
-                  add_generic_dummysym(Sym,'');
+                  AddGenericDummySym(Sym,'');
                 { add nested helpers as well }
                 if Assigned(Def) and
                     (Def.Typ in [RecordDef,ObjectDef]) and
@@ -4846,7 +4846,7 @@ implementation
                 if CRCIdx<0 then
                   InternalError(2014121201);
                 BaseName:=Copy(ObjRealName^,1,CRCIdx-1);
-                split_generic_name(BaseName,NonGeneric,ParamCount);
+                SplitGenericName(BaseName,NonGeneric,ParamCount);
                 RTTIString:=RTTIString+NonGeneric+'<';
                 RemLength:=255-Length(RTTIString)-1;
                 if RemLength<4 then
@@ -4858,7 +4858,7 @@ implementation
               if Is_Generic then
                 begin
                   RTTIString:=OwnerHierarchyName;
-                  split_generic_name(ObjRealName^,NonGeneric,ParamCount);
+                  SplitGenericName(ObjRealName^,NonGeneric,ParamCount);
                   RTTIString:=RTTIString+NonGeneric+'<';
                   { we don't want any ',' if there is only one parameter }
                   for I:=0 to ParamCount-1 do

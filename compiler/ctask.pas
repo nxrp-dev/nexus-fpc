@@ -169,8 +169,8 @@ begin
       InternalError(2026030106);
     end;
   State.Restore;
-  if Assigned(CurrentScanner) and Assigned(CurrentScanner.InputFile) then
-    if CurrentScanner.InputFile.Closed then
+  if Assigned(CurrentScanner) and Assigned(CurrentScanner.FInputFile) then
+    if CurrentScanner.FInputFile.Closed then
       begin
         CurrentScanner.TempOpenInputFile;
         CurrentScanner.GetTokenPos;
@@ -423,18 +423,18 @@ begin
             MacroSymTableStack.Clear;
             FreeAndNil(MacroSymTableStack);
           end;
-        Parser.compile_module(M);
+        Parser.CompileModule(M);
       end;
     ms_compiled : ;
     ms_compiling_wait :
       if M.IsPackage then
-        PModules.finish_package(M)
+        PModules.FinishPackage(M)
       else
-        PModules.proc_program_declarations(M,M.IsLibrary);
-    ms_compiling_waitintf : PModules.parse_unit_interface_declarations(M);
-    ms_compiling_waitimpl : PModules.proc_unit_implementation(M);
-    ms_compiling_waitfinish : PModules.finish_compile_unit(M);
-    ms_compiled_waitcrc : PModules.finish_unit(M);
+        PModules.ProcProgramDeclarations(M,M.IsLibrary);
+    ms_compiling_waitintf : PModules.ParseUnitInterfaceDeclarations(M);
+    ms_compiling_waitimpl : PModules.ProcUnitImplementation(M);
+    ms_compiling_waitfinish : PModules.FinishCompileUnit(M);
+    ms_compiled_waitcrc : PModules.FinishUnit(M);
     ms_processed : ;
   else
     InternalError(2024011801);
@@ -454,7 +454,7 @@ begin
   else if M.State=ms_compiled then
     begin
     if not M.FromPPU then
-      parsing_done(M);
+      ParsingDone(M);
     if (M.State=ms_compiled) and M.IsUnit then
       TPPUModule(M).Post_Load_Or_Compile(M);
     M.State:=ms_processed;

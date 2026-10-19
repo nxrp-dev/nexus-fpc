@@ -344,15 +344,15 @@ Unit racpugas;
                         do_error;
                         exit
                       end;
-                    consume(AS_AT);
+                    Consume(AS_AT);
                     if actasmpattern='GOTPAGEOFF' then
                       begin
-                        consume(actasmtoken);
+                        Consume(actasmtoken);
                         oper.opr.Ref.RefAddr:=addr_gotpageoffset;
                       end
                     else if actasmpattern='PAGEOFF' then
                       begin
-                        consume(actasmtoken);
+                        Consume(actasmtoken);
                         oper.opr.Ref.RefAddr:=addr_pageoffset;
                       end
                     else
@@ -489,14 +489,14 @@ Unit racpugas;
 
       procedure handlepara(sm : TShiftMode);
         begin
-          consume(AS_ID);
+          Consume(AS_ID);
           fillchar(instr.operands[opnr].opr,sizeof(instr.operands[opnr].opr),0);
           instr.operands[opnr].opr.typ:=OPR_SHIFTEROP;
           instr.operands[opnr].opr.shifterop.ShiftMode:=sm;
           if (sm=SM_LSL) or
              (actasmtoken=AS_HASH) then
             begin
-              consume(AS_HASH);
+              Consume(AS_HASH);
               instr.operands[opnr].opr.shifterop.ShiftImm:=BuildConstExpression(false,false);
             end;
         end;
@@ -628,14 +628,14 @@ Unit racpugas;
 
     Procedure TAArch64ATTReader.BuildOperand(oper: TAArch64Operand; is64bit: boolean);
       var
-        expr: string;
+        Expr: string;
         typesize, l: aint;
 
         procedure MaybeAddGotAddrMode;
           begin
             if actasmtoken=AS_AT then
               begin
-                consume(AS_AT);
+                Consume(AS_AT);
                 if actasmpattern='GOTPAGE' then
                   oper.opr.Ref.RefAddr:=addr_gotpage
                 else if actasmpattern='GOTPAGEOFF' then
@@ -646,7 +646,7 @@ Unit racpugas;
                   oper.opr.Ref.RefAddr:=addr_pageoffset
                 else
                   Message(asmr_e_expr_illegal);
-                consume(actasmtoken);
+                Consume(actasmtoken);
               end
             else
               oper.opr.Ref.RefAddr:=addr_pic;
@@ -691,9 +691,9 @@ Unit racpugas;
             hasdot:=(actasmtoken=AS_DOT);
             if hasdot then
               begin
-                if expr<>'' then
+                if Expr<>'' then
                   begin
-                    BuildRecordOffsetSize(expr,toffset,tsize,MangledName,false);
+                    BuildRecordOffsetSize(Expr,toffset,tsize,MangledName,false);
                     if (oper.opr.typ<>OPR_CONSTANT) and
                        (MangledName<>'') then
                       Message(asmr_e_wrong_sym_type);
@@ -826,7 +826,7 @@ Unit racpugas;
         icond: TAsmCond;
         RegIndex: byte;
       Begin
-        expr:='';
+        Expr:='';
         case actasmtoken of
           AS_LBRACKET: { Memory reference or constant expression }
             Begin
@@ -836,7 +836,7 @@ Unit racpugas;
 
           AS_LSBRACKET: { register set }
             begin
-              consume(AS_LSBRACKET);
+              Consume(AS_LSBRACKET);
               oper.opr.typ:=OPR_REGSET;
               oper.opr.basereg:=parsereg;
               oper.opr.nregs:=1;
@@ -845,7 +845,7 @@ Unit racpugas;
                 begin
                   if actasmtoken=AS_MINUS then
                     begin
-                      consume(AS_MINUS);
+                      Consume(AS_MINUS);
                       tempreg:=parsereg;
 
                       if (GetSupReg(tempreg)-GetSupReg(oper.opr.basereg))>=4 then
@@ -856,7 +856,7 @@ Unit racpugas;
                     end;
                   if actasmtoken=AS_COMMA then
                     begin
-                      consume(AS_COMMA);
+                      Consume(AS_COMMA);
                       tempreg:=parsereg;
                       if (GetSupReg(tempreg)-GetSupReg(oper.opr.basereg))>=4 then
                         Message(asmr_e_a64_regset_too_large);
@@ -867,13 +867,13 @@ Unit racpugas;
                   else
                     break;
                 end;
-              consume(AS_RSBRACKET);
+              Consume(AS_RSBRACKET);
               if actasmtoken=AS_LBRACKET then
                 begin
-                  consume(AS_LBRACKET);
+                  Consume(AS_LBRACKET);
                   oper.opr.regsetindex:=ParseRegIndex(actasmpattern);
-                  consume(AS_INTNUM);
-                  consume(AS_RBRACKET);
+                  Consume(AS_INTNUM);
+                  Consume(AS_RBRACKET);
                 end
               else
                 oper.opr.regsetindex:=255;
@@ -914,7 +914,7 @@ Unit racpugas;
                 begin
                   oper.opr.typ:=OPR_COND;
                   oper.opr.cc:=icond;
-                  consume(AS_ID);
+                  Consume(AS_ID);
                 end
               else
               { Local Label ? }
@@ -944,11 +944,11 @@ Unit racpugas;
                   end
                  else
                   begin
-                    expr:=actasmpattern;
+                    Expr:=actasmpattern;
                     Consume(AS_ID);
                     { typecasting? }
                     if (actasmtoken=AS_LPAREN) and
-                       SearchType(expr,typesize) then
+                       SearchType(Expr,typesize) then
                      begin
                        oper.hastype:=true;
                        Consume(AS_LPAREN);
@@ -959,28 +959,28 @@ Unit racpugas;
                      end
                     else
                      begin
-                       if not(oper.SetupVar(expr,false)) then
+                       if not(oper.SetupVar(Expr,false)) then
                         Begin
                           { look for special symbols ... }
-                          if expr= '__HIGH' then
+                          if Expr= '__HIGH' then
                             begin
-                              consume(AS_LPAREN);
+                              Consume(AS_LPAREN);
                               if not oper.setupvar('high'+actasmpattern,false) then
                                 Message1(sym_e_unknown_id,'high'+actasmpattern);
-                              consume(AS_ID);
-                              consume(AS_RPAREN);
+                              Consume(AS_ID);
+                              Consume(AS_RPAREN);
                             end
                           else
-                           if expr = '__RESULT' then
+                           if Expr = '__RESULT' then
                             oper.SetUpResult
                           else
-                           if expr = '__SELF' then
+                           if Expr = '__SELF' then
                             oper.SetupSelf
                           else
-                           if expr = '__OLDEBP' then
+                           if Expr = '__OLDEBP' then
                             oper.SetupOldEBP
                           else
-                            Message1(sym_e_unknown_id,expr);
+                            Message1(sym_e_unknown_id,Expr);
                         end
                        else if oper.opr.typ<>OPR_LOCAL then
                          begin
@@ -1021,10 +1021,10 @@ Unit racpugas;
               if (GetRegType(tempreg)=R_MMREGISTER) and
                  (actasmtoken=AS_LBRACKET) then
                 begin
-                  consume(AS_LBRACKET);
+                  Consume(AS_LBRACKET);
                   RegIndex:=ParseRegIndex(actasmpattern);
-                  consume(AS_INTNUM);
-                  consume(AS_RBRACKET);
+                  Consume(AS_INTNUM);
+                  Consume(AS_RBRACKET);
                 end;
               if actasmtoken in [AS_END,AS_SEPARATOR,AS_COMMA] then
                 begin
@@ -1396,15 +1396,15 @@ Unit racpugas;
           ash_saveregp_x:
             begin
               hreg:=actasmregister;
-              consume(AS_REGISTER);
+              Consume(AS_REGISTER);
               if (GetRegType(hreg)<>R_INTREGISTER) or (GetSubReg(hreg)<>R_SUBWHOLE) or (GetSupReg(hreg)<19) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[actsehdirective]);
-              consume(AS_COMMA);
+              Consume(AS_COMMA);
               hreg2:=actasmregister;
-              consume(AS_REGISTER);
+              Consume(AS_REGISTER);
               if (GetRegType(hreg2)<>R_INTREGISTER) or (GetSubReg(hreg2)<>R_SUBWHOLE) or (GetSupReg(hreg2)<>GetSupReg(hreg)+1) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[actsehdirective]);
-              consume(AS_COMMA);
+              Consume(AS_COMMA);
               hnum:=BuildConstExpression(false,false);
               add_reg_with_offset(actsehdirective,hreg,hnum,actsehdirective=ash_saveregp_x);
             end;
@@ -1423,15 +1423,15 @@ Unit racpugas;
           ash_savefregp_x:
             begin
               hreg:=actasmregister;
-              consume(AS_REGISTER);
+              Consume(AS_REGISTER);
               if (GetRegType(hreg)<>R_MMREGISTER) or (GetSubReg(hreg)<>R_SUBWHOLE) or (GetSupReg(hreg)<8) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[actsehdirective]);
-              consume(AS_COMMA);
+              Consume(AS_COMMA);
               hreg2:=actasmregister;
-              consume(AS_REGISTER);
+              Consume(AS_REGISTER);
               if (GetRegType(hreg2)<>R_MMREGISTER) or (GetSubReg(hreg2)<>R_SUBWHOLE) or (GetSupReg(hreg2)<>GetSupReg(hreg)+1) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[actsehdirective]);
-              consume(AS_COMMA);
+              Consume(AS_COMMA);
               hnum:=BuildConstExpression(false,false);
               add_reg_with_offset(actsehdirective,hreg,hnum,actsehdirective=ash_savefregp_x);
             end;

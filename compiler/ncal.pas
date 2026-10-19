@@ -4282,7 +4282,7 @@ implementation
                 ProcDefinition.RegisterDef;
 
                 if ProcDefinition.Is_Specialization and (ProcDefinition.typ=procdef) then
-                  maybe_add_pending_specialization(ProcDefinition,lCandidates.ParaAnonSyms);
+                  MaybeAddPendingSpecialization(ProcDefinition,lCandidates.ParaAnonSyms);
 
                 lCandidates.done;
               end; { end of procedure to call determination }

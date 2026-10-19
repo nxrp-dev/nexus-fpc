@@ -32,29 +32,29 @@ uses
   symtype,SymBase;
 
 const
-  inline_specialization_block_types = [bt_type,bt_var_type,bt_const_type,bt_body,bt_except];
+  cInlineSpecializationBlockTypes = [bt_type,bt_var_type,bt_const_type,bt_body,bt_except];
 
 type
   PSpecializationState = ^TSpecializationState;
   TSpecializationState = record
     OldSymTableStack      : TSymTableStack;
-    oldextendeddefs       : TFPHashObjectList;
-    oldgenericdummysyms   : TFPHashObjectList;
-    oldspecializestate    : PSpecializationState;
-    oldcurrent_genericdef : TDef;
-    oldoptoken            : TToken;
+    OldExtendedDefs       : TFPHashObjectList;
+    OldGenericDummySyms   : TFPHashObjectList;
+    OldSpecializeState    : PSpecializationState;
+    OldCurrentGenericDef : TDef;
+    OldOpToken            : TToken;
   end;
 
   TSpecializationContext=class
   public
-    paramlist : TFPObjectList;
-    poslist : TFPList;
-    prettyname : AnsiString;
-    specializename : AnsiString;
-    genname : AnsiString;
-    sym : TSym;
-    SymTable : TSymTable;
-    ForwardDef : TDef;
+    FParamList : TFPObjectList;
+    FPosList : TFPList;
+    FPrettyName : AnsiString;
+    FSpecializeName : AnsiString;
+    FGenName : AnsiString;
+    FSym : TSym;
+    FSymTable : TSymTable;
+    FForwardDef : TDef;
     constructor Create;
     destructor Destroy;override;
     function GetCopy:TSpecializationContext;
@@ -65,42 +65,42 @@ implementation
 
 constructor TSpecializationContext.Create;
 begin
-  paramlist:=TFPObjectList.Create(false);
-  poslist:=TFPList.Create;
+  FParamList:=TFPObjectList.Create(false);
+  FPosList:=TFPList.Create;
 end;
 
 destructor TSpecializationContext.Destroy;
 begin
-  paramlist.free;
-  paramlist := nil;
-  TFPList.FreeAndNilDisposing(poslist,TypeInfo(TFilePosInfo));
+  FParamList.free;
+  FParamList := nil;
+  TFPList.FreeAndNilDisposing(FPosList,TypeInfo(TFilePosInfo));
   inherited Destroy;
 end;
 
 function TSpecializationContext.GetCopy:TSpecializationContext;
 var
-  posinfo : PFilePosInfo;
-  i : LongInt;
+  lPosInfo : PFilePosInfo;
+  lIndex : LongInt;
 begin
-  result:=TSpecializationContext.Create;
-  result.paramlist.capacity:=paramlist.count;
-  for i:=0 to paramlist.count-1 do
+  Result:=TSpecializationContext.Create;
+  Result.FParamList.capacity:=FParamList.count;
+  for lIndex:=0 to FParamList.count-1 do
     begin
-      result.paramlist.add(paramlist[i]);
+      Result.FParamList.add(FParamList[lIndex]);
     end;
-  result.poslist.capacity:=poslist.count;
-  for i:=0 to poslist.count-1 do
+  Result.FPosList.capacity:=FPosList.count;
+  for lIndex:=0 to FPosList.count-1 do
     begin
-      new(posinfo);
-      posinfo^:=PFilePosInfo(poslist[i])^;
-      result.poslist.add(posinfo);
+      new(lPosInfo);
+      lPosInfo^:=PFilePosInfo(FPosList[lIndex])^;
+      Result.FPosList.add(lPosInfo);
     end;
-  result.prettyname:=prettyname;
-  result.specializename:=specializename;
-  result.genname:=genname;
-  result.sym:=sym;
-  result.SymTable:=SymTable;
-  result.ForwardDef:=ForwardDef;
+  Result.FPrettyName:=FPrettyName;
+  Result.FSpecializeName:=FSpecializeName;
+  Result.FGenName:=FGenName;
+  Result.FSym:=FSym;
+  Result.FSymTable:=FSymTable;
+  Result.FForwardDef:=FForwardDef;
 end;
 
 end.

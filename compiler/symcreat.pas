@@ -137,9 +137,9 @@ implementation
       OldBlockType: TBlockType;
     begin
       { would require saving of cstringpattern, patternw }
-      if (CurrentScanner.Token=_CSTRING) or
-         (CurrentScanner.Token=_CWCHAR) or
-         (CurrentScanner.Token=_CWSTRING) then
+      if (CurrentScanner.FToken=_CSTRING) or
+         (CurrentScanner.FToken=_CWCHAR) or
+         (CurrentScanner.FToken=_CWSTRING) then
         InternalError(2011032201);
       SState.OldScanner:=CurrentScanner;
       SState.OldFilePos:=CurrentFilePos;
@@ -149,7 +149,7 @@ implementation
         in the current one }
       OldBlockType:=Block_Type;
       SState.NewScanner:=TScannerFile.Create('_Macro_.'+TempName,True);
-      Set_Current_Scanner(SState.NewScanner);
+      SetCurrentScanner(SState.NewScanner);
       Block_Type:=OldBlockType;
       { required for e.g. FpcDeepCopy record method (uses "out" parameter; field
         names are escaped via &, so should not cause conflicts }
@@ -163,7 +163,7 @@ implementation
       if SState.Valid then
         begin
           SState.NewScanner.Free; // no nil needed
-          Set_Current_Scanner(SState.OldScanner);
+          SetCurrentScanner(SState.OldScanner);
           CurrentFilePos:=SState.OldFilePos;
           CurrentSettings.ModeSwitches:=SState.OldModeSwitches;
         end;
@@ -175,37 +175,37 @@ implementation
       OldParseOnly: Boolean;
     begin
       Message1(parser_d_internal_parser_string,Str);
-      OldParseOnly:=parse_only;
-      parse_only:=True;
+      OldParseOnly:=ParseOnly;
+      ParseOnly:=True;
       Result:=False;
       { in case multiple strings are injected, make sure to always close the
         previous macro inputfile to prevent memory leaks }
-      if Assigned(CurrentScanner.InputFile) and
-         not(CurrentScanner.InputFile.Closed) then
+      if Assigned(CurrentScanner.FInputFile) and
+         not(CurrentScanner.FInputFile.Closed) then
         CurrentScanner.CloseInputFile;
       { inject the string in the scanner }
       Str:=Str+'end;';
-      CurrentScanner.SubstituteMacro('meth_head_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.SubstituteMacro('meth_head_macro',@Str[1],Length(Str),CurrentScanner.FLineNumber,CurrentScanner.FInputFile.RefIndex,True);
       CurrentScanner.ReadToken(False);
       { and parse it... }
       case POType of
         potype_class_constructor:
-          PD:=class_constructor_head(AStruct);
+          PD:=ClassConstructorHead(AStruct);
         potype_class_destructor:
-          PD:=class_destructor_head(AStruct);
+          PD:=ClassDestructorHead(AStruct);
         potype_constructor:
-          PD:=constructor_head;
+          PD:=ConstructorHead;
         potype_destructor:
-          PD:=destructor_head;
+          PD:=DestructorHead;
         else if Assigned(AStruct) and
            (AStruct.Typ=RecordDef) then
-          PD:=parse_record_method_dec(AStruct,IsClassDef,False)
+          PD:=ParseRecordMethodDec(AStruct,IsClassDef,False)
         else
-          PD:=method_dec(AStruct,IsClassDef,False);
+          PD:=MethodDec(AStruct,IsClassDef,False);
       end;
       if Assigned(PD) then
         Result:=True;
-      parse_only:=OldParseOnly;
+      ParseOnly:=OldParseOnly;
       { remove the temporary macro input file again }
       CurrentScanner.CloseInputFile;
       CurrentScanner.NextFile;
@@ -232,8 +232,8 @@ implementation
                Message1(parser_d_internal_parser_string,TmpStr+Str);
              end;
         end;
-      OldParseOnly:=parse_only;
-      parse_only:=False;
+      OldParseOnly:=ParseOnly;
+      ParseOnly:=False;
       Result:=False;
       { "const" starts a new kind of block and hence makes the scanner return }
       Str:=Str+'const;';
@@ -245,7 +245,7 @@ implementation
       if IsClassDef then
         Include(Flags,rpf_classmethod);
       ResultProcDef:=Read_Proc(Flags,UseFWPD);
-      parse_only:=OldParseOnly;
+      ParseOnly:=OldParseOnly;
       { remove the temporary macro input file again }
       CurrentScanner.CloseInputFile;
       CurrentScanner.NextFile;
@@ -258,13 +258,13 @@ implementation
     var
       TmpProc: TProcDef;
     begin
-      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.InputFile.RefIndex, CurrentScanner.line_no, IsClassDef, TmpProc);
+      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.FInputFile.RefIndex, CurrentScanner.FLineNumber, IsClassDef, TmpProc);
     end;
 
 
   function Str_Parse_Method_Impl(const Str: AnsiString; UseFWPD: TProcDef; IsClassDef: Boolean; out ResultProcDef: TProcDef):Boolean;
     begin
-      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.InputFile.RefIndex, CurrentScanner.line_no, IsClassDef, ResultProcDef);
+      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.FInputFile.RefIndex, CurrentScanner.FLineNumber, IsClassDef, ResultProcDef);
     end;
 
 
@@ -277,14 +277,14 @@ implementation
       { a string that will be interpreted as the start of a new section ->
         typed constant parsing will stop }
       Str:=Str+'type ';
-      OldParseOnly:=parse_only;
+      OldParseOnly:=ParseOnly;
       OldBlockType:=Block_Type;
-      parse_only:=True;
+      ParseOnly:=True;
       Block_Type:=bt_const;
-      CurrentScanner.SubstituteMacro('typed_const_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.SubstituteMacro('typed_const_macro',@Str[1],Length(Str),CurrentScanner.FLineNumber,CurrentScanner.FInputFile.RefIndex,True);
       CurrentScanner.ReadToken(False);
-      read_typed_const(List,SSym,SSym.Owner.SymTableType in [RecordSymTable,ObjectSymTable]);
-      parse_only:=OldParseOnly;
+      ReadTypedConst(List,SSym,SSym.Owner.SymTableType in [RecordSymTable,ObjectSymTable]);
+      ParseOnly:=OldParseOnly;
       Block_Type:=OldBlockType;
       { remove the temporary macro input file again }
       CurrentScanner.CloseInputFile;
@@ -303,15 +303,15 @@ implementation
      begin
       Result:=nil;
       Message1(parser_d_internal_parser_string,Str);
-      OldParseOnly:=parse_only;
-      parse_only:=True;
+      OldParseOnly:=ParseOnly;
+      ParseOnly:=True;
       { "const" starts a new kind of block and hence makes the scanner return }
       Str:=Str+'const;';
       Block_Type:=bt_type;
       { inject the string in the scanner }
-      CurrentScanner.SubstituteMacro('hidden_interface_class_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.SubstituteMacro('hidden_interface_class_macro',@Str[1],Length(Str),CurrentScanner.FLineNumber,CurrentScanner.FInputFile.RefIndex,True);
       CurrentScanner.ReadToken(False);
-      type_dec(B);
+      TypeDec(B);
       // In the interface part, the object def is not necessarily the last one, the methods also generate defs.
       I:=CurrentModule.DefList.Count-1;
       While (Result=nil) and (I>=0) do
@@ -324,7 +324,7 @@ implementation
         end;
       if Result=nil then
         InternalError(2024050401);
-      parse_only:=OldParseOnly;
+      ParseOnly:=OldParseOnly;
       { remove the temporary macro input file again }
       CurrentScanner.CloseInputFile;
       CurrentScanner.NextFile;
@@ -341,7 +341,7 @@ implementation
       if not Assigned(Def.Owner.DefOwner) and
          Assigned(Def.Owner.RealName) and
          (Def.Owner.ModuleID<>0) then
-        Result:=internal_macro_escape_unit_namespace_name+Def.Owner.RealName^+'.';
+        Result:=cInternalMacroEscapeUnitNamespaceName+Def.Owner.RealName^+'.';
     end;
 
 
@@ -402,7 +402,7 @@ implementation
             begin
               FSym:=TFieldVarSym(Sym);
               if FSym.VarDef.NeedsInitTable then
-                Str:=Str+(internal_macro_escape_unit_namespace_name+'System.Initialize(&')+FSym.RealName+');';
+                Str:=Str+(cInternalMacroEscapeUnitNamespaceName+'System.Initialize(&')+FSym.RealName+');';
             end;
         end;
       Str:=Str+'end;';
@@ -1006,23 +1006,23 @@ implementation
 
    begin
     Message1(parser_d_internal_parser_string,Str);
-    OldParseOnly:=parse_only;
-    parse_only:=False;
+    OldParseOnly:=ParseOnly;
+    ParseOnly:=False;
     { "const" starts a new kind of block and hence makes the scanner return }
     Str:=Str+'const;';
     Block_Type:=bt_none;
     { inject the string in the scanner }
-    OldAllow:=CurrentScanner.AllowGenericID;
-    CurrentScanner.AllowGenericID:=AllowGenericID;
-    CurrentScanner.SubstituteMacro('hidden_interface_method',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+    OldAllow:=CurrentScanner.FAllowGenericID;
+    CurrentScanner.FAllowGenericID:=AllowGenericID;
+    CurrentScanner.SubstituteMacro('hidden_interface_method',@Str[1],Length(Str),CurrentScanner.FLineNumber,CurrentScanner.FInputFile.RefIndex,True);
     CurrentScanner.ReadToken(False);
     Result:=Read_Proc([],Nil);
-    parse_only:=OldParseOnly;
+    ParseOnly:=OldParseOnly;
     { remove the temporary macro input file again }
     CurrentScanner.CloseInputFile;
     CurrentScanner.NextFile;
     CurrentScanner.TempOpenInputFile;
-    CurrentScanner.AllowGenericID:=OldAllow;
+    CurrentScanner.FAllowGenericID:=OldAllow;
    end;
 
 
@@ -1179,7 +1179,7 @@ implementation
       Exit;
     IsDelphiMode:=(m_delphi in CurrentSettings.ModeSwitches);
     Replace_Scanner('hiddenclass_impl',SState);
-    SState.NewScanner.AllowGenericID:=True;
+    SState.NewScanner.FAllowGenericID:=True;
     if IsDelphiMode then
       begin
       OldSettings:=CurrentSettings.ModeSwitches;

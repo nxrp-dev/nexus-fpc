@@ -431,10 +431,10 @@ begin
                 end;
   '+','-','~' : Begin
                   { workaround for -2147483648 }
-                  if (expr[I]='-') and (expr[i+1] in ['0'..'9']) then
+                  if (Expr[I]='-') and (Expr[i+1] in ['0'..'9']) then
                    begin
                      token:='-';
-                     expr[i]:='+';
+                     Expr[i]:='+';
                    end;
                   { if start of expression then surely a prefix }
                   { or if previous char was also an operator    }
@@ -486,12 +486,12 @@ end;
 
 Function CalculateExpression(const expression: string): TCGInt;
 var
-  expr: TExprParse;
+  Expr: TExprParse;
 Begin
-  expr:=TExprParse.Create;
-  CalculateExpression:=expr.Evaluate(expression);
-  expr.Free;
-  expr := nil;
+  Expr:=TExprParse.Create;
+  CalculateExpression:=Expr.Evaluate(expression);
+  Expr.Free;
+  Expr := nil;
 end;
 
 

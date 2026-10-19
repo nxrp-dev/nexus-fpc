@@ -27,10 +27,10 @@ interface
 
 uses FModule;
 
-    function compile_module(module : TModule) : boolean;
-    procedure parsing_done(module : TModule);
-    procedure initparser;
-    procedure doneparser;
+    function CompileModule(AModule : TModule) : Boolean;
+    procedure ParsingDone(AModule : TModule);
+    procedure InitParser;
+    procedure DoneParser;
 
 implementation
 
@@ -47,18 +47,18 @@ implementation
       pbase,psystem,pmodules,psub,ncgrtti,
       CPUInfo,ProcInfo;
 
-    procedure parsing_done(module: TModule);
+    procedure ParsingDone(AModule: TModule);
 
     var
-       hp,hp2 :  TModule;
+       lModule,lNextModule :  TModule;
 
     begin
-       if (module.IsInitial) and
+       if (AModule.IsInitial) and
           (status.ErrorCount=0) then
          { Write Browser Collections }
          Do_ExtractSymbolInfo;
 
-       module.End_Of_Parsing;
+       AModule.End_Of_Parsing;
 
        { Restore all locally modified warning messages }
        RestoreLocalVerbosity(CurrentSettings.PMessage);
@@ -66,7 +66,7 @@ implementation
        ExceptBlockCounter:=0;
 
        { Shut down things when the last file is compiled successful }
-       if (module.IsInitial) and (module.state=ms_compiled) and
+       if (AModule.IsInitial) and (AModule.state=ms_compiled) and
            (status.ErrorCount=0) then
          begin
            Parser_Current_File:='';
@@ -80,19 +80,19 @@ implementation
 
      { free now what we did not free earlier in
        proc_program PM }
-     if (module.IsInitial) and (module.state=ms_compiled) and NeedSymbolInfo then
+     if (AModule.IsInitial) and (AModule.state=ms_compiled) and NeedSymbolInfo then
        begin
-         hp:=TModule(Loaded_Units.first);
-         while Assigned(hp) do
+         lModule:=TModule(Loaded_Units.first);
+         while Assigned(lModule) do
           begin
-            hp2:=TModule(hp.next);
-            if (hp<>module) then
+            lNextModule:=TModule(lModule.next);
+            if (lModule<>AModule) then
               begin
-                Loaded_Units.remove(hp);
-                hp.free;
-                hp := nil;
+                Loaded_Units.remove(lModule);
+                lModule.free;
+                lModule := nil;
               end;
-            hp:=hp2;
+            lModule:=lNextModule;
           end;
          { free also unneeded units we didn't free before }
          Unloaded_Units.Clear;
@@ -111,7 +111,7 @@ implementation
 
     end;
 
-    procedure initparser;
+    procedure InitParser;
       begin
          { Current compiled module/proc }
          SetCurrentModule(nil);
@@ -137,12 +137,12 @@ implementation
          InitScannerDirectives;
 
          { scanner }
-         Set_Current_Scanner(nil);
+         SetCurrentScanner(nil);
          SwitchesStateStackPos:=0;
 
          { register all nodes and tais }
-         registernodes;
-         registertais;
+         RegisterNodes;
+         RegisterTAIs;
 
          { memory sizes }
          if StackSize=0 then
@@ -170,7 +170,7 @@ implementation
       end;
 
 
-    procedure doneparser;
+    procedure DoneParser;
       begin
          { Reset current compiling info, so destroy routines can't
            reference the data that might already be destroyed }
@@ -205,7 +205,7 @@ implementation
          if Assigned(CurrentScanner) then
           begin
             CurrentScanner.free; // no nil needed
-            Set_Current_Scanner(nil);
+            SetCurrentScanner(nil);
           end;
 
          { close scanner }
@@ -230,11 +230,11 @@ implementation
                              Compile a source file
 *****************************************************************************}
 
-    function compile_module(module : TModule) : boolean;
+    function CompileModule(AModule : TModule) : Boolean;
 
       var
-         finished : boolean;
-         sc : TScannerFile;
+         lFinished : Boolean;
+         lScanner : TScannerFile;
 
        begin
          Result:=True;
@@ -244,20 +244,20 @@ implementation
            InternalError(200811121);
          if Assigned(CurrentStructDef) then
            InternalError(200811122);
-         inc(module.CompileCount);
-         Parser_Current_File:=module.MainSource;
+         inc(AModule.CompileCount);
+         Parser_Current_File:=AModule.MainSource;
 
        { reset parser, a previous fatal error could have left these variables in an unreliable state, this is
          important for the IDE }
-         afterassignment:=false;
-         in_args:=false;
-         named_args_allowed:=false;
-         got_addrn:=false;
-         getprocvardef:=nil;
-         getfuncrefdef:=nil;
+         AfterAssignment:=false;
+         InArgs:=false;
+         NamedArgsAllowed:=false;
+         GotAddrN:=false;
+         GetProcVarDef:=nil;
+         GetFuncRefDef:=nil;
 
        { show info }
-         Message1(parser_i_compiling,module.MainSource);
+         Message1(parser_i_compiling,AModule.MainSource);
 
        { reset symtable }
          SymTableStack:=TDefAwareSymTableStack.Create;
@@ -272,46 +272,46 @@ implementation
          { Load current state from the init values }
          CurrentSettings:=InitSettings;
 
-         SetCurrentModule(module);
-         if not (module.state in [ms_compile]) then
+         SetCurrentModule(AModule);
+         if not (AModule.state in [ms_compile]) then
            InternalError(200212281);
 
          { load current asmdata from current_module }
-         CurrentAsmData:=TAsmData(module.AsmData);
+         CurrentAsmData:=TAsmData(AModule.AsmData);
 
          { startup scanner and load the first file }
-         sc:=TScannerFile.Create(module.MainSource);
-         sc.firstfile;
-         module.Scanner:=sc;
-         module.MainScanner:=sc;
-         Set_Current_Scanner(sc);
+         lScanner:=TScannerFile.Create(AModule.MainSource);
+         lScanner.FirstFile;
+         AModule.Scanner:=lScanner;
+         AModule.MainScanner:=lScanner;
+         SetCurrentScanner(lScanner);
 
          { init macros before anything in the file is parsed.}
-         module.LocalMacroSymTable:= TMacroSymTable.Create(false);
+         AModule.LocalMacroSymTable:= TMacroSymTable.Create(false);
          MacroSymTableStack.push(InitialMacroSymTable);
-         MacroSymTableStack.push(module.LocalMacroSymTable);
+         MacroSymTableStack.push(AModule.LocalMacroSymTable);
 
          { read the first token }
-         CurrentScanner.readtoken(false);
+         CurrentScanner.ReadToken(false);
 
          { this is set to false if a unit needs to wait for other units }
-         finished:=true;
+         lFinished:=true;
 
          { If the compile level > 1 we get a nice "unit expected" error
            message if we are trying to use a program as unit.}
          try
-           if (CurrentScanner.token=_UNIT) or (not module.IsInitial) then
+           if (CurrentScanner.FToken=_UNIT) or (not AModule.IsInitial) then
              begin
-               module.IsUnit:=true;
-               finished:=proc_unit(module);
+               AModule.IsUnit:=true;
+               lFinished:=ProcUnit(AModule);
              end
-           else if (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_PACKAGE) then
+           else if (CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_PACKAGE) then
              begin
-               module.IsPackage:=true;
-               finished:=proc_package(module);
+               AModule.IsPackage:=true;
+               lFinished:=ProcPackage(AModule);
              end
            else
-             finished:=proc_program(module,CurrentScanner.token=_LIBRARY);
+             lFinished:=ProcProgram(AModule,CurrentScanner.FToken=_LIBRARY);
          except
            on ECompilerAbort do
              raise;
@@ -328,7 +328,7 @@ implementation
                raise;
              end;
          end;
-         Result:=Finished;
+         Result:=lFinished;
     end;
 
 end.

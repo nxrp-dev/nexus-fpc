@@ -30,16 +30,16 @@ interface
       GlobType,symconst,symtype,symdef;
 
     { parses a object declaration }
-    function object_dec(ObjectType:TObjectTyp;const n:TIDString;objsym:TSym;GenericDef:TStoredDef;genericlist:TFPHashObjectList;fd : TObjectDef;HelperType:THelperType) : TObjectDef;
+    function ObjectDec(AObjectType:TObjectTyp;const AName:TIDString;AObjSym:TSym;AGenericDef:TStoredDef;AGenericList:TFPHashObjectList;AForwardDef : TObjectDef;AHelperType:THelperType) : TObjectDef;
 
     { parses a (class) method declaration }
-    function method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
+    function MethodDec(AStruct: TAbstractRecordDef; AIsClassDef: Boolean;AHadGeneric:Boolean): TProcDef;
 
-    function class_constructor_head(astruct: TAbstractRecordDef):TProcDef;
-    function class_destructor_head(astruct: TAbstractRecordDef):TProcDef;
-    function constructor_head:TProcDef;
-    function destructor_head:TProcDef;
-    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: TRTTIAttributeList);
+    function ClassConstructorHead(AStruct: TAbstractRecordDef):TProcDef;
+    function ClassDestructorHead(AStruct: TAbstractRecordDef):TProcDef;
+    function ConstructorHead:TProcDef;
+    function DestructorHead:TProcDef;
+    procedure StructPropertyDec(AIsClassProperty:Boolean;var ARTTIAttrsDef: TRTTIAttributeList);
 
 implementation
 
@@ -59,19 +59,19 @@ implementation
       CurrentProcInfo = 'error';
 
     var
-      current_objectdef : TObjectDef absolute CurrentStructDef;
+      CurrentObjectDef : TObjectDef absolute CurrentStructDef;
 
 
-    procedure constr_destr_finish_head(pd: TProcDef; const astruct: TAbstractRecordDef);
+    procedure ConstrDestrFinishHead(AProcDef: TProcDef; const AStruct: TAbstractRecordDef);
       begin
-        case astruct.typ of
+        case AStruct.typ of
           recorddef:
             begin
-              parse_record_proc_directives(pd);
+              ParseRecordProcDirectives(AProcDef);
             end;
           objectdef:
             begin
-              parse_object_proc_directives(pd);
+              ParseObjectProcDirectives(AProcDef);
             end
           else
             InternalError(2011040502);
@@ -81,141 +81,141 @@ implementation
         // look at record_dec to see where calling conventions are applied (issue #0021044).
         // The same goes for objects/classes due to the calling convention that may only be set
         // later (mantis #35233).
-        Handle_Calling_Convention(pd,cHCCDefaultActionsIntfStruct);
+        Handle_Calling_Convention(AProcDef,cHCCDefaultActionsIntfStruct);
 
         { add definition to procsym }
-        Proc_Add_Definition(pd);
+        Proc_Add_Definition(AProcDef);
 
         { add procdef options to objectdef options }
-        if (po_virtualmethod in pd.ProcOptions) then
-          include(astruct.ObjectOptions,oo_has_virtual);
+        if (po_virtualmethod in AProcDef.ProcOptions) then
+          include(AStruct.ObjectOptions,oo_has_virtual);
 
-        maybe_parse_hint_directives(pd);
+        MaybeParseHintDirectives(AProcDef);
       end;
 
 
-    function class_constructor_head(astruct: TAbstractRecordDef):TProcDef;
+    function ClassConstructorHead(AStruct: TAbstractRecordDef):TProcDef;
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        result:=nil;
-        consume(_CONSTRUCTOR);
+        Result:=nil;
+        Consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
-        parse_proc_head(CurrentStructDef,potype_class_constructor,[],nil,nil,pd);
-        if not Assigned(pd) then
+        ParseProcHead(CurrentStructDef,potype_class_constructor,[],nil,nil,lProcDef);
+        if not Assigned(lProcDef) then
           begin
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
             exit;
           end;
-        pd.CalcParas;
-        if (pd.MaxParaCount>0) then
+        lProcDef.CalcParas;
+        if (lProcDef.MaxParaCount>0) then
           Message(parser_e_no_paras_for_class_constructor);
-        consume(_SEMICOLON);
-        include(astruct.ObjectOptions,oo_has_class_constructor);
+        Consume(_SEMICOLON);
+        include(AStruct.ObjectOptions,oo_has_class_constructor);
         include(CurrentModule.ModuleFlags,mf_classinits);
         { no return value }
-        pd.ReturnDef:=VoidType;
-        constr_destr_finish_head(pd,astruct);
-        result:=pd;
+        lProcDef.ReturnDef:=VoidType;
+        ConstrDestrFinishHead(lProcDef,AStruct);
+        Result:=lProcDef;
       end;
 
-    function constructor_head:TProcDef;
+    function ConstructorHead:TProcDef;
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        result:=nil;
-        consume(_CONSTRUCTOR);
+        Result:=nil;
+        Consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
-        parse_proc_head(CurrentStructDef,potype_constructor,[],nil,nil,pd);
-        if not Assigned(pd) then
+        ParseProcHead(CurrentStructDef,potype_constructor,[],nil,nil,lProcDef);
+        if not Assigned(lProcDef) then
           begin
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
             exit;
           end;
-        consume(_SEMICOLON);
+        Consume(_SEMICOLON);
         include(CurrentStructDef.ObjectOptions,oo_has_constructor);
         { Set return type, class and record constructors return the
           created instance, helper types return the extended type,
           object constructors return boolean }
-        if Is_Class(pd.struct) or
-           Is_Record(pd.struct) then
-          pd.ReturnDef:=pd.struct
+        if Is_Class(lProcDef.struct) or
+           Is_Record(lProcDef.struct) then
+          lProcDef.ReturnDef:=lProcDef.struct
         else
-          if Is_ObjectPascal_Helper(pd.struct) then
-            pd.ReturnDef:=TObjectDef(pd.struct).ExtendedDef
+          if Is_ObjectPascal_Helper(lProcDef.struct) then
+            lProcDef.ReturnDef:=TObjectDef(lProcDef.struct).ExtendedDef
           else
 {$ifdef CPU64bitaddr}
-            pd.ReturnDef:=Bool64Type;
+            lProcDef.ReturnDef:=Bool64Type;
 {$else CPU64bitaddr}
-            pd.ReturnDef:=Bool32Type;
+            lProcDef.ReturnDef:=Bool32Type;
 {$endif CPU64bitaddr}
-        constr_destr_finish_head(pd,pd.struct);
-        result:=pd;
+        ConstrDestrFinishHead(lProcDef,lProcDef.struct);
+        Result:=lProcDef;
       end;
 
 
-    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: TRTTIAttributeList);
+    procedure StructPropertyDec(AIsClassProperty:Boolean;var ARTTIAttrsDef: TRTTIAttributeList);
       var
-        p : TPropertySym;
-        _deprecatedmsg: PShortString;
-        _symoptions: TSymOptions;
+        lProperty : TPropertySym;
+        lDeprecatedMsg: PShortString;
+        lSymOptions: TSymOptions;
       begin
         { check for a class, record or helper }
         if not((Is_Class_Or_Interface_Or_DispInterface(CurrentStructDef) or Is_Record(CurrentStructDef) or
                 Is_ObjectPascal_Helper(CurrentStructDef)) or
                Is_Object(CurrentStructDef)) then
           Message(parser_e_syntax_error);
-        consume(_PROPERTY);
-        p:=read_property_dec(is_classproperty,CurrentStructDef);
-        consume(_SEMICOLON);
-        if try_to_consume(_DEFAULT) then
+        Consume(_PROPERTY);
+        lProperty:=ReadPropertyDec(AIsClassProperty,CurrentStructDef);
+        Consume(_SEMICOLON);
+        if TryToConsume(_DEFAULT) then
           begin
             if oo_has_default_property in CurrentStructDef.ObjectOptions then
               message(parser_e_only_one_default_property);
             include(CurrentStructDef.ObjectOptions,oo_has_default_property);
-            include(p.PropOptions,ppo_defaultproperty);
-            if not(ppo_hasparameters in p.PropOptions) then
+            include(lProperty.PropOptions,ppo_defaultproperty);
+            if not(ppo_hasparameters in lProperty.PropOptions) then
               message(parser_e_property_need_paras);
-            if (CurrentScanner.token=_COLON) then
+            if (CurrentScanner.FToken=_COLON) then
               begin
                 Message(parser_e_field_not_allowed_here);
-                consume_all_until(_SEMICOLON);
+                ConsumeAllUntil(_SEMICOLON);
               end;
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
           end;
         { parse possible enumerator modifier }
-        if try_to_consume(_ENUMERATOR) then
+        if TryToConsume(_ENUMERATOR) then
           begin
-            if (CurrentScanner.token = _ID) then
+            if (CurrentScanner.FToken = _ID) then
             begin
-              if CurrentScanner.pattern='CURRENT' then
+              if CurrentScanner.FPattern='CURRENT' then
               begin
                 if oo_has_enumerator_current in CurrentStructDef.ObjectOptions then
                   message(parser_e_only_one_enumerator_current);
-                if not p.PropAccessList[palt_read].empty then
+                if not lProperty.PropAccessList[palt_read].empty then
                 begin
                   include(CurrentStructDef.ObjectOptions,oo_has_enumerator_current);
-                  include(p.PropOptions,ppo_enumerator_current);
+                  include(lProperty.PropOptions,ppo_enumerator_current);
                 end
                 else
                   Message(parser_e_enumerator_current_is_not_valid) // property has no reader
               end
               else
-                Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.pattern);
-              consume(CurrentScanner.token);
+                Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.FPattern);
+              Consume(CurrentScanner.FToken);
             end
             else
               Message(parser_e_enumerator_identifier_required);
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
           end;
         { in case of a previous error, p might not be assigned }
-        if Assigned(p) then
+        if Assigned(lProperty) then
           begin
-            TRTTIAttributeList.bind(rtti_attrs_def,p.RTTIAttributeList);
+            TRTTIAttributeList.bind(ARTTIAttrsDef,lProperty.RTTIAttributeList);
 
             { hint directives, these can be separated by semicolons here,
               that needs to be handled here with a loop (PFV) }
-            while try_consume_hintdirective(p.SymOptions,p.DeprecatedMsg) do
+            while TryConsumeHintDirective(lProperty.SymOptions,lProperty.DeprecatedMsg) do
               Consume(_SEMICOLON);
           end
         else
@@ -224,263 +224,263 @@ implementation
 
             { hint directives, these can be separated by semicolons here,
               that needs to be handled here with a loop (PFV) }
-            while try_consume_hintdirective(_symoptions,_deprecatedmsg) do
+            while TryConsumeHintDirective(lSymOptions,lDeprecatedMsg) do
               Consume(_SEMICOLON);
           end;
       end;
 
 
-    function class_destructor_head(astruct: TAbstractRecordDef):TProcDef;
+    function ClassDestructorHead(AStruct: TAbstractRecordDef):TProcDef;
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        result:=nil;
-        consume(_DESTRUCTOR);
-        parse_proc_head(CurrentStructDef,potype_class_destructor,[],nil,nil,pd);
-        if not Assigned(pd) then
+        Result:=nil;
+        Consume(_DESTRUCTOR);
+        ParseProcHead(CurrentStructDef,potype_class_destructor,[],nil,nil,lProcDef);
+        if not Assigned(lProcDef) then
           begin
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
             exit;
           end;
-        pd.CalcParas;
-        if (pd.MaxParaCount>0) then
+        lProcDef.CalcParas;
+        if (lProcDef.MaxParaCount>0) then
           Message(parser_e_no_paras_for_class_destructor);
-        consume(_SEMICOLON);
-        include(astruct.ObjectOptions,oo_has_class_destructor);
+        Consume(_SEMICOLON);
+        include(AStruct.ObjectOptions,oo_has_class_destructor);
         include(CurrentModule.ModuleFlags,mf_classinits);
         { no return value }
-        pd.ReturnDef:=VoidType;
-        constr_destr_finish_head(pd,astruct);
-        result:=pd;
+        lProcDef.ReturnDef:=VoidType;
+        ConstrDestrFinishHead(lProcDef,AStruct);
+        Result:=lProcDef;
       end;
 
-    function destructor_head:TProcDef;
+    function DestructorHead:TProcDef;
       var
-        pd : TProcDef;
+        lProcDef : TProcDef;
       begin
-        result:=nil;
-        consume(_DESTRUCTOR);
-        parse_proc_head(CurrentStructDef,potype_destructor,[],nil,nil,pd);
-        if not Assigned(pd) then
+        Result:=nil;
+        Consume(_DESTRUCTOR);
+        ParseProcHead(CurrentStructDef,potype_destructor,[],nil,nil,lProcDef);
+        if not Assigned(lProcDef) then
           begin
-            consume(_SEMICOLON);
+            Consume(_SEMICOLON);
             exit;
           end;
-        pd.CalcParas;
-        if not(pd.MaxParaCount=0) and
+        lProcDef.CalcParas;
+        if not(lProcDef.MaxParaCount=0) and
            (m_fpc in CurrentSettings.ModeSwitches) then
           Message(parser_e_no_paras_for_destructor);
-        consume(_SEMICOLON);
+        Consume(_SEMICOLON);
         include(CurrentStructDef.ObjectOptions,oo_has_destructor);
         include(CurrentStructDef.ObjectOptions,oo_has_new_destructor);
         { no return value }
-        pd.ReturnDef:=VoidType;
-        constr_destr_finish_head(pd,pd.struct);
-        result:=pd;
+        lProcDef.ReturnDef:=VoidType;
+        ConstrDestrFinishHead(lProcDef,lProcDef.struct);
+        Result:=lProcDef;
       end;
 
 
-    procedure setinterfacemethodoptions;
+    procedure SetInterfaceMethodOptions;
       var
-        i   : LongInt;
-        def : TDef;
+        lIndex   : LongInt;
+        lDef : TDef;
       begin
         include(CurrentStructDef.ObjectOptions,oo_has_virtual);
-        for i:=0 to CurrentStructDef.SymTable.DefList.count-1 do
+        for lIndex:=0 to CurrentStructDef.SymTable.DefList.count-1 do
           begin
-            def:=TDef(CurrentStructDef.SymTable.DefList[i]);
-            if Assigned(def) and
-               (def.typ=procdef) then
+            lDef:=TDef(CurrentStructDef.SymTable.DefList[lIndex]);
+            if Assigned(lDef) and
+               (lDef.typ=procdef) then
               begin
-                include(TProcDef(def).ProcOptions,po_virtualmethod);
-                TProcDef(def).ForwardDef:=false;
+                include(TProcDef(lDef).ProcOptions,po_virtualmethod);
+                TProcDef(lDef).ForwardDef:=false;
               end;
           end;
       end;
 
 
-    procedure setobjcclassmethodoptions;
+    procedure SetObjCClassMethodOptions;
       var
-        i   : LongInt;
-        def : TDef;
+        lIndex   : LongInt;
+        lDef : TDef;
       begin
-        for i:=0 to CurrentStructDef.SymTable.DefList.count-1 do
+        for lIndex:=0 to CurrentStructDef.SymTable.DefList.count-1 do
           begin
-            def:=TDef(CurrentStructDef.SymTable.DefList[i]);
-            if Assigned(def) and
-               (def.typ=procdef) then
+            lDef:=TDef(CurrentStructDef.SymTable.DefList[lIndex]);
+            if Assigned(lDef) and
+               (lDef.typ=procdef) then
               begin
-                include(TProcDef(def).ProcOptions,po_virtualmethod);
+                include(TProcDef(lDef).ProcOptions,po_virtualmethod);
               end;
           end;
       end;
 
 
-    procedure handleImplementedInterface(intfdef : TObjectDef);
+    procedure HandleImplementedInterface(AInterfaceDef : TObjectDef);
       begin
-        if not Is_Interface(intfdef) then
+        if not Is_Interface(AInterfaceDef) then
           begin
-             Message1(type_e_interface_type_expected,intfdef.TypeName);
+             Message1(type_e_interface_type_expected,AInterfaceDef.TypeName);
              exit;
           end;
-        if ([oo_is_forward,oo_is_formal] * intfdef.ObjectOptions <> []) then
+        if ([oo_is_forward,oo_is_formal] * AInterfaceDef.ObjectOptions <> []) then
           begin
-             Message1(parser_e_forward_intf_declaration_must_be_resolved,intfdef.ObjRealName^);
+             Message1(parser_e_forward_intf_declaration_must_be_resolved,AInterfaceDef.ObjRealName^);
              exit;
           end;
-        if Find_Implemented_Interface(current_objectdef,intfdef)<>nil then
-          Message1(sym_e_duplicate_id,intfdef.ObjName^)
+        if Find_Implemented_Interface(CurrentObjectDef,AInterfaceDef)<>nil then
+          Message1(sym_e_duplicate_id,AInterfaceDef.ObjName^)
         else
-          current_objectdef.Register_Implemented_Interface(intfdef,true);
+          CurrentObjectDef.Register_Implemented_Interface(AInterfaceDef,true);
       end;
 
 
-    procedure handleImplementedProtocol(intfdef : TObjectDef);
+    procedure HandleImplementedProtocol(AProtocolDef : TObjectDef);
       begin
-        intfdef:=Find_Real_Class_Definition(intfdef,false);
-        case current_objectdef.ObjectType of
+        AProtocolDef:=Find_Real_Class_Definition(AProtocolDef,false);
+        case CurrentObjectDef.ObjectType of
           odt_objcclass,
           odt_objccategory,
           odt_objcprotocol:
-            if not Is_ObjCProtocol(intfdef) then
+            if not Is_ObjCProtocol(AProtocolDef) then
               begin
-                 Message1(type_e_protocol_type_expected,intfdef.TypeName);
+                 Message1(type_e_protocol_type_expected,AProtocolDef.TypeName);
                  exit;
               end;
           else
             InternalError(2011010807);
         end;
-        if ([oo_is_forward,oo_is_formal] * intfdef.ObjectOptions <> []) then
+        if ([oo_is_forward,oo_is_formal] * AProtocolDef.ObjectOptions <> []) then
           begin
-             Message1(parser_e_forward_intf_declaration_must_be_resolved,intfdef.ObjRealName^);
+             Message1(parser_e_forward_intf_declaration_must_be_resolved,AProtocolDef.ObjRealName^);
              exit;
           end;
-        if Find_Implemented_Interface(current_objectdef,intfdef)<>nil then
-          Message1(sym_e_duplicate_id,intfdef.ObjName^)
+        if Find_Implemented_Interface(CurrentObjectDef,AProtocolDef)<>nil then
+          Message1(sym_e_duplicate_id,AProtocolDef.ObjName^)
         else
-          current_objectdef.Register_Implemented_Interface(intfdef,false);
+          CurrentObjectDef.Register_Implemented_Interface(AProtocolDef,false);
       end;
 
 
-    procedure readImplementedInterfacesAndProtocols(intf: boolean);
+    procedure ReadImplementedInterfacesAndProtocols(AIsInterface: Boolean);
       var
-        hdef : TDef;
+        lDef : TDef;
       begin
-        while try_to_consume(_COMMA) do
+        while TryToConsume(_COMMA) do
           begin
              { use single_type instead of id_type for specialize support }
-             single_type(hdef,[stoAllowSpecialization,stoParseClassParent]);
-             if (hdef.typ<>objectdef) then
+             SingleType(lDef,[stoAllowSpecialization,stoParseClassParent]);
+             if (lDef.typ<>objectdef) then
                begin
-                  if intf then
-                    Message1(type_e_interface_type_expected,hdef.TypeName)
+                  if AIsInterface then
+                    Message1(type_e_interface_type_expected,lDef.TypeName)
                   else
-                    Message1(type_e_protocol_type_expected,hdef.TypeName);
+                    Message1(type_e_protocol_type_expected,lDef.TypeName);
                   continue;
                end;
-             if intf then
-               handleImplementedInterface(TObjectDef(hdef))
+             if AIsInterface then
+               HandleImplementedInterface(TObjectDef(lDef))
              else
-               handleImplementedProtocol(TObjectDef(hdef));
+               HandleImplementedProtocol(TObjectDef(lDef));
           end;
       end;
 
 
-    procedure readinterfaceiid;
+    procedure ReadInterfaceIID;
       var
-        p : TNode;
-        valid : boolean;
+        lNode : TNode;
+        lValid : Boolean;
       begin
-        p:=comp_expr([ef_accept_equal]);
-        if p.nodetype=stringconstn then
+        lNode:=CompExpr([efAcceptEqual]);
+        if lNode.nodetype=stringconstn then
           begin
-            StringDispose(current_objectdef.IIDStr);
-            current_objectdef.IIDStr:=StringDup(TStringConstNode(p).AsRawByteString);
-            valid:=String2GUID(current_objectdef.IIDStr^,current_objectdef.IIDGUID^);
-            if (current_objectdef.ObjectType in [odt_interfacecom,odt_dispinterface]) and
-               not valid then
+            StringDispose(CurrentObjectDef.IIDStr);
+            CurrentObjectDef.IIDStr:=StringDup(TStringConstNode(lNode).AsRawByteString);
+            lValid:=String2GUID(CurrentObjectDef.IIDStr^,CurrentObjectDef.IIDGUID^);
+            if (CurrentObjectDef.ObjectType in [odt_interfacecom,odt_dispinterface]) and
+               not lValid then
               Message(parser_e_improper_guid_syntax);
             include(CurrentStructDef.ObjectOptions,oo_has_valid_guid);
           end
         else
           Message(parser_e_illegal_expression);
-        p.free;
-        p := nil;
+        lNode.free;
+        lNode := nil;
       end;
 
-    procedure get_cpp_class_external_status(od: TObjectDef);
+    procedure GetCPPClassExternalStatus(AObjectDef: TObjectDef);
       var
-        hs: string;
+        lLibraryName: String;
       begin
         { C++ classes can be external -> all methods inside are external
          (defined at the class level instead of per method, so that you cannot
          define some methods as external and some not)
         }
-        if try_to_consume(_EXTERNAL) then
+        if TryToConsume(_EXTERNAL) then
           begin
-            hs:='';
-            if CurrentScanner.token in [_CSTRING,_CWSTRING,_CCHAR,_CWCHAR] then
+            lLibraryName:='';
+            if CurrentScanner.FToken in [_CSTRING,_CWSTRING,_CCHAR,_CWCHAR] then
               begin
                 { Always add library prefix and suffix to create an uniform name }
-                hs:=get_stringconst;
-                if ExtractFileExt(hs)='' then
-                  hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
-                if Copy(hs,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
-                  hs:=TargetInfo.sharedlibprefix+hs;
+                lLibraryName:=GetStringConst;
+                if ExtractFileExt(lLibraryName)='' then
+                  lLibraryName:=ChangeFileExt(lLibraryName,TargetInfo.sharedlibext);
+                if Copy(lLibraryName,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
+                  lLibraryName:=TargetInfo.sharedlibprefix+lLibraryName;
               end;
-            if hs<>'' then
+            if lLibraryName<>'' then
               begin
-                StringDispose(od.ImportLib);
-                od.ImportLib:=StringDup(hs);
+                StringDispose(AObjectDef.ImportLib);
+                AObjectDef.ImportLib:=StringDup(lLibraryName);
               end;
             { check if we shall use another name for the class }
-            if try_to_consume(_NAME) then
-              od.ObjExtName:=StringDup(get_stringconst)
+            if TryToConsume(_NAME) then
+              AObjectDef.ObjExtName:=StringDup(GetStringConst)
             else
-              od.ObjExtName:=StringDup(od.ObjRealName^);
-            include(od.ObjectOptions,oo_is_external);
+              AObjectDef.ObjExtName:=StringDup(AObjectDef.ObjRealName^);
+            include(AObjectDef.ObjectOptions,oo_is_external);
           end
         else
           begin
-            od.ObjExtName:=StringDup(od.ObjRealName^);
+            AObjectDef.ObjExtName:=StringDup(AObjectDef.ObjRealName^);
           end;
       end;
 
 
-    procedure get_objc_class_or_protocol_external_status(od: TObjectDef);
+    procedure GetObjCClassOrProtocolExternalStatus(AObjectDef: TObjectDef);
       begin
         { Objective-C classes can be external -> all messages inside are
           external (defined at the class level instead of per method, so
           that you cannot define some methods as external and some not)
         }
-        if try_to_consume(_EXTERNAL) then
+        if TryToConsume(_EXTERNAL) then
           begin
-            if try_to_consume(_NAME) then
-              od.ObjExtName:=StringDup(get_stringconst)
+            if TryToConsume(_NAME) then
+              AObjectDef.ObjExtName:=StringDup(GetStringConst)
             else
               { the external name doesn't matter for formally declared
                 classes, and allowing to specify one would mean that we would
                 have to check it for consistency with the actual definition
                 later on }
-              od.ObjExtName:=StringDup(od.ObjRealName^);
-            include(od.ObjectOptions,oo_is_external);
+              AObjectDef.ObjExtName:=StringDup(AObjectDef.ObjRealName^);
+            include(AObjectDef.ObjectOptions,oo_is_external);
           end
         else
-          od.ObjExtName:=StringDup(od.ObjRealName^);
+          AObjectDef.ObjExtName:=StringDup(AObjectDef.ObjRealName^);
       end;
 
 
-    procedure parse_object_options;
+    procedure ParseObjectOptions;
       begin
-        case current_objectdef.ObjectType of
+        case CurrentObjectDef.ObjectType of
           odt_object,odt_class:
             begin
               while true do
                 begin
-                  if try_to_consume(_ABSTRACT) then
+                  if TryToConsume(_ABSTRACT) then
                     include(CurrentStructDef.ObjectOptions,oo_is_abstract)
                   else
-                  if try_to_consume(_SEALED) then
+                  if TryToConsume(_SEALED) then
                     include(CurrentStructDef.ObjectOptions,oo_is_sealed)
                   else break;
                 end;
@@ -490,88 +490,88 @@ implementation
                 Message(parser_e_abstract_and_sealed_conflict);
             end;
           odt_cppclass:
-            get_cpp_class_external_status(current_objectdef);
+            GetCPPClassExternalStatus(CurrentObjectDef);
           odt_objcclass,odt_objcprotocol,odt_objccategory:
-            get_objc_class_or_protocol_external_status(current_objectdef);
+            GetObjCClassOrProtocolExternalStatus(CurrentObjectDef);
           odt_helper: ; // nothing
           else
             ;
         end;
       end;
 
-    procedure parse_parent_classes;
+    procedure ParseParentClasses;
       var
-        intfchildof,
-        ChildOf : TObjectDef;
-        hdef : TDef;
-        hasparentdefined : boolean;
+        lInterfaceParent,
+        lParent : TObjectDef;
+        lDef : TDef;
+        lHasParentDefined : Boolean;
       begin
-        ChildOf:=nil;
-        intfchildof:=nil;
-        hasparentdefined:=false;
+        lParent:=nil;
+        lInterfaceParent:=nil;
+        lHasParentDefined:=false;
 
         { reads the parent class }
-        if (CurrentScanner.token=_LKLAMMER) or
+        if (CurrentScanner.FToken=_LKLAMMER) or
            Is_ObjCCategory(CurrentStructDef) then
           begin
-            consume(_LKLAMMER);
+            Consume(_LKLAMMER);
             { use single_type instead of id_type for specialize support }
-            single_type(hdef,[stoAllowSpecialization, stoParseClassParent]);
-            if (not Assigned(hdef)) or
-               (hdef.typ<>objectdef) then
+            SingleType(lDef,[stoAllowSpecialization, stoParseClassParent]);
+            if (not Assigned(lDef)) or
+               (lDef.typ<>objectdef) then
               begin
-                if Assigned(hdef) then
-                  Message1(type_e_class_type_expected,hdef.TypeName)
+                if Assigned(lDef) then
+                  Message1(type_e_class_type_expected,lDef.TypeName)
                 else if Is_ObjCCategory(CurrentStructDef) then
                   { a category must specify the class to extend }
                   Message(type_e_objcclass_type_expected);
               end
             else
               begin
-                ChildOf:=TObjectDef(hdef);
+                lParent:=TObjectDef(lDef);
                 { a mix of class, interfaces, objects and cppclasses
                   isn't allowed }
-                case current_objectdef.ObjectType of
+                case CurrentObjectDef.ObjectType of
                    odt_class:
-                     if (ChildOf.ObjectType<>current_objectdef.ObjectType) then
+                     if (lParent.ObjectType<>CurrentObjectDef.ObjectType) then
                        begin
-                          if (Is_Interface(ChildOf) and
-                              Is_Class(current_objectdef)) then
+                          if (Is_Interface(lParent) and
+                              Is_Class(CurrentObjectDef)) then
                             begin
                                { we insert the interface after the child
                                  is set, see below
                                }
-                               intfchildof:=ChildOf;
-                               ChildOf:=Class_TObject;
+                               lInterfaceParent:=lParent;
+                               lParent:=Class_TObject;
                             end
                           else
                             Message(parser_e_mix_of_classes_and_objects);
                        end
                      else
-                       if oo_is_sealed in ChildOf.ObjectOptions then
-                         Message1(parser_e_sealed_descendant,ChildOf.TypeSymbolPrettyName)
+                       if oo_is_sealed in lParent.ObjectOptions then
+                         Message1(parser_e_sealed_descendant,lParent.TypeSymbolPrettyName)
                        else
-                         ChildOf:=Find_Real_Class_Definition(ChildOf,true);
+                         lParent:=Find_Real_Class_Definition(lParent,true);
                    odt_interfacecorba,
                    odt_interfacecom:
                      begin
-                       if not(Is_Interface(ChildOf)) then
+                       if not(Is_Interface(lParent)) then
                          Message(parser_e_mix_of_classes_and_objects);
-                       current_objectdef.ObjectType:=ChildOf.ObjectType;
+                       CurrentObjectDef.ObjectType:=lParent.ObjectType;
                      end;
                    odt_cppclass:
-                     if not(Is_CPPClass(ChildOf)) then
+                     if not(Is_CPPClass(lParent)) then
                        Message(parser_e_mix_of_classes_and_objects);
                    odt_objcclass:
-                     if not(Is_ObjCClass(ChildOf) or
-                        Is_ObjCCategory(ChildOf)) then
+                     if not(Is_ObjCClass(lParent) or
+                        Is_ObjCCategory(lParent)) then
                        begin
-                         if Is_ObjCProtocol(ChildOf) then
+                         if Is_ObjCProtocol(lParent) then
                            begin
                              if not(oo_is_classhelper in CurrentStructDef.ObjectOptions) then
                                begin
-                                 intfchildof:=ChildOf;
-                                 ChildOf:=nil;
+                                 lInterfaceParent:=lParent;
+                                 lParent:=nil;
                                  CGMessage(parser_h_no_objc_parent);
                                end
                              else
@@ -582,48 +582,48 @@ implementation
                            Message(parser_e_mix_of_classes_and_objects);
                        end
                      else
-                       ChildOf:=Find_Real_Class_Definition(ChildOf,true);
+                       lParent:=Find_Real_Class_Definition(lParent,true);
                    odt_objcprotocol:
                      begin
-                       if not(Is_ObjCProtocol(ChildOf)) then
+                       if not(Is_ObjCProtocol(lParent)) then
                          Message(parser_e_mix_of_classes_and_objects);
-                       intfchildof:=ChildOf;
-                       ChildOf:=nil;
+                       lInterfaceParent:=lParent;
+                       lParent:=nil;
                      end;
 
                    odt_object:
-                     if not(Is_Object(ChildOf)) then
+                     if not(Is_Object(lParent)) then
                        Message(parser_e_mix_of_classes_and_objects)
                      else
-                       if oo_is_sealed in ChildOf.ObjectOptions then
-                         Message1(parser_e_sealed_descendant,ChildOf.TypeName);
+                       if oo_is_sealed in lParent.ObjectOptions then
+                         Message1(parser_e_sealed_descendant,lParent.TypeName);
                    odt_dispinterface:
                      Message(parser_e_dispinterface_cant_have_parent);
                    odt_helper:
-                     if not Is_ObjectPascal_Helper(ChildOf) then
+                     if not Is_ObjectPascal_Helper(lParent) then
                        begin
                          Message(type_e_helper_type_expected);
-                         ChildOf:=nil;
+                         lParent:=nil;
                        end;
                    else
                      ;
                 end;
               end;
-            hasparentdefined:=true;
+            lHasParentDefined:=true;
           end;
 
         { if no parent class, then a class get tobject as parent }
-        if not Assigned(ChildOf) then
+        if not Assigned(lParent) then
           begin
-            case current_objectdef.ObjectType of
+            case CurrentObjectDef.ObjectType of
               odt_class:
-                if current_objectdef<>Class_TObject then
-                  ChildOf:=Class_TObject;
+                if CurrentObjectDef<>Class_TObject then
+                  lParent:=Class_TObject;
               odt_interfacecom:
-                if current_objectdef<>Interface_IUnknown then
-                  ChildOf:=Interface_IUnknown;
+                if CurrentObjectDef<>Interface_IUnknown then
+                  lParent:=Interface_IUnknown;
               odt_dispinterface:
-                ChildOf:=Interface_IDispatch;
+                lParent:=Interface_IDispatch;
               odt_objcclass:
                 CGMessage(parser_h_no_objc_parent);
 
@@ -632,352 +632,352 @@ implementation
             end;
           end;
 
-        if Assigned(ChildOf) then
+        if Assigned(lParent) then
           begin
             { Forbid not completly defined objects to be used as parents. This will
               also prevent circular loops of classes, because we set the forward flag
               at the start of the new definition and will reset it below after the
               parent has been set }
-            if (oo_is_forward in ChildOf.ObjectOptions) then
-              Message1(parser_e_forward_declaration_must_be_resolved,ChildOf.ObjRealName^)
-            else if not(oo_is_formal in ChildOf.ObjectOptions) then
-              current_objectdef.Set_Parent(ChildOf)
+            if (oo_is_forward in lParent.ObjectOptions) then
+              Message1(parser_e_forward_declaration_must_be_resolved,lParent.ObjRealName^)
+            else if not(oo_is_formal in lParent.ObjectOptions) then
+              CurrentObjectDef.Set_Parent(lParent)
             else
-              Message1(sym_e_formal_class_not_resolved,ChildOf.ObjRealName^);
+              Message1(sym_e_formal_class_not_resolved,lParent.ObjRealName^);
           end;
 
-        if hasparentdefined then
+        if lHasParentDefined then
           begin
-            if current_objectdef.ObjectType in [odt_class,odt_objcclass,odt_objcprotocol] then
+            if CurrentObjectDef.ObjectType in [odt_class,odt_objcclass,odt_objcprotocol] then
               begin
-                if Assigned(intfchildof) then
-                  if current_objectdef.ObjectType=odt_class then
-                    handleImplementedInterface(intfchildof)
+                if Assigned(lInterfaceParent) then
+                  if CurrentObjectDef.ObjectType=odt_class then
+                    HandleImplementedInterface(lInterfaceParent)
                   else
-                    handleImplementedProtocol(intfchildof);
-                readImplementedInterfacesAndProtocols(current_objectdef.ObjectType=odt_class);
+                    HandleImplementedProtocol(lInterfaceParent);
+                ReadImplementedInterfacesAndProtocols(CurrentObjectDef.ObjectType=odt_class);
               end;
-            consume(_RKLAMMER);
+            Consume(_RKLAMMER);
           end;
       end;
 
-    procedure parse_extended_type(HelperType:THelperType);
+    procedure ParseExtendedType(AHelperType:THelperType);
 
-      procedure validate_extendeddef_typehelper(var def:TDef);
+      procedure ValidateExtendedDefTypeHelper(var ADef:TDef);
         begin
-          if (def.typ in [undefineddef,procvardef,procdef,
+          if (ADef.typ in [undefineddef,procvardef,procdef,
               filedef,classrefdef,abstractdef,ForwardDef,formaldef]) or
               (
-                (def.typ=objectdef) and
-                not (TObjectDef(def).ObjectType in ObjectTypesWithHelpers)
+                (ADef.typ=objectdef) and
+                not (TObjectDef(ADef).ObjectType in ObjectTypesWithHelpers)
               ) then
             begin
-              Message1(type_e_type_not_allowed_for_type_helper,def.TypeName);
-              def:=GenErrorDef;
+              Message1(type_e_type_not_allowed_for_type_helper,ADef.TypeName);
+              ADef:=GenErrorDef;
             end;
         end;
 
-      procedure check_inheritance_record_type_helper(var def:TDef);
+      procedure CheckInheritanceRecordTypeHelper(var ADef:TDef);
         var
-          tmp : TStoredDef;
+          lTempDef : TStoredDef;
         begin
-          if (def.typ<>errordef) and Assigned(current_objectdef.ChildOf) then
+          if (ADef.typ<>errordef) and Assigned(CurrentObjectDef.ChildOf) then
             begin
-              if def<>current_objectdef.ChildOf.ExtendedDef then
+              if ADef<>CurrentObjectDef.ChildOf.ExtendedDef then
                 begin
                   { a type helper may extend a type alias of the type its
                     parent type helper extends }
-                  tmp:=TStoredDef(def);
-                  while (df_unique in tmp.DefOptions) and Assigned(TStoredDef(tmp).OrgDef) do
+                  lTempDef:=TStoredDef(ADef);
+                  while (df_unique in lTempDef.DefOptions) and Assigned(TStoredDef(lTempDef).OrgDef) do
                     begin
-                      if tmp.OrgDef=current_objectdef.ChildOf.ExtendedDef then
+                      if lTempDef.OrgDef=CurrentObjectDef.ChildOf.ExtendedDef then
                         exit;
-                      tmp:=TStoredDef(tmp.OrgDef);
+                      lTempDef:=TStoredDef(lTempDef.OrgDef);
                     end;
-                  Message1(type_e_record_helper_must_extend_same_record,current_objectdef.ChildOf.ExtendedDef.TypeName);
-                  def:=GenErrorDef;
+                  Message1(type_e_record_helper_must_extend_same_record,CurrentObjectDef.ChildOf.ExtendedDef.TypeName);
+                  ADef:=GenErrorDef;
                 end;
             end;
         end;
 
-      procedure check_inheritance_class_helper(var def:TDef);
+      procedure CheckInheritanceClassHelper(var ADef:TDef);
         begin
-          if (def.typ<>errordef) and Assigned(current_objectdef.ChildOf) then
+          if (ADef.typ<>errordef) and Assigned(CurrentObjectDef.ChildOf) then
             begin
-              if (current_objectdef.ChildOf.ExtendedDef.typ<>objectdef) or
-                 not (TObjectDef(current_objectdef.ChildOf.ExtendedDef).ObjectType in ObjectTypesWithHelpers) then
+              if (CurrentObjectDef.ChildOf.ExtendedDef.typ<>objectdef) or
+                 not (TObjectDef(CurrentObjectDef.ChildOf.ExtendedDef).ObjectType in ObjectTypesWithHelpers) then
                 InternalError(2011021101);
-              if not Def_Is_Related(def,current_objectdef.ChildOf.ExtendedDef) then
+              if not Def_Is_Related(ADef,CurrentObjectDef.ChildOf.ExtendedDef) then
                 begin
-                  Message1(type_e_class_helper_must_extend_subclass,current_objectdef.ChildOf.ExtendedDef.TypeName);
-                  def:=GenErrorDef;
+                  Message1(type_e_class_helper_must_extend_subclass,CurrentObjectDef.ChildOf.ExtendedDef.TypeName);
+                  ADef:=GenErrorDef;
                 end;
             end;
         end;
 
       var
-        hdef: TDef;
+        lDef: TDef;
       begin
         if not Is_ObjectPascal_Helper(CurrentStructDef) then
           InternalError(2011021103);
 
-        consume(_FOR);
+        Consume(_FOR);
         { set extendeddef to non-Nil so that potential checks for it won't trigger
           access violations }
-        current_objectdef.ExtendedDef:=GenErrorDef;
-        single_type(hdef,[stoParseClassParent]);
-        if not Assigned(hdef) or (hdef.typ=errordef) then
+        CurrentObjectDef.ExtendedDef:=GenErrorDef;
+        SingleType(lDef,[stoParseClassParent]);
+        if not Assigned(lDef) or (lDef.typ=errordef) then
           begin
-            case HelperType of
+            case AHelperType of
               ht_class:
-                Message1(type_e_class_type_expected,hdef.TypeName);
+                Message1(type_e_class_type_expected,lDef.TypeName);
               ht_record:
                 Message(type_e_record_type_expected);
               ht_type:
-                Message1(type_e_type_id_expected,hdef.TypeName);
+                Message1(type_e_type_id_expected,lDef.TypeName);
               else
                 InternalError(2019050532);
             end;
           end
         else
           begin
-            case HelperType of
+            case AHelperType of
               ht_class:
-                if (hdef.typ<>objectdef) or
-                    not Is_Class(hdef) then
-                  Message1(type_e_class_type_expected,hdef.TypeName)
+                if (lDef.typ<>objectdef) or
+                    not Is_Class(lDef) then
+                  Message1(type_e_class_type_expected,lDef.TypeName)
                 else
                   begin
                     { a class helper must extend the same class or a subclass
                       of the class extended by the parent class helper }
-                    check_inheritance_class_helper(hdef);
+                    CheckInheritanceClassHelper(lDef);
                   end;
               ht_record:
-                if (hdef.typ=objectdef) or
+                if (lDef.typ=objectdef) or
                     (
                       { primitive types are allowed for record helpers in mode
                         delphi }
-                      (hdef.typ<>recorddef) and
+                      (lDef.typ<>recorddef) and
                       not (m_delphi in CurrentSettings.ModeSwitches)
                     ) then
-                  Message1(type_e_record_type_expected,hdef.TypeName)
+                  Message1(type_e_record_type_expected,lDef.TypeName)
                 else
                   begin
-                    if hdef.typ<>recorddef then
+                    if lDef.typ<>recorddef then
                       { this is a primitive type in mode delphi, so validate
                         the def }
-                      validate_extendeddef_typehelper(hdef);
+                      ValidateExtendedDefTypeHelper(lDef);
                     { a record helper must extend the same record as the
                       parent helper }
-                    check_inheritance_record_type_helper(hdef);
+                    CheckInheritanceRecordTypeHelper(lDef);
                   end;
               ht_type:
                 begin
-                  validate_extendeddef_typehelper(hdef);
-                  if (hdef.typ=objectdef) and
-                      (TObjectDef(hdef).ObjectType in ObjectTypesWithHelpers) then
-                    check_inheritance_class_helper(hdef)
+                  ValidateExtendedDefTypeHelper(lDef);
+                  if (lDef.typ=objectdef) and
+                      (TObjectDef(lDef).ObjectType in ObjectTypesWithHelpers) then
+                    CheckInheritanceClassHelper(lDef)
                   else
                     { a type helper must extend the same type as the
                       parent helper }
-                    check_inheritance_record_type_helper(hdef);
+                    CheckInheritanceRecordTypeHelper(lDef);
                 end;
               else
                 InternalError(2019050531);
             end;
           end;
 
-        if Assigned(hdef) then
-          current_objectdef.ExtendedDef:=hdef;
+        if Assigned(lDef) then
+          CurrentObjectDef.ExtendedDef:=lDef;
       end;
 
-    procedure parse_guid;
+    procedure ParseGUID;
       begin
         { read GUID }
-        if (current_objectdef.ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface]) and
-           try_to_consume(_LECKKLAMMER) then
+        if (CurrentObjectDef.ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface]) and
+           TryToConsume(_LECKKLAMMER) then
           begin
-            readinterfaceiid;
-            consume(_RECKKLAMMER);
+            ReadInterfaceIID;
+            Consume(_RECKKLAMMER);
           end
-        else if (current_objectdef.ObjectType=odt_dispinterface) then
+        else if (CurrentObjectDef.ObjectType=odt_dispinterface) then
           message(parser_e_dispinterface_needs_a_guid);
       end;
 
 
-    function method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
+    function MethodDec(AStruct: TAbstractRecordDef; AIsClassDef: Boolean;AHadGeneric:Boolean): TProcDef;
 
-      procedure chkobjc(pd: TProcDef);
+      procedure CheckObjC(AProcDef: TProcDef);
         begin
-          if Is_ObjC_Class_Or_Protocol(pd.struct) then
+          if Is_ObjC_Class_Or_Protocol(AProcDef.struct) then
             begin
-              include(pd.ProcOptions,po_objc);
+              include(AProcDef.ProcOptions,po_objc);
             end;
         end;
 
 
-      procedure chkcpp(pd:TProcDef);
+      procedure CheckCPP(AProcDef:TProcDef);
           begin
             { nothing currently }
           end;
 
       var
-        oldparse_only: boolean;
-        flags : TParseProcFlags;
+        lOldParseOnly: Boolean;
+        lFlags : TParseProcFlags;
       begin
-        case CurrentScanner.token of
+        case CurrentScanner.FToken of
           _PROCEDURE,
           _FUNCTION:
             begin
-              if (astruct.SymTable.CurrentVisibility=vis_published) and
-                 not(oo_can_have_published in astruct.ObjectOptions) then
+              if (AStruct.SymTable.CurrentVisibility=vis_published) and
+                 not(oo_can_have_published in AStruct.ObjectOptions) then
                 Message(parser_e_cant_have_published);
 
-              oldparse_only:=parse_only;
-              parse_only:=true;
-              flags:=[];
-              if is_classdef then
-                include(flags,ppf_classmethod);
-              if hadgeneric then
-                include(flags,ppf_generic);
-              result:=parse_proc_dec(flags,astruct);
+              lOldParseOnly:=ParseOnly;
+              ParseOnly:=true;
+              lFlags:=[];
+              if AIsClassDef then
+                include(lFlags,ppfClassMethod);
+              if AHadGeneric then
+                include(lFlags,ppfGeneric);
+              Result:=ParseProcDec(lFlags,AStruct);
 
               { this is for error recovery as well as forward }
               { interface mappings, i.e. mapping to a method  }
               { which isn't declared yet                      }
-              if Assigned(result) then
+              if Assigned(Result) then
                 begin
-                  parse_object_proc_directives(result);
+                  ParseObjectProcDirectives(Result);
 
                   { check if dispid is set }
-                  if Is_DispInterface(result.struct) and not (po_dispid in result.ProcOptions) then
+                  if Is_DispInterface(Result.struct) and not (po_dispid in Result.ProcOptions) then
                     begin
-                      result.DispID:=TObjectDef(result.struct).Get_Next_DispID;
-                      include(result.ProcOptions, po_dispid);
+                      Result.DispID:=TObjectDef(Result.struct).Get_Next_DispID;
+                      include(Result.ProcOptions, po_dispid);
                     end;
 
                   { all Macintosh Object Pascal methods are virtual.  }
                   { this can't be a class method, because macpas mode }
                   { has no m_class                                    }
                   if (m_mac in CurrentSettings.ModeSwitches) then
-                    include(result.ProcOptions,po_virtualmethod);
+                    include(Result.ProcOptions,po_virtualmethod);
 
                   { for record and type helpers only static class methods are
                     allowed }
-                  if Is_ObjectPascal_Helper(astruct) and
+                  if Is_ObjectPascal_Helper(AStruct) and
                      (
-                       (TObjectDef(astruct).ExtendedDef.typ<>objectdef) or
-                       (TObjectDef(TObjectDef(astruct).ExtendedDef).ObjectType<>odt_class)
+                       (TObjectDef(AStruct).ExtendedDef.typ<>objectdef) or
+                       (TObjectDef(TObjectDef(AStruct).ExtendedDef).ObjectType<>odt_class)
                      ) and
-                     is_classdef and not (po_staticmethod in result.ProcOptions) then
-                    MessagePos(result.fileinfo,parser_e_class_methods_only_static_in_records);
+                     AIsClassDef and not (po_staticmethod in Result.ProcOptions) then
+                    MessagePos(Result.fileinfo,parser_e_class_methods_only_static_in_records);
 
-                  Handle_Calling_Convention(result,cHCCDefaultActionsIntfStruct);
+                  Handle_Calling_Convention(Result,cHCCDefaultActionsIntfStruct);
 
                   { add definition to procsym }
-                  Proc_Add_Definition(result);
+                  Proc_Add_Definition(Result);
 
                   { add procdef options to objectdef options }
-                  if (po_msgint in result.ProcOptions) then
-                    include(astruct.ObjectOptions,oo_has_msgint);
-                  if (po_msgstr in result.ProcOptions) then
-                    include(astruct.ObjectOptions,oo_has_msgstr);
-                  if (po_virtualmethod in result.ProcOptions) then
-                    include(astruct.ObjectOptions,oo_has_virtual);
+                  if (po_msgint in Result.ProcOptions) then
+                    include(AStruct.ObjectOptions,oo_has_msgint);
+                  if (po_msgstr in Result.ProcOptions) then
+                    include(AStruct.ObjectOptions,oo_has_msgstr);
+                  if (po_virtualmethod in Result.ProcOptions) then
+                    include(AStruct.ObjectOptions,oo_has_virtual);
 
-                  if result.Is_Generic then
-                    astruct.SymTable.IncludeOption(sto_has_generic);
+                  if Result.Is_Generic then
+                    AStruct.SymTable.IncludeOption(sto_has_generic);
 
-                  chkcpp(result);
-                  chkobjc(result);
+                  CheckCPP(Result);
+                  CheckObjC(Result);
                 end;
 
-              maybe_parse_hint_directives(result);
+              MaybeParseHintDirectives(Result);
 
-              parse_only:=oldparse_only;
+              ParseOnly:=lOldParseOnly;
             end;
           _CONSTRUCTOR :
             begin
-              if (astruct.SymTable.CurrentVisibility=vis_published) and
-                not(oo_can_have_published in astruct.ObjectOptions) then
+              if (AStruct.SymTable.CurrentVisibility=vis_published) and
+                not(oo_can_have_published in AStruct.ObjectOptions) then
                 Message(parser_e_cant_have_published);
 
-              if not is_classdef and not(astruct.SymTable.CurrentVisibility in [vis_public,vis_published]) then
+              if not AIsClassDef and not(AStruct.SymTable.CurrentVisibility in [vis_public,vis_published]) then
                 Message(parser_w_constructor_should_be_public);
 
-              if Is_Interface(astruct) then
+              if Is_Interface(AStruct) then
                 Message(parser_e_no_con_des_in_interfaces);
 
               { Objective-C does not know the concept of a constructor }
-              if Is_ObjC_Class_Or_Protocol(astruct) then
+              if Is_ObjC_Class_Or_Protocol(AStruct) then
                 Message(parser_e_objc_no_constructor_destructor);
 
-              if Is_ObjectPascal_Helper(astruct) then
-                if is_classdef then
+              if Is_ObjectPascal_Helper(AStruct) then
+                if AIsClassDef then
                   { class constructors are not allowed in class helpers }
                   Message(parser_e_no_class_constructor_in_helpers);
 
               { only 1 class constructor is allowed }
-              if is_classdef and (oo_has_class_constructor in astruct.ObjectOptions) then
-                Message1(parser_e_only_one_class_constructor_allowed, astruct.ObjRealName^);
+              if AIsClassDef and (oo_has_class_constructor in AStruct.ObjectOptions) then
+                Message1(parser_e_only_one_class_constructor_allowed, AStruct.ObjRealName^);
 
-              oldparse_only:=parse_only;
-              parse_only:=true;
-              if is_classdef then
-                result:=class_constructor_head(CurrentStructDef)
+              lOldParseOnly:=ParseOnly;
+              ParseOnly:=true;
+              if AIsClassDef then
+                Result:=ClassConstructorHead(CurrentStructDef)
               else
                 begin
-                  result:=constructor_head;
-                  if Is_ObjectPascal_Helper(astruct) and
-                     (TObjectDef(astruct).ExtendedDef.typ<>objectdef) and
-                     (result.MinParaCount=0) then
+                  Result:=ConstructorHead;
+                  if Is_ObjectPascal_Helper(AStruct) and
+                     (TObjectDef(AStruct).ExtendedDef.typ<>objectdef) and
+                     (Result.MinParaCount=0) then
                       { as long as parameterless constructors aren't allowed in records they
                        aren't allowed in record/type helpers either }
-                    MessagePos(result.ProcSym.fileinfo,parser_e_no_parameterless_constructor_in_records);
+                    MessagePos(Result.ProcSym.fileinfo,parser_e_no_parameterless_constructor_in_records);
                 end;
 
-              chkcpp(result);
+              CheckCPP(Result);
 
-              parse_only:=oldparse_only;
+              ParseOnly:=lOldParseOnly;
             end;
           _DESTRUCTOR :
             begin
-              if (astruct.SymTable.CurrentVisibility=vis_published) and
-                 not(oo_can_have_published in astruct.ObjectOptions) then
+              if (AStruct.SymTable.CurrentVisibility=vis_published) and
+                 not(oo_can_have_published in AStruct.ObjectOptions) then
                 Message(parser_e_cant_have_published);
 
-              if not is_classdef then
-                if (oo_has_new_destructor in astruct.ObjectOptions) then
+              if not AIsClassDef then
+                if (oo_has_new_destructor in AStruct.ObjectOptions) then
                   Message(parser_n_only_one_destructor);
 
-              if Is_Interface(astruct) then
+              if Is_Interface(AStruct) then
                 Message(parser_e_no_con_des_in_interfaces);
 
               { (class) destructors are not allowed in class helpers }
-              if Is_ObjectPascal_Helper(astruct) then
+              if Is_ObjectPascal_Helper(AStruct) then
                 Message(parser_e_no_destructor_in_records);
 
-              if not is_classdef and (astruct.SymTable.CurrentVisibility<>vis_public) then
+              if not AIsClassDef and (AStruct.SymTable.CurrentVisibility<>vis_public) then
                 Message(parser_w_destructor_should_be_public);
 
               { Objective-C does not know the concept of a destructor }
-              if Is_ObjC_Class_Or_Protocol(astruct) then
+              if Is_ObjC_Class_Or_Protocol(AStruct) then
                 Message(parser_e_objc_no_constructor_destructor);
 
               { only 1 class destructor is allowed }
-              if is_classdef and (oo_has_class_destructor in astruct.ObjectOptions) then
-                Message1(parser_e_only_one_class_destructor_allowed, astruct.ObjRealName^);
+              if AIsClassDef and (oo_has_class_destructor in AStruct.ObjectOptions) then
+                Message1(parser_e_only_one_class_destructor_allowed, AStruct.ObjRealName^);
 
-              oldparse_only:=parse_only;
-              parse_only:=true;
-              if is_classdef then
-                result:=class_destructor_head(CurrentStructDef)
+              lOldParseOnly:=ParseOnly;
+              ParseOnly:=true;
+              if AIsClassDef then
+                Result:=ClassDestructorHead(CurrentStructDef)
               else
-                result:=destructor_head;
+                Result:=DestructorHead;
 
-              chkcpp(result);
+              CheckCPP(Result);
 
-              parse_only:=oldparse_only;
+              ParseOnly:=lOldParseOnly;
             end;
           else
             InternalError(2011032102);
@@ -985,107 +985,107 @@ implementation
       end;
 
 
-    procedure parse_object_members;
+    procedure ParseObjectMembers;
 
       var
-        typedconstswritable: boolean;
-        object_member_blocktype : TBlockType;
-        hadgeneric,
-        fields_allowed, is_classdef, class_fields, is_final, final_fields,
-        threadvar_fields : boolean;
-        vdoptions: TVarDecOptions;
-        fieldlist: TFPObjectList;
-        rtti_attrs_def: TRTTIAttributeList;
-        attr_element_count,fldCount : Integer;
-        method_def : TProcDef;
+        lTypedConstsWritable: Boolean;
+        lObjectMemberBlockType : TBlockType;
+        lHadGeneric,
+        lFieldsAllowed, lIsClassDef, lClassFields, lIsFinal, lFinalFields,
+        lThreadVarFields : Boolean;
+        lVarDecOptions: TVarDecOptions;
+        lFieldList: TFPObjectList;
+        lRTTIAttrsDef: TRTTIAttributeList;
+        lAttrElementCount,lFieldCount : Integer;
+        lMethodDef : TProcDef;
 
-      procedure check_unbound_attributes;
+      procedure CheckUnboundAttributes;
         begin
-          if Assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
-            Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).TypeSym.prettyname);
-          rtti_attrs_def.free;
-          rtti_attrs_def:=nil;
+          if Assigned(lRTTIAttrsDef) and (lRTTIAttrsDef.GetAttributeCount>0) then
+            Message1(parser_e_unbound_attribute,TRTTIAttribute(lRTTIAttrsDef.RTTIAttributes[0]).TypeSym.prettyname);
+          lRTTIAttrsDef.free;
+          lRTTIAttrsDef:=nil;
         end;
 
 
-      procedure parse_const;
+      procedure ParseConst;
         begin
-          if not(current_objectdef.ObjectType in [odt_class,odt_object,odt_helper]) then
+          if not(CurrentObjectDef.ObjectType in [odt_class,odt_object,odt_helper]) then
             Message(parser_e_type_var_const_only_in_records_and_classes);
-          consume(_CONST);
-          object_member_blocktype:=bt_const;
-          final_fields:=is_final;
-          is_final:=false;
+          Consume(_CONST);
+          lObjectMemberBlockType:=bt_const;
+          lFinalFields:=lIsFinal;
+          lIsFinal:=false;
         end;
 
 
-      procedure parse_var(isthreadvar:boolean);
+      procedure ParseVar(AIsThreadVar:Boolean);
         begin
-          if not(current_objectdef.ObjectType in [odt_class,odt_object,odt_helper]) then
+          if not(CurrentObjectDef.ObjectType in [odt_class,odt_object,odt_helper]) then
             Message(parser_e_type_var_const_only_in_records_and_classes);
-          if isthreadvar then
-            consume(_THREADVAR)
+          if AIsThreadVar then
+            Consume(_THREADVAR)
           else
-            consume(_VAR);
-          fields_allowed:=true;
-          object_member_blocktype:=bt_general;
-          class_fields:=is_classdef;
-          final_fields:=is_final;
-          threadvar_fields:=isthreadvar;
-          is_classdef:=false;
-          is_final:=false;
+            Consume(_VAR);
+          lFieldsAllowed:=true;
+          lObjectMemberBlockType:=bt_general;
+          lClassFields:=lIsClassDef;
+          lFinalFields:=lIsFinal;
+          lThreadVarFields:=AIsThreadVar;
+          lIsClassDef:=false;
+          lIsFinal:=false;
         end;
 
 
-      procedure parse_class;
+      procedure ParseClass;
         begin
-          is_classdef:=false;
+          lIsClassDef:=false;
           { read class method/field/property }
-          consume(_CLASS);
+          Consume(_CLASS);
           { class modifier is only allowed for procedures, functions, }
           { constructors, destructors, fields and properties          }
-          if not((CurrentScanner.token in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_THREADVAR]) or (CurrentScanner.token=_CONSTRUCTOR)) then
+          if not((CurrentScanner.FToken in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_THREADVAR]) or (CurrentScanner.FToken=_CONSTRUCTOR)) then
             Message(parser_e_procedure_or_function_expected);
 
           { class properties currently can't have attributes }
-          if not(CurrentScanner.token in [_FUNCTION,_PROCEDURE]) then
-            check_unbound_attributes;
+          if not(CurrentScanner.FToken in [_FUNCTION,_PROCEDURE]) then
+            CheckUnboundAttributes;
 
 
           if Is_Interface(CurrentStructDef) then
             Message(parser_e_no_static_method_in_interfaces)
           else
             { class methods are also allowed for Objective-C protocols }
-            is_classdef:=true;
+            lIsClassDef:=true;
         end;
 
 
-      procedure parse_visibility(vis: TVisibility; oo: TObjectOption);
+      procedure ParseVisibility(AVisibility: TVisibility; AObjectOption: TObjectOption);
         begin
 
-          if (vis=vis_published) and
+          if (AVisibility=vis_published) and
              (Is_ObjC_Class_Or_Protocol(CurrentStructDef)) then
              Message(parser_e_no_objc_published)
           else if Is_Interface(CurrentStructDef) or
              Is_ObjC_Protocol_Or_Category(CurrentStructDef) then
             Message(parser_e_no_access_specifier_in_interfaces);
-          CurrentStructDef.SymTable.CurrentVisibility:=vis;
-          consume(CurrentScanner.token);
-          if (oo<>oo_none) then
-            include(CurrentStructDef.ObjectOptions,oo);
-          fields_allowed:=true;
-          is_classdef:=false;
-          class_fields:=false;
-          threadvar_fields:=false;
-          is_final:=false;
-          object_member_blocktype:=bt_general;
+          CurrentStructDef.SymTable.CurrentVisibility:=AVisibility;
+          Consume(CurrentScanner.FToken);
+          if (AObjectOption<>oo_none) then
+            include(CurrentStructDef.ObjectOptions,AObjectOption);
+          lFieldsAllowed:=true;
+          lIsClassDef:=false;
+          lClassFields:=false;
+          lThreadVarFields:=false;
+          lIsFinal:=false;
+          lObjectMemberBlockType:=bt_general;
         end;
 
 
       begin
         { empty class declaration ? }
-        if (current_objectdef.ObjectType in [odt_class,odt_objcclass]) and
-           (CurrentScanner.token=_SEMICOLON) then
+        if (CurrentObjectDef.ObjectType in [odt_class,odt_objcclass]) and
+           (CurrentScanner.FToken=_SEMICOLON) then
           exit;
 
         { in "publishable" classes the default access type is published }
@@ -1093,112 +1093,112 @@ implementation
           CurrentStructDef.SymTable.CurrentVisibility:=vis_published
         else
           CurrentStructDef.SymTable.CurrentVisibility:=vis_public;
-        fields_allowed:=true;
-        is_classdef:=false;
-        class_fields:=false;
-        is_final:=false;
-        final_fields:=false;
-        rtti_attrs_def:=nil;
-        hadgeneric:=false;
-        threadvar_fields:=false;
-        object_member_blocktype:=bt_general;
-        fieldlist:=TFPObjectList.Create(false);
+        lFieldsAllowed:=true;
+        lIsClassDef:=false;
+        lClassFields:=false;
+        lIsFinal:=false;
+        lFinalFields:=false;
+        lRTTIAttrsDef:=nil;
+        lHadGeneric:=false;
+        lThreadVarFields:=false;
+        lObjectMemberBlockType:=bt_general;
+        lFieldList:=TFPObjectList.Create(false);
         repeat
-          case CurrentScanner.token of
+          case CurrentScanner.FToken of
             _TYPE :
               begin
-                check_unbound_attributes;
-                if not(current_objectdef.ObjectType in [odt_class,odt_object,odt_helper]) then
+                CheckUnboundAttributes;
+                if not(CurrentObjectDef.ObjectType in [odt_class,odt_object,odt_helper]) then
                   Message(parser_e_type_var_const_only_in_records_and_classes);
-                consume(_TYPE);
-                object_member_blocktype:=bt_type;
+                Consume(_TYPE);
+                lObjectMemberBlockType:=bt_type;
 
-                if (CurrentScanner.token=_LECKKLAMMER) and (m_prefixed_attributes in CurrentSettings.ModeSwitches) then
+                if (CurrentScanner.FToken=_LECKKLAMMER) and (m_prefixed_attributes in CurrentSettings.ModeSwitches) then
                   begin
-                    check_unbound_attributes;
-                    types_dec(true,hadgeneric, rtti_attrs_def);
+                    CheckUnboundAttributes;
+                    TypesDec(true,lHadGeneric, lRTTIAttrsDef);
                   end
                 else
                   { expect at least one type declaration }
-                  if CurrentScanner.token<>_ID then
-                    consume(_ID);
+                  if CurrentScanner.FToken<>_ID then
+                    Consume(_ID);
               end;
             _VAR :
               begin
-                check_unbound_attributes;
-                rtti_attrs_def := nil;
-                parse_var(false);
+                CheckUnboundAttributes;
+                lRTTIAttrsDef := nil;
+                ParseVar(false);
                 { expect at least one var declaration }
-                if CurrentScanner.token<>_ID then
-                  consume(_ID);
+                if CurrentScanner.FToken<>_ID then
+                  Consume(_ID);
               end;
             _CONST:
               begin
-                check_unbound_attributes;
-                rtti_attrs_def := nil;
-                parse_const;
+                CheckUnboundAttributes;
+                lRTTIAttrsDef := nil;
+                ParseConst;
                 { expect at least one constant declaration }
-                if CurrentScanner.token<>_ID then
-                  consume(_ID);
+                if CurrentScanner.FToken<>_ID then
+                  Consume(_ID);
               end;
             _THREADVAR :
               begin
-                check_unbound_attributes;
-                if not is_classdef then
+                CheckUnboundAttributes;
+                if not lIsClassDef then
                   begin
                     Message(parser_e_threadvar_must_be_class);
                     { for error recovery we enforce class fields }
-                    is_classdef:=true;
+                    lIsClassDef:=true;
                   end;
-                parse_var(true);
+                ParseVar(true);
                 { expect at least one threadvar declaration }
-                if CurrentScanner.token<>_ID then
-                  consume(_ID);
+                if CurrentScanner.FToken<>_ID then
+                  Consume(_ID);
               end;
             _ID :
               begin
                 if Is_ObjCProtocol(CurrentStructDef) and
-                   ((CurrentScanner.idtoken=_REQUIRED) or
-                    (CurrentScanner.idtoken=_OPTIONAL)) then
+                   ((CurrentScanner.FIDToken=_REQUIRED) or
+                    (CurrentScanner.FIDToken=_OPTIONAL)) then
                   begin
-                    CurrentStructDef.SymTable.CurrentlyOptional:=(CurrentScanner.idtoken=_OPTIONAL);
-                    consume(CurrentScanner.idtoken)
+                    CurrentStructDef.SymTable.CurrentlyOptional:=(CurrentScanner.FIDToken=_OPTIONAL);
+                    Consume(CurrentScanner.FIDToken)
                   end
-                else case CurrentScanner.idtoken of
+                else case CurrentScanner.FIDToken of
                   _PRIVATE :
                     begin
-                      parse_visibility(vis_private,oo_has_private);
+                      ParseVisibility(vis_private,oo_has_private);
                      end;
                    _PROTECTED :
                      begin
-                       parse_visibility(vis_protected,oo_has_protected);
+                       ParseVisibility(vis_protected,oo_has_protected);
                      end;
                    _PUBLIC :
                      begin
-                       parse_visibility(vis_public,oo_none);
+                       ParseVisibility(vis_public,oo_none);
                      end;
                    _PUBLISHED :
                      begin
-                       parse_visibility(vis_published,oo_none);
+                       ParseVisibility(vis_published,oo_none);
                      end;
                    _STRICT :
                      begin
                        if Is_Interface(CurrentStructDef) or
                           Is_ObjC_Protocol_Or_Category(CurrentStructDef) then
                          Message(parser_e_no_access_specifier_in_interfaces);
-                         consume(_STRICT);
-                        if CurrentScanner.token=_ID then
+                         Consume(_STRICT);
+                        if CurrentScanner.FToken=_ID then
                           begin
-                            case CurrentScanner.idtoken of
+                            case CurrentScanner.FIDToken of
                               _PRIVATE:
                                 begin
-                                  consume(_PRIVATE);
+                                  Consume(_PRIVATE);
                                   CurrentStructDef.SymTable.CurrentVisibility:=vis_strictprivate;
                                   include(CurrentStructDef.ObjectOptions,oo_has_strictprivate);
                                 end;
                               _PROTECTED:
                                 begin
-                                  consume(_PROTECTED);
+                                  Consume(_PROTECTED);
                                   CurrentStructDef.SymTable.CurrentVisibility:=vis_strictprotected;
                                   include(CurrentStructDef.ObjectOptions,oo_has_strictprotected);
                                 end;
@@ -1208,46 +1208,46 @@ implementation
                           end
                         else
                           message(parser_e_protected_or_private_expected);
-                        fields_allowed:=true;
-                        is_classdef:=false;
-                        class_fields:=false;
-                        threadvar_fields:=false;
-                        is_final:=false;
-                        final_fields:=false;
-                        object_member_blocktype:=bt_general;
+                        lFieldsAllowed:=true;
+                        lIsClassDef:=false;
+                        lClassFields:=false;
+                        lThreadVarFields:=false;
+                        lIsFinal:=false;
+                        lFinalFields:=false;
+                        lObjectMemberBlockType:=bt_general;
                      end
                     else if (m_final_fields in CurrentSettings.ModeSwitches) and
-                            (CurrentScanner.token=_ID) and
-                            (CurrentScanner.idtoken=_FINAL) then
+                            (CurrentScanner.FToken=_ID) and
+                            (CurrentScanner.FIDToken=_FINAL) then
                       begin
                         { currently only supported for external classes, because
                           requires fully working DFA otherwise }
                         if (CurrentStructDef.typ<>objectdef) or
                            not(oo_is_external in TObjectDef(CurrentStructDef).ObjectOptions) then
                           Message(parser_e_final_only_external);
-                        consume(_final);
-                        is_final:=true;
-                        if CurrentScanner.token=_CLASS then
-                          parse_class;
-                        if not(CurrentScanner.token in [_CONST,_VAR]) then
+                        Consume(_final);
+                        lIsFinal:=true;
+                        if CurrentScanner.FToken=_CLASS then
+                          ParseClass;
+                        if not(CurrentScanner.FToken in [_CONST,_VAR]) then
                           message(parser_e_final_only_const_var);
                       end
                     else
                       begin
-                        if object_member_blocktype=bt_general then
+                        if lObjectMemberBlockType=bt_general then
                           begin
-                            if (CurrentScanner.idtoken=_GENERIC) and
+                            if (CurrentScanner.FIDToken=_GENERIC) and
                                 not (m_delphi in CurrentSettings.ModeSwitches) and
                                 (
-                                  not fields_allowed or
+                                  not lFieldsAllowed or
                                   Is_ObjectPascal_Helper(CurrentStructDef)
                                 ) then
                               begin
-                                if hadgeneric then
+                                if lHadGeneric then
                                   Message(parser_e_procedure_or_function_expected);
-                                consume(_ID);
-                                hadgeneric:=true;
-                                if not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+                                Consume(_ID);
+                                lHadGeneric:=true;
+                                if not (CurrentScanner.FToken in [_PROCEDURE,_FUNCTION,_CLASS]) then
                                   Message(parser_e_procedure_or_function_expected);
                               end
                             else
@@ -1256,30 +1256,30 @@ implementation
                                    Is_ObjC_Protocol_Or_Category(CurrentStructDef) or
                                    (
                                      Is_ObjectPascal_Helper(CurrentStructDef) and
-                                     not class_fields
+                                     not lClassFields
                                    ) then
                                   Message(parser_e_no_vars_in_interfaces);
 
                                 if (CurrentStructDef.SymTable.CurrentVisibility=vis_published) and
                                    not(oo_can_have_published in CurrentStructDef.ObjectOptions) then
                                   Message(parser_e_cant_have_published);
-                                if (not fields_allowed) then
+                                if (not lFieldsAllowed) then
                                   Message(parser_e_field_not_allowed_here);
 
-                                vdoptions:=[vd_object];
+                                lVarDecOptions:=[vdObject];
                                 if not (m_delphi in CurrentSettings.ModeSwitches) then
-                                  include(vdoptions,vd_check_generic);
-                                if class_fields then
-                                  include(vdoptions,vd_class);
+                                  include(lVarDecOptions,vdCheckGeneric);
+                                if lClassFields then
+                                  include(lVarDecOptions,vdClass);
                                 if Is_Class(CurrentStructDef) then
-                                  include(vdoptions,vd_canreorder);
-                                if final_fields then
-                                  include(vdoptions,vd_final);
-                                if threadvar_fields then
-                                  include(vdoptions,vd_threadvar);
+                                  include(lVarDecOptions,vdCanReorder);
+                                if lFinalFields then
+                                  include(lVarDecOptions,vdFinal);
+                                if lThreadVarFields then
+                                  include(lVarDecOptions,vdThreadVar);
                                 // Record count
-                                fldCount:=FieldList.Count;
-                                read_record_fields(vdoptions,fieldlist,nil,hadgeneric,attr_element_count);
+                                lFieldCount:=lFieldList.Count;
+                                ReadRecordFields(lVarDecOptions,lFieldList,nil,lHadGeneric,lAttrElementCount);
                                 {
                                   attr_element_count returns the number of fields to which the attribute must be applied.
                                   For
@@ -1292,44 +1292,44 @@ implementation
                                   it returns 2.
                                   Basically the number of variables before the first colon.
                                 }
-                                if Assigned(rtti_attrs_def) then
+                                if Assigned(lRTTIAttrsDef) then
                                   begin
                                   { read_record_fields can read a list of fields with the same type.
                                     for the first fields, we simply copy. for the last one we bind.}
-                                  While (attr_element_count>1) do
+                                  While (lAttrElementCount>1) do
                                     begin
-                                    TRTTIAttributeList.CopyAndBind(rtti_attrs_def,TFieldVarSym(fieldlist[FldCount]).RTTIAttributeList);
-                                    inc(fldcount);
-                                    dec(attr_element_count);
+                                    TRTTIAttributeList.CopyAndBind(lRTTIAttrsDef,TFieldVarSym(lFieldList[lFieldCount]).RTTIAttributeList);
+                                    inc(lFieldCount);
+                                    dec(lAttrElementCount);
                                     end;
-                                  if fldCount<FieldList.Count then
-                                    TRTTIAttributeList.bind(rtti_attrs_def,TFieldVarSym(fieldlist[FldCount]).RTTIAttributeList)
+                                  if lFieldCount<lFieldList.Count then
+                                    TRTTIAttributeList.bind(lRTTIAttrsDef,TFieldVarSym(lFieldList[lFieldCount]).RTTIAttributeList)
                                   else
-                                    rtti_attrs_def.free;
-                                    rtti_attrs_def := nil;
+                                    lRTTIAttrsDef.free;
+                                    lRTTIAttrsDef := nil;
                                   end;
-                                rtti_attrs_def:=nil;
+                                lRTTIAttrsDef:=nil;
                               end;
                           end
-                        else if object_member_blocktype=bt_type then
+                        else if lObjectMemberBlockType=bt_type then
                           begin
-                          check_unbound_attributes;
-                          types_dec(true,hadgeneric, rtti_attrs_def)
+                          CheckUnboundAttributes;
+                          TypesDec(true,lHadGeneric, lRTTIAttrsDef)
                           end
-                        else if object_member_blocktype=bt_const then
+                        else if lObjectMemberBlockType=bt_const then
                           begin
-                            check_unbound_attributes;
-                            typedconstswritable:=false;
-                            if final_fields then
+                            CheckUnboundAttributes;
+                            lTypedConstsWritable:=false;
+                            if lFinalFields then
                               begin
                                 { the value of final fields cannot be changed
                                   once they've been assigned a value }
-                                typedconstswritable:=cs_typed_const_writable in CurrentSettings.LocalSwitches;
+                                lTypedConstsWritable:=cs_typed_const_writable in CurrentSettings.LocalSwitches;
                                 exclude(CurrentSettings.LocalSwitches,cs_typed_const_writable);
                               end;
-                            consts_dec(true,true,hadgeneric);
-                            if final_fields and
-                               typedconstswritable then
+                            ConstsDec(true,true,lHadGeneric);
+                            if lFinalFields and
+                               lTypedConstsWritable then
                               include(CurrentSettings.LocalSwitches,cs_typed_const_writable);
                           end
                         else
@@ -1339,67 +1339,67 @@ implementation
               end;
             _PROPERTY :
               begin
-                struct_property_dec(is_classdef, rtti_attrs_def);
-                fields_allowed:=false;
-                is_classdef:=false;
+                StructPropertyDec(lIsClassDef, lRTTIAttrsDef);
+                lFieldsAllowed:=false;
+                lIsClassDef:=false;
               end;
             _CLASS:
-                parse_class;
+                ParseClass;
             _PROCEDURE,
             _FUNCTION,
             _CONSTRUCTOR,
             _DESTRUCTOR :
               begin
-                method_def:=method_dec(CurrentStructDef,is_classdef,hadgeneric);
-                if Assigned(rtti_attrs_def) then
+                lMethodDef:=MethodDec(CurrentStructDef,lIsClassDef,lHadGeneric);
+                if Assigned(lRTTIAttrsDef) then
                   begin
-                  TRTTIAttributeList.bind(rtti_attrs_def,method_def.RTTIAttributeList);
-                  rtti_attrs_def:=nil;
+                  TRTTIAttributeList.bind(lRTTIAttrsDef,lMethodDef.RTTIAttributeList);
+                  lRTTIAttrsDef:=nil;
                   end;
-                fields_allowed:=false;
-                is_classdef:=false;
-                hadgeneric:=false;
+                lFieldsAllowed:=false;
+                lIsClassDef:=false;
+                lHadGeneric:=false;
               end;
             _LECKKLAMMER:
               begin
                 if m_prefixed_attributes in CurrentSettings.ModeSwitches then
-                  parse_rttiattributes(rtti_attrs_def)
+                  ParseRTTIAttributes(lRTTIAttrsDef)
                 else
-                  consume(_ID);
+                  Consume(_ID);
               end;
             _END :
               begin
-                check_unbound_attributes;
-                consume(_END);
+                CheckUnboundAttributes;
+                Consume(_END);
                 break;
               end;
             else
-              consume(_ID); { Give a ident expected message, like tp7 }
+              Consume(_ID); { Give a ident expected message, like tp7 }
           end;
         until false;
 
         if Is_Class(CurrentStructDef) then
-          TAbstractRecordSymTable(CurrentStructDef.SymTable).AddFieldList(fieldlist,true);
-        fieldlist.free;
-        fieldlist := nil;
+          TAbstractRecordSymTable(CurrentStructDef.SymTable).AddFieldList(lFieldList,true);
+        lFieldList.free;
+        lFieldList := nil;
       end;
 
 
-    function object_dec(ObjectType:TObjectTyp;const n:TIDString;objsym:TSym;GenericDef:TStoredDef;genericlist:TFPHashObjectList;fd : TObjectDef;HelperType:THelperType) : TObjectDef;
+    function ObjectDec(AObjectType:TObjectTyp;const AName:TIDString;AObjSym:TSym;AGenericDef:TStoredDef;AGenericList:TFPHashObjectList;AForwardDef : TObjectDef;AHelperType:THelperType) : TObjectDef;
       var
-        old_current_structdef: TAbstractRecordDef;
-        old_current_genericdef,
-        old_current_specializedef: TStoredDef;
-        old_parse_generic: boolean;
-        list: TFPObjectList;
-        s: TSymStr;
-        st: TSymTable;
-        olddef: TDef;
+        lOldCurrentStructDef: TAbstractRecordDef;
+        lOldCurrentGenericDef,
+        lOldCurrentSpecializeDef: TStoredDef;
+        lOldParseGeneric: Boolean;
+        lList: TFPObjectList;
+        lText: TSymStr;
+        lSymTable: TSymTable;
+        lOldDef: TDef;
       begin
-        old_current_structdef:=CurrentStructDef;
-        old_current_genericdef:=CurrentGenericDef;
-        old_current_specializedef:=CurrentSpecializeDef;
-        old_parse_generic:=parse_generic;
+        lOldCurrentStructDef:=CurrentStructDef;
+        lOldCurrentGenericDef:=CurrentGenericDef;
+        lOldCurrentSpecializeDef:=CurrentSpecializeDef;
+        lOldParseGeneric:=ParseGeneric;
 
         CurrentStructDef:=nil;
         CurrentGenericDef:=nil;
@@ -1407,31 +1407,31 @@ implementation
 
         { objects and class types can't be declared local }
         if not(SymTableStack.top.SymTableType in [GlobalSymTable,staticsymtable,objectsymtable,recordsymtable]) and
-           not Assigned(genericlist) then
+           not Assigned(AGenericList) then
           Message(parser_e_no_local_objects);
 
         { reuse forward objectdef? }
-        if Assigned(fd) then
+        if Assigned(AForwardDef) then
           begin
-            if (fd.ObjectType<>ObjectType) or ((fd.Is_Generic or fd.Is_Specialization) xor Assigned(genericlist)) then
+            if (AForwardDef.ObjectType<>AObjectType) or ((AForwardDef.Is_Generic or AForwardDef.Is_Specialization) xor Assigned(AGenericList)) then
               begin
                 Message(parser_e_forward_mismatch);
                 { recover }
-                CurrentStructDef:=CObjectDef.Create(ObjectType,n,nil,true);
+                CurrentStructDef:=CObjectDef.Create(AObjectType,AName,nil,true);
                 include(CurrentStructDef.ObjectOptions,oo_is_forward);
               end
             else
-              CurrentStructDef:=fd
+              CurrentStructDef:=AForwardDef
           end
         else
           begin
             { anonym objects aren't allow (o : object a : longint; end;) }
-            if n='' then
+            if AName='' then
               Message(parser_f_no_anonym_objects);
 
             { create new class }
-            CurrentStructDef:=CObjectDef.Create(ObjectType,n,nil,true);
-            TObjectDef(CurrentStructDef).HelperType:=HelperType;
+            CurrentStructDef:=CObjectDef.Create(AObjectType,AName,nil,true);
+            TObjectDef(CurrentStructDef).HelperType:=AHelperType;
 
             { include always the forward flag, it'll be removed once the whole
               class has been parsed so that it can be used as a parent class
@@ -1442,16 +1442,16 @@ implementation
 
             if (cs_compilesystem in CurrentSettings.ModuleSwitches) then
               begin
-                case current_objectdef.ObjectType of
+                case CurrentObjectDef.ObjectType of
                   odt_interfacecom :
                     if (CurrentStructDef.ObjName^='IUNKNOWN') then
-                      Interface_IUnknown:=current_objectdef
+                      Interface_IUnknown:=CurrentObjectDef
                     else
                     if (CurrentStructDef.ObjName^='IDISPATCH') then
-                      Interface_IDispatch:=current_objectdef;
+                      Interface_IDispatch:=CurrentObjectDef;
                   odt_class :
                     if (CurrentStructDef.ObjName^='TOBJECT') then
-                      Class_TObject:=current_objectdef;
+                      Class_TObject:=CurrentObjectDef;
 
                   else
                     ;
@@ -1459,10 +1459,10 @@ implementation
               end;
             if (CurrentModule.ModuleName^='OBJCBASE') then
               begin
-                case current_objectdef.ObjectType of
+                case CurrentObjectDef.ObjectType of
                   odt_objcclass:
-                    if (current_objectdef.ObjName^='Protocol') then
-                      ObjC_ProtocolType:=current_objectdef;
+                    if (CurrentObjectDef.ObjName^='Protocol') then
+                      ObjC_ProtocolType:=CurrentObjectDef;
                   else
                     ;
                 end;
@@ -1470,18 +1470,18 @@ implementation
           end;
 
         { usage of specialized type inside its generic template }
-        if Assigned(GenericDef) then
+        if Assigned(AGenericDef) then
           CurrentSpecializeDef:=CurrentStructDef;
         { reject declaration of generic class inside generic class }
-        if Assigned(genericlist) then
+        if Assigned(AGenericList) then
           CurrentGenericDef:=CurrentStructDef;
 
         { nested types of specializations are specializations as well }
-        if Assigned(old_current_structdef) and
-            (df_specialization in old_current_structdef.DefOptions) then
+        if Assigned(lOldCurrentStructDef) and
+            (df_specialization in lOldCurrentStructDef.DefOptions) then
           include(CurrentStructDef.DefOptions,df_specialization);
-        if Assigned(old_current_structdef) and
-            (df_generic in old_current_structdef.DefOptions) then
+        if Assigned(lOldCurrentStructDef) and
+            (df_generic in lOldCurrentStructDef.DefOptions) then
           begin
             include(CurrentStructDef.DefOptions,df_generic);
             CurrentGenericDef:=CurrentStructDef;
@@ -1490,33 +1490,33 @@ implementation
         { set published flag in $M+ mode, it can also be inherited and will
           be added when the parent class set with tobjectdef.set_parent (PFV) }
         if (cs_generate_rtti in CurrentSettings.LocalSwitches) and
-           (current_objectdef.ObjectType in [odt_interfacecom,odt_interfacecorba,odt_class,odt_helper]) then
+           (CurrentObjectDef.ObjectType in [odt_interfacecom,odt_interfacecorba,odt_class,odt_helper]) then
           include(CurrentStructDef.ObjectOptions,oo_can_have_published);
 
 
-        if ObjectType in [odt_objcclass,odt_objcprotocol,odt_objccategory] then
-          parse_object_options;
+        if AObjectType in [odt_objcclass,odt_objcprotocol,odt_objccategory] then
+          ParseObjectOptions;
 
         { forward def? }
-        if CurrentScanner.token=_SEMICOLON then
+        if CurrentScanner.FToken=_SEMICOLON then
           begin
-            if Assigned(fd) then
-              Message1(parser_e_type_alread_forward,n)
+            if Assigned(AForwardDef) then
+              Message1(parser_e_type_alread_forward,AName)
             else
               begin
                 if Is_ObjectPascal_Helper(CurrentStructDef) then
-                  consume(_FOR);
+                  Consume(_FOR);
                 { add to the list of definitions to check that the forward
                   is resolved. this is required for delphi mode }
                 CurrentModule.CheckForwardDefs.add(CurrentStructDef);
 
                 SymTableStack.push(CurrentStructDef.SymTable);
-                insert_generic_parameter_types(CurrentStructDef,GenericDef,genericlist,false);
+                InsertGenericParameterTypes(CurrentStructDef,AGenericDef,AGenericList,false);
                 { when we are parsing a generic already then this is a generic as
                   well }
-                if old_parse_generic then
+                if lOldParseGeneric then
                   include(CurrentStructDef.DefOptions,df_generic);
-                parse_generic:=(df_generic in CurrentStructDef.DefOptions);
+                ParseGeneric:=(df_generic in CurrentStructDef.DefOptions);
 
                 { *don't* add the strict private symbol for non-Delphi modes for
                   forward defs }
@@ -1527,54 +1527,54 @@ implementation
         else
           begin
             { change objccategories into objcclass helpers }
-            if (ObjectType=odt_objccategory) then
+            if (AObjectType=odt_objccategory) then
               begin
-                current_objectdef.ObjectType:=odt_objcclass;
+                CurrentObjectDef.ObjectType:=odt_objcclass;
                 include(CurrentStructDef.ObjectOptions,oo_is_classhelper);
               end;
 
             { include the class helper flag for Object Pascal helpers }
-            if (ObjectType=odt_helper) then
-              include(current_objectdef.ObjectOptions,oo_is_classhelper);
+            if (AObjectType=odt_helper) then
+              include(CurrentObjectDef.ObjectOptions,oo_is_classhelper);
 
             { parse list of options (abstract / sealed) }
-            if not(ObjectType in [odt_objcclass,odt_objcprotocol,odt_objccategory]) then
-              parse_object_options;
+            if not(AObjectType in [odt_objcclass,odt_objcprotocol,odt_objccategory]) then
+              ParseObjectOptions;
 
             SymTableStack.push(CurrentStructDef.SymTable);
-            insert_generic_parameter_types(CurrentStructDef,GenericDef,genericlist,Assigned(fd));
+            InsertGenericParameterTypes(CurrentStructDef,AGenericDef,AGenericList,Assigned(AForwardDef));
             { when we are parsing a generic already then this is a generic as
               well }
-            if old_parse_generic then
+            if lOldParseGeneric then
               include(CurrentStructDef.DefOptions, df_generic);
-            parse_generic:=(df_generic in CurrentStructDef.DefOptions);
+            ParseGeneric:=(df_generic in CurrentStructDef.DefOptions);
 
             { in non-Delphi modes we need a strict private symbol without type
               count and type parameters in the name to simplify resolving }
-            maybe_insert_generic_rename_symbol(n,genericlist);
+            MaybeInsertGenericRenameSymbol(AName,AGenericList);
 
             { parse list of parent classes }
             { for record helpers in mode Delphi this is not allowed }
-            if not (Is_ObjectPascal_Helper(current_objectdef) and
+            if not (Is_ObjectPascal_Helper(CurrentObjectDef) and
                 (m_delphi in CurrentSettings.ModeSwitches) and
-                (HelperType=ht_record)) then
-              parse_parent_classes;
+                (AHelperType=ht_record)) then
+              ParseParentClasses;
 
             { for external classes we remove the external flag here already }
-            if oo_is_external in current_objectdef.ObjectOptions then
-              exclude(current_objectdef.ObjectOptions,oo_is_forward);
+            if oo_is_external in CurrentObjectDef.ObjectOptions then
+              exclude(CurrentObjectDef.ObjectOptions,oo_is_forward);
 
             { parse extended type for helpers }
             if Is_ObjectPascal_Helper(CurrentStructDef) then
-              parse_extended_type(HelperType);
+              ParseExtendedType(AHelperType);
 
-            if Is_Interface(current_objectdef) and
-                Is_Interface(current_objectdef.ChildOf) and
-                (oo_is_invokable in TObjectDef(current_objectdef.ChildOf).ObjectOptions) then
-              include(current_objectdef.ObjectOptions,oo_is_invokable);
+            if Is_Interface(CurrentObjectDef) and
+                Is_Interface(CurrentObjectDef.ChildOf) and
+                (oo_is_invokable in TObjectDef(CurrentObjectDef.ChildOf).ObjectOptions) then
+              include(CurrentObjectDef.ObjectOptions,oo_is_invokable);
 
             { parse optional GUID for interfaces }
-            parse_guid;
+            ParseGUID;
 
             { classes can handle links to themself not only inside type blocks
               but in const blocks too. Additionally this is needed to parse parameters that are
@@ -1582,37 +1582,37 @@ implementation
               ObjC classes. To make this possible we need to set their symbols to real defs instead
               of errordef }
 
-            if Assigned(objsym) and not (ObjectType in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
+            if Assigned(AObjSym) and not (AObjectType in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
               begin
-                olddef:=TTypeSym(objsym).TypeDef;
-                TTypeSym(objsym).TypeDef:=CurrentStructDef;
-                CurrentStructDef.TypeSym:=objsym;
+                lOldDef:=TTypeSym(AObjSym).TypeDef;
+                TTypeSym(AObjSym).TypeDef:=CurrentStructDef;
+                CurrentStructDef.TypeSym:=AObjSym;
               end
             else
-              olddef:=nil;
+              lOldDef:=nil;
 
             { if set explicitly, apply $RTTI directive to current object }
             if CurrentModule.RTTIDirective.clause<>rtc_none then
               CurrentStructDef.Apply_RTTI_Directive(CurrentModule.RTTIDirective)
             else
               { if not set, and class has a parent, take parent object settings }
-              if (ObjectType = odt_class) and Assigned(current_objectdef.ChildOf) then
-                CurrentStructDef.Apply_RTTI_Directive(current_objectdef.ChildOf.RTTI);
+              if (AObjectType = odt_class) and Assigned(CurrentObjectDef.ChildOf) then
+                CurrentStructDef.Apply_RTTI_Directive(CurrentObjectDef.ChildOf.RTTI);
 
             { generate TObject VMT space }
             { We must insert the VMT at the start for system.tobject, and class_tobject was already set.
               The cs_compilesystem is superfluous, but we add it for safety.
 
             }
-            if (current_objectdef=Class_TObject) and (cs_compilesystem in CurrentSettings.ModuleSwitches) then
-              current_objectdef.InsertVMT;
+            if (CurrentObjectDef=Class_TObject) and (cs_compilesystem in CurrentSettings.ModuleSwitches) then
+              CurrentObjectDef.InsertVMT;
 
             { parse and insert object members }
-            parse_object_members;
+            ParseObjectMembers;
 
-            if Assigned(olddef) then
+            if Assigned(lOldDef) then
               begin
-                TTypeSym(objsym).TypeDef:=olddef;
+                TTypeSym(AObjSym).TypeDef:=lOldDef;
                 CurrentStructDef.TypeSym:=nil;
               end;
 
@@ -1628,14 +1628,14 @@ implementation
            so their vmt is already created when TObject was parsed.
         }
         if not(oo_has_vmt in CurrentStructDef.ObjectOptions) and
-           not(current_objectdef.ObjectType in [odt_class]) and
+           not(CurrentObjectDef.ObjectType in [odt_class]) and
            not(oo_is_forward in CurrentStructDef.ObjectOptions) and
-           not(parse_generic) and
+           not(ParseGeneric) and
            { no vmt for helpers ever }
            not Is_ObjectPascal_Helper(CurrentStructDef) and
             ([oo_has_virtual,oo_has_constructor,oo_has_destructor]*CurrentStructDef.ObjectOptions<>[])
            then
-          current_objectdef.InsertVMT;
+          CurrentObjectDef.InsertVMT;
 
         { for implemented classes with a vmt check if there is a constructor }
         if (oo_has_vmt in CurrentStructDef.ObjectOptions) and
@@ -1646,46 +1646,46 @@ implementation
 
         if Is_Interface(CurrentStructDef) or
            Is_ObjCProtocol(CurrentStructDef) then
-          setinterfacemethodoptions
+          SetInterfaceMethodOptions
         else if Is_ObjCClass(CurrentStructDef) then
-          setobjcclassmethodoptions;
+          SetObjCClassMethodOptions;
 
         { we need to add this helper to the extendeddefs of the current module,
           as the global and static symtable are not pushed onto the symtable
           stack again (it will be removed when popping the symtable) }
         if Is_ObjectPascal_Helper(CurrentStructDef) and
-            (current_objectdef.ExtendedDef.typ<>errordef) then
+            (CurrentObjectDef.ExtendedDef.typ<>errordef) then
           begin
             { the topmost symtable must be a static symtable }
-            st:=CurrentStructDef.owner;
-            while st.SymTableType in [objectsymtable,recordsymtable] do
-              st:=st.DefOwner.owner;
-            if st.SymTableType in [staticsymtable,GlobalSymTable] then
+            lSymTable:=CurrentStructDef.owner;
+            while lSymTable.SymTableType in [objectsymtable,recordsymtable] do
+              lSymTable:=lSymTable.DefOwner.owner;
+            if lSymTable.SymTableType in [staticsymtable,GlobalSymTable] then
               begin
-                if current_objectdef.ExtendedDef.typ in [recorddef,objectdef] then
-                  s:=Make_MangledName('',TAbstractRecordDef(current_objectdef.ExtendedDef).SymTable,'')
+                if CurrentObjectDef.ExtendedDef.typ in [recorddef,objectdef] then
+                  lText:=Make_MangledName('',TAbstractRecordDef(CurrentObjectDef.ExtendedDef).SymTable,'')
                 else
-                  s:=Make_MangledName('',current_objectdef.ExtendedDef.owner,current_objectdef.ExtendedDef.TypeSym.name);
-                Message1(sym_d_adding_helper_for,s);
-                list:=TFPObjectList(CurrentModule.ExtendedDefs.Find(s));
-                if not Assigned(list) then
+                  lText:=Make_MangledName('',CurrentObjectDef.ExtendedDef.owner,CurrentObjectDef.ExtendedDef.TypeSym.name);
+                Message1(sym_d_adding_helper_for,lText);
+                lList:=TFPObjectList(CurrentModule.ExtendedDefs.Find(lText));
+                if not Assigned(lList) then
                   begin
-                    list:=TFPObjectList.Create(false);
-                    CurrentModule.ExtendedDefs.Add(s, list);
+                    lList:=TFPObjectList.Create(false);
+                    CurrentModule.ExtendedDefs.Add(lText, lList);
                   end;
-                list.add(CurrentStructDef);
+                lList.add(CurrentStructDef);
               end;
           end;
-        TAbstractRecordSymTable(current_objectdef.SymTable).AddAlignmentPadding;
+        TAbstractRecordSymTable(CurrentObjectDef.SymTable).AddAlignmentPadding;
 
         { return defined objectdef }
-        result:=current_objectdef;
+        Result:=CurrentObjectDef;
 
         { restore old state }
-        CurrentStructDef:=old_current_structdef;
-        CurrentGenericDef:=old_current_genericdef;
-        CurrentSpecializeDef:=old_current_specializedef;
-        parse_generic:=old_parse_generic;
+        CurrentStructDef:=lOldCurrentStructDef;
+        CurrentGenericDef:=lOldCurrentGenericDef;
+        CurrentSpecializeDef:=lOldCurrentSpecializeDef;
+        ParseGeneric:=lOldParseGeneric;
       end;
 
 end.

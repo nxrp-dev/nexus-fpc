@@ -26,7 +26,7 @@ unit pexports;
 interface
 
     { reads an exports statement in a library }
-    procedure read_exports;
+    procedure ReadExports;
 
 implementation
 
@@ -52,148 +52,148 @@ implementation
        ;
 
 
-    procedure read_exports;
+    procedure ReadExports;
       var
-        orgs,
-        DefString,
-        InternalProcName : string;
-        pd         : TProcDef;
-        pt         : TNode;
-        srsym      : TSym;
-        srsymtable : TSymTable;
-        hpname     : shortstring;
-        index      : LongInt;
-        options    : TExportOptions;
+        lOriginalName,
+        lDefString,
+        lInternalProcName : String;
+        lProcDef         : TProcDef;
+        lNode         : TNode;
+        lSearchSym      : TSym;
+        lSearchSymTable : TSymTable;
+        lExportName     : ShortString;
+        lIndex      : LongInt;
+        lOptions    : TExportOptions;
 
-        function IsGreater(hp1,hp2:TExportedItem):boolean;
+        function IsGreater(AFirstItem,ASecondItem:TExportedItem):Boolean;
         var
-          i2 : boolean;
+          lSecondHasIndex : Boolean;
         begin
-          i2:=eo_index in hp2.options;
-          if eo_index in hp1.options then
+          lSecondHasIndex:=eo_index in ASecondItem.options;
+          if eo_index in AFirstItem.options then
            begin
-             if i2 then
-               IsGreater:=hp1.Index>hp2.Index
+             if lSecondHasIndex then
+               IsGreater:=AFirstItem.Index>ASecondItem.Index
              else
                IsGreater:=false;
            end
           else
-            IsGreater:=i2;
+            IsGreater:=lSecondHasIndex;
         end;
 
       begin
          include(CurrentModule.ModuleFlags,mf_has_exports);
-         DefString:='';
-         InternalProcName:='';
-         consume(_EXPORTS);
+         lDefString:='';
+         lInternalProcName:='';
+         Consume(_EXPORTS);
          repeat
-           hpname:='';
-           options:=[];
-           index:=0;
-           if CurrentScanner.token=_ID then
+           lExportName:='';
+           lOptions:=[];
+           lIndex:=0;
+           if CurrentScanner.FToken=_ID then
              begin
-                consume_sym_orgid(srsym,srsymtable,orgs);
+                ConsumeSymOrgID(lSearchSym,lSearchSymTable,lOriginalName);
                 { current_scanner.orgpattern is still valid here }
-                InternalProcName:='';
-                case srsym.typ of
+                lInternalProcName:='';
+                case lSearchSym.typ of
                   staticvarsym :
-                    InternalProcName:=TStaticVarSym(srsym).MangledName;
+                    lInternalProcName:=TStaticVarSym(lSearchSym).MangledName;
                   ProcSym :
                     begin
-                      pd:=TProcDef(TProcSym(srsym).ProcdefList[0]);
-                      if (TProcSym(srsym).ProcdefList.Count>1) or
-                         (po_kylixlocal in pd.ProcOptions) or
+                      lProcDef:=TProcDef(TProcSym(lSearchSym).ProcdefList[0]);
+                      if (TProcSym(lSearchSym).ProcdefList.Count>1) or
+                         (po_kylixlocal in lProcDef.ProcOptions) or
                          ((tf_need_export in TargetInfo.flags) and
-                          not(po_exports in pd.ProcOptions)) then
+                          not(po_exports in lProcDef.ProcOptions)) then
                         Message(parser_e_illegal_symbol_exported)
                       else
-                        InternalProcName:=pd.MangledName;
+                        lInternalProcName:=lProcDef.MangledName;
                     end;
                   TypeSym :
                     begin
-                      if not Is_ObjCClass(TTypeSym(srsym).TypeDef) then
+                      if not Is_ObjCClass(TTypeSym(lSearchSym).TypeDef) then
                         Message(parser_e_illegal_symbol_exported)
                     end;
                   else
                     Message(parser_e_illegal_symbol_exported)
                 end;
-                if (srsym.typ<>TypeSym) then
+                if (lSearchSym.typ<>TypeSym) then
                   begin
-                    if InternalProcName<>'' then
+                    if lInternalProcName<>'' then
                      begin
                        { This is wrong if the first is not
                          an underline }
-                       if InternalProcName[1]='_' then
-                         delete(InternalProcName,1,1)
+                       if lInternalProcName[1]='_' then
+                         delete(lInternalProcName,1,1)
                        else if (TargetInfo.system=system_i386_win32) and UseDefFileForExports then
                          begin
                            Message(parser_e_dlltool_unit_var_problem);
                            Message(parser_e_dlltool_unit_var_problem2);
                          end;
-                       if length(InternalProcName)<2 then
+                       if length(lInternalProcName)<2 then
                         Message(parser_e_procname_to_short_for_export);
-                       DefString:=srsym.realname+'='+InternalProcName;
+                       lDefString:=lSearchSym.realname+'='+lInternalProcName;
                      end;
-                    if try_to_consume(_INDEX) then
+                    if TryToConsume(_INDEX) then
                      begin
-                       pt:=comp_expr([ef_accept_equal]);
-                       if pt.nodetype=ordconstn then
-                        if (TOrdConstNode(pt).Value<int64(low(index))) or
-                           (TOrdConstNode(pt).Value>int64(high(index))) then
+                       lNode:=CompExpr([efAcceptEqual]);
+                       if lNode.nodetype=ordconstn then
+                        if (TOrdConstNode(lNode).Value<Int64(low(lIndex))) or
+                           (TOrdConstNode(lNode).Value>Int64(high(lIndex))) then
                           begin
-                            index:=0;
-                            message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(index)),ToStr(high(index)))
+                            lIndex:=0;
+                            message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(lNode).Value),ToStr(low(lIndex)),ToStr(high(lIndex)))
                           end
                         else
-                          index:=TOrdConstNode(pt).Value.svalue
+                          lIndex:=TOrdConstNode(lNode).Value.svalue
                        else
                         begin
-                          index:=0;
+                          lIndex:=0;
                           message(type_e_ordinal_expr_expected);
                         end;
-                       include(options,eo_index);
-                       pt.free;
-                       pt := nil;
+                       include(lOptions,eo_index);
+                       lNode.free;
+                       lNode := nil;
                        if TargetInfo.system=system_i386_win32 then
-                        DefString:=srsym.realname+'='+InternalProcName+' @ '+ToStr(index)
+                        lDefString:=lSearchSym.realname+'='+lInternalProcName+' @ '+ToStr(lIndex)
                        else
-                        DefString:=srsym.realname+'='+InternalProcName; {Index ignored!}
+                        lDefString:=lSearchSym.realname+'='+lInternalProcName; {Index ignored!}
                      end;
-                    if try_to_consume(_NAME) then
+                    if TryToConsume(_NAME) then
                      begin
-                       pt:=comp_expr([ef_accept_equal]);
-                       if pt.nodetype=stringconstn then
-                         hpname:=StrPas(pchar(@TStringConstNode(pt).ValueAS[0]))
-                       else if Is_ConstCharNode(pt) then
-                         hpname:=chr(TOrdConstNode(pt).Value.svalue and $ff)
+                       lNode:=CompExpr([efAcceptEqual]);
+                       if lNode.nodetype=stringconstn then
+                         lExportName:=StrPas(PChar(@TStringConstNode(lNode).ValueAS[0]))
+                       else if Is_ConstCharNode(lNode) then
+                         lExportName:=chr(TOrdConstNode(lNode).Value.svalue and $ff)
                        else
                          message(type_e_string_expr_expected);
-                       include(options,eo_name);
-                       pt.free;
-                       pt := nil;
-                       DefString:=hpname+'='+InternalProcName;
+                       include(lOptions,eo_name);
+                       lNode.free;
+                       lNode := nil;
+                       lDefString:=lExportName+'='+lInternalProcName;
                      end;
-                    if try_to_consume(_RESIDENT) then
+                    if TryToConsume(_RESIDENT) then
                      begin
-                       include(options,eo_resident);
-                       DefString:=srsym.realname+'='+InternalProcName;{Resident ignored!}
+                       include(lOptions,eo_resident);
+                       lDefString:=lSearchSym.realname+'='+lInternalProcName;{Resident ignored!}
                      end;
-                    if try_to_consume(_PROMISING) then
+                    if TryToConsume(_PROMISING) then
                      begin
                        Message(parser_e_promising_exports_not_supported_on_current_platform);
-                       if not try_to_consume(_FIRST) then
-                         try_to_consume(_LAST);
+                       if not TryToConsume(_FIRST) then
+                         TryToConsume(_LAST);
                      end;
-                    if (DefString<>'') and
+                    if (lDefString<>'') and
                         (
                           UseDefFileForExports or
                           (cs_link_deffile in CurrentSettings.GlobalSwitches)
                         ) then
-                     DefFile.AddExport(DefString);
+                     DefFile.AddExport(lDefString);
                   end;
                 // consumed the symbol. Only do something if there was no error.
                 if ErrorCount=0 then
-                  case srsym.typ of
+                  case lSearchSym.typ of
                     ProcSym:
                       begin
                        { if no specific name or index was given, then if }
@@ -202,9 +202,9 @@ implementation
                        { export section (it doesn't make sense to export }
                        { the generic mangled name, because the name of   }
                        { the parent unit is used in that)                }
-                       if (options*[eo_name,eo_index]=[]) and
-                          (TProcDef(TProcSym(srsym).procdeflist[0]).AliasNames.count>1) then
-                         exportallprocsymnames(TProcSym(srsym),options)
+                       if (lOptions*[eo_name,eo_index]=[]) and
+                          (TProcDef(TProcSym(lSearchSym).procdeflist[0]).AliasNames.count>1) then
+                         exportallprocsymnames(TProcSym(lSearchSym),lOptions)
                        else
                          begin
                            { there's a name or an index -> export only one name   }
@@ -212,39 +212,39 @@ implementation
                            { same index? And/or should we also export the aliases }
                            { if a name is specified? (JM)                         }
 
-                           if not (eo_name in options) then
+                           if not (eo_name in lOptions) then
                              { Export names are not mangled on Windows }
                              if (TargetInfo.system in systems_all_windows) then
-                               hpname:=orgs
+                               lExportName:=lOriginalName
                              { Use set mangled name in case of cdecl/cppdecl/mwpascal }
                              { and no name specified                                  }
-                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).ProcCallOption in [pocall_cdecl,pocall_mwpascal]) then
-                               hpname:=TargetInfo.cprefix+TProcSym(srsym).realname
-                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).ProcCallOption in [pocall_cppdecl]) then
-                               hpname:=TargetInfo.cprefix+TProcDef(TProcSym(srsym).procdeflist[0]).CPlusPlusMangledName
+                             else if (TProcDef(TProcSym(lSearchSym).procdeflist[0]).ProcCallOption in [pocall_cdecl,pocall_mwpascal]) then
+                               lExportName:=TargetInfo.cprefix+TProcSym(lSearchSym).realname
+                             else if (TProcDef(TProcSym(lSearchSym).procdeflist[0]).ProcCallOption in [pocall_cppdecl]) then
+                               lExportName:=TargetInfo.cprefix+TProcDef(TProcSym(lSearchSym).procdeflist[0]).CPlusPlusMangledName
                              else
-                               hpname:=orgs;
+                               lExportName:=lOriginalName;
 
-                           exportprocsym(srsym,hpname,index,options);
+                           exportprocsym(lSearchSym,lExportName,lIndex,lOptions);
                          end
                       end;
                     staticvarsym:
                       begin
-                        if not (eo_name in options) then
+                        if not (eo_name in lOptions) then
                           { for "cvar" }
-                          if (vo_has_mangledname in TStaticVarSym(srsym).VarOptions) then
-                            hpname:=srsym.MangledName
+                          if (vo_has_mangledname in TStaticVarSym(lSearchSym).VarOptions) then
+                            lExportName:=lSearchSym.MangledName
                           else
-                            hpname:=orgs;
-                        exportvarsym(srsym,hpname,index,options);
+                            lExportName:=lOriginalName;
+                        exportvarsym(lSearchSym,lExportName,lIndex,lOptions);
                       end;
                     TypeSym:
                       begin
-                        case TTypeSym(srsym).TypeDef.typ of
+                        case TTypeSym(lSearchSym).TypeDef.typ of
                           objectdef:
-                            case TObjectDef(TTypeSym(srsym).TypeDef).ObjectType of
+                            case TObjectDef(TTypeSym(lSearchSym).TypeDef).ObjectType of
                               odt_objcclass:
-                                ExportObjCClass(TObjectDef(TTypeSym(srsym).TypeDef));
+                                ExportObjCClass(TObjectDef(TTypeSym(lSearchSym).TypeDef));
                               else
                                 InternalError(2009092601);
                             end;
@@ -257,9 +257,9 @@ implementation
                    end; // Case srsym.typ
              end
            else
-             consume(_ID);
-         until not try_to_consume(_COMMA);
-         consume(_SEMICOLON);
+             Consume(_ID);
+         until not TryToConsume(_COMMA);
+         Consume(_SEMICOLON);
         if not DefFile.empty then
          DefFile.writefile;
       end;

@@ -2695,7 +2695,7 @@ implementation
            increase references count (for smaller final binaries) }
          if not Assigned(CurrentScanner) then
            InternalError(2017050601);
-         if CurrentScanner.in_preproc_comp_expr then
+         if CurrentScanner.FInPreProcCompExpr then
            Exit;
          { symbol uses count }
          Sym.IncRefCount;
@@ -3184,7 +3184,7 @@ implementation
     function  SearchSym(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       begin
         case S[1] of
-          internal_macro_escape_unit_namespace_name:
+          cInternalMacroEscapeUnitNamespaceName:
             Result:=SearchSym_Maybe_With_SymOption(Copy(S,2,Length(S)-1),SRSym,SRSymTable,[ssf_unit_or_namespace_only],sp_none)
           else
             Result:=SearchSym_Maybe_With_SymOption(S,SRSym,SRSymTable,[],sp_none);

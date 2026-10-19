@@ -385,12 +385,12 @@ implementation
             CurrentAsmData:=TAsmData(CurrentModule.AsmData);
             CurrentDebugInfo:=TDebugInfo(CurrentModule.DebugInfo);
             { restore scanner and file positions }
-            Set_Current_Scanner(TScannerFile(CurrentModule.Scanner));
+            SetCurrentScanner(TScannerFile(CurrentModule.Scanner));
             if Assigned(CurrentScanner) then
               begin
                 CurrentScanner.TempOpenInputFile;
                 CurrentScanner.GetTokenPos;
-                Parser_Current_File:=CurrentScanner.InputFile.Name;
+                Parser_Current_File:=CurrentScanner.FInputFile.Name;
               end
             else
               begin
@@ -401,7 +401,7 @@ implementation
         else
           begin
             CurrentAsmData:=nil;
-            Set_Current_Scanner(nil);
+            SetCurrentScanner(nil);
             CurrentDebugInfo:=nil;
           end;
       end;
@@ -719,7 +719,7 @@ implementation
             { also update current_scanner if it was pointing
               to this module }
             if CurrentScanner=TScannerFile(Scanner) then
-              Set_Current_Scanner(nil);
+              SetCurrentScanner(nil);
             FreeAndNil(Scanner);
           end;
         if Assigned(AsmData) then
@@ -864,7 +864,7 @@ implementation
             { also update current_scanner if it was pointing
               to this module }
             if CurrentScanner=TScannerFile(Scanner) then
-              Set_Current_Scanner(nil);
+              SetCurrentScanner(nil);
             FreeAndNil(Scanner);
           end;
         if Assigned(ProcInfo) then
@@ -1544,7 +1544,7 @@ implementation
         if Assigned(Scanner) then
           begin
             if CurrentScanner=TScannerFile(Scanner) then
-              Set_Current_Scanner(nil);
+              SetCurrentScanner(nil);
             FreeAndNil(Scanner);
             Scanner:=nil;
           end;

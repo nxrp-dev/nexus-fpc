@@ -28,13 +28,13 @@ interface
     uses
       SymBase;
 
-    procedure create_intern_symbols;
-    procedure create_intern_types;
+    procedure CreateInternSymbols;
+    procedure CreateInternTypes;
 
-    procedure load_intern_types;
+    procedure LoadInternTypes;
 
-    procedure registernodes;
-    procedure registertais;
+    procedure RegisterNodes;
+    procedure RegisterTAIs;
 
 
 implementation
@@ -48,7 +48,7 @@ implementation
       node,nbas,nflw,nset,ncon,ncnv,nld,nmem,ncal,nmat,nadd,ninl;
 
 
-    procedure create_intern_symbols;
+    procedure CreateInternSymbols;
       {
         all intern procedures for the system unit
       }
@@ -123,7 +123,7 @@ implementation
       end;
 
 
-    procedure set_default_int_types;
+    procedure SetDefaultIntTypes;
       begin
 {$ifdef cpu64bitalu}
         ALUUIntType:=U64IntType;
@@ -156,7 +156,7 @@ implementation
       end;
 
 
-    procedure set_default_ptr_types;
+    procedure SetDefaultPtrTypes;
       begin
 
         VoidCodePointerType:=VoidPointerType;
@@ -202,24 +202,24 @@ implementation
         end;
       end;
 
-    procedure create_intern_types;
+    procedure CreateInternTypes;
       {
         all the types inserted into the system unit
       }
 
-        function AddType(const s:string;def:TDef):TTypeSym;
+        function AddType(const AName:String;ADef:TDef):TTypeSym;
         begin
-          result:=CTypeSym.Create(s,def);
-          SystemUnit.InsertSym(result);
+          Result:=CTypeSym.Create(AName,ADef);
+          SystemUnit.InsertSym(Result);
         end;
 
-        procedure AddField(recst:TAbstractRecordSymTable;sym:TFieldVarSym);
+        procedure AddField(ARecordSymTable:TAbstractRecordSymTable;AFieldSym:TFieldVarSym);
         begin
-          recst.InsertSym(sym);
-          recst.AddField(sym,vis_hidden);
+          ARecordSymTable.InsertSym(AFieldSym);
+          ARecordSymTable.AddField(AFieldSym,vis_hidden);
         end;
 
-        procedure create_fpu_types;
+        procedure CreateFPUTypes;
         begin
           S32FloatType:=CFloatDef.Create(S32Real,true);
           S64FloatType:=CFloatDef.Create(S64Real,true);
@@ -228,8 +228,8 @@ implementation
         end;
 
       var
-        hrecst : TRecordSymTable;
-	pvmt_name : shortstring;
+        lRecordSymTable : TRecordSymTable;
+	lPVMTName : ShortString;
       begin
         SymTableStack.push(SystemUnit);
         CUndefinedType:=CUndefinedDef.Create(true);
@@ -238,21 +238,21 @@ implementation
         VoidType:=COrdDef.Create(uvoid,0,0,true);
         VoidPointerType:=CPointerDef.Create(VoidType);
         U8IntType:=COrdDef.Create(u8bit,0,255,true);
-        S8IntType:=COrdDef.Create(s8bit,int64(-128),127,true);
+        S8IntType:=COrdDef.Create(s8bit,Int64(-128),127,true);
         U16IntType:=COrdDef.Create(u16bit,0,65535,true);
-        S16IntType:=COrdDef.Create(s16bit,int64(-32768),32767,true);
-        S24IntType:=COrdDef.Create(customint,-(int64(1) shl 23),1 shl 23 - 1,true);
+        S16IntType:=COrdDef.Create(s16bit,Int64(-32768),32767,true);
+        S24IntType:=COrdDef.Create(customint,-(Int64(1) shl 23),1 shl 23 - 1,true);
         U24IntType:=COrdDef.Create(customint,0,1 shl 24 - 1,true);
         U32IntType:=COrdDef.Create(u32bit,0,high(LongWord),true);
-        S32IntType:=COrdDef.Create(s32bit,int64(low(LongInt)),int64(high(LongInt)),true);
-        S40IntType:=COrdDef.Create(customint,-(int64(1) shl 39),int64(1) shl 39 - 1,true);
-        U40IntType:=COrdDef.Create(customint,0,int64(1) shl 40 - 1,true);
-        S48IntType:=COrdDef.Create(customint,-(int64(1) shl 47),int64(1) shl 47 - 1,true);
-        U48IntType:=COrdDef.Create(customint,0,int64(1) shl 48 - 1,true);
-        S56IntType:=COrdDef.Create(customint,-(int64(1) shl 55),int64(1) shl 55 - 1,true);
-        U56IntType:=COrdDef.Create(customint,0,int64(1) shl 56 - 1,true);
-        U64IntType:=COrdDef.Create(u64bit,low(qword),high(qword),true);
-        S64IntType:=COrdDef.Create(s64bit,low(int64),high(int64),true);
+        S32IntType:=COrdDef.Create(s32bit,Int64(low(LongInt)),Int64(high(LongInt)),true);
+        S40IntType:=COrdDef.Create(customint,-(Int64(1) shl 39),Int64(1) shl 39 - 1,true);
+        U40IntType:=COrdDef.Create(customint,0,Int64(1) shl 40 - 1,true);
+        S48IntType:=COrdDef.Create(customint,-(Int64(1) shl 47),Int64(1) shl 47 - 1,true);
+        U48IntType:=COrdDef.Create(customint,0,Int64(1) shl 48 - 1,true);
+        S56IntType:=COrdDef.Create(customint,-(Int64(1) shl 55),Int64(1) shl 55 - 1,true);
+        U56IntType:=COrdDef.Create(customint,0,Int64(1) shl 56 - 1,true);
+        U64IntType:=COrdDef.Create(u64bit,low(QWord),high(QWord),true);
+        S64IntType:=COrdDef.Create(s64bit,low(Int64),high(Int64),true);
         { upper/lower bound not yet properly set for 128 bit types, as we don't
           support them yet at the Pascal level (nor for tconstexprint); they're
           only used internally by the high level code generator for LLVM to
@@ -264,10 +264,10 @@ implementation
         PasBool16Type:=COrdDef.Create(pasbool16,0,1,true);
         PasBool32Type:=COrdDef.Create(pasbool32,0,1,true);
         PasBool64Type:=COrdDef.Create(pasbool64,0,1,true);
-        Bool8Type:=COrdDef.Create(bool8bit,low(int64),high(int64),true);
-        Bool16Type:=COrdDef.Create(bool16bit,low(int64),high(int64),true);
-        Bool32Type:=COrdDef.Create(bool32bit,low(int64),high(int64),true);
-        Bool64Type:=COrdDef.Create(bool64bit,low(int64),high(int64),true);
+        Bool8Type:=COrdDef.Create(bool8bit,low(Int64),high(Int64),true);
+        Bool16Type:=COrdDef.Create(bool16bit,low(Int64),high(Int64),true);
+        Bool32Type:=COrdDef.Create(bool32bit,low(Int64),high(Int64),true);
+        Bool64Type:=COrdDef.Create(bool64bit,low(Int64),high(Int64),true);
 
         CAnsiCharType:=COrdDef.Create(uchar,0,255,true);
         CWideCharType:=COrdDef.Create(uwidechar,0,65535,true);
@@ -282,20 +282,20 @@ implementation
         CUnicodeStringType:=CStringDef.CreateUnicode(true);
         { length=0 for shortstring is open string (needed for readln(string) }
         OpenShortStringType:=CStringDef.CreateShort(0,true);
-        pvmt_name:='pvmt';
+        lPVMTName:='pvmt';
  {$ifdef x86}
-        create_fpu_types;
+        CreateFPUTypes;
         if TargetInfo.system=system_x86_64_win64 then
-          S64CurrencyType:=COrdDef.Create(scurrency,low(int64),high(int64),true)
+          S64CurrencyType:=COrdDef.Create(scurrency,low(Int64),high(Int64),true)
         else
           S64CurrencyType:=CFloatDef.Create(s64currency,true);
 {$endif x86}
 {$ifdef aarch64}
-        create_fpu_types;
-        S64CurrencyType:=COrdDef.Create(scurrency,low(int64),high(int64),true);
+        CreateFPUTypes;
+        S64CurrencyType:=COrdDef.Create(scurrency,low(Int64),high(Int64),true);
 {$endif aarch64}
 
-        set_default_int_types;
+        SetDefaultIntTypes;
         { some other definitions }
         CharPointerType:=CPointerDef.Create(CAnsiCharType);
         WideCharPointerType:=CPointerDef.Create(CWideCharType);
@@ -327,7 +327,7 @@ implementation
         TArrayDef(X86_M256DType).ElementDef:=S64FloatType;
         TArrayDef(X86_M256IType).ElementDef:=S32FloatType;
 {$endif x86}
-        set_default_ptr_types;
+        SetDefaultPtrTypes;
         OpenCharArrayType:=CArrayDef.Create_OpenArray;
         TArrayDef(OpenCharArrayType).ElementDef:=CAnsiCharType;
         CFileType:=CFileDef.CreateUntyped;
@@ -486,153 +486,153 @@ implementation
         AddType('$s64currency',S64CurrencyType);
           begin
             { Add a type for virtual method tables }
-            hrecst:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
-            VMTType:=CRecordDef.Create('',hrecst);
+            lRecordSymTable:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
+            VMTType:=CRecordDef.Create('',lRecordSymTable);
             PVMTType:=CPointerDef.Create(VMTType);
             { can't use addtype for pvmt because the rtti of the pointed
               type is not available. The rtti for pvmt will be written implicitly
               by thev tblarray below }
-            SystemUnit.InsertSym(CTypeSym.Create('$'+pvmt_name,PVMTType));
-            AddField(hrecst,CFieldVarSym.Create('$length',vs_value,SizeSIntType,[]));
-            AddField(hrecst,CFieldVarSym.Create('$mlength',vs_value,SizeSIntType,[]));
-            AddField(hrecst,CFieldVarSym.Create('$parent',vs_value,PVMTType,[]));
+            SystemUnit.InsertSym(CTypeSym.Create('$'+lPVMTName,PVMTType));
+            AddField(lRecordSymTable,CFieldVarSym.Create('$length',vs_value,SizeSIntType,[]));
+            AddField(lRecordSymTable,CFieldVarSym.Create('$mlength',vs_value,SizeSIntType,[]));
+            AddField(lRecordSymTable,CFieldVarSym.Create('$parent',vs_value,PVMTType,[]));
             { it seems vmttype is used both for TP objects and Delphi classes,
               so the next entry could either be the first virtual method (vm1)
               (object) or the class name (class). We can't easily create separate
               vtable formats for both, as gdb is hard coded to search for
               __vtbl_ptr_type in all cases (JM) }
-            AddField(hrecst,CFieldVarSym.Create('$vm1_or_classname',vs_value,CPointerDef.Create(CShortStringType),[]));
+            AddField(lRecordSymTable,CFieldVarSym.Create('$vm1_or_classname',vs_value,CPointerDef.Create(CShortStringType),[]));
             VMTArrayType:=CArrayDef.Create(0,0,S32IntType);
             TArrayDef(VMTArrayType).ElementDef:=VoidPointerType;
-            AddField(hrecst,CFieldVarSym.Create('$__pfn',vs_value,VMTArrayType,[]));
+            AddField(lRecordSymTable,CFieldVarSym.Create('$__pfn',vs_value,VMTArrayType,[]));
             AddType('$__vtbl_ptr_type',VMTType);
             VMTArrayType:=CArrayDef.Create(0,1,S32IntType);
             TArrayDef(VMTArrayType).ElementDef:=PVMTType;
             AddType('$vtblarray',VMTArrayType);
           end;
         { Add a type for methodpointers }
-        hrecst:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
-        AddField(hrecst,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
-        AddField(hrecst,CFieldVarSym.Create('$self',vs_value,VoidPointerType,[]));
-        MethodPointerType:=CRecordDef.Create('',hrecst);
+        lRecordSymTable:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
+        AddField(lRecordSymTable,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
+        AddField(lRecordSymTable,CFieldVarSym.Create('$self',vs_value,VoidPointerType,[]));
+        MethodPointerType:=CRecordDef.Create('',lRecordSymTable);
         AddType('$methodpointer',MethodPointerType);
         { Add a type for nested proc pointers }
-        hrecst:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
-        AddField(hrecst,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
-        AddField(hrecst,CFieldVarSym.Create('$parentfp',vs_value,ParentFPVoidPointerType,[]));
-        NestedProcPointerType:=CRecordDef.Create('',hrecst);
+        lRecordSymTable:=TRecordSymTable.Create('',1,CurrentSettings.Alignment.RecordAlignMin);
+        AddField(lRecordSymTable,CFieldVarSym.Create('$proc',vs_value,VoidCodePointerType,[]));
+        AddField(lRecordSymTable,CFieldVarSym.Create('$parentfp',vs_value,ParentFPVoidPointerType,[]));
+        NestedProcPointerType:=CRecordDef.Create('',lRecordSymTable);
         AddType('$nestedprocpointer',NestedProcPointerType);
         SymTableStack.pop(SystemUnit);
       end;
 
 
-    procedure load_intern_types;
+    procedure LoadInternTypes;
       {
         Load all default definitions for consts from the system unit
       }
 
-        procedure loadtype(const s:string;var def:TDef);
+        procedure LoadType(const AName:String;var ADef:TDef);
         var
-          srsym : TTypeSym;
+          lTypeSym : TTypeSym;
         begin
-          srsym:=Search_System_Type(s);
-          def:=srsym.TypeDef;
+          lTypeSym:=Search_System_Type(AName);
+          ADef:=lTypeSym.TypeDef;
         end;
 
       var
-        oldcurrentmodule : TModule;
-        pvmt_name : shortstring;
+        lOldCurrentModule : TModule;
+        lPVMTName : ShortString;
       begin
-        oldcurrentmodule:=CurrentModule;
+        lOldCurrentModule:=CurrentModule;
         SetCurrentModule(nil);
-        loadtype('byte',U8IntType);
-        loadtype('shortint',S8IntType);
-        loadtype('word',U16IntType);
-        loadtype('smallint',S16IntType);
-        loadtype('uint24',U24IntType);
-        loadtype('sint24',S24IntType);
-        loadtype('ulong',U32IntType);
-        loadtype('longint',S32IntType);
-        loadtype('uint40',U40IntType);
-        loadtype('sint40',S40IntType);
-        loadtype('uint48',U48IntType);
-        loadtype('sint48',S48IntType);
-        loadtype('uint56',U56IntType);
-        loadtype('sint56',S56IntType);
-        loadtype('qword',U64IntType);
-        loadtype('int64',S64IntType);
-        loadtype('uint128',U128IntType);
-        loadtype('int128',S128IntType);
-        loadtype('undefined',CUndefinedType);
-        loadtype('formal',CFormalType);
-        loadtype('typedformal',CTypedFormalType);
-        loadtype('void',VoidType);
-        loadtype('void_pointer',VoidPointerType);
-        loadtype('ansichar',CAnsiCharType);
-        loadtype('widechar',CWideCharType);
-        loadtype('shortstring',CShortStringType);
-        loadtype('longstring',CLongStringType);
-        loadtype('ansistring',CAnsiStringType);
-        loadtype('widestring',CWideStringType);
-        loadtype('unicodestring',CUnicodeStringType);
-        loadtype('openshortstring',OpenShortStringType);
-        loadtype('openchararray',OpenCharArrayType);
-        loadtype('s32real',S32FloatType);
-        loadtype('s64real',S64FloatType);
-        loadtype('s80real',S80FloatType);
-        loadtype('sc80real',SC80FloatType);
-        loadtype('s64currency',S64CurrencyType);
-        loadtype('boolean',PasBool1Type);
-        loadtype('boolean8',PasBool8Type);
-        loadtype('boolean16',PasBool16Type);
-        loadtype('boolean32',PasBool32Type);
-        loadtype('boolean64',PasBool64Type);
-        loadtype('bytebool',Bool8Type);
-        loadtype('wordbool',Bool16Type);
-        loadtype('longbool',Bool32Type);
-        loadtype('qwordbool',Bool64Type);
-        loadtype('char_pointer',CharPointerType);
-        loadtype('widechar_pointer',WideCharPointerType);
-        loadtype('parentfp_void_pointer',ParentFPVoidPointerType);
+        LoadType('byte',U8IntType);
+        LoadType('shortint',S8IntType);
+        LoadType('word',U16IntType);
+        LoadType('smallint',S16IntType);
+        LoadType('uint24',U24IntType);
+        LoadType('sint24',S24IntType);
+        LoadType('ulong',U32IntType);
+        LoadType('longint',S32IntType);
+        LoadType('uint40',U40IntType);
+        LoadType('sint40',S40IntType);
+        LoadType('uint48',U48IntType);
+        LoadType('sint48',S48IntType);
+        LoadType('uint56',U56IntType);
+        LoadType('sint56',S56IntType);
+        LoadType('qword',U64IntType);
+        LoadType('int64',S64IntType);
+        LoadType('uint128',U128IntType);
+        LoadType('int128',S128IntType);
+        LoadType('undefined',CUndefinedType);
+        LoadType('formal',CFormalType);
+        LoadType('typedformal',CTypedFormalType);
+        LoadType('void',VoidType);
+        LoadType('void_pointer',VoidPointerType);
+        LoadType('ansichar',CAnsiCharType);
+        LoadType('widechar',CWideCharType);
+        LoadType('shortstring',CShortStringType);
+        LoadType('longstring',CLongStringType);
+        LoadType('ansistring',CAnsiStringType);
+        LoadType('widestring',CWideStringType);
+        LoadType('unicodestring',CUnicodeStringType);
+        LoadType('openshortstring',OpenShortStringType);
+        LoadType('openchararray',OpenCharArrayType);
+        LoadType('s32real',S32FloatType);
+        LoadType('s64real',S64FloatType);
+        LoadType('s80real',S80FloatType);
+        LoadType('sc80real',SC80FloatType);
+        LoadType('s64currency',S64CurrencyType);
+        LoadType('boolean',PasBool1Type);
+        LoadType('boolean8',PasBool8Type);
+        LoadType('boolean16',PasBool16Type);
+        LoadType('boolean32',PasBool32Type);
+        LoadType('boolean64',PasBool64Type);
+        LoadType('bytebool',Bool8Type);
+        LoadType('wordbool',Bool16Type);
+        LoadType('longbool',Bool32Type);
+        LoadType('qwordbool',Bool64Type);
+        LoadType('char_pointer',CharPointerType);
+        LoadType('widechar_pointer',WideCharPointerType);
+        LoadType('parentfp_void_pointer',ParentFPVoidPointerType);
 {$ifdef x86}
-        loadtype('void_nearpointer',VoidNearPointerType);
-        loadtype('void_nearcspointer',VoidNearCSPointerType);
-        loadtype('void_neardspointer',VoidNearDSPointerType);
-        loadtype('void_nearsspointer',VoidNearSSPointerType);
-        loadtype('void_nearespointer',VoidNearESPointerType);
-        loadtype('void_nearfspointer',VoidNearFSPointerType);
-        loadtype('void_neargspointer',VoidNearGSPointerType);
+        LoadType('void_nearpointer',VoidNearPointerType);
+        LoadType('void_nearcspointer',VoidNearCSPointerType);
+        LoadType('void_neardspointer',VoidNearDSPointerType);
+        LoadType('void_nearsspointer',VoidNearSSPointerType);
+        LoadType('void_nearespointer',VoidNearESPointerType);
+        LoadType('void_nearfspointer',VoidNearFSPointerType);
+        LoadType('void_neargspointer',VoidNearGSPointerType);
 
-        loadtype('__m64',  X86_M64Type);
-        loadtype('__m128', X86_M128Type);
-        loadtype('__m128d',X86_M128DType);
-        loadtype('__m128i',X86_M128IType);
-        loadtype('__m256', X86_M256Type);
-        loadtype('__m256d',X86_M256DType);
-        loadtype('__m256i',X86_M256IType);
+        LoadType('__m64',  X86_M64Type);
+        LoadType('__m128', X86_M128Type);
+        LoadType('__m128d',X86_M128DType);
+        LoadType('__m128i',X86_M128IType);
+        LoadType('__m256', X86_M256Type);
+        LoadType('__m256d',X86_M256DType);
+        LoadType('__m256i',X86_M256IType);
 {$endif x86}
 
-        loadtype('file',CFileType);
-        pvmt_name:='pvmt';
-        loadtype(pvmt_name,PVMTType);
-        loadtype('vtblarray',VMTArrayType);
-        loadtype('__vtbl_ptr_type',VMTType);
+        LoadType('file',CFileType);
+        lPVMTName:='pvmt';
+        LoadType(lPVMTName,PVMTType);
+        LoadType('vtblarray',VMTArrayType);
+        LoadType('__vtbl_ptr_type',VMTType);
         if f_variants in Features then
           begin
-            loadtype('variant',CVariantType);
-            loadtype('olevariant',COleVariantType);
+            LoadType('variant',CVariantType);
+            LoadType('olevariant',COleVariantType);
           end;
-        loadtype('methodpointer',MethodPointerType);
-        loadtype('nestedprocpointer',NestedProcPointerType);
-        loadtype('HRESULT',HResultDef);
-        loadtype('TTYPEKIND',TypeKindType);
-        set_default_int_types;
-        set_default_ptr_types;
-        SetCurrentModule(oldcurrentmodule);
+        LoadType('methodpointer',MethodPointerType);
+        LoadType('nestedprocpointer',NestedProcPointerType);
+        LoadType('HRESULT',HResultDef);
+        LoadType('TTYPEKIND',TypeKindType);
+        SetDefaultIntTypes;
+        SetDefaultPtrTypes;
+        SetCurrentModule(lOldCurrentModule);
       end;
 
 
-    procedure registernodes;
+    procedure RegisterNodes;
       {
         Register all possible nodes in the nodeclass array that
         will be used for loading the nodes from a ppu
@@ -713,7 +713,7 @@ implementation
       end;
 
 
-    procedure registertais;
+    procedure RegisterTAIs;
       {
         Register all possible tais in the taiclass array that
         will be used for loading the tais from a ppu

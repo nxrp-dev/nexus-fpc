@@ -32,20 +32,20 @@ interface
       SymTable,SymSym,symdef,symtype;
 
     type
-      TVarDecOption=(vd_record,vd_object,vd_threadvar,vd_class,vd_final,vd_canreorder,vd_check_generic);
+      TVarDecOption=(vdRecord,vdObject,vdThreadVar,vdClass,vdFinal,vdCanReorder,vdCheckGeneric);
       TVarDecOptions=set of TVarDecOption;
 
-    function  read_property_dec(is_classproperty:boolean;astruct:TAbstractRecordDef):TPropertySym;
+    function  ReadPropertyDec(AIsClassProperty:Boolean;AStruct:TAbstractRecordDef):TPropertySym;
 
-    procedure read_var_decls(options:TVarDecOptions;out had_generic:boolean);
+    procedure ReadVarDecls(AOptions:TVarDecOptions;out AHadGeneric:Boolean);
 
-    procedure read_record_fields(options:TVarDecOptions; reorderlist: TFPObjectList; variantdesc: PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
+    procedure ReadRecordFields(AOptions:TVarDecOptions; AReorderList: TFPObjectList; AVariantDesc: PPVariantRecDesc;out AHadGeneric:Boolean; out AAttrElementCount : Integer);
 
-    procedure read_public_and_external(vs: TAbstractVarSym);
+    procedure ReadPublicAndExternal(AVarSym: TAbstractVarSym);
 
-    procedure try_consume_sectiondirective(var asection: AnsiString);
+    procedure TryConsumeSectionDirective(var ASection: AnsiString);
 
-    function check_allowed_for_var_or_const(def:TDef;allowdynarray:boolean):boolean;
+    function CheckAllowedForVarOrConst(ADef:TDef;AAllowDynArray:Boolean):Boolean;
 
 implementation
 
@@ -72,60 +72,60 @@ implementation
        pbase,pexpr,ptype,ptconst,pdecsub,pparautl;
 
 
-    function read_property_dec(is_classproperty:boolean;astruct:TAbstractRecordDef):TPropertySym;
+    function ReadPropertyDec(AIsClassProperty:Boolean;AStruct:TAbstractRecordDef):TPropertySym;
 
         { convert a node tree to symlist and return the last
           symbol }
-        function parse_symlist(pl:TPropAccessList;out def:TDef):boolean;
+        function ParseSymList(AAccessList:TPropAccessList;out ADef:TDef):Boolean;
           var
-            idx : LongInt;
-            sym : TSym;
-            srsymtable : TSymTable;
-            st  : TSymTable;
-            p   : TNode;
+            lIndex : LongInt;
+            lSym : TSym;
+            lSearchSymTable : TSymTable;
+            lSymTable  : TSymTable;
+            lNode   : TNode;
           begin
-            result:=true;
-            def:=nil;
-            if CurrentScanner.token=_ID then
+            Result:=true;
+            ADef:=nil;
+            if CurrentScanner.FToken=_ID then
              begin
-               if Assigned(astruct) then
-                 sym:=Search_Struct_Member(astruct,CurrentScanner.pattern)
+               if Assigned(AStruct) then
+                 lSym:=Search_Struct_Member(AStruct,CurrentScanner.FPattern)
                else
-                 SearchSym(CurrentScanner.pattern,sym,srsymtable);
-               if Assigned(sym) then
+                 SearchSym(CurrentScanner.FPattern,lSym,lSearchSymTable);
+               if Assigned(lSym) then
                 begin
-                  if Assigned(astruct) and
-                     not Is_Visible_For_Object(sym,astruct) then
+                  if Assigned(AStruct) and
+                     not Is_Visible_For_Object(lSym,AStruct) then
                     Message(parser_e_cant_access_private_member);
-                  case sym.typ of
+                  case lSym.typ of
                     FieldVarSym :
                       begin
-                        AddSymRef(sym);
-                        pl.AddSym(sl_load,sym);
-                        def:=TFieldVarSym(sym).vardef;
+                        AddSymRef(lSym);
+                        AAccessList.AddSym(sl_load,lSym);
+                        ADef:=TFieldVarSym(lSym).vardef;
                       end;
                     ProcSym :
                       begin
-                        AddSymRef(sym);
-                        pl.AddSym(sl_call,sym);
+                        AddSymRef(lSym);
+                        AAccessList.AddSym(sl_call,lSym);
                       end;
                     else
                       begin
-                        Message1(parser_e_illegal_field_or_method,CurrentScanner.orgpattern);
-                        def:=GenErrorDef;
-                        result:=false;
+                        Message1(parser_e_illegal_field_or_method,CurrentScanner.FOrgPattern);
+                        ADef:=GenErrorDef;
+                        Result:=false;
                       end;
                   end;
                 end
                else
                 begin
-                  Message1(parser_e_illegal_field_or_method,CurrentScanner.orgpattern);
-                  def:=GenErrorDef;
-                  result:=false;
+                  Message1(parser_e_illegal_field_or_method,CurrentScanner.FOrgPattern);
+                  ADef:=GenErrorDef;
+                  Result:=false;
                 end;
-               consume(_ID);
+               Consume(_ID);
                repeat
-                 case CurrentScanner.token of
+                 case CurrentScanner.FToken of
                    _ID,
                    _SEMICOLON :
                      begin
@@ -133,89 +133,89 @@ implementation
                      end;
                    _POINT :
                      begin
-                       if not Is_Object(def) and not Is_Record(def) then
+                       if not Is_Object(ADef) and not Is_Record(ADef) then
                          message(sym_e_type_must_be_rec_or_object);
-                       consume(_POINT);
-                       if Assigned(def) then
+                       Consume(_POINT);
+                       if Assigned(ADef) then
                         begin
-                          st:=def.GetSymTable(gs_record);
-                          if Assigned(st) then
+                          lSymTable:=ADef.GetSymTable(gs_record);
+                          if Assigned(lSymTable) then
                            begin
-                             sym:=TSym(st.Find(CurrentScanner.pattern));
-                             if not(Assigned(sym)) and Is_Object(def) then
-                               sym:=Search_Struct_Member(TObjectDef(def),CurrentScanner.pattern);
-                             if Assigned(sym) then
+                             lSym:=TSym(lSymTable.Find(CurrentScanner.FPattern));
+                             if not(Assigned(lSym)) and Is_Object(ADef) then
+                               lSym:=Search_Struct_Member(TObjectDef(ADef),CurrentScanner.FPattern);
+                             if Assigned(lSym) then
                               begin
-                                pl.AddSym(sl_subscript,sym);
-                                case sym.typ of
+                                AAccessList.AddSym(sl_subscript,lSym);
+                                case lSym.typ of
                                   FieldVarSym :
-                                    def:=TFieldVarSym(sym).vardef;
+                                    ADef:=TFieldVarSym(lSym).vardef;
                                   else
                                     begin
-                                      Message1(sym_e_illegal_field,CurrentScanner.orgpattern);
-                                      result:=false;
+                                      Message1(sym_e_illegal_field,CurrentScanner.FOrgPattern);
+                                      Result:=false;
                                     end;
                                 end;
                               end
                              else
                               begin
-                                Message1(sym_e_illegal_field,CurrentScanner.orgpattern);
-                                result:=false;
+                                Message1(sym_e_illegal_field,CurrentScanner.FOrgPattern);
+                                Result:=false;
                               end;
                            end
                           else
                            begin
                              Message(parser_e_invalid_qualifier);
-                             result:=false;
+                             Result:=false;
                            end;
                         end
                        else
                         begin
                           Message(parser_e_invalid_qualifier);
-                          result:=false;
+                          Result:=false;
                         end;
-                       consume(_ID);
+                       Consume(_ID);
                      end;
                    _LECKKLAMMER :
                      begin
-                       consume(_LECKKLAMMER);
+                       Consume(_LECKKLAMMER);
                        repeat
-                         if Assigned(def) and (def.typ=arraydef) then
+                         if Assigned(ADef) and (ADef.typ=arraydef) then
                           begin
-                            idx:=0;
-                            p:=comp_expr([ef_accept_equal]);
+                            lIndex:=0;
+                            lNode:=CompExpr([efAcceptEqual]);
                             if (not CodeGenError) then
                              begin
-                               if (p.nodetype=ordconstn) then
+                               if (lNode.nodetype=ordconstn) then
                                  begin
                                    { type/range checking }
-                                   InsertTypeConv(p,TArrayDef(def).RangeDef);
-                                   if (TOrdConstNode(p).Value<int64(low(LongInt))) or
-                                      (TOrdConstNode(p).Value>int64(high(LongInt))) then
+                                   InsertTypeConv(lNode,TArrayDef(ADef).RangeDef);
+                                   if (TOrdConstNode(lNode).Value<Int64(low(LongInt))) or
+                                      (TOrdConstNode(lNode).Value>Int64(high(LongInt))) then
                                      message(parser_e_array_range_out_of_bounds)
                                    else
-                                     idx:=TOrdConstNode(p).Value.svalue
+                                     lIndex:=TOrdConstNode(lNode).Value.svalue
                                  end
                                else
                                 Message(type_e_ordinal_expr_expected)
                              end;
-                            pl.AddConst(sl_vec,idx,p.resultdef);
-                            p.free;
-                            p := nil;
-                            def:=TArrayDef(def).ElementDef;
+                            AAccessList.AddConst(sl_vec,lIndex,lNode.resultdef);
+                            lNode.free;
+                            lNode := nil;
+                            ADef:=TArrayDef(ADef).ElementDef;
                           end
                          else
                           begin
                             Message(parser_e_invalid_qualifier);
-                            result:=false;
+                            Result:=false;
                           end;
-                       until not try_to_consume(_COMMA);
-                       consume(_RECKKLAMMER);
+                       until not TryToConsume(_COMMA);
+                       Consume(_RECKKLAMMER);
                      end;
                    else
                      begin
                        Message(parser_e_ill_property_access_sym);
-                       result:=false;
+                       Result:=false;
                        break;
                      end;
                  end;
@@ -224,398 +224,398 @@ implementation
             else
              begin
                Message(parser_e_ill_property_access_sym);
-               result:=false;
+               Result:=false;
              end;
           end;
 
-          function has_implicit_default(p : TPropertySym) : boolean;
+          function HasImplicitDefault(AProperty : TPropertySym) : Boolean;
 
           begin
-             has_implicit_default:=
-               (Is_String(p.PropDef) or
-               Is_Real(p.PropDef) or
-               Is_Pointer(p.PropDef));
+             HasImplicitDefault:=
+               (Is_String(AProperty.PropDef) or
+               Is_Real(AProperty.PropDef) or
+               Is_Pointer(AProperty.PropDef));
           end;
 
-          function allow_default_property(p : TPropertySym) : boolean;
+          function AllowDefaultProperty(AProperty : TPropertySym) : Boolean;
 
           begin
-             allow_default_property:=
-               (Is_Ordinal(p.PropDef) or
+             AllowDefaultProperty:=
+               (Is_Ordinal(AProperty.PropDef) or
 {$ifndef cpu64bitaddr}
-               Is_64BitInt(p.PropDef) or
+               Is_64BitInt(AProperty.PropDef) or
 {$endif cpu64bitaddr}
-               Is_Class(p.PropDef) or
-               Is_Single(p.PropDef) or
-               (p.PropDef.typ in [classrefdef,pointerdef]) or
-                 Is_SmallSet(p.PropDef)
+               Is_Class(AProperty.PropDef) or
+               Is_Single(AProperty.PropDef) or
+               (AProperty.PropDef.typ in [classrefdef,pointerdef]) or
+                 Is_SmallSet(AProperty.PropDef)
                ) and not
                (
-                (p.PropDef.typ=arraydef) and
-                (ppo_indexed in p.PropOptions)
+                (AProperty.PropDef.typ=arraydef) and
+                (ppo_indexed in AProperty.PropOptions)
                ) and not
-               (ppo_hasparameters in p.PropOptions);
+               (ppo_hasparameters in AProperty.PropOptions);
           end;
 
-          procedure create_accessor_procsym(p: TPropertySym; pd: TProcDef; const prefix: string;
-              accesstype: TPropAccessListTypes);
+          procedure CreateAccessorProcSym(AProperty: TPropertySym; AProcDef: TProcDef; const APrefix: String;
+              AAccessType: TPropAccessListTypes);
             var
-              sym: TProcSym;
+              lProcSym: TProcSym;
             begin
-              if not Assigned(astruct) then
-                Handle_Calling_Convention(pd,cHCCDefaultActionsIntf)
+              if not Assigned(AStruct) then
+                Handle_Calling_Convention(AProcDef,cHCCDefaultActionsIntf)
               else
-                Handle_Calling_Convention(pd,cHCCDefaultActionsIntfStruct);
-              sym:=CProcSym.Create(prefix+lower(p.realname));
-              SymTableStack.top.InsertSym(sym);
-              pd.ProcSym:=sym;
-              include(pd.ProcOptions,po_dispid);
-              include(pd.ProcOptions,po_global);
-              pd.visibility:=vis_private;
-              Proc_Add_Definition(pd);
-              p.PropAccessList[accesstype].AddSym(sl_call,sym);
-              p.PropAccessList[accesstype].procdef:=pd;
+                Handle_Calling_Convention(AProcDef,cHCCDefaultActionsIntfStruct);
+              lProcSym:=CProcSym.Create(APrefix+lower(AProperty.realname));
+              SymTableStack.top.InsertSym(lProcSym);
+              AProcDef.ProcSym:=lProcSym;
+              include(AProcDef.ProcOptions,po_dispid);
+              include(AProcDef.ProcOptions,po_global);
+              AProcDef.visibility:=vis_private;
+              Proc_Add_Definition(AProcDef);
+              AProperty.PropAccessList[AAccessType].AddSym(sl_call,lProcSym);
+              AProperty.PropAccessList[AAccessType].procdef:=AProcDef;
             end;
 
-          procedure parse_dispinterface(p : TPropertySym; readpd,writepd: TProcDef;
-              var ParaNr: word);
+          procedure ParseDispInterface(AProperty : TPropertySym; AReadProcDef,AWriteProcDef: TProcDef;
+              var AParaNr: Word);
             var
-              hasread, haswrite: boolean;
-              pt: TNode;
-              hdispid: LongInt;
-              hparavs: TParaVarSym;
+              lHasRead, lHasWrite: Boolean;
+              lNode: TNode;
+              lDispID: LongInt;
+              lParaVarSym: TParaVarSym;
             begin
-              p.PropAccessList[palt_read].clear;
-              p.PropAccessList[palt_write].clear;
+              AProperty.PropAccessList[palt_read].clear;
+              AProperty.PropAccessList[palt_write].clear;
 
-              hasread:=true;
-              haswrite:=true;
-              hdispid:=0;
+              lHasRead:=true;
+              lHasWrite:=true;
+              lDispID:=0;
 
-              if try_to_consume(_READONLY) then
-                haswrite:=false
-              else if try_to_consume(_WRITEONLY) then
-                hasread:=false;
+              if TryToConsume(_READONLY) then
+                lHasWrite:=false
+              else if TryToConsume(_WRITEONLY) then
+                lHasRead:=false;
 
-              if try_to_consume(_DISPID) then
+              if TryToConsume(_DISPID) then
                 begin
-                  pt:=comp_expr([ef_accept_equal]);
-                  if Is_ConstIntNode(pt) then
-                    if (TOrdConstNode(pt).Value<int64(low(LongInt))) or (TOrdConstNode(pt).Value>int64(high(LongInt))) then
-                      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
+                  lNode:=CompExpr([efAcceptEqual]);
+                  if Is_ConstIntNode(lNode) then
+                    if (TOrdConstNode(lNode).Value<Int64(low(LongInt))) or (TOrdConstNode(lNode).Value>Int64(high(LongInt))) then
+                      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(lNode).Value),ToStr(low(LongInt)),ToStr(high(LongInt)))
                     else
-                      hdispid:=TOrdConstNode(pt).Value.svalue
+                      lDispID:=TOrdConstNode(lNode).Value.svalue
                   else
                     Message(parser_e_dispid_must_be_ord_const);
-                  pt.free;
-                  pt := nil;
+                  lNode.free;
+                  lNode := nil;
                 end
               else
-                hdispid:=TObjectDef(astruct).Get_Next_DispID;
+                lDispID:=TObjectDef(AStruct).Get_Next_DispID;
 
               { COM property is simply a pair of methods, tagged with 'propertyget'
                 and 'propertyset' flags (or a single method if access is restricted).
                 Creating these implicit accessor methods also allows the rest of compiler
                 to handle dispinterface properties the same way as regular ones. }
-              if hasread then
+              if lHasRead then
                 begin
-                  readpd.ReturnDef:=p.PropDef;
-                  readpd.DispID:=hdispid;
-                  readpd.ProcTypeOption:=potype_propgetter;
-                  create_accessor_procsym(p,readpd,'get$',palt_read);
+                  AReadProcDef.ReturnDef:=AProperty.PropDef;
+                  AReadProcDef.DispID:=lDispID;
+                  AReadProcDef.ProcTypeOption:=potype_propgetter;
+                  CreateAccessorProcSym(AProperty,AReadProcDef,'get$',palt_read);
                 end;
-              if haswrite then
+              if lHasWrite then
                 begin
                   { add an extra parameter, a placeholder of the value to set }
-                  inc(ParaNr);
-                  hparavs:=CParaVarSym.Create('$value',10*ParaNr,vs_value,p.PropDef,[]);
-                  writepd.ParaST.InsertSym(hparavs);
+                  inc(AParaNr);
+                  lParaVarSym:=CParaVarSym.Create('$value',10*AParaNr,vs_value,AProperty.PropDef,[]);
+                  AWriteProcDef.ParaST.InsertSym(lParaVarSym);
 
-                  writepd.ProcTypeOption:=potype_propsetter;
-                  writepd.DispID:=hdispid;
-                  create_accessor_procsym(p,writepd,'put$',palt_write);
+                  AWriteProcDef.ProcTypeOption:=potype_propsetter;
+                  AWriteProcDef.DispID:=lDispID;
+                  CreateAccessorProcSym(AProperty,AWriteProcDef,'put$',palt_write);
                 end;
             end;
 
       var
-         sym : TSym;
-         srsymtable: TSymTable;
-         p : TPropertySym;
-         overridden : TSym;
-         VarSpez : TVarSpez;
-         hdef : TDef;
-         arraytype : TDef;
-         def : TDef;
-         pt : TNode;
-         sc : TFPObjectList;
-         ParaNr : word;
-         i      : LongInt;
-	 s : single;
-         ImplIntf     : TImplementedInterface;
-         found,
-         gotreadorwrite: boolean;
-         hreadparavs,
-         hparavs      : TParaVarSym;
-         storedprocdef: TProcVarDef;
-         ReadProcDef,
-         WriteProcDef : TProcDef;
+         lSym : TSym;
+         lSearchSymTable: TSymTable;
+         lProperty : TPropertySym;
+         lOverridden : TSym;
+         lVarSpez : TVarSpez;
+         lDef : TDef;
+         lArrayType : TDef;
+         lAccessDef : TDef;
+         lNode : TNode;
+         lSymbols : TFPObjectList;
+         lParaNr : Word;
+         lIndex      : LongInt;
+	 lSingleValue : Single;
+         lImplIntf     : TImplementedInterface;
+         lFound,
+         lGotReadOrWrite: Boolean;
+         lReadParaVarSym,
+         lParaVarSym      : TParaVarSym;
+         lStoredProcDef: TProcVarDef;
+         lReadProcDef,
+         lWriteProcDef : TProcDef;
       begin
-         result:=nil;
+         Result:=nil;
          { Generate temp procdefs to search for matching read/write
            procedures. the readprocdef will store all definitions }
-         ParaNr:=0;
-         ReadProcDef:=CProcDef.Create(NormalFunctionLevel,false);
-         WriteProcDef:=CProcDef.Create(NormalFunctionLevel,false);
+         lParaNr:=0;
+         lReadProcDef:=CProcDef.Create(NormalFunctionLevel,false);
+         lWriteProcDef:=CProcDef.Create(NormalFunctionLevel,false);
 
-         ReadProcDef.struct:=astruct;
-         WriteProcDef.struct:=astruct;
+         lReadProcDef.struct:=AStruct;
+         lWriteProcDef.struct:=AStruct;
 
-         if Assigned(astruct) and is_classproperty then
+         if Assigned(AStruct) and AIsClassProperty then
            begin
-             ReadProcDef.ProcOptions:=[po_staticmethod,po_classmethod];
-             WriteProcDef.ProcOptions:=[po_staticmethod,po_classmethod];
+             lReadProcDef.ProcOptions:=[po_staticmethod,po_classmethod];
+             lWriteProcDef.ProcOptions:=[po_staticmethod,po_classmethod];
            end;
 
-         if CurrentScanner.token<>_ID then
+         if CurrentScanner.FToken<>_ID then
            begin
-              consume(_ID);
-              consume(_SEMICOLON);
+              Consume(_ID);
+              Consume(_SEMICOLON);
               exit;
            end;
          { Generate propertysym and insert in symtablestack }
-         p:=CPropertySym.Create(CurrentScanner.orgpattern);
-         p.visibility:=SymTableStack.top.CurrentVisibility;
-         p.default:=LongInt($80000000);
-         if is_classproperty then
-           include(p.SymOptions, sp_static);
-         SymTableStack.top.InsertSym(p);
-         consume(_ID);
+         lProperty:=CPropertySym.Create(CurrentScanner.FOrgPattern);
+         lProperty.visibility:=SymTableStack.top.CurrentVisibility;
+         lProperty.default:=LongInt($80000000);
+         if AIsClassProperty then
+           include(lProperty.SymOptions, sp_static);
+         SymTableStack.top.InsertSym(lProperty);
+         Consume(_ID);
          { property parameters ? }
-         if try_to_consume(_LECKKLAMMER) then
+         if TryToConsume(_LECKKLAMMER) then
            begin
               { Published indexed properties are allowed in Delphi in interfaces compiled with $M+. }
-              if (p.visibility=vis_published) and
-                not((m_delphi in CurrentSettings.ModeSwitches) and Is_InterfaceCOM_Or_DispInterface(astruct)) then
+              if (lProperty.visibility=vis_published) and
+                not((m_delphi in CurrentSettings.ModeSwitches) and Is_InterfaceCOM_Or_DispInterface(AStruct)) then
                 Message(parser_e_cant_publish_that_property);
               { create a list of the parameters }
-              p.ParaST:=TParaSymTable.Create(nil,0);
-              SymTableStack.push(p.ParaST);
-              sc:=TFPObjectList.Create(false);
+              lProperty.ParaST:=TParaSymTable.Create(nil,0);
+              SymTableStack.push(lProperty.ParaST);
+              lSymbols:=TFPObjectList.Create(false);
               repeat
-                if try_to_consume(_VAR) then
-                  VarSpez:=vs_var
-                else if try_to_consume(_CONST) then
-                  VarSpez:=vs_const
-                else if try_to_consume(_CONSTREF) then
-                  VarSpez:=vs_constref
-                else if (m_out in CurrentSettings.ModeSwitches) and try_to_consume(_OUT) then
-                  VarSpez:=vs_out
+                if TryToConsume(_VAR) then
+                  lVarSpez:=vs_var
+                else if TryToConsume(_CONST) then
+                  lVarSpez:=vs_const
+                else if TryToConsume(_CONSTREF) then
+                  lVarSpez:=vs_constref
+                else if (m_out in CurrentSettings.ModeSwitches) and TryToConsume(_OUT) then
+                  lVarSpez:=vs_out
                 else
-                  VarSpez:=vs_value;
-                sc.clear;
+                  lVarSpez:=vs_value;
+                lSymbols.clear;
                 repeat
-                  inc(ParaNr);
-                  hreadparavs:=CParaVarSym.Create(CurrentScanner.orgpattern,10*ParaNr,VarSpez,GenErrorDef,[]);
-                  p.ParaST.InsertSym(hreadparavs);
-                  sc.add(hreadparavs);
-                  consume(_ID);
-                until not try_to_consume(_COMMA);
-                if try_to_consume(_COLON) then
+                  inc(lParaNr);
+                  lReadParaVarSym:=CParaVarSym.Create(CurrentScanner.FOrgPattern,10*lParaNr,lVarSpez,GenErrorDef,[]);
+                  lProperty.ParaST.InsertSym(lReadParaVarSym);
+                  lSymbols.add(lReadParaVarSym);
+                  Consume(_ID);
+                until not TryToConsume(_COMMA);
+                if TryToConsume(_COLON) then
                   begin
-                    if try_to_consume(_ARRAY) then
+                    if TryToConsume(_ARRAY) then
                       begin
-                        consume(_OF);
+                        Consume(_OF);
                         { define range and type of range }
-                        hdef:=CArrayDef.Create_OpenArray;
-                        hdef.owner:=astruct.SymTable;
+                        lDef:=CArrayDef.Create_OpenArray;
+                        lDef.owner:=AStruct.SymTable;
                         { define field type }
-                        single_type(arraytype,[]);
-                        TArrayDef(hdef).ElementDef:=arraytype;
+                        SingleType(lArrayType,[]);
+                        TArrayDef(lDef).ElementDef:=lArrayType;
                       end
                     else
-                      single_type(hdef,[]);
+                      SingleType(lDef,[]);
                   end
                 else
-                  hdef:=CFormalType;
-                for i:=0 to sc.count-1 do
-                  TParaVarSym(sc[i]).vardef:=hdef;
-              until not try_to_consume(_SEMICOLON);
-              sc.free;
-              sc := nil;
-              SymTableStack.pop(p.ParaST);
-              consume(_RECKKLAMMER);
+                  lDef:=CFormalType;
+                for lIndex:=0 to lSymbols.count-1 do
+                  TParaVarSym(lSymbols[lIndex]).vardef:=lDef;
+              until not TryToConsume(_SEMICOLON);
+              lSymbols.free;
+              lSymbols := nil;
+              SymTableStack.pop(lProperty.ParaST);
+              Consume(_RECKKLAMMER);
 
               { the parser need to know if a property has parameters, the
                 index parameter doesn't count (PFV) }
-              if ParaNr>0 then
+              if lParaNr>0 then
                 begin
-                  p.Add_Accessor_Parameters(ReadProcDef,WriteProcDef);
-                  include(p.PropOptions,ppo_hasparameters);
+                  lProperty.Add_Accessor_Parameters(lReadProcDef,lWriteProcDef);
+                  include(lProperty.PropOptions,ppo_hasparameters);
                 end;
            end;
          { overridden property ?                                 }
          { force property interface
              there is a property parameter
              a global property }
-         if (CurrentScanner.token=_COLON) or (ParaNr>0) or (astruct=nil) then
+         if (CurrentScanner.FToken=_COLON) or (lParaNr>0) or (AStruct=nil) then
            begin
-              consume(_COLON);
-              single_type(p.PropDef,[stoAllowSpecialization]);
+              Consume(_COLON);
+              SingleType(lProperty.PropDef,[stoAllowSpecialization]);
 
-              if Is_DispInterface(astruct) and not Is_Automatable(p.PropDef) then
-                Message1(type_e_not_automatable,p.PropDef.TypeName);
+              if Is_DispInterface(AStruct) and not Is_Automatable(lProperty.PropDef) then
+                Message1(type_e_not_automatable,lProperty.PropDef.TypeName);
 
-              if (CurrentScanner.idtoken=_INDEX) then
+              if (CurrentScanner.FIDToken=_INDEX) then
                 begin
-                   consume(_INDEX);
-                   pt:=comp_expr([ef_accept_equal]);
+                   Consume(_INDEX);
+                   lNode:=CompExpr([efAcceptEqual]);
                    { Only allow enum and integer indexes. Convert all integer
                      values to objpas.integer (s32int on 32- and 64-bit targets,
                      s16int on 16- and 8-bit) to be compatible with delphi,
                      because the procedure matching requires equal parameters }
-                   if Is_ConstNode(pt) and
-                      Is_Ordinal(pt.resultdef)
-                      and (not Is_64BitInt(pt.resultdef))
+                   if Is_ConstNode(lNode) and
+                      Is_Ordinal(lNode.resultdef)
+                      and (not Is_64BitInt(lNode.resultdef))
 
                       then
                      begin
-                       if Is_Integer(pt.resultdef) then
+                       if Is_Integer(lNode.resultdef) then
 
-                         InsertTypeConv_Internal(pt,S32IntType);
+                         InsertTypeConv_Internal(lNode,S32IntType);
 
-                       p.Index:=TOrdConstNode(pt).Value.svalue;
+                       lProperty.Index:=TOrdConstNode(lNode).Value.svalue;
                      end
                    else
                      begin
                        Message(parser_e_invalid_property_index_value);
-                       p.Index:=0;
+                       lProperty.Index:=0;
                      end;
-                   p.IndexDef:=pt.resultdef;
-                   include(p.PropOptions,ppo_indexed);
+                   lProperty.IndexDef:=lNode.resultdef;
+                   include(lProperty.PropOptions,ppo_indexed);
                    { concat a longint to the para templates }
-                   p.Add_Index_Parameter(ParaNr,ReadProcDef,WriteProcDef);
-                   pt.free;
-                   pt := nil;
+                   lProperty.Add_Index_Parameter(lParaNr,lReadProcDef,lWriteProcDef);
+                   lNode.free;
+                   lNode := nil;
                 end;
            end
          else
            begin
               { do an property override }
-              if (astruct.typ=objectdef) and Assigned(TObjectDef(astruct).ChildOf) then
-                overridden:=Search_Struct_Member(TObjectDef(astruct).ChildOf,p.name)
+              if (AStruct.typ=objectdef) and Assigned(TObjectDef(AStruct).ChildOf) then
+                lOverridden:=Search_Struct_Member(TObjectDef(AStruct).ChildOf,lProperty.name)
               else
-                overridden:=nil;
-              if Assigned(overridden) and
-                 (overridden.typ=propertysym) and
-                 not(Is_DispInterface(astruct)) then
+                lOverridden:=nil;
+              if Assigned(lOverridden) and
+                 (lOverridden.typ=propertysym) and
+                 not(Is_DispInterface(AStruct)) then
                 begin
-                  TPropertySym(overridden).MakeDuplicate(p,ReadProcDef,WriteProcDef,ParaNr);
-                  p.Register_Override(TPropertySym(overridden));
+                  TPropertySym(lOverridden).MakeDuplicate(lProperty,lReadProcDef,lWriteProcDef,lParaNr);
+                  lProperty.Register_Override(TPropertySym(lOverridden));
                 end
               else
                 begin
-                  p.PropDef:=GenErrorDef;
+                  lProperty.PropDef:=GenErrorDef;
                   message(parser_e_no_property_found_to_override);
                 end;
            end;
-         if ((p.visibility=vis_published) or Is_DispInterface(astruct))
-             and not (astruct.Is_Generic and (p.PropDef.typ=undefineddef)) then
+         if ((lProperty.visibility=vis_published) or Is_DispInterface(AStruct))
+             and not (AStruct.Is_Generic and (lProperty.PropDef.typ=undefineddef)) then
            begin
              { ignore is_publishable for interfaces (related to $M+ directive).
                $M has effect on visibility of default section for classes.
                Interface has always only public section (fix for problem in tb0631.pas) }
-             if (sp_static in p.SymOptions) or ((p.PropDef.IsPublishable=pp_error) and not Is_Interface(astruct)) then
+             if (sp_static in lProperty.SymOptions) or ((lProperty.PropDef.IsPublishable=pp_error) and not Is_Interface(AStruct)) then
                begin
                  Message(parser_e_cant_publish_that_property);
-                 p.visibility:=vis_public;
+                 lProperty.visibility:=vis_public;
                end
              else
-             if (p.PropDef.IsPublishable=pp_ignore) and not Is_Interface(astruct) then
+             if (lProperty.PropDef.IsPublishable=pp_ignore) and not Is_Interface(AStruct) then
                begin
                  Message(parser_w_ignoring_published_property);
-                 p.visibility:=vis_public;
+                 lProperty.visibility:=vis_public;
                end;
            end;
 
-         if not(Is_DispInterface(astruct)) then
+         if not(Is_DispInterface(AStruct)) then
            begin
-             gotreadorwrite:=false;
+             lGotReadOrWrite:=false;
              { parse accessors }
-             if try_to_consume(_READ) then
+             if TryToConsume(_READ) then
                begin
-                 gotreadorwrite:=true;
-                 p.PropAccessList[palt_read].clear;
-                 if parse_symlist(p.PropAccessList[palt_read],def) then
+                 lGotReadOrWrite:=true;
+                 lProperty.PropAccessList[palt_read].clear;
+                 if ParseSymList(lProperty.PropAccessList[palt_read],lAccessDef) then
                   begin
-                    sym:=p.PropAccessList[palt_read].FirstSym^.sym;
+                    lSym:=lProperty.PropAccessList[palt_read].FirstSym^.sym;
                     { getter is a function returning the type of the property }
-                    if sym.typ=ProcSym then
+                    if lSym.typ=ProcSym then
                       begin
-                        ReadProcDef.ReturnDef:=p.PropDef;
+                        lReadProcDef.ReturnDef:=lProperty.PropDef;
                         { Insert hidden parameters }
-                        if Assigned(astruct) then
-                          Handle_Calling_Convention(ReadProcDef,cHCCDefaultActionsIntfStruct)
+                        if Assigned(AStruct) then
+                          Handle_Calling_Convention(lReadProcDef,cHCCDefaultActionsIntfStruct)
                         else
-                          Handle_Calling_Convention(ReadProcDef,cHCCDefaultActionsIntf);
+                          Handle_Calling_Convention(lReadProcDef,cHCCDefaultActionsIntf);
                       end;
-                    p.Add_Getter_Or_Setter_For_Sym(palt_read,sym,def,ReadProcDef);
+                    lProperty.Add_Getter_Or_Setter_For_Sym(palt_read,lSym,lAccessDef,lReadProcDef);
                   end;
                end
              else
-               p.Inherit_Accessor(palt_read);
-             if try_to_consume(_WRITE) then
+               lProperty.Inherit_Accessor(palt_read);
+             if TryToConsume(_WRITE) then
                begin
-                 gotreadorwrite:=true;
-                 p.PropAccessList[palt_write].clear;
-                 if parse_symlist(p.PropAccessList[palt_write],def) then
+                 lGotReadOrWrite:=true;
+                 lProperty.PropAccessList[palt_write].clear;
+                 if ParseSymList(lProperty.PropAccessList[palt_write],lAccessDef) then
                   begin
-                    sym:=p.PropAccessList[palt_write].FirstSym^.sym;
-                    if sym.typ=ProcSym then
+                    lSym:=lProperty.PropAccessList[palt_write].FirstSym^.sym;
+                    if lSym.typ=ProcSym then
                       begin
                         { setter is a procedure with an extra value parameter
                           of the of the property }
-                        WriteProcDef.ReturnDef:=VoidType;
-                        inc(ParaNr);
-                        hparavs:=CParaVarSym.Create('$value',10*ParaNr,vs_value,p.PropDef,[]);
-                        WriteProcDef.ParaST.InsertSym(hparavs);
+                        lWriteProcDef.ReturnDef:=VoidType;
+                        inc(lParaNr);
+                        lParaVarSym:=CParaVarSym.Create('$value',10*lParaNr,vs_value,lProperty.PropDef,[]);
+                        lWriteProcDef.ParaST.InsertSym(lParaVarSym);
                         { Insert hidden parameters }
-                        if not Assigned(astruct) then
-                          Handle_Calling_Convention(WriteProcDef,cHCCDefaultActionsIntf)
+                        if not Assigned(AStruct) then
+                          Handle_Calling_Convention(lWriteProcDef,cHCCDefaultActionsIntf)
                         else
-                          Handle_Calling_Convention(WriteProcDef,cHCCDefaultActionsIntfStruct);
+                          Handle_Calling_Convention(lWriteProcDef,cHCCDefaultActionsIntfStruct);
                       end;
-                    p.Add_Getter_Or_Setter_For_Sym(palt_write,sym,def,WriteProcDef);
+                    lProperty.Add_Getter_Or_Setter_For_Sym(palt_write,lSym,lAccessDef,lWriteProcDef);
                   end;
                end
              else
-               p.Inherit_Accessor(palt_write);
+               lProperty.Inherit_Accessor(palt_write);
              { a new property (needs to declare a getter or setter, except in
                an interface }
-             if not(ppo_overrides in p.PropOptions) and
-                not Is_Interface(astruct) and
-                not gotreadorwrite then
+             if not(ppo_overrides in lProperty.PropOptions) and
+                not Is_Interface(AStruct) and
+                not lGotReadOrWrite then
                Consume(_READ);
            end
          else
-           parse_dispinterface(p,ReadProcDef,WriteProcDef,ParaNr);
+           ParseDispInterface(lProperty,lReadProcDef,lWriteProcDef,lParaNr);
 
          { stored is not allowed for dispinterfaces, records or class properties }
-         if Assigned(astruct) and not(Is_DispInterface(astruct) or Is_Record(astruct)) and not is_classproperty then
+         if Assigned(AStruct) and not(Is_DispInterface(AStruct) or Is_Record(AStruct)) and not AIsClassProperty then
            begin
              { ppo_stored is default on for not overridden properties }
-             if not Assigned(p.OverriddenPropSym) then
-               include(p.PropOptions,ppo_stored);
-             if try_to_consume(_STORED) then
+             if not Assigned(lProperty.OverriddenPropSym) then
+               include(lProperty.PropOptions,ppo_stored);
+             if TryToConsume(_STORED) then
               begin
-                include(p.PropOptions,ppo_stored);
-                p.PropAccessList[palt_stored].clear;
-                if CurrentScanner.token=_ID then
+                include(lProperty.PropOptions,ppo_stored);
+                lProperty.PropAccessList[palt_stored].clear;
+                if CurrentScanner.FToken=_ID then
                   begin
                     { in the case that idtoken=_DEFAULT }
                     { we have to do nothing except      }
                     { setting ppo_stored, it's the same }
                     { as stored true                    }
-                    if CurrentScanner.idtoken<>_DEFAULT then
+                    if CurrentScanner.FIDToken<>_DEFAULT then
                      begin
                        { parse_symlist cannot deal with constsyms, and
                          we also don't want to put constsyms in symlists
@@ -631,61 +631,61 @@ implementation
                        { make sure we don't let constants mask class fields/
                          methods
                        }
-                       sym:=nil;
-                       if (not Assigned(astruct) or
-                           (Search_Struct_Member(astruct,CurrentScanner.pattern)=nil)) and
-                          SearchSym(CurrentScanner.pattern,sym,srsymtable) and
-                          (sym.typ = constsym) then
+                       lSym:=nil;
+                       if (not Assigned(AStruct) or
+                           (Search_Struct_Member(AStruct,CurrentScanner.FPattern)=nil)) and
+                          SearchSym(CurrentScanner.FPattern,lSym,lSearchSymTable) and
+                          (lSym.typ = constsym) then
                          begin
-                            AddSymRef(sym);
-                            if not Is_Boolean(TConstSym(sym).ConstDef) then
+                            AddSymRef(lSym);
+                            if not Is_Boolean(TConstSym(lSym).ConstDef) then
                               Message(parser_e_stored_property_must_be_boolean)
-                            else if (TConstSym(sym).Value.ValueOrd=0) then
+                            else if (TConstSym(lSym).Value.ValueOrd=0) then
                               { same as for _FALSE }
-                              exclude(p.PropOptions,ppo_stored)
+                              exclude(lProperty.PropOptions,ppo_stored)
                             else
                               begin
                                 { same as for _TRUE }
                                 { do nothing - ppo_stored is already set to p.propoptions in "include(p.propoptions,ppo_stored);" above }
                                 { especially do not reset the default value - the stored specifier is independent on the default value! }
                               end;
-                            consume(_ID);
+                            Consume(_ID);
                           end
-                       else if parse_symlist(p.PropAccessList[palt_stored],def) then
+                       else if ParseSymList(lProperty.PropAccessList[palt_stored],lAccessDef) then
                         begin
-                          sym:=p.PropAccessList[palt_stored].FirstSym^.sym;
-                          case sym.typ of
+                          lSym:=lProperty.PropAccessList[palt_stored].FirstSym^.sym;
+                          case lSym.typ of
                             ProcSym :
                               begin
                                  { Create a temporary procvardef to handle parameters }
-                                 storedprocdef:=CProcVarDef.Create(NormalFunctionLevel,true);
-                                 include(storedprocdef.ProcOptions,po_methodpointer);
+                                 lStoredProcDef:=CProcVarDef.Create(NormalFunctionLevel,true);
+                                 include(lStoredProcDef.ProcOptions,po_methodpointer);
                                  { Return type must be boolean }
-                                 storedprocdef.ReturnDef:=PasBool1Type;
+                                 lStoredProcDef.ReturnDef:=PasBool1Type;
                                  { Add index parameter if needed }
-                                 if ppo_indexed in p.PropOptions then
+                                 if ppo_indexed in lProperty.PropOptions then
                                    begin
-                                     hparavs:=CParaVarSym.Create('$index',10,vs_value,p.IndexDef,[]);
-                                     storedprocdef.ParaST.InsertSym(hparavs);
+                                     lParaVarSym:=CParaVarSym.Create('$index',10,vs_value,lProperty.IndexDef,[]);
+                                     lStoredProcDef.ParaST.InsertSym(lParaVarSym);
                                    end;
 
                                  { Insert hidden parameters }
-                                 if not Assigned(astruct) then
-                                   Handle_Calling_Convention(storedprocdef,cHCCDefaultActionsIntf)
+                                 if not Assigned(AStruct) then
+                                   Handle_Calling_Convention(lStoredProcDef,cHCCDefaultActionsIntf)
                                  else
-                                   Handle_Calling_Convention(storedprocdef,cHCCDefaultActionsIntfStruct);
-                                 p.PropAccessList[palt_stored].procdef:=TProcSym(sym).Find_ProcDef_ByPara(storedprocdef.paras,storedprocdef.ReturnDef,[cpo_allowdefaults,cpo_ignorehidden]);
-                                 if not Assigned(p.PropAccessList[palt_stored].procdef) then
+                                   Handle_Calling_Convention(lStoredProcDef,cHCCDefaultActionsIntfStruct);
+                                 lProperty.PropAccessList[palt_stored].procdef:=TProcSym(lSym).Find_ProcDef_ByPara(lStoredProcDef.paras,lStoredProcDef.ReturnDef,[cpo_allowdefaults,cpo_ignorehidden]);
+                                 if not Assigned(lProperty.PropAccessList[palt_stored].procdef) then
                                    message(parser_e_ill_property_storage_sym);
                                  { Not needed anymore }
-                                 storedprocdef.owner.DeleteDef(storedprocdef);
+                                 lStoredProcDef.owner.DeleteDef(lStoredProcDef);
                               end;
                             FieldVarSym :
                               begin
-                                if not Assigned(def) then
+                                if not Assigned(lAccessDef) then
                                   InternalError(200310073);
-                                if (ppo_hasparameters in p.PropOptions) or
-                                   not(Is_Boolean(def)) then
+                                if (ppo_hasparameters in lProperty.PropOptions) or
+                                   not(Is_Boolean(lAccessDef)) then
                                  Message(parser_e_stored_property_must_be_boolean);
                               end;
                             else
@@ -696,74 +696,74 @@ implementation
                   end;
               end;
            end;
-         if has_implicit_default(p) and not Assigned(p.OverriddenPropSym) then
+         if HasImplicitDefault(lProperty) and not Assigned(lProperty.OverriddenPropSym) then
            begin
-              p.default:=0;
+              lProperty.default:=0;
            end;
-         if not Is_Record(astruct) and try_to_consume(_DEFAULT) then
+         if not Is_Record(AStruct) and TryToConsume(_DEFAULT) then
            begin
-              if not allow_default_property(p) then
+              if not AllowDefaultProperty(lProperty) then
                 begin
                   Message(parser_e_property_cant_have_a_default_value);
                   { Error recovery }
-                  pt:=comp_expr([ef_accept_equal]);
-                  pt.free;
-                  pt := nil;
+                  lNode:=CompExpr([efAcceptEqual]);
+                  lNode.free;
+                  lNode := nil;
                 end
               else
                 begin
                   { Get the result of the default, the firstpass is
                     needed to support values like -1 }
-                  pt:=comp_expr([ef_accept_equal]);
-                  if (p.PropDef.typ=setdef) and
-                     (pt.nodetype=arrayconstructorn) then
+                  lNode:=CompExpr([efAcceptEqual]);
+                  if (lProperty.PropDef.typ=setdef) and
+                     (lNode.nodetype=arrayconstructorn) then
                     begin
-                      ArrayConstructor_To_Set(pt);
-                      DoTypeCheckPass(pt);
+                      ArrayConstructor_To_Set(lNode);
+                      DoTypeCheckPass(lNode);
                     end;
-                  InsertTypeConv(pt,p.PropDef);
-                  if not(Is_ConstNode(pt)) then
+                  InsertTypeConv(lNode,lProperty.PropDef);
+                  if not(Is_ConstNode(lNode)) then
                     Message(parser_e_property_default_value_must_const);
                   { Set default value }
-                  case pt.nodetype of
+                  case lNode.nodetype of
                     setconstn :
                       begin
-                        p.default:=PLongInt(TSetConstNode(pt).ValueSet)^;
-                        include(p.PropOptions,ppo_default_is_set);
+                        lProperty.default:=PLongInt(TSetConstNode(lNode).ValueSet)^;
+                        include(lProperty.PropOptions,ppo_default_is_set);
                       end;
                     ordconstn :
-                      if Is_Real(p.PropDef) then
+                      if Is_Real(lProperty.PropDef) then
                         begin
-                          if TOrdConstNode(pt).Value.Is_Negative then
-                            s:=TOrdConstNode(pt).Value.svalue
+                          if TOrdConstNode(lNode).Value.Is_Negative then
+                            lSingleValue:=TOrdConstNode(lNode).Value.svalue
                           else
-                            s:=TOrdConstNode(pt).Value.uvalue;
-                          p.default:=PLongInt(@s)^;
-                          include(p.PropOptions,ppo_default_is_single);
+                            lSingleValue:=TOrdConstNode(lNode).Value.uvalue;
+                          lProperty.default:=PLongInt(@lSingleValue)^;
+                          include(lProperty.PropOptions,ppo_default_is_single);
                         end
-                      else if (TOrdConstNode(pt).Value<int64(low(LongInt))) or
-                         (TOrdConstNode(pt).Value>int64(high(cardinal))) then
-                        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(LongInt)),ToStr(high(cardinal)))
+                      else if (TOrdConstNode(lNode).Value<Int64(low(LongInt))) or
+                         (TOrdConstNode(lNode).Value>Int64(high(cardinal))) then
+                        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(lNode).Value),ToStr(low(LongInt)),ToStr(high(cardinal)))
                       else
-                        p.default:=LongInt(TOrdConstNode(pt).Value.svalue);
+                        lProperty.default:=LongInt(TOrdConstNode(lNode).Value.svalue);
                     niln :
-                      p.default:=0;
+                      lProperty.default:=0;
                     realconstn:
                       begin
-                        s:=Single(TRealConstNode(pt).ValueReal);
-                        p.default:=PLongInt(@s)^;
-                        include(p.PropOptions,ppo_default_is_single);
+                        lSingleValue:=Single(TRealConstNode(lNode).ValueReal);
+                        lProperty.default:=PLongInt(@lSingleValue)^;
+                        include(lProperty.PropOptions,ppo_default_is_single);
                       end;
                     else if not CodeGenError then
                       InternalError(2019050525);
                   end;
-                  pt.free;
-                  pt := nil;
+                  lNode.free;
+                  lNode := nil;
                 end;
            end
-         else if not Is_Record(astruct) and try_to_consume(_NODEFAULT) then
+         else if not Is_Record(AStruct) and TryToConsume(_NODEFAULT) then
            begin
-              p.default:=LongInt($80000000);
+              lProperty.default:=LongInt($80000000);
            end;
 (*
          else {if allow_default_property(p) then
@@ -772,36 +772,36 @@ implementation
            end;
 *)
          { Parse possible "implements" keyword }
-         if not Is_Record(astruct) and try_to_consume(_IMPLEMENTS) then
+         if not Is_Record(AStruct) and TryToConsume(_IMPLEMENTS) then
            repeat
-             single_type(def,[]);
+             SingleType(lAccessDef,[]);
 
-             if not(Is_Interface(def)) then
+             if not(Is_Interface(lAccessDef)) then
                message(parser_e_class_implements_must_be_interface);
 
-             if Is_Interface(p.PropDef) then
+             if Is_Interface(lProperty.PropDef) then
                begin
                  { an interface type may delegate itself or one of its ancestors }
-                 if not Def_Is_Related(p.PropDef,def) then
+                 if not Def_Is_Related(lProperty.PropDef,lAccessDef) then
                    begin
-                     message2(parser_e_implements_must_have_correct_type,def.TypeName,p.PropDef.TypeName);
+                     message2(parser_e_implements_must_have_correct_type,lAccessDef.TypeName,lProperty.PropDef.TypeName);
                      exit;
                    end;
                end
-             else if Is_Class(p.PropDef) then
+             else if Is_Class(lProperty.PropDef) then
                begin
-                 ImplIntf:=Find_Implemented_Interface(TObjectDef(p.PropDef),TObjectDef(def));
-                 if Assigned(ImplIntf) then
+                 lImplIntf:=Find_Implemented_Interface(TObjectDef(lProperty.PropDef),TObjectDef(lAccessDef));
+                 if Assigned(lImplIntf) then
                    begin
-                     if Compare_Defs(ImplIntf.IntfDef,def,nothingn)<te_equal then
+                     if Compare_Defs(lImplIntf.IntfDef,lAccessDef,nothingn)<te_equal then
                        begin
-                         message2(parser_e_implements_must_have_correct_type,ImplIntf.IntfDef.TypeName,def.TypeName);
+                         message2(parser_e_implements_must_have_correct_type,lImplIntf.IntfDef.TypeName,lAccessDef.TypeName);
                          exit;
                        end;
                    end
                  else
                    begin
-                     message2(parser_e_class_doesnt_implement_interface,p.PropDef.TypeName,def.TypeName);
+                     message2(parser_e_class_doesnt_implement_interface,lProperty.PropDef.TypeName,lAccessDef.TypeName);
                      exit;
                    end;
                end
@@ -812,390 +812,390 @@ implementation
                end;
 
 
-             if not Assigned(p.PropAccessList[palt_read].FirstSym) then
+             if not Assigned(lProperty.PropAccessList[palt_read].FirstSym) then
                begin
                  message(parser_e_implements_must_read_specifier);
                  exit;
                end;
-             if Assigned(p.PropAccessList[palt_read].procdef) and
-                (TProcDef(p.PropAccessList[palt_read].procdef).ProcCallOption<>pocall_default) then
+             if Assigned(lProperty.PropAccessList[palt_read].procdef) and
+                (TProcDef(lProperty.PropAccessList[palt_read].procdef).ProcCallOption<>pocall_default) then
                message(parser_e_implements_getter_not_default_cc);
-             if Assigned(p.PropAccessList[palt_write].FirstSym) then
+             if Assigned(lProperty.PropAccessList[palt_write].FirstSym) then
                begin
                  message(parser_e_implements_must_not_have_write_specifier);
                  exit;
                end;
-             if Assigned(p.PropAccessList[palt_stored].FirstSym) then
+             if Assigned(lProperty.PropAccessList[palt_stored].FirstSym) then
                begin
                  message(parser_e_implements_must_not_have_stored_specifier);
                  exit;
                end;
-             found:=false;
-             ImplIntf:=nil;
-             for i:=0 to TObjectDef(astruct).ImplementedInterfaces.Count-1 do
+             lFound:=false;
+             lImplIntf:=nil;
+             for lIndex:=0 to TObjectDef(AStruct).ImplementedInterfaces.Count-1 do
                begin
-                 ImplIntf:=TImplementedInterface(TObjectDef(astruct).ImplementedInterfaces[i]);
+                 lImplIntf:=TImplementedInterface(TObjectDef(AStruct).ImplementedInterfaces[lIndex]);
 
-                 if Compare_Defs(def,ImplIntf.IntfDef,nothingn)>=te_equal then
+                 if Compare_Defs(lAccessDef,lImplIntf.IntfDef,nothingn)>=te_equal then
                    begin
-                     found:=true;
+                     lFound:=true;
                      break;
                    end;
                end;
-             if found then
+             if lFound then
                begin
                  { An interface may not be delegated by more than one property,
                    it also may not have method mappings. }
-                 if Assigned(ImplIntf.ImplementsGetter) then
-                   message1(parser_e_duplicate_implements_clause,ImplIntf.IntfDef.TypeName);
-                 if Assigned(ImplIntf.NameMappings) then
-                   message2(parser_e_mapping_no_implements,ImplIntf.IntfDef.TypeName,astruct.ObjRealName^);
+                 if Assigned(lImplIntf.ImplementsGetter) then
+                   message1(parser_e_duplicate_implements_clause,lImplIntf.IntfDef.TypeName);
+                 if Assigned(lImplIntf.NameMappings) then
+                   message2(parser_e_mapping_no_implements,lImplIntf.IntfDef.TypeName,AStruct.ObjRealName^);
 
-                 ImplIntf.ImplementsGetter:=p;
-                 ImplIntf.VtblImplIntf:=ImplIntf;
-                 case p.PropAccessList[palt_read].FirstSym^.sym.typ of
+                 lImplIntf.ImplementsGetter:=lProperty;
+                 lImplIntf.VtblImplIntf:=lImplIntf;
+                 case lProperty.PropAccessList[palt_read].FirstSym^.sym.typ of
                    ProcSym :
                      begin
-                       if (po_virtualmethod in TProcDef(p.PropAccessList[palt_read].procdef).ProcOptions) and
-                           not Is_ObjectPascal_Helper(TProcDef(p.PropAccessList[palt_read].procdef).struct) then
-                         ImplIntf.IType:=etVirtualMethodResult
+                       if (po_virtualmethod in TProcDef(lProperty.PropAccessList[palt_read].procdef).ProcOptions) and
+                           not Is_ObjectPascal_Helper(TProcDef(lProperty.PropAccessList[palt_read].procdef).struct) then
+                         lImplIntf.IType:=etVirtualMethodResult
                        else
-                         ImplIntf.IType:=etStaticMethodResult;
+                         lImplIntf.IType:=etStaticMethodResult;
                      end;
                    FieldVarSym :
                      begin
-                       ImplIntf.IType:=etFieldValue;
+                       lImplIntf.IType:=etFieldValue;
                        { this must be done in a more robust way. Can't read the
                          fieldvarsym's fieldoffset yet, because it may not yet
                          be set }
-                       ImplIntf.ImplementsField:=p.PropAccessList[palt_read].FirstSym^.sym;
+                       lImplIntf.ImplementsField:=lProperty.PropAccessList[palt_read].FirstSym^.sym;
                      end
                    else
                      InternalError(200802161);
                  end;
-                 if not Is_Interface(p.PropDef) then
-                   case ImplIntf.IType of
-                     etVirtualMethodResult: ImplIntf.IType := etVirtualMethodClass;
-                     etStaticMethodResult:  ImplIntf.IType := etStaticMethodClass;
-                     etFieldValue:          ImplIntf.IType := etFieldValueClass;
+                 if not Is_Interface(lProperty.PropDef) then
+                   case lImplIntf.IType of
+                     etVirtualMethodResult: lImplIntf.IType := etVirtualMethodClass;
+                     etStaticMethodResult:  lImplIntf.IType := etStaticMethodClass;
+                     etFieldValue:          lImplIntf.IType := etFieldValueClass;
                    else
                      InternalError(200912101);
                    end;
                end
              else
-               message1(parser_e_implements_uses_non_implemented_interface,def.TypeName);
-           until not try_to_consume(_COMMA);
+               message1(parser_e_implements_uses_non_implemented_interface,lAccessDef.TypeName);
+           until not TryToConsume(_COMMA);
 
          { register propgetter and propsetter procdefs }
          if Assigned(CurrentModule) and CurrentModule.InInterface then
            begin
-             if ReadProcDef.ProcTypeOption=potype_propgetter then
-               ReadProcDef.RegisterDef
+             if lReadProcDef.ProcTypeOption=potype_propgetter then
+               lReadProcDef.RegisterDef
              else
-               ReadProcDef.free; // no nil needed
-             if WriteProcDef.ProcTypeOption=potype_propsetter then
-               WriteProcDef.RegisterDef
+               lReadProcDef.free; // no nil needed
+             if lWriteProcDef.ProcTypeOption=potype_propsetter then
+               lWriteProcDef.RegisterDef
              else
-               WriteProcDef.free; // no nil needed
+               lWriteProcDef.free; // no nil needed
            end
          else
            begin
-             if ReadProcDef.ProcTypeOption=potype_propgetter then
-               ReadProcDef.Maybe_Put_In_SymTable_Stack
+             if lReadProcDef.ProcTypeOption=potype_propgetter then
+               lReadProcDef.Maybe_Put_In_SymTable_Stack
              else
-               ReadProcDef.free; // no nil needed
-             if WriteProcDef.ProcTypeOption=potype_propsetter then
-               WriteProcDef.Maybe_Put_In_SymTable_Stack
+               lReadProcDef.free; // no nil needed
+             if lWriteProcDef.ProcTypeOption=potype_propsetter then
+               lWriteProcDef.Maybe_Put_In_SymTable_Stack
              else
-               WriteProcDef.free; // no nil needed
+               lWriteProcDef.free; // no nil needed
            end;
 
-         result:=p;
+         Result:=lProperty;
       end;
 
 
-     function maybe_parse_proc_directives(def:TDef):boolean;
+     function MaybeParseProcDirectives(ADef:TDef):Boolean;
        begin
-         result:=false;
+         Result:=false;
          { Process procvar directives before = and ; }
          if (
-              (def.typ=procvardef) or
-              Is_FuncRef(def)
+              (ADef.typ=procvardef) or
+              Is_FuncRef(ADef)
             ) and
-            (def.TypeSym=nil) and
-            check_proc_directive(true) then
+            (ADef.TypeSym=nil) and
+            CheckProcDirective(true) then
            begin
-              parse_proctype_directives(def);
-              result:=true;
+              ParseProcTypeDirectives(ADef);
+              Result:=true;
            end;
        end;
 
 
     var
-       variantrecordlevel : LongInt = 0;
+       VariantRecordLevel : LongInt = 0;
 
 
-    procedure read_public_and_external_sc(sc:TFPObjectList);
+    procedure ReadPublicAndExternalSC(ASymbols:TFPObjectList);
     var
-      vs: TAbstractVarSym;
+      lVarSym: TAbstractVarSym;
     begin
       { only allowed for one var }
-      vs:=TAbstractVarSym(sc[0]);
-      if sc.count>1 then
-        Message1(parser_e_directive_only_one_var,arraytokeninfo[CurrentScanner.idtoken].str);
-      read_public_and_external(vs);
+      lVarSym:=TAbstractVarSym(ASymbols[0]);
+      if ASymbols.count>1 then
+        Message1(parser_e_directive_only_one_var,arraytokeninfo[CurrentScanner.FIDToken].str);
+      ReadPublicAndExternal(lVarSym);
     end;
 
 
-    procedure read_public_and_external(vs: TAbstractVarSym);
+    procedure ReadPublicAndExternal(AVarSym: TAbstractVarSym);
     var
-      is_dll,
-      is_cdecl,
-      is_external_var,
-      is_weak_external,
-      is_public_var  : boolean;
-      dll_name,section_name,
-      C_name,MangledName      : string;
+      lIsDLL,
+      lIsCDecl,
+      lIsExternalVar,
+      lIsWeakExternal,
+      lIsPublicVar  : Boolean;
+      lDLLName,lSectionName,
+      lCName,lMangledName      : String;
     begin
       { only allowed for one var }
       { only allow external and public on global symbols }
-      if vs.typ<>staticvarsym then
+      if AVarSym.typ<>staticvarsym then
         begin
           Message(parser_e_no_local_var_external);
           exit;
         end;
       { defaults }
-      is_dll:=false;
-      is_cdecl:=false;
-      is_external_var:=false;
-      is_public_var:=false;
-      section_name := '';
-      dll_name := '';
-      C_name:=vs.realname;
+      lIsDLL:=false;
+      lIsCDecl:=false;
+      lIsExternalVar:=false;
+      lIsPublicVar:=false;
+      lSectionName := '';
+      lDLLName := '';
+      lCName:=AVarSym.realname;
 
       { macpas specific handling due to some switches}
       if (m_mac in CurrentSettings.ModeSwitches) then
         begin
           if (cs_external_var in CurrentSettings.LocalSwitches) then
             begin {The effect of this is the same as if cvar; external; has been given as directives.}
-              is_cdecl:=true;
-              is_external_var:=true;
+              lIsCDecl:=true;
+              lIsExternalVar:=true;
             end
           else if (cs_externally_visible in CurrentSettings.LocalSwitches) then
             begin {The effect of this is the same as if cvar has been given as directives and it's made public.}
-              is_cdecl:=true;
-              is_public_var:=true;
+              lIsCDecl:=true;
+              lIsPublicVar:=true;
             end;
         end;
 
       { cdecl }
-      if try_to_consume(_CVAR) then
+      if TryToConsume(_CVAR) then
         begin
-          consume(_SEMICOLON);
-          is_cdecl:=true;
+          Consume(_SEMICOLON);
+          lIsCDecl:=true;
         end;
 
       { external }
-      is_weak_external:=try_to_consume(_WEAKEXTERNAL);
-      if is_weak_external or
-         try_to_consume(_EXTERNAL) then
+      lIsWeakExternal:=TryToConsume(_WEAKEXTERNAL);
+      if lIsWeakExternal or
+         TryToConsume(_EXTERNAL) then
         begin
-          is_external_var:=true;
-          if (CurrentScanner.idtoken<>_NAME) and (CurrentScanner.token<>_SEMICOLON) then
+          lIsExternalVar:=true;
+          if (CurrentScanner.FIDToken<>_NAME) and (CurrentScanner.FToken<>_SEMICOLON) then
             begin
-              is_dll:=true;
-              dll_name:=get_stringconst;
-              if ExtractFileExt(dll_name)='' then
-                dll_name:=ChangeFileExt(dll_name,TargetInfo.sharedlibext);
+              lIsDLL:=true;
+              lDLLName:=GetStringConst;
+              if ExtractFileExt(lDLLName)='' then
+                lDLLName:=ChangeFileExt(lDLLName,TargetInfo.sharedlibext);
             end;
-          if not(is_cdecl) and try_to_consume(_NAME) then
-            C_name:=get_stringconst;
-          consume(_SEMICOLON);
+          if not(lIsCDecl) and TryToConsume(_NAME) then
+            lCName:=GetStringConst;
+          Consume(_SEMICOLON);
         end;
 
       { export or public }
-      if CurrentScanner.idtoken in [_EXPORT,_PUBLIC] then
+      if CurrentScanner.FIDToken in [_EXPORT,_PUBLIC] then
         begin
-          consume(_ID);
-          if is_external_var then
+          Consume(_ID);
+          if lIsExternalVar then
             Message(parser_e_not_external_and_export)
           else
-            is_public_var:=true;
-          if try_to_consume(_NAME) then
-            C_name:=get_stringconst;
+            lIsPublicVar:=true;
+          if TryToConsume(_NAME) then
+            lCName:=GetStringConst;
 {$ifndef DISABLE_TLS_DIRECTORY}
           if (TargetInfo.system in systems_windows) and
-             (vs.typ=staticvarsym) and
-             try_to_consume (_SECTION) then
-            section_name:=get_stringconst;
+             (AVarSym.typ=staticvarsym) and
+             TryToConsume (_SECTION) then
+            lSectionName:=GetStringConst;
 {$endif not DISABLE_TLS_DIRECTORY}
-          consume(_SEMICOLON);
+          Consume(_SEMICOLON);
         end;
 
       { Windows uses an indirect reference using import tables }
-      if is_dll and
+      if lIsDLL and
          (TargetInfo.system in systems_all_windows) then
-        include(vs.VarOptions,vo_is_dll_var);
+        include(AVarSym.VarOptions,vo_is_dll_var);
 
       { This can only happen if vs.typ=staticvarsym }
-      if section_name<>'' then
+      if lSectionName<>'' then
         begin
-          TStaticVarSym(vs).section:=section_name;
-          include(vs.VarOptions,vo_has_section);
+          TStaticVarSym(AVarSym).section:=lSectionName;
+          include(AVarSym.VarOptions,vo_has_section);
         end;
 
 
       { Add C _ prefix }
-      if is_cdecl or
+      if lIsCDecl or
          (
-          is_dll and
+          lIsDLL and
           (TargetInfo.system in systems_darwin)
          ) then
-        C_Name := TargetInfo.Cprefix+C_Name;
+        lCName := TargetInfo.Cprefix+lCName;
 
-      if is_public_var then
+      if lIsPublicVar then
         begin
-          include(vs.VarOptions,vo_is_public);
-          vs.VarRegable := vr_none;
+          include(AVarSym.VarOptions,vo_is_public);
+          AVarSym.VarRegable := vr_none;
           { mark as referenced }
-          inc(vs.refs);
+          inc(AVarSym.refs);
         end;
 
-      MangledName:=C_name;
+      lMangledName:=lCName;
       { now we can insert it in the import lib if its a dll, or
         add it to the externals }
-      if is_external_var then
+      if lIsExternalVar then
         begin
-          if vo_is_typed_const in vs.VarOptions then
+          if vo_is_typed_const in AVarSym.VarOptions then
             Message(parser_e_initialized_not_for_external);
-          include(vs.VarOptions,vo_is_external);
-          if (is_weak_external) then
+          include(AVarSym.VarOptions,vo_is_external);
+          if (lIsWeakExternal) then
             begin
               if not(TargetInfo.system in systems_weak_linking) then
                 message(parser_e_weak_external_not_supported);
-              include(vs.VarOptions,vo_is_weak_external);
+              include(AVarSym.VarOptions,vo_is_weak_external);
             end;
-          vs.VarRegable := vr_none;
-          if is_dll then
+          AVarSym.VarRegable := vr_none;
+          if lIsDLL then
             begin
               if TargetInfo.system in systems_all_windows then
-                MangledName:=Make_DLLMangledName(dll_name,C_name,0,pocall_none);
+                lMangledName:=Make_DLLMangledName(lDLLName,lCName,0,pocall_none);
 
-              CurrentModule.AddExternalImport(dll_name,C_Name,MangledName,0,true,false);
+              CurrentModule.AddExternalImport(lDLLName,lCName,lMangledName,0,true,false);
             end
           else
             if tf_has_dllscanner in TargetInfo.flags then
-              CurrentModule.DLLScannerInputList.Add(vs.MangledName,vs);
+              CurrentModule.DLLScannerInputList.Add(AVarSym.MangledName,AVarSym);
         end;
 
       { Set the assembler name }
-      TStaticVarSym(vs).Set_MangledBaseName(MangledName);
-      TStaticVarSym(vs).Set_MangledName(MangledName);
+      TStaticVarSym(AVarSym).Set_MangledBaseName(lMangledName);
+      TStaticVarSym(AVarSym).Set_MangledName(lMangledName);
     end;
 
 
-    procedure try_consume_sectiondirective(var asection: AnsiString);
+    procedure TryConsumeSectionDirective(var ASection: AnsiString);
       begin
-        if CurrentScanner.idtoken=_SECTION then
+        if CurrentScanner.FIDToken=_SECTION then
           begin
-            consume(_ID);
-            asection:=get_stringconst;
-            consume(_SEMICOLON);
+            Consume(_ID);
+            ASection:=GetStringConst;
+            Consume(_SEMICOLON);
           end;
       end;
 
 
-    procedure read_var_decls(options:TVarDecOptions;out had_generic:boolean);
+    procedure ReadVarDecls(AOptions:TVarDecOptions;out AHadGeneric:Boolean);
 
-        procedure read_default_value(sc : TFPObjectList);
+        procedure ReadDefaultValue(ASymbols : TFPObjectList);
         var
-          vs : TAbstractNormalVarSym;
-          tcsym : TStaticVarSym;
-          TempList : TAsmList;
+          lVarSym : TAbstractNormalVarSym;
+          lConstSym : TStaticVarSym;
+          lTempList : TAsmList;
         begin
-          vs:=TAbstractNormalVarSym(sc[0]);
-          if sc.count>1 then
+          lVarSym:=TAbstractNormalVarSym(ASymbols[0]);
+          if ASymbols.count>1 then
             Message(parser_e_initialized_only_one_var);
-          if vo_is_thread_var in vs.VarOptions then
+          if vo_is_thread_var in lVarSym.VarOptions then
             Message(parser_e_initialized_not_for_threadvar);
-          consume(_EQ);
-          case vs.typ of
+          Consume(_EQ);
+          case lVarSym.typ of
             localvarsym :
               begin
-                tcsym:=CStaticVarSym.Create('$default'+vs.realname,vs_const,vs.vardef,[]);
-                include(tcsym.SymOptions,sp_internal);
-                SymTableStack.top.InsertSym(tcsym);
-                TempList:=TAsmList.Create;
-                read_typed_const(TempList,tcsym,false);
+                lConstSym:=CStaticVarSym.Create('$default'+lVarSym.realname,vs_const,lVarSym.vardef,[]);
+                include(lConstSym.SymOptions,sp_internal);
+                SymTableStack.top.InsertSym(lConstSym);
+                lTempList:=TAsmList.Create;
+                ReadTypedConst(lTempList,lConstSym,false);
                 { in case of a generic routine, this initialisation value is not
                   used, and will be re-parsed during specialisations (and the
                   current version is not type-correct and hence breaks code
                   generation for LLVM) }
-                if not parse_generic then
+                if not ParseGeneric then
                   begin
-                    vs.DefaultConstSym:=tcsym;
-                    CurrentAsmData.asmlists[al_typedconsts].ConcatList(TempList);
+                    lVarSym.DefaultConstSym:=lConstSym;
+                    CurrentAsmData.asmlists[al_typedconsts].ConcatList(lTempList);
                   end;
-                TempList.free;
-                TempList := nil;
+                lTempList.free;
+                lTempList := nil;
               end;
             staticvarsym :
               begin
-                read_typed_const(CurrentAsmData.asmlists[al_typedconsts],TStaticVarSym(vs),false);
+                ReadTypedConst(CurrentAsmData.asmlists[al_typedconsts],TStaticVarSym(lVarSym),false);
               end;
             else
               InternalError(200611051);
           end;
-          vs.VarState:=vs_initialised;
+          lVarSym.VarState:=vs_initialised;
         end;
 
-        procedure read_absolute(sc : TFPObjectList);
+        procedure ReadAbsolute(ASymbols : TFPObjectList);
         var
-          vs     : TAbstractVarSym;
-          abssym : TAbsoluteVarSym;
-          pt,hp  : TNode;
-          st     : TSymTable;
+          lVarSym     : TAbstractVarSym;
+          lAbsoluteSym : TAbsoluteVarSym;
+          lNode,lBaseNode  : TNode;
+          lSymTable     : TSymTable;
         begin
-          abssym:=nil;
+          lAbsoluteSym:=nil;
           { only allowed for one var }
-          vs:=TAbstractVarSym(sc[0]);
-          if sc.count>1 then
+          lVarSym:=TAbstractVarSym(ASymbols[0]);
+          if ASymbols.count>1 then
             Message1(parser_e_directive_only_one_var,'ABSOLUTE');
-          if vo_is_typed_const in vs.VarOptions then
+          if vo_is_typed_const in lVarSym.VarOptions then
             Message(parser_e_initialized_not_for_external);
           { parse the rest }
-          pt:=expr(true);
+          lNode:=Expr(true);
           { check allowed absolute types }
-          if (pt.nodetype=stringconstn) or
-            (Is_ConstCharNode(pt)) then
+          if (lNode.nodetype=stringconstn) or
+            (Is_ConstCharNode(lNode)) then
             begin
-              abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
-              abssym.fileinfo:=vs.fileinfo;
-              if pt.nodetype=stringconstn then
-                abssym.AsmName:=StringDup(TStringConstNode(pt).AsRawByteString)
+              lAbsoluteSym:=CAbsoluteVarSym.Create(lVarSym.realname,lVarSym.vardef);
+              lAbsoluteSym.fileinfo:=lVarSym.fileinfo;
+              if lNode.nodetype=stringconstn then
+                lAbsoluteSym.AsmName:=StringDup(TStringConstNode(lNode).AsRawByteString)
               else
-                abssym.AsmName:=StringDup(chr(TOrdConstNode(pt).Value.svalue));
-              abssym.AbsTyp:=toasm;
+                lAbsoluteSym.AsmName:=StringDup(chr(TOrdConstNode(lNode).Value.svalue));
+              lAbsoluteSym.AbsTyp:=toasm;
             end
           { address }
-          else if Is_ConstIntNode(pt) then
+          else if Is_ConstIntNode(lNode) then
             begin
-              abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
-              abssym.fileinfo:=vs.fileinfo;
-              abssym.AbsTyp:=toaddr;
+              lAbsoluteSym:=CAbsoluteVarSym.Create(lVarSym.realname,lVarSym.vardef);
+              lAbsoluteSym.fileinfo:=lVarSym.fileinfo;
+              lAbsoluteSym.AbsTyp:=toaddr;
 {$ifndef cpu64bitaddr}
               { on 64 bit systems, abssym.addroffset is a qword and hence this
                 test is useless (value is a 64 bit entity) and will always fail
                 for positive values (since int64(high(abssym.addroffset))=-1
               }
-              if (TOrdConstNode(pt).Value<int64(low(abssym.AddrOffset))) or
-                 (TOrdConstNode(pt).Value>int64(high(abssym.AddrOffset))) then
-                message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).Value),ToStr(low(abssym.AddrOffset)),ToStr(high(abssym.AddrOffset)))
+              if (TOrdConstNode(lNode).Value<Int64(low(lAbsoluteSym.AddrOffset))) or
+                 (TOrdConstNode(lNode).Value>Int64(high(lAbsoluteSym.AddrOffset))) then
+                message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(lNode).Value),ToStr(low(lAbsoluteSym.AddrOffset)),ToStr(high(lAbsoluteSym.AddrOffset)))
              else
 {$endif}
-                abssym.AddrOffset:=TOrdConstNode(pt).Value.svalue;
+                lAbsoluteSym.AddrOffset:=TOrdConstNode(lNode).Value.svalue;
 {$if defined(i386)}
-              TCPUAbsoluteVarSym(abssym).AbsSeg:=false;
+              TCPUAbsoluteVarSym(lAbsoluteSym).AbsSeg:=false;
 {$endif i386}
             end
           { variable }
@@ -1204,15 +1204,15 @@ implementation
               { we have to be able to take the address of the absolute
                 expression
               }
-              Valid_For_Addr(pt,true);
+              Valid_For_Addr(lNode,true);
               { remove subscriptn before checking for loadn }
-              hp:=pt;
-              while (hp.nodetype in [subscriptn,typeconvn,vecn]) do
+              lBaseNode:=lNode;
+              while (lBaseNode.nodetype in [subscriptn,typeconvn,vecn]) do
                 begin
                   { check for implicit dereferencing and reject it }
-                  if (hp.nodetype in [subscriptn,vecn]) then
+                  if (lBaseNode.nodetype in [subscriptn,vecn]) then
                     begin
-                      if (TUnaryNode(hp).left.resultdef.typ in [pointerdef,classrefdef]) then
+                      if (TUnaryNode(lBaseNode).left.resultdef.typ in [pointerdef,classrefdef]) then
                         break;
                       { catch, e.g., 'var b: char absolute pchar_var[5];"
                         (pchar_var[5] is a pchar_2_string typeconv ->
@@ -1220,38 +1220,38 @@ implementation
                         I don't know if all of these type conversions are
                         possible, but they're definitely all bad.
                       }
-                      if (TUnaryNode(hp).left.nodetype=typeconvn) and
-                         (TTypeConvNode(TUnaryNode(hp).left).ConvType in
+                      if (TUnaryNode(lBaseNode).left.nodetype=typeconvn) and
+                         (TTypeConvNode(TUnaryNode(lBaseNode).left).ConvType in
                            [tc_pchar_2_string,tc_pointer_2_array,
                             tc_intf_2_string,tc_intf_2_guid,
                             tc_dynarray_2_variant,tc_interface_2_variant,
                             tc_array_2_dynarray]) then
                         break;
 
-                      if (TUnaryNode(hp).left.resultdef.typ=stringdef) and
-                         not(TStringDef(TUnaryNode(hp).left.resultdef).StringType in [st_shortstring,st_longstring]) then
+                      if (TUnaryNode(lBaseNode).left.resultdef.typ=stringdef) and
+                         not(TStringDef(TUnaryNode(lBaseNode).left.resultdef).StringType in [st_shortstring,st_longstring]) then
                         break;
-                      if (TUnaryNode(hp).left.resultdef.typ=objectdef) and
-                         (TObjectDef(TUnaryNode(hp).left.resultdef).ObjectType<>odt_object) then
+                      if (TUnaryNode(lBaseNode).left.resultdef.typ=objectdef) and
+                         (TObjectDef(TUnaryNode(lBaseNode).left.resultdef).ObjectType<>odt_object) then
                         break;
-                      if Is_Dynamic_Array(TUnaryNode(hp).left.resultdef) then
+                      if Is_Dynamic_Array(TUnaryNode(lBaseNode).left.resultdef) then
                         break;
                     end;
-                  hp:=TUnaryNode(hp).left;
+                  lBaseNode:=TUnaryNode(lBaseNode).left;
                 end;
-              if (hp.nodetype=loadn) then
+              if (lBaseNode.nodetype=loadn) then
                 begin
                   { we should check the result type of loadn }
-                  if not (TLoadNode(hp).SymTableEntry.typ in [FieldVarSym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
+                  if not (TLoadNode(lBaseNode).SymTableEntry.typ in [FieldVarSym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
                     Message(parser_e_absolute_only_to_var_or_const);
-                  if vs=TLoadNode(hp).SymTableEntry then
+                  if lVarSym=TLoadNode(lBaseNode).SymTableEntry then
                     Message(parser_e_absolute_sym_cannot_reference_itself)
                   else
                     begin
-                      abssym:=CAbsoluteVarSym.Create(vs.realname,vs.vardef);
-                      abssym.fileinfo:=vs.fileinfo;
-                      abssym.AbsTyp:=tovar;
-                      abssym.Ref:=Node_To_PropAccessList(pt);
+                      lAbsoluteSym:=CAbsoluteVarSym.Create(lVarSym.realname,lVarSym.vardef);
+                      lAbsoluteSym.fileinfo:=lVarSym.fileinfo;
+                      lAbsoluteSym.AbsTyp:=tovar;
+                      lAbsoluteSym.Ref:=Node_To_PropAccessList(lNode);
                       { if the sizes are different, can't be a regvar since you }
                       { can't be "absolute upper 8 bits of a register" (except  }
                       { if its a record field of the same size of a record      }
@@ -1260,255 +1260,255 @@ implementation
                       { the whole record -- which is why we use pt and not hp)  }
 
                       { we can't take the size of an open array or an array of const }
-                      if Is_Open_Array(pt.resultdef) or
-                         Is_Array_Of_Const(pt.resultdef) or
-                         (vs.vardef.Size <> pt.resultdef.Size) then
-                        Make_Not_Regable(pt,[ra_addr_regable]);
-                      TAbsoluteVarSym(abssym).Adjust_VarRegable;
+                      if Is_Open_Array(lNode.resultdef) or
+                         Is_Array_Of_Const(lNode.resultdef) or
+                         (lVarSym.vardef.Size <> lNode.resultdef.Size) then
+                        Make_Not_Regable(lNode,[ra_addr_regable]);
+                      TAbsoluteVarSym(lAbsoluteSym).Adjust_VarRegable;
                     end;
                 end
               else
                 Message(parser_e_absolute_only_to_var_or_const);
             end;
-          pt.free;
-          pt := nil;
+          lNode.free;
+          lNode := nil;
           { replace old varsym with the new absolutevarsym }
-          if Assigned(abssym) then
+          if Assigned(lAbsoluteSym) then
             begin
-              st:=vs.owner;
-              vs.owner.DeleteSym(vs);
-              st.InsertSym(abssym);
-              sc[0]:=abssym;
+              lSymTable:=lVarSym.owner;
+              lVarSym.owner.DeleteSym(lVarSym);
+              lSymTable.InsertSym(lAbsoluteSym);
+              ASymbols[0]:=lAbsoluteSym;
             end;
         end;
 
       var
-         sc   : TFPObjectList;
-         vs   : TAbstractVarSym;
-         hdef : TDef;
-         i    : LongInt;
-         flags : THCCFlags;
-         first,
-         isgeneric,
-         semicoloneaten,
-         allowdefaultvalue,
-         hasdefaultvalue : boolean;
-         hintsymoptions  : TSymOptions;
-         DeprecatedMsg   : PShortString;
-         old_block_type  : TBlockType;
-         typepos,
-         tmp_filepos,
-         old_current_filepos     : TFilePosInfo;
+         lSymbols   : TFPObjectList;
+         lVarSym   : TAbstractVarSym;
+         lDef : TDef;
+         lIndex    : LongInt;
+         lFlags : THCCFlags;
+         lFirst,
+         lIsGeneric,
+         lSemicolonEaten,
+         lAllowDefaultValue,
+         lHasDefaultValue : Boolean;
+         lHintSymOptions  : TSymOptions;
+         lDeprecatedMsg   : PShortString;
+         lOldBlockType  : TBlockType;
+         lTypePos,
+         lTempFilePos,
+         lOldCurrentFilePos     : TFilePosInfo;
       begin
-         old_block_type:=Block_Type;
+         lOldBlockType:=Block_Type;
          Block_Type:=bt_var;
          { Force an expected ID error message }
-         if not (CurrentScanner.token in [_ID,_CASE,_END]) then
-           consume(_ID);
+         if not (CurrentScanner.FToken in [_ID,_CASE,_END]) then
+           Consume(_ID);
          { read vars }
-         sc:=TFPObjectList.Create(false);
-         first:=true;
-         had_generic:=false;
-         vs:=nil;
-         fillchar(tmp_filepos,sizeof(tmp_filepos),0);
-         while (CurrentScanner.token=_ID) do
+         lSymbols:=TFPObjectList.Create(false);
+         lFirst:=true;
+         AHadGeneric:=false;
+         lVarSym:=nil;
+         fillchar(lTempFilePos,sizeof(lTempFilePos),0);
+         while (CurrentScanner.FToken=_ID) do
            begin
-             semicoloneaten:=false;
-             hasdefaultvalue:=false;
-             allowdefaultvalue:=true;
-             sc.clear;
+             lSemicolonEaten:=false;
+             lHasDefaultValue:=false;
+             lAllowDefaultValue:=true;
+             lSymbols.clear;
              repeat
-               if (CurrentScanner.token = _ID) then
+               if (CurrentScanner.FToken = _ID) then
                  begin
-                   isgeneric:=(vd_check_generic in options) and
+                   lIsGeneric:=(vdCheckGeneric in AOptions) and
                                 not (m_delphi in CurrentSettings.ModeSwitches) and
-                                (CurrentScanner.idtoken=_GENERIC);
+                                (CurrentScanner.FIDToken=_GENERIC);
                    case SymTableStack.top.SymTableType of
                      LocalSymTable :
-                       vs:=CLocalVarSym.Create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
+                       lVarSym:=CLocalVarSym.Create(CurrentScanner.FOrgPattern,vs_value,GenErrorDef,[]);
                      staticsymtable,
                      GlobalSymTable :
                        begin
-                         vs:=CStaticVarSym.Create(CurrentScanner.orgpattern,vs_value,GenErrorDef,[]);
-                         if vd_threadvar in options then
-                           include(vs.VarOptions,vo_is_thread_var);
+                         lVarSym:=CStaticVarSym.Create(CurrentScanner.FOrgPattern,vs_value,GenErrorDef,[]);
+                         if vdThreadVar in AOptions then
+                           include(lVarSym.VarOptions,vo_is_thread_var);
                        end;
                      else
                        InternalError(200411064);
                    end;
-                   sc.add(vs);
-                   if isgeneric then
-                     tmp_filepos:=CurrentFilePos;
+                   lSymbols.add(lVarSym);
+                   if lIsGeneric then
+                     lTempFilePos:=CurrentFilePos;
                  end
                else
-                 isgeneric:=false;
-               consume(_ID);
+                 lIsGeneric:=false;
+               Consume(_ID);
                { when the first variable had been read the next declaration could be
                  a "generic procedure", "generic function" or
                  "generic class (function/procedure)" }
-               if not first
-                   and isgeneric
-                   and (sc.count=1)
-                   and (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+               if not lFirst
+                   and lIsGeneric
+                   and (lSymbols.count=1)
+                   and (CurrentScanner.FToken in [_PROCEDURE,_FUNCTION,_CLASS]) then
                  begin
-                   vs.free;
-                   vs := nil;
-                   sc.clear;
-                   had_generic:=true;
+                   lVarSym.free;
+                   lVarSym := nil;
+                   lSymbols.clear;
+                   AHadGeneric:=true;
                    break;
                  end
                else
                  begin
-                   vs.RegisterSym;
-                   if isgeneric then
+                   lVarSym.RegisterSym;
+                   if lIsGeneric then
                      begin
                        { ensure correct error position }
-                       old_current_filepos:=CurrentFilePos;
-                       CurrentFilePos:=tmp_filepos;
-                       SymTableStack.top.InsertSym(vs);
-                       CurrentFilePos:=old_current_filepos;
+                       lOldCurrentFilePos:=CurrentFilePos;
+                       CurrentFilePos:=lTempFilePos;
+                       SymTableStack.top.InsertSym(lVarSym);
+                       CurrentFilePos:=lOldCurrentFilePos;
                      end
                    else
-                     SymTableStack.top.InsertSym(vs);
+                     SymTableStack.top.InsertSym(lVarSym);
                  end;
-             until not try_to_consume(_COMMA);
+             until not TryToConsume(_COMMA);
 
-             if had_generic then
+             if AHadGeneric then
                break;
 
              { read variable type def }
              Block_Type:=bt_var_type;
-             consume(_COLON);
-             typepos:=CurrentTokenPos;
+             Consume(_COLON);
+             lTypePos:=CurrentTokenPos;
 
-             read_anon_type(hdef,false,nil);
-             for i:=0 to sc.count-1 do
+             ReadAnonType(lDef,false,nil);
+             for lIndex:=0 to lSymbols.count-1 do
                begin
-                 vs:=TAbstractVarSym(sc[i]);
-                 vs.vardef:=hdef;
+                 lVarSym:=TAbstractVarSym(lSymbols[lIndex]);
+                 lVarSym.vardef:=lDef;
                end;
              Block_Type:=bt_var;
 
              { Process procvar directives }
-             if maybe_parse_proc_directives(hdef) then
-               semicoloneaten:=true;
+             if MaybeParseProcDirectives(lDef) then
+               lSemicolonEaten:=true;
 
              { check for absolute }
-             if try_to_consume(_ABSOLUTE) then
+             if TryToConsume(_ABSOLUTE) then
                begin
-                 read_absolute(sc);
-                 allowdefaultvalue:=false;
+                 ReadAbsolute(lSymbols);
+                 lAllowDefaultValue:=false;
                end;
 
              { Check for EXTERNAL etc directives before a semicolon }
-             if (CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL) then
+             if (CurrentScanner.FIDToken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.FIDToken = _WEAKEXTERNAL) then
                begin
-                 read_public_and_external_sc(sc);
-                 allowdefaultvalue:=false;
-                 semicoloneaten:=true;
+                 ReadPublicAndExternalSC(lSymbols);
+                 lAllowDefaultValue:=false;
+                 lSemicolonEaten:=true;
                end;
 
              { try to parse the hint directives }
-             hintsymoptions:=[];
-             DeprecatedMsg:=nil;
-             try_consume_hintdirective(hintsymoptions,DeprecatedMsg);
-             for i:=0 to sc.count-1 do
+             lHintSymOptions:=[];
+             lDeprecatedMsg:=nil;
+             TryConsumeHintDirective(lHintSymOptions,lDeprecatedMsg);
+             for lIndex:=0 to lSymbols.count-1 do
                begin
-                 vs:=TAbstractVarSym(sc[i]);
-                 vs.SymOptions := vs.SymOptions + hintsymoptions;
-                 if DeprecatedMsg<>nil then
-                   vs.DeprecatedMsg:=StringDup(DeprecatedMsg^);
+                 lVarSym:=TAbstractVarSym(lSymbols[lIndex]);
+                 lVarSym.SymOptions := lVarSym.SymOptions + lHintSymOptions;
+                 if lDeprecatedMsg<>nil then
+                   lVarSym.DeprecatedMsg:=StringDup(lDeprecatedMsg^);
                end;
-             StringDispose(DeprecatedMsg);
+             StringDispose(lDeprecatedMsg);
 
              { Handling of Delphi typed const = initialized vars }
-             if allowdefaultvalue and
-                (CurrentScanner.token=_EQ) and
+             if lAllowDefaultValue and
+                (CurrentScanner.FToken=_EQ) and
                 (SymTableStack.top.SymTableType<>parasymtable) then
                begin
                  { Add calling convention for procvar }
                  if (
-                      (hdef.typ=procvardef) or
-                      Is_FuncRef(hdef)
+                      (lDef.typ=procvardef) or
+                      Is_FuncRef(lDef)
                     ) and
-                    (hdef.TypeSym=nil) then
+                    (lDef.TypeSym=nil) then
                    begin
-                     if po_is_function_ref in TProcVarDef(hdef).ProcOptions then
+                     if po_is_function_ref in TProcVarDef(lDef).ProcOptions then
                        begin
                          if not (m_function_references in CurrentSettings.ModeSwitches) and
-                             not (po_is_block in TProcVarDef(hdef).ProcOptions) then
-                           messagepos(typepos,sym_e_error_in_type_def)
+                             not (po_is_block in TProcVarDef(lDef).ProcOptions) then
+                           messagepos(lTypePos,sym_e_error_in_type_def)
                          else
                            begin
-                             if Adjust_FuncRef(hdef,nil,nil) then
+                             if Adjust_FuncRef(lDef,nil,nil) then
                                { the def was changed, so update it }
-                               for i:=0 to sc.count-1 do
+                               for lIndex:=0 to lSymbols.count-1 do
                                  begin
-                                   vs:=TAbstractVarSym(sc[i]);
-                                   vs.vardef:=hdef;
+                                   lVarSym:=TAbstractVarSym(lSymbols[lIndex]);
+                                   lVarSym.vardef:=lDef;
                                  end;
-                             if CurrentScanner.replay_stack_depth=0 then
-                               hdef.RegisterDef;
+                             if CurrentScanner.ReplayStackDepth=0 then
+                               lDef.RegisterDef;
                            end;
                        end;
-                     Handle_Calling_Convention(hdef,cHCCDefaultActionsIntf);
+                     Handle_Calling_Convention(lDef,cHCCDefaultActionsIntf);
                    end;
-                 read_default_value(sc);
-                 hasdefaultvalue:=true;
+                 ReadDefaultValue(lSymbols);
+                 lHasDefaultValue:=true;
                end
              else
                begin
-                 if not(semicoloneaten) then
-                   consume(_SEMICOLON);
+                 if not(lSemicolonEaten) then
+                   Consume(_SEMICOLON);
                end;
 
              { Support calling convention for procvars after semicolon }
-             if not(hasdefaultvalue) and
+             if not(lHasDefaultValue) and
                 (
-                  (hdef.typ=procvardef) or
-                  Is_FuncRef(hdef)
+                  (lDef.typ=procvardef) or
+                  Is_FuncRef(lDef)
                 ) and
-                (hdef.TypeSym=nil) then
+                (lDef.TypeSym=nil) then
                begin
                  { Parse procvar directives after ; }
-                 maybe_parse_proc_directives(hdef);
-                 if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).ProcOptions) then
+                 MaybeParseProcDirectives(lDef);
+                 if (lDef.typ=procvardef) and (po_is_function_ref in TProcVarDef(lDef).ProcOptions) then
                    begin
                      if not (m_function_references in CurrentSettings.ModeSwitches) and
-                         not (po_is_block in TProcVarDef(hdef).ProcOptions) then
-                       messagepos(typepos,sym_e_error_in_type_def)
+                         not (po_is_block in TProcVarDef(lDef).ProcOptions) then
+                       messagepos(lTypePos,sym_e_error_in_type_def)
                      else
                        begin
-                         if Adjust_FuncRef(hdef,nil,nil) then
+                         if Adjust_FuncRef(lDef,nil,nil) then
                            { the def was changed, so update it }
-                           for i:=0 to sc.count-1 do
+                           for lIndex:=0 to lSymbols.count-1 do
                              begin
-                               vs:=TAbstractVarSym(sc[i]);
-                               vs.vardef:=hdef;
+                               lVarSym:=TAbstractVarSym(lSymbols[lIndex]);
+                               lVarSym.vardef:=lDef;
                              end;
-                         if CurrentScanner.replay_stack_depth=0 then
-                           hdef.RegisterDef;
+                         if CurrentScanner.ReplayStackDepth=0 then
+                           lDef.RegisterDef;
                        end;
                    end;
                  { Add calling convention for procvar }
-                 if hdef.typ=procvardef then
-                   flags:=cHCCDefaultActionsIntf
+                 if lDef.typ=procvardef then
+                   lFlags:=cHCCDefaultActionsIntf
                  else
-                   flags:=cHCCDefaultActionsIntfStruct;
-                 Handle_Calling_Convention(hdef,flags);
+                   lFlags:=cHCCDefaultActionsIntfStruct;
+                 Handle_Calling_Convention(lDef,lFlags);
                  { Handling of Delphi typed const = initialized vars }
-                 if (CurrentScanner.token=_EQ) and
+                 if (CurrentScanner.FToken=_EQ) and
                     (SymTableStack.top.SymTableType<>parasymtable) then
                    begin
-                     read_default_value(sc);
-                     hasdefaultvalue:=true;
+                     ReadDefaultValue(lSymbols);
+                     lHasDefaultValue:=true;
                    end;
                end;
 
              { Check for EXTERNAL etc directives or, in macpas, if cs_external_var is set}
              if (
                  (
-                  ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
+                  ((CurrentScanner.FIDToken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.FIDToken = _WEAKEXTERNAL)) and
                   (m_cvar_support in CurrentSettings.ModeSwitches)
                  ) or
                  (
@@ -1519,477 +1519,477 @@ implementation
                   )
                  )
                 ) then
-               read_public_and_external_sc(sc);
+               ReadPublicAndExternalSC(lSymbols);
 
              { allocate normal variable (non-external and non-typed-const) staticvarsyms }
-             for i:=0 to sc.count-1 do
+             for lIndex:=0 to lSymbols.count-1 do
                begin
-                 vs:=TAbstractVarSym(sc[i]);
-                 if (vs.typ=staticvarsym) and
-                    not(vo_is_typed_const in vs.VarOptions) and
-                    not(vo_is_external in vs.VarOptions) then
-                   CNodeUtils.InsertBSSData(TStaticVarSym(vs));
-                 if vo_is_public in vs.VarOptions then
-                   CurrentModule.Add_Public_AsmSym(vs.MangledName,AB_GLOBAL,AT_DATA);
+                 lVarSym:=TAbstractVarSym(lSymbols[lIndex]);
+                 if (lVarSym.typ=staticvarsym) and
+                    not(vo_is_typed_const in lVarSym.VarOptions) and
+                    not(vo_is_external in lVarSym.VarOptions) then
+                   CNodeUtils.InsertBSSData(TStaticVarSym(lVarSym));
+                 if vo_is_public in lVarSym.VarOptions then
+                   CurrentModule.Add_Public_AsmSym(lVarSym.MangledName,AB_GLOBAL,AT_DATA);
                end;
 
-             first:=false;
+             lFirst:=false;
            end;
-         Block_Type:=old_block_type;
+         Block_Type:=lOldBlockType;
          { free the list }
-         sc.free;
-         sc := nil;
+         lSymbols.free;
+         lSymbols := nil;
       end;
 
 
-    function check_allowed_for_var_or_const(def:TDef;allowdynarray:boolean):boolean;
+    function CheckAllowedForVarOrConst(ADef:TDef;AAllowDynArray:Boolean):Boolean;
       var
-        stowner,tmpdef : TDef;
-        st : TSymTable;
+        lOwnerDef,lTempDef : TDef;
+        lSymTable : TSymTable;
       begin
-        result:=true;
-        st:=SymTableStack.top;
-        if not (st.SymTableType in [recordsymtable,objectsymtable]) then
+        Result:=true;
+        lSymTable:=SymTableStack.top;
+        if not (lSymTable.SymTableType in [recordsymtable,objectsymtable]) then
           exit;
-        stowner:=TDef(st.DefOwner);
-        while Assigned(stowner) and (stowner.typ in [objectdef,recorddef]) do
+        lOwnerDef:=TDef(lSymTable.DefOwner);
+        while Assigned(lOwnerDef) and (lOwnerDef.typ in [objectdef,recorddef]) do
           begin
-            if def.typ=arraydef then
+            if ADef.typ=arraydef then
               begin
-                tmpdef:=def;
-                while (tmpdef.typ=arraydef) do
+                lTempDef:=ADef;
+                while (lTempDef.typ=arraydef) do
                   begin
                     { dynamic arrays are allowed in certain cases }
-                    if allowdynarray and (ado_IsDynamicArray in TArrayDef(tmpdef).ArrayOptions) then
+                    if AAllowDynArray and (ado_IsDynamicArray in TArrayDef(lTempDef).ArrayOptions) then
                       begin
-                        tmpdef:=nil;
+                        lTempDef:=nil;
                         break;
                       end;
-                    tmpdef:=TArrayDef(tmpdef).ElementDef;
+                    lTempDef:=TArrayDef(lTempDef).ElementDef;
                   end;
               end
             else
-              tmpdef:=def;
-            if Assigned(tmpdef) and
-                (Is_Object(tmpdef) or Is_Record(tmpdef)) and
-                Is_Owned_By(TAbstractRecordDef(stowner),TAbstractRecordDef(tmpdef)) then
+              lTempDef:=ADef;
+            if Assigned(lTempDef) and
+                (Is_Object(lTempDef) or Is_Record(lTempDef)) and
+                Is_Owned_By(TAbstractRecordDef(lOwnerDef),TAbstractRecordDef(lTempDef)) then
               begin
-                Message1(type_e_type_is_not_completly_defined,TAbstractRecordDef(tmpdef).RTTIName);
-                result:=false;
+                Message1(type_e_type_is_not_completly_defined,TAbstractRecordDef(lTempDef).RTTIName);
+                Result:=false;
                 break;
               end;
-            stowner:=TDef(stowner.owner.DefOwner);
+            lOwnerDef:=TDef(lOwnerDef.owner.DefOwner);
           end;
       end;
 
 
-    procedure read_record_fields(options:TVarDecOptions; reorderlist: TFPObjectList; variantdesc : PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
+    procedure ReadRecordFields(AOptions:TVarDecOptions; AReorderList: TFPObjectList; AVariantDesc : PPVariantRecDesc;out AHadGeneric:Boolean; out AAttrElementCount : Integer);
       var
-         sc : TFPObjectList;
-         i  : LongInt;
-         hs,sorg : string;
-         gendef,hdef,casetype : TDef;
+         lSymbols : TFPObjectList;
+         lIndex  : LongInt;
+         lName,lOrgName : String;
+         lGenDef,lDef,lCaseType : TDef;
          { maxsize contains the max. size of a variant }
          { startvarrec contains the start of the variant part of a record }
-         maxsize, startvarrecsize : asizeint;
-         usedalign,
-         maxalignment,startvarrecalign,
-         maxpadalign, startpadalign: shortint;
-         pt : TNode;
-         fieldvs   : TFieldVarSym;
-         hstaticvs : TStaticVarSym;
-         vs    : TAbstractVarSym;
-         srsym : TSym;
-         srsymtable : TSymTable;
-         visibility : TVisibility;
-         recst : TAbstractRecordSymTable;
-         unionsymtable : TRecordSymTable;
-         offset : LongInt;
-         uniondef : TRecordDef;
-         hintsymoptions : TSymOptions;
-         DeprecatedMsg : PShortString;
-         hadgendummy,
-         semicoloneaten,
-         removeclassoption: boolean;
-         dummyattrelementcount : integer;
-         old_block_type: TBlockType;
-         typepos : TFilePosInfo;
+         lMaxSize, lStartVarRecSize : ASizeInt;
+         lUsedAlign,
+         lMaxAlignment,lStartVarRecAlign,
+         lMaxPadAlign, lStartPadAlign: ShortInt;
+         lNode : TNode;
+         lFieldVarSym   : TFieldVarSym;
+         lStaticVarSym : TStaticVarSym;
+         lVarSym    : TAbstractVarSym;
+         lSearchSym : TSym;
+         lSearchSymTable : TSymTable;
+         lVisibility : TVisibility;
+         lRecordSymTable : TAbstractRecordSymTable;
+         lUnionSymTable : TRecordSymTable;
+         lOffset : LongInt;
+         lUnionDef : TRecordDef;
+         lHintSymOptions : TSymOptions;
+         lDeprecatedMsg : PShortString;
+         lHadGenDummy,
+         lSemicolonEaten,
+         lRemoveClassOption: Boolean;
+         lDummyAttrElementCount : Integer;
+         lOldBlockType: TBlockType;
+         lTypePos : TFilePosInfo;
       begin
-         old_block_type:=Block_Type;
+         lOldBlockType:=Block_Type;
          Block_Type:=bt_var;
-         recst:=TAbstractRecordSymTable(SymTableStack.top);
+         lRecordSymTable:=TAbstractRecordSymTable(SymTableStack.top);
          { Force an expected ID error message }
-         if not (CurrentScanner.token in [_ID,_CASE,_END]) then
-           consume(_ID);
+         if not (CurrentScanner.FToken in [_ID,_CASE,_END]) then
+           Consume(_ID);
          { read vars }
-         sc:=TFPObjectList.Create(false);
-         removeclassoption:=false;
-         had_generic:=false;
-         attr_element_count:=0;
-         while (CurrentScanner.token=_ID) and
-            not(((vd_object in options) or
-                 ((vd_record in options) and (m_advanced_records in CurrentSettings.ModeSwitches))) and
-                ((CurrentScanner.idtoken in [_PUBLIC,_PRIVATE,_PUBLISHED,_PROTECTED,_STRICT]) or
+         lSymbols:=TFPObjectList.Create(false);
+         lRemoveClassOption:=false;
+         AHadGeneric:=false;
+         AAttrElementCount:=0;
+         while (CurrentScanner.FToken=_ID) and
+            not(((vdObject in AOptions) or
+                 ((vdRecord in AOptions) and (m_advanced_records in CurrentSettings.ModeSwitches))) and
+                ((CurrentScanner.FIDToken in [_PUBLIC,_PRIVATE,_PUBLISHED,_PROTECTED,_STRICT]) or
                  ((m_final_fields in CurrentSettings.ModeSwitches) and
-                  (CurrentScanner.idtoken=_FINAL)))) do
+                  (CurrentScanner.FIDToken=_FINAL)))) do
            begin
-             visibility:=SymTableStack.top.CurrentVisibility;
-             semicoloneaten:=false;
-             sc.clear;
+             lVisibility:=SymTableStack.top.CurrentVisibility;
+             lSemicolonEaten:=false;
+             lSymbols.clear;
              repeat
-               sorg:=CurrentScanner.orgpattern;
-               if CurrentScanner.token=_ID then
+               lOrgName:=CurrentScanner.FOrgPattern;
+               if CurrentScanner.FToken=_ID then
                  begin
-                   vs:=CFieldVarSym.Create(sorg,vs_value,GenErrorDef,[]);
+                   lVarSym:=CFieldVarSym.Create(lOrgName,vs_value,GenErrorDef,[]);
 
                    { normally the visibility is set via addfield, but sometimes
                      we collect symbols so we can add them in a batch of
                      potentially mixed visibility, and then the individual
                      symbols need to have their visibility already set }
-                   vs.visibility:=visibility;
-                   if (vd_check_generic in options) and (CurrentScanner.idtoken=_GENERIC) then
-                     had_generic:=true;
+                   lVarSym.visibility:=lVisibility;
+                   if (vdCheckGeneric in AOptions) and (CurrentScanner.FIDToken=_GENERIC) then
+                     AHadGeneric:=true;
                  end
                else
-                 vs:=nil;
-               consume(_ID);
-               if Assigned(vs) and
+                 lVarSym:=nil;
+               Consume(_ID);
+               if Assigned(lVarSym) and
                   (
-                    not had_generic or
-                    not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS])
+                    not AHadGeneric or
+                    not (CurrentScanner.FToken in [_PROCEDURE,_FUNCTION,_CLASS])
                   ) then
                  begin
-                   vs.RegisterSym;
-                   sc.add(vs);
-                   recst.InsertSym(vs);
-                   had_generic:=false;
+                   lVarSym.RegisterSym;
+                   lSymbols.add(lVarSym);
+                   lRecordSymTable.InsertSym(lVarSym);
+                   AHadGeneric:=false;
                  end
                else
-                 vs.free; // no nil needed
-             until not try_to_consume(_COMMA);
+                 lVarSym.free; // no nil needed
+             until not TryToConsume(_COMMA);
              if m_delphi in CurrentSettings.ModeSwitches then
                Block_Type:=bt_var_type
              else
-               Block_Type:=old_block_type;
-             if had_generic and (sc.count=0) then
+               Block_Type:=lOldBlockType;
+             if AHadGeneric and (lSymbols.count=0) then
                break;
-             consume(_COLON);
-             if attr_element_count=0 then
-               attr_element_count:=sc.Count;
+             Consume(_COLON);
+             if AAttrElementCount=0 then
+               AAttrElementCount:=lSymbols.Count;
 
-             typepos:=CurrentFilePos;
+             lTypePos:=CurrentFilePos;
 
              { make sure that the correct genericdef is set up, especially if
                we're dealing with anonymous type declarations }
-             gendef:=nil;
+             lGenDef:=nil;
              if df_specialization in CurrentStructDef.DefOptions then
                begin
-                 srsymtable:=CurrentStructDef.GenericDef.GetSymTable(gs_record);
-                 if not Assigned(srsymtable) then
+                 lSearchSymTable:=CurrentStructDef.GenericDef.GetSymTable(gs_record);
+                 if not Assigned(lSearchSymTable) then
                    InternalError(2024041204);
-                 srsym:=TSym(srsymtable.find(TAbstractVarSym(sc[0]).name));
-                 if not Assigned(srsym) then
+                 lSearchSym:=TSym(lSearchSymTable.find(TAbstractVarSym(lSymbols[0]).name));
+                 if not Assigned(lSearchSym) then
                    InternalError(2024041205);
-                 if srsym.typ<>FieldVarSym then
+                 if lSearchSym.typ<>FieldVarSym then
                    InternalError(2024041206);
-                 gendef:=TFieldVarSym(srsym).vardef;
+                 lGenDef:=TFieldVarSym(lSearchSym).vardef;
                end;
 
-             read_anon_type(hdef,false,TStoredDef(gendef));
+             ReadAnonType(lDef,false,TStoredDef(lGenDef));
              Block_Type:=bt_var;
              { allow only static fields reference to struct where they are declared }
-             if not (vd_class in options) then
+             if not (vdClass in AOptions) then
                begin
-                 if not check_allowed_for_var_or_const(hdef,true) then
+                 if not CheckAllowedForVarOrConst(lDef,true) then
                    { for error recovery or compiler will crash later }
-                   hdef:=GenErrorDef;
+                   lDef:=GenErrorDef;
                end;
 
              { field type is a generic param so set a flag in the struct }
-             if Assigned(hdef.TypeSym) and (sp_generic_para in hdef.TypeSym.SymOptions) then
+             if Assigned(lDef.TypeSym) and (sp_generic_para in lDef.TypeSym.SymOptions) then
                include(CurrentStructDef.DefOptions,df_has_generic_fields);
 
              { Process procvar directives }
-             if maybe_parse_proc_directives(hdef) then
-               semicoloneaten:=true;
+             if MaybeParseProcDirectives(lDef) then
+               lSemicolonEaten:=true;
 
 
              { types that use init/final are not allowed in variant parts, but
                classes are allowed }
-             if (variantrecordlevel>0) then
-               if Is_Managed_Type(hdef) then
+             if (VariantRecordLevel>0) then
+               if Is_Managed_Type(lDef) then
                  Message(parser_e_cant_use_inittable_here);
 
              { try to parse the hint directives }
-             hintsymoptions:=[];
-             DeprecatedMsg:=nil;
-             try_consume_hintdirective(hintsymoptions,DeprecatedMsg);
+             lHintSymOptions:=[];
+             lDeprecatedMsg:=nil;
+             TryConsumeHintDirective(lHintSymOptions,lDeprecatedMsg);
 
              { update variable type and hints }
-             for i:=0 to sc.count-1 do
+             for lIndex:=0 to lSymbols.count-1 do
                begin
-                 fieldvs:=TFieldVarSym(sc[i]);
-                 fieldvs.vardef:=hdef;
+                 lFieldVarSym:=TFieldVarSym(lSymbols[lIndex]);
+                 lFieldVarSym.vardef:=lDef;
                  { insert any additional hint directives }
-                 fieldvs.SymOptions := fieldvs.SymOptions + hintsymoptions;
-                 if DeprecatedMsg<>nil then
-                   fieldvs.DeprecatedMsg:=StringDup(DeprecatedMsg^);
+                 lFieldVarSym.SymOptions := lFieldVarSym.SymOptions + lHintSymOptions;
+                 if lDeprecatedMsg<>nil then
+                   lFieldVarSym.DeprecatedMsg:=StringDup(lDeprecatedMsg^);
                end;
-               StringDispose(DeprecatedMsg);
+               StringDispose(lDeprecatedMsg);
 
              { Records and objects can't have default values }
              { for a record there doesn't need to be a ; before the END or )    }
-             if not(CurrentScanner.token in [_END,_RKLAMMER]) and
-                not(semicoloneaten) then
-               consume(_SEMICOLON);
+             if not(CurrentScanner.FToken in [_END,_RKLAMMER]) and
+                not(lSemicolonEaten) then
+               Consume(_SEMICOLON);
 
              { Parse procvar directives after ; }
-             maybe_parse_proc_directives(hdef);
+             MaybeParseProcDirectives(lDef);
 
              { Add calling convention for procvar }
              if (
-                 (hdef.typ=procvardef) or
-                 Is_FuncRef(hdef)
-               ) and (hdef.TypeSym=nil) then
+                 (lDef.typ=procvardef) or
+                 Is_FuncRef(lDef)
+               ) and (lDef.TypeSym=nil) then
                begin
-                 if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).ProcOptions) then
+                 if (lDef.typ=procvardef) and (po_is_function_ref in TProcVarDef(lDef).ProcOptions) then
                    begin
                      if not (m_function_references in CurrentSettings.ModeSwitches) and
-                         not (po_is_block in TProcVarDef(hdef).ProcOptions) then
-                       messagepos(typepos,sym_e_error_in_type_def)
+                         not (po_is_block in TProcVarDef(lDef).ProcOptions) then
+                       messagepos(lTypePos,sym_e_error_in_type_def)
                      else
                        begin
-                         if Adjust_FuncRef(hdef,nil,nil) then
+                         if Adjust_FuncRef(lDef,nil,nil) then
                            { the def was changed, so update it }
-                           for i:=0 to sc.count-1 do
+                           for lIndex:=0 to lSymbols.count-1 do
                              begin
-                               fieldvs:=TFieldVarSym(sc[i]);
-                               fieldvs.vardef:=hdef;
+                               lFieldVarSym:=TFieldVarSym(lSymbols[lIndex]);
+                               lFieldVarSym.vardef:=lDef;
                              end;
-                         if CurrentScanner.replay_stack_depth=0 then
-                           hdef.RegisterDef;
+                         if CurrentScanner.ReplayStackDepth=0 then
+                           lDef.RegisterDef;
                        end;
                    end;
-                 Handle_Calling_Convention(hdef,cHCCDefaultActionsIntf);
+                 Handle_Calling_Convention(lDef,cHCCDefaultActionsIntf);
                end;
 
-             if (vd_object in options) then
+             if (vdObject in AOptions) then
                begin
                  { if it is not a class var section and token=STATIC then it is a class field too }
-                 if not (vd_class in options) and try_to_consume(_STATIC) then
+                 if not (vdClass in AOptions) and TryToConsume(_STATIC) then
                    begin
-                     consume(_SEMICOLON);
-                     include(options,vd_class);
-                     removeclassoption:=true;
+                     Consume(_SEMICOLON);
+                     include(AOptions,vdClass);
+                     lRemoveClassOption:=true;
                    end;
 
                end;
-             if (visibility=vis_published) and
-                not(Is_Class(hdef)) then
+             if (lVisibility=vis_published) and
+                not(Is_Class(lDef)) then
                begin
-                 MessagePos(TFieldVarSym(sc[0]).fileinfo,parser_e_cant_publish_that);
-                 visibility:=vis_public;
+                 MessagePos(TFieldVarSym(lSymbols[0]).fileinfo,parser_e_cant_publish_that);
+                 lVisibility:=vis_public;
                end;
 
-             if (visibility=vis_published) and
-                not(oo_can_have_published in TObjectDef(hdef).ObjectOptions) and
+             if (lVisibility=vis_published) and
+                not(oo_can_have_published in TObjectDef(lDef).ObjectOptions) and
                 not(m_delphi in CurrentSettings.ModeSwitches) then
                begin
-                 MessagePos(TFieldVarSym(sc[0]).fileinfo,parser_e_only_publishable_classes_can_be_published);
-                 visibility:=vis_public;
+                 MessagePos(TFieldVarSym(lSymbols[0]).fileinfo,parser_e_only_publishable_classes_can_be_published);
+                 lVisibility:=vis_public;
                end;
-             if vd_class in options then
+             if vdClass in AOptions then
                begin
                  { add static flag and staticvarsyms }
-                 for i:=0 to sc.count-1 do
+                 for lIndex:=0 to lSymbols.count-1 do
                    begin
-                     fieldvs:=TFieldVarSym(sc[i]);
-                     fieldvs.visibility:=visibility;
-                     hstaticvs:=Make_Field_Static(recst,fieldvs);
-                     if vd_threadvar in options then
-                       include(hstaticvs.VarOptions,vo_is_thread_var);
-                     if not parse_generic then
-                       CNodeUtils.InsertBSSData(hstaticvs);
-                     if vd_final in options then
-                       hstaticvs.VarSpez:=vs_final;
+                     lFieldVarSym:=TFieldVarSym(lSymbols[lIndex]);
+                     lFieldVarSym.visibility:=lVisibility;
+                     lStaticVarSym:=Make_Field_Static(lRecordSymTable,lFieldVarSym);
+                     if vdThreadVar in AOptions then
+                       include(lStaticVarSym.VarOptions,vo_is_thread_var);
+                     if not ParseGeneric then
+                       CNodeUtils.InsertBSSData(lStaticVarSym);
+                     if vdFinal in AOptions then
+                       lStaticVarSym.VarSpez:=vs_final;
                    end;
-                 if removeclassoption then
+                 if lRemoveClassOption then
                    begin
-                     exclude(options,vd_class);
-                     removeclassoption:=false;
+                     exclude(AOptions,vdClass);
+                     lRemoveClassOption:=false;
                    end;
                end;
-             if vd_final in options then
+             if vdFinal in AOptions then
                begin
                  { add final flag }
-                 for i:=0 to sc.count-1 do
+                 for lIndex:=0 to lSymbols.count-1 do
                    begin
-                     fieldvs:=TFieldVarSym(sc[i]);
-                     fieldvs.VarSpez:=vs_final;
+                     lFieldVarSym:=TFieldVarSym(lSymbols[lIndex]);
+                     lFieldVarSym.VarSpez:=vs_final;
                    end;
                end;
 
-             if not(vd_canreorder in options) then
+             if not(vdCanReorder in AOptions) then
                { add field(s) to the recordsymtable }
-               recst.AddFieldList(sc,false)
+               lRecordSymTable.AddFieldList(lSymbols,false)
              else
                { we may reorder the fields before adding them to the symbol
                  table }
-               reorderlist.ConcatListCopy(sc)
+               AReorderList.ConcatListCopy(lSymbols)
            end;
 
          if m_delphi in CurrentSettings.ModeSwitches then
            Block_Type:=bt_var_type
          else
-           Block_Type:=old_block_type;
+           Block_Type:=lOldBlockType;
          { Check for Case }
-         if (vd_record in options) and
-            try_to_consume(_CASE) then
+         if (vdRecord in AOptions) and
+            TryToConsume(_CASE) then
            begin
-              maxsize:=0;
-              maxalignment:=0;
-              maxpadalign:=0;
+              lMaxSize:=0;
+              lMaxAlignment:=0;
+              lMaxPadAlign:=0;
 
               { already inside a variant record? if not, setup a new variantdesc chain }
-              if not(Assigned(variantdesc)) then
-                variantdesc:=@TRecordDef(TRecordSymTable(recst).DefOwner).VariantRecDesc;
+              if not(Assigned(AVariantDesc)) then
+                AVariantDesc:=@TRecordDef(TRecordSymTable(lRecordSymTable).DefOwner).VariantRecDesc;
 
               { else just concat the info to the given one }
-              new(variantdesc^);
-              fillchar(variantdesc^^,sizeof(TVariantRecDesc),0);
+              new(AVariantDesc^);
+              fillchar(AVariantDesc^^,sizeof(TVariantRecDesc),0);
 
               { including a field declaration? }
-              fieldvs:=nil;
-              if CurrentScanner.token=_ID then
+              lFieldVarSym:=nil;
+              if CurrentScanner.FToken=_ID then
                 begin
-                  sorg:=CurrentScanner.orgpattern;
-                  hs:=CurrentScanner.pattern;
-                  SearchSym(hs,srsym,srsymtable);
-                  if not(Assigned(srsym) and (srsym.typ in [TypeSym,UnitSym])) then
+                  lOrgName:=CurrentScanner.FOrgPattern;
+                  lName:=CurrentScanner.FPattern;
+                  SearchSym(lName,lSearchSym,lSearchSymTable);
+                  if not(Assigned(lSearchSym) and (lSearchSym.typ in [TypeSym,UnitSym])) then
                     begin
-                      consume(_ID);
-                      consume(_COLON);
-                      fieldvs:=CFieldVarSym.Create(sorg,vs_value,GenErrorDef,[]);
-                      variantdesc^^.VariantSelector:=fieldvs;
-                      SymTableStack.top.InsertSym(fieldvs);
+                      Consume(_ID);
+                      Consume(_COLON);
+                      lFieldVarSym:=CFieldVarSym.Create(lOrgName,vs_value,GenErrorDef,[]);
+                      AVariantDesc^^.VariantSelector:=lFieldVarSym;
+                      SymTableStack.top.InsertSym(lFieldVarSym);
                     end;
                 end;
-              read_anon_type(casetype,true,nil);
+              ReadAnonType(lCaseType,true,nil);
               Block_Type:=bt_var;
-              if Assigned(fieldvs) then
+              if Assigned(lFieldVarSym) then
                 begin
-                  fieldvs.vardef:=casetype;
-                  recst.AddField(fieldvs,recst.CurrentVisibility);
+                  lFieldVarSym.vardef:=lCaseType;
+                  lRecordSymTable.AddField(lFieldVarSym,lRecordSymTable.CurrentVisibility);
                 end;
-              if not(Is_Ordinal(casetype))
+              if not(Is_Ordinal(lCaseType))
 {$ifndef cpu64bitaddr}
-                 or Is_64BitInt(casetype)
+                 or Is_64BitInt(lCaseType)
 {$endif cpu64bitaddr}
                  then
                 Message(type_e_ordinal_expr_expected);
-              consume(_OF);
+              Consume(_OF);
 
-              UnionSymtable:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
-              UnionDef:=CRecordDef.Create('',unionsymtable);
-              uniondef.IsUnion:=true;
+              lUnionSymTable:=TRecordSymTable.Create('',CurrentSettings.PackRecords,CurrentSettings.Alignment.RecordAlignMin);
+              lUnionDef:=CRecordDef.Create('',lUnionSymTable);
+              lUnionDef.IsUnion:=true;
 
-              startvarrecsize:=UnionSymtable.DataSize;
+              lStartVarRecSize:=lUnionSymTable.DataSize;
               { align the bitpacking to the next byte }
-              UnionSymtable.DataSize:=startvarrecsize;
-              startvarrecalign:=UnionSymtable.FieldAlignment;
-              startpadalign:=Unionsymtable.PadAlignment;
-              SymTableStack.push(UnionSymtable);
+              lUnionSymTable.DataSize:=lStartVarRecSize;
+              lStartVarRecAlign:=lUnionSymTable.FieldAlignment;
+              lStartPadAlign:=lUnionSymTable.PadAlignment;
+              SymTableStack.push(lUnionSymTable);
               repeat
-                SetLength(variantdesc^^.branches,length(variantdesc^^.branches)+1);
-                fillchar(variantdesc^^.branches[high(variantdesc^^.branches)],
-                  sizeof(variantdesc^^.branches[high(variantdesc^^.branches)]),0);
+                SetLength(AVariantDesc^^.branches,length(AVariantDesc^^.branches)+1);
+                fillchar(AVariantDesc^^.branches[high(AVariantDesc^^.branches)],
+                  sizeof(AVariantDesc^^.branches[high(AVariantDesc^^.branches)]),0);
                 repeat
-                  pt:=comp_expr([ef_accept_equal]);
-                  if not(pt.nodetype=ordconstn) then
+                  lNode:=CompExpr([efAcceptEqual]);
+                  if not(lNode.nodetype=ordconstn) then
                     Message(parser_e_illegal_expression);
-                  InsertTypeConv(pt,casetype);
+                  InsertTypeConv(lNode,lCaseType);
                   { iso pascal does not support ranges in variant record definitions }
-                  if (([m_iso]*CurrentSettings.ModeSwitches)=[]) and try_to_consume(_POINTPOINT) then
-                    pt:=CRangeNode.Create(pt,comp_expr([ef_accept_equal]))
+                  if (([m_iso]*CurrentSettings.ModeSwitches)=[]) and TryToConsume(_POINTPOINT) then
+                    lNode:=CRangeNode.Create(lNode,CompExpr([efAcceptEqual]))
                   else
                     begin
-                      with variantdesc^^.branches[high(variantdesc^^.branches)] do
+                      with AVariantDesc^^.branches[high(AVariantDesc^^.branches)] do
                         begin
                           SetLength(values,length(values)+1);
-                          values[high(values)]:=TOrdConstNode(pt).Value;
+                          values[high(values)]:=TOrdConstNode(lNode).Value;
                         end;
                     end;
-                  pt.free;
-                  pt := nil;
-                  if CurrentScanner.token=_COMMA then
-                    consume(_COMMA)
+                  lNode.free;
+                  lNode := nil;
+                  if CurrentScanner.FToken=_COMMA then
+                    Consume(_COMMA)
                   else
                     break;
                 until false;
                 if m_delphi in CurrentSettings.ModeSwitches then
                   Block_Type:=bt_var_type
                 else
-                  Block_Type:=old_block_type;
-                consume(_COLON);
+                  Block_Type:=lOldBlockType;
+                Consume(_COLON);
                 { read the vars }
-                consume(_LKLAMMER);
-                inc(variantrecordlevel);
-                if CurrentScanner.token<>_RKLAMMER then
-                  read_record_fields([vd_record],nil,@variantdesc^^.branches[high(variantdesc^^.branches)].NestedVariant,hadgendummy,dummyattrelementcount);
-                dec(variantrecordlevel);
-                consume(_RKLAMMER);
+                Consume(_LKLAMMER);
+                inc(VariantRecordLevel);
+                if CurrentScanner.FToken<>_RKLAMMER then
+                  ReadRecordFields([vdRecord],nil,@AVariantDesc^^.branches[high(AVariantDesc^^.branches)].NestedVariant,lHadGenDummy,lDummyAttrElementCount);
+                dec(VariantRecordLevel);
+                Consume(_RKLAMMER);
 
                 { calculates maximal variant size }
-                maxsize:=max(maxsize,unionsymtable.DataSize);
-                maxalignment:=max(maxalignment,unionsymtable.FieldAlignment);
-                maxpadalign:=max(maxpadalign,unionsymtable.PadAlignment);
+                lMaxSize:=max(lMaxSize,lUnionSymTable.DataSize);
+                lMaxAlignment:=max(lMaxAlignment,lUnionSymTable.FieldAlignment);
+                lMaxPadAlign:=max(lMaxPadAlign,lUnionSymTable.PadAlignment);
                 { the items of the next variant are overlayed }
-                unionsymtable.DataSize:=startvarrecsize;
-                unionsymtable.FieldAlignment:=startvarrecalign;
-                unionsymtable.PadAlignment:=startpadalign;
-                if (CurrentScanner.token<>_END) and (CurrentScanner.token<>_RKLAMMER) then
-                  consume(_SEMICOLON)
+                lUnionSymTable.DataSize:=lStartVarRecSize;
+                lUnionSymTable.FieldAlignment:=lStartVarRecAlign;
+                lUnionSymTable.PadAlignment:=lStartPadAlign;
+                if (CurrentScanner.FToken<>_END) and (CurrentScanner.FToken<>_RKLAMMER) then
+                  Consume(_SEMICOLON)
                 else
                   break;
-              until (CurrentScanner.token=_END) or (CurrentScanner.token=_RKLAMMER);
-              SymTableStack.pop(UnionSymtable);
+              until (CurrentScanner.FToken=_END) or (CurrentScanner.FToken=_RKLAMMER);
+              SymTableStack.pop(lUnionSymTable);
               { at last set the record size to that of the biggest variant }
-              unionsymtable.DataSize:=maxsize;
-              unionsymtable.FieldAlignment:=maxalignment;
-              unionsymtable.AddAlignmentPadding;
+              lUnionSymTable.DataSize:=lMaxSize;
+              lUnionSymTable.FieldAlignment:=lMaxAlignment;
+              lUnionSymTable.AddAlignmentPadding;
               { Align the offset where the union symtable is added }
-              case recst.UseFieldAlignment of
+              case lRecordSymTable.UseFieldAlignment of
                 { allow the unionsymtable to be aligned however it wants }
                 { (within the global min/max limits)                     }
                 0, { default }
                 CAlignment:
-                  usedalign:=Used_Align(unionsymtable.RecordAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.MaxCRecordAlign);
+                  lUsedAlign:=Used_Align(lUnionSymTable.RecordAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.MaxCRecordAlign);
                 { 1 byte alignment if we are bitpacked }
                 BitAlignment:
-                  usedalign:=1;
+                  lUsedAlign:=1;
                 Mac68KAlignment:
-                  usedalign:=2;
+                  lUsedAlign:=2;
                 { otherwise alignment at the packrecords alignment of the }
                 { current record                                          }
                 else
-                  usedalign:=Used_Align(recst.FieldAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.RecordAlignMax);
+                  lUsedAlign:=Used_Align(lRecordSymTable.FieldAlignment,CurrentSettings.Alignment.RecordAlignMin,CurrentSettings.Alignment.RecordAlignMax);
               end;
-              offset:=align(recst.DataSize,usedalign);
-              recst.DataSize:=offset+unionsymtable.DataSize;
+              lOffset:=align(lRecordSymTable.DataSize,lUsedAlign);
+              lRecordSymTable.DataSize:=lOffset+lUnionSymTable.DataSize;
 
-              if unionsymtable.RecordAlignment>recst.FieldAlignment then
-                recst.FieldAlignment:=unionsymtable.RecordAlignment;
+              if lUnionSymTable.RecordAlignment>lRecordSymTable.FieldAlignment then
+                lRecordSymTable.FieldAlignment:=lUnionSymTable.RecordAlignment;
 
-              if unionsymtable.ExplicitRecordAlignment>recst.ExplicitRecordAlignment then
-                recst.ExplicitRecordAlignment:=unionsymtable.ExplicitRecordAlignment;
+              if lUnionSymTable.ExplicitRecordAlignment>lRecordSymTable.ExplicitRecordAlignment then
+                lRecordSymTable.ExplicitRecordAlignment:=lUnionSymTable.ExplicitRecordAlignment;
 
-              TRecordSymTable(recst).InsertUnionST(Unionsymtable,offset);
-              uniondef.owner.DeleteDef(uniondef);
+              TRecordSymTable(lRecordSymTable).InsertUnionST(lUnionSymTable,lOffset);
+              lUnionDef.owner.DeleteDef(lUnionDef);
            end;
          { free the list }
-         sc.free;
-         sc := nil;
-         Block_Type:=old_block_type;
+         lSymbols.free;
+         lSymbols := nil;
+         Block_Type:=lOldBlockType;
       end;
 
 end.

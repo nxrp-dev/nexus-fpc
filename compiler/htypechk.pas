@@ -2231,12 +2231,12 @@ implementation
           AFoundAnything:=false;
           { try to specialize the procsym }
           if ASym.Could_Be_Implicitly_Specialized and
-            try_implicit_specialization(ASym,FParaNode,AProcDefOverloadList,FParaAnonSyms,TSym(FProcSym),Result) then
+            TryImplicitSpecialization(ASym,FParaNode,AProcDefOverloadList,FParaAnonSyms,TSym(FProcSym),Result) then
             AFoundAnything:=true;
           for lIndexJ:=0 to ASym.ProcdefList.Count-1 do
             begin
               lProcDef:=TProcDef(ASym.ProcdefList[lIndexJ]);
-              if not finalize_specialization(lProcDef,ASpecializationContext) then
+              if not FinalizeSpecialization(lProcDef,ASpecializationContext) then
                 continue;
               { in case of anonymous inherited, only match procdefs identical
                 to the current one (apart from hidden parameters), rather than
@@ -2460,11 +2460,11 @@ implementation
                     lHasOverload:=false;
                     lFoundAnything:=false;
                     if TProcSym(lSym).Could_Be_Implicitly_Specialized then
-                      lFoundAnything:=try_implicit_specialization(lSym,FParaNode,AProcDefOverloadList,FParaAnonSyms,TSym(FProcSym),lHasOverload);
+                      lFoundAnything:=TryImplicitSpecialization(lSym,FParaNode,AProcDefOverloadList,FParaAnonSyms,TSym(FProcSym),lHasOverload);
                     for lIndexJ:=0 to TProcSym(lSym).ProcdefList.Count-1 do
                       begin
                         lProcDef:=TProcDef(TProcSym(lSym).ProcdefList[lIndexJ]);
-                        if not finalize_specialization(lProcDef,ASpecializationContext) then
+                        if not FinalizeSpecialization(lProcDef,ASpecializationContext) then
                           continue;
                         { Store first procsym found }
                         if not Assigned(FProcSym) then

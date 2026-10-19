@@ -96,7 +96,7 @@ unit raatt;
          procedure BuildRealConstant(typ : TFloatType);
          procedure BuildStringConstant(asciiz: boolean);
          procedure BuildRva;
-         procedure BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
+         procedure BuildRecordOffsetSize(const Expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
          procedure BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
          function BuildConstExpression(allowref,betweenbracket:boolean): TCGInt;
          function Assemble: TLinkedList;override;
@@ -107,7 +107,7 @@ unit raatt;
          function is_locallabel(const s: string):boolean;
          function is_targetdirective(const s: string): boolean;virtual;
          procedure GetToken;
-         function consume(t : TAsmToken):boolean;
+         function Consume(t : TAsmToken):boolean;
          procedure RecoverConsume(allowcomma:boolean);
          procedure handlepercent;virtual;
          procedure handledollar;virtual;
@@ -179,13 +179,13 @@ unit raatt;
 
     procedure TATTReader.handledollar;
       begin
-        c:=CurrentScanner.asmgetchar;
+        c:=CurrentScanner.AsmGetChar;
         actasmtoken:=AS_DOLLAR;
       end;
 
     procedure TATTReader.handlepercent;
       begin
-        c:=CurrentScanner.asmgetchar;
+        c:=CurrentScanner.AsmGetChar;
         actasmtoken:=AS_MOD;
       end;
 
@@ -204,7 +204,7 @@ unit raatt;
         srsym : TSym;
         srsymtable : TSymTable;
       begin
-        c:=CurrentScanner.c;
+        c:=CurrentScanner.FChar;
         { save old token and reset new token }
         prevasmtoken:=actasmtoken;
         actasmtoken:=AS_NONE;
@@ -212,10 +212,10 @@ unit raatt;
         actasmpattern:='';
         { while space and tab , continue scan... }
         while c in [' ',#9] do
-         c:=CurrentScanner.asmgetchar;
+         c:=CurrentScanner.AsmGetChar;
         { get token pos }
         if not (c in [#10,#13,'{',';','/','(']) then
-          CurrentScanner.gettokenpos;
+          CurrentScanner.GetTokenPos;
         { Local Label, Label, Directive, Prefix or Opcode }
         if firsttoken and not(c in [#10,#13,'{',';','/','(']) then
          begin
@@ -227,12 +227,12 @@ unit raatt;
               inc(len);
               actasmpattern[len]:=c;
               { Let us point to the next character }
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
               while c in ['A'..'Z','a'..'z','0'..'9','_','$','.'] do
                begin
                  inc(len);
                  actasmpattern[len]:=c;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                end;
               actasmpattern[0]:=chr(len);
               { this is a local label... }
@@ -240,7 +240,7 @@ unit raatt;
                Begin
                  { local variables are case sensitive }
                  actasmtoken:=AS_LLABEL;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  firsttoken:=true;
                  exit;
                end
@@ -263,7 +263,7 @@ unit raatt;
             begin
               inc(len);
               actasmpattern[len]:=c;
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
             end;
            actasmpattern[0]:=chr(len);
            { Label ? }
@@ -271,7 +271,7 @@ unit raatt;
             begin
               actasmtoken:=AS_LABEL;
               { let us point to the next character }
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
               firsttoken:=true;
               exit;
             end;
@@ -282,7 +282,7 @@ unit raatt;
                begin
                  repeat
                    actasmpattern:=actasmpattern+c;
-                   c:=CurrentScanner.asmgetchar;
+                   c:=CurrentScanner.AsmGetChar;
                  until not(c in ['a'..'z','A'..'Z','0'..'9']);
                end;
            end;
@@ -312,16 +312,16 @@ unit raatt;
                begin
                  if (prevasmtoken in [AS_ID,AS_RPAREN]) then
                   begin
-                    c:=CurrentScanner.asmgetchar;
+                    c:=CurrentScanner.AsmGetChar;
                     actasmtoken:=AS_DOT;
                     exit;
                   end;
                  actasmpattern:=c;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  while c in  ['A'..'Z','a'..'z','0'..'9','_','$'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=CurrentScanner.asmgetchar;
+                    c:=CurrentScanner.AsmGetChar;
                   end;
                  if is_asmdirective(actasmpattern) then
                   exit;
@@ -344,7 +344,7 @@ unit raatt;
                   begin
                     inc(len);
                     actasmpattern[len]:=c;
-                    c:=CurrentScanner.asmgetchar;
+                    c:=CurrentScanner.AsmGetChar;
                   end;
                  actasmpattern[0]:=chr(len);
                  UpperVar(actasmpattern);
@@ -395,11 +395,11 @@ unit raatt;
                        srsym.owner.IsCurrentUnit then
                      begin
                        actasmpattern:=actasmpattern+c;
-                       c:=CurrentScanner.asmgetchar;
+                       c:=CurrentScanner.AsmGetChar;
                        while c in  ['A'..'Z','a'..'z','0'..'9','_','$'] do
                         begin
                           actasmpattern:=actasmpattern + upcase(c);
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end;
                      end;
                   end;
@@ -417,7 +417,7 @@ unit raatt;
                   Begin
                     inc(len);
                     actasmpattern[len]:=c;
-                    c:=CurrentScanner.asmgetchar;
+                    c:=CurrentScanner.AsmGetChar;
                   end;
                  actasmpattern[0]:=chr(len);
                  actasmpattern:=ToStr(ParseVal(actasmpattern,10));
@@ -427,15 +427,15 @@ unit raatt;
              '0' : { octal,hexa,real or binary number. }
                begin
                  actasmpattern:=c;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  case upcase(c) of
                    'B': { binary }
                      Begin
-                       c:=CurrentScanner.asmgetchar;
+                       c:=CurrentScanner.AsmGetChar;
                        while c in ['0','1'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end;
                        actasmpattern:=ToStr(ParseVal(actasmpattern,2));
                        actasmtoken:=AS_INTNUM;
@@ -443,42 +443,42 @@ unit raatt;
                      end;
                    'D': { real }
                      Begin
-                       c:=CurrentScanner.asmgetchar;
+                       c:=CurrentScanner.AsmGetChar;
                        { get ridd of the 0d }
                        if (c in ['+','-']) then
                         begin
                           actasmpattern:=c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end
                        else
                         actasmpattern:='';
                        while c in ['0'..'9'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end;
                        if c='.' then
                         begin
                           actasmpattern:=actasmpattern + c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                           while c in ['0'..'9'] do
                            Begin
                              actasmpattern:=actasmpattern + c;
-                             c:=CurrentScanner.asmgetchar;
+                             c:=CurrentScanner.AsmGetChar;
                            end;
                           if upcase(c) = 'E' then
                            begin
                              actasmpattern:=actasmpattern + c;
-                             c:=CurrentScanner.asmgetchar;
+                             c:=CurrentScanner.AsmGetChar;
                              if (c in ['+','-']) then
                               begin
                                 actasmpattern:=actasmpattern + c;
-                                c:=CurrentScanner.asmgetchar;
+                                c:=CurrentScanner.AsmGetChar;
                               end;
                              while c in ['0'..'9'] do
                               Begin
                                 actasmpattern:=actasmpattern + c;
-                                c:=CurrentScanner.asmgetchar;
+                                c:=CurrentScanner.AsmGetChar;
                               end;
                            end;
                           actasmtoken:=AS_REALNUM;
@@ -492,11 +492,11 @@ unit raatt;
                      end;
                    'X': { hexadecimal }
                      Begin
-                       c:=CurrentScanner.asmgetchar;
+                       c:=CurrentScanner.AsmGetChar;
                        while c in ['0'..'9','a'..'f','A'..'F'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end;
                        actasmpattern:=ToStr(ParseVal(actasmpattern,16));
                        actasmtoken:=AS_INTNUM;
@@ -508,7 +508,7 @@ unit raatt;
                        while c in ['0'..'7'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=CurrentScanner.asmgetchar;
+                          c:=CurrentScanner.AsmGetChar;
                         end;
                        actasmpattern:=ToStr(ParseVal(actasmpattern,8));
                        actasmtoken:=AS_INTNUM;
@@ -525,7 +525,7 @@ unit raatt;
 
              '&' :
                begin
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  actasmtoken:=AS_AND;
                end;
 
@@ -533,18 +533,18 @@ unit raatt;
                begin
                  actasmpattern:='';
                  repeat
-                   c:=CurrentScanner.asmgetchar;
+                   c:=CurrentScanner.AsmGetChar;
                    case c of
                      '\' :
                        begin
                          { copy also the next char so \" is parsed correctly }
                          actasmpattern:=actasmpattern+c;
-                         c:=CurrentScanner.asmgetchar;
+                         c:=CurrentScanner.AsmGetChar;
                          actasmpattern:=actasmpattern+c;
                        end;
                      '''' :
                        begin
-                         c:=CurrentScanner.asmgetchar;
+                         c:=CurrentScanner.AsmGetChar;
                          break;
                        end;
                      #10,#13:
@@ -562,18 +562,18 @@ unit raatt;
                begin
                  actasmpattern:='';
                  repeat
-                   c:=CurrentScanner.asmgetchar;
+                   c:=CurrentScanner.AsmGetChar;
                    case c of
                      '\' :
                        begin
                          { copy also the next char so \" is parsed correctly }
                          actasmpattern:=actasmpattern+c;
-                         c:=CurrentScanner.asmgetchar;
+                         c:=CurrentScanner.AsmGetChar;
                          actasmpattern:=actasmpattern+c;
                        end;
                      '"' :
                        begin
-                         c:=CurrentScanner.asmgetchar;
+                         c:=CurrentScanner.AsmGetChar;
                          break;
                        end;
                      #10,#13:
@@ -596,21 +596,21 @@ unit raatt;
              '#' :
                begin
                  actasmtoken:=AS_HASH;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '[' :
                begin
                  actasmtoken:=AS_LBRACKET;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              ']' :
                begin
                  actasmtoken:=AS_RBRACKET;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
@@ -619,16 +619,16 @@ unit raatt;
 {$if defined(aarch64)}
                  // the arm assembler uses { ... } for register sets
                  // but compiler directives {$... } are still allowed
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  if c<>'$' then
                    actasmtoken:=AS_LSBRACKET
                  else
                    begin
-                     CurrentScanner.skipcomment(false);
+                     CurrentScanner.SkipComment(false);
                      GetToken;
                    end;
 {$else arm or aarch64}
-                 CurrentScanner.skipcomment(true);
+                 CurrentScanner.SkipComment(true);
                  GetToken;
 {$endif}
                  exit;
@@ -638,7 +638,7 @@ unit raatt;
              '}' :
                begin
                  actasmtoken:=AS_RSBRACKET;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 {$endif}
@@ -647,49 +647,49 @@ unit raatt;
              ',' :
                begin
                  actasmtoken:=AS_COMMA;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '<' :
                begin
                  actasmtoken:=AS_SHL;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  if c = '<' then
-                  c:=CurrentScanner.asmgetchar;
+                  c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '>' :
                begin
                  actasmtoken:=AS_SHR;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  if c = '>' then
-                  c:=CurrentScanner.asmgetchar;
+                  c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '|' :
                begin
                  actasmtoken:=AS_OR;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '^' :
                begin
                  actasmtoken:=AS_XOR;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
 
              '(' :
                begin
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  if c='*' then
                    begin
-                     CurrentScanner.skipoldtpcomment(true);
+                     CurrentScanner.SkipOldTPComment(true);
                      GetToken;
                    end
                  else
@@ -700,44 +700,44 @@ unit raatt;
              ')' :
                begin
                  actasmtoken:=AS_RPAREN;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              ':' :
                begin
                  actasmtoken:=AS_COLON;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '+' :
                begin
                  actasmtoken:=AS_PLUS;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '-' :
                begin
                  actasmtoken:=AS_MINUS;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '*' :
                begin
                  actasmtoken:=AS_STAR;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '/' :
                begin
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  if c='/' then
                    begin
-                     CurrentScanner.skipdelphicomment;
+                     CurrentScanner.SkipDelphiComment;
                      GetToken;
                    end
                  else
@@ -748,28 +748,28 @@ unit raatt;
              '!' :
                begin
                  actasmtoken:=AS_NOT;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '~' :
                begin
                  actasmtoken:=AS_NOR;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              '@' :
                begin
                  actasmtoken:=AS_AT;
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  exit;
                end;
 
              #13,#10:
                begin
-                 CurrentScanner.linebreak;
-                 c:=CurrentScanner.asmgetchar;
+                 CurrentScanner.LineBreak;
+                 c:=CurrentScanner.AsmGetChar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
@@ -777,20 +777,20 @@ unit raatt;
 
              ';' :
                begin
-                 c:=CurrentScanner.asmgetchar;
+                 c:=CurrentScanner.AsmGetChar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
                end;
 
              else
-               CurrentScanner.illegal_char(c);
+               CurrentScanner.IllegalChar(c);
            end;
          end;
       end;
 
 
-    function TATTReader.consume(t : TAsmToken):boolean;
+    function TATTReader.Consume(t : TAsmToken):boolean;
       begin
         Consume:=true;
         if t<>actasmtoken then
@@ -819,15 +819,15 @@ unit raatt;
       var
        asmsymtyp : TAsmsymtype;
        asmsym,
-       expr: string;
+       Expr: string;
        value : TCGInt;
       Begin
         Repeat
           Case actasmtoken of
             AS_STRING:
               Begin
-                expr:=actasmpattern;
-                if length(expr) > 1 then
+                Expr:=actasmpattern;
+                if length(Expr) > 1 then
                  Message(asmr_e_string_not_allowed_as_const);
                 Consume(AS_STRING);
                 Case actasmtoken of
@@ -837,7 +837,7 @@ unit raatt;
                 else
                   Message(asmr_e_invalid_string_expression);
                 end; { end case }
-                ConcatString(curlist,expr);
+                ConcatString(curlist,Expr);
               end;
             AS_INTNUM,
             AS_PLUS,
@@ -876,7 +876,7 @@ unit raatt;
 
     Procedure TATTReader.BuildRealConstant(typ : TFloatType);
       var
-        expr : string;
+        Expr : string;
         r : BestReal;
         code : integer;
         negativ : boolean;
@@ -885,23 +885,23 @@ unit raatt;
         errorflag:=FALSE;
         Repeat
           negativ:=false;
-          expr:='';
+          Expr:='';
           if actasmtoken=AS_PLUS then
             Consume(AS_PLUS)
           else
            if actasmtoken=AS_MINUS then
             begin
               negativ:=true;
-              consume(AS_MINUS);
+              Consume(AS_MINUS);
             end;
           Case actasmtoken of
             AS_INTNUM:
               Begin
-                expr:=actasmpattern;
+                Expr:=actasmpattern;
                 Consume(AS_INTNUM);
                 if negativ then
-                 expr:='-'+expr;
-                Val(expr,r,code);
+                 Expr:='-'+Expr;
+                Val(Expr,r,code);
                 if code<>0 then
                  Begin
                    r:=0;
@@ -911,16 +911,16 @@ unit raatt;
               end;
             AS_REALNUM:
               Begin
-                expr:=actasmpattern;
+                Expr:=actasmpattern;
                 Consume(AS_REALNUM);
                 { in ATT syntax you have 0d in front of the real }
                 { should this be forced ?  yes i think so, as to }
                 { conform to gas as much as possible.            }
-                if (expr[1]='0') and (upper(expr[2])='D') then
-                 Delete(expr,1,2);
+                if (Expr[1]='0') and (upper(Expr[2])='D') then
+                 Delete(Expr,1,2);
                 if negativ then
-                 expr:='-'+expr;
-                Val(expr,r,code);
+                 Expr:='-'+Expr;
+                Val(Expr,r,code);
                 if code<>0 then
                  Begin
                    r:=0;
@@ -951,7 +951,7 @@ unit raatt;
 
     Procedure TATTReader.BuildStringConstant(asciiz: boolean);
       var
-        expr: string;
+        Expr: string;
         errorflag : boolean;
       Begin
         errorflag:=FALSE;
@@ -959,10 +959,10 @@ unit raatt;
           Case actasmtoken of
             AS_STRING:
               Begin
-                expr:=actasmpattern;
+                Expr:=actasmpattern;
                 if asciiz then
-                  expr:=expr+#0;
-                ConcatString(curlist,expr);
+                  Expr:=Expr+#0;
+                ConcatString(curlist,Expr);
                 Consume(AS_STRING);
               end;
             AS_COMMA:
@@ -1014,7 +1014,7 @@ unit raatt;
        curlist:=TAsmList.Create;
 
        { we might need to know which parameters are passed in registers }
-       if not parse_generic then
+       if not ParseGeneric then
          CurrentProcInfo.Generate_Parameter_Info;
 
        lasTSec:=sec_code;
@@ -1369,7 +1369,7 @@ unit raatt;
                                Parsing Helpers
 *****************************************************************************}
 
-    Procedure TATTReader.BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
+    Procedure TATTReader.BuildRecordOffsetSize(const Expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
       { Description: This routine builds up a record offset after a AS_DOT }
       { token is encountered.                                              }
       { On entry actasmtoken should be equal to AS_DOT                     }
@@ -1379,7 +1379,7 @@ unit raatt;
       Begin
         offset:=0;
         size:=0;
-        s:=expr;
+        s:=Expr;
         while (actasmtoken=AS_DOT) do
          begin
            Consume(AS_DOT);
@@ -1388,7 +1388,7 @@ unit raatt;
            if actasmtoken in [AS_ID,AS_REGISTER] then
              begin
                s:=s+'.'+actasmpattern;
-               consume(actasmtoken)
+               Consume(actasmtoken)
              end
            else
             begin
@@ -1405,7 +1405,7 @@ unit raatt;
     procedure TATTReader.BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
       var
         hssymtyp : TAsmsymtype;
-        hs,tempstr,expr,MangledName : string;
+        hs,tempstr,Expr,MangledName : string;
         parenlevel : LongInt;
         l,k : TCGInt;
         errorflag : boolean;
@@ -1419,7 +1419,7 @@ unit raatt;
         value:=0;
         errorflag:=FALSE;
         tempstr:='';
-        expr:='';
+        Expr:='';
         parenlevel:=0;
         Repeat
           Case actasmtoken of
@@ -1429,7 +1429,7 @@ unit raatt;
                 if allowref and (prevasmtoken in [AS_INTNUM,AS_ID]) then
                  break;
                 Consume(AS_LPAREN);
-                expr:=expr + '(';
+                Expr:=Expr + '(';
                 inc(parenlevel);
               end;
             AS_RBRACKET:
@@ -1449,67 +1449,67 @@ unit raatt;
                 if (parenlevel=0) and betweenbracket then
                  break;
                 Consume(AS_RPAREN);
-                expr:=expr + ')';
+                Expr:=Expr + ')';
                 dec(parenlevel);
               end;
             AS_SHL:
               Begin
                 Consume(AS_SHL);
-                expr:=expr + '<';
+                Expr:=Expr + '<';
               end;
             AS_SHR:
               Begin
                 Consume(AS_SHR);
-                expr:=expr + '>';
+                Expr:=Expr + '>';
               end;
             AS_SLASH:
               Begin
                 Consume(AS_SLASH);
-                expr:=expr + '/';
+                Expr:=Expr + '/';
               end;
             AS_MOD:
               Begin
                 Consume(AS_MOD);
-                expr:=expr + '%';
+                Expr:=Expr + '%';
               end;
             AS_STAR:
               Begin
                 Consume(AS_STAR);
-                expr:=expr + '*';
+                Expr:=Expr + '*';
               end;
             AS_PLUS:
               Begin
                 Consume(AS_PLUS);
-                expr:=expr + '+';
+                Expr:=Expr + '+';
               end;
             AS_MINUS:
               Begin
                 Consume(AS_MINUS);
-                expr:=expr + '-';
+                Expr:=Expr + '-';
               end;
             AS_AND:
               Begin
                 Consume(AS_AND);
-                expr:=expr + '&';
+                Expr:=Expr + '&';
               end;
             AS_NOT:
               Begin
                 Consume(AS_NOT);
-                expr:=expr + '~';
+                Expr:=Expr + '~';
               end;
             AS_XOR:
               Begin
                 Consume(AS_XOR);
-                expr:=expr + '^';
+                Expr:=Expr + '^';
               end;
             AS_OR:
               Begin
                 Consume(AS_OR);
-                expr:=expr + '|';
+                Expr:=Expr + '|';
               end;
             AS_INTNUM:
               Begin
-                expr:=expr + actasmpattern;
+                Expr:=Expr + actasmpattern;
                 Consume(AS_INTNUM);
               end;
             AS_DOLLAR:
@@ -1541,7 +1541,7 @@ unit raatt;
                   Message1(asmr_e_invalid_string_as_opcode_operand,actasmpattern);
                 end;
                 str(l, tempstr);
-                expr:=expr + tempstr;
+                Expr:=Expr + tempstr;
                 Consume(AS_STRING);
               end;
             AS_SIZEOF,
@@ -1582,7 +1582,7 @@ unit raatt;
                     end;
                  end;
                 str(l, tempstr);
-                expr:=expr + tempstr;
+                Expr:=Expr + tempstr;
               end;
             AS_VMTOFFSET:
               begin
@@ -1592,12 +1592,12 @@ unit raatt;
                 else
                   begin
                     tempstr:=actasmpattern;
-                    consume(AS_ID);
+                    Consume(AS_ID);
                     BuildRecordOffsetSize(tempstr,k,l,MangledName,true);
                     if (MangledName <> '') then
                       Message(asmr_e_wrong_sym_type);
                     str(k,tempstr);
-                    expr := expr + tempstr;
+                    Expr := Expr + tempstr;
                   end
               end;
             AS_ID:
@@ -1606,11 +1606,11 @@ unit raatt;
                 hssymtyp:=AT_DATA;
                 tempstr:=actasmpattern;
                 prevtok:=prevasmtoken;
-                consume(AS_ID);
+                Consume(AS_ID);
                 if SearchIConstant(tempstr,l) then
                  begin
                    str(l, tempstr);
-                   expr:=expr + tempstr;
+                   Expr:=Expr + tempstr;
                  end
                 else
                  begin
@@ -1679,11 +1679,11 @@ unit raatt;
                         end
                       else
                         Message(asmr_e_cant_have_multiple_relocatable_symbols);
-                      if (expr='') or (expr[length(expr)]='+') then
+                      if (Expr='') or (Expr[length(Expr)]='+') then
                        begin
                          { don't remove the + if there could be a record field }
                          if actasmtoken<>AS_DOT then
-                          delete(expr,length(expr),1);
+                          delete(Expr,length(Expr),1);
                        end
                       else
                        Message(asmr_e_only_add_relocatable_symbol);
@@ -1696,13 +1696,13 @@ unit raatt;
                       else
                         begin
                           str(l, tempstr);
-                          expr:=expr + tempstr;
+                          Expr:=Expr + tempstr;
                         end
                     end
                    else
                     begin
-                      if (expr='') or (expr[length(expr)] in ['+','-','/','*']) then
-                       delete(expr,length(expr),1);
+                      if (Expr='') or (Expr[length(Expr)] in ['+','-','/','*']) then
+                       delete(Expr,length(Expr),1);
                     end;
                  end;
                 { check if there are wrong operator used like / or mod etc. }
@@ -1728,7 +1728,7 @@ unit raatt;
         Until false;
         { calculate expression }
         if not ErrorFlag then
-          value:=CalculateExpression(expr)
+          value:=CalculateExpression(Expr)
         else
           value:=0;
       end;

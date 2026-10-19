@@ -346,13 +346,13 @@ implementation
 
          { do we have an assembler block without the po_assembler?
            we should allow this for Delphi compatibility (PFV) }
-         if (CurrentScanner.token=_ASM) and (m_delphi in CurrentSettings.ModeSwitches) then
+         if (CurrentScanner.FToken=_ASM) and (m_delphi in CurrentSettings.ModeSwitches) then
            include(CurrentProcInfo.ProcDef.ProcOptions,po_assembler);
 
          { Handle assembler block different }
          if (po_assembler in CurrentProcInfo.ProcDef.ProcOptions) then
           begin
-            Block:=assembler_block;
+            Block:=AssemblerBlock;
             exit;
           end;
 
@@ -363,9 +363,9 @@ implementation
              (CurrentModule.IsUnit or AIsLibrary)
             ) then
            begin
-             if (CurrentScanner.token=_END) then
+             if (CurrentScanner.FToken=_END) then
                 begin
-                   consume(_END);
+                   Consume(_END);
                    { We need at least a node, else the entry/exit code is not
                      generated and thus no PASCALMAIN symbol which we need (PFV) }
                    if AIsLibrary then
@@ -375,31 +375,31 @@ implementation
                 end
               else
                 begin
-                   if CurrentScanner.token=_INITIALIZATION then
+                   if CurrentScanner.FToken=_INITIALIZATION then
                      begin
                         { The library init code is already called and does not
                           need to be in the initfinal table (PFV) }
-                        Block:=statement_block(_INITIALIZATION);
+                        Block:=StatementBlock(_INITIALIZATION);
                         InitMainBlockSyms(Block);
                      end
-                   else if CurrentScanner.token=_FINALIZATION then
+                   else if CurrentScanner.FToken=_FINALIZATION then
                      begin
                        { when a unit has only a finalization section, we can come to this
                          point when we try to read the nonh existing initialization section
                          so we've to check if we are really try to parse the finalization }
                        if CurrentProcInfo.ProcDef.ProcTypeOption=potype_unitfinalize then
-                         Block:=statement_block(_FINALIZATION)
+                         Block:=StatementBlock(_FINALIZATION)
                        else
                          Block:=nil;
                      end
                    else
-                     Block:=statement_block(_BEGIN);
+                     Block:=StatementBlock(_BEGIN);
                 end;
             end
          else
             begin
                { parse routine body }
-               Block:=statement_block(_BEGIN);
+               Block:=StatementBlock(_BEGIN);
                InitMainBlockSyms(Block);
             end;
       end;
@@ -2120,7 +2120,7 @@ implementation
            not(Assigned(Parent) and
                Assigned(Parent.ProcDef) and
                Assigned(Parent.ProcDef.struct)) then
-          push_nested_hierarchy(ProcDef.struct);
+          PushNestedHierarchy(ProcDef.struct);
 
         { insert parasymtable in symtablestack when parsing
           a function }
@@ -2150,7 +2150,7 @@ implementation
            not(Assigned(Parent) and
                Assigned(Parent.ProcDef) and
                Assigned(Parent.ProcDef.struct)) then
-          pop_nested_hierarchy(ProcDef.struct);
+          PopNestedHierarchy(ProcDef.struct);
       end;
 
 
@@ -2184,7 +2184,7 @@ implementation
          lOldCurrentStructDef:=CurrentStructDef;
          lOldCurrentGenericDef:=CurrentGenericDef;
          lOldCurrentSpecializeDef:=CurrentSpecializeDef;
-         lOldParseGeneric:=parse_generic;
+         lOldParseGeneric:=ParseGeneric;
 
          CurrentProcInfo:=self;
          CurrentStructDef:=ProcDef.struct;
@@ -2204,12 +2204,12 @@ implementation
          if ProcDef.Is_Generic then
            begin
              CurrentGenericDef:=ProcDef;
-             parse_generic:=true;
+             ParseGeneric:=true;
            end
          else if Assigned(CurrentStructDef) and (df_generic in CurrentStructDef.DefOptions) then
            begin
              CurrentGenericDef:=CurrentStructDef;
-             parse_generic:=true;
+             ParseGeneric:=true;
            end;
          if Assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.DefOptions) then
            CurrentSpecializeDef:=CurrentStructDef;
@@ -2242,7 +2242,7 @@ implementation
            begin
              { start token recorder for generic template }
              ProcDef.InitGeneric;
-             CurrentScanner.startrecordtokens(ProcDef.GenericTokenBuf);
+             CurrentScanner.StartRecordTokens(ProcDef.GenericTokenBuf);
            end;
 
          { parse the code ... }
@@ -2253,7 +2253,7 @@ implementation
          if lRecordTokens then
            begin
              { stop token recorder for generic template }
-             CurrentScanner.stoprecordtokens;
+             CurrentScanner.StopRecordTokens;
 
              { Give an error for accesses in the static symtable that aren't visible
                outside the current unit }
@@ -2267,7 +2267,7 @@ implementation
 
          { save exit info }
          ExitSwitches:=CurrentSettings.LocalSwitches;
-         ExitPos:=last_endtoken_filepos;
+         ExitPos:=LastEndTokenFilePos;
 
          { the procedure is now defined }
          ProcDef.ForwardDef:=false;
@@ -2329,7 +2329,7 @@ implementation
          CurrentGenericDef:=lOldCurrentGenericDef;
          CurrentSpecializeDef:=lOldCurrentSpecializeDef;
          CurrentProcInfo:=lOldCurrentProcInfo;
-         parse_generic:=lOldParseGeneric;
+         ParseGeneric:=lOldParseGeneric;
 
          { Restore old state }
          Block_Type:=lOldBlockType;
@@ -2412,7 +2412,7 @@ implementation
               begin
                 { also generate the bodies for all previously done
                   specializations so that we might inline them }
-                generate_specialization_procs;
+                GenerateSpecializationProcs;
                 { convert all load nodes that might have been captured by a
                   capture object }
                 TCGProcInfo(CurrentProcInfo).ConvertCapturedSyms;
@@ -2438,7 +2438,7 @@ implementation
                 (CurrentProcInfo.ProcDef.owner.DefOwner=CurrentProcInfo.ProcDef.struct)
               )
             ) then
-          consume(_SEMICOLON);
+          Consume(_SEMICOLON);
 
         if not lIsNestedProc then
           { current_procinfo is checked for nil later on }
@@ -2471,11 +2471,11 @@ implementation
           begin
             Result:=[];
             if rpf_classmethod in AFlags then
-              include(Result,ppf_classmethod);
+              include(Result,ppfClassMethod);
             if rpf_generic in AFlags then
-              include(Result,ppf_generic);
+              include(Result,ppfGeneric);
             if rpf_anonymous in AFlags then
-              include(Result,ppf_anonymous);
+              include(Result,ppfAnonymous);
           end;
 
       var
@@ -2506,25 +2506,25 @@ implementation
 
          if not Assigned(AForwardProcDef) then
            { parse procedure declaration }
-           Result:=parse_proc_dec(ConvertFlagsToPPF,lOldCurrentStructDef)
+           Result:=ParseProcDec(ConvertFlagsToPPF,lOldCurrentStructDef)
          else
            Result:=AForwardProcDef;
 
          { set the default function options }
-         if parse_only then
+         if ParseOnly then
           begin
             Result.ForwardDef:=true;
             { set also the interface flag, for better error message when the
               implementation doesn't match this header }
             Result.InterfaceDef:=true;
             include(Result.ProcOptions,po_global);
-            lProcDefFlags:=[pd_interface];
+            lProcDefFlags:=[pdInterface];
           end
          else
           begin
-            lProcDefFlags:=[pd_body];
+            lProcDefFlags:=[pdBody];
             if (not CurrentModule.InInterface) then
-              include(lProcDefFlags,pd_implemen);
+              include(lProcDefFlags,pdImplemen);
             if (not CurrentModule.IsUnit) or
                create_smartlink_library then
               include(Result.ProcOptions,po_global);
@@ -2534,16 +2534,16 @@ implementation
          if not Assigned(AForwardProcDef) then
            begin
              { parse the directives that may follow }
-             parse_proc_directives(Result,lProcDefFlags);
+             ParseProcDirectives(Result,lProcDefFlags);
 
              if not (rpf_anonymous in AFlags) then
                { hint directives, these can be separated by semicolons here,
                  that needs to be handled here with a loop (PFV) }
-               while try_consume_hintdirective(Result.SymOptions,Result.DeprecatedMsg) do
+               while TryConsumeHintDirective(Result.SymOptions,Result.DeprecatedMsg) do
                 Consume(_SEMICOLON);
 
              { Set calling convention }
-             if parse_only then
+             if ParseOnly then
                Handle_Calling_Convention(Result,cHCCDefaultActionsIntf)
              else
                Handle_Calling_Convention(Result,cHCCDefaultActionsImpl)
@@ -2594,7 +2594,7 @@ implementation
            end;
 
          { Set mangled name }
-         proc_set_mangledname(Result);
+         ProcSetMangledName(Result);
 
          { inherit generic flags from parent routine }
          if Assigned(lOldCurrentProcInfo) and
@@ -2637,7 +2637,7 @@ implementation
            end;
 
          { compile procedure when a body is needed }
-         if (pd_body in lProcDefFlags) then
+         if (pdBody in lProcDefFlags) then
            begin
              Read_Proc_Body(lOldCurrentProcInfo,Result);
            end
@@ -2657,14 +2657,14 @@ implementation
                  }
                  if (not Result.ForwardDef) and
                     (Result.HasForward) and
-                    (proc_get_importname(Result)<>'') then
+                    (ProcGetImportName(Result)<>'') then
                    begin
                      { we cannot handle the callee-side of variadic functions (and
                        even if we could, e.g. LLVM cannot call through to something
                        else in that case) }
                      if Is_C_Variadic(Result) then
                        Message1(parser_e_callthrough_varargs,Result.FullProcName(false));
-                     Call_Through_New_Name(Result,proc_get_importname(Result));
+                     Call_Through_New_Name(Result,ProcGetImportName(Result));
                      include(Result.ImplProcOptions,pio_thunk);
                    end
                  else
@@ -2674,7 +2674,7 @@ implementation
                      hlcg.Handle_External_Proc(
                        CurrentAsmData.asmlists[al_procedures],
                        Result,
-                       proc_get_importname(Result));
+                       ProcGetImportName(Result));
                      Destroy_HLCodeGen;
                    end
                end;
@@ -2717,16 +2717,16 @@ implementation
           begin
             if Assigned (AProcDef.ImportName) then
               CurrentModule.AddExternalImport(AProcDef.ImportDLL^,
-                AProcDef.ImportName^,proc_get_importname(AProcDef),
+                AProcDef.ImportName^,ProcGetImportName(AProcDef),
                 AProcDef.ImportNr,false,false)
             else
               CurrentModule.AddExternalImport(AProcDef.ImportDLL^,
-                proc_get_importname(AProcDef),proc_get_importname(AProcDef),
+                ProcGetImportName(AProcDef),ProcGetImportName(AProcDef),
                 AProcDef.ImportNr,false,true);
           end
         else
           begin
-            lName:=proc_get_importname(AProcDef);
+            lName:=ProcGetImportName(AProcDef);
             { add import name to external list for DLL scanning }
             if tf_has_dllscanner in TargetInfo.Flags then
               CurrentModule.DLLScannerInputList.Add(lName,AProcDef);
@@ -2771,41 +2771,41 @@ implementation
         repeat
            if not Assigned(CurrentProcInfo) then
              InternalError(200304251);
-           case CurrentScanner.token of
+           case CurrentScanner.FToken of
               _LABEL:
                 begin
                   HandleUnexpectedHadGeneric;
-                  label_dec;
+                  LabelDec;
                 end;
               _CONST:
                 begin
                   HandleUnexpectedHadGeneric;
-                  const_dec(lHadGeneric);
+                  ConstDec(lHadGeneric);
                 end;
               _TYPE:
                 begin
                   HandleUnexpectedHadGeneric;
-                  type_dec(lHadGeneric);
+                  TypeDec(lHadGeneric);
                 end;
               _VAR:
                 begin
                   HandleUnexpectedHadGeneric;
-                  var_dec(lHadGeneric);
+                  VarDec(lHadGeneric);
                 end;
               _THREADVAR:
                 begin
                   HandleUnexpectedHadGeneric;
-                  threadvar_dec(lHadGeneric);
+                  ThreadVarDec(lHadGeneric);
                 end;
               _CLASS:
                 begin
                   lIsClassDef:=false;
-                  if try_to_consume(_CLASS) then
+                  if TryToConsume(_CLASS) then
                    begin
                      { class modifier is only allowed for procedures, functions, }
                      { constructors, destructors                                 }
-                     if not((CurrentScanner.token in [_FUNCTION,_PROCEDURE,_DESTRUCTOR,_OPERATOR]) or (CurrentScanner.token=_CONSTRUCTOR)) and
-                        not((CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_OPERATOR)) then
+                     if not((CurrentScanner.FToken in [_FUNCTION,_PROCEDURE,_DESTRUCTOR,_OPERATOR]) or (CurrentScanner.FToken=_CONSTRUCTOR)) and
+                        not((CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_OPERATOR)) then
                        Message(parser_e_procedure_or_function_expected);
 
                      if Is_Interface(CurrentStructDef) then
@@ -2821,7 +2821,7 @@ implementation
               _PROCEDURE,
               _OPERATOR:
                 begin
-                  if lHadGeneric and not (CurrentScanner.token in [_PROCEDURE,_FUNCTION]) then
+                  if lHadGeneric and not (CurrentScanner.FToken in [_PROCEDURE,_FUNCTION]) then
                     begin
                       Message(parser_e_procedure_or_function_expected);
                       lHadGeneric:=false;
@@ -2841,35 +2841,35 @@ implementation
                    if (CurrentProcInfo.ProcDef.LocalST.SymTableLevel>MainProgramLevel) then
                      begin
                         Message(parser_e_syntax_error);
-                        consume_all_until(_SEMICOLON);
+                        ConsumeAllUntil(_SEMICOLON);
                      end
                    else if AIsLibrary or
                      (TargetInfo.system in systems_unit_program_exports) then
-                     read_exports
+                     ReadExports
                    else
                      begin
                         Message(parser_w_unsupported_feature);
-                        consume(_BEGIN);
+                        Consume(_BEGIN);
                      end;
                 end;
               _PROPERTY:
                 begin
                   HandleUnexpectedHadGeneric;
                   if (m_fpc in CurrentSettings.ModeSwitches) then
-                    property_dec
+                    PropertyDec
                   else
                     break;
                 end;
               else
                 begin
-                  case CurrentScanner.idtoken of
+                  case CurrentScanner.FIDToken of
                     _RESOURCESTRING:
                       begin
                         HandleUnexpectedHadGeneric;
                         { m_class is needed, because the resourcestring
                           loading is in the ObjPas unit }
 {                        if (m_class in current_settings.modeswitches) then}
-                          resourcestring_dec(lHadGeneric)
+                          ResourceStringDec(lHadGeneric)
 {                        else
                           break;}
                       end;
@@ -2889,7 +2889,7 @@ implementation
                         HandleUnexpectedHadGeneric;
                         if not (m_delphi in CurrentSettings.ModeSwitches) then
                           begin
-                            consume(_ID);
+                            Consume(_ID);
                             lHadGeneric:=true;
                           end
                         else
@@ -2910,9 +2910,9 @@ implementation
              the token is a string/char. As this is a syntax error and compilation will abort anyways,
              skipping the call does not matter
            }
-           (CurrentScanner.token<>_CSTRING) and
-           (CurrentScanner.token<>_CWCHAR) and
-           (CurrentScanner.token<>_CWSTRING) then
+           (CurrentScanner.FToken<>_CSTRING) and
+           (CurrentScanner.FToken<>_CWCHAR) and
+           (CurrentScanner.FToken<>_CWSTRING) then
            Add_Synthetic_Method_Implementations(CurrentProcInfo.ProcDef.LocalST);
 
          { check for incomplete class definitions, this is only required
@@ -2940,32 +2940,32 @@ implementation
       begin
          lHadGeneric:=false;
          repeat
-           case CurrentScanner.token of
+           case CurrentScanner.FToken of
              _CONST :
                begin
                  HandleUnexpectedHadGeneric;
-                 const_dec(lHadGeneric);
+                 ConstDec(lHadGeneric);
                end;
              _TYPE :
                begin
                  HandleUnexpectedHadGeneric;
-                 type_dec(lHadGeneric);
+                 TypeDec(lHadGeneric);
                end;
              _VAR :
                begin
                  HandleUnexpectedHadGeneric;
-                 var_dec(lHadGeneric);
+                 VarDec(lHadGeneric);
                end;
              _THREADVAR :
                begin
                  HandleUnexpectedHadGeneric;
-                 threadvar_dec(lHadGeneric);
+                 ThreadVarDec(lHadGeneric);
                end;
              _FUNCTION,
              _PROCEDURE,
              _OPERATOR :
                begin
-                 if lHadGeneric and not (CurrentScanner.token in [_FUNCTION, _PROCEDURE]) then
+                 if lHadGeneric and not (CurrentScanner.FToken in [_FUNCTION, _PROCEDURE]) then
                    begin
                      message(parser_e_procedure_or_function_expected);
                      lHadGeneric:=false;
@@ -2978,17 +2978,17 @@ implementation
                end;
              else
                begin
-                 case CurrentScanner.idtoken of
+                 case CurrentScanner.FIDToken of
                    _RESOURCESTRING :
                      begin
                        HandleUnexpectedHadGeneric;
-                       resourcestring_dec(lHadGeneric);
+                       ResourceStringDec(lHadGeneric);
                      end;
                    _PROPERTY:
                      begin
                        HandleUnexpectedHadGeneric;
                        if (m_fpc in CurrentSettings.ModeSwitches) then
-                         property_dec
+                         PropertyDec
                        else
                          break;
                      end;
@@ -2998,7 +2998,7 @@ implementation
                        if not (m_delphi in CurrentSettings.ModeSwitches) then
                          begin
                            lHadGeneric:=true;
-                           consume(_ID);
+                           Consume(_ID);
                          end
                        else
                          break;

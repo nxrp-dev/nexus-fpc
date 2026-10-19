@@ -83,10 +83,10 @@ implementation
           if (([m_iso]*CurrentSettings.ModeSwitches)<>[]) and (Is_Record(TPointerDef(lNode.resultdef).PointedDef)) then
             begin
               lVariantDesc:=TRecordDef(TPointerDef(lNode.resultdef).PointedDef).VariantRecDesc;
-              while (CurrentScanner.token=_COMMA) and Assigned(lVariantDesc) do
+              while (CurrentScanner.FToken=_COMMA) and Assigned(lVariantDesc) do
                 begin
-                  consume(_COMMA);
-                  lNode2:=factor(false,[]);
+                  Consume(_COMMA);
+                  lNode2:=Factor(false,[]);
                   DoTypeCheckPass(lNode2);
                   if lNode2.nodetype=ordconstn then
                     begin
@@ -129,8 +129,8 @@ implementation
         end;
 
       begin
-        consume(_LKLAMMER);
-        lNode:=comp_expr([ef_accept_equal]);
+        Consume(_LKLAMMER);
+        lNode:=CompExpr([efAcceptEqual]);
         { calc return type }
         if AIsNew then
           begin
@@ -169,12 +169,12 @@ implementation
                    lNode2.free;
                    lNode2 := nil;
                  New_Dispose_Statement := CErrorNode.Create;
-                 consume_all_until(_RKLAMMER);
-                 consume(_RKLAMMER);
+                 ConsumeAllUntil(_RKLAMMER);
+                 Consume(_RKLAMMER);
                  exit;
               end;
 
-            do_member_read(lClassDef,false,lSym,lNode2,lAgain,[],nil);
+            DoMemberRead(lClassDef,false,lSym,lNode2,lAgain,[],nil);
 
             { we need the real called method }
             DoTypeCheckPass(lNode2);
@@ -204,22 +204,22 @@ implementation
           end
         { constructor,destructor specified }
         else if (([m_mac,m_iso]*CurrentSettings.ModeSwitches)=[]) and
-                try_to_consume(_COMMA) then
+                TryToConsume(_COMMA) then
           begin
             { extended syntax of new and dispose }
             { function styled new is handled in factor }
             { destructors have no parameters }
-            lDestructorName:=CurrentScanner.pattern;
+            lDestructorName:=CurrentScanner.FPattern;
             lDestructorPosition:=CurrentTokenPos;
-            consume(_ID);
+            Consume(_ID);
 
             if Is_TypeParam(lNode.resultdef) then
               begin
                  lNode.free;
-                 lNode:=factor(false,[]);
+                 lNode:=Factor(false,[]);
                  lNode.free;
                  lNode := nil;
-                 consume(_RKLAMMER);
+                 Consume(_RKLAMMER);
                  New_Dispose_Statement:=CNothingNode.Create;
                  exit;
               end;
@@ -228,10 +228,10 @@ implementation
               begin
                  Message1(type_e_pointer_type_expected,lNode.resultdef.TypeName);
                  lNode.free;
-                 lNode:=factor(false,[]);
+                 lNode:=Factor(false,[]);
                  lNode.free;
                  lNode := nil;
-                 consume(_RKLAMMER);
+                 Consume(_RKLAMMER);
                  New_Dispose_Statement:=CErrorNode.Create;
                  exit;
               end;
@@ -241,9 +241,9 @@ implementation
                  Message(parser_e_pointer_to_class_expected);
                  lNode.free;
                  lNode := nil;
-                 New_Dispose_Statement:=factor(false,[]);
-                 consume_all_until(_RKLAMMER);
-                 consume(_RKLAMMER);
+                 New_Dispose_Statement:=Factor(false,[]);
+                 ConsumeAllUntil(_RKLAMMER);
+                 Consume(_RKLAMMER);
                  exit;
               end;
             { check, if the first parameter is a pointer to a _class_ }
@@ -251,9 +251,9 @@ implementation
             if Is_Class(lClassDef) then
               begin
                  Message(parser_e_no_new_or_dispose_for_classes);
-                 New_Dispose_Statement:=factor(false,[]);
-                 consume_all_until(_RKLAMMER);
-                 consume(_RKLAMMER);
+                 New_Dispose_Statement:=Factor(false,[]);
+                 ConsumeAllUntil(_RKLAMMER);
+                 Consume(_RKLAMMER);
                  exit;
               end;
             { search cons-/destructor, also in parent classes }
@@ -291,22 +291,22 @@ implementation
                 else
                   lCallFlags:=cnf_dispose_call;
                 if AIsNew then
-                  do_member_read(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
+                  DoMemberRead(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
                 else
                   begin
                     if not(m_fpc in CurrentSettings.ModeSwitches) then
-                      do_member_read(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
+                      DoMemberRead(lClassDef,false,lSym,lNode2,lAgain,[lCallFlags],nil)
                     else
                       begin
                         lNode2:=CCallNode.Create(nil,TProcSym(lSym),lSym.owner,lNode2,[lCallFlags],nil);
                         { support dispose(p,done()); }
-                        if try_to_consume(_LKLAMMER) then
+                        if TryToConsume(_LKLAMMER) then
                           begin
-                            if not try_to_consume(_RKLAMMER) then
+                            if not TryToConsume(_RKLAMMER) then
                               begin
                                 Message(parser_e_no_paras_for_destructor);
-                                consume_all_until(_RKLAMMER);
-                                consume(_RKLAMMER);
+                                ConsumeAllUntil(_RKLAMMER);
+                                Consume(_RKLAMMER);
                               end;
                           end;
                       end;
@@ -350,7 +350,7 @@ implementation
                    begin
                       lNode.free;
                       lNode := nil;
-                      consume(_RKLAMMER);
+                      Consume(_RKLAMMER);
                       New_Dispose_Statement:=CNothingNode.Create;
                       exit;
                    end
@@ -434,7 +434,7 @@ implementation
                    end;
                end;
           end;
-        consume(_RKLAMMER);
+        Consume(_RKLAMMER);
       end;
 
 
@@ -446,13 +446,13 @@ implementation
         lSymTable : TSymTable;
         lAgain  : Boolean; { dummy for do_proc_call }
       begin
-        consume(_LKLAMMER);
-        lNode1:=factor(false,[]);
+        Consume(_LKLAMMER);
+        lNode1:=Factor(false,[]);
         if lNode1.nodetype<>typen then
          begin
            Message(type_e_type_id_expected);
-           consume_all_until(_RKLAMMER);
-           consume(_RKLAMMER);
+           ConsumeAllUntil(_RKLAMMER);
+           Consume(_RKLAMMER);
            lNode1.free;
            lNode1 := nil;
            New_Function:=CErrorNode.Create;
@@ -462,15 +462,15 @@ implementation
         if (lNode1.resultdef.typ<>pointerdef) then
          begin
            Message1(type_e_pointer_type_expected,lNode1.resultdef.TypeName);
-           consume_all_until(_RKLAMMER);
-           consume(_RKLAMMER);
+           ConsumeAllUntil(_RKLAMMER);
+           Consume(_RKLAMMER);
            lNode1.free;
            lNode1 := nil;
            New_Function:=CErrorNode.Create;
            exit;
          end;
 
-        if try_to_consume(_RKLAMMER) then
+        if TryToConsume(_RKLAMMER) then
           begin
             if (TPointerDef(lNode1.resultdef).PointedDef.typ=objectdef) and
                (oo_has_vmt in TObjectDef(TPointerDef(lNode1.resultdef).PointedDef).ObjectOptions)  then
@@ -483,12 +483,12 @@ implementation
           end
         else
           begin
-            consume(_COMMA);
+            Consume(_COMMA);
             if TPointerDef(lNode1.resultdef).PointedDef.typ<>objectdef then
              begin
                Message(parser_e_pointer_to_class_expected);
-               consume_all_until(_RKLAMMER);
-               consume(_RKLAMMER);
+               ConsumeAllUntil(_RKLAMMER);
+               Consume(_RKLAMMER);
                lNode1.free;
                lNode1 := nil;
                New_Function:=CErrorNode.Create;
@@ -501,10 +501,10 @@ implementation
             DoTypeCheckPass(lNode1);
             { search the constructor also in the symbol tables of
               the parents }
-            afterassignment:=false;
-            SearchSym_In_Class(lClassDef,lClassDef,CurrentScanner.pattern,lSym,lSymTable,[ssf_search_helper]);
-            consume(_ID);
-            do_member_read(lClassDef,false,lSym,lNode1,lAgain,[cnf_new_call],nil);
+            AfterAssignment:=false;
+            SearchSym_In_Class(lClassDef,lClassDef,CurrentScanner.FPattern,lSym,lSymTable,[ssf_search_helper]);
+            Consume(_ID);
+            DoMemberRead(lClassDef,false,lSym,lNode1,lAgain,[cnf_new_call],nil);
             { we need to know which procedure is called }
             DoTypeCheckPass(lNode1);
             if not(
@@ -518,7 +518,7 @@ implementation
             lNode1.resultdef:=lNode2.resultdef;
             lNode2.free;
             lNode2 := nil;
-            consume(_RKLAMMER);
+            Consume(_RKLAMMER);
           end;
         New_Function:=lNode1;
       end;
@@ -528,9 +528,9 @@ implementation
       var
         lParas: TNode;
       begin
-        consume(_LKLAMMER);
-        lParas:=parse_paras(false,false,_RKLAMMER);
-        consume(_RKLAMMER);
+        Consume(_LKLAMMER);
+        lParas:=ParseParas(false,false,_RKLAMMER);
+        Consume(_RKLAMMER);
         if not Assigned(lParas) then
          begin
            Result:=CErrorNode.Create;
@@ -547,9 +547,9 @@ implementation
         lProcName: String;
         lCallPara: TStringEncoding;
       begin
-        consume(_LKLAMMER);
-        lParas:=parse_paras(false,false,_RKLAMMER);
-        consume(_RKLAMMER);
+        Consume(_LKLAMMER);
+        lParas:=ParseParas(false,false,_RKLAMMER);
+        Consume(_RKLAMMER);
         lProcName:='';
         if Assigned(lParas) and
            Assigned(TCallParaNode(lParas).right) and
@@ -607,9 +607,9 @@ implementation
         { for easy exiting if something goes wrong }
         Result := CErrorNode.Create;
 
-        consume(_LKLAMMER);
-        lParas:=parse_paras(false,false,_RKLAMMER);
-        consume(_RKLAMMER);
+        Consume(_LKLAMMER);
+        lParas:=ParseParas(false,false,_RKLAMMER);
+        Consume(_RKLAMMER);
         lParaNode:=TCallParaNode(lParas);
 
         if not Assigned(lParas) or
@@ -674,9 +674,9 @@ implementation
       begin
         Result := CErrorNode.Create;
 
-        consume(_LKLAMMER);
-        lParas:=parse_paras(false,false,_RKLAMMER);
-        consume(_RKLAMMER);
+        Consume(_LKLAMMER);
+        lParas:=ParseParas(false,false,_RKLAMMER);
+        Consume(_RKLAMMER);
         if not Assigned(lParas) and ACheckEmpty then
           begin
             CGMessage1(parser_e_wrong_parameter_size,AName);

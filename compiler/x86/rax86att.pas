@@ -130,7 +130,7 @@ Implementation
       begin
         len:=1;
         actasmpattern[len]:='%';
-        c:=CurrentScanner.asmgetchar;
+        c:=CurrentScanner.AsmGetChar;
         { to be a register there must be a letter and not a number }
         if c in ['0'..'9'] then
          begin
@@ -142,25 +142,25 @@ Implementation
             Begin
               inc(len);
               actasmpattern[len]:=c;
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
             end;
            actasmpattern[0]:=chr(len);
            UpperVar(actasmpattern);
            if (actasmpattern = '%ST') and (c='(') then
             Begin
               actasmpattern:=actasmpattern+c;
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
               if c in ['0'..'9'] then
                actasmpattern:=actasmpattern + c
               else
                Message(asmr_e_invalid_fpu_register);
-              c:=CurrentScanner.asmgetchar;
+              c:=CurrentScanner.AsmGetChar;
               if c <> ')' then
                Message(asmr_e_invalid_fpu_register)
               else
                Begin
                  actasmpattern:=actasmpattern + c;
-                 c:=CurrentScanner.asmgetchar; { let us point to next character. }
+                 c:=CurrentScanner.AsmGetChar; { let us point to next character. }
                end;
             end;
            if is_register(actasmpattern) then
@@ -234,7 +234,7 @@ Implementation
 
         var
           tmp : tx86operand;
-          expr : string;
+          Expr : string;
         begin
           if actasmtoken=AS_REGISTER then
            Begin
@@ -244,26 +244,26 @@ Implementation
            end
           else if actasmtoken=AS_ID then
             begin
-              expr:=actasmpattern;
+              Expr:=actasmpattern;
               Consume(AS_ID);
               tmp:=Tx86Operand.Create;
-              if not tmp.SetupVar(expr,false) then
+              if not tmp.SetupVar(Expr,false) then
                 begin
                   { look for special symbols ... }
-                  if expr= '__HIGH' then
+                  if Expr= '__HIGH' then
                     begin
-                      consume(AS_LPAREN);
+                      Consume(AS_LPAREN);
                       if not tmp.setupvar('high'+actasmpattern,false) then
                         Message1(sym_e_unknown_id,'high'+actasmpattern);
-                      consume(AS_ID);
-                      consume(AS_RPAREN);
+                      Consume(AS_ID);
+                      Consume(AS_RPAREN);
                     end
                   else
-                    if expr = '__SELF' then
+                    if Expr = '__SELF' then
                       tmp.SetupSelf
                   else
                     begin
-                      message1(sym_e_unknown_id,expr);
+                      message1(sym_e_unknown_id,Expr);
                       RecoverConsume(false);
                       tmp.free;
                       Exit;
@@ -305,7 +305,7 @@ Implementation
         end;
 
       var
-        expr : string;
+        Expr : string;
         tmp : tx86operand;
       begin
         oper.InitRef;
@@ -356,26 +356,26 @@ Implementation
             end; {end case }
           AS_ID: { identifier (parameter, variable, ...), but only those that might be in a register }
             begin
-              expr:=actasmpattern;
+              Expr:=actasmpattern;
               Consume(AS_ID);
               tmp:=Tx86Operand.Create;
-              if not tmp.SetupVar(expr,false) then
+              if not tmp.SetupVar(Expr,false) then
                 begin
                   { look for special symbols ... }
-                  if expr= '__HIGH' then
+                  if Expr= '__HIGH' then
                     begin
-                      consume(AS_LPAREN);
+                      Consume(AS_LPAREN);
                       if not tmp.setupvar('high'+actasmpattern,false) then
                         Message1(sym_e_unknown_id,'high'+actasmpattern);
-                      consume(AS_ID);
-                      consume(AS_RPAREN);
+                      Consume(AS_ID);
+                      Consume(AS_RPAREN);
                     end
                   else
-                    if expr = '__SELF' then
+                    if Expr = '__SELF' then
                       tmp.SetupSelf
                   else
                     begin
-                      message1(sym_e_unknown_id,expr);
+                      message1(sym_e_unknown_id,Expr);
                       RecoverConsume(false);
                       tmp.free;
                       Exit;
@@ -476,7 +476,7 @@ Implementation
               { generate this automatically                      }
               if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
                 Message(asmr_e_invalid_reference_syntax);
-              consume(AS_AT);
+              Consume(AS_AT);
               if actasmtoken=AS_ID then
                 begin
 {$ifdef x86_64}
@@ -506,7 +506,7 @@ Implementation
                           Message(asmr_e_invalid_reference_syntax)
                       end;
                       oper.opr.Ref.RefAddr:=addr_pic;
-                      consume(AS_ID);
+                      Consume(AS_ID);
                     end
                   else
                     Message(asmr_e_invalid_reference_syntax);
@@ -536,7 +536,7 @@ Implementation
     Procedure TX86ATTReader.BuildOperand(oper : tx86operand);
       var
         tempstr,
-        expr : string;
+        Expr : string;
         typesize,l,k : TCGInt;
 
 
@@ -571,9 +571,9 @@ Implementation
             hasdot:=(actasmtoken=AS_DOT);
             if hasdot then
              begin
-               if expr<>'' then
+               if Expr<>'' then
                  begin
-                   BuildRecordOffsetSize(expr,toffset,tsize,MangledName,false);
+                   BuildRecordOffsetSize(Expr,toffset,tsize,MangledName,false);
                    if (oper.opr.typ<>OPR_CONSTANT) and
                       (MangledName<>'') then
                     Message(asmr_e_wrong_sym_type);
@@ -724,7 +724,7 @@ Implementation
         tempreg : TRegister;
         hl      : TAsmLabel;
       Begin
-        expr:='';
+        Expr:='';
         case actasmtoken of
           AS_LPAREN: { Memory reference or constant expression }
             Begin
@@ -804,11 +804,11 @@ Implementation
                   end
                  else
                   begin
-                    expr:=actasmpattern;
+                    Expr:=actasmpattern;
                     Consume(AS_ID);
                     { typecasting? }
                     if (actasmtoken=AS_LPAREN) and
-                       SearchType(expr,typesize) then
+                       SearchType(Expr,typesize) then
                      begin
                        oper.hastype:=true;
                        Consume(AS_LPAREN);
@@ -819,30 +819,30 @@ Implementation
                      end
                     else
                      begin
-                       if oper.SetupVar(expr,false) then
+                       if oper.SetupVar(Expr,false) then
                          MaybeGetPICModifier(oper)
                        else
                         Begin
                           { look for special symbols ... }
-                          if expr= '__HIGH' then
+                          if Expr= '__HIGH' then
                             begin
-                              consume(AS_LPAREN);
+                              Consume(AS_LPAREN);
                               if not oper.setupvar('high'+actasmpattern,false) then
                                 Message1(sym_e_unknown_id,'high'+actasmpattern);
-                              consume(AS_ID);
-                              consume(AS_RPAREN);
+                              Consume(AS_ID);
+                              Consume(AS_RPAREN);
                             end
                           else
-                           if expr = '__RESULT' then
+                           if Expr = '__RESULT' then
                             oper.SetUpResult
                           else
-                           if expr = '__SELF' then
+                           if Expr = '__SELF' then
                             oper.SetupSelf
                           else
-                           if expr = '__OLDEBP' then
+                           if Expr = '__OLDEBP' then
                             oper.SetupOldEBP
                           else
-                            Message1(sym_e_unknown_id,expr);
+                            Message1(sym_e_unknown_id,Expr);
                         end;
                      end;
                   end;

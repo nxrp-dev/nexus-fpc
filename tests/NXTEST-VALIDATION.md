@@ -143,4 +143,46 @@ correcting the expression wrapper. The regression now checks both `True` and
 `False`; its skip was removed. The general `SysUtils.BoolToStr` API and its
 callers are unchanged. The other suites were not rerun for this one-wrapper
 correction. See [NXTEST-FAILURES.md](NXTEST-FAILURES.md) for the remaining six
-unresolved cases and the local before/after evidence location.
+unresolved cases at that stage and the local before/after evidence location.
+
+## PKG-001 follow-up: optimized symbolic address assignments
+
+The corrected `OptPass1MOV` SIMD-copy rule excludes symbolic immediates
+(`RefAddr = addr_full`). The lifecycle project now builds at `-O2` and replaces
+its optimized-case skip with four native `Compiler.X86.MovePairs` regressions.
+The existing full lifecycle assertions remain enabled in their own suite.
+
+The original SDK compiler fails to assemble both new address cases. On
+2026-10-18, the existing bootstrap script was run from the repository root:
+
+```sh
+python3 ../nexus-private/scripts/linux/bootstrap-nexusfpc.py \
+  /media/kcollins/dev/source/nexus-fpc --allow-dirty \
+  --toolchain-root /media/kcollins/dev/worktree/pkg-001-move-pairs/toolchain
+```
+
+It completed successfully with compiler cycles 2 and 3 identical and all 89 RTL
+objects matching. All artifacts are under
+`/media/kcollins/dev/worktree/pkg-001-move-pairs`:
+
+- Installed SDK: `toolchain/nexus-fpc/x86_64-linux/d9f54ab727-work-da393de8fb`.
+- Bootstrap logs: `toolchain/build/nexus-fpc-d9f54ab727-work-da393de8fb/logs`.
+- Test commands, assembly, build/run logs and results: `validation`.
+
+The script's optimizer source was checked against the corrected working-tree
+file, and the installed compiler hash against its `build-identity.json`.
+`validation/results.json` retains that compiler identity and SHA-256.
+
+That installed compiler and matching RTL pass **5 cases with 0 failures, 0 errors
+and 0 skips** for each of `-O1`, `-O2`, and `-O2 -CfAVX` on native Linux x64.
+The test builds use the lifecycle project's compiler options with the installed
+compiler/RTL paths and separate output directories. The two memory-copy controls
+still emit MOVDQU/VMOVDQU; all variants preserve the exact lifecycle trace
+`BLRHCF!fchrlb`. The shared nxbuild environment still points to its earlier SDK.
+No cross-target validation was run.
+
+The migration snapshot table above remains historical; other suites were not
+rerun for this correction. Five RTL fixture failures and the Unicode-default
+environment requirement remain in the failure register. The earlier
+`/tmp/pkg-001-fix` experiments are diagnostic evidence. No build output is kept
+in the source checkout.

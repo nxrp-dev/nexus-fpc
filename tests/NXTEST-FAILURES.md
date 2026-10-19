@@ -12,9 +12,8 @@ Remove the corresponding skip only after reproducing the correction.
 | RTL-003 | `RTL.Sysutils.twstrcmp` | Line 25: `Illegal compiler directive "MODESWITCH UNICODESTRINGS"`. | The fixture still uses a retired directive. Determine its intended ANSI/Unicode configurations. |
 | RTL-004 | `RTL.Unix.ttimezone1` | Lines 12 and 30: `Identifier not found "Result"`. | The source uses `Result` without selecting a supporting language mode. Preserve the default-mode failure pending an explicit fixture configuration decision. |
 | RTL-005 | `RTL.Unicode.WideStrings.tcpstr9fpwidestring` | Line 3: `MODE DELPHIUNICODE requires -MUNICODESTRINGS`. | Same configuration issue as RTL-002, through the wide-string provider. Keep the two API paths represented. |
-| PKG-001 | `Packages.Lifecycle.OptimizedReferenceArrayCopy` | At `-O2`, Clang rejects `movdqu $...REF+8,%xmm0` as an invalid operand. | The unchanged original program and the native unit both reproduce the immediate-address SIMD load. The lifecycle suite builds with `-O-` and its full descriptor/diamond/rollback/finalization assertions pass. The optimized variant is separately skipped on Linux x86-64. |
 
-The fixture skips are in `rtl/fixtures.tsv`; PKG-001 calls
+The fixture skips are in `rtl/fixtures.tsv`; TEXT-001 calls
 `TNXTestContext.Skip` directly. Unknown future failures remain failures; no
 catch-all conversion from errors to skips exists.
 
@@ -29,9 +28,85 @@ compiler output, and runtime output under a new run directory. The fixture
 source's options and expected exit status are read by the existing, tested
 `tsutils.GetConfig` parser.
 
-For PKG-001, remove the project's `-O-` override and build at `-O2`; both the native unit and
-the original program at the pre-migration revision reproduce the assembler
-error. The normal lifecycle test remains enabled at `-O-`.
+## Resolved PKG-001: symbolic addresses in SIMD move merging
+
+The generic x86-64 peephole optimizer's `OptPass1MOV` rule
+`MovMovMovMov2MovdqMovdq` in `compiler/x86/aoptx86.pas` (around line 4475)
+merges two adjacent 8-byte memory copies into one 16-byte SIMD copy. Its faulty
+source operand check accepted `top_ref`, which represents both memory operands
+and symbolic address constants. It omitted the `RefAddr <> addr_full` check
+needed to distinguish the two.
+
+The lifecycle trigger is `Dep[3,0]:=@Ref[1]; Dep[3,1]:=@Ref[2]`. A standalone
+reduction requires no package or test-framework units:
+
+```pascal
+program AddressPair;
+{$mode objfpc}
+type PValue = ^PtrUInt; PPValue = ^PValue;
+var Refs: array[0..2] of PValue;
+    Slots: array[0..1] of PPValue;
+begin
+  Slots[0] := @Refs[1];
+  Slots[1] := @Refs[2];
+  if (Slots[0] <> @Refs[1]) or (Slots[1] <> @Refs[2]) then Halt(1);
+end.
+```
+
+Correct scalar code stores the two addresses, loaded as `movq $Refs+8,reg` and
+`movq $Refs+16,reg`. The faulty rule sees equal source symbols and offsets eight
+bytes apart, then changes the load to `movdqu` while retaining `addr_full`.
+The AT&T writer in `compiler/x86/agx86att.pas` correctly renders that address
+constant with `$`; MOVDQU/VMOVDQU have no immediate-source form. Both Clang and
+GNU as reject it. Removing `$` would read the contents at Refs instead of
+forming the required addresses and would change program behavior.
+
+Verified on the matching Linux x64 SDK recorded in NXTEST-VALIDATION.md:
+
+- `-O-` passes; `-O1` and `-O2` reproduce the failure. `-O2 -CfAVX` reproduces
+  the AVX form at compile time. Other OS/backend configurations were not run.
+- `-O2 -OoNOPEEPHOLE` passes both the reducer and the full original lifecycle
+  program, whose trace remains `BLRHCF!fchrlb`. `-O2 -Cg` also passes the reducer
+  because address formation uses a different instruction pattern.
+- An isolated diagnostic compiler logs the exact rule accepting `RefAddr=1`
+  (`addr_full`), source offsets 8/16 and the Refs symbol before emitting the
+  invalid load. The optimizer source is byte-identical to the SDK source.
+- An isolated compiler with only `(SourceRef.RefAddr <> addr_full)` added to
+  the merge condition passes the reducer at `-O1`/`-O2` and the full original
+  lifecycle program at `-O2`. Descending address assignments also pass. Genuine
+  ascending/descending memory-copy controls still emit MOVDQU and pass, so the
+  experiment preserves that optimization for real memory operands.
+
+The repository compiler now excludes `addr_full` sources from this merge rule.
+`NXPackageLifecycleTests` builds with `-O2`; the old optimized-case skip and
+`-O-` workaround are removed. Its full lifecycle case runs alongside four
+focused native `Compiler.X86.MovePairs` cases in
+`compiler-regressions/tsNXMovePairs.pas`: address formation and genuine memory
+copies, each with ascending and descending stores.
+
+With the unfixed compiler, the focused regression fails compilation at both
+address cases. With the bootstrap-installed compiler and matching RTL, the full
+project passes
+**5 cases, 0 failures, 0 errors and 0 skips** at each of `-O1`, `-O2`, and
+`-O2 -CfAVX` on native Linux x64. The memory-copy cases retain MOVDQU/VMOVDQU;
+neither address case emits an immediate-source SIMD load. The original
+lifecycle trace remains `BLRHCF!fchrlb`.
+
+Validation on 2026-10-18 used the existing
+`../nexus-private/scripts/linux/bootstrap-nexusfpc.py` script against this working
+tree, with `--allow-dirty` and a toolchain root under
+`/media/kcollins/dev/worktree/pkg-001-move-pairs`. Compiler cycles 2 and 3 matched,
+as did all 89 RTL objects. The bootstrapped optimizer source was verified
+byte-identical to the corrected working-tree source.
+
+The SDK, bootstrap logs and test outputs are all under that worktree directory.
+`validation/results.json` records the installed compiler's identity and hash and
+all three test variants; their subdirectories retain exact compiler commands,
+build/run logs and assembly. See [NXTEST-VALIDATION.md](NXTEST-VALIDATION.md) for
+the bootstrap command and artifact paths. The shared nxbuild environment still
+selects its older SDK; it was not changed by this validation. Other target
+platforms were not run. The earlier `/tmp/pkg-001-analysis` and
+`/tmp/pkg-001-fix` experiments are diagnostic evidence.
 
 ## Other explicit skips
 

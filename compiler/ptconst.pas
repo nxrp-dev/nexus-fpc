@@ -27,7 +27,7 @@ interface
 
    uses symtype,SymSym,AAsmData;
 
-    procedure read_typed_const(list:TAsmList;sym:TStaticVarSym;in_structure:boolean);
+    procedure ReadTypedConst(AList:TAsmList;ASym:TStaticVarSym;AInStructure:Boolean);
 
 
 implementation
@@ -41,39 +41,39 @@ implementation
        symconst,SymBase,symdef
        ;
 
-    procedure read_typed_const(list:TAsmList;sym:TStaticVarSym;in_structure:boolean);
+    procedure ReadTypedConst(AList:TAsmList;ASym:TStaticVarSym;AInStructure:Boolean);
       var
-        storefilepos : TFilePosInfo;
-        tcbuilder    : TTypedConstBuilder;
-        reslist,
-        datalist     : TAsmList;
+        lSavedFilePos : TFilePosInfo;
+        lBuilder    : TTypedConstBuilder;
+        lResultList,
+        lDataList     : TAsmList;
       begin
         { mark the staticvarsym as typedconst }
-        include(sym.VarOptions,vo_is_typed_const);
+        include(ASym.VarOptions,vo_is_typed_const);
         { The variable has a value assigned }
-        sym.VarState:=vs_initialised;
+        ASym.VarState:=vs_initialised;
         { the variable can't be placed in a register }
-        sym.VarRegable:=vr_none;
+        ASym.VarRegable:=vr_none;
 
         { generate data for typed const }
-        storefilepos:=CurrentFilePos;
-        CurrentFilePos:=sym.fileinfo;
+        lSavedFilePos:=CurrentFilePos;
+        CurrentFilePos:=ASym.fileinfo;
 
-        maybe_new_object_file(list);
-        tcbuilder:=TAsmListTypedConstBuilderClass(CTypedConstBuilder).Create(sym);
-        TAsmListTypedConstBuilder(tcbuilder).parse_into_asmlist;
+        maybe_new_object_file(AList);
+        lBuilder:=TAsmListTypedConstBuilderClass(CTypedConstBuilder).Create(ASym);
+        TAsmListTypedConstBuilder(lBuilder).parse_into_asmlist;
 
         { Parse hints }
-        try_consume_hintdirective(sym.SymOptions,sym.DeprecatedMsg);
+        TryConsumeHintDirective(ASym.SymOptions,ASym.DeprecatedMsg);
 
-        consume(_SEMICOLON);
+        Consume(_SEMICOLON);
 
         { parse public/external/export/... }
-        if not in_structure and
+        if not AInStructure and
            (
             (
-             (CurrentScanner.token = _ID) and
-             ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
+             (CurrentScanner.FToken = _ID) and
+             ((CurrentScanner.FIDToken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.FIDToken = _WEAKEXTERNAL)) and
              (m_cvar_support in CurrentSettings.ModeSwitches)
             ) or
             (
@@ -84,27 +84,27 @@ implementation
              )
             )
            ) then
-          read_public_and_external(sym);
+          ReadPublicAndExternal(ASym);
 
 
-        if not parse_generic then
+        if not ParseGeneric then
           begin
-            if vo_is_public in sym.VarOptions then
-              CurrentModule.Add_Public_AsmSym(sym.MangledName,AB_GLOBAL,AT_DATA);
+            if vo_is_public in ASym.VarOptions then
+              CurrentModule.Add_Public_AsmSym(ASym.MangledName,AB_GLOBAL,AT_DATA);
 
             { only now get the final asmlist, because inserting the symbol
               information depends on potential section information set above }
-            TAsmListTypedConstBuilder(tcbuilder).get_final_asmlists(reslist,datalist);
+            TAsmListTypedConstBuilder(lBuilder).get_final_asmlists(lResultList,lDataList);
             { add the parsed value }
-            list.ConcatList(reslist);
+            AList.ConcatList(lResultList);
             { and pointed data, if any }
-            CurrentAsmData.asmlists[al_const].ConcatList(datalist);
+            CurrentAsmData.asmlists[al_const].ConcatList(lDataList);
             { the (empty) lists themselves are freed by tcbuilder }
           end;
 
-        tcbuilder.free;
-        tcbuilder := nil;
-        CurrentFilePos:=storefilepos;
+        lBuilder.free;
+        lBuilder := nil;
+        CurrentFilePos:=lSavedFilePos;
       end;
 
 end.
