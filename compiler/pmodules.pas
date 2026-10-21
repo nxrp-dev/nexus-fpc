@@ -37,6 +37,10 @@ uses FModule;
     function FinishCompileUnit(AModule:TModule): Boolean;
     function FinishUnit(AModule:TModule): Boolean;
 
+    function ContinueModuleHeader(AModule: TModule): Boolean;
+    function ContinueModuleUses(AModule: TModule): Boolean;
+    function FinishModuleEmission(AModule: TModule): Boolean;
+
 implementation
 
     uses
@@ -192,40 +196,25 @@ implementation
         CheckResourcesUsed:=lFound;
       end;
 
-    function AddUnit(AModule : TModule; const AName:String; AAddAsUsed:Boolean = true): TPPUModule;
+    function RegisterImplicitUnit(AModule: TModule; const AName: String): TPPUModule;
       var
-        lModule : TPPUModule;
-        lUnitSym : TUnitSym;
-        lIsNew : Boolean;
-        lUsedUnit: TUsedUnit;
-
+        lModule: TPPUModule;
+        lUnitSym: TUnitSym;
+        lIsNew: Boolean;
       begin
-        { load unit }
         lModule:=RegisterUnit(AModule,AName,'',lIsNew);
-        if lIsNew then
-          UsedUnits.concat(TUsedUnit.Create(lModule,true,AAddAsUsed,nil));
-        lModule.AddDependency(AModule,AModule.InInterface); { adddependency before loadppu for invalid cycle test }
-        lModule.LoadPPU(AModule);
-        TModule.Finish_Module(lModule);
-
-        { add to symtable stack }
-        if Assigned(lModule.GlobalSymTable) then
-          SymTableStack.push(lModule.GlobalSymTable);
-        if (m_mac in CurrentSettings.ModeSwitches) and
-            Assigned(lModule.GlobalMacroSymTable) then
-          MacroSymTableStack.push(lModule.GlobalMacroSymTable);
-        { insert unitsym }
-        lUnitSym:=CUnitSym.Create(lModule.ModuleName^,lModule);
-        inc(lUnitSym.refs);
-        TAbstractUnitSymTable(AModule.LocalSymTable).InsertUnit(lUnitSym);
-        if AAddAsUsed then
-        begin
-          { add to used units }
-          lUsedUnit:=AModule.AddUsedUnit(lModule,false,lUnitSym);
-          lUsedUnit.DependentAdded:=true;
-        end;
         Result:=lModule;
+        if lIsNew then
+          UsedUnits.concat(TUsedUnit.Create(lModule,AModule.InInterface,false,nil));
+        if Assigned(AModule.FindUsedUnit(lModule)) then
+          exit;
+        lUnitSym:=CUnitSym.Create(lModule.ModuleName^,nil);
+        inc(lUnitSym.refs);
+        AModule.AddUsedUnit(lModule,false,lUnitSym);
       end;
+
+    function LoadUnits(AModule: TModule; AFromInterface: Boolean): Boolean; forward;
+    procedure ConnectLoadedUnits(AModule: TModule; APreserveSymTable: TSymTable); forward;
 
     function MaybeLoadVariantsUnit(AModule : TModule) : Boolean;
       var
@@ -244,7 +233,14 @@ implementation
         while Assigned(lModule) do
           begin
             if (lModule.ModuleName^='VARIANTS') or (lModule.ModuleName^='SYSTEM.VARIANTS') then
-              exit;
+              begin
+                if lModule<>AModule then
+                  begin
+                    RegisterImplicitUnit(AModule,lModule.ModuleName^);
+                    Result:=LoadUnits(AModule,AModule.InInterface);
+                  end;
+                exit;
+              end;
             lModule:=TModule(lModule.next);
           end;
         { Variants unit is not loaded yet, load it now }
@@ -252,7 +248,8 @@ implementation
         lAddSystemNamespace:=NamespaceList.Find('System')=Nil;
         if lAddSystemNamespace then
           NamespaceList.concat('System');
-        Result:=AddUnit(AModule,'variants').state in [ms_compiled,ms_processed];
+        RegisterImplicitUnit(AModule,'variants');
+        Result:=LoadUnits(AModule,AModule.InInterface);
         if lAddSystemNamespace then
           NamespaceList.Remove('System');
       end;
@@ -333,13 +330,11 @@ implementation
       end;
 
 
-    function LoadSystemUnit(AModule : TModule) : Boolean;
+    procedure BindSystemUnit(AModule: TModule);
       var
         lState: TGlobalState;
-        lSystemModule : TModule;
 
       begin
-        Result:=False;
         { we are going to rebuild the symtablestack, clear it first }
         SymTableStack.clear;
         MacroSymTableStack.clear;
@@ -363,8 +358,7 @@ implementation
 
         { insert the system unit, it is always the first. Load also the
           internal types from the system unit }
-        lSystemModule:=AddUnit(AModule,'system');
-        Result:=Assigned(lSystemModule) and (lSystemModule.State in [ms_processed,ms_compiled]);
+        ConnectLoadedUnits(AModule,nil);
         SystemUnit:=TGlobalSymTable(SymTableStack.top);
 
         { load_intern_types resets the scanner... }
@@ -374,8 +368,7 @@ implementation
         lState.restore;
         FreeAndNil(lState);
         CurrentScanner.TempOpenInputFile;
-        if Result then
-          CheckSystemCharWidth;
+        CheckSystemCharWidth;
 
         { Set the owner of errorsym and errortype to symtable to
           prevent crashes when accessing .owner }
@@ -387,123 +380,75 @@ implementation
       end;
 
 
-    { load default units, like language mode units
-      Return true if all units were loaded, no recompilation needed. }
-    function LoadDefaultUnits(AModule :TModule) : Boolean;
-
-      procedure RegisterRuntimeUnit(const AName: String);
-        var
-          lModule: TPPUModule;
-          lUnitSym: TUnitSym;
-          lIsNew: Boolean;
-        begin
-          lModule:=RegisterUnit(AModule,AName,'',lIsNew);
-          if lIsNew then
-            UsedUnits.concat(TUsedUnit.Create(lModule,false,true,nil));
-          lUnitSym:=CUnitSym.Create(lModule.ModuleName^,nil);
-          inc(lUnitSym.refs);
-          AModule.AddUsedUnit(lModule,true,lUnitSym);
-        end;
-
-      Procedure CheckAddUnit(AName: String);
-
-        var
-          lOK : Boolean;
-          lModule : TModule;
-
-        begin
-          lModule:=AddUnit(AModule,AName,true);
-          lOK:=Assigned(lModule) and (lModule.state in [ms_processed,ms_compiled]);
-          if not lOK then
-            Message2(unit_f_cant_find_ppu,AName,AModule.RealModuleName^);
-          Result:=lOK and Result;
-        end;
-
+    { Register implicit runtime and language dependencies in initialization order. }
+    procedure RegisterDefaultUnits(AModule: TModule);
       begin
-        Result:=True;
         { Units only required for main module }
         if not(AModule.IsUnit) then
          begin
            { Heaptrc unit, load heaptrace before any other units especially objpas }
            if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) then
-             RegisterRuntimeUnit('heaptrc');
+             RegisterImplicitUnit(AModule,'heaptrc');
            { Valgrind requires c memory manager }
            if (cs_gdb_valgrind in CurrentSettings.GlobalSwitches) or
               (([cs_sanitize_address]*CurrentSettings.ModuleSwitches)<>[]) then
-             CheckAddUnit('cmem');
+             RegisterImplicitUnit(AModule,'cmem');
            { Lineinfo unit }
            if (cs_use_lineinfo in CurrentSettings.GlobalSwitches) then begin
-             CheckAddUnit('lnfodwrf');
+             RegisterImplicitUnit(AModule,'lnfodwrf');
            end;
            { Which kind of resource support?
              Note: if resources aren't used this unit will be removed later,
              otherwise we need it here since it must be loaded quite early }
            if (tf_has_winlike_resources in TargetInfo.flags) then
-             CheckAddUnit('fpintres');
+             RegisterImplicitUnit(AModule,'fpintres');
          end
         else if (cs_checkpointer in CurrentSettings.LocalSwitches) then
-          CheckAddUnit('heaptrc');
+          RegisterImplicitUnit(AModule,'heaptrc');
         { Objpas unit? }
         if m_objpas in CurrentSettings.ModeSwitches then
-          CheckAddUnit('objpas');
+          RegisterImplicitUnit(AModule,'objpas');
 
-        { Optional runtimes can require a source rebuild. Register them as
-          implicit uses entries for loadunits and sequential continuation. }
+        { Add the profiling runtime through the same implicit dependency path. }
         if not AModule.IsUnit and not AModule.IsLibrary and
            (TargetInfo.system=system_x86_64_win64) and
            (cs_nexus_profile in CurrentSettings.ModuleSwitches) then
-          RegisterRuntimeUnit('nxprofilerruntime');
+          RegisterImplicitUnit(AModule,'nxprofilerruntime');
 
         { Macpas unit? }
         if m_mac in CurrentSettings.ModeSwitches then
-          CheckAddUnit('macpas');
+          RegisterImplicitUnit(AModule,'macpas');
 
         if m_iso in CurrentSettings.ModeSwitches then
-          CheckAddUnit('iso7185');
+          RegisterImplicitUnit(AModule,'iso7185');
 
         { blocks support? }
         if m_blocks in CurrentSettings.ModeSwitches then
-          CheckAddUnit('blockrtl');
+          RegisterImplicitUnit(AModule,'blockrtl');
 
         { Objective-C support unit? }
         if (m_objectivec1 in CurrentSettings.ModeSwitches) then
           begin
             { interface to Objective-C run time }
-            CheckAddUnit('objc');
-            LoadObjCTypes;
+            RegisterImplicitUnit(AModule,'objc');
             { NSObject }
             if not(AModule.IsUnit) or
                (AModule.ModuleName^<>'OBJCBASE') then
-              CheckAddUnit('objcbase');
+              RegisterImplicitUnit(AModule,'objcbase');
           end;
       end;
 
-    { Load units provided on the command line
-      Return true if all units were loaded, no recompilation needed. }
-    function LoadAutoUnits(AModule: TModule) : Boolean;
-
-      Procedure CheckAddUnit(AName: String);
-
-        var
-          lOK : Boolean;
-          lModule : TModule;
-
-        begin
-          lModule:=AddUnit(AModule,AName,true);
-          lOK:=Assigned(lModule) and (lModule.state in [ms_compiled,ms_processed]);
-          Result:=lOK and Result;
-        end;
-
+    { Register units provided on the command line. }
+    procedure RegisterAutoUnits(AModule: TModule);
       var
-        lAutoUnits,lName : String;
+        lAutoUnits,lName: String;
       begin
-        Result:=True;
         lAutoUnits:=AutoloadUnits;
         repeat
           lName:=GetToken(lAutoUnits,',');
           if lName='' then
             break;
-          CheckAddUnit(lName);
+          RegisterImplicitUnit(AModule,lName);
         until false;
       end;
 
@@ -627,9 +572,8 @@ implementation
         while Assigned(lUsedUnit) do
           begin
             lLoadedModule:=lUsedUnit.u;
-            { Only load the units that are in the current
-              (interface/implementation) uses clause }
-            if lUsedUnit.InUses and
+            { Load unconnected dependencies of this phase, including implicit units. }
+            if not lUsedUnit.SymbolsConnected and
                (lUsedUnit.InInterface=AFromInterface) then
              begin
                { adddependency before loadppu for invalid cycle test }
@@ -640,7 +584,7 @@ implementation
                end;
                { always call loadppu for the cycle test }
                TPPUModule(lLoadedModule).LoadPPU(AModule);
-               if not (AModule.state in [ms_compile,ms_compiling_wait,ms_compiling_waitintf,ms_compiling_waitimpl]) then
+               if not (AModule.state in [ms_compile,ms_compiling_waitheader,ms_compiling_waitdefaults,ms_compiling_wait,ms_compiling_waitintf,ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiling_waitemit]) then
                begin
                  {$IFDEF DEBUG_PPU_CYCLES}
                  WriteLn('loadunits STOPPED ',AModule.ModuleName^,' ',AModule.StateStr);
@@ -698,14 +642,15 @@ implementation
          else
            Writeln(_module.modulename^,': Examining unit without module... ');
          }
-         if not (lUsedUnit.InUses and
-            (lUsedUnit.InInterface=AModule.InInterface)) then
+         if lUsedUnit.SymbolsConnected or not Assigned(lUsedUnit.UnitSym) or
+            (lUsedUnit.InInterface<>AModule.InInterface) then
            begin
 //           writeln('Must not connect ',pu.u.modulename^,' (pu.in_interface: ',pu.in_interface,' <> module.in_interface',_module.in_interface,')');
            end
          else
            begin
 //           writeln('Must connect ',pu.u.modulename^,'(sym: ',pu.unitsym.realname,')');
+           lUsedUnit.SymbolsConnected:=true;
            { save crc values }
            lUsedUnit.checksum:=lUsedUnit.u.crc;
            lUsedUnit.InterfaceChecksum:=lUsedUnit.u.InterfaceCRC;
@@ -1222,8 +1167,6 @@ type
          lString1,lString2  : ^String; {Saves stack space}
          lUnitName : AnsiString;
          lUnitName8 : String[8];
-         lFeature : TFeature;
-         lLoadOK : Boolean;
 
       begin
          Result:=true;
@@ -1300,82 +1243,15 @@ type
            the same name }
          TAbstractUnitSymTable(AModule.LocalSymTable).InsertUnit(CUnitSym.Create(AModule.RealModuleName^,AModule));
 
-         { load default system unit, it must be loaded before interface is parsed
-           else we cannot use e.g. feature switches before the next real token }
          if AModule.IsInitial then
            Load_Packages;
-         lLoadOK:=LoadSystemUnit(AModule);
-
-         { system unit is loaded, now insert feature defines }
-         for lFeature:=low(TFeature) to high(TFeature) do
-           if lFeature in Features then
-             Def_System_Macro('FPC_HAS_FEATURE_'+FeatureStr[lFeature]);
-
-         Consume(_INTERFACE);
-
-         { global switches are read, so further changes aren't allowed  }
-         AModule.InGlobal:=false;
-
-         message1(unit_u_loading_interface_units,AModule.ModuleName^);
-
-         { update status }
-         status.CurrentModule:=AModule.RealModuleName^;
-
-         { maybe turn off m_objpas if we are compiling objpas }
-         if (AModule.ModuleName^='OBJPAS') then
-           exclude(CurrentSettings.ModeSwitches,m_objpas);
-
-         { maybe turn off m_mac if we are compiling macpas }
-         if (AModule.ModuleName^='MACPAS') then
-           exclude(CurrentSettings.ModeSwitches,m_mac);
-
-         ParseOnly:=true;
-
-         { load default units, like language mode units }
-         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
-           lLoadOK:=LoadDefaultUnits(AModule) and lLoadOK;
-
-         { insert qualifier for the system unit (allows system.writeln) }
-         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
-            (CurrentScanner.FToken=_USES) then
-           begin
-             // We do this as late as possible.
-             if Assigned(AModule) then
-               AModule.LoadLocalNamespaceList
-             else
-               CurrentNamespaceList:=Nil;
-             ParseUsesClause(AModule);
-             lLoadOK:=LoadUnits(AModule,true) and lLoadOK and not TModule.CTask_Fast_Backtrack;
-             { has it been compiled at a higher level ?}
-             if AModule.state in [ms_compiled,ms_processed] then
-               begin
-                 Message1(parser_u_already_compiled,AModule.RealModuleName^);
-                 exit;
-               end;
-
-             AModule.ConsumeSemicolonAfterUses:=true;
-           end
-         else
-           AModule.ConsumeSemicolonAfterUses:=false;
-
-         { move the global symtable from the temporary local to global }
-         CurrentModule.GlobalSymTable:=CurrentModule.LocalSymTable;
-         CurrentModule.LocalSymTable:=nil;
-
-         { Now we check if we can continue. }
-
-         if not lLoadOK then
-           AModule.state:=ms_compiling_waitintf;
-
-         { create whole program optimisation information (may already be
-           updated in the interface, e.g., in case of classrefdef typed
-           constants }
-         AModule.WPOInfo:=TUnitWPOInfo.Create;
-
-         { Can we continue compiling ? }
-         Result:=AModule.state<>ms_compiling_waitintf;
+         if not (cs_compilesystem in CurrentSettings.ModuleSwitches) then
+           RegisterImplicitUnit(AModule,'system');
+         Result:=LoadUnits(AModule,true);
          if Result then
-           Result:=ParseUnitInterfaceDeclarations(AModule);
+           Result:=ContinueModuleHeader(AModule)
+         else
+           AModule.State:=ms_compiling_waitheader;
       end;
 
     procedure ModuleIsDone(AModule: TModule);inline;
@@ -1386,22 +1262,6 @@ type
 
     function FinishCompileUnit(AModule: TModule): Boolean;
 
-      function IsAssemblerGenerated:Boolean;
-      var
-        lAsmListType : TAsmListType;
-      begin
-        Result:=false;
-        if ErrorCount=0 then
-          begin
-            for lAsmListType:=low(TAsmListType) to high(TAsmListType) do
-              if not CurrentAsmData.asmlists[lAsmListType].empty then
-                begin
-                  Result:=true;
-                  exit;
-                end;
-          end;
-      end;
-
       var
 {$ifdef EXTDEBUG}
         lStoredCRC,
@@ -1409,9 +1269,8 @@ type
         lForceInitFinal : Boolean;
         lInitializationProcedure,
         lFinalizationProcedure : TCGProcInfo;
-        lAsmGenerated , lWaitDependency: Boolean;
         lFinishState : TFinishState;
-        lOldModule, lWaitModule: TModule;
+        lOldModule: TModule;
       begin
          Result:=true;
          { curr is now module }
@@ -1562,9 +1421,38 @@ type
          { if an Objective-C module, generate rtti and module info }
          MaybeGenerateObjectiveCImageInfo(AModule.GlobalSymTable,AModule.LocalSymTable);
 
-         { do we need to add the variants unit? }
-         MaybeLoadVariantsUnit(AModule);
+         Result:=MaybeLoadVariantsUnit(AModule);
+         if Result then
+           Result:=FinishModuleEmission(AModule)
+         else
+           AModule.State:=ms_compiling_waitemit;
+         SetCurrentModule(lOldModule);
+      end;
 
+    function EmitUnit(AModule: TModule): Boolean;
+
+      function IsAssemblerGenerated:Boolean;
+      var
+        lAsmListType : TAsmListType;
+      begin
+        Result:=false;
+        if ErrorCount=0 then
+          begin
+            for lAsmListType:=low(TAsmListType) to high(TAsmListType) do
+              if not CurrentAsmData.asmlists[lAsmListType].empty then
+                begin
+                  Result:=true;
+                  exit;
+                end;
+          end;
+      end;
+
+      var
+        lAsmGenerated, lWaitDependency: Boolean;
+        lOldModule, lWaitModule: TModule;
+      begin
+         lOldModule:=CurrentModule;
+         SetCurrentModule(AModule);
          { generate rtti/init tables }
          Write_Persistent_Type_Info(AModule.GlobalSymTable,true);
          Write_Persistent_Type_Info(AModule.LocalSymTable,false);
@@ -1888,34 +1776,12 @@ type
            already provided by one of the loaded packages }
          Load_Packages;
 
-         if PackageList.Count>0 then
-           begin
-             { this means the SYSTEM unit *must* be part of one of the required
-               packages, so load it }
-             AddUnit(AModule,'system',false);
-             SystemUnit:=TGlobalSymTable(SymTableStack.top);
-             LoadInternTypes;
-             CheckSystemCharWidth;
-             { system unit is loaded, now insert feature defines }
-             for lFeature:=low(TFeature) to high(TFeature) do
-               if lFeature in Features then
-                 Def_System_Macro('FPC_HAS_FEATURE_'+FeatureStr[lFeature]);
-           end;
-
-         { Register contained units before yielding to the existing scheduler. }
-         AModule.ConsumeSemicolonAfterUses:=false;
-         if (CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_CONTAINS) then
-           begin
-             { Cached contained units can dereference built-in types while
-               loading their dependencies, before finish_package is reached. }
-             if not Assigned(SystemUnit) then
-               LoadSystemUnit(AModule);
-             ParseUsesClause(AModule,true);
-             LoadUnits(AModule,false);
-             AModule.ConsumeSemicolonAfterUses:=true;
-           end;
-         AModule.state:=ms_compiling_wait;
-         Result:=false;
+         RegisterImplicitUnit(AModule,'system');
+         Result:=LoadUnits(AModule,false);
+         if Result then
+           Result:=ContinueModuleHeader(AModule)
+         else
+           AModule.State:=ms_compiling_waitheader;
       end;
 
     function FinishPackage(AModule: TModule) : Boolean;
@@ -1962,11 +1828,11 @@ type
                begin
                  if mf_package_deny in lModule.ModuleFlags then
                    message1(package_e_unit_deny_package,lModule.RealModuleName^);
-                 { part of the package's used, aka contained units? }
+                 { Was this unit explicitly listed in the contains clause? }
                  lUsedUnit:=TUsedUnit(AModule.UsedUnitList.first);
                  while Assigned(lUsedUnit) do
                    begin
-                     if lUsedUnit.u=lModule then
+                     if (lUsedUnit.u=lModule) and lUsedUnit.InUses then
                        break;
                      lUsedUnit:=TUsedUnit(lUsedUnit.next);
                    end;
@@ -1979,7 +1845,7 @@ type
                  lUsedUnit:=TUsedUnit(AModule.UsedUnitList.first);
                  while Assigned(lUsedUnit) do
                    begin
-                     if lUsedUnit.u=lModule then
+                     if (lUsedUnit.u=lModule) and lUsedUnit.InUses then
                        break;
                      lUsedUnit:=TUsedUnit(lUsedUnit.next);
                    end;
@@ -2307,14 +2173,11 @@ type
     procedure ProcProgramAfterParsing(AModule : TModule; AIsLibrary : Boolean);
 
       var
-        lSystemInitModule, lModule,lNextModule : TModule;
-        lResourcesUsed : Boolean;
+        lModule,lNextModule : TModule;
 
       begin
-        lSystemInitModule:=nil;
         lModule:=nil;
         lNextModule:=nil;
-        lResourcesUsed:=false;
 
 
         { reset wpo flags for all defs }
@@ -2357,22 +2220,22 @@ type
         { do we need to add the variants unit? }
         MaybeLoadVariantsUnit(AModule);
 
-        { Now that everything has been compiled we know if we need resource
-          support. If not, remove the unit. }
-        lResourcesUsed:=MaybeRemoveResUnit(AModule);
-
         linker.initsysinitunitname;
         if (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) and
            Assigned(Find_Module_From_SymTable(SystemUnit).package) then
           linker.sysinitunit:='sysinitpkg';
         if TargetInfo.system in systems_internal_sysinit then
-        begin
-          { add start/halt unit }
-          lSystemInitModule:=AddUnit(AModule,linker.sysinitunit);
-        end
-        else
-          lSystemInitModule:=nil;
+          begin
+            AModule.StartupModule:=RegisterImplicitUnit(AModule,linker.sysinitunit);
+          end;
+        LoadUnits(AModule,false);
+        AModule.State:=ms_compiling_waitemit;
+      end;
 
+    procedure EmitProgram(AModule: TModule);
+      begin
+        { Final dependency discovery is complete, including resource users. }
+        MaybeRemoveResUnit(AModule);
         CNodeUtils.InsertThreadvars;
 
         { generate rtti/init tables }
@@ -2385,7 +2248,7 @@ type
         if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
           CurrentDebugInfo.inserttypeinfo;
 
-        if AIsLibrary or (TargetInfo.system in systems_unit_program_exports) then
+        if AModule.IsLibrary or (TargetInfo.system in systems_unit_program_exports) then
           exportlib.generatelib;
 
         { Reference all DEBUGINFO sections from the main .fpc section }
@@ -2452,7 +2315,7 @@ type
         { create the executable when we are at level 1 }
 
         if (not AModule.IsUnit) and (AModule.IsInitial) then
-          ProcCreateExecutable(AModule,lSystemInitModule,AIsLibrary);
+          ProcCreateExecutable(AModule,AModule.StartupModule,AModule.IsLibrary);
 
         { Give Fatal with error count for linker errors }
         if (ErrorCount>0) and not status.SkipError then
@@ -2661,6 +2524,7 @@ type
 
 
         ProcProgramAfterParsing(AModule,AIsLibrary);
+        Result:=AModule.State=ms_compiled;
 
 
       end;
@@ -2696,21 +2560,14 @@ type
 
       end;
 
-    type
-      TProgramParam = record
-        Name : AnsiString;
-        Number : DWord;
-      end;
-      TProgramParamArray = array of TProgramParam;
-
-      procedure ProcProgramHeader(AModule: TModule; out AProgramParams : TProgramParamArray);
+      procedure ProcProgramHeader(AModule: TModule);
 
         var
           lProgramName : AnsiString;
           lParamNum : Integer;
 
         begin
-          AProgramParams:=nil;
+          AModule.ProgramParams:=nil;
           Consume(_PROGRAM);
           lProgramName:=CurrentScanner.FOrgPattern;
           Consume(_ID);
@@ -2733,8 +2590,8 @@ type
                      if (CurrentScanner.FPattern<>'INPUT') and (CurrentScanner.FPattern<>'OUTPUT') then
                        begin
                          { the symtablestack is not setup here, so text must be created later on }
-                         SetLength(AProgramParams,length(AProgramParams)+1);
-                         with AProgramParams[high(AProgramParams)] do
+                         SetLength(AModule.ProgramParams,length(AModule.ProgramParams)+1);
+                         with AModule.ProgramParams[high(AModule.ProgramParams)] do
                            begin
                              Name:=CurrentScanner.FPattern;
                              Number:=lParamNum;
@@ -2758,13 +2615,6 @@ type
 
       var
          lMainFile : TInputFile;
-         lConsumeSemicolonAfterLoaded : Boolean;
-         lProgramParaSym : TProgramParaSym;
-         lTextSym : TTypeSym;
-         lProgramParams : TProgramParamArray;
-         lIndex : LongInt;
-         lFeature : TFeature;
-         lLoadOK : Boolean;
 
       begin
          Result:=true;
@@ -2772,10 +2622,10 @@ type
          Status.IsPackage:=false;
          Status.IsExe:=true;
          ParseOnly:=false;
-         lConsumeSemicolonAfterLoaded:=false;
+         AModule.ConsumeSemicolonAfterHeader:=false;
 
          { make the compiler happy and avoid an uninitialized variable warning on Setlength(sc,length(sc)+1); }
-         lProgramParams:=nil;
+         AModule.ProgramParams:=nil;
 
          { DLL defaults to create reloc info }
          if AIsLibrary or (TargetInfo.system in [system_aarch64_win64]) then
@@ -2794,13 +2644,13 @@ type
          if AIsLibrary then
            begin
              ProcLibraryHeader(AModule);
-             lConsumeSemicolonAfterLoaded:=true;
+             AModule.ConsumeSemicolonAfterHeader:=true;
            end
          else if CurrentScanner.FToken=_PROGRAM then
            { is there an program head ? }
            begin
-             ProcProgramHeader(AModule,lProgramParams);
-             lConsumeSemicolonAfterLoaded:=true;
+             ProcProgramHeader(AModule);
+             AModule.ConsumeSemicolonAfterHeader:=true;
            end
          else
            begin
@@ -2824,70 +2674,127 @@ type
            of the program                                              }
          AModule.LocalSymTable:=TStaticSymTable.Create(AModule.RealModuleName^,AModule.ModuleID);
 
-         { load system unit }
-         lLoadOK:=LoadSystemUnit(AModule);
-
-         { consume the semicolon now that the system unit is loaded }
-         if lConsumeSemicolonAfterLoaded then
-           Consume(_SEMICOLON);
-
-         { global switches are read, so further changes aren't allowed }
-         AModule.InGlobal:=false;
-
-         { system unit is loaded, now insert feature defines }
-         for lFeature:=low(TFeature) to high(TFeature) do
-           if lFeature in Features then
-             Def_System_Macro('FPC_HAS_FEATURE_'+FeatureStr[lFeature]);
-
-         { load standard units, e.g objpas,profile unit }
-         lLoadOK:=LoadDefaultUnits(AModule) and lLoadOK;
-
-         { Load units provided on the command line }
-         lLoadOK:=LoadAutoUnits(AModule) and lLoadOK;
-
-         { insert iso program parameters }
-         if length(lProgramParams)>0 then
-           begin
-             lTextSym:=Search_System_Type('TEXT');
-             if not(Assigned(lTextSym)) then
-               InternalError(2013011201);
-             for lIndex:=0 to high(lProgramParams) do
-               begin
-                 lProgramParaSym:=CProgramParaSym.Create(lProgramParams[lIndex].Name,lProgramParams[lIndex].Number);
-                 AModule.LocalSymTable.InsertSym(lProgramParaSym,true);
-               end;
-           end;
-
-         { Load the units used by the program we compile. }
-         if CurrentScanner.FToken=_USES then
-           begin
-             // We can do this here: if there is no uses then the namespace directive makes no sense.
-             if Assigned(AModule) then
-               AModule.LoadLocalNamespaceList
-             else
-               CurrentNamespaceList:=Nil;
-             ParseUsesClause(AModule);
-             AModule.ConsumeSemicolonAfterUses:=true;
-           end
-         else begin
-           AModule.ConsumeSemicolonAfterUses:=false;
-           if TModule.CTask_Fast_Backtrack then
-             lLoadOK:=false; { some used units are not fully compiled }
-         end;
-
-         { Also load compiler-injected dependencies when there is no uses clause. }
-         lLoadOK:=LoadUnits(AModule,false) and lLoadOK;
-
-         if AModule.IsInitial then
-           lLoadOK:=false; { delay program, so ctask can finish all units }
-         if not lLoadOK then
-           AModule.state:=ms_compiling_wait;
-
-         { Can we continue compiling ? }
-
-         Result:=AModule.state<>ms_compiling_wait;
+         RegisterImplicitUnit(AModule,'system');
+         Result:=LoadUnits(AModule,false);
          if Result then
-           Result:=ProcProgramDeclarations(AModule,AIsLibrary)
+           Result:=ContinueModuleHeader(AModule)
+         else
+           AModule.State:=ms_compiling_waitheader;
+      end;
+
+    function ContinueModuleHeader(AModule: TModule): Boolean;
+      var
+        lFeature: TFeature;
+      begin
+        BindSystemUnit(AModule);
+        if not AModule.IsUnit and not AModule.IsPackage and
+           AModule.ConsumeSemicolonAfterHeader then
+          begin
+            Consume(_SEMICOLON);
+            AModule.ConsumeSemicolonAfterHeader:=false;
+          end;
+        for lFeature:=low(TFeature) to high(TFeature) do
+          if lFeature in Features then
+            Def_System_Macro('FPC_HAS_FEATURE_'+FeatureStr[lFeature]);
+
+        if AModule.IsPackage then
+          exit(ContinueModuleUses(AModule));
+        if AModule.IsUnit then
+          begin
+            Consume(_INTERFACE);
+            message1(unit_u_loading_interface_units,AModule.ModuleName^);
+            Status.CurrentModule:=AModule.RealModuleName^;
+            if AModule.ModuleName^='OBJPAS' then
+              exclude(CurrentSettings.ModeSwitches,m_objpas);
+            if AModule.ModuleName^='MACPAS' then
+              exclude(CurrentSettings.ModeSwitches,m_mac);
+            ParseOnly:=true;
+          end;
+        AModule.InGlobal:=false;
+        if not (cs_compilesystem in CurrentSettings.ModuleSwitches) then
+          RegisterDefaultUnits(AModule);
+        if not AModule.IsUnit then
+          RegisterAutoUnits(AModule);
+        Result:=LoadUnits(AModule,AModule.InInterface);
+        if Result then
+          Result:=ContinueModuleUses(AModule)
+        else
+          AModule.State:=ms_compiling_waitdefaults;
+      end;
+
+    function ContinueModuleUses(AModule: TModule): Boolean;
+      var
+        lIndex: LongInt;
+        lLoadOK: Boolean;
+      begin
+        ConnectLoadedUnits(AModule,nil);
+        AModule.UpdateMaps;
+        if not AModule.IsPackage and
+           (m_objectivec1 in CurrentSettings.ModeSwitches) then
+          LoadObjCTypes;
+        if length(AModule.ProgramParams)>0 then
+          begin
+            if not Assigned(Search_System_Type('TEXT')) then
+              InternalError(2013011201);
+            for lIndex:=0 to high(AModule.ProgramParams) do
+              AModule.LocalSymTable.InsertSym(CProgramParaSym.Create(
+                AModule.ProgramParams[lIndex].Name,AModule.ProgramParams[lIndex].Number),true);
+            AModule.ProgramParams:=nil;
+          end;
+
+        AModule.ConsumeSemicolonAfterUses:=false;
+        if AModule.IsPackage then
+          begin
+            if (CurrentScanner.FToken=_ID) and (CurrentScanner.FIDToken=_CONTAINS) then
+              begin
+                ParseUsesClause(AModule,true);
+                AModule.ConsumeSemicolonAfterUses:=true;
+              end;
+          end
+        else if not (cs_compilesystem in CurrentSettings.ModuleSwitches) and
+                    (CurrentScanner.FToken=_USES) then
+          begin
+            AModule.LoadLocalNamespaceList;
+            ParseUsesClause(AModule);
+            AModule.ConsumeSemicolonAfterUses:=true;
+          end;
+        lLoadOK:=LoadUnits(AModule,AModule.InInterface);
+        if AModule.IsUnit then
+          begin
+            if AModule.State in [ms_compiled,ms_processed] then
+              exit(true);
+            AModule.GlobalSymTable:=AModule.LocalSymTable;
+            AModule.LocalSymTable:=nil;
+            AModule.WPOInfo:=TUnitWPOInfo.Create;
+            if not lLoadOK then
+              AModule.State:=ms_compiling_waitintf;
+            Result:=lLoadOK;
+            if Result then
+              Result:=ParseUnitInterfaceDeclarations(AModule);
+          end
+        else
+          begin
+            if AModule.IsInitial or AModule.IsPackage then
+              lLoadOK:=false;
+            if not lLoadOK then
+              AModule.State:=ms_compiling_wait;
+            Result:=lLoadOK;
+            if Result then
+              Result:=ProcProgramDeclarations(AModule,AModule.IsLibrary);
+          end;
+      end;
+
+    function FinishModuleEmission(AModule: TModule): Boolean;
+      begin
+        ConnectLoadedUnits(AModule,nil);
+        AModule.UpdateMaps;
+        if AModule.IsUnit then
+          Result:=EmitUnit(AModule)
+        else
+          begin
+            EmitProgram(AModule);
+            Result:=AModule.State=ms_compiled;
+          end;
       end;
 
 end.

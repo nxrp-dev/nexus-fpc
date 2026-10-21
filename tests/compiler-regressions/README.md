@@ -194,10 +194,37 @@ record parameters and retained network/UTF-16BE/GUID conversions.
 and rejection of retired, mixed and missing byte-order flags. Run both with
 `tests/switches/Run-NXRemovedBigEndianTests.sh` and matching compiler/RTL units.
 
-`implicit_heaptrc_source.pas` reproduces internal error 2026032615 when `-gh`
-needs to compile HeapTrc from source. `Run-NXImplicitHeapTrcTests.sh` builds the
-original RTL source directly, verifies the second build loads the unchanged
-cached unit, and requires a clean runtime heap report with `-gh -gl` enabled.
+## Implicit dependencies
+
+Build `ImplicitRuntimeTests.nxproject` with nxbuild, then run:
+
+```text
+ImplicitRuntimeTests <source-root> <compiler> <matching-rtl-units> <external-output>
+```
+
+The Linux x86-64 NXTests compile original source fixtures and RTL sources through
+the normal dependency loader. They cover explicit and `-Fa` dependencies, cached
+units, stale dependency checksums, symbol visibility, initialization/finalization
+order, valid implementation cycles and rejected interface cycles. Source-built
+System, ObjPas, ISO7185, HeapTrc, line information, startup and late-discovered Variants
+exercise the compiler's different continuation points. Package cases distinguish
+implicit imports from explicit `contains` ownership claims.
+
+Five cases additionally require procedure, file and line names in runtime
+backtraces: source-built, cached and installed line information, a PIE executable,
+and a fixed-address executable without the optional `PT_PHDR` descriptor. The
+latter changes that ELF descriptor to `PT_NULL` in the generated test artifact;
+Pascal source, machine code, load segments and DWARF are unchanged. The tests
+check the actual ELF executable type. The PIE control uses the native x86-64
+Linux interpreter at `/lib64/ld-linux-x86-64.so.2`.
+
+All 22 cases pass with the repaired ELF load-address calculation. The original
+failure and its upstream introduction are recorded in
+[the failure history](../NXTEST-FAILURES.md#runtime-backtrace-symbolization).
+
+The narrower `Run-NXImplicitHeapTrcTests.sh` runner builds the original HeapTrc
+source directly, verifies unchanged cached artifacts on a second build, and
+requires a clean runtime heap report with `-gh -gl` enabled.
 
 ## Windows debug artifacts and linker paths
 

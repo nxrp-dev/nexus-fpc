@@ -99,7 +99,11 @@ interface
       end;
       TDerefMapArray = array of TDerefMapRec;
 
-      TFinishModuleEvent = procedure(m: TModule) of object;
+      TProgramParam = record
+        Name: AnsiString;
+        Number: DWord;
+      end;
+      TProgramParamArray = array of TProgramParam;
       TRenameModuleEvent = procedure(m: TModule; const oldname: TSymStr) of object;
 
       { tused_unit }
@@ -113,6 +117,7 @@ interface
         U               : TModule;
         UnitSym         : TUnitSym;
         DependentAdded : Boolean;
+        SymbolsConnected: Boolean; { source consumer has bound this dependency's symbols and CRCs }
         constructor Create(AUnit : TModule;IntFace,AInUses:Boolean;USym:TUnitSym);
         procedure Check_Hints;
       end;
@@ -243,6 +248,9 @@ interface
         DeprecatedMsg: PShortString;
         CompileCount : Integer;
         ConsumeSemicolonAfterUses : Boolean;
+        ConsumeSemicolonAfterHeader: Boolean;
+        ProgramParams: TProgramParamArray;
+        StartupModule: TModule;
         InitFinalChecked : Boolean;
         FuncTypeChecked : Boolean;
 
@@ -302,7 +310,6 @@ interface
         class procedure Increase_Cycle_Stamp;
         procedure Disconnect_Depending_Modules; virtual;
         function Is_Reload_Needed(DU: TDependentUnit): Boolean; virtual; // true if reload needed after self changed
-        class var Finish_Module: TFinishModuleEvent;
         procedure AddImportedSym(Sym:TSymEntry; CheckIfExists: Boolean = True);
         procedure DerefImportedSymbols;
         function  AddUsedUnit(HP:TModule;AInUses:Boolean;USym:TUnitSym):TUsedUnit;
@@ -857,6 +864,9 @@ implementation
         M : TModule;
       begin
         IsReset:=True;
+        ProgramParams:=nil;
+        ConsumeSemicolonAfterHeader:=False;
+        StartupModule:=nil;
         DoRecompile:=False;
         FromPPU:=False;
         if Assigned(Scanner) then
@@ -1226,13 +1236,13 @@ implementation
 
         if InterfaceCompiled then
         begin
-          if State in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf] then
+          if State in [ms_registered,ms_compile,ms_compiling_waitheader,ms_compiling_waitdefaults,ms_compiling_wait,ms_compiling_waitintf] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' interface_compiled=true');
             InternalError(2026021912);
           end;
         end else begin
-          if State in [ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed] then
+          if State in [ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiling_waitemit,ms_compiled_waitcrc,ms_compiled,ms_processed] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' interface_compiled=false');
             InternalError(2026021911);
@@ -1241,8 +1251,8 @@ implementation
 
         if CRCFinal then
         begin
-          if State in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf,
-            ms_compiling_waitimpl,ms_compiling_waitfinish] then
+          if State in [ms_registered,ms_compile,ms_compiling_waitheader,ms_compiling_waitdefaults,ms_compiling_wait,ms_compiling_waitintf,
+            ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiling_waitemit] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' crc_final=true');
             InternalError(2026021910);
@@ -1271,8 +1281,14 @@ implementation
 
     function TModule.Is_Reload_Needed(DU: TDependentUnit): Boolean;
       { du.u is a module using this unit }
+      var
+        lUsedUnit: TUsedUnit;
       begin
-        Result:=(DU.U.State in [ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed])
+        lUsedUnit:=DU.U.FindUsedUnit(Self);
+        if not DU.U.FromPPU and Assigned(lUsedUnit) and
+           not lUsedUnit.SymbolsConnected then
+          exit(false);
+        Result:=(DU.U.State in [ms_compiling_waitfinish,ms_compiling_waitemit,ms_compiled_waitcrc,ms_compiled,ms_processed])
              or (DU.InInterface and DU.U.InterfaceCompiled);
         { Note: see also the override in fppu.tppumodule }
       end;

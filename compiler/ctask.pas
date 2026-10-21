@@ -62,7 +62,6 @@ type
     FirstTask: TTask;
     function CreateTask(M: TModule): TTask;
     procedure FreeTask(T: TTask);
-    procedure FinishModule(M: TModule);
     procedure QueueModule(M: TModule);
     function RestoreTaskState(M: TModule): TTask;
     function ReloadModule(M: TModule): TTask;
@@ -78,7 +77,6 @@ type
     procedure RecompileSCC(SCCRoot: TModule);
     function CheckCompiledUses(Dst: TModule): TModule;
   public
-    constructor Create;
     destructor Destroy; override;
     { Find the task for module m }
     function FindTask(M : TModule; AutoCreate: Boolean = False) : TTask;
@@ -179,11 +177,6 @@ end;
 
 { ttask_handler }
 
-constructor TTaskHandler.Create;
-begin
-  TModule.Finish_Module:=@FinishModule;
-end;
-
 destructor TTaskHandler.Destroy;
 begin
   while FirstTask<>Nil do
@@ -226,110 +219,6 @@ begin
   Dec(TaskCount);
 end;
 
-procedure TTaskHandler.FinishModule(M: TModule);
-{ finish loading special units added by the compiler itself, e.g. variants.nxu
-  No reloads, no recompiles }
-
-  function FindCanContinue(Root: TModule): TModule;
-  var
-    UU: TUsedUnit;
-    FirstWaiting: TModule;
-  begin
-    Result:=Nil;
-    if Root.CycleSearchStamp=TModule.Cycle_Stamp then Exit;
-    Root.CycleSearchStamp:=TModule.Cycle_Stamp;
-
-    if Root.DoRecompile then
-      begin
-        // e.g. system.nxu not found
-        TPPUModule(Root).Check_Sources_For_Recompile;
-        WriteLn('ttask_handler.finishmodule ',Root.ModuleName^,' ',Root.StateStr);
-        InternalError(2026032615);
-      end
-    else if not (Root.State in [ms_registered,ms_load,ms_compiled,ms_processed]) then
-      begin
-        WriteLn('ttask_handler.finishmodule ',Root.ModuleName^,' ',Root.StateStr);
-        InternalError(2026030401);
-      end;
-
-    { finish used units first }
-    UU:=TUsedUnit(Root.UsedUnitList.First);
-    while Assigned(UU) do
-      begin
-        Result:=FindCanContinue(UU.U);
-        if Assigned(Result) then Exit;
-        UU:=TUsedUnit(UU.Next);
-      end;
-
-    if not (Root.State in [ms_compiled,ms_processed])
-        and CanContinue(Root,FirstWaiting) then
-      Exit(Root);
-  end;
-
-  procedure FindUnfinished(Root: TModule);
-  { find unfinished unit(s) and write message }
-  var
-    UU: TUsedUnit;
-    UM: TModule;
-  begin
-    if Root.CycleSearchStamp=TModule.Cycle_Stamp then Exit;
-    Root.CycleSearchStamp:=TModule.Cycle_Stamp;
-
-    if Root.State in [ms_compiled,ms_processed] then
-      begin
-        UU:=TUsedUnit(Root.UsedUnitList.First);
-        while Assigned(UU) do
-          begin
-            FindUnfinished(UU.U);
-            UU:=TUsedUnit(UU.Next);
-          end;
-        Exit;
-      end;
-
-    { check for invalid unit cycle }
-    UU:=TUsedUnit(Root.UsedUnitList.First);
-    while Assigned(UU) and (UU.U.State in [ms_compiled,ms_processed]) do
-      UU:=TUsedUnit(UU.Next);
-    if UU<>Nil then
-      Message2(unit_f_circular_unit_reference,Root.RealModuleName^,UU.U.RealModuleName^);
-
-    if Root.WaitingForUnit<>Nil then
-      begin
-        UM:=TModule(Root.WaitingForUnit[0]);
-        Message2(unit_f_circular_unit_reference,Root.RealModuleName^,UM.RealModuleName^);
-      end;
-
-    WriteLn('CTASK: cannot finish module ',Root.RealModuleName^);
-    InternalError(2026030301);
-  end;
-
-var
-  Next: TModule;
-  State: TGlobalState;
-begin
-  if M.SCCFinished then Exit;
-
-  State:=Nil;
-  repeat
-    TModule.Increase_Cycle_Stamp;
-    Next:=FindCanContinue(M);
-    if Next=Nil then Break;
-    if State=Nil then
-      State:=TGlobalState.Create(True);
-    {$IF defined(DEBUG_CTASK) or defined(Debug_FreeParseMem)}WriteLn('CTASK-finish: continuing ',Next.ToString,' state=',Next.StateStr,' total-units=',Loaded_Units.Count,' tasks=',TaskCount);{$ENDIF}
-    Continue_Module(Next);
-  until False;
-
-  TModule.Increase_Cycle_Stamp;
-  FindUnfinished(M);
-
-  if State<>Nil then
-    begin
-      State.Restore;
-      State.Free;
-    end;
-end;
-
 procedure TTaskHandler.QueueModule(M: TModule);
 var
   T: TTask;
@@ -361,6 +250,9 @@ begin
       ms_registered : CanContinue:=True;
       ms_load: CanContinue:=TPPUModule(M).PPULoadCanContinue(FirstWaiting);
       ms_compile : CanContinue:=True;
+      ms_compiling_waitheader,
+      ms_compiling_waitdefaults,
+      ms_compiling_waitemit : CanContinue:=M.UsedUnitsLoaded(M.InInterface,FirstWaiting);
       ms_compiling_wait : CanContinue:=M.UsedUnitsLoaded(True,FirstWaiting);
       ms_compiling_waitintf : CanContinue:=M.UsedUnitsLoaded(True,FirstWaiting);
       ms_compiling_waitimpl : CanContinue:=M.UsedUnitsLoaded(False,FirstWaiting);
@@ -426,6 +318,9 @@ begin
         Parser.CompileModule(M);
       end;
     ms_compiled : ;
+    ms_compiling_waitheader : PModules.ContinueModuleHeader(M);
+    ms_compiling_waitdefaults : PModules.ContinueModuleUses(M);
+    ms_compiling_waitemit : PModules.FinishModuleEmission(M);
     ms_compiling_wait :
       if M.IsPackage then
         PModules.FinishPackage(M)
@@ -706,7 +601,8 @@ begin
           PU:=TUsedUnit(M.UsedUnitList.First);
           while Assigned(PU) do
             begin
-              if PU.InInterface or CheckCRC then
+              if (M.FromPPU or PU.SymbolsConnected) and
+                 (PU.InInterface or CheckCRC) then
                 begin
                   if (PU.U.InterfaceCompiled
                       and ((PU.U.InterfaceCRC<>PU.InterfaceChecksum)

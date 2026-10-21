@@ -1966,6 +1966,7 @@ var
                   { uses by implementation }
                   case M.State of
                   ms_compiling_waitfinish,
+                  ms_compiling_waitemit,
                   ms_compiled_waitcrc:
                     ; { m has crc of its impl uses }
                   ms_compiled,
@@ -1981,6 +1982,7 @@ var
             while Assigned(UU) do
               begin
                 if (UU.U=Self)
+                    and (M.FromPPU or UU.SymbolsConnected)
                     and ( (InterfaceCRC<>UU.InterfaceChecksum)
                         or (IndirectCRC<>UU.IndirectChecksum)
                         or (CheckCRC and (CRC<>UU.Checksum) ) ) then

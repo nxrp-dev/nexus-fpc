@@ -1,0 +1,4 @@
+package implicit_package_consumer;
+requires implicit_package_base;
+contains implicit_plain_unit;
+end.

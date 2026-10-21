@@ -1,0 +1,3 @@
+package implicit_package_base;
+contains FPCPackage, FpIntRes;
+end.

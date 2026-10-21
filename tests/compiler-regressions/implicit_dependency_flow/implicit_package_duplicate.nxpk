@@ -1,0 +1,4 @@
+package implicit_package_duplicate;
+requires implicit_package_base;
+contains FPCPackage;
+end.

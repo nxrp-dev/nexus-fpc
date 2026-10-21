@@ -99,11 +99,14 @@ remain available. Check with
 `bash tests/switches/Run-NXRemovedBigEndianTests.sh <compiler> <rtl-units>
 <compiler-units> <output>`.
 
-When `-gh` needs HeapTrc from source, the compiler registers it with the normal
-serial uses-unit loader. It no longer sends that source build through the
-compiled-unit-only loader that raised internal error 2026032615. Validate the
-source and cached-unit paths with
-`bash tests/switches/Run-NXImplicitHeapTrcTests.sh <compiler> <rtl-units> <output>`.
+Compiler-injected dependencies use the same sequential dependency loader as
+explicit `uses` entries. This includes System, language/runtime units, `-Fa`
+autoloads and startup units. Compilation resumes when the declarations needed
+by its current phase are available; dependencies discovered after parsing are
+resolved before final emission. Source and cached units follow the same rules,
+without a separate compiled-unit-only loader. See
+[`ImplicitRuntimeTests`](tests/compiler-regressions/README.md#implicit-dependencies)
+for source, cache, cycle, initialization and package-ownership regressions.
 
 Extended Pascal mode and its `ExtPas` RTL unit are retired. `-Mextendedpascal`
 uses the ordinary illegal-parameter diagnostic; `{$mode extendedpascal}` uses

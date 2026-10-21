@@ -156,16 +156,55 @@ The SysUtils implementation and declarations retain their original SHA-256
 values. Build logs, before/after results and the consumer audit are under
 `/media/kcollins/dev/worktree/expression-booltostr`.
 
-## Implicit line information from source
+## Runtime backtrace symbolization
 
-`ImplicitRuntimeTests` (`tests/compiler-regressions/ImplicitRuntimeTests.nxproject`)
-registers `ImplicitRuntime.LineInfoFromSource`. With `-gl` and the original
-`rtl/inc` source directory before the installed RTL unit directory, the compiler
-selects `lnfodwrf.pas` and raises internal error 2026032615 in
-`TTaskHandler.FinishModule`. The same minimal program builds when the installed
-RTL directory comes first. This source-loading defect remains unresolved; the
-regression expects successful compilation and currently fails. The system
-application recipes place their installed RTL dependency before source support.
+Resolved in `rtl/inc/exeinfo.pas`. Upstream commit
+[`2ba3a9521c767b3ab326636bb93a1929fb13d07d`](https://github.com/fpc/FPCSource/commit/2ba3a9521c767b3ab326636bb93a1929fb13d07d)
+(Pierre Muller; authored September 19, 2023, committed June 2, 2025) replaced
+the executable-base calculation with a backward ELF-header search to support
+PIE. LLVM can map file offset zero at two different addresses in an ordinary
+ELF executable. The search accepted the second header, producing a $1000 error
+in the load adjustment and preventing runtime DWARF address lookup. PIC was
+enabled in the failing x86-64 build; fixed-address linking and PIC generation
+are separate choices.
 
-Run the test executable with the compiler source root, matching compiler,
+The repair uses the loader's `AT_PHDR` address and the executable's program
+headers. When the optional `PT_PHDR` descriptor is absent, it reads `e_phoff`
+from the running executable and finds its containing `PT_LOAD` segment. The
+file's program headers must match the loader's table. This preserves PIE
+support and removes the memory search and its exit-handler recovery hook.
+
+`ImplicitRuntimeTests` now has 22 passing cases, with no failures, errors or
+skips. `LineInfoBacktraceFromSource`, `LineInfoCached` and `LineInfoInstalled`
+all identify `RaiseWithBacktrace` and its source location. New `LineInfoPIE`
+and `LineInfoWithoutPHDR` cases cover PIE and the optional-header fallback.
+Against the unchanged RTL, the final suite reports 18 passes and four failures;
+the PIE control passes before and after the repair.
+
+A fresh Forge bootstrap from stock FPC 3.2.2 passed in 106.12 seconds. Compiler
+generations two and three and all 89 RTL objects match byte for byte; both
+native/shared-library bootstrap NXTests pass. Additional x86-64 controls pass
+with LLVM and GNU linkers for ordinary and PIE executables, using identical
+object inputs for each link. i386 ordinary executables pass with both linkers.
+The 30 existing compiler recompilation NXTests also pass. Forge cross builds
+pass for i386/ARM64 Linux and x86-64/ARM64 Android; object inspection confirms
+each includes the repaired reader. Together with the native build, these cover
+all five affected ELF targets. Android and ARM64 runtime execution was not run.
+An attempted i386 PIE control was invalid for the existing non-PIC i386 RTL:
+LLD rejected its absolute relocations. Its build policy was not changed.
+
+A proposed PIE fixture with its `PT_PHDR` descriptor removed failed inside
+`ld-linux` (`dl_main`, before Pascal entry). It was not retained as an RTL test;
+the retained optional-header fixture is a valid fixed-address executable.
+
+The separate source-loading internal error 2026032615 is resolved by routing all
+implicit dependencies through the existing sequential loader. The removed
+`FinishModule` path allowed compiled units only; source compilation instead
+needed to return to `ProcessQueue`. Released FPC 3.2.2 handled this synchronously.
+The original failure was also reproduced with unmodified upstream compiler
+`33fe3a02f3ac738afbb4e682fc390ba601fb0d77`.
+
+Run `ImplicitRuntimeTests` with the compiler source root, matching compiler,
 matching RTL unit directory and an external output directory, in that order.
+Verification artifacts are under
+`/media/kcollins/dev/worktree/nxpc-elf-load-base-2_km88l9`.

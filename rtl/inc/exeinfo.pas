@@ -545,139 +545,168 @@ type
 {$if defined(ELF32) or defined(ELF64)}
 
 {$ifdef FIND_BASEADDR_ELF}
+{ PT_PHDR is optional. When it is absent, read e_phoff from the executable
+  and locate that file offset in PT_LOAD. Verify the file's program headers
+  against AT_PHDR before using it, including when AT_EXECFN names a replaced
+  executable. /proc/self/exe continues to name the running image after a rename. }
+function ReadElfProgramHeaderOffset(const AFileName: ansistring;
+  AHeaders: pointer; ACount: ptruint; var AOffset: ptruint): boolean;
 var
-  LocalJmpBuf : Jmp_Buf;
-procedure LocalError;
+  lFile: file;
+  lFileMode: word;
+  lHeader: telfheader;
+  lProgramHeader: telfproghdr;
+  lReadCount, lError: longint;
+  lIndex: ptruint;
+  lHeaderPointer: ^telfproghdr;
+  lValid: boolean;
 begin
-  Longjmp(LocalJmpBuf,1);
+  ReadElfProgramHeaderOffset:=false;
+  if AFileName='' then
+    exit;
+  assign(lFile,AFileName);
+  {$push}{$I-}
+  lFileMode:=FileMode;
+  FileMode:=$40;
+  reset(lFile,1);
+  FileMode:=lFileMode;
+  lError:=IOResult;
+  if lError<>0 then
+    exit;
+  blockread(lFile,lHeader,sizeof(lHeader),lReadCount);
+  lError:=IOResult;
+  lValid:=(lError=0) and (lReadCount=sizeof(lHeader)) and
+    (lHeader.magic0123=$464c457f) and
+    (lHeader.e_phentsize=sizeof(telfproghdr)) and
+    (lHeader.e_phnum=ACount) and (lHeader.e_phoff>=sizeof(lHeader));
+  if lValid then
+    begin
+      seek(lFile,lHeader.e_phoff);
+      lValid:=IOResult=0;
+      lHeaderPointer:=AHeaders;
+      lIndex:=0;
+      while lValid and (lIndex<ACount) do
+        begin
+          blockread(lFile,lProgramHeader,sizeof(lProgramHeader),lReadCount);
+          lError:=IOResult;
+          lValid:=(lError=0) and (lReadCount=sizeof(lProgramHeader)) and
+            (CompareByte(lProgramHeader,lHeaderPointer^,sizeof(lProgramHeader))=0);
+          inc(lHeaderPointer);
+          inc(lIndex);
+        end;
+    end;
+  close(lFile);
+  lError:=IOResult;
+  {$pop}
+  if lValid and (lError=0) then
+    begin
+      AOffset:=lHeader.e_phoff;
+      ReadElfProgramHeaderOffset:=true;
+    end;
 end;
 
-procedure GetExeInMemoryBaseAddr(addr : pointer; var BaseAddr : pointer;
-                                 var filename : ansistring);
+procedure GetExeInMemoryBaseAddr(AAddr: pointer; var ABaseAddr: pointer;
+  var AFileName: ansistring);
 type
-  AT_HDR = record
-    typ : ptruint;
-    value : ptruint;
+  TAuxEntry = record
+    Kind: ptruint;
+    Value: ptruint;
   end;
-  P_AT_HDR = ^AT_HDR;
-
-{ Values taken from /usr/include/linux/auxvec.h }
+  PAuxEntry = ^TAuxEntry;
 const
-  AT_HDR_COUNT = 5;{ AT_PHNUM }
-  AT_HDR_SIZE = 4; { AT_PHENT }
-  AT_HDR_Addr = 3; { AT_PHDR }
-  AT_HDR_PageSize = 6; {AT_PAGESZ }
-  AT_EXE_FN = 31;  {AT_EXECFN }
-  max_elf_attempt = 256; { limit the number of pages checked for ELF prefix }
+  cATPHDR = 3;
+  cATPHENT = 4;
+  cATPHNUM = 5;
+  cATExecFN = 31;
+  cPTLoad = 1;
+  cPTPHDR = 6;
 var
-  pc : PPAnsiChar;
-  pat_hdr : P_AT_HDR;
-  i, phdr_count, elf_attempt : ptrint;
-  phdr_size : ptruint;
-  phdr :  ^telfproghdr;
-  found_addr, pagesize : ptruint;
-  pelf : pchar;
-  is_elf_start : boolean;
-  SavedExitProc : pointer;
+  lEnvironment: PPAnsiChar;
+  lAuxEntry: PAuxEntry;
+  lHeaders, lHeader: ^telfproghdr;
+  lCount, lEntrySize, lIndex: ptruint;
+  lImageAddress, lHeaderAddress, lHeaderOffset, lOffset: ptruint;
+  lHaveHeaderAddress: boolean;
 begin
-  filename:=ParamStr(0);
-  SavedExitProc:=ExitProc;
-  ExitProc:=@LocalError;
-  pc:=envp;
-  elf_attempt:=0;
-  phdr_count:=-1;
-  phdr_size:=0;
-  phdr:=nil;
-  pagesize:=ptruint(-1);
-  found_addr:=ptruint(-1);
-  pelf:=pchar(-1);
-  { Try, avoided in order to remove exception installation }
-  if SetJmp(LocalJmpBuf)=0 then
-  begin
-    while (assigned(pc^)) do
-      inc (pointer(pc), sizeof(ptruint));
-    inc(pointer(pc), sizeof(ptruint));
-    pat_hdr:=P_AT_HDR(pc);
-    while assigned(pat_hdr) do
-      begin
-        if (pat_hdr^.typ=0) and (pat_hdr^.value=0) then
-          break;
-        if pat_hdr^.typ = AT_HDR_COUNT then
-          phdr_count:=pat_hdr^.value;
-        if pat_hdr^.typ = AT_HDR_SIZE then
-          phdr_size:=pat_hdr^.value;
-        if pat_hdr^.typ = AT_HDR_Addr then
-          phdr := pointer(pat_hdr^.value);
-        if pat_hdr^.typ = AT_HDR_PageSize then
-          pagesize := ptruint(pat_hdr^.value);
-        if pat_hdr^.typ = AT_EXE_FN then
-          filename:=strpas(pansichar(pat_hdr^.value));
-        inc (pointer(pat_hdr),sizeof(AT_HDR));
+  ABaseAddr:=nil;
+  AFileName:=ParamStr(0);
+  lEnvironment:=envp;
+  if not assigned(lEnvironment) then
+    exit;
+  while assigned(lEnvironment^) do
+    inc(lEnvironment);
+  inc(lEnvironment);
+  lAuxEntry:=PAuxEntry(lEnvironment);
+  lHeaders:=nil;
+  lCount:=0;
+  lEntrySize:=0;
+  while lAuxEntry^.Kind<>0 do
+    begin
+      case lAuxEntry^.Kind of
+        cATPHDR: lHeaders:=pointer(lAuxEntry^.Value);
+        cATPHENT: lEntrySize:=lAuxEntry^.Value;
+        cATPHNUM: lCount:=lAuxEntry^.Value;
+        cATExecFN: AFileName:=strpas(pansichar(lAuxEntry^.Value));
       end;
-    if (phdr_count>0) and (phdr_size = sizeof (telfproghdr)) and  assigned(phdr) then
-      begin
-        for i:=0 to phdr_count -1 do
-          begin
-            if (phdr^.p_type = 1 {PT_LOAD}) and (ptruint(phdr^.p_vaddr) < ptruint(addr))
-               and ((found_addr=ptruint(-1)) or (found_addr<ptruint(phdr^.p_vaddr))) then
-              begin
-                found_addr:=phdr^.p_vaddr;
-                if pagesize=ptruint(-1) then
-                  pagesize:=phdr^.p_align;
-                if phdr^.p_offset < found_addr then
-                  dec(found_addr,phdr^.p_offset);
-              end;
-            inc(pointer(phdr), phdr_size);
-          end;
-      end;
+      inc(lAuxEntry);
+    end;
+  if not assigned(lHeaders) or (lCount=0) or
+     (lEntrySize<>sizeof(telfproghdr)) then
+    exit;
 
-    if (found_addr=ptruint(-1)) or ((found_addr < ptruint(phdr)) and (ptruint(phdr)<ptruint(addr))) then
-      found_addr:=ptruint(phdr);
-    { Set pagesize to a default small value }
-    if (pagesize=ptruint(-1)) then
-      pagesize:=$100;
-    pelf := pchar(found_addr and ptruint(not (pagesize-1)));
-    is_elf_start:=false;
-    repeat
-      if (pelf[0]=#127) and (pelf[1]='E') and
-         (pelf[2]='L') and (pelf[3]='F') then
-        is_elf_start:=true
-      else
-        pelf:=pchar(ptruint(pelf) - pagesize);
-      inc(elf_attempt);
-    until is_elf_start or (elf_attempt > max_elf_attempt);
-    if is_elf_start then
-      found_addr:=ptruint(pelf);
-    if found_addr<>ptruint(-1) then
-      begin
-        {$ifdef DEBUG_LINEINFO}
-        Writeln(stderr,'Found memory base addr = $',hexstr(found_addr,2 * sizeof(ptruint)));
-        {$endif}
-        BaseAddr:=pointer(found_addr);
-     end
-    {$ifdef DEBUG_LINEINFO}
-    else
-      begin
-        writeln(stderr,'Error parsing stack');
-        if (phdr_count=-1) then
-           writeln(stderr,'AUX entry AT_PHNUM not found');
-        if (phdr_size=0) then
-           writeln(stderr,'AUX entry AT_PHENT not found');
-        if (phdr=nil) then
-           writeln(stderr,'AUX entry AT_PHDR not found');
-      end;
-    {$endif DEBUG_LINEINFO}
-  end
-  else
-  begin
-  {$ifdef DEBUG_LINEINFO}
-    writeln(stderr,'Exception generated while trying to find program base addr');
-    writeln(stderr,'elf_attempt=',elf_attempt);
-    writeln(stderr,'Found memory base addr = $',hexstr(found_addr,2 * sizeof(ptruint)));
-    writeln(stderr,'pelf addr = $',hexstr(ptruint(pelf),2 * sizeof(ptruint)));
-  {$endif DEBUG_LINEINFO}
-  end;
-  ExitProc:=SavedExitProc;
+  lImageAddress:=High(ptruint);
+  lHeaderAddress:=0;
+  lHaveHeaderAddress:=false;
+  lHeader:=lHeaders;
+  for lIndex:=0 to lCount-1 do
+    begin
+      if (lHeader^.p_type=cPTLoad) and
+         (lHeader^.p_vaddr<lImageAddress) then
+        lImageAddress:=lHeader^.p_vaddr;
+      if lHeader^.p_type=cPTPHDR then
+        begin
+          lHeaderAddress:=lHeader^.p_vaddr;
+          lHaveHeaderAddress:=true;
+        end;
+      inc(lHeader);
+    end;
+  if lImageAddress=High(ptruint) then
+    exit;
+
+  if not lHaveHeaderAddress then
+    begin
+      if not ReadElfProgramHeaderOffset('/proc/self/exe',lHeaders,lCount,lHeaderOffset) then
+        if not ReadElfProgramHeaderOffset(AFileName,lHeaders,lCount,lHeaderOffset) then
+          exit;
+      lHeader:=lHeaders;
+      for lIndex:=0 to lCount-1 do
+        begin
+          if (lHeader^.p_type=cPTLoad) and
+             (lHeaderOffset>=lHeader^.p_offset) then
+            begin
+              lOffset:=lHeaderOffset-lHeader^.p_offset;
+              if (lOffset<lHeader^.p_filesz) and
+                 (lCount<=((lHeader^.p_filesz-lOffset) div lEntrySize)) then
+                begin
+                  lHeaderAddress:=lHeader^.p_vaddr+lOffset;
+                  lHaveHeaderAddress:=true;
+                  break;
+                end;
+            end;
+          inc(lHeader);
+        end;
+    end;
+
+  { Return the runtime address corresponding to the lowest PT_LOAD p_vaddr,
+    which is also OpenElf's processaddress. Their difference is the load bias.
+    AT_PHDR identifies the loader's mapping, unlike an ELF-magic search: a
+    second segment can map file offset zero again at a different address. }
+  if lHaveHeaderAddress and (lHeaderAddress>=lImageAddress) then
+    begin
+      lOffset:=lHeaderAddress-lImageAddress;
+      if lOffset<=ptruint(lHeaders) then
+        ABaseAddr:=pointer(ptruint(lHeaders)-lOffset);
+    end;
 end;
 {$endif FIND_BASEADDR_ELF}
 

@@ -118,10 +118,13 @@ interface
           ms_registered, { tmodule created }
           ms_load,
           ms_compile,    { parsing and compiling }
+          ms_compiling_waitheader, { waiting for dependencies needed to finish the header }
+          ms_compiling_waitdefaults, { waiting for implicit declarations before the uses clause }
           ms_compiling_wait,      { waiting for used units of program/library/package }
           ms_compiling_waitintf,  { waiting for used units of interface section }
           ms_compiling_waitimpl,  { waiting for used units of implementation section }
           ms_compiling_waitfinish,{ after impl section parsed, waiting for other impl sections needed by specializations }
+          ms_compiling_waitemit, { parsed and generated bodies, waiting for final dependencies }
           ms_compiled_waitcrc,   { after computing own CRC, waiting for used units' CRCs }
           ms_compiled,   { compiling complete, ppu written }
           ms_processed,   { task complete }
@@ -135,10 +138,13 @@ interface
           'Registered',
           'Load',
           'Compile',
+          'Compiling_Waiting_header',
+          'Compiling_Waiting_defaults',
           'Compiling_Waiting',
           'Compiling_Waiting_interface',
           'Compiling_Waiting_implementation',
           'Compiling_Waiting_finish',
+          'Compiling_Waiting_emission',
           'Compiled_Waiting_crc',
           'Compiled',
           'Processed',
