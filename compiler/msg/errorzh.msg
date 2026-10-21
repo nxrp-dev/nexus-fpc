@@ -3068,7 +3068,7 @@ option_com_files_require_tiny_model=11057_E_在当前内存模型下不支持创
 % 如果给定了 -Ur 选项，请不要启用实验性的 -gc 选项。
 option_gc_incompatible_with_release_flag=11058_W_由于与 -Ur 选项不兼容，未启用实验性的 CheckPointer 选项。
 % 编译器二进制文件只支持单一目标架构。如果你想为不同的目标架构选择编译器二进制文件，请调用 fpc 二进制文件。
-option_invalid_target_architecture=11059_E_不支持的目标架构 -P$1，请改用"fpc"编译器驱动程序。
+option_invalid_target_architecture=11059_E_不支持的目标架构 -P$1，请改用"nxpc"编译器驱动程序。
 % ppc<target> 可执行文件只支持单一目标架构。它们不支持 -P 开关。编译器驱动程序"fpc"
 % 处理这个开关，所以你必须使用"fpc"来进行编译
 option_features_only_for_system_unit=11060_E_功能开关仅在编译系统单元时支持。
@@ -3387,7 +3387,7 @@ x*2Aas_使用 GNU AS 汇编
 **1B_构建所有模块
 **1C<x>_代码生成选项:
 **2C3_启用常量的 IEEE 错误检查
-**2Ca<x>_选择 ABI；使用 fpc -i 或 fpc -ia 查看可能的值
+**2Ca<x>_选择 ABI；使用 nxpc -i 或 nxpc -ia 查看可能的值
 **2Cc<x>_将默认调用约定设置为 <x>
 V*2Cd<x>_丢弃选定的 RTL 启动段(谨慎使用)
 V*3Cdc_丢弃初始化数据。数据默认为 noinit 段
@@ -3396,7 +3396,7 @@ V*3Cds_丢弃 _START 代码。仅在所有中断都被禁用时使用
 V*3Cdz_丢弃初始化零寄存器和栈指针的代码
 **2Ce_使用模拟浮点操作码进行编译
 **2CE_生成可能引发异常的 FPU 代码
-**2Cf<x>_选择要使用的 fpu 指令集；使用 fpc -i 或 fpc -if 查看可能的值
+**2Cf<x>_选择要使用的 fpu 指令集；使用 nxpc -i 或 nxpc -if 查看可能的值
 **2CF<x>_最小浮点常量精度(默认、32、64)
 **2Cg_生成 PIC 代码
 **2Ch<n>[,m]_<n> 字节最小堆大小(在 1023 和 67107840 之间)以及可选的 [m] 最大堆大小
@@ -3404,7 +3404,7 @@ V*3Cdz_丢弃初始化零寄存器和栈指针的代码
 A*2CI<x>_在 ARM 上选择指令集: ARM 或 THUMB
 **2Co_检查整数运算的溢出
 **2CO_检查整数运算可能的溢出
-**2Cp<x>_选择指令集；使用 fpc -i 或 fpc -ic 查看可能的值
+**2Cp<x>_选择指令集；使用 nxpc -i 或 nxpc -ic 查看可能的值
 **2CP<x>=<y>_打包设置
 **3CPPACKENUM=<y>_<y> 枚举打包: 0、1、2 和 4 或 DEFAULT 或 NORMAL
 **3CPPACKRECORD=<y>_<y> 记录打包: 0 或 DEFAULT 或 NORMAL、1、2、4、8、16 和 32
@@ -3514,11 +3514,11 @@ A*2CV<x>_将线程变量模型设置为 <x>
 **2O3_级别 3 优化(-O2 + 慢速优化)
 **2O4_级别 4 优化(-O3 + 可能有意外副作用的优化)
 **2Oa<x>=<y>_设置对齐
-**2Oo[NO]<x>_启用或禁用优化；可能的值请参见 fpc -i 或 fpc -io
-**2Op<x>_设置优化目标 CPU；可能的值请参见 fpc -i 或 fpc -ic
+**2Oo[NO]<x>_启用或禁用优化；可能的值请参见 nxpc -i 或 nxpc -io
+**2Op<x>_设置优化目标 CPU；可能的值请参见 nxpc -i 或 nxpc -ic
 **2Os_优化大小而不是速度
-**2Ow<x>_执行整体程序优化 <x>；可能的值请参见 fpc -i 或 fpc -iw
-**2OW<x>_为优化 <x> 生成整体程序优化反馈；可能的值请参见 fpc -i 或 fpc -iw
+**2Ow<x>_执行整体程序优化 <x>；可能的值请参见 nxpc -i 或 nxpc -iw
+**2OW<x>_为优化 <x> 生成整体程序优化反馈；可能的值请参见 nxpc -i 或 nxpc -iw
 F*1P<x>_目标 CPU / 编译器相关选项：
 F*2PB_显示默认编译器二进制文件
 F*2PP_显示默认目标 CPU
@@ -3546,7 +3546,7 @@ F*2P<x>_设置目标 CPU (aarch64,arm,avr,i386,i8086,jvm,loongarch64,mips,mipsel
 **3*_h：编译器在提示后也停止
 **3*_n：编译器在注释后也停止
 **3*_w：编译器在警告后也停止
-**2Sf_在编译器和 RTL 中启用某些功能；可能的值请参见 fpc -i 或 fpc -ir
+**2Sf_在编译器和 RTL 中启用某些功能；可能的值请参见 nxpc -i 或 nxpc -ir
 **2Sg_Enable LABEL and GOTO
 **2Sh_使用引用计数字符串(默认为 ansistring)而不是 shortstrings
 **2Si_启用声明为"inline"的过程/函数的内联
@@ -3676,7 +3676,7 @@ W*2Twasip2_WebAssembly 系统接口预览版 2 (WASI 0.2) (实验性)
 **1t<x>_目标架构
 **2*_ * 定义 FPC_SUBTARGET_<x>
 **2*_ * 定义 FPC_SUBTARGET 为 <arg>
-**2*_ * 另外读取配置文件 fpc-<subtarget>.cfg
+**2*_ * 另外读取配置文件 nxpc-<subtarget>.cfg
 **1u<x>_取消定义符号 <x>
 **1U_单元选项：
 **2Un_不检查单元名是否与文件名匹配

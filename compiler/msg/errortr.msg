@@ -3342,10 +3342,10 @@ S*2Aas_Assemble using GNU AS
 **1B_Build all modules
 **1C<x>_Code generation options:
 **2C3_Turn on ieee error checking for constants
-**2Ca<x>_Select ABI; see fpc -i or fpc -ia for possible values
+**2Ca<x>_Select ABI; see nxpc -i or nxpc -ia for possible values
 **2Cc<x>_Set default calling convention to <x>
 **2Ce_Compilation with emulated floating point opcodes
-**2Cf<x>_Select fpu instruction set to use; see fpc -i or fpc -if for possible values
+**2Cf<x>_Select fpu instruction set to use; see nxpc -i or nxpc -if for possible values
 **2CF<x>_Minimal floating point constant precision (default, 32, 64)
 **2Cg_Generate PIC code
 **2Ch<n>_<n> bytes heap (between 1023 and 67107840)
@@ -3353,7 +3353,7 @@ S*2Aas_Assemble using GNU AS
 A*2CI<x>_Select instruction set on ARM: ARM or THUMB
 **2Co_Check overflow of integer operations
 **2CO_Check for possible overflow of integer operations
-**2Cp<x>_Select instruction set; see fpc -i or fpc -ic for possible values
+**2Cp<x>_Select instruction set; see nxpc -i or nxpc -ic for possible values
 **2CP<x>=<y>_ packing settings
 **3CPPACKSET=<y>_ <y> set allocation: 0, 1 or DEFAULT or NORMAL, 2, 4 and 8
 **3CPPACKENUM=<y>_ <y> enum packing: 0, 1, 2 and 4 or DEFAULT or NORMAL
@@ -3447,10 +3447,10 @@ A*2CT<x>_Target-specific code generation options
 **2O3_Level 3 optimizations (-O2 + slow optimizations)
 **2O4_Level 4 optimizations (-O3 + optimizations which might have unexpected side effects)
 **2Oa<x>=<y>_Set alignment
-**2Oo[NO]<x>_Enable or disable optimizations; see fpc -i or fpc -io for possible values
-**2Op<x>_Set target cpu for optimizing; see fpc -i or fpc -ic for possible values
-**2OW<x>_Generate whole-program optimization feedback for optimization <x>; see fpc -i or fpc -iw for possible values
-**2Ow<x>_Perform whole-program optimization <x>; see fpc -i or fpc -iw for possible values
+**2Oo[NO]<x>_Enable or disable optimizations; see nxpc -i or nxpc -io for possible values
+**2Op<x>_Set target cpu for optimizing; see nxpc -i or nxpc -ic for possible values
+**2OW<x>_Generate whole-program optimization feedback for optimization <x>; see nxpc -i or nxpc -iw for possible values
+**2Ow<x>_Perform whole-program optimization <x>; see nxpc -i or nxpc -iw for possible values
 **2Os_Optimize for size rather than speed
 **1profile_Enable Nexus procedure trace profiling
 F*1P<x>_Target CPU / compiler related options:
@@ -3472,7 +3472,7 @@ F*2P<x>_Set target CPU (arm,avr,i386,jvm,m68k,mips,mipsel,powerpc,powerpc64,spar
 **3*_w : Compiler also halts after warnings
 **3*_n : Compiler also halts after notes
 **3*_h : Compiler also halts after hints
-**2Sf_Enable certain features in compiler and RTL; see fpc -i or fpc -ir for possible values)
+**2Sf_Enable certain features in compiler and RTL; see nxpc -i or nxpc -ir for possible values)
 **2Sg_Enable LABEL and GOTO
 **2Sh_Use reference counted strings (ansistring by default) instead of shortstrings
 **2Si_Turn on inlining of procedures/functions declared as "inline"
@@ -3620,9 +3620,9 @@ P*2WM<x>_Minimum Mac OS X deployment version: 10.4, 10.5.1, ... (Darwin)
 3*2WN_Do not generate relocation code, needed for debugging (Windows)
 4*2WN_Do not generate relocation code, needed for debugging (Windows)
 A*2WN_Do not generate relocation code, needed for debugging (Windows)
-A*2Wpxxxx_Specify the controller type; see fpc -i or fpc -iu for possible values
-m*2Wpxxxx_Specify the controller type; see fpc -i or fpc -iu for possible values
-V*2Wpxxxx_Specify the controller type; see fpc -i or fpc -iu for possible values
+A*2Wpxxxx_Specify the controller type; see nxpc -i or nxpc -iu for possible values
+m*2Wpxxxx_Specify the controller type; see nxpc -i or nxpc -iu for possible values
+V*2Wpxxxx_Specify the controller type; see nxpc -i or nxpc -iu for possible values
 3*2WP<x>_Minimum iOS deployment version: 3.0, 5.0.1, ... (iphonesim)
 A*2WP<x>_Minimum iOS deployment version: 3.0, 5.0.1, ... (Darwin)
 3*2WR_Generate relocation code (Windows)

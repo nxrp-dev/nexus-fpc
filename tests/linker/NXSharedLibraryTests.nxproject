@@ -8,9 +8,9 @@ Project SharedLibraryTests {
     Requires: [@Projects.NexusTest, @Projects.FCLProcess, @Projects.FCLBase];
     RootDirectory: "../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/SharedLibraryTests/" + @Tools.Native.Name;
- FPC Tests {
-  CompilerPath: @Tools.Native.FPCCompiler;
-  SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/linker/NXSharedLibraryTests.lpr"];
+ NXPC Tests {
+  CompilerPath: @Tools.Native.NXPCCompiler;
+  SourceFiles: [@Tools.NXPC.SourcePath + "/tests/linker/NXSharedLibraryTests.lpr"];
   OutputPath: @SharedLibraryTests.OutputRoot;
   Config Options { DisableDefaultConfigFiles: True; }
   Language Pascal { Mode: ObjFPC; }
@@ -19,10 +19,10 @@ Project SharedLibraryTests {
    CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
    UnitPaths: [
        @Tools.Native.RTLPath,
-       @Tools.NexusFPC.SourcePath + "/tests/linker",
-       @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"
+       @Tools.NXPC.SourcePath + "/tests/linker",
+       @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/inc"
    ];
-   IncludePaths: [@Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/unix", @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
+   IncludePaths: [@Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/unix", @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
   }
  }
 }

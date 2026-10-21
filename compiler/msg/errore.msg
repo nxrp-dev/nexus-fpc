@@ -3609,10 +3609,10 @@ option_malformed_para=11055_E_Malformed parameter: $1
 option_com_files_require_tiny_model=11057_E_Creating .COM files is not supported in the current memory model. Only the tiny memory model supports making .COM files.
 % Do not enable experimental -gc option if -Ur option is given.
 option_gc_incompatible_with_release_flag=11058_W_Experimental CheckPointer option not enabled because it is incompatible with -Ur option.
-% The compiler binary only supports a single target architecture. Invoke the fpc binary if you wish to select a compiler binary for a different target architecture.
-option_invalid_target_architecture=11059_E_Unsupported target architecture -P$1, invoke the "fpc" compiler driver instead.
-% The ppc<target> executables support only a single target architecture. They do not support the -P switch. The compiler driver "fpc"
-% handles this switch, so you have to invoke compiling by using "fpc" instead
+% The compiler binary only supports a single target architecture. Invoke the nxpc binary if you wish to select a compiler binary for a different target architecture.
+option_invalid_target_architecture=11059_E_Unsupported target architecture -P$1, invoke the "nxpc" compiler driver instead.
+% The nxpc-<cpu> executables support only a single target architecture. They do not support the -P switch. The compiler driver "nxpc"
+% handles this switch, so you have to invoke compiling by using "nxpc" instead
 option_features_only_for_system_unit=11060_E_Feature switches are only supported while compiling the system unit.
 % To selected a certain feature, the system unit must be compiled with this feature enabled. All other units inherited the features set by the
 % system unit through the ppu of the system unit.
@@ -3880,7 +3880,7 @@ new features, etc.):
 #    a = AArch64
 #    A = ARM
 #    e = in extended debug mode only
-#    F = help for the 'fpc' binary (independent of the target compiler)
+#    F = help for the 'nxpc' binary (independent of the target compiler)
 #    I = VIS
 #    J = JVM
 #    L = LLVM variant
@@ -3956,7 +3956,7 @@ x*2Aas_Assemble using GNU AS
 **1B_Build all modules
 **1C<x>_Code generation options:
 **2C3_Turn on IEEE error checking for constants
-**2Ca<x>_Select ABI; see fpc -i or fpc -ia for possible values
+**2Ca<x>_Select ABI; see nxpc -i or nxpc -ia for possible values
 **2Cc<x>_Set default calling convention to <x>
 V*2CC_Use compact vector table
 V*2Cd<x>_Discard selected RTL startup sections (use with caution)
@@ -3966,7 +3966,7 @@ V*3Cds_Discard _START code. Use only if all interrupts are disabled
 V*3Cdz_Discard code initializing the zero register and stack pointer
 **2Ce_Compilation with emulated floating point opcodes
 **2CE_Generate FPU code which can raise exceptions
-**2Cf<x>_Select fpu instruction set to use; see fpc -i or fpc -if for possible values
+**2Cf<x>_Select fpu instruction set to use; see nxpc -i or nxpc -if for possible values
 **2CF<x>_Minimal floating point constant precision (default, 32, 64)
 **2Cg_Generate PIC code
 **2Ch<n>[,m]_<n> bytes min heap size (between 1023 and 67107840) and optionally [m] max heap size
@@ -3974,7 +3974,7 @@ V*3Cdz_Discard code initializing the zero register and stack pointer
 A*2CI<x>_Select instruction set on ARM: ARM or THUMB
 **2Co_Check overflow of integer operations
 **2CO_Check for possible overflow of integer operations
-**2Cp<x>_Select instruction set; see fpc -i or fpc -ic for possible values
+**2Cp<x>_Select instruction set; see nxpc -i or nxpc -ic for possible values
 **2CP<x>=<y>_ packing settings
 **3CPPACKENUM=<y>_ <y> enum packing: 0, 1, 2 and 4 or DEFAULT or NORMAL
 **3CPPACKRECORD=<y>_ <y> record packing: 0 or DEFAULT or NORMAL, 1, 2, 4, 8, 16 and 32
@@ -4080,11 +4080,11 @@ A*2CV<x>_Set section threadvar model to <x>
 **2O3_Level 3 optimizations (-O2 + slow optimizations)
 **2O4_Level 4 optimizations (-O3 + optimizations which might have unexpected side effects)
 **2Oa<x>=<y>_Set alignment
-**2Oo[NO]<x>_Enable or disable optimizations; see fpc -i or fpc -io for possible values
-**2Op<x>_Set target cpu for optimizing; see fpc -i or fpc -ic for possible values
+**2Oo[NO]<x>_Enable or disable optimizations; see nxpc -i or nxpc -io for possible values
+**2Op<x>_Set target cpu for optimizing; see nxpc -i or nxpc -ic for possible values
 **2Os_Optimize for size rather than speed
-**2Ow<x>_Perform whole-program optimization <x>; see fpc -i or fpc -iw for possible values
-**2OW<x>_Generate whole-program optimization feedback for optimization <x>; see fpc -i or fpc -iw for possible values
+**2Ow<x>_Perform whole-program optimization <x>; see nxpc -i or nxpc -iw for possible values
+**2OW<x>_Generate whole-program optimization feedback for optimization <x>; see nxpc -i or nxpc -iw for possible values
 **1profile_Enable Nexus procedure trace profiling
 F*1P<x>_Target CPU / compiler related options:
 F*2PB_Show default compiler binary
@@ -4113,7 +4113,7 @@ F*2P<x>_Set target CPU (aarch64,arm,avr,i386,i8086,jvm,loongarch64,mips,mipsel,p
 **3*_h : Compiler also halts after hints
 **3*_n : Compiler also halts after notes
 **3*_w : Compiler also halts after warnings
-**2Sf_Enable certain features in compiler and RTL; see fpc -i or fpc -ir for possible values)
+**2Sf_Enable certain features in compiler and RTL; see nxpc -i or nxpc -ir for possible values)
 **2Sg_Enable LABEL and GOTO (default in -Mdelphi)
 **2Sh_Use reference counted strings (ansistring by default) instead of shortstrings
 **2Si_Turn on inlining of procedures/functions declared as "inline"
@@ -4242,7 +4242,7 @@ W*2Twasip2_The WebAssembly System Interface Preview 2 (WASI 0.2) (experimental)
 **1t<x>_Target architecture
 **2*_ * Defines FPC_SUBTARGET_<x> 
 **2*_ * Defines FPC_SUBTARGET as <arg>
-**2*_ * Additionally reads config file fpc-<subtarget>.cfg
+**2*_ * Additionally reads config file nxpc-<subtarget>.cfg
 **1u<x>_Undefines the symbol <x>
 **1U_Unit options:
 **2Un_Do not check where the unit name matches the file name

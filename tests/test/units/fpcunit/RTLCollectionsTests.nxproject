@@ -10,9 +10,9 @@ Project RTLCollectionsTests {
     Requires: [@Projects.FCLBase, @Projects.NexusTest];
     RootDirectory: "../../../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/RTLCollectionsTests/" + @Tools.Native.Name;
-    FPC Tests {
-        CompilerPath: @Tools.Native.FPCCompiler;
-        SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit/RTLCollectionsTests.lpr"];
+    NXPC Tests {
+        CompilerPath: @Tools.Native.NXPCCompiler;
+        SourceFiles: [@Tools.NXPC.SourcePath + "/tests/test/units/fpcunit/RTLCollectionsTests.lpr"];
         OutputPath: @RTLCollectionsTests.OutputRoot;
         Config Options { DisableDefaultConfigFiles: True; }
         Language Pascal { Mode: ObjFPC; }
@@ -21,13 +21,13 @@ Project RTLCollectionsTests {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
             UnitPaths: [
                 @Tools.Native.RTLPath,
-                @Tools.NexusFPC.SourcePath + "/tests/test/units/fpcunit",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform
+                @Tools.NXPC.SourcePath + "/tests/test/units/fpcunit",
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/inc",
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform
             ];
             IncludePaths: [
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/x86_64"
             ];
         }
     }

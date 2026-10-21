@@ -929,7 +929,8 @@ implementation
                 InternalError(2026092202);
             end;
             Add('/nodefaultlib');
-            Add('/out:'+MaybeQuoted(OutputFile));
+            { lld-link response files use Windows quoting on every host. }
+            Add('/out:'+MaybeQuoted_For_Script(OutputFile,script_dos));
             if Info.ExtraOptions<>'' then
               Add(Info.ExtraOptions);
             if IsDLL then
@@ -1007,19 +1008,19 @@ implementation
               else
                 Add('/stack:'+ToStr(StackReserve));
             if cs_link_map in CurrentSettings.GlobalSwitches then
-              Add('/map:'+MaybeQuoted(ChangeFileExt(OutputFile,'.map')));
+              Add('/map:'+MaybeQuoted_For_Script(ChangeFileExt(OutputFile,'.map'),script_dos));
 
             HPath:=TCmdStrListItem(CurrentModule.LocalLibrarySearchPath.First);
             while Assigned(HPath) do
               begin
                 { A trailing backslash would escape the closing response-file quote. }
-                Add('/libpath:'+MaybeQuoted(BSToSlash(HPath.Str)));
+                Add('/libpath:'+MaybeQuoted_For_Script(BSToSlash(HPath.Str),script_dos));
                 HPath:=TCmdStrListItem(HPath.Next);
               end;
             HPath:=TCmdStrListItem(LibrarySearchPath.First);
             while Assigned(HPath) do
               begin
-                Add('/libpath:'+MaybeQuoted(BSToSlash(HPath.Str)));
+                Add('/libpath:'+MaybeQuoted_For_Script(BSToSlash(HPath.Str),script_dos));
                 HPath:=TCmdStrListItem(HPath.Next);
               end;
 
@@ -1027,21 +1028,21 @@ implementation
               begin
                 S:=ObjectFiles.GetFirst;
                 if S<>'' then
-                  AddFileName(MaybeQuoted(S));
+                  AddFileName(MaybeQuoted_For_Script(S,script_dos));
               end;
             while not StaticLibFiles.Empty do
               begin
                 S:=StaticLibFiles.GetFirst;
                 if S<>'' then
-                  AddFileName(MaybeQuoted(S));
+                  AddFileName(MaybeQuoted_For_Script(S,script_dos));
               end;
             if CurrentModule.ResourceLinkFile<>'' then
-              AddFileName(MaybeQuoted(CurrentModule.ResourceLinkFile));
+              AddFileName(MaybeQuoted_For_Script(CurrentModule.ResourceLinkFile,script_dos));
             while not SharedLibFiles.Empty do
               begin
                 S:=SharedLibFiles.GetFirst;
                 if FindLibraryFile(S,TargetInfo.staticClibprefix,TargetInfo.staticClibext,S2) then
-                  AddFileName(MaybeQuoted(S2))
+                  AddFileName(MaybeQuoted_For_Script(S2,script_dos))
                 else
                   begin
                     if Pos(TargetInfo.sharedlibprefix,S)=1 then
@@ -1049,13 +1050,13 @@ implementation
                     I:=Pos(TargetInfo.sharedlibext,S);
                     if I>0 then
                       Delete(S,I,Length(TargetInfo.sharedlibext));
-                    AddFileName(MaybeQuoted(TargetInfo.staticClibprefix+S+TargetInfo.staticClibext));
+                    AddFileName(MaybeQuoted_For_Script(TargetInfo.staticClibprefix+S+TargetInfo.staticClibext,script_dos));
                   end;
               end;
             if not DefFile.Empty then
               begin
                 DefFile.WriteFile;
-                Add('/def:'+MaybeQuoted(DefFile.FName));
+                Add('/def:'+MaybeQuoted_For_Script(DefFile.FName,script_dos));
               end;
             WriteToDisk;
           end;
@@ -1072,7 +1073,9 @@ implementation
           Message1(exec_i_linking,OutputFile);
         if not WriteLLDResponseFile(OutputFile,IsDLL) then
           exit(false);
-        CmdStr:='@'+MaybeQuoted(OutputExeDir+Info.ResName);
+        { Quote the whole argument: the Unix process parser only recognizes
+          quotes at the start of an argument. }
+        CmdStr:=MaybeQuoted('@'+OutputExeDir+Info.ResName);
         DoLLDLink:=DoExec(FindUtil('lld-link'),CmdStr,true,false);
         if DoLLDLink and
            not(cs_link_nolink in CurrentSettings.GlobalSwitches) then

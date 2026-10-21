@@ -8,9 +8,9 @@ Project RTLRegressionTests {
     Requires: [@Projects.NexusTest, @Projects.FCLProcess, @Projects.FCLBase];
     RootDirectory: "../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/RTLRegressionTests/" + @Tools.Native.Name;
- FPC Tests {
-  CompilerPath: @Tools.Native.FPCCompiler;
-  SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/rtl/RTLRegressionTests.lpr"];
+ NXPC Tests {
+  CompilerPath: @Tools.Native.NXPCCompiler;
+  SourceFiles: [@Tools.NXPC.SourcePath + "/tests/rtl/RTLRegressionTests.lpr"];
   OutputPath: @RTLRegressionTests.OutputRoot;
   Config Options { DisableDefaultConfigFiles: True; }
   Language Pascal { Mode: ObjFPC; }
@@ -19,11 +19,11 @@ Project RTLRegressionTests {
    CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
    UnitPaths: [
        @Tools.Native.RTLPath,
-       @Tools.NexusFPC.SourcePath + "/tests/rtl",
-       @Tools.NexusFPC.SourcePath + "/tests/utils",
-       @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc"
+       @Tools.NXPC.SourcePath + "/tests/rtl",
+       @Tools.NXPC.SourcePath + "/tests/utils",
+       @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/inc"
    ];
-   IncludePaths: [@Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform, @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
+   IncludePaths: [@Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform, @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/x86_64"];
   }
  }
 }

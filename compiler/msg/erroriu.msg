@@ -2746,10 +2746,10 @@ S*2Aas_Assembla con GNU AS
 **1b_Genera info per il browser
 **1B_Costruisce tutti i moduli
 **1C<x>_Opzioni di generazione del codice:
-**2Ca<x>_Seleziona l'ABI, vedi fpc -i per i valori possibili
+**2Ca<x>_Seleziona l'ABI, vedi nxpc -i per i valori possibili
 **2Cc<x>_Imposta la convenzione di chiamata di default a <x>
 **2Ce_Compilazione con opcode in virgola mobile emulati
-**2Cf<x>_Sceglie il set di istruzioni FPU, (vedi fpc -i)
+**2Cf<x>_Sceglie il set di istruzioni FPU, (vedi nxpc -i)
 **2CF<x>_Precisione minima per costanti virgola mobile (default/32/64)
 **2Cg_Genera codice position-independent (PIC)
 **2Ch<n>_<n> dimensione in byte dello heap 
@@ -2758,7 +2758,7 @@ S*2Aas_Assembla con GNU AS
 **2Co_Controlla l'overflow di operazioni su interi
 **2CO_Controlla il possibile overflow di operazioni su interi
 **2Cp<x>_Scegli il set di istruzioni, 
-**3*_        (vedi fpc -i per i valori possibili)
+**3*_        (vedi nxpc -i per i valori possibili)
 **2CP<x>=<y>_ impostazioni per il packing
 **3CPPACKSET=<y>_ <y> imposta l'allocazione: 
 **3*_        (0, 1 o DEFAULT o NORMAL, 2, 4 e 8)
@@ -2836,11 +2836,11 @@ S*2Aas_Assembla con GNU AS
 **2O3_Ottimizzazione livello 3 (-O2 + ottimizz. lenta)
 **2Oa<x>=<y>_Imposta allineamento
 **2Oo[NO]<x>_Abilita/disabilita ottimizzazioni, 
-**3*_        (vedi fpc -i per possibili valori)
+**3*_        (vedi nxpc -i per possibili valori)
 **2Op<x>_Imposta ottimizzazione per una CPU specifica, 
-**3*_        (vedi fpc -i per possibili valori)
-**2OW<x>_Genera feedback per l'ottimizz. globale <x> (vedi fpc -i)
-**2Ow<x>_Esegue ottimizzazione globale <x> (vedi fpc -i)
+**3*_        (vedi nxpc -i per possibili valori)
+**2OW<x>_Genera feedback per l'ottimizz. globale <x> (vedi nxpc -i)
+**2Ow<x>_Esegue ottimizzazione globale <x> (vedi nxpc -i)
 **2Os_Ottimizza per la dimensione e non per la velocità
 **1R<x>_Stile di lettura assembler:
 **2Rdefault_Usa assembler di default per la destinazione

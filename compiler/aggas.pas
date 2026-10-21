@@ -56,7 +56,7 @@ interface
         FWin64ComdatSections : TGNUWin64ComdatInfo;
         FWin64ComdatKeyToDefine : string;
         FWin64ComdatKeyIndex : LongInt;
-        function UseWin64Comdat:boolean;
+        function UseWindowsComdat:boolean;
         function FindWin64ComdatInfo(const ASectionName:string):TGNUWin64ComdatInfo;
         function EnsureWin64ComdatLeader(const ASectionName:string):TGNUWin64ComdatInfo;
         procedure RegisterWin64AssociativeComdat(const ASectionName,LeaderKey:string);
@@ -155,9 +155,9 @@ implementation
 {                          GNU Assembler writer                              }
 {****************************************************************************}
 
-    function TGNUAssembler.UseWin64Comdat:boolean;
+    function TGNUAssembler.UseWindowsComdat:boolean;
       begin
-        result:=(TargetInfo.system in [system_x86_64_win64,system_aarch64_win64]) and
+        result:=(TargetInfo.system in [system_i386_win32,system_x86_64_win64,system_aarch64_win64]) and
           (asminfo^.id=as_clang_gas) and
           (af_llvm in asminfo^.flags);
       end;
@@ -212,7 +212,7 @@ implementation
 
     function TGNUAssembler.IsWin64SmartSection(atype:TAsmSectiontype;const aname:string):boolean;
       begin
-        result:=UseWin64Comdat and
+        result:=UseWindowsComdat and
           create_smartlink_sections and
           (aname<>'') and
           not (atype in [sec_bss,sec_toc,sec_user,sec_note,sec_fpc,sec_pdata]) and
@@ -467,7 +467,7 @@ implementation
         else
           result:=secname;
 
-        if UseWin64Comdat and
+        if UseWindowsComdat and
            create_smartlink_sections and
            (aname<>'') and
            not (atype in [sec_bss,sec_toc,sec_user,sec_note]) then
@@ -537,7 +537,7 @@ implementation
 
           sec_debug_frame,sec_debug_info,sec_debug_line,sec_debug_abbrev,
           sec_debug_aranges,sec_debug_ranges,sec_debug_loc,sec_debug_loclists:
-            if UseWin64Comdat then
+            if UseWindowsComdat then
               result:='rD'
             else
               result:='n';
@@ -570,7 +570,7 @@ implementation
         info : TGNUWin64ComdatInfo;
         finalsectionname : string;
       begin
-        if not UseWin64Comdat or
+        if not UseWindowsComdat or
            not create_smartlink_sections then
           exit;
         finalsectionname:=sectionname(atype,aname,aorder);
@@ -871,7 +871,7 @@ implementation
 
                cursec:=TAISection(hp);
                leadersec:=cursec.AssociativeSection;
-               if UseWin64Comdat and
+               if UseWindowsComdat and
                   create_smartlink_sections and
                   Assigned(leadersec) and
                   IsWin64SmartSection(leadersec.sectype,leadersec.name^) then

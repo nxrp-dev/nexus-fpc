@@ -198,3 +198,29 @@ and rejection of retired, mixed and missing byte-order flags. Run both with
 needs to compile HeapTrc from source. `Run-NXImplicitHeapTrcTests.sh` builds the
 original RTL source directly, verifies the second build loads the unchanged
 cached unit, and requires a clean runtime heap report with `-gh -gl` enabled.
+
+## Windows debug artifacts and linker paths
+
+Build `DwarfArtifactTests.nxproject` with nxbuild, then run:
+
+```text
+DwarfArtifactTests <source-root> <nxpc-driver-or-bootstrap-root> <llvm-dwarfdump> <external-output>
+```
+
+The second argument accepts either an installed NXPC driver with its matching
+configuration, or an isolated Forge bootstrap root after the three Windows
+`Build:Cross` invocations. The latter selects each `cross/<cpu>-<os>/nxpc-<cpu>`
+and its matching `rtl` directly. Outputs must be outside source, under worktree.
+Clang, llvm-ar and llvm-readobj must be on PATH.
+
+The NXTests cover i386 Win32, x86-64 Win64 and ARM64 Win64. They verify complete
+linked DWARF range tables, compare live-function counts and linker maps, and
+check that discarded functions lose their range entries. They also require
+discarded functions' debug records to have zero start and end addresses, while
+retained functions keep nonzero address ranges, and run LLVM's DWARF verifier.
+
+The path cases build executables and DLLs with braces, spaces and apostrophes
+in output paths. They check map placement, quoted archive filenames, actual
+linker library-path lookup in a separate directory, and named DLL exports
+through definition files. The original braced response-file regression remains
+an independent case. No Windows execution is required for these artifact checks.

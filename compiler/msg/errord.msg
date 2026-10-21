@@ -3682,7 +3682,7 @@ option_com_files_require_tiny_model=11057_E_Das Erstellen von .COM Dateien wird 
 % Do not enable experimental -gc option if -Ur option is given.
 option_gc_incompatible_with_release_flag=11058_W_Die experimentelle Option CheckPointer wird nicht eingeschaltet, weil sie zur Option -Ur inkompatibel ist
 % The compiler binary only supports a single target architecture. Invoke the fpc binary if you wish to select a compiler binary for a different target architecture.
-option_invalid_target_architecture=11059_E_Nicht unterstÅtzte Zielarchitektur -P$1, rufe statt dessen den Compilertreiber "fpc" auf.
+option_invalid_target_architecture=11059_E_Nicht unterstÅtzte Zielarchitektur -P$1, rufe statt dessen den Compilertreiber "nxpc" auf.
 % The ppc<target> executables support only a single target architecture. They do not support the -P switch. The compiler driver "fpc"
 % handles this switch, so you have to invoke compiling by using "fpc" instead
 option_features_only_for_system_unit=11060_E_Feature-Schalter werden nur beim öbersetzen der Unit "System" unterstÅtzt
@@ -4024,7 +4024,7 @@ x*2Aas_Assembliere mit Hilfe von GNU AS
 **1B_Erzeuge alle Module (Build)
 **1C<x>_Optionen fÅr Code-Erzeugung:
 **2C3<x>_Schalte IEEE-PrÅfung von Konstanten ein
-**2Ca<x>_WÑhle ABI aus; fpc -i oder fpc -ia geben die mîglichen Werte aus
+**2Ca<x>_WÑhle ABI aus; nxpc -i oder nxpc -ia geben die mîglichen Werte aus
 **2Cc<x>_Setze "default calling convention" zu <x>
 V*2Cd<x>_Verwerfe ausgewÑhlte RTL Start-Sektionen (Mit Vorsicht nutzen)
 V*3Cdc_Verwerfe Intialisierungsdaten. FÅr die Daten wird die Voreinstellung der Noinit-Sektion verwendet
@@ -4033,7 +4033,7 @@ V*3Cds_Verwerfe den _START Code. Nur verwenden, wenn alle Interrupts ausgeschalt
 V*3Cdz_Verwerfe Code, der das Zero-Register und den Stack-Pointer initialisiert
 **2Ce_öbersetze mit emulierten Fliesskomma opcodes
 **2CE_Erzeuge FPU Code, der Ausnahmen (exceptions) auslîsen kann
-**2Cf<x>_WÑhle den Fliesskomma-Befehlssatz aus; fpc -i oder fpc -if geben die mîglichen Werte aus
+**2Cf<x>_WÑhle den Fliesskomma-Befehlssatz aus; nxpc -i oder nxpc -if geben die mîglichen Werte aus
 **2CF<x>_Minimale PrÑzission von Fliesskommakonstanten (default, 32, 64)
 **2Cg_Erzeuge PIC Code
 **2Ch<n>[,m]_<n> Minimale Grî·e des Heap in Byte (zwischen 1023 und 67107840) und optional [m] maximale Grî·e des Heap
@@ -4041,7 +4041,7 @@ V*3Cdz_Verwerfe Code, der das Zero-Register und den Stack-Pointer initialisiert
 A*2CI<x>_WÑhle den Befehlssatz fÅr ARM aus: ARM oder THUMB
 **2Co_PrÅfe auf öberlauf von Integer-Operationen
 **2CO_PrÅfe auf mîglichen öberlauf von Integer-Operationen
-**2Cp<x>_WÑhle Befehlssatz aus; fpc -i oder fpc -ic geben die mîglichen Werte aus
+**2Cp<x>_WÑhle Befehlssatz aus; nxpc -i oder nxpc -ic geben die mîglichen Werte aus
 **2CP<x>=<y>_ Einstellungen fÅr packing
 **3CPPACKENUM=<y>_ <y> Packen von AufzÑhlungen: 0, 1, 2 und 4 oder DEFAULT oder NORMAL
 **3CPPACKRECORD=<y>_ <y> Packen von Records: 0 oder DEFAULT oder NORMAL, 1, 2, 4, 8, 16 und 32
@@ -4148,11 +4148,11 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2O3_Level 3 Optimierung (-O2 + langsame Optimierungen)
 **2O4_Level 4 Optimierung (-O3 + Optimierungen, die unerwartete Nebeneffekte haben kînnen)
 **2Oa<x>=<y>_Ausrichtung (alignment) von Mengen
-**2Oo[NO]<x>_Optimierungen ein- oder ausschalten; fpc -i oder fpc -io geben die mîglichen Werte aus
-**2Op<x>_Setze Zielprozessor fÅr die Optimierung; fpc -i oder fpc -ic geben die mîglichen Werte aus
+**2Oo[NO]<x>_Optimierungen ein- oder ausschalten; nxpc -i oder nxpc -io geben die mîglichen Werte aus
+**2Op<x>_Setze Zielprozessor fÅr die Optimierung; nxpc -i oder nxpc -ic geben die mîglichen Werte aus
 **2Os_Erzeuge kÅrzeren Code
-**2Ow<x>_FÅhre die Gesamtprogramm-Optimierung durch <x>; fpc -i oder fpc -iw  geben die mîglichen Werte aus
-**2OW<x>_Erzeuge Feedback fÅr die Gesamtprogramm-Optimierung fÅr Optimierung <x>; fpc -i oder fpc -iw geben die mîglichen Werte aus
+**2Ow<x>_FÅhre die Gesamtprogramm-Optimierung durch <x>; nxpc -i oder nxpc -iw  geben die mîglichen Werte aus
+**2OW<x>_Erzeuge Feedback fÅr die Gesamtprogramm-Optimierung fÅr Optimierung <x>; nxpc -i oder nxpc -iw geben die mîglichen Werte aus
 F*1P<x>_Zielprozessor / Compiler bezogene Optionen:
 F*2PB_Zeige die voreingestellte CompilerbinÑrdatei
 F*2PP_Zeige den voreingestellten Zielprozessor
@@ -4180,7 +4180,7 @@ F*2P<x>_Setze den Zielprozessor (aarch64, arm, avr, i386, i8086, jvm, loongarch6
 **3*_h : Compiler hÑlt auch nach Hinweisen
 **3*_n : Compiler hÑlt auch nach Anmerkungen
 **3*_w : Compiler hÑlt auch nach Warnungen
-**2Sf_Schalte bestimmte Feature in Compiler und RTL ein; fpc -i oder fpc -ir geben die mîglichen Werte aus
+**2Sf_Schalte bestimmte Feature in Compiler und RTL ein; nxpc -i oder nxpc -ir geben die mîglichen Werte aus
 **2Sg_Erlaube LABEL und GOTO
 **2Sh_Benutze ANSI-Strings
 **2Si_Benutze C++ artige INLINE
@@ -4309,7 +4309,7 @@ W*2Twasip2_Das WebAssembly System Interface Vorschau 2 (WASI 0.2) (experimentell
 **1t<x>_Zielsystem-Architektur
 **2*_ * Definiert FPC_SUBTARGET_<x>
 **2*_ * Definiert FPC_SUBTARGET als <arg>
-**2*_ * Liest zusÑtzlich die Konfigurationsdatei fpc-<subtarget>.cfg
+**2*_ * Liest zusÑtzlich die Konfigurationsdatei nxpc-<subtarget>.cfg
 **1u<x>_Entferne die Definition fÅr das Symbol <x>
 **1U<x>_Unit-Optionen:
 **2Un_PrÅfe den Unitnamen nicht

@@ -3589,12 +3589,12 @@ S*2Aas_assembler avec GNU AS
 **1C<x>_options de génération de code :
 **2Cc<x>_définir les convention d'appel <x> par défaut
 **2Ce_compilation avec émulation des opérations à virgule flottante
-**2Cf<x>_sélectionner le jeu d'instructions FPU à utiliser, voir fpc -i pour les valeurs possibles
+**2Cf<x>_sélectionner le jeu d'instructions FPU à utiliser, voir nxpc -i pour les valeurs possibles
 **2Cg_Générer du code PIC
 **2Ch<n>_<n> taille du tas en bytes (entre 1023 et 67107840)
 **2Ci_IO-checking
 **2Co_génère des tests d'overflow pour les opérations sur les entiers
-**2Cp<x>_sélectionner le jeu d'instructions, voir fpc -i pour les valeurs possibles
+**2Cp<x>_sélectionner le jeu d'instructions, voir nxpc -i pour les valeurs possibles
 **2Cr_controle d'intervalles
 **2CR_vérifier la validité de l'appel à la méthode d'objet
 **2Cs<n>_spécifie <n> comme taille de la pile

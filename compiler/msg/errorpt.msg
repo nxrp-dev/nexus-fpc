@@ -3146,17 +3146,17 @@ S*2Aas_Monta usando o GNU AS
 **1B_Constr¢i todos os m¢dulos
 **1C<x>_Opá‰es geraá∆o de c¢digo:
 **2C3<x>_Ligar verificaá∆o de erro IEEE para constantes
-**2Ca<x>_Seleciona ABI, veja fpc -i para poss°veis valores
+**2Ca<x>_Seleciona ABI, veja nxpc -i para poss°veis valores
 **2Cc<x>_Ajusta convená∆o de chamada para <x>
 **2Ce_Compilaá∆o com opcodes de ponto flutuante emulados
-**2Cf<x>_Seleciona conjunto de instruá‰es fpu a usar, veja fpc -i para poss°veis valores
+**2Cf<x>_Seleciona conjunto de instruá‰es fpu a usar, veja nxpc -i para poss°veis valores
 **2CF<x>_Precis∆o m°nima constante ponto flutuante (padr∆o, 32, 64)
 **2Cg_Gera c¢digo PIC
 **2Ch<n>_<n> bytes heap (entre 1023 e 67107840)
 **2Ci_Verificaá∆o E/S
 **2Co_Verifica transbordamento de operaá‰es inteiras
 **2CO_Verifica poss°vel transbordamento de operaá‰es inteiras
-**2Cp<x>_Seleciona conjunto de instruá‰es, veja fpc -i para poss°ves valores
+**2Cp<x>_Seleciona conjunto de instruá‰es, veja nxpc -i para poss°ves valores
 **2CP<x>=<y>_ Ajustes compactaá∆o
 **3CPPACKSET=<y>_ <y> conjunto alocaá∆o: 0, 1 ou DEFAULT ou NORMAL, 2, 4 e 8
 **2Cr_Verificaá∆o de faixa
@@ -3227,10 +3227,10 @@ S*2Aas_Monta usando o GNU AS
 **2O2_N°vel 2 otimizaá‰es (-O1 + otimizaá‰es r†pidas)
 **2O3_N°vel 3 otimizaá‰es (-O2 + otimizaá‰es lentas)
 **2Oa<x>=<y>_Ajusta alinhamento
-**2Oo[NO]<x>_Habilita ou desabilita otimizaá‰es, veja fpc -i para poss°veis valores
-**2Op<x>_Ajusta cpu alvo para otimizaá‰es, veja fpc -i para poss°veis valores
-**2OW<x>_Gera retorno otimizaá∆o completa programa para otimizaá‰es <x>, veja fpc -i para poss°veis valores
-**2Ow<x>_Realiza otimizaá∆o completa programa <x>, veja fpc -i para poss°veis valores
+**2Oo[NO]<x>_Habilita ou desabilita otimizaá‰es, veja nxpc -i para poss°veis valores
+**2Op<x>_Ajusta cpu alvo para otimizaá‰es, veja nxpc -i para poss°veis valores
+**2OW<x>_Gera retorno otimizaá∆o completa programa para otimizaá‰es <x>, veja nxpc -i para poss°veis valores
+**2Ow<x>_Realiza otimizaá∆o completa programa <x>, veja nxpc -i para poss°veis valores
 **2Os_Otimiza tamanho ao invÇs de velocidade
 **1R<x>_Estilo leitura Assembler:
 **2Rdefault_Use assembler padr∆o para alvo
@@ -3358,8 +3358,8 @@ A*2WI_Liga/desliga o uso de seá‰es de importaá∆o (Windows)
 3*2WN_N∆o gera c¢digo de relocaá∆o, necess†rio para depuraá∆o (Windows)
 4*2WN_N∆o gera c¢digo de relocaá∆o, necess†rio para depuraá∆o (Windows)
 A*2WN_N∆o gera c¢digo de relocaá∆o, necess†rio para depuraá∆o (Windows)
-A*2Wpxxxx_Especifica o tipo de controlador, veja fpc -i para valores poss°veis
-V*2Wpxxxx_Especifica o tipo de controlador, veja fpc -i para valores poss°veis
+A*2Wpxxxx_Especifica o tipo de controlador, veja nxpc -i para valores poss°veis
+V*2Wpxxxx_Especifica o tipo de controlador, veja nxpc -i para valores poss°veis
 3*2WR_Gera c¢digo de relocaá∆o (Windows)
 4*2WR_Gera c¢digo de relocaá∆o (Windows)
 A*2WR_Gera c¢digo de relocaá∆o (Windows)

@@ -2167,12 +2167,12 @@ S*2Aas_asemblacja przy u¿yciu GNU AS
 **1C<x>_opcje generacji kodu:
 **2Cc<x>_ustawia domy¶lny sposób wywo³ania funkcji/procedur na <x>
 **2Ce_kompilacja z emulowanymi opkodami zmiennoprzecinkowymi
-**2Cf<x>_ustawia u¿ywany zbiór instrukcji FPU na <x> (u¿yj "fpc -i", aby zobaczyæ mo¿liwe warto¶ci)
+**2Cf<x>_ustawia u¿ywany zbiór instrukcji FPU na <x> (u¿yj "nxpc -i", aby zobaczyæ mo¿liwe warto¶ci)
 **2Cg_generowanie kodu PIC
 **2Ch<n>_rozmiar sterty w bajtach (pomiêdzy 1023 i 67107840)
 **2Ci_sprawdzanie operacji wej¶cia/wyj¶cia
 **2Co_sprawdzanie przepe³nienia liczb ca³kowitych
-**2Cp<x>_ustawia u¿ywany zbiór instrukcji na <x> (u¿yj "fpc -i", aby zobaczyæ mo¿liwe warto¶ci)
+**2Cp<x>_ustawia u¿ywany zbiór instrukcji na <x> (u¿yj "nxpc -i", aby zobaczyæ mo¿liwe warto¶ci)
 **2Cr_sprawdzanie zakresu
 **2CR_sprawdzanie poprawno¶ci wywo³ywania metod obiektów
 **2Cs<n>_ustawienie rozmiar stosu na <n>

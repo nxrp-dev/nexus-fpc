@@ -215,7 +215,7 @@ interface
         function  RefAsmSymbol(const s : TSymStr;_typ:TAsmsymtype;indirect:boolean=false) : TAsmSymbol;
         function  GetAsmSymbol(const s : TSymStr) : TAsmSymbol;
         { create new assembler label }
-        procedure getlabel(out l : TAsmLabel;alt:TAsmLabelType);
+        procedure getlabel(out l : TAsmLabel;alt:TAsmLabelType;AKeepSymbol:boolean=false);
         procedure getjumplabel(out l : TAsmLabel);
         procedure getglobaljumplabel(out l : TAsmLabel);
         procedure getaddrlabel(out l : TAsmLabel);
@@ -684,9 +684,11 @@ implementation
       end;
 
 
-    procedure TAsmData.getlabel(out l : TAsmLabel;alt:TAsmLabelType);
+    procedure TAsmData.getlabel(out l : TAsmLabel;alt:TAsmLabelType;AKeepSymbol:boolean);
       begin
-        if (TargetInfo.system in (systems_linux + systems_android)) and
+        if AKeepSymbol then
+          l:=TAsmLabel.createstatic(AsmSymbolDict,FNextLabelNr[alt],alt)
+        else if (TargetInfo.system in (systems_linux + systems_android)) and
            { the next condition was
              (cs_create_smart in current_settings.moduleswitches) and
              but if we create_smartlink_sections, this is useless }

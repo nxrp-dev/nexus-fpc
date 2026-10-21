@@ -2116,7 +2116,9 @@ implementation
         if In_CurrentUnit then
           begin
             { mark end of procedure }
-            CurrentAsmData.getlabel(procendlabel,alt_dbgtype);
+            { COFF must retain the end symbol: folding it into a section plus
+              offset leaves a nonzero high_pc when LLD discards the procedure. }
+            CurrentAsmData.getlabel(procendlabel,alt_dbgtype,TargetInfo.system in systems_windows);
             CurrentAsmData.asmlists[al_procedures].insertbefore(TAILabel.Create(procendlabel),def.ProcEndTAI);
 
             procentry := def.MangledName;

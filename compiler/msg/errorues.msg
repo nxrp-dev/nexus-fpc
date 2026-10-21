@@ -3500,12 +3500,12 @@ S*2Aas_ensamblar usando GNU AS
 **1C<x>_opciones de generado de código:
 **2Cc<x>_cambiar la convencion de llamada por defecto a <x>
 **2Ce_Compilar con opcodes de punto flotante emulados
-**2Cf<x>_Cambiar el set de instrucciones de la FPU usado, fpc -i para posibles valores<x>
+**2Cf<x>_Cambiar el set de instrucciones de la FPU usado, nxpc -i para posibles valores<x>
 **2Cg_Generar código PIC
 **2Ch<n>_<n> bytes heap (entre 1023 y 67107840)
 **2Ci_Comprobación de E/S
 **2Co_comprobar desbordamiento en operaciones de enteros
-**2Cp<x>_Cambiar el set de instrucciones usado, fpc -i para posibles valores
+**2Cp<x>_Cambiar el set de instrucciones usado, nxpc -i para posibles valores
 **2Cr_comprobación de rango
 **2CR_verificar validez de objetos de llamada
 **2Cs<n>_definir el tamaño de la pila a <n>

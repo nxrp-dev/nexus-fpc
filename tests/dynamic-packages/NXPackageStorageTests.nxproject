@@ -8,8 +8,8 @@ Project NXPackageStorageTests {
     Requires: [@Projects.NexusTest];
     RootDirectory: "../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/NXPackageStorageTests/" + @Tools.Native.Name;
-    FPC Tests {
-        CompilerPath: @Tools.Native.FPCCompiler;
+    NXPC Tests {
+        CompilerPath: @Tools.Native.NXPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/dynamic-packages/NXPackageStorageTests.lpr"];
         OutputPath: @NXPackageStorageTests.OutputRoot;
         RawOptions: ["-gl", "-Cr", "-Co", "-Ci"];

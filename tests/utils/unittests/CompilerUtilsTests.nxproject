@@ -10,9 +10,9 @@ Project CompilerUtilsTests {
     Requires: [@Projects.FCLProcess, @Projects.FCLBase, @Projects.NexusTest];
     RootDirectory: "../../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/CompilerUtilsTests/" + @Tools.Native.Name;
-    FPC Tests {
-        CompilerPath: @Tools.Native.FPCCompiler;
-        SourceFiles: [@Tools.NexusFPC.SourcePath + "/tests/utils/unittests/CompilerUtilsTests.lpr"];
+    NXPC Tests {
+        CompilerPath: @Tools.Native.NXPCCompiler;
+        SourceFiles: [@Tools.NXPC.SourcePath + "/tests/utils/unittests/CompilerUtilsTests.lpr"];
         OutputPath: @CompilerUtilsTests.OutputRoot;
         Config Options { DisableDefaultConfigFiles: True; }
         Language Pascal { Mode: ObjFPC; }
@@ -21,15 +21,15 @@ Project CompilerUtilsTests {
             CompilerUtilitiesPath: @Tools.Native.CompilerUtilitiesPath;
             UnitPaths: [
                 @Tools.Native.RTLPath,
-                @Tools.NexusFPC.SourcePath + "/tests/utils/unittests",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/inc",
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/tests/utils",
-                @Tools.NexusFPC.SourcePath + "/compiler"
+                @Tools.NXPC.SourcePath + "/tests/utils/unittests",
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/inc",
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NXPC.SourcePath + "/tests/utils",
+                @Tools.NXPC.SourcePath + "/compiler"
             ];
             IncludePaths: [
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
-                @Tools.NexusFPC.SourcePath + "/packages/rtl-objpas/src/x86_64"
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/" + @Tools.Native.PascalPlatform,
+                @Tools.NXPC.SourcePath + "/packages/rtl-objpas/src/x86_64"
             ];
         }
     }

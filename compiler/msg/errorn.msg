@@ -3581,8 +3581,8 @@ option_help_pages=11025_[
 **2O2_Niveau 2 optimalisaties (-O1 + snelle optimalisaties)
 **2O3_Niveau 3 optimalisaties (-O2 + trage optimalisaties)
 **2Oa<x>=<y>_Stel alignering in
-**2Oo[NO]<x>_Schakel optimalisatie x aan of uit, zie fpc -i voor mogelijke waarden
-**2Op<x>_Stel doel-cpu in voor optimalisaties, zie fpc -i voor mogelijke waarden
+**2Oo[NO]<x>_Schakel optimalisatie x aan of uit, zie nxpc -i voor mogelijke waarden
+**2Op<x>_Stel doel-cpu in voor optimalisaties, zie nxpc -i voor mogelijke waarden
 **2Os_Genereer kleinere code
 6*1T<x>_Doel besturingssysteem:
 3*2TGO32V2_versie 2 of DJ Delorie DOS-extender

@@ -10,8 +10,8 @@ Project CollationDataTests {
     Requires: [@Projects.NexusTest];
     RootDirectory: "../../../../../nexus";
     OutputRoot: @Tools.OutputRoot + "/CollationDataTests/" + @Tools.Native.Name;
-    FPC Tests {
-        CompilerPath: @Tools.Native.FPCCompiler;
+    NXPC Tests {
+        CompilerPath: @Tools.Native.NXPCCompiler;
         SourceFiles: ["../nexus-fpc/tests/test/units/fpwidestring/CollationDataTests.lpr"];
         OutputPath: @CollationDataTests.OutputRoot;
         RawOptions: ["-gl", "-Cr", "-Co", "-Ci"];
