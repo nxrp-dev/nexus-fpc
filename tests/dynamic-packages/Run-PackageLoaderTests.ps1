@@ -5,9 +5,9 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $lRoot=(Resolve-Path "$PSScriptRoot/../..").Path; $SdkRoot=(Resolve-Path $SdkRoot).Path
-. "$lRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
+. "$lRoot/tests/dynamic-packages/NXPCPackageArtifacts.ps1"
 $lLate="$script:TestOutput/late"
-$null=Invoke-TestScript late-examples "$lRoot/tests/dynamic-packages/Build-NexusFPCLatePackageExamples.ps1" @{
+$null=Invoke-TestScript late-examples "$lRoot/tests/dynamic-packages/Build-NXPCLatePackageExamples.ps1" @{
     SdkRoot=$SdkRoot; OutputRoot=$lLate; RunExamples=$true; SmartLink=[bool]$SmartLink
 }
 $lProviders=Get-NexusPackageBundle "$lLate/packages"
@@ -36,7 +36,7 @@ function Compile([string]$Name,[string]$Source,[string]$Kind='Package',[string[]
         OutputDirectory=$(if($Kind -eq 'Package'){$lDistribution}else{"$script:TestOutput/$Name"})
         PackagePath=@($lProviders,$lDistribution)}
     if($Requires.Count){$p.RequiredPackages=$Requires}
-    $null=Invoke-TestScript "build-$Name" "$lRoot/tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1" $p $Expected $Contains
+    $null=Invoke-TestScript "build-$Name" "$lRoot/tests/dynamic-packages/Invoke-NXPCPackageCompile.ps1" $p $Expected $Contains
 }
 function Package([string]$Name,[Collections.IDictionary]$Units,[string]$Requires='nxrtl, democontracts'){
     $lDirectory="$lFixtures/$Name"
@@ -106,13 +106,13 @@ New-Item -ItemType Directory -Force $lPair,$lPairOutput | Out-Null
 Get-ChildItem (Get-NexusPackageBundle $lDistribution) -File | Where-Object Extension -In '.nxp','.dll' | Copy-Item -Destination $lPair
 Set-TestIdentityMismatch "$lPair/failinit.dll" dependency
 $lSDKIdentity=(Get-Content "$SdkRoot/sdk.json" -Raw | ConvertFrom-Json).SDKIdentity
-$lCode='. '+(ConvertTo-TestLiteral "$lRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1")+"`nPublish-NexusPackageBundle -OutputDirectory "+(ConvertTo-TestLiteral $lPairOutput)+' -Work '+(ConvertTo-TestLiteral $lPair)+' -Name failinit -Kind Package -SDKIdentity '+(ConvertTo-TestLiteral $lSDKIdentity)+' -PackageDirectories '+(ConvertTo-TestLiteral $lPair)
+$lCode='. '+(ConvertTo-TestLiteral "$lRoot/tests/dynamic-packages/NXPCPackageArtifacts.ps1")+"`nPublish-NexusPackageBundle -OutputDirectory "+(ConvertTo-TestLiteral $lPairOutput)+' -Work '+(ConvertTo-TestLiteral $lPair)+' -Name failinit -Kind Package -SDKIdentity '+(ConvertTo-TestLiteral $lSDKIdentity)+' -PackageDirectories '+(ConvertTo-TestLiteral $lPair)
 $null=Invoke-TestPowerShell reject-mismatched-pair $lCode 1 'metadata/image identity mismatch'
 Assert-PackageTest (-not(Test-Path "$lPairOutput/current.json")) 'Mismatched package published'
 $lDamaged="$script:TestOutput/damaged-bundle"
 Copy-Item $lDistribution $lDamaged -Recurse
 $lDLL="$(Get-NexusPackageBundle $lDamaged)/failinit.dll"
 [IO.File]::WriteAllBytes($lDLL,[byte[]]([IO.File]::ReadAllBytes($lDLL)+[Text.Encoding]::ASCII.GetBytes('tampered')))
-$lCode='. '+(ConvertTo-TestLiteral "$lRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1")+"`nGet-NexusPackageBundle "+(ConvertTo-TestLiteral $lDamaged)
+$lCode='. '+(ConvertTo-TestLiteral "$lRoot/tests/dynamic-packages/NXPCPackageArtifacts.ps1")+"`nGet-NexusPackageBundle "+(ConvertTo-TestLiteral $lDamaged)
 $null=Invoke-TestPowerShell reject-damaged-bundle $lCode 1 'differs from its manifest'
 Write-Host "PASS package loader suite ($($script:TestSteps.Count) steps)"

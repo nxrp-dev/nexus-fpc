@@ -8,7 +8,7 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SourceRoot=(Resolve-Path $SourceRoot).Path; $BootstrapBin=(Resolve-Path $BootstrapBin).Path
-. "$SourceRoot/tests/dynamic-packages/NexusFPCPackageArtifacts.ps1"
+. "$SourceRoot/tests/dynamic-packages/NXPCPackageArtifacts.ps1"
 if(-not $ExampleRoot){$ExampleRoot=Join-Path $SourceRoot "../nexus-lab/examples/packages/runtime-loading"}
 $ExampleRoot=(Resolve-Path -LiteralPath $ExampleRoot).Path
 $lSource="$script:TestOutput/source"
@@ -25,7 +25,7 @@ Add-TestResult source-only-input @{Files=$lPaths.Count}
 foreach($lSmart in @($false,$true)){
     $lMode=if($lSmart){'smart'}else{'normal'}
     $lCase="$script:TestOutput/$lMode"; $lSdk="$lCase/sdk"
-    $null=Invoke-TestScript "$lMode-build-and-run" "$lSource/tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1" @{
+    $null=Invoke-TestScript "$lMode-build-and-run" "$lSource/tests/dynamic-packages/Build-NXPCPackageSDK.ps1" @{
         SourceRoot=$lSource; ExampleRoot=$ExampleRoot; OutputRoot=$lSdk; BootstrapBin=$BootstrapBin; RunExamples=$true; SmartLink=$lSmart
     }
     Assert-PackageTest ((Get-TestHashes $lSource) -ceq $lBefore) 'SDK build modified source inputs'
@@ -44,7 +44,7 @@ begin
   WriteLn('PASS static host');
 end.
 '@
-    $null=Invoke-TestProcess "$lMode-static-build" "$lSdk/bin/ppcx64.exe" ((Get-TestCompilerOptions $lSdk $lStatic)+@('-O2',"$lStatic/static_host.pas"))
+    $null=Invoke-TestProcess "$lMode-static-build" "$lSdk/bin/nxpc-x86_64.exe" ((Get-TestCompilerOptions $lSdk $lStatic)+@('-O2',"$lStatic/static_host.pas"))
     $null=Invoke-TestProcess "$lMode-static-runtime" "$lStatic/static_host.exe" @() 0 'PASS static host'
     $lImports=Invoke-TestProcess "$lMode-static-imports" llvm-readobj.exe @('--coff-imports',"$lStatic/static_host.exe")
     Assert-PackageTest (-not $lImports.ToLowerInvariant().Contains('nxrtl.dll')) 'Static host imports shared RTL'
@@ -62,7 +62,7 @@ end.
     try {
         foreach($lKind in @('console','gui')){
             $lName="demo_$lKind"; $lApp="$lCase/$lName"
-            $null=Invoke-TestScript "$lMode-relocated-build-$lKind" "$lRelocated/bin/Invoke-NexusFPCPackageCompile.ps1" @{
+            $null=Invoke-TestScript "$lMode-relocated-build-$lKind" "$lRelocated/bin/Invoke-NXPCPackageCompile.ps1" @{
                 SdkRoot=$lRelocated; Source="$lHostSource/$lName.pas"; OutputDirectory=$lApp; Kind=$lKind
                 PackagePath=$lProviders; RequiredPackages=@('demotypes','demoleft','demoright'); SmartLink=$lSmart
             }

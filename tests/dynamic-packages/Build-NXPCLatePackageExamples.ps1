@@ -13,7 +13,7 @@ param(
     [switch]$RunExamples
 )
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
+. (Join-Path $PSScriptRoot 'NXPCPackageArtifacts.ps1')
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $SdkRoot = (Resolve-Path -LiteralPath $SdkRoot).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
@@ -26,7 +26,7 @@ if (-not $ExampleRoot) { $ExampleRoot = Join-Path $SourceRoot "../nexus-lab/exam
 Copy-Item -LiteralPath (Join-Path $ExampleRoot "late") -Destination $source -Recurse
 $packages = Join-Path $OutputRoot 'packages'
 New-Item -ItemType Directory -Path $packages | Out-Null
-$compile = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
+$compile = Join-Path $PSScriptRoot 'Invoke-NXPCPackageCompile.ps1'
 foreach ($item in @(@('contracts','democontracts'),@('base','pluginbase'),@('left','pluginleft'),@('right','pluginright'))) {
     & $compile -Forge $Forge -SdkRoot $SdkRoot -Kind Package -Source "$source\$($item[0])\$($item[1]).nxpk" `
         -PackagePath $packages -OutputDirectory $packages -SmartLink:$SmartLink

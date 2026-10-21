@@ -5,7 +5,7 @@ function Read-NexusPackageMetadata([string]$Path) {
     try {
         $header = $reader.ReadBytes(32)
         if ($header.Length -ne 32 -or [Text.Encoding]::ASCII.GetString($header,0,6) -cne 'NXP004') {
-            throw "Unsupported package metadata: $Path; expected NexusFPC NXP004, rebuild with NexusFPC"
+            throw "Unsupported package metadata: $Path; expected NXPC NXP004, rebuild with NXPC"
         }
         $result = @{Name='';SDK='';Build='';Requires=@{}}
         while ($stream.Position -lt $stream.Length) {

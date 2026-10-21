@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SdkRoot=(Resolve-Path $SdkRoot).Path
-$lCompiler="$SdkRoot/bin/ppcx64.exe"; $lBuild="$script:TestOutput/driver"; $lFixtures="$script:TestOutput/fixtures"
+$lCompiler="$SdkRoot/bin/nxpc-x86_64.exe"; $lBuild="$script:TestOutput/driver"; $lFixtures="$script:TestOutput/fixtures"
 New-Item -ItemType Directory -Force $lBuild,$lFixtures | Out-Null
 $lOptions=(Get-TestCompilerOptions $SdkRoot $lBuild)+@('-B','-O1','-dx86_64')
 foreach($lPart in @('','x86_64','x86','systems')){
@@ -153,7 +153,7 @@ Reject empty-required-name (Fixture Case @(''))
 Reject empty-contained-name (Fixture Case @() @(''))
 $lFirst=[BitConverter]::ToInt32($lBase,$lOffsets[243][1])
 $b=$lBase.Clone(); [Text.Encoding]::ASCII.GetBytes('PPU').CopyTo($b,$lFirst)
-Reject foreign-embedded-unit-same-version $b 'requires NexusFPC NXU signature'
+Reject foreign-embedded-unit-same-version $b 'requires NXPC NXU signature'
 foreach($c in @(@('ppu-magic',0,'B',0),@('ppu-version',3,'B',57),@('ppu-cpu',8,'H',65535),@('ppu-target',10,'H',65535),@('ppu-byte-order',12,'U',4),@('ppu-size',16,'U',[uint32]::MaxValue))){
     Reject $c[0] (Mutate $lBase ($lFirst+$c[1]) $c[2] $c[3])
 }

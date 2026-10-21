@@ -1,11 +1,11 @@
-This directory contains the NexusFPC compiler sources.
+This directory contains the NXPC compiler sources.
 
-Builds use the Forge projects in ../NexusFPC.Forge.nxscript. Read
-../NexusFPC.Forge.md for prerequisites, generation steps, the supported target
+Builds use the Forge projects in ../NXPC.Forge.nxscript. Read
+../NXPC.Forge.md for prerequisites, generation steps, the supported target
 matrix, release tools and SDK assembly.
 
 The retained compiler backends are i386, x86_64 and aarch64. Supported targets
-are selected by both CPU and OS in ../NexusFPC.Forge.Targets.nxscript:
+are selected by both CPU and OS in ../NXPC.Forge.Targets.nxscript:
 
   Linux:         i386, x86_64, aarch64
   Windows:       i386 (win32), x86_64 and aarch64 (win64)
@@ -24,7 +24,7 @@ Forge entry points:
 
 Use the documented Clang/LLVM assembler and LLD linker path. Compiler inputs
 are generated from the .dat and message sources by the utilities in utils/;
-see ../NexusFPC.Forge.Tables.nxscript and utils/README.txt.
+see ../NXPC.Forge.Tables.nxscript and utils/README.txt.
 
 Keep generated files outside the source checkout, in a unique directory under
 the development worktree. Full rebuild validation uses an isolated checkout.

@@ -1,6 +1,6 @@
-This directory contains retained Free Pascal utilities. NexusFPC builds
+This directory contains retained Free Pascal utilities. NXPC builds
 release tools through Forge's Bootstrap/Tools projects and installs their
-distribution through the Release project. See ../NexusFPC.Forge.md.
+distribution through the Release project. See ../NXPC.Forge.md.
 
 bin2obj : Converts binary data into Pascal include files; used by fpGUI's
           image-generation tooling.

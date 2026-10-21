@@ -10,5 +10,5 @@ mkx86inl          : Generate x86 intrinsic declarations and tables.
 mka64ins, mka64reg : Generate AArch64 instruction and register tables.
 
 The generation commands and retained release-tool list are documented in
-NexusFPC.Forge.md at the repository root. Run generators in an
+NXPC.Forge.md at the repository root. Run generators in an
 isolated source copy under the development worktree, outside this checkout.

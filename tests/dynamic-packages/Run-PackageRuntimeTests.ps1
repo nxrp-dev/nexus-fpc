@@ -6,7 +6,7 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SdkRoot=(Resolve-Path $SdkRoot).Path; $SourceRoot=(Resolve-Path $SourceRoot).Path
-$lCompiler="$SdkRoot/bin/ppcx64.exe"
+$lCompiler="$SdkRoot/bin/nxpc-x86_64.exe"
 $lNXTestSources=Join-Path $SourceRoot '../nexus/packages/nexus-packages/nxtest/src'
 if (-not (Test-Path "$lNXTestSources/obNXTestRegistry.pas")) {
     $lNXTestSources=Join-Path $SourceRoot '../../nexus/packages/nexus-packages/nxtest/src'

@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 . "$PSScriptRoot/PackageTestCommon.ps1"
 Initialize-PackageTests $OutputRoot
 $SdkRoot=(Resolve-Path $SdkRoot).Path
-$lCompiler="$SdkRoot/bin/ppcx64.exe"
+$lCompiler="$SdkRoot/bin/nxpc-x86_64.exe"
 $lProbe="$script:TestOutput/package_native_probe.exe"
 $null=Invoke-TestProcess 'build-probe' $lCompiler ((Get-TestCompilerOptions $SdkRoot $script:TestOutput)+@("$PSScriptRoot/package_native_probe.pas"))
 foreach ($lSmart in @($false,$true)) {

@@ -2,7 +2,7 @@
 .SYNOPSIS
 Build the Win64 runtime-package SDK with Forge after a completed Bootstrap.
 .EXAMPLE
-.\tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -Forge C:\tools\nxforge.exe -BootstrapDirectory C:\dev\worktree\fpc-bootstrap -OutputRoot C:\dev\worktree\nxpkg-sdk -RunExamples
+.\tests\dynamic-packages\Build-NXPCPackageSDK.ps1 -Forge C:\tools\nxforge.exe -BootstrapDirectory C:\dev\worktree\fpc-bootstrap -OutputRoot C:\dev\worktree\nxpkg-sdk -RunExamples
 #>
 [CmdletBinding()]
 param(
@@ -17,7 +17,7 @@ param(
     [switch]$SmartLink
 )
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
+. (Join-Path $PSScriptRoot 'NXPCPackageArtifacts.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '../..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $Forge = (Resolve-Path -LiteralPath $Forge).Path
@@ -58,7 +58,7 @@ if ($BuildExamples -or $RunExamples) {
     $exampleSource = (Resolve-Path -LiteralPath $ExampleRoot).Path
     $examplePackages = Join-Path $OutputRoot 'examples\packages'
     New-Item -ItemType Directory -Force -Path $examplePackages | Out-Null
-    $helper = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
+    $helper = Join-Path $PSScriptRoot 'Invoke-NXPCPackageCompile.ps1'
     foreach ($name in @('demotypes','demoleft','demoright')) {
         & $helper -Forge $Forge -SdkRoot $OutputRoot -Source "$exampleSource\$name\$name.nxpk" -Kind Package `
             -PackagePath $examplePackages -OutputDirectory $examplePackages -SmartLink:$SmartLink

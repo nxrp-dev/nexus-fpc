@@ -49,7 +49,7 @@ Project Build {
     Id: "NXRP.PackageBuild.$name";
     Group Steps (PackageBuild) {
         PackageBuildPrepare Prepare (PackageBuild.Prepare) { SDKDirectory: $sdk; WorkDirectory: $work; PackageDirectories: [$paths]; }
-        FPC Compile (PackageBuild.Compile) { EntryPoint: $sourcePath; UnitPaths: [$units]; SmartLinkUnits: $smart; SmartLink: $smart; $application }
+        NXPC Compile (PackageBuild.Compile) { EntryPoint: $sourcePath; UnitPaths: [$units]; SmartLinkUnits: $smart; SmartLink: $smart; $application }
         PackageBundlePublish Publish (PackageBuild.Publish) { Name: "$name"; Kind: $Kind; OutputDirectory: $output; }
     }
 }

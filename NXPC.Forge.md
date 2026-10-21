@@ -16,7 +16,7 @@ For native Linux x86-64, invoke Forge directly from the nexus-fpc root:
 
 ```bash
 nxforge /input=NXPC.Forge.nxscript \
-  "/targets=Build:Bootstrap,Promote:No,BuildRoot:/path/to/worktree/fpc-bootstrap,InstallRoot:/path/to/worktree/fpc-sdk,SeedCompiler:/usr/bin/ppcx64,SeedRTL:/usr/lib/x86_64-linux-gnu/fpc/3.2.2/units/x86_64-linux/rtl,NXBuildExecutable:nxbuild"
+  "/targets=Build:Bootstrap,Promote:No,BuildRoot:/path/to/worktree/nxpc-bootstrap,InstallRoot:/path/to/worktree/nxpc-sdk,SeedCompiler:/usr/bin/ppcx64,SeedRTL:/usr/lib/x86_64-linux-gnu/fpc/3.2.2/units/x86_64-linux/rtl,NXBuildExecutable:nxbuild"
 ```
 
 `BuildRoot` and `InstallRoot` must be distinct directories. Use a fresh output
@@ -54,7 +54,7 @@ seed and all three generations; Forge checks compiler and RTL convergence.
 
 ```powershell
 $forge = 'nxforge.exe'
-$buildRoot = 'C:/dev/worktree/fpc-bootstrap'
+$buildRoot = 'C:/dev/worktree/nxpc-bootstrap'
 & $forge /input=NXPC.Forge.nxscript "/targets=Build:Bootstrap,BuildRoot:$buildRoot"
 ```
 
@@ -229,7 +229,7 @@ directory. The target list below is the retained matrix shown above:
 
 ```powershell
 $forge = 'nxforge.exe'
-$buildRoot = 'C:/dev/worktree/fpc-bootstrap'
+$buildRoot = 'C:/dev/worktree/nxpc-bootstrap'
 & $forge /input=NXPC.Forge.nxscript "/targets=Build:Bootstrap,BuildRoot:$buildRoot"
 if ($LASTEXITCODE -ne 0) { throw 'Bootstrap failed' }
 foreach ($target in @('i386-linux','x86_64-linux','aarch64-linux',
@@ -403,7 +403,7 @@ The output is `<BuildRoot>/distribution/`:
 
 - `bin/<host>/`: the release tools, `nxpc-x86_64`, `nxpc-i386`, and `nxpc-aarch64`.
   The Windows host also stores `nxpc.cfg` here. On Linux the config is
-  `bin/etc/fpc.cfg`, the compiler's existing `../etc/fpc.cfg` search location.
+  `bin/etc/nxpc.cfg`, the compiler's existing `../etc/nxpc.cfg` search location.
 - `units/<cpu>-<os>/rtl/`: compiled RTL units, objects and associated resources
   for the 13 targets. The internal `buildrtl` build helper is excluded.
 - `build-identity.json`: the identity captured by the bootstrap.
@@ -418,9 +418,9 @@ per CPU. The driver selects that compiler with `-P`; `-T` selects its target OS
 and matching RTL. For example, from the distribution's binary directory:
 
 ```powershell
-& .\fpc.exe app.pas
-& .\fpc.exe -Pi386 -Twin32 app.pas
-& .\fpc.exe -Paarch64 -Tlinux app.pas
+& .\nxpc.exe app.pas
+& .\nxpc.exe -Pi386 -Twin32 app.pas
+& .\nxpc.exe -Paarch64 -Tlinux app.pas
 ```
 
 `NXPC.Release.cfg` is copied unchanged. It uses the compiler's

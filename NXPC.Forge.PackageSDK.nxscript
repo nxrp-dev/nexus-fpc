@@ -70,7 +70,7 @@ Group RuntimePackageSDK {
         Recursive: True;
         Source: "../nexus/projects/forge/templates";
         Destination: @BootstrapPaths.Root + "/package-sdk/forge";
-        IncludeMasks: ["PackageBuild.nxscript", "LinuxPackageBuild.nxscript", "LinuxPackageApplication.nxscript", "FPC.mustache"];
+        IncludeMasks: ["PackageBuild.nxscript", "LinuxPackageBuild.nxscript", "LinuxPackageApplication.nxscript", "NXPC.mustache"];
     }
     PackageSDKManifest SDKManifest {
         Directory: @BootstrapPaths.Root + "/package-sdk";

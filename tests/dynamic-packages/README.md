@@ -38,7 +38,7 @@ It builds one matching SDK for each normal/smart-link configuration through
 the historical source-bootstrap helpers. This retained runner still passes
 `BootstrapBin` to the current SDK helper and omits the Forge recipe closure;
 it is not a working current bootstrap command. Use the Forge bootstrap and
-`Build-NexusFPCPackageSDK.ps1 -Forge <forge> -BootstrapDirectory <BuildRoot>`
+`Build-NXPCPackageSDK.ps1 -Forge <forge> -BootstrapDirectory <BuildRoot>`
 until the retained runner is replaced by the Windows NXTest work.
 `-FullSuite` adds all Windows package suites and the Extended/shared-RTL math
 regressions. Omit it to run just SDK construction and relocation checks.
