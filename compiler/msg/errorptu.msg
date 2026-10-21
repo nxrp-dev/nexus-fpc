@@ -3721,7 +3721,7 @@ S*2Tlinux_Linux
 **2*_s : Mostra Data/Hora            q : Mostra números mensagens
 **2*_a : Mostra tudo                 x : Info. executável (apenas Win32)
 **2*_b : Grava mensagens nome arqs.  p : Grava tree.log com árvore análise
-**2*_    com caminho completo        v : Grava fpcdebug.txt com muitas
+**2*_    com caminho completo        v : Grava nxpcdebug.txt com muitas
 **2*_                                    informações de depuração
 **2*_m<x>,<y> : Não mostra mensagens numeradas <x> e <y>
 **1W<x>_Opções específicas do alvo (alvos)

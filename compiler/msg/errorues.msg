@@ -3639,7 +3639,7 @@ S*2Tlinux_Linux
 **2*_i : Mostrar info. general       d : Mostrar info. de depurado
 **2*_l : Mostrar num de lineas       r : Modo compatible con Rhide/GCC
 **2*_a : Mostrar todo                x : Info. del ejecutable (Win32 solo)
-**2*_v : escribe fpcdebug.txt con    p : Escribir el árbol de parser en tree.log
+**2*_v : escribe nxpcdebug.txt con    p : Escribir el árbol de parser en tree.log
 **2*_    mucha informacón de depurado
 3*1W<x>_opciones de Win32 o similares
 3*2WB<x>_Establece la dirección hex de base a <x>

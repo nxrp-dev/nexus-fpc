@@ -2284,7 +2284,7 @@ S*2Tlinux_Linux
 **2*_i : mostra informació general   d : mostra l'informació del depurador
 **2*_l : mostra números de línia     r : compatibilitat Rhide/GCC
 **2*_a : mostra-ho tot               x : informació de l'executable (win32)
-**2*_v : escriu fpcdebug.txt amb     p : escriu tree.log amb arbre analitzat
+**2*_v : escriu nxpcdebug.txt amb     p : escriu tree.log amb arbre analitzat
 **2*_    molta informació de la depuració
 3*1W<x>_Opcions per a plataformes tipus Win32
 3*2WB<x>_Imatge a valor hexadecimal <x>

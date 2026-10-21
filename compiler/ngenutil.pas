@@ -1568,7 +1568,7 @@ implementation
     begin
       { Insert Ident of the compiler in the .fpc.version section }
       lBuilder:=CTAITypedConstBuilder.Create([tcalo_no_dead_strip]);
-      lName:='FPC '+Full_Version_String+
+      lName:='NXPC '+Full_Version_String+
         ' ['+DateString+'] for '+TargetCPUString+' - '+TargetInfo.shortname;
       lDef:=CArrayDef.getreusable(CAnsiCharType,length(lName));
       lBuilder.maybe_begin_aggregate(lDef);

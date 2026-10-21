@@ -3732,7 +3732,7 @@ S*2Tlinux_Linux
 **2*_l : montre les numéros de lignes  r : mode compatibilité Rhide/GCC
 **2*_a : montre tout                   x : infos Executable (Win32 seulement)
 **2*_b : montre le nom des fichiers avec chemin complet dans les messages
-**2*_v : écrit fpcdebug.txt avec       p : écrit tree.log avec arbre d'analyse
+**2*_v : écrit nxpcdebug.txt avec       p : écrit tree.log avec arbre d'analyse
 **2*_    un maximum d'informations de débogage
 3*1W<x>_options pour cibles de type Win32
 3*2WB_créer une image relogeable

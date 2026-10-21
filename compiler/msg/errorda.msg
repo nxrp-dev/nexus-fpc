@@ -3629,7 +3629,7 @@ option_help_pages=11025_[
 **2*_b : Vis alle procedure-         r : Rhide/GCC kompatabilitetstilstand
 **2*_    erklæringer hvis der        x : Programinformation (kun på windows)
 **2*_    opstår en fejl
-**1V_skriv filen fpcdebug.txt med store mængder debug-information
+**1V_skriv filen nxpcdebug.txt med store mængder debug-information
 *L2Xc_link med c-biblioteket
 **2Xs_fjern alle symboler fra programfilen
 **2XP<x>_sæt <x> foran binutils-filnavnene

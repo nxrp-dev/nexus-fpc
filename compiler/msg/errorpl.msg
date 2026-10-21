@@ -2306,7 +2306,7 @@ S*2Tlinux_Linux
 **2*_i : pokazuje og¢lne informacje  d : pokazuje informacje debugowania
 **2*_l : pokazuje numery lini        r : tryb kompatybilno˜ci z Rhide/GCC
 **2*_a : pokazuje wszystko           x : informacje o pliku exe (tylko Win32)
-**2*_v : zapisuje plik fpcdebug.txt  p : zapisuje tree.log z drzewem
+**2*_v : zapisuje plik nxpcdebug.txt  p : zapisuje tree.log z drzewem
 **2*_    z du¾¥ ilo˜ci¥ informacji       parsowania
 3*1W<x>_opcje dla Win32 i podobnych
 3*2WB_tworzenie relokacyjnego obrazu

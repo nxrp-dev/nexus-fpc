@@ -151,7 +151,7 @@ implementation
       begin
         if Status.UseBugReport then
          Exit;
-        FN:='fpcdebug.txt';
+        FN:='nxpcdebug.txt';
         Assign(Status.ReportBugFile,FN);
         {$push}{$I-}
          Append(Status.ReportBugFile);
@@ -160,7 +160,7 @@ implementation
         {$pop}
         Status.UseBugReport:=(IOResult=0);
         if Status.UseBugReport then
-         WriteLn(Status.ReportBugFile,'FPC bug report file');
+         WriteLn(Status.ReportBugFile,'NXPC bug report file');
       end;
 
     procedure RestoreLocalVerbosity(PState : PMessageStateRecord);

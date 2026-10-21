@@ -4271,7 +4271,7 @@ W*2Twasip2_The WebAssembly System Interface Preview 2 (WASI 0.2) (experimental)
 **2*_s : Show time stamps
 **2*_t : Show tried/used files
 **2*_u : Show unit info
-**2*_v : Write fpcdebug.txt with lots of debugging info
+**2*_v : Write nxpcdebug.txt with lots of debugging info
 **2*_w : Show warnings
 **2*_x : Show info about invoked tools
 #**2*_y : Not used yet

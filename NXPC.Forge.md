@@ -488,7 +488,7 @@ build ID. The manifest operation checks the compiler metadata and native runtime
 descriptor without loading the library, then hashes the compiler, foundation and startup artifacts. Both
 operations use the existing ordered group execution. SDK generation and consumer
 compilation no longer invoke PowerShell internally. The SDK ships
-`forge/PackageBuild.nxscript` and `forge/FPC.mustache`; it does not ship PowerShell
+`forge/PackageBuild.nxscript` and `forge/NXPC.mustache`; it does not ship PowerShell
 compile/artifact helpers. Consumers compose the group with their SDK, source,
 provider, work and output paths using the installed Forge language definitions.
 

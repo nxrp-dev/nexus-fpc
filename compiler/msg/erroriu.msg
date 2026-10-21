@@ -2921,7 +2921,7 @@ S*2Tlinux_Linux
 **2*_s : Mostra date/ore          q : Mostra numeri dei messaggi
 **2*_a : Mostra tutto             x : Info degli exe (solo Win32)
 **2*_b : Nei messaggi scrivi nomi p : Scrivi parse tree in tree.log
-**2*_    file con path completo   v : Scrivi fpcdebug.txt con
+**2*_    file con path completo   v : Scrivi nxpcdebug.txt con
 **2*_                                 molte informazioni di debug
 **2*_m<x>,<y> : Non mostrare messaggi con i numeri <x> e <y>
 3*1W<x>_Opzioni specifiche della destinazione (destinazioni)

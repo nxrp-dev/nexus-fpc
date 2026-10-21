@@ -3682,7 +3682,7 @@ S*2Tlinux_Linux
 **2*_l : Tampilkan nomor baris         r : Mode kompatibilitas Rhide/GCC
 **2*_a : Tampilkan semuanya            x : Info executable (hanya Win32)
 **2*_b : Tulis pesan nama file dengan path lengkap
-**2*_v : Tulis fpcdebug.txt dengan     p : Tulis tree.log dengan susunan urai
+**2*_v : Tulis nxpcdebug.txt dengan     p : Tulis tree.log dengan susunan urai
 **2*_    banyak info debug
 3*1W<x>_Opsi spesifik-target (target)
 A*1W<x>_Opsi spesifik-target (target)
