@@ -1,0 +1,54 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project PackageSDK {
+    Id: "NXRP.NXPC.PackageSDK";
+    RootDirectory: $BootstrapRoot;
+    NXPC SharedRTL Part[SharedRTL] {
+        CompilerPath: $SDKCompiler;
+        Assembler LLVM TargetOS[linux] { OutputFormat: "as-clang"; }
+        SourceFiles: [
+            $BootstrapRoot + "/package-sdk/work/nxrtl/nxrtl.nxpk"
+        ];
+        OutputPath: $BootstrapRoot + "/package-sdk/work/nxrtl";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg", $BootstrapRoot + "/package-sdk/work/foundation.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Linking Link { StripSymbols: Enabled; }
+        Language Pascal { Mode: ObjFPC; }
+        RawOptions: ["-o" + $BootstrapRoot + "/package-sdk/work/nxrtl/nxrtl.nxpl"];
+        Files Paths {
+            UnitPaths: [
+                $BootstrapRoot + "/package-sdk/work/rtl-units",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/" + $TargetOS
+            ];
+        }
+    }
+    NXPC HostStartup Part[HostStartup] {
+        CompilerPath: $SDKCompiler;
+        Assembler LLVM TargetOS[linux] { OutputFormat: "as-clang"; }
+        SourceFiles: [
+            $BootstrapRoot + "/package-sdk/work/sysinitpkg.pas"
+        ];
+        OutputPath: $BootstrapRoot + "/package-sdk/units";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg", $BootstrapRoot + "/package-sdk/work/startup.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Language Pascal { Mode: ObjFPC; }
+        Files Paths {
+            UnitPaths: [
+                $BootstrapRoot + "/package-sdk/units"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/" + $TargetOS,
+                $BootstrapRoot + "/seed/rtl/" + $TargetOS + "/" + $TargetCPU
+            ];
+            LibraryPaths: [$BootstrapRoot + "/package-sdk/packages"];
+        }
+    }
+}

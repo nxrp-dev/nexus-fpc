@@ -90,7 +90,7 @@ implementation
           begin
 {$ifdef i386}
             case TargetInfo.system of
-              system_i386_linux,system_i386_android:
+              system_i386_linux:
                 begin
                   case CurrentSettings.TLSModel of
                     tlsm_local_exec:

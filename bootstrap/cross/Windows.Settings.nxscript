@@ -1,0 +1,40 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+// Shared compiler settings; compilation inputs belong to the consuming project.
+Project WindowsSettings {
+    Id: "NXRP.NXPC.Settings.WindowsSettings";
+    NXPC Options {
+        CompilerPath: $CrossCompiler;
+        OutputPath: $CrossRTL;
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Target Platform { OperatingSystem: $TargetOS; }
+        RawOptions: ["-XLL"];
+        Files Paths {
+            UnitPaths: [
+                $CrossRTL,
+                $RTLDirectory,
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU
+            ];
+            IncludePaths: [
+                $RTLDirectory,
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU,
+                $RTLDirectory + "/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/win/wininc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes",
+                $BootstrapRoot + "/seed/rtl/charmaps"
+            ];
+        }
+    }
+}

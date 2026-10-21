@@ -1829,7 +1829,7 @@ procedure TObjCRTTIWriterNonFragile.GenObjCClassesSections(AList:TAsmList; AObjC
     lMetaTypedConstBuilder.emit_tai(TAIConst.Create_sym(FObjCEmptyCacheVar),VoidPointerType);
     { pointer to vtable }
     if not Assigned(FObjCEmptyVtableVar) and
-       not(TargetInfo.system in [system_aarch64_ios,system_aarch64_darwin,system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+       not(TargetInfo.system in [system_aarch64_ios,system_aarch64_darwin,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
       FObjCEmptyVtableVar:=CurrentAsmData.RefAsmSymbol(TargetInfo.Cprefix+'_objc_empty_vtable',AT_DATA);
     ConcatSymOrNil(lMetaTypedConstBuilder,FObjCEmptyVtableVar,VoidPointerType);
     { the read-only part }

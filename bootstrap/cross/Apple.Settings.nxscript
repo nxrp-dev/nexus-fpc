@@ -1,0 +1,43 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+// Shared compiler settings; compilation inputs belong to the consuming project.
+Project AppleSettings {
+    Id: "NXRP.NXPC.Settings.AppleSettings";
+    NXPC Options {
+        CompilerPath: $CrossCompiler;
+        OutputPath: $CrossRTL;
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Definitions Symbols { Defines: [FPC_USE_LIBC]; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Target Platform { OperatingSystem: $TargetOS; }
+        RawOptions: ["-XLL"];
+        Files Paths {
+            UnitPaths: [
+                $CrossRTL,
+                $BootstrapRoot + "/seed/rtl/darwin",
+                $BootstrapRoot + "/seed/rtl/bsd",
+                $BootstrapRoot + "/seed/rtl/unix",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/darwin",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/unix",
+                $BootstrapRoot + "/seed/rtl/bsd",
+                $BootstrapRoot + "/seed/rtl/bsd/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/darwin/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes",
+                $BootstrapRoot + "/seed/rtl/charmaps"
+            ];
+        }
+    }
+}

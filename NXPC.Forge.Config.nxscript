@@ -1,0 +1,13 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+module "NXPC.Forge.Targets.nxscript";
+
+NXBuild CrossProjectBuild Build[Cross] {
+    Executable: $NXBuildExecutable;
+    Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+    TargetOS: @CrossTarget.TargetOS;
+    TargetCPU: @CrossTarget.Architecture;
+    BuildConfiguration: Release;
+    Targets: "NativeCompiler:" + @CrossHost.NativeCompiler + ",NativeRTL:" + @CrossHost.NativeRTL + ",BootstrapRoot:" + @BootstrapPaths.Root + ",Backend:" + @CrossTarget.SharedBackend + ",CrossDirectory:" + @CrossTarget.Directory + ",CrossCompiler:" + @CrossTarget.Compiler + ",CrossRTL:" + @CrossTarget.RTL + ",RTLDirectory:" + @CrossTarget.RTLDirectory + ",Triple:" + @CrossTarget.Triple + ",SmokeOutput:" + @CrossTarget.Directory + "/smoke" + @CrossTarget.ExecutableSuffix + ",HostOS:" + $HostOS + ",HostCPU:" + $HostCPU + ",HostClang:" + @CrossHost.Clang + ",HostLLVMDirectory:" + @CrossHost.LLVMDirectory;
+}

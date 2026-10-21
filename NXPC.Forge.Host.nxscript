@@ -1,0 +1,36 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+module BootstrapPaths "NXPC.Forge.Paths.nxscript";
+Environment BootstrapHost HostOS[win64] {
+    Name: "x86_64-win64";
+    ConfigDirectory: "x86_64-win64";
+    PackageTarget: "x86_64-win64";
+    Suffix: ".exe";
+    Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe";
+    RTL: @BootstrapPaths.Root + "/cycle3/rtl64";
+    RTLPlatform: "win";
+}
+Environment BootstrapHost HostOS[linux] {
+    Name: "x86_64-linux";
+    ConfigDirectory: "etc";
+    PackageTarget: "x86_64-linux-gnu";
+    Suffix: "";
+    Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64";
+    RTL: @BootstrapPaths.Root + "/cycle3/rtl";
+    RTLPlatform: "unix";
+}
+
+Environment CrossHost HostOS[win64] {
+    Suffix: ".exe";
+    NativeCompiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe";
+    NativeRTL: @BootstrapPaths.Root + "/cycle3/rtl64";
+    Clang: "C:/android/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe";
+    LLVMDirectory: "C:/android/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/bin";
+}
+Environment CrossHost HostOS[linux] {
+    Suffix: "";
+    NativeCompiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64";
+    NativeRTL: @BootstrapPaths.Root + "/cycle3/rtl";
+    Clang: "/usr/bin/clang-18";
+    LLVMDirectory: "/usr/bin";
+}

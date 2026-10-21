@@ -3,6 +3,7 @@
 [CmdletBinding()]
 param(
     [string]$SourceRoot = (Join-Path $PSScriptRoot '../..'),
+    [Parameter(Mandatory)][string]$BootstrapDirectory,
     [switch]$InputsOnly,
     [string]$ReleaseRoot,
     [string]$OutputRoot
@@ -14,8 +15,8 @@ $targets = @(
     'x86_64-android', 'aarch64-android', 'x86_64-darwin', 'aarch64-darwin',
     'x86_64-iphonesim', 'aarch64-iphonesim', 'aarch64-ios'
 )
-$compilers = @{i386='ppcross386.exe'; x86_64='ppcrossx64.exe'; aarch64='ppcrossa64.exe'}
-$tools = @('fpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
+$compilers = @{i386='nxpc-i386.exe'; x86_64='nxpc-x86_64.exe'; aarch64='nxpc-aarch64.exe'}
+$tools = @('nxpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
     'rstconv','bin2obj')
 
 function Require-File([string]$Path) {
@@ -58,14 +59,14 @@ function Assert-RelocatedUnits([string]$LogName, [string]$Target) {
 
 try {
     $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
-    $bootstrap = Join-Path $SourceRoot 'build/forge-bootstrap'
+    $bootstrap = [IO.Path]::GetFullPath($BootstrapDirectory)
     $toolBin = Join-Path $bootstrap 'tools/bin'
     $identityFile = Join-Path $bootstrap 'seed/build-identity.json'
     if ($InputsOnly) {
         Require-File $identityFile
         foreach ($name in $tools) { Require-File (Join-Path $toolBin ($name+'.exe')) }
-        $native = Join-Path $bootstrap 'cycle3/ppcx64.exe'
-        Assert-Same $native (Join-Path $toolBin 'ppcx64.exe')
+        $native = Join-Path $bootstrap 'cycle3/nxpc-x86_64.exe'
+        Assert-Same $native (Join-Path $toolBin 'nxpc-x86_64.exe')
         $canonical = @{x86_64=$native}
         foreach ($target in $targets) {
             $cpu = $target.Split('-')[0]
@@ -80,7 +81,7 @@ try {
             else { $canonical[$cpu] = $compiler }
         }
         foreach ($compiler in $canonical.Values) {
-            & (Join-Path $SourceRoot 'tests/forge/Test-NexusFPCBuildIdentity.ps1') -Compiler $compiler -IdentityFile $identityFile
+            & (Join-Path $SourceRoot 'tests/forge/Test-NXPCBuildIdentity.ps1') -Compiler $compiler -IdentityFile $identityFile
         }
         Write-Host "PASS release inputs: $($tools.Count) tools, three matching compiler families, 13 target RTLs"
         exit 0
@@ -94,7 +95,7 @@ try {
     New-Item -ItemType Directory -Path $OutputRoot | Out-Null
     $steps = [Collections.Generic.List[object]]::new()
     $bin = Join-Path $ReleaseRoot 'bin/x86_64-win64'
-    foreach ($name in ($tools | ForEach-Object { $_+'.exe' }) + @('ppcx64.exe')) {
+    foreach ($name in ($tools | ForEach-Object { $_+'.exe' }) + @('nxpc-x86_64.exe')) {
         Assert-Same (Join-Path $toolBin $name) (Join-Path $bin $name)
     }
     foreach ($cpu in @('i386','aarch64')) {
@@ -114,7 +115,7 @@ try {
         foreach ($file in $files) { Assert-Same $file.FullName (Join-Path $destination $file.Name) }
         $unitFiles += $files.Count
     }
-    $config = Get-Content -LiteralPath (Join-Path $bin 'fpc.cfg') -Raw
+    $config = Get-Content -LiteralPath (Join-Path $bin 'nxpc.cfg') -Raw
     if (-not $config.Contains('-Fu$FPCBINDIR/../../units/$FPCTARGET/rtl')) { throw 'Release config must use compiler-relative unit paths.' }
     if ($config -match '(?i)[a-z]:[/\\]|forge-bootstrap|%basepath%') { throw 'Release config contains an unresolved or machine-specific path.' }
 
@@ -122,7 +123,7 @@ try {
     $relocated = Join-Path $OutputRoot 'relocated distribution'
     Copy-Item -LiteralPath $ReleaseRoot -Destination $relocated -Recurse
     $bin = Join-Path $relocated 'bin/x86_64-win64'
-    $driver = Join-Path $bin 'fpc.exe'
+    $driver = Join-Path $bin 'nxpc.exe'
     $clang = (Get-Command clang.exe -CommandType Application -ErrorAction Stop).Source
     $llvmrc = (Get-Command llvm-rc.exe -CommandType Application -ErrorAction Stop).Source
     $linker = (Get-Command ld.lld.exe -CommandType Application -ErrorAction Stop).Source

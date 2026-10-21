@@ -1296,7 +1296,7 @@ implementation
        HS1 : TPathStr;
 {$endif need_path_search}
      begin
-       LocalExePath:=GetEnvironmentVariable('PPC_EXEC_PATH');
+       LocalExePath:=GetEnvironmentVariable('NXPC_EXEC_PATH');
        ExeName := '';
        if LocalExePath='' then
          begin

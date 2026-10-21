@@ -21,9 +21,6 @@ The normal test suite discovers the `t*.pas` fixtures in `tbs`, `tbf`, and
 `webtbf`. The saved-unit consumer also uses its standard `RECOMPILE` directive.
 The future nxtest integration must retain the source-hidden PPU check and optimization variant.
 
-See [the recovery report](../../nexusfpc-compiler-regression-recovery.md) for the
-original failure, compiler correction, and recorded validation.
-
 ## Assigned callback optimization correction (2026-10-14)
 
 At `-O2`, the compiler combines two comparisons such as

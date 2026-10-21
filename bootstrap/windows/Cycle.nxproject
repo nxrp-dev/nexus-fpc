@@ -1,0 +1,107 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module CycleSettings "Cycle.Settings.nxscript";
+
+Project Cycle {
+    Id: "NXRP.NXPC.windows.Cycle";
+    RootDirectory: $BootstrapRoot;
+    NXPC System {
+        CompilerPath: $PreviousCompiler;
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/win64/system.pas"
+        ];
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/rtl64";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; CompileSystemUnit: Enabled; }
+        Files Paths {
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/win64",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/x86_64",
+                $BootstrapRoot + "/seed/rtl/win64/x86_64",
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/win/wininc"
+            ];
+        }
+    }
+
+    NXPC RTL (CycleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/objpas.pas",
+            $BootstrapRoot + "/seed/rtl/win64/windows.pas",
+            $BootstrapRoot + "/seed/rtl/win/sysutils.pas",
+            $BootstrapRoot + "/seed/rtl/win64/buildrtl.pas",
+            $BootstrapRoot + "/seed/rtl/inc/uuchar.pas",
+            $BootstrapRoot + "/seed/rtl/inc/macpas.pas",
+            $BootstrapRoot + "/seed/rtl/inc/iso7185.pas"
+        ];
+    }
+
+    NXPC CodePages (CycleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/charmaps/cpall.pas"
+        ];
+
+        Files Paths {
+            UnitPaths: [
+                $BootstrapRoot + "/" + $Stage + "/rtl64",
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/x86_64"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/win64",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/x86_64",
+                $BootstrapRoot + "/seed/rtl/win64/x86_64",
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/win/wininc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes",
+                $BootstrapRoot + "/seed/rtl/charmaps"
+            ];
+        }
+    }
+
+    NXPC Diagnostics (CycleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/inc/lnfodwrf.pas",
+            $BootstrapRoot + "/seed/rtl/x86_64/intrinsics.pas"
+        ];
+    }
+    NXPC Compiler {
+        CompilerPath: $PreviousCompiler;
+        SourceFiles: [
+            $BootstrapRoot + "/seed/source/pp.pas"
+        ];
+        OutputPath: $CompilerUnits;
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Optimization Optimize { Level: Level2; }
+        Definitions Symbols { Defines: [x86_64, REVINC, RELEASE]; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Linking Link { StripSymbols: Enabled; }
+        RawOptions: ["-o" + $CompilerOutput];
+        Files Paths {
+            UnitPaths: [
+                $BootstrapRoot + "/" + $Stage + "/rtl64",
+                $BootstrapRoot + "/seed/source/x86_64",
+                $BootstrapRoot + "/seed/source/x86",
+                $BootstrapRoot + "/seed/source/systems",
+                $BootstrapRoot + "/seed/dependencies/paszlib"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/source",
+                $BootstrapRoot + "/seed/source/x86_64",
+                $BootstrapRoot + "/seed/source/x86",
+                $BootstrapRoot + "/seed/source/systems"
+            ];
+        }
+    }
+}

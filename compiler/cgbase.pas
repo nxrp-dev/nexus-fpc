@@ -127,10 +127,6 @@ interface
           OC_A             { greater than (unsigned)          }
         );
 
-       { indirect symbol flags }
-       TIndSymFlag = (is_data,is_weak);
-       TIndSymFlags = set of TIndSymFlag;
-
        { OS_NO is also used memory references with large data that can
          not be loaded in a register directly }
        TCgSize = (OS_NO,

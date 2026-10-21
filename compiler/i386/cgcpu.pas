@@ -249,15 +249,7 @@ unit cgcpu;
                   begin
                     if Assigned(symbol) then
                       begin
-                        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-                           ((dirref.Symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) or
-                            (cs_create_pic in CurrentSettings.ModuleSwitches)) then
-                          begin
-                            tmpreg:=GetAddressRegister(list);
-                            A_LoadAddr_Ref_Reg(list,dirref,tmpreg);
-                            list.concat(TAICPU.op_reg(A_PUSH,opsize,tmpreg));
-                          end
-                        else if cs_create_pic in CurrentSettings.ModuleSwitches then
+                        if cs_create_pic in CurrentSettings.ModuleSwitches then
                           begin
                             if offset<>0 then
                               begin
@@ -580,55 +572,42 @@ unit cgcpu;
         if (tf_pic_uses_got in TargetInfo.flags) and
           (pi_needs_got in CurrentProcInfo.flags) then
           begin
-            if not (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
+            { Use ECX as a temp register by default }
+            if CurrentProcInfo.got = NR_EBX then
+              tmpreg:=NR_EBX
+            else
+              tmpreg:=NR_ECX;
+            { Allocate registers used for parameters to make sure they
+              never allocated during this PIC init code }
+            for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
+              with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
+                if Loc in [LOC_REGISTER, LOC_CREGISTER] then begin
+                  A_Reg_Alloc(list, register);
+                  { If ECX is used for a parameter, use EBX as temp }
+                  if GetSupReg(register) = RS_ECX then
+                    tmpreg:=NR_EBX;
+                end;
+
+            if tmpreg = NR_EBX then
               begin
-                { Use ECX as a temp register by default }
-                if CurrentProcInfo.got = NR_EBX then
-                  tmpreg:=NR_EBX
-                else
-                  tmpreg:=NR_ECX;
-                { Allocate registers used for parameters to make sure they
-                  never allocated during this PIC init code }
-                for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
-                    if Loc in [LOC_REGISTER, LOC_CREGISTER] then begin
-                      A_Reg_Alloc(list, register);
-                      { If ECX is used for a parameter, use EBX as temp }
-                      if GetSupReg(register) = RS_ECX then
-                        tmpreg:=NR_EBX;
-                    end;
-
-                if tmpreg = NR_EBX then
-                  begin
-                    { Mark EBX as used in the proc }
-                    include(rg[R_INTREGISTER].UsedInProc,RS_EBX);
-                    CurrentModule.RequiresEBXPICHelper:=true;
-                    A_Call_Name_Static(list,'fpc_geteipasebx');
-                  end
-                else
-                  begin
-                    CurrentModule.RequiresECXPICHelper:=true;
-                    A_Call_Name_Static(list,'fpc_geteipasecx');
-                  end;
-                list.concat(TAICPU.op_sym_ofs_reg(A_ADD,S_L,CurrentAsmData.RefAsmSymbol('_GLOBAL_OFFSET_TABLE_',AT_DATA),0,tmpreg));
-                list.concat(TAICPU.op_reg_reg(A_MOV,S_L,tmpreg,CurrentProcInfo.got));
-
-                { Deallocate parameter registers }
-                for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
-                    if Loc in [LOC_REGISTER, LOC_CREGISTER] then
-                      A_Reg_Dealloc(list, register);
+                { Mark EBX as used in the proc }
+                include(rg[R_INTREGISTER].UsedInProc,RS_EBX);
+                CurrentModule.RequiresEBXPICHelper:=true;
+                A_Call_Name_Static(list,'fpc_geteipasebx');
               end
             else
               begin
-                { call/pop is faster than call/ret/mov on Core Solo and later
-                  according to Apple's benchmarking -- and all Intel Macs
-                  have at least a Core Solo (furthermore, the i386 - Pentium 1
-                  don't have a return stack buffer) }
-                A_Call_Name_Static(list,CurrentProcInfo.CurrGOTLabel.name);
-                A_Label(list,CurrentProcInfo.CurrGotLabel);
-                list.concat(TAICPU.op_reg(A_POP,S_L,CurrentProcInfo.got))
+                CurrentModule.RequiresECXPICHelper:=true;
+                A_Call_Name_Static(list,'fpc_geteipasecx');
               end;
+            list.concat(TAICPU.op_sym_ofs_reg(A_ADD,S_L,CurrentAsmData.RefAsmSymbol('_GLOBAL_OFFSET_TABLE_',AT_DATA),0,tmpreg));
+            list.concat(TAICPU.op_reg_reg(A_MOV,S_L,tmpreg,CurrentProcInfo.got));
+
+            { Deallocate parameter registers }
+            for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
+              with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
+                if Loc in [LOC_REGISTER, LOC_CREGISTER] then
+                  A_Reg_Dealloc(list, register);
           end;
       end;
 

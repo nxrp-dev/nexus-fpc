@@ -3329,9 +3329,9 @@ option_config_is_dir=11040_F_Le fichier de configuration $1 est un répertoire
 option_confict_asm_debug=11041_W_Assembler output selected "$1" cannot generate debug info, debugging disabled
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use fpc.cfg instead
+option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use nxpc.cfg instead
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_In options file $1 at line $2 #ELSE directive without #IF(N)DEF found
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_Option "$1" is not, or not yet, supported on the current target platform
@@ -3454,12 +3454,12 @@ wpo_cant_create_feedback_file=12019_E_Cannot create specified whole program opti
 #
 # Logo (option -l)
 #
-option_logo=11023_[ Compilateur Free Pascal version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
+option_logo=11023_[ Compilateur NXPC version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
 Copyright (c) 1993-2026, Florian Klaempfl and others]
 #
 # Info (option -i)
 #
-option_info=11024_[ Compilateur Free Pascal version $FPCVERSION
+option_info=11024_[ Compilateur NXPC version $FPCVERSION
 Date du compilateur: $FPCDATE
 Processeur cible: $FPCCPU
 Cibles supportées: $OSTARGETS
@@ -3492,7 +3492,7 @@ Rapports de bogues, suggestions, etc. à:
 #  The third character represents the indentation level.
 #
 option_info=11024_[
-Free Pascal Compiler version $FPCVERSION
+NXPC compiler version $FPCVERSION
 
 Compiler date      : $FPCDATE
 Compiler CPU target: $FPCCPU

@@ -1,0 +1,143 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+module "NXPC.Forge.Host.nxscript";
+// Assemble the complete target matrix for the selected native host.
+
+Group ReleaseAssembly {
+    Run CheckReleaseInputs HostOS[win64] {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseDistribution.ps1", "-SourceRoot", ".", "-BootstrapDirectory", @BootstrapPaths.Root, "-InputsOnly"];
+    }
+    DeletePath CleanDistribution { Path: @BootstrapPaths.Root + "/distribution"; Recursive: True; }
+    DeletePath CleanReleaseChecks { Path: @BootstrapPaths.Root + "/release-checks"; Recursive: True; }
+    CopyFile HostTools HostOS[win64] {
+        Source: @BootstrapPaths.Root + "/tools/bin";
+        Destination: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.Name;
+        Recursive: True;
+        IncludeMasks: ["*.exe"];
+    }
+    CopyFile HostToolsLinux HostOS[linux] {
+        Source: @BootstrapPaths.Root + "/tools/bin";
+        Destination: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.Name;
+        Recursive: True;
+    }
+    CopyFile I386Compiler {
+        Source: @BootstrapPaths.Root + "/cross/i386-linux/nxpc-i386" + @BootstrapHost.Suffix;
+        Destination: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.Name + "/nxpc-i386" + @BootstrapHost.Suffix;
+    }
+    CopyFile AArch64Compiler {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-linux/nxpc-aarch64" + @BootstrapHost.Suffix;
+        Destination: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.Name + "/nxpc-aarch64" + @BootstrapHost.Suffix;
+    }
+    CopyFile RTL_i386_linux {
+        Source: @BootstrapPaths.Root + "/cross/i386-linux/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/i386-linux/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_x86_64_linux {
+        Source: @BootstrapPaths.Root + "/cross/x86_64-linux/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/x86_64-linux/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_linux {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-linux/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-linux/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_i386_win32 {
+        Source: @BootstrapPaths.Root + "/cross/i386-win32/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/i386-win32/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_x86_64_win64 {
+        Source: @BootstrapPaths.Root + "/cross/x86_64-win64/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/x86_64-win64/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_win64 {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-win64/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-win64/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_x86_64_android {
+        Source: @BootstrapPaths.Root + "/cross/x86_64-android/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/x86_64-android/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_android {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-android/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-android/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_x86_64_darwin {
+        Source: @BootstrapPaths.Root + "/cross/x86_64-darwin/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/x86_64-darwin/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_darwin {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-darwin/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-darwin/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_x86_64_iphonesim {
+        Source: @BootstrapPaths.Root + "/cross/x86_64-iphonesim/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/x86_64-iphonesim/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_iphonesim {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-iphonesim/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-iphonesim/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile RTL_aarch64_ios {
+        Source: @BootstrapPaths.Root + "/cross/aarch64-ios/rtl";
+        Destination: @BootstrapPaths.Root + "/distribution/units/aarch64-ios/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile BuildIdentity {
+        Source: @BootstrapPaths.Root + "/seed/build-identity.json";
+        Destination: @BootstrapPaths.Root + "/distribution/build-identity.json";
+    }
+    CopyFile RuntimePackageSDK {
+        Source: @BootstrapPaths.Root + "/package-sdk";
+        Destination: @BootstrapPaths.Root + "/distribution/package-sdk/" + @BootstrapHost.Name;
+        Recursive: True;
+        ExcludeNames: "work";
+    }
+    CopyFile ReleaseConfig {
+        Source: "NXPC.Release.cfg";
+        Destination: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.ConfigDirectory + "/nxpc.cfg";
+    }
+    Run VerifyReleaseDistribution HostOS[win64] {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseDistribution.ps1", "-SourceRoot", ".", "-BootstrapDirectory", @BootstrapPaths.Root];
+    }
+}

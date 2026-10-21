@@ -1,0 +1,62 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project Cycle {
+    Id: "NXRP.NXPC.Bootstrap.Cycle";
+    RootDirectory: $BootstrapRoot;
+    LLVM AbiTag {
+        CompilerPath: "clang";
+        BuildKind: Object;
+        SourceFiles: ["seed/rtl/linux/x86_64/abitag.as"];
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/rtl";
+        RawOptions: ["-x", "assembler"];
+    }
+    NXPC System {
+        CompilerPath: $PreviousCompiler;
+        SourceFiles: ["seed/rtl/linux/system.pas"];
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/rtl";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; CompileSystemUnit: Enabled; }
+        RawOptions: ["-XLL"];
+        Files Paths {
+            UnitPaths: [$BootstrapRoot + "/" + $Stage + "/rtl", "seed/rtl/linux", "seed/rtl/unix", "seed/rtl/inc", "seed/rtl/objpas", "seed/rtl/x86_64", "seed/rtl/linux/x86_64", "seed/rtl/objpas/sysutils", "seed/rtl/objpas/classes", "seed/rtl/charmaps"];
+            IncludePaths: ["seed/rtl/linux", "seed/rtl/unix", "seed/rtl/inc", "seed/rtl/objpas", "seed/rtl/x86_64", "seed/rtl/linux/x86_64", "seed/rtl/objpas/sysutils", "seed/rtl/objpas/classes", "seed/rtl/charmaps"];
+        }
+    }
+    NXPC RTL {
+        CompilerPath: $PreviousCompiler;
+        SourceFiles: ["seed/rtl/objpas/objpas.pas", "seed/rtl/linux/buildrtl.pas", "seed/rtl/linux/si_c.pas", "seed/rtl/linux/si_dll.pas", "seed/rtl/x86_64/intrinsics.pas", "seed/rtl/inc/uuchar.pas", "seed/rtl/inc/macpas.pas", "seed/rtl/inc/iso7185.pas", "seed/rtl/inc/lnfodwrf.pas", "seed/rtl/unix/cwstring.pas", "seed/rtl/linux/termio.pas", "seed/rtl/linux/linux.pas", "seed/rtl/unix/errors.pas", "seed/rtl/unix/dl.pas", "seed/rtl/inc/dynlibs.pas", "seed/rtl/unix/unix98pty.pas", "seed/rtl/unix/ports.pas", "seed/rtl/unix/x86.pas", "seed/rtl/charmaps/cpall.pas"];
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/rtl";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        RawOptions: ["-XLL"];
+        Files Paths {
+            UnitPaths: [$BootstrapRoot + "/" + $Stage + "/rtl", "seed/rtl/linux", "seed/rtl/unix", "seed/rtl/inc", "seed/rtl/objpas", "seed/rtl/x86_64", "seed/rtl/linux/x86_64", "seed/rtl/objpas/sysutils", "seed/rtl/objpas/classes", "seed/rtl/charmaps"];
+            IncludePaths: ["seed/rtl/linux", "seed/rtl/unix", "seed/rtl/inc", "seed/rtl/objpas", "seed/rtl/x86_64", "seed/rtl/linux/x86_64", "seed/rtl/objpas/sysutils", "seed/rtl/objpas/classes", "seed/rtl/charmaps"];
+        }
+    }
+    NXPC Compiler {
+        CompilerPath: $PreviousCompiler;
+        SourceFiles: ["seed/source/pp.pas"];
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/compiler-units";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Definitions Symbols { Defines: [x86_64, REVINC, RELEASE]; }
+        Linking Link { StripSymbols: Enabled; }
+        RawOptions: ["-XLL", "-o" + $BootstrapRoot + "/" + $Stage + "/nxpc-x86_64"];
+        Files Paths {
+            UnitPaths: [$BootstrapRoot + "/" + $Stage + "/rtl", "seed/source/x86_64", "seed/source/x86", "seed/source/systems", "seed/rtl/objpas"];
+            IncludePaths: ["seed/source", "seed/source/x86_64", "seed/source/x86", "seed/source/systems"];
+        }
+    }
+}

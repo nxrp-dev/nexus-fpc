@@ -1,0 +1,196 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+module BootstrapPaths "NXPC.Forge.Paths.nxscript";
+
+Group NativeLinux {
+    DeletePath CleanSeed { Path: @BootstrapPaths.Root + "/seed"; Recursive: True; }
+    CopyFile StageCompiler {
+        Source: "compiler";
+        Destination: @BootstrapPaths.Root + "/seed/source";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc", "*.dat", "*.msg"];
+        ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nor.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
+    }
+    CopyFile StageRTL {
+        Source: "rtl";
+        Destination: @BootstrapPaths.Root + "/seed/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.nxpk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
+        ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
+    }
+    BuildIdentity CaptureIdentity { Repository: "."; OutputDirectory: @BootstrapPaths.Root + "/seed"; }
+    NXBuild BuildGenerators {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Generators.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL;
+    }
+    Msg2Inc GenerateMessages {
+        Template: "../nexus/projects/forge/templates/Msg2Inc.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/msg2inc";
+        Source: @BootstrapPaths.Root + "/seed/source/msg/errore.msg";
+        OutputPrefix: @BootstrapPaths.Root + "/seed/source/msg";
+        ConstantName: msg;
+    }
+    Run mkx86ins_i386 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86ins";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run mkx86reg_i386 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86reg";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run mkx86ins_x86_64 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86ins";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run mkx86reg_x86_64 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86reg";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run mka64ins_aarch64 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mka64ins";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/aarch64";
+    }
+    Run mka64reg_aarch64 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mka64reg";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/aarch64";
+    }
+    Run mkx86inl_x86 {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86inl";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86";
+    }
+    CopyFile i386_cpummprocs {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpummprocs.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/i386/cpummprocs.inc";
+    }
+    CopyFile i386_cpumminnr {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpumminnr.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/i386/cpumminnr.inc";
+    }
+    CopyFile x86_64_cpummprocs {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpummprocs.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/x86_64/cpummprocs.inc";
+    }
+    CopyFile x86_64_cpumminnr {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpumminnr.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/x86_64/cpumminnr.inc";
+    }
+    NXBuild BuildSeed {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Seed.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL;
+    }
+    DeletePath CleanCycle1 { Path: @BootstrapPaths.Root + "/cycle1"; Recursive: True; }
+    NXBuild BuildCycle1 {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Cycle.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL + ",Stage:cycle1,PreviousCompiler:" + @BootstrapPaths.Root + "/seed/bin/nxpc-x86_64-seed";
+    }
+    DeletePath CleanCycle2 { Path: @BootstrapPaths.Root + "/cycle2"; Recursive: True; }
+    NXBuild BuildCycle2 {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Cycle.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL + ",Stage:cycle2,PreviousCompiler:" + @BootstrapPaths.Root + "/cycle1/nxpc-x86_64";
+    }
+    DeletePath CleanCycle3 { Path: @BootstrapPaths.Root + "/cycle3"; Recursive: True; }
+    NXBuild BuildCycle3 {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Cycle.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL + ",Stage:cycle3,PreviousCompiler:" + @BootstrapPaths.Root + "/cycle2/nxpc-x86_64";
+    }
+    CompareFiles VerifyCompiler {
+        Left: @BootstrapPaths.Root + "/cycle2/nxpc-x86_64";
+        Right: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64";
+    }
+    CompareDirectories VerifyRTL {
+        Left: @BootstrapPaths.Root + "/cycle2/rtl";
+        Right: @BootstrapPaths.Root + "/cycle3/rtl";
+        IncludeMasks: ["*.o"];
+    }
+    VerifyBuildIdentity VerifyIdentity {
+        Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64";
+        IdentityFile: @BootstrapPaths.Root + "/seed/build-identity.json";
+    }
+    DeletePath CleanInstall { Path: $InstallRoot; Recursive: True; }
+    CopyFile InstallCompiler {
+        Source: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64";
+        Destination: $InstallRoot + "/bin/nxpc-x86_64";
+    }
+    CopyFile InstallRTL {
+        Source: @BootstrapPaths.Root + "/cycle3/rtl";
+        Destination: $InstallRoot + "/units/x86_64-linux/rtl";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+    }
+    CopyFile StageUsers {
+        Source: "../nexus/packages/nexus-packages/users/src";
+        Destination: @BootstrapPaths.Root + "/seed/users";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc"];
+    }
+    NXBuild BuildUsers {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/linux/Users.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",SeedCompiler:" + $SeedCompiler + ",SeedRTL:" + $SeedRTL + ",InstallRoot:" + $InstallRoot;
+    }
+    CopyFile InstallIdentity {
+        Source: @BootstrapPaths.Root + "/seed/build-identity.json";
+        Destination: $InstallRoot + "/build-identity.json";
+    }
+    NXBuild BuildInstalledSmoke {
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/tests/BootstrapSmoke.nxproject";
+        TargetOS: linux;
+        TargetCPU: x86_64;
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",InstallRoot:" + $InstallRoot;
+    }
+    Run VerifyInstalledSmoke {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/smoke/BootstrapSmoke";
+        Arguments: [@BootstrapPaths.Root + "/smoke/libBootstrapSmoke.so"];
+    }
+    Group Promotion Promote[Yes] {
+        Run UpdateCurrent {
+            Template: "../nexus/projects/forge/templates/Run.mustache";
+            Executable: "ln";
+            Arguments: ["-sfnT", $InstallRoot, $CurrentLink];
+        }
+    }
+}

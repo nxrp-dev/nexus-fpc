@@ -42,11 +42,8 @@ begin
   CheckOrdinal('system_i386_Win32', Ord(system_i386_Win32), 5);
   CheckOrdinal('system_x86_64_linux', Ord(system_x86_64_linux), 26);
   CheckOrdinal('system_x86_64_win64', Ord(system_x86_64_win64), 37);
-  CheckOrdinal('system_i386_darwin', Ord(system_i386_darwin), 44);
   CheckOrdinal('system_x86_64_darwin', Ord(system_x86_64_darwin), 61);
   CheckOrdinal('system_i386_nativent', Ord(system_i386_nativent), 68);
-  CheckOrdinal('system_i386_iphonesim', Ord(system_i386_iphonesim), 69);
-  CheckOrdinal('system_i386_android', Ord(system_i386_android), 78);
   CheckOrdinal('system_aarch64_ios', Ord(system_aarch64_ios), 86);
   CheckOrdinal('system_x86_64_iphonesim', Ord(system_x86_64_iphonesim), 87);
   CheckOrdinal('system_aarch64_linux', Ord(system_aarch64_linux), 88);

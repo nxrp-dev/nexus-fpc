@@ -1,0 +1,218 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+//
+// Native: /targets=Build:Bootstrap,BuildRoot:<worktree-directory> (plus Linux seed/install selections)
+// Cross:  /targets=Build:Cross,TargetCPU:aarch64,TargetOS:linux
+// Tools:  /targets=Build:Tools (requires a completed Bootstrap)
+// PackageSDK: /targets=Build:PackageSDK (requires a completed Bootstrap)
+// Release: /targets=Build:Release (requires Bootstrap and the full Cross matrix)
+//
+// Bootstrap selects the native host; nxbuild projects own compilation.
+// Windows retains its stock Win32-to-Win64 bridge. Outputs belong in BuildRoot.
+// Compiler and RTL generations two and three must match before installation.
+// Cross builds use that native compiler and target-filtered configurations.
+// See NXPC.Forge.md for the retained targets and tool prerequisites.
+// Bootstrap also builds the Win64 release tools. Other packages await owner selection.
+
+dialect "../nexus/projects/forge/language/Forge.nxscript";
+
+module "NXPC.Forge.Config.nxscript";
+module CompilerTables "NXPC.Forge.Tables.nxscript";
+module ReleaseTools "NXPC.Forge.Tools.nxscript";
+module RuntimePackageSDK "NXPC.Forge.PackageSDK.nxscript";
+module ReleaseAssembly "NXPC.Forge.Release.nxscript";
+module NativeLinux "NXPC.Forge.Linux.nxscript";
+Project Bootstrap Build[Bootstrap] HostOS[win64] {
+    Id: "NXRP.NXPC.Bootstrap";
+    Outputs: [Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe", RTL: @BootstrapPaths.Root + "/cycle3/rtl64", Identity: @BootstrapPaths.Root + "/seed/build-identity.json", Tools: @BootstrapPaths.Root + "/tools/bin"];
+    DeletePath CleanSeed { Path: @BootstrapPaths.Root + "/seed"; Recursive: True; }
+    CreateDirectory SeedBin {
+        Path: @BootstrapPaths.Root + "/seed/bin";
+    }
+    CreateDirectory SeedUnits {
+        Path: @BootstrapPaths.Root + "/seed/units32";
+    }
+    CopyFile StageCompiler {
+        Source: "compiler";
+        Destination: @BootstrapPaths.Root + "/seed/source";
+        Recursive: True;
+        CleanDestination: True;
+        IncludeMasks: ["*.pas", "*.inc", "*.dat"];
+        ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nor.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
+    }
+    CopyFile StageMetadataCompression {
+        Source: "rtl/objpas";
+        Destination: @BootstrapPaths.Root + "/seed/dependencies/paszlib";
+        Recursive: True;
+        CleanDestination: True;
+        IncludeMasks: ["crc32.pas", "paszlib.pas"];
+    }
+    CopyFile StageRTL {
+        Source: "rtl";
+        Destination: @BootstrapPaths.Root + "/seed/rtl";
+        Recursive: True;
+        CleanDestination: True;
+        IncludeMasks: ["*.pas", "*.nxpk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
+        ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
+    }
+    BuildIdentity CaptureBuildIdentity {
+        Repository: ".";
+        OutputDirectory: @BootstrapPaths.Root + "/seed";
+    }
+    Group GenerateTables (CompilerTables) {}
+    Msg2Inc GenerateMessages {
+        Template: "../nexus/projects/forge/templates/Msg2Inc.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/msg2inc.exe";
+        Source: "compiler/msg/errore.msg";
+        OutputPrefix: @BootstrapPaths.Root + "/seed/source/msg";
+        ConstantName: msg;
+    }
+    NXBuild BuildSeedCompiler {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Seed.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root;
+    }
+    DeletePath CleanSeedRTL {
+        Path: @BootstrapPaths.Root + "/seed/rtl64";
+        Recursive: True;
+    }
+    CreateDirectory SeedRTL {
+        Path: @BootstrapPaths.Root + "/seed/rtl64";
+    }
+    NXBuild BuildNativeSeed {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Cycle.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Stage:seed,PreviousCompiler:" + @BootstrapPaths.Root + "/seed/bin/seed32.exe,CompilerUnits:" + @BootstrapPaths.Root + "/seed/units64,CompilerOutput:" + @BootstrapPaths.Root + "/seed/bin/nxpc-x86_64.exe";
+    }
+    // Native generation 1 rebuilds the RTL and compiler with the preceding compiler.
+    DeletePath CleanCycle1 { Path: @BootstrapPaths.Root + "/cycle1"; Recursive: True; }
+    CreateDirectory Cycle1RTL { Path: @BootstrapPaths.Root + "/cycle1/rtl64"; }
+    CreateDirectory Cycle1Units { Path: @BootstrapPaths.Root + "/cycle1/units64"; }
+    NXBuild BuildCycle1 {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Cycle.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Stage:cycle1,PreviousCompiler:" + @BootstrapPaths.Root + "/seed/bin/nxpc-x86_64.exe,CompilerUnits:" + @BootstrapPaths.Root + "/cycle1/units64,CompilerOutput:" + @BootstrapPaths.Root + "/cycle1/nxpc-x86_64.exe";
+    }
+    // Native generation 2 rebuilds the RTL and compiler with the preceding compiler.
+    DeletePath CleanCycle2 { Path: @BootstrapPaths.Root + "/cycle2"; Recursive: True; }
+    CreateDirectory Cycle2RTL { Path: @BootstrapPaths.Root + "/cycle2/rtl64"; }
+    CreateDirectory Cycle2Units { Path: @BootstrapPaths.Root + "/cycle2/units64"; }
+    NXBuild BuildCycle2 {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Cycle.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Stage:cycle2,PreviousCompiler:" + @BootstrapPaths.Root + "/cycle1/nxpc-x86_64.exe,CompilerUnits:" + @BootstrapPaths.Root + "/cycle2/units64,CompilerOutput:" + @BootstrapPaths.Root + "/cycle2/nxpc-x86_64.exe";
+    }
+    // Native generation 3 rebuilds the RTL and compiler with the preceding compiler.
+    DeletePath CleanCycle3 { Path: @BootstrapPaths.Root + "/cycle3"; Recursive: True; }
+    CreateDirectory Cycle3RTL { Path: @BootstrapPaths.Root + "/cycle3/rtl64"; }
+    CreateDirectory Cycle3Units { Path: @BootstrapPaths.Root + "/cycle3/units64"; }
+    NXBuild BuildCycle3 {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Cycle.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Stage:cycle3,PreviousCompiler:" + @BootstrapPaths.Root + "/cycle2/nxpc-x86_64.exe,CompilerUnits:" + @BootstrapPaths.Root + "/cycle3/units64,CompilerOutput:" + @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe";
+    }
+    CompareFiles VerifyBootstrap {
+        Left: @BootstrapPaths.Root + "/cycle2/nxpc-x86_64.exe";
+        Right: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe";
+    }
+    VerifyBuildIdentity VerifyBuildIdentity {
+        Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64.exe";
+        IdentityFile: @BootstrapPaths.Root + "/seed/build-identity.json";
+    }
+    CompareDirectories VerifyRTL {
+        Left: @BootstrapPaths.Root + "/cycle2/rtl64";
+        Right: @BootstrapPaths.Root + "/cycle3/rtl64";
+        IncludeMasks: ["*.o"];
+    }
+    Group BuildReleaseTools (ReleaseTools) {}
+}
+
+Project Bootstrap Build[Bootstrap] HostOS[linux] HostCPU[x86_64] {
+    Id: "NXRP.NXPC.Bootstrap.Linux";
+    Outputs: [Compiler: @BootstrapPaths.Root + "/cycle3/nxpc-x86_64",
+        RTL: @BootstrapPaths.Root + "/cycle3/rtl",
+        Identity: $InstallRoot + "/build-identity.json", Directory: $InstallRoot];
+    Group Native (NativeLinux) {}
+}
+
+Project Tools Build[Tools] HostOS[win64, linux] {
+    Id: "NXRP.NXPC.Tools";
+    Outputs: [Bin: @BootstrapPaths.Root + "/tools/bin", Driver: @BootstrapPaths.Root + "/tools/bin/nxpc" + @BootstrapHost.Suffix];
+    Group BuildReleaseTools (ReleaseTools) {}
+}
+
+Project Release Build[Release] HostOS[win64, linux] {
+    Id: "NXRP.NXPC.Release";
+    Outputs: [Directory: @BootstrapPaths.Root + "/distribution", Bin: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.Name, Config: @BootstrapPaths.Root + "/distribution/bin/" + @BootstrapHost.ConfigDirectory + "/nxpc.cfg", Identity: @BootstrapPaths.Root + "/distribution/build-identity.json", PackageSDK: @BootstrapPaths.Root + "/distribution/package-sdk/" + @BootstrapHost.Name];
+    Group BuildRuntimePackageSDK (RuntimePackageSDK) {}
+    Group AssembleRelease (ReleaseAssembly) {}
+}
+
+Project PackageSDK Build[PackageSDK] HostOS[win64, linux] {
+    Id: "NXRP.NXPC.PackageSDK";
+    Outputs: [Directory: @BootstrapPaths.Root + "/package-sdk", Manifest: @BootstrapPaths.Root + "/package-sdk/sdk.json", Packages: @BootstrapPaths.Root + "/package-sdk/packages", Units: @BootstrapPaths.Root + "/package-sdk/units"];
+    Group BuildRuntimePackageSDK (RuntimePackageSDK) {}
+}
+
+Project Cross Build[Cross] HostOS[win64, linux] {
+    Id: "NXRP.NXPC.Cross";
+    Outputs: [Compiler: @CrossTarget.Compiler, RTL: @CrossTarget.RTL];
+    DeletePath CleanCross {
+        Path: @CrossTarget.Directory;
+        Recursive: True;
+    }
+    CreateDirectory CrossCompilerUnits { Path: @CrossTarget.Directory + "/compiler-units"; }
+    CreateDirectory CrossRTLUnits { Path: @CrossTarget.RTL; }
+    NXBuild BuildCrossCompiler (CrossProjectBuild) {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Compiler.nxproject";
+    }
+    VerifyBuildIdentity VerifyCrossBuildIdentity {
+        Compiler: @CrossTarget.Compiler;
+        IdentityFile: @BootstrapPaths.Root + "/seed/build-identity.json";
+    }
+    NXBuild BuildLinuxRTL (CrossProjectBuild) TargetOS[linux] {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Linux.nxproject";
+    }
+    NXBuild BuildWindowsRTL (CrossProjectBuild) TargetOS[win32, win64] {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Windows.nxproject";
+    }
+    NXBuild BuildAndroidRTL (CrossProjectBuild) TargetOS[android] {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Android.nxproject";
+    }
+    NXBuild BuildAppleRTL (CrossProjectBuild) TargetOS[darwin, iphonesim, ios] {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Apple.nxproject";
+    }
+    WriteTextFile CrossSmokeSource TargetOS[linux, win32, win64] {
+        Path: @CrossTarget.Directory + "/smoke.pas";
+        Text: "program ForgeCrossSmoke; {$mode objfpc}{$H+} uses SysUtils, Classes; var lLines: TStringList; begin lLines := TStringList.Create; try lLines.Add(IntToStr(42)); if lLines[0] <> '42' then Halt(1); WriteLn('forge-cross-ok'); finally lLines.Free; end; end.";
+    }
+    NXBuild BuildCrossSmoke (CrossProjectBuild) TargetOS[linux, win32, win64] {
+        Executable: $NXBuildExecutable;
+        EntryPoint: "bootstrap/cross/Smoke.nxproject";
+    }
+}

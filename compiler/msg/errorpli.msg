@@ -2093,7 +2093,7 @@ option_code_page_not_available=11039_E_Nieznana strona kodowa
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler wersja $FPCFULLVERSION [$FPCDATE] dla $FPCCPU
+NXPC compiler wersja $FPCFULLVERSION [$FPCDATE] dla $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -2101,7 +2101,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler wersja $FPCVERSION
+NXPC compiler wersja $FPCVERSION
 
 Data kompilatora  : $FPCDATE
 Platforma docelowa: $FPCCPU

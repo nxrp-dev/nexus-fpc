@@ -1,7 +1,7 @@
 {
     Copyright (c) 2000-2002 by Florian Klaempfl
 
-    This file is the "loader" for the Free Pascal compiler
+    This file is the "loader" for the NXPC compiler
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
  ****************************************************************************}
-program fpc;
+program nxpc;
 
 {$mode objfpc}{$H+}
 
@@ -32,19 +32,6 @@ program fpc;
       ExeExt='.exe';
 {$endif UNIX}
 
-Const
-{$ifdef darwin}
-  { the mach-o format supports "fat" binaries whereby }
-  { a single executable contains machine code for     }
-  { several architectures -> it is counter-intuitive  }
-  { and non-standard to use different binary names    }
-  { for cross-compilers vs. native compilers          }
-  CrossSuffix = '';
-{$else not darwin}
-  CrossSuffix = 'ross';
-{$endif not darwin}
-
-
   procedure error(const s : string);noreturn;
 
   begin
@@ -56,9 +43,9 @@ Const
 
   begin
     case processorstr of
-      'aarch64': Result := 'a64';
+      'aarch64': Result := 'aarch64';
       'arm': Result := 'arm';
-      'i386': Result := '386';
+      'i386': Result := 'i386';
       'mips': Result := 'mips';
       'mipsel': Result := 'mipsel';
       'mipseb': Result := 'mipseb';
@@ -68,7 +55,7 @@ Const
       'powerpc64': Result := 'ppc64';
       'sparc': Result := 'sparc';
       'sparc64': Result := 'sparc64';
-      'x86_64': Result := 'x64';
+      'x86_64': Result := 'x86_64';
       else
         error('Illegal processor type "'+processorstr+'"');
     end;
@@ -78,15 +65,15 @@ Const
 
   begin
     {$ifdef i386}
-         ppcbin:='ppc386';
+         ppcbin:='nxpc-i386';
          processorname:='i386';
     {$endif i386}
     {$ifdef aarch64}
-         ppcbin:='ppca64';
+         ppcbin:='nxpc-aarch64';
          processorname:='aarch64';
     {$endif aarch64}
     {$ifdef x86_64}
-         ppcbin:='ppcx64';
+         ppcbin:='nxpc-x86_64';
          processorname:='x86_64';
     {$endif x86_64}
   end;
@@ -125,7 +112,7 @@ Const
 
       if (extrapath<>'') and (extrapath[length(extrapath)]<>DirectorySeparator) then
         extrapath:=extrapath+DirectorySeparator;
-      { get path of fpc.exe }
+      { get path of nxpc.exe }
       path:=splitpath(ParamStr(0));
       { don't try with an empty extra patch, this might have strange results
         if the current directory contains a compiler
@@ -161,7 +148,7 @@ Const
         begin
           if cpusuffix<>'' Then
             begin
-              Result:='ppc'+cpusuffix;
+              Result:='nxpc-'+cpusuffix;
               if exesuffix<>'' then
                 result:=result+'-'+exesuffix;
               if not findexe(result) then
@@ -199,7 +186,7 @@ Function FindConfigFile(const aFile : string; const aCompiler : String) : String
   Order to read configuration file :
   Unix:
    1 - current dir
-   2 - ~/.fpc.cfg
+   2 - ~/.nxpc.cfg
    3 - configpath
    4 - /etc
   Windows:
@@ -232,7 +219,7 @@ begin
   ExePath:=SetDirSeparators(ExtractFilePath(ParamStr(0)));
   aSearchPath:='';
   { retrieve configpath }
-  configpath:=SetDirSeparators(GetEnvironmentVariable('PPC_CONFIG_PATH'));
+  configpath:=SetDirSeparators(GetEnvironmentVariable('NXPC_CONFIG_PATH'));
 {$ifdef Unix}
   hs:=SetDirSeparators(GetEnvironmentVariable('HOME'));
   if (hs<>'') then
@@ -391,7 +378,7 @@ begin
              if TargetCPU <> SourceCPU then
                begin
                  cpusuffix:=processortosuffix(TargetCPU);
-                 ppcbin:='ppc'+crosssuffix+cpusuffix;
+                 ppcbin:='nxpc-'+cpusuffix;
                end;
            end
         else if pos('-Xp',s)=1 then
@@ -414,7 +401,7 @@ begin
      ppcbin := findcompiler(ppcbin, cpusuffix, exesuffix);
      if (TargetName<>'') then
        begin
-       S:='fpc-'+lowercase(TargetName)+'.cfg';
+       S:='nxpc-'+lowercase(TargetName)+'.cfg';
        CfgFile:=FindConfigFile(s,ppcbin);
        if CfgFile='' then
          Error('Cannot find subtarget config file: '+s);
@@ -422,7 +409,7 @@ begin
        end;
      SetLength(ppccommandline, ppccommandlinelen);
 
-     { call ppcXXX }
+     { call the NXPC backend }
      try
        errorvalue:=ExecuteProcess(ppcbin,ppccommandline);
      except

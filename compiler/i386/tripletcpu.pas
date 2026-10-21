@@ -33,18 +33,11 @@ function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
 implementation
 
 uses
-  Globals, Systems, CPUInfo;
+  Globals, CPUInfo;
 
 function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
   begin
-    if tripletstyle in [triplet_llvm,triplet_llvmrt] then
-      begin
-        if TargetInfo.system in systems_android then
-          result:='i686'
-        else
-          result:='i386'
-      end
-    else if (TargetInfo.system in systems_darwin) or
+    if (tripletstyle in [triplet_llvm,triplet_llvmrt]) or
        (CurrentSettings.CPUType<cpu_Pentium2) then
       result:='i386'
     else

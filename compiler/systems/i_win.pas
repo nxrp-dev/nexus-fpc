@@ -42,7 +42,7 @@ unit i_win;
                             tf_safecall_exceptions,tf_no_backquote_support,
                             tf_supports_hidden_symbols];
             cpu          : cpu_i386;
-            unit_env     : 'WIN32UNITS';
+            unit_env     : 'NXPC_WIN32UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
             ExeExt       : '.exe';
             defext       : '.def';
@@ -111,7 +111,7 @@ unit i_win;
                             tf_safecall_exceptions,tf_no_backquote_support,tf_supports_hidden_symbols,
                             tf_supports_packages];
             cpu          : cpu_x86_64;
-            unit_env     : 'WIN64UNITS';
+            unit_env     : 'NXPC_WIN64UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
             ExeExt       : '.exe';
             defext       : '.def';
@@ -180,7 +180,7 @@ unit i_win;
                             tf_no_generic_stackcheck,tf_has_winlike_resources,
                             tf_safecall_exceptions,tf_no_backquote_support,tf_supports_hidden_symbols];
             cpu          : cpu_aarch64;
-            unit_env     : 'WIN64UNITS';
+            unit_env     : 'NXPC_WIN64UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
             ExeExt       : '.exe';
             defext       : '.def';

@@ -2004,7 +2004,7 @@ begin
      if someone uses this in assembler code
      FPC itself does not use it at all PM }
    if (opcode=A_ENTER) and
-      (TargetInfo.system in [system_i386_linux,system_i386_android]) then
+      (TargetInfo.system=system_i386_linux) then
      Message(asmr_w_enter_not_supported_by_linux);
 
   ai:=TAICPU.op_none(opcode,siz);

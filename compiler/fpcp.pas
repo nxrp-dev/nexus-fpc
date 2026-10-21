@@ -130,8 +130,8 @@ implementation
        begin
          PCPFile.Free;
          PCPFile:=nil;
-         Comment(VNormal,'Invalid NexusFPC package header in '+PCPFileName+
-           ' (expected NXP signature and current header layout); rebuild with NexusFPC');
+         Comment(VNormal,'Invalid NXPC package header in '+PCPFileName+
+           ' (expected NXP signature and current header layout); rebuild with NXPC');
          Exit;
        end;
     { check for allowed PCP versions }
@@ -502,7 +502,7 @@ implementation
               if not PPUFile.OpenStream(Data) then
                 InvalidPCP('truncated embedded PPU header');
               if not PPUFile.CheckPPUId then
-                InvalidPCP('embedded unit requires NexusFPC NXU signature; rebuild with NexusFPC');
+                InvalidPCP('embedded unit requires NXPC NXU signature; rebuild with NXPC');
               if (PPUFile.GetVersion<>CurrentPPUVersion) or
                  (PPUFile.Header.Common.CPU<>PCPFile.Header.Common.CPU) or
                  (PPUFile.Header.Common.Target<>PCPFile.Header.Common.Target) or

@@ -30,6 +30,4 @@ never the source checkout. Examples remain in Nexus Lab
 
 Original legal text remains in `readme.txt`, the RTL source headers,
 `../COPYING.FPC` and `../../rtl/COPYING.txt`. See the
-[central attribution record](../../../nexus/ATTRIBUTIONS.md#paszlib),
-[earlier reconciliation](CONSOLIDATION.md) and
-[RTL consolidation review](../../rtl/objpas/paszlib-consolidation.md).
+[central attribution record](../../../nexus/ATTRIBUTIONS.md#paszlib).

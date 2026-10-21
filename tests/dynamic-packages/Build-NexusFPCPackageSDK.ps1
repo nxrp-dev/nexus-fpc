@@ -2,13 +2,14 @@
 .SYNOPSIS
 Build the Win64 runtime-package SDK with Forge after a completed Bootstrap.
 .EXAMPLE
-.\tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -OutputRoot C:\dev\worktree\nxpkg-sdk -RunExamples
+.\tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -Forge C:\tools\nxforge.exe -BootstrapDirectory C:\dev\worktree\fpc-bootstrap -OutputRoot C:\dev\worktree\nxpkg-sdk -RunExamples
 #>
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
     [string]$ExampleRoot,
-    [string]$Forge,
+    [Parameter(Mandatory)][string]$Forge,
+    [Parameter(Mandatory)][string]$BootstrapDirectory,
     [string]$OutputRoot,
     [switch]$BuildExamples,
     [switch]$RunExamples,
@@ -19,12 +20,11 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '../..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
-if (-not $Forge) { $Forge = Join-Path $SourceRoot '../nexus/output/NexusForge-next/x86_64-win64/nxforge.exe' }
 $Forge = (Resolve-Path -LiteralPath $Forge).Path
-$bootstrap = Join-Path $SourceRoot 'build/forge-bootstrap'
+$bootstrap = [IO.Path]::GetFullPath($BootstrapDirectory)
 $sdk = [IO.Path]::GetFullPath((Join-Path $bootstrap 'package-sdk'))
-if (-not (Test-Path -LiteralPath (Join-Path $bootstrap 'cycle3/ppcx64.exe'))) {
-    throw 'Run NexusFPC.Forge.nxscript /targets=Build:Bootstrap before building the package SDK.'
+if (-not (Test-Path -LiteralPath (Join-Path $bootstrap 'cycle3/nxpc-x86_64.exe'))) {
+    throw 'Run NXPC.Forge.nxscript /targets=Build:Bootstrap before building the package SDK.'
 }
 if (-not $OutputRoot) { $OutputRoot = $sdk }
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot).TrimEnd('\','/')
@@ -41,7 +41,7 @@ $log = Join-Path $bootstrap 'package-sdk-forge.log'
 Push-Location -LiteralPath $SourceRoot
 try {
     $ErrorActionPreference = 'Continue'
-    & $Forge /input=NexusFPC.Forge.nxscript /targets=Build:PackageSDK *> $log
+    & $Forge /input=NXPC.Forge.nxscript "/targets=Build:PackageSDK,BuildRoot:$bootstrap" *> $log
     $code = $LASTEXITCODE
 } finally { Pop-Location; $ErrorActionPreference = 'Stop' }
 if ($code -ne 0) { throw "Forge package SDK build failed ($code). Details: $log" }

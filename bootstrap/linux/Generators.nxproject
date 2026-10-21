@@ -1,0 +1,19 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project Generators {
+    Id: "NXRP.NXPC.Bootstrap.Generators";
+    RootDirectory: $BootstrapRoot;
+    FPC Tools {
+        CompilerPath: $SeedCompiler;
+        SourceFiles: ["seed/source/utils/msg2inc.pas", "seed/source/utils/mkx86ins.pas", "seed/source/utils/mkx86reg.pas", "seed/source/utils/mkx86inl.pas", "seed/source/utils/mka64ins.pas", "seed/source/utils/mka64reg.pas"];
+        OutputPath: $BootstrapRoot + "/seed/bin";
+        Config Options { DisableDefaultConfigFiles: True; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Files Paths {
+            UnitPaths: [$SeedRTL];
+        }
+    }
+}

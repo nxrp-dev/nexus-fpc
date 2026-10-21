@@ -1,0 +1,74 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+module BootstrapPaths "NXPC.Forge.Paths.nxscript";
+
+Group CompilerTables {
+    NXBuild BuildGenerators {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: win64;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/windows/Generators.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root;
+    }
+    Run X86Instructions {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86ins.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run X64Instructions {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86ins.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run X86Registers {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86reg.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run X64Registers {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86reg.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run A64Instructions {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mka64ins.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/aarch64";
+
+    }
+    Run A64Registers {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mka64reg.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/aarch64";
+
+    }
+    Run X86Intrinsics {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/seed/bin/mkx86inl.exe";
+        WorkingDirectory: @BootstrapPaths.Root + "/seed/source/x86";
+
+    }
+    CopyFile Stage_i386_cpummprocs {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpummprocs.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/i386/cpummprocs.inc";
+    }
+    CopyFile Stage_i386_cpumminnr {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpumminnr.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/i386/cpumminnr.inc";
+    }
+    CopyFile Stage_x86_64_cpummprocs {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpummprocs.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/x86_64/cpummprocs.inc";
+    }
+    CopyFile Stage_x86_64_cpumminnr {
+        Source: @BootstrapPaths.Root + "/seed/source/x86/cpumminnr.inc";
+        Destination: @BootstrapPaths.Root + "/seed/rtl/x86_64/cpumminnr.inc";
+    }
+}

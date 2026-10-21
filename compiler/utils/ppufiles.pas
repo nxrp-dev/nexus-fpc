@@ -148,7 +148,7 @@ begin
   if not inppu.CheckPPUId then
    begin
      inppu.free;
-     Error('Error: Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC',false);
+     Error('Error: Expected NXPC NXU unit signature in '+PPUFn+'; rebuild with NXPC',false);
      Exit;
    end;
   if inppu.GetVersion<>CurrentPPUVersion then
@@ -167,7 +167,7 @@ begin
           if ppulongversion<>CurrentPPULongVersion then
             begin
               inppu.free;
-              Error('Error: Wrong NexusFPC PPU Long Version in '+PPUFn,false);
+              Error('Error: Wrong NXPC PPU Long Version in '+PPUFn,false);
               exit;
             end;
         end;

@@ -88,8 +88,6 @@ unit cpupara;
 
 
     function TCPUParaManager.Ret_In_Param(Def:TDef;PD:TAbstractProcDef):Boolean;
-      var
-        Size: LongInt;
       begin
         if Handle_Common_Ret_In_Param(Def,PD,Result) then
           Exit;
@@ -115,34 +113,6 @@ unit cpupara;
                   end;
                 else
                   ;
-              end;
-            end;
-          system_i386_darwin,
-          system_i386_iphonesim :
-            begin
-              if PD.ProcCallOption in CDecl_PoCalls then
-                begin
-                  case Def.Typ of
-                    RecordDef :
-                      begin
-                        Size:=Def.Size;
-                        if (Size>0) and
-                           (Size<=8) and
-                           { only if size is a power of 2 }
-                           ((Size and (Size-1)) = 0) then
-                          begin
-                            Result:=False;
-                            Exit;
-                          end;
-                      end;
-                    ProcVarDef:
-                      begin
-                        Result:=False;
-                        Exit;
-                      end;
-                    else
-                      ;
-                  end;
               end;
             end;
           else
@@ -298,45 +268,11 @@ unit cpupara;
       var
         RetCGSize  : TCgSize;
         ParaLoc : PCGParaLocation;
-        FDef,
-        UseDef: TDef;
         Handled: Boolean;
       begin
-        if not Assigned(ForceTempDef) then
-          UseDef:=P.ReturnDef
-        else
-          UseDef:=ForceTempDef;
-        { on darwin/i386, if a record has only one field and that field is a
-          single or double, it has to be returned like a single/double }
-        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
-           ((UseDef.Typ=RecordDef) or
-            Is_Object(UseDef)) and
-           TAbstractRecordSymTable(TAbstractRecordDef(UseDef).SymTable).Has_Single_Field(FDef) and
-           (FDef.Typ=FloatDef) and
-           (TFloatDef(FDef).FloatType in [S32Real,S64Real]) then
-          UseDef:=FDef;
-
-        Handled:=Set_Common_FuncRetLoc_Info(P,UseDef,RetCGSize,Result);
-        { normally forcetempdef is passed straight through to
-          set_common_funcretloc_info and that one will correctly determine whether
-          the location is a temporary one, but that doesn't work here because we
-          sometimes have to change the type }
-        Result.Temporary:=Assigned(ForceTempDef);
+        Handled:=Set_Common_FuncRetLoc_Info(P,ForceTempDef,RetCGSize,Result);
         if Handled then
           Exit;
-
-        { darwin/x86 requires that results < sizeof(aint) are sign/zero
-          extended to sizeof(aint) }
-        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
-           (Side=CalleeSide) and
-           (Result.IntSize>0) and
-           (Result.IntSize<SizeOf(AInt)) then
-          begin
-            Result.Def:=SIntType;
-            Result.IntSize:=SizeOf(AInt);
-            RetCGSize:=OS_SINT;
-            Result.Size:=RetCGSize;
-          end;
 
         { Return in FPU register? }
         if Result.Def.Typ=FloatDef then
@@ -442,16 +378,6 @@ unit cpupara;
             HP.ParaLoc[Side].IntSize:=ParaLen;
             HP.ParaLoc[Side].Def:=ParaDef;
             HP.ParaLoc[Side].Alignment:=ParaAlign;
-            { darwin/x86 requires that parameters < sizeof(aint) are sign/ }
-            { zero extended to sizeof(aint)                                }
-            if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
-               (Side = CallerSide) and
-               (ParaLen > 0) and
-               (ParaLen < SizeOf(AInt)) then
-              begin
-                ParaCGSize:=OS_SINT;
-                ParaDef:=SIntType;
-              end;
             { Copy to stack? }
             if (ParaCGSize=OS_NO) or
                (Use_Fixed_Stack) then
@@ -466,12 +392,6 @@ unit cpupara;
                   ParaLoc^.Reference.Index:=NR_FRAME_POINTER_REG;
                 VarAlign:=Used_Align(Size_2_Align(ParaLen),ParaAlign,ParaAlign);
 
-                { don't let push_size return 16, because then we can    }
-                { read past the end of the heap since the value is only }
-                { 10 bytes long (JM)                                    }
-                if (ParaCGSize = OS_F80) and
-                   (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) then
-                  ParaLen:=16;
                 ParaLoc^.Reference.Offset:=ParaSize;
                 if Side=CalleeSide then
                   Inc(ParaLoc^.Reference.Offset,TargetInfo.first_parm_offset);

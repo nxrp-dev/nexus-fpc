@@ -472,10 +472,6 @@ Implementation
         case actasmtoken of
           AS_AT:
             begin
-              { darwin/i386 needs a relsym instead, and we can't }
-              { generate this automatically                      }
-              if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
-                Message(asmr_e_invalid_reference_syntax);
               Consume(AS_AT);
               if actasmtoken=AS_ID then
                 begin

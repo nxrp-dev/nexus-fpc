@@ -133,8 +133,6 @@ unit cgx86;
         procedure make_simple_ref(list:TAsmList;var ref: TReference);inline;
         procedure make_direct_ref(list:TAsmList;var ref: TReference);
 
-        function get_darwin_call_stub(const s: string; weak: boolean): TAsmSymbol;
-
         procedure generate_leave(list : TAsmList);
       protected
         procedure a_load_ref_reg_internal(list : TAsmList;fromsize,tosize: TCgSize;const ref : TReference;reg : TRegister;isdirect:boolean);virtual;
@@ -591,30 +589,7 @@ unit cgx86;
           end;
 {$elseif defined(i386)}
         add_hreg:=false;
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
-          begin
-            if Assigned(ref.Symbol) and
-               not(Assigned(ref.RelSymbol)) and
-               ((ref.Symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL,AB_PRIVATE_EXTERN]) or
-                (cs_create_pic in CurrentSettings.ModuleSwitches)) then
-             begin
-               if ref.Symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL,AB_PRIVATE_EXTERN] then
-                 begin
-                   hreg:=G_Indirect_Sym_Load(list,ref.Symbol.name,asmsym2indsymflags(ref.Symbol));
-                   ref.Symbol:=nil;
-                 end
-               else
-                 begin
-                   include(CurrentProcInfo.flags,pi_needs_got);
-                   { make a copy of the got register, hreg can get modified }
-                   hreg:=GetAddressRegister(list);
-                   A_Load_Reg_Reg(list,OS_ADDR,OS_ADDR,CurrentProcInfo.got,hreg);
-                   ref.RelSymbol:=CurrentProcInfo.CurrGOTLabel;
-                 end;
-               add_hreg:=true
-             end
-          end
-        else if (cs_create_pic in CurrentSettings.ModuleSwitches) and
+        if (cs_create_pic in CurrentSettings.ModuleSwitches) and
            Assigned(ref.Symbol) then
           begin
             Reference_Reset_Symbol(href,ref.Symbol,0,sizeof(PInt),[]);
@@ -783,50 +758,14 @@ unit cgx86;
 ****************************************************************************}
 
     procedure TCGX86.A_Jmp_Name(list : TAsmList;const s : string);
-      var
-        r: TReference;
       begin
-        if (TargetInfo.system <> system_i386_darwin) then
-          list.concat(TAICPU.op_sym(A_JMP,S_NO,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)))
-        else
-          begin
-            Reference_Reset_Symbol(r,get_darwin_call_stub(s,false),0,sizeof(PInt),[]);
-            r.RefAddr:=addr_full;
-            list.concat(TAICPU.op_ref(A_JMP,S_NO,r));
-          end;
+        list.concat(TAICPU.op_sym(A_JMP,S_NO,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)));
       end;
 
 
     procedure TCGX86.A_Jmp_Always(list : TAsmList;l: TAsmLabel);
       begin
         a_jmp_cond(list, OC_NONE, l);
-      end;
-
-
-    function TCGX86.get_darwin_call_stub(const s: string; weak: boolean): TAsmSymbol;
-      var
-        stubname: string;
-      begin
-        stubname := 'L'+s+'$stub';
-        result := CurrentAsmData.GetAsmSymbol(stubname);
-        if Assigned(result) then
-          exit;
-
-        if CurrentAsmData.asmlists[al_imports]=nil then
-          CurrentAsmData.asmlists[al_imports]:=TAsmList.Create;
-
-        new_section(CurrentAsmData.asmlists[al_imports],sec_stub,'',0);
-        result := CurrentAsmData.DefineAsmSymbol(stubname,AB_LOCAL,AT_FUNCTION,VoidCodePointerType);
-        CurrentAsmData.asmlists[al_imports].concat(TAISymbol.Create(result,0));
-        { register as a weak symbol if necessary }
-        if weak then
-          CurrentAsmData.weakrefasmsymbol(s,AT_FUNCTION);
-        CurrentAsmData.asmlists[al_imports].concat(TAIDirective.Create(asd_indirect_symbol,s));
-        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
       end;
 
 
@@ -842,27 +781,19 @@ unit cgx86;
         r : TReference;
       begin
 
-        if (TargetInfo.system <> system_i386_darwin) then
+        if not(weak) then
+          sym:=CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)
+        else
+          sym:=CurrentAsmData.WeakRefAsmSymbol(s,AT_FUNCTION);
+        Reference_Reset_Symbol(r,sym,0,sizeof(PInt),[]);
+        if (cs_create_pic in CurrentSettings.ModuleSwitches) and
+           { darwin's assembler doesn't want @PLT after call symbols }
+           not(TargetInfo.system in [system_x86_64_darwin,system_x86_64_iphonesim]) then
           begin
-            if not(weak) then
-              sym:=CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)
-            else
-              sym:=CurrentAsmData.WeakRefAsmSymbol(s,AT_FUNCTION);
-            Reference_Reset_Symbol(r,sym,0,sizeof(PInt),[]);
-            if (cs_create_pic in CurrentSettings.ModuleSwitches) and
-               { darwin's assembler doesn't want @PLT after call symbols }
-               not(TargetInfo.system in [system_x86_64_darwin,system_i386_iphonesim,system_x86_64_iphonesim]) then
-              begin
-                r.RefAddr:=addr_pic;
-              end
-            else
-              r.RefAddr:=addr_full;
+            r.RefAddr:=addr_pic;
           end
         else
-          begin
-            Reference_Reset_Symbol(r,get_darwin_call_stub(s,weak),0,sizeof(PInt),[]);
-            r.RefAddr:=addr_full;
-          end;
+          r.RefAddr:=addr_full;
         list.concat(TAICPU.op_ref(A_CALL,S_NO,r));
       end;
 
@@ -1065,7 +996,7 @@ unit cgx86;
                 { Convert thread local address to a process global address
                   as we cannot handle far pointers.}
                 case TargetInfo.system of
-                  system_i386_linux,system_i386_android:
+                  system_i386_linux:
                     if segment=NR_GS then
                       begin
                         Reference_Reset(tmpref,1,[]);
@@ -1127,29 +1058,7 @@ unit cgx86;
               begin
                 if Assigned(dirref.Symbol) then
                   begin
-                    if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-                       ((dirref.Symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) or
-                        (cs_create_pic in CurrentSettings.ModuleSwitches)) then
-                      begin
-                        if (dirref.Symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) or
-                           ((cs_create_pic in CurrentSettings.ModuleSwitches) and
-                            (dirref.Symbol.bind in [AB_COMMON,AB_GLOBAL,AB_PRIVATE_EXTERN])) then
-                          begin
-                             Reference_Reset_Base(tmpref,
-                               G_Indirect_Sym_Load(list,dirref.Symbol.name,asmsym2indsymflags(dirref.Symbol)),
-                               offset,CTempPosInvalid,sizeof(PInt),[]);
-                             A_LoadAddr_Ref_Reg(list,tmpref,r);
-                          end
-                       else
-                         begin
-                           include(CurrentProcInfo.flags,pi_needs_got);
-                           Reference_Reset_Base(tmpref,CurrentProcInfo.got,offset,dirref.TempPos,dirref.Alignment,[]);
-                           tmpref.Symbol:=symbol;
-                           tmpref.RelSymbol:=CurrentProcInfo.CurrGOTLabel;
-                           list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,r));
-                         end;
-                      end
-                    else if (cs_create_pic in CurrentSettings.ModuleSwitches)
+                    if (cs_create_pic in CurrentSettings.ModuleSwitches)
 {$ifdef x86_64}
                              and not(dirref.Symbol.bind=AB_LOCAL)
 {$endif x86_64}

@@ -1,0 +1,30 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project BootstrapSmoke {
+    Id: "NXRP.NXPC.Bootstrap.Smoke";
+    OutputRoot: $BootstrapRoot + "/smoke";
+    NXPC SharedLibrary {
+        CompilerPath: $InstallRoot + "/bin/nxpc-x86_64";
+        SourceFiles: ["BootstrapSmokeLibrary.lpr"];
+        OutputPath: @BootstrapSmoke.OutputRoot;
+        RawOptions: ["-XLL", "-o" + @BootstrapSmoke.OutputRoot + "/libBootstrapSmoke.so"];
+        Config Options { DisableDefaultConfigFiles: True; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Files Paths { UnitPaths: [$InstallRoot + "/units/x86_64-linux/rtl"]; }
+    }
+    NXPC Tests {
+        CompilerPath: $InstallRoot + "/bin/nxpc-x86_64";
+        SourceFiles: ["BootstrapSmoke.lpr"];
+        OutputPath: @BootstrapSmoke.OutputRoot;
+        RawOptions: ["-XLL", "-o" + @BootstrapSmoke.OutputRoot + "/BootstrapSmoke"];
+        Config Options { DisableDefaultConfigFiles: True; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Files Paths {
+            UnitPaths: [$InstallRoot + "/units/x86_64-linux/rtl",
+                "../../../nexus/packages/nexus-packages/nxtest/src"];
+        }
+    }
+}

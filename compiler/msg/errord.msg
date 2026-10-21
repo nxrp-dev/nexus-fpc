@@ -3180,7 +3180,7 @@ exec_w_init_file_not_found=09034_W_"$1" nicht gefunden; dies wird wahrscheinlich
 % The compiler adds certain startup code files to the linker only when they are found.
 % If they are not found, they are not added and this might cause a linking failure.
 % If the system has gcc installed, running \var{gcc --print-file-name <filename>} might return the path to the file.
-% Add this path in your \var{fpc.cfg} using the switch \var{-Fl} to fix this error. This requires though,
+% Add this path in your \var{nxpc.cfg} using the switch \var{-Fl} to fix this error. This requires though,
 % that gcc targets the same target as FPC.
 exec_e_static_lib_not_supported=09035_E_Statische Bibliotheken nicht unterstÅtzt
 % Creating static libraries is not supported for this platform, because it was
@@ -3639,9 +3639,9 @@ option_config_is_dir=11040_F_Konfigurationsdatei $1 ist ein Verzeichnis
 option_confict_asm_debug=11041_W_Die gewÑhlte Assembler-Ausgabe "$1" kann kein Debug-Info erzeugen, Debugging ist ausgeschaltet
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Die Verwendung von ppc386.cfg wird beendet. Bitte statt dessen fpc.cfg benutzen
+option_ppc386_deprecated=11042_W_Die Verwendung von ppc386.cfg wird beendet. Bitte statt dessen nxpc.cfg benutzen
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_Zur \#ELSE Direktive in Zeile $2 der Optionen-Datei $1 gibt es kein entsprechendes \#IF(N)DEF
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_Die Option "$1" wird auf der Zielplattform nicht oder noch nicht unterstÅtzt
@@ -3880,7 +3880,7 @@ package_u_ppl_filename=13029_U_PPL Dateiname $1
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler Version $FPCFULLVERSION [$FPCDATE] fÅr $FPCTARGET
+NXPC compiler Version $FPCFULLVERSION [$FPCDATE] fÅr $FPCTARGET
 Copyright (c) 1993-2026 Florian KlÑmpfl und andere
 ]
 
@@ -3888,7 +3888,7 @@ Copyright (c) 1993-2026 Florian KlÑmpfl und andere
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler Version $FPCVERSION
+NXPC compiler Version $FPCVERSION
 
 Compiler-Datum:      $FPCDATE
 Compiler-Zielsystem: $FPCCPU
@@ -3978,7 +3978,7 @@ option_help_pages=11025_[
 # It is also possible to insert comments in that section
 F*0*_Es werden nur Optionen aufgelistet, die fÅr die voreingestellte oder ausgewÑhlte Plattform gÅltig sind.
 **0*_Nach booleschen Optionen geben Sie + zum Ein- bzw. - zum Ausschalten an
-**1@<x>_Lese zusÑtzlich zu den voreingestellten Compiler-Optionen aus fpc.cfg auch die aus <x>
+**1@<x>_Lese zusÑtzlich zu den voreingestellten Compiler-Optionen aus nxpc.cfg auch die aus <x>
 # Assembler related options
 **1a_Der Compiler lîscht die erzeugte Assembler-Datei nicht und Åbergibt automatisch an den externen Assembler-Schreiber
 **2al_Liste Quellcode-Zeilen in der Assembler-Datei

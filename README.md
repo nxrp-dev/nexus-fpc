@@ -1,7 +1,7 @@
-# FPC Source code repository
+# NXPC source repository
 
 ## Synopsis
-This repository contains the sources of the [Free Pascal](https://www.freepascal.org/) compiler distribution.
+NXPC is the Nexus Pascal compiler and runtime, forked from [Free Pascal](https://www.freepascal.org/).
 
 
 It contains
@@ -11,39 +11,47 @@ It contains
 * Several utilities in the directory *utils*.
 * The compiler testsuite in the directory *tests*.
 
-NexusFPC uses its own [compiled artifact identities](nexusfpc-artifact-identity.md):
+NXPC uses its own [compiled artifact identities](nexusfpc-artifact-identity.md):
 `NXU` in `.nxu` files and `NXP` in `.nxp` files. Numeric format revisions are
 independent of upstream FPC. Rebuild the compiler, RTL, units and packages together
 when moving from an earlier build; upstream compiled units cannot be reused.
 
-## Building NexusFPC
+The installed command is `nxpc`, with backends `nxpc-x86_64`, `nxpc-i386`
+and `nxpc-aarch64`. Its configuration is `nxpc.cfg`. Compiler configuration,
+executable and message overrides use `NXPC_CONFIG_PATH`, `NXPC_EXEC_PATH` and
+`NXPC_ERROR_FILE`; `NXPCDIR` selects the compiler installation root. These names
+are separate from stock FPC. Platform unit overrides likewise use the `NXPC_`
+prefix, for example `NXPC_LINUXUNITS` and `NXPC_WIN64UNITS`. Language modes and FPC compatibility symbols remain
+available to source code. nxbuild and Forge distinguish `NXPC` product builds
+from genuine `FPC` builds. Initial bootstrap generators and the seed compiler
+still build with stock FPC 3.2.2; subsequent stages use NXPC.
 
-Forge is the build system for the compiler, base RTL, release tools and Win64
-runtime-package SDK. Run builds in an isolated checkout under `../../worktree`
-so generated files stay outside the source checkouts. From that checkout:
+## Building NXPC
 
-```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
-```
+Forge owns compiler bootstrap orchestration. On Linux, nxbuild projects own
+compilation of the generators, seed, three compiler/RTL generations and retained
+Users units. Forge verifies convergence and compiler identity, installs the
+matching compiler/RTL, and builds/runs native and shared-library NXTests.
+Windows-hosted bootstrap, cross builds, release tools and the Win64 runtime-package
+SDK remain Forge projects.
 
-See [NexusFPC with Forge](NexusFPC.Forge.md) for the complete cross matrix,
-release assembly and prerequisites. Makefiles, make generators, fpmake,
-make-based bootstrap/cross scripts and upstream make CI have been retired.
+All generated files belong in a selected worktree `BuildRoot`, outside source.
+Use the commands and prerequisites in [NXPC with Forge](NXPC.Forge.md).
+The Linux Python helper in nexus-private is a launcher for that entry point and
+contains no independent build logic. Makefiles, make generators, fpmake and
+make-based bootstrap/cross scripts have been retired.
+
 [Recovered package build requirements](nexusfpc-package-build-requirements.md)
-record the useful details from the removed package and test recipes. Package
-sources await selection. [Native nxtest suites](tests/NXTEST.md) now own unit
-coverage, with documented skips for unresolved failures. Native Linux-hosted
-builds and Linux SDK construction through Forge remain deferred. The compiler
-and RTL still support the retained Linux
-cross targets and the Linux package runtime.
+record useful details from the removed package and test recipes. Native
+[nxtest suites](tests/NXTEST.md) own unit coverage and document unresolved cases.
 
 ## Experimental Win64 dynamic packages
 
-Complete the [Forge bootstrap](NexusFPC.Forge.md), then build the package SDK
+Complete the [Forge bootstrap](NXPC.Forge.md), then build the package SDK
 and validate its console/GUI examples:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NexusFPCPackageSDK.ps1 -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NXPCPackageSDK.ps1 -Forge C:/tools/nxforge.exe -BootstrapDirectory C:/dev/worktree/fpc-bootstrap -RunExamples
 ```
 
 See the [package SDK guide](../nexus-lab/examples/packages/runtime-loading/README.md) for prerequisites,
@@ -54,7 +62,7 @@ linking or runtime packages. This SDK recipe targets Win64 x86-64.
 Build and run real late-loading console/GUI examples against that SDK:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot build\forge-bootstrap\package-sdk -OutputRoot output\nxpkg-late -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\dynamic-packages\Build-NXPCLatePackageExamples.ps1 -SdkRoot build\forge-bootstrap\package-sdk -OutputRoot output\nxpkg-late -RunExamples
 ```
 
 Use the SDK path printed by the first command. Late loading is synchronous.

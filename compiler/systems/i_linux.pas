@@ -40,7 +40,7 @@ unit i_linux;
                             tf_safecall_exceptions,tf_safecall_clearstack,
                             tf_supports_hidden_symbols];
             cpu          : cpu_i386;
-            unit_env     : 'LINUXUNITS';
+            unit_env     : 'NXPC_LINUXUNITS';
             extradefines : 'UNIX;HASUNIX';
             ExeExt       : '';
             defext       : '.def';
@@ -111,7 +111,7 @@ unit i_linux;
                             ,tf_supports_hidden_symbols,tf_supports_packages
                             ];
             cpu          : cpu_x86_64;
-            unit_env     : 'LINUXUNITS';
+            unit_env     : 'NXPC_LINUXUNITS';
             extradefines : 'UNIX;HASUNIX';
             ExeExt       : '';
             defext       : '.def';
@@ -186,7 +186,7 @@ unit i_linux;
                             ,tf_supports_hidden_symbols
                             ];
             cpu          : cpu_aarch64;
-            unit_env     : 'LINUXUNITS';
+            unit_env     : 'NXPC_LINUXUNITS';
             extradefines : 'UNIX;HASUNIX';
             ExeExt       : '';
             defext       : '.def';

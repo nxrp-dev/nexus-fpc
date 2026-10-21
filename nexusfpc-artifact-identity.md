@@ -1,6 +1,6 @@
-# NexusFPC compiled artifact identity
+# NXPC compiled artifact identity
 
-NexusFPC owns a separate compiled artifact family. An upstream numeric version
+NXPC owns a separate compiled artifact family. An upstream numeric version
 increase cannot cause an upstream unit or package to be mistaken for a Nexus
 artifact, even when all numeric version fields happen to match.
 
@@ -127,15 +127,15 @@ The Windows repository bootstrap starts with stock FPC 3.2.2 i386-win32 and its
 matching RTL. It builds an x64 seed, then the new Win64 RTL and native compiler
 before the normal cycle, retaining native hardware80 arithmetic at every step.
 The bootstrap compiler therefore never has to read `NXU` files. Use an isolated
-source checkout for the [Forge bootstrap and full matrix](NexusFPC.Forge.md):
+source checkout for the [Forge bootstrap and full matrix](NXPC.Forge.md):
 
 ```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+& nxforge.exe /input=NXPC.Forge.nxscript "/targets=Build:Bootstrap,BuildRoot:C:/dev/worktree/fpc-bootstrap"
 ```
 
 The Win64 SDK reuses the completed Forge bootstrap's compiler, staged sources
-and matching RTL. Native Linux SDK construction through Forge is deferred; its
-old make builder has been retired. Do not mix an existing SDK's compiler or RTL
+and matching RTL. Native Linux compiler/base-RTL construction now runs through Forge and
+nxbuild, with explicit worktree output/install roots; see the build guide. Do not mix an existing SDK's compiler or RTL
 with new files.
 
 ## Verification

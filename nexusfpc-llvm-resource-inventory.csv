@@ -250,7 +250,6 @@ validation,tests/resource-formats/Run-NXResourceHostChecks.sh,Modify,,Aggregates
 validation,tests/resource-formats/Prepare-NXResourceRuntimeCheck.sh,Modify,,Isolated new-object/old-compiler runtime preparation; Linux packaged command and native APIs pass; target execution and production integration remain distinct.,50
 validation,tests/resource-formats/Prepare-NXResourceRuntimeCheck.ps1,Modify,,Prepares Windows LLD runtime check using canonical RES under the original compiler link input; native owner execution pending.,64
 validation,tests/resource-formats/Package-NXResourceRuntimeApp.sh,Modify,,Packages prepared Mach-O executables and expected RES for simulator/device; structural plist/copy checks pass; native signing/install/launch pending.,47
-validation,tests/resource-formats/Native-Validation.md,Modify,,Owner-requested host and target commands; explicit compiler/RTL/SDK inputs; prototype scope; no false runtime/removal passes.,179
 compiler,compiler/x86/rax86.pas,Modify,A_CRC32,Owner-approved CRC32 source-width correction; instruction/vector/alignment and string hash regressions.,2246
 regression,tests/resource-formats/Run-NXLinuxPackageResourceTests.sh,Modify,NXPL resource ownership,Build provider and source-hidden consumer with matching PIC RTL; inspect provider resources and absence of copied consumer resources.,71
 regression,tests/resource-formats/Run-NXCRC32WidthTests.sh,Modify,CRC32 instruction widths,"Validate byte/word/dword/qword encodings, vectors and equal-string hashing.",27

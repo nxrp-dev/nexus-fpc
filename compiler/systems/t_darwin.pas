@@ -172,21 +172,17 @@ implementation
         if not isdll then
           begin
             case TargetInfo.system of
-                  system_i386_darwin,
                   system_x86_64_darwin:
                     begin
                       { 10.8 and later: no crt1.* }
                       if MacOSXVersionMin.RelationTo(10,8,0)>=0 then
                         exit('');
                       { x86: crt1.10.6.o -> crt1.10.5.o -> crt1.o }
-                      { others: crt1.10.5 -> crt1.o }
-                      if (TargetInfo.system in [system_i386_darwin,system_x86_64_darwin]) and
-                         (MacOSXVersionMin.RelationTo(10,6,0)>=0) then
+                      if MacOSXVersionMin.RelationTo(10,6,0)>=0 then
                         exit('crt1.10.6.o');
                       if MacOSXVersionMin.RelationTo(10,5,0)>=0 then
                         exit('crt1.10.5.o');
                     end;
-                  system_i386_iphonesim,
                   system_x86_64_iphonesim,
                   system_aarch64_iphonesim:
                     begin
@@ -212,7 +208,6 @@ implementation
             if (AppType=app_bundle) then
               begin
                 case TargetInfo.system of
-                  system_i386_darwin,
                   system_x86_64_darwin:
                     begin
                       { < 10.6: bundle1.o
@@ -227,7 +222,6 @@ implementation
                       if IPhoneOSVersionMin.RelationTo(3,1,0)>=0 then
                         exit('');
                     end;
-                  system_i386_iphonesim,
                   system_x86_64_iphonesim,
                   system_aarch64_iphonesim:
                     begin
@@ -245,7 +239,6 @@ implementation
             else
               begin
                 case TargetInfo.system of
-                  system_i386_darwin,
                   system_x86_64_darwin:
                     begin
                       { >= 10.6: nothing
@@ -264,7 +257,6 @@ implementation
                       if IPhoneOSVersionMin.RelationTo(3,1,0)>=0 then
                         exit('');
                     end;
-                  system_i386_iphonesim,
                   system_x86_64_iphonesim,
                   system_aarch64_iphonesim:
                     begin
@@ -302,9 +294,6 @@ implementation
     function TLinkerDarwin.GetLinkArch: TCmdStr;
       begin
         case TargetInfo.system of
-          system_i386_darwin,
-          system_i386_iphonesim:
-            result:='-arch i386';
           system_x86_64_darwin,
           system_x86_64_iphonesim:
             result:='-arch x86_64';
@@ -331,7 +320,7 @@ implementation
           end
         else if IPhoneOSVersionMin.IsValid then
           begin
-            if TargetInfo.system in [system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim] then
+            if TargetInfo.system in [system_x86_64_iphonesim,system_aarch64_iphonesim] then
               result:='-ios_simulator_version_min '+IPhoneOSVersionMin.str
             else
               result:='-iphoneos_version_min '+IPhoneOSVersionMin.str;

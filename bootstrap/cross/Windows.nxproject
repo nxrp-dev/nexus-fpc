@@ -1,0 +1,40 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module WindowsSettings "Windows.Settings.nxscript";
+
+Project Windows {
+    Id: "NXRP.NXPC.cross.Windows";
+    RootDirectory: $BootstrapRoot;
+
+    NXPC System (WindowsSettings.Options) {
+        SourceFiles: [
+            $RTLDirectory + "/system.pas"
+        ];
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; CompileSystemUnit: Enabled; }
+    }
+
+    NXPC Runtime (WindowsSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/objpas.pas",
+            $RTLDirectory + "/windows.pas",
+            $BootstrapRoot + "/seed/rtl/win/sysutils.pas",
+            $RTLDirectory + "/buildrtl.pas",
+            $BootstrapRoot + "/seed/rtl/inc/uuchar.pas",
+            $BootstrapRoot + "/seed/rtl/inc/macpas.pas",
+            $BootstrapRoot + "/seed/rtl/inc/iso7185.pas",
+            $BootstrapRoot + "/seed/rtl/charmaps/cpall.pas",
+            $BootstrapRoot + "/seed/rtl/inc/lnfodwrf.pas",
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/intrinsics.pas"
+        ];
+    }
+
+    NXPC X86Runtime (WindowsSettings.Options) TargetCPU[i386, x86_64] {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/cpu.pas",
+            $RTLDirectory + "/signals.pas"
+        ];
+    }
+}

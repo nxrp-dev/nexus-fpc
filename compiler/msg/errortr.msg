@@ -3106,9 +3106,9 @@ option_config_is_dir=11040_F_$1 yapılandırma dosyası bir dizindir
 option_confict_asm_debug=11041_W_"$1" seçilmiş Assembler çıkışı hata ayıklama bilgisi üretemiyor, hata ayıklama devre dışı
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Ppc386.cfg kullanımı kullanımdan kaldırılmıştır, lütfen yerine fpc.cfg kullanın
+option_ppc386_deprecated=11042_W_Ppc386.cfg kullanımı kullanımdan kaldırılmıştır, lütfen yerine nxpc.cfg kullanın
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_Seçenekler $2 dosyasında $1 satırındaki #ELSE yönergesinde #IF(N)DEF bulunamadı
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_"$1" seçeneği mevcut hedef platformda desteklenmiyor veya henüz desteklenmiyor
@@ -3232,7 +3232,7 @@ wpo_cant_create_feedback_file=12019_E_"$1" belirtilen tüm program optimizasyon 
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
+NXPC compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
 Copyright (c) 1993-2024 by Florian Klaempfl and others
 ]
 
@@ -3240,7 +3240,7 @@ Copyright (c) 1993-2024 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler version $FPCVERSION
+NXPC compiler version $FPCVERSION
 
 Compiler date      : $FPCDATE
 Compiler CPU target: $FPCCPU
@@ -3314,7 +3314,7 @@ new features, etc.):
 option_help_pages=11025_[
 F*0*_Only options valid for the default or selected platform are listed.
 **0*_Put + after a boolean switch option to enable it, - to disable it.
-**1@<x>_Read compiler options from <x> in addition to the default fpc.cfg
+**1@<x>_Read compiler options from <x> in addition to the default nxpc.cfg
 **1a_The compiler does not delete the generated assembler file
 **2al_List sourcecode lines in assembler file
 **2an_List node info in assembler file (-dEXTDEBUG compiler)

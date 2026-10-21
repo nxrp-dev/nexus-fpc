@@ -449,7 +449,7 @@ implementation
        begin
          InPPU.Free;
          InPPU := nil;
-         Comment(VError,'Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC');
+         Comment(VError,'Expected NXPC NXU unit signature in '+PPUFn+'; rebuild with NXPC');
          Exit;
        end;
       PPUVersion:=InPPU.GetVersion;
@@ -508,7 +508,7 @@ implementation
                  begin
                    InPPU.Free;
                    OutPPU.Free;
-                   Comment(VError,'Wrong NexusFPC PPU Long Version in '+PPUFn);
+                   Comment(VError,'Wrong NXPC PPU Long Version in '+PPUFn);
                    Exit;
                  end;
                OutPPU.PutLongInt(LongInt(PPULongVersion));

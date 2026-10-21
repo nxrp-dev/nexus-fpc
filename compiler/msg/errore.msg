@@ -3164,7 +3164,7 @@ exec_w_init_file_not_found=09034_W_"$1" not found, this will probably cause a li
 % The compiler adds certain startup code files to the linker only when they are found.
 % If they are not found, they are not added and this might cause a linking failure.
 % If the system has gcc installed, running \var{gcc --print-file-name <filename>} might return the path to the file.
-% Add this path in your \var{fpc.cfg} using the switch \var{-Fl} to fix this error. This requires though,
+% Add this path in your \var{nxpc.cfg} using the switch \var{-Fl} to fix this error. This requires though,
 % that gcc targets the same target as FPC.
 exec_e_static_lib_not_supported=09035_E_Creation of Static Libraries not supported
 % Creating static libraries is not supported for this platform, because it was
@@ -3247,8 +3247,8 @@ unit_u_ppu_time=10005_U_PPU Time: $1
 % When you use the \var{-vu} flag, the time the unit was compiled is shown.
 unit_u_ppu_file_too_short=10006_U_PPU File too short
 % The ppufile is too short, not all declarations are present.
-unit_u_ppu_invalid_header=10007_U_PPU Invalid Header (expected NexusFPC NXU signature; rebuild with NexusFPC)
-% NexusFPC unit files begin with \var{NXU}. Upstream FPC and legacy NexusFPC units must be rebuilt.
+unit_u_ppu_invalid_header=10007_U_PPU Invalid Header (expected NXPC NXU signature; rebuild with NXPC)
+% NXPC unit files begin with \var{NXU}. Upstream FPC and legacy NexusFPC units must be rebuilt.
 unit_u_ppu_invalid_version=10008_U_PPU Invalid Version $1 expecting $2
 % This unit file was compiled with a different version of the compiler, and
 % cannot be read.
@@ -3568,9 +3568,9 @@ option_config_is_dir=11040_F_Config file $1 is a directory
 option_confict_asm_debug=11041_W_Assembler output selected "$1" cannot generate debug info, debugging disabled
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use fpc.cfg instead
+option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use nxpc.cfg instead
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_In options file $1 at line $2 #ELSE directive without #IF(N)DEF found
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_Option "$1" is not, or not yet, supported on the current target platform
@@ -3755,8 +3755,8 @@ package_u_pcp_time=13012_U_PCP Time: $1
 % When you use the \var{-vu} flag, the time the package was compiled is shown.
 package_u_pcp_file_too_short=13013_U_PCP File too short
 % The PCP file is too short, not all declarations are present.
-package_u_pcp_invalid_header=13014_U_PCP Invalid Header (expected NexusFPC NXP signature; rebuild with NexusFPC)
-% NexusFPC package metadata begins with \var{NXP}. Upstream FPC and legacy NexusFPC packages must be rebuilt.
+package_u_pcp_invalid_header=13014_U_PCP Invalid Header (expected NXPC NXP signature; rebuild with NXPC)
+% NXPC package metadata begins with \var{NXP}. Upstream FPC and legacy NexusFPC packages must be rebuilt.
 package_u_pcp_invalid_version=13015_U_PCP Invalid Version $1
 % This package file was compiled with a different version of the compiler, and
 % cannot be read.
@@ -3810,7 +3810,7 @@ package_u_ppl_filename=13029_U_PPL filename $1
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
+NXPC compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -3818,7 +3818,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler version $FPCVERSION
+NXPC compiler version $FPCVERSION
 
 Compiler date      : $FPCDATE
 Compiler CPU target: $FPCCPU
@@ -3907,7 +3907,7 @@ option_help_pages=11025_[
 # It is also possible to insert comments in that section
 F*0*_Only options valid for the default or selected platform are listed.
 **0*_Put + after a boolean switch option to enable it, - to disable it.
-**1@<x>_Read compiler options from <x> in addition to the default fpc.cfg
+**1@<x>_Read compiler options from <x> in addition to the default nxpc.cfg
 # Assembler related options
 **1a_The compiler does not delete the generated assembler file, automatically switches to external assembler writer
 **2al_List source code lines in assembler file

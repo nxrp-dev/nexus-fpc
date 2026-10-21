@@ -1,0 +1,23 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project Users {
+    Id: "NXRP.NXPC.Bootstrap.Users";
+    RootDirectory: $BootstrapRoot;
+    NXPC Users {
+        CompilerPath: $BootstrapRoot + "/cycle3/nxpc-x86_64";
+        SourceFiles: ["seed/users/crypth.pas", "seed/users/users.pas"];
+        OutputPath: $InstallRoot + "/units/x86_64-linux/users";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        RawOptions: ["-XLL"];
+        Files Paths {
+            UnitPaths: [$InstallRoot + "/units/x86_64-linux/rtl", "seed/users"];
+        }
+    }
+}

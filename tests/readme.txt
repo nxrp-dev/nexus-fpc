@@ -7,9 +7,6 @@ Native unit-test projects, suite boundaries, categories and execution instructio
 Observed unresolved failures and explicit skips:
   NXTEST-FAILURES.md
 
-Measured validation and platform limits:
-  NXTEST-VALIDATION.md
-
 The punit and dotest runners, redirection/digest tools, database schemas and
 FPCUnit console defaults are retired. Current results come from nxtest.
 

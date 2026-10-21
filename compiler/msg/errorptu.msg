@@ -3325,9 +3325,9 @@ option_config_is_dir=11040_F_Arquivo configuração $1 é um diretório
 option_confict_asm_debug=11041_W_Saída montador Assembler selecionado "$1" não pode gerar informações depuração, depuração desabilitada
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Uso de 'ppc386.cfg' está depreciado, favor usar 'fpc.cfg'
+option_ppc386_deprecated=11042_W_Uso de 'ppc386.cfg' está depreciado, favor usar 'nxpc.cfg'
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_No arquivo opções $1 na linha $2 diretiva \var{\#ELSE} sem \var{\#IF(N)DEF} encontrada
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_Opção "$1" não é, ou ainda não é, suportada pela plataforma alvo atual
@@ -3465,7 +3465,7 @@ wpo_cant_create_feedback_file=12019_E_Impossível criar arquivo retorno otimiza�
 # Logo (option -l)
 #
 option_logo=11023_[
-Compilador Free Pascal versão $FPCFULLVERSION [$FPCDATE] para $FPCCPU
+Compilador NXPC versão $FPCFULLVERSION [$FPCDATE] para $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -3473,7 +3473,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Compilador Free Pascal versão $FPCVERSION
+Compilador NXPC versão $FPCVERSION
 
 Data Compilador    : $FPCDATE
 CPU Alvo Copilador : $FPCCPU

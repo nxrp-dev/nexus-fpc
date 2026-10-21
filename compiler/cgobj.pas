@@ -460,8 +460,6 @@ unit cgobj;
             for an exceptfilter (current_procinfo is parent, finalize_procinfo is exceptfilter). }
           procedure Adjust_ExceptFilter_Ref(var Ref: TReference; ForFinalization: Boolean); virtual;
 
-         protected
-          function G_Indirect_Sym_Load(List:TAsmList;const SymName: string; const Flags: TIndSymFlags): TRegister;virtual;
        end;
 
 {$ifdef cpu64bitalu}
@@ -578,8 +576,6 @@ unit cgobj;
        { Code generator class for all operations working with 64-Bit operands }
        CG64 : TCG64;
 {$endif cpu64bitalu}
-
-    function AsmSym2IndSymFlags(Sym: TAsmSymbol): TIndSymFlags;
 
     procedure Destroy_CodeGen;
 
@@ -2633,50 +2629,6 @@ implementation
       end;
 
 
-   function TCG.G_Indirect_Sym_Load(List:TAsmList;const SymName: string; const Flags: TIndSymFlags): TRegister;
-      var
-        L: TAsmSymbol;
-        Ref: TReference;
-        NLSymName: string;
-        SymTyp: TAsmsymtype;
-      begin
-        Result := NR_NO;
-        case TargetInfo.System of
-          system_i386_darwin,
-          system_i386_iphonesim:
-            begin
-              NLSymName:='L'+SymName+'$non_lazy_ptr';
-              L:=CurrentAsmData.GetAsmSymbol(NLSymName);
-              if not(Assigned(L)) then
-                begin
-                  if is_data in Flags then
-                    SymTyp:=AT_DATA
-                  else
-                    SymTyp:=AT_FUNCTION;
-                  new_section(CurrentAsmData.AsmLists[al_picdata],sec_data_nonlazy,'',SizeOf(PInt));
-                  L:=CurrentAsmData.DefineAsmSymbol(NLSymName,AB_LOCAL,AT_DATA,VoidPointerType);
-                  CurrentAsmData.AsmLists[al_picdata].Concat(TAISymbol.Create(L,0));
-                  if not(is_weak in Flags) then
-                    CurrentAsmData.AsmLists[al_picdata].Concat(TAIDirective.Create(asd_indirect_symbol,CurrentAsmData.RefAsmSymbol(SymName,SymTyp).Name))
-                  else
-                    CurrentAsmData.AsmLists[al_picdata].Concat(TAIDirective.Create(asd_indirect_symbol,CurrentAsmData.WeakRefAsmSymbol(SymName,SymTyp).Name));
-{$ifdef cpu64bitaddr}
-                  CurrentAsmData.AsmLists[al_picdata].Concat(TAIConst.create_64bit(0));
-{$else cpu64bitaddr}
-                  CurrentAsmData.AsmLists[al_picdata].Concat(TAIConst.create_32bit(0));
-{$endif cpu64bitaddr}
-                end;
-              Result := GetAddressRegister(List);
-              Reference_Reset_Symbol(Ref,L,0,SizeOf(PInt),[]);
-              { a_load_ref_reg will turn this into a pic-load if needed }
-              A_Load_Ref_Reg(List,OS_ADDR,OS_ADDR,Ref,Result);
-            end;
-          else
-            ;
-        end;
-      end;
-
-
     procedure TCG.G_Maybe_Got_Init(List: TAsmList);
       begin
       end;
@@ -3204,15 +3156,6 @@ implementation
         TmpLocHi.Done;
       end;
 {$endif cpu64bitalu}
-
-    function AsmSym2IndSymFlags(Sym: TAsmSymbol): TIndSymFlags;
-      begin
-        Result:=[];
-        if Sym.Typ<>AT_FUNCTION then
-          Include(Result,is_data);
-        if Sym.Bind=AB_WEAK_EXTERNAL then
-          Include(Result,is_weak);
-      end;
 
     procedure Destroy_CodeGen;
       begin

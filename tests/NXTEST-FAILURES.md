@@ -61,7 +61,7 @@ constant with `$`; MOVDQU/VMOVDQU have no immediate-source form. Both Clang and
 GNU as reject it. Removing `$` would read the contents at Refs instead of
 forming the required addresses and would change program behavior.
 
-Verified on the matching Linux x64 SDK recorded in NXTEST-VALIDATION.md:
+Verified on a matching Linux x64 SDK:
 
 - `-O-` passes; `-O1` and `-O2` reproduce the failure. `-O2 -CfAVX` reproduces
   the AVX form at compile time. Other OS/backend configurations were not run.
@@ -102,8 +102,7 @@ byte-identical to the corrected working-tree source.
 The SDK, bootstrap logs and test outputs are all under that worktree directory.
 `validation/results.json` records the installed compiler's identity and hash and
 all three test variants; their subdirectories retain exact compiler commands,
-build/run logs and assembly. See [NXTEST-VALIDATION.md](NXTEST-VALIDATION.md) for
-the bootstrap command and artifact paths. The shared nxbuild environment still
+build/run logs and assembly. The shared nxbuild environment still
 selects its older SDK; it was not changed by this validation. Other target
 platforms were not run. The earlier `/tmp/pkg-001-analysis` and
 `/tmp/pkg-001-fix` experiments are diagnostic evidence.
@@ -156,3 +155,17 @@ Direct `SysUtils.BoolToStr` callers use a separate API and remain unchanged.
 The SysUtils implementation and declarations retain their original SHA-256
 values. Build logs, before/after results and the consumer audit are under
 `/media/kcollins/dev/worktree/expression-booltostr`.
+
+## Implicit line information from source
+
+`ImplicitRuntimeTests` (`tests/compiler-regressions/ImplicitRuntimeTests.nxproject`)
+registers `ImplicitRuntime.LineInfoFromSource`. With `-gl` and the original
+`rtl/inc` source directory before the installed RTL unit directory, the compiler
+selects `lnfodwrf.pas` and raises internal error 2026032615 in
+`TTaskHandler.FinishModule`. The same minimal program builds when the installed
+RTL directory comes first. This source-loading defect remains unresolved; the
+regression expects successful compilation and currently fails. The system
+application recipes place their installed RTL dependency before source support.
+
+Run the test executable with the compiler source root, matching compiler,
+matching RTL unit directory and an external output directory, in that order.

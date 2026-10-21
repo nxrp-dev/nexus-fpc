@@ -1,0 +1,83 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module AppleSettings "Apple.Settings.nxscript";
+
+Project Apple {
+    Id: "NXRP.NXPC.cross.Apple";
+    RootDirectory: $BootstrapRoot;
+
+    NXPC System (AppleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/bsd/system.pas"
+        ];
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; CompileSystemUnit: Enabled; }
+    }
+
+    NXPC Core (AppleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/objpas.pas",
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/intrinsics.pas",
+            $BootstrapRoot + "/seed/rtl/darwin/sysinit.pas",
+            $BootstrapRoot + "/seed/rtl/inc/uuchar.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixtype.pas",
+            $BootstrapRoot + "/seed/rtl/inc/ctypes.pas",
+            $BootstrapRoot + "/seed/rtl/inc/macpas.pas",
+            $BootstrapRoot + "/seed/rtl/inc/iso7185.pas",
+            $BootstrapRoot + "/seed/rtl/inc/strings.pas",
+            $BootstrapRoot + "/seed/rtl/bsd/sysctl.pas",
+            $BootstrapRoot + "/seed/rtl/unix/baseunix.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixutil.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unix.pas",
+            $BootstrapRoot + "/seed/rtl/unix/initc.pas",
+            $BootstrapRoot + "/seed/rtl/inc/cmem.pas",
+            $BootstrapRoot + "/seed/rtl/inc/dynlibs.pas",
+            $BootstrapRoot + "/seed/rtl/unix/dos.pas",
+            $BootstrapRoot + "/seed/rtl/unix/dl.pas",
+            $BootstrapRoot + "/seed/rtl/inc/blockrtl.pas"
+        ];
+    }
+
+    NXPC TypInfo (AppleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/typinfo.pas"
+        ];
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+    }
+
+    NXPC Runtime (AppleSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/inc/sortbase.pas",
+            $BootstrapRoot + "/seed/rtl/unix/classes.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/math.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/types.pas",
+            $BootstrapRoot + "/seed/rtl/inc/charset.pas",
+            $BootstrapRoot + "/seed/rtl/charmaps/cpall.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/character.pas",
+            $BootstrapRoot + "/seed/rtl/inc/getopts.pas",
+            $BootstrapRoot + "/seed/rtl/inc/heaptrc.pas",
+            $BootstrapRoot + "/seed/rtl/inc/lnfodwrf.pas",
+            $BootstrapRoot + "/seed/rtl/unix/errors.pas",
+            $BootstrapRoot + "/seed/rtl/darwin/termio.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/sysconst.pas",
+            $BootstrapRoot + "/seed/rtl/unix/cthreads.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/rtlconsts.pas",
+            $BootstrapRoot + "/seed/rtl/unix/cwstring.pas",
+            $BootstrapRoot + "/seed/rtl/bsd/bsd.pas",
+            $BootstrapRoot + "/seed/rtl/unix/sysutils.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/fpwidestring.pas",
+            $BootstrapRoot + "/seed/rtl/inc/fpintres.pas",
+            $BootstrapRoot + "/seed/rtl/inc/objc.pas",
+            $BootstrapRoot + "/seed/rtl/inc/objcbase.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixcp.pas"
+        ];
+    }
+
+    NXPC X86Runtime (AppleSettings.Options) TargetCPU[x86_64] {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/cpu.pas"
+        ];
+    }
+}

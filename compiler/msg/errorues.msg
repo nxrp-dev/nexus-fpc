@@ -3300,9 +3300,9 @@ option_config_is_dir=11040_F_Config file $1 is a directory
 option_confict_asm_debug=11041_W_Assembler output selected "$1" cannot generate debug info, debugging disabled
 % The selected assembler output cannot generate
 % debugging information, debugging option is therefore disabled.
-option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use fpc.cfg instead
+option_ppc386_deprecated=11042_W_Use of ppc386.cfg is deprecated, please use nxpc.cfg instead
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_In options file $1 at line $2 #ELSE directive without #IF(N)DEF found
 % An \var{\#ELSE} statement was found in the options file without a matching \var{\#IF(N)DEF} statement.
 option_unsupported_target=11044_F_Option "$1" is not, or not yet, supported on the current target platform
@@ -3426,7 +3426,7 @@ wpo_cant_create_feedback_file=12019_E_Cannot create specified whole program opti
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
+NXPC compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -3434,7 +3434,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler versión $FPCVERSION
+NXPC compiler versión $FPCVERSION
 
 Fecha del Compilador : $FPCDATE
 CPU de destino       : $FPCCPU

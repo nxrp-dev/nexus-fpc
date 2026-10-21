@@ -1,0 +1,37 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project Seed {
+    Id: "NXRP.NXPC.windows.Seed";
+    RootDirectory: $BootstrapRoot;
+    FPC Compiler {
+        CompilerPath: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        SourceFiles: [
+            $BootstrapRoot + "/seed/source/pp.pas"
+        ];
+        OutputPath: $BootstrapRoot + "/seed/units32";
+        Config Options { DisableDefaultConfigFiles: True; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Optimization Optimize { Level: Level2; }
+        Definitions Symbols { Defines: [x86_64, REVINC, RELEASE]; }
+        Linking Link { StripSymbols: Enabled; }
+        RawOptions: ["-o" + $BootstrapRoot + "/seed/bin/seed32.exe"];
+        Files Paths {
+            UnitPaths: [
+                "C:/fpc/3.2.2/units/i386-win32/rtl",
+                $BootstrapRoot + "/seed/source/x86_64",
+                $BootstrapRoot + "/seed/source/x86",
+                $BootstrapRoot + "/seed/source/systems",
+                $BootstrapRoot + "/seed/dependencies/paszlib"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/source",
+                $BootstrapRoot + "/seed/source/x86_64",
+                $BootstrapRoot + "/seed/source/x86",
+                $BootstrapRoot + "/seed/source/systems"
+            ];
+        }
+    }
+}

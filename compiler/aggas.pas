@@ -630,8 +630,6 @@ implementation
              writer.AsmWrite('.section ');
              usesectionflags:=true;
            end;
-         system_i386_darwin,
-         system_i386_iphonesim,
          system_x86_64_darwin,
          system_aarch64_ios,
          system_aarch64_iphonesim,
@@ -689,20 +687,7 @@ implementation
               if aname = 'resptrs' then
                 writer.AsmWrite(', "a", @progbits');
             sec_stub :
-              begin
-                case TargetInfo.system of
-                  { there are processor-independent shortcuts available    }
-                  { for this, namely .symbol_stub and .picsymbol_stub, but }
-                  { they don't work and gcc doesn't use them either...     }
-                  system_i386_darwin,
-                  system_i386_iphonesim:
-                    writer.AsmWriteln('__IMPORT,__jump_table,symbol_stubs,self_modifying_code+pure_instructions,5');
-                  { darwin/(x86-64/AArch64) uses PC-based GOT addressing, no
-                    explicit symbol stubs }
-                  else
-                    InternalError(2006031101);
-                end;
-              end;
+              InternalError(2006031101);
             sec_note :
               writer.AsmWrite(', "", @note');
           else

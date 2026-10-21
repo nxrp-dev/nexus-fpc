@@ -166,8 +166,7 @@ implementation
         lReference.ScaleFactor:=sizeof(aint);
 
 
-        if (not (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim])) and
-           (cs_create_pic in CurrentSettings.ModuleSwitches) then
+        if (cs_create_pic in CurrentSettings.ModuleSwitches) then
           begin
             lLabelType:=aitconst_gotoff_symbol;
             lJumpReg:=cg.GetIntRegister(CurrentAsmData.CurrAsmList,OS_ADDR);
@@ -179,10 +178,7 @@ implementation
         else
           emit_ref(A_JMP,S_NO,lReference);
         { generate jump table }
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
-          lJumpTableList:=CurrentAsmData.asmlists[al_const]
-        else
-          lJumpTableList:=CurrentProcInfo.AktLocalData;
+        lJumpTableList:=CurrentProcInfo.AktLocalData;
         new_section(lJumpTableList,sec_rodata,CurrentProcInfo.procdef.MangledName,sizeof(aint));
         lJumpTableList.concat(TAILabel.Create(lTableLabel));
 

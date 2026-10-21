@@ -1,0 +1,35 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+// Shared compiler settings; compilation inputs belong to the consuming project.
+Project CycleSettings {
+    Id: "NXRP.NXPC.Settings.CycleSettings";
+    NXPC Options {
+        CompilerPath: $PreviousCompiler;
+        OutputPath: $BootstrapRoot + "/" + $Stage + "/rtl64";
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Files Paths {
+            UnitPaths: [
+                $BootstrapRoot + "/" + $Stage + "/rtl64",
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/x86_64"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/win64",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/x86_64",
+                $BootstrapRoot + "/seed/rtl/win64/x86_64",
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/win/wininc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes"
+            ];
+        }
+    }
+}

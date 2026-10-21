@@ -1,0 +1,78 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+module "NXPC.Forge.Host.nxscript";
+
+Group RuntimePackageSDK {
+    CompareFiles RequireCompletedBootstrap {
+        Left: @BootstrapPaths.Root + "/cycle2/nxpc-x86_64" + @BootstrapHost.Suffix;
+        Right: @BootstrapHost.Compiler;
+    }
+    DeletePath CleanPackageSDK { Path: @BootstrapPaths.Root + "/package-sdk"; Recursive: True; }
+    CopyFile Compiler {
+        Source: @BootstrapHost.Compiler;
+        Destination: @BootstrapPaths.Root + "/package-sdk/bin/nxpc-x86_64" + @BootstrapHost.Suffix;
+    }
+    CopyFile MatchingRTL {
+        Source: @BootstrapHost.RTL;
+        Destination: @BootstrapPaths.Root + "/package-sdk/work/rtl-units";
+        Recursive: True;
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
+    }
+    CopyFile FoundationDeclaration {
+        Source: @BootstrapPaths.Root + "/seed/rtl/" + $HostOS + "/nxrtl.nxpk";
+        Destination: @BootstrapPaths.Root + "/package-sdk/work/nxrtl/nxrtl.nxpk";
+    }
+    CopyFile StartupSource {
+        Source: @BootstrapPaths.Root + "/seed/rtl/" + $HostOS + "/sysinitpkg.pas";
+        Destination: @BootstrapPaths.Root + "/package-sdk/work/sysinitpkg.pas";
+    }
+    PackageSDKOptions PackageIdentity {
+        Target: @BootstrapHost.PackageTarget;
+        CompilerFileName: "nxpc-x86_64" + @BootstrapHost.Suffix;
+        BootstrapDirectory: @BootstrapPaths.Root;
+        OutputDirectory: @BootstrapPaths.Root + "/package-sdk";
+    }
+    NXBuild SharedRTL {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: $HostOS;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/common/PackageSDK.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Part:SharedRTL,SDKCompiler:" + @BootstrapPaths.Root + "/package-sdk/bin/nxpc-x86_64" + @BootstrapHost.Suffix;
+    }
+    CopyFile FoundationImage {
+        Source: @BootstrapPaths.Root + "/package-sdk/work/nxrtl/nxrtl.nxpl";
+        Destination: @BootstrapPaths.Root + "/package-sdk/packages/nxrtl.nxpl";
+    }
+    CopyFile PerImageResourceAdapter {
+        Source: @BootstrapPaths.Root + "/package-sdk/work/rtl-units";
+        Destination: @BootstrapPaths.Root + "/package-sdk/units";
+        Recursive: True;
+        IncludeMasks: ["fpintres.nxu", "fpintres.o", "libimpfpintres.a"];
+    }
+    CopyFile NativeABITag HostOS[linux] {
+        Source: @BootstrapHost.RTL + "/abitag.o";
+        Destination: @BootstrapPaths.Root + "/package-sdk/units/abitag.o";
+    }
+    NXBuild HostStartup {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: $HostOS;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/common/PackageSDK.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",Part:HostStartup,SDKCompiler:" + @BootstrapPaths.Root + "/package-sdk/bin/nxpc-x86_64" + @BootstrapHost.Suffix;
+    }
+    CopyFile ConsumerTemplates {
+        Recursive: True;
+        Source: "../nexus/projects/forge/templates";
+        Destination: @BootstrapPaths.Root + "/package-sdk/forge";
+        IncludeMasks: ["PackageBuild.nxscript", "LinuxPackageBuild.nxscript", "LinuxPackageApplication.nxscript", "FPC.mustache"];
+    }
+    PackageSDKManifest SDKManifest {
+        Directory: @BootstrapPaths.Root + "/package-sdk";
+    }
+}

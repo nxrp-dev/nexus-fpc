@@ -3,11 +3,12 @@
 [CmdletBinding()]
 param(
     [string]$SourceRoot = (Join-Path $PSScriptRoot '../..'),
+    [Parameter(Mandatory)][string]$BootstrapDirectory,
     [string]$OutputRoot
 )
 $ErrorActionPreference = 'Stop'
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
-$bootstrap = Join-Path $SourceRoot 'build/forge-bootstrap'
+$bootstrap = [IO.Path]::GetFullPath($BootstrapDirectory)
 $bin = Join-Path $bootstrap 'tools/bin'
 $rtl = Join-Path $bootstrap 'cycle3/rtl64'
 if (-not $OutputRoot) { $OutputRoot = Join-Path $bootstrap 'tools/checks' }
@@ -34,15 +35,15 @@ function Assert-Contains([string]$Name, [string]$Text) {
 function Assert-Same([string]$Left, [string]$Right) {
     if ((Get-FileHash -LiteralPath $Left).Hash -ne (Get-FileHash -LiteralPath $Right).Hash) { throw "Generated file mismatch: $Left; $Right" }
 }
-$names = @('fpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
+$names = @('nxpc','ppufiles','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
     'rstconv','bin2obj')
 foreach ($name in $names) {
     if (-not (Test-Path -LiteralPath (Join-Path $bin ($name+'.exe')))) { throw "Missing release tool: $name" }
 }
-Assert-Same (Join-Path $bin 'ppcx64.exe') (Join-Path $bootstrap 'cycle3/ppcx64.exe')
+Assert-Same (Join-Path $bin 'nxpc-x86_64.exe') (Join-Path $bootstrap 'cycle3/nxpc-x86_64.exe')
 Push-Location $OutputRoot
 try {
-    $driver = Join-Path $bin 'fpc.exe'
+    $driver = Join-Path $bin 'nxpc.exe'
     $compile = @('-n','-O2',('-Fu'+$rtl),('-FU'+$OutputRoot),('-FE'+$OutputRoot))
     Run-Step 'driver-identity' $driver @('-iW')
     $identity = Get-Content -LiteralPath (Join-Path $bootstrap 'seed/build-identity.json') -Raw | ConvertFrom-Json

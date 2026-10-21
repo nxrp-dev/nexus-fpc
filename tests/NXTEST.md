@@ -2,8 +2,6 @@
 
 [nxtest-suites.json](nxtest-suites.json) indexes the 15 native projects and 19
 specialized native programs with their build adapters and required inputs.
-[NXTEST-AUDIT.md](NXTEST-AUDIT.md) records the coverage/retirement audit,
-including the remaining compiler inputs, integration workloads and examples.
 [Unresolved failures](NXTEST-FAILURES.md) lists every migration skip with the
 observed diagnostic and follow-up. There is one implementation of each migrated
 behavior; punit, its runner, the old dotest/redirection/reporting programs, and
@@ -172,6 +170,3 @@ remain documented in [python-runner-retirement.md](python-runner-retirement.md).
   runner, with assembler, linker and archive suite boundaries. The numeric
   regression drivers retain exact low-bit/rounding/ABI assertions and use native
   contexts; saved FPU exception masks are restored even after failed assertions.
-
-See [NXTEST-VALIDATION.md](NXTEST-VALIDATION.md) for measured results and platform
-limits; skips are listed separately from passes.

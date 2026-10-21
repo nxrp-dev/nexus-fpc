@@ -1,0 +1,100 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module AndroidSettings "Android.Settings.nxscript";
+
+Project Android {
+    Id: "NXRP.NXPC.cross.Android";
+    RootDirectory: $BootstrapRoot;
+    LLVM BuildAndroid_prt0 {
+        CompilerPath: $HostClang;
+        BuildKind: Object;
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/android/prt0.as"
+        ];
+        OutputPath: $CrossRTL;
+        Target: $Triple;
+        RawOptions: ["-x", "assembler", "-o" + $CrossRTL + "/prt0.o", "-Wa,-defsym," + "CPU64=1"];
+    }
+    LLVM BuildAndroid_dllprt0 {
+        CompilerPath: $HostClang;
+        BuildKind: Object;
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/android/dllprt0.as"
+        ];
+        OutputPath: $CrossRTL;
+        Target: $Triple;
+        RawOptions: ["-x", "assembler", "-o" + $CrossRTL + "/dllprt0.o", "-Wa,-defsym," + "CPU64=1"];
+    }
+
+    NXPC System (AndroidSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/linux/system.pas"
+        ];
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; CompileSystemUnit: Enabled; }
+    }
+
+    NXPC Core (AndroidSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/objpas.pas",
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/intrinsics.pas",
+            $BootstrapRoot + "/seed/rtl/inc/fpintres.pas",
+            $BootstrapRoot + "/seed/rtl/inc/uuchar.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixtype.pas",
+            $BootstrapRoot + "/seed/rtl/inc/ctypes.pas",
+            $BootstrapRoot + "/seed/rtl/unix/baseunix.pas",
+            $BootstrapRoot + "/seed/rtl/inc/strings.pas",
+            $BootstrapRoot + "/seed/rtl/inc/macpas.pas",
+            $BootstrapRoot + "/seed/rtl/inc/iso7185.pas",
+            $BootstrapRoot + "/seed/rtl/unix/syscall.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixutil.pas",
+            $BootstrapRoot + "/seed/rtl/inc/heaptrc.pas",
+            $BootstrapRoot + "/seed/rtl/inc/lnfodwrf.pas",
+            $BootstrapRoot + "/seed/rtl/linux/termio.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unix.pas",
+            $BootstrapRoot + "/seed/rtl/linux/linux.pas",
+            $BootstrapRoot + "/seed/rtl/unix/initc.pas",
+            $BootstrapRoot + "/seed/rtl/inc/cmem.pas",
+            $BootstrapRoot + "/seed/rtl/linux/linuxvcs.pas",
+            $BootstrapRoot + "/seed/rtl/unix/sysutils.pas"
+        ];
+    }
+
+    NXPC TypInfo (AndroidSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/typinfo.pas"
+        ];
+        Syntax PascalSyntax { COperators: Disabled; LabelAndGoto: Enabled; }
+    }
+
+    NXPC Runtime (AndroidSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/objpas/math.pas",
+            $BootstrapRoot + "/seed/rtl/inc/charset.pas",
+            $BootstrapRoot + "/seed/rtl/charmaps/cpall.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/character.pas",
+            $BootstrapRoot + "/seed/rtl/unix/unixcp.pas",
+            $BootstrapRoot + "/seed/rtl/inc/getopts.pas",
+            $BootstrapRoot + "/seed/rtl/unix/errors.pas",
+            $BootstrapRoot + "/seed/rtl/unix/dl.pas",
+            $BootstrapRoot + "/seed/rtl/inc/dynlibs.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/types.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/sysconst.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/fpwidestring.pas",
+            $BootstrapRoot + "/seed/rtl/unix/cthreads.pas",
+            $BootstrapRoot + "/seed/rtl/inc/sortbase.pas",
+            $BootstrapRoot + "/seed/rtl/unix/classes.pas",
+            $BootstrapRoot + "/seed/rtl/objpas/rtlconsts.pas",
+            $BootstrapRoot + "/seed/rtl/unix/dos.pas",
+            $BootstrapRoot + "/seed/rtl/android/cwstring.pas"
+        ];
+    }
+
+    NXPC X86Runtime (AndroidSettings.Options) TargetCPU[x86_64] {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/rtl/" + $TargetCPU + "/cpu.pas"
+        ];
+    }
+}

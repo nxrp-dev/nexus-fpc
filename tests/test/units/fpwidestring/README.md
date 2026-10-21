@@ -34,9 +34,6 @@ recipe are in
 All three original programs pass in both ANSI-default and Unicode-default builds:
 206,308 non-ignorable lines and 227,819 shifted lines per program, with zero
 errors. The fixture ZIP and memory loader remain here in one maintained location.
-See the package's
-[review](../../../../../nexus/packages/nexus-packages/rtl-unicode/CODE_REVIEW.md)
-for the restored provider's regression and conformance results.
 
 The conformance and wide-string compiler inputs are also owned by the
 [native RTL regression catalog](../../../NXTEST.md).

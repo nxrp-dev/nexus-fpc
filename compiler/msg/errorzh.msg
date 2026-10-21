@@ -2687,7 +2687,7 @@ exec_w_init_file_not_found=09034_W_找不到 "$1"，这可能会导致链接失�
 % 编译器只在找到某些启动代码文件时才会将它们添加到链接器。
 % 如果找不到它们，它们就不会被添加，这可能会导致链接失败。
 % 如果系统安装了 gcc，运行 \var{gcc --print-file-name <filename>} 可能会返回文件的路径。
-% 在 \var{fpc.cfg} 中使用 \var{-Fl} 开关添加此路径可以修复此错误。不过，这要求
+% 在 \var{nxpc.cfg} 中使用 \var{-Fl} 开关添加此路径可以修复此错误。不过，这要求
 % gcc 的目标与 FPC 的目标相同。
 exec_e_static_lib_not_supported=09035_E_不支持创建静态库
 % 不支持为此平台创建静态库，因为编译器尚未实现此功能。
@@ -3034,8 +3034,8 @@ option_config_is_dir=11040_F_配置文件 $1 是一个目录
 % 目录不能用作配置文件。
 option_confict_asm_debug=11041_W_选择的汇编器输出"$1"无法生成调试信息，已禁用调试
 % 选择的汇编器输出无法生成调试信息，因此禁用了调试选项。
-option_ppc386_deprecated=11042_W_使用 ppc386.cfg 已过时，请改用 fpc.cfg
-% 出于历史原因仍支持使用 ppc386.cfg，但对于多平台系统来说，这种命名已不再有意义。请继续使用 fpc.cfg。
+option_ppc386_deprecated=11042_W_使用 ppc386.cfg 已过时，请改用 nxpc.cfg
+% 出于历史原因仍支持使用 ppc386.cfg，但对于多平台系统来说，这种命名已不再有意义。请继续使用 nxpc.cfg。
 option_else_without_if=11043_F_在选项文件 $1 的第 $2 行发现没有 #IF(N)DEF 的 #ELSE 指令
 % 在选项文件中发现了一个 \var{\#ELSE} 语句，但没有匹配的 \var{\#IF(N)DEF} 语句。
 option_unsupported_target=11044_F_选项"$1"在当前目标平台上不支持或尚未支持
@@ -3244,7 +3244,7 @@ package_u_ppl_filename=13029_U_PPL 文件名 $1
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal 编译器版本 $FPCFULLVERSION [$FPCDATE] 用于 $FPCCPU
+NXPC 编译器版本 $FPCFULLVERSION [$FPCDATE] 用于 $FPCCPU
 版权所有 (c) 1993-2026 Florian Klaempfl 和其他人
 ]
 
@@ -3252,7 +3252,7 @@ Free Pascal 编译器版本 $FPCFULLVERSION [$FPCDATE] 用于 $FPCCPU
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal 编译器版本 $FPCVERSION
+NXPC 编译器版本 $FPCVERSION
 
 编译器日期      : $FPCDATE
 编译器 CPU 目标: $FPCCPU
@@ -3340,7 +3340,7 @@ option_help_pages=11025_[
 # 在此部分也可以插入注释
 F*0*_仅列出对默认或选定平台有效的选项。
 **0*_在布尔开关选项后加 + 启用它，加 - 禁用它。
-**1@<x>_除默认的 fpc.cfg 外，还从 <x> 读取编译器选项
+**1@<x>_除默认的 nxpc.cfg 外，还从 <x> 读取编译器选项
 # 汇编器相关选项
 **1a_编译器不删除生成的汇编文件，自动切换到外部汇编器写入器
 **2al_在汇编文件中列出源代码行

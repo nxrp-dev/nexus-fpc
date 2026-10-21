@@ -3203,9 +3203,9 @@ option_config_is_dir=11040_F_Файл конфигурации $1 - директ
 option_confict_asm_debug=11041_W_Выбранный тип ассемблера "$1" не поддерживает отладочную информацию, отладка отключена
 % Выбранный ассемблер не поддерживает генерацию отладочной информации,
 % поэтому возможность отладки отключена.
-option_ppc386_deprecated=11042_W_Использование ppc386.cfg является устаревшим, вместо него следует использовать fpc.cfg
+option_ppc386_deprecated=11042_W_Использование ppc386.cfg является устаревшим, вместо него следует использовать nxpc.cfg
 % Using ppc386.cfg is still supported for historical reasons, however, for a multiplatform
-% system the naming makes no sense anymore. Please continue to use fpc.cfg instead.
+% system the naming makes no sense anymore. Please continue to use nxpc.cfg instead.
 option_else_without_if=11043_F_В файле опций $1 строка $2 обнаружена директива \var{\#ELSE} без предварительной \var{\#IF(N)DEF}
 % В файле конфигурации обнаружена директива \var{\#ELSE} без предварительной директивы \var{\#IF(N)DEF}.
 option_unsupported_target=11044_F_Опция "$1" не поддерживается (или пока не поддерживается) для целевой платформы
@@ -3341,7 +3341,7 @@ wpo_cant_create_feedback_file=12019_E_Невозможно создать фай
 # Logo (option -l)
 #
 option_logo=11023_[
-Компилятор Free Pascal версии $FPCFULLVERSION [$FPCDATE] для $FPCCPU
+Компилятор NXPC версии $FPCFULLVERSION [$FPCDATE] для $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -3349,7 +3349,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler version $FPCVERSION
+NXPC compiler version $FPCVERSION
 
 Compiler Date      : $FPCDATE
 Compiler CPU Target: $FPCCPU

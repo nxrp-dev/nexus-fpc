@@ -103,8 +103,6 @@ interface
             FormatName:='win32';
           system_i386_linux:
             FormatName:='elf';
-          system_i386_darwin:
-            FormatName:='macho32';
         else
           FormatName:='elf';
         end;

@@ -1,0 +1,63 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+module ToolSettings "Tools.Settings.nxscript";
+
+Project Tools {
+    Id: "NXRP.NXPC.Tools";
+    RootDirectory: $BootstrapRoot;
+
+    NXPC Driver (ToolSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/source/utils/nxpc.pas"
+        ];
+        OutputPath: $BootstrapRoot + "/tools/units/nxpc";
+        Definitions Symbols { Defines: [x86_64]; }
+    }
+
+    NXPC PPUInspector (ToolSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/source/utils/ppufiles.pas"
+        ];
+        OutputPath: $BootstrapRoot + "/tools/units/ppufiles";
+        Definitions Symbols { Defines: [GENERIC_CPU]; }
+        Files Paths {
+            UnitPaths: [
+                $NativeRTL,
+                $BootstrapRoot + "/tools/packages/rtl-objpas/src/inc",
+                $BootstrapRoot + "/tools/packages/rtl-objpas/src/" + $HostRTLPlatform,
+                $BootstrapRoot + "/tools/packages/fcl-base/src",
+                $BootstrapRoot + "/tools/packages/fcl-base/src/" + $HostRTLPlatform,
+                $BootstrapRoot + "/tools/packages/fcl-json/src",
+                $BootstrapRoot + "/tools/packages/paszlib/src",
+                $NativeRTL,
+                $BootstrapRoot + "/seed/source",
+                $BootstrapRoot + "/seed/source/generic",
+                $BootstrapRoot + "/seed/source/systems"
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/tools/packages/rtl-objpas/src/inc",
+                $BootstrapRoot + "/tools/packages/rtl-objpas/src/" + $HostRTLPlatform,
+                $BootstrapRoot + "/tools/packages/rtl-objpas/src/x86_64",
+                $BootstrapRoot + "/tools/packages/fcl-base/src",
+                $BootstrapRoot + "/tools/packages/fcl-base/src/" + $HostRTLPlatform,
+                $BootstrapRoot + "/tools/packages/fcl-base/src/dummy",
+                $BootstrapRoot + "/seed/source"
+            ];
+        }
+    }
+
+    NXPC Utilities (ToolSettings.Options) {
+        SourceFiles: [
+            $BootstrapRoot + "/seed/source/utils/mkx86ins.pas",
+            $BootstrapRoot + "/seed/source/utils/mkx86reg.pas",
+            $BootstrapRoot + "/seed/source/utils/mkx86inl.pas",
+            $BootstrapRoot + "/seed/source/utils/mka64ins.pas",
+            $BootstrapRoot + "/seed/source/utils/mka64reg.pas",
+            $BootstrapRoot + "/seed/source/utils/msg2inc.pas",
+            $BootstrapRoot + "/tools/source/rstconv.pas",
+            $BootstrapRoot + "/tools/source/bin2obj.pas"
+        ];
+    }
+}

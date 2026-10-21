@@ -1,0 +1,63 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+module "NXPC.Forge.Host.nxscript";
+
+Group ReleaseTools {
+    DeletePath CleanTools { Path: @BootstrapPaths.Root + "/tools"; Recursive: True; }
+    CreateDirectory ToolBin { Path: @BootstrapPaths.Root + "/tools/bin"; }
+    CopyFile StageTools {
+        Source: "utils";
+        Destination: @BootstrapPaths.Root + "/tools/source";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc"];
+        ExcludeNames: "units;bin";
+    }
+    CopyFile Stage_rtl_objpas {
+        Source: "packages/rtl-objpas/src";
+        Destination: @BootstrapPaths.Root + "/tools/packages/rtl-objpas/src";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_base {
+        Source: "../nexus/packages/nexus-packages/fcl-base/src";
+        Destination: @BootstrapPaths.Root + "/tools/packages/fcl-base/src";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_json {
+        Source: "../nexus/packages/nexus-packages/serialization/fcl-json/src";
+        Destination: @BootstrapPaths.Root + "/tools/packages/fcl-json/src";
+        Recursive: True;
+        IncludeMasks: ["*.pas", "*.inc"];
+    }
+    CopyFile Stage_paszlib {
+        Source: "rtl/objpas";
+        Destination: @BootstrapPaths.Root + "/tools/packages/paszlib/src";
+        Recursive: True;
+        IncludeMasks: ["crc32.pas", "paszlib.pas", "paszlibio.pas"];
+    }
+    NXBuild BuildTools {
+        Executable: $NXBuildExecutable;
+        Template: "../nexus/projects/forge/templates/NXBuild.mustache";
+        TargetOS: $HostOS;
+        TargetCPU: x86_64;
+        BuildConfiguration: Release;
+        EntryPoint: "bootstrap/common/Tools.nxproject";
+        Targets: "BootstrapRoot:" + @BootstrapPaths.Root + ",NativeCompiler:" + @BootstrapHost.Compiler + ",NativeRTL:" + @BootstrapHost.RTL + ",HostOS:" + $HostOS + ",HostRTLPlatform:" + @BootstrapHost.RTLPlatform;
+    }
+    CopyFile NativeCompiler {
+        Source: @BootstrapHost.Compiler;
+        Destination: @BootstrapPaths.Root + "/tools/bin/nxpc-x86_64" + @BootstrapHost.Suffix;
+    }
+    Run VerifyReleaseTools HostOS[win64] {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseTools.ps1", "-SourceRoot", ".", "-BootstrapDirectory", @BootstrapPaths.Root];
+    }
+    Run VerifyLinuxDriver HostOS[linux] {
+        Template: "../nexus/projects/forge/templates/Run.mustache";
+        Executable: @BootstrapPaths.Root + "/tools/bin/nxpc";
+        Arguments: ["-iV"];
+    }
+}

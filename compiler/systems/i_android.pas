@@ -40,7 +40,7 @@ unit i_android;
                              tf_pic_uses_got, tf_pic_default,
                              tf_smartlink_sections,tf_has_winlike_resources,tf_supports_hidden_symbols];
              cpu          : cpu_aarch64;
-             unit_env     : 'ANDROIDUNITS';
+             unit_env     : 'NXPC_ANDROIDUNITS';
              extradefines : 'UNIX;HASUNIX';
              ExeExt       : '';
              defext       : '.def';
@@ -106,7 +106,7 @@ unit i_android;
                              {tf_pic_uses_got,} tf_pic_default, tf_smartlink_sections,
                              tf_safecall_exceptions, tf_safecall_clearstack,tf_supports_hidden_symbols];
              cpu          : cpu_x86_64;
-             unit_env     : 'ANDROIDUNITS';
+             unit_env     : 'NXPC_ANDROIDUNITS';
              extradefines : 'UNIX;HASUNIX';
              ExeExt       : '';
              defext       : '.def';

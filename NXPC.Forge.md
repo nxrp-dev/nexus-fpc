@@ -1,34 +1,77 @@
-# NexusFPC with Forge
+# NXPC with Forge
 
-The entry point is `NexusFPC.Forge.nxscript` in this directory. Forge target
+The entry point is `NXPC.Forge.nxscript` in this directory. Forge target
 filters select the build phase, CPU, and OS. Bootstrap and Cross are Forge
 Project contracts with compiler and RTL Outputs; their ordered children own
 generation, compilation, and final verification. Imported configurations supply
-the compiler, paths, and named compiler and assembler settings. All targets
-share Forge's FPC and Clang Mustache templates, which render those settings.
+the compiler, paths, and named compiler and assembler settings. Linux compilation is delegated to nxbuild projects. The existing Windows and
+cross compilation operations use Forge's FPC and Clang templates.
 
-From the nexus-fpc root, build the native Win64 compiler and RTL:
+Use a rebuilt Forge and nxbuild. Both executables are prerequisites; the
+bootstrap does not build its own orchestrators. Forge's CLI supplies lowercase
+`HostOS` and `HostCPU` defaults for the executing machine. `BuildRoot` must name
+an output directory under worktree, outside the source checkout.
 
-```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+For native Linux x86-64, invoke Forge directly from the nexus-fpc root:
+
+```bash
+nxforge /input=NXPC.Forge.nxscript \
+  "/targets=Build:Bootstrap,Promote:No,BuildRoot:/path/to/worktree/fpc-bootstrap,InstallRoot:/path/to/worktree/fpc-sdk,SeedCompiler:/usr/bin/ppcx64,SeedRTL:/usr/lib/x86_64-linux-gnu/fpc/3.2.2/units/x86_64-linux/rtl,NXBuildExecutable:nxbuild"
 ```
 
-The bootstrap uses the stock Win32 seed at
-`C:\fpc\3.2.2\bin\i386-win32\ppc386.exe`, generates compiler messages and tables, and
-builds three native compiler/RTL generations. It requires cycles two and three
-to match byte for byte, then builds and checks the Win64 release tools.
-The public outputs are `build/forge-bootstrap/cycle3/ppcx64.exe`, `cycle3/rtl64`,
-and `build/forge-bootstrap/tools/bin`.
+`BuildRoot` and `InstallRoot` must be distinct directories. Use a fresh output
+directory for each validation. Paths may contain spaces, but commas separate
+target selections. `SeedCompiler` and `SeedRTL` must be a matching pair. Stock
+FPC 3.2.2 uses its ordinary assembler/linker for the generators and initial seed;
+all three Nexus-built compiler/RTL generations use Clang and LLD.
+
+`NXPC.Forge.Linux.nxscript` owns staging, generator execution, stage order,
+convergence checks, installation and optional promotion. The projects under
+`bootstrap/linux` own generator, seed, compiler, RTL and Users compilation through
+nxbuild. The RTL project explicitly lists units in dependency order.
+Forge checks compiler generations 2/3 and the complete nonempty RTL object sets,
+verifies the compiler's captured identity/date, installs the compiler and matching
+RTL, and builds/runs `bootstrap/tests/BootstrapSmoke.nxproject`. Its NXTests verify
+the native RTL and loading/calling/unloading a Pascal shared library before
+promotion can occur. All generated source and compiler outputs stay in BuildRoot.
+The installed base compiler/RTL is not the Win64 dynamic runtime-package SDK.
+
+Promotion is explicit: replace `Promote:No` with `Promote:Yes` and add
+`CurrentLink:/path/to/toolchain/nexus-fpc/x86_64-linux/current`. Forge then runs
+the link update after all verification succeeds. The Linux convenience launcher
+`../nexus-private/scripts/linux/bootstrap-nexusfpc.py` only constructs this Forge
+invocation; it contains no compiler commands, generation loops, caches, source
+snapshotting, convergence checks, installation or promotion implementation.
+Use its `--forge`, `--nxbuild`, `--build-root`, `--toolchain-root`, and seed options
+as needed. `--no-promote` passes `Promote:No` explicitly. Promotion defaults to
+enabled in that convenience launcher, preserving its existing invocation policy.
+
+For native Win64, put `nxforge.exe` and `nxbuild.exe` on PATH. Forge stages
+source and invokes the projects under `bootstrap/windows`: the stock Win32
+FPC 3.2.2 bridge builds an x64 seed, followed by three native compiler/RTL
+generations and the Windows release tools. `Cycle.nxproject` is reused for the
+seed and all three generations; Forge checks compiler and RTL convergence.
+
+```powershell
+$forge = 'nxforge.exe'
+$buildRoot = 'C:/dev/worktree/fpc-bootstrap'
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Bootstrap,BuildRoot:$buildRoot"
+```
+
+The Win32 seed is `C:/fpc/3.2.2/bin/i386-win32/ppc386.exe` with its matching RTL.
+Windows output suffixes remain `.exe`; the native compiler and RTL are below
+`<BuildRoot>/cycle3/nxpc-x86_64.exe` and `<BuildRoot>/cycle3/rtl64`.
 
 Then select a cross target, for example:
 
 ```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Cross,TargetCPU:aarch64,TargetOS:linux
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Cross,TargetCPU:aarch64,TargetOS:linux,BuildRoot:$buildRoot"
 ```
 
-Supply all three selections for a cross build. Target names and values are
+Supply Build, TargetCPU, TargetOS and the same BuildRoot for a cross build. Target names and values are
 case-sensitive. Each invocation builds one target using the completed native
-bootstrap. The retained combinations are:
+bootstrap. The projects under `bootstrap/cross` own cross-compiler, RTL and
+smoke compilation. The retained combinations are:
 
 | TargetOS | TargetCPU |
 | --- | --- |
@@ -40,10 +83,11 @@ bootstrap. The retained combinations are:
 | iphonesim | x86_64, aarch64 |
 | ios | aarch64 |
 
-LLVM is the only officially supported assembler/linker toolchain for NexusFPC;
+LLVM is the only officially supported assembler/linker toolchain for NXPC;
 its tools must be on PATH. The Android configuration uses the installed NDK
 at `C:\android\ndk\25.2.9519653`; its Clang executable and FPC
-`CompilerUtilitiesPath` are set in `NexusFPC.Forge.Config.nxscript`.
+`CompilerUtilitiesPath` are set in `bootstrap/cross/Android.nxproject` and
+`bootstrap/cross/Android.Settings.nxscript`, respectively.
 
 All supported hosts and targets are little-endian. The target byte-order
 selector `-Cb` (including `-Cb+` and `-Cb-`) is retired and uses the ordinary
@@ -164,7 +208,7 @@ On a Linux host, check the removed options and native LLVM linking with:
 
 ```bash
 bash tests/switches/Run-NXRemovedInternalLinkerTests.sh \
-  /path/to/ppcx64 /path/to/matching/rtl/units /tmp/nexus-linker-options
+  /path/to/nxpc-x86_64 /path/to/matching/rtl/units /tmp/nexus-linker-options
 ```
 
 Each cross build creates a Windows-hosted compiler and the target RTL,
@@ -173,7 +217,7 @@ a small SysUtils/Classes smoke program. Apple and Android validation currently
 covers the compiler and RTL; it does not link or run applications for those
 platforms.
 
-Generated files stay under the ignored `build/forge-bootstrap/` directory.
+Generated files stay under the explicitly selected `<BuildRoot>` directory outside source.
 A cross build cleans only its own `cross/<cpu>-<os>` output directory.
 It preserves the native bootstrap and other cross targets.
 
@@ -184,18 +228,19 @@ For a complete Windows-hosted release, run the projects sequentially from this
 directory. The target list below is the retained matrix shown above:
 
 ```powershell
-$forge = '..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe'
-& $forge /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+$forge = 'nxforge.exe'
+$buildRoot = 'C:/dev/worktree/fpc-bootstrap'
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Bootstrap,BuildRoot:$buildRoot"
 if ($LASTEXITCODE -ne 0) { throw 'Bootstrap failed' }
 foreach ($target in @('i386-linux','x86_64-linux','aarch64-linux',
     'i386-win32','x86_64-win64','aarch64-win64',
     'x86_64-android','aarch64-android','x86_64-darwin','aarch64-darwin',
     'x86_64-iphonesim','aarch64-iphonesim','aarch64-ios')) {
     $cpu,$os = $target -split '-'
-    & $forge /input=NexusFPC.Forge.nxscript "/targets=Build:Cross,TargetCPU:$cpu,TargetOS:$os"
+    & $forge /input=NXPC.Forge.nxscript "/targets=Build:Cross,TargetCPU:$cpu,TargetOS:$os,BuildRoot:$buildRoot"
     if ($LASTEXITCODE -ne 0) { throw "Cross build failed: $target" }
 }
-& $forge /input=NexusFPC.Forge.nxscript /targets=Build:Release
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Release,BuildRoot:$buildRoot"
 if ($LASTEXITCODE -ne 0) { throw 'Release failed' }
 ```
 
@@ -211,7 +256,7 @@ sudo apt install clang lld llvm
 
 `clang` supplies the assembler used by `-Aas-clang`; `lld` supplies `ld.lld`,
 selected by `-XLL`; `llvm` supplies utilities such as `llvm-ar`. These package
-names also provide the unversioned commands that NexusFPC expects on PATH.
+names also provide the unversioned commands that NXPC expects on PATH.
 See the Ubuntu package records for [Clang](https://packages.ubuntu.com/noble/clang),
 [LLD](https://packages.ubuntu.com/noble/lld) and
 [LLVM](https://packages.ubuntu.com/noble/llvm).
@@ -238,29 +283,29 @@ The original `tests/systemids/nxsystemids.pas` fixture expected a
 three-byte CPU-ID set; stock FPC 3.2.2 and both Nexus builds produce four.
 A diagnostic copy with that expectation corrected passed in normal and
 `-O2` builds. The checked-in fixture now expects four bytes and passes with
-stock FPC 3.2.2 and NexusFPC at `-O1` and `-O2`. No compiler or RTL source
+stock FPC 3.2.2 and NXPC at `-O1` and `-O2`. No compiler or RTL source
 changes were needed for this test correction.
 
 The local LLVM compiler and matching base RTL are under
 `output/nexus-fpc-linux-x86_64/`; its configuration selects `-Aas-clang -XLL`.
 The previous experimental GNU build is preserved under
 `output/nexus-fpc-linux-x86_64-gnu/`. Evidence and reproduction helpers are
-under the ignored `build/forge-bootstrap/linux-llvm/` directory:
+under the ignored `<BuildRoot>/linux-llvm/` directory:
 `bootstrap.py`, `verify.py`, `result.json` and `logs/`.
 
-This native validation executes the Forge recipe's compiler/RTL steps
-directly. Native Linux-hosted compiler/SDK construction through Forge remains
-deferred. GNU tools are not an officially supported NexusFPC toolchain.
+That 2026-10-13 record describes the historical direct-stage validation.
+The Linux bootstrap now runs through Forge and nxbuild as documented above;
+the independent Python build implementation has been retired.
 
 ## Generated compiler inputs
 
-`NexusFPC.Forge.Tables.nxscript` is composed as an ordinary Group inside the
+`NXPC.Forge.Tables.nxscript` is composed as an ordinary Group inside the
 Bootstrap Project. It builds `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, and
 `mka64reg` with the stock Win32 seed, then runs them for the retained i386,
 x86_64, and aarch64 backends. Explicit CopyFile children install the x86
 intrinsic declarations into the staged i386 and x86_64 RTL trees.
 
-Bootstrap stages compiler and RTL source under `build/forge-bootstrap/seed`.
+Bootstrap stages compiler and RTL source under `<BuildRoot>/seed`.
 Compiler staging excludes the checked-in generated instruction/register/intrinsic
 includes and message includes; RTL staging excludes generated x86 intrinsics.
 The generated files therefore must be produced before any compiler generation
@@ -275,7 +320,7 @@ No make/fpmake process is used for these generation steps.
 
 ## Release tools
 
-`NexusFPC.Forge.Tools.nxscript` runs as an ordered Group at the end of Bootstrap.
+`NXPC.Forge.Tools.nxscript` runs as an ordered Group at the end of Bootstrap.
 FCL JSON source is owned by the `nexus-packages` checkout at
 `../../nexus/packages/nexus-packages/serialization/fcl-json/src`, following the
 same workspace layout as the Forge dialect and templates. Keep that checkout
@@ -285,7 +330,7 @@ their build does not consume installed JSON units or require a package SDK.
 To rebuild just the tools after a completed bootstrap:
 
 ```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Tools
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Tools,BuildRoot:$buildRoot"
 ```
 
 The Tools Project exports its binary directory and driver.
@@ -297,7 +342,7 @@ It builds these 10 Win64 tools using the verified native compiler:
 | Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
 | Binary includes and translations | `bin2obj`, `rstconv` |
 
-The output directory includes `ppcx64.exe` beside `fpc.exe`. The launcher can
+The output directory includes `nxpc-x86_64.exe` beside `nxpc.exe`. The launcher can
 therefore find its native compiler without an installed FPC on PATH. The Release
 Project adds the matching target RTLs and compiler-relative configuration for application unit searches.
 
@@ -343,21 +388,22 @@ in [the Nexus attribution ledger](../nexus/ATTRIBUTIONS.md#free-pascal-and-nexus
 After Bootstrap and all 13 Cross builds have completed, assemble the distribution:
 
 ```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Release
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:Release,BuildRoot:$buildRoot"
 ```
 
 The Release Project exposes Directory, Bin, Config, Identity and PackageSDK outputs.
 It first builds the runtime-package SDK described below. Its ordered children
-in `NexusFPC.Forge.Release.nxscript` validate the remaining build inputs,
+in `NXPC.Forge.Release.nxscript` validate the remaining build inputs,
 copy the artifacts and release configuration, and
 verify the relocated distribution. It consumes completed Bootstrap/Cross builds
 and does not silently omit missing targets. SDK construction and input checks
 run before clearing the previous distribution.
 
-The output is `build/forge-bootstrap/distribution/`:
+The output is `<BuildRoot>/distribution/`:
 
-- `bin/x86_64-win64/`: the 10 release tools, `ppcx64`,
-  `ppcross386`, `ppcrossa64`, and `fpc.cfg`.
+- `bin/<host>/`: the release tools, `nxpc-x86_64`, `nxpc-i386`, and `nxpc-aarch64`.
+  The Windows host also stores `nxpc.cfg` here. On Linux the config is
+  `bin/etc/fpc.cfg`, the compiler's existing `../etc/fpc.cfg` search location.
 - `units/<cpu>-<os>/rtl/`: compiled RTL units, objects and associated resources
   for the 13 targets. The internal `buildrtl` build helper is excluded.
 - `build-identity.json`: the identity captured by the bootstrap.
@@ -377,7 +423,7 @@ and matching RTL. For example, from the distribution's binary directory:
 & .\fpc.exe -Paarch64 -Tlinux app.pas
 ```
 
-`NexusFPC.Release.cfg` is copied unchanged. It uses the compiler's
+`NXPC.Release.cfg` is copied unchanged. It uses the compiler's
 existing `$FPCBINDIR` and `$FPCTARGET` macros. These are FPC configuration macros,
 not NexusScript reference syntax. No checkout, seed installation, or machine-specific
 path is embedded. The compiler retains its normal configuration overrides.
@@ -394,7 +440,7 @@ target RTLs and checks that every loaded PPU belongs to the relocated target.
 It also links six Windows/Linux smoke programs, runs the Win64 and Win32 programs,
 exercises the compiler resource pipeline with Clang and LLVM RC, and verifies that a missing RTL produces a
 failure. Android and Apple checks compile units only; they do not validate SDK
-linking or execution. Evidence stays in `build/forge-bootstrap/release-checks/`.
+linking or execution. Evidence stays in `<BuildRoot>/release-checks/`.
 
 Other package builds and their runtime-package distribution artifacts remain
 outside this assembly until the owner selects them.
@@ -406,18 +452,22 @@ the directory while preventing its final backslash from escaping the closing quo
 
 ## Runtime-package SDK
 
-After Bootstrap, build just the Win64 SDK with:
+After Bootstrap, build the native Windows or Linux SDK with the matching host
+Forge and nxbuild executables:
 
 ```powershell
-& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:PackageSDK
+& $forge /input=NXPC.Forge.nxscript "/targets=Build:PackageSDK,BuildRoot:$buildRoot,NXBuildExecutable:$nxbuild"
 ```
 
 The PackageSDK Project exposes Directory, Manifest, Packages and Units outputs.
-Its group in `NexusFPC.Forge.PackageSDK.nxscript` copies the verified native
+Its group in `NXPC.Forge.PackageSDK.nxscript` copies the verified native
 compiler and matching RTL into an isolated SDK work directory, compiles `nxrtl`
-with an FPC child, then compiles `SysInitPkg` against that package with a second
-FPC child. Only the per-image resource adapter and startup units enter the public
-SDK unit directory; the provider metadata is compressed inside `nxrtl.nxpl`.
+through nxbuild, then compiles `SysInitPkg` against that package through nxbuild.
+The public SDK unit directory contains the per-image resource adapter and startup
+units, plus `abitag.o` for Linux. The provider metadata is compressed inside
+`nxrtl.nxpl`. Both hosts use the same Format 2 manifest fields; targets are
+`x86_64-win64` and `x86_64-linux-gnu`. Regenerate older Linux SDKs with lowercase
+manifest fields.
 Packages can select a sidecar with `EmbedPackageMetadata: Disabled` on their FPC
 build. See [package storage](nexusfpc-package-storage.md) for the format and switch.
 
@@ -425,7 +475,10 @@ All RTL/package source comes from the bootstrap staging tree, including the
 `.nxpk` declaration now staged by Bootstrap. Rebuild older bootstraps that lack it.
 The SDK build does not regenerate the compiler, rebuild the base RTL with make,
 or modify the bootstrap RTL cache. Release assembly invokes this same group and
-ships its public files; no alternative SDK build path is maintained.
+ships its public files; no alternative SDK build path is maintained. The SDK
+includes `PackageBuild`, `LinuxPackageBuild`, and `LinuxPackageApplication`
+templates. Linux executable consumers use `LinuxPackageApplication`; explicitly
+compose each customized child from the corresponding imported template child.
 
 Native Forge `PackageSDKOptions` writes the identity response files before the
 FPC children run; `PackageSDKManifest` writes the final Format 2 manifest afterward.
@@ -447,13 +500,13 @@ generation and atomically updating `current.json`. Rejected builds preserve the
 previous selection. The group explicitly clears its dedicated work directory.
 
 This is a temporary native migration of SDK policy, pending the owner's later
-architecture review. The source `tests/dynamic-packages/Invoke-NexusFPCPackageCompile.ps1` remains a
+architecture review. The source `tests/dynamic-packages/Invoke-NXPCPackageCompile.ps1` remains a
 thin Forge-document/log adapter for existing example/test callers. The separate
-`tests/dynamic-packages/NexusFPCPackageArtifacts.ps1` helper still serves older test utilities and example run
+`tests/dynamic-packages/NXPCPackageArtifacts.ps1` helper still serves older test utilities and example run
 selection; native package builds do not call it. No general dependency resolver,
 version selection or new execution lifecycle was introduced.
 
-`tests/dynamic-packages/Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
+`tests/dynamic-packages/Build-NXPCPackageSDK.ps1` now delegates to the Forge target. It can export
 the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
 it no longer accepts a seed directory. Its `-SmartLink` option applies to example
 consumers. The foundation has one standard release build, usable by both ordinary
@@ -461,7 +514,7 @@ and smart-linked consumers. See the [SDK guide](../nexus-lab/examples/packages/r
 for the layout and developer commands.
 
 The native SDK metadata migration was verified on 2026-10-12 using nxbuild and
-NexusFPC. The isolated `Build:PackageSDK` completed in 4.49 seconds. Its SDK
+NXPC. The isolated `Build:PackageSDK` completed in 4.49 seconds. Its SDK
 identity and all nine artifact hashes matched the retired PowerShell writer
 on the same inputs. After removing that writer from the isolated checkout,
 the SDK built again and the relocated console and GUI examples passed with
@@ -590,11 +643,11 @@ PowerShell writer's checks now belong to the NexusForge test suite.
 
 Cross builds reuse the captured identity and staged source. They do not relabel
 that source using the current checkout's revision. Both native and cross recipes
-finish their compiler construction with `tests/forge/Test-NexusFPCBuildIdentity.ps1`, which
+finish their compiler construction with `tests/forge/Test-NXPCBuildIdentity.ps1`, which
 checks `-iW` and `-iD` against the captured record and fails on a mismatch.
 
 The native identity replacement was verified on 2026-10-12 with Forge and its
-tests rebuilt through nxbuild using NexusFPC. All 48 Forge checks passed with
+tests rebuilt through nxbuild using NXPC. All 48 Forge checks passed with
 zero unfreed heap blocks, including a fixed `SOURCE_DATE_EPOCH` environment,
 clean/dirty/untracked source, repeatability, invalid timestamps, and failure
 ordering. The isolated native bootstrap passed in 139.13 seconds; generations
@@ -730,13 +783,14 @@ The following obsolete infrastructure has been removed:
 - The `fpcmake` and `fpgmake` generators and their templates, `rmwait`, and
   `fpcmkcfg` with its templates and old `samplecfg` wrapper. The unused
   `fpmkunit` engine, its manifest generator and generated caches are also removed.
-- Both copies of `Invoke-NexusFPCBootstrap.ps1`, `NexusFPCBootstrapSeed.ps1`, and
+- Both copies of `Invoke-NXPCBootstrap.ps1`, `NXPCBootstrapSeed.ps1`, and
   the old Linux/Android cross-build wrappers. Use the Forge commands above.
 - The upstream make-based GitLab CI configuration. A future CI configuration
   must invoke Forge on an appropriately provisioned host.
-- The native Linux SDK make builder and its WSL wrapper. Native Linux-hosted
-  compiler/SDK construction through Forge remains deferred. Linux runtime,
-  package declarations and startup sources remain. Existing Linux SDK consumption
+- The native Linux SDK make builder and its WSL wrapper. Native Linux compiler
+  and base-RTL construction now use Forge and nxbuild. Linux runtime-package
+  SDK construction remains a separate feature; runtime package declarations
+  and startup sources remain. Existing Linux SDK consumption
   and publication now use native Forge; the Python helpers are removed.
   The Windows-hosted Linux cross builds are unchanged.
 
@@ -765,3 +819,38 @@ Ad hoc regression-suite integration is explicitly excluded from this migration.
 Unit testing now uses [the native nxtest suites](tests/NXTEST.md). Additional
 compiler/integration-suite orchestration is separate from the retired make build
 and is not a prerequisite for that build migration.
+
+
+## Forge/nxbuild bootstrap verification (2026-10-19)
+
+Two fresh Linux x86-64 bootstraps started from stock FPC 3.2.2 and completed
+through the rebuilt Forge CLI: a direct invocation in 109.93 seconds, and the
+replacement launcher in 155.16 seconds. The latter included the final installed
+compiler/RTL NXTests. Both compiler generations 2/3 and all 89 RTL objects matched
+byte for byte. Installed compiler and RTL object hashes were checked independently;
+ELF analysis identified x86-64 artifacts linked by LLD. Compiler identity and date
+matched the captured record. Both native/shared-library NXTests passed.
+
+All 69 Forge NXTests and all 44 nxbuild NXTests passed. The Forge contract test
+loads Linux/Windows native contexts and all 13 retained Windows-hosted cross
+contexts with output roots outside source. The nxbuild suite reported zero
+unfreed memory blocks. Native Windows execution was not performed in this pass.
+Clang emitted SI_C weak-binding warnings while assembling the RTL; the builds,
+object comparisons and shared-library tests still succeeded.
+
+Validation used a byte-identical 6,818-file source snapshot under
+`/media/kcollins/dev/worktree/forge-bootstrap-6ub34ze3/source/nexus-fpc`.
+No test-only source corrections were applied to that snapshot. Initial recipe
+errors (module imports, host-name case, promotion selection and duplicate option
+section names) were corrected in the actual source before refreshing it.
+The final live recipe commands match the tested snapshot; subsequent entry-point
+comment/documentation edits do not change those commands. Logs, commands,
+snapshot hashes and independent artifact checks are in that worktree directory.
+Both validation invocations selected `Promote:No` and used isolated install roots.
+
+The retained `tests/dynamic-packages/Run-PackageSDKTests.ps1` is an older runner
+for the retired source-bootstrap interface: it still passes `BootstrapBin` and
+copies an incomplete source/recipe closure. It is not a current bootstrap
+validation entry point. Its migration belongs with the remaining Windows NXTest
+work; it was not used to substantiate the results above. Use the current Forge
+bootstrap and explicit `-Forge`/`-BootstrapDirectory` SDK helper arguments.

@@ -1080,7 +1080,7 @@ begin
   if MacVersionSet then
     exit;
   { check for deployment target set via environment variable }
-  if not(TargetInfo.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+  if not(TargetInfo.system in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
     begin
       EnvStr:=GetEnvironmentVariable('MACOSX_DEPLOYMENT_TARGET');
       if EnvStr<>'' then
@@ -1103,16 +1103,10 @@ begin
     end;
   { nothing specified -> defaults }
   case TargetInfo.system of
-    system_i386_darwin,
     system_x86_64_darwin:
       begin
         if not ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.8.0',false) then
           InternalError(2022090912);
-      end;
-    system_i386_iphonesim:
-      begin
-        if not ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
-          InternalError(2022090913);
       end;
     system_aarch64_ios,
     system_x86_64_iphonesim:
@@ -3364,7 +3358,7 @@ begin
          end;
        'M':
          begin
-           if (TargetInfo.system in (systems_darwin-[system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
+           if (TargetInfo.system in (systems_darwin-[system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
               ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',copy(More,2),false) then
              begin
                break;
@@ -3631,14 +3625,14 @@ begin
   foundfn:=fn;
   check_configfile:=true;
   { retrieve configpath }
-  configpath:=FixPath(GetEnvironmentVariable('PPC_CONFIG_PATH'),false);
+  configpath:=FixPath(GetEnvironmentVariable('NXPC_CONFIG_PATH'),false);
 {$ifdef Unix}
   if configpath='' then
    configpath:=ExpandFileName(FixPath(ExePath+'../etc/',false));
 {$endif}
   {
     Order to read configuration file :
-    try reading fpc.cfg in :
+    try reading nxpc.cfg in :
      1 - current dir
      2 - configpath
      3 - compiler path
@@ -3831,7 +3825,7 @@ begin
   Option.TargetOptions(true);
 
 { get default messagefile }
-  MsgFileName:=GetEnvironmentVariable('PPC_ERROR_FILE');
+  MsgFileName:=GetEnvironmentVariable('NXPC_ERROR_FILE');
 
 { default configfile can be specified on the commandline,
    remove it first }
@@ -3841,7 +3835,7 @@ begin
       Delete(cmd,1,pos(']',cmd));
     end
   else
-    ppccfg:='fpc.cfg';
+    ppccfg:='nxpc.cfg';
 
 { first pass reading of parameters, only -i -v -T etc.}
   option.FirstPass:=true;
@@ -3910,7 +3904,7 @@ begin
     read_configfile := false;
   if (option.parasubtarget<>'') then
     begin
-    subcfg:='fpc-'+lower(option.parasubtarget)+'.cfg';
+    subcfg:='nxpc-'+lower(option.parasubtarget)+'.cfg';
     read_subfile:=check_configfile(subcfg,subcfg);
     // Warn if we didn't find an architecture-specific file
     if not read_subfile then
@@ -4037,16 +4031,16 @@ begin
     end;
 
 {$ifdef Unix}
-  fpcdir:=FixPath(GetEnvironmentVariable('FPCDIR'),false);
+  fpcdir:=FixPath(GetEnvironmentVariable('NXPCDIR'),false);
   if fpcdir='' then
     begin
-      if PathExists('/usr/local/lib/fpc/'+Version_String,true) then
-        fpcdir:='/usr/local/lib/fpc/'+Version_String+'/'
+      if PathExists('/usr/local/lib/nxpc/'+Version_String,true) then
+        fpcdir:='/usr/local/lib/nxpc/'+Version_String+'/'
       else
-        fpcdir:='/usr/lib/fpc/'+Version_String+'/';
+        fpcdir:='/usr/lib/nxpc/'+Version_String+'/';
     end;
 {$else unix}
-  fpcdir:=FixPath(GetEnvironmentVariable('FPCDIR'),false);
+  fpcdir:=FixPath(GetEnvironmentVariable('NXPCDIR'),false);
   if fpcdir='' then
     begin
       fpcdir:=ExePath+'../';
@@ -4146,25 +4140,6 @@ begin
 
   { set Mac OS X version default macros if not specified explicitly }
   option.MaybeSetDefaultMacVersionMacro;
-
-{$ifdef i386}
-  case TargetInfo.system of
-    system_i386_android:
-      begin
-        { set default cpu type to PentiumM for Android unless specified otherwise }
-        if not option.CPUSetExplicitly then
-          InitSettings.CPUType:=cpu_PentiumM;
-        if not option.OptCPUSetExplicitly then
-          InitSettings.OptimizeCPUType:=cpu_PentiumM;
-        { set default fpu type to SSSE3 for Android unless specified otherwise }
-        if not option.FPUSetExplicitly then
-          InitSettings.FPUType:=fpu_ssse3;
-      end;
-    else
-      ;
-  end;
-{$endif i386}
-
 
 {$ifdef aarch64}
   case TargetInfo.system of

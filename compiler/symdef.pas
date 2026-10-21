@@ -636,7 +636,6 @@ interface
           procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  IsPublishable : TPublishProperty;override;
           function  GetTypeName:string;override;
-          function Alignment:ShortInt;override;
           procedure SetSize;
           function  PackedBitSize: ASizeInt; override;
           function GetVarDef : LongInt;override;
@@ -653,7 +652,6 @@ interface
           procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          function Alignment:ShortInt;override;
           function StructAlignment: ShortInt;override;
           procedure SetSize;
           function  GetVarDef:LongInt;override;
@@ -3416,16 +3414,6 @@ implementation
       end;
 
 
-    function TOrdDef.Alignment:ShortInt;
-      begin
-        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
-           (OrdType in [S64Bit,U64Bit]) then
-          Result := 4
-        else
-          Result := inherited Alignment;
-      end;
-
-
     procedure TOrdDef.SetSize;
       const
         SizeTbl : array[TOrdType] of LongInt = (
@@ -3563,23 +3551,6 @@ implementation
       end;
 
 
-    function TFloatDef.Alignment:ShortInt;
-      begin
-        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) then
-          case FloatType of
-            SC80Real,
-            S80Real: Result:=16;
-            S64Real,
-            S64Currency,
-            S64Comp : Result:=4;
-            else
-              Result := inherited Alignment;
-          end
-        else
-          Result := inherited Alignment;
-      end;
-
-
     function TFloatDef.StructAlignment: ShortInt;
       begin
         Result:=Alignment;
@@ -3592,8 +3563,7 @@ implementation
            S32Real : SaveSize:=4;
            S80Real : SaveSize:=10;
            SC80Real:
-             if TargetInfo.System in [system_i386_darwin,
-                  system_i386_iphonesim,system_x86_64_darwin,
+             if TargetInfo.System in [system_x86_64_darwin,
                   system_x86_64_iphonesim,
                   system_x86_64_linux] then
                SaveSize:=16
@@ -9184,7 +9154,7 @@ implementation
       begin
         if Assigned(ObjC_FastEnumeration) then
           Exit;
-        if not(TargetInfo.System in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+        if not(TargetInfo.System in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
           CocoaUnit:='COCOAALL'
         else
           CocoaUnit:='IPHONEALL';

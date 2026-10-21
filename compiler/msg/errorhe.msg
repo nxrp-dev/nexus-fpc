@@ -2381,7 +2381,7 @@ option_confict_asm_debug=11041_W_סוג הפלט של המאסף שנבחר "$1" אינו יכול ליצור מי
 # Logo (option -l)
 #
 option_logo=11023_[
-Free Pascal Compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
+NXPC compiler version $FPCFULLVERSION [$FPCDATE] for $FPCCPU
 Copyright (c) 1993-2026 by Florian Klaempfl and others
 ]
 
@@ -2389,7 +2389,7 @@ Copyright (c) 1993-2026 by Florian Klaempfl and others
 # Info (option -i)
 #
 option_info=11024_[
-Free Pascal Compiler version $FPCVERSION
+NXPC compiler version $FPCVERSION
 
 תאריך מהדר : $FPCDATE
 מהדר למעבד: $FPCCPU

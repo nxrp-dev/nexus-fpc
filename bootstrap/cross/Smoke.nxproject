@@ -1,0 +1,81 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+dialect "../../../nexus/projects/nxbuild/language/nxbuild.Language.nxscript";
+
+Project Smoke {
+    Id: "NXRP.NXPC.cross.Smoke";
+    RootDirectory: $BootstrapRoot;
+    NXPC SmokeLinux TargetOS[linux] {
+        CompilerPath: $CrossCompiler;
+        SourceFiles: [
+            $CrossDirectory + "/smoke.pas"
+        ];
+        OutputPath: $CrossDirectory;
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Target Platform { OperatingSystem: $TargetOS; }
+        RawOptions: ["-XLL", "-o" + $SmokeOutput];
+        Files Paths {
+            UnitPaths: [
+                $CrossRTL,
+                $BootstrapRoot + "/seed/rtl/linux",
+                $BootstrapRoot + "/seed/rtl/unix",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/linux/" + $TargetCPU
+            ];
+            IncludePaths: [
+                $BootstrapRoot + "/seed/rtl/linux",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/unix",
+                $BootstrapRoot + "/seed/rtl/linux/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes",
+                $BootstrapRoot + "/seed/rtl/charmaps"
+            ];
+        }
+    }
+    NXPC SmokeWindows TargetOS[win32, win64] {
+        CompilerPath: $CrossCompiler;
+        SourceFiles: [
+            $CrossDirectory + "/smoke.pas"
+        ];
+        OutputPath: $CrossDirectory;
+        Config Options { DisableDefaultConfigFiles: True; OptionFiles: [$BootstrapRoot + "/seed/build-options.cfg"]; }
+        Syntax PascalSyntax { COperators: Disabled; }
+        Assembler LLVM { OutputFormat: "as-clang"; }
+        Optimization Optimize { Level: Level2; }
+        Units UnitOptions { GenerateReleaseUnitFiles: Enabled; }
+        Target Platform { OperatingSystem: $TargetOS; }
+        RawOptions: ["-XLL", "-o" + $SmokeOutput];
+        Files Paths {
+            UnitPaths: [
+                $CrossRTL,
+                $RTLDirectory,
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU
+            ];
+            IncludePaths: [
+                $RTLDirectory,
+                $BootstrapRoot + "/seed/rtl/inc",
+                $BootstrapRoot + "/seed/rtl/" + $TargetCPU,
+                $RTLDirectory + "/" + $TargetCPU,
+                $BootstrapRoot + "/seed/rtl/win",
+                $BootstrapRoot + "/seed/rtl/win/wininc",
+                $BootstrapRoot + "/seed/rtl/objpas",
+                $BootstrapRoot + "/seed/rtl/objpas/sysutils",
+                $BootstrapRoot + "/seed/rtl/objpas/classes",
+                $BootstrapRoot + "/seed/rtl/charmaps"
+            ];
+        }
+    }
+}

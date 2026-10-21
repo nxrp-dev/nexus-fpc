@@ -15,6 +15,5 @@ The 4 GiB case is reported as skipped unless `NXTEST_LARGE_ZIP=1` is set.
 `ReadOnlyGzipTests.nxproject` retains a separate `NO_DEFLATE` compilation and native
 reader/rejected-writer case.
 
-See [the suite catalog](../../../tests/NXTEST.md),
-[consolidation decisions](../../../tests/NXTEST.md#consolidation-decisions) and
-[recorded package verification](../CONSOLIDATION.md).
+See [the suite catalog](../../../tests/NXTEST.md) and
+[consolidation decisions](../../../tests/NXTEST.md#consolidation-decisions).
