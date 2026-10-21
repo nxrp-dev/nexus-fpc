@@ -4,7 +4,7 @@ Checks implementation-only unit exports in EXEs and DLLs, normally and with smar
 
 The old compiler fails the fresh private-export case. Interface-visible unit exports also disappeared on cached builds. Windows and Linux unit export metadata uses optional PPU entry `ibunitexports` (88); existing PPUs without it remain readable. Units with exports must be rebuilt once to acquire the metadata. Earlier compilers cannot read PPUs containing this new entry.
 
-For Windows-hosted Linux compilers and matching RTLs, use the [Forge cross matrix](../../NexusFPC.Forge.md). The historical `Build-NXLinuxExportRTL.ps1` invokes removed make targets; its replacement belongs in the later nxtest work.
+For Windows-hosted Linux compilers and matching RTLs, use the [Forge cross matrix](../../NXPC.Forge.md). The historical `Build-NXLinuxExportRTL.ps1` invokes removed make targets; its replacement belongs in the later nxtest work.
 
 The Python Linux runner was removed on 2026-10-12. Its exact exports, expected
 values, cache checks and diagnostics are recorded in the

@@ -75,7 +75,7 @@ are no longer needed.
 
 ## Building
 
-Use the [Forge bootstrap and cross matrix](../../NexusFPC.Forge.md) in an isolated
+Use the [Forge bootstrap and cross matrix](../../NXPC.Forge.md) in an isolated
 checkout. The stock FPC 3.2.2 **i386-win32** seed's hardware80 arithmetic builds
 the first x64 compiler, then the Win64 RTL/native compiler and self-hosting cycle.
 Forge owns that transition; the make bootstrap and seed scripts are retired.

@@ -17,7 +17,7 @@ registrations without requiring target SDKs.
 
 ## Build compilers and RTLs
 
-Use the [Forge bootstrap and cross matrix](../../NexusFPC.Forge.md). The former
+Use the [Forge bootstrap and cross matrix](../../NXPC.Forge.md). The former
 bootstrap/Linux/Android PowerShell build scripts and Android make overlay are
 retired. Forge's Android recipe compiles the startup assembly with NDK Clang.
 The sample commands below are historical and use the old build output layout;

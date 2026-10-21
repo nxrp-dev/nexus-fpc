@@ -16,7 +16,7 @@ variant or bootstrap stage is involved.
 
 The source-only bootstrap orchestration below is historical: the make bootstrap
 and Linux SDK builder have been retired. The fixtures, assertions and existing-SDK
-runners remain for the later nxtest work. Use the [Forge build guide](../../NexusFPC.Forge.md)
+runners remain for the later nxtest work. Use the [Forge build guide](../../NXPC.Forge.md)
 for current Win64 SDK construction; no replacement ad hoc test orchestration is
 being maintained as part of make retirement.
 
